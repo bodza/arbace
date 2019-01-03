@@ -28,5 +28,5 @@
 ;                   "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=ALL-UNNAMED"
                    ]
     :source-paths ["src"] :java-source-paths ["src"] :resource-paths ["resources"] :test-paths ["src"]
-    :main arbace.core
+;   :main arbace.core
     :aliases {"arbace" ["run" "-m" "arbace.core"]})
