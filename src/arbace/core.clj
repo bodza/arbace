@@ -1,5 +1,5 @@
 (ns arbace.core
-    (:refer-clojure :only [*ns* = apply assoc cond conj cons defmacro #_def defn defprotocol defrecord #_do doseq extend-type first #_if if-not import inc into keys let letfn loop next ns-imports ns-unmap or peek pop #_recur second seq some? str symbol symbol? #_throw update vary-meta vector?])
+    (:refer-clojure :only [*ns* = and apply assoc cond conj cons defmacro #_def defn defprotocol defrecord #_do doseq extend-type first #_if if-not import inc into keys let letfn loop next ns-imports ns-unmap or peek pop #_recur second seq some? str symbol symbol? #_throw update vary-meta vector?])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec #_vector]] [flatland.ordered.map :refer [#_ordered-map]] [flatland.ordered.set :refer [#_ordered-set]])
 )
 
