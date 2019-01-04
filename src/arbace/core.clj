@@ -16,7 +16,7 @@
 (doseq [% (keys (ns-imports *ns*))] (ns-unmap *ns* %))
 
 (import
-    [java.lang Error String]
+    [java.lang Boolean Error String]
 )
 
 (defmacro throw! [^String s] `(throw (Error. ~s)))
@@ -68,7 +68,21 @@
 (defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 
 (import
-    [sun.misc #_Unsafe]
+    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
+)
+
+(value-ns HotSpot
+    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
+
+    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
+    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
+    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
+
+    (when-not (and HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
+        (throw! "“Use the Force, Luke!”")
+    )
 )
 
 (value-ns Arbace)
