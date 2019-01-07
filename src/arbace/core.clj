@@ -19571,12 +19571,12 @@
 
 (§ soon
 (ns rrb-vector
-    (:refer-clojure :exclude [->VecSeq subvec vector vector-of vec])
+    (:refer-clojure :exclude [->VecSeq subvec vector vec])
     (:require
         [clojure.core.protocols :refer [IKVReduce]]
     )
     (:import
-        [clojure.core ArrayManager Vec VecNode]
+        [clojure.core ArrayManager Vec]
         [clojure.lang
             ArityException Box IHashEq
         ]
@@ -19597,71 +19597,25 @@
     (as-rrbt [v])
 )
 
-;;; array managers
-
-(defmacro mk-am [t] (#'clojure.core/mk-am &env &form t))
-
-(definline object [x] x)
-
-(def ams (assoc @#'clojure.core/ams :object (mk-am object)))
-
-(def object-am (ams :object))
-
-;;; empty nodes
-
-(def empty-pv-node PersistentVector/EMPTY_NODE)
-
-(def empty-gvec-node clojure.core/EMPTY-NODE)
-
 ;;; node managers
 
-(definterface NodeManager
-    (node [#_"AtomicReference" edit, arr])
-    (empty [])
-    (array [node])
-    (#_"AtomicReference" edit [node])
-    (#_"boolean" regular [node])
-    (clone [#_"ArrayManager" am, #_"int" shift, node])
+(defn #_"boolean" NodeManager'regular [node]
+    (not (== (alength #_"objects" (:array #_"VNode" node)) (int 33)))
 )
 
-(def object-nm
-    (reify NodeManager
-        (node [this, edit, arr] (VNode. edit arr))
-        (empty [this] empty-pv-node)
-        (array [this, node] (:array #_"VNode" node))
-        (edit [this, node] (:edit #_"VNode" node))
-        (regular [this, node] (not (== (alength #_"objects" (:array #_"VNode" node)) (int 33))))
-        (clone [this, am, shift, node]
-            (VNode. (:edit #_"VNode" node) (aclone #_"objects" (:array #_"VNode" node)))
-        )
-    )
-)
-
-(def primitive-nm
-    (reify NodeManager
-        (node [this, edit, arr] (VecNode. edit arr))
-        (empty [this] empty-gvec-node)
-        (array [this, node] (:arr #_"VecNode" node))
-        (edit [this, node] (:edit #_"VecNode" node))
-        (regular [this, node] (not (== (alength #_"objects" (:arr #_"VecNode" node)) (int 33))))
-        (clone [this, am, shift, node]
-            (if (zero? shift)
-                (VecNode. (:edit #_"VecNode" node) (.aclone am (:arr #_"VecNode" node)))
-                (VecNode. (:edit #_"VecNode" node) (aclone #_"objects" (:arr #_"VecNode" node)))
-            )
-        )
-    )
+(defn NodeManager'clone [node]
+    (VNode. (:edit #_"VNode" node) (aclone #_"objects" (:array #_"VNode" node)))
 )
 
 ;;; ranges
 
-(defmacro ranges [nm node]
-  `(ints (aget ~(with-meta `(.array ~nm ~node) {:tag 'objects}) 32))
+(defmacro ranges [node]
+  `(ints (aget ~(with-meta `(:array ~node) {:tag 'objects}) 32))
 )
 
-(defn last-range [#_"NodeManager" nm, node]
+(defn last-range [node]
     (let [
-        b (ranges nm node)
+        b (ranges node)
         i (unchecked-dec-int (aget b 32))
     ]
         (aget b i)
@@ -19691,18 +19645,17 @@
 
 ;;; root overflow
 
-(defn overflow? [#_"NodeManager" nm, root, shift, cnt]
-    (if (.regular nm root)
+(defn overflow? [root, shift, cnt]
+    (if (NodeManager'regular root)
         (< (<< (int 1) (int shift)) (>> (unchecked-inc-int (int cnt)) (int 5)))
         (let [
-            b (ranges nm root)
+            b (ranges root)
             n (aget b 32)
         ]
             (and (== n (int 32))
                 (or (== (int shift) (int 5))
                     (recur
-                        nm
-                        (aget #_"objects" (.array nm root) (unchecked-dec-int n))
+                        (aget #_"objects" (:array root) (unchecked-dec-int n))
                         (unchecked-subtract-int (int shift) (int 5))
                         (unchecked-add-int (unchecked-subtract-int (aget b 31) (aget b 30)) (int 32))
                     )
@@ -19714,7 +19667,7 @@
 
 ;;; find 0 / nil
 
-(defn index-of-0 #_"long" [a]
+(defn #_"long" index-of-0 [a]
     (let [a (ints a)]
         (loop-when [l 0 h 31] (< l (unchecked-dec h)) => (cond (zero? (aget a l)) l (zero? (aget a h)) h :else 32)
             (let [mid (unchecked-add l (>> (unchecked-subtract h l) 1))]
@@ -19727,7 +19680,7 @@
     )
 )
 
-(defn index-of-nil #_"long" [a]
+(defn #_"long" index-of-nil [a]
     (loop-when [l 0 h 31] (< l (unchecked-dec h)) => (cond (nil? (aget #_"objects" a l)) l (nil? (aget #_"objects" a h)) h :else 32)
         (let [mid (unchecked-add l (>> (unchecked-subtract h l) 1))]
             (if (nil? (aget #_"objects" a mid))
@@ -19740,27 +19693,27 @@
 
 ;;; children
 
-(defn first-child [#_"NodeManager" nm, node]
-    (aget #_"objects" (.array nm node) 0)
+(defn first-child [node]
+    (aget #_"objects" (:array node) 0)
 )
 
-(defn last-child [#_"NodeManager" nm, node]
-    (let [a (.array nm node)]
-        (aget #_"objects" a (if (.regular nm node) (dec (index-of-nil a)) (unchecked-dec-int (aget (ranges nm node) 32))))
+(defn last-child [node]
+    (let [a (:array node)]
+        (aget #_"objects" a (if (NodeManager'regular node) (dec (index-of-nil a)) (unchecked-dec-int (aget (ranges node) 32))))
     )
 )
 
-(defn remove-leftmost-child [#_"NodeManager" nm, shift, parent]
-    (let [a (.array nm parent)]
+(defn remove-leftmost-child [shift, parent]
+    (let [a (:array parent)]
         (when (some? (aget #_"objects" a 1)) => nil
             (let [
-                regular? (.regular nm parent)
+                regular? (NodeManager'regular parent)
                 a' (object-array (if regular? 32 33))
                 _ (System/arraycopy a 1 a' 0 31)
             ]
                 (when-not regular?
                     (let [
-                        b (ranges nm parent)
+                        b (ranges parent)
                         n (dec (aget b 32))
                         b' (int-array 33)
                         b0 (aget b 0)
@@ -19771,14 +19724,14 @@
                         (aset #_"objects" a' 32 b')
                     )
                 )
-                (.node nm (.edit nm parent) a')
+                (VNode. (:edit parent) a')
             )
         )
     )
 )
 
-(defn replace-leftmost-child [#_"NodeManager" nm, shift, parent, pcnt, child, delta]
-    (if (.regular nm parent)
+(defn replace-leftmost-child [shift, parent, pcnt, child, delta]
+    (if (NodeManager'regular parent)
         (let [
             b' (int-array 33)
             step (<< 1 shift)
@@ -19789,83 +19742,83 @@
             _ (aset b' 32 (int (inc n)))
             a' (object-array 33)
             _ (aset #_"objects" a' 0 child)
-            _ (System/arraycopy (.array nm parent) 1 a' 1 n)
+            _ (System/arraycopy (:array parent) 1 a' 1 n)
             _ (aset #_"objects" a' 32 b')
         ]
-            (.node nm nil a')
+            (VNode. nil a')
         )
         (let [
             b' (int-array 33)
-            b (ranges nm parent)
+            b (ranges parent)
             n (aget b 32)
             _ (dotimes [i n] (aset b' i (- (aget b i) (int delta))))
             _ (aset b' 32 n)
-            a' (aclone #_"objects" (.array nm parent))
+            a' (aclone #_"objects" (:array parent))
             _ (aset #_"objects" a' 0 child)
             _ (aset #_"objects" a' 32 b')
         ]
-            (.node nm nil a')
+            (VNode. nil a')
         )
     )
 )
 
-(defn replace-rightmost-child [#_"NodeManager" nm, shift, parent, child, delta]
-    (if (.regular nm parent)
+(defn replace-rightmost-child [shift, parent, child, delta]
+    (if (NodeManager'regular parent)
         (let [
-            a (.array nm parent)
+            a (:array parent)
             n (unchecked-dec (index-of-nil a))
         ]
-            (if (.regular nm child)
+            (if (NodeManager'regular child)
                 (let [
                     a' (aclone #_"objects" a)
                     _ (aset #_"objects" a' n child)
                 ]
-                    (.node nm nil a')
+                    (VNode. nil a')
                 )
                 (let [
                     step (<< 1 shift)
                     b' (int-array 33)
                     _ (loop-when-recur [i 0 r step] (<= i n) [(inc i) (+ r step)] (aset b' i r))
-                    _ (aset b' n (int (last-range nm child)))
+                    _ (aset b' n (int (last-range child)))
                     _ (aset b' 32 (inc n))
                     a' (object-array 33)
                     _ (System/arraycopy a 0 a' 0 n)
                     _ (aset #_"objects" a' n child)
                     _ (aset #_"objects" a' 32 b')
                 ]
-                    (.node nm nil a')
+                    (VNode. nil a')
                 )
             )
         )
         (let [
-            b (ranges nm parent)
+            b (ranges parent)
             b' (aclone b)
             n (dec (aget b 32))
             _ (aset b' n (int (+ (aget b n) delta)))
-            a' (aclone #_"objects" (.array nm parent))
+            a' (aclone #_"objects" (:array parent))
             _ (aset #_"objects" a' n child)
             _ (aset #_"objects" a' 32 b')
         ]
-            (.node nm nil a')
+            (VNode. nil a')
         )
     )
 )
 
 ;;; fold-tail
 
-(defn new-path [#_"NodeManager" nm, #_"ArrayManager" am, shift, node]
+(defn new-path [#_"ArrayManager" am, shift, node]
     (let [
-        reg? (== (.alength am (.array nm node)) 32)
+        reg? (== (.alength am (:array node)) 32)
         n (if reg? 32 33)
         a (object-array n)
         b
             (when-not reg?
                 (doto (int-array 33)
-                    (aset 0 (.alength am (.array nm node)))
+                    (aset 0 (.alength am (:array node)))
                     (aset 32 1)
                 )
             )
-        ret (.node nm nil a)
+        ret (VNode. nil a)
     ]
         (loop [a a shift shift]
             (if (== shift 5)
@@ -19877,7 +19830,7 @@
                 )
                 (let [
                     a' (object-array n)
-                    e (.node nm nil a')
+                    e (VNode. nil a')
                 ]
                     (aset a 0 e)
                     (when-not reg?
@@ -19891,20 +19844,20 @@
     )
 )
 
-(defn fold-tail [#_"NodeManager" nm, #_"ArrayManager" am, node, shift, cnt, tail]
+(defn fold-tail [#_"ArrayManager" am, node, shift, cnt, tail]
     (let [
         n (.alength am tail)
-        reg? (and (.regular nm node) (== n 32))
-        a (.array nm node)
+        reg? (and (NodeManager'regular node) (== n 32))
+        a (:array node)
         i (index-of-nil a)
         a' (object-array (if reg? 32 33))
-        b (when-not (.regular nm node) (ranges nm node))
+        b (when-not (NodeManager'regular node) (ranges node))
         t
-            (when-not (== shift 5) => (.node nm nil tail)
-                (fold-tail nm am
+            (when-not (== shift 5) => (VNode. nil tail)
+                (fold-tail am
                     (aget #_"objects" a (dec i))
                     (- shift 5)
-                    (when-not (.regular nm node) => (mod cnt (<< 1 shift))
+                    (when-not (NodeManager'regular node) => (mod cnt (<< 1 shift))
                         (let [i (unchecked-dec-int (aget b 32))]
                             (if (pos? i)
                                 (unchecked-subtract-int (aget b i) (aget b (unchecked-dec-int i)))
@@ -19937,10 +19890,10 @@
                 (aset a' 32 b')
             )
             (if (nil? t)
-                (aset a' i (new-path nm am (unchecked-subtract-int shift 5) (.node nm nil tail)))
+                (aset a' i (new-path am (unchecked-subtract-int shift 5) (VNode. nil tail)))
                 (aset a' (if (== shift 5) i (dec i)) t)
             )
-            (.node nm nil a')
+            (VNode. nil a')
         )
     )
 )
@@ -20039,7 +19992,7 @@
     (seq [this] this)
 )
 
-(defn slice-right [#_"NodeManager" nm, #_"ArrayManager" am, node, shift, end]
+(defn slice-right [#_"ArrayManager" am, node, shift, end]
     (let [shift (int shift) end (int end)]
         (if (zero? shift)
             ;; potentially return a short node, although it would be better to make sure a regular
@@ -20047,13 +20000,13 @@
             ;; (and then potentially back into the tree should the tail become too long...)
             (let [
                 a' (.array am end)
-                _ (System/arraycopy (.array nm node) 0 a' 0 end)
+                _ (System/arraycopy (:array node) 0 a' 0 end)
             ]
-                (.node nm nil a')
+                (VNode. nil a')
             )
             (let [
-                regular? (.regular nm node)
-                b (when-not regular? (ranges nm node))
+                regular? (NodeManager'regular node)
+                b (when-not regular? (ranges node))
                 n (& (>> (unchecked-dec-int end) shift) (int 0x1f))
                 n
                     (when-not regular? => n
@@ -20070,12 +20023,12 @@
                             (unchecked-subtract-int end (aget b (unchecked-dec-int n)))
                         )
                     )
-                a (.array nm node)
-                c' (slice-right nm am (aget #_"objects" a n) (unchecked-subtract-int shift (int 5)) child-end)
+                a (:array node)
+                c' (slice-right am (aget #_"objects" a n) (unchecked-subtract-int shift (int 5)) child-end)
                 regular-child?
                     (if (== shift (int 5))
-                        (== (int 32) (.alength am (.array nm c')))
-                        (.regular nm c')
+                        (== (int 32) (.alength am (:array c')))
+                        (NodeManager'regular c')
                     )
                 a' (object-array (if (and regular? regular-child?) 32 33))
                 d'
@@ -20084,8 +20037,8 @@
                             (if (zero? m) (<< 1 shift) m)
                         )
                         (if (== shift (int 5))
-                            (.alength am (.array nm c'))
-                            (last-range nm c')
+                            (.alength am (:array c'))
+                            (last-range c')
                         )
                     )
                 _ (System/arraycopy a 0 a' 0 n)
@@ -20105,13 +20058,13 @@
                         (aset a' 32 b')
                     )
                 )
-                (.node nm nil a')
+                (VNode. nil a')
             )
         )
     )
 )
 
-(defn slice-left [#_"NodeManager" nm, #_"ArrayManager" am, node, shift, start, end]
+(defn slice-left [#_"ArrayManager" am, node, shift, start, end]
     (let [
         shift (int shift)
         start (int start)
@@ -20120,17 +20073,17 @@
         (if (zero? shift)
             ;; potentially return a short node
             (let [
-                a (.array nm node)
+                a (:array node)
                 n' (unchecked-subtract-int (.alength am a) start)
                 a' (.array am n')
                 _ (System/arraycopy a start a' 0 n')
             ]
-                (.node nm nil a')
+                (VNode. nil a')
             )
             (let [
-                regular? (.regular nm node)
-                a (.array nm node)
-                b (when-not regular? (ranges nm node))
+                regular? (NodeManager'regular node)
+                a (:array node)
+                b (when-not regular? (ranges node))
                 n (& (>> start shift) (int 0x1f))
                 n
                     (when-not regular? => n
@@ -20149,7 +20102,7 @@
                 x (if regular? (unchecked-multiply-int n (<< (int 1) shift)) (aget b (unchecked-dec-int n)))
                 child-start (when (pos? n) => start (unchecked-subtract-int start x))
                 child-end (int (min (<< (int 1) shift) (when (pos? n) => end (unchecked-subtract-int end x))))
-                c' (slice-left nm am (aget #_"objects" a n) (unchecked-subtract-int shift (int 5)) child-start child-end)
+                c' (slice-left am (aget #_"objects" a n) (unchecked-subtract-int shift (int 5)) child-start child-end)
                 n' (unchecked-subtract-int n' n)
                 n' (if (nil? c') (unchecked-dec-int n') n')
             ]
@@ -20161,9 +20114,9 @@
                             a' (object-array 33)
                             b' (int-array 33)
                             b0
-                                (if (or (nil? c') (== shift (int 5)) (.regular nm c'))
+                                (if (or (nil? c') (== shift (int 5)) (NodeManager'regular c'))
                                     (unchecked-subtract-int (<< (int 1) shift) (& (>> start (unchecked-subtract-int shift (int 5))) (int 0x1f)))
-                                    (int (last-range nm c'))
+                                    (int (last-range c'))
                                 )
                             step (<< (int 1) shift)
                         ]
@@ -20180,7 +20133,7 @@
                                 (aset a' 0 c')
                             )
                             (aset a' 32 b')
-                            (.node nm (.edit nm node) a')
+                            (VNode. (:edit node) a')
                         )
                     :else
                         (let [
@@ -20197,7 +20150,7 @@
                                 (aset a' 0 c')
                             )
                             (aset a' 32 b')
-                            (.node nm (.edit nm node) a')
+                            (VNode. (:edit node) a')
                         )
                 )
             )
@@ -20207,7 +20160,7 @@
 
 (declare splice-rrbts ->Transient)
 
-(deftype Vector [#_"NodeManager" nm, #_"ArrayManager" am, #_"int" cnt, #_"int" shift, root, tail, #_"IPersistentMap" _meta, ^:unsynchronized-mutable #_"int" _hash, ^:unsynchronized-mutable #_"int" _hasheq]
+(deftype Vector [#_"ArrayManager" am, #_"int" cnt, #_"int" shift, root, tail, #_"IPersistentMap" _meta, ^:unsynchronized-mutable #_"int" _hash, ^:unsynchronized-mutable #_"int" _hasheq]
     Object
     (equals [this, that]
         (or (identical? this that)
@@ -20260,7 +20213,7 @@
     (meta [this] (:_meta this))
 
     IObj
-    (withMeta [this, m] (Vector. (:nm this) (:am this) (:cnt this) (:shift this) (:root this) (:tail this) m (:_hash this) (:_hasheq this)))
+    (withMeta [this, m] (Vector. (:am this) (:cnt this) (:shift this) (:root this) (:tail this) m (:_hash this) (:_hasheq this)))
 
     Indexed
     (nth [this, i]
@@ -20271,17 +20224,17 @@
                 (when (< i tail-off) => (.aget (:am this) (:tail this) (unchecked-subtract-int i tail-off))
                     (loop [i i node (:root this) shift (:shift this)]
                         (if (zero? shift)
-                            (let [a (.array (:nm this) node)]
+                            (let [a (:array node)]
                                 (.aget (:am this) a (& (>> i shift) (int 0x1f)))
                             )
-                            (if (.regular (:nm this) node)
+                            (if (NodeManager'regular node)
                                 (let [
-                                    a (.array (:nm this) node)
+                                    a (:array node)
                                     idx (& (>> i shift) (int 0x1f))
                                 ]
                                     (loop [i i node (aget #_"objects" a idx) shift (unchecked-subtract-int shift (int 5))]
                                         (let [
-                                            a (.array (:nm this) node)
+                                            a (:array node)
                                             idx (& (>> i shift) (int 0x1f))
                                         ]
                                             (if (zero? shift)
@@ -20292,8 +20245,8 @@
                                     )
                                 )
                                 (let [
-                                    a (.array (:nm this) node)
-                                    b (ranges (:nm this) node)
+                                    a (:array node)
+                                    b (ranges node)
                                     idx
                                         (loop [j (& (>> i shift) (int 0x1f))]
                                             (when-not (< i (aget b j)) => j
@@ -20330,37 +20283,37 @@
                 _ (System/arraycopy (:tail this) 0 t' 0 tail-len)
                 _ (.aset (:am this) t' tail-len val)
             ]
-                (Vector. (:nm this) (:am this) (unchecked-inc-int (:cnt this)) (:shift this) (:root this) t' (:_meta this) -1 -1)
+                (Vector. (:am this) (unchecked-inc-int (:cnt this)) (:shift this) (:root this) t' (:_meta this) -1 -1)
             )
             (let [
-                tail-node (.node (:nm this) (.edit (:nm this) (:root this)) (:tail this))
+                tail-node (VNode. (:edit (:root this)) (:tail this))
                 t'
                     (let [a' (.array (:am this) 1)]
                         (.aset (:am this) a' 0 val)
                         a'
                     )
             ]
-                (if (overflow? (:nm this) (:root this) (:shift this) (:cnt this))
-                    (if (.regular (:nm this) (:root this))
+                (if (overflow? (:root this) (:shift this) (:cnt this))
+                    (if (NodeManager'regular (:root this))
                         (let [
                             a' (object-array 32)
-                            new-root (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                            new-root (VNode. (:edit (:root this)) a')
                         ]
                             (doto a'
                                 (aset (int 0) (:root this))
-                                (aset (int 1) (.newPath this (.edit (:nm this) (:root this)) (:shift this) tail-node))
+                                (aset (int 1) (.newPath this (:edit (:root this)) (:shift this) tail-node))
                             )
-                            (Vector. (:nm this) (:am this) (unchecked-inc-int (:cnt this)) (unchecked-add-int (:shift this) (int 5)) new-root t' (:_meta this) -1 -1)
+                            (Vector. (:am this) (unchecked-inc-int (:cnt this)) (unchecked-add-int (:shift this) (int 5)) new-root t' (:_meta this) -1 -1)
                         )
                         (let [
                             a' (object-array 33)
                             b' (ints (int-array 33))
-                            new-root (.node (:nm this) (.edit (:nm this) (:root this)) a')
-                            root-total-range (aget (ranges (:nm this) (:root this)) (int 31))
+                            new-root (VNode. (:edit (:root this)) a')
+                            root-total-range (aget (ranges (:root this)) (int 31))
                         ]
                             (doto a'
                                 (aset (int 0) (:root this))
-                                (aset (int 1) (.newPath this (.edit (:nm this) (:root this)) (:shift this) tail-node))
+                                (aset (int 1) (.newPath this (:edit (:root this)) (:shift this) tail-node))
                                 (aset (int 32) b')
                             )
                             (doto b'
@@ -20368,15 +20321,15 @@
                                 (aset (int 1) (unchecked-add-int root-total-range (int 32)))
                                 (aset (int 32) (int 2))
                             )
-                            (Vector. (:nm this) (:am this) (unchecked-inc-int (:cnt this)) (unchecked-add-int (:shift this) (int 5)) new-root t' (:_meta this) -1 -1)
+                            (Vector. (:am this) (unchecked-inc-int (:cnt this)) (unchecked-add-int (:shift this) (int 5)) new-root t' (:_meta this) -1 -1)
                         )
                     )
-                    (Vector. (:nm this) (:am this) (unchecked-inc-int (:cnt this)) (:shift this) (.pushTail this (:shift this) (:cnt this) (:root this) tail-node) t' (:_meta this) -1 -1)
+                    (Vector. (:am this) (unchecked-inc-int (:cnt this)) (:shift this) (.pushTail this (:shift this) (:cnt this) (:root this) tail-node) t' (:_meta this) -1 -1)
                 )
             )
         )
     )
-    (empty [this] (Vector. (:nm this) (:am this) 0 5 (.empty (:nm this)) (.array (:am this) 0) (:_meta this) -1 -1))
+    (empty [this] (Vector. (:am this) 0 5 PersistentVector'EMPTY_NODE (.array (:am this) 0) (:_meta this) -1 -1))
     (equiv [this, that]
         (if (instance? IPersistentVector that)
             (and (== (:cnt this) (count that))
@@ -20405,13 +20358,13 @@
             (zero? (:cnt this))
                 (throw (IllegalStateException. "Can't pop empty vector"))
             (== 1 (:cnt this))
-                (Vector. (:nm this) (:am this) 0 5 (.empty (:nm this)) (.array (:am this) 0) (:_meta this) -1 -1)
+                (Vector. (:am this) 0 5 PersistentVector'EMPTY_NODE (.array (:am this) 0) (:_meta this) -1 -1)
             (< (int 1) (.alength (:am this) (:tail this)))
                 (let [
                     new-tail (.array (:am this) (unchecked-dec-int (.alength (:am this) (:tail this))))
                     _ (System/arraycopy (:tail this) 0 new-tail 0 (.alength (:am this) new-tail))
                 ]
-                    (Vector. (:nm this) (:am this) (unchecked-dec-int (:cnt this)) (:shift this) (:root this) new-tail (:_meta this) -1 -1)
+                    (Vector. (:am this) (unchecked-dec-int (:cnt this)) (:shift this) (:root this) new-tail (:_meta this) -1 -1)
                 )
             :else
                 (let [
@@ -20421,11 +20374,11 @@
                 ]
                     (cond
                         (nil? new-root)
-                            (Vector. (:nm this) (:am this) (unchecked-dec-int (:cnt this)) (:shift this) (.empty (:nm this)) new-tail (:_meta this) -1 -1)
-                        (and (< (int 5) (:shift this)) (nil? (aget #_"objects" (.array (:nm this) new-root) 1)))
-                            (Vector. (:nm this) (:am this) (unchecked-dec-int (:cnt this)) (unchecked-subtract-int (:shift this) (int 5)) (aget #_"objects" (.array (:nm this) new-root) 0) new-tail (:_meta this) -1 -1)
+                            (Vector. (:am this) (unchecked-dec-int (:cnt this)) (:shift this) PersistentVector'EMPTY_NODE new-tail (:_meta this) -1 -1)
+                        (and (< (int 5) (:shift this)) (nil? (aget #_"objects" (:array new-root) 1)))
+                            (Vector. (:am this) (unchecked-dec-int (:cnt this)) (unchecked-subtract-int (:shift this) (int 5)) (aget #_"objects" (:array new-root) 0) new-tail (:_meta this) -1 -1)
                         :else
-                            (Vector. (:nm this) (:am this) (unchecked-dec-int (:cnt this)) (:shift this) new-root new-tail (:_meta this) -1 -1)
+                            (Vector. (:am this) (unchecked-dec-int (:cnt this)) (:shift this) new-root new-tail (:_meta this) -1 -1)
                     )
                 )
         )
@@ -20436,14 +20389,14 @@
         (cond
             (and (<= (int 0) i) (< i (:cnt this)))
                 (let [tail-off (.tailoff this)]
-                    (when (<= tail-off i) => (Vector. (:nm this) (:am this) (:cnt this) (:shift this) (.doAssoc this (:shift this) (:root this) i val) (:tail this) (:_meta this) -1 -1)
+                    (when (<= tail-off i) => (Vector. (:am this) (:cnt this) (:shift this) (.doAssoc this (:shift this) (:root this) i val) (:tail this) (:_meta this) -1 -1)
                         (let [
                             t' (.array (:am this) (.alength (:am this) (:tail this)))
                             idx (unchecked-subtract-int i tail-off)
                             _ (System/arraycopy (:tail this) 0 t' 0 (.alength (:am this) (:tail this)))
                             _ (.aset (:am this) t' idx val)
                         ]
-                            (Vector. (:nm this) (:am this) (:cnt this) (:shift this) (:root this) t' (:_meta this) -1 -1)
+                            (Vector. (:am this) (:cnt this) (:shift this) (:root this) t' (:_meta this) -1 -1)
                         )
                     )
                 )
@@ -20520,7 +20473,7 @@
 
     IEditableCollection
     (asTransient [this]
-        (->Transient (:nm this) (:am this) (identical? (:am this) object-am) (:cnt this) (:shift this) (TransientHelper'editableRoot (:nm this) (:am this) (:root this)) (TransientHelper'editableTail (:am this) (:tail this)) (.alength (:am this) (:tail this)))
+        (->Transient (:am this) (identical? (:am this) object-am) (:cnt this) (:shift this) (TransientHelper'editableRoot (:am this) (:root this)) (TransientHelper'editableTail (:am this) (:tail this)) (.alength (:am this) (:tail this)))
     )
 
     IVecImpl
@@ -20530,16 +20483,16 @@
             (when (< i (.tailoff this)) => (:tail this)
                 (loop [i (int i) node (:root this) shift (:shift this)]
                     (if (zero? shift)
-                        (.array (:nm this) node)
-                        (if (.regular (:nm this) node)
-                            (loop [node (aget #_"objects" (.array (:nm this) node) (& (>> i shift) (int 0x1f))) shift (unchecked-subtract-int shift (int 5))]
+                        (:array node)
+                        (if (NodeManager'regular node)
+                            (loop [node (aget #_"objects" (:array node) (& (>> i shift) (int 0x1f))) shift (unchecked-subtract-int shift (int 5))]
                                 (if (zero? shift)
-                                    (.array (:nm this) node)
-                                    (recur (aget #_"objects" (.array (:nm this) node) (& (>> i shift) (int 0x1f))) (unchecked-subtract-int shift (int 5)))
+                                    (:array node)
+                                    (recur (aget #_"objects" (:array node) (& (>> i shift) (int 0x1f))) (unchecked-subtract-int shift (int 5)))
                                 )
                             )
                             (let [
-                                rngs (ranges (:nm this) node)
+                                rngs (ranges node)
                                 j
                                     (loop [j (& (>> i shift) (int 0x1f))]
                                         (when-not (< i (aget rngs j)) => j
@@ -20551,7 +20504,7 @@
                                         (unchecked-subtract-int i (aget rngs (unchecked-dec-int j)))
                                     )
                             ]
-                                (recur (int i) (aget #_"objects" (.array (:nm this) node) j) (unchecked-subtract-int shift (int 5)))
+                                (recur (int i) (aget #_"objects" (:array node) j) (unchecked-subtract-int shift (int 5)))
                             )
                         )
                     )
@@ -20560,27 +20513,27 @@
         )
     )
     (pushTail [this, shift, cnt, node, tail-node]
-        (if (.regular (:nm this) node)
+        (if (NodeManager'regular node)
             (let [
-                a' (aclone #_"objects" (.array (:nm this) node))
-                ret (.node (:nm this) (.edit (:nm this) node) a')
+                a' (aclone #_"objects" (:array node))
+                ret (VNode. (:edit node) a')
             ]
                 (loop [node ret shift (int shift)]
                     (let [
-                        a' (.array (:nm this) node)
+                        a' (:array node)
                         subidx (& (>> (unchecked-dec-int cnt) shift) (int 0x1f))
                     ]
                         (if (== shift (int 5))
                             (aset #_"objects" a' subidx tail-node)
                             (if-let [child (aget #_"objects" a' subidx)]
                                 (let [
-                                    new-carr (aclone #_"objects" (.array (:nm this) child))
-                                    new-child (.node (:nm this) (.edit (:nm this) (:root this)) new-carr)
+                                    new-carr (aclone #_"objects" (:array child))
+                                    new-child (VNode. (:edit (:root this)) new-carr)
                                 ]
                                     (aset #_"objects" a' subidx new-child)
                                     (recur new-child (unchecked-subtract-int shift (int 5)))
                                 )
-                                (aset #_"objects" a' subidx (.newPath this (.edit (:nm this) (:root this)) (unchecked-subtract-int shift (int 5)) tail-node))
+                                (aset #_"objects" a' subidx (.newPath this (:edit (:root this)) (unchecked-subtract-int shift (int 5)) tail-node))
                             )
                         )
                     )
@@ -20588,10 +20541,10 @@
                 ret
             )
             (let [
-                a' (aclone #_"objects" (.array (:nm this) node))
-                b' (ranges (:nm this) node)
+                a' (aclone #_"objects" (:array node))
+                b' (ranges node)
                 n (unchecked-dec-int (aget b' 32))
-                ret (.node (:nm this) (.edit (:nm this) node) a')
+                ret (VNode. (:edit node) a')
                 cret
                     (when-not (== shift (int 5)) => nil
                         (let [
@@ -20616,7 +20569,7 @@
                         ret
                     )
                     (let [
-                        _ (aset #_"objects" a' (unchecked-inc-int n) (.newPath this (.edit (:nm this) (:root this)) (unchecked-subtract-int shift (int 5)) tail-node))
+                        _ (aset #_"objects" a' (unchecked-inc-int n) (.newPath this (:edit (:root this)) (unchecked-subtract-int shift (int 5)) tail-node))
                         _ (aset b' (unchecked-inc-int n) (unchecked-add-int (aget b' n) (int 32)))
                         _ (aset b' 32 (unchecked-inc-int (aget b' 32)))
                     ]
@@ -20627,21 +20580,21 @@
         )
     )
     (popTail [this, shift, cnt, node]
-        (if (.regular (:nm this) node)
+        (if (NodeManager'regular node)
             (let [
                 n (& (>> (unchecked-dec-int cnt) (int shift)) (int 0x1f))
             ]
                 (cond
                     (< (int 5) (int shift))
                         (let [
-                            c' (.popTail this (unchecked-subtract-int (int shift) (int 5)) cnt (aget #_"objects" (.array (:nm this) node) n))
+                            c' (.popTail this (unchecked-subtract-int (int shift) (int 5)) cnt (aget #_"objects" (:array node) n))
                         ]
                             (when-not (and (nil? c') (zero? n)) => nil
                                 (let [
-                                    a' (aclone #_"objects" (.array (:nm this) node))
+                                    a' (aclone #_"objects" (:array node))
                                     _ (aset a' n c')
                                 ]
-                                    (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                                    (VNode. (:edit (:root this)) a')
                                 )
                             )
                         )
@@ -20649,16 +20602,16 @@
                         nil
                     :else
                         (let [
-                            a' (aclone #_"objects" (.array (:nm this) node))
+                            a' (aclone #_"objects" (:array node))
                             _ (aset a' n nil)
                         ]
-                            (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                            (VNode. (:edit (:root this)) a')
                         )
                 )
             )
             (let [
                 n (int (& (>> (unchecked-dec-int cnt) (int shift)) (int 0x1f)))
-                b (ranges (:nm this) node)
+                b (ranges node)
                 n
                     (int
                         (loop [n n]
@@ -20673,7 +20626,7 @@
                     (< (int 5) (int shift))
                         (let [
                             b' (aclone b)
-                            c (aget #_"objects" (.array (:nm this) node) n)
+                            c (aget #_"objects" (:array node) n)
                             child-cnt
                                 (if (zero? n)
                                     (aget b 0)
@@ -20684,9 +20637,9 @@
                             (cond
                                 (and (nil? c') (zero? n))
                                     nil
-                                (.regular (:nm this) c)
+                                (NodeManager'regular c)
                                     (let [
-                                        a' (aclone #_"objects" (.array (:nm this) node))
+                                        a' (aclone #_"objects" (:array node))
                                     ]
                                         (aset b' n (unchecked-subtract-int (aget b' n) (int 32)))
                                         (aset a' n c')
@@ -20694,12 +20647,12 @@
                                         (when (nil? c')
                                             (aset b' 32 (unchecked-dec-int (aget b' 32)))
                                         )
-                                        (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                                        (VNode. (:edit (:root this)) a')
                                     )
                                 :else
                                     (let [
-                                        diff (unchecked-subtract-int (int (last-range (:nm this) c)) (if c' (last-range (:nm this) c') 0))
-                                        a' (aclone #_"objects" (.array (:nm this) node))
+                                        diff (unchecked-subtract-int (int (last-range c)) (if c' (last-range c') 0))
+                                        a' (aclone #_"objects" (:array node))
                                     ]
                                         (aset b' n (unchecked-subtract-int (aget b' n) diff))
                                         (aset a' n c')
@@ -20707,7 +20660,7 @@
                                         (when (nil? c')
                                             (aset b' 32 (unchecked-dec-int (aget b' 32)))
                                         )
-                                        (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                                        (VNode. (:edit (:root this)) a')
                                     )
                             )
                         )
@@ -20715,14 +20668,14 @@
                         nil
                     :else
                         (let [
-                            a' (aclone #_"objects" (.array (:nm this) node))
+                            a' (aclone #_"objects" (:array node))
                             b' (aclone b)
                         ]
                             (aset a' n nil)
                             (aset a' (int 32) b')
                             (aset b' n 0)
                             (aset b' 32 (unchecked-dec-int (aget b' (int 32))))
-                            (.node (:nm this) (.edit (:nm this) (:root this)) a')
+                            (VNode. (:edit (:root this)) a')
                         )
                 )
             )
@@ -20736,7 +20689,7 @@
                     (when-not (== s shift) => node
                         (let [
                             a' (object-array 32)
-                            ret (.node (:nm this) edit a')
+                            ret (VNode. edit a')
                         ]
                             (aset a' 0 node)
                             (recur (unchecked-add-int s (int 5)) ret)
@@ -20750,7 +20703,7 @@
                         (let [
                             a' (object-array 33)
                             b' (int-array 33)
-                            ret (.node (:nm this) edit a')
+                            ret (VNode. edit a')
                         ]
                             (aset a' 0 node)
                             (aset a' 32 b')
@@ -20765,16 +20718,16 @@
     )
 
     (doAssoc [this, shift, node, i, val]
-        (if (.regular (:nm this) node)
+        (if (NodeManager'regular node)
             (let [
-                node (.clone (:nm this) (:am this) shift node)
+                node (NodeManager'clone node)
             ]
                 (loop [shift (int shift) node node]
-                    (when-not (zero? shift) => (.aset (:am this) (.array (:nm this) node) (& i (int 0x1f)) val)
+                    (when-not (zero? shift) => (.aset (:am this) (:array node) (& i (int 0x1f)) val)
                         (let [
-                            a' (.array (:nm this) node)
+                            a' (:array node)
                             n (& (>> i shift) (int 0x1f))
-                            c (.clone (:nm this) (:am this) shift (aget #_"objects" a' n))
+                            c (NodeManager'clone (aget #_"objects" a' n))
                         ]
                             (aset #_"objects" a' n c)
                             (recur (unchecked-subtract-int shift (int 5)) c)
@@ -20784,8 +20737,8 @@
                 node
             )
             (let [
-                a' (aclone #_"objects" (.array (:nm this) node))
-                b (ranges (:nm this) node)
+                a' (aclone #_"objects" (:array node))
+                b (ranges node)
                 n (& (>> i shift) (int 0x1f))
                 n
                     (loop [n n]
@@ -20799,7 +20752,7 @@
                     )
             ]
                 (aset a' n (.doAssoc this (unchecked-subtract-int (int shift) (int 5)) (aget a' n) i val))
-                (.node (:nm this) (.edit (:nm this) node) a')
+                (VNode. (:edit node) a')
             )
         )
     )
@@ -20844,12 +20797,12 @@
                         (if (<= tail-off start)
                             (let [new-tail (.array (:am this) new-cnt)]
                                 (System/arraycopy (:tail this) (unchecked-subtract-int start tail-off) new-tail 0 new-cnt)
-                                (Vector. (:nm this) (:am this) new-cnt (int 5) (.empty (:nm this)) new-tail (:_meta this) -1 -1)
+                                (Vector. (:am this) new-cnt (int 5) PersistentVector'EMPTY_NODE new-tail (:_meta this) -1 -1)
                             )
                             (let [
                                 tail-cut? (< tail-off end)
-                                new-root (if tail-cut? (:root this) (slice-right (:nm this) (:am this) (:root this) (:shift this) end))
-                                new-root (if (zero? start) new-root (slice-left (:nm this) (:am this) new-root (:shift this) start (min end tail-off)))
+                                new-root (if tail-cut? (:root this) (slice-right (:am this) (:root this) (:shift this) end))
+                                new-root (if (zero? start) new-root (slice-left (:am this) new-root (:shift this) start (min end tail-off)))
                                 new-tail
                                     (if tail-cut?
                                         (let [
@@ -20859,18 +20812,18 @@
                                         ]
                                             new-tail
                                         )
-                                        (.arrayFor (Vector. (:nm this) (:am this) new-cnt (:shift this) new-root (.array (:am this) 0) nil -1 -1) (unchecked-dec-int new-cnt))
+                                        (.arrayFor (Vector. (:am this) new-cnt (:shift this) new-root (.array (:am this) 0) nil -1 -1) (unchecked-dec-int new-cnt))
                                     )
                                 new-root
                                     (when-not tail-cut? => new-root
-                                        (.popTail (Vector. (:nm this) (:am this) new-cnt (:shift this) new-root (.array (:am this) 0) nil -1 -1) (:shift this) new-cnt new-root)
+                                        (.popTail (Vector. (:am this) new-cnt (:shift this) new-root (.array (:am this) 0) nil -1 -1) (:shift this) new-cnt new-root)
                                     )
                             ]
-                                (when (some? new-root) => (Vector. (:nm this) (:am this) new-cnt 5 (.empty (:nm this)) new-tail (:_meta this) -1 -1)
+                                (when (some? new-root) => (Vector. (:am this) new-cnt 5 PersistentVector'EMPTY_NODE new-tail (:_meta this) -1 -1)
                                     (loop-when-recur [r new-root s (int (:shift this))]
-                                                     (and (< (int 5) s) (nil? (aget #_"objects" (.array (:nm this) r) 1)))
-                                                     [(aget #_"objects" (.array (:nm this) r) 0) (unchecked-subtract-int s (int 5))]
-                                                  => (Vector. (:nm this) (:am this) new-cnt s r new-tail (:_meta this) -1 -1)
+                                                     (and (< (int 5) s) (nil? (aget #_"objects" (:array r) 1)))
+                                                     [(aget #_"objects" (:array r) 0) (unchecked-subtract-int s (int 5))]
+                                                  => (Vector. (:am this) new-cnt s r new-tail (:_meta this) -1 -1)
                                     )
                                 )
                             )
@@ -20881,7 +20834,7 @@
     )
 
     ISpliceableVector
-    (splicev [this, that] (splice-rrbts (:nm this) (:am this) this (as-rrbt that)))
+    (splicev [this, that] (splice-rrbts (:am this) this (as-rrbt that)))
 
     AsRRBT
     (as-rrbt [this] this)
@@ -20915,12 +20868,12 @@
 (extend-protocol AsRRBT
     Vec
     (as-rrbt [#_"Vec" this]
-        (Vector. primitive-nm (:am this) (:cnt this) (:shift this) (:root this) (:tail this) (:_meta this) -1 -1)
+        (Vector. (:am this) (:cnt this) (:shift this) (:root this) (:tail this) (:_meta this) -1 -1)
     )
 
     PersistentVector
     (as-rrbt [#_"PersistentVector" this]
-        (Vector. object-nm object-am (count this) (:shift this) (:root this) (:tail this) (meta this) -1 -1)
+        (Vector. object-am (count this) (:shift this) (:root this) (:tail this) (meta this) -1 -1)
     )
 
     SubVector
@@ -20934,19 +20887,19 @@
     )
 )
 
-(defn shift-from-to [#_"NodeManager" nm, node, from, to]
+(defn shift-from-to [node, from, to]
     (cond
         (== from to)
             node
-        (.regular nm node)
-            (recur nm
-                (.node nm (.edit nm node) (doto (object-array 32) (aset 0 node)))
+        (NodeManager'regular node)
+            (recur
+                (VNode. (:edit node) (doto (object-array 32) (aset 0 node)))
                 (unchecked-add-int (int 5) (int from))
                 to
             )
         :else
-            (recur nm
-                (.node nm (.edit nm node) (doto (object-array 33) (aset 0 node) (aset 32 (ints (doto (int-array 33) (aset 0 (int (last-range nm node))) (aset 32 (int 1)))))))
+            (recur
+                (VNode. (:edit node) (doto (object-array 33) (aset 0 node) (aset 32 (ints (doto (int-array 33) (aset 0 (int (last-range node))) (aset 32 (int 1)))))))
                 (unchecked-add-int (int 5) (int from))
                 to
             )
@@ -20957,48 +20910,48 @@
     (doto (object-array 2) (aset 0 x) (aset 1 y))
 )
 
-(defn slot-count [#_"NodeManager" nm, #_"ArrayManager" am, node, shift]
-    (let [a (.array nm node)]
+(defn slot-count [#_"ArrayManager" am, node, shift]
+    (let [a (:array node)]
         (cond
             (zero? shift) (.alength am a)
-            (.regular nm node) (index-of-nil a)
-            :else (aget (ranges nm node) 32)
+            (NodeManager'regular node) (index-of-nil a)
+            :else (aget (ranges node) 32)
         )
     )
 )
 
-(defn subtree-branch-count [#_"NodeManager" nm, #_"ArrayManager" am, node, shift]
+(defn subtree-branch-count [#_"ArrayManager" am, node, shift]
     ;; NB. positive shifts only
     (let [
-        a (.array nm node)
+        a (:array node)
     ]
-        (if (.regular nm node)
+        (if (NodeManager'regular node)
             (loop-when [i 0 sbc 0] (< i 32) => sbc
                 (if-let [child (aget #_"objects" a i)]
-                    (recur (inc i) (+ sbc (long (slot-count nm am child (- shift 5)))))
+                    (recur (inc i) (+ sbc (long (slot-count am child (- shift 5)))))
                     sbc
                 )
             )
-            (let [n (aget (ranges nm node) 32)]
+            (let [n (aget (ranges node) 32)]
                 (loop-when [i 0 sbc 0] (< i n) => sbc
-                    (recur (inc i) (+ sbc (long (slot-count nm am (aget #_"objects" a i) (- shift 5)))))
+                    (recur (inc i) (+ sbc (long (slot-count am (aget #_"objects" a i) (- shift 5)))))
                 )
             )
         )
     )
 )
 
-(defn leaf-seq [#_"NodeManager" nm, arr]
-    (mapcat #(.array nm %) (take (index-of-nil arr) arr))
+(defn leaf-seq [a]
+    (mapcat :array (take (index-of-nil a) a))
 )
 
-(defn rebalance-leaves [#_"NodeManager" nm, #_"ArrayManager" am, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
+(defn rebalance-leaves [#_"ArrayManager" am, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
     (let [
-        slc1 (slot-count nm am n1 5)
-        slc2 (slot-count nm am n2 5)
+        slc1 (slot-count am n1 5)
+        slc2 (slot-count am n2 5)
         a (+ slc1 slc2)
-        sbc1 (subtree-branch-count nm am n1 5)
-        sbc2 (subtree-branch-count nm am n2 5)
+        sbc1 (subtree-branch-count am n1 5)
+        sbc2 (subtree-branch-count am n2 5)
         p (+ sbc1 sbc2)
         e (- a (inc (quot (dec p) 32)))
     ]
@@ -21009,15 +20962,15 @@
                 (let [
                     reg? (zero? (mod p 32))
                     a' (object-array (if reg? 32 33))
-                    n' (.node nm nil a')
+                    n' (VNode. nil a')
                 ]
-                    (loop [i 0 bs (partition-all 32 (concat (leaf-seq nm (.array nm n1)) (leaf-seq nm (.array nm n2))))]
+                    (loop [i 0 bs (partition-all 32 (concat (leaf-seq (:array n1)) (leaf-seq (:array n2))))]
                         (when-first [block bs]
                             (let [a (.array am (count block))]
                                 (loop-when-recur [i 0 s (seq block)] s [(inc i) (next s)]
                                     (.aset am a i (first s))
                                 )
-                                (aset a' i (.node nm nil a))
+                                (aset a' i (VNode. nil a))
                                 (recur (inc i) (next bs))
                             )
                         )
@@ -21033,18 +20986,18 @@
                     reg? (zero? (mod p 32))
                     a1' (object-array 32)
                     a2' (object-array (if reg? 32 33))
-                    n1' (.node nm nil a1')
-                    n2' (.node nm nil a2')
+                    n1' (VNode. nil a1')
+                    n2' (VNode. nil a2')
                 ]
-                    (loop [i 0 bs (partition-all 32 (concat (leaf-seq nm (.array nm n1)) (leaf-seq nm (.array nm n2))))]
+                    (loop [i 0 bs (partition-all 32 (concat (leaf-seq (:array n1)) (leaf-seq (:array n2))))]
                         (when-first [block bs]
                             (let [a (.array am (count block))]
                                 (loop-when-recur [i 0 s (seq block)] s [(inc i) (next s)]
                                     (.aset am a i (first s))
                                 )
                                 (if (< i 32)
-                                    (aset a1' i (.node nm nil a))
-                                    (aset a2' (- i 32) (.node nm nil a))
+                                    (aset a1' i (VNode. nil a))
+                                    (aset a2' (- i 32) (VNode. nil a))
                                 )
                                 (recur (inc i) (next bs))
                             )
@@ -21060,31 +21013,31 @@
     )
 )
 
-(defn child-seq [#_"NodeManager" nm, node, shift, cnt]
+(defn child-seq [node, shift, cnt]
     (let [
         f'cseq
             (fn [c r]
                 (let [
-                    a (.array nm c)
-                    b (if (.regular nm c) (ints (regular-ranges (- shift 5) r)) (ranges nm c))
+                    a (:array c)
+                    b (if (NodeManager'regular c) (ints (regular-ranges (- shift 5) r)) (ranges c))
                     n (if b (aget b 32) (index-of-nil a))
                 ]
                     (map list (take n a) (take n (map - b (cons 0 b))))
                 )
             )
-        a (.array nm node)
-        b (if (.regular nm node) (ints (regular-ranges shift cnt)) (ranges nm node))
+        a (:array node)
+        b (if (NodeManager'regular node) (ints (regular-ranges shift cnt)) (ranges node))
         n (if b (aget b 32) (index-of-nil a))
     ]
         (mapcat f'cseq (take n a) (take n (map - b (cons 0 b))))
     )
 )
 
-(defn rebalance [#_"NodeManager" nm, #_"ArrayManager" am, shift, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
+(defn rebalance [#_"ArrayManager" am, shift, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
     (when (some? n2) => (pair n1 nil)
         (let [
-            slc1 (slot-count nm am n1 shift) sbc1 (subtree-branch-count nm am n1 shift)
-            slc2 (slot-count nm am n2 shift) sbc2 (subtree-branch-count nm am n2 shift)
+            slc1 (slot-count am n1 shift) sbc1 (subtree-branch-count am n1 shift)
+            slc2 (slot-count am n2 shift) sbc2 (subtree-branch-count am n2 shift)
         ]
             (cond
                 (<= (- (+ slc1 slc2) (inc (quot (dec (+ sbc1 sbc2)) 32))) max-extra-search-steps)
@@ -21093,9 +21046,9 @@
                     (let [
                         a' (object-array 33)
                         b' (int-array 33)
-                        n' (.node nm nil a')
+                        n' (VNode. nil a')
                     ]
-                        (loop [i 0 bs (partition-all 32 (concat (child-seq nm n1 shift cnt1) (child-seq nm n2 shift cnt2)))]
+                        (loop [i 0 bs (partition-all 32 (concat (child-seq n1 shift cnt1) (child-seq n2 shift cnt2)))]
                             (when-first [block bs]
                                 (let [
                                     a (object-array 33)
@@ -21110,7 +21063,7 @@
                                             (recur (inc i) (unchecked-add-int o (int gcr)) (next s))
                                         )
                                     )
-                                    (aset #_"objects" a' i (.node nm nil a))
+                                    (aset #_"objects" a' i (VNode. nil a))
                                     (aset b' i (+ (aget r (dec (aget r 32))) (if (pos? i) (aget b' (dec i)) (int 0))))
                                     (aset b' 32 (inc i))
                                     (recur (inc i) (next bs))
@@ -21123,10 +21076,10 @@
                     )
                 :else
                     (let [
-                        a1' (object-array 33) b1' (int-array 33) n1' (.node nm nil a1')
-                        a2' (object-array 33) b2' (int-array 33) n2' (.node nm nil a2')
+                        a1' (object-array 33) b1' (int-array 33) n1' (VNode. nil a1')
+                        a2' (object-array 33) b2' (int-array 33) n2' (VNode. nil a2')
                     ]
-                        (loop [i 0 bs (partition-all 32 (concat (child-seq nm n1 shift cnt1) (child-seq nm n2 shift cnt2)))]
+                        (loop [i 0 bs (partition-all 32 (concat (child-seq n1 shift cnt1) (child-seq n2 shift cnt2)))]
                             (when-first [block bs]
                                 (let [
                                     a (object-array 33)
@@ -21155,7 +21108,7 @@
                                         r' (if (< i 32) b1' b2')
                                         k (mod i 32)
                                     ]
-                                        (aset #_"objects" a' k (.node nm nil a))
+                                        (aset #_"objects" a' k (VNode. nil a))
                                         (aset r' k (+ (aget r (dec (aget r 32))) (if (pos? k) (aget r' (dec k)) (int 0))))
                                         (aset r' 32 (int (inc k)))
                                     )
@@ -21172,40 +21125,40 @@
     )
 )
 
-(defn zippath [#_"NodeManager" nm, #_"ArrayManager" am, shift, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
+(defn zippath [#_"ArrayManager" am, shift, n1, cnt1, n2, cnt2, #_"Box" transferred-leaves]
     (if (== shift 5)
-        (rebalance-leaves nm am n1 cnt1 n2 cnt2 transferred-leaves)
+        (rebalance-leaves am n1 cnt1 n2 cnt2 transferred-leaves)
         (let [
-            c1 (last-child nm n1)
-            c2 (first-child nm n2)
+            c1 (last-child n1)
+            c2 (first-child n2)
             ccnt1
-                (if (.regular nm n1)
+                (if (NodeManager'regular n1)
                     (let [m (mod cnt1 (<< 1 shift))]
                         (if (zero? m) (<< 1 shift) m)
                     )
                     (let [
-                        b (ranges nm n1)
+                        b (ranges n1)
                         n (dec (aget b 32))
                     ]
                         (if (zero? n) (aget b 0) (- (aget b n) (aget b (dec n))))
                     )
                 )
             ccnt2
-                (if (.regular nm n2)
+                (if (NodeManager'regular n2)
                     (let [m (mod cnt2 (<< 1 shift))]
                         (if (zero? m) (<< 1 shift) m)
                     )
-                    (aget (ranges nm n2) 0)
+                    (aget (ranges n2) 0)
                 )
             next-transferred-leaves (Box. 0)
-            [new-c1 new-c2] (zippath nm am (- shift 5) c1 ccnt1 c2 ccnt2 next-transferred-leaves)
+            [new-c1 new-c2] (zippath am (- shift 5) c1 ccnt1 c2 ccnt2 next-transferred-leaves)
             d (:val next-transferred-leaves)
         ]
             (set! (:val transferred-leaves) (+ (:val transferred-leaves) d))
-            (rebalance nm am shift
-                (if (identical? c1 new-c1) n1 (replace-rightmost-child nm shift n1 new-c1 d))
+            (rebalance am shift
+                (if (identical? c1 new-c1) n1 (replace-rightmost-child shift n1 new-c1 d))
                 (+ cnt1 d)
-                (if new-c2 (if (identical? c2 new-c2) n2 (replace-leftmost-child nm shift n2 cnt2 new-c2 d)) (remove-leftmost-child nm shift n2))
+                (if new-c2 (if (identical? c2 new-c2) n2 (replace-leftmost-child shift n2 cnt2 new-c2 d)) (remove-leftmost-child shift n2))
                 (- cnt2 d)
                 transferred-leaves
             )
@@ -21213,16 +21166,16 @@
     )
 )
 
-(defn squash-nodes [#_"NodeManager" nm, shift, n1, cnt1, n2, cnt2]
+(defn squash-nodes [shift, n1, cnt1, n2, cnt2]
     (let [
-        a1 (.array nm n1) i1 (index-of-nil a1)
-        a2 (.array nm n2) i2 (index-of-nil a2)
+        a1 (:array n1) i1 (index-of-nil a1)
+        a2 (:array n2) i2 (index-of-nil a2)
         slots (concat (take i1 a1) (take i2 a2))
     ]
         (when (<= (count slots) 32) => (pair n1 n2)
             (let [
-                rngs1 (take i1 (if (.regular nm n1) (regular-ranges shift cnt1) (ranges nm n1)))
-                rngs2 (take i2 (if (.regular nm n2) (regular-ranges shift cnt2) (ranges nm n2)))
+                rngs1 (take i1 (if (NodeManager'regular n1) (regular-ranges shift cnt1) (ranges n1)))
+                rngs2 (take i2 (if (NodeManager'regular n2) (regular-ranges shift cnt2) (ranges n2)))
                 rngs2 (let [r (last rngs1)] (map #(+ % r) rngs2))
                 rngs (concat rngs1 rngs2)
                 a' (object-array 33)
@@ -21235,13 +21188,13 @@
                 (loop-when-recur [i 0 s (seq rngs)] s [(inc i) (next s)] => (aset b' 32 i)
                     (aset b' i (int (first s)))
                 )
-                (pair (.node nm nil a') nil)
+                (pair (VNode. nil a') nil)
             )
         )
     )
 )
 
-(defn splice-rrbts [#_"NodeManager" nm, #_"ArrayManager" am, #_"Vector" v1, #_"Vector" v2]
+(defn splice-rrbts [#_"ArrayManager" am, #_"Vector" v1, #_"Vector" v2]
     (cond
         (zero? (count v1)) v2
         (< (count v2) rrbt-concat-threshold) (into v1 v2)
@@ -21250,17 +21203,17 @@
                 s1 (:shift v1)
                 s2 (:shift v2)
                 r1 (:root v1)
-                o? (overflow? nm r1 s1 (+ (count v1) (- 32 (.alength am (:tail v1)))))
+                o? (overflow? r1 s1 (+ (count v1) (- 32 (.alength am (:tail v1)))))
                 r1
-                    (when o? => (fold-tail nm am r1 s1 (.tailoff v1) (:tail v1))
+                    (when o? => (fold-tail am r1 s1 (.tailoff v1) (:tail v1))
                         (let [
                             tail (:tail v1)
-                            tail-node (.node nm nil tail)
-                            reg? (and (.regular nm r1) (== (.alength am tail) 32))
+                            tail-node (VNode. nil tail)
+                            reg? (and (NodeManager'regular r1) (== (.alength am tail) 32))
                             arr (object-array (if reg? 32 33))
                         ]
                             (aset arr 0 r1)
-                            (aset arr 1 (new-path nm am s1 tail-node))
+                            (aset arr 1 (new-path am s1 tail-node))
                             (when-not reg?
                                 (let [rngs (int-array 33)]
                                     (aset rngs 32 2)
@@ -21269,37 +21222,37 @@
                                     (aset arr 32 rngs)
                                 )
                             )
-                            (.node nm nil arr)
+                            (VNode. nil arr)
                         )
                     )
                 s1 (if o? (+ s1 5) s1)
                 r2 (:root v2)
                 s (max s1 s2)
-                r1 (shift-from-to nm r1 s1 s)
-                r2 (shift-from-to nm r2 s2 s)
+                r1 (shift-from-to r1 s1 s)
+                r2 (shift-from-to r2 s2 s)
                 transferred-leaves (Box. 0)
-                [n1 n2] (zippath nm am s r1 (count v1) r2 (- (count v2) (.alength am (:tail v2))) transferred-leaves)
+                [n1 n2] (zippath am s r1 (count v1) r2 (- (count v2) (.alength am (:tail v2))) transferred-leaves)
                 d (:val transferred-leaves)
                 ncnt1 (+ (count v1) d)
                 ncnt2 (- (count v2) (.alength am (:tail v2)) d)
-                [n1 n2] (if (identical? n2 r2) (squash-nodes nm s n1 ncnt1 n2 ncnt2) (object-array (list n1 n2)))
+                [n1 n2] (if (identical? n2 r2) (squash-nodes s n1 ncnt1 n2 ncnt2) (object-array (list n1 n2)))
                 ncnt1 (if n2 (int ncnt1) (unchecked-add-int (int ncnt1) (int ncnt2)))
                 ncnt2 (if n2 (int ncnt2) (int 0))
             ]
                 (if n2
                     (let [
                         arr (object-array 33)
-                        new-root (.node nm nil arr)
+                        new-root (VNode. nil arr)
                         _ (aset arr 0 n1)
                         _ (aset arr 1 n2)
                         _ (aset arr 32 (doto (int-array 33) (aset 0 ncnt1) (aset 1 (+ ncnt1 ncnt2)) (aset 32 2)))
                     ]
-                        (Vector. nm am (+ (count v1) (count v2)) (+ s 5) new-root (:tail v2) nil -1 -1)
+                        (Vector. am (+ (count v1) (count v2)) (+ s 5) new-root (:tail v2) nil -1 -1)
                     )
                     (loop [r n1 s (int s)]
-                        (if (and (< (int 5) s) (nil? (aget #_"objects" (.array nm r) 1)))
-                            (recur (aget #_"objects" (.array nm r) 0) (unchecked-subtract-int s (int 5)))
-                            (Vector. nm am (+ (count v1) (count v2)) s r (:tail v2) nil -1 -1)
+                        (if (and (< (int 5) s) (nil? (aget #_"objects" (:array r) 1)))
+                            (recur (aget #_"objects" (:array r) 0) (unchecked-subtract-int s (int 5)))
+                            (Vector. am (+ (count v1) (count v2)) s r (:tail v2) nil -1 -1)
                         )
                     )
                 )
@@ -21313,31 +21266,31 @@
     )
 )
 
-(deftype Transient [#_"NodeManager" nm, #_"ArrayManager" am, #_"boolean" objects?, ^:unsynchronized-mutable #_"int" cnt, ^:unsynchronized-mutable #_"int" shift, ^:unsynchronized-mutable root, ^:unsynchronized-mutable tail, ^:unsynchronized-mutable #_"int" tidx]
+(deftype Transient [#_"ArrayManager" am, #_"boolean" objects?, ^:unsynchronized-mutable #_"int" cnt, ^:unsynchronized-mutable #_"int" shift, ^:unsynchronized-mutable root, ^:unsynchronized-mutable tail, ^:unsynchronized-mutable #_"int" tidx]
     Counted
     (count [this]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (:cnt this)
     )
 
     Indexed
     (nth [this, i]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (when (and (<= (int 0) i) (< i (:cnt this))) => (throw (IndexOutOfBoundsException.))
             (let [
                 tail-off (unchecked-subtract-int (:cnt this) (.alength (:am this) (:tail this)))
             ]
                 (when (< i tail-off) => (.aget (:am this) (:tail this) (unchecked-subtract-int i tail-off))
                     (loop [i i node (:root this) shift (:shift this)]
-                        (when-not (zero? shift) => (.aget (:am this) (.array (:nm this) node) (& (>> i shift) (int 0x1f)))
-                            (if (.regular (:nm this) node)
+                        (when-not (zero? shift) => (.aget (:am this) (:array node) (& (>> i shift) (int 0x1f)))
+                            (if (NodeManager'regular node)
                                 (let [
-                                    a (.array (:nm this) node)
+                                    a (:array node)
                                     idx (& (>> i shift) (int 0x1f))
                                 ]
                                     (loop [i i node (aget #_"objects" a idx) shift (unchecked-subtract-int shift (int 5))]
                                         (let [
-                                            a (.array (:nm this) node)
+                                            a (:array node)
                                             idx (& (>> i shift) (int 0x1f))
                                         ]
                                             (if (zero? shift)
@@ -21348,8 +21301,8 @@
                                     )
                                 )
                                 (let [
-                                    a (.array (:nm this) node)
-                                    b (ranges (:nm this) node)
+                                    a (:array node)
+                                    b (ranges node)
                                     idx
                                         (loop [j (& (>> i shift) (int 0x1f))]
                                             (when-not (< i (aget b j)) => j
@@ -21371,7 +21324,7 @@
         )
     )
     (nth [this, i, not-found]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (when (and (<= (int 0) i) (< i (:cnt this))) => not-found
             (.nth this i)
         )
@@ -21379,7 +21332,7 @@
 
     ILookup
     (valAt [this, k, not-found]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (when (Util/isInteger k) => not-found
             (let [i (int k)]
                 (when (and (<= (int 0) i) (< i (:cnt this))) => not-found
@@ -21394,7 +21347,7 @@
 
     IFn
     (invoke [this, k]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (when (Util/isInteger k) => (throw (IllegalArgumentException. "Key must be integer"))
             (let [i (int k)]
                 (when (and (<= (int 0) i) (< i (:cnt this))) => (throw (IndexOutOfBoundsException.))
@@ -21404,7 +21357,7 @@
         )
     )
     (applyTo [this, args]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (let [n (RT/boundedLength args 1)]
             (case n
                 0 (throw (ArityException. n (.. this (getClass) (getSimpleName))))
@@ -21416,7 +21369,7 @@
 
     ITransientCollection
     (conj [this, val]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (if (< (:tidx this) 32)
             (do
                 (.aset (:am this) (:tail this) (:tidx this) val)
@@ -21425,22 +21378,22 @@
                 this
             )
             (let [
-                tail-node (.node (:nm this) (.edit (:nm this) (:root this)) (:tail this))
+                tail-node (VNode. (:edit (:root this)) (:tail this))
                 new-tail (.array (:am this) 32)
             ]
                 (.aset (:am this) new-tail 0 val)
                 (set! (:tail this) new-tail)
                 (set! (:tidx this) (int 1))
-                (if (overflow? (:nm this) (:root this) (:shift this) (:cnt this))
-                    (if (.regular (:nm this) (:root this))
+                (if (overflow? (:root this) (:shift this) (:cnt this))
+                    (if (NodeManager'regular (:root this))
                         (let [
                             a' (object-array 32)
                         ]
                             (doto a'
                                 (aset 0 (:root this))
-                                (aset 1 (TransientHelper'newPath (:nm this) (:am this) (:tail this) (.edit (:nm this) (:root this)) (:shift this) tail-node))
+                                (aset 1 (TransientHelper'newPath (:am this) (:tail this) (:edit (:root this)) (:shift this) tail-node))
                             )
-                            (set! (:root this) (.node (:nm this) (.edit (:nm this) (:root this)) a'))
+                            (set! (:root this) (VNode. (:edit (:root this)) a'))
                             (set! (:shift this) (unchecked-add-int (:shift this) (int 5)))
                             (set! (:cnt this) (unchecked-inc-int (:cnt this)))
                             this
@@ -21448,12 +21401,12 @@
                         (let [
                             a' (object-array 33)
                             b' (int-array 33)
-                            new-root (.node (:nm this) (.edit (:nm this) (:root this)) a')
-                            root-total-range (aget (ranges (:nm this) (:root this)) 31)
+                            new-root (VNode. (:edit (:root this)) a')
+                            root-total-range (aget (ranges (:root this)) 31)
                         ]
                             (doto a'
                                 (aset 0 (:root this))
-                                (aset 1 (TransientHelper'newPath (:nm this) (:am this) (:tail this) (.edit (:nm this) (:root this)) (:shift this) tail-node))
+                                (aset 1 (TransientHelper'newPath (:am this) (:tail this) (:edit (:root this)) (:shift this) tail-node))
                                 (aset 32 b')
                             )
                             (doto b'
@@ -21468,7 +21421,7 @@
                         )
                     )
                     (let [
-                        new-root (TransientHelper'pushTail (:nm this) (:am this) (:shift this) (:cnt this) (.edit (:nm this) (:root this)) (:root this) tail-node)
+                        new-root (TransientHelper'pushTail (:am this) (:shift this) (:cnt this) (:edit (:root this)) (:root this) tail-node)
                     ]
                         (set! (:root this) new-root)
                         (set! (:cnt this) (unchecked-inc-int (:cnt this)))
@@ -21479,23 +21432,23 @@
         )
     )
     (persistent [this]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
-        (.set (.edit (:nm this) (:root this)) nil)
+        (TransientHelper'ensureEditable (:root this))
+        (.set (:edit (:root this)) nil)
         (let [trimmed-tail (.array (:am this) (:tidx this))]
             (array-copy (:am this) (:tail this) 0 trimmed-tail 0 (:tidx this))
-            (Vector. (:nm this) (:am this) (:cnt this) (:shift this) (:root this) trimmed-tail nil -1 -1)
+            (Vector. (:am this) (:cnt this) (:shift this) (:root this) trimmed-tail nil -1 -1)
         )
     )
 
     ITransientVector
     (assocN [this, i, val]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (cond
             (and (<= 0 i) (< i (:cnt this)))
                 (let [tail-off (unchecked-subtract-int (:cnt this) (:tidx this))]
                     (if (<= tail-off i)
                         (.aset (:am this) (:tail this) (unchecked-subtract-int i tail-off) val)
-                        (set! (:root this) (TransientHelper'doAssoc (:nm this) (:am this) (:shift this) (.edit (:nm this) (:root this)) (:root this) i val))
+                        (set! (:root this) (TransientHelper'doAssoc (:am this) (:shift this) (:edit (:root this)) (:root this) i val))
                     )
                     this
                 )
@@ -21504,7 +21457,7 @@
         )
     )
     (pop [this]
-        (TransientHelper'ensureEditable (:nm this) (:root this))
+        (TransientHelper'ensureEditable (:root this))
         (cond
             (zero? (:cnt this)) (throw (IllegalStateException. "Can't pop empty vector"))
             (== 1 (:cnt this))
@@ -21530,22 +21483,22 @@
                     new-tail-base (.arrayFor this (unchecked-subtract-int (:cnt this) (int 2)))
                     new-tail (.aclone (:am this) new-tail-base)
                     new-tidx (.alength (:am this) new-tail-base)
-                    new-root (TransientHelper'popTail (:nm this) (:am this) (:shift this) (:cnt this) (.edit (:nm this) (:root this)) (:root this))
+                    new-root (TransientHelper'popTail (:am this) (:shift this) (:cnt this) (:edit (:root this)) (:root this))
                 ]
                     (cond
                         (nil? new-root)
                             (do
                                 (set! (:cnt this) (unchecked-dec-int (:cnt this)))
-                                (set! (:root this) (TransientHelper'ensureEditable (:nm this) (:am this) (.edit (:nm this) (:root this)) (.empty (:nm this)) 5))
+                                (set! (:root this) (TransientHelper'ensureEditable (:am this) (:edit (:root this)) PersistentVector'EMPTY_NODE 5))
                                 (set! (:tail this) new-tail)
                                 (set! (:tidx this) new-tidx)
                                 this
                             )
-                        (and (< 5 (:shift this)) (nil? (aget #_"objects" (.array (:nm this) new-root) 1)))
+                        (and (< 5 (:shift this)) (nil? (aget #_"objects" (:array new-root) 1)))
                             (do
                                 (set! (:cnt this) (unchecked-dec-int (:cnt this)))
                                 (set! (:shift this) (unchecked-subtract-int (:shift this) (int 5)))
-                                (set! (:root this) (aget #_"objects" (.array (:nm this) new-root) 0))
+                                (set! (:root this) (aget #_"objects" (:array new-root) 0))
                                 (set! (:tail this) new-tail)
                                 (set! (:tidx this) new-tidx)
                                 this
@@ -21573,15 +21526,15 @@
         (when (and (<= (int 0) i) (< i (:cnt this))) => (throw (IndexOutOfBoundsException.))
             (when (< i (.tailoff this)) => (:tail this)
                 (loop [i (int i) node (:root this) shift (:shift this)]
-                    (when-not (zero? shift) => (.array (:nm this) node)
-                        (if (.regular (:nm this) node)
-                            (loop [node (aget #_"objects" (.array (:nm this) node) (& (>> i shift) (int 0x1f))) shift (unchecked-subtract-int shift (int 5))]
-                                (when-not (zero? shift) => (.array (:nm this) node)
-                                    (recur (aget #_"objects" (.array (:nm this) node) (& (>> i shift) (int 0x1f))) (unchecked-subtract-int shift (int 5)))
+                    (when-not (zero? shift) => (:array node)
+                        (if (NodeManager'regular node)
+                            (loop [node (aget #_"objects" (:array node) (& (>> i shift) (int 0x1f))) shift (unchecked-subtract-int shift (int 5))]
+                                (when-not (zero? shift) => (:array node)
+                                    (recur (aget #_"objects" (:array node) (& (>> i shift) (int 0x1f))) (unchecked-subtract-int shift (int 5)))
                                 )
                             )
                             (let [
-                                b (ranges (:nm this) node)
+                                b (ranges node)
                                 n
                                     (loop [n (& (>> i shift) (int 0x1f))]
                                         (when-not (< i (aget b n)) => n
@@ -21593,7 +21546,7 @@
                                         (unchecked-subtract-int i (aget b (unchecked-dec-int n)))
                                     )
                             ]
-                                (recur (int i) (aget #_"objects" (.array (:nm this) node) n) (unchecked-subtract-int shift (int 5)))
+                                (recur (int i) (aget #_"objects" (:array node) n) (unchecked-subtract-int shift (int 5)))
                             )
                         )
                     )
@@ -21603,8 +21556,8 @@
     )
 )
 
-(defn TransientHelper'editableRoot [#_"NodeManager" nm, #_"ArrayManager" am, root]
-    (.node nm (AtomicReference. (Thread/currentThread)) (clojure.core/aclone #_"objects" (.array nm root)))
+(defn TransientHelper'editableRoot [#_"ArrayManager" am, root]
+    (VNode. (AtomicReference. (Thread/currentThread)) (clojure.core/aclone #_"objects" (:array root)))
 )
 
 (defn TransientHelper'editableTail [#_"ArrayManager" am, tail]
@@ -21614,8 +21567,8 @@
     )
 )
 
-(defn TransientHelper'ensureEditable [#_"NodeManager" nm, root]
-    (let [owner (->> root (.edit nm) (.get))]
+(defn TransientHelper'ensureEditable [root]
+    (let [owner (.get (:edit root))]
         (cond
             (identical? owner (Thread/currentThread)) nil
             (not (nil? owner)) (throw (IllegalAccessError. "Transient used by non-owner thread"))
@@ -21624,38 +21577,38 @@
     )
 )
 
-(defn TransientHelper'ensureEditable [#_"NodeManager" nm, #_"ArrayManager" am, #_"AtomicReference" root-edit, current-node, #_"int" shift]
+(defn TransientHelper'ensureEditable [#_"ArrayManager" am, #_"AtomicReference" root-edit, current-node, #_"int" shift]
     (cond
-        (identical? root-edit (.edit nm current-node)) current-node
-        (zero? shift) (.node nm root-edit (.aclone am (.array nm current-node)))
+        (identical? root-edit (:edit current-node)) current-node
+        (zero? shift) (VNode. root-edit (.aclone am (:array current-node)))
         :else
             (let [
-                a' (aclone #_"objects" (.array nm current-node))
+                a' (aclone #_"objects" (:array current-node))
             ]
                 (when (== 33 (alength #_"objects" a'))
                     (aset a' 32 (aclone (ints (aget #_"objects" a' 32))))
                 )
-                (.node nm root-edit a')
+                (VNode. root-edit a')
             )
     )
 )
 
-(defn TransientHelper'pushTail [#_"NodeManager" nm, #_"ArrayManager" am, #_"int" shift, #_"int" cnt, #_"AtomicReference" root-edit, current-node, tail-node]
+(defn TransientHelper'pushTail [#_"ArrayManager" am, #_"int" shift, #_"int" cnt, #_"AtomicReference" root-edit, current-node, tail-node]
     (let [
-        ret (TransientHelper'ensureEditable nm am root-edit current-node shift)
+        ret (TransientHelper'ensureEditable am root-edit current-node shift)
     ]
-        (if (.regular nm ret)
+        (if (NodeManager'regular ret)
             (do
                 (loop [e ret shift shift]
                     (let [
-                        a (.array nm e)
+                        a (:array e)
                         n (& (>> (dec cnt) shift) 0x1f)
                     ]
                         (when-not (== shift 5) => (aset #_"objects" a n tail-node)
                             (let [child (aget #_"objects" a n)]
-                                (when (some? child) => (aset #_"objects" a n (TransientHelper'newPath nm am (.array nm tail-node) root-edit (unchecked-subtract-int shift 5) tail-node))
+                                (when (some? child) => (aset #_"objects" a n (TransientHelper'newPath am (:array tail-node) root-edit (unchecked-subtract-int shift 5) tail-node))
                                     (let [
-                                        editable-child (TransientHelper'ensureEditable nm am root-edit child (unchecked-subtract-int shift 5))
+                                        editable-child (TransientHelper'ensureEditable am root-edit child (unchecked-subtract-int shift 5))
                                         _ (aset #_"objects" a n editable-child)
                                     ]
                                         (recur editable-child (- shift 5))
@@ -21668,20 +21621,20 @@
                 ret
             )
             (let [
-                arr (.array nm ret)
-                rngs (ranges nm ret)
+                arr (:array ret)
+                rngs (ranges ret)
                 li (unchecked-dec-int (aget rngs 32))
                 cret
                     (when-not (== shift 5) => nil
                         (let [
-                            child (TransientHelper'ensureEditable nm am root-edit (aget #_"objects" arr li) (unchecked-subtract-int shift 5))
+                            child (TransientHelper'ensureEditable am root-edit (aget #_"objects" arr li) (unchecked-subtract-int shift 5))
                             ccnt
                                 (when (pos? li) => (aget rngs 0)
                                     (unchecked-subtract-int (aget rngs li) (aget rngs (unchecked-dec-int li)))
                                 )
                         ]
                             (when-not (== ccnt (<< 1 shift))
-                                (TransientHelper'pushTail nm am (unchecked-subtract-int shift 5) (unchecked-inc-int ccnt) root-edit child tail-node)
+                                (TransientHelper'pushTail am (unchecked-subtract-int shift 5) (unchecked-inc-int ccnt) root-edit child tail-node)
                             )
                         )
                     )
@@ -21694,7 +21647,7 @@
                         ret
                     )
                     (let [
-                        _ (aset #_"objects" arr (inc li) (TransientHelper'newPath nm am (.array nm tail-node) root-edit (unchecked-subtract-int shift 5) tail-node))
+                        _ (aset #_"objects" arr (inc li) (TransientHelper'newPath am (:array tail-node) root-edit (unchecked-subtract-int shift 5) tail-node))
                         _ (aset rngs (unchecked-inc-int li) (unchecked-add-int (aget rngs li) 32))
                         _ (aset rngs 32 (unchecked-inc-int (aget rngs 32)))
                     ]
@@ -21706,19 +21659,19 @@
     )
 )
 
-(defn TransientHelper'popTail [#_"NodeManager" nm, #_"ArrayManager" am, #_"int" shift, #_"int" cnt, #_"AtomicReference" root-edit, current-node]
+(defn TransientHelper'popTail [#_"ArrayManager" am, #_"int" shift, #_"int" cnt, #_"AtomicReference" root-edit, current-node]
     (let [
-        ret (TransientHelper'ensureEditable nm am root-edit current-node shift)
+        ret (TransientHelper'ensureEditable am root-edit current-node shift)
     ]
-        (if (.regular nm ret)
+        (if (NodeManager'regular ret)
             (let [n (& (>> (unchecked-dec-int cnt) shift) 0x1f)]
                 (cond
                     (< 5 shift)
                         (let [
-                            child (TransientHelper'popTail nm am (unchecked-subtract-int shift 5) cnt root-edit (aget #_"objects" (.array nm ret) n))
+                            child (TransientHelper'popTail am (unchecked-subtract-int shift 5) cnt root-edit (aget #_"objects" (:array ret) n))
                         ]
                             (when-not (and (nil? child) (zero? n)) => nil
-                                (aset #_"objects" (.array nm ret) n child)
+                                (aset #_"objects" (:array ret) n child)
                                 ret
                             )
                         )
@@ -21726,13 +21679,13 @@
                         nil
                     :else
                         (do
-                            (aset #_"objects" (.array nm ret) n nil)
+                            (aset #_"objects" (:array ret) n nil)
                             ret
                         )
                 )
             )
             (let [
-                b (ranges nm ret)
+                b (ranges ret)
                 n (& (>> (unchecked-dec-int cnt) shift) 0x1f)
                 n
                     (loop [n n]
@@ -21744,20 +21697,20 @@
                 (cond
                     (< 5 shift)
                         (let [
-                            c (aget #_"objects" (.array nm ret) n)
+                            c (aget #_"objects" (:array ret) n)
                             child-cnt
                                 (when-not (zero? n) => (aget b 0)
                                     (unchecked-subtract-int (aget b n) (aget b (unchecked-dec-int n)))
                                 )
-                            c' (TransientHelper'popTail nm am (unchecked-subtract-int n 5) child-cnt root-edit c)
+                            c' (TransientHelper'popTail am (unchecked-subtract-int n 5) child-cnt root-edit c)
                         ]
                             (cond
                                 (and (nil? c') (zero? n))
                                     nil
-                                (.regular nm c)
+                                (NodeManager'regular c)
                                     (do
                                         (aset b n (unchecked-subtract-int (aget b n) 32))
-                                        (aset #_"objects" (.array nm ret) n c')
+                                        (aset #_"objects" (:array ret) n c')
                                         (when (nil? c')
                                             (aset b 32 (unchecked-dec-int (aget b 32)))
                                         )
@@ -21765,10 +21718,10 @@
                                     )
                                 :else
                                     (let [
-                                        diff (unchecked-subtract-int (last-range nm c) (if c' (last-range nm c') 0))
+                                        diff (unchecked-subtract-int (last-range c) (if c' (last-range c') 0))
                                     ]
                                         (aset b n (unchecked-subtract-int (aget b n) diff))
-                                        (aset #_"objects" (.array nm ret) n c')
+                                        (aset #_"objects" (:array ret) n c')
                                         (when (nil? c')
                                             (aset b 32 (unchecked-dec-int (aget b 32)))
                                         )
@@ -21780,7 +21733,7 @@
                         nil
                     :else
                         (do
-                            (aset #_"objects" (.array nm ret) n nil)
+                            (aset #_"objects" (:array ret) n nil)
                             (aset b n 0)
                             (aset b 32 (unchecked-dec-int (aget b 32)))
                             ret
@@ -21791,15 +21744,15 @@
     )
 )
 
-(defn TransientHelper'doAssoc [#_"NodeManager" nm, #_"ArrayManager" am, #_"int" shift, #_"AtomicReference" root-edit, current-node, #_"int"  i, val]
-    (let [ret (TransientHelper'ensureEditable nm am root-edit current-node shift)]
-        (if (.regular nm ret)
+(defn TransientHelper'doAssoc [#_"ArrayManager" am, #_"int" shift, #_"AtomicReference" root-edit, current-node, #_"int"  i, val]
+    (let [ret (TransientHelper'ensureEditable am root-edit current-node shift)]
+        (if (NodeManager'regular ret)
             (loop [shift shift node ret]
-                (when-not (zero? shift) => (.aset am (.array nm node) (& i 0x1f) val)
+                (when-not (zero? shift) => (.aset am (:array node) (& i 0x1f) val)
                     (let [
-                        a (.array nm node)
+                        a (:array node)
                         n (& (>> i shift) 0x1f)
-                        child (TransientHelper'ensureEditable nm am root-edit (aget #_"objects" a n) shift)
+                        child (TransientHelper'ensureEditable am root-edit (aget #_"objects" a n) shift)
                     ]
                         (aset #_"objects" a n child)
                         (recur (unchecked-subtract-int shift 5) child)
@@ -21807,8 +21760,8 @@
                 )
             )
             (let [
-                a (.array nm ret)
-                b (ranges nm ret)
+                a (:array ret)
+                b (ranges ret)
                 n (& (>> i shift) 0x1f)
                 n
                     (loop [n n]
@@ -21821,20 +21774,20 @@
                         (unchecked-subtract-int i (aget b (unchecked-dec-int n)))
                     )
             ]
-                (aset #_"objects" a n (TransientHelper'doAssoc nm am (unchecked-subtract-int shift 5) root-edit (aget #_"objects" a n) i val))
+                (aset #_"objects" a n (TransientHelper'doAssoc am (unchecked-subtract-int shift 5) root-edit (aget #_"objects" a n) i val))
             )
         )
         ret
     )
 )
 
-(defn TransientHelper'newPath [#_"NodeManager" nm, #_"ArrayManager" am, tail, #_"AtomicReference" edit, #_"int" shift, current-node]
+(defn TransientHelper'newPath [#_"ArrayManager" am, tail, #_"AtomicReference" edit, #_"int" shift, current-node]
     (if (== (.alength am tail) 32)
         (loop [s 0 n current-node]
             (when-not (== s shift) => n
                 (let [
                     a (object-array 32)
-                    ret (.node nm edit a)
+                    ret (VNode. edit a)
                 ]
                     (aset #_"objects" a 0 n)
                     (recur (unchecked-add s 5) ret)
@@ -21846,7 +21799,7 @@
                 (let [
                     a (object-array 33)
                     b (int-array 33)
-                    ret (.node nm edit a)
+                    ret (VNode. edit a)
                 ]
                     (aset #_"objects" a 0 n)
                     (aset #_"objects" a 32 b)
@@ -21889,7 +21842,7 @@
     (let [a (with-meta (gensym "a__") {:tag 'objects})]
         `(let [~a (object-array ~(count s))]
             ~@(map-indexed (fn [i x] `(aset ~a ~i ~x)) s)
-            (Vector. #_"NodeManager" object-nm #_"ArrayManager" object-am ~(count s) 5 empty-pv-node ~a nil ~(if s -1 1) ~(if s -1 (hash [])))
+            (Vector. #_"ArrayManager" object-am ~(count s) 5 PersistentVector'EMPTY_NODE ~a nil ~(if s -1 1) ~(if s -1 (hash [])))
         )
     )
 )
@@ -21902,32 +21855,6 @@
     ([a b c d] (gen-vector-method a b c d))
     ([a b c d & s]
         (loop-when [v (transient (vector a b c d)) s s] s => (persistent! v)
-            (recur (.conj #_"ITransientCollection" v (first s)) (next s))
-        )
-    )
-)
-
-(defmacro- gen-vector-of-method [t & s]
-    (let [am (gensym "am__") nm (gensym "nm__") a (gensym "a__")]
-        `(let [
-            ~am #_"ArrayManager" (ams ~t)
-            ~nm #_"NodeManager" (if (identical? ~t :object) object-nm primitive-nm)
-            ~a (.array ~am ~(count s))
-        ]
-            ~@(map-indexed (fn [i x] `(.aset ~am ~a ~i ~x)) s)
-            (Vector. ~nm ~am ~(count s) 5 (if (identical? ~t :object) empty-pv-node empty-gvec-node) ~a nil ~(if s -1 1) ~(if s -1 (hash [])))
-        )
-    )
-)
-
-(defn vector-of
-    ([t]         (gen-vector-of-method t))
-    ([t a]       (gen-vector-of-method t a))
-    ([t a b]     (gen-vector-of-method t a b))
-    ([t a b c]   (gen-vector-of-method t a b c))
-    ([t a b c d] (gen-vector-of-method t a b c d))
-    ([t a b c d & s]
-        (loop-when [v (transient (vector-of t a b c d)) s s] s => (persistent! v)
             (recur (.conj #_"ITransientCollection" v (first s)) (next s))
         )
     )
