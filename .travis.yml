@@ -1,5 +1,4 @@
 language: clojure
 os: osx
 before_install:
-  - brew install leiningen
-  - brew install leiningen
+  - brew install leiningen || brew install leiningen
