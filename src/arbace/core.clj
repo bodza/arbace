@@ -13860,14 +13860,9 @@
         )
     )
 
-    (defn #_"VNode" VNode''newPath [#_"VNode" this, #_"Thread'" edit, #_"int" level]
-        (when-not (zero? level) => this
-            (let [
-                #_"Object[]" a (object-array 32)
-                _ (aset a 0 (VNode''newPath this, edit, (- level 5)))
-            ]
-                (VNode'new edit, a)
-            )
+    (defn #_"VNode" VNode''newPath [#_"VNode" this, #_"Thread'" edit, #_"int" shift]
+        (when (pos? shift) => this
+            (VNode'new edit, (doto (object-array 32) (aset 0 (VNode''newPath this, edit, (- shift 5)))))
         )
     )
 
@@ -19842,40 +19837,9 @@
         )
     )
 
-    (defn #_"WNode" WNode''new-path [#_"WNode" this, #_"int" shift]
-        (let [
-            #_"boolean" regular? (= (alength (:array this)) 32)
-            #_"int" n (if regular? 32 33)
-            #_"Object[]" a (object-array n)
-            #_"int[]" b
-                (when-not regular?
-                    (doto (int-array 33)
-                        (aset 0 (alength (:array this)))
-                        (aset 32 1)
-                    )
-                )
-            #_"WNode" ret (WNode'new nil, a, nil)
-        ]
-            (loop [a a shift shift]
-                (if (= shift 5)
-                    (do
-                        (aset a 0 this)
-                        (when-not regular?
-                            (aset a 32 b)
-                        )
-                    )
-                    (let [
-                        #_"Object[]" a' (object-array n)
-                    ]
-                        (aset a 0 (WNode'new nil, a', nil))
-                        (when-not regular?
-                            (aset a 32 b)
-                        )
-                        (recur a' (- shift 5))
-                    )
-                )
-            )
-            ret
+    (defn #_"WNode" WNode''newPath [#_"WNode" this, #_"Thread'" edit, #_"int" shift]
+        (when (pos? shift) => this
+            (WNode'new edit, (doto (object-array 32) (aset 0 (WNode''newPath this, edit, (- shift 5)))), nil)
         )
     )
 
@@ -19929,7 +19893,7 @@
                         (aset a' 32 b')
                     )
                     (if (nil? t)
-                        (aset a' x (WNode''new-path (WNode'new nil, tail, nil), (- shift 5)))
+                        (aset a' x (WNode''newPath (WNode'new nil, tail, nil), nil, (- shift 5)))
                         (aset a' (if (= shift 5) x (dec x)) t)
                     )
                     (WNode'new nil, a', nil)
@@ -20421,25 +20385,6 @@
         (doto (value-array 32) (acopy 0 tail 0 (alength tail)))
     )
 
-    (defn #_"WNode" WNode''newPath [#_"WNode" this, #_"Object[]" tail, #_"Thread'" edit, #_"int" level]
-        (loop-when [#_"int" l 0 #_"WNode" node this] (< l level) => node
-            (let [
-                #_"Object[]" a
-                    (if (= (alength tail) 32)
-                        (doto (object-array 32)
-                            (aset 0 node)
-                        )
-                        (doto (object-array 33)
-                            (aset 0 node)
-                            (aset 32 (doto (int-array 33) (aset 0 (alength tail)) (aset 32 1)))
-                        )
-                    )
-            ]
-                (recur (+ l 5) (WNode'new edit, a, nil))
-            )
-        )
-    )
-
     (defn #_"WNode" WNode''pushTail [#_"WNode" this, #_"int" shift, #_"int" cnt, #_"Thread'" edit, #_"WNode" tail-node]
         (let [
             this (WNode''ensureEditable this, edit, shift)
@@ -20456,7 +20401,7 @@
                                 (let [
                                     #_"WNode" child (aget a' x)
                                 ]
-                                    (when (some? child) => (aset a' x (WNode''newPath tail-node, (:array tail-node), edit, (- shift 5)))
+                                    (when (some? child) => (aset a' x (WNode''newPath tail-node, edit, (- shift 5)))
                                         (let [
                                             node (WNode''ensureEditable child, edit, (- shift 5))
                                             _ (aset a' x node)
@@ -20496,7 +20441,7 @@
                             this
                         )
                         (let [
-                            _ (aset a (inc n) (WNode''newPath tail-node, (:array tail-node), edit, (- shift 5)))
+                            _ (aset a (inc n) (WNode''newPath tail-node, edit, (- shift 5)))
                             _ (aset b (inc n) (+ (aget b n) 32))
                             _ (aset b 32 (inc (aget b 32)))
                         ]
@@ -20824,7 +20769,7 @@
                                 #_"Object[]" a'
                                     (doto (object-array 32)
                                         (aset 0 (:root this))
-                                        (aset 1 (WNode''newPath tail-node, (:tail this), (:edit (:root this)), (:shift this)))
+                                        (aset 1 (WNode''newPath tail-node, (:edit (:root this)), (:shift this)))
                                     )
                                 #_"WNode" root (WNode'new (:edit (:root this)), a', nil)
                             ]
@@ -20841,7 +20786,7 @@
                                 #_"Object[]" a'
                                     (doto (object-array 33)
                                         (aset 0 (:root this))
-                                        (aset 1 (WNode''newPath tail-node, (:tail this), (:edit (:root this)), (:shift this)))
+                                        (aset 1 (WNode''newPath tail-node, (:edit (:root this)), (:shift this)))
                                         (aset 32 b')
                                     )
                                 #_"WNode" root (WNode'new (:edit (:root this)), a', nil)
@@ -21109,7 +21054,7 @@
                             (when-not (= shift 5) => tail-node
                                 (if-some [child (aget a x)]
                                     (PersistentWector''pushTail this, (- shift 5), cnt, child, tail-node)
-                                    (WNode''newPath tail-node, (:tail this), (:edit (:root this)), (- shift 5))
+                                    (WNode''newPath tail-node, (:edit (:root this)), (- shift 5))
                                 )
                             )
                         _ (aset a x child)
@@ -21137,7 +21082,7 @@
                                     (aset b x (+ (aget b x) 32))
                                 )
                                 (do
-                                    (aset a (inc x) (WNode''newPath tail-node, (:tail this), (:edit (:root this)), (- shift 5)))
+                                    (aset a (inc x) (WNode''newPath tail-node, (:edit (:root this)), (- shift 5)))
                                     (aset b (inc x) (+ (aget b x) 32))
                                     (aset b 32 (inc (aget b 32)))
                                 )
@@ -21173,11 +21118,11 @@
                                         (if (= (alength a) 32)
                                             (doto (object-array 32)
                                                 (aset 0 (:root this))
-                                                (aset 1 (WNode''newPath tail-node, (:tail this), (:edit (:root this)), shift))
+                                                (aset 1 (WNode''newPath tail-node, (:edit (:root this)), shift))
                                             )
                                             (doto (object-array 33)
                                                 (aset 0 (:root this))
-                                                (aset 1 (WNode''newPath tail-node, (:tail this), (:edit (:root this)), shift))
+                                                (aset 1 (WNode''newPath tail-node, (:edit (:root this)), shift))
                                                 (aset 32
                                                     (let [
                                                         #_"int" root-total-range (aget (aget a 32) 31)
@@ -21424,7 +21369,7 @@
                                         #_"Object[]" a
                                             (doto (object-array (if regular? 32 33))
                                                 (aset 0 r1)
-                                                (aset 1 (WNode''new-path (WNode'new nil, t1, nil), s1))
+                                                (aset 1 (WNode''newPath (WNode'new nil, t1, nil), nil, s1))
                                             )
                                         _
                                             (when-not regular?
