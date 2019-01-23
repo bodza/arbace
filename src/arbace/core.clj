@@ -1,5 +1,5 @@
 (ns arbace.core
-    (:refer-clojure :only [*ns* + - < <= = aclone aget alength and apply aset assoc atom case concat cond conj conj! cons count dec defmacro #_def defn defprotocol defrecord #_do doseq doto drop extend-type first fn gensym hash-map identical? #_if if-not import inc int-array into keys let letfn list loop map mapcat map-indexed merge neg? next ns-imports ns-unmap object-array or partition-all peek persistent! pop pos? #_recur reset! satisfies? second seq some? str symbol symbol? take #_throw transient update vary-meta vector? with-meta])
+    (:refer-clojure :only [* *ns* + - < <= = aclone aget alength apply aset assoc atom bit-and bit-or bit-shift-left bit-shift-right case concat conj conj! cons count dec defmacro #_def defn defprotocol defrecord #_do doseq doto drop even? extend-type #_finally first fn hash-map identical? #_if import inc int int-array interleave into keys keyword? last let #_letfn* list long loop map mapcat map-indexed max merge meta min mod #_monitor-enter #_monitor-exit neg? next ns-imports ns-unmap partition-all peek persistent! pop pos? quot #_recur reduced? rem reset! satisfies? second seq seq? split-at str swap! symbol symbol? take #_throw transient #_try unsigned-bit-shift-right update vary-meta vector? with-meta zero?])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec #_vector]] [flatland.ordered.map :refer [#_ordered-map]] [flatland.ordered.set :refer [#_ordered-set]])
 )
 
@@ -19,20 +19,267 @@
 (doseq [% (keys (ns-imports *ns*))] (ns-unmap *ns* %))
 
 (import
-    [java.lang Boolean Error String]
+    [arbace.math BigInteger]
+    [java.lang Boolean Byte Character Class Error Integer Long Number Object String System Thread]
+    [java.lang.reflect Array]
+    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
 )
 
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
 
+(let [last-id' (atom 0)] (defn next-id! [] (swap! last-id' inc)))
+
+;;;
+ ; Returns a new symbol with a unique name. If a prefix string is supplied,
+ ; the name is prefix# where # is some unique number.
+ ; If prefix is not supplied, the prefix is 'G__'.
+ ;;
+(defn gensym
+    ([] (gensym "G__"))
+    ([prefix] (symbol (str prefix (next-id!))))
+)
+
+;;;
+ ; defs the supplied var names with no bindings, useful for making forward declarations.
+ ;;
+(defmacro declare [& names] `(do ~@(map #(list 'def (vary-meta % assoc :declared true)) names)))
+
 (defmacro def-      [x & s] `(def      ~(vary-meta x assoc :private true) ~@s))
 (defmacro defn-     [x & s] `(defn     ~(vary-meta x assoc :private true) ~@s))
 (defmacro defmacro- [x & s] `(defmacro ~(vary-meta x assoc :private true) ~@s))
+
+(defn identity   [x] x)
+(defn constantly [x] (fn [& _] x))
+
+(defn nil?   [x] (identical? x nil))
+(defn false? [x] (identical? x false))
+(defn true?  [x] (identical? x true))
+(defn not    [x] (if x false true))
+(defn some?  [x] (not (nil? x)))
+(defn any?   [_] true)
+
+;;;
+ ; Evaluates test. If logical false, evaluates and returns then expr,
+ ; otherwise else expr, if supplied, else nil.
+ ;;
+(defmacro if-not
+    ([? then] (if-not ? then nil))
+    ([? then else] (list 'if ? else then))
+)
+
+;;;
+ ; Evaluates exprs one at a time, from left to right. If a form returns logical false
+ ; (nil or false), and returns that value and doesn't evaluate any of the other expressions,
+ ; otherwise it returns the value of the last expr. (and) returns true.
+ ;;
+(defmacro and
+    ([] true)
+    ([x] x)
+    ([x & s] `(let [and# ~x] (if and# (and ~@s) and#)))
+)
+
+;;;
+ ; Evaluates exprs one at a time, from left to right. If a form returns a logical true value,
+ ; or returns that value and doesn't evaluate any of the other expressions, otherwise it returns
+ ; the value of the last expression. (or) returns nil.
+ ;;
+(defmacro or
+    ([] nil)
+    ([x] x)
+    ([x & s] `(let [or# ~x] (if or# or# (or ~@s))))
+)
+
+(defmacro any
+    ([f x y] `(~f ~x ~y))
+    ([f x y & s] `(let [f# ~f x# ~x] (or (f# x# ~y) (any f# x# ~@s))))
+)
+
+;;;
+ ; fnspec => (fname [params*] exprs) or (fname ([params*] exprs)+)
+ ;
+ ; Takes a vector of function specs and a body, and generates a set of
+ ; bindings of functions to their names. All of the names are available
+ ; in all of the definitions of the functions, as well as the body.
+ ;;
+(defmacro letfn [fnspecs & body]
+    `(letfn* ~(vec (interleave (map first fnspecs) (map #(cons `fn %) fnspecs))) ~@body)
+)
 
 (letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
     (defmacro     when       [? & s] (let [[e & s] (=> s)]               `(if     ~? (do ~@s) ~e)))
     (defmacro     when-not   [? & s] (let [[e & s] (=> s)]               `(if-not ~? (do ~@s) ~e)))
     (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if     ~? (do ~@s) ~e))))
     (defmacro let-when-not [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if-not ~? (do ~@s) ~e))))
+)
+
+;;;
+ ; Takes a set of test/expr pairs. It evaluates each test one at a time.
+ ; If a test returns logical true, cond evaluates and returns the value of the
+ ; corresponding expr and doesn't evaluate any of the other tests or exprs.
+ ; (cond) returns nil.
+ ;;
+(defmacro cond [& s]
+    (when s
+        `(if ~(first s)
+            ~(when (next s) => (throw! "cond requires an even number of forms")
+                (second s)
+            )
+            (cond ~@(next (next s)))
+        )
+    )
+)
+
+(defmacro- assert-args [& s]
+    `(when ~(first s) ~'=> (throw! (str (first ~'&form) " requires " ~(second s)))
+        ~(let-when [s (next (next s))] s
+            `(assert-args ~@s)
+        )
+    )
+)
+
+(defmacro if-let
+    ([bind then] `(if-let ~bind ~then nil))
+    ([bind then else & _]
+        (assert-args
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (nil? _) "1 or 2 forms after binding vector"
+        )
+        `(let-when [x# ~(bind 1)] x# ~'=> ~else
+            (let [~(bind 0) x#]
+                ~then
+            )
+        )
+    )
+)
+
+(defmacro cond-let [bind then & else]
+    (let [bind (if (vector? bind) bind [`_# bind])]
+        `(if-let ~bind ~then ~(when else `(cond-let ~@else)))
+    )
+)
+
+(defmacro if-some
+    ([bind then] `(if-some ~bind ~then nil))
+    ([bind then else & _]
+        (assert-args
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (nil? _) "1 or 2 forms after binding vector"
+        )
+        `(let-when [x# ~(bind 1)] (some? x#) ~'=> ~else
+            (let [~(bind 0) x#]
+                ~then
+            )
+        )
+    )
+)
+
+(defmacro cond-some [bind then & else]
+    (let [bind (if (vector? bind) bind [`_# bind])]
+        `(if-some ~bind ~then ~(when else `(cond-some ~@else)))
+    )
+)
+
+(defmacro if-first
+    ([bind then] `(if-first ~bind ~then nil))
+    ([bind then else & _]
+        (assert-args
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (nil? _) "1 or 2 forms after binding vector"
+        )
+        `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
+            (let [~(bind 0) (first s#)]
+                ~then
+            )
+        )
+    )
+)
+
+(ß defmacro when-let [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+    )
+    `(let-when [x# ~(bindings 1)] x#
+        (let [~(bindings 0) x#]
+            ~@body
+        )
+    )
+)
+
+(ß defmacro when-some [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+    )
+    `(let-when [x# ~(bindings 1)] (some? x#)
+        (let [~(bindings 0) x#]
+            ~@body
+        )
+    )
+)
+
+(ß defmacro when-first [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+    )
+    `(when-some [s# (seq ~(bindings 1))]
+        (let [~(bindings 0) (first s#)]
+            ~@body
+        )
+    )
+)
+
+(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+    (defmacro when-let   [v & s] (let [[e & s] (=> s)] `(if-let   ~(vec v) (do ~@s) ~e)))
+    (defmacro when-some  [v & s] (let [[e & s] (=> s)] `(if-some  ~(vec v) (do ~@s) ~e)))
+    (defmacro when-first [v & s] (let [[e & s] (=> s)] `(if-first ~(vec v) (do ~@s) ~e)))
+)
+
+;;;
+ ; Takes a binary predicate, an expression, and a set of clauses.
+ ; Each clause can take the form of either:
+ ;
+ ; test-expr result-expr
+ ;
+ ; test-expr :>> result-fn
+ ;
+ ; Note :>> is an ordinary keyword.
+ ;
+ ; For each clause, (f? test-expr expr) is evaluated. If it returns logical true,
+ ; the clause is a match. If a binary clause matches, the result-expr is returned,
+ ; if a ternary clause matches, its result-fn, which must be a unary function, is
+ ; called with the result of the predicate as its argument, the result of that call
+ ; being the return value of condp. A single default expression can follow the clauses,
+ ; and its value will be returned if no clause matches. If no default expression
+ ; is provided and no clause matches, an IllegalArgumentException is thrown.
+ ;;
+(defmacro condp [f? expr & clauses]
+    (let [gpred (gensym "pred__") gexpr (gensym "expr__")
+          emit-
+            (fn emit- [f? expr args]
+                (let [[[a b c :as clause] more] (split-at (if (= :>> (second args)) 3 2) args) n (count clause)]
+                    (cond
+                        (= 0 n) `(throw! (str "no matching clause: " ~expr))
+                        (= 1 n) a
+                        (= 2 n) `(if (~f? ~a ~expr)
+                                    ~b
+                                    ~(emit- f? expr more)
+                                )
+                        :else   `(if-let [p# (~f? ~a ~expr)]
+                                    (~c p#)
+                                    ~(emit- f? expr more)
+                                )
+                    )
+                )
+            )]
+        `(let [~gpred ~f? ~gexpr ~expr]
+            ~(emit- gpred gexpr clauses)
+        )
+    )
 )
 
 (letfn [(v' [v] (cond (vector? v) v (symbol? v) [v v] :else [`_# v]))
@@ -48,11 +295,189 @@
     (defmacro recur-if [? r & s] `(if ~? ~(r' r) ~(=> s)))
 )
 
-(defmacro any
-    ([f x y] `(~f ~x ~y))
-    ([f x y & s] `(let [f# ~f x# ~x] (or (f# x# ~y) (any f# x# ~@s))))
+;;;
+ ; Repeatedly executes body while test expression is true. Presumes
+ ; some side-effect will cause test to become false/nil. Returns nil.
+ ;;
+(defmacro while [? & s]
+    `(loop [] (when ~? ~@s (recur)))
 )
 
+;;;
+ ; form => fieldName-symbol or (instanceMethodName-symbol args*)
+ ;
+ ; Expands into a member access (.) of the first member on the first argument,
+ ; followed by the next member on the result, etc. For instance:
+ ;
+ ; (.. System (getProperties) (get "os.name"))
+ ;
+ ; expands to:
+ ;
+ ; (. (. System (getProperties)) (get "os.name"))
+ ;
+ ; but is easier to write, read, and understand.
+ ;;
+(defmacro ..
+    ([x form] `(. ~x ~form))
+    ([x form & s] `(.. (. ~x ~form) ~@s))
+)
+
+;;;
+ ; Threads the expr through the forms. Inserts x as the second item
+ ; in the first form, making a list of it if it is not a list already.
+ ; If there are more forms, inserts the first form as the second item
+ ; in second form, etc.
+ ;;
+(defmacro -> [x & s]
+    (when s => x
+        (recur &form &env
+            (let-when [f (first s)] (seq? f) => (list f x)
+                (with-meta `(~(first f) ~x ~@(next f)) (meta f))
+            )
+            (next s)
+        )
+    )
+)
+
+;;;
+ ; Threads the expr through the forms. Inserts x as the last item
+ ; in the first form, making a list of it if it is not a list already.
+ ; If there are more forms, inserts the first form as the last item
+ ; in second form, etc.
+ ;;
+(defmacro ->> [x & s]
+    (when s => x
+        (recur &form &env
+            (let-when [f (first s)] (seq? f) => (list f x)
+                (with-meta `(~(first f) ~@(next f) ~x) (meta f))
+            )
+            (next s)
+        )
+    )
+)
+
+;;;
+ ; Repeatedly executes body (presumably for side-effects) with bindings and filtering as provided by "for".
+ ; Does not retain the head of the sequence. Returns nil.
+ ;;
+(defmacro doseq [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (even? (count bindings)) "an even number of forms in binding vector"
+    )
+    (letfn [(emit- [e r]
+                (when e => [`(do ~@body) true]
+                    (let [[k v & e] e]
+                        (if (keyword? k)
+                            (let [[f r?] (emit- e r)]
+                                (case k
+                                    :let   [`(let ~v ~f) r?]
+                                    :while [`(when ~v ~f ~@(when r? [r])) false]
+                                    :when  [`(if ~v (do ~f ~@(when r? [r])) ~r) false]
+                                )
+                            )
+                            (let [s (gensym "s__") r `(recur (next ~s)) [f r?] (emit- e r)]
+                                [`(loop-when [~s (seq ~v)] ~s (let [~k (first ~s)] ~f ~@(when r? [r]))) true]
+                            )
+                        )
+                    )
+                )
+            )]
+        (first (emit- (seq bindings) nil))
+    )
+)
+
+;;;
+ ; bindings => name n
+ ;
+ ; Repeatedly executes body (presumably for side-effects) with name
+ ; bound to integers from 0 through n-1.
+ ;;
+(defmacro dotimes [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+    )
+    (let [[i n] bindings]
+        `(let [n# (long ~n)]
+            (loop-when-recur [~i 0] (< ~i n#) [(inc ~i)]
+                ~@body
+            )
+        )
+    )
+)
+
+;;;
+ ; Executes exprs in an implicit do, while holding the monitor of x.
+ ; Will release the monitor of x in all circumstances.
+ ;;
+(defmacro locking [x & body]
+    `(let [lockee# ~x]
+        (try
+            (monitor-enter lockee#)
+            ~@body
+            (finally
+                (monitor-exit lockee#)
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns the Class of x.
+ ;;
+(defn #_"Class" class [#_"Object" x] (when (some? x) (.getClass x)))
+
+;;;
+ ; Throws a ClassCastException if x is not a c, else returns x.
+ ;;
+(defn cast [#_"Class" c x] (.cast c x))
+
+;;;
+ ; Evaluates x and tests if it is an instance of class c. Returns true or false.
+ ;;
+(defn instance? [#_"Class" c x] (.isInstance c x))
+
+(defn class?   [x] (instance? Class x))
+(defn boolean? [x] (instance? Boolean x))
+(defn char?    [x] (instance? Character x))
+(defn number?  [x] (instance? Number x))
+(defn string?  [x] (instance? String x))
+
+(defn integer? [n]
+    (or (instance? Long n)
+        (instance? BigInteger n)
+        (instance? Integer n)
+        (instance? Byte n)
+    )
+)
+
+;;;
+ ; Creates and returns an array of instances of the specified class of the specified dimension(s).
+ ; Note that a class object is required.
+ ; Class objects can be obtained by using their imported or fully-qualified name.
+ ; Class objects for the primitive types can be obtained using, e.g. Integer/TYPE.
+ ;;
+(defn make-array
+    ([#_"Class" type n] (Array/newInstance type (int n)))
+    ([#_"Class" type dim & s] (Array/newInstance type (int-array (cons dim s))))
+)
+
+;;;
+ ; Creates an array of objects.
+ ;;
+(defn object-array [size-or-seq]
+    (if (number? size-or-seq)
+        (make-array Object (.intValue #_"Number" size-or-seq))
+        (let [#_"ISeq" s (seq size-or-seq) #_"int" size (count s) #_"Object[]" a (make-array Object size)]
+            (loop-when-recur [#_"int" i 0 s s] (and (< i size) (some? s)) [(inc i) (next s)]
+                (aset a i (first s))
+            )
+            a
+        )
+    )
+)
+
 (defn index-of [s x]
     (loop-when [i 0 s (seq s)] (some? s) => -1
         (when-not (= (first s) x) => i
@@ -70,9 +495,15 @@
 
 (defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 
-(import
-    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
-)
+(def & bit-and)
+(def | bit-or)
+
+(def << bit-shift-left)
+(def >> bit-shift-right)
+(def >>> unsigned-bit-shift-right)
+
+(defmacro acopy [a i b j n] `(System/arraycopy ~b, ~j, ~a, ~i, ~n))
+(defmacro aswap [a i f & s] `(let [a# ~a i# ~i] (aset a# i# (~f (aget a# i#) ~@s))))
 
 (value-ns HotSpot
     (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
@@ -90,6 +521,104 @@
     )
 )
 
+(arbace-ns Oops!
+    (defp AFn)
+    (defp Associative
+        (#_"Associative" Associative'''assoc [#_"Associative" this, #_"Object" key, #_"Object" val])
+        (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"Object" key])
+        (#_"IMapEntry" Associative'''entryAt [#_"Associative" this, #_"Object" key])
+    )
+    (defp Counted
+        (#_"int" Counted'''count [#_"Counted" this])
+    )
+    (defp Hashed
+        (#_"int" Hashed'''hash [#_"Hashed" this])
+    )
+    (defp IEditableCollection
+        (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
+    )
+    (defp IFn
+        (#_"Object" IFn'''invoke
+            [#_"IFn" this]
+            [#_"IFn" this, a1]
+            [#_"IFn" this, a1, a2]
+            [#_"IFn" this, a1, a2, a3]
+            [#_"IFn" this, a1, a2, a3, a4]
+            [#_"IFn" this, a1, a2, a3, a4, a5]
+            [#_"IFn" this, a1, a2, a3, a4, a5, a6]
+            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7]
+            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8]
+            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]
+            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args]
+        )
+        (#_"Object" IFn'''applyTo [#_"IFn" this, #_"ISeq" args])
+    )
+    (defp IKVReduce
+        (#_"Object" IKVReduce'''kvreduce [#_"IKVReduce" this, #_"IFn" f, #_"Object" r])
+    )
+    (defp ILookup
+        (#_"Object" ILookup'''valAt
+            [#_"ILookup" this, #_"Object" key]
+            [#_"ILookup" this, #_"Object" key, #_"Object" not-found]
+        )
+    )
+    (defp IMeta
+        (#_"IPersistentMap" IMeta'''meta [#_"IMeta" this])
+    )
+    (defp IObj
+        (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"IPersistentMap" meta])
+    )
+    (defp IObject
+        (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
+        (#_"String" IObject'''toString [#_"IObject" this])
+    )
+    (defp IPersistentCollection
+        (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
+        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
+    )
+    (defp IPersistentStack
+        (#_"Object" IPersistentStack'''peek [#_"IPersistentStack" this])
+        (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
+    )
+    (defp IPersistentVector
+        (#_"IPersistentVector" IPersistentVector'''assocN [#_"IPersistentVector" this, #_"int" i, #_"Object" val])
+    )
+    (defp IReduce
+        (#_"Object" IReduce'''reduce
+            [#_"IReduce" this, #_"IFn" f]
+            [#_"IReduce" this, #_"IFn" f, #_"Object" r]
+        )
+    )
+    (defp ITransientAssociative
+        (#_"ITransientAssociative" ITransientAssociative'''assoc! [#_"ITransientAssociative" this, #_"Object" key, #_"Object" val])
+        (#_"boolean" ITransientAssociative'''containsKey [#_"ITransientAssociative" this, #_"Object" key])
+        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ITransientAssociative" this, #_"Object" key])
+    )
+    (defp ITransientCollection
+        (#_"ITransientCollection" ITransientCollection'''conj! [#_"ITransientCollection" this, #_"Object" val])
+        (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
+    )
+    (defp ITransientVector
+        (#_"ITransientVector" ITransientVector'''assocN! [#_"ITransientVector" this, #_"int" i, #_"Object" val])
+        (#_"ITransientVector" ITransientVector'''pop! [#_"ITransientVector" this])
+    )
+    (defp Indexed
+        (#_"Object" Indexed'''nth
+            [#_"Indexed" this, #_"int" i]
+            [#_"Indexed" this, #_"int" i, #_"Object" not-found]
+        )
+    )
+    (defp Reversible
+        (#_"ISeq" Reversible'''rseq [#_"Reversible" this])
+    )
+    (defp Seqable
+        (#_"ISeq" Seqable'''seq [#_"Seqable" this])
+    )
+    (defp Sequential)
+
+    (declare count' APersistentVector'new)
+)
+
 (arbace-ns IPersistentWector
     (defp IPersistentWector
         (#_"IPersistentWector" IPersistentWector'''slicew [#_"IPersistentWector" this, #_"int" start, #_"int" end])
@@ -105,9 +634,9 @@
     (defp PersistentWector)
 )
 
-(ß arbace-ns PersistentWector
+(arbace-ns PersistentWector
 
-(defn- value-array object-array)
+(def- value-array object-array)
 
 (class-ns WNode []
     (defn #_"WNode" WNode'new [#_"Thread'" edit, #_"Object[]" array, #_"int[]" index]
@@ -1513,7 +2042,7 @@
     )
 )
 
-(ß defn wector
+(defn wector
     ([]        (gen-wector-))
     ([a]       (gen-wector- a))
     ([a b]     (gen-wector- a b))
@@ -1526,7 +2055,7 @@
     )
 )
 
-(ß defn wec [s]
+(defn wec [s]
     (if (wector? s) s (apply wector s))
 )
 
@@ -1536,11 +2065,11 @@
 
 (§ soon
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *out* *print-length* *warn-on-reflection* binding boolean byte char defmethod even? extend-protocol hash-set int interleave intern key keyword? long meta print-method proxy reify seq? split-at swap! the-ns to-array val])
+    (:refer-clojure :only [*err* *in* *out* *print-length* *warn-on-reflection* binding boolean byte char defmethod extend-protocol hash-set intern key print-method proxy reify the-ns to-array val])
 )
 
 (import
-    [java.lang ArithmeticException Byte Character CharSequence Class #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception Integer Long NoSuchMethodException Number Object StringBuilder System Thread ThreadLocal Throwable Void]
+    [java.lang ArithmeticException CharSequence #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception NoSuchMethodException StringBuilder ThreadLocal Throwable Void]
 )
 
 (defmacro import-as [#_"Symbol" sym #_"String" sig]
@@ -1560,439 +2089,15 @@
 (import
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue SoftReference WeakReference]
-    [java.lang.reflect Array #_Constructor #_Field #_Method Modifier]
+    [java.lang.reflect #_Constructor #_Field #_Method Modifier]
     [java.security AccessController PrivilegedAction]
     [java.util Arrays Comparator IdentityHashMap]
     [java.util.regex Matcher Pattern]
     [arbace.asm #_ClassVisitor ClassWriter Label #_MethodVisitor Opcodes Type]
     [arbace.asm.commons GeneratorAdapter Method]
-    [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
-
-(let [id (atom 0)] (defn next-id! [] (swap! id inc)))
-
-;;;
- ; Returns a new symbol with a unique name. If a prefix string is supplied,
- ; the name is prefix# where # is some unique number.
- ; If prefix is not supplied, the prefix is 'G__'.
- ;;
-(defn gensym
-    ([] (gensym "G__"))
-    ([prefix] (symbol (str prefix (next-id!))))
-)
-
-;;;
- ; defs the supplied var names with no bindings, useful for making forward declarations.
- ;;
-(defmacro declare [& names] `(do ~@(map #(list 'def (vary-meta % assoc :declared true)) names)))
-
-(defmacro def-      [x & s] `(def      ~(vary-meta x assoc :private true) ~@s))
-(defmacro defn-     [x & s] `(defn     ~(vary-meta x assoc :private true) ~@s))
-(defmacro defmacro- [x & s] `(defmacro ~(vary-meta x assoc :private true) ~@s))
-
-(defn identity   [x] x)
-(defn constantly [x] (fn [& _] x))
-
-(defn #_"Boolean" nil?   [x] (identical? x nil))
-(defn #_"Boolean" false? [x] (identical? x false))
-(defn #_"Boolean" true?  [x] (identical? x true))
-(defn #_"Boolean" not    [x] (if x false true))
-(defn #_"Boolean" some?  [x] (not (nil? x)))
-(defn #_"Boolean" any?   [_] true)
-
-;;;
- ; Evaluates test. If logical false, evaluates and returns then expr,
- ; otherwise else expr, if supplied, else nil.
- ;;
-(defmacro if-not
-    ([? then] (if-not ? then nil))
-    ([? then else] (list 'if ? else then))
-)
-
-;;;
- ; Evaluates exprs one at a time, from left to right. If a form returns logical false
- ; (nil or false), and returns that value and doesn't evaluate any of the other expressions,
- ; otherwise it returns the value of the last expr. (and) returns true.
- ;;
-(defmacro and
-    ([] true)
-    ([x] x)
-    ([x & s] `(let [and# ~x] (if and# (and ~@s) and#)))
-)
-
-;;;
- ; Evaluates exprs one at a time, from left to right. If a form returns a logical true value,
- ; or returns that value and doesn't evaluate any of the other expressions, otherwise it returns
- ; the value of the last expression. (or) returns nil.
- ;;
-(defmacro or
-    ([] nil)
-    ([x] x)
-    ([x & s] `(let [or# ~x] (if or# or# (or ~@s))))
-)
-
-(defmacro any
-    ([f x y] `(~f ~x ~y))
-    ([f x y & s] `(let [f# ~f x# ~x _# (any f# x# ~y)] (if _# _# (any f# x# ~@s))))
-)
-
-;;;
- ; fnspec => (fname [params*] exprs) or (fname ([params*] exprs)+)
- ;
- ; Takes a vector of function specs and a body, and generates a set of
- ; bindings of functions to their names. All of the names are available
- ; in all of the definitions of the functions, as well as the body.
- ;;
-(defmacro letfn [fnspecs & body]
-    `(letfn* ~(vec (interleave (map first fnspecs) (map #(cons `fn %) fnspecs))) ~@body)
-)
-
-(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
-    (defmacro     when       [? & s] (let [[e & s] (=> s)]               `(if     ~? (do ~@s) ~e)))
-    (defmacro     when-not   [? & s] (let [[e & s] (=> s)]               `(if-not ~? (do ~@s) ~e)))
-    (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if     ~? (do ~@s) ~e))))
-    (defmacro let-when-not [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if-not ~? (do ~@s) ~e))))
-)
-
-;;;
- ; Takes a set of test/expr pairs. It evaluates each test one at a time.
- ; If a test returns logical true, cond evaluates and returns the value of the
- ; corresponding expr and doesn't evaluate any of the other tests or exprs.
- ; (cond) returns nil.
- ;;
-(defmacro cond [& s]
-    (when s
-        `(if ~(first s)
-            ~(when (next s) => (throw! "cond requires an even number of forms")
-                (second s)
-            )
-            (cond ~@(next (next s)))
-        )
-    )
-)
-
-(defmacro- assert-args [& s]
-    `(when ~(first s) ~'=> (throw! (str (first ~'&form) " requires " ~(second s)))
-        ~(let-when [s (next (next s))] s
-            `(assert-args ~@s)
-        )
-    )
-)
-
-(defmacro if-let
-    ([bind then] `(if-let ~bind ~then nil))
-    ([bind then else & _]
-        (assert-args
-            (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
-            (nil? _) "1 or 2 forms after binding vector"
-        )
-        `(let-when [x# ~(bind 1)] x# ~'=> ~else
-            (let [~(bind 0) x#]
-                ~then
-            )
-        )
-    )
-)
-
-(defmacro if-some
-    ([bind then] `(if-some ~bind ~then nil))
-    ([bind then else & _]
-        (assert-args
-            (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
-            (nil? _) "1 or 2 forms after binding vector"
-        )
-        `(let-when [x# ~(bind 1)] (some? x#) ~'=> ~else
-            (let [~(bind 0) x#]
-                ~then
-            )
-        )
-    )
-)
-
-(defmacro cond-let [bind then & else]
-    (let [bind (if (vector? bind) bind [`_# bind])]
-        `(if-some ~bind ~then ~(when else `(cond-let ~@else)))
-    )
-)
-
-(defmacro when-let [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
-    )
-    `(let-when [x# ~(bindings 1)] x#
-        (let [~(bindings 0) x#]
-            ~@body
-        )
-    )
-)
-
-(defmacro when-some [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
-    )
-    `(let-when [x# ~(bindings 1)] (some? x#)
-        (let [~(bindings 0) x#]
-            ~@body
-        )
-    )
-)
-
-(defmacro when-first [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
-    )
-    `(when-some [s# (seq ~(bindings 1))]
-        (let [~(bindings 0) (first s#)]
-            ~@body
-        )
-    )
-)
-
-;;;
- ; Takes a binary predicate, an expression, and a set of clauses.
- ; Each clause can take the form of either:
- ;
- ; test-expr result-expr
- ;
- ; test-expr :>> result-fn
- ;
- ; Note :>> is an ordinary keyword.
- ;
- ; For each clause, (f? test-expr expr) is evaluated. If it returns logical true,
- ; the clause is a match. If a binary clause matches, the result-expr is returned,
- ; if a ternary clause matches, its result-fn, which must be a unary function, is
- ; called with the result of the predicate as its argument, the result of that call
- ; being the return value of condp. A single default expression can follow the clauses,
- ; and its value will be returned if no clause matches. If no default expression
- ; is provided and no clause matches, an IllegalArgumentException is thrown.
- ;;
-(defmacro condp [f? expr & clauses]
-    (let [gpred (gensym "pred__") gexpr (gensym "expr__")
-          emit
-            (fn emit [f? expr args]
-                (let [[[a b c :as clause] more] (split-at (if (= :>> (second args)) 3 2) args) n (count clause)]
-                    (cond
-                        (= 0 n) `(throw! (str "no matching clause: " ~expr))
-                        (= 1 n) a
-                        (= 2 n) `(if (~f? ~a ~expr)
-                                    ~b
-                                    ~(emit f? expr more)
-                                )
-                        :else   `(if-let [p# (~f? ~a ~expr)]
-                                    (~c p#)
-                                    ~(emit f? expr more)
-                                )
-                    )
-                )
-            )]
-        `(let [~gpred ~f? ~gexpr ~expr]
-            ~(emit gpred gexpr clauses)
-        )
-    )
-)
-
-(letfn [(v' [v] (cond (vector? v) v (symbol? v) [v v] :else [`_# v]))
-        (r' [r] (cond (vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
-        (=> [s] (if (= '=> (first s)) (next s) (cons nil s)))
-        (l' [v ? r s] (let [r (r' r) [e & s] (=> s)] `(loop ~(v' v) (if ~? (do ~@s ~@r) ~e))))]
-    (defmacro loop-when [v ? & s] (l' v ? nil s))
-    (defmacro loop-when-recur [v ? r & s] (l' v ? r s))
-)
-
-(letfn [(r' [r] (cond (vector? r) `(recur ~@r) (some? r) `(recur ~r)))
-        (=> [s] (if (= '=> (first s)) (second s)))]
-    (defmacro recur-if [? r & s] `(if ~? ~(r' r) ~(=> s)))
-)
-
-;;;
- ; Repeatedly executes body while test expression is true. Presumes
- ; some side-effect will cause test to become false/nil. Returns nil.
- ;;
-(defmacro while [? & s]
-    `(loop [] (when ~? ~@s (recur)))
-)
-
-;;;
- ; form => fieldName-symbol or (instanceMethodName-symbol args*)
- ;
- ; Expands into a member access (.) of the first member on the first argument,
- ; followed by the next member on the result, etc. For instance:
- ;
- ; (.. System (getProperties) (get "os.name"))
- ;
- ; expands to:
- ;
- ; (. (. System (getProperties)) (get "os.name"))
- ;
- ; but is easier to write, read, and understand.
- ;;
-(defmacro ..
-    ([x form] `(. ~x ~form))
-    ([x form & s] `(.. (. ~x ~form) ~@s))
-)
-
-;;;
- ; Threads the expr through the forms. Inserts x as the second item
- ; in the first form, making a list of it if it is not a list already.
- ; If there are more forms, inserts the first form as the second item
- ; in second form, etc.
- ;;
-(defmacro -> [x & s]
-    (when s => x
-        (recur &form &env
-            (let-when [f (first s)] (seq? f) => (list f x)
-                (with-meta `(~(first f) ~x ~@(next f)) (meta f))
-            )
-            (next s)
-        )
-    )
-)
-
-;;;
- ; Threads the expr through the forms. Inserts x as the last item
- ; in the first form, making a list of it if it is not a list already.
- ; If there are more forms, inserts the first form as the last item
- ; in second form, etc.
- ;;
-(defmacro ->> [x & s]
-    (when s => x
-        (recur &form &env
-            (let-when [f (first s)] (seq? f) => (list f x)
-                (with-meta `(~(first f) ~@(next f) ~x) (meta f))
-            )
-            (next s)
-        )
-    )
-)
-
-;;;
- ; Repeatedly executes body (presumably for side-effects) with bindings and filtering as provided by "for".
- ; Does not retain the head of the sequence. Returns nil.
- ;;
-(defmacro doseq [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
-    )
-    (letfn [(emit- [e r]
-                (when e => [`(do ~@body) true]
-                    (let [[k v & e] e]
-                        (if (keyword? k)
-                            (let [[f r?] (emit- e r)]
-                                (case k
-                                    :let   [`(let ~v ~f) r?]
-                                    :while [`(when ~v ~f ~@(when r? [r])) false]
-                                    :when  [`(if ~v (do ~f ~@(when r? [r])) ~r) false]
-                                )
-                            )
-                            (let [s (gensym "s__") r `(recur (next ~s)) [f r?] (emit- e r)]
-                                [`(loop-when [~s (seq ~v)] ~s (let [~k (first ~s)] ~f ~@(when r? [r]))) true]
-                            )
-                        )
-                    )
-                )
-            )]
-        (first (emit- (seq bindings) nil))
-    )
-)
-
-;;;
- ; bindings => name n
- ;
- ; Repeatedly executes body (presumably for side-effects) with name
- ; bound to integers from 0 through n-1.
- ;;
-(defmacro dotimes [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
-    )
-    (let [[i n] bindings]
-        `(let [n# (long ~n)]
-            (loop-when-recur [~i 0] (< ~i n#) [(inc ~i)]
-                ~@body
-            )
-        )
-    )
-)
-
-;;;
- ; Executes exprs in an implicit do, while holding the monitor of x.
- ; Will release the monitor of x in all circumstances.
- ;;
-(defmacro locking [x & body]
-    `(let [lockee# ~x]
-        (try
-            (monitor-enter lockee#)
-            ~@body
-            (finally
-                (monitor-exit lockee#)
-            )
-        )
-    )
-)
-
-;;;
- ; Returns the Class of x.
- ;;
-(defn #_"Class" class [#_"Object" x] (when (some? x) (.getClass x)))
-
-;;;
- ; Throws a ClassCastException if x is not a c, else returns x.
- ;;
-(defn cast [#_"Class" c x] (.cast c x))
-
-;;;
- ; Evaluates x and tests if it is an instance of class c. Returns true or false.
- ;;
-(defn instance? [#_"Class" c x] (.isInstance c x))
-
-(defn class?   [x] (instance? Class x))
-(defn boolean? [x] (instance? Boolean x))
-(defn char?    [x] (instance? Character x))
-(defn number?  [x] (instance? Number x))
-(defn string?  [x] (instance? String x))
-
-(defn integer? [n]
-    (or (instance? Long n)
-        (instance? BigInteger n)
-        (instance? Integer n)
-        (instance? Byte n)
-    )
-)
-
-;;;
- ; Creates and returns an array of instances of the specified class of the specified dimension(s).
- ; Note that a class object is required.
- ; Class objects can be obtained by using their imported or fully-qualified name.
- ; Class objects for the primitive types can be obtained using, e.g. Integer/TYPE.
- ;;
-(defn make-array
-    ([#_"Class" type n] (Array/newInstance type (int n)))
-    ([#_"Class" type dim & s] (Array/newInstance type (int-array (cons dim s))))
-)
-
-;;;
- ; Creates an array of objects.
- ;;
-(defn object-array [size-or-seq]
-    (if (number? size-or-seq)
-        (make-array Object (.intValue #_"Number" size-or-seq))
-        (let [#_"ISeq" s (seq size-or-seq) #_"int" size (count s) #_"Object[]" a (make-array Object size)]
-            (loop-when-recur [#_"int" i 0 s s] (and (< i size) (some? s)) [(inc i) (next s)]
-                (aset a i (first s))
-            )
-            a
-        )
-    )
-)
-
+
 (arbace-ns IObject
     (defp IObject
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
@@ -9189,7 +9294,7 @@
                     (let-when [#_"Matcher" m (.matcher LispReader'rxInteger, s)] (.matches m)
                         (when (nil? (.group m, 2)) => (Long/valueOf 0)
                             (let [[#_"String" n #_"int" radix]
-                                    (cond-let
+                                    (cond-some
                                         [n (.group m, 3)] [n 10]
                                         [n (.group m, 4)] [n 16]
                                         [n (.group m, 5)] [n 8]
@@ -9848,7 +9953,7 @@
         (-> h1 (bit-xor k1) (Integer/rotateLeft 13) (* 5) (+ 0xe6546b64))
     )
 
-    (declare unsigned-bit-shift-right)
+    (declare unsigned-bit-shift-right)
 
     ;; finalization mix - force all bits of a hash block to avalanche
     (defn- #_"int" Murmur3'fmix [#_"int" h1, #_"int" n]
@@ -9881,8 +9986,8 @@
         )
     )
 
-    (declare bit-or)
-    (declare bit-shift-left)
+    (declare bit-or)
+    (declare bit-shift-left)
     (declare odd?)
 
     (defn #_"int" Murmur3'hashUnencodedChars [#_"CharSequence" s]
@@ -10149,7 +10254,7 @@
  ;;
 (defn hash [x] (Hashed'''hash x))
 
-    (declare bit-shift-right)
+    (declare bit-shift-right)
 
     (defn #_"int" Util'hashCombine [#_"int" seed, #_"int" hash]
         ;; a la boost
