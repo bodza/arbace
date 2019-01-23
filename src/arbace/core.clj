@@ -1,6 +1,6 @@
 (ns arbace.core
-    (:refer-clojure :only [* *ns* + - < <= = aclone aget alength apply aset assoc atom bit-and bit-or bit-shift-left bit-shift-right case concat conj conj! cons count dec defmacro #_def defn defprotocol defrecord #_do doseq doto drop even? extend-type #_finally first fn hash-map identical? #_if import inc int int-array interleave into keys keyword? last let #_letfn* list long loop map mapcat map-indexed max merge meta min mod #_monitor-enter #_monitor-exit neg? next ns-imports ns-unmap partition-all peek persistent! pop pos? quot #_recur reduced? rem reset! satisfies? second seq seq? split-at str swap! symbol symbol? take #_throw transient #_try unsigned-bit-shift-right update vary-meta vector? with-meta zero?])
-    (:require [clojure.core.rrb-vector :refer [catvec subvec vec #_vector]] [flatland.ordered.map :refer [#_ordered-map]] [flatland.ordered.set :refer [#_ordered-set]])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* + - < = aclone aget alength aset assoc atom bit-and bit-or bit-shift-left bit-shift-right boolean byte case char cons count defmacro defmethod defn defprotocol defrecord even? extend-protocol extend-type first fn hash-map hash-set identical? import inc int int-array interleave intern key keyword? let list long loop map map-indexed merge meta next pos? proxy reify rem satisfies? second seq seq? split-at str swap! symbol symbol? to-array unsigned-bit-shift-right val vary-meta vector? with-meta])
+    (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]] [flatland.ordered.map :refer [#_ordered-map]] [flatland.ordered.set :refer [#_ordered-set]])
 )
 
 (defmacro § [& _])
@@ -16,16 +16,54 @@
 (defmacro arbace-ns  [_ & s] (cons 'do s))
 (defmacro cloiure-ns [_ & s] (cons 'do s))
 
-(doseq [% (keys (ns-imports *ns*))] (ns-unmap *ns* %))
+(clojure.core/doseq [% (clojure.core/keys (clojure.core/ns-imports *ns*))] (clojure.core/ns-unmap *ns* %))
 
 (import
-    [arbace.math BigInteger]
-    [java.lang Boolean Byte Character Class Error Integer Long Number Object String System Thread]
-    [java.lang.reflect Array]
+    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException ClassLoader ClassNotFoundException Comparable Error Exception Integer Long NoSuchMethodException Number Object String StringBuilder System Thread ThreadLocal Throwable Void]
+)
+
+(defmacro import-as [#_"Symbol" sym #_"String" sig]
+    (let [#_"java.lang.reflect.Method" m (.getDeclaredMethod clojure.lang.Namespace, "referenceClass", (clojure.core/into-array [clojure.lang.Symbol Class]))]
+        (.setAccessible m, true)
+        (.invoke m, *ns*, (clojure.core/object-array [sym (Class/forName sig)]))
+    )
+)
+
+(import-as boolean'array "[Z")
+(import-as byte'array    "[B")
+(import-as char'array    "[C")
+(import-as int'array     "[I")
+(import-as long'array    "[J")
+(import-as Object'array  "[Ljava.lang.Object;")
+
+(import
+    [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
+    [java.lang.ref #_Reference ReferenceQueue SoftReference WeakReference]
+    [java.lang.reflect Array #_Constructor #_Field #_Method Modifier]
+    [java.security AccessController PrivilegedAction]
+    [java.util Arrays Comparator IdentityHashMap]
+    [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
+    [cloiure.asm #_ClassVisitor ClassWriter Label #_MethodVisitor Opcodes Type]
+    [cloiure.asm.commons GeneratorAdapter Method]
+    [arbace.math BigInteger]
+    [arbace.util.concurrent.atomic AtomicReference]
 )
 
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
+
+(def % rem)
+
+(def & bit-and)
+(def | bit-or)
+
+(def << bit-shift-left)
+(def >> bit-shift-right)
+(def >>> unsigned-bit-shift-right)
+
+(ß defmacro acopy [a i b j n] `(System/arraycopy ~b, ~j, ~a, ~i, ~n))
+(defn acopy [a i b j n] (System/arraycopy b, j, a, i, n))
+(defmacro aswap [a i f & s] `(let [a# ~a i# ~i] (aset a# i# (~f (aget a# i#) ~@s))))
 
 (let [last-id' (atom 0)] (defn next-id! [] (swap! last-id' inc)))
 
@@ -477,1634 +515,14 @@
         )
     )
 )
-
-(defn index-of [s x]
-    (loop-when [i 0 s (seq s)] (some? s) => -1
-        (when-not (= (first s) x) => i
-            (recur (inc i) (next s))
-        )
-    )
-)
 
-(defn assoc'  [v i x & s] (apply assoc  (vec v) i x s))
-(defn conj'   [v   x & s] (apply conj   (vec v)   x s))
-(defn into'   [v       s]       (into   (vec v)     s))
-(defn peek'   [v]               (peek   (vec v)      ))
-(defn pop'    [v]               (pop    (vec v)      ))
-(defn update' [v i f & s] (apply update (vec v) i f s))
-
-(defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
-
-(def & bit-and)
-(def | bit-or)
-
-(def << bit-shift-left)
-(def >> bit-shift-right)
-(def >>> unsigned-bit-shift-right)
-
-(defmacro acopy [a i b j n] `(System/arraycopy ~b, ~j, ~a, ~i, ~n))
-(defmacro aswap [a i f & s] `(let [a# ~a i# ~i] (aset a# i# (~f (aget a# i#) ~@s))))
-
-(value-ns HotSpot
-    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
-
-    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
-    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
-
-    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
-
-    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
-    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
-
-    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
-        (throw! "“Use the Force, Luke!”")
-    )
-)
-
-(arbace-ns Oops!
-    (defp AFn)
-    (defp Associative
-        (#_"Associative" Associative'''assoc [#_"Associative" this, #_"Object" key, #_"Object" val])
-        (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"Object" key])
-        (#_"IMapEntry" Associative'''entryAt [#_"Associative" this, #_"Object" key])
-    )
-    (defp Counted
-        (#_"int" Counted'''count [#_"Counted" this])
-    )
-    (defp Hashed
-        (#_"int" Hashed'''hash [#_"Hashed" this])
-    )
-    (defp IEditableCollection
-        (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
-    )
-    (defp IFn
-        (#_"Object" IFn'''invoke
-            [#_"IFn" this]
-            [#_"IFn" this, a1]
-            [#_"IFn" this, a1, a2]
-            [#_"IFn" this, a1, a2, a3]
-            [#_"IFn" this, a1, a2, a3, a4]
-            [#_"IFn" this, a1, a2, a3, a4, a5]
-            [#_"IFn" this, a1, a2, a3, a4, a5, a6]
-            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7]
-            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8]
-            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]
-            [#_"IFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args]
-        )
-        (#_"Object" IFn'''applyTo [#_"IFn" this, #_"ISeq" args])
-    )
-    (defp IKVReduce
-        (#_"Object" IKVReduce'''kvreduce [#_"IKVReduce" this, #_"IFn" f, #_"Object" r])
-    )
-    (defp ILookup
-        (#_"Object" ILookup'''valAt
-            [#_"ILookup" this, #_"Object" key]
-            [#_"ILookup" this, #_"Object" key, #_"Object" not-found]
-        )
-    )
-    (defp IMeta
-        (#_"IPersistentMap" IMeta'''meta [#_"IMeta" this])
-    )
-    (defp IObj
-        (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"IPersistentMap" meta])
-    )
-    (defp IObject
-        (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
-        (#_"String" IObject'''toString [#_"IObject" this])
-    )
-    (defp IPersistentCollection
-        (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
-        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
-    )
-    (defp IPersistentStack
-        (#_"Object" IPersistentStack'''peek [#_"IPersistentStack" this])
-        (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
-    )
-    (defp IPersistentVector
-        (#_"IPersistentVector" IPersistentVector'''assocN [#_"IPersistentVector" this, #_"int" i, #_"Object" val])
-    )
-    (defp IReduce
-        (#_"Object" IReduce'''reduce
-            [#_"IReduce" this, #_"IFn" f]
-            [#_"IReduce" this, #_"IFn" f, #_"Object" r]
-        )
-    )
-    (defp ITransientAssociative
-        (#_"ITransientAssociative" ITransientAssociative'''assoc! [#_"ITransientAssociative" this, #_"Object" key, #_"Object" val])
-        (#_"boolean" ITransientAssociative'''containsKey [#_"ITransientAssociative" this, #_"Object" key])
-        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ITransientAssociative" this, #_"Object" key])
-    )
-    (defp ITransientCollection
-        (#_"ITransientCollection" ITransientCollection'''conj! [#_"ITransientCollection" this, #_"Object" val])
-        (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
-    )
-    (defp ITransientVector
-        (#_"ITransientVector" ITransientVector'''assocN! [#_"ITransientVector" this, #_"int" i, #_"Object" val])
-        (#_"ITransientVector" ITransientVector'''pop! [#_"ITransientVector" this])
-    )
-    (defp Indexed
-        (#_"Object" Indexed'''nth
-            [#_"Indexed" this, #_"int" i]
-            [#_"Indexed" this, #_"int" i, #_"Object" not-found]
-        )
-    )
-    (defp Reversible
-        (#_"ISeq" Reversible'''rseq [#_"Reversible" this])
-    )
-    (defp Seqable
-        (#_"ISeq" Seqable'''seq [#_"Seqable" this])
-    )
-    (defp Sequential)
-
-    (declare count' APersistentVector'new)
-)
-
-(arbace-ns IPersistentWector
-    (defp IPersistentWector
-        (#_"IPersistentWector" IPersistentWector'''slicew [#_"IPersistentWector" this, #_"int" start, #_"int" end])
-        (#_"IPersistentWector" IPersistentWector'''splicew [#_"IPersistentWector" this, #_"IPersistentWector" that])
-    )
-)
-
-(defn wector? [x] (satisfies? IPersistentWector x))
-
-(arbace-ns PersistentWector
-    (defp WNode)
-    (defp TransientWector)
-    (defp PersistentWector)
-)
-
-(arbace-ns PersistentWector
-
-(def- value-array object-array)
-
-(class-ns WNode []
-    (defn #_"WNode" WNode'new [#_"Thread'" edit, #_"Object[]" array, #_"int[]" index]
-        (merge (WNode'class.)
-            (hash-map
-                #_"Thread'" :edit edit
-                #_"Object[]" :array (or array (object-array 32))
-                #_"int[]" :index index
-            )
-        )
-    )
-
-    (def #_"WNode" WNode'EMPTY (WNode'new nil, nil, nil))
-
-    (defn #_"WNode" WNode''newPath [#_"WNode" this, #_"Thread'" edit, #_"int" shift]
-        (when (pos? shift) => this
-            (WNode'new edit, (doto (object-array 32) (aset 0 (WNode''newPath this, edit, (- shift 5)))), nil)
-        )
-    )
-
-    (defn #_"values" WNode''arrayFor
-        ([#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt] (WNode''arrayFor this, i, shift, cnt, cnt, nil))
-        ([#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
-            (when (< -1 i cnt) => (throw! "index is out of bounds")
-                (when (< i tail-off) => tail
-                    (loop-when [i i #_"WNode" node this shift shift] (pos? shift) => (:array node)
-                        (let [
-                            #_"int[]" x (:index node)
-                            #_"int" m (& (>> i shift) 0x1f)
-                            [m i]
-                                (when (some? x) => [m i]
-                                    (let [
-                                        m (loop-when-recur m (<= (aget x m) i) (inc m) => m)
-                                    ]
-                                        [m (if (pos? m) (- i (aget x (dec m))) i)]
-                                    )
-                                )
-                        ]
-                            (recur i (aget (:array node) m) (- shift 5))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"value" WNode''valueFor [#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"values" tail]
-        (let [
-            #_"int" tail-off (- cnt (alength tail))
-        ]
-            (aget (WNode''arrayFor this, i, shift, cnt, tail-off, tail) (if (< i tail-off) (& (>> i shift) 0x1f) (- i tail-off)))
-        )
-    )
-
-    (defn- #_"int[]" WNode'n-index [#_"int" shift, #_"int" n]
-        (let [
-            #_"int" k (<< 1 shift)
-            #_"int[]" x (int-array 33)
-        ]
-            (loop [#_"int" j 0 #_"int" i k]
-                (if (< i n)
-                    (do
-                        (aset x j i)
-                        (recur (inc j) (+ i k))
-                    )
-                    (doto x
-                        (aset j n)
-                        (aset 32 (inc j))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"int[]" WNode'm-n-index [#_"int" shift, #_"int" m, #_"int" n]
-        (let [
-            #_"int" k (<< 1 shift)
-            #_"int[]" x (int-array 33)
-        ]
-            (loop [#_"int" j 0 #_"int" i k]
-                (if (< j m)
-                    (do
-                        (aset x j i)
-                        (recur (inc j) (+ i k))
-                    )
-                    (doto x
-                        (aset j n)
-                        (aset 32 (inc j))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"int" WNode'index-of-nil [#_"Object[]" a]
-        (loop-when [#_"int" l 0 #_"int" h 31] (< l (dec h)) => (cond (nil? (aget a l)) l (nil? (aget a h)) h :else 32)
-            (let [
-                #_"int" m (+ l (>> (- h l) 1))
-            ]
-                (if (nil? (aget a m))
-                    (recur l m)
-                    (recur (inc m) h)
-                )
-            )
-        )
-    )
-
-    (defn #_"int" WNode'last-range [#_"int[]" x]
-        (aget x (dec (aget x 32)))
-    )
-
-    (defn #_"boolean" WNode''overflow? [#_"WNode" this, #_"int" shift, #_"int" cnt]
-        (let [
-            #_"int[]" x (:index this)
-        ]
-            (when (some? x) => (< (<< 1 shift) (>> (inc cnt) 5))
-                (and (= (aget x 32) 32)
-                    (or (= shift 5)
-                        (recur
-                            (aget (:array this) 31)
-                            (- shift 5)
-                            (+ (- (aget x 31) (aget x 30)) 32)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"WNode" WNode''first-child [#_"WNode" this]
-        (aget (:array this) 0)
-    )
-
-    (defn- #_"WNode" WNode''last-child [#_"WNode" this]
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (aget a (dec (if (some? x) (aget x 32) (WNode'index-of-nil a))))
-        )
-    )
-
-    (defn- #_"WNode" WNode''remove-leftmost-child [#_"WNode" this]
-        (let [
-            #_"Object[]" a (:array this)
-        ]
-            (when (some? (aget a 1))
-                (let [
-                    #_"Object[]" a' (doto (object-array 32) (acopy 0 a 1 31))
-                    #_"int[]" x (:index this)
-                    #_"int[]" x'
-                        (when (some? x)
-                            (let [
-                                #_"int" k (aget x 0)
-                                #_"int" e (dec (aget x 32))
-                                x' (int-array 33)
-                                _ (dotimes [#_"int" j e] (aset x' j (- (aget x (inc j)) k)))
-                            ]
-                                (doto x' (aset e 0) (aset 32 e))
-                            )
-                        )
-                ]
-                    (WNode'new nil, a', x')
-                )
-            )
-        )
-    )
-
-    (defn- #_"WNode" WNode''replace-leftmost-child [#_"WNode" this, #_"int" shift, #_"int" cnt, #_"WNode" node, #_"int" delta]
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-            #_"int[]" x' (int-array 33)
-            #_"Object[]" a'
-                (if (some? x)
-                    (let [
-                        #_"int" n (aget x 32)
-                        _ (dotimes [#_"int" j n] (aset x' j (- (aget x j) delta)))
-                        _ (aset x' 32 n)
-                    ]
-                        (doto (aclone a) (aset 0 node))
-                    )
-                    (let [
-                        #_"int" k (<< 1 shift)
-                        #_"int" n (& (>> shift (dec cnt)) 0x1f)
-                        _ (aset x' 0 (- k delta))
-                        _ (dotimes [#_"int" j n] (aset x' (inc j) (+ (aget x' j) k)))
-                        _ (aset x' n (- cnt delta))
-                        _ (aset x' 32 (inc n))
-                    ]
-                        (doto (object-array 32) (aset 0 node) (acopy 1 a 1 n))
-                    )
-                )
-        ]
-            (WNode'new nil, a', x')
-        )
-    )
-
-    (defn- #_"WNode" WNode''replace-rightmost-child [#_"WNode" this, #_"int" shift, #_"WNode" node, #_"int" delta]
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (if (some? x)
-                (let [
-                    #_"int" e (dec (aget x 32))
-                ]
-                    (WNode'new nil, (doto (aclone a) (aset e node)), (doto (aclone x) (aset e (+ (aget x e) delta))))
-                )
-                (let [
-                    #_"int" m (dec (WNode'index-of-nil a))
-                ]
-                    (if (some? (:index node))
-                        (WNode'new nil, (doto (object-array 32) (acopy 0 a 0 m) (aset m node)), (WNode'm-n-index shift, m, (WNode'last-range (:index node))))
-                        (WNode'new nil, (doto (aclone a) (aset m node)), nil)
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"WNode" WNode''fold-tail [#_"WNode" this, #_"int" shift, #_"int" cnt, #_"Object[]" tail]
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-            #_"int" m (WNode'index-of-nil a)
-            #_"WNode" tail-node
-                (when (< 5 shift) => (WNode'new nil, tail, nil)
-                    (let [
-                        #_"int" n
-                            (when (some? x) => (mod cnt (<< 1 shift))
-                                (let [
-                                    #_"int" e (dec (aget x 32))
-                                ]
-                                    (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0))
-                                )
-                            )
-                    ]
-                        (WNode''fold-tail (aget a (dec m)), (- shift 5), n, tail)
-                    )
-                )
-        ]
-            (when (or (< m 32) (and (some? tail-node) (< 5 shift)))
-                (let [
-                    #_"int" n (alength tail)
-                    #_"int[]" x'
-                        (when (or (some? x) (< n 32))
-                            (let [
-                                x' (if (some? x) (aclone x) (WNode'n-index shift, cnt))
-                            ]
-                                (if (and (some? tail-node) (< 5 shift))
-                                    (do
-                                        (when (pos? m)
-                                            (aset x' (dec m) (+ (aget x' (dec m)) n))
-                                        )
-                                        (doto x' (aset 32 m))
-                                    )
-                                    (do
-                                        (aset x' m (+ (if (pos? m) (aget x' (dec m)) 0) n))
-                                        (doto x' (aset 32 (inc m)))
-                                    )
-                                )
-                            )
-                        )
-                    #_"Object[]" a' (doto (object-array 32) (acopy 0 a 0 m))
-                ]
-                    (if (some? tail-node)
-                        (aset a' (if (< 5 shift) (dec m) m) tail-node)
-                        (aset a' m (WNode''newPath (WNode'new nil, tail, nil), nil, (- shift 5)))
-                    )
-                    (WNode'new nil, a', x')
-                )
-            )
-        )
-    )
-
-    (def #_"int" WNode'rrbt-concat-threshold 33)
-    (def- #_"int" WNode'max-extra-search-steps 2)
-
-    (defn #_"WNode" WNode''slice-right [#_"WNode" this, #_"int" shift, #_"int" end]
-        ;; => potentially return a short node, although it would be better to make sure a regular
-        ;; leaf is always left at the right, with any items over the final 32 moved into tail
-        ;; (and then potentially back into the tree should the tail become too long...)
-        (when (pos? shift) => (WNode'new nil, (doto (value-array end) (acopy 0 (:array this) 0 end)), nil)
-            (let [
-                #_"Object[]" a (:array this) #_"int[]" x (:index this)
-                #_"int" m (& (>> (dec end) shift) 0x1f)
-                m
-                    (when (some? x) => m
-                        (loop-when-recur m (< (aget x m) end) (inc m) => m)
-                    )
-                #_"int" k (<< 1 shift)
-                #_"int" child-end
-                    (cond
-                        (nil? x) (let [#_"int" e (rem end k)] (if (zero? e) k e))
-                        (pos? m) (- end (aget x (dec m)))
-                        :else    end
-                    )
-                #_"WNode" child (WNode''slice-right (aget a m), (- shift 5), child-end)
-                #_"int[]" y (:index child)
-                #_"Object[]" a' (doto (object-array 32) (acopy 0 a 0 m) (aset m child))
-                #_"int[]" x'
-                    (when (or (some? x) (some? y))
-                        (let [
-                            x' (int-array 33)
-                            _ (dotimes [#_"int" j m] (aset x' j (if (some? x) (aget x j) (* (inc j) k))))
-                            #_"int" delta
-                                (cond
-                                    (nil? y)    (let [#_"int" e (mod child-end k) ] (if (zero? e) k e))
-                                    (< 5 shift) (WNode'last-range y)
-                                    :else       (alength (:array child))
-                                )
-                        ]
-                            (aset x' m (+ (if (pos? m) (aget x' (dec m)) 0) delta))
-                            (doto x' (aset 32 (inc m)))
-                        )
-                    )
-            ]
-                (WNode'new nil, a', x')
-            )
-        )
-    )
-
-    (defn #_"WNode" WNode''slice-left [#_"WNode" this, #_"int" shift, #_"int" start, #_"int" end]
-        (if (zero? shift)
-            ;; potentially return a short node
-            (let [
-                #_"Object[]" a (:array this)
-                #_"int" n (- (alength a) start)
-            ]
-                (WNode'new nil, (doto (value-array n) (acopy 0 a start n)), nil)
-            )
-            (let [
-                #_"Object[]" a (:array this) #_"int[]" x (:index this)
-                #_"int" m (& (>> start shift) 0x1f)
-                m
-                    (when (some? x) => m
-                        (loop-when-recur m (<= (aget x m) start) (inc m) => m)
-                    )
-                #_"int" n
-                    (when (nil? x) => (aget x 32)
-                        (loop-when-recur [n m] (and (< n 32) (some? (aget a n))) [(inc n)] => n)
-                    )
-                #_"int" k (<< 1 shift)
-                #_"WNode" child
-                    (let [
-                        #_"int" i (if (some? x) (aget x (dec m)) (* m k))
-                    ]
-                        (WNode''slice-left (aget a m), (- shift 5), (if (pos? m) (- start i) start), (min k (if (pos? m) (- end i) end)))
-                    )
-                n (- n m)
-                n (if (some? child) n (dec n))
-            ]
-                (when (pos? n)
-                    (let [
-                        #_"int[]" x' (int-array 33)
-                        _
-                            (if (some? x)
-                                (loop-when [#_"int" j 0 #_"int" i m] (< j n)
-                                    (aset x' j (- (aget x i) start))
-                                    (recur (inc j) (inc i))
-                                )
-                                (let [
-                                    #_"int" i
-                                        (if (and (some? child) (some? (:index child)) (< 5 shift))
-                                            (WNode'last-range (:index child))
-                                            (- k (& (>> start (- shift 5)) 0x1f))
-                                        )
-                                ]
-                                    (loop-when [#_"int" j 0 i i] (< j n)
-                                        (aset x' j i)
-                                        (recur (inc j) (+ i k))
-                                    )
-                                    (when (< 1 n)
-                                        (aset x' (dec n) (- end start))
-                                    )
-                                )
-                            )
-                        _ (aset x' 32 n)
-                        #_"Object[]" a' (object-array 32)
-                        _
-                            (if (some? child)
-                                (doto a' (aset 0 child) (acopy 1 a (inc m) (dec n)))
-                                (doto a' (acopy 0 a (inc m) n))
-                            )
-                    ]
-                        (WNode'new nil, a', x')
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"WNode" WNode''shift-from-to [#_"WNode" this, #_"int" from, #_"int" to]
-        (when-not (= from to) => this
-            (let [
-                #_"int[]" x'
-                    (when (some? (:index this))
-                        (doto (int-array 33) (aset 0 (WNode'last-range (:index this))) (aset 32 1))
-                    )
-            ]
-                (recur (WNode'new nil, (doto (object-array 32) (aset 0 this)), x') (+ 5 from) to)
-            )
-        )
-    )
-
-    (defn- #_"int" WNode''leaf-count [#_"WNode" this, #_"int" shift]
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (cond
-                (zero? shift) (alength a)
-                (some? x)     (aget x 32)
-                :else         (WNode'index-of-nil a)
-            )
-        )
-    )
-
-    (defn- #_"int" WNode''tree-count [#_"WNode" this, #_"int" shift]
-        ;; NB. positive shifts only
-        (let [
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (loop-when-recur [#_"int" i 0 #_"int" n 0]
-                             (if (some? x) (< i (aget x 32)) (and (< i 32) (some? (aget a i))))
-                             [(inc i) (+ n (WNode''leaf-count (aget a i), (- shift 5)))]
-                          => n
-            )
-        )
-    )
-
-    (defn- #_"seq" WNode''leaf-seq [#_"WNode" this]
-        (let [
-            #_"Object[]" a (:array this)
-        ]
-            (mapcat :array (take (WNode'index-of-nil a) a))
-        )
-    )
-
-    (defn- #_"[WNode WNode int]" WNode'rebalance-leaves [#_"WNode" node1, #_"WNode" node2, #_"int" delta]
-        (let [
-            #_"int" n1 (WNode''tree-count node1, 5) #_"int" n2 (WNode''tree-count node2, 5) #_"int" n (+ n1 n2)
-        ]
-            (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, 5) (WNode''leaf-count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
-                (let [
-                    #_"seq" s (map #(WNode'new nil, (value-array %), nil) (partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
-                ]
-                    (if (<= n (* 32 32))
-                        (let [
-                            #_"int[]" x' (when-not (zero? (mod n 32)) (WNode'n-index 5, n))
-                        ]
-                            [(WNode'new nil, (object-array s), x') nil n2]
-                        )
-                        (let [
-                            #_"int[]" x' (when-not (zero? (mod n 32)) (WNode'n-index 5, (- n (* 32 32))))
-                        ]
-                            [(WNode'new nil, (object-array (take 32 s)), nil) (WNode'new nil, (object-array (drop 32 s)), x') (- (* 32 32) n1)]
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"seq" WNode''child-seq [#_"WNode" this, #_"int" shift, #_"int" cnt]
-        (let [
-            f'cseq
-                (fn [#_"WNode" this #_"int" cnt]
-                    (let [
-                        #_"int[]" x (or (:index this) (WNode'n-index (- shift 5), cnt))
-                        #_"int" n (aget x 32)
-                    ]
-                        (take n (map list (:array this) (map - x (cons 0 x))))
-                    )
-                )
-            #_"int[]" x (or (:index this) (WNode'n-index shift, cnt))
-            #_"int" n (aget x 32)
-        ]
-            (mapcat f'cseq (take n (:array this)) (take n (map - x (cons 0 x))))
-        )
-    )
-
-    (defn- #_"[WNode WNode int]" WNode'rebalance [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2, #_"int" delta]
-        (when (some? node2) => [node1 nil delta]
-            (let [
-                #_"int" n1 (WNode''tree-count node1, shift) #_"int" n2 (WNode''tree-count node2, shift) #_"int" n (+ n1 n2)
-            ]
-                (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, shift) (WNode''leaf-count node2, shift)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
-                    (let [
-                        #_"seq" s (partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
-                    ]
-                        (if (<= n (* 32 32))
-                            (let [
-                                #_"Object[]" a (object-array 32) #_"int[]" x (int-array 33)
-                                _
-                                    (loop [#_"int" i 0 s s]
-                                        (when-first [#_"seq" block s]
-                                            (let [
-                                                #_"Object[]" a' (object-array 32) #_"int[]" x' (int-array 33)
-                                                _
-                                                    (loop [#_"int" j 0 #_"int" k 0 #_"seq" z (seq block)]
-                                                        (when-first [[#_"WNode" c #_"int" r] z]
-                                                            (aset a' j c)
-                                                            (aset x' j (+ k r))
-                                                            (recur (inc j) (+ k r) (next z))
-                                                        )
-                                                    )
-                                                _ (aset x' 32 (count block))
-                                            ]
-                                                (aset a i (WNode'new nil, a', x'))
-                                                (aset x i (+ (WNode'last-range  x') (if (pos? i) (aget x (dec i)) 0)))
-                                                (aset x 32 (inc i))
-                                                (recur (inc i) (next s))
-                                            )
-                                        )
-                                    )
-                            ]
-                                [(WNode'new nil, a, x) nil cnt2]
-                            )
-                            (let [
-                                #_"Object[]" a1 (object-array 32) #_"int[]" x1 (int-array 33)
-                                #_"Object[]" a2 (object-array 32) #_"int[]" x2 (int-array 33)
-                                delta
-                                    (loop [delta delta #_"int" i 0 s s]
-                                        (when-first [#_"seq" block s] => delta
-                                            (let [
-                                                #_"Object[]" a' (object-array 32) #_"int[]" x' (int-array 33)
-                                                _
-                                                    (loop [#_"int" j 0 #_"int" k 0 #_"seq" z (seq block)]
-                                                        (when-first [[#_"WNode" c #_"int" r] z]
-                                                            (aset a' j c)
-                                                            (aset x' j (+ k r))
-                                                            (recur (inc j) (+ k r) (next z))
-                                                        )
-                                                    )
-                                                _ (aset x' 32 (count block))
-                                                delta
-                                                    (when (and (< i 32) (< n1 (+ (* i 32) (aget x' 32)))) => delta
-                                                        (let [
-                                                            #_"int" k (- (+ (* i 32) (aget x' 32)) n1)
-                                                            #_"int" e (dec (aget x' 32))
-                                                        ]
-                                                            (+ delta (if (< k 32) (- (aget x' e) (aget x' (- e k))) (aget x' e)))
-                                                        )
-                                                    )
-                                                #_"Object[]" a (if (< i 32) a1 a2) #_"int[]" x (if (< i 32) x1 x2)
-                                                #_"int" m (mod i 32)
-                                            ]
-                                                (aset a m (WNode'new nil, a', x'))
-                                                (aset x m (+ (WNode'last-range  x') (if (pos? m) (aget x (dec m)) 0)))
-                                                (aset x 32 (inc m))
-                                                (recur delta (inc i) (next s))
-                                            )
-                                        )
-                                    )
-                            ]
-                                [(WNode'new nil, a1, x1) (WNode'new nil, a2, x2) delta]
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"[WNode WNode int]" WNode'zippath [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2, #_"int" delta]
-        (if (= shift 5)
-            (WNode'rebalance-leaves node1, node2, delta)
-            (let [
-                #_"WNode" c1 (WNode''last-child node1)
-                #_"WNode" c2 (WNode''first-child node2)
-                #_"int" k (<< 1 shift)
-                #_"int" m1
-                    (let [
-                        #_"int[]" x1 (:index node1)
-                    ]
-                        (when (some? x1) => (let [#_"int" m (mod cnt1 k)] (if (zero? m) k m))
-                            (let [#_"int" e (dec (aget x1 32))]
-                                (if (pos? e) (- (aget x1 e) (aget x1 (dec e))) (aget x1 0))
-                            )
-                        )
-                    )
-                #_"int" m2
-                    (let [
-                        #_"int[]" x2 (:index node2)
-                    ]
-                        (when (some? x2) => (let [#_"int" m (mod cnt2 k)] (if (zero? m) k m))
-                            (aget x2 0)
-                        )
-                    )
-                [#_"WNode" c1' #_"WNode" c2' #_"int" d'] (WNode'zippath (- shift 5), c1, m1, c2, m2, 0)
-            ]
-                (WNode'rebalance shift,
-                    (if (identical? c1 c1') node1 (WNode''replace-rightmost-child node1, shift, c1', d')),
-                    (+ cnt1 d'),
-                    (if c2' (if (identical? c2 c2') node2 (WNode''replace-leftmost-child node2, shift, cnt2, c2', d')) (WNode''remove-leftmost-child node2)),
-                    (- cnt2 d'),
-                    (+ delta d')
-                )
-            )
-        )
-    )
-
-    (defn #_"[WNode WNode]" WNode'squash-nodes [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2]
-        (let [
-            #_"Object[]" a1 (:array node1) #_"int" n1 (WNode'index-of-nil a1)
-            #_"Object[]" a2 (:array node2) #_"int" n2 (WNode'index-of-nil a2)
-            #_"seq" slots (concat (take n1 a1) (take n2 a2))
-        ]
-            (when (<= (count slots) 32) => [node1 node2]
-                (let [
-                    #_"seq" s1 (take n1 (or (:index node1) (WNode'n-index shift, cnt1)))
-                    #_"seq" s2 (take n2 (or (:index node2) (WNode'n-index shift, cnt2)))
-                    #_"seq" index (concat s1 (let [#_"int" d (last s1)] (map #(+ % d) s2)))
-                    #_"Object[]" a' (object-array 32)
-                    _
-                        (loop-when-recur [#_"int" i 0 s (seq slots)] s [(inc i) (next s)]
-                            (aset a' i (first s))
-                        )
-                    #_"int[]" x' (int-array 33)
-                    _
-                        (loop-when-recur [#_"int" i 0 s (seq index)] s [(inc i) (next s)] => (aset x' 32 i)
-                            (aset x' i (first s))
-                        )
-                ]
-                    [(WNode'new nil, a', x') nil]
-                )
-            )
-        )
-    )
-
-    (defn #_"void" WNode''assertEditable [#_"WNode" this]
-        (let [
-            #_"Thread" owner @(or (:edit this) (throw! "transient use of persistent data"))
-        ]
-            (when-not (identical? (Thread/currentThread) owner)
-                (if (some? owner)
-                    (throw! "transient used by non-owner thread")
-                    (throw! "transient used after persistent! call")
-                )
-            )
-        )
-        nil
-    )
-
-    (defn #_"boolean" WNode''cow? [#_"WNode" this, #_"Thread'" edit]
-        (let [
-            #_"Thread'" e (:edit this)
-        ]
-            (or (nil? e) (nil? @e) (not (or (identical? e edit) (throw! "transient cow!"))))
-        )
-    )
-
-    (defn #_"WNode" WNode''editableRoot [#_"WNode" this]
-        (let [
-            #_"Thread'" edit (atom (Thread/currentThread))
-            #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (WNode'new edit, (aclone a), (when (some? x) (aclone x)))
-        )
-    )
-
-    (defn #_"values" WNode'editableTail [#_"values" tail]
-        (doto (value-array 32) (acopy 0 tail 0 (alength tail)))
-    )
-
-    (defn #_"WNode" WNode''pushTail [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt, #_"WNode" tail-node]
-        (let [
-            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
-        ]
-            (if (some? x)
-                (let [
-                    #_"int" e (dec (aget x 32))
-                    #_"WNode" child
-                        (when (< 5 shift)
-                            (let [
-                                #_"int" n (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0))
-                            ]
-                                (when (< n (<< 1 shift))
-                                    (WNode''pushTail (aget a e), edit, (- shift 5), (inc n), tail-node)
-                                )
-                            )
-                        )
-                    a (if cow? (aclone a) a) x (if cow? (aclone x) x)
-                    _
-                        (if (some? child)
-                            (do
-                                (aset a e child)
-                                (aswap x e + 32)
-                            )
-                            (do
-                                (aset a (inc e) (WNode''newPath tail-node, edit, (- shift 5)))
-                                (aset x (inc e) (+ (aget x e) 32))
-                                (aswap x 32 inc)
-                            )
-                        )
-                ]
-                    (if cow? (WNode'new edit, a, x) this)
-                )
-                (let [
-                    #_"int" e (& (>> (dec cnt) shift) 0x1f)
-                    #_"WNode" child
-                        (when (< 5 shift) => tail-node
-                            (if-some [child (aget a e)]
-                                (WNode''pushTail child, edit, (- shift 5), cnt, tail-node)
-                                (WNode''newPath tail-node, edit, (- shift 5))
-                            )
-                        )
-                    a (if cow? (aclone a) a)
-                    _ (aset a e child)
-                ]
-                    (if cow? (WNode'new edit, a, nil) this)
-                )
-            )
-        )
-    )
-
-    (defn #_"WNode" WNode''popTail [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt]
-        (let [
-            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
-            #_"int" e (& (>> (dec cnt) shift) 0x1f)
-        ]
-            (if (some? x)
-                (let [
-                    e (loop-when-recur e (and (< e 31) (pos? (aget x (inc e)))) (inc e) => e)
-                ]
-                    (cond
-                        (< 5 shift)
-                            (let [
-                                #_"WNode" c (aget a e)
-                                #_"WNode" c' (WNode''popTail c, edit, (- shift 5), (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0)))
-                            ]
-                                (when (or (some? c') (pos? e))
-                                    (let [
-                                        a (if cow? (aclone a) a)
-                                        _ (aset a e c')
-                                        #_"int" d
-                                            (when (some? (:index c)) => 32
-                                                (- (WNode'last-range (:index c)) (if (some? c') (WNode'last-range (:index c')) 0))
-                                            )
-                                        x (if cow? (aclone x) x)
-                                        _ (aswap x e - d)
-                                        _ (when (nil? c') (aswap x 32 dec))
-                                    ]
-                                        (if cow? (WNode'new edit, a, x) this)
-                                    )
-                                )
-                            )
-                        (pos? e)
-                            (let [
-                                a (if cow? (aclone a) a)
-                                _ (aset a e nil)
-                                x (if cow? (aclone x) x)
-                                _ (aset x e 0)
-                                _ (aswap x 32 dec)
-                            ]
-                                (if cow? (WNode'new edit, a, x) this)
-                            )
-                    )
-                )
-                (cond
-                    (< 5 shift)
-                        (let [
-                            #_"WNode" c' (WNode''popTail (aget a e), edit, (- shift 5), cnt)
-                        ]
-                            (when (or (some? c') (pos? e))
-                                (let [
-                                    a (if cow? (aclone a) a)
-                                    _ (aset a e c')
-                                ]
-                                    (if cow? (WNode'new edit, a, nil) this)
-                                )
-                            )
-                        )
-                    (pos? e)
-                        (let [
-                            a (if cow? (aclone a) a)
-                            _ (aset a e nil)
-                        ]
-                            (if cow? (WNode'new edit, a, nil) this)
-                        )
-                )
-            )
-        )
-    )
-
-    (defn #_"WNode" WNode''doAssoc [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" i, #_"value" val]
-        (let [
-            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
-            a (if cow? (aclone a) a)
-            #_"int" m (& (>> i shift) 0x1f)
-            _
-                (when (pos? shift) => (aset a m val)
-                    (let [
-                        [m i]
-                            (when (some? x) => [m i]
-                                (let [
-                                    m (loop-when-recur m (<= (aget x m) i) (inc m) => m)
-                                ]
-                                    [m (if (pos? m) (- i (aget x (dec m))) i)]
-                                )
-                            )
-                    ]
-                        (aswap a m WNode''doAssoc edit, (- shift 5), i, val)
-                    )
-                )
-        ]
-            (if cow? (WNode'new edit, a, x) this)
-        )
-    )
-)
-
-(class-ns TransientWector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector]
-    (defn #_"TransientWector" TransientWector'new
-        ([#_"PersistentWector" w]
-            (TransientWector'new (:cnt w), (:shift w), (WNode''editableRoot (:root w)), (WNode'editableTail (:tail w)), (alength (:tail w)))
-        )
-        ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"Object[]" tail, #_"int" tidx]
-            (merge (TransientWector'class.)
-                (hash-map
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"WNode" :root root
-                    #_"Object[]" :tail tail
-                    #_"int" :tidx tidx
-                )
-            )
-        )
-    )
-
-    (defn- #_"int" TransientWector''tailoff [#_"TransientWector" this]
-        (- (:cnt this) (:tidx this))
-    )
-
-    (defn- #_"values" TransientWector''arrayFor [#_"TransientWector" this, #_"int" i]
-        (WNode''arrayFor (:root this), i, (:shift this), (:cnt this), (TransientWector''tailoff this), (:tail this))
-    )
-
-    (defm TransientWector Counted
-        (#_"int" Counted'''count [#_"TransientWector" this]
-            (WNode''assertEditable (:root this))
-            (:cnt this)
-        )
-    )
-
-    (defm TransientWector Indexed
-        (#_"value" Indexed'''nth
-            ([#_"TransientWector" this, #_"int" i]
-                (WNode''assertEditable (:root this))
-                (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
-            )
-            ([#_"TransientWector" this, #_"int" i, #_"value" not-found]
-                (WNode''assertEditable (:root this))
-                (when (< -1 i (:cnt this)) => not-found
-                    (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
-                )
-            )
-        )
-    )
-
-    (defm TransientWector ILookup
-        (#_"value" ILookup'''valAt
-            ([#_"TransientWector" this, #_"key" key] (ILookup'''valAt this, key, nil))
-            ([#_"TransientWector" this, #_"key" key, #_"value" not-found]
-                (WNode''assertEditable (:root this))
-                (when (integer? key) => not-found
-                    (let-when [#_"int" i (.intValue key)] (< -1 i (:cnt this)) => not-found
-                        (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
-                    )
-                )
-            )
-        )
-    )
-
-    (defm TransientWector IFn
-        (#_"value" IFn'''invoke [#_"TransientWector" this, #_"key" arg]
-            (when (integer? arg) => (throw! "arg must be integer")
-                (Indexed'''nth this, (.intValue arg))
-            )
-        )
-
-        (#_"value" IFn'''applyTo [#_"TransientWector" this, #_"seq" args]
-            (case (count' args 1)
-                1 (IFn'''invoke this, (first args))
-            )
-        )
-    )
-
-    (defm TransientWector ITransientCollection
-        (#_"TransientWector" ITransientCollection'''conj! [#_"TransientWector" this, #_"value" val]
-            (WNode''assertEditable (:root this))
-            (if (< (:tidx this) 32)
-                (let [
-                    _ (aset (:tail this) (:tidx this) val)
-                ]
-                    (-> this (update :cnt inc) (update :tidx inc))
-                )
-                (let [
-                    #_"WNode" tail-node (WNode'new (:edit (:root this)), (:tail this), nil)
-                    this (assoc this :tail (doto (value-array 32) (aset 0 val)), :tidx 1)
-                ]
-                    (if (WNode''overflow? (:root this), (:shift this), (:cnt this))
-                        (let [
-                            #_"Object[]" a'
-                                (doto (object-array 32)
-                                    (aset 0 (:root this))
-                                    (aset 1 (WNode''newPath tail-node, (:edit (:root this)), (:shift this)))
-                                )
-                            #_"int[]" x'
-                                (when (some? (:index (:root this)))
-                                    (let [
-                                        #_"int" n (aget (:index (:root this)) 31)
-                                    ]
-                                        (doto (int-array 33) (aset 0 n) (aset 1 (+ n 32)) (aset 32 2))
-                                    )
-                                )
-                            #_"WNode" root (WNode'new (:edit (:root this)), a', x')
-                        ]
-                            (-> this (assoc :root root) (update :shift + 5) (update :cnt inc))
-                        )
-                        (let [
-                            #_"WNode" root (WNode''pushTail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
-                        ]
-                            (-> this (assoc :root root) (update :cnt inc))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defm TransientWector ITransientVector
-        (#_"TransientWector" ITransientVector'''assocN! [#_"TransientWector" this, #_"int" i, #_"value" val]
-            (WNode''assertEditable (:root this))
-            (if (< -1 i (:cnt this))
-                (let [
-                    #_"int" tail-off (TransientWector''tailoff this)
-                ]
-                    (if (<= tail-off i)
-                        (do
-                            (aset (:tail this) (- i tail-off) val)
-                            this
-                        )
-                        (do
-                            (assoc this :root (WNode''doAssoc (:root this), (:edit (:root this)), (:shift this), i, val))
-                        )
-                    )
-                )
-                (when (= i (:cnt this)) => (throw! "index is out of bounds")
-                    (ITransientCollection'''conj! this, val)
-                )
-            )
-        )
-    )
-
-    (defm TransientWector ITransientAssociative
-        (#_"TransientWector" ITransientAssociative'''assoc! [#_"TransientWector" this, #_"key" key, #_"value" val]
-            (when (integer? key) => (throw! "key must be integer")
-                (ITransientVector'''assocN! this, (.intValue key), val)
-            )
-        )
-    )
-
-    (defm TransientWector ITransientVector
-        (#_"TransientWector" ITransientVector'''pop! [#_"TransientWector" this]
-            (WNode''assertEditable (:root this))
-            (cond
-                (zero? (:cnt this))
-                    (throw! "can't pop the empty vector")
-                (= (:cnt this) 1)
-                    (let [
-                        this (assoc this :cnt 0)
-                        this (assoc this :tidx 0)
-                        _ (aset (:tail this) 0 nil)
-                    ]
-                        this
-                    )
-                (< 1 (:tidx this))
-                    (let [
-                        this (update this :cnt dec)
-                        this (update this :tidx dec)
-                        _ (aset (:tail this) (:tidx this) nil)
-                    ]
-                        this
-                    )
-                :else
-                    (let [
-                        #_"values" tail (aclone (TransientWector''arrayFor this, (- (:cnt this) 2)))
-                        #_"WNode" root (WNode''popTail (:root this), (:edit (:root this)), (:shift this), (:cnt this))
-                        this
-                            (cond
-                                (nil? root)
-                                    (-> this
-                                        (assoc :root (WNode'new (:edit (:root this)), nil, nil))
-                                    )
-                                (and (< 5 (:shift this)) (nil? (aget (:array root) 1)))
-                                    (-> this
-                                        (update :shift - 5)
-                                        (assoc :root (aget (:array root) 0))
-                                    )
-                                :else
-                                    (-> this
-                                        (assoc :root root)
-                                    )
-                            )
-                    ]
-                        (-> this
-                            (update :cnt dec)
-                            (assoc :tail tail)
-                            (assoc :tidx (alength tail))
-                        )
-                    )
-            )
-        )
-    )
-
-    (declare PersistentWector'new)
-
-    (defm TransientWector ITransientCollection
-        (#_"PersistentWector" ITransientCollection'''persistent! [#_"TransientWector" this]
-            (WNode''assertEditable (:root this))
-            (reset! (:edit (:root this)) nil)
-            (let [
-                #_"values" trimmed-tail (doto (value-array (:tidx this)) (acopy 0 (:tail this) 0 (:tidx this)))
-            ]
-                (PersistentWector'new nil, (:cnt this), (:shift this), (:root this), trimmed-tail)
-            )
-        )
-    )
-)
-
-(class-ns PersistentWector [#_"APersistentVector" Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IPersistentWector IReduce Reversible Seqable Sequential]
-    (defn #_"PersistentWector" PersistentWector'new
-        ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
-        ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail]
-            (merge (PersistentWector'class.) (APersistentVector'new)
-                (hash-map
-                    #_"IPersistentMap" :_meta meta
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"WNode" :root root
-                    #_"values" :tail tail
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IMeta
-        (#_"IPersistentMap" IMeta'''meta [#_"PersistentWector" this]
-            (:_meta this)
-        )
-    )
-
-    (defm PersistentWector IObj
-        (#_"PersistentWector" IObj'''withMeta [#_"PersistentWector" this, #_"IPersistentMap" meta]
-            (PersistentWector'new meta, (:cnt this), (:shift this), (:root this), (:tail this))
-        )
-    )
-
-    (defm PersistentWector IEditableCollection
-        (#_"TransientWector" IEditableCollection'''asTransient [#_"PersistentWector" this]
-            (TransientWector'new this)
-        )
-    )
-
-    (defm PersistentWector Counted
-        (#_"int" Counted'''count [#_"PersistentWector" this]
-            (:cnt this)
-        )
-    )
-
-    (defn- #_"int" PersistentWector''tailoff [#_"PersistentWector" this]
-        (- (:cnt this) (alength (:tail this)))
-    )
-
-    (defn- #_"values" PersistentWector''arrayFor [#_"PersistentWector" this, #_"int" i]
-        (WNode''arrayFor (:root this), i, (:shift this), (:cnt this), (PersistentWector''tailoff this), (:tail this))
-    )
-
-    (defm PersistentWector Indexed
-        (#_"value" Indexed'''nth
-            ([#_"PersistentWector" this, #_"int" i]
-                (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
-            )
-            ([#_"PersistentWector" this, #_"int" i, #_"value" not-found]
-                (when (< -1 i (:cnt this)) => not-found
-                    (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IPersistentCollection
-        (#_"PersistentWector" IPersistentCollection'''conj [#_"PersistentWector" this, #_"value" val]
-            (let [
-                #_"int" tail-len (alength (:tail this))
-            ]
-                (if (< tail-len 32)
-                    (let [
-                        #_"values" tail (doto (value-array (inc tail-len)) (acopy 0 (:tail this) 0 tail-len) (aset tail-len val))
-                    ]
-                        (PersistentWector'new (:_meta this), (inc (:cnt this)), (:shift this), (:root this), tail)
-                    )
-                    (let [
-                        #_"WNode" tail-node (WNode'new (:edit (:root this)), (:tail this), nil)
-                        #_"int" shift (:shift this)
-                        [#_"WNode" root shift]
-                            (if (WNode''overflow? (:root this), shift, (:cnt this))
-                                (let [
-                                    #_"Object[]" a'
-                                        (doto (object-array 32)
-                                            (aset 0 (:root this))
-                                            (aset 1 (WNode''newPath tail-node, (:edit (:root this)), shift))
-                                        )
-                                    #_"int[]" x'
-                                        (when (some? (:index (:root this)))
-                                            (let [
-                                                #_"int" n (aget (:index (:root this)) 31)
-                                            ]
-                                                (doto (int-array 33) (aset 0 n) (aset 1 (+ n 32)) (aset 32 2))
-                                            )
-                                        )
-                                ]
-                                    [(WNode'new (:edit (:root this)), a', x') (+ shift 5)]
-                                )
-                                [(WNode''pushTail (:root this), (:edit (:root this)), shift, (:cnt this), tail-node) shift]
-                            )
-                    ]
-                        (PersistentWector'new (:_meta this), (inc (:cnt this)), shift, root, (value-array [ val ]))
-                    )
-                )
-            )
-        )
-
-        (#_"PersistentWector" IPersistentCollection'''empty [#_"PersistentWector" this]
-            (PersistentWector'new (:_meta this), 0, 5, WNode'EMPTY, (value-array 0))
-        )
-    )
-
-    (defm PersistentWector IPersistentVector
-        (#_"PersistentWector" IPersistentVector'''assocN [#_"PersistentWector" this, #_"int" i, #_"value" val]
-            (if (< -1 i (:cnt this))
-                (let [
-                    #_"int" tail-off (PersistentWector''tailoff this)
-                ]
-                    (if (<= tail-off i)
-                        (let [
-                            #_"int" n (alength (:tail this))
-                            #_"values" tail (doto (value-array n) (acopy 0 (:tail this) 0 n) (aset (- i tail-off) val))
-                        ]
-                            (PersistentWector'new (:_meta this), (:cnt this), (:shift this), (:root this), tail)
-                        )
-                        (PersistentWector'new (:_meta this), (:cnt this), (:shift this), (WNode''doAssoc (:root this), nil, (:shift this), i, val), (:tail this))
-                    )
-                )
-                (when (= i (:cnt this)) => (throw! "index is out of bounds")
-                    (IPersistentCollection'''conj this, val)
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IPersistentStack
-        ;; %% redundant as of APersistentVector
-        (#_"value" IPersistentStack'''peek [#_"PersistentWector" this]
-            (when (pos? (:cnt this))
-                (Indexed'''nth this, (dec (:cnt this)))
-            )
-        )
-
-        (#_"PersistentWector" IPersistentStack'''pop [#_"PersistentWector" this]
-            (condp = (:cnt this)
-                0   (throw! "can't pop the empty vector")
-                1   (PersistentWector'new (:_meta this), 0, 5, WNode'EMPTY, (value-array 0))
-                (let [
-                    #_"int" tail-len (alength (:tail this))
-                ]
-                    (if (< 1 tail-len)
-                        (let [
-                            #_"values" tail (doto (value-array (dec tail-len)) (acopy 0 (:tail this) 0 (dec tail-len)))
-                        ]
-                            (PersistentWector'new (:_meta this), (dec (:cnt this)), (:shift this), (:root this), tail)
-                        )
-                        (let [
-                            #_"values" tail (PersistentWector''arrayFor this, (- (:cnt this) 2))
-                            #_"int" shift (:shift this)
-                            #_"WNode" root (WNode''popTail (:root this), (:edit (:root this)), shift, (PersistentWector''tailoff this))
-                            [shift root]
-                                (cond
-                                    (nil? root)                                     [shift WNode'EMPTY]
-                                    (and (< 5 shift) (nil? (aget (:array root) 1))) [(- shift 5) (aget (:array root) 0)]
-                                    :else                                           [shift root]
-                                )
-                        ]
-                            (PersistentWector'new (:_meta this), (dec (:cnt this)), shift, root, tail)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IFn
-        ;; %% redundant as of APersistentVector
-        (#_"value" IFn'''invoke [#_"PersistentWector" this, #_"key" arg]
-            (when (integer? arg) => (throw! "arg must be integer")
-                (Indexed'''nth this, (.intValue arg))
-            )
-        )
-
-        (#_"value" IFn'''applyTo [#_"PersistentWector" this, #_"seq" args]
-            (case (count' args 1)
-                1 (IFn'''invoke this, (first args))
-            )
-        )
-    )
-
-    (defm PersistentWector IReduce
-        (#_"value" IReduce'''reduce
-            ([#_"PersistentWector" this, #_"IFn" f]
-                (when (pos? (:cnt this)) => (f)
-                    (loop-when [#_"value" r (aget (PersistentWector''arrayFor this, 0) 0) #_"int" i 0] (< i (:cnt this)) => r
-                        (let [#_"values" a (PersistentWector''arrayFor this, i)
-                              r (loop-when [r r #_"int" j (if (zero? i) 1 0)] (< j (alength a)) => r
-                                    (let [r (f r (aget a j))]
-                                        (when-not (reduced? r) => r
-                                            (recur r (inc j))
-                                        )
-                                    )
-                                )]
-                            (when-not (reduced? r) => @r
-                                (recur r (+ i (alength a)))
-                            )
-                        )
-                    )
-                )
-            )
-            ([#_"PersistentWector" this, #_"IFn" f, #_"value" r]
-                (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
-                    (let [#_"values" a (PersistentWector''arrayFor this, i)
-                          r (loop-when [r r #_"int" j 0] (< j (alength a)) => r
-                                (let [r (f r (aget a j))]
-                                    (when-not (reduced? r) => r
-                                        (recur r (inc j))
-                                    )
-                                )
-                            )]
-                        (when-not (reduced? r) => @r
-                            (recur r (+ i (alength a)))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IKVReduce
-        (#_"value" IKVReduce'''kvreduce [#_"PersistentWector" this, #_"IFn" f, #_"value" r]
-            (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
-                (let [
-                    #_"values" a (PersistentWector''arrayFor this, i)
-                    r
-                        (loop-when [r r #_"int" j 0] (< j (alength a)) => r
-                            (let [
-                                r (f r (+ i j) (aget a j))
-                            ]
-                                (when-not (reduced? r) => r
-                                    (recur r (inc j))
-                                )
-                            )
-                        )
-                ]
-                    (when-not (reduced? r) => @r
-                        (recur r (+ i (alength a)))
-                    )
-                )
-            )
-        )
-    )
-
-    (defm PersistentWector IPersistentWector
-        (#_"PersistentWector" IPersistentWector'''slicew [#_"PersistentWector" this, #_"int" start, #_"int" end]
-            (cond
-                (or (neg? start) (< (:cnt this) end)) (throw! "index is out of bounds")
-                (= start end)                         (IPersistentCollection'''empty this) ;; NB. preserves metadata
-                (< end start)                         (throw! "start index greater than end index")
-                :else
-                    (let [
-                        #_"int" new-cnt (- end start)
-                        #_"int" tail-off (PersistentWector''tailoff this)
-                    ]
-                        (if (<= tail-off start)
-                            (let [
-                                #_"values" tail (doto (value-array new-cnt) (acopy 0 (:tail this) (- start tail-off) new-cnt))
-                            ]
-                                (PersistentWector'new (:_meta this), new-cnt, 5, WNode'EMPTY, tail)
-                            )
-                            (let [
-                                #_"boolean" tail-cut? (< tail-off end)
-                                #_"WNode" root (:root this)
-                                root (if tail-cut? root (WNode''slice-right root, (:shift this), end))
-                                root (if (zero? start) root (WNode''slice-left root, (:shift this), start, (min end tail-off)))
-                                #_"values" tail
-                                    (when tail-cut? => (WNode''arrayFor root, (dec new-cnt), (:shift this), new-cnt)
-                                        (let [
-                                            #_"int" n (- end tail-off)
-                                        ]
-                                            (doto (value-array n) (acopy 0 (:tail this) 0 n))
-                                        )
-                                    )
-                                root
-                                    (when-not tail-cut? => root
-                                        (WNode''popTail root, nil, (:shift this), new-cnt)
-                                    )
-                            ]
-                                (when (some? root) => (PersistentWector'new (:_meta this), new-cnt, 5, WNode'EMPTY, tail)
-                                    (loop-when-recur [#_"WNode" node root #_"int" shift (:shift this)]
-                                                     (and (< 5 shift) (nil? (aget (:array node) 1)))
-                                                     [(aget (:array node) 0) (- shift 5)]
-                                                  => (PersistentWector'new (:_meta this), new-cnt, shift, node, tail)
-                                    )
-                                )
-                            )
-                        )
-                    )
-            )
-        )
-
-        (#_"PersistentWector" IPersistentWector'''splicew [#_"PersistentWector" this, #_"PersistentWector" that]
-            (let [
-                #_"int" c1 (count this) #_"int" c2 (count that)
-            ]
-                (cond
-                    (zero? c1) that
-                    (< c2 WNode'rrbt-concat-threshold) (into this that)
-                    :else
-                        (let [
-                            #_"WNode" r1 (:root this) #_"int" s1 (:shift this) #_"Object[]" t1 (:tail this)
-                            #_"boolean" overflow? (WNode''overflow? r1, s1, (+ c1 (- 32 (alength t1))))
-                            r1
-                                (when overflow? => (WNode''fold-tail r1, s1, (PersistentWector''tailoff this), t1)
-                                    (let [
-                                        #_"Object[]" a'
-                                            (doto (object-array 32)
-                                                (aset 0 r1)
-                                                (aset 1 (WNode''newPath (WNode'new nil, t1, nil), nil, s1))
-                                            )
-                                        #_"int[]" x'
-                                            (when (or (some? (:index r1)) (< (alength t1) 32))
-                                                (doto (int-array 33) (aset 0 (- c1 (alength t1))) (aset 1 c1) (aset 32 2))
-                                            )
-                                    ]
-                                        (WNode'new nil, a', x')
-                                    )
-                                )
-                            s1 (if overflow? (+ s1 5) s1)
-                            #_"WNode" r2 (:root that) #_"int" s2 (:shift that) #_"Object[]" t2 (:tail that)
-                            #_"int" shift (max s1 s2)
-                            r1 (WNode''shift-from-to r1, s1, shift)
-                            r2 (WNode''shift-from-to r2, s2, shift)
-                            [#_"WNode" n1 #_"WNode" n2 #_"int" delta] (WNode'zippath shift, r1, c1, r2, (- c2 (alength t2)), 0)
-                            #_"int" c1' (+ c1 delta)
-                            #_"int" c2' (- c2 (alength t2) delta)
-                            [n1 n2] (if (identical? n2 r2) (WNode'squash-nodes shift, n1, c1', n2, c2') [n1 n2])
-                        ]
-                            (if (some? n2)
-                                (let [
-                                    #_"Object[]" a' (doto (object-array 32) (aset 0 n1) (aset 1 n2))
-                                    #_"int[]" x' (doto (int-array 33) (aset 0 c1') (aset 1 (+ c1' c2')) (aset 32 2))
-                                ]
-                                    (PersistentWector'new nil, (+ c1 c2), (+ shift 5), (WNode'new nil, a', x'), t2)
-                                )
-                                (loop-when-recur [#_"WNode" node n1 shift shift]
-                                                 (and (< 5 shift) (nil? (aget (:array node) 1)))
-                                                 [(aget (:array node) 0) (- shift 5)]
-                                              => (PersistentWector'new nil, (+ c1 c2), shift, node, t2)
-                                )
-                            )
-                        )
-                )
-            )
-        )
-    )
-)
-)
-
-(defn subwec
-    ([v i]   (IPersistentWector'''slicew v, i, (count v)))
-    ([v i e] (IPersistentWector'''slicew v, i, e))
-)
-
-(defn catwec
-    ([] [])
-    ([a]                                                                                                  a)
-    ([a b]                                                                   (IPersistentWector'''splicew a, b))
-    ([a b c]                                    (IPersistentWector'''splicew (IPersistentWector'''splicew a, b),                              c))
-    ([a b c d]                                  (IPersistentWector'''splicew (IPersistentWector'''splicew a, b), (IPersistentWector'''splicew c, d)))
-    ([a b c d & s] (IPersistentWector'''splicew (IPersistentWector'''splicew (IPersistentWector'''splicew a, b), (IPersistentWector'''splicew c, d)), (apply catwec s)))
-)
-
-(defmacro- gen-wector- [& s]
-    (let [a (with-meta (gensym "a__") {:tag 'objects})]
-        `(let [~a (object-array ~(count s))]
-            ~@(map-indexed (fn [i x] `(aset ~a ~i ~x)) s)
-            (PersistentWector'new nil, ~(count s), 5, WNode'EMPTY, ~a)
-        )
-    )
-)
-
-(defn wector
-    ([]        (gen-wector-))
-    ([a]       (gen-wector- a))
-    ([a b]     (gen-wector- a b))
-    ([a b c]   (gen-wector- a b c))
-    ([a b c d] (gen-wector- a b c d))
-    ([a b c d & s]
-        (loop-when [w (transient (wector a b c d)) s s] s => (persistent! w)
-            (recur (conj! w (first s)) (next s))
-        )
-    )
-)
-
-(defn wec [s]
-    (if (wector? s) s (apply wector s))
-)
-
-(value-ns Arbace)
-
-(defn -main [& args])
-
-(§ soon
-(ns arbace.core
-    (:refer-clojure :only [*err* *in* *out* *print-length* *warn-on-reflection* binding boolean byte char defmethod extend-protocol hash-set intern key print-method proxy reify the-ns to-array val])
-)
-
-(import
-    [java.lang ArithmeticException CharSequence #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception NoSuchMethodException StringBuilder ThreadLocal Throwable Void]
-)
-
-(defmacro import-as [#_"Symbol" sym #_"String" sig]
-    (let [#_"java.lang.reflect.Method" m (.getDeclaredMethod clojure.lang.Namespace, "referenceClass", (clojure.core/into-array [clojure.lang.Symbol Class]))]
-        (.setAccessible m, true)
-        (.invoke m, *ns*, (clojure.core/object-array [sym (Class/forName sig)]))
-    )
-)
-
-(import-as boolean'array "[Z")
-(import-as byte'array    "[B")
-(import-as char'array    "[C")
-(import-as int'array     "[I")
-(import-as long'array    "[J")
-(import-as Object'array  "[Ljava.lang.Object;")
-
-(import
-    [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
-    [java.lang.ref #_Reference ReferenceQueue SoftReference WeakReference]
-    [java.lang.reflect #_Constructor #_Field #_Method Modifier]
-    [java.security AccessController PrivilegedAction]
-    [java.util Arrays Comparator IdentityHashMap]
-    [java.util.regex Matcher Pattern]
-    [arbace.asm #_ClassVisitor ClassWriter Label #_MethodVisitor Opcodes Type]
-    [arbace.asm.commons GeneratorAdapter Method]
-    [arbace.util.concurrent.atomic AtomicReference]
-)
-
 (arbace-ns IObject
     (defp IObject
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
         (#_"String" IObject'''toString [#_"IObject" this])
     )
 
-    (extend-type nil IObject
+    (extend-type nil IObject
         (#_"boolean" IObject'''equals [#_"nil" this, #_"Object" that] (nil? that))
         (#_"String" IObject'''toString [#_"nil" this] "")
     )
@@ -2136,7 +554,7 @@
     )
 
     (extend-protocol Seqable
-        nil                  (Seqable'''seq [_] nil)
+        nil                  (Seqable'''seq [_] nil)
         clojure.lang.Seqable (Seqable'''seq [o] (.seq o))
     )
 )
@@ -2148,7 +566,7 @@
     )
 
     (extend-protocol ISeq
-        nil               (ISeq'''first [_] nil)        (ISeq'''next [_] nil)
+        nil               (ISeq'''first [_] nil)        (ISeq'''next [_] nil)
         clojure.lang.ISeq (ISeq'''first [o] (.first o)) (ISeq'''next [o] (.next o))
     )
 )
@@ -2179,18 +597,40 @@
  ;;
 (§ defn #_"ISeq" next [s] (ISeq'''next (if (satisfies? ISeq s) s (seq s))))
 
+(§ defn second [s] (first (next s)))
+(defn third  [s] (first (next (next s))))
+(defn fourth [s] (first (next (next (next s)))))
+(defn last   [s] (if-some [r (next s)] (recur r) (first s)))
+
+(declare conj)
+
+;;;
+ ; Return a seq of all but the last item in coll, in linear time.
+ ;;
+(defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
+
+(defn index-of [s x]
+    (loop-when [i 0 s (seq s)] (some? s) => -1
+        (when-not (= (first s) x) => i
+            (recur (inc i) (next s))
+        )
+    )
+)
+
 (arbace-ns Counted
     (defp Counted
         (#_"int" Counted'''count [#_"Counted" this])
     )
 
     (extend-protocol Counted
-        nil                  (Counted'''count [_] 0)
+        nil                  (Counted'''count [_] 0)
         clojure.lang.Counted (Counted'''count [o] (.count o))
         Object'array         (Counted'''count [a] (Array/getLength a))
         CharSequence         (Counted'''count [s] (.length s))
     )
 )
+
+(declare neg?)
 
 (defn count'
     ([x] (count' x -1))
@@ -2209,18 +649,6 @@
     )
 )
 
-(§ defn second [s] (first (next s)))
-(defn third  [s] (first (next (next s))))
-(defn fourth [s] (first (next (next (next s)))))
-(defn last   [s] (if-some [r (next s)] (recur r) (first s)))
-
-(declare conj)
-
-;;;
- ; Return a seq of all but the last item in coll, in linear time.
- ;;
-(defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
-
 (arbace-ns Hashed
     (defp Hashed
         (#_"int" Hashed'''hash [#_"Hashed" this])
@@ -2230,7 +658,7 @@
     (declare Murmur3'hashLong)
 
     (extend-protocol Hashed
-        nil                  (Hashed'''hash [_] 0)
+        nil                  (Hashed'''hash [_] 0)
         Object               (Hashed'''hash [o] (.hashCode o))
         String               (Hashed'''hash [s] (Murmur3'hashInt (.hashCode s)))
         Number               (Hashed'''hash [n] (Murmur3'hashLong (.longValue n)))
@@ -2356,7 +784,7 @@
  ; Returns true if x implements IFn.
  ; Note that many data structures (e.g. sets and maps) implement IFn.
  ;;
-(defn ifn? [x] (satisfies? IFn x))
+(defn ifn? [x] (or (satisfies? IFn x) (instance? clojure.lang.IFn x)))
 
 (defn- spread [s]
     (cond
@@ -2393,13 +821,13 @@
     (defp IType)
 )
 
-(defn type? [x] (satisfies? IType x))
+(defn type? [x] (or (satisfies? IType x) (instance? clojure.lang.IType x)))
 
 (arbace-ns IRecord
     (defp IRecord)
 )
 
-(defn record? [x] (satisfies? IRecord x))
+(defn record? [x] (or (satisfies? IRecord x) (instance? clojure.lang.IRecord x)))
 
 (arbace-ns INamed
     (defp INamed
@@ -2502,7 +930,7 @@
     (defp Sequential)
 )
 
-(defn sequential? [x] (satisfies? Sequential x))
+(defn sequential? [x] (or (satisfies? Sequential x) (instance? clojure.lang.Sequential x)))
 
 (arbace-ns Reversible
     (defp Reversible
@@ -2516,7 +944,7 @@
  ;;
 (defn rseq [#_"Reversible" s] (Reversible'''rseq s))
 
-(defn reversible? [x] (satisfies? Reversible x))
+(defn reversible? [x] (or (satisfies? Reversible x) (instance? clojure.lang.Reversible x)))
 
 (arbace-ns Sorted
     (defp Sorted
@@ -2527,7 +955,7 @@
     )
 )
 
-(defn sorted? [x] (satisfies? Sorted x))
+(defn sorted? [x] (or (satisfies? Sorted x) (instance? clojure.lang.Sorted x)))
 
 (arbace-ns Indexed
     (defp Indexed
@@ -2541,7 +969,9 @@
 ;;;
  ; Return true if x implements Indexed, indicating efficient lookup by index.
  ;;
-(defn indexed? [x] (satisfies? Indexed x))
+(defn indexed? [x] (or (satisfies? Indexed x) (instance? clojure.lang.Indexed x)))
+
+(declare dec)
 
 ;;;
  ; Returns the nth next of coll, (seq coll) when n is 0.
@@ -2590,7 +1020,7 @@
 (defn keys [m] (map key m))
 (defn vals [m] (map val m))
 
-(defn map-entry? [x] (satisfies? IMapEntry x))
+(defn map-entry? [x] (or (satisfies? IMapEntry x) (instance? clojure.lang.IMapEntry x)))
 
 (arbace-ns IPersistentCollection
     (defp IPersistentCollection
@@ -2599,7 +1029,7 @@
     )
 )
 
-(defn coll? [x] (satisfies? IPersistentCollection x))
+(defn coll? [x] (or (satisfies? IPersistentCollection x) (instance? clojure.lang.IPersistentCollection x)))
 
 (arbace-ns IEditableCollection
     (defp IEditableCollection
@@ -2607,7 +1037,7 @@
     )
 )
 
-(defn editable? [x] (satisfies? IEditableCollection x))
+(defn editable? [x] (or (satisfies? IEditableCollection x) (instance? clojure.lang.IEditableCollection x)))
 
 (arbace-ns Associative
     (defp Associative
@@ -2617,7 +1047,7 @@
     )
 )
 
-(defn associative? [x] (satisfies? Associative x))
+(defn associative? [x] (or (satisfies? Associative x) (instance? clojure.lang.Associative x)))
 
 (arbace-ns IPersistentMap
     (defp IPersistentMap
@@ -2625,7 +1055,7 @@
     )
 )
 
-(defn map? [x] (satisfies? IPersistentMap x))
+(defn map? [x] (or (satisfies? IPersistentMap x) (instance? clojure.lang.IPersistentMap x)))
 
 (arbace-ns IPersistentSet
     (defp IPersistentSet
@@ -2635,7 +1065,7 @@
     )
 )
 
-(defn set? [x] (satisfies? IPersistentSet x))
+(defn set? [x] (or (satisfies? IPersistentSet x) (instance? clojure.lang.IPersistentSet x)))
 
 (arbace-ns IPersistentStack
     (defp IPersistentStack
@@ -2648,7 +1078,7 @@
     (defp IPersistentList)
 )
 
-(defn list? [x] (satisfies? IPersistentList x))
+(defn list? [x] (or (satisfies? IPersistentList x) (instance? clojure.lang.IPersistentList x)))
 
 (arbace-ns IPersistentVector
     (defp IPersistentVector
@@ -2656,7 +1086,16 @@
     )
 )
 
-(§ defn vector? [x] (satisfies? IPersistentVector x))
+(§ defn vector? [x] (or (satisfies? IPersistentVector x) (instance? clojure.lang.IPersistentVector x)))
+
+(arbace-ns IPersistentWector
+    (defp IPersistentWector
+        (#_"IPersistentWector" IPersistentWector'''slicew [#_"IPersistentWector" this, #_"int" start, #_"int" end])
+        (#_"IPersistentWector" IPersistentWector'''splicew [#_"IPersistentWector" this, #_"IPersistentWector" that])
+    )
+)
+
+(defn wector? [x] (satisfies? IPersistentWector x))
 
 (arbace-ns ITransientCollection
     (defp ITransientCollection
@@ -2774,13 +1213,13 @@
     (defp Symbol)
 )
 
-(§ defn symbol? [x] (satisfies? Symbol x))
+(§ defn symbol? [x] (or (satisfies? Symbol x) (instance? clojure.lang.Symbol x)))
 
 (arbace-ns Keyword
     (defp Keyword)
 )
 
-(§ defn keyword? [x] (satisfies? Keyword x))
+(§ defn keyword? [x] (or (satisfies? Keyword x) (instance? clojure.lang.Keyword x)))
 
 (arbace-ns Fn
     #_abstract
@@ -2790,7 +1229,7 @@
 ;;;
  ; Returns true if x is an object created via fn.
  ;;
-(defn fn? [x] (satisfies? Fn x))
+(defn fn? [x] (or (satisfies? Fn x) (instance? clojure.lang.Fn x)))
 
 (arbace-ns RestFn
     (defp IRestFn
@@ -2815,7 +1254,7 @@
 
 (arbace-ns ASeq
     #_abstract
-    (defp ASeq) (extend-type Hashed IObject IPersistentCollection ISeq Seqable Sequential)
+    (defp ASeq) (ß extend-type Hashed IObject IPersistentCollection ISeq Seqable Sequential)
 )
 
 (arbace-ns LazySeq
@@ -2964,6 +1403,12 @@
     (defp VNode)
     (defp TransientVector)
     (defp PersistentVector)
+)
+
+(arbace-ns PersistentWector
+    (defp WNode)
+    (defp TransientWector)
+    (defp PersistentWector)
 )
 
 (arbace-ns Repeat
@@ -3638,7 +2083,7 @@
 
     (def- #_"Type[][]" Compiler'ARG_TYPES
         (let [#_"int" n Compiler'MAX_POSITIONAL_ARITY
-              #_"Type[][]" a (make-array (Class/forName "[Larbace.asm.Type;") (+ n 2))
+              #_"Type[][]" a (make-array (Class/forName "[Lcloiure.asm.Type;") (+ n 2))
               #_"Type" t (Type/getType Object)]
             (dotimes [#_"int" i (inc n)]
                 (let [#_"Type[]" b (make-array Type i)]
@@ -3680,7 +2125,6 @@
     )
 
     (declare Namespace''getMapping)
-    (declare var?)
 
     (defn #_"Symbol" Compiler'resolveSymbol [#_"Symbol" sym]
         ;; already qualified or classname?
@@ -4282,6 +2726,7 @@
     )
 
     (declare Namespace''importClass)
+    (defp RT)
 
     (defm ImportExpr Expr
         (#_"Object" Expr'''eval [#_"ImportExpr" this]
@@ -4554,6 +2999,8 @@
     )
 )
 
+(defp Numbers)
+
 (value-ns Interop
     (defn #_"void" Interop'emitBoxReturn [#_"IopObject" objx, #_"GeneratorAdapter" gen, #_"Class" returnType]
         (when (.isPrimitive returnType)
@@ -4714,6 +3161,8 @@
             )
         )
     )
+
+    (defp Reflector)
 
     (defm InstanceFieldExpr Expr
         (#_"Object" Expr'''eval [#_"InstanceFieldExpr" this]
@@ -5155,6 +3604,7 @@
         (and (some? (:method this)) (some? (get Intrinsics'preds (str (:method this)))))
     )
 
+    (declare pop)
     (declare peek)
 
     (defn #_"void" StaticMethodExpr''emitIntrinsicPredicate [#_"StaticMethodExpr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen, #_"Label" falseLabel]
@@ -5620,6 +4070,8 @@
         )
     )
 )
+
+(declare binding)
 
 (value-ns TryParser
     (defn #_"IParser" TryParser'new []
@@ -6168,6 +4620,7 @@
     )
 
     (declare Tuple'MAX_SIZE)
+    (defp Tuple)
 
     (defm VectorExpr Expr
         (#_"Object" Expr'''eval [#_"VectorExpr" this]
@@ -6400,7 +4853,7 @@
         nil
     )
 
-    (declare subvec)
+    (defp Util)
 
     (defn #_"void" InvokeExpr''emitProto [#_"InvokeExpr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen]
         (let [#_"Label" onLabel (.newLabel gen) #_"Label" callLabel (.newLabel gen) #_"Label" endLabel (.newLabel gen)]
@@ -6845,8 +5298,6 @@
             )
         )
     )
-
-    (declare vals)
 
     (defn #_"Type[]" IopObject''ctorTypes [#_"IopObject" this]
         (let [#_"IPersistentVector" v (if (IopObject'''supportsMeta this) [(Type/getType IPersistentMap'iface)] [])
@@ -9595,8 +8046,6 @@
     )
 )
 
-(declare rseq)
-
 (value-ns FnReader
     (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"char" _delim]
         (when-not (bound? #'*arg-env*) => (throw! "nested #()s are not allowed")
@@ -9826,7 +8275,7 @@
 (value-ns ListReader
     (defn #_"Object" list-reader [#_"PushbackReader" r, #_"char" _delim]
         (let-when [#_"PersistentVector" v (LispReader'readDelimitedForms r, \))] (seq v) => ()
-            (PersistentList/create #_(to-array v) v)
+            (ß PersistentList/create #_(to-array v) v)
         )
     )
 )
@@ -9953,13 +8402,11 @@
         (-> h1 (bit-xor k1) (Integer/rotateLeft 13) (* 5) (+ 0xe6546b64))
     )
 
-    (declare unsigned-bit-shift-right)
-
     ;; finalization mix - force all bits of a hash block to avalanche
     (defn- #_"int" Murmur3'fmix [#_"int" h1, #_"int" n]
-        (let [h1 (bit-xor h1 n)    h1 (bit-xor h1 (unsigned-bit-shift-right h1 16))
-              h1 (* h1 0x85ebca6b) h1 (bit-xor h1 (unsigned-bit-shift-right h1 13))
-              h1 (* h1 0xc2b2ae35) h1 (bit-xor h1 (unsigned-bit-shift-right h1 16))]
+        (let [h1 (bit-xor h1 n)    h1 (bit-xor h1 (>>> h1 16))
+              h1 (* h1 0x85ebca6b) h1 (bit-xor h1 (>>> h1 13))
+              h1 (* h1 0xc2b2ae35) h1 (bit-xor h1 (>>> h1 16))]
             h1
         )
     )
@@ -9976,7 +8423,7 @@
     (defn #_"int" Murmur3'hashLong [#_"long" input]
         (when-not (zero? input) => 0
             (let [#_"int" low (int input)
-                  #_"int" high (int (unsigned-bit-shift-right input 32))
+                  #_"int" high (int (>>> input 32))
                   #_"int" k1 (Murmur3'mixK1 low)
                   #_"int" h1 (Murmur3'mixH1 Murmur3'seed, k1)
                   k1 (Murmur3'mixK1 high)
@@ -9986,14 +8433,12 @@
         )
     )
 
-    (declare bit-or)
-    (declare bit-shift-left)
     (declare odd?)
 
     (defn #_"int" Murmur3'hashUnencodedChars [#_"CharSequence" s]
         (let [#_"int" h1 ;; step through the input 2 chars at a time
                 (loop-when [h1 Murmur3'seed #_"int" i 1] (< i (.length s)) => h1
-                    (let [#_"int" k1 (bit-or (.charAt s, (dec i)) (bit-shift-left (.charAt s, i) 16))]
+                    (let [#_"int" k1 (| (.charAt s, (dec i)) (<< (.charAt s, i) 16))]
                         (recur (Murmur3'mixH1 h1, (Murmur3'mixK1 k1)) (+ i 2))
                     )
                 )
@@ -10254,11 +8699,9 @@
  ;;
 (defn hash [x] (Hashed'''hash x))
 
-    (declare bit-shift-right)
-
     (defn #_"int" Util'hashCombine [#_"int" seed, #_"int" hash]
         ;; a la boost
-        (bit-xor seed (+ hash 0x9e3779b9 (bit-shift-left seed 6) (bit-shift-right seed 2)))
+        (bit-xor seed (+ hash 0x9e3779b9 (<< seed 6) (>> seed 2)))
     )
 
 (defn hash-combine [x y]
@@ -11647,8 +10090,6 @@
             (- (count (:v this)) (:i this))
         )
     )
-
-    (declare reduced?)
 
     (defm VSeq IReduce
         (#_"Object" IReduce'''reduce
@@ -13160,11 +11601,11 @@
 
 (value-ns PersistentHashMap
     (defn #_"int" PersistentHashMap'mask [#_"int" hash, #_"int" shift]
-        (bit-and (unsigned-bit-shift-right hash shift) 0x1f)
+        (& (>>> hash shift) 0x1f)
     )
 
     (defn- #_"int" PersistentHashMap'bitpos [#_"int" hash, #_"int" shift]
-        (bit-shift-left 1 (PersistentHashMap'mask hash, shift))
+        (<< 1 (PersistentHashMap'mask hash, shift))
     )
 
     (defn- #_"Object[]" PersistentHashMap'cloneAndSet
@@ -13220,7 +11661,7 @@
                     (let [[bitmap j]
                             (when (some? (aget (:a this) i)) => [bitmap j]
                                 (aset a' j (aget (:a this) i))
-                                [(bit-or bitmap (bit-shift-left 1 i)) (+ j 2)]
+                                [(| bitmap (<< 1 i)) (+ j 2)]
                             )]
                         (recur bitmap j (inc i))
                     )
@@ -13230,7 +11671,7 @@
                     (let [[bitmap j]
                             (when (some? (aget (:a this) i)) => [bitmap j]
                                 (aset a' j (aget (:a this) i))
-                                [(bit-or bitmap (bit-shift-left 1 i)) (+ j 2)]
+                                [(| bitmap (<< 1 i)) (+ j 2)]
                             )]
                         (recur bitmap j (inc i))
                     )
@@ -13345,7 +11786,7 @@
     (def #_"BitmapIndexedNode" BitmapIndexedNode'EMPTY (BitmapIndexedNode'new nil, 0, (object-array 0)))
 
     (defn #_"int" BitmapIndexedNode''index [#_"BitmapIndexedNode" this, #_"int" bit]
-        (Integer/bitCount (bit-and (:bitmap this) (dec bit)))
+        (Integer/bitCount (& (:bitmap this) (dec bit)))
     )
 
     (declare HashCollisionNode'new)
@@ -13366,7 +11807,7 @@
     (defm BitmapIndexedNode INode
         (#_"INode" INode'''assoc [#_"BitmapIndexedNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" idx (BitmapIndexedNode''index this, bit)]
-                (if-not (zero? (bit-and (:bitmap this) bit))
+                (if-not (zero? (& (:bitmap this) bit))
                     (let [#_"Object" keyOrNull (aget (:a this) (* 2 idx))
                           #_"Object" valOrNode (aget (:a this) (inc (* 2 idx)))
                           _ (cond
@@ -13392,7 +11833,7 @@
                             (let [#_"INode[]" nodes (make-array #_"INode" Object 32) #_"int" jdx (PersistentHashMap'mask hash, shift)]
                                 (aset nodes jdx (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), hash, key, val, addedLeaf))
                                 (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
-                                    (when (odd? (unsigned-bit-shift-right (:bitmap this) i)) => (recur j (inc i))
+                                    (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                         (if (some? (aget (:a this) j))
                                             (aset nodes i (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), (Hashed'''hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
                                             (aset nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
@@ -13408,7 +11849,7 @@
                                 (reset! addedLeaf true)
                                 (aset a' (inc (* 2 idx)) val)
                                 (System/arraycopy (:a this), (* 2 idx), a', (* 2 (inc idx)), (* 2 (- n idx)))
-                                (BitmapIndexedNode'new nil, (bit-or (:bitmap this) bit), a')
+                                (BitmapIndexedNode'new nil, (| (:bitmap this) bit), a')
                             )
                         )
                     )
@@ -13417,7 +11858,7 @@
         )
 
         (#_"INode" INode'''dissoc [#_"BitmapIndexedNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
-            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => this
+            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (& (:bitmap this) bit)) => this
                 (let [#_"int" i (BitmapIndexedNode''index this, bit) #_"int" ii (* 2 i)
                       #_"Object" keyOrNull (aget (:a this) ii)
                       #_"Object" valOrNode (aget (:a this) (inc ii))]
@@ -13445,7 +11886,7 @@
 
         (#_"IMapEntry|Object" INode'''find
             ([#_"BitmapIndexedNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
-                (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit))
+                (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (& (:bitmap this) bit))
                     (let [#_"int" i (BitmapIndexedNode''index this, bit)
                         #_"Object" keyOrNull (aget (:a this) (* 2 i))
                         #_"Object" valOrNode (aget (:a this) (inc (* 2 i)))]
@@ -13457,7 +11898,7 @@
                 )
             )
             ([#_"BitmapIndexedNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not-found]
-                (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => not-found
+                (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (& (:bitmap this) bit)) => not-found
                     (let [#_"int" i (BitmapIndexedNode''index this, bit)
                         #_"Object" keyOrNull (aget (:a this) (* 2 i))
                         #_"Object" valOrNode (aget (:a this) (inc (* 2 i)))]
@@ -13532,7 +11973,7 @@
     (defm BitmapIndexedNode INode
         (#_"INode" INode'''assocT [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" idx (BitmapIndexedNode''index this, bit)]
-                (if-not (zero? (bit-and (:bitmap this) bit))
+                (if-not (zero? (& (:bitmap this) bit))
                     (let [#_"Object" keyOrNull (aget (:a this) (* 2 idx))
                           #_"Object" valOrNode (aget (:a this) (inc (* 2 idx)))]
                         (cond
@@ -13556,7 +11997,7 @@
                         (cond
                             (< (* n 2) (alength (:a this)))
                                 (let [_ (reset! addedLeaf true)
-                                      #_"BitmapIndexedNode" e (-> (BitmapIndexedNode''ensureEditable this, edit) (update :bitmap bit-or bit))]
+                                      #_"BitmapIndexedNode" e (-> (BitmapIndexedNode''ensureEditable this, edit) (update :bitmap | bit))]
                                     (System/arraycopy (:a e), (* 2 idx), (:a e), (* 2 (inc idx)), (* 2 (- n idx)))
                                     (aset (:a e) (* 2 idx) key)
                                     (aset (:a e) (inc (* 2 idx)) val)
@@ -13566,7 +12007,7 @@
                                 (let [#_"INode[]" nodes (make-array #_"INode" Object 32) #_"int" jdx (PersistentHashMap'mask hash, shift)]
                                     (aset nodes jdx (INode'''assocT BitmapIndexedNode'EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf))
                                     (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
-                                        (when (odd? (unsigned-bit-shift-right (:bitmap this) i)) => (recur j (inc i))
+                                        (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                             (if (some? (aget (:a this) j))
                                                 (aset nodes i (INode'''assocT BitmapIndexedNode'EMPTY, edit, (+ shift 5), (Hashed'''hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
                                                 (aset nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
@@ -13585,7 +12026,7 @@
                                     (System/arraycopy (:a this), (* 2 idx), a', (* 2 (inc idx)), (* 2 (- n idx)))
                                     (-> (BitmapIndexedNode''ensureEditable this, edit)
                                         (assoc :a a')
-                                        (update :bitmap bit-or bit)
+                                        (update :bitmap | bit)
                                     )
                                 )
                         )
@@ -13595,7 +12036,7 @@
         )
 
         (#_"INode" INode'''dissocT [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"boolean'" removedLeaf]
-            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => this
+            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (& (:bitmap this) bit)) => this
                 (let [#_"int" i (BitmapIndexedNode''index this, bit) #_"int" ii (* 2 i)
                       #_"Object" keyOrNull (aget (:a this) ii)
                       #_"Object" valOrNode (aget (:a this) (inc ii))]
@@ -15405,6 +13846,8 @@
         )
     )
 
+    (declare doto)
+
     (defn #_"VNode" VNode''newPath [#_"VNode" this, #_"Thread'" edit, #_"int" shift]
         (when (pos? shift) => this
             (VNode'new edit, (doto (object-array 32) (aset 0 (VNode''newPath this, edit, (- shift 5)))))
@@ -15416,8 +13859,8 @@
             #_"Object[]" a (aclone (:a this))
             _
                 (if (zero? level)
-                    (aset a (bit-and i 0x1f) o)
-                    (aswap a (bit-and (unsigned-bit-shift-right i level) 0x1f) VNode''doAssoc (- level 5), i, o)
+                    (aset a (& i 0x1f) o)
+                    (aswap a (& (>>> i level) 0x1f) VNode''doAssoc (- level 5), i, o)
                 )
         ]
             (VNode'new (:edit this), a)
@@ -15443,7 +13886,7 @@
     )
 
     (defn- #_"int" TransientVector''tailoff [#_"TransientVector" this]
-        (if (< (:cnt this) 32) 0 (bit-shift-left (unsigned-bit-shift-right (dec (:cnt this)) 5) 5))
+        (if (< (:cnt this) 32) 0 (<< (>>> (dec (:cnt this)) 5) 5))
     )
 
     (defn- #_"Object[]" TransientVector''arrayFor [#_"TransientVector" this, #_"int" i]
@@ -15451,7 +13894,7 @@
             (when (< i (TransientVector''tailoff this)) => (:tail this)
                 (loop-when-recur [#_"VNode" node (:root this) #_"int" level (:shift this)]
                                  (pos? level)
-                                 [(aget (:a node) (bit-and (unsigned-bit-shift-right i level) 0x1f)) (- level 5)]
+                                 [(aget (:a node) (& (>>> i level) 0x1f)) (- level 5)]
                               => (:a node)
                 )
             )
@@ -15469,7 +13912,7 @@
             (when (< i (TransientVector''tailoff this)) => (:tail this)
                 (loop-when-recur [#_"VNode" node (:root this) #_"int" level (:shift this)]
                                  (pos? level)
-                                 [(TransientVector''ensureEditable this, (aget (:a node) (bit-and (unsigned-bit-shift-right i level) 0x1f))) (- level 5)]
+                                 [(TransientVector''ensureEditable this, (aget (:a node) (& (>>> i level) 0x1f))) (- level 5)]
                               => (:a node)
                 )
             )
@@ -15487,7 +13930,7 @@
         (#_"Object" Indexed'''nth
             ([#_"TransientVector" this, #_"int" i]
                 (VNode''assertEditable (:root this))
-                (aget (TransientVector''arrayFor this, i) (bit-and i 0x1f))
+                (aget (TransientVector''arrayFor this, i) (& i 0x1f))
             )
             ([#_"TransientVector" this, #_"int" i, #_"Object" not-found]
                 (when (< -1 i (:cnt this)) => not-found
@@ -15544,7 +13987,7 @@
         ;; return nodeToInsert placed in parent
         (let [
             parent (TransientVector''ensureEditable this, parent)
-            #_"int" x (bit-and (unsigned-bit-shift-right (dec (:cnt this)) level) 0x1f)
+            #_"int" x (& (>>> (dec (:cnt this)) level) 0x1f)
             #_"VNode" child
                 (when-not (= level 5) => tail-node
                     (let [
@@ -15567,7 +14010,7 @@
             (VNode''assertEditable (:root this))
             (if (< (- (:cnt this) (TransientVector''tailoff this)) 32) ;; room in tail?
                 (let [
-                    _ (aset (:tail this) (bit-and (:cnt this) 0x1f) val)
+                    _ (aset (:tail this) (& (:cnt this) 0x1f) val)
                 ]
                     (-> this (update :cnt inc))
                 )
@@ -15577,7 +14020,7 @@
                     this (assoc this :tail (object-array 32))
                     _ (aset (:tail this) 0 val)
                 ]
-                    (if (< (bit-shift-left 1 (:shift this)) (unsigned-bit-shift-right (:cnt this) 5)) ;; overflow root?
+                    (if (< (<< 1 (:shift this)) (>>> (:cnt this) 5)) ;; overflow root?
                         (let [
                             #_"Object[]" a
                                 (doto (object-array 32)
@@ -15604,9 +14047,9 @@
             node (TransientVector''ensureEditable this, node)
         ]
             (if (zero? level)
-                (aset (:a node) (bit-and i 0x1f) val)
+                (aset (:a node) (& i 0x1f) val)
                 (let [
-                    #_"int" x (bit-and (unsigned-bit-shift-right i level) 0x1f)
+                    #_"int" x (& (>>> i level) 0x1f)
                 ]
                     (aset (:a node) x (TransientVector''doAssoc this, (- level 5), (aget (:a node) x), i, val))
                 )
@@ -15621,7 +14064,7 @@
             (if (< -1 i (:cnt this))
                 (if (<= (TransientVector''tailoff this) i)
                     (do
-                        (aset (:tail this) (bit-and i 0x1f) val)
+                        (aset (:tail this) (& i 0x1f) val)
                         this
                     )
                     (do
@@ -15646,7 +14089,7 @@
     (defn- #_"VNode" TransientVector''popTail [#_"TransientVector" this, #_"int" level, #_"VNode" node]
         (let [
             node (TransientVector''ensureEditable this, node)
-            #_"int" x (bit-and (unsigned-bit-shift-right (- (:cnt this) 2) level) 0x1f)
+            #_"int" x (& (>>> (- (:cnt this) 2) level) 0x1f)
         ]
             (cond
                 (< 5 level)
@@ -15673,7 +14116,7 @@
             (cond
                 (zero? (:cnt this))
                     (throw! "can't pop the empty vector")
-                (or (= (:cnt this) 1) (not (zero? (bit-and (dec (:cnt this)) 0x1f))))
+                (or (= (:cnt this) 1) (not (zero? (& (dec (:cnt this)) 0x1f))))
                     (-> this (update :cnt dec))
                 :else
                     (let [
@@ -15799,7 +14242,7 @@
     )
 
     (defn- #_"int" PersistentVector''tailoff [#_"PersistentVector" this]
-        (if (< (:cnt this) 32) 0 (bit-shift-left (unsigned-bit-shift-right (dec (:cnt this)) 5) 5))
+        (if (< (:cnt this) 32) 0 (<< (>>> (dec (:cnt this)) 5) 5))
     )
 
     (defn- #_"Object[]" PersistentVector''arrayFor [#_"PersistentVector" this, #_"int" i]
@@ -15807,7 +14250,7 @@
             (when (< i (PersistentVector''tailoff this)) => (:tail this)
                 (loop-when-recur [#_"VNode" node (:root this) #_"int" level (:shift this)]
                                  (pos? level)
-                                 [(aget (:a node) (bit-and (unsigned-bit-shift-right i level) 0x1f)) (- level 5)]
+                                 [(aget (:a node) (& (>>> i level) 0x1f)) (- level 5)]
                               => (:a node)
                 )
             )
@@ -15817,7 +14260,7 @@
     (defm PersistentVector Indexed
         (#_"Object" Indexed'''nth
             ([#_"PersistentVector" this, #_"int" i]
-                (aget (PersistentVector''arrayFor this, i) (bit-and i 0x1f))
+                (aget (PersistentVector''arrayFor this, i) (& i 0x1f))
             )
             ([#_"PersistentVector" this, #_"int" i, #_"Object" not-found]
                 (when (< -1 i (:cnt this)) => not-found
@@ -15834,7 +14277,7 @@
         ;; return nodeToInsert placed in copy of parent
         (let [
             #_"Object[]" a (aclone (:a parent))
-            #_"int" x (bit-and (unsigned-bit-shift-right (dec (:cnt this)) level) 0x1f)
+            #_"int" x (& (>>> (dec (:cnt this)) level) 0x1f)
             #_"VNode" child
                 (when-not (= level 5) => tail-node
                     (if-some [child (aget a x)]
@@ -15866,7 +14309,7 @@
                         #_"VNode" tail-node (VNode'new (:edit (:root this)), (:tail this))
                         #_"int" shift (:shift this)
                         [#_"VNode" root shift]
-                            (if (< (bit-shift-left 1 shift) (unsigned-bit-shift-right (:cnt this) 5)) ;; overflow root?
+                            (if (< (<< 1 shift) (>>> (:cnt this) 5)) ;; overflow root?
                                 (let [
                                     #_"Object[]" a
                                         (doto (object-array 32)
@@ -15897,7 +14340,7 @@
                     (let [
                         #_"Object[]" tail (object-array (alength (:tail this)))
                         _ (System/arraycopy (:tail this), 0, tail, 0, (alength tail))
-                        _ (aset tail (bit-and i 0x1f) o)
+                        _ (aset tail (& i 0x1f) o)
                     ]
                         (PersistentVector'new (meta this), (:cnt this), (:shift this), (:root this), tail)
                     )
@@ -15912,7 +14355,7 @@
 
     (defn- #_"VNode" PersistentVector''popTail [#_"PersistentVector" this, #_"int" level, #_"VNode" node]
         (let [
-            #_"int" x (bit-and (unsigned-bit-shift-right (- (:cnt this) 2) level) 0x1f)
+            #_"int" x (& (>>> (- (:cnt this) 2) level) 0x1f)
         ]
             (cond
                 (< 5 level)
@@ -16044,6 +14487,1437 @@
         )
     )
 )
+)
+
+(arbace-ns PersistentWector
+
+(def- value-array object-array)
+
+(class-ns WNode []
+    (defn #_"WNode" WNode'new [#_"Thread'" edit, #_"Object[]" array, #_"int[]" index]
+        (merge (WNode'class.)
+            (hash-map
+                #_"Thread'" :edit edit
+                #_"Object[]" :array (or array (object-array 32))
+                #_"int[]" :index index
+            )
+        )
+    )
+
+    (def #_"WNode" WNode'EMPTY (WNode'new nil, nil, nil))
+
+    (defn #_"WNode" WNode''newPath [#_"WNode" this, #_"Thread'" edit, #_"int" shift]
+        (when (pos? shift) => this
+            (WNode'new edit, (doto (object-array 32) (aset 0 (WNode''newPath this, edit, (- shift 5)))), nil)
+        )
+    )
+
+    (defn #_"values" WNode''arrayFor
+        ([#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt] (WNode''arrayFor this, i, shift, cnt, cnt, nil))
+        ([#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
+            (when (< -1 i cnt) => (throw! "index is out of bounds")
+                (when (< i tail-off) => tail
+                    (loop-when [i i #_"WNode" node this shift shift] (pos? shift) => (:array node)
+                        (let [
+                            #_"int[]" x (:index node)
+                            #_"int" m (& (>> i shift) 0x1f)
+                            [m i]
+                                (when (some? x) => [m i]
+                                    (let [
+                                        m (loop-when-recur m (<= (aget x m) i) (inc m) => m)
+                                    ]
+                                        [m (if (pos? m) (- i (aget x (dec m))) i)]
+                                    )
+                                )
+                        ]
+                            (recur i (aget (:array node) m) (- shift 5))
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"value" WNode''valueFor [#_"WNode" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"values" tail]
+        (let [
+            #_"int" tail-off (- cnt (alength tail))
+        ]
+            (aget (WNode''arrayFor this, i, shift, cnt, tail-off, tail) (if (< i tail-off) (& (>> i shift) 0x1f) (- i tail-off)))
+        )
+    )
+
+    (defn- #_"int[]" WNode'n-index [#_"int" shift, #_"int" n]
+        (let [
+            #_"int" k (<< 1 shift)
+            #_"int[]" x (int-array 33)
+        ]
+            (loop [#_"int" j 0 #_"int" i k]
+                (if (< i n)
+                    (do
+                        (aset x j i)
+                        (recur (inc j) (+ i k))
+                    )
+                    (doto x
+                        (aset j n)
+                        (aset 32 (inc j))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"int[]" WNode'm-n-index [#_"int" shift, #_"int" m, #_"int" n]
+        (let [
+            #_"int" k (<< 1 shift)
+            #_"int[]" x (int-array 33)
+        ]
+            (loop [#_"int" j 0 #_"int" i k]
+                (if (< j m)
+                    (do
+                        (aset x j i)
+                        (recur (inc j) (+ i k))
+                    )
+                    (doto x
+                        (aset j n)
+                        (aset 32 (inc j))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"int" WNode'index-of-nil [#_"Object[]" a]
+        (loop-when [#_"int" l 0 #_"int" h 31] (< l (dec h)) => (cond (nil? (aget a l)) l (nil? (aget a h)) h :else 32)
+            (let [
+                #_"int" m (+ l (>> (- h l) 1))
+            ]
+                (if (nil? (aget a m))
+                    (recur l m)
+                    (recur (inc m) h)
+                )
+            )
+        )
+    )
+
+    (defn #_"int" WNode'last-range [#_"int[]" x]
+        (aget x (dec (aget x 32)))
+    )
+
+    (defn #_"boolean" WNode''overflow? [#_"WNode" this, #_"int" shift, #_"int" cnt]
+        (let [
+            #_"int[]" x (:index this)
+        ]
+            (when (some? x) => (< (<< 1 shift) (>> (inc cnt) 5))
+                (and (= (aget x 32) 32)
+                    (or (= shift 5)
+                        (recur
+                            (aget (:array this) 31)
+                            (- shift 5)
+                            (+ (- (aget x 31) (aget x 30)) 32)
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"WNode" WNode''first-child [#_"WNode" this]
+        (aget (:array this) 0)
+    )
+
+    (defn- #_"WNode" WNode''last-child [#_"WNode" this]
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (aget a (dec (if (some? x) (aget x 32) (WNode'index-of-nil a))))
+        )
+    )
+
+    (defn- #_"WNode" WNode''remove-leftmost-child [#_"WNode" this]
+        (let [
+            #_"Object[]" a (:array this)
+        ]
+            (when (some? (aget a 1))
+                (let [
+                    #_"Object[]" a' (doto (object-array 32) (acopy 0 a 1 31))
+                    #_"int[]" x (:index this)
+                    #_"int[]" x'
+                        (when (some? x)
+                            (let [
+                                #_"int" k (aget x 0)
+                                #_"int" e (dec (aget x 32))
+                                x' (int-array 33)
+                                _ (dotimes [#_"int" j e] (aset x' j (- (aget x (inc j)) k)))
+                            ]
+                                (doto x' (aset e 0) (aset 32 e))
+                            )
+                        )
+                ]
+                    (WNode'new nil, a', x')
+                )
+            )
+        )
+    )
+
+    (defn- #_"WNode" WNode''replace-leftmost-child [#_"WNode" this, #_"int" shift, #_"int" cnt, #_"WNode" node, #_"int" delta]
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+            #_"int[]" x' (int-array 33)
+            #_"Object[]" a'
+                (if (some? x)
+                    (let [
+                        #_"int" n (aget x 32)
+                        _ (dotimes [#_"int" j n] (aset x' j (- (aget x j) delta)))
+                        _ (aset x' 32 n)
+                    ]
+                        (doto (aclone a) (aset 0 node))
+                    )
+                    (let [
+                        #_"int" k (<< 1 shift)
+                        #_"int" n (& (>> shift (dec cnt)) 0x1f)
+                        _ (aset x' 0 (- k delta))
+                        _ (dotimes [#_"int" j n] (aset x' (inc j) (+ (aget x' j) k)))
+                        _ (aset x' n (- cnt delta))
+                        _ (aset x' 32 (inc n))
+                    ]
+                        (doto (object-array 32) (aset 0 node) (acopy 1 a 1 n))
+                    )
+                )
+        ]
+            (WNode'new nil, a', x')
+        )
+    )
+
+    (defn- #_"WNode" WNode''replace-rightmost-child [#_"WNode" this, #_"int" shift, #_"WNode" node, #_"int" delta]
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (if (some? x)
+                (let [
+                    #_"int" e (dec (aget x 32))
+                ]
+                    (WNode'new nil, (doto (aclone a) (aset e node)), (doto (aclone x) (aset e (+ (aget x e) delta))))
+                )
+                (let [
+                    #_"int" m (dec (WNode'index-of-nil a))
+                ]
+                    (if (some? (:index node))
+                        (WNode'new nil, (doto (object-array 32) (acopy 0 a 0 m) (aset m node)), (WNode'm-n-index shift, m, (WNode'last-range (:index node))))
+                        (WNode'new nil, (doto (aclone a) (aset m node)), nil)
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"WNode" WNode''fold-tail [#_"WNode" this, #_"int" shift, #_"int" cnt, #_"Object[]" tail]
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+            #_"int" m (WNode'index-of-nil a)
+            #_"WNode" tail-node
+                (when (< 5 shift) => (WNode'new nil, tail, nil)
+                    (let [
+                        #_"int" n
+                            (when (some? x) => (mod cnt (<< 1 shift))
+                                (let [
+                                    #_"int" e (dec (aget x 32))
+                                ]
+                                    (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0))
+                                )
+                            )
+                    ]
+                        (WNode''fold-tail (aget a (dec m)), (- shift 5), n, tail)
+                    )
+                )
+        ]
+            (when (or (< m 32) (and (some? tail-node) (< 5 shift)))
+                (let [
+                    #_"int" n (alength tail)
+                    #_"int[]" x'
+                        (when (or (some? x) (< n 32))
+                            (let [
+                                x' (if (some? x) (aclone x) (WNode'n-index shift, cnt))
+                            ]
+                                (if (and (some? tail-node) (< 5 shift))
+                                    (do
+                                        (when (pos? m)
+                                            (aset x' (dec m) (+ (aget x' (dec m)) n))
+                                        )
+                                        (doto x' (aset 32 m))
+                                    )
+                                    (do
+                                        (aset x' m (+ (if (pos? m) (aget x' (dec m)) 0) n))
+                                        (doto x' (aset 32 (inc m)))
+                                    )
+                                )
+                            )
+                        )
+                    #_"Object[]" a' (doto (object-array 32) (acopy 0 a 0 m))
+                ]
+                    (if (some? tail-node)
+                        (aset a' (if (< 5 shift) (dec m) m) tail-node)
+                        (aset a' m (WNode''newPath (WNode'new nil, tail, nil), nil, (- shift 5)))
+                    )
+                    (WNode'new nil, a', x')
+                )
+            )
+        )
+    )
+
+    (def #_"int" WNode'rrbt-concat-threshold 33)
+    (def- #_"int" WNode'max-extra-search-steps 2)
+
+    (defn #_"WNode" WNode''slice-right [#_"WNode" this, #_"int" shift, #_"int" end]
+        ;; => potentially return a short node, although it would be better to make sure a regular
+        ;; leaf is always left at the right, with any items over the final 32 moved into tail
+        ;; (and then potentially back into the tree should the tail become too long...)
+        (when (pos? shift) => (WNode'new nil, (doto (value-array end) (acopy 0 (:array this) 0 end)), nil)
+            (let [
+                #_"Object[]" a (:array this) #_"int[]" x (:index this)
+                #_"int" m (& (>> (dec end) shift) 0x1f)
+                m
+                    (when (some? x) => m
+                        (loop-when-recur m (< (aget x m) end) (inc m) => m)
+                    )
+                #_"int" k (<< 1 shift)
+                #_"int" child-end
+                    (cond
+                        (nil? x) (let [#_"int" e (rem end k)] (if (zero? e) k e))
+                        (pos? m) (- end (aget x (dec m)))
+                        :else    end
+                    )
+                #_"WNode" child (WNode''slice-right (aget a m), (- shift 5), child-end)
+                #_"int[]" y (:index child)
+                #_"Object[]" a' (doto (object-array 32) (acopy 0 a 0 m) (aset m child))
+                #_"int[]" x'
+                    (when (or (some? x) (some? y))
+                        (let [
+                            x' (int-array 33)
+                            _ (dotimes [#_"int" j m] (aset x' j (if (some? x) (aget x j) (* (inc j) k))))
+                            #_"int" delta
+                                (cond
+                                    (nil? y)    (let [#_"int" e (mod child-end k) ] (if (zero? e) k e))
+                                    (< 5 shift) (WNode'last-range y)
+                                    :else       (alength (:array child))
+                                )
+                        ]
+                            (aset x' m (+ (if (pos? m) (aget x' (dec m)) 0) delta))
+                            (doto x' (aset 32 (inc m)))
+                        )
+                    )
+            ]
+                (WNode'new nil, a', x')
+            )
+        )
+    )
+
+    (defn #_"WNode" WNode''slice-left [#_"WNode" this, #_"int" shift, #_"int" start, #_"int" end]
+        (if (zero? shift)
+            ;; potentially return a short node
+            (let [
+                #_"Object[]" a (:array this)
+                #_"int" n (- (alength a) start)
+            ]
+                (WNode'new nil, (doto (value-array n) (acopy 0 a start n)), nil)
+            )
+            (let [
+                #_"Object[]" a (:array this) #_"int[]" x (:index this)
+                #_"int" m (& (>> start shift) 0x1f)
+                m
+                    (when (some? x) => m
+                        (loop-when-recur m (<= (aget x m) start) (inc m) => m)
+                    )
+                #_"int" n
+                    (when (nil? x) => (aget x 32)
+                        (loop-when-recur [n m] (and (< n 32) (some? (aget a n))) [(inc n)] => n)
+                    )
+                #_"int" k (<< 1 shift)
+                #_"WNode" child
+                    (let [
+                        #_"int" i (if (some? x) (aget x (dec m)) (* m k))
+                    ]
+                        (WNode''slice-left (aget a m), (- shift 5), (if (pos? m) (- start i) start), (min k (if (pos? m) (- end i) end)))
+                    )
+                n (- n m)
+                n (if (some? child) n (dec n))
+            ]
+                (when (pos? n)
+                    (let [
+                        #_"int[]" x' (int-array 33)
+                        _
+                            (if (some? x)
+                                (loop-when [#_"int" j 0 #_"int" i m] (< j n)
+                                    (aset x' j (- (aget x i) start))
+                                    (recur (inc j) (inc i))
+                                )
+                                (let [
+                                    #_"int" i
+                                        (if (and (some? child) (some? (:index child)) (< 5 shift))
+                                            (WNode'last-range (:index child))
+                                            (- k (& (>> start (- shift 5)) 0x1f))
+                                        )
+                                ]
+                                    (loop-when [#_"int" j 0 i i] (< j n)
+                                        (aset x' j i)
+                                        (recur (inc j) (+ i k))
+                                    )
+                                    (when (< 1 n)
+                                        (aset x' (dec n) (- end start))
+                                    )
+                                )
+                            )
+                        _ (aset x' 32 n)
+                        #_"Object[]" a' (object-array 32)
+                        _
+                            (if (some? child)
+                                (doto a' (aset 0 child) (acopy 1 a (inc m) (dec n)))
+                                (doto a' (acopy 0 a (inc m) n))
+                            )
+                    ]
+                        (WNode'new nil, a', x')
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"WNode" WNode''shift-from-to [#_"WNode" this, #_"int" from, #_"int" to]
+        (when-not (= from to) => this
+            (let [
+                #_"int[]" x'
+                    (when (some? (:index this))
+                        (doto (int-array 33) (aset 0 (WNode'last-range (:index this))) (aset 32 1))
+                    )
+            ]
+                (recur (WNode'new nil, (doto (object-array 32) (aset 0 this)), x') (+ 5 from) to)
+            )
+        )
+    )
+
+    (defn- #_"int" WNode''leaf-count [#_"WNode" this, #_"int" shift]
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (cond
+                (zero? shift) (alength a)
+                (some? x)     (aget x 32)
+                :else         (WNode'index-of-nil a)
+            )
+        )
+    )
+
+    (defn- #_"int" WNode''tree-count [#_"WNode" this, #_"int" shift]
+        ;; NB. positive shifts only
+        (let [
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (loop-when-recur [#_"int" i 0 #_"int" n 0]
+                             (if (some? x) (< i (aget x 32)) (and (< i 32) (some? (aget a i))))
+                             [(inc i) (+ n (WNode''leaf-count (aget a i), (- shift 5)))]
+                          => n
+            )
+        )
+    )
+
+    (declare mapcat)
+    (declare take)
+
+    (defn- #_"seq" WNode''leaf-seq [#_"WNode" this]
+        (let [
+            #_"Object[]" a (:array this)
+        ]
+            (mapcat :array (take (WNode'index-of-nil a) a))
+        )
+    )
+
+    (declare partition-all)
+    (declare drop)
+
+    (defn- #_"[WNode WNode int]" WNode'rebalance-leaves [#_"WNode" node1, #_"WNode" node2, #_"int" delta]
+        (let [
+            #_"int" n1 (WNode''tree-count node1, 5) #_"int" n2 (WNode''tree-count node2, 5) #_"int" n (+ n1 n2)
+        ]
+            (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, 5) (WNode''leaf-count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
+                (let [
+                    #_"seq" s (map #(WNode'new nil, (value-array %), nil) (partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
+                ]
+                    (if (<= n (* 32 32))
+                        (let [
+                            #_"int[]" x' (when-not (zero? (mod n 32)) (WNode'n-index 5, n))
+                        ]
+                            [(WNode'new nil, (object-array s), x') nil n2]
+                        )
+                        (let [
+                            #_"int[]" x' (when-not (zero? (mod n 32)) (WNode'n-index 5, (- n (* 32 32))))
+                        ]
+                            [(WNode'new nil, (object-array (take 32 s)), nil) (WNode'new nil, (object-array (drop 32 s)), x') (- (* 32 32) n1)]
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"seq" WNode''child-seq [#_"WNode" this, #_"int" shift, #_"int" cnt]
+        (let [
+            f'cseq
+                (fn [#_"WNode" this #_"int" cnt]
+                    (let [
+                        #_"int[]" x (or (:index this) (WNode'n-index (- shift 5), cnt))
+                        #_"int" n (aget x 32)
+                    ]
+                        (take n (map list (:array this) (map - x (cons 0 x))))
+                    )
+                )
+            #_"int[]" x (or (:index this) (WNode'n-index shift, cnt))
+            #_"int" n (aget x 32)
+        ]
+            (mapcat f'cseq (take n (:array this)) (take n (map - x (cons 0 x))))
+        )
+    )
+
+    (defn- #_"[WNode WNode int]" WNode'rebalance [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2, #_"int" delta]
+        (when (some? node2) => [node1 nil delta]
+            (let [
+                #_"int" n1 (WNode''tree-count node1, shift) #_"int" n2 (WNode''tree-count node2, shift) #_"int" n (+ n1 n2)
+            ]
+                (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, shift) (WNode''leaf-count node2, shift)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
+                    (let [
+                        #_"seq" s (partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
+                    ]
+                        (if (<= n (* 32 32))
+                            (let [
+                                #_"Object[]" a (object-array 32) #_"int[]" x (int-array 33)
+                                _
+                                    (loop [#_"int" i 0 s s]
+                                        (when-first [#_"seq" block s]
+                                            (let [
+                                                #_"Object[]" a' (object-array 32) #_"int[]" x' (int-array 33)
+                                                _
+                                                    (loop [#_"int" j 0 #_"int" k 0 #_"seq" z (seq block)]
+                                                        (when-first [[#_"WNode" c #_"int" r] z]
+                                                            (aset a' j c)
+                                                            (aset x' j (+ k r))
+                                                            (recur (inc j) (+ k r) (next z))
+                                                        )
+                                                    )
+                                                _ (aset x' 32 (count block))
+                                            ]
+                                                (aset a i (WNode'new nil, a', x'))
+                                                (aset x i (+ (WNode'last-range  x') (if (pos? i) (aget x (dec i)) 0)))
+                                                (aset x 32 (inc i))
+                                                (recur (inc i) (next s))
+                                            )
+                                        )
+                                    )
+                            ]
+                                [(WNode'new nil, a, x) nil cnt2]
+                            )
+                            (let [
+                                #_"Object[]" a1 (object-array 32) #_"int[]" x1 (int-array 33)
+                                #_"Object[]" a2 (object-array 32) #_"int[]" x2 (int-array 33)
+                                delta
+                                    (loop [delta delta #_"int" i 0 s s]
+                                        (when-first [#_"seq" block s] => delta
+                                            (let [
+                                                #_"Object[]" a' (object-array 32) #_"int[]" x' (int-array 33)
+                                                _
+                                                    (loop [#_"int" j 0 #_"int" k 0 #_"seq" z (seq block)]
+                                                        (when-first [[#_"WNode" c #_"int" r] z]
+                                                            (aset a' j c)
+                                                            (aset x' j (+ k r))
+                                                            (recur (inc j) (+ k r) (next z))
+                                                        )
+                                                    )
+                                                _ (aset x' 32 (count block))
+                                                delta
+                                                    (when (and (< i 32) (< n1 (+ (* i 32) (aget x' 32)))) => delta
+                                                        (let [
+                                                            #_"int" k (- (+ (* i 32) (aget x' 32)) n1)
+                                                            #_"int" e (dec (aget x' 32))
+                                                        ]
+                                                            (+ delta (if (< k 32) (- (aget x' e) (aget x' (- e k))) (aget x' e)))
+                                                        )
+                                                    )
+                                                #_"Object[]" a (if (< i 32) a1 a2) #_"int[]" x (if (< i 32) x1 x2)
+                                                #_"int" m (mod i 32)
+                                            ]
+                                                (aset a m (WNode'new nil, a', x'))
+                                                (aset x m (+ (WNode'last-range  x') (if (pos? m) (aget x (dec m)) 0)))
+                                                (aset x 32 (inc m))
+                                                (recur delta (inc i) (next s))
+                                            )
+                                        )
+                                    )
+                            ]
+                                [(WNode'new nil, a1, x1) (WNode'new nil, a2, x2) delta]
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"[WNode WNode int]" WNode'zippath [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2, #_"int" delta]
+        (if (= shift 5)
+            (WNode'rebalance-leaves node1, node2, delta)
+            (let [
+                #_"WNode" c1 (WNode''last-child node1)
+                #_"WNode" c2 (WNode''first-child node2)
+                #_"int" k (<< 1 shift)
+                #_"int" m1
+                    (let [
+                        #_"int[]" x1 (:index node1)
+                    ]
+                        (when (some? x1) => (let [#_"int" m (mod cnt1 k)] (if (zero? m) k m))
+                            (let [#_"int" e (dec (aget x1 32))]
+                                (if (pos? e) (- (aget x1 e) (aget x1 (dec e))) (aget x1 0))
+                            )
+                        )
+                    )
+                #_"int" m2
+                    (let [
+                        #_"int[]" x2 (:index node2)
+                    ]
+                        (when (some? x2) => (let [#_"int" m (mod cnt2 k)] (if (zero? m) k m))
+                            (aget x2 0)
+                        )
+                    )
+                [#_"WNode" c1' #_"WNode" c2' #_"int" d'] (WNode'zippath (- shift 5), c1, m1, c2, m2, 0)
+            ]
+                (WNode'rebalance shift,
+                    (if (identical? c1 c1') node1 (WNode''replace-rightmost-child node1, shift, c1', d')),
+                    (+ cnt1 d'),
+                    (if c2' (if (identical? c2 c2') node2 (WNode''replace-leftmost-child node2, shift, cnt2, c2', d')) (WNode''remove-leftmost-child node2)),
+                    (- cnt2 d'),
+                    (+ delta d')
+                )
+            )
+        )
+    )
+
+    (defn #_"[WNode WNode]" WNode'squash-nodes [#_"int" shift, #_"WNode" node1, #_"int" cnt1, #_"WNode" node2, #_"int" cnt2]
+        (let [
+            #_"Object[]" a1 (:array node1) #_"int" n1 (WNode'index-of-nil a1)
+            #_"Object[]" a2 (:array node2) #_"int" n2 (WNode'index-of-nil a2)
+            #_"seq" slots (concat (take n1 a1) (take n2 a2))
+        ]
+            (when (<= (count slots) 32) => [node1 node2]
+                (let [
+                    #_"seq" s1 (take n1 (or (:index node1) (WNode'n-index shift, cnt1)))
+                    #_"seq" s2 (take n2 (or (:index node2) (WNode'n-index shift, cnt2)))
+                    #_"seq" index (concat s1 (let [#_"int" d (last s1)] (map #(+ % d) s2)))
+                    #_"Object[]" a' (object-array 32)
+                    _
+                        (loop-when-recur [#_"int" i 0 s (seq slots)] s [(inc i) (next s)]
+                            (aset a' i (first s))
+                        )
+                    #_"int[]" x' (int-array 33)
+                    _
+                        (loop-when-recur [#_"int" i 0 s (seq index)] s [(inc i) (next s)] => (aset x' 32 i)
+                            (aset x' i (first s))
+                        )
+                ]
+                    [(WNode'new nil, a', x') nil]
+                )
+            )
+        )
+    )
+
+    (defn #_"void" WNode''assertEditable [#_"WNode" this]
+        (let [
+            #_"Thread" owner @(or (:edit this) (throw! "transient use of persistent data"))
+        ]
+            (when-not (identical? (Thread/currentThread) owner)
+                (if (some? owner)
+                    (throw! "transient used by non-owner thread")
+                    (throw! "transient used after persistent! call")
+                )
+            )
+        )
+        nil
+    )
+
+    (defn #_"boolean" WNode''cow? [#_"WNode" this, #_"Thread'" edit]
+        (let [
+            #_"Thread'" e (:edit this)
+        ]
+            (or (nil? e) (nil? @e) (not (or (identical? e edit) (throw! "transient cow!"))))
+        )
+    )
+
+    (defn #_"WNode" WNode''editableRoot [#_"WNode" this]
+        (let [
+            #_"Thread'" edit (atom (Thread/currentThread))
+            #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (WNode'new edit, (aclone a), (when (some? x) (aclone x)))
+        )
+    )
+
+    (defn #_"values" WNode'editableTail [#_"values" tail]
+        (doto (value-array 32) (acopy 0 tail 0 (alength tail)))
+    )
+
+    (defn #_"WNode" WNode''pushTail [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt, #_"WNode" tail-node]
+        (let [
+            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
+        ]
+            (if (some? x)
+                (let [
+                    #_"int" e (dec (aget x 32))
+                    #_"WNode" child
+                        (when (< 5 shift)
+                            (let [
+                                #_"int" n (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0))
+                            ]
+                                (when (< n (<< 1 shift))
+                                    (WNode''pushTail (aget a e), edit, (- shift 5), (inc n), tail-node)
+                                )
+                            )
+                        )
+                    a (if cow? (aclone a) a) x (if cow? (aclone x) x)
+                    _
+                        (if (some? child)
+                            (do
+                                (aset a e child)
+                                (aswap x e + 32)
+                            )
+                            (do
+                                (aset a (inc e) (WNode''newPath tail-node, edit, (- shift 5)))
+                                (aset x (inc e) (+ (aget x e) 32))
+                                (aswap x 32 inc)
+                            )
+                        )
+                ]
+                    (if cow? (WNode'new edit, a, x) this)
+                )
+                (let [
+                    #_"int" e (& (>> (dec cnt) shift) 0x1f)
+                    #_"WNode" child
+                        (when (< 5 shift) => tail-node
+                            (if-some [child (aget a e)]
+                                (WNode''pushTail child, edit, (- shift 5), cnt, tail-node)
+                                (WNode''newPath tail-node, edit, (- shift 5))
+                            )
+                        )
+                    a (if cow? (aclone a) a)
+                    _ (aset a e child)
+                ]
+                    (if cow? (WNode'new edit, a, nil) this)
+                )
+            )
+        )
+    )
+
+    (defn #_"WNode" WNode''popTail [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt]
+        (let [
+            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
+            #_"int" e (& (>> (dec cnt) shift) 0x1f)
+        ]
+            (if (some? x)
+                (let [
+                    e (loop-when-recur e (and (< e 31) (pos? (aget x (inc e)))) (inc e) => e)
+                ]
+                    (cond
+                        (< 5 shift)
+                            (let [
+                                #_"WNode" c (aget a e)
+                                #_"WNode" c' (WNode''popTail c, edit, (- shift 5), (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0)))
+                            ]
+                                (when (or (some? c') (pos? e))
+                                    (let [
+                                        a (if cow? (aclone a) a)
+                                        _ (aset a e c')
+                                        #_"int" d
+                                            (when (some? (:index c)) => 32
+                                                (- (WNode'last-range (:index c)) (if (some? c') (WNode'last-range (:index c')) 0))
+                                            )
+                                        x (if cow? (aclone x) x)
+                                        _ (aswap x e - d)
+                                        _ (when (nil? c') (aswap x 32 dec))
+                                    ]
+                                        (if cow? (WNode'new edit, a, x) this)
+                                    )
+                                )
+                            )
+                        (pos? e)
+                            (let [
+                                a (if cow? (aclone a) a)
+                                _ (aset a e nil)
+                                x (if cow? (aclone x) x)
+                                _ (aset x e 0)
+                                _ (aswap x 32 dec)
+                            ]
+                                (if cow? (WNode'new edit, a, x) this)
+                            )
+                    )
+                )
+                (cond
+                    (< 5 shift)
+                        (let [
+                            #_"WNode" c' (WNode''popTail (aget a e), edit, (- shift 5), cnt)
+                        ]
+                            (when (or (some? c') (pos? e))
+                                (let [
+                                    a (if cow? (aclone a) a)
+                                    _ (aset a e c')
+                                ]
+                                    (if cow? (WNode'new edit, a, nil) this)
+                                )
+                            )
+                        )
+                    (pos? e)
+                        (let [
+                            a (if cow? (aclone a) a)
+                            _ (aset a e nil)
+                        ]
+                            (if cow? (WNode'new edit, a, nil) this)
+                        )
+                )
+            )
+        )
+    )
+
+    (defn #_"WNode" WNode''doAssoc [#_"WNode" this, #_"Thread'" edit, #_"int" shift, #_"int" i, #_"value" val]
+        (let [
+            #_"boolean" cow? (WNode''cow? this, edit) #_"Object[]" a (:array this) #_"int[]" x (:index this)
+            a (if cow? (aclone a) a)
+            #_"int" m (& (>> i shift) 0x1f)
+            _
+                (when (pos? shift) => (aset a m val)
+                    (let [
+                        [m i]
+                            (when (some? x) => [m i]
+                                (let [
+                                    m (loop-when-recur m (<= (aget x m) i) (inc m) => m)
+                                ]
+                                    [m (if (pos? m) (- i (aget x (dec m))) i)]
+                                )
+                            )
+                    ]
+                        (aswap a m WNode''doAssoc edit, (- shift 5), i, val)
+                    )
+                )
+        ]
+            (if cow? (WNode'new edit, a, x) this)
+        )
+    )
+)
+
+(class-ns TransientWector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector]
+    (defn #_"TransientWector" TransientWector'new
+        ([#_"PersistentWector" w]
+            (TransientWector'new (:cnt w), (:shift w), (WNode''editableRoot (:root w)), (WNode'editableTail (:tail w)), (alength (:tail w)))
+        )
+        ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"Object[]" tail, #_"int" tidx]
+            (merge (TransientWector'class.)
+                (hash-map
+                    #_"int" :cnt cnt
+                    #_"int" :shift shift
+                    #_"WNode" :root root
+                    #_"Object[]" :tail tail
+                    #_"int" :tidx tidx
+                )
+            )
+        )
+    )
+
+    (defn- #_"int" TransientWector''tailoff [#_"TransientWector" this]
+        (- (:cnt this) (:tidx this))
+    )
+
+    (defn- #_"values" TransientWector''arrayFor [#_"TransientWector" this, #_"int" i]
+        (WNode''arrayFor (:root this), i, (:shift this), (:cnt this), (TransientWector''tailoff this), (:tail this))
+    )
+
+    (defm TransientWector Counted
+        (#_"int" Counted'''count [#_"TransientWector" this]
+            (WNode''assertEditable (:root this))
+            (:cnt this)
+        )
+    )
+
+    (defm TransientWector Indexed
+        (#_"value" Indexed'''nth
+            ([#_"TransientWector" this, #_"int" i]
+                (WNode''assertEditable (:root this))
+                (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
+            )
+            ([#_"TransientWector" this, #_"int" i, #_"value" not-found]
+                (WNode''assertEditable (:root this))
+                (when (< -1 i (:cnt this)) => not-found
+                    (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
+                )
+            )
+        )
+    )
+
+    (defm TransientWector ILookup
+        (#_"value" ILookup'''valAt
+            ([#_"TransientWector" this, #_"key" key] (ILookup'''valAt this, key, nil))
+            ([#_"TransientWector" this, #_"key" key, #_"value" not-found]
+                (WNode''assertEditable (:root this))
+                (when (integer? key) => not-found
+                    (let-when [#_"int" i (.intValue key)] (< -1 i (:cnt this)) => not-found
+                        (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
+                    )
+                )
+            )
+        )
+    )
+
+    (defm TransientWector IFn
+        (#_"value" IFn'''invoke [#_"TransientWector" this, #_"key" arg]
+            (when (integer? arg) => (throw! "arg must be integer")
+                (Indexed'''nth this, (.intValue arg))
+            )
+        )
+
+        (#_"value" IFn'''applyTo [#_"TransientWector" this, #_"seq" args]
+            (case (count' args 1)
+                1 (IFn'''invoke this, (first args))
+            )
+        )
+    )
+
+    (defm TransientWector ITransientCollection
+        (#_"TransientWector" ITransientCollection'''conj! [#_"TransientWector" this, #_"value" val]
+            (WNode''assertEditable (:root this))
+            (if (< (:tidx this) 32)
+                (let [
+                    _ (aset (:tail this) (:tidx this) val)
+                ]
+                    (-> this (update :cnt inc) (update :tidx inc))
+                )
+                (let [
+                    #_"WNode" tail-node (WNode'new (:edit (:root this)), (:tail this), nil)
+                    this (assoc this :tail (doto (value-array 32) (aset 0 val)), :tidx 1)
+                ]
+                    (if (WNode''overflow? (:root this), (:shift this), (:cnt this))
+                        (let [
+                            #_"Object[]" a'
+                                (doto (object-array 32)
+                                    (aset 0 (:root this))
+                                    (aset 1 (WNode''newPath tail-node, (:edit (:root this)), (:shift this)))
+                                )
+                            #_"int[]" x'
+                                (when (some? (:index (:root this)))
+                                    (let [
+                                        #_"int" n (aget (:index (:root this)) 31)
+                                    ]
+                                        (doto (int-array 33) (aset 0 n) (aset 1 (+ n 32)) (aset 32 2))
+                                    )
+                                )
+                            #_"WNode" root (WNode'new (:edit (:root this)), a', x')
+                        ]
+                            (-> this (assoc :root root) (update :shift + 5) (update :cnt inc))
+                        )
+                        (let [
+                            #_"WNode" root (WNode''pushTail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
+                        ]
+                            (-> this (assoc :root root) (update :cnt inc))
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defm TransientWector ITransientVector
+        (#_"TransientWector" ITransientVector'''assocN! [#_"TransientWector" this, #_"int" i, #_"value" val]
+            (WNode''assertEditable (:root this))
+            (if (< -1 i (:cnt this))
+                (let [
+                    #_"int" tail-off (TransientWector''tailoff this)
+                ]
+                    (if (<= tail-off i)
+                        (do
+                            (aset (:tail this) (- i tail-off) val)
+                            this
+                        )
+                        (do
+                            (assoc this :root (WNode''doAssoc (:root this), (:edit (:root this)), (:shift this), i, val))
+                        )
+                    )
+                )
+                (when (= i (:cnt this)) => (throw! "index is out of bounds")
+                    (ITransientCollection'''conj! this, val)
+                )
+            )
+        )
+    )
+
+    (defm TransientWector ITransientAssociative
+        (#_"TransientWector" ITransientAssociative'''assoc! [#_"TransientWector" this, #_"key" key, #_"value" val]
+            (when (integer? key) => (throw! "key must be integer")
+                (ITransientVector'''assocN! this, (.intValue key), val)
+            )
+        )
+    )
+
+    (defm TransientWector ITransientVector
+        (#_"TransientWector" ITransientVector'''pop! [#_"TransientWector" this]
+            (WNode''assertEditable (:root this))
+            (cond
+                (zero? (:cnt this))
+                    (throw! "can't pop the empty vector")
+                (= (:cnt this) 1)
+                    (let [
+                        this (assoc this :cnt 0)
+                        this (assoc this :tidx 0)
+                        _ (aset (:tail this) 0 nil)
+                    ]
+                        this
+                    )
+                (< 1 (:tidx this))
+                    (let [
+                        this (update this :cnt dec)
+                        this (update this :tidx dec)
+                        _ (aset (:tail this) (:tidx this) nil)
+                    ]
+                        this
+                    )
+                :else
+                    (let [
+                        #_"values" tail (aclone (TransientWector''arrayFor this, (- (:cnt this) 2)))
+                        #_"WNode" root (WNode''popTail (:root this), (:edit (:root this)), (:shift this), (:cnt this))
+                        this
+                            (cond
+                                (nil? root)
+                                    (-> this
+                                        (assoc :root (WNode'new (:edit (:root this)), nil, nil))
+                                    )
+                                (and (< 5 (:shift this)) (nil? (aget (:array root) 1)))
+                                    (-> this
+                                        (update :shift - 5)
+                                        (assoc :root (aget (:array root) 0))
+                                    )
+                                :else
+                                    (-> this
+                                        (assoc :root root)
+                                    )
+                            )
+                    ]
+                        (-> this
+                            (update :cnt dec)
+                            (assoc :tail tail)
+                            (assoc :tidx (alength tail))
+                        )
+                    )
+            )
+        )
+    )
+
+    (declare PersistentWector'new)
+
+    (defm TransientWector ITransientCollection
+        (#_"PersistentWector" ITransientCollection'''persistent! [#_"TransientWector" this]
+            (WNode''assertEditable (:root this))
+            (reset! (:edit (:root this)) nil)
+            (let [
+                #_"values" trimmed-tail (doto (value-array (:tidx this)) (acopy 0 (:tail this) 0 (:tidx this)))
+            ]
+                (PersistentWector'new nil, (:cnt this), (:shift this), (:root this), trimmed-tail)
+            )
+        )
+    )
+)
+
+(class-ns PersistentWector [#_"APersistentVector" Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IPersistentWector IReduce Reversible Seqable Sequential]
+    (defn #_"PersistentWector" PersistentWector'new
+        ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
+        ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail]
+            (merge (PersistentWector'class.) (APersistentVector'new)
+                (hash-map
+                    #_"IPersistentMap" :_meta meta
+                    #_"int" :cnt cnt
+                    #_"int" :shift shift
+                    #_"WNode" :root root
+                    #_"values" :tail tail
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IMeta
+        (#_"IPersistentMap" IMeta'''meta [#_"PersistentWector" this]
+            (:_meta this)
+        )
+    )
+
+    (defm PersistentWector IObj
+        (#_"PersistentWector" IObj'''withMeta [#_"PersistentWector" this, #_"IPersistentMap" meta]
+            (PersistentWector'new meta, (:cnt this), (:shift this), (:root this), (:tail this))
+        )
+    )
+
+    (defm PersistentWector IEditableCollection
+        (#_"TransientWector" IEditableCollection'''asTransient [#_"PersistentWector" this]
+            (TransientWector'new this)
+        )
+    )
+
+    (defm PersistentWector Counted
+        (#_"int" Counted'''count [#_"PersistentWector" this]
+            (:cnt this)
+        )
+    )
+
+    (defn- #_"int" PersistentWector''tailoff [#_"PersistentWector" this]
+        (- (:cnt this) (alength (:tail this)))
+    )
+
+    (defn- #_"values" PersistentWector''arrayFor [#_"PersistentWector" this, #_"int" i]
+        (WNode''arrayFor (:root this), i, (:shift this), (:cnt this), (PersistentWector''tailoff this), (:tail this))
+    )
+
+    (defm PersistentWector Indexed
+        (#_"value" Indexed'''nth
+            ([#_"PersistentWector" this, #_"int" i]
+                (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
+            )
+            ([#_"PersistentWector" this, #_"int" i, #_"value" not-found]
+                (when (< -1 i (:cnt this)) => not-found
+                    (WNode''valueFor (:root this), i, (:shift this), (:cnt this), (:tail this))
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IPersistentCollection
+        (#_"PersistentWector" IPersistentCollection'''conj [#_"PersistentWector" this, #_"value" val]
+            (let [
+                #_"int" tail-len (alength (:tail this))
+            ]
+                (if (< tail-len 32)
+                    (let [
+                        #_"values" tail (doto (value-array (inc tail-len)) (acopy 0 (:tail this) 0 tail-len) (aset tail-len val))
+                    ]
+                        (PersistentWector'new (:_meta this), (inc (:cnt this)), (:shift this), (:root this), tail)
+                    )
+                    (let [
+                        #_"WNode" tail-node (WNode'new (:edit (:root this)), (:tail this), nil)
+                        #_"int" shift (:shift this)
+                        [#_"WNode" root shift]
+                            (if (WNode''overflow? (:root this), shift, (:cnt this))
+                                (let [
+                                    #_"Object[]" a'
+                                        (doto (object-array 32)
+                                            (aset 0 (:root this))
+                                            (aset 1 (WNode''newPath tail-node, (:edit (:root this)), shift))
+                                        )
+                                    #_"int[]" x'
+                                        (when (some? (:index (:root this)))
+                                            (let [
+                                                #_"int" n (aget (:index (:root this)) 31)
+                                            ]
+                                                (doto (int-array 33) (aset 0 n) (aset 1 (+ n 32)) (aset 32 2))
+                                            )
+                                        )
+                                ]
+                                    [(WNode'new (:edit (:root this)), a', x') (+ shift 5)]
+                                )
+                                [(WNode''pushTail (:root this), (:edit (:root this)), shift, (:cnt this), tail-node) shift]
+                            )
+                    ]
+                        (PersistentWector'new (:_meta this), (inc (:cnt this)), shift, root, (value-array [ val ]))
+                    )
+                )
+            )
+        )
+
+        (#_"PersistentWector" IPersistentCollection'''empty [#_"PersistentWector" this]
+            (PersistentWector'new (:_meta this), 0, 5, WNode'EMPTY, (value-array 0))
+        )
+    )
+
+    (defm PersistentWector IPersistentVector
+        (#_"PersistentWector" IPersistentVector'''assocN [#_"PersistentWector" this, #_"int" i, #_"value" val]
+            (if (< -1 i (:cnt this))
+                (let [
+                    #_"int" tail-off (PersistentWector''tailoff this)
+                ]
+                    (if (<= tail-off i)
+                        (let [
+                            #_"int" n (alength (:tail this))
+                            #_"values" tail (doto (value-array n) (acopy 0 (:tail this) 0 n) (aset (- i tail-off) val))
+                        ]
+                            (PersistentWector'new (:_meta this), (:cnt this), (:shift this), (:root this), tail)
+                        )
+                        (PersistentWector'new (:_meta this), (:cnt this), (:shift this), (WNode''doAssoc (:root this), nil, (:shift this), i, val), (:tail this))
+                    )
+                )
+                (when (= i (:cnt this)) => (throw! "index is out of bounds")
+                    (IPersistentCollection'''conj this, val)
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IPersistentStack
+        ;; %% redundant as of APersistentVector
+        (#_"value" IPersistentStack'''peek [#_"PersistentWector" this]
+            (when (pos? (:cnt this))
+                (Indexed'''nth this, (dec (:cnt this)))
+            )
+        )
+
+        (#_"PersistentWector" IPersistentStack'''pop [#_"PersistentWector" this]
+            (condp = (:cnt this)
+                0   (throw! "can't pop the empty vector")
+                1   (PersistentWector'new (:_meta this), 0, 5, WNode'EMPTY, (value-array 0))
+                (let [
+                    #_"int" tail-len (alength (:tail this))
+                ]
+                    (if (< 1 tail-len)
+                        (let [
+                            #_"values" tail (doto (value-array (dec tail-len)) (acopy 0 (:tail this) 0 (dec tail-len)))
+                        ]
+                            (PersistentWector'new (:_meta this), (dec (:cnt this)), (:shift this), (:root this), tail)
+                        )
+                        (let [
+                            #_"values" tail (PersistentWector''arrayFor this, (- (:cnt this) 2))
+                            #_"int" shift (:shift this)
+                            #_"WNode" root (WNode''popTail (:root this), (:edit (:root this)), shift, (PersistentWector''tailoff this))
+                            [shift root]
+                                (cond
+                                    (nil? root)                                     [shift WNode'EMPTY]
+                                    (and (< 5 shift) (nil? (aget (:array root) 1))) [(- shift 5) (aget (:array root) 0)]
+                                    :else                                           [shift root]
+                                )
+                        ]
+                            (PersistentWector'new (:_meta this), (dec (:cnt this)), shift, root, tail)
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IFn
+        ;; %% redundant as of APersistentVector
+        (#_"value" IFn'''invoke [#_"PersistentWector" this, #_"key" arg]
+            (when (integer? arg) => (throw! "arg must be integer")
+                (Indexed'''nth this, (.intValue arg))
+            )
+        )
+
+        (#_"value" IFn'''applyTo [#_"PersistentWector" this, #_"seq" args]
+            (case (count' args 1)
+                1 (IFn'''invoke this, (first args))
+            )
+        )
+    )
+
+    (defm PersistentWector IReduce
+        (#_"value" IReduce'''reduce
+            ([#_"PersistentWector" this, #_"IFn" f]
+                (when (pos? (:cnt this)) => (f)
+                    (loop-when [#_"value" r (aget (PersistentWector''arrayFor this, 0) 0) #_"int" i 0] (< i (:cnt this)) => r
+                        (let [#_"values" a (PersistentWector''arrayFor this, i)
+                              r (loop-when [r r #_"int" j (if (zero? i) 1 0)] (< j (alength a)) => r
+                                    (let [r (f r (aget a j))]
+                                        (when-not (reduced? r) => r
+                                            (recur r (inc j))
+                                        )
+                                    )
+                                )]
+                            (when-not (reduced? r) => @r
+                                (recur r (+ i (alength a)))
+                            )
+                        )
+                    )
+                )
+            )
+            ([#_"PersistentWector" this, #_"IFn" f, #_"value" r]
+                (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
+                    (let [#_"values" a (PersistentWector''arrayFor this, i)
+                          r (loop-when [r r #_"int" j 0] (< j (alength a)) => r
+                                (let [r (f r (aget a j))]
+                                    (when-not (reduced? r) => r
+                                        (recur r (inc j))
+                                    )
+                                )
+                            )]
+                        (when-not (reduced? r) => @r
+                            (recur r (+ i (alength a)))
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IKVReduce
+        (#_"value" IKVReduce'''kvreduce [#_"PersistentWector" this, #_"IFn" f, #_"value" r]
+            (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
+                (let [
+                    #_"values" a (PersistentWector''arrayFor this, i)
+                    r
+                        (loop-when [r r #_"int" j 0] (< j (alength a)) => r
+                            (let [
+                                r (f r (+ i j) (aget a j))
+                            ]
+                                (when-not (reduced? r) => r
+                                    (recur r (inc j))
+                                )
+                            )
+                        )
+                ]
+                    (when-not (reduced? r) => @r
+                        (recur r (+ i (alength a)))
+                    )
+                )
+            )
+        )
+    )
+
+    (defm PersistentWector IPersistentWector
+        (#_"PersistentWector" IPersistentWector'''slicew [#_"PersistentWector" this, #_"int" start, #_"int" end]
+            (cond
+                (or (neg? start) (< (:cnt this) end)) (throw! "index is out of bounds")
+                (= start end)                         (IPersistentCollection'''empty this) ;; NB. preserves metadata
+                (< end start)                         (throw! "start index greater than end index")
+                :else
+                    (let [
+                        #_"int" new-cnt (- end start)
+                        #_"int" tail-off (PersistentWector''tailoff this)
+                    ]
+                        (if (<= tail-off start)
+                            (let [
+                                #_"values" tail (doto (value-array new-cnt) (acopy 0 (:tail this) (- start tail-off) new-cnt))
+                            ]
+                                (PersistentWector'new (:_meta this), new-cnt, 5, WNode'EMPTY, tail)
+                            )
+                            (let [
+                                #_"boolean" tail-cut? (< tail-off end)
+                                #_"WNode" root (:root this)
+                                root (if tail-cut? root (WNode''slice-right root, (:shift this), end))
+                                root (if (zero? start) root (WNode''slice-left root, (:shift this), start, (min end tail-off)))
+                                #_"values" tail
+                                    (when tail-cut? => (WNode''arrayFor root, (dec new-cnt), (:shift this), new-cnt)
+                                        (let [
+                                            #_"int" n (- end tail-off)
+                                        ]
+                                            (doto (value-array n) (acopy 0 (:tail this) 0 n))
+                                        )
+                                    )
+                                root
+                                    (when-not tail-cut? => root
+                                        (WNode''popTail root, nil, (:shift this), new-cnt)
+                                    )
+                            ]
+                                (when (some? root) => (PersistentWector'new (:_meta this), new-cnt, 5, WNode'EMPTY, tail)
+                                    (loop-when-recur [#_"WNode" node root #_"int" shift (:shift this)]
+                                                     (and (< 5 shift) (nil? (aget (:array node) 1)))
+                                                     [(aget (:array node) 0) (- shift 5)]
+                                                  => (PersistentWector'new (:_meta this), new-cnt, shift, node, tail)
+                                    )
+                                )
+                            )
+                        )
+                    )
+            )
+        )
+
+        (#_"PersistentWector" IPersistentWector'''splicew [#_"PersistentWector" this, #_"PersistentWector" that]
+            (let [
+                #_"int" c1 (count this) #_"int" c2 (count that)
+            ]
+                (cond
+                    (zero? c1) that
+                    (< c2 WNode'rrbt-concat-threshold) (into this that)
+                    :else
+                        (let [
+                            #_"WNode" r1 (:root this) #_"int" s1 (:shift this) #_"Object[]" t1 (:tail this)
+                            #_"boolean" overflow? (WNode''overflow? r1, s1, (+ c1 (- 32 (alength t1))))
+                            r1
+                                (when overflow? => (WNode''fold-tail r1, s1, (PersistentWector''tailoff this), t1)
+                                    (let [
+                                        #_"Object[]" a'
+                                            (doto (object-array 32)
+                                                (aset 0 r1)
+                                                (aset 1 (WNode''newPath (WNode'new nil, t1, nil), nil, s1))
+                                            )
+                                        #_"int[]" x'
+                                            (when (or (some? (:index r1)) (< (alength t1) 32))
+                                                (doto (int-array 33) (aset 0 (- c1 (alength t1))) (aset 1 c1) (aset 32 2))
+                                            )
+                                    ]
+                                        (WNode'new nil, a', x')
+                                    )
+                                )
+                            s1 (if overflow? (+ s1 5) s1)
+                            #_"WNode" r2 (:root that) #_"int" s2 (:shift that) #_"Object[]" t2 (:tail that)
+                            #_"int" shift (max s1 s2)
+                            r1 (WNode''shift-from-to r1, s1, shift)
+                            r2 (WNode''shift-from-to r2, s2, shift)
+                            [#_"WNode" n1 #_"WNode" n2 #_"int" delta] (WNode'zippath shift, r1, c1, r2, (- c2 (alength t2)), 0)
+                            #_"int" c1' (+ c1 delta)
+                            #_"int" c2' (- c2 (alength t2) delta)
+                            [n1 n2] (if (identical? n2 r2) (WNode'squash-nodes shift, n1, c1', n2, c2') [n1 n2])
+                        ]
+                            (if (some? n2)
+                                (let [
+                                    #_"Object[]" a' (doto (object-array 32) (aset 0 n1) (aset 1 n2))
+                                    #_"int[]" x' (doto (int-array 33) (aset 0 c1') (aset 1 (+ c1' c2')) (aset 32 2))
+                                ]
+                                    (PersistentWector'new nil, (+ c1 c2), (+ shift 5), (WNode'new nil, a', x'), t2)
+                                )
+                                (loop-when-recur [#_"WNode" node n1 shift shift]
+                                                 (and (< 5 shift) (nil? (aget (:array node) 1)))
+                                                 [(aget (:array node) 0) (- shift 5)]
+                                              => (PersistentWector'new nil, (+ c1 c2), shift, node, t2)
+                                )
+                            )
+                        )
+                )
+            )
+        )
+    )
+)
+)
+
+(defn subwec
+    ([v i]   (IPersistentWector'''slicew v, i, (count v)))
+    ([v i e] (IPersistentWector'''slicew v, i, e))
+)
+
+(defn catwec
+    ([] [])
+    ([a]                                                                                                  a)
+    ([a b]                                                                   (IPersistentWector'''splicew a, b))
+    ([a b c]                                    (IPersistentWector'''splicew (IPersistentWector'''splicew a, b),                              c))
+    ([a b c d]                                  (IPersistentWector'''splicew (IPersistentWector'''splicew a, b), (IPersistentWector'''splicew c, d)))
+    ([a b c d & s] (IPersistentWector'''splicew (IPersistentWector'''splicew (IPersistentWector'''splicew a, b), (IPersistentWector'''splicew c, d)), (apply catwec s)))
+)
+
+(defmacro- gen-wector- [& s]
+    (let [a (with-meta (gensym "a__") {:tag 'objects})]
+        `(let [~a (object-array ~(count s))]
+            ~@(map-indexed (fn [i x] `(aset ~a ~i ~x)) s)
+            (PersistentWector'new nil, ~(count s), 5, WNode'EMPTY, ~a)
+        )
+    )
+)
+
+(defn wector
+    ([]        (gen-wector-))
+    ([a]       (gen-wector- a))
+    ([a b]     (gen-wector- a b))
+    ([a b c]   (gen-wector- a b c))
+    ([a b c d] (gen-wector- a b c d))
+    ([a b c d & s]
+        (loop-when [w (transient (wector a b c d)) s s] s => (persistent! w)
+            (recur (conj! w (first s)) (next s))
+        )
+    )
+)
+
+(defn wec [s]
+    (if (wector? s) s (apply wector s))
 )
 
 (arbace-ns Repeat
@@ -16490,6 +16364,8 @@
         )
     )
 
+(declare the-ns)
+
 ;;;
  ; Finds or creates a var named by the symbol name in the namespace
  ; ns (which can be a symbol or a namespace), setting its root binding
@@ -16931,7 +16807,7 @@
  ; If end is not supplied, defaults to (count vector). This operation is O(1) and very fast, as
  ; the resulting vector shares structure with the original and no trimming is done.
  ;;
-(defn subvec
+(§ defn subvec
     ([v start] (subvec v start (count v)))
     ([v start end] (RT'subvec v start end))
 )
@@ -19330,12 +19206,10 @@
     )
 )
 
-(defn- shift-mask [shift mask x]
-    (-> x (bit-shift-right shift) (bit-and mask))
-)
+(defn- shift-mask [shift mask x] (-> x (>> shift) (& mask)))
 
 (def- max-mask-bits 13)
-(def- max-switch-table-size (bit-shift-left 1 max-mask-bits))
+(def- max-switch-table-size (<< 1 max-mask-bits))
 
 ;;;
  ; Takes a collection of hashes and returns [shift mask] or nil if none found.
@@ -19343,7 +19217,7 @@
 (defn- maybe-min-hash [hashes]
     (first
         (filter (fn [[s m]] (apply distinct? (map #(shift-mask s m %) hashes)))
-            (§ soon for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
+            (§ soon for [mask (map #(dec (<< 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
                 [shift mask]
             )
         )
@@ -19559,6 +19433,8 @@
     (.write w end)
 )
 
+(declare print-method)
+
 (defn- pr-on [o w]
     (print-method o w)
     nil
@@ -19673,8 +19549,6 @@
 (defn- parse-opts [s] (loop-when-recur [m {} [k v & s'] s] (keyword? k) [(assoc m k v) s'] => [m s]))
 
 (defn- parse-impls [s] (loop-when-recur [m {} s s] (seq s) [(assoc m (first s) (take-while seq? (next s))) (drop-while seq? (next s))] => m))
-
-(declare resolve)
 
 (defn- parse-opts+specs [opts+specs]
     (let [[opts specs] (parse-opts opts+specs)
@@ -21184,5 +21058,33 @@
 (defn macroexpand-all [form] (prewalk #(if (seq? %) (macroexpand %) %) form))
 )
 
-(defn -main [& args])
+(defn abs [a] (if (neg? a) (- a) a))
+
+(defn assoc'  [v i x & s] (apply assoc  (vec v) i x s))
+(defn conj'   [v   x & s] (apply conj   (vec v)   x s))
+(defn into'   [v       s]       (into   (vec v)     s))
+(defn peek'   [v]               (peek   (vec v)      ))
+(defn pop'    [v]               (pop    (vec v)      ))
+(defn update' [v i f & s] (apply update (vec v) i f s))
+
+(defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
+
+(value-ns HotSpot
+    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
+
+    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
+    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
+
+    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
+    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
+
+    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
+        (throw! "“Use the Force, Luke!”")
+    )
 )
+
+(value-ns Arbace)
+
+(defn -main [& args])
