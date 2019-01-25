@@ -1,10 +1,21 @@
-(ns arbace.bore
-    (:refer-clojure :only [*ns* apply bit-and bit-or bit-shift-left bit-shift-right cons defmacro defn defprotocol defrecord doseq doto extend-type fn import into-array keys let map ns-imports ns-unmap object-array rem some? str symbol unsigned-bit-shift-right when])
-    (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
+(ns arbace.core
+    (:refer-clojure :only [defmacro])
 )
 
 (defmacro § [& _])
 (defmacro ß [& _])
+
+(ns arbace.bore
+    (:refer-clojure :only [*ns* apply bit-and bit-or bit-shift-left bit-shift-right cons defmacro defn defprotocol defrecord doseq doto extend-type fn import into-array keys let map merge meta ns-imports ns-resolve ns-unmap object-array rem select-keys some? str symbol symbol? the-ns unsigned-bit-shift-right vary-meta when])
+    (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
+    (:refer arbace.core :only [§ ß])
+)
+
+(defmacro refer! [ns s]
+    (let [f #(let [v (ns-resolve (the-ns ns) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
+        (if (symbol? s) (f s) (cons 'do (map f s)))
+    )
+)
 
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (ns-imports *ns*))] (ns-unmap *ns* n#)) (import ~@syms-or-seqs)))
 
@@ -45,14 +56,14 @@
 
 (defn aclone [a] (when (some? a) (clojure.core/aclone a)))
 (defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
-(def aget clojure.core/aget)
+(refer! clojure.core aget)
 (defn aset! [a i x] (clojure.core/aset a i x) a)
 (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* + - < = apply assoc atom boolean case char cons count defmacro defmethod defn even? extend-protocol extend-type first fn hash-map hash-set identical? inc int int-array interleave intern key keyword? let list long loop map map-indexed merge meta next pos? proxy reify satisfies? second seq seq? split-at str swap! symbol symbol? to-array val vary-meta vector? with-meta zero?])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* + - < = apply assoc atom boolean case char cons count defmethod defn even? extend-protocol extend-type first fn hash-map hash-set identical? inc int int-array interleave intern key keyword? let list long loop map map-indexed merge meta next pos? proxy reify satisfies? second seq seq? split-at str swap! symbol symbol? to-array val vary-meta vector? with-meta zero?])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
-    (:require [arbace.bore :refer [% & << >> >>> aclone acopy! aget arbace-ns aset! aswap! class-ns cloiure-ns defm defp import! import-as thread throw! value-ns | § ß]])
+    (:refer arbace.bore :only [% & << >> >>> aclone acopy! aget arbace-ns aset! aswap! class-ns cloiure-ns defm defp import! import-as thread throw! value-ns |])
 )
 
 (import!
