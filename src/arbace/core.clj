@@ -33,8 +33,8 @@
 (defn thread [] (Thread/currentThread))
 
 (defmacro defp [p & s] (let [i (symbol (str p "'iface"))] `(do (defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [])    (extend-type ~c ~r ~@s)     ~c)))
-(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do                      (extend-type ~i ~p ~@s)     ~i)))
+(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [] ~r ~@s)                         ~c)))
+(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do (extend-type ~i ~p ~@s)                          ~i)))
 
 (defmacro class-ns [r [& s] & z] `(do (defr ~r ~@s) ~@z))
 (defmacro value-ns [_ & z] (cons 'do z))

@@ -33,8 +33,8 @@
 (defn thread [] (Thread/currentThread))
 
 (defmacro defp [p & s] (let [i (symbol (str p "'iface"))] `(do (defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [])    (extend-type ~c ~r ~@s)     ~c)))
-(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do                      (extend-type ~i ~p ~@s)     ~i)))
+(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [] ~r ~@s)                         ~c)))
+(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do (extend-type ~i ~p ~@s)                          ~i)))
 
 (defmacro class-ns [r [& s] & z] `(do (defr ~r ~@s) ~@z))
 (defmacro value-ns [_ & z] (cons 'do z))
@@ -60,7 +60,7 @@
 (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
 (ns arbace.wector
-    (:refer-clojure :only [* + - -> < <= = and apply assoc atom case compare concat cond condp cons count dec declare defn defn- dotimes drop first fn hash-map identical? if-not if-some inc int int-array integer? into last let letfn list loop map mapcat max merge min mod neg? next nil? not object-array or partition-all pos? quot reduced? rem reset! satisfies? second seq sequential? some? str symbol? take update vary-meta vec vector? zero?])
+    (:refer-clojure :only [* + - -> < <= = and apply assoc atom case compare concat cond condp cons #_count dec declare defn defn- dotimes drop first fn hash-map identical? if-not if-some inc int int-array integer? into last let letfn list loop map mapcat max merge min mod neg? next nil? not object-array or partition-all pos? quot reduced? rem reset! satisfies? second seq sequential? some? str symbol? take update vary-meta vec vector? zero?])
     (:refer arbace.bore :only [& << >>> aclone acopy! aget alength arbace-ns aset! aswap! class-ns defm defp import! thread throw! value-ns])
 )
 
@@ -90,7 +90,7 @@
     ([bind then else & _]
         (assert-args
             (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (= 2 (clojure.core/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
@@ -238,7 +238,26 @@
     #_abstract
     (defp APersistentVector)
 
-(defn count' [s _] (count s))
+(defn count'
+    ([x] (count' x -1))
+    ([x m]
+        (condp satisfies? x
+            Counted
+                (Counted'''count x)
+            Seqable
+                (loop-when [n 0 s (Seqable'''seq x)] (and s (or (neg? m) (< n m))) => n
+                    (when (satisfies? Counted s) => (recur (inc n) (next s))
+                        (+ n (Counted'''count s))
+                    )
+                )
+            (when (neg? m) => (throw! (str "count' not supported on " (clojure.core/class x)))
+                (clojure.core/count x)
+            )
+        )
+    )
+)
+
+(defn count [s] (count' s -1))
 )
 
 (declare MapEntry'create Murmur3'mixCollHash RSeq'new RT'printString VSeq'new)
@@ -1063,7 +1082,7 @@
     )
 )
 
-(class-ns TransientWector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector]
+(class-ns TransientWector [AFn]
     (defn #_"TransientWector" TransientWector'new
         ([#_"PersistentWector" w]
             (TransientWector'new (:cnt w), (:shift w), (WNode''editableRoot (:root w)), (WNode'editableTail (:tail w)), (alength (:tail w)))
@@ -1294,7 +1313,7 @@
     )
 )
 
-(class-ns PersistentWector [APersistentVector Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IPersistentWector IReduce Reversible Seqable Sequential]
+(class-ns PersistentWector [APersistentVector]
     (defn #_"PersistentWector" PersistentWector'new
         ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
         ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail]
@@ -1725,6 +1744,8 @@
             )
         )
     )
+
+    (defm PersistentWector Sequential)
 
     (defm PersistentWector Seqable
         (#_"seq" Seqable'''seq [#_"PersistentWector" this]
