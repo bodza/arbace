@@ -6,63 +6,57 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* apply bit-and bit-or bit-shift-left bit-shift-right cons defmacro defn defprotocol defrecord doseq doto extend-type fn import into-array keys let map merge meta ns-imports ns-resolve ns-unmap object-array rem select-keys some? str symbol symbol? the-ns unsigned-bit-shift-right vary-meta when])
+    (:refer-clojure :only [*ns* = apply cons defmacro defn doseq fn keys let map merge meta select-keys some? str symbol symbol? vary-meta when]) (:require [clojure.core :as -])
     (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
 )
 
-(defmacro refer! [ns s]
-    (let [f #(let [v (ns-resolve (the-ns ns) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
-        (if (symbol? s) (f s) (cons 'do (map f s)))
-    )
-)
-
-(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (ns-imports *ns*))] (ns-unmap *ns* n#)) (import ~@syms-or-seqs)))
+(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
 (import! [java.lang Class Error #_String System Thread] #_[java.lang.reflect Method] [clojure.lang Namespace Symbol])
 
 (defn #_"void" Bore'import-as [#_"Symbol" sym, #_"String" sig]
-    (doto (#_"Class" .getDeclaredMethod Namespace, "referenceClass", (into-array [Symbol Class]))
+    (-/doto (#_"Class" .getDeclaredMethod Namespace, "referenceClass", (-/into-array [Symbol Class]))
         (#_"Method" .setAccessible true)
-        (#_"Method" .invoke *ns*, (object-array [sym (Class/forName sig)]))
+        (#_"Method" .invoke *ns*, (-/object-array [sym (Class/forName sig)]))
     )
     nil
 )
 
 (defmacro import-as [& s] (cons 'do (map (fn [[sym sig]] `(Bore'import-as (quote ~sym), ~sig)) (apply ordered-map s))))
 
-(defn thread [] (Thread/currentThread))
+(defmacro refer! [ns s]
+    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
+        (if (symbol? s) (f s) (cons 'do (map f s)))
+    )
+)
 
-(defmacro defp [p & s] (let [i (symbol (str p "'iface"))] `(do (defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [] ~r ~@s)                         ~c)))
-(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do (extend-type ~i ~p ~@s)                          ~i)))
+(defmacro about [& s] (cons 'do s))
 
-(defmacro class-ns [r [& s] & z] `(do (defr ~r ~@s) ~@z))
-(defmacro value-ns [_ & z] (cons 'do z))
-
-(defmacro arbace-ns  [_ & s] (cons 'do s))
-(defmacro cloiure-ns [_ & s] (cons 'do s))
+(defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (-/defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
+(defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (-/extend-type ~i ~@s)                             ~i)))
 
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
 
-(def % rem)
+(def & -/bit-and)
+(def | -/bit-or)
 
-(def & bit-and)
-(def | bit-or)
+(def << -/bit-shift-left)
+(def >> -/bit-shift-right)
+(def >>> -/unsigned-bit-shift-right)
 
-(def << bit-shift-left)
-(def >> bit-shift-right)
-(def >>> unsigned-bit-shift-right)
-
-(defn aclone [a] (when (some? a) (clojure.core/aclone a)))
+(defn aclone [a] (when (some? a) (-/aclone a)))
 (defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
-(refer! clojure.core [aget alength])
-(defn aset! [a i x] (clojure.core/aset a i x) a)
+(refer! - [aget alength])
+(defn aset! [a i x] (-/aset a i x) a)
 (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
+(defn thread [] (Thread/currentThread))
+
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* + - < = apply assoc atom boolean case char cons count defmethod defn even? extend-protocol extend-type first fn hash-map hash-set identical? inc int int-array interleave intern key keyword? let list long loop map map-indexed merge meta next pos? proxy reify satisfies? second seq seq? split-at str swap! symbol symbol? to-array val vary-meta vector? with-meta zero?])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* + - < = apply assoc atom boolean case char cons defmethod defn even? first fn hash-map hash-set identical? inc int int-array interleave intern key keyword? let list long loop map merge meta next pos? reify satisfies? second seq seq? str swap! symbol symbol? to-array val vary-meta vector? with-meta zero?]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
-    (:refer arbace.bore :only [% & << >> >>> aclone acopy! aget arbace-ns aset! aswap! class-ns cloiure-ns defm defp import! import-as thread throw! value-ns |])
+    (:refer arbace.bore :only [& << >> >>> about aclone acopy! aget alength aset! aswap! defm defp defr import! import-as thread throw! |])
 )
 
 (import!
@@ -204,7 +198,7 @@
     ([bind then else & _]
         (assert-args
             (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] x# ~'=> ~else
@@ -226,7 +220,7 @@
     ([bind then else & _]
         (assert-args
             (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] (some? x#) ~'=> ~else
@@ -248,7 +242,7 @@
     ([bind then else & _]
         (assert-args
             (vector? bind) "a vector for its binding"
-            (= 2 (count bind)) "exactly 2 forms in binding vector"
+            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
@@ -262,7 +256,7 @@
 (ß defmacro when-let [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] x#
         (let [~(bindings 0) x#]
@@ -274,7 +268,7 @@
 (ß defmacro when-some [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] (some? x#)
         (let [~(bindings 0) x#]
@@ -286,7 +280,7 @@
 (ß defmacro when-first [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(when-some [s# (seq ~(bindings 1))]
         (let [~(bindings 0) (first s#)]
@@ -323,7 +317,7 @@
     (let [gpred (gensym "pred__") gexpr (gensym "expr__")
           emit-
             (fn emit- [f? expr args]
-                (let [[[a b c :as clause] more] (split-at (if (= :>> (second args)) 3 2) args) n (count clause)]
+                (let [[[a b c :as clause] more] (-/split-at (if (= :>> (second args)) 3 2) args) n (-/count clause)]
                     (cond
                         (= 0 n) `(throw! (str "no matching clause: " ~expr))
                         (= 1 n) a
@@ -372,7 +366,7 @@
 (defmacro doseq [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
+        (even? (-/count bindings)) "an even number of forms in binding vector"
     )
     (letfn [(emit- [e r]
                 (when e => [`(do ~@body) true]
@@ -405,7 +399,7 @@
 (defmacro dotimes [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (= 2 (count bindings)) "exactly 2 forms in binding vector"
+        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     (let [[i n] bindings]
         `(let [n# (long ~n)]
@@ -528,7 +522,7 @@
 (defn object-array [size-or-seq]
     (if (number? size-or-seq)
         (make-array Object (.intValue #_"Number" size-or-seq))
-        (let [#_"ISeq" s (seq size-or-seq) #_"int" size (count s) #_"Object[]" a (make-array Object size)]
+        (let [#_"ISeq" s (seq size-or-seq) #_"int" size (-/count s) #_"Object[]" a (make-array Object size)]
             (loop-when-recur [#_"int" i 0 s s] (and (< i size) (some? s)) [(inc i) (next s)]
                 (aset! a i (first s))
             )
@@ -537,18 +531,18 @@
     )
 )
 
-(arbace-ns IObject
+(about #_"cloiure.core.IObject"
     (defp IObject
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
         (#_"String" IObject'''toString [#_"IObject" this])
     )
 
-    (extend-type nil IObject
+    (-/extend-type nil IObject
         (#_"boolean" IObject'''equals [#_"nil" this, #_"Object" that] (nil? that))
         (#_"String" IObject'''toString [#_"nil" this] "")
     )
 
-    (extend-type Object IObject
+    (-/extend-type Object IObject
         (#_"boolean" IObject'''equals [#_"Object" this, #_"Object" that] (.equals this, that))
         (#_"String" IObject'''toString [#_"Object" this] (.toString this))
     )
@@ -569,24 +563,24 @@
     )
 )
 
-(arbace-ns Seqable
+(about #_"cloiure.core.Seqable"
     (defp Seqable
         (#_"ISeq" Seqable'''seq [#_"Seqable" this])
     )
 
-    (extend-protocol Seqable
+    (-/extend-protocol Seqable
         nil                  (Seqable'''seq [_] nil)
         clojure.lang.Seqable (Seqable'''seq [o] (.seq o))
     )
 )
 
-(arbace-ns ISeq
+(about #_"cloiure.core.ISeq"
     (defp ISeq
         (#_"Object" ISeq'''first [#_"ISeq" this])
         (#_"ISeq" ISeq'''next [#_"ISeq" this])
     )
 
-    (extend-protocol ISeq
+    (-/extend-protocol ISeq
         nil               (ISeq'''first [_] nil)        (ISeq'''next [_] nil)
         clojure.lang.ISeq (ISeq'''first [o] (.first o)) (ISeq'''next [o] (.next o))
     )
@@ -638,12 +632,12 @@
     )
 )
 
-(arbace-ns Counted
+(about #_"cloiure.core.Counted"
     (defp Counted
         (#_"int" Counted'''count [#_"Counted" this])
     )
 
-    (extend-protocol Counted
+    (-/extend-protocol Counted
         nil                  (Counted'''count [_] 0)
         clojure.lang.Counted (Counted'''count [o] (.count o))
         Object'array         (Counted'''count [a] (Array/getLength a))
@@ -653,8 +647,8 @@
 
 (declare neg?)
 
-(defn count'
-    ([x] (count' x -1))
+(defn count
+    ([x] (count x -1))
     ([x m]
         (condp satisfies? x
             Counted
@@ -670,7 +664,7 @@
     )
 )
 
-(arbace-ns Hashed
+(about #_"cloiure.core.Hashed"
     (defp Hashed
         (#_"int" Hashed'''hash [#_"Hashed" this])
     )
@@ -678,7 +672,7 @@
     (declare Murmur3'hashInt)
     (declare Murmur3'hashLong)
 
-    (extend-protocol Hashed
+    (-/extend-protocol Hashed
         nil                  (Hashed'''hash [_] 0)
         Object               (Hashed'''hash [o] (.hashCode o))
         String               (Hashed'''hash [s] (Murmur3'hashInt (.hashCode s)))
@@ -688,7 +682,7 @@
     )
 )
 
-(arbace-ns Compiler
+(about #_"cloiure.core.Compiler"
     (defp Expr
         (#_"Object" Expr'''eval [#_"Expr" this])
         (#_"void" Expr'''emit [#_"Expr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen])
@@ -734,7 +728,7 @@
     (defp Recur)
 )
 
-(arbace-ns Compiler
+(about #_"cloiure.core.Compiler"
     (defp NilExpr)
     (defp BooleanExpr)
     (defp MonitorEnterExpr)
@@ -782,7 +776,7 @@
     (defp CaseExpr)
 )
 
-(arbace-ns IFn
+(about #_"cloiure.core.IFn"
     (defp IFn
         (#_"Object" IFn'''invoke
             [#_"IFn" this]
@@ -838,19 +832,19 @@
     ([#_"IFn" f a b c d & s] (IFn'''applyTo f, (cons a (cons b (cons c (cons d (spread s)))))))
 )
 
-(arbace-ns IType
+(about #_"cloiure.core.IType"
     (defp IType)
 )
 
 (defn type? [x] (or (satisfies? IType x) (instance? clojure.lang.IType x)))
 
-(arbace-ns IRecord
+(about #_"cloiure.core.IRecord"
     (defp IRecord)
 )
 
 (defn record? [x] (or (satisfies? IRecord x) (instance? clojure.lang.IRecord x)))
 
-(arbace-ns INamed
+(about #_"cloiure.core.INamed"
     (defp INamed
         (#_"String" INamed'''getNamespace [#_"INamed" this])
         (#_"String" INamed'''getName [#_"INamed" this])
@@ -867,7 +861,7 @@
  ;;
 (defn #_"String" name [x] (if (string? x) x (INamed'''getName #_"INamed" x)))
 
-(arbace-ns IMeta
+(about #_"cloiure.core.IMeta"
     (defp IMeta
         (#_"IPersistentMap" IMeta'''meta [#_"IMeta" this])
     )
@@ -878,7 +872,7 @@
  ;;
 (§ defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
 
-(arbace-ns IObj
+(about #_"cloiure.core.IObj"
     (defp IObj
         (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"IPersistentMap" meta])
     )
@@ -895,7 +889,7 @@
  ;;
 (§ defn vary-meta [x f & args] (with-meta x (apply f (meta x) args)))
 
-(arbace-ns IReference
+(about #_"cloiure.core.IReference"
     (defp IReference
         (#_"IPersistentMap" IReference'''alterMeta [#_"IReference" this, #_"IFn" f, #_"ISeq" args])
         (#_"IPersistentMap" IReference'''resetMeta [#_"IReference" this, #_"IPersistentMap" m])
@@ -913,7 +907,7 @@
  ;;
 (defn reset-meta! [#_"IReference" r m] (IReference'''resetMeta r, m))
 
-(arbace-ns IDeref
+(about #_"cloiure.core.IDeref"
     (defp IDeref
         (#_"Object" IDeref'''deref [#_"IDeref" this])
     )
@@ -926,7 +920,7 @@
  ;;
 (defn deref [#_"IDeref" ref] (IDeref'''deref ref))
 
-(arbace-ns IAtom
+(about #_"cloiure.core.IAtom"
     (defp IAtom
         (#_"boolean" IAtom'''compareAndSet [#_"IAtom" this, #_"Object" o, #_"Object" o'])
         (#_"Object" IAtom'''swap [#_"IAtom" this, #_"IFn" f, #_"ISeq" args])
@@ -936,7 +930,7 @@
     )
 )
 
-(arbace-ns IPending
+(about #_"cloiure.core.IPending"
     (defp IPending
         (#_"boolean" IPending'''isRealized [#_"IPending" this])
     )
@@ -947,13 +941,13 @@
  ;;
 (defn realized? [#_"IPending" x] (IPending'''isRealized x))
 
-(arbace-ns Sequential
+(about #_"cloiure.core.Sequential"
     (defp Sequential)
 )
 
 (defn sequential? [x] (or (satisfies? Sequential x) (instance? clojure.lang.Sequential x)))
 
-(arbace-ns Reversible
+(about #_"cloiure.core.Reversible"
     (defp Reversible
         (#_"ISeq" Reversible'''rseq [#_"Reversible" this])
     )
@@ -967,7 +961,7 @@
 
 (defn reversible? [x] (or (satisfies? Reversible x) (instance? clojure.lang.Reversible x)))
 
-(arbace-ns Sorted
+(about #_"cloiure.core.Sorted"
     (defp Sorted
         (#_"Comparator" Sorted'''comparator [#_"Sorted" this])
         (#_"Object" Sorted'''entryKey [#_"Sorted" this, #_"Object" entry])
@@ -978,7 +972,7 @@
 
 (defn sorted? [x] (or (satisfies? Sorted x) (instance? clojure.lang.Sorted x)))
 
-(arbace-ns Indexed
+(about #_"cloiure.core.Indexed"
     (defp Indexed
         (#_"Object" Indexed'''nth
             [#_"Indexed" this, #_"int" i]
@@ -1001,7 +995,7 @@
     (loop-when-recur [s (seq s) n n] (and s (pos? n)) [(next s) (dec n)] => s)
 )
 
-(arbace-ns ILookup
+(about #_"cloiure.core.ILookup"
     (defp ILookup
         (#_"Object" ILookup'''valAt
             [#_"ILookup" this, #_"Object" key]
@@ -1010,19 +1004,19 @@
     )
 )
 
-(arbace-ns ILookupSite
+(about #_"cloiure.core.ILookupSite"
     (defp ILookupSite
         (#_"ILookupThunk" ILookupSite'''fault [#_"ILookupSite" this, #_"Object" target])
     )
 )
 
-(arbace-ns ILookupThunk
+(about #_"cloiure.core.ILookupThunk"
     (defp ILookupThunk
         (#_"Object" ILookupThunk'''get [#_"ILookupThunk" this, #_"Object" target])
     )
 )
 
-(arbace-ns IMapEntry
+(about #_"cloiure.core.IMapEntry"
     (defp IMapEntry
         (#_"Object" IMapEntry'''key [#_"IMapEntry" this])
         (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
@@ -1043,7 +1037,7 @@
 
 (defn map-entry? [x] (or (satisfies? IMapEntry x) (instance? clojure.lang.IMapEntry x)))
 
-(arbace-ns IPersistentCollection
+(about #_"cloiure.core.IPersistentCollection"
     (defp IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
         (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
@@ -1052,7 +1046,7 @@
 
 (defn coll? [x] (or (satisfies? IPersistentCollection x) (instance? clojure.lang.IPersistentCollection x)))
 
-(arbace-ns IEditableCollection
+(about #_"cloiure.core.IEditableCollection"
     (defp IEditableCollection
         (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
     )
@@ -1060,7 +1054,7 @@
 
 (defn editable? [x] (or (satisfies? IEditableCollection x) (instance? clojure.lang.IEditableCollection x)))
 
-(arbace-ns Associative
+(about #_"cloiure.core.Associative"
     (defp Associative
         (#_"Associative" Associative'''assoc [#_"Associative" this, #_"Object" key, #_"Object" val])
         (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"Object" key])
@@ -1070,7 +1064,7 @@
 
 (defn associative? [x] (or (satisfies? Associative x) (instance? clojure.lang.Associative x)))
 
-(arbace-ns IPersistentMap
+(about #_"cloiure.core.IPersistentMap"
     (defp IPersistentMap
         (#_"IPersistentMap" IPersistentMap'''dissoc [#_"IPersistentMap" this, #_"Object" key])
     )
@@ -1078,7 +1072,7 @@
 
 (defn map? [x] (or (satisfies? IPersistentMap x) (instance? clojure.lang.IPersistentMap x)))
 
-(arbace-ns IPersistentSet
+(about #_"cloiure.core.IPersistentSet"
     (defp IPersistentSet
         (#_"IPersistentSet" IPersistentSet'''disj [#_"IPersistentSet" this, #_"Object" key])
         (#_"boolean" IPersistentSet'''contains? [#_"IPersistentSet" this, #_"Object" key])
@@ -1088,20 +1082,20 @@
 
 (defn set? [x] (or (satisfies? IPersistentSet x) (instance? clojure.lang.IPersistentSet x)))
 
-(arbace-ns IPersistentStack
+(about #_"cloiure.core.IPersistentStack"
     (defp IPersistentStack
         (#_"Object" IPersistentStack'''peek [#_"IPersistentStack" this])
         (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
     )
 )
 
-(arbace-ns IPersistentList
+(about #_"cloiure.core.IPersistentList"
     (defp IPersistentList)
 )
 
 (defn list? [x] (or (satisfies? IPersistentList x) (instance? clojure.lang.IPersistentList x)))
 
-(arbace-ns IPersistentVector
+(about #_"cloiure.core.IPersistentVector"
     (defp IPersistentVector
         (#_"IPersistentVector" IPersistentVector'''assocN [#_"IPersistentVector" this, #_"int" i, #_"Object" val])
     )
@@ -1109,14 +1103,14 @@
 
 (§ defn vector? [x] (or (satisfies? IPersistentVector x) (instance? clojure.lang.IPersistentVector x)))
 
-(arbace-ns ITransientCollection
+(about #_"cloiure.core.ITransientCollection"
     (defp ITransientCollection
         (#_"ITransientCollection" ITransientCollection'''conj! [#_"ITransientCollection" this, #_"Object" val])
         (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
     )
 )
 
-(arbace-ns ITransientAssociative
+(about #_"cloiure.core.ITransientAssociative"
     (defp ITransientAssociative
         (#_"ITransientAssociative" ITransientAssociative'''assoc! [#_"ITransientAssociative" this, #_"Object" key, #_"Object" val])
         (#_"boolean" ITransientAssociative'''containsKey [#_"ITransientAssociative" this, #_"Object" key])
@@ -1124,13 +1118,13 @@
     )
 )
 
-(arbace-ns ITransientMap
+(about #_"cloiure.core.ITransientMap"
     (defp ITransientMap
         (#_"ITransientMap" ITransientMap'''dissoc! [#_"ITransientMap" this, #_"Object" key])
     )
 )
 
-(arbace-ns ITransientSet
+(about #_"cloiure.core.ITransientSet"
     (defp ITransientSet
         (#_"ITransientSet" ITransientSet'''disj! [#_"ITransientSet" this, #_"Object" key])
         (#_"boolean" ITransientSet'''contains? [#_"ITransientSet" this, #_"Object" key])
@@ -1138,14 +1132,14 @@
     )
 )
 
-(arbace-ns ITransientVector
+(about #_"cloiure.core.ITransientVector"
     (defp ITransientVector
         (#_"ITransientVector" ITransientVector'''assocN! [#_"ITransientVector" this, #_"int" i, #_"Object" val])
         (#_"ITransientVector" ITransientVector'''pop! [#_"ITransientVector" this])
     )
 )
 
-(arbace-ns PersistentHashMap
+(about #_"cloiure.core.PersistentHashMap"
     (defp INode
         (#_"INode" INode'''assoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf])
         (#_"INode" INode'''dissoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key])
@@ -1160,7 +1154,7 @@
     )
 )
 
-(arbace-ns IReduce
+(about #_"cloiure.core.IReduce"
     (defp IReduce
         (#_"Object" IReduce'''reduce
             [#_"IReduce" this, #_"IFn" f]
@@ -1169,23 +1163,23 @@
     )
 )
 
-(arbace-ns IKVReduce
+(about #_"cloiure.core.IKVReduce"
     (defp IKVReduce
         (#_"Object" IKVReduce'''kvreduce [#_"IKVReduce" this, #_"IFn" f, #_"Object" r])
     )
 )
 
-(arbace-ns Range
+(about #_"cloiure.core.Range"
     (defp RangeBoundsCheck
         (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" this, #_"Object" val])
     )
 )
 
-(arbace-ns Ratio
+(about #_"cloiure.core.Ratio"
     (defp Ratio)
 )
 
-(arbace-ns Numbers
+(about #_"cloiure.core.Numbers"
     (defp Ops
         (#_"Ops" Ops'''combine [#_"Ops" this, #_"Ops" y])
         (#_"Ops" Ops'''opsWithLong [#_"Ops" this, #_"LongOps" x])
@@ -1212,28 +1206,28 @@
     (defp BigIntOps)
 )
 
-(arbace-ns Atom
+(about #_"cloiure.core.Atom"
     (defp Atom)
 )
 
-(arbace-ns AFn
+(about #_"cloiure.core.AFn"
     #_abstract
-    (defp AFn) (extend-type IFn)
+    (defp AFn) (ß extend-type IFn)
 )
 
-(arbace-ns Symbol
+(about #_"cloiure.core.Symbol"
     (defp Symbol)
 )
 
 (§ defn symbol? [x] (or (satisfies? Symbol x) (instance? clojure.lang.Symbol x)))
 
-(arbace-ns Keyword
+(about #_"cloiure.core.Keyword"
     (defp Keyword)
 )
 
 (§ defn keyword? [x] (or (satisfies? Keyword x) (instance? clojure.lang.Keyword x)))
 
-(arbace-ns Fn
+(about #_"cloiure.core.Fn"
     #_abstract
     (defp Fn)
 )
@@ -1243,7 +1237,7 @@
  ;;
 (defn fn? [x] (or (satisfies? Fn x) (instance? clojure.lang.Fn x)))
 
-(arbace-ns RestFn
+(about #_"cloiure.core.RestFn"
     (defp IRestFn
         (#_"int" IRestFn'''requiredArity [#_"IRestFn" this])
         (#_"Object" IRestFn'''doInvoke
@@ -1264,26 +1258,26 @@
     (defp RestFn)
 )
 
-(arbace-ns ASeq
+(about #_"cloiure.core.ASeq"
     #_abstract
     (defp ASeq) (ß extend-type Hashed IObject IPersistentCollection ISeq Seqable Sequential)
 )
 
-(arbace-ns LazySeq
+(about #_"cloiure.core.LazySeq"
     (defp LazySeq)
 )
 
-(arbace-ns APersistentMap
+(about #_"cloiure.core.APersistentMap"
     #_abstract
     (defp APersistentMap)
 )
 
-(arbace-ns APersistentSet
+(about #_"cloiure.core.APersistentSet"
     #_abstract
     (defp APersistentSet)
 )
 
-(arbace-ns APersistentVector
+(about #_"cloiure.core.APersistentVector"
     (defp VSeq)
     (defp RSeq)
     #_abstract
@@ -1291,16 +1285,16 @@
     (defp SubVector)
 )
 
-(arbace-ns AMapEntry
+(about #_"cloiure.core.AMapEntry"
     #_abstract
     (defp AMapEntry)
 )
 
-(arbace-ns ArraySeq
+(about #_"cloiure.core.ArraySeq"
     (defp ArraySeq)
 )
 
-(arbace-ns ATransientMap
+(about #_"cloiure.core.ATransientMap"
     (defp IATransientMap
         (#_"void" IATransientMap'''assertEditable [#_"IATransientMap" this])
         (#_"ITransientMap" IATransientMap'''doAssoc [#_"IATransientMap" this, #_"Object" key, #_"Object" val])
@@ -1314,46 +1308,46 @@
     (defp ATransientMap)
 )
 
-(arbace-ns ATransientSet
+(about #_"cloiure.core.ATransientSet"
     #_abstract
     (defp ATransientSet)
 )
 
-(arbace-ns Cons
+(about #_"cloiure.core.Cons"
     (defp Cons)
 )
 
-(arbace-ns Delay
+(about #_"cloiure.core.Delay"
     (defp Delay)
 )
 
-(arbace-ns Iterate
+(about #_"cloiure.core.Iterate"
     (defp Iterate)
 )
 
-(arbace-ns KeywordLookupSite
+(about #_"cloiure.core.KeywordLookupSite"
     (defp KeywordLookupSite)
 )
 
-(arbace-ns MapEntry
+(about #_"cloiure.core.MapEntry"
     (defp MapEntry)
 )
 
-(arbace-ns MethodImplCache
+(about #_"cloiure.core.MethodImplCache"
     (defp MethodImplCache)
 )
 
-(arbace-ns Namespace
+(about #_"cloiure.core.Namespace"
     (defp Namespace)
 )
 
-(arbace-ns PersistentArrayMap
+(about #_"cloiure.core.PersistentArrayMap"
     (defp MSeq)
     (defp TransientArrayMap)
     (defp PersistentArrayMap)
 )
 
-(arbace-ns PersistentHashMap
+(about #_"cloiure.core.PersistentHashMap"
     (defp TransientHashMap)
     (defp HSeq)
     (defp ArrayNode)
@@ -1363,22 +1357,22 @@
     (defp PersistentHashMap)
 )
 
-(arbace-ns PersistentHashSet
+(about #_"cloiure.core.PersistentHashSet"
     (defp TransientHashSet)
     (defp PersistentHashSet)
 )
 
-(arbace-ns PersistentList
+(about #_"cloiure.core.PersistentList"
     (defp EmptyList)
     (defp PersistentList)
 )
 
-(arbace-ns PersistentQueue
+(about #_"cloiure.core.PersistentQueue"
     (defp QSeq)
     (defp PersistentQueue)
 )
 
-(arbace-ns PersistentTreeMap
+(about #_"cloiure.core.PersistentTreeMap"
     (defp ITNode
         (#_"ITNode" ITNode'''left [#_"ITNode" this])
         (#_"ITNode" ITNode'''right [#_"ITNode" this])
@@ -1407,33 +1401,33 @@
     (defp PersistentTreeMap)
 )
 
-(arbace-ns PersistentTreeSet
+(about #_"cloiure.core.PersistentTreeSet"
     (defp PersistentTreeSet)
 )
 
-(arbace-ns PersistentVector
+(about #_"cloiure.core.PersistentVector"
     (defp VNode)
     (defp TransientVector)
     (defp PersistentVector)
 )
 
-(arbace-ns Repeat
+(about #_"cloiure.core.Repeat"
     (defp Repeat)
 )
 
-(arbace-ns Range
+(about #_"cloiure.core.Range"
     (defp Range)
 )
 
-(arbace-ns Reduced
+(about #_"cloiure.core.Reduced"
     (defp Reduced)
 )
 
-(arbace-ns StringSeq
+(about #_"cloiure.core.StringSeq"
     (defp StringSeq)
 )
 
-(arbace-ns Var
+(about #_"cloiure.core.Var"
     (defp Unbound)
     (defp Var)
 )
@@ -1469,12 +1463,12 @@
 
 (defmacro update! [x f & z] `(set! ~x (~f ~x ~@z)))
 
-(arbace-ns Cache
+(about #_"cloiure.core.Cache"
 
 (declare get)
 (declare dissoc)
 
-(value-ns Cache
+(about #_"Cache"
     (defn #_"<K, V> void" Cache'purge [#_"ReferenceQueue" queue, #_"{K Reference<V>}'" cache]
         (when (some? (.poll queue))
             (while (some? (.poll queue)))
@@ -1489,9 +1483,9 @@
 )
 )
 
-(arbace-ns Loader
+(about #_"cloiure.core.Loader"
 
-(value-ns Loader
+(about #_"Loader"
     (def- #_"{String Reference<Class>}'" Loader'cache (atom {}))
     (def- #_"ReferenceQueue" Loader'queue (ReferenceQueue.))
 
@@ -1504,7 +1498,7 @@
     (defp Loader)
 
     (defn #_"Loader" Loader'new [#_"ClassLoader" parent]
-        (proxy [ClassLoader arbace.core.Loader] [parent]
+        (-/proxy [ClassLoader arbace.core.Loader] [parent]
             (#_"Class<?>" findClass [#_"Loader" #_this, #_"String" name]
                 (or (Loader'findCached name) (throw (ClassNotFoundException. name)))
             )
@@ -1545,9 +1539,9 @@
 )
 )
 
-(arbace-ns Intrinsics
+(about #_"cloiure.core.Intrinsics"
 
-(value-ns Intrinsics
+(about #_"Intrinsics"
     (def #_"{String int|[int]}" Intrinsics'ops
         (hash-map
             "public static int clojure.lang.Numbers.shiftLeftInt(int,int)"                  Opcodes/ISHL
@@ -1626,9 +1620,9 @@
 )
 )
 
-(arbace-ns Reflector
+(about #_"cloiure.core.Reflector"
 
-(value-ns Reflector
+(about #_"Reflector"
     (defn #_"Class" Reflector'classOf [#_"Object" o]
         (class o)
     )
@@ -1958,7 +1952,7 @@
 )
 )
 
-(arbace-ns Compiler
+(about #_"cloiure.core.Compiler"
 
 (def Context'enum-set
     (hash-set
@@ -1969,7 +1963,7 @@
     )
 )
 
-(value-ns Compiler
+(about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
 
     (def #_"String" Compiler'COMPILE_STUB_PREFIX "compile__stub")
@@ -1982,7 +1976,9 @@
     (defn #_"String" Compiler'thunkNameStatic [#_"int" n] (str "__thunk__" n "__"))
 )
 
-(class-ns NilExpr [Expr Literal]
+(about #_"NilExpr"
+    (defr NilExpr [Expr Literal])
+
     (defn #_"NilExpr" NilExpr'new []
         (NilExpr'class.)
     )
@@ -2014,7 +2010,9 @@
     (def #_"NilExpr" Compiler'NIL_EXPR (NilExpr'new))
 )
 
-(class-ns BooleanExpr [Expr Literal]
+(about #_"BooleanExpr"
+    (defr BooleanExpr [Expr Literal])
+
     (defn #_"BooleanExpr" BooleanExpr'new [#_"boolean" val]
         (merge (BooleanExpr'class.)
             (hash-map
@@ -2051,7 +2049,7 @@
     (def #_"BooleanExpr" Compiler'FALSE_EXPR (BooleanExpr'new false))
 )
 
-(value-ns Compiler
+(about #_"Compiler"
     (def #_"Var" ^:dynamic *class-loader*      ) ;; Loader
     (def #_"Var" ^:dynamic *line*              ) ;; Integer
     (def #_"Var" ^:dynamic *last-unique-id*    ) ;; Integer
@@ -2603,7 +2601,9 @@
     )
 )
 
-(class-ns MonitorEnterExpr [Expr Untyped]
+(about #_"MonitorEnterExpr"
+    (defr MonitorEnterExpr [Expr Untyped])
+
     (defn #_"MonitorEnterExpr" MonitorEnterExpr'new [#_"Expr" target]
         (merge (MonitorEnterExpr'class.)
             (hash-map
@@ -2632,7 +2632,7 @@
 
 (declare Compiler'analyze)
 
-(value-ns MonitorEnterParser
+(about #_"MonitorEnterParser"
     (defn #_"IParser" MonitorEnterParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -2642,7 +2642,9 @@
     )
 )
 
-(class-ns MonitorExitExpr [Expr Untyped]
+(about #_"MonitorExitExpr"
+    (defr MonitorExitExpr [Expr Untyped])
+
     (defn #_"MonitorExitExpr" MonitorExitExpr'new [#_"Expr" target]
         (merge (MonitorExitExpr'class.)
             (hash-map
@@ -2669,7 +2671,7 @@
     )
 )
 
-(value-ns MonitorExitParser
+(about #_"MonitorExitParser"
     (defn #_"IParser" MonitorExitParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -2679,7 +2681,9 @@
     )
 )
 
-(class-ns AssignExpr [Expr]
+(about #_"AssignExpr"
+    (defr AssignExpr [Expr])
+
     (defn #_"AssignExpr" AssignExpr'new [#_"Assignable" target, #_"Expr" val]
         (merge (AssignExpr'class.)
             (hash-map
@@ -2705,7 +2709,7 @@
     )
 )
 
-(value-ns AssignParser
+(about #_"AssignParser"
     (defn #_"IParser" AssignParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -2721,7 +2725,9 @@
     )
 )
 
-(class-ns ImportExpr [Expr]
+(about #_"ImportExpr"
+    (defr ImportExpr [Expr])
+
     (defn #_"ImportExpr" ImportExpr'new [#_"String" c]
         (merge (ImportExpr'class.)
             (hash-map
@@ -2758,7 +2764,7 @@
     )
 )
 
-(value-ns ImportParser
+(about #_"ImportParser"
     (defn #_"IParser" ImportParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -2768,7 +2774,9 @@
     )
 )
 
-(class-ns EmptyExpr [Expr]
+(about #_"EmptyExpr"
+    (defr EmptyExpr [Expr])
+
     (defn #_"EmptyExpr" EmptyExpr'new [#_"Object" coll]
         (merge (EmptyExpr'class.)
             (hash-map
@@ -2808,7 +2816,9 @@
     )
 )
 
-(class-ns ConstantExpr [Expr Literal]
+(about #_"ConstantExpr"
+    (defr ConstantExpr [Expr Literal])
+
     (defn #_"ConstantExpr" ConstantExpr'new [#_"Object" v]
         (merge (ConstantExpr'class.)
             (hash-map
@@ -2852,7 +2862,9 @@
     )
 )
 
-(class-ns NumberExpr [Expr Literal MaybePrimitive]
+(about #_"NumberExpr"
+    (defr NumberExpr [Expr Literal MaybePrimitive])
+
     (defn #_"NumberExpr" NumberExpr'new [#_"Number" n]
         (merge (NumberExpr'class.)
             (hash-map
@@ -2911,7 +2923,9 @@
     )
 )
 
-(class-ns StringExpr [Expr Literal]
+(about #_"StringExpr"
+    (defr StringExpr [Expr Literal])
+
     (defn #_"StringExpr" StringExpr'new [#_"String" str]
         (merge (StringExpr'class.)
             (hash-map
@@ -2944,7 +2958,9 @@
     )
 )
 
-(class-ns KeywordExpr [Expr Literal]
+(about #_"KeywordExpr"
+    (defr KeywordExpr [Expr Literal])
+
     (defn #_"KeywordExpr" KeywordExpr'new [#_"Keyword" k]
         (merge (KeywordExpr'class.)
             (hash-map
@@ -2980,7 +2996,7 @@
     )
 )
 
-(value-ns ConstantParser
+(about #_"ConstantParser"
     (defn #_"IParser" ConstantParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -3006,7 +3022,7 @@
 
 (defp Numbers)
 
-(value-ns Interop
+(about #_"Interop"
     (defn #_"void" Interop'emitBoxReturn [#_"IopObject" objx, #_"GeneratorAdapter" gen, #_"Class" returnType]
         (when (.isPrimitive returnType)
             (condp = returnType
@@ -3143,7 +3159,9 @@
     )
 )
 
-(class-ns InstanceFieldExpr [Assignable Expr Interop MaybePrimitive]
+(about #_"InstanceFieldExpr"
+    (defr InstanceFieldExpr [Assignable Expr Interop MaybePrimitive])
+
     (defn #_"InstanceFieldExpr" InstanceFieldExpr'new [#_"int" line, #_"Expr" target, #_"String" fieldName, #_"Symbol" tag, #_"boolean" requireField]
         (let [#_"Class" c (Expr'''getClass target)
               #_"Field" f (when (some? c) (Reflector'getField c, fieldName, false))]
@@ -3254,7 +3272,9 @@
     )
 )
 
-(class-ns StaticFieldExpr [Assignable Expr Interop MaybePrimitive]
+(about #_"StaticFieldExpr"
+    (defr StaticFieldExpr [Assignable Expr Interop MaybePrimitive])
+
     (defn #_"StaticFieldExpr" StaticFieldExpr'new [#_"int" line, #_"Class" c, #_"String" fieldName, #_"Symbol" tag]
         (merge (StaticFieldExpr'class.)
             (hash-map
@@ -3321,7 +3341,7 @@
     )
 )
 
-(value-ns MethodExpr
+(about #_"MethodExpr"
     (defn #_"void" MethodExpr'emitArgsAsArray [#_"IPersistentVector" args, #_"IopObject" objx, #_"GeneratorAdapter" gen]
         (.push gen, (count args))
         (.newArray gen, (Type/getType Object))
@@ -3364,7 +3384,7 @@
     )
 )
 
-(value-ns IopMethod
+(about #_"IopMethod"
     (defn #_"IopMethod" IopMethod'init [#_"IopObject" objx, #_"IopMethod" parent]
         (hash-map
             #_"IopObject" :objx objx
@@ -3427,7 +3447,9 @@
 
 (declare <=)
 
-(class-ns InstanceMethodExpr [Expr Interop MaybePrimitive]
+(about #_"InstanceMethodExpr"
+    (defr InstanceMethodExpr [Expr Interop MaybePrimitive])
+
     (defn #_"InstanceMethodExpr" InstanceMethodExpr'new [#_"int" line, #_"Symbol" tag, #_"Expr" target, #_"String" methodName, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [#_"java.lang.reflect.Method" method
                 (if (some? (Expr'''getClass target))
@@ -3566,7 +3588,9 @@
     )
 )
 
-(class-ns StaticMethodExpr [Expr Interop MaybePrimitive]
+(about #_"StaticMethodExpr"
+    (defr StaticMethodExpr [Expr Interop MaybePrimitive])
+
     (defn #_"StaticMethodExpr" StaticMethodExpr'new [#_"int" line, #_"Symbol" tag, #_"Class" c, #_"String" methodName, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [#_"java.lang.reflect.Method" method
                 (let [#_"PersistentVector" methods (Reflector'getMethods c, (count args), methodName, true)]
@@ -3721,7 +3745,7 @@
 
 (declare not=)
 
-(value-ns HostParser
+(about #_"HostParser"
     (defn #_"IParser" HostParser'new []
         (reify IParser
             ;; (. x fieldname-sym) or
@@ -3784,7 +3808,9 @@
     )
 )
 
-(class-ns UnresolvedVarExpr [Expr]
+(about #_"UnresolvedVarExpr"
+    (defr UnresolvedVarExpr [Expr])
+
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
         (merge (UnresolvedVarExpr'class.)
             (hash-map
@@ -3808,7 +3834,9 @@
     )
 )
 
-(class-ns VarExpr [Assignable Expr]
+(about #_"VarExpr"
+    (defr VarExpr [Assignable Expr])
+
     (defn #_"VarExpr" VarExpr'new [#_"Var" var, #_"Symbol" tag]
         (merge (VarExpr'class.)
             (hash-map
@@ -3859,7 +3887,9 @@
     )
 )
 
-(class-ns TheVarExpr [Expr]
+(about #_"TheVarExpr"
+    (defr TheVarExpr [Expr])
+
     (defn #_"TheVarExpr" TheVarExpr'new [#_"Var" var]
         (merge (TheVarExpr'class.)
             (hash-map
@@ -3887,7 +3917,7 @@
     )
 )
 
-(value-ns TheVarParser
+(about #_"TheVarParser"
     (defn #_"IParser" TheVarParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -3901,7 +3931,9 @@
     )
 )
 
-(class-ns BodyExpr [Expr MaybePrimitive]
+(about #_"BodyExpr"
+    (defr BodyExpr [Expr MaybePrimitive])
+
     (defn #_"BodyExpr" BodyExpr'new [#_"PersistentVector" exprs]
         (merge (BodyExpr'class.)
             (hash-map
@@ -3949,7 +3981,7 @@
     )
 )
 
-(value-ns BodyParser
+(about #_"BodyParser"
     (defn #_"IParser" BodyParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -3967,7 +3999,9 @@
     )
 )
 
-(class-ns CatchClause []
+(about #_"CatchClause"
+    (defr CatchClause [])
+
     (defn #_"CatchClause" CatchClause'new [#_"Class" c, #_"LocalBinding" lb, #_"Expr" handler]
         (merge (CatchClause'class.)
             (hash-map
@@ -3979,7 +4013,9 @@
     )
 )
 
-(class-ns TryExpr [Expr]
+(about #_"TryExpr"
+    (defr TryExpr [Expr])
+
     (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"PersistentVector" catchExprs, #_"Expr" finallyExpr]
         (merge (TryExpr'class.)
             (hash-map
@@ -4078,7 +4114,7 @@
 
 (declare binding)
 
-(value-ns TryParser
+(about #_"TryParser"
     (defn #_"IParser" TryParser'new []
         (reify IParser
             ;; (try try-expr* catch-expr* finally-expr?)
@@ -4141,7 +4177,9 @@
     )
 )
 
-(class-ns ThrowExpr [Expr Untyped]
+(about #_"ThrowExpr"
+    (defr ThrowExpr [Expr Untyped])
+
     (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
         (merge (ThrowExpr'class.)
             (hash-map
@@ -4168,7 +4206,7 @@
     )
 )
 
-(value-ns ThrowParser
+(about #_"ThrowParser"
     (defn #_"IParser" ThrowParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -4183,7 +4221,9 @@
     )
 )
 
-(class-ns NewExpr [Expr]
+(about #_"NewExpr"
+    (defr NewExpr [Expr])
+
     (defn #_"NewExpr" NewExpr'new [#_"Class" c, #_"IPersistentVector" args, #_"int" line]
         (let [#_"Constructor" ctor
                 (let [#_"Constructor[]" allctors (.getConstructors c)
@@ -4256,7 +4296,7 @@
     )
 )
 
-(value-ns NewParser
+(about #_"NewParser"
     (defn #_"IParser" NewParser'new []
         (reify IParser
             ;; (new Classname args...)
@@ -4282,7 +4322,9 @@
     )
 )
 
-(class-ns MetaExpr [Expr]
+(about #_"MetaExpr"
+    (defr MetaExpr [Expr])
+
     (defn #_"MetaExpr" MetaExpr'new [#_"Expr" expr, #_"Expr" meta]
         (merge (MetaExpr'class.)
             (hash-map
@@ -4315,7 +4357,9 @@
     )
 )
 
-(class-ns IfExpr [Expr MaybePrimitive]
+(about #_"IfExpr"
+    (defr IfExpr [Expr MaybePrimitive])
+
     (defn #_"IfExpr" IfExpr'new [#_"int" line, #_"Expr" testExpr, #_"Expr" thenExpr, #_"Expr" elseExpr]
         (merge (IfExpr'class.)
             (hash-map
@@ -4416,7 +4460,7 @@
     )
 )
 
-(value-ns IfParser
+(about #_"IfParser"
     (defn #_"IParser" IfParser'new []
         (reify IParser
             ;; (if test then) or (if test then else)
@@ -4435,7 +4479,9 @@
     )
 )
 
-(class-ns ListExpr [Expr]
+(about #_"ListExpr"
+    (defr ListExpr [Expr])
+
     (defn #_"ListExpr" ListExpr'new [#_"IPersistentVector" args]
         (merge (ListExpr'class.)
             (hash-map
@@ -4468,7 +4514,9 @@
     )
 )
 
-(class-ns MapExpr [Expr]
+(about #_"MapExpr"
+    (defr MapExpr [Expr])
+
     (defn #_"MapExpr" MapExpr'new [#_"IPersistentVector" keyvals]
         (merge (MapExpr'class.)
             (hash-map
@@ -4557,7 +4605,9 @@
     )
 )
 
-(class-ns SetExpr [Expr]
+(about #_"SetExpr"
+    (defr SetExpr [Expr])
+
     (defn #_"SetExpr" SetExpr'new [#_"IPersistentVector" keys]
         (merge (SetExpr'class.)
             (hash-map
@@ -4615,7 +4665,9 @@
     )
 )
 
-(class-ns VectorExpr [Expr]
+(about #_"VectorExpr"
+    (defr VectorExpr [Expr])
+
     (defn #_"VectorExpr" VectorExpr'new [#_"IPersistentVector" args]
         (merge (VectorExpr'class.)
             (hash-map
@@ -4684,7 +4736,9 @@
     )
 )
 
-(class-ns KeywordInvokeExpr [Expr]
+(about #_"KeywordInvokeExpr"
+    (defr KeywordInvokeExpr [Expr])
+
     (defn #_"KeywordInvokeExpr" KeywordInvokeExpr'new [#_"int" line, #_"Symbol" tag, #_"KeywordExpr" kw, #_"Expr" target]
         (merge (KeywordInvokeExpr'class.)
             (hash-map
@@ -4744,7 +4798,9 @@
     )
 )
 
-(class-ns InstanceOfExpr [Expr MaybePrimitive]
+(about #_"InstanceOfExpr"
+    (defr InstanceOfExpr [Expr MaybePrimitive])
+
     (defn #_"InstanceOfExpr" InstanceOfExpr'new [#_"Class" c, #_"Expr" expr]
         (merge (InstanceOfExpr'class.)
             (hash-map
@@ -4789,7 +4845,9 @@
 (declare var-get)
 (declare keyword)
 
-(class-ns InvokeExpr [Expr]
+(about #_"InvokeExpr"
+    (defr InvokeExpr [Expr])
+
     (defn #_"InvokeExpr" InvokeExpr'new [#_"int" line, #_"Symbol" tag, #_"Expr" fexpr, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [this
                 (merge (InvokeExpr'class.)
@@ -4962,7 +5020,9 @@
     )
 )
 
-(class-ns LocalBinding []
+(about #_"LocalBinding"
+    (defr LocalBinding [])
+
     (defn #_"LocalBinding" LocalBinding'new [#_"int" idx, #_"Symbol" sym, #_"Symbol" tag, #_"Expr" init, #_"boolean" isArg]
         (when (and (some? (Compiler'maybePrimitiveType init)) (some? tag))
             (throw! "can't type hint a local with a primitive initializer")
@@ -5001,7 +5061,9 @@
     )
 )
 
-(class-ns LocalBindingExpr [Assignable Expr MaybePrimitive]
+(about #_"LocalBindingExpr"
+    (defr LocalBindingExpr [Assignable Expr MaybePrimitive])
+
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb, #_"Symbol" tag]
         (when (or (nil? (LocalBinding''getPrimitiveType lb)) (nil? tag)) => (throw! "can't type hint a primitive local")
             (merge (LocalBindingExpr'class.)
@@ -5063,7 +5125,9 @@
     )
 )
 
-(class-ns MethodParamExpr [Expr MaybePrimitive]
+(about #_"MethodParamExpr"
+    (defr MethodParamExpr [Expr MaybePrimitive])
+
     (defn #_"MethodParamExpr" MethodParamExpr'new [#_"Class" c]
         (merge (MethodParamExpr'class.)
             (hash-map
@@ -5097,7 +5161,9 @@
     )
 )
 
-(class-ns FnMethod [IopMethod]
+(about #_"FnMethod"
+    (defr FnMethod [IopMethod])
+
     (defn #_"FnMethod" FnMethod'new [#_"IopObject" objx, #_"IopMethod" parent]
         (merge (FnMethod'class.) (IopMethod'init objx, parent)
             (hash-map
@@ -5247,7 +5313,7 @@
     )
 )
 
-(value-ns IopObject
+(about #_"IopObject"
     (defn #_"IopObject" IopObject'init [#_"Object" tag]
         (hash-map
             #_"int" :uid (Compiler'nextUniqueId)
@@ -5919,7 +5985,9 @@
     )
 )
 
-(class-ns FnExpr [Expr IopObject]
+(about #_"FnExpr"
+    (defr FnExpr [Expr IopObject])
+
     (defn #_"FnExpr" FnExpr'new [#_"Object" tag]
         (merge (FnExpr'class.) (IopObject'init tag)
             (hash-map
@@ -6086,7 +6154,9 @@
     )
 )
 
-(class-ns DefExpr [Expr]
+(about #_"DefExpr"
+    (defr DefExpr [Expr])
+
     (defn #_"DefExpr" DefExpr'new [#_"int" line, #_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided, #_"boolean" shadowsCoreMapping]
         (merge (DefExpr'class.)
             (hash-map
@@ -6156,7 +6226,7 @@
     )
 )
 
-(value-ns DefParser
+(about #_"DefParser"
     (defn #_"IParser" DefParser'new []
         (reify IParser
             ;; (def x) or (def x initexpr)
@@ -6189,7 +6259,9 @@
     )
 )
 
-(class-ns BindingInit []
+(about #_"BindingInit"
+    (defr BindingInit [])
+
     (defn #_"BindingInit" BindingInit'new [#_"LocalBinding" binding, #_"Expr" init]
         (merge (BindingInit'class.)
             (hash-map
@@ -6200,7 +6272,9 @@
     )
 )
 
-(class-ns LetFnExpr [Expr]
+(about #_"LetFnExpr"
+    (defr LetFnExpr [Expr])
+
     (defn #_"LetFnExpr" LetFnExpr'new [#_"PersistentVector" bindingInits, #_"Expr" body]
         (merge (LetFnExpr'class.)
             (hash-map
@@ -6260,7 +6334,7 @@
 
 (declare quot)
 
-(value-ns LetFnParser
+(about #_"LetFnParser"
     (defn #_"IParser" LetFnParser'new []
         (reify IParser
             ;; (letfns* [var (fn [args] body) ...] body...)
@@ -6299,7 +6373,9 @@
     )
 )
 
-(class-ns LetExpr [Expr MaybePrimitive]
+(about #_"LetExpr"
+    (defr LetExpr [Expr MaybePrimitive])
+
     (defn #_"LetExpr" LetExpr'new [#_"PersistentVector" bindingInits, #_"Expr" body, #_"boolean" isLoop]
         (merge (LetExpr'class.)
             (hash-map
@@ -6385,7 +6461,7 @@
 (declare push-thread-bindings)
 (declare pop-thread-bindings)
 
-(value-ns LetParser
+(about #_"LetParser"
     (defn #_"IParser" LetParser'new []
         (reify IParser
             ;; (let [var val var2 val2 ...] body...)
@@ -6505,7 +6581,9 @@
     )
 )
 
-(class-ns RecurExpr [Expr MaybePrimitive]
+(about #_"RecurExpr"
+    (defr RecurExpr [Expr MaybePrimitive])
+
     (defn #_"RecurExpr" RecurExpr'new [#_"IPersistentVector" loopLocals, #_"IPersistentVector" args, #_"int" line]
         (merge (RecurExpr'class.)
             (hash-map
@@ -6580,7 +6658,7 @@
     )
 )
 
-(value-ns RecurParser
+(about #_"RecurParser"
     (defn #_"IParser" RecurParser'new []
         (reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"ISeq" form]
@@ -6626,7 +6704,9 @@
     )
 )
 
-(class-ns NewInstanceMethod [IopMethod]
+(about #_"NewInstanceMethod"
+    (defr NewInstanceMethod [IopMethod])
+
     (defn #_"NewInstanceMethod" NewInstanceMethod'new [#_"IopObject" objx, #_"IopMethod" parent]
         (merge (NewInstanceMethod'class.) (IopMethod'init objx, parent)
             (hash-map
@@ -6805,7 +6885,9 @@
     )
 )
 
-(class-ns NewInstanceExpr [Expr IopObject]
+(about #_"NewInstanceExpr"
+    (defr NewInstanceExpr [Expr IopObject])
+
     (defn- #_"NewInstanceExpr" NewInstanceExpr'new [#_"Object" tag]
         (merge (NewInstanceExpr'class.) (IopObject'init tag)
             (hash-map
@@ -7167,7 +7249,7 @@
     )
 )
 
-(value-ns ReifyParser
+(about #_"ReifyParser"
     (defn #_"IParser" ReifyParser'new []
         (reify IParser
             ;; (reify this-name? [interfaces] (method-name [args] body)*)
@@ -7189,7 +7271,7 @@
     )
 )
 
-(value-ns DeftypeParser
+(about #_"DeftypeParser"
     (defn #_"IParser" DeftypeParser'new []
         (reify IParser
             ;; (deftype* tagname classname [fields] :implements [interfaces] :tag tagname methods*)
@@ -7211,7 +7293,9 @@
     )
 )
 
-(class-ns CaseExpr [Expr MaybePrimitive]
+(about #_"CaseExpr"
+    (defr CaseExpr [Expr MaybePrimitive])
+
     ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
     (defn #_"CaseExpr" CaseExpr'new [#_"int" line, #_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck]
         (when-not (any = switchType :compact :sparse)
@@ -7422,7 +7506,7 @@
     )
 )
 
-(value-ns CaseParser
+(about #_"CaseParser"
     (defn #_"IParser" CaseParser'new []
         (reify IParser
             ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
@@ -7463,7 +7547,7 @@
     )
 )
 
-(value-ns Compiler
+(about #_"Compiler"
     (def #_"IPersistentMap" Compiler'specials
         (hash-map
             'def           (DefParser'new)
@@ -7670,9 +7754,9 @@
 )
 )
 
-(arbace-ns LispReader
+(about #_"cloiure.core.LispReader"
 
-(value-ns LispReader
+(about #_"LispReader"
     (def #_"Var" ^:dynamic *arg-env*   ) ;; sorted-map num->gensymbol
     (def #_"Var" ^:dynamic *gensym-env*) ;; symbol->gensymbol
 
@@ -7942,7 +8026,7 @@
     )
 )
 
-(value-ns RegexReader
+(about #_"RegexReader"
     (defn #_"Object" regex-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
@@ -7963,7 +8047,7 @@
     )
 )
 
-(value-ns StringReader
+(about #_"StringReader"
     (defn- #_"char" StringReader'escape [#_"PushbackReader" r]
         (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading string")
             (case ch
@@ -8006,39 +8090,39 @@
     )
 )
 
-(value-ns CommentReader
+(about #_"CommentReader"
     (defn #_"Object" comment-reader [#_"PushbackReader" r, #_"char" _delim]
         (while (not (any = (LispReader'read1 r) nil \newline \return)))
         r
     )
 )
 
-(value-ns DiscardReader
+(about #_"DiscardReader"
     (defn #_"Object" discard-reader [#_"PushbackReader" r, #_"char" _delim]
         (LispReader'read r)
         r
     )
 )
 
-(value-ns QuoteReader
+(about #_"QuoteReader"
     (defn #_"Object" quote-reader [#_"PushbackReader" r, #_"char" _delim]
         (list 'quote (LispReader'read r))
     )
 )
 
-(value-ns DerefReader
+(about #_"DerefReader"
     (defn #_"Object" deref-reader [#_"PushbackReader" r, #_"char" _delim]
         (list `deref (LispReader'read r))
     )
 )
 
-(value-ns VarReader
+(about #_"VarReader"
     (defn #_"Object" var-reader [#_"PushbackReader" r, #_"char" _delim]
         (list 'var (LispReader'read r))
     )
 )
 
-(value-ns DispatchReader
+(about #_"DispatchReader"
     (declare LispReader'dispatchMacros)
 
     (defn #_"Object" dispatch-reader [#_"PushbackReader" r, #_"char" _delim]
@@ -8051,7 +8135,7 @@
     )
 )
 
-(value-ns FnReader
+(about #_"FnReader"
     (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"char" _delim]
         (when-not (bound? #'*arg-env*) => (throw! "nested #()s are not allowed")
             (binding [*arg-env* (sorted-map)]
@@ -8079,7 +8163,7 @@
     )
 )
 
-(value-ns ArgReader
+(about #_"ArgReader"
     (defn #_"Object" arg-reader [#_"PushbackReader" r, #_"char" _delim]
         (when (bound? #'*arg-env*) => (LispReader'interpretToken (LispReader'readToken r, \%))
             (let [#_"char" ch (LispReader'read1 r) _ (LispReader'unread r, ch)]
@@ -8099,7 +8183,7 @@
     )
 )
 
-(value-ns MetaReader
+(about #_"MetaReader"
     (defn #_"Object" meta-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"Object" meta (LispReader'read r)
               meta
@@ -8130,7 +8214,7 @@
     )
 )
 
-(value-ns SyntaxQuoteReader
+(about #_"SyntaxQuoteReader"
     (defn- #_"IPersistentVector" SyntaxQuoteReader'flattened [#_"IPersistentMap" m]
         (loop-when [#_"IPersistentVector" v [] #_"ISeq" s (seq m)] (some? s) => v
             (let [#_"IMapEntry" e (first s)]
@@ -8224,7 +8308,7 @@
     )
 )
 
-(value-ns UnquoteReader
+(about #_"UnquoteReader"
     (defn #_"Object" unquote-reader [#_"PushbackReader" r, #_"char" _delim]
         (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading character")
             (if (= ch \@)
@@ -8238,7 +8322,7 @@
     )
 )
 
-(value-ns CharacterReader
+(about #_"CharacterReader"
     (defn #_"Object" character-reader [#_"PushbackReader" r, #_"char" _delim]
         (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading character")
             (let [#_"String" token (LispReader'readToken r, ch)]
@@ -8277,7 +8361,7 @@
     )
 )
 
-(value-ns ListReader
+(about #_"ListReader"
     (defn #_"Object" list-reader [#_"PushbackReader" r, #_"char" _delim]
         (let-when [#_"PersistentVector" v (LispReader'readDelimitedForms r, \))] (seq v) => ()
             (ß PersistentList/create #_(to-array v) v)
@@ -8285,13 +8369,13 @@
     )
 )
 
-(value-ns VectorReader
+(about #_"VectorReader"
     (defn #_"Object" vector-reader [#_"PushbackReader" r, #_"char" _delim]
         (#_"LazilyPersistentVector'create" identity (LispReader'readDelimitedForms r, \]))
     )
 )
 
-(value-ns MapReader
+(about #_"MapReader"
     (defn #_"Object" map-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"PersistentVector" v (LispReader'readDelimitedForms r, \})]
             (when (even? (count v)) => (throw! "map literal must contain an even number of forms")
@@ -8303,19 +8387,19 @@
 
 (declare PersistentHashSet'createWithCheck-1s)
 
-(value-ns SetReader
+(about #_"SetReader"
     (defn #_"Object" set-reader [#_"PushbackReader" r, #_"char" _delim]
         (PersistentHashSet'createWithCheck-1s (LispReader'readDelimitedForms r, \}))
     )
 )
 
-(value-ns UnmatchedDelimiterReader
+(about #_"UnmatchedDelimiterReader"
     (defn #_"Object" unmatched-delimiter-reader [#_"PushbackReader" _r, #_"char" delim]
         (throw! (str "unmatched delimiter: " delim))
     )
 )
 
-(value-ns LispReader
+(about #_"LispReader"
     (def #_"{char IFn}" LispReader'macros
         (hash-map
             \"  string-reader ;; oops! "
@@ -8348,9 +8432,9 @@
 )
 )
 
-(arbace-ns Compiler
+(about #_"cloiure.core.Compiler"
 
-(value-ns Compiler
+(about #_"Compiler"
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
@@ -8382,7 +8466,7 @@
  ;;
 (defn eval [form] (Compiler'eval form))
 
-(arbace-ns Murmur3
+(about #_"cloiure.core.Murmur3"
 
 ;;;
  ; See http://smhasher.googlecode.com/svn/trunk/MurmurHash3.cpp
@@ -8392,7 +8476,7 @@
  ; @author Dimitris Andreou
  ; @author Kurt Alfred Kluever
  ;;
-(value-ns Murmur3
+(about #_"Murmur3"
     (def- #_"int" Murmur3'seed 0)
     (def- #_"int" Murmur3'C1 0xcc9e2d51)
     (def- #_"int" Murmur3'C2 0x1b873593)
@@ -8503,9 +8587,11 @@
  ;;
 (defn #_"long" hash-unordered-coll [s] (Murmur3'hashUnordered s))
 
-(arbace-ns Atom
+(about #_"cloiure.core.Atom"
 
-(class-ns Atom [IAtom IMeta IDeref IReference]
+(about #_"Atom"
+    (defr Atom [IAtom IMeta IDeref IReference])
+
     (defn #_"Atom" Atom'new
         ([#_"Object" data] (Atom'new nil, data))
         ([#_"IPersistentMap" meta, #_"Object" data]
@@ -8630,9 +8716,11 @@
  ;;
 (defn #_"IPersistentVector" reset-vals! [#_"IAtom" a x'] (IAtom'''resetVals a, x'))
 
-(arbace-ns Reduced
+(about #_"cloiure.core.Reduced"
 
-(class-ns Reduced [IDeref]
+(about #_"Reduced"
+    (defr Reduced [IDeref])
+
     (defn #_"Reduced" Reduced'new [#_"Object" val]
         (merge (Reduced'class.)
             (hash-map
@@ -8669,9 +8757,9 @@
  ;;
 (defn unreduced [x] (if (reduced? x) (deref x) x))
 
-(arbace-ns Util
+(about #_"cloiure.core.Util"
 
-(value-ns Util
+(about #_"Util"
     (declare Numbers'equal)
 
     (defn #_"boolean" Util'equiv [#_"Object" k1, #_"Object" k2]
@@ -8743,9 +8831,11 @@
  ;;
 (defn compare [x y] (Util'compare x y))
 
-(arbace-ns Ratio
+(about #_"cloiure.core.Ratio"
 
-(class-ns Ratio [#_"Number" #_"Comparable" Hashed IObject]
+(about #_"Ratio"
+    (defr Ratio [#_"Number" #_"Comparable" Hashed IObject])
+
     (defn #_"Ratio" Ratio'new [#_"BigInteger" numerator, #_"BigInteger" denominator]
         (merge (Ratio'class.) (§ foreign Number'new)
             (hash-map
@@ -8792,14 +8882,16 @@
 )
 )
 
-(arbace-ns Numbers
+(about #_"cloiure.core.Numbers"
 
-(class-ns LongOps [Ops]
+(about #_"LongOps"
+    (defr LongOps [Ops])
+
     (defn #_"LongOps" LongOps'new []
         (LongOps'class.)
     )
 
-    (defn #_"long" LongOps'gcd [#_"long" u, #_"long" v] (if (clojure.core/= v 0) u (recur v (clojure.core/rem u v))))
+    (defn #_"long" LongOps'gcd [#_"long" u, #_"long" v] (if (-/= v 0) u (recur v (-/rem u v))))
 
     (declare Numbers'RATIO_OPS)
     (declare Numbers'BIGINT_OPS)
@@ -8811,17 +8903,17 @@
         (#_"Ops" Ops'''opsWithRatio [#_"LongOps" this, #_"RatioOps" x] Numbers'RATIO_OPS)
         (#_"Ops" Ops'''opsWithBigInt [#_"LongOps" this, #_"BigIntOps" x] Numbers'BIGINT_OPS)
 
-        (#_"boolean" Ops'''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (clojure.core/= (.longValue x) (.longValue y)))
-        (#_"boolean" Ops'''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (clojure.core/< (.longValue x) (.longValue y)))
-        (#_"boolean" Ops'''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (clojure.core/<= (.longValue x) (.longValue y)))
+        (#_"boolean" Ops'''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/= (.longValue x) (.longValue y)))
+        (#_"boolean" Ops'''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/< (.longValue x) (.longValue y)))
+        (#_"boolean" Ops'''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/<= (.longValue x) (.longValue y)))
 
-        (#_"boolean" Ops'''isZero [#_"LongOps" this, #_"Number" x] (clojure.core/= (.longValue x) 0))
-        (#_"boolean" Ops'''isPos [#_"LongOps" this, #_"Number" x] (clojure.core/> (.longValue x) 0))
-        (#_"boolean" Ops'''isNeg [#_"LongOps" this, #_"Number" x] (clojure.core/< (.longValue x) 0))
+        (#_"boolean" Ops'''isZero [#_"LongOps" this, #_"Number" x] (-/= (.longValue x) 0))
+        (#_"boolean" Ops'''isPos [#_"LongOps" this, #_"Number" x] (-/> (.longValue x) 0))
+        (#_"boolean" Ops'''isNeg [#_"LongOps" this, #_"Number" x] (-/< (.longValue x) 0))
 
         (#_"Number" Ops'''add [#_"LongOps" this, #_"Number" x, #_"Number" y]
-            (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y) #_"long" lz (clojure.core/+ lx ly)]
-                (when (and (clojure.core/< (clojure.core/bit-xor lz lx) 0) (clojure.core/< (clojure.core/bit-xor lz ly) 0)) => (Long/valueOf lz)
+            (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y) #_"long" lz (-/+ lx ly)]
+                (when (and (-/< (-/bit-xor lz lx) 0) (-/< (-/bit-xor lz ly) 0)) => (Long/valueOf lz)
                     (Ops'''add Numbers'BIGINT_OPS, x, y)
                 )
             )
@@ -8829,7 +8921,7 @@
 
         (#_"Number" Ops'''negate [#_"LongOps" this, #_"Number" x]
             (let [#_"long" lx (.longValue x)]
-                (when (clojure.core/= lx Long/MIN_VALUE) => (Long/valueOf (clojure.core/- lx))
+                (when (-/= lx Long/MIN_VALUE) => (Long/valueOf (-/- lx))
                     (.negate (BigInteger/valueOf lx))
                 )
             )
@@ -8837,7 +8929,7 @@
 
         (#_"Number" Ops'''inc [#_"LongOps" this, #_"Number" x]
             (let [#_"long" lx (.longValue x)]
-                (when (clojure.core/= lx Long/MAX_VALUE) => (Long/valueOf (clojure.core/+ lx 1))
+                (when (-/= lx Long/MAX_VALUE) => (Long/valueOf (-/+ lx 1))
                     (Ops'''inc Numbers'BIGINT_OPS, x)
                 )
             )
@@ -8845,7 +8937,7 @@
 
         (#_"Number" Ops'''dec [#_"LongOps" this, #_"Number" x]
             (let [#_"long" lx (.longValue x)]
-                (when (clojure.core/= lx Long/MIN_VALUE) => (Long/valueOf (clojure.core/- lx 1))
+                (when (-/= lx Long/MIN_VALUE) => (Long/valueOf (-/- lx 1))
                     (Ops'''dec Numbers'BIGINT_OPS, x)
                 )
             )
@@ -8853,9 +8945,9 @@
     
         (#_"Number" Ops'''multiply [#_"LongOps" this, #_"Number" x, #_"Number" y]
             (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y)]
-                (when-not (and (clojure.core/= lx Long/MIN_VALUE) (clojure.core/< ly 0)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
-                    (let [#_"long" lz (clojure.core/* lx ly)]
-                        (when (or (clojure.core/= ly 0) (clojure.core/= (clojure.core/quot lz ly) lx)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
+                (when-not (and (-/= lx Long/MIN_VALUE) (-/< ly 0)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
+                    (let [#_"long" lz (-/* lx ly)]
+                        (when (or (-/= ly 0) (-/= (-/quot lz ly) lx)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
                             (Long/valueOf lz)
                         )
                     )
@@ -8865,11 +8957,11 @@
 
         (#_"Number" Ops'''divide [#_"LongOps" this, #_"Number" x, #_"Number" y]
             (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y)]
-                (let-when-not [#_"long" gcd (LongOps'gcd lx, ly)] (clojure.core/= gcd 0) => (Long/valueOf 0)
-                    (let-when-not [lx (clojure.core/quot lx gcd) ly (clojure.core/quot ly gcd)] (clojure.core/= ly 1) => (Long/valueOf lx)
+                (let-when-not [#_"long" gcd (LongOps'gcd lx, ly)] (-/= gcd 0) => (Long/valueOf 0)
+                    (let-when-not [lx (-/quot lx gcd) ly (-/quot ly gcd)] (-/= ly 1) => (Long/valueOf lx)
                         (let [[lx ly]
-                                (when (clojure.core/< ly 0) => [lx ly]
-                                    [(clojure.core/- lx) (clojure.core/- ly)]
+                                (when (-/< ly 0) => [lx ly]
+                                    [(-/- lx) (-/- ly)]
                                 )]
                             (Ratio'new (BigInteger/valueOf lx), (BigInteger/valueOf ly))
                         )
@@ -8878,12 +8970,14 @@
             )
         )
 
-        (#_"Number" Ops'''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long/valueOf (clojure.core/quot (.longValue x) (.longValue y))))
-        (#_"Number" Ops'''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long/valueOf (clojure.core/rem (.longValue x) (.longValue y))))
+        (#_"Number" Ops'''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long/valueOf (-/quot (.longValue x) (.longValue y))))
+        (#_"Number" Ops'''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long/valueOf (-/rem (.longValue x) (.longValue y))))
 )
 )
 
-(class-ns RatioOps [Ops]
+(about #_"RatioOps"
+    (defr RatioOps [Ops])
+
     (defn #_"RatioOps" RatioOps'new []
         (RatioOps'class.)
     )
@@ -8904,7 +8998,7 @@
 
         (#_"boolean" Ops'''eq [#_"RatioOps" this, #_"Number" x, #_"Number" y]
             (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
-                (and (clojure.core/= (:n rx) (:n ry)) (clojure.core/= (:d rx) (:d ry)))
+                (and (-/= (:n rx) (:n ry)) (-/= (:d rx) (:d ry)))
             )
         )
 
@@ -8920,9 +9014,9 @@
             )
         )
 
-        (#_"boolean" Ops'''isZero [#_"RatioOps" this, #_"Number" x] (clojure.core/= (.signum (:n (§ cast #_"Ratio" x))) 0))
-        (#_"boolean" Ops'''isPos [#_"RatioOps" this, #_"Number" x] (clojure.core/> (.signum (:n (§ cast #_"Ratio" x))) 0))
-        (#_"boolean" Ops'''isNeg [#_"RatioOps" this, #_"Number" x] (clojure.core/< (.signum (:n (§ cast #_"Ratio" x))) 0))
+        (#_"boolean" Ops'''isZero [#_"RatioOps" this, #_"Number" x] (-/= (.signum (:n (§ cast #_"Ratio" x))) 0))
+        (#_"boolean" Ops'''isPos [#_"RatioOps" this, #_"Number" x] (-/> (.signum (:n (§ cast #_"Ratio" x))) 0))
+        (#_"boolean" Ops'''isNeg [#_"RatioOps" this, #_"Number" x] (-/< (.signum (:n (§ cast #_"Ratio" x))) 0))
 
         (#_"Number" Ops'''add [#_"RatioOps" this, #_"Number" x, #_"Number" y]
             (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
@@ -8963,7 +9057,9 @@
     )
 )
 
-(class-ns BigIntOps [Ops]
+(about #_"BigIntOps"
+    (defr BigIntOps [Ops])
+
     (defn #_"BigIntOps" BigIntOps'new []
         (BigIntOps'class.)
     )
@@ -8978,20 +9074,20 @@
         (#_"Ops" Ops'''opsWithBigInt [#_"BigIntOps" this, #_"BigIntOps" x] this)
 
         (#_"boolean" Ops'''eq [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (clojure.core/= (Numbers'toBigInteger x) (Numbers'toBigInteger y))
+            (-/= (Numbers'toBigInteger x) (Numbers'toBigInteger y))
         )
 
         (#_"boolean" Ops'''lt [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (clojure.core/< (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/< (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
         (#_"boolean" Ops'''lte [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (clojure.core/<= (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/<= (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
-        (#_"boolean" Ops'''isZero [#_"BigIntOps" this, #_"Number" x] (clojure.core/= (.signum (Numbers'toBigInteger x)) 0))
-        (#_"boolean" Ops'''isPos [#_"BigIntOps" this, #_"Number" x] (clojure.core/> (.signum (Numbers'toBigInteger x)) 0))
-        (#_"boolean" Ops'''isNeg [#_"BigIntOps" this, #_"Number" x] (clojure.core/< (.signum (Numbers'toBigInteger x)) 0))
+        (#_"boolean" Ops'''isZero [#_"BigIntOps" this, #_"Number" x] (-/= (.signum (Numbers'toBigInteger x)) 0))
+        (#_"boolean" Ops'''isPos [#_"BigIntOps" this, #_"Number" x] (-/> (.signum (Numbers'toBigInteger x)) 0))
+        (#_"boolean" Ops'''isNeg [#_"BigIntOps" this, #_"Number" x] (-/< (.signum (Numbers'toBigInteger x)) 0))
 
         (#_"Number" Ops'''add [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
             (.add (Numbers'toBigInteger x), (Numbers'toBigInteger y))
@@ -9008,14 +9104,14 @@
 
         (#_"Number" Ops'''divide [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
             (let [#_"BigInteger" n (Numbers'toBigInteger x) #_"BigInteger" d (Numbers'toBigInteger y)]
-                (when-not (clojure.core/= d BigInteger/ZERO) => (throw (ArithmeticException. "Divide by zero"))
+                (when-not (-/= d BigInteger/ZERO) => (throw (ArithmeticException. "Divide by zero"))
                     (let [#_"BigInteger" gcd (.gcd n, d)]
-                        (when-not (clojure.core/= gcd BigInteger/ZERO) => BigInteger/ZERO
+                        (when-not (-/= gcd BigInteger/ZERO) => BigInteger/ZERO
                             (let [n (.divide n, gcd) d (.divide d, gcd)]
-                                (condp clojure.core/= d
+                                (condp -/= d
                                     BigInteger/ONE           n
                                     (.negate BigInteger/ONE) (.negate n)
-                                                             (Ratio'new (if (clojure.core/< (.signum d) 0) (.negate n) n), (if (clojure.core/< (.signum d) 0) (.negate d) d))
+                                                             (Ratio'new (if (-/< (.signum d) 0) (.negate n) n), (if (-/< (.signum d) 0) (.negate d) d))
                                 )
                             )
                         )
@@ -9034,7 +9130,7 @@
     )
 )
 
-(value-ns Numbers
+(about #_"Numbers"
     (def #_"LongOps"       Numbers'LONG_OPS       (LongOps'new)      )
     (def #_"RatioOps"      Numbers'RATIO_OPS      (RatioOps'new)     )
     (def #_"BigIntOps"     Numbers'BIGINT_OPS     (BigIntOps'new)    )
@@ -9135,23 +9231,23 @@
         )
     )
 
-    (defn #_"long" Numbers'not [#_"Object" x] (clojure.core/bit-not (Numbers'bitOpsCast x)))
+    (defn #_"long" Numbers'not [#_"Object" x] (-/bit-not (Numbers'bitOpsCast x)))
 
-    (defn #_"long" Numbers'and [#_"Object" x, #_"Object" y] (clojure.core/bit-and (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
-    (defn #_"long" Numbers'or  [#_"Object" x, #_"Object" y] (clojure.core/bit-or (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
-    (defn #_"long" Numbers'xor [#_"Object" x, #_"Object" y] (clojure.core/bit-xor (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'and [#_"Object" x, #_"Object" y] (-/bit-and (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'or  [#_"Object" x, #_"Object" y] (-/bit-or (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'xor [#_"Object" x, #_"Object" y] (-/bit-xor (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
 
-    (defn #_"long" Numbers'andNot [#_"Object" x, #_"Object" y] (clojure.core/bit-and (Numbers'bitOpsCast x) (clojure.core/bit-not (Numbers'bitOpsCast y))))
+    (defn #_"long" Numbers'andNot [#_"Object" x, #_"Object" y] (-/bit-and (Numbers'bitOpsCast x) (-/bit-not (Numbers'bitOpsCast y))))
 
-    (defn #_"long" Numbers'shiftLeft          [#_"Object" x, #_"Object" n] (clojure.core/bit-shift-left (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
-    (defn #_"long" Numbers'shiftRight         [#_"Object" x, #_"Object" n] (clojure.core/bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
-    (defn #_"long" Numbers'unsignedShiftRight [#_"Object" x, #_"Object" n] (clojure.core/unsigned-bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'shiftLeft          [#_"Object" x, #_"Object" n] (-/bit-shift-left (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'shiftRight         [#_"Object" x, #_"Object" n] (-/bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'unsignedShiftRight [#_"Object" x, #_"Object" n] (-/unsigned-bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
 
-    (defn #_"long" Numbers'clearBit [#_"Object" x, #_"Object" n] (clojure.core/bit-and (Numbers'bitOpsCast x) (clojure.core/bit-not (clojure.core/bit-shift-left 1 (Numbers'bitOpsCast n)))))
-    (defn #_"long" Numbers'setBit   [#_"Object" x, #_"Object" n] (clojure.core/bit-or (Numbers'bitOpsCast x) (clojure.core/bit-shift-left 1 (Numbers'bitOpsCast n))))
-    (defn #_"long" Numbers'flipBit  [#_"Object" x, #_"Object" n] (clojure.core/bit-xor (Numbers'bitOpsCast x) (clojure.core/bit-shift-left 1 (Numbers'bitOpsCast n))))
+    (defn #_"long" Numbers'clearBit [#_"Object" x, #_"Object" n] (-/bit-and (Numbers'bitOpsCast x) (-/bit-not (-/bit-shift-left 1 (Numbers'bitOpsCast n)))))
+    (defn #_"long" Numbers'setBit   [#_"Object" x, #_"Object" n] (-/bit-or (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))))
+    (defn #_"long" Numbers'flipBit  [#_"Object" x, #_"Object" n] (-/bit-xor (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))))
 
-    (defn #_"boolean" Numbers'testBit [#_"Object" x, #_"Object" n] (clojure.core/not= (clojure.core/bit-and (Numbers'bitOpsCast x) (clojure.core/bit-shift-left 1 (Numbers'bitOpsCast n))) 0))
+    (defn #_"boolean" Numbers'testBit [#_"Object" x, #_"Object" n] (-/not= (-/bit-and (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))) 0))
 )
 )
 
@@ -9351,9 +9447,9 @@
  ;;
 (defn odd? [n] (not (even? n)))
 
-(arbace-ns AFn
+(about #_"cloiure.core.AFn"
 
-(value-ns AFn
+(about #_"AFn"
     (declare Compiler'demunge)
 
     (defn #_"void" AFn'throwArity [#_"IFn" f, #_"int" n]
@@ -9377,7 +9473,7 @@
     )
 
     (defn #_"Object" AFn'applyToHelper [#_"IFn" f, #_"ISeq" s]
-        (case (count' s (inc 9))
+        (case (count s (inc 9))
             0                                           (IFn'''invoke f)
             1 (let [[a1] s]                             (IFn'''invoke f, a1))
             2 (let [[a1 a2] s]                          (IFn'''invoke f, a1, a2))
@@ -9400,9 +9496,11 @@
 )
 )
 
-(arbace-ns Symbol
+(about #_"cloiure.core.Symbol"
 
-(class-ns Symbol [AFn #_"Comparable" IFn Hashed IMeta INamed IObj IObject]
+(about #_"Symbol"
+    (defr Symbol [AFn #_"Comparable" IFn Hashed IMeta INamed IObj IObject])
+
     (defn- #_"Symbol" Symbol'new
         ([#_"String" ns, #_"String" name] (Symbol'new nil, ns, name))
         ([#_"IPersistentMap" meta, #_"String" ns, #_"String" name]
@@ -9495,9 +9593,11 @@
 )
 )
 
-(arbace-ns Keyword
+(about #_"cloiure.core.Keyword"
 
-(class-ns Keyword [AFn #_"Comparable" IFn Hashed INamed IObject]
+(about #_"Keyword"
+    (defr Keyword [AFn #_"Comparable" IFn Hashed INamed IObject])
+
     (def- #_"{Symbol Reference<Keyword>}'" Keyword'cache (atom {}))
     (def- #_"ReferenceQueue" Keyword'queue (ReferenceQueue.))
 
@@ -9579,9 +9679,11 @@
 )
 )
 
-(arbace-ns Fn
+(about #_"cloiure.core.Fn"
 
-(class-ns Fn [AFn #_"Comparator" IFn]
+(about #_"Fn"
+    (defr Fn [AFn #_"Comparator" IFn])
+
     (defn #_"Fn" Fn'new []
         (merge (Fn'class.)
             (hash-map
@@ -9602,9 +9704,11 @@
 )
 )
 
-(arbace-ns RestFn
+(about #_"cloiure.core.RestFn"
 
-(class-ns RestFn [#_"Fn" #_"Comparator" IFn IRestFn]
+(about #_"RestFn"
+    (defr RestFn [#_"Fn" #_"Comparator" IFn IRestFn])
+
     (defn #_"RestFn" RestFn'new []
         (merge (RestFn'class.) (Fn'new))
     )
@@ -9626,7 +9730,7 @@
 
     (defm RestFn IFn
         (#_"Object" IFn'''applyTo [#_"RestFn" this, #_"ISeq" s]
-            (let-when [#_"int" n (IRestFn'''requiredArity this)] (< n (count' s (inc n))) => (AFn'applyToHelper this, s)
+            (let-when [#_"int" n (IRestFn'''requiredArity this)] (< n (count s (inc n))) => (AFn'applyToHelper this, s)
                 (case n
                     0                                           (IRestFn'''doInvoke this, s)
                     1 (let [[a1 & s] s]                         (IRestFn'''doInvoke this, a1, s))
@@ -9779,9 +9883,9 @@
 )
 )
 
-(arbace-ns ASeq
+(about #_"cloiure.core.ASeq"
 
-(value-ns ASeq
+(about #_"ASeq"
     (defm arbace.core.ASeq IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''empty [#_"ASeq" this]
             ()
@@ -9820,9 +9924,11 @@
 )
 )
 
-(arbace-ns LazySeq
+(about #_"cloiure.core.LazySeq"
 
-(class-ns LazySeq [Hashed IMeta IObj IObject IPending IPersistentCollection ISeq Seqable Sequential]
+(about #_"LazySeq"
+    (defr LazySeq [Hashed IMeta IObj IObject IPending IPersistentCollection ISeq Seqable Sequential])
+
     (defn- #_"LazySeq" LazySeq'init [#_"IPersistentMap" meta, #_"IFn" f, #_"ISeq" s]
         (merge (LazySeq'class.)
             (hash-map
@@ -9920,9 +10026,11 @@
 )
 )
 
-(arbace-ns APersistentMap
+(about #_"cloiure.core.APersistentMap"
 
-(class-ns APersistentMap [AFn Associative Counted IFn Hashed ILookup IObject IPersistentCollection IPersistentMap Seqable]
+(about #_"APersistentMap"
+    (defr APersistentMap [AFn Associative Counted IFn Hashed ILookup IObject IPersistentCollection IPersistentMap Seqable])
+
     (defn #_"APersistentMap" APersistentMap'new []
         (APersistentMap'class.)
     )
@@ -9952,7 +10060,7 @@
         )
     )
 
-    (defm APersistentMap IObject
+    (defm APersistentMap IObject
         (#_"boolean" IObject'''equals [#_"APersistentMap" this, #_"Object" that]
             (or (identical? this that)
                 (and (map? that) (= (count that) (count this))
@@ -9983,9 +10091,11 @@
 )
 )
 
-(arbace-ns APersistentSet
+(about #_"cloiure.core.APersistentSet"
 
-(class-ns APersistentSet [AFn Counted IFn Hashed IObject IPersistentCollection IPersistentSet Seqable]
+(about #_"APersistentSet"
+    (defr APersistentSet [AFn Counted IFn Hashed IObject IPersistentCollection IPersistentSet Seqable])
+
     (defn #_"APersistentSet" APersistentSet'new [#_"IPersistentMap" impl]
         (merge (APersistentSet'class.)
             (hash-map
@@ -10029,7 +10139,7 @@
         )
     )
 
-    (defm APersistentSet IObject
+    (defm APersistentSet IObject
         (#_"boolean" IObject'''equals [#_"APersistentSet" this, #_"Object" that]
             (or (identical? this that)
                 (and (set? that) (= (count this) (count that))
@@ -10049,9 +10159,11 @@
 )
 )
 
-(arbace-ns APersistentVector
+(about #_"cloiure.core.APersistentVector"
 
-(class-ns VSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"VSeq"
+    (defr VSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (defn #_"VSeq" VSeq'new
         ([#_"IPersistentVector" v, #_"int" i] (VSeq'new nil, v, i))
         ([#_"IPersistentMap" meta, #_"IPersistentVector" v, #_"int" i]
@@ -10120,7 +10232,9 @@
     )
 )
 
-(class-ns RSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"RSeq"
+    (defr RSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"RSeq" RSeq'new
         ([#_"IPersistentVector" v, #_"int" i] (RSeq'new nil, v, i))
         ([#_"IPersistentMap" meta, #_"IPersistentVector" v, #_"int" i]
@@ -10166,7 +10280,9 @@
     )
 )
 
-(class-ns APersistentVector [AFn Associative #_"Comparable" Counted IFn Hashed ILookup Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential]
+(about #_"APersistentVector"
+    (defr APersistentVector [AFn Associative #_"Comparable" Counted IFn Hashed ILookup Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+
     (defn #_"APersistentVector" APersistentVector'new []
         (APersistentVector'class.)
     )
@@ -10193,7 +10309,7 @@
         )
     )
 
-    (defm APersistentVector IObject
+    (defm APersistentVector IObject
         (#_"boolean" IObject'''equals [#_"APersistentVector" this, #_"Object" that]
             (or (identical? this that)
                 (cond
@@ -10292,7 +10408,9 @@
     )
 )
 
-(class-ns SubVector [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential]
+(about #_"SubVector"
+    (defr SubVector [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+
     (defn #_"SubVector" SubVector'new [#_"IPersistentMap" meta, #_"IPersistentVector" v, #_"int" start, #_"int" end]
         (let [[v start end]
                 (when (satisfies? SubVector v) => [v start end]
@@ -10377,9 +10495,11 @@
 )
 )
 
-(arbace-ns AMapEntry
+(about #_"cloiure.core.AMapEntry"
 
-(class-ns AMapEntry [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential]
+(about #_"AMapEntry"
+    (defr AMapEntry [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+
     (defn #_"AMapEntry" AMapEntry'new []
         (merge (AMapEntry'class.) (APersistentVector'new))
     )
@@ -10439,9 +10559,11 @@
 )
 )
 
-(arbace-ns MapEntry
+(about #_"cloiure.core.MapEntry"
 
-(class-ns MapEntry [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential]
+(about #_"MapEntry"
+    (defr MapEntry [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+
     (defn- #_"MapEntry" MapEntry'new [#_"Object" key, #_"Object" val]
         (merge (MapEntry'class.) (AMapEntry'new)
             (hash-map
@@ -10467,9 +10589,11 @@
 )
 )
 
-(arbace-ns ArraySeq
+(about #_"cloiure.core.ArraySeq"
 
-(class-ns ArraySeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"ArraySeq"
+    (defr ArraySeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (defn #_"ArraySeq" ArraySeq'new
         ([#_"Object[]" a, #_"int" i] (ArraySeq'new nil, a, i))
         ([#_"IPersistentMap" meta, #_"Object[]" a, #_"int" i]
@@ -10502,7 +10626,7 @@
         )
     )
 
-    (extend-protocol Seqable Object'array
+    (-/extend-protocol Seqable Object'array
         (#_"ArraySeq" Seqable'''seq [#_"Object[]" a] (ArraySeq'create a))
     )
 
@@ -10553,9 +10677,11 @@
 )
 )
 
-(arbace-ns ATransientMap
+(about #_"cloiure.core.ATransientMap"
 
-(class-ns ATransientMap [AFn Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap]
+(about #_"ATransientMap"
+    (defr ATransientMap [AFn Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+
     (defn #_"ATransientMap" ATransientMap'new []
         (ATransientMap'class.)
     )
@@ -10618,7 +10744,7 @@
 
     (def- #_"Object" ATransientMap'NOT_FOUND (Object.))
 
-    (defm ATransientMap ITransientAssociative
+    (defm ATransientMap ITransientAssociative
         (#_"boolean" ITransientAssociative'''containsKey [#_"ATransientMap" this, #_"Object" key]
             (not (identical? (get this key ATransientMap'NOT_FOUND) ATransientMap'NOT_FOUND))
         )
@@ -10641,9 +10767,11 @@
 )
 )
 
-(arbace-ns ATransientSet
+(about #_"cloiure.core.ATransientSet"
 
-(class-ns ATransientSet [AFn Counted IFn ITransientCollection ITransientSet]
+(about #_"ATransientSet"
+    (defr ATransientSet [AFn Counted IFn ITransientCollection ITransientSet])
+
     (defn #_"ATransientSet" ATransientSet'new [#_"ITransientMap" impl]
         (merge (ATransientSet'class.)
             (hash-map
@@ -10695,9 +10823,11 @@
 )
 )
 
-(arbace-ns Cons
+(about #_"cloiure.core.Cons"
 
-(class-ns Cons [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"Cons"
+    (defr Cons [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"Cons" Cons'new
         ([#_"Object" _first, #_"ISeq" _more] (Cons'new nil, _first, _more))
         ([#_"IPersistentMap" meta, #_"Object" _first, #_"ISeq" _more]
@@ -10742,9 +10872,11 @@
 )
 )
 
-(arbace-ns Delay
+(about #_"cloiure.core.Delay"
 
-(class-ns Delay [IDeref IPending]
+(about #_"Delay"
+    (defr Delay [IDeref IPending])
+
     (defn #_"Delay" Delay'new [#_"IFn" f]
         (merge (Delay'class.)
             (hash-map
@@ -10792,9 +10924,11 @@
 )
 )
 
-(arbace-ns Iterate
+(about #_"cloiure.core.Iterate"
 
-(class-ns Iterate [ASeq Hashed IMeta IObj IObject IPending IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"Iterate"
+    (defr Iterate [ASeq Hashed IMeta IObj IObject IPending IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (def- #_"Object" Iterate'UNREALIZED_SEED (Object.))
 
     (defn- #_"Iterate" Iterate'new
@@ -10866,9 +11000,11 @@
 )
 )
 
-(arbace-ns KeywordLookupSite
+(about #_"cloiure.core.KeywordLookupSite"
 
-(class-ns KeywordLookupSite [ILookupSite ILookupThunk]
+(about #_"KeywordLookupSite"
+    (defr KeywordLookupSite [ILookupSite ILookupThunk])
+
     (defn #_"KeywordLookupSite" KeywordLookupSite'new [#_"Keyword" k]
         (merge (KeywordLookupSite'class.)
             (hash-map
@@ -10908,9 +11044,11 @@
 )
 )
 
-(arbace-ns MethodImplCache
+(about #_"cloiure.core.MethodImplCache"
 
-(class-ns MethodImplCache []
+(about #_"MethodImplCache"
+    (defr MethodImplCache [])
+
     (defn #_"MethodImplCache" MethodImplCache'new [#_"IPersistentMap" protocol, #_"Keyword" methodk]
         (merge (MethodImplCache'class.)
             (hash-map
@@ -10930,9 +11068,11 @@
 )
 )
 
-(arbace-ns Namespace
+(about #_"cloiure.core.Namespace"
 
-(class-ns Namespace [IObject]
+(about #_"Namespace"
+    (defr Namespace [IObject])
+
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom {}))
 
     (defn #_"Namespace" Namespace'new [#_"Symbol" name]
@@ -11113,9 +11253,11 @@
 )
 )
 
-(arbace-ns PersistentArrayMap
+(about #_"cloiure.core.PersistentArrayMap"
 
-(class-ns MSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"MSeq"
+    (defr MSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"MSeq" MSeq'new
         ([#_"Object[]" a, #_"int" i] (MSeq'new nil, a, i))
         ([#_"IPersistentMap" meta, #_"Object[]" a, #_"int" i]
@@ -11168,7 +11310,9 @@
  ; Copies array on every change, so only appropriate for _very_small_ maps. nil keys and values are
  ; ok, but you won't be able to distinguish a nil value via valAt, use contains/entryAt for that.
  ;;
-(class-ns PersistentArrayMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable]
+(about #_"PersistentArrayMap"
+    (defr PersistentArrayMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable])
+
     (def #_"int" PersistentArrayMap'HASHTABLE_THRESHOLD 16)
 
     (defn #_"PersistentArrayMap" PersistentArrayMap'new
@@ -11296,7 +11440,7 @@
 
     (declare PersistentHashMap'create-1a)
 
-    (defm PersistentArrayMap Associative
+    (defm PersistentArrayMap Associative
         (#_"IPersistentMap" Associative'''assoc [#_"PersistentArrayMap" this, #_"Object" key, #_"Object" val]
             (let [#_"int" i (PersistentArrayMap''indexOf this, key)]
                 (if (<= 0 i) ;; already have key, same-sized replacement
@@ -11390,7 +11534,9 @@
     )
 )
 
-(class-ns TransientArrayMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap]
+(about #_"TransientArrayMap"
+    (defr TransientArrayMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+
     (defn #_"TransientArrayMap" TransientArrayMap'new [#_"Object[]" a]
         (let [#_"int" n (count a)]
             (merge (TransientArrayMap'class.) (ATransientMap'new)
@@ -11467,9 +11613,11 @@
 )
 )
 
-(arbace-ns PersistentHashMap
+(about #_"cloiure.core.PersistentHashMap"
 
-(class-ns HSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"HSeq"
+    (defr HSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn- #_"HSeq" HSeq'new [#_"IPersistentMap" meta, #_"INode[]" nodes, #_"int" i, #_"ISeq" s]
         (merge (HSeq'class.)
             (hash-map
@@ -11521,7 +11669,9 @@
     )
 )
 
-(class-ns NodeSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"NodeSeq"
+    (defr NodeSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"NodeSeq" NodeSeq'new
         ([#_"Object[]" a, #_"int" i] (NodeSeq'new nil, a, i, nil))
         ([#_"IPersistentMap" meta, #_"Object[]" a, #_"int" i, #_"ISeq" s]
@@ -11602,7 +11752,7 @@
     )
 )
 
-(value-ns PersistentHashMap
+(about #_"PersistentHashMap"
     (defn #_"int" PersistentHashMap'mask [#_"int" hash, #_"int" shift]
         (& (>>> hash shift) 0x1f)
     )
@@ -11623,7 +11773,9 @@
     )
 )
 
-(class-ns ArrayNode [INode]
+(about #_"ArrayNode"
+    (defr ArrayNode [INode])
+
     (defn #_"ArrayNode" ArrayNode'new [#_"Thread'" edit, #_"int" n, #_"INode[]" a]
         (merge (ArrayNode'class.)
             (hash-map
@@ -11681,7 +11833,7 @@
         )
     )
 
-    (defm ArrayNode INode
+    (defm ArrayNode INode
         (#_"INode" INode'''dissoc [#_"ArrayNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
             (let-when [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)] (some? ai) => this
                 (let-when-not [#_"INode" node (INode'''dissoc ai, (+ shift 5), hash, key)] (= node ai) => this
@@ -11743,7 +11895,7 @@
         )
     )
 
-    (defm ArrayNode INode
+    (defm ArrayNode INode
         (#_"INode" INode'''assocT [#_"ArrayNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)]
                 (if (some? ai)
@@ -11773,7 +11925,9 @@
     )
 )
 
-(class-ns BitmapIndexedNode [INode]
+(about #_"BitmapIndexedNode"
+    (defr BitmapIndexedNode [INode])
+
     (defn #_"BitmapIndexedNode" BitmapIndexedNode'new [#_"Thread'" edit, #_"int" bitmap, #_"Object[]" a]
         (merge (BitmapIndexedNode'class.)
             (hash-map
@@ -11971,7 +12125,7 @@
         )
     )
 
-    (defm BitmapIndexedNode INode
+    (defm BitmapIndexedNode INode
         (#_"INode" INode'''assocT [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" idx (BitmapIndexedNode''index this, bit)]
                 (if-not (zero? (& (:bitmap this) bit))
@@ -12066,7 +12220,9 @@
     )
 )
 
-(class-ns HashCollisionNode [INode]
+(about #_"HashCollisionNode"
+    (defr HashCollisionNode [INode])
+
     (defn #_"HashCollisionNode" HashCollisionNode'new [#_"Thread'" edit, #_"int" hash, #_"int" n & #_"Object..." a]
         (merge (HashCollisionNode'class.)
             (hash-map
@@ -12174,7 +12330,7 @@
         )
     )
 
-    (defm HashCollisionNode INode
+    (defm HashCollisionNode INode
         (#_"INode" INode'''assocT [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (if (= hash (:hash this))
                 (let [#_"int" i (HashCollisionNode''findIndex this, key)]
@@ -12225,7 +12381,9 @@
     )
 )
 
-(class-ns TransientHashMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap]
+(about #_"TransientHashMap"
+    (defr TransientHashMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+
     (defn #_"TransientHashMap" TransientHashMap'new
         ([#_"PersistentHashMap" m]
             (TransientHashMap'new (atom (thread)), (:root m), (:n m), (:hasNull m), (:nullValue m))
@@ -12317,7 +12475,9 @@
  ;
  ; Any errors are my own.
  ;;
-(class-ns PersistentHashMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable]
+(about #_"PersistentHashMap"
+    (defr PersistentHashMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable])
+
     (defn #_"PersistentHashMap" PersistentHashMap'new
         ([#_"int" n, #_"INode" root, #_"boolean" hasNull, #_"Object" nullValue] (PersistentHashMap'new nil, n, root, hasNull, nullValue))
         ([#_"IPersistentMap" meta, #_"int" n, #_"INode" root, #_"boolean" hasNull, #_"Object" nullValue]
@@ -12418,7 +12578,7 @@
         )
     )
 
-    (defm PersistentHashMap Associative
+    (defm PersistentHashMap Associative
         (#_"IPersistentMap" Associative'''assoc [#_"PersistentHashMap" this, #_"Object" key, #_"Object" val]
             (if (nil? key)
                 (when-not (and (:hasNull this) (= val (:nullValue this))) => this
@@ -12511,9 +12671,11 @@
 )
 )
 
-(arbace-ns PersistentHashSet
+(about #_"cloiure.core.PersistentHashSet"
 
-(class-ns TransientHashSet [#_"ATransientSet" Counted IFn ITransientCollection ITransientSet]
+(about #_"TransientHashSet"
+    (defr TransientHashSet [#_"ATransientSet" Counted IFn ITransientCollection ITransientSet])
+
     (defn #_"TransientHashSet" TransientHashSet'new [#_"ITransientMap" impl]
         (merge (TransientHashSet'class.) (ATransientSet'new impl))
     )
@@ -12527,7 +12689,9 @@
     )
 )
 
-(class-ns PersistentHashSet [#_"APersistentSet" Counted IEditableCollection IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Seqable]
+(about #_"PersistentHashSet"
+    (defr PersistentHashSet [#_"APersistentSet" Counted IEditableCollection IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Seqable])
+
     (defn #_"PersistentHashSet" PersistentHashSet'new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
         (merge (PersistentHashSet'class.) (APersistentSet'new impl)
             (hash-map
@@ -12622,9 +12786,11 @@
 )
 )
 
-(arbace-ns PersistentList
+(about #_"cloiure.core.PersistentList"
 
-(class-ns EmptyList [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack ISeq Seqable Sequential]
+(about #_"EmptyList"
+    (defr EmptyList [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack ISeq Seqable Sequential])
+
     (def #_"int" EmptyList'HASH (§ soon Murmur3'hashOrdered nil))
 
     (defn #_"EmptyList" EmptyList'new [#_"IPersistentMap" meta]
@@ -12710,7 +12876,9 @@
     )
 )
 
-(class-ns PersistentList [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack IReduce ISeq Seqable Sequential]
+(about #_"PersistentList"
+    (defr PersistentList [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack IReduce ISeq Seqable Sequential])
+
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new nil))
 
     (defn #_"PersistentList" PersistentList'new
@@ -12807,9 +12975,11 @@
 )
 )
 
-(arbace-ns PersistentQueue
+(about #_"cloiure.core.PersistentQueue"
 
-(class-ns QSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"QSeq"
+    (defr QSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"QSeq" QSeq'new
         ([#_"ISeq" f, #_"ISeq" rseq] (QSeq'new nil, f, rseq))
         ([#_"IPersistentMap" meta, #_"ISeq" f, #_"ISeq" rseq]
@@ -12865,7 +13035,9 @@
  ; Differs in that, it uses a PersistentVector as the rear, which is in-order,
  ; so no reversing or suspensions required for persistent use.
  ;;
-(class-ns PersistentQueue [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack Seqable Sequential]
+(about #_"PersistentQueue"
+    (defr PersistentQueue [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack Seqable Sequential])
+
     (defn #_"PersistentQueue" PersistentQueue'new [#_"IPersistentMap" meta, #_"int" cnt, #_"ISeq" f, #_"PersistentVector" r]
         (merge (PersistentQueue'class.)
             (hash-map
@@ -12961,9 +13133,11 @@
 )
 )
 
-(arbace-ns PersistentTreeMap
+(about #_"cloiure.core.PersistentTreeMap"
 
-(class-ns TNode [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"TNode"
+    (defr TNode [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"TNode" TNode'new [#_"Object" key]
         (merge (TNode'class.) (AMapEntry'new)
             (hash-map
@@ -13024,7 +13198,9 @@
     )
 )
 
-(class-ns Black [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"Black"
+    (defr Black [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"Black" Black'new [#_"Object" key]
         (merge (Black'class.) (TNode'new key))
     )
@@ -13064,7 +13240,9 @@
     )
 )
 
-(class-ns BlackVal [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"BlackVal"
+    (defr BlackVal [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"BlackVal" BlackVal'new [#_"Object" key, #_"Object" val]
         (merge (BlackVal'class.) (Black'new key)
             (hash-map
@@ -13088,7 +13266,9 @@
     )
 )
 
-(class-ns BlackBranch [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"BlackBranch"
+    (defr BlackBranch [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"BlackBranch" BlackBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
         (merge (BlackBranch'class.) (Black'new key)
             (hash-map
@@ -13115,7 +13295,9 @@
     )
 )
 
-(class-ns BlackBranchVal [#_"BlackBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"BlackBranchVal"
+    (defr BlackBranchVal [#_"BlackBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"BlackBranchVal" BlackBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
         (merge (BlackBranchVal'class.) (BlackBranch'new key, left, right)
             (hash-map
@@ -13139,7 +13321,9 @@
     )
 )
 
-(class-ns Red [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"Red"
+    (defr Red [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"Red" Red'new [#_"Object" key]
         (merge (Red'class.) (TNode'new key))
     )
@@ -13177,7 +13361,9 @@
     )
 )
 
-(class-ns RedVal [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"RedVal"
+    (defr RedVal [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"RedVal" RedVal'new [#_"Object" key, #_"Object" val]
         (merge (RedVal'class.) (Red'new key)
             (hash-map
@@ -13199,7 +13385,9 @@
     )
 )
 
-(class-ns RedBranch [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"RedBranch"
+    (defr RedBranch [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"RedBranch" RedBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
         (merge (RedBranch'class.) (Red'new key)
             (hash-map
@@ -13256,7 +13444,9 @@
     )
 )
 
-(class-ns RedBranchVal [#_"RedBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential]
+(about #_"RedBranchVal"
+    (defr RedBranchVal [#_"RedBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+
     (defn #_"RedBranchVal" RedBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
         (merge (RedBranchVal'class.) (RedBranch'new key, left, right)
             (hash-map
@@ -13278,7 +13468,9 @@
     )
 )
 
-(class-ns TSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential]
+(about #_"TSeq"
+    (defr TSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+
     (defn #_"TSeq" TSeq'new
         ([#_"ISeq" stack, #_"boolean" asc?] (TSeq'new stack, asc?, -1))
         ([#_"ISeq" stack, #_"boolean" asc?, #_"int" cnt] (TSeq'new nil, stack, asc?, cnt))
@@ -13348,7 +13540,9 @@
  ;
  ; See Okasaki, Kahrs, Larsen, et al.
  ;;
-(class-ns PersistentTreeMap [#_"APersistentMap" Associative Counted IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Reversible Seqable Sorted]
+(about #_"PersistentTreeMap"
+    (defr PersistentTreeMap [#_"APersistentMap" Associative Counted IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Reversible Seqable Sorted])
+
     (defn #_"PersistentTreeMap" PersistentTreeMap'new
         ([] (PersistentTreeMap'new compare))
         ([#_"Comparator" cmp] (PersistentTreeMap'new nil, cmp))
@@ -13436,7 +13630,7 @@
         (.compare (:cmp this), k1, k2)
     )
 
-    (defm PersistentTreeMap Sorted
+    (defm PersistentTreeMap Sorted
         (#_"Object" Sorted'''entryKey [#_"PersistentTreeMap" this, #_"Object" entry]
             (key entry)
         )
@@ -13525,7 +13719,7 @@
         )
     )
 
-    (defm PersistentTreeMap Associative
+    (defm PersistentTreeMap Associative
         (#_"TNode" Associative'''entryAt [#_"PersistentTreeMap" this, #_"Object" key]
             (loop-when [#_"TNode" t (:tree this)] (some? t) => t
                 (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
@@ -13698,7 +13892,7 @@
         )
     )
 
-    (defm PersistentTreeMap Associative
+    (defm PersistentTreeMap Associative
         (#_"PersistentTreeMap" Associative'''assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
             (let [#_"Atom" found (atom nil) #_"TNode" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
                 (if (nil? t)
@@ -13728,9 +13922,11 @@
 )
 )
 
-(arbace-ns PersistentTreeSet
+(about #_"cloiure.core.PersistentTreeSet"
 
-(class-ns PersistentTreeSet [#_"APersistentSet" Counted IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Reversible Seqable Sorted]
+(about #_"PersistentTreeSet"
+    (defr PersistentTreeSet [#_"APersistentSet" Counted IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Reversible Seqable Sorted])
+
     (defn #_"PersistentTreeSet" PersistentTreeSet'new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
         (merge (PersistentTreeSet'class.) (APersistentSet'new impl)
             (hash-map
@@ -13806,11 +14002,13 @@
 )
 )
 
-(arbace-ns PersistentVector
+(about #_"cloiure.core.PersistentVector"
 
 (def- value-array object-array)
 
-(class-ns VNode []
+(about #_"VNode"
+    (defr VNode [])
+
     (defn #_"VNode" VNode'new [#_"Thread'" edit, #_"Object[]" array]
         (merge (VNode'class.)
             (hash-map
@@ -13937,7 +14135,9 @@
     )
 )
 
-(class-ns TransientVector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector]
+(about #_"TransientVector"
+    (defr TransientVector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector])
+
     (defn #_"TransientVector" TransientVector'new
         ([#_"PersistentVector" v]
             (TransientVector'new (:cnt v), (:shift v), (VNode''editableRoot (:root v)), (VNode'editableTail (:tail v)))
@@ -14082,7 +14282,7 @@
         )
     )
 
-    (defm TransientVector ITransientVector
+    (defm TransientVector ITransientVector
         (#_"TransientVector" ITransientVector'''pop! [#_"TransientVector" this]
             (VNode''assertEditable (:root this))
             (cond
@@ -14122,7 +14322,7 @@
 
     (declare PersistentVector'new)
 
-    (defm TransientVector ITransientCollection
+    (defm TransientVector ITransientCollection
         (#_"PersistentVector" ITransientCollection'''persistent! [#_"TransientVector" this]
             (VNode''assertEditable (:root this))
             (reset! (:edit (:root this)) nil)
@@ -14135,7 +14335,9 @@
     )
 )
 
-(class-ns PersistentVector [#_"APersistentVector" Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IReduce Reversible Seqable Sequential]
+(about #_"PersistentVector"
+    (defr PersistentVector [#_"APersistentVector" Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IReduce Reversible Seqable Sequential])
+
     (defn #_"PersistentVector" PersistentVector'new
         ([#_"int" cnt, #_"int" shift, #_"VNode" root, #_"values" tail] (PersistentVector'new nil, cnt, shift, root, tail))
         ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"VNode" root, #_"values" tail]
@@ -14386,9 +14588,9 @@
 )
 )
 
-(arbace-ns LazilyPersistentVector
+(about #_"cloiure.core.LazilyPersistentVector"
 
-(value-ns LazilyPersistentVector
+(about #_"LazilyPersistentVector"
     (defn #_"IPersistentVector" LazilyPersistentVector'createOwning [& #_"Object..." items]
         (if (<= (count items) 32)
             (PersistentVector'new (count items), 5, VNode'EMPTY, items)
@@ -14444,9 +14646,11 @@
     )
 )
 
-(arbace-ns Repeat
+(about #_"cloiure.core.Repeat"
 
-(class-ns Repeat [ASeq Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"Repeat"
+    (defr Repeat [ASeq Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (def- #_"long" Repeat'INFINITE -1)
 
     (defn- #_"Repeat" Repeat'new
@@ -14530,12 +14734,14 @@
 )
 )
 
-(arbace-ns Range
+(about #_"cloiure.core.Range"
 
 ;;;
  ; Implements generic numeric (potentially infinite) range.
  ;;
-(class-ns Range [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"Range"
+    (defr Range [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (defn- #_"RangeBoundsCheck" Range'positiveStep [#_"Object" end]
         (reify RangeBoundsCheck
             (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
@@ -14646,9 +14852,11 @@
 )
 )
 
-(arbace-ns StringSeq
+(about #_"cloiure.core.StringSeq"
 
-(class-ns StringSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential]
+(about #_"StringSeq"
+    (defr StringSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+
     (defn- #_"StringSeq" StringSeq'new [#_"IPersistentMap" meta, #_"CharSequence" s, #_"int" i]
         (merge (StringSeq'class.)
             (hash-map
@@ -14680,7 +14888,7 @@
         )
     )
 
-    (extend-protocol Seqable CharSequence
+    (-/extend-protocol Seqable CharSequence
         (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (StringSeq'create s))
     )
 
@@ -14725,9 +14933,9 @@
 )
 )
 
-(arbace-ns Tuple
+(about #_"cloiure.core.Tuple"
 
-(value-ns Tuple
+(about #_"Tuple"
     (def #_"int" Tuple'MAX_SIZE 6)
 
     (defn #_"IPersistentVector" Tuple'create
@@ -14742,9 +14950,11 @@
 )
 )
 
-(arbace-ns Var
+(about #_"cloiure.core.Var"
 
-(class-ns Unbound [AFn IFn IObject]
+(about #_"Unbound"
+    (defr Unbound [AFn IFn IObject])
+
     (defn #_"Unbound" Unbound'new [#_"Namespace" ns, #_"Symbol" sym]
         (merge (Unbound'class.)
             (hash-map
@@ -14763,7 +14973,9 @@
     )
 )
 
-(class-ns Var [IDeref IFn IMeta IObject IReference]
+(about #_"Var"
+    (defr Var [IDeref IFn IMeta IObject IReference])
+
     (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
 
     (defn #_"Var" Var'find [#_"Symbol" sym]
@@ -14963,9 +15175,9 @@
 )
 )
 
-(arbace-ns RT
+(about #_"cloiure.core.RT"
 
-(value-ns RT
+(about #_"RT"
     (defn #_"Object" RT'seqOrElse [#_"Object" o]
         (when (some? (seq o))
             o
@@ -15402,7 +15614,7 @@
 )
 )
 
-(cloiure-ns arbace.core
+(about #_"cloiure.core"
 
 (declare remove)
 
@@ -16176,7 +16388,7 @@
 ;;;
  ; Returns a vector of [(take n coll) (drop n coll)].
  ;;
-(§ defn split-at [n s] [(take n s) (drop n s)])
+(defn split-at [n s] [(take n s) (drop n s)])
 
 ;;;
  ; Returns a vector of [(take-while f? coll) (drop-while f? coll)].
@@ -18676,7 +18888,7 @@
  ;  {:baz (fn ([x] ...) ([x y & zs] ...))
  ;   :bar (fn [x y] ...)})
  ;;
-(§ defmacro extend-type [t & specs]
+(defmacro extend-type [t & specs]
     `(extend ~t ~@(mapcat (partial emit-hinted-impl t) (parse-impls specs)))
 )
 
@@ -18716,12 +18928,12 @@
  ;   (foo [x] ...)
  ;   (bar [x y] ...)))
  ;;
-(§ defmacro extend-protocol [p & specs]
+(defmacro extend-protocol [p & specs]
     `(do ~@(map (fn [[t fs]] `(extend-type ~t ~p ~@fs)) (parse-impls specs)))
 )
 )
 
-(cloiure-ns arbace.core.protocols
+(about #_"cloiure.core.protocols"
 
 (defn- seq-reduce
     ([s f] (if-some [s (seq s)] (seq-reduce (next s) f (first s)) (f)))
@@ -18966,7 +19178,7 @@
  ; accept 2 arguments, index and item. Returns a stateful transducer when
  ; no collection is provided.
  ;;
-(§ defn map-indexed
+(defn map-indexed
     ([f]
         (fn [g]
             (let [i' (atom -1)]
@@ -19282,7 +19494,7 @@
 )
 )
 
-(cloiure-ns arbace.set
+(about #_"cloiure.set"
 
 ;;;
  ; Move a maximal element of coll according to fn k (which returns a number) to the front of coll.
@@ -19442,7 +19654,7 @@
  ; Note: "walk" supports all Arbace data structures EXCEPT maps created with
  ; sorted-map-by. There is no (obvious) way to retrieve the sorting function.
  ;;
-(cloiure-ns arbace.walk
+(about #_"cloiure.walk"
 
 ;;;
  ; Traverses form, an arbitrary data structure. inner and outer are functions.
@@ -19504,7 +19716,7 @@
 
 (defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 
-(value-ns HotSpot
+(about #_"HotSpot"
     (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
 
     (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
@@ -19520,6 +19732,6 @@
     )
 )
 
-(value-ns Arbace)
+(about #_"Arbace")
 
 (defn -main [& args])

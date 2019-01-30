@@ -6,67 +6,61 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* apply bit-and bit-or bit-shift-left bit-shift-right cons defmacro defn defprotocol defrecord doseq doto extend-type fn import into-array keys let map merge meta ns-imports ns-resolve ns-unmap object-array rem select-keys some? str symbol symbol? the-ns unsigned-bit-shift-right vary-meta when])
-    (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
+    (:refer-clojure :only [*ns* = apply cons defmacro defn doseq keys let map merge meta select-keys some? str symbol symbol? vary-meta when]) (:require [clojure.core :as -])
 )
 
+(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
+
+(import! [java.lang Error #_String System Thread])
+
 (defmacro refer! [ns s]
-    (let [f #(let [v (ns-resolve (the-ns ns) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
+    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
         (if (symbol? s) (f s) (cons 'do (map f s)))
     )
 )
 
-(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (ns-imports *ns*))] (ns-unmap *ns* n#)) (import ~@syms-or-seqs)))
+(defmacro about [& s] (cons 'do s))
 
-(import! [java.lang Class Error #_String System Thread] #_[java.lang.reflect Method] [clojure.lang Namespace Symbol])
-
-(defn #_"void" Bore'import-as [#_"Symbol" sym, #_"String" sig]
-    (doto (#_"Class" .getDeclaredMethod Namespace, "referenceClass", (into-array [Symbol Class]))
-        (#_"Method" .setAccessible true)
-        (#_"Method" .invoke *ns*, (object-array [sym (Class/forName sig)]))
-    )
-    nil
-)
-
-(defmacro import-as [& s] (cons 'do (map (fn [[sym sig]] `(Bore'import-as (quote ~sym), ~sig)) (apply ordered-map s))))
-
-(defn thread [] (Thread/currentThread))
-
-(defmacro defp [p & s] (let [i (symbol (str p "'iface"))] `(do (defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defr [r & s] (let [c (symbol (str r "'class"))] `(do (defrecord ~c [] ~r ~@s)                         ~c)))
-(defmacro defm [r p & s] (let [i `(:on-interface ~r)]     `(do (extend-type ~i ~p ~@s)                          ~i)))
-
-(defmacro class-ns [r [& s] & z] `(do (defr ~r ~@s) ~@z))
-(defmacro value-ns [_ & z] (cons 'do z))
-
-(defmacro arbace-ns  [_ & s] (cons 'do s))
-(defmacro cloiure-ns [_ & s] (cons 'do s))
+(defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (-/defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
+(defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (-/extend-type ~i ~@s)                             ~i)))
 
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
 
-(def % rem)
+(refer! - [< <= max min mod neg? pos? zero?])
 
-(def & bit-and)
-(def | bit-or)
+(def +    -/unchecked-add-int)
+(def neg  -/unchecked-negate-int)
+(def -    -/unchecked-subtract-int)
+(def inc  -/unchecked-inc-int)
+(def dec  -/unchecked-dec-int)
+(def *    -/unchecked-multiply-int)
+(def quot -/unchecked-divide-int)
+(def rem  -/unchecked-remainder-int)
 
-(def << bit-shift-left)
-(def >> bit-shift-right)
-(def >>> unsigned-bit-shift-right)
+(def &   -/bit-and)
+(def |   -/bit-or)
+(def <<  -/bit-shift-left)
+(def >>  -/bit-shift-right)
+(def >>> -/unsigned-bit-shift-right)
 
-(defn aclone [a] (when (some? a) (clojure.core/aclone a)))
+(refer! - [aget alength])
+
+(defn aclone [a]         (when (some? a) (-/aclone a)))
 (defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
-(refer! clojure.core [aget alength])
-(defn aset! [a i x] (clojure.core/aset a i x) a)
+(defn aset!  [a i x]     (-/aset a i x) a)
 (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
+(defn thread [] (Thread/currentThread))
+
 (ns arbace.wector
-    (:refer-clojure :only [* + - -> < <= = and apply assoc atom case compare concat cond condp cons #_count dec declare defn defn- dotimes drop first fn hash-map identical? if-not if-some inc int int-array integer? into last let letfn list loop map mapcat max merge min mod neg? next nil? not object-array or partition-all pos? quot reduced? rem reset! satisfies? second seq sequential? some? str symbol? take update vary-meta vec vector? zero?])
-    (:refer arbace.bore :only [& << >>> aclone acopy! aget alength arbace-ns aset! aswap! class-ns defm defp import! thread throw! value-ns])
+    (:refer-clojure :only [-> = and apply assoc atom case compare concat cond condp cons declare defn defn- dotimes drop first fn hash-map identical? if-not if-some int int-array integer? last let letfn list loop map mapcat merge next nil? not object-array or reduced? reset! satisfies? second seq sequential? some? symbol? take update vary-meta vec vector?]) (:require [clojure.core :as -])
+    (:refer arbace.bore :only [& * + - < << <= >>> about aclone acopy! aget alength aset! aswap! dec defm defp defr import! inc max min mod neg? pos? quot rem thread throw! zero?])
 )
 
 (import!)
 
-(arbace-ns Oops!
+(about #_"Oops!"
 
 (defmacro def-      [x & s] `(def      ~(vary-meta x assoc :private true) ~@s))
 (defmacro defmacro- [x & s] `(defmacro ~(vary-meta x assoc :private true) ~@s))
@@ -78,7 +72,7 @@
 )
 
 (defmacro- assert-args [& s]
-    `(when ~(first s) ~'=> (throw! (str (first ~'&form) " requires " ~(second s)))
+    `(when ~(first s) ~'=> (throw! (-/str (first ~'&form) " requires " ~(second s)))
         ~(let-when [s (next (next s))] s
             `(assert-args ~@s)
         )
@@ -90,7 +84,7 @@
     ([bind then else & _]
         (assert-args
             (vector? bind) "a vector for its binding"
-            (= 2 (clojure.core/count bind)) "exactly 2 forms in binding vector"
+            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
@@ -190,6 +184,8 @@
         (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
     )
 
+    (defn editable? [x] (satisfies? IEditableCollection x))
+
     (defp Associative
         (#_"Associative" Associative'''assoc [#_"Associative" this, #_"Object" key, #_"Object" val])
         (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"Object" key])
@@ -238,8 +234,8 @@
     #_abstract
     (defp APersistentVector)
 
-(defn count'
-    ([x] (count' x -1))
+(defn count
+    ([x] (count x -1))
     ([x m]
         (condp satisfies? x
             Counted
@@ -250,19 +246,50 @@
                         (+ n (Counted'''count s))
                     )
                 )
-            (when (neg? m) => (throw! (str "count' not supported on " (clojure.core/class x)))
-                (clojure.core/count x)
+            (when (neg? m) => (throw! (-/str "count not supported on " (-/class x)))
+                (-/count x)
             )
         )
     )
 )
 
-(defn count [s] (count' s -1))
+(defn conj
+    ([] [])
+    ([coll] coll)
+    ([coll x] (if (some? coll) (IPersistentCollection'''conj coll, x) (list x)))
+    ([coll x & s] (recur-when s [(conj coll x) (first s) (next s)] => (conj coll x)))
+)
+
+(defn reduce
+    ([f s] (if-some [s (seq s)] (reduce f (first s) (next s)) (f)))
+    ([f r s] (if-some [s (seq s)] (recur f (f r (first s)) (next s)) r))
+)
+
+(defn transient [#_"IEditableCollection" coll] (IEditableCollection'''asTransient coll))
+(defn persistent! [#_"ITransientCollection" coll] (ITransientCollection'''persistent! coll))
+
+(defn conj!
+    ([] (transient []))
+    ([coll] coll)
+    ([#_"ITransientCollection" coll x] (ITransientCollection'''conj! coll, x))
+)
+
+(defn reduce!
+    ([f s] (if-some [s (seq s)] (reduce! f (first s) (next s)) (f)))
+    ([f r s] (persistent! (reduce f (transient r) s)))
+)
+
+(defn into [to from]
+    (if (editable? to)
+        (reduce! conj! to from)
+        (reduce conj to from)
+    )
+)
 )
 
 (declare MapEntry'create Murmur3'mixCollHash RSeq'new RT'printString VSeq'new)
 
-(arbace-ns IPersistentWector
+(about #_"cloiure.core.IPersistentWector"
     (defp IPersistentWector
         (#_"IPersistentWector" IPersistentWector'''slicew [#_"IPersistentWector" this, #_"int" start, #_"int" end])
         (#_"IPersistentWector" IPersistentWector'''splicew [#_"IPersistentWector" this, #_"IPersistentWector" that])
@@ -271,17 +298,19 @@
 
 (defn wector? [x] (satisfies? IPersistentWector x))
 
-(arbace-ns PersistentWector
+(about #_"arbace.wector"
     (defp WNode)
     (defp TransientWector)
     (defp PersistentWector)
 )
 
-(arbace-ns PersistentWector
+(about #_"arbace.wector"
 
 (def- walue-array object-array)
 
-(class-ns WNode []
+(about #_"WNode"
+    (defr WNode [])
+
     (defn #_"WNode" WNode'new [#_"Thread'" edit, #_"objects" array, #_"ints" index]
         (merge (WNode'class.)
             (hash-map
@@ -895,7 +924,7 @@
         ]
             (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, 5) (WNode''leaf-count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
                 (let [
-                    #_"seq" s (map #(WNode'new nil, (walue-array %), nil) (partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
+                    #_"seq" s (map #(WNode'new nil, (walue-array %), nil) (-/partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
                 ]
                     (if (<= n (* 32 32))
                         (let [
@@ -939,7 +968,7 @@
             ]
                 (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, shift) (WNode''leaf-count node2, shift)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
                     (let [
-                        #_"seq" s (partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
+                        #_"seq" s (-/partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
                     ]
                         (if (<= n (* 32 32))
                             (let [
@@ -1082,7 +1111,9 @@
     )
 )
 
-(class-ns TransientWector [AFn]
+(about #_"TransientWector"
+    (defr TransientWector [AFn])
+
     (defn #_"TransientWector" TransientWector'new
         ([#_"PersistentWector" w]
             (TransientWector'new (:cnt w), (:shift w), (WNode''editableRoot (:root w)), (WNode'editableTail (:tail w)), (alength (:tail w)))
@@ -1152,11 +1183,13 @@
         )
 
         (#_"value" IFn'''applyTo [#_"TransientWector" this, #_"seq" args]
-            (case (count' args 1)
+            (case (count args 1)
                 1 (IFn'''invoke this, (first args))
             )
         )
     )
+
+    (declare PersistentWector'new)
 
     (defm TransientWector ITransientCollection
         (#_"TransientWector" ITransientCollection'''conj! [#_"TransientWector" this, #_"value" val]
@@ -1199,6 +1232,16 @@
                 )
             )
         )
+
+        (#_"PersistentWector" ITransientCollection'''persistent! [#_"TransientWector" this]
+            (WNode''assertEditable (:root this))
+            (reset! (:edit (:root this)) nil)
+            (let [
+                #_"int" n (:tlen this)
+            ]
+                (PersistentWector'new (:cnt this), (:shift this), (:root this), (-> (walue-array n) (acopy! 0 (:tail this) 0 n)))
+            )
+        )
     )
 
     (defm TransientWector ITransientVector
@@ -1223,29 +1266,7 @@
                 )
             )
         )
-    )
 
-    (defm TransientWector ITransientAssociative
-        (#_"TransientWector" ITransientAssociative'''assoc! [#_"TransientWector" this, #_"key" key, #_"value" val]
-            (when (integer? key) => (throw! "key must be integer")
-                (ITransientVector'''assocN! this, (int key), val)
-            )
-        )
-
-        (#_"boolean" ITransientAssociative'''containsKey [#_"TransientWector" this, #_"key" key]
-            (and (integer? key) (< -1 (int key) (:cnt this)))
-        )
-
-        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"TransientWector" this, #_"key" key]
-            (when (integer? key)
-                (let-when [#_"int" i (int key)] (< -1 i (:cnt this))
-                    (MapEntry'create key, (Indexed'''nth this, i))
-                )
-            )
-        )
-    )
-
-    (defm TransientWector ITransientVector
         (#_"TransientWector" ITransientVector'''pop! [#_"TransientWector" this]
             (WNode''assertEditable (:root this))
             (cond
@@ -1298,22 +1319,30 @@
         )
     )
 
-    (declare PersistentWector'new)
+    (defm TransientWector ITransientAssociative
+        (#_"TransientWector" ITransientAssociative'''assoc! [#_"TransientWector" this, #_"key" key, #_"value" val]
+            (when (integer? key) => (throw! "key must be integer")
+                (ITransientVector'''assocN! this, (int key), val)
+            )
+        )
 
-    (defm TransientWector ITransientCollection
-        (#_"PersistentWector" ITransientCollection'''persistent! [#_"TransientWector" this]
-            (WNode''assertEditable (:root this))
-            (reset! (:edit (:root this)) nil)
-            (let [
-                #_"int" n (:tlen this)
-            ]
-                (PersistentWector'new (:cnt this), (:shift this), (:root this), (-> (walue-array n) (acopy! 0 (:tail this) 0 n)))
+        (#_"boolean" ITransientAssociative'''containsKey [#_"TransientWector" this, #_"key" key]
+            (and (integer? key) (< -1 (int key) (:cnt this)))
+        )
+
+        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"TransientWector" this, #_"key" key]
+            (when (integer? key)
+                (let-when [#_"int" i (int key)] (< -1 i (:cnt this))
+                    (MapEntry'create key, (Indexed'''nth this, i))
+                )
             )
         )
     )
 )
 
-(class-ns PersistentWector [APersistentVector]
+(about #_"PersistentWector"
+    (defr PersistentWector [APersistentVector])
+
     (defn #_"PersistentWector" PersistentWector'new
         ([#_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
         ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"WNode" root, #_"values" tail]
@@ -1539,7 +1568,7 @@
         )
 
         (#_"value" IFn'''applyTo [#_"PersistentWector" this, #_"seq" args]
-            (case (count' args 1)
+            (case (count args 1)
                 1 (IFn'''invoke this, (first args))
             )
         )
@@ -1767,7 +1796,7 @@
     (§ defm PersistentWector #_"Comparable"
         (#_"int" Comparable'''compareTo [#_"PersistentWector" this, #_"IPersistentVector" that]
             (when-not (identical? this that) => 0
-                (let [#_"int" n (:cnt this) #_"int" m (count that)]
+                (let [#_"int" n (:cnt this) #_"int" m (count that)]
                     (cond (< n m) -1 (< m n) 1
                         :else
                             (loop-when [#_"int" i 0] (< i n) => 0
@@ -1783,7 +1812,7 @@
 )
 )
 
-(value-ns Wector
+(about #_"arbace.wector"
 
 (defn subwec
     ([v i]   (IPersistentWector'''slicew v, i, (count v)))
