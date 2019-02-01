@@ -6,12 +6,12 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* = apply cons defmacro defn doseq keys let map merge meta select-keys some? str symbol symbol? vary-meta when]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn identity keys keyword let letfn map mapcat merge meta select-keys some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
 )
 
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
-(import! [java.lang Error #_String System Thread])
+(import! [java.lang Error #_String System Thread] [clojure.lang ILookup ITransientAssociative])
 
 (defmacro refer! [ns s]
     (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:private :macro]))] `(def ~n ~v))]
@@ -21,8 +21,59 @@
 
 (defmacro about [& s] (cons 'do s))
 
+(about #_"Oops!"
+
+(defn- emit-defarray* [tname cname fields interfaces methods opts]
+    (let [
+        classname  (with-meta (symbol (str (-/namespace-munge *ns*) "." cname)) (meta cname))
+        interfaces (vec interfaces)
+        fields     (map #(with-meta % nil) fields)
+    ]
+        (let [a '__data v (-/gensym)]
+            (letfn [(ilookup [[i m]]
+                        [
+                            (conj i 'clojure.lang.ILookup)
+                            (conj m
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (case k# ~@(mapcat (fn [x y] [(keyword y) `(-/aget ~a ~x)]) (-/range) fields)))
+                            )
+                        ]
+                    )
+                    (imap [[i m]]
+                        [
+                            (conj i 'clojure.lang.ITransientAssociative)
+                            (conj m
+                                `(assoc [this# k# ~v] (case k# ~@(mapcat (fn [x y] [(keyword y) `(-/aset ~a ~x ~v)]) (-/range) fields)) this#)
+                            )
+                        ]
+                    )]
+                (let [[i m] (-> [interfaces methods] ilookup imap)]
+                    `(deftype* ~(symbol (-/name (-/ns-name *ns*)) (-/name tname))
+                        ~classname
+                        ~(vector a)
+                        :implements ~(vec i)
+                        ~@(mapcat identity opts)
+                        ~@m
+                    )
+                )
+            )
+        )
+    )
+)
+ 
+(defmacro defarray [name fields & opts+specs]
+    (#'-/validate-fields fields name)
+    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+        `(do
+            ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
+            (-/import ~(symbol (str (-/namespace-munge *ns*) "." name)))
+        )
+    )
+)
+)
+
 (defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (-/defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
+(defmacro defq [r f & s] (let [c (symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                      ~c)))
 (defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (-/extend-type ~i ~@s)                             ~i)))
 
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
@@ -55,8 +106,8 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.wector
-    (:refer-clojure :only [-> = and apply assoc atom case compare concat cond condp cons declare defn defn- drop first fn hash-map identical? if-not if-some int integer? last let letfn list loop map mapcat merge next nil? not or reduced? reset! satisfies? second seq sequential? some? symbol? take update vary-meta vec vector?]) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [& * + - < << <= >>> about aclone acopy! aget alength anew aset! aswap! dec defm defp defr import! inc max min neg? pos? quot rem thread throw! zero?])
+    (:refer-clojure :only [-> = and apply assoc assoc! atom case compare concat cond condp cons declare defn defn- drop first fn get identical? if-not if-some int integer? last let letfn list loop map mapcat next nil? not or reduced? reset! satisfies? second seq sequential? some? symbol? take vary-meta vec vector?]) (:require [clojure.core :as -])
+    (:refer arbace.bore :only [& * + - < << <= >>> about aclone acopy! aget alength anew aset! aswap! dec defm defp defq import! inc max min neg? pos? quot rem thread throw! zero?])
 )
 
 (import!)
@@ -286,6 +337,13 @@
         (reduce conj to from)
     )
 )
+
+(defn update!
+    ([m k f] (assoc! m k (f (get m k))))
+    ([m k f x] (assoc! m k (f (get m k) x)))
+    ([m k f x y] (assoc! m k (f (get m k) x y)))
+    ([m k f x y & z] (assoc! m k (apply f (get m k) x y z)))
+)
 )
 
 (declare MapEntry'create Murmur3'mixCollHash RSeq'new RT'printString VSeq'new)
@@ -308,15 +366,13 @@
 (about #_"arbace.wector"
 
 (about #_"WNode"
-    (defr WNode [])
+    (defq WNode [edit, array, index])
 
     (defn #_"node" WNode'new [#_"Thread'" edit, #_"array" array, #_"index" index]
-        (merge (WNode'class.)
-            (hash-map
-                #_"Thread'" :edit edit
-                #_"array" :array (or array (anew 32))
-                #_"index" :index index
-            )
+        (assoc! (WNode'class. (anew 3))
+            #_"Thread'" :edit edit
+            #_"array" :array (or array (anew 32))
+            #_"index" :index index
         )
     )
 
@@ -1075,21 +1131,19 @@
 )
 
 (about #_"TransientWector"
-    (defr TransientWector [AFn])
+    (defq TransientWector [cnt, shift, root, tail, tlen] AFn)
 
     (defn #_"TransientWector" TransientWector'new
         ([#_"PersistentWector" w]
             (TransientWector'new (:cnt w), (:shift w), (WNode''editable-root (:root w)), (WNode'editable-tail (:tail w)), (alength (:tail w)))
         )
         ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen]
-            (merge (TransientWector'class.)
-                (hash-map
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"node" :root root
-                    #_"values" :tail tail
-                    #_"int" :tlen tlen
-                )
+            (assoc! (TransientWector'class. (anew 5))
+                #_"int" :cnt cnt
+                #_"int" :shift shift
+                #_"node" :root root
+                #_"values" :tail tail
+                #_"int" :tlen tlen
             )
         )
     )
@@ -1161,11 +1215,11 @@
                 (let [
                     _ (aset! (:tail this) (:tlen this) val)
                 ]
-                    (-> this (update :cnt inc) (update :tlen inc))
+                    (-> this (update! :cnt inc) (update! :tlen inc))
                 )
                 (let [
                     #_"node" tail-node (WNode'new (:edit (:root this)), (:tail this), nil)
-                    this (assoc this :tail (-> (anew 32) (aset! 0 val)), :tlen 1)
+                    this (assoc! this :tail (-> (anew 32) (aset! 0 val)), :tlen 1)
                 ]
                     (if (WNode''overflow? (:root this), (:shift this), (:cnt this))
                         (let [
@@ -1184,12 +1238,12 @@
                                 )
                             #_"node" root (WNode'new (:edit (:root this)), a, x)
                         ]
-                            (-> this (assoc :root root) (update :shift + 5) (update :cnt inc))
+                            (-> this (assoc! :root root) (update! :shift + 5) (update! :cnt inc))
                         )
                         (let [
                             #_"node" root (WNode''push-tail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
                         ]
-                            (-> this (assoc :root root) (update :cnt inc))
+                            (-> this (assoc! :root root) (update! :cnt inc))
                         )
                     )
                 )
@@ -1220,7 +1274,7 @@
                             this
                         )
                         (do
-                            (assoc this :root (WNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val))
+                            (assoc! this :root (WNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val))
                         )
                     )
                 )
@@ -1237,16 +1291,16 @@
                     (throw! "can't pop the empty vector")
                 (= (:cnt this) 1)
                     (let [
-                        this (assoc this :cnt 0)
-                        this (assoc this :tlen 0)
+                        this (assoc! this :cnt 0)
+                        this (assoc! this :tlen 0)
                         _ (aset! (:tail this) 0 nil)
                     ]
                         this
                     )
                 (< 1 (:tlen this))
                     (let [
-                        this (update this :cnt dec)
-                        this (update this :tlen dec)
+                        this (update! this :cnt dec)
+                        this (update! this :tlen dec)
                         _ (aset! (:tail this) (:tlen this) nil)
                     ]
                         this
@@ -1259,23 +1313,23 @@
                             (cond
                                 (nil? root)
                                     (-> this
-                                        (assoc :root (WNode'new (:edit (:root this)), nil, nil))
+                                        (assoc! :root (WNode'new (:edit (:root this)), nil, nil))
                                     )
                                 (and (< 5 (:shift this)) (nil? (aget (:array root) 1)))
                                     (-> this
-                                        (update :shift - 5)
-                                        (assoc :root (aget (:array root) 0))
+                                        (update! :shift - 5)
+                                        (assoc! :root (aget (:array root) 0))
                                     )
                                 :else
                                     (-> this
-                                        (assoc :root root)
+                                        (assoc! :root root)
                                     )
                             )
                     ]
                         (-> this
-                            (update :cnt dec)
-                            (assoc :tail tail)
-                            (assoc :tlen (alength tail))
+                            (update! :cnt dec)
+                            (assoc! :tail tail)
+                            (assoc! :tlen (alength tail))
                         )
                     )
             )
@@ -1304,19 +1358,17 @@
 )
 
 (about #_"PersistentWector"
-    (defr PersistentWector [APersistentVector])
+    (defq PersistentWector [_meta, cnt, shift, root, tail] APersistentVector)
 
     (defn #_"PersistentWector" PersistentWector'new
         ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
         ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail]
-            (merge (PersistentWector'class.)
-                (hash-map
-                    #_"IPersistentMap" :_meta meta
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"node" :root root
-                    #_"values" :tail tail
-                )
+            (assoc! (PersistentWector'class. (anew 5))
+                #_"IPersistentMap" :_meta meta
+                #_"int" :cnt cnt
+                #_"int" :shift shift
+                #_"node" :root root
+                #_"values" :tail tail
             )
         )
     )
