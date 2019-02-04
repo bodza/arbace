@@ -101,8 +101,10 @@
 (def quot -/unchecked-divide-int)
 (def rem  -/unchecked-remainder-int)
 
-(def &   -/bit-and)
-(def |   -/bit-or)
+(refer! - [bit-and bit-or bit-xor])
+
+(def &     bit-and)
+(def |     bit-or)
 (def <<  -/bit-shift-left)
 (def >>  -/bit-shift-right)
 (def >>> -/unsigned-bit-shift-right)
@@ -127,9 +129,9 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = apply assoc atom boolean case char compare cons defmethod defn even? first fn hash-map hash-set identical? int int-array interleave intern key keyword? let list long loop map merge meta next reify reset! satisfies? seq seq? str swap! symbol symbol? to-array val vary-meta vector? with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = assoc atom boolean case char compare cons defmethod defn fn hash-map hash-set identical? int intern let list long loop make-array map merge object-array reify reset! satisfies? swap! symbol to-array vector?]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
-    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength anew aset! assoc!! aswap! dec defm defp defq defr import! import-as inc neg? pos? quot rem thread throw! update!! zero? |])
+    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength anew aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot rem thread throw! update!! zero? |])
 )
 
 (import!
@@ -165,17 +167,17 @@
  ;;
 (defn gensym
     ([] (gensym "G__"))
-    ([prefix] (symbol (str prefix (next-id!))))
+    ([prefix] (symbol (-/str prefix (next-id!))))
 )
 
 ;;;
  ; defs the supplied var names with no bindings, useful for making forward declarations.
  ;;
-(defmacro declare [& names] `(do ~@(map #(list 'def (vary-meta % assoc :declared true)) names)))
+(defmacro declare [& names] `(do ~@(map #(list 'def (-/vary-meta % assoc :declared true)) names)))
 
-(defmacro def-      [x & s] `(def      ~(vary-meta x assoc :private true) ~@s))
-(defmacro defn-     [x & s] `(defn     ~(vary-meta x assoc :private true) ~@s))
-(defmacro defmacro- [x & s] `(defmacro ~(vary-meta x assoc :private true) ~@s))
+(defmacro def-      [x & s] `(def      ~(-/vary-meta x assoc :private true) ~@s))
+(defmacro defn-     [x & s] `(defn     ~(-/vary-meta x assoc :private true) ~@s))
+(defmacro defmacro- [x & s] `(defmacro ~(-/vary-meta x assoc :private true) ~@s))
 
 (defn identity   [x] x)
 (defn constantly [x] (fn [& _] x))
@@ -231,10 +233,10 @@
  ; in all of the definitions of the functions, as well as the body.
  ;;
 (defmacro letfn [fnspecs & body]
-    `(letfn* ~(vec (interleave (map first fnspecs) (map #(cons `fn %) fnspecs))) ~@body)
+    `(letfn* ~(vec (-/interleave (map -/first fnspecs) (map #(cons `fn %) fnspecs))) ~@body)
 )
 
-(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+(letfn [(=> [s] (if (= '=> (-/first s)) (-/next s) (cons nil s)))]
     (defmacro     when       [? & s] (let [[e & s] (=> s)]               `(if     ~? (do ~@s) ~e)))
     (defmacro     when-not   [? & s] (let [[e & s] (=> s)]               `(if-not ~? (do ~@s) ~e)))
     (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if     ~? (do ~@s) ~e))))
@@ -249,18 +251,18 @@
  ;;
 (defmacro cond [& s]
     (when s
-        `(if ~(first s)
-            ~(when (next s) => (throw! "cond requires an even number of forms")
+        `(if ~(-/first s)
+            ~(when (-/next s) => (throw! "cond requires an even number of forms")
                 (-/second s)
             )
-            (cond ~@(next (next s)))
+            (cond ~@(-/next (-/next s)))
         )
     )
 )
 
 (defmacro- assert-args [& s]
-    `(when ~(first s) ~'=> (throw! (str (first ~'&form) " requires " ~(-/second s)))
-        ~(let-when [s (next (next s))] s
+    `(when ~(-/first s) ~'=> (throw! (-/str (-/first ~'&form) " requires " ~(-/second s)))
+        ~(let-when [s (-/next (-/next s))] s
             `(assert-args ~@s)
         )
     )
@@ -318,8 +320,8 @@
             (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
-        `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
-            (let [~(bind 0) (first s#)]
+        `(let-when [s# (-/seq ~(bind 1))] (some? s#) ~'=> ~else
+            (let [~(bind 0) (-/first s#)]
                 ~then
             )
         )
@@ -355,14 +357,14 @@
         (vector? bindings) "a vector for its binding"
         (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
-    `(when-some [s# (seq ~(bindings 1))]
-        (let [~(bindings 0) (first s#)]
+    `(when-some [s# (-/seq ~(bindings 1))]
+        (let [~(bindings 0) (-/first s#)]
             ~@body
         )
     )
 )
 
-(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+(letfn [(=> [s] (if (= '=> (-/first s)) (-/next s) (cons nil s)))]
     (defmacro when-let   [v & s] (let [[e & s] (=> s)] `(if-let   ~(vec v) (do ~@s) ~e)))
     (defmacro when-some  [v & s] (let [[e & s] (=> s)] `(if-some  ~(vec v) (do ~@s) ~e)))
     (defmacro when-first [v & s] (let [[e & s] (=> s)] `(if-first ~(vec v) (do ~@s) ~e)))
@@ -392,7 +394,7 @@
             (fn emit- [f? expr args]
                 (let [[[a b c :as clause] more] (-/split-at (if (= :>> (-/second args)) 3 2) args) n (-/count clause)]
                     (cond
-                        (= 0 n) `(throw! (str "no matching clause: " ~expr))
+                        (= 0 n) `(throw! (-/str "no matching clause: " ~expr))
                         (= 1 n) a
                         (= 2 n) `(if (~f? ~a ~expr)
                                     ~b
@@ -411,16 +413,16 @@
     )
 )
 
-(letfn [(v' [v] (cond (vector? v) v (symbol? v) [v v] :else [`_# v]))
+(letfn [(v' [v] (cond (vector? v) v (-/symbol? v) [v v] :else [`_# v]))
         (r' [r] (cond (vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
-        (=> [s] (if (= '=> (first s)) (next s) (cons nil s)))
+        (=> [s] (if (= '=> (-/first s)) (-/next s) (cons nil s)))
         (l' [v ? r s] (let [r (r' r) [e & s] (=> s)] `(loop ~(v' v) (if ~? (do ~@s ~@r) ~e))))]
     (defmacro loop-when [v ? & s] (l' v ? nil s))
     (defmacro loop-when-recur [v ? r & s] (l' v ? r s))
 )
 
 (letfn [(r' [r] (cond (vector? r) `(recur ~@r) (some? r) `(recur ~r)))
-        (=> [s] (if (= '=> (first s)) (-/second s)))]
+        (=> [s] (if (= '=> (-/first s)) (-/second s)))]
     (defmacro recur-when [? r & s] `(if ~? ~(r' r) ~(=> s)))
 )
 
@@ -439,12 +441,12 @@
 (defmacro doseq [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
-        (even? (-/count bindings)) "an even number of forms in binding vector"
+        (-/even? (-/count bindings)) "an even number of forms in binding vector"
     )
     (letfn [(emit- [e r]
                 (when e => [`(do ~@body) true]
                     (let [[k v & e] e]
-                        (if (keyword? k)
+                        (if (-/keyword? k)
                             (let [[f r?] (emit- e r)]
                                 (case k
                                     :let   [`(let ~v ~f) r?]
@@ -452,14 +454,14 @@
                                     :when  [`(if ~v (do ~f ~@(when r? [r])) ~r) false]
                                 )
                             )
-                            (let [s (gensym "s__") r `(recur (next ~s)) [f r?] (emit- e r)]
-                                [`(loop-when [~s (seq ~v)] ~s (let [~k (first ~s)] ~f ~@(when r? [r]))) true]
+                            (let [s (gensym "s__") r `(recur (-/next ~s)) [f r?] (emit- e r)]
+                                [`(loop-when [~s (-/seq ~v)] ~s (let [~k (-/first ~s)] ~f ~@(when r? [r]))) true]
                             )
                         )
                     )
                 )
             )]
-        (first (emit- (seq bindings) nil))
+        (-/first (emit- (-/seq bindings) nil))
     )
 )
 
@@ -493,7 +495,7 @@
 (defmacro doto [x & s]
     (let [x' (gensym)]
         `(let [~x' ~x]
-            ~@(map (fn [f] (with-meta (if (seq? f) `(~(first f) ~x' ~@(next f)) `(~f ~x')) (meta f))) s)
+            ~@(map (fn [f] (-/with-meta (if (-/seq? f) `(~(-/first f) ~x' ~@(-/next f)) `(~f ~x')) (-/meta f))) s)
             ~x'
         )
     )
@@ -508,10 +510,10 @@
 (defmacro -> [x & s]
     (when s => x
         (recur &form &env
-            (let-when [f (first s)] (seq? f) => (list f x)
-                (with-meta `(~(first f) ~x ~@(next f)) (meta f))
+            (let-when [f (-/first s)] (-/seq? f) => (list f x)
+                (-/with-meta `(~(-/first f) ~x ~@(-/next f)) (-/meta f))
             )
-            (next s)
+            (-/next s)
         )
     )
 )
@@ -525,10 +527,10 @@
 (defmacro ->> [x & s]
     (when s => x
         (recur &form &env
-            (let-when [f (first s)] (seq? f) => (list f x)
-                (with-meta `(~(first f) ~@(next f) ~x) (meta f))
+            (let-when [f (-/first s)] (-/seq? f) => (list f x)
+                (-/with-meta `(~(-/first f) ~@(-/next f) ~x) (-/meta f))
             )
-            (next s)
+            (-/next s)
         )
     )
 )
@@ -578,41 +580,64 @@
     )
 )
 
-;;;
- ; Creates and returns an array of instances of the specified class of the specified dimension(s).
- ; Note that a class object is required.
- ; Class objects can be obtained by using their imported or fully-qualified name.
- ; Class objects for the primitive types can be obtained using, e.g. Integer/TYPE.
- ;;
-(defn make-array
-    ([#_"Class" type n] (Array/newInstance type (int n)))
-    ([#_"Class" type dim & s] (Array/newInstance type (int-array (cons dim s))))
-)
+(about #_"cloiure.core.Seqable"
+    (defp Seqable
+        (#_"ISeq" Seqable'''seq [#_"Seqable" this])
+    )
 
-;;;
- ; Creates an array of objects.
- ;;
-(defn object-array [size-or-seq]
-    (if (number? size-or-seq)
-        (make-array Object (.intValue #_"Number" size-or-seq))
-        (let [#_"ISeq" s (seq size-or-seq) #_"int" size (-/count s) #_"Object[]" a (make-array Object size)]
-            (loop-when-recur [#_"int" i 0 s s] (and (< i size) (some? s)) [(inc i) (next s)]
-                (aset! a i (first s))
-            )
-            a
-        )
+    (-/extend-protocol Seqable
+        clojure.lang.Seqable (Seqable'''seq [x] (.seq x))
     )
 )
+
+(defn seqable? [x] (satisfies? Seqable x))
+
+;;;
+ ; Returns a seq on coll. If coll is empty, returns nil.
+ ; (seq nil) returns nil.
+ ;;
+(defn #_"ISeq" seq [x] (when (some? x) (Seqable'''seq x)))
+
+;;;
+ ; Returns true if coll has no items.
+ ; Please use the idiom (seq x) rather than (not (empty? x)).
+ ;;
+(defn empty? [x] (not (seq x)))
+
+(about #_"cloiure.core.ISeq"
+    (defp ISeq
+        (#_"Object" ISeq'''first [#_"ISeq" this])
+        (#_"ISeq" ISeq'''next [#_"ISeq" this])
+    )
+
+    (-/extend-protocol ISeq
+        clojure.lang.ISeq (ISeq'''first [s] (.first s)) (ISeq'''next [s] (.next s))
+    )
+)
+
+(defn seq? [x] (satisfies? ISeq x))
+
+;;;
+ ; Returns the first item in coll. Calls seq on its argument.
+ ; If s is nil, returns nil.
+ ;;
+(defn first [s] (if (seq? s) (ISeq'''first s) (when-some [s (seq s)] (ISeq'''first s))))
+
+;;;
+ ; Returns a seq of the items after the first. Calls seq on its argument.
+ ; If there are no more items, returns nil.
+ ;;
+(defn #_"ISeq" next [s] (if (seq? s) (ISeq'''next s) (when-some [s (seq s)] (ISeq'''next s))))
+
+(defn second [s] (first (next s)))
+(defn third  [s] (first (next (next s))))
+(defn fourth [s] (first (next (next (next s)))))
+(defn last   [s] (if-some [r (next s)] (recur r) (first s)))
 
 (about #_"cloiure.core.IObject"
     (defp IObject
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
         (#_"String" IObject'''toString [#_"IObject" this])
-    )
-
-    (-/extend-type nil IObject
-        (#_"boolean" IObject'''equals [#_"nil" this, #_"Object" that] (nil? that))
-        (#_"String" IObject'''toString [#_"nil" this] "")
     )
 
     (-/extend-type Object IObject
@@ -626,81 +651,12 @@
  ; (str nil) returns the empty string.
  ; With more than one arg, returns the concatenation of the str values of the args.
  ;;
-(§ defn #_"String" str
+(defn #_"String" str
     ([] "")
-    ([#_"Object" x] (IObject'''toString x))
+    ([x] (if (some? x) (IObject'''toString x) ""))
     ([x & y]
         ((fn [#_"StringBuilder" sb s] (recur-when s [(.append sb (str (first s))) (next s)] => (str sb)))
             (StringBuilder. (str x)) y
-        )
-    )
-)
-
-(about #_"cloiure.core.Seqable"
-    (defp Seqable
-        (#_"ISeq" Seqable'''seq [#_"Seqable" this])
-    )
-
-    (-/extend-protocol Seqable
-        nil                  (Seqable'''seq [_] nil)
-        clojure.lang.Seqable (Seqable'''seq [o] (.seq o))
-    )
-)
-
-(about #_"cloiure.core.ISeq"
-    (defp ISeq
-        (#_"Object" ISeq'''first [#_"ISeq" this])
-        (#_"ISeq" ISeq'''next [#_"ISeq" this])
-    )
-
-    (-/extend-protocol ISeq
-        nil               (ISeq'''first [_] nil)        (ISeq'''next [_] nil)
-        clojure.lang.ISeq (ISeq'''first [o] (.first o)) (ISeq'''next [o] (.next o))
-    )
-)
-
-(§ defn seq? [x] (and (some? x) (satisfies? ISeq x)))
-
-;;;
- ; Returns a seq on coll. If coll is empty, returns nil.
- ; (seq nil) returns nil.
- ;;
-(§ defn #_"ISeq" seq [s] (Seqable'''seq s))
-
-;;;
- ; Returns true if coll has no items.
- ; Please use the idiom (seq x) rather than (not (empty? x)).
- ;;
-(defn empty? [s] (not (seq s)))
-
-;;;
- ; Returns the first item in coll. Calls seq on its argument.
- ; If s is nil, returns nil.
- ;;
-(§ defn first [s] (ISeq'''first (if (satisfies? ISeq s) s (seq s))))
-
-;;;
- ; Returns a seq of the items after the first. Calls seq on its argument.
- ; If there are no more items, returns nil.
- ;;
-(§ defn #_"ISeq" next [s] (ISeq'''next (if (satisfies? ISeq s) s (seq s))))
-
-(defn second [s] (first (next s)))
-(defn third  [s] (first (next (next s))))
-(defn fourth [s] (first (next (next (next s)))))
-(defn last   [s] (if-some [r (next s)] (recur r) (first s)))
-
-(declare conj)
-
-;;;
- ; Return a seq of all but the last item in coll, in linear time.
- ;;
-(defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
-
-(defn index-of [s x]
-    (loop-when [i 0 s (seq s)] (some? s) => -1
-        (when-not (= (first s) x) => i
-            (recur (inc i) (next s))
         )
     )
 )
@@ -711,26 +667,30 @@
     )
 
     (-/extend-protocol Counted
-        nil                  (Counted'''count [_] 0)
         clojure.lang.Counted (Counted'''count [o] (.count o))
         Object'array         (Counted'''count [a] (Array/getLength a))
         CharSequence         (Counted'''count [s] (.length s))
     )
 )
 
+(defn counted? [x] (satisfies? Counted x))
+
 (defn count
     ([x] (count x -1))
     ([x m]
-        (condp satisfies? x
-            Counted
+        (cond
+            (nil? x)
+                0
+            (counted? x)
                 (Counted'''count x)
-            Seqable
-                (loop-when [n 0 s (Seqable'''seq x)] (and s (or (neg? m) (< n m))) => n
-                    (when (satisfies? Counted s) => (recur (inc n) (next s))
+            (seqable? x)
+                (loop-when [n 0 s (seq x)] (and (some? s) (or (neg? m) (< n m))) => n
+                    (when (counted? s) => (recur (inc n) (next s))
                         (+ n (Counted'''count s))
                     )
                 )
-            (throw! (str "count not supported on " (class x)))
+            :else
+                (throw! (str "count not supported on " (class x)))
         )
     )
 )
@@ -744,13 +704,26 @@
     (declare Murmur3'hashLong)
 
     (-/extend-protocol Hashed
-        nil                  (Hashed'''hash [_] 0)
         Object               (Hashed'''hash [o] (.hashCode o))
         String               (Hashed'''hash [s] (Murmur3'hashInt (.hashCode s)))
         Number               (Hashed'''hash [n] (Murmur3'hashLong (.longValue n)))
         BigInteger           (Hashed'''hash [i] (if (< (.bitLength i) 64) (Murmur3'hashLong (.longValue i)) (.hashCode i)))
         clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
     )
+)
+
+(defn hashed? [x] (satisfies? Hashed x))
+
+;;;
+ ; Returns the hash code of its argument. Note this is the hash code
+ ; consistent with =, and thus is different from .hashCode for Integer,
+ ; Byte and Clojure collections.
+ ;;
+(defn f'hash [x] (if (some? x) (Hashed'''hash x) 0))
+
+(defn hash-combine [seed x]
+    ;; a la boost
+    (bit-xor seed (+ (f'hash x) 0x9e3779b9 (<< seed 6) (>> seed 2)))
 )
 
 (about #_"cloiure.core.Compiler"
@@ -864,13 +837,30 @@
         )
         (#_"Object" IFn'''applyTo [#_"IFn" this, #_"ISeq" args])
     )
+
+    (-/extend-protocol IFn clojure.lang.IFn
+        (IFn'''invoke
+            ([this]                                                    (.invoke this))
+            ([this, a1]                                                (.invoke this, a1))
+            ([this, a1, a2]                                            (.invoke this, a1, a2))
+            ([this, a1, a2, a3]                                        (.invoke this, a1, a2, a3))
+            ([this, a1, a2, a3, a4]                                    (.invoke this, a1, a2, a3, a4))
+            ([this, a1, a2, a3, a4, a5]                                (.invoke this, a1, a2, a3, a4, a5))
+            ([this, a1, a2, a3, a4, a5, a6]                            (.invoke this, a1, a2, a3, a4, a5, a6))
+            ([this, a1, a2, a3, a4, a5, a6, a7]                        (.invoke this, a1, a2, a3, a4, a5, a6, a7))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8]                    (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]                (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (to-array args)))
+        )
+        (IFn'''applyTo [this, args] (.applyTo this, args))
+    )
 )
 
 ;;;
  ; Returns true if x implements IFn.
  ; Note that many data structures (e.g. sets and maps) implement IFn.
  ;;
-(defn ifn? [x] (or (satisfies? IFn x) (instance? clojure.lang.IFn x)))
+(defn ifn? [x] (satisfies? IFn x))
 
 (defn- spread [s]
     (cond
@@ -895,7 +885,7 @@
 ;;;
  ; Applies fn f to the argument list formed by prepending intervening arguments to args.
  ;;
-(§ defn apply
+(defn apply
     ([#_"IFn" f s] (IFn'''applyTo f, (seq s)))
     ([#_"IFn" f a s] (IFn'''applyTo f, (list* a s)))
     ([#_"IFn" f a b s] (IFn'''applyTo f, (list* a b s)))
@@ -905,22 +895,32 @@
 
 (about #_"cloiure.core.IType"
     (defp IType)
+
+    (-/extend-protocol IType clojure.lang.IType)
 )
 
-(defn type? [x] (or (satisfies? IType x) (instance? clojure.lang.IType x)))
+(defn type? [x] (satisfies? IType x))
 
 (about #_"cloiure.core.IRecord"
     (defp IRecord)
+
+    (-/extend-protocol IRecord clojure.lang.IRecord)
 )
 
-(defn record? [x] (or (satisfies? IRecord x) (instance? clojure.lang.IRecord x)))
+(defn record? [x] (satisfies? IRecord x))
 
 (about #_"cloiure.core.INamed"
     (defp INamed
         (#_"String" INamed'''getNamespace [#_"INamed" this])
         (#_"String" INamed'''getName [#_"INamed" this])
     )
+
+    (-/extend-protocol INamed
+        clojure.lang.Named (INamed'''getNamespace [this] (.getNamespace this)) (INamed'''getName [this] (.getName this))
+    )
 )
+
+(defn named? [x] (satisfies? INamed x))
 
 ;;;
  ; Returns the namespace String of a symbol or keyword, or nil if not present.
@@ -936,34 +936,46 @@
     (defp IMeta
         (#_"IPersistentMap" IMeta'''meta [#_"IMeta" this])
     )
+
+    (-/extend-protocol IMeta
+        clojure.lang.IMeta (IMeta'''meta [this] (.meta this))
+    )
 )
 
 ;;;
  ; Returns the metadata of obj, returns nil if there is no metadata.
  ;;
-(§ defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
+(defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
 
 (about #_"cloiure.core.IObj"
     (defp IObj
         (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"IPersistentMap" meta])
+    )
+
+    (-/extend-protocol IObj
+        clojure.lang.IObj (IObj'''withMeta [this, meta] (.withMeta this, meta))
     )
 )
 
 ;;;
  ; Returns an object of the same type and value as obj, with map m as its metadata.
  ;;
-(§ defn with-meta [#_"IObj" x m] (IObj'''withMeta x, m))
+(defn with-meta [#_"IObj" x m] (IObj'''withMeta x, m))
 
 ;;;
  ; Returns an object of the same type and value as x,
  ; with (apply f (meta x) args) as its metadata.
  ;;
-(§ defn vary-meta [x f & args] (with-meta x (apply f (meta x) args)))
+(defn vary-meta [x f & args] (with-meta x (apply f (meta x) args)))
 
 (about #_"cloiure.core.IReference"
     (defp IReference
         (#_"IPersistentMap" IReference'''alterMeta [#_"IReference" this, #_"IFn" f, #_"ISeq" args])
         (#_"IPersistentMap" IReference'''resetMeta [#_"IReference" this, #_"IPersistentMap" m])
+    )
+
+    (-/extend-protocol IReference
+        clojure.lang.IReference (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args)) (IReference'''resetMeta [this, m] (.resetMeta this, m))
     )
 )
 
@@ -982,6 +994,10 @@
     (defp IDeref
         (#_"Object" IDeref'''deref [#_"IDeref" this])
     )
+
+    (-/extend-protocol IDeref
+        clojure.lang.IDeref (IDeref'''deref [this] (.deref this))
+    )
 )
 
 ;;;
@@ -999,11 +1015,20 @@
         (#_"[Object Object]" IAtom'''swapVals [#_"IAtom" this, #_"IFn" f, #_"ISeq" args])
         (#_"[Object Object]" IAtom'''resetVals [#_"IAtom" this, #_"Object" o'])
     )
+
+    (-/extend-protocol IAtom clojure.lang.IAtom2                         (IAtom'''compareAndSet [this, o, o'] (.compareAndSet this, o, o'))
+        (IAtom'''swap     [this, f, args] (.swap     this, f, args)) (IAtom'''reset         [this,    o'] (.reset         this,    o'))
+        (IAtom'''swapVals [this, f, args] (.swapVals this, f, args)) (IAtom'''resetVals     [this,    o'] (.resetVals     this,    o'))
+    )
 )
 
 (about #_"cloiure.core.IPending"
     (defp IPending
         (#_"boolean" IPending'''isRealized [#_"IPending" this])
+    )
+
+    (-/extend-protocol IPending
+        clojure.lang.IPending (IPending'''isRealized [this] (.isRealized this))
     )
 )
 
@@ -1014,13 +1039,19 @@
 
 (about #_"cloiure.core.Sequential"
     (defp Sequential)
+
+    (-/extend-protocol Sequential clojure.lang.Sequential)
 )
 
-(defn sequential? [x] (or (satisfies? Sequential x) (instance? clojure.lang.Sequential x)))
+(defn sequential? [x] (satisfies? Sequential x))
 
 (about #_"cloiure.core.Reversible"
     (defp Reversible
         (#_"ISeq" Reversible'''rseq [#_"Reversible" this])
+    )
+
+    (-/extend-protocol Reversible
+        clojure.lang.Reversible (Reversible'''rseq [this] (.rseq this))
     )
 )
 
@@ -1030,7 +1061,7 @@
  ;;
 (defn rseq [#_"Reversible" s] (Reversible'''rseq s))
 
-(defn reversible? [x] (or (satisfies? Reversible x) (instance? clojure.lang.Reversible x)))
+(defn reversible? [x] (satisfies? Reversible x))
 
 (about #_"cloiure.core.Sorted"
     (defp Sorted
@@ -1039,9 +1070,16 @@
         (#_"ISeq" Sorted'''seq [#_"Sorted" this, #_"boolean" ascending?])
         (#_"ISeq" Sorted'''seqFrom [#_"Sorted" this, #_"Object" key, #_"boolean" ascending?])
     )
+
+    (-/extend-protocol Sorted clojure.lang.Sorted
+        (Sorted'''comparator [this] (.comparator this))
+        (Sorted'''entryKey [this, entry] (.entryKey this, entry))
+        (Sorted'''seq [this, ascending?] (.seq this, ascending?))
+        (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
+    )
 )
 
-(defn sorted? [x] (or (satisfies? Sorted x) (instance? clojure.lang.Sorted x)))
+(defn sorted? [x] (satisfies? Sorted x))
 
 (about #_"cloiure.core.Indexed"
     (defp Indexed
@@ -1050,19 +1088,21 @@
             [#_"Indexed" this, #_"int" i, #_"Object" not-found]
         )
     )
+
+    (-/extend-protocol Indexed
+        clojure.lang.Indexed (Indexed'''nth ([this, i] (.nth this, i)) ([this, i, not-found] (.nth this, i, not-found)))
+    )
 )
 
 ;;;
  ; Return true if x implements Indexed, indicating efficient lookup by index.
  ;;
-(defn indexed? [x] (or (satisfies? Indexed x) (instance? clojure.lang.Indexed x)))
+(defn indexed? [x] (satisfies? Indexed x))
 
 ;;;
  ; Returns the nth next of coll, (seq coll) when n is 0.
  ;;
-(defn nthnext [s n]
-    (loop-when-recur [s (seq s) n n] (and s (pos? n)) [(next s) (dec n)] => s)
-)
+(defn nthnext [s n] (loop-when-recur [s (seq s) n n] (and s (pos? n)) [(next s) (dec n)] => s))
 
 (about #_"cloiure.core.ILookup"
     (defp ILookup
@@ -1071,17 +1111,29 @@
             [#_"ILookup" this, #_"Object" key, #_"Object" not-found]
         )
     )
+
+    (-/extend-protocol ILookup
+        clojure.lang.ILookup (ILookup'''valAt ([this, key] (.valAt this, key)) ([this, key, not-found] (.valAt this, key, not-found)))
+    )
 )
 
 (about #_"cloiure.core.ILookupSite"
     (defp ILookupSite
         (#_"ILookupThunk" ILookupSite'''fault [#_"ILookupSite" this, #_"Object" target])
     )
+
+    (-/extend-protocol ILookupSite
+        clojure.lang.ILookupSite (ILookupSite'''fault [this, target] (.fault this, target))
+    )
 )
 
 (about #_"cloiure.core.ILookupThunk"
     (defp ILookupThunk
         (#_"Object" ILookupThunk'''get [#_"ILookupThunk" this, #_"Object" target])
+    )
+
+    (-/extend-protocol ILookupThunk
+        clojure.lang.ILookupThunk (ILookupThunk'''get [this, target] (.get this, target))
     )
 )
 
@@ -1090,22 +1142,26 @@
         (#_"Object" IMapEntry'''key [#_"IMapEntry" this])
         (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
     )
+
+    (-/extend-protocol IMapEntry
+        clojure.lang.IMapEntry (IMapEntry'''key [this] (.key this)) (IMapEntry'''val [this] (.val this))
+    )
 )
+
+(defn map-entry? [x] (satisfies? IMapEntry x))
 
 ;;;
  ; Returns the key/value of/in the map entry.
  ;;
-(§ defn key [#_"IMapEntry" e] (IMapEntry'''key e))
-(§ defn val [#_"IMapEntry" e] (IMapEntry'''val e))
+(defn key [#_"IMapEntry" e] (IMapEntry'''key e))
+(defn val [#_"IMapEntry" e] (IMapEntry'''val e))
 
 ;;;
  ; Returns a sequence of the map's keys/values, in the same order as (seq m).
  ;;
 (defn keys [m] (map key m))
 (defn vals [m] (map val m))
-
-(defn map-entry? [x] (or (satisfies? IMapEntry x) (instance? clojure.lang.IMapEntry x)))
-
+
 (about #_"cloiure.core.IPersistentCollection"
     (defp IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
@@ -1297,13 +1353,13 @@
     (defp Symbol)
 )
 
-(§ defn symbol? [x] (or (satisfies? Symbol x) (instance? clojure.lang.Symbol x)))
+(defn symbol? [x] (or (satisfies? Symbol x) (instance? clojure.lang.Symbol x)))
 
 (about #_"cloiure.core.Keyword"
     (defp Keyword)
 )
 
-(§ defn keyword? [x] (or (satisfies? Keyword x) (instance? clojure.lang.Keyword x)))
+(defn keyword? [x] (or (satisfies? Keyword x) (instance? clojure.lang.Keyword x)))
 
 (about #_"cloiure.core.Fn"
     #_abstract
@@ -1537,6 +1593,7 @@
 )
 
 (declare conj!)
+(declare conj)
 
 (defn into [to from]
     (if (editable? to)
@@ -6414,6 +6471,8 @@
     )
 )
 
+(declare even?)
+
 (about #_"LetFnParser"
     (defn #_"IParser" LetFnParser'new []
         (reify IParser
@@ -7491,7 +7550,7 @@
 
     (defn- #_"void" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"IopObject" objx, #_"GeneratorAdapter" gen]
         (Expr'''emit (:expr this), :Context'EXPRESSION, objx, gen)
-        (.invokeStatic gen, (Type/getType Util'iface), (Method/getMethod "int hash(Object)"))
+        (.invokeStatic gen, (Type/getType Util'iface), (Method/getMethod "int hash(Object)"))
         (CaseExpr''emitShiftMask this, gen)
         nil
     )
@@ -7526,7 +7585,7 @@
                 )
                 (if (= (:switchType this) :sparse)
                     (let [#_"Label[]" la (into-array Label (vals labels))]
-                        (.visitLookupSwitchInsn gen, defaultLabel, (int-array (keys (:tests this))), la)
+                        (.visitLookupSwitchInsn gen, defaultLabel, (-/int-array (keys (:tests this))), la)
                     )
                     (let [#_"Label[]" la (make-array Label (inc (- (:high this) (:low this))))]
                         (loop-when-recur [#_"int" i (:low this)] (<= i (:high this)) [(inc i)]
@@ -8564,8 +8623,6 @@
         (-> k1 (* Murmur3'C1) (Integer/rotateLeft 15) (* Murmur3'C2))
     )
 
-    (declare bit-xor)
-
     (defn- #_"int" Murmur3'mixH1 [#_"int" h1, #_"int" k1]
         (-> h1 (bit-xor k1) (Integer/rotateLeft 13) (* 5) (+ 0xe6546b64))
     )
@@ -8627,7 +8684,7 @@
     (defn #_"int" Murmur3'hashOrdered [#_"Seqable" items]
         (loop-when-recur [#_"int" hash 1 #_"int" n 0 #_"ISeq" s (seq items)]
                          (some? s)
-                         [(+ (* 31 hash) (Hashed'''hash (first s))) (inc n) (next s)]
+                         [(+ (* 31 hash) (f'hash (first s))) (inc n) (next s)]
                       => (Murmur3'mixCollHash hash, n)
         )
     )
@@ -8635,7 +8692,7 @@
     (defn #_"int" Murmur3'hashUnordered [#_"Seqable" items]
         (loop-when-recur [#_"int" hash 0 #_"int" n 0 #_"ISeq" s (seq items)]
                          (some? s)
-                         [(+ hash (Hashed'''hash (first s))) (inc n) (next s)]
+                         [(+ hash (f'hash (first s))) (inc n) (next s)]
                       => (Murmur3'mixCollHash hash, n)
         )
     )
@@ -8863,22 +8920,6 @@
             :else        (.compareTo (cast Comparable k1), k2)
         )
     )
-
-;;;
- ; Returns the hash code of its argument. Note this is the hash code
- ; consistent with =, and thus is different from .hashCode for Integer,
- ; Byte and Arbace collections.
- ;;
-(defn hash [x] (Hashed'''hash x))
-
-    (defn #_"int" Util'hashCombine [#_"int" seed, #_"int" hash]
-        ;; a la boost
-        (bit-xor seed (+ hash 0x9e3779b9 (<< seed 6) (>> seed 2)))
-    )
-
-(defn hash-combine [x y]
-    (Util'hashCombine x (Hashed'''hash y))
-)
 )
 )
 
@@ -8926,7 +8967,7 @@
 
     (defm Ratio Hashed
         (#_"int" Hashed'''hash [#_"Ratio" this]
-            (bit-xor (Hashed'''hash (:n this)) (Hashed'''hash (:d this)))
+            (bit-xor (f'hash (:n this)) (f'hash (:d this)))
         )
     )
 
@@ -9468,7 +9509,7 @@
 ;;;
  ; Bitwise and.
  ;;
-(defn bit-and
+(§ defn bit-and
     ([x y] (Numbers'and x y))
     ([x y & s] (reduce bit-and (bit-and x y) s))
 )
@@ -9476,7 +9517,7 @@
 ;;;
  ; Bitwise or.
  ;;
-(defn bit-or
+(§ defn bit-or
     ([x y] (Numbers'or x y))
     ([x y & s] (reduce bit-or (bit-or x y) s))
 )
@@ -9484,7 +9525,7 @@
 ;;;
  ; Bitwise exclusive or.
  ;;
-(defn bit-xor
+(§ defn bit-xor
     ([x y] (Numbers'xor x y))
     ([x y & s] (reduce bit-xor (bit-xor x y) s))
 )
@@ -9515,7 +9556,7 @@
 ;;;
  ; Returns true if n is even, throws an exception if n is not an integer.
  ;;
-(§ defn even? [n]
+(defn even? [n]
     (when (integer? n) => (throw! (str "argument must be an integer: " n))
         (zero? (bit-and n 1))
     )
@@ -9684,7 +9725,7 @@
         (merge (Keyword'class.)
             (hash-map
                 #_"Symbol" :sym sym
-                #_"int" :hash (+ (Hashed'''hash sym) 0x9e3779b9)
+                #_"int" :hash (+ (f'hash sym) 0x9e3779b9)
             )
         )
     )
@@ -10412,7 +10453,7 @@
     (defm APersistentVector Hashed
         (#_"int" Hashed'''hash [#_"APersistentVector" this]
             (loop-when [#_"int" hash 1 #_"int" i 0] (< i (count this)) => (Murmur3'mixCollHash hash, i)
-                (recur (+ (* 31 hash) (Hashed'''hash (nth this i))) (inc i))
+                (recur (+ (* 31 hash) (f'hash (nth this i))) (inc i))
             )
         )
     )
@@ -12026,7 +12067,7 @@
     (declare HashCollisionNode'new)
 
     (defn- #_"INode" BitmapIndexedNode'createNode-6 [#_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" key2hash, #_"Object" key2, #_"Object" val2]
-        (let [#_"int" key1hash (Hashed'''hash key1)]
+        (let [#_"int" key1hash (f'hash key1)]
             (when-not (= key1hash key2hash) => (HashCollisionNode'new nil, key1hash, 2, (object-array [ key1, val1, key2, val2 ]))
                 (let [#_"boolean'" addedLeaf (atom false) #_"Thread'" edit (atom nil)]
                     (-> BitmapIndexedNode'EMPTY
@@ -12069,7 +12110,7 @@
                                 (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
                                     (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                         (if (some? (aget (:a this) j))
-                                            (aset! nodes i (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), (Hashed'''hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
+                                            (aset! nodes i (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), (f'hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
                                             (aset! nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
                                         )
                                         (recur (+ j 2) (inc i))
@@ -12192,7 +12233,7 @@
     )
 
     (defn- #_"INode" BitmapIndexedNode'createNode-7 [#_"Thread'" edit, #_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" key2hash, #_"Object" key2, #_"Object" val2]
-        (let [#_"int" key1hash (Hashed'''hash key1)]
+        (let [#_"int" key1hash (f'hash key1)]
             (when-not (= key1hash key2hash) => (HashCollisionNode'new nil, key1hash, 2, (object-array [ key1, val1, key2, val2 ]))
                 (let [#_"boolean'" addedLeaf (atom false)]
                     (-> BitmapIndexedNode'EMPTY
@@ -12243,7 +12284,7 @@
                                     (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
                                         (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                             (if (some? (aget (:a this) j))
-                                                (aset! nodes i (INode'''assocT BitmapIndexedNode'EMPTY, edit, (+ shift 5), (Hashed'''hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
+                                                (aset! nodes i (INode'''assocT BitmapIndexedNode'EMPTY, edit, (+ shift 5), (f'hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
                                                 (aset! nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
                                             )
                                             (recur (+ j 2) (inc i))
@@ -12491,7 +12532,7 @@
                     )
                 )
                 (let [#_"boolean'" addedLeaf (atom false)
-                      #_"INode" node (INode'''assocT (or (:root this) BitmapIndexedNode'EMPTY), (:edit this), 0, (Hashed'''hash key), key, val, addedLeaf)
+                      #_"INode" node (INode'''assocT (or (:root this) BitmapIndexedNode'EMPTY), (:edit this), 0, (f'hash key), key, val, addedLeaf)
                       this (if (= (:root this) node) this (assoc this :root node))]
                     (when @addedLeaf => this
                         (update this :n inc)
@@ -12507,7 +12548,7 @@
                 )
                 (when (some? (:root this)) => this
                     (let [#_"boolean'" removedLeaf (atom false)
-                          #_"INode" node (INode'''dissocT (:root this), (:edit this), 0, (Hashed'''hash key), key, removedLeaf)
+                          #_"INode" node (INode'''dissocT (:root this), (:edit this), 0, (f'hash key), key, removedLeaf)
                           this (if (= (:root this) node) this (assoc this :root node))]
                         (when @removedLeaf => this
                             (update this :n dec)
@@ -12528,7 +12569,7 @@
                     (:nullValue this)
                 )
                 (when (some? (:root this)) => not-found
-                    (INode'''find (:root this), 0, (Hashed'''hash key), key, not-found)
+                    (INode'''find (:root this), 0, (f'hash key), key, not-found)
                 )
             )
         )
@@ -12640,7 +12681,7 @@
             (if (nil? key)
                 (:hasNull this)
                 (and (some? (:root this))
-                    (not (identical? (INode'''find (:root this), 0, (Hashed'''hash key), key, PersistentHashMap'NOT_FOUND) PersistentHashMap'NOT_FOUND))
+                    (not (identical? (INode'''find (:root this), 0, (f'hash key), key, PersistentHashMap'NOT_FOUND) PersistentHashMap'NOT_FOUND))
                 )
             )
         )
@@ -12651,7 +12692,7 @@
                     (MapEntry'create nil, (:nullValue this))
                 )
                 (when (some? (:root this))
-                    (INode'''find (:root this), 0, (Hashed'''hash key), key)
+                    (INode'''find (:root this), 0, (f'hash key), key)
                 )
             )
         )
@@ -12664,7 +12705,7 @@
                     (PersistentHashMap'new (meta this), (+ (:n this) (if (:hasNull this) 0 1)), (:root this), true, val)
                 )
                 (let [#_"boolean'" addedLeaf (atom false)
-                      #_"INode" newroot (INode'''assoc (or (:root this) BitmapIndexedNode'EMPTY), 0, (Hashed'''hash key), key, val, addedLeaf)]
+                      #_"INode" newroot (INode'''assoc (or (:root this) BitmapIndexedNode'EMPTY), 0, (f'hash key), key, val, addedLeaf)]
                     (when-not (= newroot (:root this)) => this
                         (PersistentHashMap'new (meta this), (+ (:n this) (if @addedLeaf 1 0)), newroot, (:hasNull this), (:nullValue this))
                     )
@@ -12682,7 +12723,7 @@
                         (:nullValue this)
                     )
                     (when (some? (:root this)) => not-found
-                        (INode'''find (:root this), 0, (Hashed'''hash key), key, not-found)
+                        (INode'''find (:root this), 0, (f'hash key), key, not-found)
                     )
                 )
             )
@@ -12697,7 +12738,7 @@
                 (nil? (:root this))
                     this
                 :else
-                    (let [#_"INode" newroot (INode'''dissoc (:root this), 0, (Hashed'''hash key), key)]
+                    (let [#_"INode" newroot (INode'''dissoc (:root this), 0, (f'hash key), key)]
                         (when-not (= newroot (:root this)) => this
                             (PersistentHashMap'new (meta this), (dec (:n this)), newroot, (:hasNull this), (:nullValue this))
                         )
@@ -15817,7 +15858,7 @@
     (defm PersistentWector Hashed
         (#_"int" Hashed'''hash [#_"PersistentWector" this]
             (loop-when [#_"int" hash 1 #_"int" i 0] (< i (:cnt this)) => (Murmur3'mixCollHash hash, i)
-                (recur (+ (* 31 hash) (Hashed'''hash (Indexed'''nth this, i))) (inc i))
+                (recur (+ (* 31 hash) (f'hash (Indexed'''nth this, i))) (inc i))
             )
         )
     )
@@ -16828,6 +16869,11 @@
     )
 
 ;;;
+ ; Return a seq of all but the last item in coll, in linear time.
+ ;;
+(defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
+
+;;;
  ; For a list or queue, returns a new list/queue without the first item,
  ; for a vector, returns a new vector without the last item.
  ; If the collection is empty, throws an exception.
@@ -17171,7 +17217,7 @@
                     )
                     a
                 )
-            (satisfies? Seqable coll)
+            (seqable? coll)
                 (RT'seqToArray (seq coll))
             (string? coll)
                 (let [#_"char[]" chars (.toCharArray coll)
@@ -17737,6 +17783,14 @@
  ; Returns false if (f? x) is logical true for every x in coll, else true.
  ;;
 (def #_"Boolean" not-every? (comp not every?))
+
+(defn index-of [s x]
+    (loop-when [i 0 s (seq s)] (some? s) => -1
+        (when-not (= (first s) x) => i
+            (recur (inc i) (next s))
+        )
+    )
+)
 
 ;;;
  ; Returns the first logical true value of (f? x) for any x in coll,
@@ -18580,7 +18634,7 @@
 ;;;
  ; Returns a lazy seq of the first item in each coll, then the second, etc.
  ;;
-(§ defn interleave
+(defn interleave
     ([] ())
     ([c1] (lazy-seq c1))
     ([c1 c2]
@@ -19534,7 +19588,7 @@
     (let [buckets
             (loop-when-recur [m {} ks tests vs thens]
                              (and ks vs)
-                             [(update m (Hashed'''hash (first ks)) (fnil conj []) [(first ks) (first vs)]) (next ks) (next vs)]
+                             [(update m (f'hash (first ks)) (fnil conj []) [(first ks) (first vs)]) (next ks) (next vs)]
                           => m
             )
           assoc-multi
@@ -19567,17 +19621,17 @@
  ; post-switch equivalence checking must not be done (occurs with hash collisions).
  ;;
 (defn- prep-hashes [expr-sym default tests thens]
-    (let [hashes (into #{} (map Hashed'''hash tests))]
+    (let [hashes (into #{} (map f'hash tests))]
         (if (= (count tests) (count hashes))
             (if (fits-table? hashes)
                 ;; compact case ints, no shift-mask
-                [0 0 (case-map Hashed'''hash identity tests thens) :compact]
+                [0 0 (case-map f'hash identity tests thens) :compact]
                 (let [[shift mask] (or (maybe-min-hash hashes) [0 0])]
                     (if (zero? mask)
                         ;; sparse case ints, no shift-mask
-                        [0 0 (case-map Hashed'''hash identity tests thens) :sparse]
+                        [0 0 (case-map f'hash identity tests thens) :sparse]
                         ;; compact case ints, with shift-mask
-                        [shift mask (case-map #(shift-mask shift mask (Hashed'''hash %)) identity tests thens) :compact]
+                        [shift mask (case-map #(shift-mask shift mask (f'hash %)) identity tests thens) :compact]
                     )
                 )
             )
@@ -19967,7 +20021,7 @@
           fields         (mapv #(with-meta % nil) fields)
           base-fields    fields
           fields         (conj fields '__meta '__extmap '^:mutable __hash)
-          type-hash      (hash classname)]
+          type-hash      (f'hash classname)]
         (when (some #{:volatile :mutable} (mapcat (comp keys meta) hinted-fields))
             (throw! ":volatile or :mutable not supported for record fields")
         )
