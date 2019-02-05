@@ -129,9 +129,9 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = assoc atom boolean case char compare cons defmethod defn fn hash-map hash-set identical? int intern let list long loop make-array map merge object-array reify reset! satisfies? swap! symbol to-array vector?]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = atom boolean case char compare cons defmethod defn fn hash-map hash-set identical? int intern let list long loop make-array map merge object-array reify reset! satisfies? swap! symbol to-array]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
-    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength anew aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot rem thread throw! update!! zero? |])
+    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength anew aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! update!! zero? |])
 )
 
 (import!
@@ -173,11 +173,11 @@
 ;;;
  ; defs the supplied var names with no bindings, useful for making forward declarations.
  ;;
-(defmacro declare [& names] `(do ~@(map #(list 'def (-/vary-meta % assoc :declared true)) names)))
+(defmacro declare [& names] `(do ~@(map #(list 'def (-/vary-meta % -/assoc :declared true)) names)))
 
-(defmacro def-      [x & s] `(def      ~(-/vary-meta x assoc :private true) ~@s))
-(defmacro defn-     [x & s] `(defn     ~(-/vary-meta x assoc :private true) ~@s))
-(defmacro defmacro- [x & s] `(defmacro ~(-/vary-meta x assoc :private true) ~@s))
+(defmacro def-      [x & s] `(def      ~(-/vary-meta x -/assoc :private true) ~@s))
+(defmacro defn-     [x & s] `(defn     ~(-/vary-meta x -/assoc :private true) ~@s))
+(defmacro defmacro- [x & s] `(defmacro ~(-/vary-meta x -/assoc :private true) ~@s))
 
 (defn identity   [x] x)
 (defn constantly [x] (fn [& _] x))
@@ -272,7 +272,7 @@
     ([bind then] `(if-let ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (vector? bind) "a vector for its binding"
+            (-/vector? bind) "a vector for its binding"
             (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
@@ -285,7 +285,7 @@
 )
 
 (defmacro cond-let [bind then & else]
-    (let [bind (if (vector? bind) bind [`_# bind])]
+    (let [bind (if (-/vector? bind) bind [`_# bind])]
         `(if-let ~bind ~then ~(when else `(cond-let ~@else)))
     )
 )
@@ -294,7 +294,7 @@
     ([bind then] `(if-some ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (vector? bind) "a vector for its binding"
+            (-/vector? bind) "a vector for its binding"
             (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
@@ -307,7 +307,7 @@
 )
 
 (defmacro cond-some [bind then & else]
-    (let [bind (if (vector? bind) bind [`_# bind])]
+    (let [bind (if (-/vector? bind) bind [`_# bind])]
         `(if-some ~bind ~then ~(when else `(cond-some ~@else)))
     )
 )
@@ -316,7 +316,7 @@
     ([bind then] `(if-first ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (vector? bind) "a vector for its binding"
+            (-/vector? bind) "a vector for its binding"
             (= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
@@ -330,7 +330,7 @@
 
 (ß defmacro when-let [bindings & body]
     (assert-args
-        (vector? bindings) "a vector for its binding"
+        (-/vector? bindings) "a vector for its binding"
         (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] x#
@@ -342,7 +342,7 @@
 
 (ß defmacro when-some [bindings & body]
     (assert-args
-        (vector? bindings) "a vector for its binding"
+        (-/vector? bindings) "a vector for its binding"
         (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] (some? x#)
@@ -354,7 +354,7 @@
 
 (ß defmacro when-first [bindings & body]
     (assert-args
-        (vector? bindings) "a vector for its binding"
+        (-/vector? bindings) "a vector for its binding"
         (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(when-some [s# (-/seq ~(bindings 1))]
@@ -413,15 +413,15 @@
     )
 )
 
-(letfn [(v' [v] (cond (vector? v) v (-/symbol? v) [v v] :else [`_# v]))
-        (r' [r] (cond (vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
+(letfn [(v' [v] (cond (-/vector? v) v (-/symbol? v) [v v] :else [`_# v]))
+        (r' [r] (cond (-/vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
         (=> [s] (if (= '=> (-/first s)) (-/next s) (cons nil s)))
         (l' [v ? r s] (let [r (r' r) [e & s] (=> s)] `(loop ~(v' v) (if ~? (do ~@s ~@r) ~e))))]
     (defmacro loop-when [v ? & s] (l' v ? nil s))
     (defmacro loop-when-recur [v ? r & s] (l' v ? r s))
 )
 
-(letfn [(r' [r] (cond (vector? r) `(recur ~@r) (some? r) `(recur ~r)))
+(letfn [(r' [r] (cond (-/vector? r) `(recur ~@r) (some? r) `(recur ~r)))
         (=> [s] (if (= '=> (-/first s)) (-/second s)))]
     (defmacro recur-when [? r & s] `(if ~? ~(r' r) ~(=> s)))
 )
@@ -440,7 +440,7 @@
  ;;
 (defmacro doseq [bindings & body]
     (assert-args
-        (vector? bindings) "a vector for its binding"
+        (-/vector? bindings) "a vector for its binding"
         (-/even? (-/count bindings)) "an even number of forms in binding vector"
     )
     (letfn [(emit- [e r]
@@ -473,7 +473,7 @@
  ;;
 (defmacro dotimes [bindings & body]
     (assert-args
-        (vector? bindings) "a vector for its binding"
+        (-/vector? bindings) "a vector for its binding"
         (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     (let [[i n] bindings]
@@ -585,8 +585,8 @@
         (#_"ISeq" Seqable'''seq [#_"Seqable" this])
     )
 
-    (-/extend-protocol Seqable
-        clojure.lang.Seqable (Seqable'''seq [x] (.seq x))
+    (-/extend-protocol Seqable clojure.lang.Seqable
+        (Seqable'''seq [x] (.seq x))
     )
 )
 
@@ -610,8 +610,9 @@
         (#_"ISeq" ISeq'''next [#_"ISeq" this])
     )
 
-    (-/extend-protocol ISeq
-        clojure.lang.ISeq (ISeq'''first [s] (.first s)) (ISeq'''next [s] (.next s))
+    (-/extend-protocol ISeq clojure.lang.ISeq
+        (ISeq'''first [s] (.first s))
+        (ISeq'''next [s] (.next s))
     )
 )
 
@@ -915,8 +916,9 @@
         (#_"String" INamed'''getName [#_"INamed" this])
     )
 
-    (-/extend-protocol INamed
-        clojure.lang.Named (INamed'''getNamespace [this] (.getNamespace this)) (INamed'''getName [this] (.getName this))
+    (-/extend-protocol INamed clojure.lang.Named
+        (INamed'''getNamespace [this] (.getNamespace this))
+        (INamed'''getName [this] (.getName this))
     )
 )
 
@@ -937,8 +939,8 @@
         (#_"IPersistentMap" IMeta'''meta [#_"IMeta" this])
     )
 
-    (-/extend-protocol IMeta
-        clojure.lang.IMeta (IMeta'''meta [this] (.meta this))
+    (-/extend-protocol IMeta clojure.lang.IMeta
+        (IMeta'''meta [this] (.meta this))
     )
 )
 
@@ -952,8 +954,8 @@
         (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"IPersistentMap" meta])
     )
 
-    (-/extend-protocol IObj
-        clojure.lang.IObj (IObj'''withMeta [this, meta] (.withMeta this, meta))
+    (-/extend-protocol IObj clojure.lang.IObj
+        (IObj'''withMeta [this, meta] (.withMeta this, meta))
     )
 )
 
@@ -974,8 +976,9 @@
         (#_"IPersistentMap" IReference'''resetMeta [#_"IReference" this, #_"IPersistentMap" m])
     )
 
-    (-/extend-protocol IReference
-        clojure.lang.IReference (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args)) (IReference'''resetMeta [this, m] (.resetMeta this, m))
+    (-/extend-protocol IReference clojure.lang.IReference
+        (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
+        (IReference'''resetMeta [this, m] (.resetMeta this, m))
     )
 )
 
@@ -995,8 +998,8 @@
         (#_"Object" IDeref'''deref [#_"IDeref" this])
     )
 
-    (-/extend-protocol IDeref
-        clojure.lang.IDeref (IDeref'''deref [this] (.deref this))
+    (-/extend-protocol IDeref clojure.lang.IDeref
+        (IDeref'''deref [this] (.deref this))
     )
 )
 
@@ -1027,8 +1030,8 @@
         (#_"boolean" IPending'''isRealized [#_"IPending" this])
     )
 
-    (-/extend-protocol IPending
-        clojure.lang.IPending (IPending'''isRealized [this] (.isRealized this))
+    (-/extend-protocol IPending clojure.lang.IPending
+        (IPending'''isRealized [this] (.isRealized this))
     )
 )
 
@@ -1050,8 +1053,8 @@
         (#_"ISeq" Reversible'''rseq [#_"Reversible" this])
     )
 
-    (-/extend-protocol Reversible
-        clojure.lang.Reversible (Reversible'''rseq [this] (.rseq this))
+    (-/extend-protocol Reversible clojure.lang.Reversible
+        (Reversible'''rseq [this] (.rseq this))
     )
 )
 
@@ -1089,8 +1092,11 @@
         )
     )
 
-    (-/extend-protocol Indexed
-        clojure.lang.Indexed (Indexed'''nth ([this, i] (.nth this, i)) ([this, i, not-found] (.nth this, i, not-found)))
+    (-/extend-protocol Indexed clojure.lang.Indexed
+        (Indexed'''nth
+            ([this, i] (.nth this, i))
+            ([this, i, not-found] (.nth this, i, not-found))
+        )
     )
 )
 
@@ -1112,8 +1118,11 @@
         )
     )
 
-    (-/extend-protocol ILookup
-        clojure.lang.ILookup (ILookup'''valAt ([this, key] (.valAt this, key)) ([this, key, not-found] (.valAt this, key, not-found)))
+    (-/extend-protocol ILookup clojure.lang.ILookup
+        (ILookup'''valAt
+            ([this, key] (.valAt this, key))
+            ([this, key, not-found] (.valAt this, key, not-found))
+        )
     )
 )
 
@@ -1122,8 +1131,8 @@
         (#_"ILookupThunk" ILookupSite'''fault [#_"ILookupSite" this, #_"Object" target])
     )
 
-    (-/extend-protocol ILookupSite
-        clojure.lang.ILookupSite (ILookupSite'''fault [this, target] (.fault this, target))
+    (-/extend-protocol ILookupSite clojure.lang.ILookupSite
+        (ILookupSite'''fault [this, target] (.fault this, target))
     )
 )
 
@@ -1132,8 +1141,8 @@
         (#_"Object" ILookupThunk'''get [#_"ILookupThunk" this, #_"Object" target])
     )
 
-    (-/extend-protocol ILookupThunk
-        clojure.lang.ILookupThunk (ILookupThunk'''get [this, target] (.get this, target))
+    (-/extend-protocol ILookupThunk clojure.lang.ILookupThunk
+        (ILookupThunk'''get [this, target] (.get this, target))
     )
 )
 
@@ -1143,8 +1152,9 @@
         (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
     )
 
-    (-/extend-protocol IMapEntry
-        clojure.lang.IMapEntry (IMapEntry'''key [this] (.key this)) (IMapEntry'''val [this] (.val this))
+    (-/extend-protocol IMapEntry clojure.lang.IMapEntry
+        (IMapEntry'''key [this] (.key this))
+        (IMapEntry'''val [this] (.val this))
     )
 )
 
@@ -1161,23 +1171,32 @@
  ;;
 (defn keys [m] (map key m))
 (defn vals [m] (map val m))
-
+
 (about #_"cloiure.core.IPersistentCollection"
     (defp IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
         (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
     )
+
+    (-/extend-protocol IPersistentCollection clojure.lang.IPersistentCollection
+        (IPersistentCollection'''conj [this, o] (.cons this, o))
+        (IPersistentCollection'''empty [this] (.empty this))
+    )
 )
 
-(defn coll? [x] (or (satisfies? IPersistentCollection x) (instance? clojure.lang.IPersistentCollection x)))
+(defn coll? [x] (satisfies? IPersistentCollection x))
 
 (about #_"cloiure.core.IEditableCollection"
     (defp IEditableCollection
         (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
     )
+
+    (-/extend-protocol IEditableCollection clojure.lang.IEditableCollection
+        (IEditableCollection'''asTransient [this] (.asTransient this))
+    )
 )
 
-(defn editable? [x] (or (satisfies? IEditableCollection x) (instance? clojure.lang.IEditableCollection x)))
+(defn editable? [x] (satisfies? IEditableCollection x))
 
 (about #_"cloiure.core.Associative"
     (defp Associative
@@ -1185,17 +1204,27 @@
         (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"Object" key])
         (#_"IMapEntry" Associative'''entryAt [#_"Associative" this, #_"Object" key])
     )
+
+    (-/extend-protocol Associative clojure.lang.Associative
+        (Associative'''assoc [this, key, val] (.assoc this, key, val))
+        (Associative'''containsKey [this, key] (.containsKey this, key))
+        (Associative'''entryAt [this, key] (.entryAt this, key))
+    )
 )
 
-(defn associative? [x] (or (satisfies? Associative x) (instance? clojure.lang.Associative x)))
+(defn associative? [x] (satisfies? Associative x))
 
 (about #_"cloiure.core.IPersistentMap"
     (defp IPersistentMap
         (#_"IPersistentMap" IPersistentMap'''dissoc [#_"IPersistentMap" this, #_"Object" key])
     )
+
+    (-/extend-protocol IPersistentMap clojure.lang.IPersistentMap
+        (IPersistentMap'''dissoc [this, key] (.without this, key))
+    )
 )
 
-(defn map? [x] (or (satisfies? IPersistentMap x) (instance? clojure.lang.IPersistentMap x)))
+(defn map? [x] (satisfies? IPersistentMap x))
 
 (about #_"cloiure.core.IPersistentSet"
     (defp IPersistentSet
@@ -1203,30 +1232,49 @@
         (#_"boolean" IPersistentSet'''contains? [#_"IPersistentSet" this, #_"Object" key])
         (#_"Object" IPersistentSet'''get [#_"IPersistentSet" this, #_"Object" key])
     )
+
+    (-/extend-protocol IPersistentSet clojure.lang.IPersistentSet
+        (IPersistentSet'''disj [this, key] (.disjoin this, key))
+        (IPersistentSet'''contains? [this, key] (.contains this, key))
+        (IPersistentSet'''get [this, key] (.get this, key))
+    )
 )
 
-(defn set? [x] (or (satisfies? IPersistentSet x) (instance? clojure.lang.IPersistentSet x)))
+(defn set? [x] (satisfies? IPersistentSet x))
 
 (about #_"cloiure.core.IPersistentStack"
     (defp IPersistentStack
         (#_"Object" IPersistentStack'''peek [#_"IPersistentStack" this])
         (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
     )
+
+    (-/extend-protocol IPersistentStack clojure.lang.IPersistentStack
+        (IPersistentStack'''peek [this] (.peek this))
+        (IPersistentStack'''pop [this] (.pop this))
+    )
 )
+
+(defn stack? [x] (satisfies? IPersistentStack x))
 
 (about #_"cloiure.core.IPersistentList"
     (defp IPersistentList)
+
+    (-/extend-protocol IPersistentList clojure.lang.IPersistentList)
 )
 
-(defn list? [x] (or (satisfies? IPersistentList x) (instance? clojure.lang.IPersistentList x)))
+(defn list? [x] (satisfies? IPersistentList x))
 
 (about #_"cloiure.core.IPersistentVector"
     (defp IPersistentVector
         (#_"IPersistentVector" IPersistentVector'''assocN [#_"IPersistentVector" this, #_"int" i, #_"Object" val])
     )
+
+    (-/extend-protocol IPersistentVector clojure.lang.IPersistentVector
+        (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
+    )
 )
 
-(§ defn vector? [x] (or (satisfies? IPersistentVector x) (instance? clojure.lang.IPersistentVector x)))
+(defn vector? [x] (satisfies? IPersistentVector x))
 
 (about #_"cloiure.core.IPersistentWector"
     (defp IPersistentWector
@@ -1242,6 +1290,11 @@
         (#_"ITransientCollection" ITransientCollection'''conj! [#_"ITransientCollection" this, #_"Object" val])
         (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
     )
+
+    (-/extend-protocol ITransientCollection clojure.lang.ITransientCollection
+        (ITransientCollection'''conj! [this, val] (.conj this, val))
+        (ITransientCollection'''persistent! [this] (.persistent this))
+    )
 )
 
 (about #_"cloiure.core.ITransientAssociative"
@@ -1250,11 +1303,21 @@
         (#_"boolean" ITransientAssociative'''containsKey [#_"ITransientAssociative" this, #_"Object" key])
         (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ITransientAssociative" this, #_"Object" key])
     )
+
+    (-/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
+        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
+        (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
+        (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
+    )
 )
 
 (about #_"cloiure.core.ITransientMap"
     (defp ITransientMap
         (#_"ITransientMap" ITransientMap'''dissoc! [#_"ITransientMap" this, #_"Object" key])
+    )
+
+    (-/extend-protocol ITransientMap clojure.lang.ITransientMap
+        (ITransientMap'''dissoc! [this, key] (.without this, key))
     )
 )
 
@@ -1264,12 +1327,23 @@
         (#_"boolean" ITransientSet'''contains? [#_"ITransientSet" this, #_"Object" key])
         (#_"Object" ITransientSet'''get [#_"ITransientSet" this, #_"Object" key])
     )
+
+    (-/extend-protocol ITransientSet clojure.lang.ITransientSet
+        (ITransientSet'''disj! [this, key] (.disjoin this, key))
+        (ITransientSet'''contains? [this, key] (.contains this, key))
+        (ITransientSet'''get [this, key] (.get this, key))
+    )
 )
 
 (about #_"cloiure.core.ITransientVector"
     (defp ITransientVector
         (#_"ITransientVector" ITransientVector'''assocN! [#_"ITransientVector" this, #_"int" i, #_"Object" val])
         (#_"ITransientVector" ITransientVector'''pop! [#_"ITransientVector" this])
+    )
+
+    (-/extend-protocol ITransientVector clojure.lang.ITransientVector
+        (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
+        (ITransientVector'''pop! [this] (.pop this))
     )
 )
 
@@ -1286,6 +1360,19 @@
         (#_"INode" INode'''dissocT [#_"INode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"boolean'" removedLeaf])
         (#_"Object" INode'''kvreduce [#_"INode" this, #_"IFn" f, #_"Object" r])
     )
+
+    (-/extend-protocol INode clojure.lang.PersistentHashMap$INode
+        (INode'''assoc [this, shift, hash, key, val, addedLeaf] (.assoc this, shift, hash, key, val, addedLeaf))
+        (INode'''dissoc [this, shift, hash, key] (.without this, shift, hash, key))
+        (INode'''find
+            ([this, shift, hash, key] (.find this, shift, hash, key))
+            ([this, shift, hash, key, not-found] (.find this, shift, hash, key, not-found))
+        )
+        (INode'''nodeSeq [this] (.nodeSeq this))
+        (INode'''assocT [this, edit, shift, hash, key, val, addedLeaf] (.assoc this, edit, shift, hash, key, val, addedLeaf))
+        (INode'''dissocT [this, edit, shift, hash, key, removedLeaf] (.without this, edit, shift, hash, key, removedLeaf))
+        (INode'''kvreduce [this, f, r] (.kvreduce this, f, r))
+    )
 )
 
 (about #_"cloiure.core.IReduce"
@@ -1295,11 +1382,22 @@
             [#_"IReduce" this, #_"IFn" f, #_"Object" r]
         )
     )
+
+    (-/extend-protocol IReduce clojure.lang.IReduce
+        (IReduce'''reduce
+            ([this, f] (.reduce this, f))
+            ([this, f, r] (.reduce this, f, r))
+        )
+    )
 )
 
 (about #_"cloiure.core.IKVReduce"
     (defp IKVReduce
         (#_"Object" IKVReduce'''kvreduce [#_"IKVReduce" this, #_"IFn" f, #_"Object" r])
+    )
+
+    (-/extend-protocol IKVReduce clojure.lang.IKVReduce
+        (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
     )
 )
 
@@ -1351,25 +1449,31 @@
 
 (about #_"cloiure.core.Symbol"
     (defp Symbol)
+
+    (-/extend-protocol Symbol clojure.lang.Symbol)
 )
 
-(defn symbol? [x] (or (satisfies? Symbol x) (instance? clojure.lang.Symbol x)))
+(defn symbol? [x] (satisfies? Symbol x))
 
 (about #_"cloiure.core.Keyword"
     (defp Keyword)
+
+    (-/extend-protocol Keyword clojure.lang.Keyword)
 )
 
-(defn keyword? [x] (or (satisfies? Keyword x) (instance? clojure.lang.Keyword x)))
+(defn keyword? [x] (satisfies? Keyword x))
 
 (about #_"cloiure.core.Fn"
     #_abstract
     (defp Fn)
+
+    (-/extend-protocol Fn clojure.lang.Fn)
 )
 
 ;;;
  ; Returns true if x is an object created via fn.
  ;;
-(defn fn? [x] (or (satisfies? Fn x) (instance? clojure.lang.Fn x)))
+(defn fn? [x] (satisfies? Fn x))
 
 (about #_"cloiure.core.RestFn"
     (defp IRestFn
@@ -1561,7 +1665,14 @@
 
 (about #_"cloiure.core.Reduced"
     (defp Reduced)
+
+    (-/extend-protocol Reduced clojure.lang.Reduced)
 )
+
+;;;
+ ; Returns true if x is the result of a call to reduced.
+ ;;
+(defn reduced? [x] (satisfies? Reduced x))
 
 (about #_"cloiure.core.StringSeq"
     (defp StringSeq)
@@ -1570,6 +1681,8 @@
 (about #_"cloiure.core.Var"
     (defp Unbound)
     (defp Var)
+
+    (-/extend-protocol Var clojure.lang.Var)
 )
 
 ;;;
@@ -1652,6 +1765,8 @@
     (defn #_"ClassLoader" Loader'context [] (if (bound? #'*class-loader*) *class-loader* (.getContextClassLoader (thread))))
 
     (defn #_"ClassLoader" Loader'create [] (AccessController/doPrivileged (reify PrivilegedAction (run [_] (Loader'new (Loader'context))))))
+
+    (declare assoc)
 
     (defn #_"Class" Loader''defineClass [#_"Loader" this, #_"String" name, #_"byte[]" bytes]
         (Cache'purge Loader'queue, Loader'cache)
@@ -2428,7 +2543,7 @@
         ;; DEMUNGE_MAP maps strings to characters in the opposite direction that CHAR_MAP does, plus it maps "$" to '/'.
         (loop-when [#_"IPersistentMap" m { "$" \/ } #_"ISeq" s (seq Compiler'CHAR_MAP)] (some? s) => m
             (let [#_"IMapEntry" e (first s)]
-                (recur (assoc m (val e) (key e)) (next s))
+                (recur (-/assoc m (val e) (key e)) (next s))
             )
         )
     )
@@ -8879,11 +8994,6 @@
 (defn reduced [x] (Reduced'new x))
 
 ;;;
- ; Returns true if x is the result of a call to reduced.
- ;;
-(defn reduced? [x] (or (satisfies? Reduced x) (instance? clojure.lang.Reduced x)))
-
-;;;
  ; If x is already reduced?, returns it, else returns (reduced x).
  ;;
 (defn ensure-reduced [x] (if (reduced? x) x (reduced x)))
@@ -9134,9 +9244,9 @@
             )
         )
 
-        (#_"boolean" Ops'''isZero [#_"RatioOps" this, #_"Number" x] (-/= (.signum (:n (§ cast #_"Ratio" x))) 0))
-        (#_"boolean" Ops'''isPos [#_"RatioOps" this, #_"Number" x] (-/> (.signum (:n (§ cast #_"Ratio" x))) 0))
-        (#_"boolean" Ops'''isNeg [#_"RatioOps" this, #_"Number" x] (-/< (.signum (:n (§ cast #_"Ratio" x))) 0))
+        (#_"boolean" Ops'''isZero [#_"RatioOps" this, #_"Number" x] (-/= (.signum (:n #_"Ratio" x)) 0))
+        (#_"boolean" Ops'''isPos [#_"RatioOps" this, #_"Number" x] (-/> (.signum (:n #_"Ratio" x)) 0))
+        (#_"boolean" Ops'''isNeg [#_"RatioOps" this, #_"Number" x] (-/< (.signum (:n #_"Ratio" x)) 0))
 
         (#_"Number" Ops'''add [#_"RatioOps" this, #_"Number" x, #_"Number" y]
             (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
@@ -10747,7 +10857,7 @@
     )
 
     (-/extend-protocol Seqable Object'array
-        (#_"ArraySeq" Seqable'''seq [#_"Object[]" a] (ArraySeq'create a))
+        (#_"ArraySeq" Seqable'''seq [#_"Object[]" a] (#_ArraySeq'create -/seq a))
     )
 
     (defm ArraySeq ISeq
@@ -11137,7 +11247,7 @@
         (reify ILookupThunk
             (#_"Object" ILookupThunk'''get [#_"ILookupThunk" self, #_"Object" target]
                 (if (and (some? target) (= (class target) c))
-                    (ILookup'''valAt (§ cast #_"ILookup" target), (:k this))
+                    (ILookup'''valAt #_"ILookup" target, (:k this))
                     self
                 )
             )
@@ -11824,7 +11934,7 @@
             (loop-when i (< i (count a))
                 (when (nil? (aget a i)) => (NodeSeq'new nil, a, i, nil)
                     (or
-                        (when-some [#_"INode" node (§ cast #_"INode" (aget a (inc i)))]
+                        (when-some [#_"INode" node #_"INode" (aget a (inc i))]
                             (when-some [s (INode'''nodeSeq node)]
                                 (NodeSeq'new nil, a, (+ i 2), s)
                             )
@@ -11860,7 +11970,7 @@
         (loop-when [r r #_"int" i 0] (< i (count a)) => r
             (let [r (if (some? (aget a i))
                         (f r (aget a i), (aget a (inc i)))
-                        (let-when [#_"INode" node (§ cast #_"INode" (aget a (inc i)))] (some? node) => r
+                        (let-when [#_"INode" node #_"INode" (aget a (inc i))] (some? node) => r
                             (INode'''kvreduce node, f, r)
                         )
                     )]
@@ -12087,7 +12197,7 @@
                           #_"Object" valOrNode (aget (:a this) (inc (* 2 idx)))
                           _ (cond
                                 (nil? keyOrNull)
-                                    (let [#_"INode" node (INode'''assoc (§ cast #_"INode" valOrNode), (+ shift 5), hash, key, val, addedLeaf)]
+                                    (let [#_"INode" node (INode'''assoc #_"INode" valOrNode, (+ shift 5), hash, key, val, addedLeaf)]
                                         (when-not (= node valOrNode)
                                             (PersistentHashMap'cloneAndSet (:a this), (inc (* 2 idx)), node)
                                         )
@@ -12111,7 +12221,7 @@
                                     (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                         (if (some? (aget (:a this) j))
                                             (aset! nodes i (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), (f'hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
-                                            (aset! nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
+                                            (aset! nodes i #_"INode" (aget (:a this) (inc j)))
                                         )
                                         (recur (+ j 2) (inc i))
                                     )
@@ -12142,7 +12252,7 @@
                             ;; TODO: collapse
                             (BitmapIndexedNode'new nil, (bit-xor (:bitmap this) bit), (PersistentHashMap'removePair (:a this), i))
                         )
-                        (let [#_"INode" node (INode'''dissoc (§ cast #_"INode" valOrNode), (+ shift 5), hash, key)]
+                        (let [#_"INode" node (INode'''dissoc #_"INode" valOrNode, (+ shift 5), hash, key)]
                             (cond
                                 (= node valOrNode)
                                     this
@@ -12166,7 +12276,7 @@
                         #_"Object" keyOrNull (aget (:a this) (* 2 i))
                         #_"Object" valOrNode (aget (:a this) (inc (* 2 i)))]
                         (cond
-                            (nil? keyOrNull)  (INode'''find (§ cast #_"INode" valOrNode), (+ shift 5), hash, key)
+                            (nil? keyOrNull)  (INode'''find #_"INode" valOrNode, (+ shift 5), hash, key)
                             (= key keyOrNull) (MapEntry'create keyOrNull, valOrNode)
                         )
                     )
@@ -12178,7 +12288,7 @@
                         #_"Object" keyOrNull (aget (:a this) (* 2 i))
                         #_"Object" valOrNode (aget (:a this) (inc (* 2 i)))]
                         (cond
-                            (nil? keyOrNull)  (INode'''find (§ cast #_"INode" valOrNode), (+ shift 5), hash, key, not-found)
+                            (nil? keyOrNull)  (INode'''find #_"INode" valOrNode, (+ shift 5), hash, key, not-found)
                             (= key keyOrNull) valOrNode
                             :else             not-found
                         )
@@ -12253,7 +12363,7 @@
                           #_"Object" valOrNode (aget (:a this) (inc (* 2 idx)))]
                         (cond
                             (nil? keyOrNull)
-                                (let [#_"INode" node (INode'''assocT (§ cast #_"INode" valOrNode), edit, (+ shift 5), hash, key, val, addedLeaf)]
+                                (let [#_"INode" node (INode'''assocT #_"INode" valOrNode, edit, (+ shift 5), hash, key, val, addedLeaf)]
                                     (when-not (= node valOrNode) => this
                                         (BitmapIndexedNode''editAndSet-4 this, edit, (inc (* 2 idx)), node)
                                     )
@@ -12285,7 +12395,7 @@
                                         (when (odd? (>>> (:bitmap this) i)) => (recur j (inc i))
                                             (if (some? (aget (:a this) j))
                                                 (aset! nodes i (INode'''assocT BitmapIndexedNode'EMPTY, edit, (+ shift 5), (f'hash (aget (:a this) j)), (aget (:a this) j), (aget (:a this) (inc j)), addedLeaf))
-                                                (aset! nodes i (§ cast #_"INode" (aget (:a this) (inc j))))
+                                                (aset! nodes i #_"INode" (aget (:a this) (inc j)))
                                             )
                                             (recur (+ j 2) (inc i))
                                         )
@@ -12321,7 +12431,7 @@
                             ;; TODO: collapse
                             (BitmapIndexedNode''editAndRemovePair this, edit, bit, i)
                         )
-                        (let [#_"INode" node (INode'''dissocT (§ cast #_"INode" valOrNode), edit, (+ shift 5), hash, key, removedLeaf)]
+                        (let [#_"INode" node (INode'''dissocT #_"INode" valOrNode, edit, (+ shift 5), hash, key, removedLeaf)]
                             (cond
                                 (= node valOrNode)
                                     this
@@ -13635,7 +13745,7 @@
         )
 
         (#_"ISeq" ISeq'''next [#_"TSeq" this]
-            (let [#_"TNode" t (§ cast #_"TNode" (first (:stack this))) #_"boolean" asc? (:asc? this)]
+            (let [#_"TNode" t #_"TNode" (first (:stack this)) #_"boolean" asc? (:asc? this)]
                 (when-some [#_"ISeq" stack (TSeq'push (if asc? (ITNode'''right t) (ITNode'''left t)), (next (:stack this)), asc?)]
                     (TSeq'new stack, asc?, (dec (:cnt this)))
                 )
@@ -14016,7 +14126,7 @@
         (#_"PersistentTreeMap" Associative'''assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
             (let [#_"Atom" found (atom nil) #_"TNode" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
                 (if (nil? t)
-                    (if (= (IMapEntry'''val (§ cast #_"TNode" @found)) val)
+                    (if (= (IMapEntry'''val #_"TNode" @found) val)
                         this
                         (PersistentTreeMap'new (meta this), (:cmp this), (PersistentTreeMap''replace this, (:tree this), key, val), (:_count this))
                     )
@@ -16534,7 +16644,7 @@
     )
 
     (-/extend-protocol Seqable CharSequence
-        (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (StringSeq'create s))
+        (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (#_StringSeq'create -/seq s))
     )
 
     (defm StringSeq ISeq
@@ -16879,7 +16989,7 @@
  ; If the collection is empty, throws an exception.
  ; Note - not the same as next/butlast.
  ;;
-(§ defn pop [s] (RT'pop s))
+(defn pop [s] (RT'pop s))
 
     (defn #_"Object" RT'get
         ([#_"Object" coll, #_"Object" key]
@@ -16928,8 +17038,8 @@
 
     (defn #_"Associative" RT'assoc [#_"Object" coll, #_"Object" key, #_"Object" val]
         (if (some? coll)
-            (Associative'''assoc (§ cast #_"Associative" coll), key, val)
-            (PersistentArrayMap'new (object-array [ key, val ]))
+            (Associative'''assoc #_"Associative" coll, key, val)
+            #_(PersistentArrayMap'new (object-array [ key, val ])) (-/assoc coll key val)
         )
     )
 
@@ -16938,7 +17048,7 @@
  ; When applied to a map, returns a new map of the same (hashed/sorted) type, that contains the mapping of key(s) to val(s).
  ; When applied to a vector, returns a new vector that contains val at index. Note - index must be <= (count vector).
  ;;
-(§ defn assoc
+(defn assoc
     ([a k v] (RT'assoc a k v))
     ([a k v & kvs]
         (let-when [a (assoc a k v)] kvs => a
@@ -17012,7 +17122,7 @@
 
     (defn #_"Object" RT'dissoc [#_"Object" coll, #_"Object" key]
         (when (some? coll)
-            (IPersistentMap'''dissoc (§ cast #_"IPersistentMap" coll), key)
+            (IPersistentMap'''dissoc #_"IPersistentMap" coll, key)
         )
     )
 
@@ -17460,7 +17570,8 @@
  ; is called, and will cache the result and return it on all subsequent
  ; seq calls. See also - realized?
  ;;
-(defmacro lazy-seq [& body] `(LazySeq'new (^{:once true} fn* [] ~@body)))
+(refer! - lazy-seq)
+(ß defmacro lazy-seq [& body] `(LazySeq'new (^{:once true} fn* [] ~@body)))
 
 ;;;
  ; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
@@ -20641,7 +20752,7 @@
 )
 
 (§ extend-protocol KVReduce
-    nil
+    nil
     (kv-reduce [_ _ r] r)
 
     ;; slow path default
