@@ -1444,7 +1444,7 @@
 
 (about #_"cloiure.core.AFn"
     #_abstract
-    (defp AFn) (ß extend-type IFn)
+    (defp AFn)
 )
 
 (about #_"cloiure.core.Symbol"
@@ -1498,7 +1498,7 @@
 
 (about #_"cloiure.core.ASeq"
     #_abstract
-    (defp ASeq) (ß extend-type Hashed IObject IPersistentCollection ISeq Seqable Sequential)
+    (defp ASeq)
 )
 
 (about #_"cloiure.core.LazySeq"
@@ -2233,7 +2233,7 @@
 )
 
 (about #_"NilExpr"
-    (defr NilExpr [Expr Literal])
+    (defr NilExpr [])
 
     (defn #_"NilExpr" NilExpr'new []
         (NilExpr'class.)
@@ -2267,7 +2267,7 @@
 )
 
 (about #_"BooleanExpr"
-    (defr BooleanExpr [Expr Literal])
+    (defr BooleanExpr [])
 
     (defn #_"BooleanExpr" BooleanExpr'new [#_"boolean" val]
         (merge (BooleanExpr'class.)
@@ -2858,7 +2858,7 @@
 )
 
 (about #_"MonitorEnterExpr"
-    (defr MonitorEnterExpr [Expr Untyped])
+    (defr MonitorEnterExpr [Untyped])
 
     (defn #_"MonitorEnterExpr" MonitorEnterExpr'new [#_"Expr" target]
         (merge (MonitorEnterExpr'class.)
@@ -2899,7 +2899,7 @@
 )
 
 (about #_"MonitorExitExpr"
-    (defr MonitorExitExpr [Expr Untyped])
+    (defr MonitorExitExpr [Untyped])
 
     (defn #_"MonitorExitExpr" MonitorExitExpr'new [#_"Expr" target]
         (merge (MonitorExitExpr'class.)
@@ -2938,7 +2938,7 @@
 )
 
 (about #_"AssignExpr"
-    (defr AssignExpr [Expr])
+    (defr AssignExpr [])
 
     (defn #_"AssignExpr" AssignExpr'new [#_"Assignable" target, #_"Expr" val]
         (merge (AssignExpr'class.)
@@ -2982,7 +2982,7 @@
 )
 
 (about #_"ImportExpr"
-    (defr ImportExpr [Expr])
+    (defr ImportExpr [])
 
     (defn #_"ImportExpr" ImportExpr'new [#_"String" c]
         (merge (ImportExpr'class.)
@@ -3031,7 +3031,7 @@
 )
 
 (about #_"EmptyExpr"
-    (defr EmptyExpr [Expr])
+    (defr EmptyExpr [])
 
     (defn #_"EmptyExpr" EmptyExpr'new [#_"Object" coll]
         (merge (EmptyExpr'class.)
@@ -3073,7 +3073,7 @@
 )
 
 (about #_"ConstantExpr"
-    (defr ConstantExpr [Expr Literal])
+    (defr ConstantExpr [])
 
     (defn #_"ConstantExpr" ConstantExpr'new [#_"Object" v]
         (merge (ConstantExpr'class.)
@@ -3119,7 +3119,7 @@
 )
 
 (about #_"NumberExpr"
-    (defr NumberExpr [Expr Literal MaybePrimitive])
+    (defr NumberExpr [])
 
     (defn #_"NumberExpr" NumberExpr'new [#_"Number" n]
         (merge (NumberExpr'class.)
@@ -3180,7 +3180,7 @@
 )
 
 (about #_"StringExpr"
-    (defr StringExpr [Expr Literal])
+    (defr StringExpr [])
 
     (defn #_"StringExpr" StringExpr'new [#_"String" str]
         (merge (StringExpr'class.)
@@ -3215,7 +3215,7 @@
 )
 
 (about #_"KeywordExpr"
-    (defr KeywordExpr [Expr Literal])
+    (defr KeywordExpr [])
 
     (defn #_"KeywordExpr" KeywordExpr'new [#_"Keyword" k]
         (merge (KeywordExpr'class.)
@@ -3416,7 +3416,7 @@
 )
 
 (about #_"InstanceFieldExpr"
-    (defr InstanceFieldExpr [Assignable Expr Interop MaybePrimitive])
+    (defr InstanceFieldExpr [Interop])
 
     (defn #_"InstanceFieldExpr" InstanceFieldExpr'new [#_"int" line, #_"Expr" target, #_"String" fieldName, #_"Symbol" tag, #_"boolean" requireField]
         (let [#_"Class" c (Expr'''getClass target)
@@ -3529,7 +3529,7 @@
 )
 
 (about #_"StaticFieldExpr"
-    (defr StaticFieldExpr [Assignable Expr Interop MaybePrimitive])
+    (defr StaticFieldExpr [Interop])
 
     (defn #_"StaticFieldExpr" StaticFieldExpr'new [#_"int" line, #_"Class" c, #_"String" fieldName, #_"Symbol" tag]
         (merge (StaticFieldExpr'class.)
@@ -3702,7 +3702,7 @@
 )
 
 (about #_"InstanceMethodExpr"
-    (defr InstanceMethodExpr [Expr Interop MaybePrimitive])
+    (defr InstanceMethodExpr [Interop])
 
     (defn #_"InstanceMethodExpr" InstanceMethodExpr'new [#_"int" line, #_"Symbol" tag, #_"Expr" target, #_"String" methodName, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [#_"java.lang.reflect.Method" method
@@ -3843,7 +3843,7 @@
 )
 
 (about #_"StaticMethodExpr"
-    (defr StaticMethodExpr [Expr Interop MaybePrimitive])
+    (defr StaticMethodExpr [Interop])
 
     (defn #_"StaticMethodExpr" StaticMethodExpr'new [#_"int" line, #_"Symbol" tag, #_"Class" c, #_"String" methodName, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [#_"java.lang.reflect.Method" method
@@ -4063,7 +4063,7 @@
 )
 
 (about #_"UnresolvedVarExpr"
-    (defr UnresolvedVarExpr [Expr])
+    (defr UnresolvedVarExpr [])
 
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
         (merge (UnresolvedVarExpr'class.)
@@ -4089,7 +4089,7 @@
 )
 
 (about #_"VarExpr"
-    (defr VarExpr [Assignable Expr])
+    (defr VarExpr [])
 
     (defn #_"VarExpr" VarExpr'new [#_"Var" var, #_"Symbol" tag]
         (merge (VarExpr'class.)
@@ -4142,7 +4142,7 @@
 )
 
 (about #_"TheVarExpr"
-    (defr TheVarExpr [Expr])
+    (defr TheVarExpr [])
 
     (defn #_"TheVarExpr" TheVarExpr'new [#_"Var" var]
         (merge (TheVarExpr'class.)
@@ -4186,7 +4186,7 @@
 )
 
 (about #_"BodyExpr"
-    (defr BodyExpr [Expr MaybePrimitive])
+    (defr BodyExpr [])
 
     (defn #_"BodyExpr" BodyExpr'new [#_"PersistentVector" exprs]
         (merge (BodyExpr'class.)
@@ -4268,7 +4268,7 @@
 )
 
 (about #_"TryExpr"
-    (defr TryExpr [Expr])
+    (defr TryExpr [])
 
     (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"PersistentVector" catchExprs, #_"Expr" finallyExpr]
         (merge (TryExpr'class.)
@@ -4432,7 +4432,7 @@
 )
 
 (about #_"ThrowExpr"
-    (defr ThrowExpr [Expr Untyped])
+    (defr ThrowExpr [Untyped])
 
     (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
         (merge (ThrowExpr'class.)
@@ -4476,7 +4476,7 @@
 )
 
 (about #_"NewExpr"
-    (defr NewExpr [Expr])
+    (defr NewExpr [])
 
     (defn #_"NewExpr" NewExpr'new [#_"Class" c, #_"IPersistentVector" args, #_"int" line]
         (let [#_"Constructor" ctor
@@ -4577,7 +4577,7 @@
 )
 
 (about #_"MetaExpr"
-    (defr MetaExpr [Expr])
+    (defr MetaExpr [])
 
     (defn #_"MetaExpr" MetaExpr'new [#_"Expr" expr, #_"Expr" meta]
         (merge (MetaExpr'class.)
@@ -4612,7 +4612,7 @@
 )
 
 (about #_"IfExpr"
-    (defr IfExpr [Expr MaybePrimitive])
+    (defr IfExpr [])
 
     (defn #_"IfExpr" IfExpr'new [#_"int" line, #_"Expr" testExpr, #_"Expr" thenExpr, #_"Expr" elseExpr]
         (merge (IfExpr'class.)
@@ -4734,7 +4734,7 @@
 )
 
 (about #_"ListExpr"
-    (defr ListExpr [Expr])
+    (defr ListExpr [])
 
     (defn #_"ListExpr" ListExpr'new [#_"IPersistentVector" args]
         (merge (ListExpr'class.)
@@ -4769,7 +4769,7 @@
 )
 
 (about #_"MapExpr"
-    (defr MapExpr [Expr])
+    (defr MapExpr [])
 
     (defn #_"MapExpr" MapExpr'new [#_"IPersistentVector" keyvals]
         (merge (MapExpr'class.)
@@ -4860,7 +4860,7 @@
 )
 
 (about #_"SetExpr"
-    (defr SetExpr [Expr])
+    (defr SetExpr [])
 
     (defn #_"SetExpr" SetExpr'new [#_"IPersistentVector" keys]
         (merge (SetExpr'class.)
@@ -4920,7 +4920,7 @@
 )
 
 (about #_"VectorExpr"
-    (defr VectorExpr [Expr])
+    (defr VectorExpr [])
 
     (defn #_"VectorExpr" VectorExpr'new [#_"IPersistentVector" args]
         (merge (VectorExpr'class.)
@@ -4991,7 +4991,7 @@
 )
 
 (about #_"KeywordInvokeExpr"
-    (defr KeywordInvokeExpr [Expr])
+    (defr KeywordInvokeExpr [])
 
     (defn #_"KeywordInvokeExpr" KeywordInvokeExpr'new [#_"int" line, #_"Symbol" tag, #_"KeywordExpr" kw, #_"Expr" target]
         (merge (KeywordInvokeExpr'class.)
@@ -5053,7 +5053,7 @@
 )
 
 (about #_"InstanceOfExpr"
-    (defr InstanceOfExpr [Expr MaybePrimitive])
+    (defr InstanceOfExpr [])
 
     (defn #_"InstanceOfExpr" InstanceOfExpr'new [#_"Class" c, #_"Expr" expr]
         (merge (InstanceOfExpr'class.)
@@ -5100,7 +5100,7 @@
 (declare keyword)
 
 (about #_"InvokeExpr"
-    (defr InvokeExpr [Expr])
+    (defr InvokeExpr [])
 
     (defn #_"InvokeExpr" InvokeExpr'new [#_"int" line, #_"Symbol" tag, #_"Expr" fexpr, #_"IPersistentVector" args, #_"boolean" tailPosition]
         (let [this
@@ -5316,7 +5316,7 @@
 )
 
 (about #_"LocalBindingExpr"
-    (defr LocalBindingExpr [Assignable Expr MaybePrimitive])
+    (defr LocalBindingExpr [])
 
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb, #_"Symbol" tag]
         (when (or (nil? (LocalBinding''getPrimitiveType lb)) (nil? tag)) => (throw! "can't type hint a primitive local")
@@ -5380,7 +5380,7 @@
 )
 
 (about #_"MethodParamExpr"
-    (defr MethodParamExpr [Expr MaybePrimitive])
+    (defr MethodParamExpr [])
 
     (defn #_"MethodParamExpr" MethodParamExpr'new [#_"Class" c]
         (merge (MethodParamExpr'class.)
@@ -5416,7 +5416,7 @@
 )
 
 (about #_"FnMethod"
-    (defr FnMethod [IopMethod])
+    (defr FnMethod [])
 
     (defn #_"FnMethod" FnMethod'new [#_"IopObject" objx, #_"IopMethod" parent]
         (merge (FnMethod'class.) (IopMethod'init objx, parent)
@@ -6240,7 +6240,7 @@
 )
 
 (about #_"FnExpr"
-    (defr FnExpr [Expr IopObject])
+    (defr FnExpr [])
 
     (defn #_"FnExpr" FnExpr'new [#_"Object" tag]
         (merge (FnExpr'class.) (IopObject'init tag)
@@ -6409,7 +6409,7 @@
 )
 
 (about #_"DefExpr"
-    (defr DefExpr [Expr])
+    (defr DefExpr [])
 
     (defn #_"DefExpr" DefExpr'new [#_"int" line, #_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided, #_"boolean" shadowsCoreMapping]
         (merge (DefExpr'class.)
@@ -6527,7 +6527,7 @@
 )
 
 (about #_"LetFnExpr"
-    (defr LetFnExpr [Expr])
+    (defr LetFnExpr [])
 
     (defn #_"LetFnExpr" LetFnExpr'new [#_"PersistentVector" bindingInits, #_"Expr" body]
         (merge (LetFnExpr'class.)
@@ -6628,7 +6628,7 @@
 )
 
 (about #_"LetExpr"
-    (defr LetExpr [Expr MaybePrimitive])
+    (defr LetExpr [])
 
     (defn #_"LetExpr" LetExpr'new [#_"PersistentVector" bindingInits, #_"Expr" body, #_"boolean" isLoop]
         (merge (LetExpr'class.)
@@ -6836,7 +6836,7 @@
 )
 
 (about #_"RecurExpr"
-    (defr RecurExpr [Expr MaybePrimitive])
+    (defr RecurExpr [])
 
     (defn #_"RecurExpr" RecurExpr'new [#_"IPersistentVector" loopLocals, #_"IPersistentVector" args, #_"int" line]
         (merge (RecurExpr'class.)
@@ -6959,7 +6959,7 @@
 )
 
 (about #_"NewInstanceMethod"
-    (defr NewInstanceMethod [IopMethod])
+    (defr NewInstanceMethod [])
 
     (defn #_"NewInstanceMethod" NewInstanceMethod'new [#_"IopObject" objx, #_"IopMethod" parent]
         (merge (NewInstanceMethod'class.) (IopMethod'init objx, parent)
@@ -7140,7 +7140,7 @@
 )
 
 (about #_"NewInstanceExpr"
-    (defr NewInstanceExpr [Expr IopObject])
+    (defr NewInstanceExpr [])
 
     (defn- #_"NewInstanceExpr" NewInstanceExpr'new [#_"Object" tag]
         (merge (NewInstanceExpr'class.) (IopObject'init tag)
@@ -7547,7 +7547,7 @@
 )
 
 (about #_"CaseExpr"
-    (defr CaseExpr [Expr MaybePrimitive])
+    (defr CaseExpr [])
 
     ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
     (defn #_"CaseExpr" CaseExpr'new [#_"int" line, #_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck]
@@ -8841,7 +8841,7 @@
 (about #_"cloiure.core.Atom"
 
 (about #_"Atom"
-    (defr Atom [IAtom IMeta IDeref IReference])
+    (defr Atom [])
 
     (defn #_"Atom" Atom'new
         ([#_"Object" data] (Atom'new nil, data))
@@ -8970,7 +8970,7 @@
 (about #_"cloiure.core.Reduced"
 
 (about #_"Reduced"
-    (defr Reduced [IDeref])
+    (defr Reduced [])
 
     (defn #_"Reduced" Reduced'new [#_"Object" val]
         (merge (Reduced'class.)
@@ -9064,7 +9064,7 @@
 (about #_"cloiure.core.Ratio"
 
 (about #_"Ratio"
-    (defr Ratio [#_"Number" #_"Comparable" Hashed IObject])
+    (defr Ratio [#_"Number" #_"Comparable"])
 
     (defn #_"Ratio" Ratio'new [#_"BigInteger" numerator, #_"BigInteger" denominator]
         (merge (Ratio'class.) (§ foreign Number'new)
@@ -9115,7 +9115,7 @@
 (about #_"cloiure.core.Numbers"
 
 (about #_"LongOps"
-    (defr LongOps [Ops])
+    (defr LongOps [])
 
     (defn #_"LongOps" LongOps'new []
         (LongOps'class.)
@@ -9206,7 +9206,7 @@
 )
 
 (about #_"RatioOps"
-    (defr RatioOps [Ops])
+    (defr RatioOps [])
 
     (defn #_"RatioOps" RatioOps'new []
         (RatioOps'class.)
@@ -9288,7 +9288,7 @@
 )
 
 (about #_"BigIntOps"
-    (defr BigIntOps [Ops])
+    (defr BigIntOps [])
 
     (defn #_"BigIntOps" BigIntOps'new []
         (BigIntOps'class.)
@@ -9686,22 +9686,6 @@
         (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to: " (Compiler'demunge (.getName (class f)))))
     )
 
-    (defm arbace.core.AFn IFn
-        (#_"Object" IFn'''invoke
-            ([#_"AFn" this]                                                    (AFn'throwArity this,   0))
-            ([#_"AFn" this, a1]                                                (AFn'throwArity this,   1))
-            ([#_"AFn" this, a1, a2]                                            (AFn'throwArity this,   2))
-            ([#_"AFn" this, a1, a2, a3]                                        (AFn'throwArity this,   3))
-            ([#_"AFn" this, a1, a2, a3, a4]                                    (AFn'throwArity this,   4))
-            ([#_"AFn" this, a1, a2, a3, a4, a5]                                (AFn'throwArity this,   5))
-            ([#_"AFn" this, a1, a2, a3, a4, a5, a6]                            (AFn'throwArity this,   6))
-            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7]                        (AFn'throwArity this,   7))
-            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8]                    (AFn'throwArity this,   8))
-            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]                (AFn'throwArity this,   9))
-            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args] (AFn'throwArity this, -10))
-        )
-    )
-
     (defn #_"Object" AFn'applyToHelper [#_"IFn" f, #_"ISeq" s]
         (case (count s (inc 9))
             0                                           (IFn'''invoke f)
@@ -9718,7 +9702,21 @@
         )
     )
 
-    (defm arbace.core.AFn IFn
+    (defm AFn IFn
+        (#_"Object" IFn'''invoke
+            ([#_"AFn" this]                                                    (AFn'throwArity this,   0))
+            ([#_"AFn" this, a1]                                                (AFn'throwArity this,   1))
+            ([#_"AFn" this, a1, a2]                                            (AFn'throwArity this,   2))
+            ([#_"AFn" this, a1, a2, a3]                                        (AFn'throwArity this,   3))
+            ([#_"AFn" this, a1, a2, a3, a4]                                    (AFn'throwArity this,   4))
+            ([#_"AFn" this, a1, a2, a3, a4, a5]                                (AFn'throwArity this,   5))
+            ([#_"AFn" this, a1, a2, a3, a4, a5, a6]                            (AFn'throwArity this,   6))
+            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7]                        (AFn'throwArity this,   7))
+            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8]                    (AFn'throwArity this,   8))
+            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]                (AFn'throwArity this,   9))
+            ([#_"AFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args] (AFn'throwArity this, -10))
+        )
+
         (#_"Object" IFn'''applyTo [#_"AFn" this, #_"ISeq" args]
             (AFn'applyToHelper this, args)
         )
@@ -9729,7 +9727,7 @@
 (about #_"cloiure.core.Symbol"
 
 (about #_"Symbol"
-    (defr Symbol [AFn #_"Comparable" IFn Hashed IMeta INamed IObj IObject])
+    (defr Symbol [AFn #_"Comparable"])
 
     (defn- #_"Symbol" Symbol'new
         ([#_"String" ns, #_"String" name] (Symbol'new nil, ns, name))
@@ -9826,7 +9824,7 @@
 (about #_"cloiure.core.Keyword"
 
 (about #_"Keyword"
-    (defr Keyword [AFn #_"Comparable" IFn Hashed INamed IObject])
+    (defr Keyword [AFn #_"Comparable"])
 
     (def- #_"{Symbol Reference<Keyword>}'" Keyword'cache (atom {}))
     (def- #_"ReferenceQueue" Keyword'queue (ReferenceQueue.))
@@ -9912,7 +9910,7 @@
 (about #_"cloiure.core.Fn"
 
 (about #_"Fn"
-    (defr Fn [AFn #_"Comparator" IFn])
+    (defr Fn [AFn #_"Comparator"])
 
     (defn #_"Fn" Fn'new []
         (merge (Fn'class.)
@@ -9937,7 +9935,7 @@
 (about #_"cloiure.core.RestFn"
 
 (about #_"RestFn"
-    (defr RestFn [#_"Fn" #_"Comparator" IFn IRestFn])
+    (defr RestFn [#_"Fn" #_"Comparator"])
 
     (defn #_"RestFn" RestFn'new []
         (merge (RestFn'class.) (Fn'new))
@@ -10116,19 +10114,24 @@
 (about #_"cloiure.core.ASeq"
 
 (about #_"ASeq"
-    (defm arbace.core.ASeq IPersistentCollection
+    #_abstract
+    (defm ASeq ISeq)
+
+    (defm ASeq IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''empty [#_"ASeq" this]
             ()
         )
     )
 
-    (defm arbace.core.ASeq Seqable
+    (defm ASeq Sequential)
+
+    (defm ASeq Seqable
         (#_"ISeq" Seqable'''seq [#_"ASeq" this]
             this
         )
     )
 
-    (defm arbace.core.ASeq Hashed
+    (defm ASeq Hashed
         (#_"int" Hashed'''hash [#_"ASeq" this]
             (Murmur3'hashOrdered this)
         )
@@ -10136,7 +10139,7 @@
 
     (declare RT'printString)
 
-    (defm arbace.core.ASeq IObject
+    (defm ASeq IObject
         (#_"boolean" IObject'''equals [#_"ASeq" this, #_"Object" that]
             (or (identical? this that)
                 (and (sequential? that)
@@ -10157,7 +10160,7 @@
 (about #_"cloiure.core.LazySeq"
 
 (about #_"LazySeq"
-    (defr LazySeq [Hashed IMeta IObj IObject IPending IPersistentCollection ISeq Seqable Sequential])
+    (defr LazySeq [Sequential])
 
     (defn- #_"LazySeq" LazySeq'init [#_"IPersistentMap" meta, #_"IFn" f, #_"ISeq" s]
         (merge (LazySeq'class.)
@@ -10259,17 +10262,14 @@
 (about #_"cloiure.core.APersistentMap"
 
 (about #_"APersistentMap"
-    (defr APersistentMap [AFn Associative Counted IFn Hashed ILookup IObject IPersistentCollection IPersistentMap Seqable])
+    (defr APersistentMap [AFn])
 
     (defn #_"APersistentMap" APersistentMap'new []
         (APersistentMap'class.)
     )
 
-    (defm APersistentMap IObject
-        (#_"String" IObject'''toString [#_"APersistentMap" this]
-            (RT'printString this)
-        )
-    )
+    #_abstract
+    (defm APersistentMap Associative Counted ILookup IPersistentMap Seqable)
 
     (defm APersistentMap IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"APersistentMap" this, #_"Object" o]
@@ -10290,7 +10290,7 @@
         )
     )
 
-    (defm APersistentMap IObject
+    (defm APersistentMap IObject
         (#_"boolean" IObject'''equals [#_"APersistentMap" this, #_"Object" that]
             (or (identical? this that)
                 (and (map? that) (= (count that) (count this))
@@ -10303,6 +10303,10 @@
                     )
                 )
             )
+        )
+
+        (#_"String" IObject'''toString [#_"APersistentMap" this]
+            (RT'printString this)
         )
     )
 
@@ -10324,19 +10328,16 @@
 (about #_"cloiure.core.APersistentSet"
 
 (about #_"APersistentSet"
-    (defr APersistentSet [AFn Counted IFn Hashed IObject IPersistentCollection IPersistentSet Seqable])
+    (defr APersistentSet [AFn])
+
+    #_abstract
+    (defm APersistentSet IPersistentCollection)
 
     (defn #_"APersistentSet" APersistentSet'new [#_"IPersistentMap" impl]
         (merge (APersistentSet'class.)
             (hash-map
                 #_"IPersistentMap" :impl impl
             )
-        )
-    )
-
-    (defm APersistentSet IObject
-        (#_"String" IObject'''toString [#_"APersistentSet" this]
-            (RT'printString this)
         )
     )
 
@@ -10369,7 +10370,7 @@
         )
     )
 
-    (defm APersistentSet IObject
+    (defm APersistentSet IObject
         (#_"boolean" IObject'''equals [#_"APersistentSet" this, #_"Object" that]
             (or (identical? this that)
                 (and (set? that) (= (count this) (count that))
@@ -10378,6 +10379,10 @@
                     )
                 )
             )
+        )
+
+        (#_"String" IObject'''toString [#_"APersistentSet" this]
+            (RT'printString this)
         )
     )
 
@@ -10392,7 +10397,7 @@
 (about #_"cloiure.core.APersistentVector"
 
 (about #_"VSeq"
-    (defr VSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr VSeq [ASeq])
 
     (defn #_"VSeq" VSeq'new
         ([#_"IPersistentVector" v, #_"int" i] (VSeq'new nil, v, i))
@@ -10463,7 +10468,7 @@
 )
 
 (about #_"RSeq"
-    (defr RSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr RSeq [ASeq])
 
     (defn #_"RSeq" RSeq'new
         ([#_"IPersistentVector" v, #_"int" i] (RSeq'new nil, v, i))
@@ -10511,16 +10516,15 @@
 )
 
 (about #_"APersistentVector"
-    (defr APersistentVector [AFn Associative #_"Comparable" Counted IFn Hashed ILookup Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+    (defr APersistentVector [AFn])
+
+    #_abstract
+    (defm APersistentVector Counted Indexed IPersistentCollection IPersistentVector)
+    
+    (defm APersistentVector Sequential)
 
     (defn #_"APersistentVector" APersistentVector'new []
         (APersistentVector'class.)
-    )
-
-    (defm APersistentVector IObject
-        (#_"String" IObject'''toString [#_"APersistentVector" this]
-            (RT'printString this)
-        )
     )
 
     (defm APersistentVector Seqable
@@ -10539,7 +10543,7 @@
         )
     )
 
-    (defm APersistentVector IObject
+    (defm APersistentVector IObject
         (#_"boolean" IObject'''equals [#_"APersistentVector" this, #_"Object" that]
             (or (identical? this that)
                 (cond
@@ -10557,6 +10561,10 @@
                         false
                 )
             )
+        )
+
+        (#_"String" IObject'''toString [#_"APersistentVector" this]
+            (RT'printString this)
         )
     )
 
@@ -10639,7 +10647,7 @@
 )
 
 (about #_"SubVector"
-    (defr SubVector [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+    (defr SubVector [#_"APersistentVector"])
 
     (defn #_"SubVector" SubVector'new [#_"IPersistentMap" meta, #_"IPersistentVector" v, #_"int" start, #_"int" end]
         (let [[v start end]
@@ -10728,7 +10736,10 @@
 (about #_"cloiure.core.AMapEntry"
 
 (about #_"AMapEntry"
-    (defr AMapEntry [#_"APersistentVector" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+    (defr AMapEntry [#_"APersistentVector"])
+
+    #_abstract
+    (defm AMapEntry IMapEntry)
 
     (defn #_"AMapEntry" AMapEntry'new []
         (merge (AMapEntry'class.) (APersistentVector'new))
@@ -10792,7 +10803,7 @@
 (about #_"cloiure.core.MapEntry"
 
 (about #_"MapEntry"
-    (defr MapEntry [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector Reversible Seqable Sequential])
+    (defr MapEntry [#_"AMapEntry"])
 
     (defn- #_"MapEntry" MapEntry'new [#_"Object" key, #_"Object" val]
         (merge (MapEntry'class.) (AMapEntry'new)
@@ -10822,7 +10833,7 @@
 (about #_"cloiure.core.ArraySeq"
 
 (about #_"ArraySeq"
-    (defr ArraySeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr ArraySeq [ASeq])
 
     (defn #_"ArraySeq" ArraySeq'new
         ([#_"Object[]" a, #_"int" i] (ArraySeq'new nil, a, i))
@@ -10910,7 +10921,10 @@
 (about #_"cloiure.core.ATransientMap"
 
 (about #_"ATransientMap"
-    (defr ATransientMap [AFn Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+    (defr ATransientMap [AFn])
+
+    #_abstract
+    (defm ATransientMap IATransientMap)
 
     (defn #_"ATransientMap" ATransientMap'new []
         (ATransientMap'class.)
@@ -10941,7 +10955,31 @@
         )
     )
 
+    (defm ATransientMap ILookup
+        (#_"Object" ILookup'''valAt
+            ([#_"ATransientMap" this, #_"Object" key] (ILookup'''valAt this, key, nil))
+            ([#_"ATransientMap" this, #_"Object" key, #_"Object" not-found]
+                (IATransientMap'''assertEditable this)
+                (IATransientMap'''doValAt this, key, not-found)
+            )
+        )
+    )
+
+    (def- #_"Object" ATransientMap'NOT_FOUND (Object.))
+
     (defm ATransientMap ITransientAssociative
+        (#_"boolean" ITransientAssociative'''containsKey [#_"ATransientMap" this, #_"Object" key]
+            (not (identical? (get this key ATransientMap'NOT_FOUND) ATransientMap'NOT_FOUND))
+        )
+
+        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ATransientMap" this, #_"Object" key]
+            (let [#_"Object" v (get this key ATransientMap'NOT_FOUND)]
+                (when-not (identical? v ATransientMap'NOT_FOUND)
+                    (MapEntry'create key, v)
+                )
+            )
+        )
+
         (#_"ITransientMap" ITransientAssociative'''assoc! [#_"ATransientMap" this, #_"Object" key, #_"Object" val]
             (IATransientMap'''assertEditable this)
             (IATransientMap'''doAssoc this, key, val)
@@ -10962,32 +11000,6 @@
         )
     )
 
-    (defm ATransientMap ILookup
-        (#_"Object" ILookup'''valAt
-            ([#_"ATransientMap" this, #_"Object" key] (ILookup'''valAt this, key, nil))
-            ([#_"ATransientMap" this, #_"Object" key, #_"Object" not-found]
-                (IATransientMap'''assertEditable this)
-                (IATransientMap'''doValAt this, key, not-found)
-            )
-        )
-    )
-
-    (def- #_"Object" ATransientMap'NOT_FOUND (Object.))
-
-    (defm ATransientMap ITransientAssociative
-        (#_"boolean" ITransientAssociative'''containsKey [#_"ATransientMap" this, #_"Object" key]
-            (not (identical? (get this key ATransientMap'NOT_FOUND) ATransientMap'NOT_FOUND))
-        )
-
-        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ATransientMap" this, #_"Object" key]
-            (let [#_"Object" v (get this key ATransientMap'NOT_FOUND)]
-                (when-not (identical? v ATransientMap'NOT_FOUND)
-                    (MapEntry'create key, v)
-                )
-            )
-        )
-    )
-
     (defm ATransientMap Counted
         (#_"int" Counted'''count [#_"ATransientMap" this]
             (IATransientMap'''assertEditable this)
@@ -11000,7 +11012,7 @@
 (about #_"cloiure.core.ATransientSet"
 
 (about #_"ATransientSet"
-    (defr ATransientSet [AFn Counted IFn ITransientCollection ITransientSet])
+    (defr ATransientSet [AFn])
 
     (defn #_"ATransientSet" ATransientSet'new [#_"ITransientMap" impl]
         (merge (ATransientSet'class.)
@@ -11056,7 +11068,7 @@
 (about #_"cloiure.core.Cons"
 
 (about #_"Cons"
-    (defr Cons [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr Cons [ASeq])
 
     (defn #_"Cons" Cons'new
         ([#_"Object" _first, #_"ISeq" _more] (Cons'new nil, _first, _more))
@@ -11105,7 +11117,7 @@
 (about #_"cloiure.core.Delay"
 
 (about #_"Delay"
-    (defr Delay [IDeref IPending])
+    (defr Delay [])
 
     (defn #_"Delay" Delay'new [#_"IFn" f]
         (merge (Delay'class.)
@@ -11157,7 +11169,7 @@
 (about #_"cloiure.core.Iterate"
 
 (about #_"Iterate"
-    (defr Iterate [ASeq Hashed IMeta IObj IObject IPending IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr Iterate [ASeq])
 
     (def- #_"Object" Iterate'UNREALIZED_SEED (Object.))
 
@@ -11233,7 +11245,7 @@
 (about #_"cloiure.core.KeywordLookupSite"
 
 (about #_"KeywordLookupSite"
-    (defr KeywordLookupSite [ILookupSite ILookupThunk])
+    (defr KeywordLookupSite [])
 
     (defn #_"KeywordLookupSite" KeywordLookupSite'new [#_"Keyword" k]
         (merge (KeywordLookupSite'class.)
@@ -11301,7 +11313,7 @@
 (about #_"cloiure.core.Namespace"
 
 (about #_"Namespace"
-    (defr Namespace [IObject])
+    (defr Namespace [])
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom {}))
 
@@ -11486,7 +11498,7 @@
 (about #_"cloiure.core.PersistentArrayMap"
 
 (about #_"MSeq"
-    (defr MSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr MSeq [ASeq])
 
     (defn #_"MSeq" MSeq'new
         ([#_"Object[]" a, #_"int" i] (MSeq'new nil, a, i))
@@ -11541,7 +11553,7 @@
  ; ok, but you won't be able to distinguish a nil value via valAt, use contains/entryAt for that.
  ;;
 (about #_"PersistentArrayMap"
-    (defr PersistentArrayMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable])
+    (defr PersistentArrayMap [#_"APersistentMap"])
 
     (def #_"int" PersistentArrayMap'HASHTABLE_THRESHOLD 16)
 
@@ -11656,6 +11668,8 @@
         )
     )
 
+    (declare PersistentHashMap'create-1a)
+
     (defm PersistentArrayMap Associative
         (#_"boolean" Associative'''containsKey [#_"PersistentArrayMap" this, #_"Object" key]
             (<= 0 (PersistentArrayMap''indexOf this, key))
@@ -11666,11 +11680,7 @@
                 (MapEntry'create (aget (:a this) i), (aget (:a this) (inc i)))
             )
         )
-    )
 
-    (declare PersistentHashMap'create-1a)
-
-    (defm PersistentArrayMap Associative
         (#_"IPersistentMap" Associative'''assoc [#_"PersistentArrayMap" this, #_"Object" key, #_"Object" val]
             (let [#_"int" i (PersistentArrayMap''indexOf this, key)]
                 (if (<= 0 i) ;; already have key, same-sized replacement
@@ -11765,7 +11775,7 @@
 )
 
 (about #_"TransientArrayMap"
-    (defr TransientArrayMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+    (defr TransientArrayMap [#_"ATransientMap"])
 
     (defn #_"TransientArrayMap" TransientArrayMap'new [#_"Object[]" a]
         (let [#_"int" n (count a)]
@@ -11846,7 +11856,7 @@
 (about #_"cloiure.core.PersistentHashMap"
 
 (about #_"HSeq"
-    (defr HSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr HSeq [ASeq])
 
     (defn- #_"HSeq" HSeq'new [#_"IPersistentMap" meta, #_"INode[]" nodes, #_"int" i, #_"ISeq" s]
         (merge (HSeq'class.)
@@ -11900,7 +11910,7 @@
 )
 
 (about #_"NodeSeq"
-    (defr NodeSeq [ASeq Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr NodeSeq [ASeq])
 
     (defn #_"NodeSeq" NodeSeq'new
         ([#_"Object[]" a, #_"int" i] (NodeSeq'new nil, a, i, nil))
@@ -12004,7 +12014,7 @@
 )
 
 (about #_"ArrayNode"
-    (defr ArrayNode [INode])
+    (defr ArrayNode [])
 
     (defn #_"ArrayNode" ArrayNode'new [#_"Thread'" edit, #_"int" n, #_"INode[]" a]
         (merge (ArrayNode'class.)
@@ -12016,22 +12026,16 @@
         )
     )
 
-    (declare BitmapIndexedNode'EMPTY)
+    (defn- #_"ArrayNode" ArrayNode''ensureEditable [#_"ArrayNode" this, #_"Thread'" edit]
+        (when-not (identical? (:edit this) edit) => this
+            (ArrayNode'new edit, (:n this), (aclone (:a this)))
+        )
+    )
 
-    (defm ArrayNode INode
-        (#_"INode" INode'''assoc [#_"ArrayNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
-            (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)]
-                (if (some? ai)
-                    (let [#_"INode" node (INode'''assoc ai, (+ shift 5), hash, key, val, addedLeaf)]
-                        (when-not (= node ai) => this
-                            (ArrayNode'new nil, (:n this), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                        )
-                    )
-                    (let [#_"INode" node (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), hash, key, val, addedLeaf)]
-                        (ArrayNode'new nil, (inc (:n this)), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                    )
-                )
-            )
+    (defn- #_"ArrayNode" ArrayNode''editAndSet [#_"ArrayNode" this, #_"Thread'" edit, #_"int" i, #_"INode" node]
+        (let [#_"ArrayNode" e (ArrayNode''ensureEditable this, edit)]
+            (aset! (:a e) i node)
+            e
         )
     )
 
@@ -12063,7 +12067,24 @@
         )
     )
 
-    (defm ArrayNode INode
+    (declare BitmapIndexedNode'EMPTY)
+
+    (defm ArrayNode INode
+        (#_"INode" INode'''assoc [#_"ArrayNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
+            (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)]
+                (if (some? ai)
+                    (let [#_"INode" node (INode'''assoc ai, (+ shift 5), hash, key, val, addedLeaf)]
+                        (when-not (= node ai) => this
+                            (ArrayNode'new nil, (:n this), (PersistentHashMap'cloneAndSet (:a this), i, node))
+                        )
+                    )
+                    (let [#_"INode" node (INode'''assoc BitmapIndexedNode'EMPTY, (+ shift 5), hash, key, val, addedLeaf)]
+                        (ArrayNode'new nil, (inc (:n this)), (PersistentHashMap'cloneAndSet (:a this), i, node))
+                    )
+                )
+            )
+        )
+
         (#_"INode" INode'''dissoc [#_"ArrayNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
             (let-when [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)] (some? ai) => this
                 (let-when-not [#_"INode" node (INode'''dissoc ai, (+ shift 5), hash, key)] (= node ai) => this
@@ -12110,22 +12131,7 @@
                 )
             )
         )
-    )
 
-    (defn- #_"ArrayNode" ArrayNode''ensureEditable [#_"ArrayNode" this, #_"Thread'" edit]
-        (when-not (identical? (:edit this) edit) => this
-            (ArrayNode'new edit, (:n this), (aclone (:a this)))
-        )
-    )
-
-    (defn- #_"ArrayNode" ArrayNode''editAndSet [#_"ArrayNode" this, #_"Thread'" edit, #_"int" i, #_"INode" node]
-        (let [#_"ArrayNode" e (ArrayNode''ensureEditable this, edit)]
-            (aset! (:a e) i node)
-            e
-        )
-    )
-
-    (defm ArrayNode INode
         (#_"INode" INode'''assocT [#_"ArrayNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"INode" ai (aget (:a this) i)]
                 (if (some? ai)
@@ -12156,7 +12162,7 @@
 )
 
 (about #_"BitmapIndexedNode"
-    (defr BitmapIndexedNode [INode])
+    (defr BitmapIndexedNode [])
 
     (defn #_"BitmapIndexedNode" BitmapIndexedNode'new [#_"Thread'" edit, #_"int" bitmap, #_"Object[]" a]
         (merge (BitmapIndexedNode'class.)
@@ -12180,6 +12186,55 @@
         (let [#_"int" key1hash (f'hash key1)]
             (when-not (= key1hash key2hash) => (HashCollisionNode'new nil, key1hash, 2, (object-array [ key1, val1, key2, val2 ]))
                 (let [#_"boolean'" addedLeaf (atom false) #_"Thread'" edit (atom nil)]
+                    (-> BitmapIndexedNode'EMPTY
+                        (INode'''assocT edit, shift, key1hash, key1, val1, addedLeaf)
+                        (INode'''assocT edit, shift, key2hash, key2, val2, addedLeaf)
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''ensureEditable [#_"BitmapIndexedNode" this, #_"Thread'" edit]
+        (when-not (identical? (:edit this) edit) => this
+            (let [#_"int" n (Integer/bitCount (:bitmap this)) #_"Object[]" a' (object-array (* 2 (inc n)))] ;; make room for next assoc
+                (acopy! a' 0 (:a this) 0 (* 2 n))
+                (BitmapIndexedNode'new edit, (:bitmap this), a')
+            )
+        )
+    )
+
+    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndSet-4 [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x]
+        (let [#_"BitmapIndexedNode" e (BitmapIndexedNode''ensureEditable this, edit)]
+            (aset! (:a e) i x)
+            e
+        )
+    )
+
+    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndSet-6 [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
+        (let [#_"BitmapIndexedNode" e (BitmapIndexedNode''ensureEditable this, edit)]
+            (aset! (:a e) i x)
+            (aset! (:a e) j y)
+            e
+        )
+    )
+
+    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndRemovePair [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" bit, #_"int" i]
+        (when-not (= (:bitmap this) bit)
+            (let [#_"BitmapIndexedNode" e (-> (BitmapIndexedNode''ensureEditable this, edit) (update :bitmap bit-xor bit))
+                  #_"Object[]" a (:a e) #_"int" n (count a)]
+                (acopy! a (* 2 i) a (* 2 (inc i)) (- n (* 2 (inc i))))
+                (aset! a (- n 2) nil)
+                (aset! a (- n 1) nil)
+                e
+            )
+        )
+    )
+
+    (defn- #_"INode" BitmapIndexedNode'createNode-7 [#_"Thread'" edit, #_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" key2hash, #_"Object" key2, #_"Object" val2]
+        (let [#_"int" key1hash (f'hash key1)]
+            (when-not (= key1hash key2hash) => (HashCollisionNode'new nil, key1hash, 2, (object-array [ key1, val1, key2, val2 ]))
+                (let [#_"boolean'" addedLeaf (atom false)]
                     (-> BitmapIndexedNode'EMPTY
                         (INode'''assocT edit, shift, key1hash, key1, val1, addedLeaf)
                         (INode'''assocT edit, shift, key2hash, key2, val2, addedLeaf)
@@ -12304,58 +12359,7 @@
         (#_"Object" INode'''kvreduce [#_"BitmapIndexedNode" this, #_"IFn" f, #_"Object" r]
             (NodeSeq'kvreduce (:a this), f, r)
         )
-    )
 
-    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''ensureEditable [#_"BitmapIndexedNode" this, #_"Thread'" edit]
-        (when-not (identical? (:edit this) edit) => this
-            (let [#_"int" n (Integer/bitCount (:bitmap this)) #_"Object[]" a' (object-array (* 2 (inc n)))] ;; make room for next assoc
-                (acopy! a' 0 (:a this) 0 (* 2 n))
-                (BitmapIndexedNode'new edit, (:bitmap this), a')
-            )
-        )
-    )
-
-    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndSet-4 [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x]
-        (let [#_"BitmapIndexedNode" e (BitmapIndexedNode''ensureEditable this, edit)]
-            (aset! (:a e) i x)
-            e
-        )
-    )
-
-    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndSet-6 [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
-        (let [#_"BitmapIndexedNode" e (BitmapIndexedNode''ensureEditable this, edit)]
-            (aset! (:a e) i x)
-            (aset! (:a e) j y)
-            e
-        )
-    )
-
-    (defn- #_"BitmapIndexedNode" BitmapIndexedNode''editAndRemovePair [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" bit, #_"int" i]
-        (when-not (= (:bitmap this) bit)
-            (let [#_"BitmapIndexedNode" e (-> (BitmapIndexedNode''ensureEditable this, edit) (update :bitmap bit-xor bit))
-                  #_"Object[]" a (:a e) #_"int" n (count a)]
-                (acopy! a (* 2 i) a (* 2 (inc i)) (- n (* 2 (inc i))))
-                (aset! a (- n 2) nil)
-                (aset! a (- n 1) nil)
-                e
-            )
-        )
-    )
-
-    (defn- #_"INode" BitmapIndexedNode'createNode-7 [#_"Thread'" edit, #_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" key2hash, #_"Object" key2, #_"Object" val2]
-        (let [#_"int" key1hash (f'hash key1)]
-            (when-not (= key1hash key2hash) => (HashCollisionNode'new nil, key1hash, 2, (object-array [ key1, val1, key2, val2 ]))
-                (let [#_"boolean'" addedLeaf (atom false)]
-                    (-> BitmapIndexedNode'EMPTY
-                        (INode'''assocT edit, shift, key1hash, key1, val1, addedLeaf)
-                        (INode'''assocT edit, shift, key2hash, key2, val2, addedLeaf)
-                    )
-                )
-            )
-        )
-    )
-
-    (defm BitmapIndexedNode INode
         (#_"INode" INode'''assocT [#_"BitmapIndexedNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" idx (BitmapIndexedNode''index this, bit)]
                 (if-not (zero? (& (:bitmap this) bit))
@@ -12451,7 +12455,7 @@
 )
 
 (about #_"HashCollisionNode"
-    (defr HashCollisionNode [INode])
+    (defr HashCollisionNode [])
 
     (defn #_"HashCollisionNode" HashCollisionNode'new [#_"Thread'" edit, #_"int" hash, #_"int" n & #_"Object..." a]
         (merge (HashCollisionNode'class.)
@@ -12469,6 +12473,36 @@
             (loop-when [#_"int" i 0] (< i m) => -1
                 (if (= key (aget (:a this) i)) i (recur (+ i 2)))
             )
+        )
+    )
+
+    (defn- #_"HashCollisionNode" HashCollisionNode''ensureEditable-2 [#_"HashCollisionNode" this, #_"Thread'" edit]
+        (when-not (identical? (:edit this) edit) => this
+            (let [#_"int" n (:n this) #_"Object[]" a' (object-array (* 2 (inc n)))] ;; make room for next assoc
+                (acopy! a' 0 (:a this) 0 (* 2 n))
+                (HashCollisionNode'new edit, (:hash this), n, a')
+            )
+        )
+    )
+
+    (defn- #_"HashCollisionNode" HashCollisionNode''ensureEditable-4 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" n, #_"Object[]" a]
+        (when-not (identical? (:edit this) edit) => (assoc this :a a :n n)
+            (HashCollisionNode'new edit, (:hash this), n, a)
+        )
+    )
+
+    (defn- #_"HashCollisionNode" HashCollisionNode''editAndSet-4 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x]
+        (let [#_"HashCollisionNode" e (HashCollisionNode''ensureEditable-2 this, edit)]
+            (aset! (:a e) i x)
+            e
+        )
+    )
+
+    (defn- #_"HashCollisionNode" HashCollisionNode''editAndSet-6 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
+        (let [#_"HashCollisionNode" e (HashCollisionNode''ensureEditable-2 this, edit)]
+            (aset! (:a e) i x)
+            (aset! (:a e) j y)
+            e
         )
     )
 
@@ -12528,39 +12562,7 @@
         (#_"Object" INode'''kvreduce [#_"HashCollisionNode" this, #_"IFn" f, #_"Object" r]
             (NodeSeq'kvreduce (:a this), f, r)
         )
-    )
 
-    (defn- #_"HashCollisionNode" HashCollisionNode''ensureEditable-2 [#_"HashCollisionNode" this, #_"Thread'" edit]
-        (when-not (identical? (:edit this) edit) => this
-            (let [#_"int" n (:n this) #_"Object[]" a' (object-array (* 2 (inc n)))] ;; make room for next assoc
-                (acopy! a' 0 (:a this) 0 (* 2 n))
-                (HashCollisionNode'new edit, (:hash this), n, a')
-            )
-        )
-    )
-
-    (defn- #_"HashCollisionNode" HashCollisionNode''ensureEditable-4 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" n, #_"Object[]" a]
-        (when-not (identical? (:edit this) edit) => (assoc this :a a :n n)
-            (HashCollisionNode'new edit, (:hash this), n, a)
-        )
-    )
-
-    (defn- #_"HashCollisionNode" HashCollisionNode''editAndSet-4 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x]
-        (let [#_"HashCollisionNode" e (HashCollisionNode''ensureEditable-2 this, edit)]
-            (aset! (:a e) i x)
-            e
-        )
-    )
-
-    (defn- #_"HashCollisionNode" HashCollisionNode''editAndSet-6 [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
-        (let [#_"HashCollisionNode" e (HashCollisionNode''ensureEditable-2 this, edit)]
-            (aset! (:a e) i x)
-            (aset! (:a e) j y)
-            e
-        )
-    )
-
-    (defm HashCollisionNode INode
         (#_"INode" INode'''assocT [#_"HashCollisionNode" this, #_"Thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf]
             (if (= hash (:hash this))
                 (let [#_"int" i (HashCollisionNode''findIndex this, key)]
@@ -12612,7 +12614,7 @@
 )
 
 (about #_"TransientHashMap"
-    (defr TransientHashMap [#_"ATransientMap" Counted IATransientMap IFn ILookup ITransientAssociative ITransientCollection ITransientMap])
+    (defr TransientHashMap [#_"ATransientMap"])
 
     (defn #_"TransientHashMap" TransientHashMap'new
         ([#_"PersistentHashMap" m]
@@ -12706,7 +12708,7 @@
  ; Any errors are my own.
  ;;
 (about #_"PersistentHashMap"
-    (defr PersistentHashMap [#_"APersistentMap" Associative Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Seqable])
+    (defr PersistentHashMap [#_"APersistentMap"])
 
     (defn #_"PersistentHashMap" PersistentHashMap'new
         ([#_"int" n, #_"INode" root, #_"boolean" hasNull, #_"Object" nullValue] (PersistentHashMap'new nil, n, root, hasNull, nullValue))
@@ -12806,9 +12808,7 @@
                 )
             )
         )
-    )
 
-    (defm PersistentHashMap Associative
         (#_"IPersistentMap" Associative'''assoc [#_"PersistentHashMap" this, #_"Object" key, #_"Object" val]
             (if (nil? key)
                 (when-not (and (:hasNull this) (= val (:nullValue this))) => this
@@ -12904,7 +12904,7 @@
 (about #_"cloiure.core.PersistentHashSet"
 
 (about #_"TransientHashSet"
-    (defr TransientHashSet [#_"ATransientSet" Counted IFn ITransientCollection ITransientSet])
+    (defr TransientHashSet [#_"ATransientSet"])
 
     (defn #_"TransientHashSet" TransientHashSet'new [#_"ITransientMap" impl]
         (merge (TransientHashSet'class.) (ATransientSet'new impl))
@@ -12920,7 +12920,7 @@
 )
 
 (about #_"PersistentHashSet"
-    (defr PersistentHashSet [#_"APersistentSet" Counted IEditableCollection IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Seqable])
+    (defr PersistentHashSet [#_"APersistentSet"])
 
     (defn #_"PersistentHashSet" PersistentHashSet'new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
         (merge (PersistentHashSet'class.) (APersistentSet'new impl)
@@ -13019,7 +13019,9 @@
 (about #_"cloiure.core.PersistentList"
 
 (about #_"EmptyList"
-    (defr EmptyList [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack ISeq Seqable Sequential])
+    (defr EmptyList [])
+
+    (defm EmptyList IPersistentList Sequential)
 
     (def #_"int" EmptyList'HASH (§ soon Murmur3'hashOrdered nil))
 
@@ -13107,7 +13109,7 @@
 )
 
 (about #_"PersistentList"
-    (defr PersistentList [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack IReduce ISeq Seqable Sequential])
+    (defr PersistentList [ASeq])
 
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new nil))
 
@@ -13125,6 +13127,8 @@
             )
         )
     )
+
+    (defm PersistentList IPersistentList)
 
     (defm PersistentList IMeta
         (#_"IPersistentMap" IMeta'''meta [#_"PersistentList" this]
@@ -13208,7 +13212,7 @@
 (about #_"cloiure.core.PersistentQueue"
 
 (about #_"QSeq"
-    (defr QSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr QSeq [ASeq])
 
     (defn #_"QSeq" QSeq'new
         ([#_"ISeq" f, #_"ISeq" rseq] (QSeq'new nil, f, rseq))
@@ -13266,7 +13270,9 @@
  ; so no reversing or suspensions required for persistent use.
  ;;
 (about #_"PersistentQueue"
-    (defr PersistentQueue [Counted Hashed IMeta IObj IObject IPersistentCollection IPersistentList IPersistentStack Seqable Sequential])
+    (defr PersistentQueue [])
+
+    (defm PersistentQueue IPersistentList Sequential)
 
     (defn #_"PersistentQueue" PersistentQueue'new [#_"IPersistentMap" meta, #_"int" cnt, #_"ISeq" f, #_"PersistentVector" r]
         (merge (PersistentQueue'class.)
@@ -13366,7 +13372,7 @@
 (about #_"cloiure.core.PersistentTreeMap"
 
 (about #_"TNode"
-    (defr TNode [#_"AMapEntry" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr TNode [#_"AMapEntry"])
 
     (defn #_"TNode" TNode'new [#_"Object" key]
         (merge (TNode'class.) (AMapEntry'new)
@@ -13429,7 +13435,7 @@
 )
 
 (about #_"Black"
-    (defr Black [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr Black [#_"TNode"])
 
     (defn #_"Black" Black'new [#_"Object" key]
         (merge (Black'class.) (TNode'new key))
@@ -13471,7 +13477,7 @@
 )
 
 (about #_"BlackVal"
-    (defr BlackVal [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr BlackVal [#_"Black"])
 
     (defn #_"BlackVal" BlackVal'new [#_"Object" key, #_"Object" val]
         (merge (BlackVal'class.) (Black'new key)
@@ -13497,7 +13503,7 @@
 )
 
 (about #_"BlackBranch"
-    (defr BlackBranch [#_"Black" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr BlackBranch [#_"Black"])
 
     (defn #_"BlackBranch" BlackBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
         (merge (BlackBranch'class.) (Black'new key)
@@ -13526,7 +13532,7 @@
 )
 
 (about #_"BlackBranchVal"
-    (defr BlackBranchVal [#_"BlackBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr BlackBranchVal [#_"BlackBranch"])
 
     (defn #_"BlackBranchVal" BlackBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
         (merge (BlackBranchVal'class.) (BlackBranch'new key, left, right)
@@ -13552,7 +13558,7 @@
 )
 
 (about #_"Red"
-    (defr Red [#_"TNode" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr Red [#_"TNode"])
 
     (defn #_"Red" Red'new [#_"Object" key]
         (merge (Red'class.) (TNode'new key))
@@ -13592,7 +13598,7 @@
 )
 
 (about #_"RedVal"
-    (defr RedVal [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr RedVal [#_"Red"])
 
     (defn #_"RedVal" RedVal'new [#_"Object" key, #_"Object" val]
         (merge (RedVal'class.) (Red'new key)
@@ -13616,7 +13622,7 @@
 )
 
 (about #_"RedBranch"
-    (defr RedBranch [#_"Red" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr RedBranch [#_"Red"])
 
     (defn #_"RedBranch" RedBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
         (merge (RedBranch'class.) (Red'new key)
@@ -13675,7 +13681,7 @@
 )
 
 (about #_"RedBranchVal"
-    (defr RedBranchVal [#_"RedBranch" Associative #_"Comparable" Counted IFn Hashed IKVReduce ILookup IMapEntry Indexed IObject IPersistentCollection IPersistentStack IPersistentVector ITNode Reversible Seqable Sequential])
+    (defr RedBranchVal [#_"RedBranch"])
 
     (defn #_"RedBranchVal" RedBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
         (merge (RedBranchVal'class.) (RedBranch'new key, left, right)
@@ -13699,7 +13705,7 @@
 )
 
 (about #_"TSeq"
-    (defr TSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection ISeq Seqable Sequential])
+    (defr TSeq [ASeq])
 
     (defn #_"TSeq" TSeq'new
         ([#_"ISeq" stack, #_"boolean" asc?] (TSeq'new stack, asc?, -1))
@@ -13771,7 +13777,7 @@
  ; See Okasaki, Kahrs, Larsen, et al.
  ;;
 (about #_"PersistentTreeMap"
-    (defr PersistentTreeMap [#_"APersistentMap" Associative Counted IFn Hashed IKVReduce ILookup IMeta IObj IObject IPersistentCollection IPersistentMap Reversible Seqable Sorted])
+    (defr PersistentTreeMap [#_"APersistentMap"])
 
     (defn #_"PersistentTreeMap" PersistentTreeMap'new
         ([] (PersistentTreeMap'new compare))
@@ -13820,14 +13826,6 @@
         )
     )
 
-    (declare find)
-
-    (defm PersistentTreeMap Associative
-        (#_"boolean" Associative'''containsKey [#_"PersistentTreeMap" this, #_"Object" key]
-            (some? (find this key))
-        )
-    )
-
     (defm PersistentTreeMap Seqable
         (#_"ISeq" Seqable'''seq [#_"PersistentTreeMap" this]
             (when (pos? (:_count this))
@@ -13850,17 +13848,15 @@
         )
     )
 
-    (defm PersistentTreeMap Sorted
-        (#_"Comparator" Sorted'''comparator [#_"PersistentTreeMap" this]
-            (:cmp this)
-        )
-    )
-
     (defn #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"Object" k1, #_"Object" k2]
         (.compare (:cmp this), k1, k2)
     )
 
-    (defm PersistentTreeMap Sorted
+    (defm PersistentTreeMap Sorted
+        (#_"Comparator" Sorted'''comparator [#_"PersistentTreeMap" this]
+            (:cmp this)
+        )
+
         (#_"Object" Sorted'''entryKey [#_"PersistentTreeMap" this, #_"Object" entry]
             (key entry)
         )
@@ -13928,6 +13924,8 @@
         (PersistentTreeMap''depth-2 this, (:tree this))
     )
 
+    (declare find)
+
     (defm PersistentTreeMap ILookup
         (#_"Object" ILookup'''valAt
             ([#_"PersistentTreeMap" this, #_"Object" key] (ILookup'''valAt this, key, nil))
@@ -13946,20 +13944,6 @@
     (defm PersistentTreeMap Counted
         (#_"int" Counted'''count [#_"PersistentTreeMap" this]
             (:_count this)
-        )
-    )
-
-    (defm PersistentTreeMap Associative
-        (#_"TNode" Associative'''entryAt [#_"PersistentTreeMap" this, #_"Object" key]
-            (loop-when [#_"TNode" t (:tree this)] (some? t) => t
-                (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                    (cond
-                        (neg? cmp) (recur (ITNode'''left t))
-                        (pos? cmp) (recur (ITNode'''right t))
-                        :else      t
-                    )
-                )
-            )
         )
     )
 
@@ -14122,7 +14106,23 @@
         )
     )
 
-    (defm PersistentTreeMap Associative
+    (defm PersistentTreeMap Associative
+        (#_"boolean" Associative'''containsKey [#_"PersistentTreeMap" this, #_"Object" key]
+            (some? (find this key))
+        )
+
+        (#_"TNode" Associative'''entryAt [#_"PersistentTreeMap" this, #_"Object" key]
+            (loop-when [#_"TNode" t (:tree this)] (some? t) => t
+                (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
+                    (cond
+                        (neg? cmp) (recur (ITNode'''left t))
+                        (pos? cmp) (recur (ITNode'''right t))
+                        :else      t
+                    )
+                )
+            )
+        )
+
         (#_"PersistentTreeMap" Associative'''assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
             (let [#_"Atom" found (atom nil) #_"TNode" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
                 (if (nil? t)
@@ -14155,7 +14155,7 @@
 (about #_"cloiure.core.PersistentTreeSet"
 
 (about #_"PersistentTreeSet"
-    (defr PersistentTreeSet [#_"APersistentSet" Counted IFn Hashed IMeta IObj IObject IPersistentCollection IPersistentSet Reversible Seqable Sorted])
+    (defr PersistentTreeSet [#_"APersistentSet"])
 
     (defn #_"PersistentTreeSet" PersistentTreeSet'new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
         (merge (PersistentTreeSet'class.) (APersistentSet'new impl)
@@ -14234,23 +14234,19 @@
 
 (about #_"arbace.vector"
 
-(def- value-array object-array)
-
 (about #_"VNode"
-    (defr VNode [])
+    (defq VNode [edit, array])
 
-    (defn #_"VNode" VNode'new [#_"Thread'" edit, #_"Object[]" array]
-        (merge (VNode'class.)
-            (hash-map
-                #_"Thread'" :edit edit
-                #_"Object[]" :array (or array (object-array 32))
-            )
+    (defn #_"node" VNode'new [#_"Thread'" edit, #_"array" array]
+        (assoc!! (VNode'class. (anew 2))
+            #_"Thread'" :edit edit
+            #_"array" :array (or array (anew 32))
         )
     )
 
-    (def #_"VNode" VNode'EMPTY (VNode'new nil, nil))
+    (def #_"node" VNode'EMPTY (VNode'new nil, nil))
 
-    (defn #_"void" VNode''assertEditable [#_"VNode" this]
+    (defn #_"void" VNode''assert-editable [#_"node" this]
         (let [
             #_"Thread" owner @(or (:edit this) (throw! "transient use of persistent data"))
         ]
@@ -14264,7 +14260,7 @@
         nil
     )
 
-    (defn #_"boolean" VNode''cow? [#_"VNode" this, #_"Thread'" edit]
+    (defn #_"boolean" VNode''cow? [#_"node" this, #_"Thread'" edit]
         (let [
             #_"Thread'" e (:edit this)
         ]
@@ -14272,18 +14268,18 @@
         )
     )
 
-    (defn #_"VNode" VNode''editableRoot [#_"VNode" this]
+    (defn #_"node" VNode''editable-root [#_"node" this]
         (VNode'new (atom (thread)), (aclone (:array this)))
     )
 
-    (defn #_"values" VNode'editableTail [#_"values" tail]
-        (doto (value-array 32) (acopy! 0 tail 0 (count tail)))
+    (defn #_"values" VNode'editable-tail [#_"values" tail]
+        (-> (anew 32) (acopy! 0 tail 0 (alength tail)))
     )
 
-    (defn #_"values" VNode''arrayFor [#_"VNode" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
+    (defn #_"values" VNode''array-for [#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
         (when (< -1 i cnt) => (throw! "index is out of bounds")
             (when (< i tail-off) => tail
-                (loop-when-recur [#_"VNode" node this shift shift]
+                (loop-when-recur [#_"node" node this shift shift]
                                  (pos? shift)
                                  [(aget (:array node) (& (>>> i shift) 0x1f)) (- shift 5)]
                               => (:array node)
@@ -14292,9 +14288,9 @@
         )
     )
 
-    (defn #_"VNode" VNode''newPath [#_"VNode" this, #_"Thread'" edit, #_"int" shift]
+    (defn #_"node" VNode''new-path [#_"node" this, #_"Thread'" edit, #_"int" shift]
         (when (pos? shift) => this
-            (VNode'new edit, (doto (object-array 32) (aset! 0 (VNode''newPath this, edit, (- shift 5)))))
+            (VNode'new edit, (-> (anew 32) (aset! 0 (VNode''new-path this, edit, (- shift 5)))))
         )
     )
 
@@ -14302,15 +14298,15 @@
         (< (<< 1 shift) (>>> cnt 5))
     )
 
-    (defn #_"VNode" VNode''pushTail [#_"VNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt, #_"VNode" tail-node]
+    (defn #_"node" VNode''push-tail [#_"node" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt, #_"node" tail-node]
         (let [
-            #_"boolean" cow? (VNode''cow? this, edit) #_"Object[]" a (:array this)
+            #_"boolean" cow? (VNode''cow? this, edit) #_"array" a (:array this)
             #_"int" e (& (>>> (dec cnt) shift) 0x1f)
-            #_"VNode" child
+            #_"node" child
                 (when (< 5 shift) => tail-node
                     (if-some [child (aget a e)]
-                        (VNode''pushTail child, edit, (- shift 5), cnt, tail-node)
-                        (VNode''newPath tail-node, edit, (- shift 5))
+                        (VNode''push-tail child, edit, (- shift 5), cnt, tail-node)
+                        (VNode''new-path tail-node, edit, (- shift 5))
                     )
                 )
             a (if cow? (aclone a) a)
@@ -14320,15 +14316,15 @@
         )
     )
 
-    (defn #_"VNode" VNode''popTail [#_"VNode" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt]
+    (defn #_"node" VNode''pop-tail [#_"node" this, #_"Thread'" edit, #_"int" shift, #_"int" cnt]
         (let [
-            #_"boolean" cow? (VNode''cow? this, edit) #_"Object[]" a (:array this)
-            #_"int" e (& (>>> (- cnt 2) shift) 0x1f)
+            #_"boolean" cow? (VNode''cow? this, edit) #_"array" a (:array this)
+            #_"int" e (& (>>> (- cnt 2) shift) 0x1f)
         ]
             (cond
                 (< 5 shift)
                     (let [
-                        #_"VNode" child (VNode''popTail (aget a e), edit, (- shift 5), cnt)
+                        #_"node" child (VNode''pop-tail (aget a e), edit, (- shift 5), cnt)
                     ]
                         (when (or (some? child) (pos? e))
                             (let [
@@ -14342,7 +14338,7 @@
                 (pos? e)
                     (let [
                         a (if cow? (aclone a) a)
-                        _ (aset! a e nil)
+                        a (aset! a e nil)
                     ]
                         (if cow? (VNode'new edit, a) this)
                     )
@@ -14350,14 +14346,14 @@
         )
     )
 
-    (defn #_"VNode" VNode''doAssoc [#_"VNode" this, #_"Thread'" edit, #_"int" shift, #_"int" i, #_"value" val]
+    (defn #_"node" VNode''do-assoc [#_"node" this, #_"Thread'" edit, #_"int" shift, #_"int" i, #_"value" val]
         (let [
-            #_"boolean" cow? (VNode''cow? this, edit) #_"Object[]" a (:array this)
+            #_"boolean" cow? (VNode''cow? this, edit) #_"array" a (:array this)
             a (if cow? (aclone a) a)
             #_"int" m (& (>>> i shift) 0x1f)
-            _
+            a
                 (when (pos? shift) => (aset! a m val)
-                    (aswap! a m VNode''doAssoc edit, (- shift 5), i, val)
+                    (aswap! a m VNode''do-assoc edit, (- shift 5), i, val)
                 )
         ]
             (if cow? (VNode'new edit, a) this)
@@ -14366,49 +14362,47 @@
 )
 
 (about #_"TransientVector"
-    (defr TransientVector [AFn Counted IFn ILookup Indexed ITransientAssociative ITransientCollection ITransientVector])
+    (defq TransientVector [cnt, shift, root, tail] AFn)
 
     (defn #_"TransientVector" TransientVector'new
         ([#_"PersistentVector" v]
-            (TransientVector'new (:cnt v), (:shift v), (VNode''editableRoot (:root v)), (VNode'editableTail (:tail v)))
+            (TransientVector'new (:cnt v), (:shift v), (VNode''editable-root (:root v)), (VNode'editable-tail (:tail v)))
         )
-        ([#_"int" cnt, #_"int" shift, #_"VNode" root, #_"values" tail]
-            (merge (TransientVector'class.)
-                (hash-map
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"VNode" :root root
-                    #_"values" :tail tail
-                )
+        ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail]
+            (assoc!! (TransientVector'class. (anew 4))
+                #_"int" :cnt cnt
+                #_"int" :shift shift
+                #_"node" :root root
+                #_"values" :tail tail
             )
         )
     )
 
-    (defn- #_"int" TransientVector''tailoff [#_"TransientVector" this]
+    (defm TransientVector Counted
+        (#_"int" Counted'''count [#_"TransientVector" this]
+            (VNode''assert-editable (:root this))
+            (:cnt this)
+        )
+    )
+
+    (defn- #_"int" TransientVector''tail-off [#_"TransientVector" this]
         (if (< (:cnt this) 32) 0 (<< (>>> (dec (:cnt this)) 5) 5))
     )
 
-    (defn- #_"values" TransientVector''arrayFor [#_"TransientVector" this, #_"int" i]
-        (VNode''arrayFor (:root this), i, (:shift this), (:cnt this), (TransientVector''tailoff this), (:tail this))
-    )
-
-    (defm TransientVector Counted
-        (#_"int" Counted'''count [#_"TransientVector" this]
-            (VNode''assertEditable (:root this))
-            (:cnt this)
-        )
+    (defn- #_"values" TransientVector''array-for [#_"TransientVector" this, #_"int" i]
+        (VNode''array-for (:root this), i, (:shift this), (:cnt this), (TransientVector''tail-off this), (:tail this))
     )
 
     (defm TransientVector Indexed
         (#_"value" Indexed'''nth
             ([#_"TransientVector" this, #_"int" i]
-                (VNode''assertEditable (:root this))
-                (aget (TransientVector''arrayFor this, i) (& i 0x1f))
+                (VNode''assert-editable (:root this))
+                (aget (TransientVector''array-for this, i) (& i 0x1f))
             )
             ([#_"TransientVector" this, #_"int" i, #_"value" not-found]
-                (VNode''assertEditable (:root this))
+                (VNode''assert-editable (:root this))
                 (when (< -1 i (:cnt this)) => not-found
-                    (aget (TransientVector''arrayFor this, i) (& i 0x1f))
+                    (aget (TransientVector''array-for this, i) (& i 0x1f))
                 )
             )
         )
@@ -14418,10 +14412,10 @@
         (#_"value" ILookup'''valAt
             ([#_"TransientVector" this, #_"key" key] (ILookup'''valAt this, key, nil))
             ([#_"TransientVector" this, #_"key" key, #_"value" not-found]
-                (VNode''assertEditable (:root this))
+                (VNode''assert-editable (:root this))
                 (when (integer? key) => not-found
-                    (let-when [#_"int" i (.intValue key)] (< -1 i (:cnt this)) => not-found
-                        (aget (TransientVector''arrayFor this, i) (& i 0x1f))
+                    (let-when [#_"int" i (int key)] (< -1 i (:cnt this)) => not-found
+                        (aget (TransientVector''array-for this, i) (& i 0x1f))
                     )
                 )
             )
@@ -14431,58 +14425,76 @@
     (defm TransientVector IFn
         (#_"value" IFn'''invoke [#_"TransientVector" this, #_"key" arg]
             (when (integer? arg) => (throw! "arg must be integer")
-                (Indexed'''nth this, (.intValue arg))
+                (Indexed'''nth this, (int arg))
+            )
+        )
+
+        (#_"value" IFn'''applyTo [#_"TransientVector" this, #_"seq" args]
+            (case (count args 1)
+                1 (IFn'''invoke this, (first args))
             )
         )
     )
 
+    (declare PersistentVector'new)
+
     (defm TransientVector ITransientCollection
         (#_"TransientVector" ITransientCollection'''conj! [#_"TransientVector" this, #_"value" val]
-            (VNode''assertEditable (:root this))
-            (if (< (- (:cnt this) (TransientVector''tailoff this)) 32) ;; room in tail?
+            (VNode''assert-editable (:root this))
+            (if (< (- (:cnt this) (TransientVector''tail-off this)) 32) ;; room in tail?
                 (let [
-                    _ (aset! (:tail this) (& (:cnt this) 0x1f) val)
+                    _ (aset! (:tail this) (& (:cnt this) 0x1f) val)
                 ]
-                    (-> this (update :cnt inc))
+                    (-> this (update!! :cnt inc))
                 )
                 ;; full tail, push into tree
                 (let [
-                    #_"VNode" tail-node (VNode'new (:edit (:root this)), (:tail this))
-                    this (assoc this :tail (doto (value-array 32) (aset! 0 val)))
+                    #_"node" tail-node (VNode'new (:edit (:root this)), (:tail this))
+                    this (assoc!! this :tail (-> (anew 32) (aset! 0 val)))
                 ]
                     (if (VNode'overflow? (:shift this), (:cnt this)) ;; overflow root?
                         (let [
-                            #_"Object[]" a
-                                (doto (object-array 32)
+                            #_"array" a
+                                (-> (anew 32)
                                     (aset! 0 (:root this))
-                                    (aset! 1 (VNode''newPath tail-node, (:edit (:root this)), (:shift this)))
+                                    (aset! 1 (VNode''new-path tail-node, (:edit (:root this)), (:shift this)))
                                 )
-                            #_"VNode" root (VNode'new (:edit (:root this)), a)
+                            #_"node" root (VNode'new (:edit (:root this)), a)
                         ]
-                            (-> this (assoc :root root) (update :shift + 5) (update :cnt inc))
+                            (-> this (assoc!! :root root) (update!! :shift + 5) (update!! :cnt inc))
                         )
                         (let [
-                            #_"VNode" root (VNode''pushTail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
+                            #_"node" root (VNode''push-tail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
                         ]
-                            (-> this (assoc :root root) (update :cnt inc))
+                            (-> this (assoc!! :root root) (update!! :cnt inc))
                         )
                     )
                 )
+            )
+        )
+
+        (#_"PersistentVector" ITransientCollection'''persistent! [#_"TransientVector" this]
+            (VNode''assert-editable (:root this))
+            (reset! (:edit (:root this)) nil)
+            (let [
+                #_"int" n (- (:cnt this) (TransientVector''tail-off this))
+            ]
+                (PersistentVector'new (:cnt this), (:shift this), (:root this), (-> (anew n) (acopy! 0 (:tail this) 0 n)))
             )
         )
     )
 
     (defm TransientVector ITransientVector
         (#_"TransientVector" ITransientVector'''assocN! [#_"TransientVector" this, #_"int" i, #_"value" val]
-            (VNode''assertEditable (:root this))
+            (VNode''assert-editable (:root this))
             (if (< -1 i (:cnt this))
-                (if (<= (TransientVector''tailoff this) i)
+                (if (<= (TransientVector''tail-off this) i)
                     (do
-                        (aset! (:tail this) (& i 0x1f) val)
+                        (aset! (:tail this) (& i 0x1f) val)
                         this
                     )
                     (do
-                        (assoc this :root (VNode''doAssoc (:root this), (:edit (:root this)), (:shift this), i, val))
+                        (assoc!! this :root (VNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val))
                     )
                 )
                 (when (= i (:cnt this)) => (throw! "index is out of bounds")
@@ -14490,96 +14502,111 @@
                 )
             )
         )
-    )
 
-    (defm TransientVector ITransientAssociative
-        (#_"TransientVector" ITransientAssociative'''assoc! [#_"TransientVector" this, #_"key" key, #_"value" val]
-            (when (integer? key) => (throw! "key must be integer")
-                (ITransientVector'''assocN! this, (.intValue key), val)
-            )
-        )
-
-        (#_"boolean" ITransientAssociative'''containsKey [#_"TransientVector" this, #_"key" key]
-            (and (integer? key) (< -1 (.intValue key) (:cnt this)))
-        )
-
-        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"TransientVector" this, #_"key" key]
-            (when (integer? key)
-                (let-when [#_"int" i (.intValue key)] (< -1 i (:cnt this))
-                    (MapEntry'create key, (Indexed'''nth this, i))
-                )
-            )
-        )
-    )
-
-    (defm TransientVector ITransientVector
         (#_"TransientVector" ITransientVector'''pop! [#_"TransientVector" this]
-            (VNode''assertEditable (:root this))
+            (VNode''assert-editable (:root this))
             (cond
                 (zero? (:cnt this))
                     (throw! "can't pop the empty vector")
                 (or (= (:cnt this) 1) (pos? (& (dec (:cnt this)) 0x1f)))
-                    (-> this (update :cnt dec))
+                    (-> this (update!! :cnt dec))
                 :else
                     (let [
-                        #_"values" tail (aclone (TransientVector''arrayFor this, (- (:cnt this) 2)))
-                        #_"VNode" root (VNode''popTail (:root this), (:edit (:root this)), (:shift this), (:cnt this))
+                        #_"values" tail (aclone (TransientVector''array-for this, (- (:cnt this) 2)))
+                        #_"node" root (VNode''pop-tail (:root this), (:edit (:root this)), (:shift this), (:cnt this))
                         this
                             (cond
                                 (nil? root)
                                     (-> this
-                                        (assoc :root (VNode'new (:edit (:root this)), nil))
+                                        (assoc!! :root (VNode'new (:edit (:root this)), nil))
                                     )
                                 (and (< 5 (:shift this)) (nil? (aget (:array root) 1)))
                                     (-> this
-                                        (update :shift - 5)
-                                        (assoc :root (aget (:array root) 0))
+                                        (update!! :shift - 5)
+                                        (assoc!! :root (aget (:array root) 0))
                                     )
                                 :else
                                     (-> this
-                                        (assoc :root root)
+                                        (assoc!! :root root)
                                     )
                             )
                     ]
                         (-> this
-                            (update :cnt dec)
-                            (assoc :tail tail)
+                            (update!! :cnt dec)
+                            (assoc!! :tail tail)
                         )
                     )
             )
         )
     )
 
-    (declare PersistentVector'new)
+    (defm TransientVector ITransientAssociative
+        (#_"TransientVector" ITransientAssociative'''assoc! [#_"TransientVector" this, #_"key" key, #_"value" val]
+            (when (integer? key) => (throw! "key must be integer")
+                (ITransientVector'''assocN! this, (int key), val)
+            )
+        )
 
-    (defm TransientVector ITransientCollection
-        (#_"PersistentVector" ITransientCollection'''persistent! [#_"TransientVector" this]
-            (VNode''assertEditable (:root this))
-            (reset! (:edit (:root this)) nil)
-            (let [
-                #_"int" n (- (:cnt this) (TransientVector''tailoff this))
-            ]
-                (PersistentVector'new (:cnt this), (:shift this), (:root this), (doto (value-array n) (acopy! 0 (:tail this) 0 n)))
+        (#_"boolean" ITransientAssociative'''containsKey [#_"TransientVector" this, #_"key" key]
+            (and (integer? key) (< -1 (int key) (:cnt this)))
+        )
+
+        (#_"IMapEntry" ITransientAssociative'''entryAt [#_"TransientVector" this, #_"key" key]
+            (when (integer? key)
+                (let-when [#_"int" i (int key)] (< -1 i (:cnt this))
+                    (MapEntry'create key, (Indexed'''nth this, i))
+                )
             )
         )
     )
 )
 
 (about #_"PersistentVector"
-    (defr PersistentVector [#_"APersistentVector" Associative #_"Comparable" Counted IEditableCollection IFn Hashed IKVReduce ILookup IMeta Indexed IObj IObject IPersistentCollection IPersistentStack IPersistentVector IReduce Reversible Seqable Sequential])
+    (defq PersistentVector [_meta, cnt, shift, root, tail] APersistentVector)
 
     (defn #_"PersistentVector" PersistentVector'new
-        ([#_"int" cnt, #_"int" shift, #_"VNode" root, #_"values" tail] (PersistentVector'new nil, cnt, shift, root, tail))
-        ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"VNode" root, #_"values" tail]
-            (merge (PersistentVector'class.) (APersistentVector'new)
-                (hash-map
-                    #_"IPersistentMap" :_meta meta
-                    #_"int" :cnt cnt
-                    #_"int" :shift shift
-                    #_"VNode" :root root
-                    #_"values" :tail tail
-                )
+        ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] (PersistentVector'new nil, cnt, shift, root, tail))
+        ([#_"IPersistentMap" meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail]
+            (assoc!! (PersistentVector'class. (anew 5))
+                #_"IPersistentMap" :_meta meta
+                #_"int" :cnt cnt
+                #_"int" :shift shift
+                #_"node" :root root
+                #_"values" :tail tail
             )
+        )
+    )
+
+    (def #_"PersistentVector" PersistentVector'EMPTY (PersistentVector'new 0, 5, VNode'EMPTY, (anew 0)))
+
+    (defn #_"PersistentVector" PersistentVector'create-1r [#_"IReduce" values]
+        (into PersistentVector'EMPTY values)
+    )
+
+    (defn #_"PersistentVector" PersistentVector'create-1s [#_"Seqable" values]
+        (let [
+            #_"array" a (anew 32)
+            [#_"ISeq" s #_"int" i]
+                (loop-when-recur [s (seq values) i 0] (and (some? s) (< i 32)) [(next s) (inc i)] => [s i]
+                    (aset! a i (first s))
+                )
+        ]
+            (cond
+                (some? s) ;; >32, construct with array directly
+                    (into (PersistentVector'new 32, 5, VNode'EMPTY, a) s)
+                (= i 32) ;; exactly 32, skip copy
+                    (PersistentVector'new 32, 5, VNode'EMPTY, a)
+                :else ;; <32, copy to minimum array and construct
+                    (PersistentVector'new i, 5, VNode'EMPTY, (-> (anew i) (acopy! 0 a 0 i)))
+            )
+        )
+    )
+
+    (defn #_"PersistentVector" PersistentVector'create-1a [& #_"value..." values]
+        (loop-when-recur [#_"TransientVector" v (transient PersistentVector'EMPTY) #_"int" i 0]
+                         (< i (alength values))
+                         [(conj! v (aget values i)) (inc i)]
+                      => (persistent! v)
         )
     )
 
@@ -14595,38 +14622,8 @@
         )
     )
 
-    (def #_"PersistentVector" PersistentVector'EMPTY (PersistentVector'new 0, 5, VNode'EMPTY, (value-array 0)))
-
-    (defn #_"PersistentVector" PersistentVector'create-1r [#_"IReduce" items]
-        (into PersistentVector'EMPTY items)
-    )
-
-    (defn #_"PersistentVector" PersistentVector'create-1s [#_"Seqable" items]
-        (let [
-            #_"Object[]" a (object-array 32)
-            [#_"ISeq" s #_"int" i]
-                (loop-when-recur [s (seq items) i 0] (and (some? s) (< i 32)) [(next s) (inc i)] => [s i]
-                    (aset! a i (first s))
-                )
-        ]
-            (cond
-                (some? s) ;; >32, construct with array directly
-                    (into (PersistentVector'new 32, 5, VNode'EMPTY, a) s)
-                (= i 32) ;; exactly 32, skip copy
-                    (PersistentVector'new 32, 5, VNode'EMPTY, a)
-                :else ;; <32, copy to minimum array and construct
-                    (PersistentVector'new i, 5, VNode'EMPTY, (doto (object-array i) (acopy! 0 a 0 i)))
-            )
-        )
-    )
-
-    (defn #_"PersistentVector" PersistentVector'create-1a [& #_"Object..." items]
-        (loop-when-recur [#_"TransientVector" v (transient PersistentVector'EMPTY) #_"int" i 0]
-                         (< i (count items))
-                         [(conj! v (aget items i)) (inc i)]
-                      => (persistent! v)
-        )
-    )
+    ;; defm  IObject
+    ;; defm  Hashed
 
     (defm PersistentVector IEditableCollection
         (#_"TransientVector" IEditableCollection'''asTransient [#_"PersistentVector" this]
@@ -14640,22 +14637,22 @@
         )
     )
 
-    (defn- #_"int" PersistentVector''tailoff [#_"PersistentVector" this]
+    (defn- #_"int" PersistentVector''tail-off [#_"PersistentVector" this]
         (if (< (:cnt this) 32) 0 (<< (>>> (dec (:cnt this)) 5) 5))
     )
 
-    (defn- #_"values" PersistentVector''arrayFor [#_"PersistentVector" this, #_"int" i]
-        (VNode''arrayFor (:root this), i, (:shift this), (:cnt this), (PersistentVector''tailoff this), (:tail this))
+    (defn- #_"values" PersistentVector''array-for [#_"PersistentVector" this, #_"int" i]
+        (VNode''array-for (:root this), i, (:shift this), (:cnt this), (PersistentVector''tail-off this), (:tail this))
     )
 
     (defm PersistentVector Indexed
         (#_"value" Indexed'''nth
             ([#_"PersistentVector" this, #_"int" i]
-                (aget (PersistentVector''arrayFor this, i) (& i 0x1f))
+                (aget (PersistentVector''array-for this, i) (& i 0x1f))
             )
-            ([#_"PersistentVector" this, #_"int" i, #_"Object" not-found]
+            ([#_"PersistentVector" this, #_"int" i, #_"value" not-found]
                 (when (< -1 i (:cnt this)) => not-found
-                    (aget (PersistentVector''arrayFor this, i) (& i 0x1f))
+                    (aget (PersistentVector''array-for this, i) (& i 0x1f))
                 )
             )
         )
@@ -14664,33 +14661,33 @@
     (defm PersistentVector IPersistentCollection
         (#_"PersistentVector" IPersistentCollection'''conj [#_"PersistentVector" this, #_"value" val]
             (let [
-                #_"int" tail-len (count (:tail this))
+                #_"int" tail-len (alength (:tail this))
             ]
-                (if (< (- (:cnt this) (PersistentVector''tailoff this)) 32) ;; room in tail?
+                (if (< (- (:cnt this) (PersistentVector''tail-off this)) 32) ;; room in tail?
                     (let [
-                        #_"values" tail (doto (value-array (inc tail-len)) (acopy! 0 (:tail this) 0 tail-len) (aset! tail-len val))
+                        #_"values" tail (-> (anew (inc tail-len)) (acopy! 0 (:tail this) 0 tail-len) (aset! tail-len val))
                     ]
                         (PersistentVector'new (:_meta this), (inc (:cnt this)), (:shift this), (:root this), tail)
                     )
                     ;; full tail, push into tree
                     (let [
-                        #_"VNode" tail-node (VNode'new (:edit (:root this)), (:tail this))
+                        #_"node" tail-node (VNode'new (:edit (:root this)), (:tail this))
                         #_"int" shift (:shift this)
-                        [#_"VNode" root shift]
+                        [#_"node" root shift]
                             (if (VNode'overflow? shift, (:cnt this)) ;; overflow root?
                                 (let [
-                                    #_"Object[]" a
-                                        (doto (object-array 32)
+                                    #_"array" a
+                                        (-> (anew 32)
                                             (aset! 0 (:root this))
-                                            (aset! 1 (VNode''newPath tail-node, (:edit (:root this)), shift))
+                                            (aset! 1 (VNode''new-path tail-node, (:edit (:root this)), shift))
                                         )
                                 ]
                                     [(VNode'new (:edit (:root this)), a) (+ shift 5)]
                                 )
-                                [(VNode''pushTail (:root this), (:edit (:root this)), shift, (:cnt this), tail-node) shift]
+                                [(VNode''push-tail (:root this), (:edit (:root this)), shift, (:cnt this), tail-node) shift]
                             )
                     ]
-                        (PersistentVector'new (:_meta this), (inc (:cnt this)), shift, root, (value-array [ val ]))
+                        (PersistentVector'new (:_meta this), (inc (:cnt this)), shift, root, (anew [ val ]))
                     )
                 )
             )
@@ -14704,14 +14701,14 @@
     (defm PersistentVector IPersistentVector
         (#_"PersistentVector" IPersistentVector'''assocN [#_"PersistentVector" this, #_"int" i, #_"value" val]
             (if (< -1 i (:cnt this))
-                (if (<= (PersistentVector''tailoff this) i)
+                (if (<= (PersistentVector''tail-off this) i)
                     (let [
-                        #_"int" n (count (:tail this))
-                        #_"values" tail (doto (value-array n) (acopy! 0 (:tail this) 0 n) (aset! (& i 0x1f) val))
+                        #_"int" n (alength (:tail this))
+                        #_"values" tail (-> (anew n) (acopy! 0 (:tail this) 0 n) (aset! (& i 0x1f) val))
                     ]
                         (PersistentVector'new (:_meta this), (:cnt this), (:shift this), (:root this), tail)
                     )
-                    (PersistentVector'new (:_meta this), (:cnt this), (:shift this), (VNode''doAssoc (:root this), (:edit (:root this)), (:shift this), i, val), (:tail this))
+                    (PersistentVector'new (:_meta this), (:cnt this), (:shift this), (VNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val), (:tail this))
                 )
                 (when (= i (:cnt this)) => (throw! "index is out of bounds")
                     (IPersistentCollection'''conj this, val)
@@ -14721,23 +14718,25 @@
     )
 
     (defm PersistentVector IPersistentStack
+        ;;  peek
+
         (#_"PersistentVector" IPersistentStack'''pop [#_"PersistentVector" this]
-            (condp = (:cnt this)
+            (case (:cnt this)
                 0   (throw! "can't pop the empty vector")
                 1   (IObj'''withMeta PersistentVector'EMPTY, (:_meta this))
                 (let [
-                    #_"int" tail-len (count (:tail this))
+                    #_"int" tail-len (alength (:tail this))
                 ]
-                    (if (< 1 (- (:cnt this) (PersistentVector''tailoff this)))
+                    (if (< 1 (- (:cnt this) (PersistentVector''tail-off this)))
                         (let [
-                            #_"values" tail (doto (value-array (dec tail-len)) (acopy! 0 (:tail this) 0 (dec tail-len)))
+                            #_"values" tail (-> (anew (dec tail-len)) (acopy! 0 (:tail this) 0 (dec tail-len)))
                         ]
                             (PersistentVector'new (:_meta this), (dec (:cnt this)), (:shift this), (:root this), tail)
                         )
                         (let [
-                            #_"values" tail (PersistentVector''arrayFor this, (- (:cnt this) 2))
+                            #_"values" tail (PersistentVector''array-for this, (- (:cnt this) 2))
                             #_"int" shift (:shift this)
-                            #_"VNode" root (VNode''popTail (:root this), (:edit (:root this)), shift, (:cnt this))
+                            #_"node" root (VNode''pop-tail (:root this), (:edit (:root this)), shift, (:cnt this))
                             [shift root]
                                 (cond
                                     (nil? root)                                     [shift VNode'EMPTY]
@@ -14753,13 +14752,15 @@
         )
     )
 
+    ;; defm  IFn
+
     (defm PersistentVector IReduce
         (#_"value" IReduce'''reduce
             ([#_"PersistentVector" this, #_"IFn" f]
                 (when (pos? (:cnt this)) => (f)
-                    (loop-when [#_"value" r (aget (PersistentVector''arrayFor this, 0) 0) #_"int" i 0] (< i (:cnt this)) => r
-                        (let [#_"values" a (PersistentVector''arrayFor this, i)
-                              r (loop-when [r r #_"int" j (if (zero? i) 1 0)] (< j (count a)) => r
+                    (loop-when [#_"value" r (aget (PersistentVector''array-for this, 0) 0) #_"int" i 0] (< i (:cnt this)) => r
+                        (let [#_"values" a (PersistentVector''array-for this, i)
+                              r (loop-when [r r #_"int" j (if (zero? i) 1 0)] (< j (alength a)) => r
                                     (let [r (f r (aget a j))]
                                         (when-not (reduced? r) => r
                                             (recur r (inc j))
@@ -14767,7 +14768,7 @@
                                     )
                                 )]
                             (when-not (reduced? r) => @r
-                                (recur r (+ i (count a)))
+                                (recur r (+ i (alength a)))
                             )
                         )
                     )
@@ -14775,8 +14776,8 @@
             )
             ([#_"PersistentVector" this, #_"IFn" f, #_"value" r]
                 (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
-                    (let [#_"values" a (PersistentVector''arrayFor this, i)
-                          r (loop-when [r r #_"int" j 0] (< j (count a)) => r
+                    (let [#_"values" a (PersistentVector''array-for this, i)
+                          r (loop-when [r r #_"int" j 0] (< j (alength a)) => r
                                 (let [r (f r (aget a j))]
                                     (when-not (reduced? r) => r
                                         (recur r (inc j))
@@ -14784,7 +14785,7 @@
                                 )
                             )]
                         (when-not (reduced? r) => @r
-                            (recur r (+ i (count a)))
+                            (recur r (+ i (alength a)))
                         )
                     )
                 )
@@ -14796,9 +14797,9 @@
         (#_"value" IKVReduce'''kvreduce [#_"PersistentVector" this, #_"IFn" f, #_"value" r]
             (loop-when [r r #_"int" i 0] (< i (:cnt this)) => r
                 (let [
-                    #_"values" a (PersistentVector''arrayFor this, i)
+                    #_"values" a (PersistentVector''array-for this, i)
                     r
-                        (loop-when [r r #_"int" j 0] (< j (count a)) => r
+                        (loop-when [r r #_"int" j 0] (< j (alength a)) => r
                             (let [
                                 r (f r (+ i j) (aget a j))
                             ]
@@ -14809,12 +14810,19 @@
                         )
                 ]
                     (when-not (reduced? r) => @r
-                        (recur r (+ i (count a)))
+                        (recur r (+ i (alength a)))
                     )
                 )
             )
         )
     )
+
+    ;; defm  Associative
+    ;; defm  ILookup
+    ;; defm  Sequential
+    ;; defm  Seqable
+    ;; defm  Reversible
+    ;; defm  #_"Comparable"
 )
 )
 
@@ -16404,7 +16412,7 @@
 (about #_"cloiure.core.Repeat"
 
 (about #_"Repeat"
-    (defr Repeat [ASeq Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr Repeat [ASeq])
 
     (def- #_"long" Repeat'INFINITE -1)
 
@@ -16495,7 +16503,10 @@
  ; Implements generic numeric (potentially infinite) range.
  ;;
 (about #_"Range"
-    (defr Range [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr Range [ASeq])
+
+    #_abstract
+    (defm Range Counted)
 
     (defn- #_"RangeBoundsCheck" Range'positiveStep [#_"Object" end]
         (reify RangeBoundsCheck
@@ -16610,7 +16621,7 @@
 (about #_"cloiure.core.StringSeq"
 
 (about #_"StringSeq"
-    (defr StringSeq [ASeq Counted Hashed IMeta IObj IObject IPersistentCollection IReduce ISeq Seqable Sequential])
+    (defr StringSeq [ASeq])
 
     (defn- #_"StringSeq" StringSeq'new [#_"IPersistentMap" meta, #_"CharSequence" s, #_"int" i]
         (merge (StringSeq'class.)
@@ -16708,7 +16719,7 @@
 (about #_"cloiure.core.Var"
 
 (about #_"Unbound"
-    (defr Unbound [AFn IFn IObject])
+    (defr Unbound [AFn])
 
     (defn #_"Unbound" Unbound'new [#_"Namespace" ns, #_"Symbol" sym]
         (merge (Unbound'class.)
@@ -16729,7 +16740,7 @@
 )
 
 (about #_"Var"
-    (defr Var [IDeref IFn IMeta IObject IReference])
+    (defr Var [IFn])
 
     (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
 
