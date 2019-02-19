@@ -46,7 +46,7 @@
                             (conj i 'clojure.lang.ILookup)
                             (conj m
                                 `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (let [x# (case k# ~@s)] (-/aget ~a x#)))
+                                `(valAt [this# k# else#] (let [x# (case k# ~@s nil)] (-/aget ~a x#)))
                             )
                         ]
                     )
@@ -1613,8 +1613,6 @@
 
 (about #_"cloiure.core.PersistentTreeMap"
     (defp ITNode
-        (#_"ITNode" ITNode'''left [#_"ITNode" this])
-        (#_"ITNode" ITNode'''right [#_"ITNode" this])
         (#_"ITNode" ITNode'''addLeft [#_"ITNode" this, #_"ITNode" ins])
         (#_"ITNode" ITNode'''addRight [#_"ITNode" this, #_"ITNode" ins])
         (#_"ITNode" ITNode'''removeLeft [#_"ITNode" this, #_"ITNode" del])
@@ -9654,7 +9652,7 @@
     (defr RestFn [])
 
     #_inherit
-    (defm RestFn AFn Fn)
+    (defm RestFn Fn AFn)
 
     (defn #_"RestFn" RestFn'new []
         (merge (RestFn'class.) (Fn'new))
@@ -10228,7 +10226,7 @@
     (defq MapEntry [#_"key" k, #_"value" v])
 
     #_inherit
-    (defm MapEntry AFn APersistentVector AMapEntry)
+    (defm MapEntry AMapEntry APersistentVector AFn)
 
     (defn- #_"MapEntry" MapEntry'new [#_"key" k, #_"value" v]
         (MapEntry'class. (anew [k, v]))
@@ -10914,7 +10912,7 @@
     (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt])
 
     #_inherit
-    (defm TransientArrayMap AFn ATransientMap)
+    (defm TransientArrayMap ATransientMap AFn)
 
     (declare PersistentArrayMap'HASHTABLE_THRESHOLD)
 
@@ -11056,7 +11054,7 @@
     (defq PersistentArrayMap [#_"meta" _meta, #_"array" array])
 
     #_inherit
-    (defm PersistentArrayMap AFn APersistentMap)
+    (defm PersistentArrayMap APersistentMap AFn)
 
     (defn #_"PersistentArrayMap" PersistentArrayMap'new
         ;; This ctor captures/aliases the passed array, so do not modify it later.
@@ -12085,17 +12083,17 @@
 )
 
 (about #_"TransientHashMap"
-    (defq TransientHashMap [#_"thread'" edit, #_"INode" root, #_"int" cnt, #_"boolean" hasNull, #_"value" nullValue])
+    (defq TransientHashMap [#_"thread'" edit, #_"INode" root, #_"int" cnt, #_"boolean" has-nil?, #_"value" nil-value])
 
     #_inherit
-    (defm TransientHashMap AFn ATransientMap)
+    (defm TransientHashMap ATransientMap AFn)
 
     (defn #_"TransientHashMap" TransientHashMap'new
         ([#_"PersistentHashMap" m]
-            (TransientHashMap'new (atom (thread)), (:root m), (:cnt m), (:hasNull m), (:nullValue m))
+            (TransientHashMap'new (atom (thread)), (:root m), (:cnt m), (:has-nil? m), (:nil-value m))
         )
-        ([#_"thread'" edit, #_"INode" root, #_"int" cnt, #_"boolean" hasNull, #_"value" nullValue]
-            (TransientHashMap'class. (anew [edit, root, cnt, hasNull, nullValue]))
+        ([#_"thread'" edit, #_"INode" root, #_"int" cnt, #_"boolean" has-nil?, #_"value" nil-value]
+            (TransientHashMap'class. (anew [edit, root, cnt, has-nil?, nil-value]))
         )
     )
 
@@ -12117,8 +12115,8 @@
             ([#_"TransientHashMap" this, #_"key" key, #_"value" not-found]
                 (TransientHashMap''assert-editable this)
                 (if (nil? key)
-                    (when (:hasNull this) => not-found
-                        (:nullValue this)
+                    (when (:has-nil? this) => not-found
+                        (:nil-value this)
                     )
                     (when (some? (:root this)) => not-found
                         (INode'''find (:root this), 0, (f'hash key), key, not-found)
@@ -12139,10 +12137,10 @@
             (TransientHashMap''assert-editable this)
             (if (nil? key)
                 (let [
-                    this (if (= (:nullValue this) val) this (assoc!! this :nullValue val))
+                    this (if (= (:nil-value this) val) this (assoc!! this :nil-value val))
                 ]
-                    (when-not (:hasNull this) => this
-                        (-> this (update!! :cnt inc) (assoc!! :hasNull true))
+                    (when-not (:has-nil? this) => this
+                        (-> this (update!! :cnt inc) (assoc!! :has-nil? true))
                     )
                 )
                 (let [
@@ -12166,8 +12164,8 @@
         (#_"ITransientMap" ITransientMap'''dissoc! [#_"TransientHashMap" this, #_"key" key]
             (TransientHashMap''assert-editable this)
             (if (nil? key)
-                (when (:hasNull this) => this
-                    (-> this (update!! :cnt dec) (assoc!! :hasNull false, :nullValue nil))
+                (when (:has-nil? this) => this
+                    (-> this (update!! :cnt dec) (assoc!! :has-nil? false, :nil-value nil))
                 )
                 (when (some? (:root this)) => this
                     (let [
@@ -12208,7 +12206,7 @@
         (#_"IPersistentMap" ITransientCollection'''persistent! [#_"TransientHashMap" this]
             (TransientHashMap''assert-editable this)
             (reset! (:edit this) nil)
-            (PersistentHashMap'new (:cnt this), (:root this), (:hasNull this), (:nullValue this))
+            (PersistentHashMap'new (:cnt this), (:root this), (:has-nil? this), (:nil-value this))
         )
     )
 )
@@ -12224,21 +12222,59 @@
  ; Any errors are my own.
  ;;
 (about #_"PersistentHashMap"
-    (defr PersistentHashMap [])
+    (defq PersistentHashMap [#_"meta" _meta, #_"int" cnt, #_"INode" root, #_"boolean" has-nil?, #_"value" nil-value])
 
     #_inherit
-    (defm PersistentHashMap AFn APersistentMap)
+    (defm PersistentHashMap APersistentMap AFn)
 
     (defn #_"PersistentHashMap" PersistentHashMap'new
-        ([#_"int" cnt, #_"INode" root, #_"boolean" hasNull, #_"value" nullValue] (PersistentHashMap'new nil, cnt, root, hasNull, nullValue))
-        ([#_"meta" meta, #_"int" cnt, #_"INode" root, #_"boolean" hasNull, #_"value" nullValue]
-            (merge (PersistentHashMap'class.)
-                (hash-map
-                    #_"meta" :_meta meta
-                    #_"int" :cnt cnt
-                    #_"INode" :root root
-                    #_"boolean" :hasNull hasNull
-                    #_"value" :nullValue nullValue
+        ([#_"int" cnt, #_"INode" root, #_"boolean" has-nil?, #_"value" nil-value] (PersistentHashMap'new nil, cnt, root, has-nil?, nil-value))
+        ([#_"meta" meta, #_"int" cnt, #_"INode" root, #_"boolean" has-nil?, #_"value" nil-value]
+            (PersistentHashMap'class. (anew [meta, cnt, root, has-nil?, nil-value]))
+        )
+    )
+
+    (def #_"PersistentHashMap" PersistentHashMap'EMPTY (PersistentHashMap'new 0, nil, false, nil))
+
+    (defn #_"PersistentHashMap" PersistentHashMap'create-1a [#_"array" init]
+        (loop-when-recur [#_"ITransientMap" m (transient PersistentHashMap'EMPTY) #_"int" i 0]
+                         (< i (alength init))
+                         [(assoc! m (aget init i) (aget init (inc i))) (+ i 2)]
+                      => (persistent! m)
+        )
+    )
+
+    (defn #_"PersistentHashMap" PersistentHashMap'create-1s [#_"Seqable" init]
+        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)]
+            (loop-when [m m #_"seq" s (seq init)] (some? s) => (persistent! m)
+                (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
+                    (recur (assoc! m (first s) (second s)) (next (next s)))
+                )
+            )
+        )
+    )
+
+    (defn #_"PersistentHashMap" PersistentHashMap'createWithCheck-1a [#_"array" init]
+        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)]
+            (loop-when [m m #_"int" i 0] (< i (alength init)) => (persistent! m)
+                (let [m (assoc! m (aget init i) (aget init (inc i)))]
+                    (when (= (count m) (inc (quot i 2))) => (throw! (str "duplicate key: " (aget init i)))
+                        (recur m (+ i 2))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"PersistentHashMap" PersistentHashMap'createWithCheck-1s [#_"Seqable" init]
+        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)]
+            (loop-when [m m #_"seq" s (seq init) #_"int" n 0] (some? s) => (persistent! m)
+                (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
+                    (let [m (assoc! m (first s) (second s))]
+                        (when (= (count m) (inc n)) => (throw! (str "duplicate key: " (first s)))
+                            (recur m (next (next s)) (inc n))
+                        )
+                    )
                 )
             )
         )
@@ -12251,96 +12287,13 @@
     (defm PersistentHashMap IObj
         (#_"PersistentHashMap" IObj'''withMeta [#_"PersistentHashMap" this, #_"meta" meta]
             (when-not (= meta (:_meta this)) => this
-                (PersistentHashMap'new meta, (:cnt this), (:root this), (:hasNull this), (:nullValue this))
+                (PersistentHashMap'new meta, (:cnt this), (:root this), (:has-nil? this), (:nil-value this))
             )
         )
     )
 
-    (def #_"PersistentHashMap" PersistentHashMap'EMPTY (PersistentHashMap'new 0, nil, false, nil))
-
-    (defn #_"PersistentHashMap" PersistentHashMap'create-1a [& #_"Object..." a]
-        (loop-when-recur [#_"ITransientMap" m (transient PersistentHashMap'EMPTY) #_"int" i 0]
-                         (< i (count a))
-                         [(assoc! m (aget a i) (aget a (inc i))) (+ i 2)]
-                      => (persistent! m)
-        )
-    )
-
-    (defn #_"PersistentHashMap" PersistentHashMap'create-1s [#_"Seqable" keyvals]
-        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)
-              m (loop-when [m m #_"seq" s (seq keyvals)] (some? s) => m
-                    (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                        (recur (assoc! m (first s) (second s)) (next (next s)))
-                    )
-                )]
-            (persistent! m)
-        )
-    )
-
-    (defn #_"PersistentHashMap" PersistentHashMap'createWithCheck-1a [& #_"Object..." a]
-        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)
-              m (loop-when [m m #_"int" i 0] (< i (count a)) => m
-                    (let [m (assoc! m (aget a i) (aget a (inc i)))]
-                        (when (= (count m) (inc (quot i 2))) => (throw! (str "duplicate key: " (aget a i)))
-                            (recur m (+ i 2))
-                        )
-                    )
-                )]
-            (persistent! m)
-        )
-    )
-
-    (defn #_"PersistentHashMap" PersistentHashMap'createWithCheck-1s [#_"Seqable" keyvals]
-        (let [#_"ITransientMap" m (transient PersistentHashMap'EMPTY)
-              m (loop-when [m m #_"seq" s (seq keyvals) #_"int" i 0] (some? s) => m
-                    (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                        (let [m (assoc! m (first s) (second s))]
-                            (when (= (count m) (inc i)) => (throw! (str "duplicate key: " (first s)))
-                                (recur m (next (next s)) (inc i))
-                            )
-                        )
-                    )
-                )]
-            (persistent! m)
-        )
-    )
-
-    (def- #_"value" PersistentHashMap'NOT_FOUND (Object.))
-
-    (defm PersistentHashMap Associative
-        (#_"IPersistentMap" Associative'''assoc [#_"PersistentHashMap" this, #_"key" key, #_"value" val]
-            (if (nil? key)
-                (when-not (and (:hasNull this) (= val (:nullValue this))) => this
-                    (PersistentHashMap'new (meta this), (+ (:cnt this) (if (:hasNull this) 0 1)), (:root this), true, val)
-                )
-                (let [#_"boolean'" addedLeaf (atom false)
-                      #_"INode" newroot (INode'''assoc (or (:root this) BitmapIndexedNode'EMPTY), 0, (f'hash key), key, val, addedLeaf)]
-                    (when-not (= newroot (:root this)) => this
-                        (PersistentHashMap'new (meta this), (+ (:cnt this) (if @addedLeaf 1 0)), newroot, (:hasNull this), (:nullValue this))
-                    )
-                )
-            )
-        )
-
-        (#_"boolean" Associative'''containsKey [#_"PersistentHashMap" this, #_"key" key]
-            (if (nil? key)
-                (:hasNull this)
-                (and (some? (:root this))
-                    (not (identical? (INode'''find (:root this), 0, (f'hash key), key, PersistentHashMap'NOT_FOUND) PersistentHashMap'NOT_FOUND))
-                )
-            )
-        )
-
-        (#_"IMapEntry" Associative'''entryAt [#_"PersistentHashMap" this, #_"key" key]
-            (if (nil? key)
-                (when (:hasNull this)
-                    (MapEntry'new nil, (:nullValue this))
-                )
-                (when (some? (:root this))
-                    (INode'''find (:root this), 0, (f'hash key), key)
-                )
-            )
-        )
+    (defm PersistentHashMap Counted
+        (#_"int" Counted'''count => :cnt)
     )
 
     (defm PersistentHashMap ILookup
@@ -12348,8 +12301,8 @@
             ([#_"PersistentHashMap" this, #_"key" key] (ILookup'''valAt this, key, nil))
             ([#_"PersistentHashMap" this, #_"key" key, #_"value" not-found]
                 (if (nil? key)
-                    (when (:hasNull this) => not-found
-                        (:nullValue this)
+                    (when (:has-nil? this) => not-found
+                        (:nil-value this)
                     )
                     (when (some? (:root this)) => not-found
                         (INode'''find (:root this), 0, (f'hash key), key, not-found)
@@ -12359,26 +12312,92 @@
         )
     )
 
+    (defm PersistentHashMap IFn
+        (#_"value" IFn'''invoke => APersistentMap''invoke)
+
+        (#_"value" IFn'''applyTo => AFn'applyToHelper)
+    )
+
+    (def- #_"value" PersistentHashMap'NOT_FOUND (Object.))
+
+    (defm PersistentHashMap Associative
+        (#_"IPersistentMap" Associative'''assoc [#_"PersistentHashMap" this, #_"key" key, #_"value" val]
+            (if (nil? key)
+                (when-not (and (:has-nil? this) (= (:nil-value this) val)) => this
+                    (PersistentHashMap'new (:_meta this), (+ (:cnt this) (if (:has-nil? this) 0 1)), (:root this), true, val)
+                )
+                (let [
+                    #_"boolean'" addedLeaf (atom false)
+                    #_"INode" root (INode'''assoc (or (:root this) BitmapIndexedNode'EMPTY), 0, (f'hash key), key, val, addedLeaf)
+                ]
+                    (when-not (= root (:root this)) => this
+                        (PersistentHashMap'new (:_meta this), (+ (:cnt this) (if @addedLeaf 1 0)), root, (:has-nil? this), (:nil-value this))
+                    )
+                )
+            )
+        )
+
+        (#_"boolean" Associative'''containsKey [#_"PersistentHashMap" this, #_"key" key]
+            (if (nil? key)
+                (:has-nil? this)
+                (and (some? (:root this))
+                    (not (identical? (INode'''find (:root this), 0, (f'hash key), key, PersistentHashMap'NOT_FOUND) PersistentHashMap'NOT_FOUND))
+                )
+            )
+        )
+
+        (#_"IMapEntry" Associative'''entryAt [#_"PersistentHashMap" this, #_"key" key]
+            (if (nil? key)
+                (when (:has-nil? this)
+                    (MapEntry'new nil, (:nil-value this))
+                )
+                (when (some? (:root this))
+                    (INode'''find (:root this), 0, (f'hash key), key)
+                )
+            )
+        )
+    )
+
     (defm PersistentHashMap IPersistentMap
         (#_"IPersistentMap" IPersistentMap'''dissoc [#_"PersistentHashMap" this, #_"key" key]
             (cond
                 (nil? key)
-                    (if (:hasNull this) (PersistentHashMap'new (meta this), (dec (:cnt this)), (:root this), false, nil) this)
+                    (when (:has-nil? this) => this
+                        (PersistentHashMap'new (:_meta this), (dec (:cnt this)), (:root this), false, nil)
+                    )
                 (nil? (:root this))
                     this
                 :else
-                    (let [#_"INode" newroot (INode'''dissoc (:root this), 0, (f'hash key), key)]
-                        (when-not (= newroot (:root this)) => this
-                            (PersistentHashMap'new (meta this), (dec (:cnt this)), newroot, (:hasNull this), (:nullValue this))
+                    (let [#_"INode" root (INode'''dissoc (:root this), 0, (f'hash key), key)]
+                        (when-not (= root (:root this)) => this
+                            (PersistentHashMap'new (:_meta this), (dec (:cnt this)), root, (:has-nil? this), (:nil-value this))
                         )
                     )
             )
         )
     )
 
+    (defm PersistentHashMap IPersistentCollection
+        (#_"IPersistentCollection" IPersistentCollection'''conj => APersistentMap''conj)
+
+        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"PersistentHashMap" this]
+            (with-meta PersistentHashMap'EMPTY (:_meta this))
+        )
+    )
+
+    (defm PersistentHashMap Seqable
+        (#_"seq" Seqable'''seq [#_"PersistentHashMap" this]
+            (let [#_"seq" s (when (some? (:root this)) (INode'''nodeSeq (:root this)))]
+                (when (:has-nil? this) => s
+                    (Cons'new (MapEntry'new nil, (:nil-value this)), s)
+                )
+            )
+        )
+    )
+
     (defm PersistentHashMap IKVReduce
         (#_"value" IKVReduce'''kvreduce [#_"PersistentHashMap" this, #_"fn" f, #_"value" r]
-            (let [r (if (:hasNull this) (f r nil (:nullValue this)) r)]
+            (let [r (if (:has-nil? this) (f r nil (:nil-value this)) r)]
                 (when-not (reduced? r) => @r
                     (when (some? (:root this)) => r
                         (let [r (INode'''kvreduce (:root this), f, r)]
@@ -12389,26 +12408,6 @@
                     )
                 )
             )
-        )
-    )
-
-    (defm PersistentHashMap Counted
-        (#_"int" Counted'''count => :cnt)
-    )
-
-    (defm PersistentHashMap Seqable
-        (#_"seq" Seqable'''seq [#_"PersistentHashMap" this]
-            (let [#_"seq" s (when (some? (:root this)) (INode'''nodeSeq (:root this)))]
-                (if (:hasNull this) (Cons'new (MapEntry'new nil, (:nullValue this)), s) s)
-            )
-        )
-    )
-
-    (defm PersistentHashMap IPersistentCollection
-        (#_"IPersistentCollection" IPersistentCollection'''conj => APersistentMap''conj)
-
-        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"PersistentHashMap" this]
-            (with-meta PersistentHashMap'EMPTY (meta this))
         )
     )
 
@@ -12425,29 +12424,19 @@
     (defm PersistentHashMap Hashed
         (#_"int" Hashed'''hash => Murmur3'hashUnordered)
     )
-
-    (defm PersistentHashMap IFn
-        (#_"value" IFn'''invoke => APersistentMap''invoke)
-
-        (#_"value" IFn'''applyTo => AFn'applyToHelper)
-    )
 )
 )
 
 (about #_"cloiure.core.PersistentHashSet"
 
 (about #_"TransientHashSet"
-    (defr TransientHashSet [])
+    (defq TransientHashSet [#_"ITransientMap" impl])
 
     #_inherit
-    (defm TransientHashSet AFn ATransientSet)
+    (defm TransientHashSet ATransientSet AFn)
 
     (defn #_"TransientHashSet" TransientHashSet'new [#_"ITransientMap" impl]
-        (merge (TransientHashSet'class.)
-            (hash-map
-                #_"ITransientMap" :impl impl
-            )
-        )
+        (TransientHashSet'class. (anew [impl]))
     )
 
     (defm TransientHashSet Counted
@@ -12459,10 +12448,10 @@
     (declare PersistentHashSet'new)
 
     (defm TransientHashSet ITransientCollection
-        (#_"ITransientSet" ITransientCollection'''conj! [#_"TransientHashSet" this, #_"Object" val]
-            (let [#_"ITransientMap" m (assoc (:impl this) val val)]
+        (#_"ITransientSet" ITransientCollection'''conj! [#_"TransientHashSet" this, #_"value" val]
+            (let [#_"ITransientMap" m (assoc! (:impl this) val val)]
                 (when-not (= m (:impl this)) => this
-                    (assoc this :impl m)
+                    (assoc!! this :impl m)
                 )
             )
         )
@@ -12472,42 +12461,81 @@
         )
     )
 
+    (declare dissoc!)
+
     (defm TransientHashSet ITransientSet
-        (#_"ITransientSet" ITransientSet'''disj! [#_"TransientHashSet" this, #_"Object" key]
-            (let [#_"ITransientMap" m (dissoc (:impl this) key)]
+        (#_"ITransientSet" ITransientSet'''disj! [#_"TransientHashSet" this, #_"key" key]
+            (let [#_"ITransientMap" m (dissoc! (:impl this) key)]
                 (when-not (= m (:impl this)) => this
-                    (assoc this :impl m)
+                    (assoc!! this :impl m)
                 )
             )
         )
 
-        (#_"boolean" ITransientSet'''contains? [#_"TransientHashSet" this, #_"Object" key]
+        (#_"boolean" ITransientSet'''contains? [#_"TransientHashSet" this, #_"key" key]
             (not (identical? (get (:impl this) key this) this))
         )
 
-        (#_"Object" ITransientSet'''get [#_"TransientHashSet" this, #_"Object" key]
+        (#_"value" ITransientSet'''get [#_"TransientHashSet" this, #_"key" key]
             (get (:impl this) key)
         )
     )
 
     (defm TransientHashSet IFn
-        (#_"Object" IFn'''invoke => ATransientSet''invoke)
+        (#_"value" IFn'''invoke => ATransientSet''invoke)
 
-        (#_"Object" IFn'''applyTo => AFn'applyToHelper)
+        (#_"value" IFn'''applyTo => AFn'applyToHelper)
     )
 )
 
 (about #_"PersistentHashSet"
-    (defr PersistentHashSet [])
+    (defq PersistentHashSet [#_"meta" _meta, #_"map" impl])
 
     #_inherit
-    (defm PersistentHashSet AFn APersistentSet)
+    (defm PersistentHashSet APersistentSet AFn)
 
     (defn #_"PersistentHashSet" PersistentHashSet'new [#_"meta" meta, #_"map" impl]
-        (merge (PersistentHashSet'class.)
-            (hash-map
-                #_"meta" :_meta meta
-                #_"map" :impl impl
+        (PersistentHashSet'class. (anew [meta, impl]))
+    )
+
+    (def #_"PersistentHashSet" PersistentHashSet'EMPTY (PersistentHashSet'new nil, PersistentHashMap'EMPTY))
+
+    (defn #_"PersistentHashSet" PersistentHashSet'create-1a [#_"array" init]
+        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"int" i 0]
+                         (< i (alength init))
+                         [(conj! s (aget init i)) (inc i)]
+                      => (persistent! s)
+        )
+    )
+
+    (defn #_"PersistentHashSet" PersistentHashSet'create-1s [#_"Seqable" init]
+        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"seq" q (seq init)]
+                         (some? q)
+                         [(conj! s (first q)) (next q)]
+                      => (persistent! s)
+        )
+    )
+
+    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1a [#_"array" init]
+        (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)]
+            (loop-when [s s #_"int" i 0] (< i (alength init)) => (persistent! s)
+                (let [s (conj! s (aget init i))]
+                    (when (= (count s) (inc i)) => (throw! (str "duplicate key: " (aget init i)))
+                        (recur s (inc i))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1s [#_"Seqable" init]
+        (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)]
+            (loop-when [s s #_"seq" q (seq init) #_"int" n 0] (some? q) => (persistent! s)
+                (let [s (conj! s (first q))]
+                    (when (= (count s) (inc n)) => (throw! (str "duplicate key: " (first q)))
+                        (recur s (next q) (inc n))
+                    )
+                )
             )
         )
     )
@@ -12524,89 +12552,39 @@
         )
     )
 
-    (def #_"PersistentHashSet" PersistentHashSet'EMPTY (PersistentHashSet'new nil, PersistentHashMap'EMPTY))
-
-    (defn #_"PersistentHashSet" PersistentHashSet'create-1a [& #_"Object..." items]
-        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"int" i 0]
-                         (< i (count items))
-                         [(conj! s (aget items i)) (inc i)]
-                      => (persistent! s)
-        )
-    )
-
-    (defn #_"PersistentHashSet" PersistentHashSet'create-1s [#_"Seqable" items]
-        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"seq" q (seq items)]
-                         (some? q)
-                         [(conj! s (first q)) (next q)]
-                      => (persistent! s)
-        )
-    )
-
-    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1a [& #_"Object..." items]
-        (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)
-              s (loop-when [s s #_"int" i 0] (< i (count items)) => s
-                    (let [s (conj! s (aget items i))]
-                        (when (= (count s) (inc i)) => (throw! (str "duplicate key: " (aget items i)))
-                            (recur s (inc i))
-                        )
-                    )
-                )]
-            (persistent! s)
-        )
-    )
-
-    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1s [#_"Seqable" items]
-        (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)
-              s (loop-when [s s #_"seq" q (seq items) #_"int" i 0] (some? q) => s
-                    (let [#_"Object" key (first q) s (conj! s key)]
-                        (when (= (count s) (inc i)) => (throw! (str "duplicate key: " key))
-                            (recur s (next q) (inc i))
-                        )
-                    )
-                )]
-            (persistent! s)
-        )
-    )
-
-    (defm PersistentHashSet IPersistentSet
-        (#_"IPersistentSet" IPersistentSet'''disj [#_"PersistentHashSet" this, #_"Object" key]
-            (if (contains? this key)
-                (PersistentHashSet'new (meta this), (dissoc (:impl this) key))
-                this
-            )
-        )
-
-        (#_"boolean" IPersistentSet'''contains? [#_"PersistentHashSet" this, #_"Object" key]
-            (contains? (:impl this) key)
-        )
-
-        (#_"Object" IPersistentSet'''get [#_"PersistentHashSet" this, #_"Object" key]
-            (get (:impl this) key)
+    (defm PersistentHashSet Counted
+        (#_"int" Counted'''count [#_"PersistentHashSet" this]
+            (count (:impl this))
         )
     )
 
     (defm PersistentHashSet IPersistentCollection
-        (#_"PersistentHashSet" IPersistentCollection'''conj [#_"PersistentHashSet" this, #_"Object" o]
-            (if (contains? this o)
+        (#_"PersistentHashSet" IPersistentCollection'''conj [#_"PersistentHashSet" this, #_"value" val]
+            (if (contains? (:impl this) val)
                 this
-                (PersistentHashSet'new (meta this), (assoc (:impl this) o o))
+                (PersistentHashSet'new (:_meta this), (assoc (:impl this) val val))
             )
         )
 
         (#_"PersistentHashSet" IPersistentCollection'''empty [#_"PersistentHashSet" this]
-            (with-meta PersistentHashSet'EMPTY (meta this))
+            (with-meta PersistentHashSet'EMPTY (:_meta this))
         )
     )
 
-    (defm PersistentHashSet IEditableCollection
-        (#_"ITransientCollection" IEditableCollection'''asTransient [#_"PersistentHashSet" this]
-            (TransientHashSet'new (transient (:impl this)))
+    (defm PersistentHashSet IPersistentSet
+        (#_"IPersistentSet" IPersistentSet'''disj [#_"PersistentHashSet" this, #_"key" key]
+            (if (contains? (:impl this) key)
+                (PersistentHashSet'new (:_meta this), (dissoc (:impl this) key))
+                this
+            )
         )
-    )
 
-    (defm PersistentHashSet Counted
-        (#_"int" Counted'''count [#_"PersistentHashSet" this]
-            (count (:impl this))
+        (#_"boolean" IPersistentSet'''contains? [#_"PersistentHashSet" this, #_"key" key]
+            (contains? (:impl this) key)
+        )
+
+        (#_"value" IPersistentSet'''get [#_"PersistentHashSet" this, #_"key" key]
+            (get (:impl this) key)
         )
     )
 
@@ -12616,10 +12594,16 @@
         )
     )
 
-    (defm PersistentHashSet IFn
-        (#_"Object" IFn'''invoke => APersistentSet''invoke)
+    (defm PersistentHashSet IEditableCollection
+        (#_"ITransientCollection" IEditableCollection'''asTransient [#_"PersistentHashSet" this]
+            (TransientHashSet'new (transient (:impl this)))
+        )
+    )
 
-        (#_"Object" IFn'''applyTo => AFn'applyToHelper)
+    (defm PersistentHashSet IFn
+        (#_"value" IFn'''invoke => APersistentSet''invoke)
+
+        (#_"value" IFn'''applyTo => AFn'applyToHelper)
     )
 
     (defm PersistentHashSet IObject
@@ -12980,10 +12964,10 @@
 (about #_"cloiure.core.PersistentTreeMap"
 
 (about #_"TNode"
-    (defn #_"Object" TNode''kvreduce [#_"TNode" this, #_"fn" f, #_"Object" r]
+    (defn #_"value" TNode''kvreduce [#_"node" this, #_"fn" f, #_"value" r]
         (or
-            (when (some? (ITNode'''left this))
-                (let [r (INode'''kvreduce (ITNode'''left this), f, r)]
+            (when (some? (:left this))
+                (let [r (INode'''kvreduce (:left this), f, r)]
                     (when (reduced? r)
                         r
                     )
@@ -12991,9 +12975,9 @@
             )
             (let [r (f r (key this) (val this))]
                 (cond
-                    (reduced? r)                  r
-                    (some? (ITNode'''right this)) (INode'''kvreduce (ITNode'''right this), f, r)
-                    :else                         r
+                    (reduced? r)          r
+                    (some? (:right this)) (INode'''kvreduce (:right this), f, r)
+                    :else                 r
                 )
             )
         )
@@ -13001,21 +12985,19 @@
 )
 
 (about #_"Black"
-    (defq Black [#_"Object" key])
+    (defq Black [#_"key" key])
 
     #_inherit
-    (defm Black AFn APersistentVector AMapEntry TNode)
+    (defm Black TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"Black" Black'new [#_"Object" key]
+    (defn #_"Black" Black'new [#_"key" key]
         (Black'class. (anew [key]))
     )
 
     (defm Black IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val [#_"Black" this]
-            nil
-        )
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (declare PersistentTreeMap'balanceLeftDel)
@@ -13024,47 +13006,39 @@
     (declare Red'new)
 
     (defm Black ITNode
-        (#_"TNode" ITNode'''left [#_"Black" this]
-            nil
-        )
-
-        (#_"TNode" ITNode'''right [#_"Black" this]
-            nil
-        )
-
-        (#_"TNode" ITNode'''addLeft [#_"Black" this, #_"TNode" ins]
+        (#_"node" ITNode'''addLeft [#_"Black" this, #_"node" ins]
             (ITNode'''balanceLeft ins, this)
         )
 
-        (#_"TNode" ITNode'''addRight [#_"Black" this, #_"TNode" ins]
+        (#_"node" ITNode'''addRight [#_"Black" this, #_"node" ins]
             (ITNode'''balanceRight ins, this)
         )
 
-        (#_"TNode" ITNode'''removeLeft [#_"Black" this, #_"TNode" del]
-            (PersistentTreeMap'balanceLeftDel (:key this), (IMapEntry'''val this), del, (ITNode'''right this))
+        (#_"node" ITNode'''removeLeft [#_"Black" this, #_"node" del]
+            (PersistentTreeMap'balanceLeftDel (:key this), (:val this), del, (:right this))
         )
 
-        (#_"TNode" ITNode'''removeRight [#_"Black" this, #_"TNode" del]
-            (PersistentTreeMap'balanceRightDel (:key this), (IMapEntry'''val this), (ITNode'''left this), del)
+        (#_"node" ITNode'''removeRight [#_"Black" this, #_"node" del]
+            (PersistentTreeMap'balanceRightDel (:key this), (:val this), (:left this), del)
         )
 
-        (#_"TNode" ITNode'''blacken [#_"Black" this]
+        (#_"node" ITNode'''blacken [#_"Black" this]
             this
         )
 
-        (#_"TNode" ITNode'''redden [#_"Black" this]
+        (#_"node" ITNode'''redden [#_"Black" this]
             (Red'new (:key this))
         )
 
-        (#_"TNode" ITNode'''balanceLeft [#_"Black" this, #_"TNode" parent]
-            (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), this, (ITNode'''right parent))
+        (#_"node" ITNode'''balanceLeft [#_"Black" this, #_"node" parent]
+            (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
         )
 
-        (#_"TNode" ITNode'''balanceRight [#_"Black" this, #_"TNode" parent]
-            (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''left parent), this)
+        (#_"node" ITNode'''balanceRight [#_"Black" this, #_"node" parent]
+            (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
         )
 
-        (#_"TNode" ITNode'''replace [#_"Black" this, #_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
+        (#_"node" ITNode'''replace [#_"Black" this, #_"key" key, #_"value" val, #_"node" left, #_"node" right]
             (PersistentTreeMap'black key, val, left, right)
         )
     )
@@ -13072,7 +13046,7 @@
     (defm Black Sequential)
 
     (defm Black Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm Black Counted
@@ -13103,28 +13077,24 @@
     )
 
     (defm Black IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"BlackVal"
-    (defr BlackVal [])
+    (defq BlackVal [#_"key" key, #_"value" val])
 
     #_inherit
-    (defm BlackVal AFn APersistentVector AMapEntry TNode Black)
+    (defm BlackVal Black TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"BlackVal" BlackVal'new [#_"Object" key, #_"Object" val]
-        (merge (BlackVal'class.) (Black'new key)
-            (hash-map
-                #_"Object" :val val
-            )
-        )
+    (defn #_"BlackVal" BlackVal'new [#_"key" key, #_"value" val]
+        (BlackVal'class. (anew [key, val]))
     )
 
     (defm BlackVal IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val => :val)
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (declare RedVal'new)
@@ -13132,7 +13102,7 @@
     (defm BlackVal ITNode
         ;; inherit Black left right addLeft addRight removeLeft removeRight blacken
 
-        (#_"TNode" ITNode'''redden [#_"BlackVal" this]
+        (#_"node" ITNode'''redden [#_"BlackVal" this]
             (RedVal'new (:key this), (:val this))
         )
 
@@ -13142,7 +13112,7 @@
     (defm BlackVal Sequential)
 
     (defm BlackVal Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm BlackVal Counted
@@ -13173,43 +13143,32 @@
     )
 
     (defm BlackVal IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"BlackBranch"
-    (defr BlackBranch [])
+    (defq BlackBranch [#_"key" key, #_"node" left, #_"node" right])
 
     #_inherit
-    (defm BlackBranch AFn APersistentVector AMapEntry TNode Black)
+    (defm BlackBranch Black TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"BlackBranch" BlackBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
-        (merge (BlackBranch'class.) (Black'new key)
-            (hash-map
-                #_"TNode" :left left
-                #_"TNode" :right right
-            )
-        )
+    (defn #_"BlackBranch" BlackBranch'new [#_"key" key, #_"node" left, #_"node" right]
+        (BlackBranch'class. (anew [key, left, right]))
     )
 
     (defm BlackBranch IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val [#_"BlackBranch" this]
-            nil
-        )
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (declare RedBranch'new)
 
     (defm BlackBranch ITNode
-        (#_"TNode" ITNode'''left => :left)
-
-        (#_"TNode" ITNode'''right => :right)
-
         ;; inherit Black addLeft addRight removeLeft removeRight blacken
 
-        (#_"TNode" ITNode'''redden [#_"BlackBranch" this]
+        (#_"node" ITNode'''redden [#_"BlackBranch" this]
             (RedBranch'new (:key this), (:left this), (:right this))
         )
 
@@ -13219,7 +13178,7 @@
     (defm BlackBranch Sequential)
 
     (defm BlackBranch Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm BlackBranch Counted
@@ -13250,28 +13209,24 @@
     )
 
     (defm BlackBranch IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"BlackBranchVal"
-    (defr BlackBranchVal [])
+    (defq BlackBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
 
     #_inherit
-    (defm BlackBranchVal AFn APersistentVector AMapEntry TNode Black BlackBranch)
+    (defm BlackBranchVal BlackBranch Black TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"BlackBranchVal" BlackBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
-        (merge (BlackBranchVal'class.) (BlackBranch'new key, left, right)
-            (hash-map
-                #_"Object" :val val
-            )
-        )
+    (defn #_"BlackBranchVal" BlackBranchVal'new [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
+        (BlackBranchVal'class. (anew [key, val, left, right]))
     )
 
     (defm BlackBranchVal IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val => :val)
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (declare RedBranchVal'new)
@@ -13279,7 +13234,7 @@
     (defm BlackBranchVal ITNode
         ;; inherit BlackBranch left right addLeft addRight removeLeft removeRight blacken
 
-        (#_"TNode" ITNode'''redden [#_"BlackBranchVal" this]
+        (#_"node" ITNode'''redden [#_"BlackBranchVal" this]
             (RedBranchVal'new (:key this), (:val this), (:left this), (:right this))
         )
 
@@ -13289,7 +13244,7 @@
     (defm BlackBranchVal Sequential)
 
     (defm BlackBranchVal Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm BlackBranchVal Counted
@@ -13320,72 +13275,62 @@
     )
 
     (defm BlackBranchVal IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"Red"
-    (defq Red [#_"Object" key])
+    (defq Red [#_"key" key])
 
     #_inherit
-    (defm Red AFn APersistentVector AMapEntry TNode)
+    (defm Red TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"Red" Red'new [#_"Object" key]
+    (defn #_"Red" Red'new [#_"key" key]
         (Red'class. (anew [key]))
     )
 
     (defm Red IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val [#_"Red" this]
-            nil
-        )
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (declare PersistentTreeMap'red)
 
     (defm Red ITNode
-        (#_"TNode" ITNode'''left [#_"Red" this]
-            nil
+        (#_"node" ITNode'''addLeft [#_"Red" this, #_"node" ins]
+            (PersistentTreeMap'red (:key this), (:val this), ins, (:right this))
         )
 
-        (#_"TNode" ITNode'''right [#_"Red" this]
-            nil
+        (#_"node" ITNode'''addRight [#_"Red" this, #_"node" ins]
+            (PersistentTreeMap'red (:key this), (:val this), (:left this), ins)
         )
 
-        (#_"TNode" ITNode'''addLeft [#_"Red" this, #_"TNode" ins]
-            (PersistentTreeMap'red (:key this), (IMapEntry'''val this), ins, (ITNode'''right this))
+        (#_"node" ITNode'''removeLeft [#_"Red" this, #_"node" del]
+            (PersistentTreeMap'red (:key this), (:val this), del, (:right this))
         )
 
-        (#_"TNode" ITNode'''addRight [#_"Red" this, #_"TNode" ins]
-            (PersistentTreeMap'red (:key this), (IMapEntry'''val this), (ITNode'''left this), ins)
+        (#_"node" ITNode'''removeRight [#_"Red" this, #_"node" del]
+            (PersistentTreeMap'red (:key this), (:val this), (:left this), del)
         )
 
-        (#_"TNode" ITNode'''removeLeft [#_"Red" this, #_"TNode" del]
-            (PersistentTreeMap'red (:key this), (IMapEntry'''val this), del, (ITNode'''right this))
-        )
-
-        (#_"TNode" ITNode'''removeRight [#_"Red" this, #_"TNode" del]
-            (PersistentTreeMap'red (:key this), (IMapEntry'''val this), (ITNode'''left this), del)
-        )
-
-        (#_"TNode" ITNode'''blacken [#_"Red" this]
+        (#_"node" ITNode'''blacken [#_"Red" this]
             (Black'new (:key this))
         )
 
-        (#_"TNode" ITNode'''redden [#_"Red" this]
+        (#_"node" ITNode'''redden [#_"Red" this]
             (throw! "invariant violation")
         )
 
-        (#_"TNode" ITNode'''balanceLeft [#_"Red" this, #_"TNode" parent]
-            (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), this, (ITNode'''right parent))
+        (#_"node" ITNode'''balanceLeft [#_"Red" this, #_"node" parent]
+            (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
         )
 
-        (#_"TNode" ITNode'''balanceRight [#_"Red" this, #_"TNode" parent]
-            (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''left parent), this)
+        (#_"node" ITNode'''balanceRight [#_"Red" this, #_"node" parent]
+            (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
         )
 
-        (#_"TNode" ITNode'''replace [#_"Red" this, #_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
+        (#_"node" ITNode'''replace [#_"Red" this, #_"key" key, #_"value" val, #_"node" left, #_"node" right]
             (PersistentTreeMap'red key, val, left, right)
         )
     )
@@ -13393,7 +13338,7 @@
     (defm Red Sequential)
 
     (defm Red Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm Red Counted
@@ -13424,34 +13369,30 @@
     )
 
     (defm Red IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"RedVal"
-    (defr RedVal [])
+    (defq RedVal [#_"key" key, #_"value" val])
 
     #_inherit
-    (defm RedVal AFn APersistentVector AMapEntry TNode Red)
+    (defm RedVal Red TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"RedVal" RedVal'new [#_"Object" key, #_"Object" val]
-        (merge (RedVal'class.) (Red'new key)
-            (hash-map
-                #_"Object" :val val
-            )
-        )
+    (defn #_"RedVal" RedVal'new [#_"key" key, #_"value" val]
+        (RedVal'class. (anew [key, val]))
     )
 
     (defm RedVal IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val => :val)
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (defm RedVal ITNode
         ;; inherit Red left right addLeft addRight removeLeft removeRight
 
-        (#_"TNode" ITNode'''blacken [#_"RedVal" this]
+        (#_"node" ITNode'''blacken [#_"RedVal" this]
             (BlackVal'new (:key this), (:val this))
         )
 
@@ -13461,7 +13402,7 @@
     (defm RedVal Sequential)
 
     (defm RedVal Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm RedVal Counted
@@ -13492,74 +13433,63 @@
     )
 
     (defm RedVal IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"RedBranch"
-    (defr RedBranch [])
+    (defq RedBranch [#_"key" key, #_"node" left, #_"node" right])
 
     #_inherit
-    (defm RedBranch AFn APersistentVector AMapEntry TNode Red)
+    (defm RedBranch Red TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"RedBranch" RedBranch'new [#_"Object" key, #_"TNode" left, #_"TNode" right]
-        (merge (RedBranch'class.) (Red'new key)
-            (hash-map
-                #_"TNode" :left left
-                #_"TNode" :right right
-            )
-        )
+    (defn #_"RedBranch" RedBranch'new [#_"key" key, #_"node" left, #_"node" right]
+        (RedBranch'class. (anew [key, left, right]))
     )
 
     (defm RedBranch IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val [#_"RedBranch" this]
-            nil
-        )
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (defm RedBranch ITNode
-        (#_"TNode" ITNode'''left => :left)
-
-        (#_"TNode" ITNode'''right => :right)
-
         ;; inherit Red addLeft addRight removeLeft removeRight
 
-        (#_"TNode" ITNode'''blacken [#_"RedBranch" this]
+        (#_"node" ITNode'''blacken [#_"RedBranch" this]
             (BlackBranch'new (:key this), (:left this), (:right this))
         )
 
         ;; inherit Red redden
 
-        (#_"TNode" ITNode'''balanceLeft [#_"RedBranch" this, #_"TNode" parent]
+        (#_"node" ITNode'''balanceLeft [#_"RedBranch" this, #_"node" parent]
             (cond (satisfies? Red (:left this))
                 (do
-                    (PersistentTreeMap'red (:key this), (IMapEntry'''val this), (ITNode'''blacken (:left this)), (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (:right this), (ITNode'''right parent)))
+                    (PersistentTreeMap'red (:key this), (:val this), (ITNode'''blacken (:left this)), (PersistentTreeMap'black (:key parent), (:val parent), (:right this), (:right parent)))
                 )
                 (satisfies? Red (:right this))
                 (do
-                    (PersistentTreeMap'red (:key (:right this)), (IMapEntry'''val (:right this)), (PersistentTreeMap'black (:key this), (IMapEntry'''val this), (:left this), (ITNode'''left (:right this))), (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''right (:right this)), (ITNode'''right parent)))
+                    (PersistentTreeMap'red (:key (:right this)), (:val (:right this)), (PersistentTreeMap'black (:key this), (:val this), (:left this), (:left (:right this))), (PersistentTreeMap'black (:key parent), (:val parent), (:right (:right this)), (:right parent)))
                 )
                 :else
                 (do
-                    (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), this, (ITNode'''right parent))
+                    (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
                 )
             )
         )
 
-        (#_"TNode" ITNode'''balanceRight [#_"RedBranch" this, #_"TNode" parent]
+        (#_"node" ITNode'''balanceRight [#_"RedBranch" this, #_"node" parent]
             (cond (satisfies? Red (:right this))
                 (do
-                    (PersistentTreeMap'red (:key this), (IMapEntry'''val this), (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''left parent), (:left this)), (ITNode'''blacken (:right this)))
+                    (PersistentTreeMap'red (:key this), (:val this), (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), (:left this)), (ITNode'''blacken (:right this)))
                 )
                 (satisfies? Red (:left this))
                 (do
-                    (PersistentTreeMap'red (:key (:left this)), (IMapEntry'''val (:left this)), (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''left parent), (ITNode'''left (:left this))), (PersistentTreeMap'black (:key this), (IMapEntry'''val this), (ITNode'''right (:left this)), (:right this)))
+                    (PersistentTreeMap'red (:key (:left this)), (:val (:left this)), (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), (:left (:left this))), (PersistentTreeMap'black (:key this), (:val this), (:right (:left this)), (:right this)))
                 )
                 :else
                 (do
-                    (PersistentTreeMap'black (:key parent), (IMapEntry'''val parent), (ITNode'''left parent), this)
+                    (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
                 )
             )
         )
@@ -13570,7 +13500,7 @@
     (defm RedBranch Sequential)
 
     (defm RedBranch Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm RedBranch Counted
@@ -13601,34 +13531,30 @@
     )
 
     (defm RedBranch IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
 (about #_"RedBranchVal"
-    (defr RedBranchVal [])
+    (defq RedBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
 
     #_inherit
-    (defm RedBranchVal AFn APersistentVector AMapEntry TNode Red RedBranch)
+    (defm RedBranchVal RedBranch Red TNode AMapEntry APersistentVector AFn)
 
-    (defn #_"RedBranchVal" RedBranchVal'new [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
-        (merge (RedBranchVal'class.) (RedBranch'new key, left, right)
-            (hash-map
-                #_"Object" :val val
-            )
-        )
+    (defn #_"RedBranchVal" RedBranchVal'new [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
+        (RedBranchVal'class. (anew [key, val, left, right]))
     )
 
     (defm RedBranchVal IMapEntry
-        (#_"Object" IMapEntry'''key => :key)
+        (#_"key" IMapEntry'''key => :key)
 
-        (#_"Object" IMapEntry'''val => :val)
+        (#_"value" IMapEntry'''val => :val)
     )
 
     (defm RedBranchVal ITNode
         ;; inherit RedBranch left right addLeft addRight removeLeft removeRight
 
-        (#_"TNode" ITNode'''blacken [#_"RedBranchVal" this]
+        (#_"node" ITNode'''blacken [#_"RedBranchVal" this]
             (BlackBranchVal'new (:key this), (:val this), (:left this), (:right this))
         )
 
@@ -13638,7 +13564,7 @@
     (defm RedBranchVal Sequential)
 
     (defm RedBranchVal Indexed
-        (#_"Object" Indexed'''nth => AMapEntry''nth)
+        (#_"value" Indexed'''nth => AMapEntry''nth)
     )
 
     (defm RedBranchVal Counted
@@ -13669,7 +13595,7 @@
     )
 
     (defm RedBranchVal IKVReduce
-        (#_"Object" IKVReduce'''kvreduce => TNode''kvreduce)
+        (#_"value" IKVReduce'''kvreduce => TNode''kvreduce)
     )
 )
 
@@ -13699,13 +13625,13 @@
         )
     )
 
-    (defn #_"seq" TSeq'push [#_"TNode" t, #_"seq" stack, #_"boolean" asc?]
+    (defn #_"seq" TSeq'push [#_"node" t, #_"seq" stack, #_"boolean" asc?]
         (loop-when [stack stack t t] (some? t) => stack
-            (recur (cons t stack) (if asc? (ITNode'''left t) (ITNode'''right t)))
+            (recur (cons t stack) (if asc? (:left t) (:right t)))
         )
     )
 
-    (defn #_"TSeq" TSeq'create [#_"TNode" t, #_"boolean" asc?, #_"int" cnt]
+    (defn #_"TSeq" TSeq'create [#_"node" t, #_"boolean" asc?, #_"int" cnt]
         (TSeq'new (TSeq'push t, nil, asc?), asc?, cnt)
     )
 
@@ -13715,8 +13641,8 @@
         )
 
         (#_"seq" ISeq'''next [#_"TSeq" this]
-            (let [#_"TNode" t #_"TNode" (first (:stack this)) #_"boolean" asc? (:asc? this)]
-                (when-some [#_"seq" stack (TSeq'push (if asc? (ITNode'''right t) (ITNode'''left t)), (next (:stack this)), asc?)]
+            (let [#_"node" t #_"node" (first (:stack this)) #_"boolean" asc? (:asc? this)]
+                (when-some [#_"seq" stack (TSeq'push (if asc? (:right t) (:left t)), (next (:stack this)), asc?)]
                     (TSeq'new stack, asc?, (dec (:cnt this)))
                 )
             )
@@ -13759,22 +13685,30 @@
  ; See Okasaki, Kahrs, Larsen, et al.
  ;;
 (about #_"PersistentTreeMap"
-    (defr PersistentTreeMap [])
+    (defq PersistentTreeMap [#_"meta" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt])
 
     #_inherit
-    (defm PersistentTreeMap AFn APersistentMap)
+    (defm PersistentTreeMap APersistentMap AFn)
 
     (defn #_"PersistentTreeMap" PersistentTreeMap'new
         ([] (PersistentTreeMap'new compare))
         ([#_"Comparator" cmp] (PersistentTreeMap'new nil, cmp))
         ([#_"meta" meta, #_"Comparator" cmp] (PersistentTreeMap'new meta, cmp, nil, 0))
-        ([#_"meta" meta, #_"Comparator" cmp, #_"TNode" tree, #_"int" cnt]
-            (merge (PersistentTreeMap'class.)
-                (hash-map
-                    #_"meta" :_meta meta
-                    #_"Comparator" :cmp cmp
-                    #_"TNode" :tree tree
-                    #_"int" :cnt cnt
+        ([#_"meta" meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt]
+            (PersistentTreeMap'class. (anew [meta, cmp, tree, cnt]))
+        )
+    )
+
+    (def #_"PersistentTreeMap" PersistentTreeMap'EMPTY (PersistentTreeMap'new))
+
+    (defn #_"PersistentTreeMap" PersistentTreeMap'create
+        ([#_"Seqable" keyvals] (PersistentTreeMap'create nil, keyvals))
+        ([#_"Comparator" cmp, #_"Seqable" keyvals]
+            (let [#_"PersistentTreeMap" m (if (some? cmp) (PersistentTreeMap'new cmp) PersistentTreeMap'EMPTY)]
+                (loop-when [m m #_"seq" s (seq keyvals)] (some? s) => m
+                    (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
+                        (recur (assoc m (first s) (second s)) (next (next s)))
+                    )
                 )
             )
         )
@@ -13792,23 +13726,25 @@
         )
     )
 
-    (def #_"PersistentTreeMap" PersistentTreeMap'EMPTY (PersistentTreeMap'new))
+    (defm PersistentTreeMap Counted
+        (#_"int" Counted'''count => :cnt)
+    )
 
-    (defn #_"PersistentTreeMap" PersistentTreeMap'create
-        ([#_"Seqable" keyvals]
-            (loop-when [#_"PersistentTreeMap" m PersistentTreeMap'EMPTY #_"seq" s (seq keyvals)] (some? s) => m
-                (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                    (recur (assoc m (first s) (second s)) (next (next s)))
+    (defm PersistentTreeMap ILookup
+        (#_"value" ILookup'''valAt
+            ([#_"PersistentTreeMap" this, #_"key" key] (ILookup'''valAt this, key, nil))
+            ([#_"PersistentTreeMap" this, #_"key" key, #_"value" not-found]
+                (when-some [#_"node" node (Associative'''entryAt this, key)] => not-found
+                    (IMapEntry'''val node)
                 )
             )
         )
-        ([#_"Comparator" cmp, #_"Seqable" keyvals]
-            (loop-when [#_"PersistentTreeMap" m (PersistentTreeMap'new cmp) #_"seq" s (seq keyvals)] (some? s) => m
-                (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                    (recur (assoc m (first s) (second s)) (next (next s)))
-                )
-            )
-        )
+    )
+
+    (defm PersistentTreeMap IFn
+        (#_"value" IFn'''invoke => APersistentMap''invoke)
+
+        (#_"value" IFn'''applyTo => AFn'applyToHelper)
     )
 
     (defm PersistentTreeMap Seqable
@@ -13816,14 +13752,6 @@
             (when (pos? (:cnt this))
                 (TSeq'create (:tree this), true, (:cnt this))
             )
-        )
-    )
-
-    (defm PersistentTreeMap IPersistentCollection
-        (#_"IPersistentCollection" IPersistentCollection'''conj => APersistentMap''conj)
-
-        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"PersistentTreeMap" this]
-            (PersistentTreeMap'new (meta this), (:cmp this))
         )
     )
 
@@ -13835,14 +13763,22 @@
         )
     )
 
-    (defn #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"Object" k1, #_"Object" k2]
+    (defm PersistentTreeMap IPersistentCollection
+        (#_"IPersistentCollection" IPersistentCollection'''conj => APersistentMap''conj)
+
+        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"PersistentTreeMap" this]
+            (PersistentTreeMap'new (:_meta this), (:cmp this))
+        )
+    )
+
+    (defn- #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"key" k1, #_"key" k2]
         (.compare (:cmp this), k1, k2)
     )
 
     (defm PersistentTreeMap Sorted
         (#_"Comparator" Sorted'''comparator => :cmp)
 
-        (#_"Object" Sorted'''entryKey [#_"PersistentTreeMap" this, #_"Object" entry]
+        (#_"key" Sorted'''entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
             (key entry)
         )
 
@@ -13852,14 +13788,14 @@
             )
         )
 
-        (#_"seq" Sorted'''seqFrom [#_"PersistentTreeMap" this, #_"Object" key, #_"boolean" ascending?]
+        (#_"seq" Sorted'''seqFrom [#_"PersistentTreeMap" this, #_"key" key, #_"boolean" ascending?]
             (when (pos? (:cnt this))
-                (loop-when [#_"seq" s nil #_"TNode" t (:tree this)] (some? t) => (when (some? s) (TSeq'new s, ascending?))
+                (loop-when [#_"seq" s nil #_"node" t (:tree this)] (some? t) => (when (some? s) (TSeq'new s, ascending?))
                     (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
                         (cond
                             (zero? cmp) (TSeq'new (cons t s), ascending?)
-                            ascending?  (if (neg? cmp) (recur (cons t s) (ITNode'''left t)) (recur s (ITNode'''right t)))
-                            :else       (if (pos? cmp) (recur (cons t s) (ITNode'''right t)) (recur s (ITNode'''left t)))
+                            ascending?  (if (neg? cmp) (recur (cons t s) (:left t)) (recur s (:right t)))
+                            :else       (if (pos? cmp) (recur (cons t s) (:right t)) (recur s (:left t)))
                         )
                     )
                 )
@@ -13868,198 +13804,47 @@
     )
 
     (defm PersistentTreeMap IKVReduce
-        (#_"Object" IKVReduce'''kvreduce [#_"PersistentTreeMap" this, #_"fn" f, #_"Object" r]
+        (#_"value" IKVReduce'''kvreduce [#_"PersistentTreeMap" this, #_"fn" f, #_"value" r]
             (let [r (if (some? (:tree this)) (INode'''kvreduce (:tree this), f, r) r)]
                 (if (reduced? r) @r r)
             )
         )
     )
 
-    (defn #_"TNode" PersistentTreeMap''min [#_"PersistentTreeMap" this]
-        (when-some [#_"TNode" t (:tree this)]
-            (loop-when-recur t (some? (ITNode'''left t)) (ITNode'''left t) => t)
+    (defn- #_"node" PersistentTreeMap''min [#_"PersistentTreeMap" this]
+        (when-some [#_"node" t (:tree this)]
+            (loop-when-recur t (some? (:left t)) (:left t) => t)
         )
     )
 
-    (defn #_"TNode" PersistentTreeMap''max [#_"PersistentTreeMap" this]
-        (when-some [#_"TNode" t (:tree this)]
-            (loop-when-recur t (some? (ITNode'''right t)) (ITNode'''right t) => t)
+    (defn- #_"node" PersistentTreeMap''max [#_"PersistentTreeMap" this]
+        (when-some [#_"node" t (:tree this)]
+            (loop-when-recur t (some? (:right t)) (:right t) => t)
         )
     )
 
-    (defn #_"Object" PersistentTreeMap''minKey [#_"PersistentTreeMap" this]
-        (let [#_"TNode" t (PersistentTreeMap''min this)]
+    (defn #_"key" PersistentTreeMap''minKey [#_"PersistentTreeMap" this]
+        (let [#_"node" t (PersistentTreeMap''min this)]
             (when (some? t) (:key t))
         )
     )
 
-    (defn #_"Object" PersistentTreeMap''maxKey [#_"PersistentTreeMap" this]
-        (let [#_"TNode" t (PersistentTreeMap''max this)]
+    (defn #_"key" PersistentTreeMap''maxKey [#_"PersistentTreeMap" this]
+        (let [#_"node" t (PersistentTreeMap''max this)]
             (when (some? t) (:key t))
         )
     )
 
-    (defn #_"int" PersistentTreeMap''depth-2 [#_"PersistentTreeMap" this, #_"TNode" t]
-        (when (some? t) => 0
-            (inc (max (PersistentTreeMap''depth-2 this, (ITNode'''left t)) (PersistentTreeMap''depth-2 this, (ITNode'''right t))))
-        )
-    )
-
-    (defn #_"int" PersistentTreeMap''depth-1 [#_"PersistentTreeMap" this]
-        (PersistentTreeMap''depth-2 this, (:tree this))
-    )
-
-    (declare find)
-
-    (defm PersistentTreeMap ILookup
-        (#_"Object" ILookup'''valAt
-            ([#_"PersistentTreeMap" this, #_"Object" key] (ILookup'''valAt this, key, nil))
-            ([#_"PersistentTreeMap" this, #_"Object" key, #_"Object" not-found]
-                (let [#_"TNode" node (find this key)]
-                    (if (some? node) (IMapEntry'''val node) not-found)
-                )
+    (defn #_"int" PersistentTreeMap''depth
+        ([#_"PersistentTreeMap" this] (PersistentTreeMap''depth this, (:tree this)))
+        ([#_"PersistentTreeMap" this, #_"node" t]
+            (when (some? t) => 0
+                (inc (max (PersistentTreeMap''depth this, (:left t)) (PersistentTreeMap''depth this, (:right t))))
             )
         )
     )
 
-    (defm PersistentTreeMap Counted
-        (#_"int" Counted'''count => :cnt)
-    )
-
-    (defn #_"TNode" PersistentTreeMap'rightBalance [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" ins]
-        (cond
-            (and (satisfies? Red ins) (satisfies? Red (ITNode'''right ins)))
-                (PersistentTreeMap'red (:key ins), (IMapEntry'''val ins), (PersistentTreeMap'black key, val, left, (ITNode'''left ins)), (ITNode'''blacken (ITNode'''right ins)))
-            (and (satisfies? Red ins) (satisfies? Red (ITNode'''left ins)))
-                (PersistentTreeMap'red (:key (ITNode'''left ins)), (IMapEntry'''val (ITNode'''left ins)), (PersistentTreeMap'black key, val, left, (ITNode'''left (ITNode'''left ins))), (PersistentTreeMap'black (:key ins), (IMapEntry'''val ins), (ITNode'''right (ITNode'''left ins)), (ITNode'''right ins)))
-            :else
-                (PersistentTreeMap'black key, val, left, ins)
-        )
-    )
-
-    (defn #_"TNode" PersistentTreeMap'balanceLeftDel [#_"Object" key, #_"Object" val, #_"TNode" del, #_"TNode" right]
-        (cond
-            (satisfies? Red del)
-                (PersistentTreeMap'red key, val, (ITNode'''blacken del), right)
-            (satisfies? Black right)
-                (PersistentTreeMap'rightBalance key, val, del, (ITNode'''redden right))
-            (and (satisfies? Red right) (satisfies? Black (ITNode'''left right)))
-                (PersistentTreeMap'red (:key (ITNode'''left right)), (IMapEntry'''val (ITNode'''left right)), (PersistentTreeMap'black key, val, del, (ITNode'''left (ITNode'''left right))), (PersistentTreeMap'rightBalance (:key right), (IMapEntry'''val right), (ITNode'''right (ITNode'''left right)), (ITNode'''redden (ITNode'''right right))))
-            :else
-                (throw! "invariant violation")
-        )
-    )
-
-    (defn #_"TNode" PersistentTreeMap'leftBalance [#_"Object" key, #_"Object" val, #_"TNode" ins, #_"TNode" right]
-        (cond
-            (and (satisfies? Red ins) (satisfies? Red (ITNode'''left ins)))
-                (PersistentTreeMap'red (:key ins), (IMapEntry'''val ins), (ITNode'''blacken (ITNode'''left ins)), (PersistentTreeMap'black key, val, (ITNode'''right ins), right))
-            (and (satisfies? Red ins) (satisfies? Red (ITNode'''right ins)))
-                (PersistentTreeMap'red (:key (ITNode'''right ins)), (IMapEntry'''val (ITNode'''right ins)), (PersistentTreeMap'black (:key ins), (IMapEntry'''val ins), (ITNode'''left ins), (ITNode'''left (ITNode'''right ins))), (PersistentTreeMap'black key, val, (ITNode'''right (ITNode'''right ins)), right))
-            :else
-                (PersistentTreeMap'black key, val, ins, right)
-        )
-    )
-
-    (defn #_"TNode" PersistentTreeMap'balanceRightDel [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" del]
-        (cond
-            (satisfies? Red del)
-                (PersistentTreeMap'red key, val, left, (ITNode'''blacken del))
-            (satisfies? Black left)
-                (PersistentTreeMap'leftBalance key, val, (ITNode'''redden left), del)
-            (and (satisfies? Red left) (satisfies? Black (ITNode'''right left)))
-                (PersistentTreeMap'red (:key (ITNode'''right left)), (IMapEntry'''val (ITNode'''right left)), (PersistentTreeMap'leftBalance (:key left), (IMapEntry'''val left), (ITNode'''redden (ITNode'''left left)), (ITNode'''left (ITNode'''right left))), (PersistentTreeMap'black key, val, (ITNode'''right (ITNode'''right left)), del))
-            :else
-                (throw! "invariant violation")
-        )
-    )
-
-    (defn #_"TNode" PersistentTreeMap''add [#_"PersistentTreeMap" this, #_"TNode" t, #_"Object" key, #_"Object" val, #_"Atom" found]
-        (if (nil? t)
-            (if (nil? val)
-                (Red'new key)
-                (RedVal'new key, val)
-            )
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (if (zero? cmp)
-                    (do
-                        (reset! found t)
-                        nil
-                    )
-                    (let [#_"TNode" ins (if (neg? cmp) (PersistentTreeMap''add this, (ITNode'''left t), key, val, found) (PersistentTreeMap''add this, (ITNode'''right t), key, val, found))]
-                        (cond
-                            (nil? ins) nil ;; found below
-                            (neg? cmp) (ITNode'''addLeft t, ins)
-                            :else      (ITNode'''addRight t, ins)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"TNode" PersistentTreeMap'append [#_"TNode" left, #_"TNode" right]
-        (cond
-            (nil? left)
-                right
-            (nil? right)
-                left
-            (satisfies? Red left)
-                (if (satisfies? Red right)
-                    (let [#_"TNode" app (PersistentTreeMap'append (ITNode'''right left), (ITNode'''left right))]
-                        (if (satisfies? Red app)
-                            (PersistentTreeMap'red (:key app), (IMapEntry'''val app), (PersistentTreeMap'red (:key left), (IMapEntry'''val left), (ITNode'''left left), (ITNode'''left app)), (PersistentTreeMap'red (:key right), (IMapEntry'''val right), (ITNode'''right app), (ITNode'''right right)))
-                            (PersistentTreeMap'red (:key left), (IMapEntry'''val left), (ITNode'''left left), (PersistentTreeMap'red (:key right), (IMapEntry'''val right), app, (ITNode'''right right)))
-                        )
-                    )
-                    (PersistentTreeMap'red (:key left), (IMapEntry'''val left), (ITNode'''left left), (PersistentTreeMap'append (ITNode'''right left), right))
-                )
-            (satisfies? Red right)
-                (PersistentTreeMap'red (:key right), (IMapEntry'''val right), (PersistentTreeMap'append left, (ITNode'''left right)), (ITNode'''right right))
-            :else ;; black/black
-                (let [#_"TNode" app (PersistentTreeMap'append (ITNode'''right left), (ITNode'''left right))]
-                    (if (satisfies? Red app)
-                        (PersistentTreeMap'red (:key app), (IMapEntry'''val app), (PersistentTreeMap'black (:key left), (IMapEntry'''val left), (ITNode'''left left), (ITNode'''left app)), (PersistentTreeMap'black (:key right), (IMapEntry'''val right), (ITNode'''right app), (ITNode'''right right)))
-                        (PersistentTreeMap'balanceLeftDel (:key left), (IMapEntry'''val left), (ITNode'''left left), (PersistentTreeMap'black (:key right), (IMapEntry'''val right), app, (ITNode'''right right)))
-                    )
-                )
-        )
-    )
-
-    (defn #_"TNode" PersistentTreeMap''remove [#_"PersistentTreeMap" this, #_"TNode" t, #_"Object" key, #_"Atom" found]
-        (when (some? t) => nil ;; not found indicator
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (if (zero? cmp)
-                    (do
-                        (reset! found t)
-                        (PersistentTreeMap'append (ITNode'''left t), (ITNode'''right t))
-                    )
-                    (let [#_"TNode" del (if (neg? cmp) (PersistentTreeMap''remove this, (ITNode'''left t), key, found) (PersistentTreeMap''remove this, (ITNode'''right t), key, found))]
-                        (when (or (some? del) (some? @found)) => nil ;; not found below
-                            (if (neg? cmp)
-                                (if (satisfies? Black (ITNode'''left t))
-                                    (PersistentTreeMap'balanceLeftDel (:key t), (IMapEntry'''val t), del, (ITNode'''right t))
-                                    (PersistentTreeMap'red (:key t), (IMapEntry'''val t), del, (ITNode'''right t))
-                                )
-                                (if (satisfies? Black (ITNode'''right t))
-                                    (PersistentTreeMap'balanceRightDel (:key t), (IMapEntry'''val t), (ITNode'''left t), del)
-                                    (PersistentTreeMap'red (:key t), (IMapEntry'''val t), (ITNode'''left t), del)
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"TNode" PersistentTreeMap''replace [#_"PersistentTreeMap" this, #_"TNode" t, #_"Object" key, #_"Object" val]
-        (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-            (ITNode'''replace t, (:key t), (if (zero? cmp) val (IMapEntry'''val t)), (if (neg? cmp) (PersistentTreeMap''replace this, (ITNode'''left t), key, val) (ITNode'''left t)), (if (pos? cmp) (PersistentTreeMap''replace this, (ITNode'''right t), key, val) (ITNode'''right t)))
-        )
-    )
-
-    (defn #_"Red" PersistentTreeMap'red [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
+    (defn #_"Red" PersistentTreeMap'red [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
         (if (and (nil? left) (nil? right))
             (if (nil? val)
                 (Red'new key)
@@ -14072,7 +13857,7 @@
         )
     )
 
-    (defn #_"Black" PersistentTreeMap'black [#_"Object" key, #_"Object" val, #_"TNode" left, #_"TNode" right]
+    (defn #_"Black" PersistentTreeMap'black [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
         (if (and (nil? left) (nil? right))
             (if (nil? val)
                 (Black'new key)
@@ -14085,29 +13870,164 @@
         )
     )
 
-    (defm PersistentTreeMap Associative
-        (#_"PersistentTreeMap" Associative'''assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
-            (let [#_"Atom" found (atom nil) #_"TNode" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
-                (if (nil? t)
-                    (if (= (IMapEntry'''val #_"TNode" @found) val)
-                        this
-                        (PersistentTreeMap'new (meta this), (:cmp this), (PersistentTreeMap''replace this, (:tree this), key, val), (:cnt this))
+    (defn- #_"node" PersistentTreeMap'rightBalance [#_"key" key, #_"value" val, #_"node" left, #_"node" ins]
+        (cond
+            (and (satisfies? Red ins) (satisfies? Red (:right ins)))
+                (PersistentTreeMap'red (:key ins), (:val ins), (PersistentTreeMap'black key, val, left, (:left ins)), (ITNode'''blacken (:right ins)))
+            (and (satisfies? Red ins) (satisfies? Red (:left ins)))
+                (PersistentTreeMap'red (:key (:left ins)), (:val (:left ins)), (PersistentTreeMap'black key, val, left, (:left (:left ins))), (PersistentTreeMap'black (:key ins), (:val ins), (:right (:left ins)), (:right ins)))
+            :else
+                (PersistentTreeMap'black key, val, left, ins)
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap'balanceLeftDel [#_"key" key, #_"value" val, #_"node" del, #_"node" right]
+        (cond
+            (satisfies? Red del)
+                (PersistentTreeMap'red key, val, (ITNode'''blacken del), right)
+            (satisfies? Black right)
+                (PersistentTreeMap'rightBalance key, val, del, (ITNode'''redden right))
+            (and (satisfies? Red right) (satisfies? Black (:left right)))
+                (PersistentTreeMap'red (:key (:left right)), (:val (:left right)), (PersistentTreeMap'black key, val, del, (:left (:left right))), (PersistentTreeMap'rightBalance (:key right), (:val right), (:right (:left right)), (ITNode'''redden (:right right))))
+            :else
+                (throw! "invariant violation")
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap'leftBalance [#_"key" key, #_"value" val, #_"node" ins, #_"node" right]
+        (cond
+            (and (satisfies? Red ins) (satisfies? Red (:left ins)))
+                (PersistentTreeMap'red (:key ins), (:val ins), (ITNode'''blacken (:left ins)), (PersistentTreeMap'black key, val, (:right ins), right))
+            (and (satisfies? Red ins) (satisfies? Red (:right ins)))
+                (PersistentTreeMap'red (:key (:right ins)), (:val (:right ins)), (PersistentTreeMap'black (:key ins), (:val ins), (:left ins), (:left (:right ins))), (PersistentTreeMap'black key, val, (:right (:right ins)), right))
+            :else
+                (PersistentTreeMap'black key, val, ins, right)
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap'balanceRightDel [#_"key" key, #_"value" val, #_"node" left, #_"node" del]
+        (cond
+            (satisfies? Red del)
+                (PersistentTreeMap'red key, val, left, (ITNode'''blacken del))
+            (satisfies? Black left)
+                (PersistentTreeMap'leftBalance key, val, (ITNode'''redden left), del)
+            (and (satisfies? Red left) (satisfies? Black (:right left)))
+                (PersistentTreeMap'red (:key (:right left)), (:val (:right left)), (PersistentTreeMap'leftBalance (:key left), (:val left), (ITNode'''redden (:left left)), (:left (:right left))), (PersistentTreeMap'black key, val, (:right (:right left)), del))
+            :else
+                (throw! "invariant violation")
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap''add [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"value" val, #_"node'" found]
+        (if (nil? t)
+            (if (nil? val)
+                (Red'new key)
+                (RedVal'new key, val)
+            )
+            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
+                (if (zero? cmp)
+                    (do
+                        (reset! found t)
+                        nil
                     )
-                    (PersistentTreeMap'new (meta this), (:cmp this), (ITNode'''blacken t), (inc (:cnt this)))
+                    (let [#_"node" ins (PersistentTreeMap''add this, (if (neg? cmp) (:left t) (:right t)), key, val, found)]
+                        (when (some? ins) => nil ;; found below
+                            (if (neg? cmp) (ITNode'''addLeft t, ins) (ITNode'''addRight t, ins))
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap'append [#_"node" left, #_"node" right]
+        (cond
+            (nil? left)
+                right
+            (nil? right)
+                left
+            (satisfies? Red left)
+                (if (satisfies? Red right)
+                    (let [#_"node" app (PersistentTreeMap'append (:right left), (:left right))]
+                        (if (satisfies? Red app)
+                            (PersistentTreeMap'red (:key app), (:val app), (PersistentTreeMap'red (:key left), (:val left), (:left left), (:left app)), (PersistentTreeMap'red (:key right), (:val right), (:right app), (:right right)))
+                            (PersistentTreeMap'red (:key left), (:val left), (:left left), (PersistentTreeMap'red (:key right), (:val right), app, (:right right)))
+                        )
+                    )
+                    (PersistentTreeMap'red (:key left), (:val left), (:left left), (PersistentTreeMap'append (:right left), right))
+                )
+            (satisfies? Red right)
+                (PersistentTreeMap'red (:key right), (:val right), (PersistentTreeMap'append left, (:left right)), (:right right))
+            :else ;; black/black
+                (let [#_"node" app (PersistentTreeMap'append (:right left), (:left right))]
+                    (if (satisfies? Red app)
+                        (PersistentTreeMap'red (:key app), (:val app), (PersistentTreeMap'black (:key left), (:val left), (:left left), (:left app)), (PersistentTreeMap'black (:key right), (:val right), (:right app), (:right right)))
+                        (PersistentTreeMap'balanceLeftDel (:key left), (:val left), (:left left), (PersistentTreeMap'black (:key right), (:val right), app, (:right right)))
+                    )
+                )
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap''remove [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"node'" found]
+        (when (some? t) => nil ;; not found indicator
+            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
+                (if (zero? cmp)
+                    (do
+                        (reset! found t)
+                        (PersistentTreeMap'append (:left t), (:right t))
+                    )
+                    (let [#_"node" del (PersistentTreeMap''remove this, (if (neg? cmp) (:left t) (:right t)), key, found)]
+                        (when (or (some? del) (some? @found)) => nil ;; not found below
+                            (if (neg? cmp)
+                                (if (satisfies? Black (:left t))
+                                    (PersistentTreeMap'balanceLeftDel (:key t), (:val t), del, (:right t))
+                                    (PersistentTreeMap'red (:key t), (:val t), del, (:right t))
+                                )
+                                (if (satisfies? Black (:right t))
+                                    (PersistentTreeMap'balanceRightDel (:key t), (:val t), (:left t), del)
+                                    (PersistentTreeMap'red (:key t), (:val t), (:left t), del)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"node" PersistentTreeMap''replace [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"value" val]
+        (let [
+            #_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))
+            #_"node" left  (if (neg? cmp) (PersistentTreeMap''replace this, (:left  t), key, val) (:left  t))
+            #_"node" right (if (pos? cmp) (PersistentTreeMap''replace this, (:right t), key, val) (:right t))
+        ]
+            (ITNode'''replace t, (:key t), (if (zero? cmp) val (:val t)), left, right)
+        )
+    )
+
+    (defm PersistentTreeMap Associative
+        (#_"PersistentTreeMap" Associative'''assoc [#_"PersistentTreeMap" this, #_"key" key, #_"value" val]
+            (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
+                (if (nil? t)
+                    (if (= (:val #_"node" @found) val)
+                        this
+                        (PersistentTreeMap'new (:_meta this), (:cmp this), (PersistentTreeMap''replace this, (:tree this), key, val), (:cnt this))
+                    )
+                    (PersistentTreeMap'new (:_meta this), (:cmp this), (ITNode'''blacken t), (inc (:cnt this)))
                 )
             )
         )
 
-        (#_"boolean" Associative'''containsKey [#_"PersistentTreeMap" this, #_"Object" key]
-            (some? (find this key))
+        (#_"boolean" Associative'''containsKey [#_"PersistentTreeMap" this, #_"key" key]
+            (some? (Associative'''entryAt this, key))
         )
 
-        (#_"TNode" Associative'''entryAt [#_"PersistentTreeMap" this, #_"Object" key]
-            (loop-when [#_"TNode" t (:tree this)] (some? t) => t
+        (#_"node" Associative'''entryAt [#_"PersistentTreeMap" this, #_"key" key]
+            (loop-when [#_"node" t (:tree this)] (some? t) => t
                 (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
                     (cond
-                        (neg? cmp) (recur (ITNode'''left t))
-                        (pos? cmp) (recur (ITNode'''right t))
+                        (neg? cmp) (recur (:left t))
+                        (pos? cmp) (recur (:right t))
                         :else      t
                     )
                 )
@@ -14116,14 +14036,14 @@
     )
 
     (defm PersistentTreeMap IPersistentMap
-        (#_"PersistentTreeMap" IPersistentMap'''dissoc [#_"PersistentTreeMap" this, #_"Object" key]
-            (let [#_"Atom" found (atom nil) #_"TNode" t (PersistentTreeMap''remove this, (:tree this), key, found)]
+        (#_"PersistentTreeMap" IPersistentMap'''dissoc [#_"PersistentTreeMap" this, #_"key" key]
+            (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap''remove this, (:tree this), key, found)]
                 (if (nil? t)
                     (if (nil? @found)
                         this
-                        (PersistentTreeMap'new (meta this), (:cmp this))
+                        (PersistentTreeMap'new (:_meta this), (:cmp this))
                     )
-                    (PersistentTreeMap'new (meta this), (:cmp this), (ITNode'''blacken t), (dec (:cnt this)))
+                    (PersistentTreeMap'new (:_meta this), (:cmp this), (ITNode'''blacken t), (dec (:cnt this)))
                 )
             )
         )
@@ -14138,30 +14058,26 @@
     (defm PersistentTreeMap Hashed
         (#_"int" Hashed'''hash => Murmur3'hashUnordered)
     )
-
-    (defm PersistentTreeMap IFn
-        (#_"Object" IFn'''invoke => APersistentMap''invoke)
-
-        (#_"Object" IFn'''applyTo => AFn'applyToHelper)
-    )
 )
 )
 
 (about #_"cloiure.core.PersistentTreeSet"
 
 (about #_"PersistentTreeSet"
-    (defr PersistentTreeSet [])
+    (defq PersistentTreeSet [#_"meta" _meta, #_"map" impl])
 
     #_inherit
-    (defm PersistentTreeSet AFn APersistentSet)
+    (defm PersistentTreeSet APersistentSet AFn)
 
     (defn #_"PersistentTreeSet" PersistentTreeSet'new [#_"meta" meta, #_"map" impl]
-        (merge (PersistentTreeSet'class.)
-            (hash-map
-                #_"meta" :_meta meta
-                #_"map" :impl impl
-            )
-        )
+        (PersistentTreeSet'class. (anew [meta, impl]))
+    )
+
+    (def #_"PersistentTreeSet" PersistentTreeSet'EMPTY (PersistentTreeSet'new nil, PersistentTreeMap'EMPTY))
+
+    (defn #_"PersistentTreeSet" PersistentTreeSet'create
+        ([                    #_"Seqable" init] (into PersistentTreeSet'EMPTY                                       init))
+        ([#_"Comparator" cmp, #_"Seqable" init] (into (PersistentTreeSet'new nil, (PersistentTreeMap'new nil, cmp)) init))
     )
 
     (defm PersistentTreeSet IMeta
@@ -14176,48 +14092,41 @@
         )
     )
 
-    (def #_"PersistentTreeSet" PersistentTreeSet'EMPTY (PersistentTreeSet'new nil, PersistentTreeMap'EMPTY))
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet'create
-        ([                    #_"Seqable" items] (into PersistentTreeSet'EMPTY                                       items))
-        ([#_"Comparator" cmp, #_"Seqable" items] (into (PersistentTreeSet'new nil, (PersistentTreeMap'new nil, cmp)) items))
-    )
-
-    (defm PersistentTreeSet IPersistentSet
-        (#_"IPersistentSet" IPersistentSet'''disj [#_"PersistentTreeSet" this, #_"Object" key]
-            (if (contains? this key)
-                (PersistentTreeSet'new (meta this), (dissoc (:impl this) key))
-                this
-            )
-        )
-
-        (#_"boolean" IPersistentSet'''contains? [#_"PersistentTreeSet" this, #_"Object" key]
-            (contains? (:impl this) key)
-        )
-
-        (#_"Object" IPersistentSet'''get [#_"PersistentTreeSet" this, #_"Object" key]
-            (get (:impl this) key)
+    (defm PersistentTreeSet Counted
+        (#_"int" Counted'''count [#_"PersistentTreeSet" this]
+            (count (:impl this))
         )
     )
 
     (declare empty)
 
     (defm PersistentTreeSet IPersistentCollection
-        (#_"PersistentTreeSet" IPersistentCollection'''conj [#_"PersistentTreeSet" this, #_"Object" o]
-            (if (contains? this o)
+        (#_"PersistentTreeSet" IPersistentCollection'''conj [#_"PersistentTreeSet" this, #_"value" val]
+            (if (contains? (:impl this) val)
                 this
-                (PersistentTreeSet'new (meta this), (assoc (:impl this) o o))
+                (PersistentTreeSet'new (:_meta this), (assoc (:impl this) val val))
             )
         )
 
         (#_"PersistentTreeSet" IPersistentCollection'''empty [#_"PersistentTreeSet" this]
-            (PersistentTreeSet'new (meta this), (empty (:impl this)))
+            (PersistentTreeSet'new (:_meta this), (empty (:impl this)))
         )
     )
 
-    (defm PersistentTreeSet Reversible
-        (#_"seq" Reversible'''rseq [#_"PersistentTreeSet" this]
-            (map key (rseq (:impl this)))
+    (defm PersistentTreeSet IPersistentSet
+        (#_"IPersistentSet" IPersistentSet'''disj [#_"PersistentTreeSet" this, #_"key" key]
+            (if (contains? (:impl this) key)
+                (PersistentTreeSet'new (:_meta this), (dissoc (:impl this) key))
+                this
+            )
+        )
+
+        (#_"boolean" IPersistentSet'''contains? [#_"PersistentTreeSet" this, #_"key" key]
+            (contains? (:impl this) key)
+        )
+
+        (#_"value" IPersistentSet'''get [#_"PersistentTreeSet" this, #_"key" key]
+            (get (:impl this) key)
         )
     )
 
@@ -14226,7 +14135,7 @@
             (Sorted'''comparator (:impl this))
         )
 
-        (#_"Object" Sorted'''entryKey [#_"PersistentTreeSet" this, #_"Object" entry]
+        (#_"value" Sorted'''entryKey [#_"PersistentTreeSet" this, #_"value" entry]
             entry
         )
 
@@ -14234,14 +14143,8 @@
             (keys (Sorted'''seq (:impl this), ascending?))
         )
 
-        (#_"seq" Sorted'''seqFrom [#_"PersistentTreeSet" this, #_"Object" key, #_"boolean" ascending?]
+        (#_"seq" Sorted'''seqFrom [#_"PersistentTreeSet" this, #_"key" key, #_"boolean" ascending?]
             (keys (Sorted'''seqFrom (:impl this), key, ascending?))
-        )
-    )
-
-    (defm PersistentTreeSet Counted
-        (#_"int" Counted'''count [#_"PersistentTreeSet" this]
-            (count (:impl this))
         )
     )
 
@@ -14251,10 +14154,16 @@
         )
     )
 
-    (defm PersistentTreeSet IFn
-        (#_"Object" IFn'''invoke => APersistentSet''invoke)
+    (defm PersistentTreeSet Reversible
+        (#_"seq" Reversible'''rseq [#_"PersistentTreeSet" this]
+            (map key (rseq (:impl this)))
+        )
+    )
 
-        (#_"Object" IFn'''applyTo => AFn'applyToHelper)
+    (defm PersistentTreeSet IFn
+        (#_"value" IFn'''invoke => APersistentSet''invoke)
+
+        (#_"value" IFn'''applyTo => AFn'applyToHelper)
     )
 
     (defm PersistentTreeSet IObject
@@ -15284,7 +15193,7 @@
     (defq PersistentWector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail])
 
     #_inherit
-    (defm PersistentWector AFn APersistentVector)
+    (defm PersistentWector APersistentVector AFn)
 
     (defn #_"PersistentWector" PersistentWector'new
         ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] (PersistentWector'new nil, cnt, shift, root, tail))
