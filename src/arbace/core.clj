@@ -140,7 +140,7 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = atom boolean case char compare cons defmethod defn fn hash-map hash-set identical? int intern let list long loop make-array map merge object-array reify reset! satisfies? swap! symbol to-array]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = atom boolean case char compare cons defmethod defn fn hash-map hash-set identical? int intern let list long loop make-array map merge object-array reset! satisfies? swap! symbol to-array]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
     (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength anew aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! update!! zero? |])
 )
@@ -1572,10 +1572,6 @@
     (defp MapEntry)
 )
 
-(about #_"cloiure.core.MethodImplCache"
-    (defp MethodImplCache)
-)
-
 (about #_"cloiure.core.Namespace"
     (defp Namespace)
 )
@@ -1757,7 +1753,7 @@
 
     (defn #_"ClassLoader" Loader'context [] (if (bound? #'*class-loader*) *class-loader* (.getContextClassLoader (thread))))
 
-    (defn #_"ClassLoader" Loader'create [] (AccessController/doPrivileged (reify PrivilegedAction (run [_] (Loader'new (Loader'context))))))
+    (defn #_"ClassLoader" Loader'create [] (AccessController/doPrivileged (-/reify PrivilegedAction (run [_] (Loader'new (Loader'context))))))
 
     (declare assoc)
 
@@ -2893,7 +2889,7 @@
 
 (about #_"MonitorEnterParser"
     (defn #_"IParser" MonitorEnterParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (MonitorEnterExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
             )
@@ -2934,7 +2930,7 @@
 
 (about #_"MonitorExitParser"
     (defn #_"IParser" MonitorExitParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (MonitorExitExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
             )
@@ -2971,7 +2967,7 @@
 
 (about #_"AssignParser"
     (defn #_"IParser" AssignParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
                     (let [#_"Expr" target (Compiler'analyze :Context'EXPRESSION, (second form))]
@@ -3025,8 +3021,8 @@
 )
 
 (about #_"ImportParser"
-    (defn #_"IParser" ImportParser'new []
-        (reify IParser
+    (defn #_"IParser" ImportParser'new []
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (ImportExpr'new (second form))
             )
@@ -3247,7 +3243,7 @@
 
 (about #_"ConstantParser"
     (defn #_"IParser" ConstantParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"int" n (dec (count form))]
                     (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
@@ -3994,8 +3990,8 @@
 (declare not=)
 
 (about #_"HostParser"
-    (defn #_"IParser" HostParser'new []
-        (reify IParser
+    (defn #_"IParser" HostParser'new []
+        (-/reify IParser
             ;; (. x fieldname-sym) or
             ;; (. x 0-ary-method)
             ;; (. x methodname-sym args+)
@@ -4166,7 +4162,7 @@
 
 (about #_"TheVarParser"
     (defn #_"IParser" TheVarParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, false)]
                     (when (some? v) => (throw! (str "unable to resolve var: " sym " in this context"))
@@ -4233,7 +4229,7 @@
 
 (about #_"BodyParser"
     (defn #_"IParser" BodyParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
                       #_"vector" v
@@ -4355,7 +4351,7 @@
 
 (about #_"TryParser"
     (defn #_"IParser" TryParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (try try-expr* catch-expr* finally-expr?)
             ;; catch-expr: (catch class sym expr*)
             ;; finally-expr: (finally expr*)
@@ -4449,7 +4445,7 @@
 
 (about #_"ThrowParser"
     (defn #_"IParser" ThrowParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (cond
                     (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
@@ -4532,8 +4528,8 @@
 )
 
 (about #_"NewParser"
-    (defn #_"IParser" NewParser'new []
-        (reify IParser
+    (defn #_"IParser" NewParser'new []
+        (-/reify IParser
             ;; (new Classname args...)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"int" line *line*]
@@ -4696,7 +4692,7 @@
 
 (about #_"IfParser"
     (defn #_"IParser" IfParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (if test then) or (if test then else)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (cond
@@ -6437,7 +6433,7 @@
 
 (about #_"DefParser"
     (defn #_"IParser" DefParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (def x) or (def x initexpr)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (cond
@@ -6539,7 +6535,7 @@
 
 (about #_"LetFnParser"
     (defn #_"IParser" LetFnParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (letfns* [var (fn [args] body) ...] body...)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (when (vector? (second form)) => (throw! "bad binding form, expected vector")
@@ -6667,7 +6663,7 @@
 
 (about #_"LetParser"
     (defn #_"IParser" LetParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (let [var val var2 val2 ...] body...)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"boolean" isLoop (= (first form) 'loop*)]
@@ -6865,7 +6861,7 @@
 
 (about #_"RecurParser"
     (defn #_"IParser" RecurParser'new []
-        (reify IParser
+        (-/reify IParser
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (when-not (and (= context :Context'RETURN) (some? *loop-locals*))
                     (throw! "can only recur from tail position")
@@ -7452,8 +7448,8 @@
 )
 
 (about #_"ReifyParser"
-    (defn #_"IParser" ReifyParser'new []
-        (reify IParser
+    (defn #_"IParser" ReifyParser'new []
+        (-/reify IParser
             ;; (reify this-name? [interfaces] (method-name [args] body)*)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"seq" s form                                       s (next s)
@@ -7474,8 +7470,8 @@
 )
 
 (about #_"DeftypeParser"
-    (defn #_"IParser" DeftypeParser'new []
-        (reify IParser
+    (defn #_"IParser" DeftypeParser'new []
+        (-/reify IParser
             ;; (deftype* tagname classname [fields] :implements [interfaces] :tag tagname methods*)
             (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
                 (let [#_"seq" s form                                  s (next s)
@@ -7697,7 +7693,7 @@
 
 (about #_"CaseParser"
     (defn #_"IParser" CaseParser'new []
-        (reify IParser
+        (-/reify IParser
             ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
             ;; prepared by case macro and presumed correct
             ;; case macro binds actual expr in let so expr is always a local,
@@ -7750,18 +7746,18 @@
             'fn*           nil
             'quote         (ConstantParser'new)
             'var           (TheVarParser'new)
-            'import*       (ImportParser'new)
-            '.             (HostParser'new)
+            'import*       (ImportParser'new)
+            '.             (HostParser'new)
             'set!          (AssignParser'new)
-            'deftype*      (DeftypeParser'new)
-            'reify*        (ReifyParser'new)
+            'deftype*      (DeftypeParser'new)
+            'reify*        (ReifyParser'new)
             'try           (TryParser'new)
             'throw         (ThrowParser'new)
             'monitor-enter (MonitorEnterParser'new)
             'monitor-exit  (MonitorExitParser'new)
             'catch         nil
             'finally       nil
-            'new           (NewParser'new)
+            'new           (NewParser'new)
             '&             nil
         )
     )
@@ -9841,13 +9837,13 @@
 (about #_"cloiure.core.Fn"
 
 (about #_"Fn"
-    (defq Fn [#_"MethodImplCache'" __methodImplCache])
+    (defq Fn [])
 
     #_inherit
     (defm Fn AFn)
 
     (defn #_"Fn" Fn'new []
-        (Fn'class. (anew [(atom nil)]))
+        (Fn'class. (anew []))
     )
 
     (defn- #_"Object" Fn''invoke
@@ -9886,13 +9882,13 @@
 (about #_"cloiure.core.RestFn"
 
 (about #_"RestFn"
-    (defq RestFn [#_"MethodImplCache'" __methodImplCache])
+    (defq RestFn [])
 
     #_inherit
     (defm RestFn Fn AFn)
 
     (defn #_"RestFn" RestFn'new []
-        (RestFn'class. (anew [(atom nil)]))
+        (RestFn'class. (anew []))
     )
 
     (defn- #_"Object" RestFn''doInvoke
@@ -10314,6 +10310,10 @@
         )
     )
 
+    (defn- #_"seq" VSeq''seq [#_"VSeq" this]
+        this
+    )
+
     (defm VSeq IMeta
         (IMeta'''meta => :_meta)
     )
@@ -10337,10 +10337,6 @@
 
     (defm VSeq Sequential)
 
-    (defn- #_"seq" VSeq''seq [#_"VSeq" this]
-        this
-    )
-
     (defm VSeq Seqable
         (Seqable'''seq => VSeq''seq)
     )
@@ -10349,13 +10345,10 @@
         (Hashed'''hash => Murmur3'hashOrdered)
     )
 
-    (defm VSeq IObject
-        (IObject'''equals => ASeq''equals)
-    )
-
     (declare RT'printString)
 
-    (defm VSeq IObject
+    (defm VSeq IObject
+        (IObject'''equals => ASeq''equals)
         (IObject'''toString => RT'printString)
     )
 )
@@ -10393,6 +10386,10 @@
         (inc (:i this))
     )
 
+    (defn- #_"seq" RSeq''seq [#_"RSeq" this]
+        this
+    )
+
     (defm RSeq IMeta
         (IMeta'''meta => :_meta)
     )
@@ -10411,10 +10408,6 @@
     )
 
     (defm RSeq Sequential)
-
-    (defn- #_"seq" RSeq''seq [#_"RSeq" this]
-        this
-    )
 
     (defm RSeq Seqable
         (Seqable'''seq => RSeq''seq)
@@ -10916,7 +10909,7 @@
     )
 
     (defn- #_"ILookupThunk" KeywordLookupSite''ilookupThunk [#_"KeywordLookupSite" this, #_"Class" c]
-        (reify ILookupThunk
+        (-/reify ILookupThunk
             (#_"Object" ILookupThunk'''get [#_"ILookupThunk" self, #_"Object" target]
                 (if (and (some? target) (= (class target) c))
                     (ILookup'''valAt #_"ILookup" target, (:k this))
@@ -10946,25 +10939,6 @@
 
     (defm KeywordLookupSite ILookupThunk
         (ILookupThunk'''get => KeywordLookupSite''get)
-    )
-)
-)
-
-(about #_"cloiure.core.MethodImplCache"
-
-(about #_"MethodImplCache"
-    (defq MethodImplCache [#_"map" protocol, #_"Keyword" methodk])
-
-    (defn #_"MethodImplCache" MethodImplCache'new [#_"map" protocol, #_"Keyword" methodk]
-        (MethodImplCache'class. (anew [protocol, methodk]))
-    )
-
-    (defn #_"MethodImplCache" MethodImplCache''assoc [#_"MethodImplCache" this, #_"Class" c, #_"fn" f]
-        (assoc this (cast Class c) f)
-    )
-
-    (defn #_"fn" MethodImplCache''get [#_"MethodImplCache" this, #_"Class" c]
-        (get this (cast Class c))
     )
 )
 )
@@ -16375,7 +16349,7 @@
     (defm Range Counted)
 
     (defn- #_"RangeBoundsCheck" Range'positiveStep [#_"Object" end]
-        (reify RangeBoundsCheck
+        (-/reify RangeBoundsCheck
             (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
                 (<= end val)
             )
@@ -16383,7 +16357,7 @@
     )
 
     (defn- #_"RangeBoundsCheck" Range'negativeStep [#_"Object" end]
-        (reify RangeBoundsCheck
+        (-/reify RangeBoundsCheck
             (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
                 (<= val end)
             )
@@ -19305,28 +19279,6 @@
 (defn thread-bound? [& vars] (every? #(Var''getThreadBinding #_"Var" %) vars))
 
 ;;;
- ; Returns the immediate superclass and direct interfaces of c, if any.
- ;;
-(defn bases [#_"Class" c]
-    (when c
-        (let [i (seq (.getInterfaces c)) s (.getSuperclass c)]
-            (if s (cons s i) i)
-        )
-    )
-)
-
-;;;
- ; Returns the immediate and indirect superclasses and interfaces of c, if any.
- ;;
-(defn supers [#_"Class" c]
-    (loop-when [s (set (bases c)) cs s] (seq cs) => (not-empty s)
-        (let [c (first cs) bs (bases c)]
-            (recur (into s bs) (into (disj cs c) bs))
-        )
-    )
-)
-
-;;;
  ; Returns true if (= child parent), or child is directly or indirectly derived
  ; from parent via Java type inheritance relationship.
  ;;
@@ -19783,831 +19735,6 @@
 (§ defmethod -/print-method IPersistentSet'iface [o, #_"Writer" w]
     (print-sequential "#{" pr-on " " "}" o w)
 )
-
-(def- prim->class
-     (hash-map
-        'boolean Boolean/TYPE   'booleans boolean'array
-        'byte    Byte/TYPE      'bytes    byte'array
-        'char    Character/TYPE 'chars    char'array
-        'int     Integer/TYPE   'ints     int'array
-        'long    Long/TYPE      'longs    long'array
-        'void    Void/TYPE
-    )
-)
-
-(defn- #_"Class" the-class [x]
-    (cond
-        (class? x) x
-        (contains? prim->class x) (prim->class x)
-        :else (let [s (str x)] (Loader'classForName (if (some #{\. \[} s) s (str "java.lang." s))))
-    )
-)
-
-;;;
- ; Returns an asm Type object for c, which may be a primitive class (such as Integer/TYPE),
- ; any other class (such as Long), or a fully-qualified class name given as a string or symbol
- ; (such as 'java.lang.String).
- ;;
-(defn- #_"Type" asm-type [c]
-    (if (or (class? c) (prim->class c))
-        (Type/getType (the-class c))
-        (let [s (str c)]
-            (Type/getObjectType (.replace (if (some #{\. \[} s) s (str "java.lang." s)) "." "/"))
-        )
-    )
-)
-
-(defn- generate-interface [{:keys [iname extends methods]}]
-    (when-not (some #(-> % first name (.contains "-")) methods) => (throw! "interface methods must not contain '-'")
-        (let [iname (.replace (str iname) "." "/") cv (ClassWriter. ClassWriter/COMPUTE_MAXS)]
-            (.visit cv Opcodes/V1_5 (+ Opcodes/ACC_PUBLIC Opcodes/ACC_ABSTRACT Opcodes/ACC_INTERFACE) iname nil "java/lang/Object"
-                (when (seq extends)
-                    (into-array (map #(.getInternalName (asm-type %)) extends))
-                )
-            )
-            (doseq [[mname pclasses rclass pmetas] methods]
-                (let [md (Type/getMethodDescriptor (asm-type rclass) (if pclasses (into-array Type (map asm-type pclasses)) (make-array Type 0)))
-                      mv (.visitMethod cv (+ Opcodes/ACC_PUBLIC Opcodes/ACC_ABSTRACT) (str mname) md nil nil)]
-                    (.visitEnd mv)
-                )
-            )
-            (.visitEnd cv)
-            [iname (.toByteArray cv)]
-        )
-    )
-)
-
-;;;
- ; In all subsequent sections taking types, the primitive types can be
- ; referred to by their Java names (int, long, etc.), and classes in the
- ; java.lang package can be used without a package qualifier. All other
- ; classes must be fully qualified.
- ;
- ; Options should be a set of key/value pairs, all except for :name are
- ; optional:
- ;
- ; :name aname
- ;
- ; The package-qualified name of the class to be generated.
- ;
- ; :extends [interface ...]
- ;
- ; One or more interfaces, which will be extended by this interface.
- ;
- ; :methods [ [name [param-types] return-type], ...]
- ;
- ; This parameter is used to specify the signatures of the methods of the
- ; generated interface. Do not repeat superinterface signatures here.
- ;;
-(defmacro gen-interface [& options]
-    (let [opts (apply hash-map options) name (str (:name opts)) [_ code] (generate-interface opts)]
-        (Loader''defineClass *class-loader*, name, code)
-    )
-)
-
-;;;
- ; Convert a Arbace namespace name to a legal Java package name.
- ;;
-(defn- namespace-munge [ns] (.replace (str ns) \- \_))
-
-(defn- parse-opts [s] (loop-when-recur [m {} [k v & s'] s] (keyword? k) [(assoc m k v) s'] => [m s]))
-
-(defn- parse-impls [s] (loop-when-recur [m {} s s] (seq s) [(assoc m (first s) (take-while seq? (next s))) (drop-while seq? (next s))] => m))
-
-(defn- parse-opts+specs [opts+specs]
-    (let [[opts specs] (parse-opts opts+specs)
-          impls (parse-impls specs)
-          ifaces (-> (map #(let [v (resolve %)] (if (var? v) (:on @v) %)) (keys impls)) set (disj 'Object 'java.lang.Object) vec)
-          methods (map #(let [[name pars & body] %] (cons name (maybe-destructured pars body))) (apply concat (vals impls)))]
-        (when-some [bad-opts (seq (keys opts))]
-            (throw! (apply str "unsupported option(s): " (interpose ", " bad-opts)))
-        )
-        [ifaces methods opts]
-    )
-)
-
-;;;
- ; reify is a macro with the following structure:
- ;
- ; (reify options* specs*)
- ;
- ; Currently there are no options.
- ;
- ; Each spec consists of the protocol or interface name followed by
- ; zero or more method bodies:
- ;
- ; protocol-or-interface-or-Object
- ;  (methodName [args+] body)*
- ;
- ; Methods should be supplied for all methods of the desired protocol(s)
- ; and interface(s). You can also define overrides for methods of Object.
- ; Note that the first parameter must be supplied to correspond to the
- ; target object ('this' in Java parlance). Thus methods for interfaces
- ; will take one more argument than do the interface declarations. Note
- ; also that recur calls to the method head should *not* pass the target
- ; object, it will be supplied automatically and can not be substituted.
- ;
- ; The return type can be indicated by a type hint on the method name, and
- ; arg types can be indicated by a type hint on arg names. If you leave out
- ; all hints, reify will try to match on same name/arity method in the
- ; protocol(s)/interface(s) - this is preferred. If you supply any hints at
- ; all, no inference is done, so all hints (or default of Object) must be
- ; correct, for both arguments and return type. If a method is overloaded
- ; in a protocol/interface, multiple independent method definitions must be
- ; supplied. If overloaded with same arity in an interface you must specify
- ; complete hints to disambiguate - a missing hint implies Object.
- ;
- ; recur works to method heads. The method bodies of reify are lexical
- ; closures, and can refer to the surrounding local scope:
- ;
- ; (str (let [f "foo"]
- ;  (reify Object
- ;   (toString [this] f))))
- ; => "foo"
- ;
- ; (seq (let [f "foo"]
- ;  (reify Seqable
- ;   (seq [this] (seq f)))))
- ; => (\f \o \o)
- ;
- ; reify always implements IObj and transfers meta data of the form
- ; to the created object.
- ;
- ; (meta ^{:k :v} (reify Object (toString [this] "foo")))
- ; => {:k :v}
- ;;
-(§ defmacro reify [& opts+specs]
-    (let [[interfaces methods] (parse-opts+specs opts+specs)]
-        (with-meta `(reify* ~interfaces ~@methods) (meta &form))
-    )
-)
-
-(defn munge [s] ((if (symbol? s) symbol str) (Compiler'munge (str s))))
-
-(defn- validate-fields [fields name]
-    (when-not (vector? fields)
-        (throw! "no fields vector given")
-    )
-    (let-when [specials '#{__meta __extmap __hash}] (some specials fields)
-        (throw! (str "the names in " specials " cannot be used as field names for types or records"))
-    )
-    (let-when [non-syms (remove symbol? fields)] (seq non-syms)
-        (throw! (apply str "defrecord and deftype fields must be symbols, " *ns* "." name " had: " (interpose ", " non-syms)))
-    )
-)
-
-;;;
- ; Do not use this directly, use deftype.
- ;;
-(defn- emit-deftype* [tagname cname fields interfaces methods opts]
-    `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname))
-        ~(with-meta (symbol (str (namespace-munge *ns*) "." cname)) (meta cname))
-        ~fields
-        :implements ~(conj interfaces 'arbace.core.IType)
-        ~@(mapcat identity opts)
-        ~@methods
-    )
-)
-
-;;;
- ; (deftype name [fields*] options* specs*)
- ;
- ; Options are expressed as sequential keywords and arguments (in any order).
- ;
- ; Each spec consists of a protocol or interface name followed by zero
- ; or more method bodies:
- ;
- ; protocol-or-interface-or-Object
- ; (methodName [args*] body)*
- ;
- ; Dynamically generates compiled bytecode for class with the given name,
- ; in a package with the same name as the current namespace, the given fields,
- ; and, optionally, methods for protocols and/or interfaces.
- ;
- ; The class will have the (by default, immutable) fields named by fields, which
- ; can have type hints. Protocols/interfaces and methods are optional. The only
- ; methods that can be supplied are those declared in the protocols/interfaces.
- ; Note that method bodies are not closures, the local environment includes only
- ; the named fields, and those fields can be accessed directly. Fields can be
- ; qualified with the metadata :volatile true or :mutable true,
- ; at which point (set! afield aval) will be supported in method bodies. Note well
- ; that mutable fields are extremely difficult to use correctly, and are present only
- ; to facilitate the building of higher level constructs, such as Arbace's reference
- ; types, in Arbace itself. They are for experts only - if the semantics and
- ; implications of :volatile or :mutable are not immediately
- ; apparent to you, you should not be using them.
- ;
- ; Method definitions take the form:
- ;
- ; (methodname [args*] body)
- ;
- ; The argument and return types can be hinted on the arg and methodname
- ; symbols. If not supplied, they will be inferred, so type hints should be
- ; reserved for disambiguation.
- ;
- ; Methods should be supplied for all methods of the desired protocol(s)
- ; and interface(s). You can also define overrides for methods of Object.
- ; Note that a parameter must be supplied to correspond to the target object
- ; ('this' in Java parlance). Thus methods for interfaces will take one more
- ; argument than do the interface declarations. Note also that recur calls
- ; to the method head should *not* pass the target object, it will be
- ; supplied automatically and can not be substituted.
- ;
- ; In the method bodies, the (unqualified) name can be used to name the
- ; class (for calls to new, instance?, etc).
- ;
- ; One constructor will be defined, taking the designated fields. Note
- ; that the field names __meta, __extmap and __hash are currently
- ; reserved and should not be used when defining your own types.
- ;;
-(defmacro deftype [name fields & opts+specs]
-    (validate-fields fields name)
-    (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
-        `(do
-            ~(emit-deftype* name name (vec fields) (vec interfaces) methods opts)
-            (import ~(symbol (str (namespace-munge *ns*) "." name)))
-        )
-    )
-)
-
-;;;
- ; Do not use this directly, use defrecord.
- ;;
-(defn- emit-defrecord* [tagname cname fields interfaces methods opts]
-    (let [classname      (with-meta (symbol (str (namespace-munge *ns*) "." cname)) (meta cname))
-          interfaces     (vec interfaces)
-          hinted-fields  fields
-          fields         (mapv #(with-meta % nil) fields)
-          base-fields    fields
-          fields         (conj fields '__meta '__extmap '^:mutable __hash)
-          type-hash      (f'hash classname)]
-        (when (some #{:volatile :mutable} (mapcat (comp keys meta) hinted-fields))
-            (throw! ":volatile or :mutable not supported for record fields")
-        )
-        (let [gs (gensym)]
-            (letfn [(irecord [[i m]] [(conj i 'arbace.core.IRecord) m])
-                    (eqhash [[i m]]
-                        [
-                            (conj i 'arbace.core.Hashed 'arbace.core.IObject)
-                            (conj m
-                                `(Hashed'''hash [this#]
-                                    (let-when [hash# ~'__hash] (zero? hash#) => hash#
-                                        (set! ~'__hash (int (bit-xor ~type-hash (Murmur3'hashUnordered this#))))
-                                    )
-                                )
-                                `(IObject'''equals [this# ~gs]
-                                    (or (identical? this# ~gs)
-                                        (and (identical? (class this#) (class ~gs))
-                                            (let [~gs ~(with-meta gs {:tag tagname})]
-                                                (and ~@(map (fn [%] `(= ~% (. ~gs ~(symbol (str "-" %))))) base-fields)
-                                                    (= ~'__extmap (. ~gs ~'__extmap))
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                    (iobj [[i m]]
-                        [
-                            (conj i 'arbace.core.IMeta 'arbace.core.IObj)
-                            (conj m
-                                `(IMeta'''meta [_] ~'__meta)
-                                `(IObj'''withMeta [_ ~gs] (new ~tagname ~@(replace {'__meta gs} fields)))
-                            )
-                        ]
-                    )
-                    (ilookup [[i m]]
-                        [
-                            (conj i 'arbace.core.ILookup)
-                            (conj m
-                                `(ILookup'''valAt [this# k#] (ILookup'''valAt this# k# nil))
-                                `(ILookup'''valAt [_ k# else#]
-                                    (case k#
-                                        ~@(mapcat (fn [%] [(keyword %) %]) base-fields)
-                                        (get ~'__extmap k# else#)
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                    (imap [[i m]]
-                        [
-                            (conj i 'arbace.core.Associative 'arbace.core.Counted 'arbace.core.IPersistentCollection 'arbace.core.IPersistentMap 'arbace.core.Seqable)
-                            (conj m
-                                `(Associative'''assoc [_ k# ~gs]
-                                    (condp identical? k#
-                                        ~@(mapcat
-                                            (fn [%] [(keyword %) (list* `new tagname (replace {% gs} (remove '#{__hash} fields)))])
-                                            base-fields
-                                        )
-                                        (new ~tagname ~@(remove '#{__extmap __hash} fields) (assoc ~'__extmap k# ~gs))
-                                    )
-                                )
-                                `(Associative'''containsKey [this# k#] (not (identical? (ILookup'''valAt this# k# this#) this#)))
-                                `(Associative'''entryAt [this# k#]
-                                    (let-when [v# (ILookup'''valAt this# k# this#)] (not (identical? v# this#))
-                                        (MapEntry'new k# v#)
-                                    )
-                                )
-                                `(Counted'''count [_] (+ ~(count base-fields) (count ~'__extmap)))
-                                `(IPersistentCollection'''empty [_] (throw! (str "empty not supported on " ~(str classname))))
-                                `(IPersistentCollection'''conj [this# o#]
-                                    (cond
-                                        (map-entry? o#) (let [#_"IMapEntry" e# o#] (Associative'''assoc this# (key e#) (val e#)))
-                                        (indexed? o#) (let [#_"Indexed" i# o#] (Associative'''assoc this# (nth i# 0) (nth i# 1)))
-                                        :else
-                                            (loop-when [this# this# s# (seq o#)] s# => this#
-                                                (let [#_"IMapEntry" e# (first s#)]
-                                                    (recur (Associative'''assoc this# (key e#) (val e#)) (next s#))
-                                                )
-                                            )
-                                    )
-                                )
-                                `(IPersistentMap'''dissoc [this# k#]
-                                    (if (contains? #{~@(map keyword base-fields)} k#)
-                                        (dissoc (with-meta (into {} this#) ~'__meta) k#)
-                                        (new ~tagname ~@(remove '#{__extmap __hash} fields) (not-empty (dissoc ~'__extmap k#)))
-                                    )
-                                )
-                                `(Seqable'''seq [_] (seq (concat [~@(map #(list `MapEntry'new (keyword %) %) base-fields)] ~'__extmap)))
-                            )
-                        ]
-                    )]
-                (let [[i m] (-> [interfaces methods] irecord eqhash iobj ilookup imap)]
-                    `(deftype* ~(symbol (name (ns-name *ns*)) (name tagname))
-                        ~classname
-                        ~(conj hinted-fields '__meta '__extmap '^int ^:mutable __hash)
-                        :implements ~(vec i)
-                        ~@(mapcat identity opts)
-                        ~@m
-                    )
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; (defrecord name [fields*] options* specs*)
- ;
- ; Options are expressed as sequential keywords and arguments (in any order).
- ;
- ; Each spec consists of a protocol or interface name followed by zero
- ; or more method bodies:
- ;
- ; protocol-or-interface-or-Object
- ; (methodName [args*] body)*
- ;
- ; Dynamically generates compiled bytecode for class with the given name,
- ; in a package with the same name as the current namespace, the given fields,
- ; and, optionally, methods for protocols and/or interfaces.
- ;
- ; The class will have the (immutable) fields named by fields, which can have
- ; type hints. Protocols/interfaces and methods are optional. The only methods
- ; that can be supplied are those declared in the protocols/interfaces. Note
- ; that method bodies are not closures, the local environment includes only
- ; the named fields, and those fields can be accessed directly.
- ;
- ; Method definitions take the form:
- ;
- ; (methodname [args*] body)
- ;
- ; The argument and return types can be hinted on the arg and methodname
- ; symbols. If not supplied, they will be inferred, so type hints should be
- ; reserved for disambiguation.
- ;
- ; Methods should be supplied for all methods of the desired protocol(s)
- ; and interface(s). You can also define overrides for methods of Object.
- ; Note that a parameter must be supplied to correspond to the target object
- ; ('this' in Java parlance). Thus methods for interfaces will take one more
- ; argument than do the interface declarations. Note also that recur calls
- ; to the method head should *not* pass the target object, it will be
- ; supplied automatically and can not be substituted.
- ;
- ; In the method bodies, the (unqualified) name can be used to name the
- ; class (for calls to new, instance?, etc).
- ;
- ; The class will have implementations of several (arbace.core)
- ; interfaces generated automatically: IObj (metadata support) and
- ; IPersistentMap, and all of their superinterfaces.
- ;
- ; In addition, defrecord will define type-and-value-based =,
- ; and will defined Java .hashCode and .equals consistent with the
- ; contract for java.util.Map.
- ;
- ; Two constructors will be defined, one taking the designated fields
- ; followed by a metadata map (nil for none) and an extension field map
- ; (nil for none), and one taking only the fields (using nil for meta and
- ; extension fields). Note that the field names __meta, __extmap and
- ; __hash are currently reserved and should not be used when defining
- ; your own records.
- ;
- ; Given (defrecord TypeName ...), two factory functions will be defined:
- ; ->TypeName, taking positional parameters for the fields, and
- ; map->TypeName, taking a map of keywords to field values.
- ;;
-(defmacro defrecord [name fields & opts+specs]
-    (validate-fields fields name)
-    (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
-        `(do
-            ~(emit-defrecord* name name (vec fields) (vec interfaces) methods opts)
-            (import ~(symbol (str (namespace-munge *ns*) "." name)))
-        )
-    )
-)
-
-(defn- super-chain [#_"Class" c]
-    (when c
-        (cons c (super-chain (.getSuperclass c)))
-    )
-)
-
-(defn find-protocol-impl [protocol x]
-    (if (instance? (:on-interface protocol) x)
-        x
-        (let [find- #(get (:impls protocol) %)
-              pref-
-                (fn
-                    ([] nil)
-                    ([a] a)
-                    ([#_"Class" a #_"Class" b] (if (.isAssignableFrom a b) b a))
-                )
-              c (class x)]
-            (or (find- c)
-                (and c
-                    (or (some find- (butlast (super-chain c)))
-                        (when-some [t (reduce pref- (filter find- (disj (supers c) Object)))]
-                            (find- t)
-                        )
-                        (find- Object)
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defn find-protocol-method [protocol methodk x]
-    (get (find-protocol-impl protocol x) methodk)
-)
-
-(defn- protocol? [maybe-p]
-    (boolean (:on-interface maybe-p))
-)
-
-(defn- implements? [protocol atype]
-    (and atype (.isAssignableFrom #_"Class" (:on-interface protocol) atype))
-)
-
-;;;
- ; Returns true if atype extends protocol.
- ;;
-(defn extends? [protocol atype]
-    (boolean (or (implements? protocol atype) (get (:impls protocol) atype)))
-)
-
-;;;
- ; Returns a collection of the types explicitly extending protocol.
- ;;
-(defn extenders [protocol] (keys (:impls protocol)))
-
-;;;
- ; Returns true if x satisfies the protocol.
- ;;
-(§ defn satisfies? [protocol x]
-    (boolean (find-protocol-impl protocol x))
-)
-
-(defn -cache-protocol-fn [#_"Fn" this x #_"Class" c #_"IFn" ifn]
-    (let [cache @(:__methodImplCache this)
-          f (if (instance? c x) ifn (find-protocol-method (:protocol cache) (:methodk cache) x))]
-        (when-not f
-            (throw!
-                (str "no implementation of method: " (:methodk cache)
-                     " of protocol: " (:var (:protocol cache))
-                     " found for class: " (if (some? x) (.getName (class x)) "nil"))
-            )
-        )
-        (reset! (:__methodImplCache this) (MethodImplCache''assoc cache (class x) f))
-        f
-    )
-)
-
-(defn- emit-method-builder [on-interface method on-method arglists]
-    (let [methodk (keyword method) this' (with-meta (gensym) {:tag 'arbace.core.Fn}) ifn' (gensym)]
-        `(fn [cache#]
-            (let [~ifn'
-                    (fn ~@(map
-                        (fn [args]
-                            (let [args' (map #(gensym (str "gf__" % "__")) args) target (first args')]
-                                `([~@args'] (. ~(with-meta target {:tag on-interface}) (~(or on-method method) ~@(next args'))))
-                            )
-                        )
-                        arglists
-                    ))
-                  #_"Fn" f#
-                    (fn ~this' ~@(map
-                        (fn [args]
-                            (let [args' (map #(gensym (str "gf__" % "__")) args) target (first args')]
-                                `([~@args']
-                                    (let [cache# @(:__methodImplCache ~this')
-                                          f# (MethodImplCache''get cache# (Reflector'classOf ~target))]
-                                        ((or f# (-cache-protocol-fn ~this' ~target ~on-interface ~ifn')) ~@args')
-                                    )
-                                )
-                            )
-                        )
-                        arglists
-                    ))]
-                (reset! (:__methodImplCache f#) cache#)
-                f#
-            )
-        )
-    )
-)
-
-(defn -reset-methods [protocol]
-    (doseq [[#_"Var" v build] (:method-builders protocol)]
-        (Var''bindRoot v (build (MethodImplCache'new protocol (keyword (:sym v)))))
-    )
-)
-
-(defn- assert-same-protocol [protocol-var method-syms]
-    (doseq [m method-syms]
-        (let [v (resolve m) pv (:protocol (meta v))]
-            (when (and v (bound? v) (not= protocol-var pv))
-                (.println *err*,
-                    (str "WARNING: protocol " protocol-var " is overwriting "
-                        (if pv
-                            (str "method " (:sym v) " of protocol " (:sym pv))
-                            (str "function " (:sym v))
-                        )
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defn- emit-protocol [name opts+sigs]
-    (let [iname (symbol (str (munge (namespace-munge *ns*)) "." (munge name)))
-          [opts sigs]
-            (loop [opts {:on (list 'quote iname) :on-interface iname} sigs opts+sigs]
-                (condp #(%1 %2) (first sigs)
-                    keyword? (recur (assoc opts (first sigs) (second sigs)) (next (next sigs)))
-                    [opts sigs]
-                )
-            )
-          sigs
-            (when sigs
-                (reduce
-                    (fn [m s]
-                        (let [nmeta (meta (first s)) mname (with-meta (first s) nil) arglists (take-while vector? (next s))]
-                            (when (some zero? (map count arglists))
-                                (throw! (str "definition of function " mname " in protocol " name " must take at least one arg"))
-                            )
-                            (when (m (keyword mname))
-                                (throw! (str "function " mname " in protocol " name " was redefined: specify all arities in single definition"))
-                            )
-                            (assoc m (keyword mname) (merge nmeta {:name (vary-meta mname assoc :arglists arglists) :arglists arglists}))
-                        )
-                    )
-                    {} sigs
-                )
-            )
-          meths
-            (mapcat
-                (fn [sig]
-                    (let [m (munge (:name sig))]
-                        (map #(vector m (vec (repeat (dec (count %)) 'Object)) 'Object) (:arglists sig))
-                    )
-                )
-                (vals sigs)
-            )]
-        `(do
-            (defonce ~name {})
-            (gen-interface :name ~iname :methods ~meths)
-            ~(when sigs
-                `(#'assert-same-protocol (var ~name) '~(map :name (vals sigs)))
-            )
-            (alter-var-root (var ~name) merge
-                (assoc ~opts
-                    :sigs '~sigs
-                    :var (var ~name)
-                    :method-map
-                        ~(and (:on opts)
-                            (apply hash-map
-                                (mapcat
-                                    (fn [sig] [(keyword (:name sig)) (keyword (or (:on sig) (:name sig)))])
-                                    (vals sigs)
-                                )
-                            )
-                        )
-                    :method-builders
-                        ~(apply hash-map
-                            (mapcat
-                                (fn [sig]
-                                    [
-                                        `(intern *ns* (with-meta '~(:name sig) (merge '~sig {:protocol (var ~name)})))
-                                        (emit-method-builder (:on-interface opts) (:name sig) (:on sig) (:arglists sig))
-                                    ]
-                                )
-                                (vals sigs)
-                            )
-                        )
-                )
-            )
-            (-reset-methods ~name)
-            '~name
-        )
-    )
-)
-
-;;;
- ; A protocol is a named set of named methods and their signatures:
- ;
- ; (defprotocol AProtocolName
- ;
- ;  ;; method signatures
- ;  (bar [this a b])
- ;  (baz [this a] [this a b] [this a b c]))
- ;
- ; No implementations are provided. The above yields a set of polymorphic
- ; functions and a protocol object. All are namespace-qualified by the ns
- ; enclosing the definition The resulting functions dispatch on the type of
- ; their first argument, which is required and corresponds to the implicit
- ; target object ('this' in Java parlance). defprotocol is dynamic, has no
- ; special compile-time effect, and defines no new types or classes.
- ; Implementations of the protocol methods can be provided using extend.
- ;
- ; defprotocol will automatically generate a corresponding interface, with
- ; the same name as the protocol, i.e. given a protocol: my.ns/Protocol, an
- ; interface: my.ns.Protocol. The interface will have methods corresponding
- ; to the protocol functions, and the protocol will automatically work with
- ; instances of the interface.
- ;
- ; Note that you should not use this interface with deftype or reify, as
- ; they support the protocol directly:
- ;
- ; (defprotocol P
- ;  (foo [this])
- ;  (bar-me [this] [this y]))
- ;
- ; (deftype Foo [a b c]
- ;  P
- ;  (foo [this] a)
- ;  (bar-me [this] b)
- ;  (bar-me [this y] (+ c y)))
- ;
- ; (bar-me (Foo. 1 2 3) 42)
- ; => 45
- ;
- ; (foo
- ;  (let [x 42]
- ;   (reify P
- ;    (foo [this] 17)
- ;    (bar-me [this] x)
- ;    (bar-me [this y] x))))
- ; => 17
- ;;
-(defmacro defprotocol [name & opts+sigs]
-    (emit-protocol name opts+sigs)
-)
-
-;;;
- ; Implementations of protocol methods can be provided using the extend
- ; construct:
- ;
- ; (extend AType
- ;  AProtocol
- ;  {:foo an-existing-fn
- ;   :bar (fn [a b] ...)
- ;   :baz (fn ([a]...) ([a b] ...)...)}
- ;  BProtocol
- ;   {...}
- ;  ...)
- ;
- ; extend takes a type/class (or interface, see below), and one or more
- ; protocol + method map pairs. It will extend the polymorphism of the
- ; protocol's methods to call the supplied methods when an AType is
- ; provided as the first argument.
- ;
- ; Method maps are maps of the keyword-ized method names to ordinary
- ; fns. This facilitates easy reuse of existing fns and fn maps, for
- ; code reuse/mixins without derivation or composition. You can extend
- ; an interface to a protocol. This is primarily to facilitate interop
- ; with the host (e.g. Java) but opens the door to incidental multiple
- ; inheritance of implementation since a class can inherit from more
- ; than one interface, both of which extend the protocol. It is TBD how
- ; to specify which impl to use. You can extend a protocol on nil.
- ;
- ; If you are supplying the definitions explicitly (i.e. not reusing
- ; exsting functions or mixin maps), you may find it more convenient to
- ; use the extend-type or extend-protocol macros.
- ;
- ; Note that multiple independent extend clauses can exist for the same
- ; type, not all protocols need be defined in a single extend call.
- ;
- ; See also: extends?, satisfies?, extenders.
- ;;
-(defn extend [atype & proto+mmaps]
-    (doseq [[proto mmap] (partition 2 proto+mmaps)]
-        (when-not (protocol? proto)
-            (throw! (str proto " is not a protocol"))
-        )
-        (when (implements? proto atype)
-            (throw! (str atype " already directly implements " (:on-interface proto) " for protocol:" (:var proto)))
-        )
-        (-reset-methods (alter-var-root (:var proto) assoc-in [:impls atype] mmap))
-    )
-)
-
-(defn- emit-impl [[p fs]]
-    [p (zipmap (map #(-> % first keyword) fs) (map #(cons `fn (drop 1 %)) fs))]
-)
-
-(defn- emit-hinted-impl [c [p fs]]
-    (letfn [(hint- [s]
-                (let [s (if (vector? (first s)) (list s) s)]
-                    (map
-                        (fn [[[target & args] & body]]
-                            (cons (apply vector (vary-meta target assoc :tag c) args) body)
-                        )
-                        s
-                    )
-                )
-            )]
-        [p (zipmap (map #(-> % first name keyword) fs) (map #(cons `fn (hint- (drop 1 %))) fs))]
-    )
-)
-
-;;;
- ; A macro that expands into an extend call. Useful when you are supplying
- ; the definitions explicitly inline, extend-type automatically creates
- ; the maps required by extend. Propagates the class as a type hint on the
- ; first argument of all fns.
- ;
- ; (extend-type MyType
- ;  Countable
- ;  (cnt [c] ...)
- ;  Foo
- ;  (bar [x y] ...)
- ;  (baz ([x] ...) ([x y & zs] ...)))
- ;
- ; expands into:
- ;
- ; (extend MyType
- ;  Countable
- ;  {:cnt (fn [c] ...)}
- ;  Foo
- ;  {:baz (fn ([x] ...) ([x y & zs] ...))
- ;   :bar (fn [x y] ...)})
- ;;
-(defmacro extend-type [t & specs]
-    `(extend ~t ~@(mapcat (partial emit-hinted-impl t) (parse-impls specs)))
-)
-
-;;;
- ; Useful when you want to provide several implementations of the same
- ; protocol all at once. Takes a single protocol and the implementation
- ; of that protocol for one or more types. Expands into calls to
- ; extend-type:
- ;
- ; (extend-protocol Protocol
- ;  AType
- ;  (foo [x] ...)
- ;  (bar [x y] ...)
- ;  BType
- ;  (foo [x] ...)
- ;  (bar [x y] ...)
- ;  AClass
- ;  (foo [x] ...)
- ;  (bar [x y] ...)
- ;  nil
- ;  (foo [x] ...)
- ;  (bar [x y] ...))
- ;
- ; expands into:
- ;
- ; (do
- ;  (arbace.core/extend-type AType Protocol
- ;   (foo [x] ...)
- ;   (bar [x y] ...))
- ;  (arbace.core/extend-type BType Protocol
- ;   (foo [x] ...)
- ;   (bar [x y] ...))
- ;  (arbace.core/extend-type AClass Protocol
- ;   (foo [x] ...)
- ;   (bar [x y] ...))
- ;  (arbace.core/extend-type nil Protocol
- ;   (foo [x] ...)
- ;   (bar [x y] ...)))
- ;;
-(defmacro extend-protocol [p & specs]
-    `(do ~@(map (fn [[t fs]] `(extend-type ~t ~p ~@fs)) (parse-impls specs)))
-)
 )
 
 (about #_"cloiure.core.protocols"
@@ -20655,11 +19782,11 @@
  ; a function of key and val faster than first/next recursion over map entries.
  ; Called by reduce-kv, and has same semantics (just different arg order).
  ;;
-(§ defprotocol KVReduce
+(§ -/defprotocol KVReduce
     (kv-reduce [m f r])
 )
 
-(§ extend-protocol KVReduce
+(§ -/extend-protocol KVReduce
     nil
     (kv-reduce [_ _ r] r)
 
