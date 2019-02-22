@@ -6,7 +6,7 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn get identity keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn get identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
     (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -46,7 +46,7 @@
                             (conj i 'clojure.lang.ILookup)
                             (conj m
                                 `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (let [x# (case k# ~@s nil)] (-/aget ~a x#)))
+                                `(valAt [this# k# else#] (if-some [x# (case k# ~@s nil)] (-/aget ~a x#) else#))
                             )
                         ]
                     )
@@ -139,7 +139,7 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn hash-map hash-set identical? int intern let list long loop make-array map object-array satisfies? symbol to-array]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn identical? int intern let list long loop make-array object-array satisfies? symbol to-array]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
     (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! update!! zero? |])
 )
@@ -183,7 +183,7 @@
 ;;;
  ; defs the supplied var names with no bindings, useful for making forward declarations.
  ;;
-(defmacro declare [& names] `(do ~@(map #(list 'def (-/vary-meta % -/assoc :declared true)) names)))
+(defmacro declare [& names] `(do ~@(-/map #(list 'def (-/vary-meta % -/assoc :declared true)) names)))
 
 (defmacro def-      [x & s] `(def      ~(-/vary-meta x -/assoc :private true) ~@s))
 (defmacro defn-     [x & s] `(defn     ~(-/vary-meta x -/assoc :private true) ~@s))
@@ -243,7 +243,7 @@
  ; in all of the definitions of the functions, as well as the body.
  ;;
 (defmacro letfn [fnspecs & body]
-    `(letfn* ~(vec (-/interleave (map -/first fnspecs) (map #(-/cons `fn %) fnspecs))) ~@body)
+    `(letfn* ~(vec (-/interleave (-/map -/first fnspecs) (-/map #(-/cons `fn %) fnspecs))) ~@body)
 )
 
 (letfn [(=> [s] (if (= '=> (-/first s)) (-/next s) (-/cons nil s)))]
@@ -505,7 +505,7 @@
 (defmacro doto [x & s]
     (let [x' (gensym)]
         `(let [~x' ~x]
-            ~@(map (fn [f] (-/with-meta (if (-/seq? f) `(~(-/first f) ~x' ~@(-/next f)) `(~f ~x')) (-/meta f))) s)
+            ~@(-/map (fn [f] (-/with-meta (if (-/seq? f) `(~(-/first f) ~x' ~@(-/next f)) `(~f ~x')) (-/meta f))) s)
             ~x'
         )
     )
@@ -590,6 +590,9 @@
     )
 )
 
+(defn type?   [x] false)
+(defn record? [x] false)
+
 (about #_"arbace.Seqable"
     (defp Seqable
         (#_"seq" Seqable'''seq [#_"Seqable" this])
@@ -598,21 +601,21 @@
     (-/extend-protocol Seqable clojure.lang.Seqable
         (Seqable'''seq [x] (.seq x))
     )
+
+    (defn seqable? [x] (satisfies? Seqable x))
+
+    ;;;
+     ; Returns a seq on coll. If coll is empty, returns nil.
+     ; (seq nil) returns nil.
+     ;;
+    (defn #_"seq" seq [x] (when (some? x) (Seqable'''seq x)))
+
+    ;;;
+     ; Returns true if coll has no items.
+     ; Please use the idiom (seq x) rather than (not (empty? x)).
+     ;;
+    (defn empty? [x] (not (seq x)))
 )
-
-(defn seqable? [x] (satisfies? Seqable x))
-
-;;;
- ; Returns a seq on coll. If coll is empty, returns nil.
- ; (seq nil) returns nil.
- ;;
-(defn #_"seq" seq [x] (when (some? x) (Seqable'''seq x)))
-
-;;;
- ; Returns true if coll has no items.
- ; Please use the idiom (seq x) rather than (not (empty? x)).
- ;;
-(defn empty? [x] (not (seq x)))
 
 (about #_"arbace.ISeq"
     (defp ISeq
@@ -624,26 +627,26 @@
         (ISeq'''first [s] (.first s))
         (ISeq'''next [s] (.next s))
     )
+
+    (defn seq? [x] (satisfies? ISeq x))
+
+    ;;;
+     ; Returns the first item in coll. Calls seq on its argument.
+     ; If s is nil, returns nil.
+     ;;
+    (defn first [s] (if (seq? s) (ISeq'''first s) (when-some [s (seq s)] (ISeq'''first s))))
+
+    ;;;
+     ; Returns a seq of the items after the first. Calls seq on its argument.
+     ; If there are no more items, returns nil.
+     ;;
+    (defn #_"seq" next [s] (if (seq? s) (ISeq'''next s) (when-some [s (seq s)] (ISeq'''next s))))
+
+    (defn second [s] (first (next s)))
+    (defn third  [s] (first (next (next s))))
+    (defn fourth [s] (first (next (next (next s)))))
+    (defn last   [s] (if-some [r (next s)] (recur r) (first s)))
 )
-
-(defn seq? [x] (satisfies? ISeq x))
-
-;;;
- ; Returns the first item in coll. Calls seq on its argument.
- ; If s is nil, returns nil.
- ;;
-(defn first [s] (if (seq? s) (ISeq'''first s) (when-some [s (seq s)] (ISeq'''first s))))
-
-;;;
- ; Returns a seq of the items after the first. Calls seq on its argument.
- ; If there are no more items, returns nil.
- ;;
-(defn #_"seq" next [s] (if (seq? s) (ISeq'''next s) (when-some [s (seq s)] (ISeq'''next s))))
-
-(defn second [s] (first (next s)))
-(defn third  [s] (first (next (next s))))
-(defn fourth [s] (first (next (next (next s)))))
-(defn last   [s] (if-some [r (next s)] (recur r) (first s)))
 
 (about #_"arbace.IObject"
     (defp IObject
@@ -655,19 +658,19 @@
         (#_"boolean" IObject'''equals [#_"Object" this, #_"Object" that] (.equals this, that))
         (#_"String" IObject'''toString [#_"Object" this] (.toString this))
     )
-)
 
-;;;
- ; With no args, returns the empty string. With one arg x, returns x.toString().
- ; (str nil) returns the empty string.
- ; With more than one arg, returns the concatenation of the str values of the args.
- ;;
-(defn #_"String" str
-    ([] "")
-    ([x] (if (some? x) (IObject'''toString x) ""))
-    ([x & y]
-        ((fn [#_"StringBuilder" sb s] (recur-when s [(.append sb (str (first s))) (next s)] => (str sb)))
-            (StringBuilder. (str x)) y
+    ;;;
+     ; With no args, returns the empty string. With one arg x, returns x.toString().
+     ; (str nil) returns the empty string.
+     ; With more than one arg, returns the concatenation of the str values of the args.
+     ;;
+    (defn #_"String" str
+        ([] "")
+        ([x] (if (some? x) (IObject'''toString x) ""))
+        ([x & y]
+            ((fn [#_"StringBuilder" sb s] (recur-when s [(.append sb (str (first s))) (next s)] => (str sb)))
+                (StringBuilder. (str x)) y
+            )
         )
     )
 )
@@ -682,26 +685,26 @@
         Object'array         (Counted'''count [a] (Array/getLength a))
         CharSequence         (Counted'''count [s] (.length s))
     )
-)
 
-(defn counted? [x] (satisfies? Counted x))
+    (defn counted? [x] (satisfies? Counted x))
 
-(defn count
-    ([x] (count x -1))
-    ([x m]
-        (cond
-            (nil? x)
-                0
-            (counted? x)
-                (Counted'''count x)
-            (seqable? x)
-                (loop-when [n 0 s (seq x)] (and (some? s) (or (neg? m) (< n m))) => n
-                    (when (counted? s) => (recur (inc n) (next s))
-                        (+ n (Counted'''count s))
+    (defn count
+        ([x] (count x -1))
+        ([x m]
+            (cond
+                (nil? x)
+                    0
+                (counted? x)
+                    (Counted'''count x)
+                (seqable? x)
+                    (loop-when [n 0 s (seq x)] (and (some? s) (or (neg? m) (< n m))) => n
+                        (when (counted? s) => (recur (inc n) (next s))
+                            (+ n (Counted'''count s))
+                        )
                     )
-                )
-            :else
-                (throw! (str "count not supported on " (class x)))
+                :else
+                    (throw! (str "count not supported on " (class x)))
+            )
         )
     )
 )
@@ -721,20 +724,20 @@
         BigInteger           (Hashed'''hash [i] (if (< (.bitLength i) 64) (Murmur3'hashLong (.longValue i)) (.hashCode i)))
         clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
     )
-)
 
-(defn hashed? [x] (satisfies? Hashed x))
+    (defn hashed? [x] (satisfies? Hashed x))
 
-;;;
- ; Returns the hash code of its argument. Note this is the hash code
- ; consistent with =, and thus is different from .hashCode for Integer,
- ; Byte and Clojure collections.
- ;;
-(defn f'hash [x] (if (some? x) (Hashed'''hash x) 0))
+    ;;;
+     ; Returns the hash code of its argument. Note this is the hash code
+     ; consistent with =, and thus is different from .hashCode for Integer,
+     ; Byte and Clojure collections.
+     ;;
+    (defn f'hash [x] (if (some? x) (Hashed'''hash x) 0))
 
-(defn hash-combine [seed x]
-    ;; a la boost
-    (bit-xor seed (+ (f'hash x) 0x9e3779b9 (<< seed 6) (>> seed 2)))
+    (defn hash-combine [seed x]
+        ;; a la boost
+        (bit-xor seed (+ (f'hash x) 0x9e3779b9 (<< seed 6) (>> seed 2)))
+    )
 )
 
 (about #_"arbace.IFn"
@@ -771,62 +774,59 @@
         )
         (IFn'''applyTo [this, args] (.applyTo this, args))
     )
-)
 
-;;;
- ; Returns true if x implements IFn.
- ; Note that many data structures (e.g. sets and maps) implement IFn.
- ;;
-(defn ifn? [x] (satisfies? IFn x))
+    ;;;
+     ; Returns true if x implements IFn.
+     ; Note that many data structures (e.g. sets and maps) implement IFn.
+     ;;
+    (defn ifn? [x] (satisfies? IFn x))
 
-(declare cons)
+    (declare cons)
 
-(defn- spread [s]
-    (cond
-        (nil? s) nil
-        (nil? (next s)) (seq (first s))
-        :else (cons (first s) (spread (next s)))
+    (defn- spread [s]
+        (cond
+            (nil? s) nil
+            (nil? (next s)) (seq (first s))
+            :else (cons (first s) (spread (next s)))
+        )
+    )
+
+    ;;;
+     ; Creates a new seq containing the items prepended to the rest,
+     ; the last of which will be treated as a sequence.
+     ;;
+    (defn list*
+        ([s] (seq s))
+        ([a s] (cons a s))
+        ([a b s] (cons a (cons b s)))
+        ([a b c s] (cons a (cons b (cons c s))))
+        ([a b c d & s] (cons a (cons b (cons c (cons d (spread s))))))
+    )
+
+    ;;;
+     ; Applies fn f to the argument list formed by prepending intervening arguments to args.
+     ;;
+    (defn apply
+        ([#_"fn" f s] (IFn'''applyTo f, (seq s)))
+        ([#_"fn" f a s] (IFn'''applyTo f, (list* a s)))
+        ([#_"fn" f a b s] (IFn'''applyTo f, (list* a b s)))
+        ([#_"fn" f a b c s] (IFn'''applyTo f, (list* a b c s)))
+        ([#_"fn" f a b c d & s] (IFn'''applyTo f, (cons a (cons b (cons c (cons d (spread s)))))))
+    )
+
+    ;;;
+     ; Takes a fn f and returns a fn that takes the same arguments as f,
+     ; has the same effects, if any, and returns the opposite truth value.
+     ;;
+    (defn complement [f]
+        (fn
+            ([] (not (f)))
+            ([x] (not (f x)))
+            ([x y] (not (f x y)))
+            ([x y & s] (not (apply f x y s)))
+        )
     )
 )
-
-;;;
- ; Creates a new seq containing the items prepended to the rest,
- ; the last of which will be treated as a sequence.
- ;;
-(defn list*
-    ([s] (seq s))
-    ([a s] (cons a s))
-    ([a b s] (cons a (cons b s)))
-    ([a b c s] (cons a (cons b (cons c s))))
-    ([a b c d & s] (cons a (cons b (cons c (cons d (spread s))))))
-)
-
-;;;
- ; Applies fn f to the argument list formed by prepending intervening arguments to args.
- ;;
-(defn apply
-    ([#_"fn" f s] (IFn'''applyTo f, (seq s)))
-    ([#_"fn" f a s] (IFn'''applyTo f, (list* a s)))
-    ([#_"fn" f a b s] (IFn'''applyTo f, (list* a b s)))
-    ([#_"fn" f a b c s] (IFn'''applyTo f, (list* a b c s)))
-    ([#_"fn" f a b c d & s] (IFn'''applyTo f, (cons a (cons b (cons c (cons d (spread s)))))))
-)
-
-(about #_"arbace.IType"
-    (defp IType)
-
-    (-/extend-protocol IType clojure.lang.IType)
-)
-
-(defn type? [x] (satisfies? IType x))
-
-(about #_"arbace.IRecord"
-    (defp IRecord)
-
-    (-/extend-protocol IRecord clojure.lang.IRecord)
-)
-
-(defn record? [x] (satisfies? IRecord x))
 
 (about #_"arbace.INamed"
     (defp INamed
@@ -838,19 +838,19 @@
         (INamed'''getNamespace [this] (.getNamespace this))
         (INamed'''getName [this] (.getName this))
     )
+
+    (defn named? [x] (satisfies? INamed x))
+
+    ;;;
+     ; Returns the namespace String of a symbol or keyword, or nil if not present.
+     ;;
+    (defn #_"String" namespace [#_"INamed" x] (INamed'''getNamespace x))
+
+    ;;;
+     ; Returns the name String of a string, symbol or keyword.
+     ;;
+    (defn #_"String" name [x] (if (string? x) x (INamed'''getName #_"INamed" x)))
 )
-
-(defn named? [x] (satisfies? INamed x))
-
-;;;
- ; Returns the namespace String of a symbol or keyword, or nil if not present.
- ;;
-(defn #_"String" namespace [#_"INamed" x] (INamed'''getNamespace x))
-
-;;;
- ; Returns the name String of a string, symbol or keyword.
- ;;
-(defn #_"String" name [x] (if (string? x) x (INamed'''getName #_"INamed" x)))
 
 (about #_"arbace.IMeta"
     (defp IMeta
@@ -860,12 +860,12 @@
     (-/extend-protocol IMeta clojure.lang.IMeta
         (IMeta'''meta [this] (.meta this))
     )
-)
 
-;;;
- ; Returns the metadata of obj, returns nil if there is no metadata.
- ;;
-(defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
+    ;;;
+     ; Returns the metadata of obj, returns nil if there is no metadata.
+     ;;
+    (defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
+)
 
 (about #_"arbace.IObj"
     (defp IObj
@@ -875,18 +875,18 @@
     (-/extend-protocol IObj clojure.lang.IObj
         (IObj'''withMeta [this, meta] (.withMeta this, meta))
     )
+
+    ;;;
+     ; Returns an object of the same type and value as obj, with map m as its metadata.
+     ;;
+    (defn with-meta [#_"IObj" x m] (IObj'''withMeta x, m))
+
+    ;;;
+     ; Returns an object of the same type and value as x,
+     ; with (apply f (meta x) args) as its metadata.
+     ;;
+    (defn vary-meta [x f & args] (with-meta x (apply f (meta x) args)))
 )
-
-;;;
- ; Returns an object of the same type and value as obj, with map m as its metadata.
- ;;
-(defn with-meta [#_"IObj" x m] (IObj'''withMeta x, m))
-
-;;;
- ; Returns an object of the same type and value as x,
- ; with (apply f (meta x) args) as its metadata.
- ;;
-(defn vary-meta [x f & args] (with-meta x (apply f (meta x) args)))
 
 (about #_"arbace.IReference"
     (defp IReference
@@ -898,18 +898,18 @@
         (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
         (IReference'''resetMeta [this, m] (.resetMeta this, m))
     )
+
+    ;;;
+     ; Atomically sets the metadata for a var/atom to be: (apply f its-current-meta args)
+     ; f must be free of side-effects.
+     ;;
+    (defn alter-meta! [#_"IReference" r f & args] (IReference'''alterMeta r, f, args))
+
+    ;;;
+     ; Atomically resets the metadata for a var/atom.
+     ;;
+    (defn reset-meta! [#_"IReference" r m] (IReference'''resetMeta r, m))
 )
-
-;;;
- ; Atomically sets the metadata for a var/atom to be: (apply f its-current-meta args)
- ; f must be free of side-effects.
- ;;
-(defn alter-meta! [#_"IReference" r f & args] (IReference'''alterMeta r, f, args))
-
-;;;
- ; Atomically resets the metadata for a var/atom.
- ;;
-(defn reset-meta! [#_"IReference" r m] (IReference'''resetMeta r, m))
 
 (about #_"arbace.IDeref"
     (defp IDeref
@@ -919,14 +919,14 @@
     (-/extend-protocol IDeref clojure.lang.IDeref
         (IDeref'''deref [this] (.deref this))
     )
-)
 
-;;;
- ; When applied to a var or atom, returns its current state.
- ; When applied to a delay, forces it if not already forced.
- ; See also - realized?. Also reader macro: @.
- ;;
-(defn deref [#_"IDeref" ref] (IDeref'''deref ref))
+    ;;;
+     ; When applied to a var or atom, returns its current state.
+     ; When applied to a delay, forces it if not already forced.
+     ; See also - realized?. Also reader macro: @.
+     ;;
+    (defn deref [#_"IDeref" ref] (IDeref'''deref ref))
+)
 
 (about #_"arbace.IAtom"
     (defp IAtom
@@ -951,20 +951,20 @@
     (-/extend-protocol IPending clojure.lang.IPending
         (IPending'''isRealized [this] (.isRealized this))
     )
-)
 
-;;;
- ; Returns true if a value has been produced for a delay or lazy sequence.
- ;;
-(defn realized? [#_"IPending" x] (IPending'''isRealized x))
+    ;;;
+     ; Returns true if a value has been produced for a delay or lazy sequence.
+     ;;
+    (defn realized? [#_"IPending" x] (IPending'''isRealized x))
+)
 
 (about #_"arbace.Sequential"
     (defp Sequential)
 
     (-/extend-protocol Sequential clojure.lang.Sequential)
-)
 
-(defn sequential? [x] (satisfies? Sequential x))
+    (defn sequential? [x] (satisfies? Sequential x))
+)
 
 (about #_"arbace.Reversible"
     (defp Reversible
@@ -974,15 +974,15 @@
     (-/extend-protocol Reversible clojure.lang.Reversible
         (Reversible'''rseq [this] (.rseq this))
     )
+
+    (defn reversible? [x] (satisfies? Reversible x))
+
+    ;;;
+     ; Returns, in constant time, a seq of the items in rev (which can be a vector or sorted-map), in reverse order.
+     ; If rev is empty, returns nil.
+     ;;
+    (defn rseq [#_"Reversible" s] (Reversible'''rseq s))
 )
-
-;;;
- ; Returns, in constant time, a seq of the items in rev (which can be a vector or sorted-map), in reverse order.
- ; If rev is empty, returns nil.
- ;;
-(defn rseq [#_"Reversible" s] (Reversible'''rseq s))
-
-(defn reversible? [x] (satisfies? Reversible x))
 
 (about #_"arbace.Sorted"
     (defp Sorted
@@ -998,9 +998,9 @@
         (Sorted'''seq [this, ascending?] (.seq this, ascending?))
         (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
     )
-)
 
-(defn sorted? [x] (satisfies? Sorted x))
+    (defn sorted? [x] (satisfies? Sorted x))
+)
 
 (about #_"arbace.Indexed"
     (defp Indexed
@@ -1016,17 +1016,17 @@
             ([this, i, not-found] (.nth this, i, not-found))
         )
     )
+
+    ;;;
+     ; Return true if x implements Indexed, indicating efficient lookup by index.
+     ;;
+    (defn indexed? [x] (satisfies? Indexed x))
+
+    ;;;
+     ; Returns the nth next of coll, (seq coll) when n is 0.
+     ;;
+    (defn nthnext [s n] (loop-when-recur [s (seq s) n n] (and s (pos? n)) [(next s) (dec n)] => s))
 )
-
-;;;
- ; Return true if x implements Indexed, indicating efficient lookup by index.
- ;;
-(defn indexed? [x] (satisfies? Indexed x))
-
-;;;
- ; Returns the nth next of coll, (seq coll) when n is 0.
- ;;
-(defn nthnext [s n] (loop-when-recur [s (seq s) n n] (and s (pos? n)) [(next s) (dec n)] => s))
 
 (about #_"arbace.ILookup"
     (defp ILookup
@@ -1036,7 +1036,7 @@
         )
     )
 
-    (-/extend-protocol ILookup clojure.lang.ILookup
+    (§ -/extend-protocol ILookup clojure.lang.ILookup
         (ILookup'''valAt
             ([this, key] (.valAt this, key))
             ([this, key, not-found] (.valAt this, key, not-found))
@@ -1064,32 +1064,6 @@
     )
 )
 
-(about #_"arbace.IMapEntry"
-    (defp IMapEntry
-        (#_"Object" IMapEntry'''key [#_"IMapEntry" this])
-        (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
-    )
-
-    (-/extend-protocol IMapEntry clojure.lang.IMapEntry
-        (IMapEntry'''key [this] (.key this))
-        (IMapEntry'''val [this] (.val this))
-    )
-)
-
-(defn map-entry? [x] (satisfies? IMapEntry x))
-
-;;;
- ; Returns the key/value of/in the map entry.
- ;;
-(defn key [#_"IMapEntry" e] (IMapEntry'''key e))
-(defn val [#_"IMapEntry" e] (IMapEntry'''val e))
-
-;;;
- ; Returns a sequence of the map's keys/values, in the same order as (seq m).
- ;;
-(defn keys [m] (map key m))
-(defn vals [m] (map val m))
-
 (about #_"arbace.IPersistentCollection"
     (defp IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"Object" o])
@@ -1100,35 +1074,35 @@
         (IPersistentCollection'''conj [this, o] (.cons this, o))
         (IPersistentCollection'''empty [this] (.empty this))
     )
-)
 
-(defn coll? [x] (satisfies? IPersistentCollection x))
+    (defn coll? [x] (satisfies? IPersistentCollection x))
 
-;;;
- ; conj[oin].
- ; Returns a new collection with the items 'added'. (conj nil item) returns (item).
- ; The 'addition' may happen at different 'places' depending on the concrete type.
- ;;
-(defn conj
-    ([] [])
-    ([coll] coll)
-    ([coll x] (if (some? coll) (IPersistentCollection'''conj coll, x) (list x)))
-    ([coll x & s] (recur-when s [(conj coll x) (first s) (next s)] => (conj coll x)))
-)
-
-;;;
- ; Returns an empty collection of the same category as coll, or nil.
- ;;
-(defn empty [coll]
-    (when (coll? coll)
-        (IPersistentCollection'''empty #_"IPersistentCollection" coll)
+    ;;;
+     ; conj[oin].
+     ; Returns a new collection with the items 'added'. (conj nil item) returns (item).
+     ; The 'addition' may happen at different 'places' depending on the concrete type.
+     ;;
+    (defn conj
+        ([] [])
+        ([coll] coll)
+        ([coll x] (if (some? coll) (IPersistentCollection'''conj coll, x) (list x)))
+        ([coll x & s] (recur-when s [(conj coll x) (first s) (next s)] => (conj coll x)))
     )
-)
 
-;;;
- ; If coll is empty, returns nil, else coll.
- ;;
-(defn not-empty [coll] (when (seq coll) coll))
+    ;;;
+     ; Returns an empty collection of the same category as coll, or nil.
+     ;;
+    (defn empty [coll]
+        (when (coll? coll)
+            (IPersistentCollection'''empty #_"IPersistentCollection" coll)
+        )
+    )
+
+    ;;;
+     ; If coll is empty, returns nil, else coll.
+     ;;
+    (defn not-empty [coll] (when (seq coll) coll))
+)
 
 (about #_"arbace.IEditableCollection"
     (defp IEditableCollection
@@ -1138,9 +1112,37 @@
     (-/extend-protocol IEditableCollection clojure.lang.IEditableCollection
         (IEditableCollection'''asTransient [this] (.asTransient this))
     )
+
+    (defn editable? [x] (satisfies? IEditableCollection x))
 )
 
-(defn editable? [x] (satisfies? IEditableCollection x))
+(about #_"arbace.IMapEntry"
+    (defp IMapEntry
+        (#_"Object" IMapEntry'''key [#_"IMapEntry" this])
+        (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
+    )
+
+    (-/extend-protocol IMapEntry clojure.lang.IMapEntry
+        (IMapEntry'''key [this] (.key this))
+        (IMapEntry'''val [this] (.val this))
+    )
+
+    (defn map-entry? [x] (satisfies? IMapEntry x))
+
+    ;;;
+     ; Returns the key/value of/in the map entry.
+     ;;
+    (defn key [#_"IMapEntry" e] (IMapEntry'''key e))
+    (defn val [#_"IMapEntry" e] (IMapEntry'''val e))
+
+    (declare map)
+
+    ;;;
+     ; Returns a sequence of the map's keys/values, in the same order as (seq m).
+     ;;
+    (defn keys [m] (not-empty (map key m)))
+    (defn vals [m] (not-empty (map val m)))
+)
 
 (about #_"arbace.Associative"
     (defp Associative
@@ -1154,9 +1156,9 @@
         (Associative'''containsKey [this, key] (.containsKey this, key))
         (Associative'''entryAt [this, key] (.entryAt this, key))
     )
-)
 
-(defn associative? [x] (satisfies? Associative x))
+    (defn associative? [x] (satisfies? Associative x))
+)
 
 (about #_"arbace.IPersistentMap"
     (defp IPersistentMap
@@ -1166,9 +1168,9 @@
     (-/extend-protocol IPersistentMap clojure.lang.IPersistentMap
         (IPersistentMap'''dissoc [this, key] (.without this, key))
     )
-)
 
-(defn map? [x] (satisfies? IPersistentMap x))
+    (defn map? [x] (satisfies? IPersistentMap x))
+)
 
 (about #_"arbace.IPersistentSet"
     (defp IPersistentSet
@@ -1182,9 +1184,9 @@
         (IPersistentSet'''contains? [this, key] (.contains this, key))
         (IPersistentSet'''get [this, key] (.get this, key))
     )
-)
 
-(defn set? [x] (satisfies? IPersistentSet x))
+    (defn set? [x] (satisfies? IPersistentSet x))
+)
 
 (about #_"arbace.IPersistentStack"
     (defp IPersistentStack
@@ -1196,34 +1198,34 @@
         (IPersistentStack'''peek [this] (.peek this))
         (IPersistentStack'''pop [this] (.pop this))
     )
-)
 
-(defn stack? [x] (satisfies? IPersistentStack x))
+    (defn stack? [x] (satisfies? IPersistentStack x))
 
-;;;
- ; For a list or queue, same as first, for a vector, same as, but much
- ; more efficient than, last. If the collection is empty, returns nil.
- ;;
-(defn peek [s]
-    (when (some? s)
-        (IPersistentStack'''peek s)
+    ;;;
+     ; For a list or queue, same as first, for a vector, same as, but much
+     ; more efficient than, last. If the collection is empty, returns nil.
+     ;;
+    (defn peek [s]
+        (when (some? s)
+            (IPersistentStack'''peek s)
+        )
     )
-)
 
-;;;
- ; Return a seq of all but the last item in coll, in linear time.
- ;;
-(defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
+    ;;;
+     ; Return a seq of all but the last item in coll, in linear time.
+     ;;
+    (defn butlast [s] (loop-when-recur [v [] s s] (next s) [(conj v (first s)) (next s)] => (seq v)))
 
-;;;
- ; For a list or queue, returns a new list/queue without the first item,
- ; for a vector, returns a new vector without the last item.
- ; If the collection is empty, throws an exception.
- ; Note - not the same as next/butlast.
- ;;
-(defn pop [s]
-    (when (some? s)
-        (IPersistentStack'''pop s)
+    ;;;
+     ; For a list or queue, returns a new list/queue without the first item,
+     ; for a vector, returns a new vector without the last item.
+     ; If the collection is empty, throws an exception.
+     ; Note - not the same as next/butlast.
+     ;;
+    (defn pop [s]
+        (when (some? s)
+            (IPersistentStack'''pop s)
+        )
     )
 )
 
@@ -1231,9 +1233,9 @@
     (defp IPersistentList)
 
     (-/extend-protocol IPersistentList clojure.lang.IPersistentList)
-)
 
-(defn list? [x] (satisfies? IPersistentList x))
+    (defn list? [x] (satisfies? IPersistentList x))
+)
 
 (about #_"arbace.IPersistentVector"
     (defp IPersistentVector
@@ -1243,18 +1245,18 @@
     (-/extend-protocol IPersistentVector clojure.lang.IPersistentVector
         (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
     )
-)
 
-(defn vector? [x] (satisfies? IPersistentVector x))
+    (defn vector? [x] (satisfies? IPersistentVector x))
+)
 
 (about #_"arbace.IPersistentWector"
     (defp IPersistentWector
         (#_"IPersistentWector" IPersistentWector'''slicew [#_"IPersistentWector" this, #_"int" start, #_"int" end])
         (#_"IPersistentWector" IPersistentWector'''splicew [#_"IPersistentWector" this, #_"IPersistentWector" that])
     )
-)
 
-(defn wector? [x] (satisfies? IPersistentWector x))
+    (defn wector? [x] (satisfies? IPersistentWector x))
+)
 
 (about #_"arbace.ITransientCollection"
     (defp ITransientCollection
@@ -1262,7 +1264,7 @@
         (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
     )
 
-    (-/extend-protocol ITransientCollection clojure.lang.ITransientCollection
+    (§ -/extend-protocol ITransientCollection clojure.lang.ITransientCollection
         (ITransientCollection'''conj! [this, val] (.conj this, val))
         (ITransientCollection'''persistent! [this] (.persistent this))
     )
@@ -1275,7 +1277,7 @@
         (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ITransientAssociative" this, #_"Object" key])
     )
 
-    (-/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
+    (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
         (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
         (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
         (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
@@ -1422,29 +1424,29 @@
     (defp Symbol)
 
     (-/extend-protocol Symbol clojure.lang.Symbol)
-)
 
-(defn symbol? [x] (satisfies? Symbol x))
+    (defn symbol? [x] (satisfies? Symbol x))
+)
 
 (about #_"arbace.Keyword"
     (defp Keyword)
 
     (-/extend-protocol Keyword clojure.lang.Keyword)
-)
 
-(defn keyword? [x] (satisfies? Keyword x))
+    (defn keyword? [x] (satisfies? Keyword x))
+)
 
 (about #_"arbace.Fn"
     #_abstract
     (defp Fn)
 
     (-/extend-protocol Fn clojure.lang.Fn)
-)
 
-;;;
- ; Returns true if x is an object created via fn.
- ;;
-(defn fn? [x] (satisfies? Fn x))
+    ;;;
+     ; Returns true if x is an object created via fn.
+     ;;
+    (defn fn? [x] (satisfies? Fn x))
+)
 
 (about #_"arbace.RestFn"
     (defp IRestFn
@@ -1616,12 +1618,12 @@
     (defp Reduced)
 
     (-/extend-protocol Reduced clojure.lang.Reduced)
-)
 
-;;;
- ; Returns true if x is the result of a call to reduced.
- ;;
-(defn reduced? [x] (satisfies? Reduced x))
+    ;;;
+     ; Returns true if x is the result of a call to reduced.
+     ;;
+    (defn reduced? [x] (satisfies? Reduced x))
+)
 
 (about #_"arbace.StringSeq"
     (defp StringSeq)
@@ -1632,12 +1634,12 @@
     (defp Var)
 
     (-/extend-protocol Var clojure.lang.Var)
-)
 
-;;;
- ; Returns true if v is of type Var.
- ;;
-(defn var? [v] (satisfies? Var v))
+    ;;;
+     ; Returns true if v is of type Var.
+     ;;
+    (defn var? [v] (satisfies? Var v))
+)
 
 ;; naïve reduce to be redefined later with IReduce
 
@@ -1969,6 +1971,22 @@
  ; If x is reduced?, returns (deref x), else returns x.
  ;;
 (defn unreduced [x] (if (reduced? x) (deref x) x))
+
+(defn- preserving-reduced [f] #(let [r (f %1 %2)] (if (reduced? r) (reduced r) r)))
+
+;;;
+ ; A transducer which concatenates the contents of each input, which must
+ ; be a collection, into the reduction.
+ ;;
+(defn cat [f]
+    (let [g (preserving-reduced f)]
+        (fn
+            ([] (f))
+            ([s] (f s))
+            ([s x] (reduce g s x))
+        )
+    )
+)
 )
 
 (about #_"arbace.Util"
@@ -3353,6 +3371,392 @@
         )
     )
 )
+
+;;;
+ ; Takes a set of functions and returns a fn that is the composition
+ ; of those fns. The returned fn takes a variable number of args,
+ ; applies the rightmost of fns to the args, the next
+ ; fn (right-to-left) to the result, etc.
+ ;;
+(defn comp
+    ([] identity)
+    ([f] f)
+    ([f g]
+        (fn
+            ([] (f (g)))
+            ([x] (f (g x)))
+            ([x y] (f (g x y)))
+            ([x y & z] (f (apply g x y z)))
+        )
+    )
+    ([f g & fs] (reduce comp (list* f g fs)))
+)
+
+;;;
+ ; Takes a set of functions and returns a fn that is the juxtaposition
+ ; of those fns. The returned fn takes a variable number of args, and
+ ; returns a vector containing the result of applying each fn to the
+ ; args (left-to-right).
+ ; ((juxt a b c) x) => [(a x) (b x) (c x)]
+ ;;
+(defn juxt
+    ([f]
+        (fn
+            ([] [(f)])
+            ([x] [(f x)])
+            ([x y] [(f x y)])
+            ([x y & z] [(apply f x y z)])
+        )
+    )
+    ([f g]
+        (fn
+            ([] [(f) (g)])
+            ([x] [(f x) (g x)])
+            ([x y] [(f x y) (g x y)])
+            ([x y & z] [(apply f x y z) (apply g x y z)])
+        )
+    )
+    ([f g h]
+        (fn
+            ([] [(f) (g) (h)])
+            ([x] [(f x) (g x) (h x)])
+            ([x y] [(f x y) (g x y) (h x y)])
+            ([x y & z] [(apply f x y z) (apply g x y z) (apply h x y z)])
+        )
+    )
+    ([f g h & fs]
+        (let [fs (list* f g h fs)]
+            (fn
+                ([] (reduce #(conj %1 (%2)) [] fs))
+                ([x] (reduce #(conj %1 (%2 x)) [] fs))
+                ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
+                ([x y & z] (reduce #(conj %1 (apply %2 x y z)) [] fs))
+            )
+        )
+    )
+)
+
+;;;
+ ; Takes a function f and fewer than the normal arguments to f, and
+ ; returns a fn that takes a variable number of additional args. When
+ ; called, the returned function calls f with args + additional args.
+ ;;
+(defn partial
+    ([f] f)
+    ([f a]
+        (fn
+            ([] (f a))
+            ([x] (f a x))
+            ([x y] (f a x y))
+            ([x y z] (f a x y z))
+            ([x y z & args] (apply f a x y z args))
+        )
+    )
+    ([f a b]
+        (fn
+            ([] (f a b))
+            ([x] (f a b x))
+            ([x y] (f a b x y))
+            ([x y z] (f a b x y z))
+            ([x y z & args] (apply f a b x y z args))
+        )
+    )
+    ([f a b c]
+        (fn
+            ([] (f a b c))
+            ([x] (f a b c x))
+            ([x y] (f a b c x y))
+            ([x y z] (f a b c x y z))
+            ([x y z & args] (apply f a b c x y z args))
+        )
+    )
+    ([f a b c & more]
+        (fn [& args] (apply f a b c (concat more args)))
+    )
+)
+
+;;;
+ ; Returns true if (f? x) is logical true for every x in coll, else false.
+ ;;
+(defn #_"Boolean" every? [f? s]
+    (cond
+        (nil? (seq s)) true
+        (f? (first s)) (recur f? (next s))
+        :else false
+    )
+)
+
+;;;
+ ; Returns false if (f? x) is logical true for every x in coll, else true.
+ ;;
+(def #_"Boolean" not-every? (comp not every?))
+
+(defn index-of [s x]
+    (loop-when [i 0 s (seq s)] (some? s) => -1
+        (when-not (= (first s) x) => i
+            (recur (inc i) (next s))
+        )
+    )
+)
+
+;;;
+ ; Returns the first logical true value of (f? x) for any x in coll,
+ ; else nil. One common idiom is to use a set as f?, for example
+ ; this will return :fred if :fred is in the sequence, otherwise nil:
+ ; (some #{:fred} coll).
+ ;;
+(defn some [f? s]
+    (when (seq s)
+        (or (f? (first s)) (recur f? (next s)))
+    )
+)
+
+;;;
+ ; Returns false if (f? x) is logical true for any x in coll, else true.
+ ;;
+(def #_"Boolean" not-any? (comp not some))
+
+;;;
+ ; Returns a lazy sequence consisting of the result of applying f to
+ ; the set of first items of each coll, followed by applying f to the
+ ; set of second items in each coll, until any one of the colls is
+ ; exhausted. Any remaining items in other colls are ignored. Function
+ ; f should accept number-of-colls arguments. Returns a transducer when
+ ; no collection is provided.
+ ;;
+(defn map
+    ([f]
+        (fn [g]
+            (fn
+                ([] (g))
+                ([x] (g x))
+                ([x y] (g x (f y)))
+                ([x y & s] (g x (apply f y s)))
+            )
+        )
+    )
+    ([f s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (cons (f (first s)) (map f (next s)))
+            )
+        )
+    )
+    ([f s1 s2]
+        (lazy-seq
+            (let-when [s1 (seq s1) s2 (seq s2)] (and s1 s2)
+                (cons (f (first s1) (first s2)) (map f (next s1) (next s2)))
+            )
+        )
+    )
+    ([f s1 s2 s3]
+        (lazy-seq
+            (let-when [s1 (seq s1) s2 (seq s2) s3 (seq s3)] (and s1 s2 s3)
+                (cons (f (first s1) (first s2) (first s3)) (map f (next s1) (next s2) (next s3)))
+            )
+        )
+    )
+    ([f s1 s2 s3 & z]
+        (letfn [(map- [s]
+                    (lazy-seq
+                        (let-when [s (map seq s)] (every? identity s)
+                            (cons (map first s) (map- (map next s)))
+                        )
+                    )
+                )]
+            (map #(apply f %) (map- (conj z s3 s2 s1)))
+        )
+    )
+)
+
+;;;
+ ; Returns the result of applying concat to the result of applying map to f and colls.
+ ; Thus function f should return a collection.
+ ; Returns a transducer when no collections are provided.
+ ;;
+(defn mapcat
+    ([f] (comp (map f) cat))
+    ([f & s] (apply concat (apply map f s)))
+)
+
+;;;
+ ; Returns a lazy sequence of the items in coll for which (f? item) returns logical true.
+ ; f? must be free of side-effects.
+ ; Returns a transducer when no collection is provided.
+ ;;
+(defn filter
+    ([f?]
+        (fn [g]
+            (fn
+                ([] (g))
+                ([s] (g s))
+                ([s x] (if (f? x) (g s x) s))
+            )
+        )
+    )
+    ([f? s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let-when [x (first s)] (f? x) => (filter f? (next s))
+                    (cons x (filter f? (next s)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy sequence of the items in coll for which (f? item) returns logical false.
+ ; f? must be free of side-effects.
+ ; Returns a transducer when no collection is provided.
+ ;;
+(defn remove
+    ([f?]   (filter (complement f?)  ))
+    ([f? s] (filter (complement f?) s))
+)
+
+;;;
+ ; Returns a lazy sequence of the first n items in coll, or all items if there are fewer than n.
+ ; Returns a stateful transducer when no collection is provided.
+ ;;
+(defn take
+    ([n]
+        (fn [g]
+            (let [n' (atom n)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x]
+                        (let [n @n' m (swap! n' dec) s (if (pos? n) (g s x) s)]
+                            (if (pos? m) s (ensure-reduced s))
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([n s]
+        (lazy-seq
+            (when (pos? n)
+                (when-some [s (seq s)]
+                    (cons (first s) (take (dec n) (next s)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy sequence of successive items from coll while (f? item) returns logical true.
+ ; f? must be free of side-effects.
+ ; Returns a transducer when no collection is provided.
+ ;;
+(defn take-while
+    ([f?]
+        (fn [g]
+            (fn
+                ([] (g))
+                ([s] (g s))
+                ([s x] (if (f? x) (g s x) (reduced s)))
+            )
+        )
+    )
+    ([f? s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let-when [x (first s)] (f? x)
+                    (cons x (take-while f? (next s)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy sequence of all but the first n items in coll.
+ ; Returns a stateful transducer when no collection is provided.
+ ;;
+(defn drop
+    ([n]
+        (fn [g]
+            (let [n' (atom n)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x] (if (neg? (swap! n' dec)) (g s x) s))
+                )
+            )
+        )
+    )
+    ([n s]
+        (letfn [(drop- [n s]
+                    (let [s (seq s)]
+                        (recur-when (and (pos? n) s) [(dec n) (next s)] => s)
+                    )
+                )]
+            (lazy-seq (drop- n s))
+        )
+    )
+)
+
+;;;
+ ; Return a lazy sequence of all but the last n (default 1) items in coll.
+ ;;
+(defn drop-last
+    ([s] (drop-last 1 s))
+    ([n s] (map (fn [x _] x) s (drop n s)))
+)
+
+;;;
+ ; Returns a seq of the last n items in coll. Depending on the type of coll
+ ; may be no better than linear time. For vectors, see also subvec.
+ ;;
+(defn take-last [n coll]
+    (loop-when-recur [s (seq coll) z (seq (drop n coll))] z [(next s) (next z)] => s)
+)
+
+;;;
+ ; Returns a lazy sequence of the items in coll starting from the
+ ; first item for which (f? item) returns logical false.
+ ; Returns a stateful transducer when no collection is provided.
+ ;;
+(defn drop-while
+    ([f?]
+        (fn [g]
+            (let [drop? (atom true)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x]
+                        (when-not (and @drop? (f? x)) => s
+                            (reset! drop? nil)
+                            (g s x)
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([f? s]
+        (letfn [(drop- [f? s]
+                    (let [s (seq s)]
+                        (recur-when (and s (f? (first s))) [f? (next s)] => s)
+                    )
+                )]
+            (lazy-seq (drop- f? s))
+        )
+    )
+)
+
+;;;
+ ; Returns a vector of [(take n coll) (drop n coll)].
+ ;;
+(defn split-at [n s] [(take n s) (drop n s)])
+
+;;;
+ ; Returns a vector of [(take-while f? coll) (drop-while f? coll)].
+ ;;
+(defn split-with [f? s] [(take-while f? s) (drop-while f? s)])
 )
 
 (about #_"arbace.APersistentMap"
@@ -4442,18 +4846,18 @@
     )
 
     (defm TransientArrayMap ITransientAssociative
-        (ITransientAssociative'''assoc! => ''assocTransientArrayMap!)
+        (ITransientAssociative'''assoc! => TransientArrayMap''assoc!)
         (ITransientAssociative'''containsKey => ATransientMap''containsKey)
         (ITransientAssociative'''entryAt => ATransientMap''entryAt)
     )
 
     (defm TransientArrayMap ITransientMap
-        (ITransientMap'''dissoc! => ''dissocTransientArrayMap!)
+        (ITransientMap'''dissoc! => TransientArrayMap''dissoc!)
     )
 
     (defm TransientArrayMap ITransientCollection
-        (ITransientCollection'''conj! => ''conjTransientArrayMap!)
-        (ITransientCollection'''persistent! => ''persistentTransientArrayMap!)
+        (ITransientCollection'''conj! => TransientArrayMap''conj!)
+        (ITransientCollection'''persistent! => TransientArrayMap''persistent!)
     )
 )
 
@@ -5679,18 +6083,18 @@
     )
 
     (defm TransientHashMap ITransientAssociative
-        (ITransientAssociative'''assoc! => ''assocTransientHashMap!)
+        (ITransientAssociative'''assoc! => TransientHashMap''assoc!)
         (ITransientAssociative'''containsKey => ATransientMap''containsKey)
         (ITransientAssociative'''entryAt => ATransientMap''entryAt)
     )
 
     (defm TransientHashMap ITransientMap
-        (ITransientMap'''dissoc! => ''dissocTransientHashMap!)
+        (ITransientMap'''dissoc! => TransientHashMap''dissoc!)
     )
 
     (defm TransientHashMap ITransientCollection
-        (ITransientCollection'''conj! => ''conjTransientHashMap!)
-        (ITransientCollection'''persistent! => ''persistentTransientHashMap!)
+        (ITransientCollection'''conj! => TransientHashMap''conj!)
+        (ITransientCollection'''persistent! => TransientHashMap''persistent!)
     )
 )
 
@@ -5976,13 +6380,13 @@
     )
 
     (defm TransientHashSet ITransientCollection
-        (ITransientCollection'''conj! => ''conjTransientHashSet!)
-        (ITransientCollection'''persistent! => ''persistentTransientHashSet!)
+        (ITransientCollection'''conj! => TransientHashSet''conj!)
+        (ITransientCollection'''persistent! => TransientHashSet''persistent!)
     )
 
     (defm TransientHashSet ITransientSet
-        (ITransientSet'''disj! => ''disjTransientHashSet!)
-        (ITransientSet'''contains? => ''containsTransientHashSet?)
+        (ITransientSet'''disj! => TransientHashSet''disj!)
+        (ITransientSet'''contains? => TransientHashSet''contains?)
         (ITransientSet'''get => TransientHashSet''get)
     )
 
@@ -6107,7 +6511,7 @@
 
     (defm PersistentHashSet IPersistentSet
         (IPersistentSet'''disj => PersistentHashSet''disj)
-        (IPersistentSet'''contains? => ''containsPersistentHashSet?)
+        (IPersistentSet'''contains? => PersistentHashSet''contains?)
         (IPersistentSet'''get => PersistentHashSet''get)
     )
 
@@ -7310,35 +7714,14 @@
         )
     )
 
+    (defn- #_"IPersistentCollection" PersistentTreeMap''empty [#_"PersistentTreeMap" this]
+        (PersistentTreeMap'new (:_meta this), (:cmp this))
+    )
+
     (defn- #_"PersistentTreeMap" PersistentTreeMap''withMeta [#_"PersistentTreeMap" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
             (PersistentTreeMap'new meta, (:cmp this), (:tree this), (:cnt this))
         )
-    )
-
-    (defn- #_"value" PersistentTreeMap''valAt
-        ([#_"PersistentTreeMap" this, #_"key" key] (PersistentTreeMap''valAt this, key, nil))
-        ([#_"PersistentTreeMap" this, #_"key" key, #_"value" not-found]
-            (when-some [#_"node" node (Associative'''entryAt this, key)] => not-found
-                (IMapEntry'''val node)
-            )
-        )
-    )
-
-    (defn- #_"seq" PersistentTreeMap''seq [#_"PersistentTreeMap" this]
-        (when (pos? (:cnt this))
-            (TSeq'create (:tree this), true, (:cnt this))
-        )
-    )
-
-    (defn- #_"seq" PersistentTreeMap''rseq [#_"PersistentTreeMap" this]
-        (when (pos? (:cnt this))
-            (TSeq'create (:tree this), false, (:cnt this))
-        )
-    )
-
-    (defn- #_"IPersistentCollection" PersistentTreeMap''empty [#_"PersistentTreeMap" this]
-        (PersistentTreeMap'new (:_meta this), (:cmp this))
     )
 
     (defn- #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"key" k1, #_"key" k2]
@@ -7349,9 +7732,12 @@
         (key entry)
     )
 
-    (defn- #_"seq" PersistentTreeMap''seq [#_"PersistentTreeMap" this, #_"boolean" ascending?]
-        (when (pos? (:cnt this))
-            (TSeq'create (:tree this), ascending?, (:cnt this))
+    (defn- #_"seq" PersistentTreeMap''seq
+        ([#_"PersistentTreeMap" this] (PersistentTreeMap''seq this, true))
+        ([#_"PersistentTreeMap" this, #_"boolean" ascending?]
+            (when (pos? (:cnt this))
+                (TSeq'create (:tree this), ascending?, (:cnt this))
+            )
         )
     )
 
@@ -7367,6 +7753,35 @@
                 )
             )
         )
+    )
+
+    (defn- #_"seq" PersistentTreeMap''rseq [#_"PersistentTreeMap" this]
+        (PersistentTreeMap''seq this, false)
+    )
+
+    (defn- #_"node" PersistentTreeMap''entryAt [#_"PersistentTreeMap" this, #_"key" key]
+        (loop-when [#_"node" t (:tree this)] (some? t) => t
+            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
+                (cond
+                    (neg? cmp) (recur (:left t))
+                    (pos? cmp) (recur (:right t))
+                    :else      t
+                )
+            )
+        )
+    )
+
+    (defn- #_"value" PersistentTreeMap''valAt
+        ([#_"PersistentTreeMap" this, #_"key" key] (PersistentTreeMap''valAt this, key, nil))
+        ([#_"PersistentTreeMap" this, #_"key" key, #_"value" not-found]
+            (when-some [#_"node" node (PersistentTreeMap''entryAt this, key)] => not-found
+                (IMapEntry'''val node)
+            )
+        )
+    )
+
+    (defn- #_"boolean" PersistentTreeMap''containsKey [#_"PersistentTreeMap" this, #_"key" key]
+        (some? (PersistentTreeMap''entryAt this, key))
     )
 
     (defn- #_"value" PersistentTreeMap''kvreduce [#_"PersistentTreeMap" this, #_"fn" f, #_"value" r]
@@ -7581,22 +7996,6 @@
         )
     )
 
-    (defn- #_"boolean" PersistentTreeMap''containsKey [#_"PersistentTreeMap" this, #_"key" key]
-        (some? (Associative'''entryAt this, key))
-    )
-
-    (defn- #_"node" PersistentTreeMap''entryAt [#_"PersistentTreeMap" this, #_"key" key]
-        (loop-when [#_"node" t (:tree this)] (some? t) => t
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (cond
-                    (neg? cmp) (recur (:left t))
-                    (pos? cmp) (recur (:right t))
-                    :else      t
-                )
-            )
-        )
-    )
-
     (defn- #_"PersistentTreeMap" PersistentTreeMap''dissoc [#_"PersistentTreeMap" this, #_"key" key]
         (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap''remove this, (:tree this), key, found)]
             (if (nil? t)
@@ -7738,16 +8137,17 @@
         entry
     )
 
-    (defn- #_"seq" PersistentTreeSet''seq [#_"PersistentTreeSet" this, #_"boolean" ascending?]
-        (keys (Sorted'''seq (:impl this), ascending?))
+    (defn- #_"seq" PersistentTreeSet''seq
+        ([#_"PersistentTreeSet" this]
+            (keys (:impl this))
+        )
+        ([#_"PersistentTreeSet" this, #_"boolean" ascending?]
+            (keys (Sorted'''seq (:impl this), ascending?))
+        )
     )
 
     (defn- #_"seq" PersistentTreeSet''seqFrom [#_"PersistentTreeSet" this, #_"key" key, #_"boolean" ascending?]
         (keys (Sorted'''seqFrom (:impl this), key, ascending?))
-    )
-
-    (defn- #_"seq" PersistentTreeSet''seq [#_"PersistentTreeSet" this]
-        (keys (:impl this))
     )
 
     (defn- #_"seq" PersistentTreeSet''rseq [#_"PersistentTreeSet" this]
@@ -7773,7 +8173,7 @@
 
     (defm PersistentTreeSet IPersistentSet
         (IPersistentSet'''disj => PersistentTreeSet''disj)
-        (IPersistentSet'''contains? => ''containsPersistentTreeSet?)
+        (IPersistentSet'''contains? => PersistentTreeSet''contains?)
         (IPersistentSet'''get => PersistentTreeSet''get)
     )
 
@@ -8397,9 +8797,6 @@
         )
     )
 
-    (declare mapcat)
-    (declare take)
-
     (defn- #_"seq" WNode''leaf-seq [#_"node" this]
         (let [
             #_"array" a (:array this)
@@ -8407,8 +8804,6 @@
             (mapcat :array (take (WNode'index-of-nil a) a))
         )
     )
-
-    (declare drop)
 
     (defn- #_"[node node int]" WNode'rebalance-leaves [#_"node" node1, #_"node" node2, #_"int" delta]
         (let [
@@ -8822,17 +9217,17 @@
     )
 
     (defm TransientWector ITransientCollection
-        (ITransientCollection'''conj! => ''conjTransientWector!)
-        (ITransientCollection'''persistent! => ''persistentTransientWector!)
+        (ITransientCollection'''conj! => TransientWector''conj!)
+        (ITransientCollection'''persistent! => TransientWector''persistent!)
     )
 
     (defm TransientWector ITransientVector
-        (ITransientVector'''assocN! => ''assocNTransientWector!)
-        (ITransientVector'''pop! => ''popTransientWector!)
+        (ITransientVector'''assocN! => TransientWector''assocN!)
+        (ITransientVector'''pop! => TransientWector''pop!)
     )
 
     (defm TransientWector ITransientAssociative
-        (ITransientAssociative'''assoc! => ''assocTransientWector!)
+        (ITransientAssociative'''assoc! => TransientWector''assoc!)
         (ITransientAssociative'''containsKey => TransientWector''containsKey)
         (ITransientAssociative'''entryAt => TransientWector''entryAt)
     )
@@ -10374,8 +10769,6 @@
 
 (about #_"cloiure.core"
 
-(declare remove)
-
 ;;;
  ; A good fdecl looks like (([a] ...) ([a b] ...)) near the end of defn.
  ;;
@@ -10473,18 +10866,18 @@
  ; Returns a new hash map with supplied mappings.
  ; If any keys are equal, they are handled as if by repeated uses of assoc.
  ;;
-(§ defn hash-map
+(defn hash-map
     ([] {})
-    ([& keyvals] (PersistentHashMap'create keyvals))
+    ([& keyvals] (PersistentHashMap'create-1s keyvals))
 )
 
 ;;;
  ; Returns a new hash set with supplied keys.
  ; Any equal keys are handled as if by repeated uses of conj.
  ;;
-(§ defn hash-set
+(defn hash-set
     ([] #{})
-    ([& keys] (PersistentHashSet'create keys))
+    ([& keys] (PersistentHashSet'create-1s keys))
 )
 
 ;;;
@@ -10575,19 +10968,6 @@
  ; Returns a seq of the items in coll in reverse order. Not lazy.
  ;;
 (defn reverse [s] (into () s))
-
-;;;
- ; Takes a fn f and returns a fn that takes the same arguments as f,
- ; has the same effects, if any, and returns the opposite truth value.
- ;;
-(defn complement [f]
-    (fn
-        ([] (not (f)))
-        ([x] (not (f x)))
-        ([x y] (not (f x y)))
-        ([x y & s] (not (apply f x y s)))
-    )
-)
 
 ;;;
  ; disj[oin]. Returns a new set of the same (hashed/sorted) type,
@@ -10719,394 +11099,6 @@
  ; or nil if no var with that name.
  ;;
 (defn find-var [sym] (Var'find sym))
-
-;;;
- ; Takes a set of functions and returns a fn that is the composition
- ; of those fns. The returned fn takes a variable number of args,
- ; applies the rightmost of fns to the args, the next
- ; fn (right-to-left) to the result, etc.
- ;;
-(defn comp
-    ([] identity)
-    ([f] f)
-    ([f g]
-        (fn
-            ([] (f (g)))
-            ([x] (f (g x)))
-            ([x y] (f (g x y)))
-            ([x y & z] (f (apply g x y z)))
-        )
-    )
-    ([f g & fs] (reduce comp (list* f g fs)))
-)
-
-;;;
- ; Takes a set of functions and returns a fn that is the juxtaposition
- ; of those fns. The returned fn takes a variable number of args, and
- ; returns a vector containing the result of applying each fn to the
- ; args (left-to-right).
- ; ((juxt a b c) x) => [(a x) (b x) (c x)]
- ;;
-(defn juxt
-    ([f]
-        (fn
-            ([] [(f)])
-            ([x] [(f x)])
-            ([x y] [(f x y)])
-            ([x y & z] [(apply f x y z)])
-        )
-    )
-    ([f g]
-        (fn
-            ([] [(f) (g)])
-            ([x] [(f x) (g x)])
-            ([x y] [(f x y) (g x y)])
-            ([x y & z] [(apply f x y z) (apply g x y z)])
-        )
-    )
-    ([f g h]
-        (fn
-            ([] [(f) (g) (h)])
-            ([x] [(f x) (g x) (h x)])
-            ([x y] [(f x y) (g x y) (h x y)])
-            ([x y & z] [(apply f x y z) (apply g x y z) (apply h x y z)])
-        )
-    )
-    ([f g h & fs]
-        (let [fs (list* f g h fs)]
-            (fn
-                ([] (reduce #(conj %1 (%2)) [] fs))
-                ([x] (reduce #(conj %1 (%2 x)) [] fs))
-                ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
-                ([x y & z] (reduce #(conj %1 (apply %2 x y z)) [] fs))
-            )
-        )
-    )
-)
-
-;;;
- ; Takes a function f and fewer than the normal arguments to f, and
- ; returns a fn that takes a variable number of additional args. When
- ; called, the returned function calls f with args + additional args.
- ;;
-(defn partial
-    ([f] f)
-    ([f a]
-        (fn
-            ([] (f a))
-            ([x] (f a x))
-            ([x y] (f a x y))
-            ([x y z] (f a x y z))
-            ([x y z & args] (apply f a x y z args))
-        )
-    )
-    ([f a b]
-        (fn
-            ([] (f a b))
-            ([x] (f a b x))
-            ([x y] (f a b x y))
-            ([x y z] (f a b x y z))
-            ([x y z & args] (apply f a b x y z args))
-        )
-    )
-    ([f a b c]
-        (fn
-            ([] (f a b c))
-            ([x] (f a b c x))
-            ([x y] (f a b c x y))
-            ([x y z] (f a b c x y z))
-            ([x y z & args] (apply f a b c x y z args))
-        )
-    )
-    ([f a b c & more]
-        (fn [& args] (apply f a b c (concat more args)))
-    )
-)
-
-;;;
- ; Returns true if (f? x) is logical true for every x in coll, else false.
- ;;
-(defn #_"Boolean" every? [f? s]
-    (cond
-        (nil? (seq s)) true
-        (f? (first s)) (recur f? (next s))
-        :else false
-    )
-)
-
-;;;
- ; Returns false if (f? x) is logical true for every x in coll, else true.
- ;;
-(def #_"Boolean" not-every? (comp not every?))
-
-(defn index-of [s x]
-    (loop-when [i 0 s (seq s)] (some? s) => -1
-        (when-not (= (first s) x) => i
-            (recur (inc i) (next s))
-        )
-    )
-)
-
-;;;
- ; Returns the first logical true value of (f? x) for any x in coll,
- ; else nil. One common idiom is to use a set as f?, for example
- ; this will return :fred if :fred is in the sequence, otherwise nil:
- ; (some #{:fred} coll).
- ;;
-(defn some [f? s]
-    (when (seq s)
-        (or (f? (first s)) (recur f? (next s)))
-    )
-)
-
-;;;
- ; Returns false if (f? x) is logical true for any x in coll, else true.
- ;;
-(def #_"Boolean" not-any? (comp not some))
-
-;;;
- ; Returns a lazy sequence consisting of the result of applying f to
- ; the set of first items of each coll, followed by applying f to the
- ; set of second items in each coll, until any one of the colls is
- ; exhausted. Any remaining items in other colls are ignored. Function
- ; f should accept number-of-colls arguments. Returns a transducer when
- ; no collection is provided.
- ;;
-(§ defn map
-    ([f]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([x] (g x))
-                ([x y] (g x (f y)))
-                ([x y & s] (g x (apply f y s)))
-            )
-        )
-    )
-    ([f s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (cons (f (first s)) (map f (next s)))
-            )
-        )
-    )
-    ([f s1 s2]
-        (lazy-seq
-            (let-when [s1 (seq s1) s2 (seq s2)] (and s1 s2)
-                (cons (f (first s1) (first s2)) (map f (next s1) (next s2)))
-            )
-        )
-    )
-    ([f s1 s2 s3]
-        (lazy-seq
-            (let-when [s1 (seq s1) s2 (seq s2) s3 (seq s3)] (and s1 s2 s3)
-                (cons (f (first s1) (first s2) (first s3)) (map f (next s1) (next s2) (next s3)))
-            )
-        )
-    )
-    ([f s1 s2 s3 & z]
-        (letfn [(map- [s]
-                    (lazy-seq
-                        (let-when [s (map seq s)] (every? identity s)
-                            (cons (map first s) (map- (map next s)))
-                        )
-                    )
-                )]
-            (map #(apply f %) (map- (conj z s3 s2 s1)))
-        )
-    )
-)
-
-(declare cat)
-
-;;;
- ; Returns the result of applying concat to the result of applying map to f and colls.
- ; Thus function f should return a collection.
- ; Returns a transducer when no collections are provided.
- ;;
-(defn mapcat
-    ([f] (comp (map f) cat))
-    ([f & s] (apply concat (apply map f s)))
-)
-
-;;;
- ; Returns a lazy sequence of the items in coll for which (f? item) returns logical true.
- ; f? must be free of side-effects.
- ; Returns a transducer when no collection is provided.
- ;;
-(defn filter
-    ([f?]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([s] (g s))
-                ([s x] (if (f? x) (g s x) s))
-            )
-        )
-    )
-    ([f? s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let-when [x (first s)] (f? x) => (filter f? (next s))
-                    (cons x (filter f? (next s)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of the items in coll for which (f? item) returns logical false.
- ; f? must be free of side-effects.
- ; Returns a transducer when no collection is provided.
- ;;
-(defn remove
-    ([f?]   (filter (complement f?)  ))
-    ([f? s] (filter (complement f?) s))
-)
-
-;;;
- ; Returns a lazy sequence of the first n items in coll, or all items if there are fewer than n.
- ; Returns a stateful transducer when no collection is provided.
- ;;
-(defn take
-    ([n]
-        (fn [g]
-            (let [n' (atom n)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x]
-                        (let [n @n' m (swap! n' dec) s (if (pos? n) (g s x) s)]
-                            (if (pos? m) s (ensure-reduced s))
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([n s]
-        (lazy-seq
-            (when (pos? n)
-                (when-some [s (seq s)]
-                    (cons (first s) (take (dec n) (next s)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of successive items from coll while (f? item) returns logical true.
- ; f? must be free of side-effects.
- ; Returns a transducer when no collection is provided.
- ;;
-(defn take-while
-    ([f?]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([s] (g s))
-                ([s x] (if (f? x) (g s x) (reduced s)))
-            )
-        )
-    )
-    ([f? s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let-when [x (first s)] (f? x)
-                    (cons x (take-while f? (next s)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of all but the first n items in coll.
- ; Returns a stateful transducer when no collection is provided.
- ;;
-(defn drop
-    ([n]
-        (fn [g]
-            (let [n' (atom n)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x] (if (neg? (swap! n' dec)) (g s x) s))
-                )
-            )
-        )
-    )
-    ([n s]
-        (letfn [(drop- [n s]
-                    (let [s (seq s)]
-                        (recur-when (and (pos? n) s) [(dec n) (next s)] => s)
-                    )
-                )]
-            (lazy-seq (drop- n s))
-        )
-    )
-)
-
-;;;
- ; Return a lazy sequence of all but the last n (default 1) items in coll.
- ;;
-(defn drop-last
-    ([s] (drop-last 1 s))
-    ([n s] (map (fn [x _] x) s (drop n s)))
-)
-
-;;;
- ; Returns a seq of the last n items in coll. Depending on the type of coll
- ; may be no better than linear time. For vectors, see also subvec.
- ;;
-(defn take-last [n coll]
-    (loop-when-recur [s (seq coll) z (seq (drop n coll))] z [(next s) (next z)] => s)
-)
-
-;;;
- ; Returns a lazy sequence of the items in coll starting from the
- ; first item for which (f? item) returns logical false.
- ; Returns a stateful transducer when no collection is provided.
- ;;
-(defn drop-while
-    ([f?]
-        (fn [g]
-            (let [drop? (atom true)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x]
-                        (when-not (and @drop? (f? x)) => s
-                            (reset! drop? nil)
-                            (g s x)
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([f? s]
-        (letfn [(drop- [f? s]
-                    (let [s (seq s)]
-                        (recur-when (and s (f? (first s))) [f? (next s)] => s)
-                    )
-                )]
-            (lazy-seq (drop- f? s))
-        )
-    )
-)
-
-;;;
- ; Returns a vector of [(take n coll) (drop n coll)].
- ;;
-(defn split-at [n s] [(take n s) (drop n s)])
-
-;;;
- ; Returns a vector of [(take-while f? coll) (drop-while f? coll)].
- ;;
-(defn split-with [f? s] [(take-while f? s) (drop-while f? s)])
 
 ;;;
  ; Returns a map that consists of the rest of the maps conj-ed onto
@@ -12712,7 +12704,7 @@
  ; the first item in coll, then applying f to that result and the 2nd item,
  ; etc. If coll contains no items, returns val and f is not called.
  ;;
-(defn reduce
+(defn reduce
     ([f s]
         (if (satisfies? IReduce s)
             (IReduce'''reduce #_"IReduce" s f)
@@ -12791,7 +12783,7 @@
  ; Returns a new coll consisting of to-coll with all of the items of from-coll
  ; conjoined. A transducer may be supplied.
  ;;
-(defn into
+(defn into
     ([] [])
     ([to] to)
     ([to from]
@@ -13189,22 +13181,6 @@
           s (map (fn [x] `(when (some? ~e') (->> ~e' ~x))) s)]
         `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
             ~(if (seq s) (last s) e')
-        )
-    )
-)
-
-(defn- preserving-reduced [f] #(let [r (f %1 %2)] (if (reduced? r) (reduced r) r)))
-
-;;;
- ; A transducer which concatenates the contents of each input, which must
- ; be a collection, into the reduction.
- ;;
-(defn cat [f]
-    (let [g (preserving-reduced f)]
-        (fn
-            ([] (f))
-            ([s] (f s))
-            ([s x] (reduce g s x))
         )
     )
 )
@@ -13703,7 +13679,7 @@
 (about #_"arbace.Compiler"
 
 (def Context'enum-set
-    (hash-set
+    (-/hash-set
         :Context'STATEMENT ;; value ignored
         :Context'EXPRESSION ;; value required
         :Context'RETURN ;; tail position relative to enclosing recur frame
@@ -13924,7 +13900,7 @@
     )
 
     (def #_"map" Compiler'CHAR_MAP
-        (hash-map
+        (-/hash-map
             \- "_"
             \: "_COLON_"
             \+ "_PLUS_"
@@ -13966,7 +13942,7 @@
         ;; Note: Regex matching rules mean that #"_|_COLON_" "_COLON_" returns "_", but #"_COLON_|_" "_COLON_"
         ;; returns "_COLON_" as desired. Sorting string keys of DEMUNGE_MAP from longest to shortest ensures
         ;; correct matching behavior, even if some strings are prefixes of others.
-        (let [#_"String[]" a (to-array (keys Compiler'DEMUNGE_MAP)) _ (Arrays/sort a, #(- (count %2) (count %1)))
+        (let [#_"String[]" a (to-array (-/keys Compiler'DEMUNGE_MAP)) _ (Arrays/sort a, #(- (count %2) (count %1)))
               #_"StringBuilder" sb (StringBuilder.)]
             (dotimes [#_"int" i (count a)]
                 (when (pos? i)
@@ -17739,7 +17715,7 @@
 
 (about #_"Compiler"
     (def #_"map" Compiler'specials
-        (hash-map
+        (-/hash-map
             'def           (DefParser'new)
             'loop*         (LetParser'new)
             'recur         (RecurParser'new)
@@ -18576,7 +18552,7 @@
 
 (about #_"LispReader"
     (def #_"{char IFn}" LispReader'macros
-        (hash-map
+        (-/hash-map
             \"  string-reader ;; oops! "
             \;  comment-reader
             \'  quote-reader
@@ -18594,7 +18570,7 @@
     )
 
     (def #_"{char IFn}" LispReader'dispatchMacros
-        (hash-map
+        (-/hash-map
             \^  meta-reader
             \'  var-reader
             \"  regex-reader ;; oops! "
