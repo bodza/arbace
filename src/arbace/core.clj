@@ -13421,7 +13421,7 @@
         (list? form)      (outer (apply list (map inner form)))
         (map-entry? form) (outer (vec (map inner form)))
         (seq? form)       (outer (doall (map inner form)))
-        (record? form)    (outer (reduce #(conj %1 (inner %2)) form form))
+        (record? form)    (outer (reduce #(conj %1 (inner %2)) form form))
         (coll? form)      (outer (into (empty form) (map inner form)))
         :else             (outer form)
     )
@@ -13649,19 +13649,6 @@
         (and (some? c) (.isPrimitive c) (not (= c Void/TYPE)))
     )
 
-    (defn #_"Field" Reflector'getField [#_"Class" c, #_"String" name, #_"boolean" static?]
-        (let [#_"Field[]" allfields (.getFields c)]
-            (loop-when [#_"int" i 0] (< i (count allfields))
-                (let [#_"Field" f (aget allfields i)]
-                    (if (and (= name (.getName f)) (= (Modifier/isStatic (.getModifiers f)) static?))
-                        f
-                        (recur (inc i))
-                    )
-                )
-            )
-        )
-    )
-
     (defn #_"vector" Reflector'getMethods [#_"Class" c, #_"int" arity, #_"String" name, #_"boolean" static?]
         (let [matches- #(and (= name (.getName %)) (= (Modifier/isStatic (.getModifiers %)) static?) (= (count (.getParameterTypes %)) arity))
               #_"java.lang.reflect.Method[]" allmethods (.getMethods c)
@@ -13703,215 +13690,11 @@
         )
     )
 
-    (defn #_"Object" Reflector'boxArg [#_"Class" c, #_"Object" arg]
-        (let [unexpected! #(throw! (str "unexpected param type, expected: " c ", given: " (.getName (class arg))))]
-            (cond
-                (not (.isPrimitive c)) (cast c arg)
-                (= c Boolean/TYPE)     (cast Boolean arg)
-                (= c Character/TYPE)   (cast Character arg)
-                (number? arg)
-                    (condp = c
-                        Integer/TYPE   (.intValue #_"Number" arg)
-                        Long/TYPE      (.longValue #_"Number" arg)
-                        Byte/TYPE      (.byteValue #_"Number" arg)
-                        (unexpected!)
-                    )
-                :else
-                    (unexpected!)
-            )
-        )
-    )
-
-    (defn #_"array" Reflector'boxArgs [#_"Class[]" params, #_"array" args]
-        (when (pos? (count params))
-            (let [#_"array" a (object-array (count params))]
-                (dotimes [#_"int" i (count params)]
-                    (aset! a i (Reflector'boxArg (aget params i), (aget args i)))
-                )
-                a
-            )
-        )
-    )
-
-    (defn #_"boolean" Reflector'paramArgTypeMatch [#_"Class" paramType, #_"Class" argType]
-        (cond
-            (nil? argType)
-                (not (.isPrimitive paramType))
-            (or (= paramType argType) (.isAssignableFrom paramType, argType))
-                true
-            :else
-                (condp = paramType
-                    Integer/TYPE   (any = argType Integer Long/TYPE Long Byte/TYPE)
-                    Long/TYPE      (any = argType Long Integer/TYPE Byte/TYPE)
-                    Character/TYPE (= argType Character)
-                    Byte/TYPE      (= argType Byte)
-                    Boolean/TYPE   (= argType Boolean)
-                                   false
-                )
-        )
-    )
-
-    (defn #_"boolean" Reflector'isCongruent [#_"Class[]" params, #_"array" args]
-        (when (some? args) => (zero? (count params))
-            (and (= (count params) (count args))
-                (loop-when-recur [#_"boolean" ? true #_"int" i 0]
-                                 (and ? (< i (count params)))
-                                 [(Reflector'paramArgTypeMatch (aget params i), (class (aget args i))) (inc i)]
-                              => ?
-                )
-            )
-        )
-    )
-
-    (defn #_"boolean" Reflector'isMatch [#_"java.lang.reflect.Method" lhs, #_"java.lang.reflect.Method" rhs]
-        (and (= (.getName lhs), (.getName rhs)) (Modifier/isPublic (.getModifiers (.getDeclaringClass lhs)))
-            (let [#_"Class[]" types1 (.getParameterTypes lhs) #_"Class[]" types2 (.getParameterTypes rhs)]
-                (and (= (count types1) (count types2))
-                    (loop-when [#_"int" i 0] (< i (count types1)) => true
-                        (and (.isAssignableFrom (aget types1 i), (aget types2 i))
-                            (recur (inc i))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"java.lang.reflect.Method" Reflector'getAsMethodOfPublicBase [#_"Class" c, #_"java.lang.reflect.Method" m]
-        (or
-            (let [#_"Class[]" ifaces (.getInterfaces c)]
-                (loop-when [#_"int" j 0] (< j (count ifaces))
-                    (let [#_"java.lang.reflect.Method[]" methods (.getMethods (aget ifaces j))]
-                        (or
-                            (loop-when [#_"int" i 0] (< i (count methods))
-                                (let-when [#_"java.lang.reflect.Method" im (aget methods i)] (Reflector'isMatch im, m) => (recur (inc i))
-                                    im
-                                )
-                            )
-                            (recur (inc j))
-                        )
-                    )
-                )
-            )
-            (when-some [#_"Class" sc (.getSuperclass c)]
-                (let [#_"java.lang.reflect.Method[]" methods (.getMethods sc)]
-                    (loop-when [#_"int" i 0] (< i (count methods)) => (Reflector'getAsMethodOfPublicBase sc, m)
-                        (let-when [#_"java.lang.reflect.Method" scm (aget methods i)] (Reflector'isMatch scm, m) => (recur (inc i))
-                            scm
-                        )
-                    )
-                )
-            )
-        )
-    )
-
     (defn #_"Object" Reflector'prepRet [#_"Class" c, #_"Object" x]
         (cond
             (not (or (.isPrimitive c) (= c Boolean))) x
             (boolean? x)                          (if x true false)
             :else                                     x
-        )
-    )
-
-    (defn #_"boolean" Reflector'subsumes [#_"Class[]" c1, #_"Class[]" c2]
-        ;; presumes matching lengths
-        (loop-when [#_"boolean" better false #_"int" i 0] (< i (count c1)) => better
-            (when-not (= (aget c1 i) (aget c2 i)) => (recur better (inc i))
-                (and (or (and (not (.isPrimitive (aget c1 i))) (.isPrimitive (aget c2 i))) (.isAssignableFrom (aget c2 i), (aget c1 i)))
-                    (recur true (inc i))
-                )
-            )
-        )
-    )
-
-    (defn #_"Object" Reflector'invokeMatchingMethod [#_"String" methodName, #_"vector" methods, #_"Object" target, #_"array" args]
-        (let-when [#_"int" n (count methods)] (pos? n) => (throw! (str "no matching method found: " methodName (when (some? target) (str " for " (class target)))))
-            (let [[#_"java.lang.reflect.Method" m #_"array" boxedArgs]
-                    (if (= n 1)
-                        (let [m (nth methods 0)]
-                            [m (Reflector'boxArgs (.getParameterTypes m), args)]
-                        )
-                        ;; overloaded w/same arity
-                        (loop-when [#_"java.lang.reflect.Method" found nil boxedArgs nil #_"seq" s (seq methods)] (some? s) => [found boxedArgs]
-                            (let [m (first s) #_"Class[]" params (.getParameterTypes m)
-                                  [found boxedArgs]
-                                    (if (and (Reflector'isCongruent params, args) (or (nil? found) (Reflector'subsumes params, (.getParameterTypes found))))
-                                        [m (Reflector'boxArgs params, args)]
-                                        [found boxedArgs]
-                                    )]
-                                (recur found boxedArgs (next s))
-                            )
-                        )
-                    )]
-                (when (some? m) => (throw! (str "no matching method found: " methodName (when (some? target) (str " for " (class target)))))
-                    (let [m (when-not (Modifier/isPublic (.getModifiers (.getDeclaringClass m))) => m
-                                ;; public method of non-public class, try to find it in hierarchy
-                                (or (Reflector'getAsMethodOfPublicBase (class target), m)
-                                    (throw! (str "can't call public method of non-public class: " m))
-                                )
-                            )]
-                        (try
-                            (Reflector'prepRet (.getReturnType m), (.invoke m, target, boxedArgs))
-                            (catch Exception e
-                                (throw (or (.getCause e) e))
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"Object" Reflector'invokeConstructor [#_"Class" c, #_"array" args]
-        (try
-            (let [#_"Constructor[]" allctors (.getConstructors c)
-                  #_"vector" ctors
-                    (loop-when [ctors [] #_"int" i 0] (< i (count allctors)) => ctors
-                        (let [#_"Constructor" ctor (aget allctors i)
-                              ctors
-                                (when (= (count (.getParameterTypes ctor)) (count args)) => ctors
-                                    (conj ctors ctor)
-                                )]
-                            (recur ctors (inc i))
-                        )
-                    )]
-                (condp = (count ctors)
-                    0   (throw! (str "no matching ctor found for " c))
-                    1   (let [#_"Constructor" ctor (nth ctors 0)]
-                            (.newInstance ctor, (Reflector'boxArgs (.getParameterTypes ctor), args))
-                        )
-                    (or ;; overloaded w/same arity
-                        (loop-when-recur [#_"seq" s (seq ctors)] (some? s) [(next s)]
-                            (let [#_"Constructor" ctor (first s)]
-                                (let-when [#_"Class[]" params (.getParameterTypes ctor)] (Reflector'isCongruent params, args)
-                                    (.newInstance ctor, (Reflector'boxArgs params, args))
-                                )
-                            )
-                        )
-                        (throw! (str "no matching ctor found for " c))
-                    )
-                )
-            )
-            (catch Exception e
-                (throw (or (.getCause e) e))
-            )
-        )
-    )
-
-    (defn #_"Object" Reflector'invokeStaticMethod [#_"Class" c, #_"String" methodName, #_"array" args]
-        (if (= methodName "new")
-            (Reflector'invokeConstructor c, args)
-            (let [#_"vector" methods (Reflector'getMethods c, (count args), methodName, true)]
-                (Reflector'invokeMatchingMethod methodName, methods, nil, args)
-            )
-        )
-    )
-
-    (defn #_"Object" Reflector'getInstanceField [#_"Object" target, #_"String" fieldName]
-        (let [#_"Class" c (class target) #_"Field" f (Reflector'getField c, fieldName, false)]
-            (when (some? f) => (throw! (str "no matching field found: " fieldName " for " c))
-                (Reflector'prepRet (.getType f), (.get f, target))
-            )
         )
     )
 )
@@ -14447,19 +14230,6 @@
 
     (defn #_"Class" Compiler'primClass [#_"Class" c]
         (if (.isPrimitive c) c Object)
-    )
-
-    (defn #_"Class" Compiler'boxClass [#_"Class" p]
-        (when (.isPrimitive p) => p
-            (condp = p
-                Integer/TYPE   Integer
-                Long/TYPE      Long
-                Character/TYPE Character
-                Byte/TYPE      Byte
-                Boolean/TYPE   Boolean
-                               nil
-            )
-        )
     )
 )
 
@@ -16725,31 +16495,6 @@
                         (.invokeStatic gen, (Type/getType RT'iface), (Method/getMethod "arbace.core.Var var(String, String)"))
                         true
                     )
-                    (type? value)
-                    (let [#_"Method" ctor (Method. "<init>", (Type/getConstructorDescriptor (aget (.getConstructors (class value)) 0)))]
-                        (.newInstance gen, (Type/getType (class value)))
-                        (.dup gen)
-                        (let [#_"vector" fields (Reflector'invokeStaticMethod (class value), "getBasis", (object-array 0))]
-                            (loop-when-recur [#_"seq" s (seq fields)] (some? s) [(next s)]
-                                (let [#_"Symbol" field (first s)]
-                                    (IopObject''emitValue this, (Reflector'getInstanceField value, (Compiler'munge (:name field))), gen)
-                                    (let-when [#_"Class" c (Interop'tagClass (Compiler'tagOf field))] (.isPrimitive c)
-                                        (let [#_"Type" b (Type/getType (Compiler'boxClass c))]
-                                            (.invokeVirtual gen, b, (Method. (str (.getName c) "Value"), (str "()" (.getDescriptor (Type/getType c)))))
-                                        )
-                                    )
-                                )
-                            )
-                            (.invokeConstructor gen, (Type/getType (class value)), ctor)
-                        )
-                        true
-                    )
-                    (record? value)
-                    (let [#_"Class" c (class value)]
-                        (IopObject''emitValue this, (apply array-map value), gen)
-                        (.invokeStatic gen, (Compiler'getType c), (Method/getMethod (str (.getName c) " create(arbace.core.IPersistentMap)")))
-                        true
-                    )
                     (map? value)
                     (let [#_"vector" v
                             (loop-when [v [] #_"seq" s (seq value)] (some? s) => v
@@ -18148,7 +17893,7 @@
                         (keyword? form) (Compiler'registerKeyword form)
                         (number? form)  (NumberExpr'parse form)
                         (string? form)  (StringExpr'new (.intern #_"String" form))
-                        (and (coll? form) (not (record? form)) (not (type? form)) (zero? (count form)))
+                        (and (coll? form) (not (record? form)) (not (type? form)) (zero? (count form)))
                             (let-when [#_"Expr" e (EmptyExpr'new form)] (some? (meta form)) => e
                                 (MetaExpr'new e, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
                             )
@@ -18172,7 +17917,7 @@
                             (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
                                 (Compiler'eval (first s))
                             )
-                        (or (type? form) (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def")))))
+                        (or (type? form) (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def")))))
                             (let [#_"IopObject" fexpr (Compiler'analyze :Context'EXPRESSION, (list 'fn* [] form), (str "eval" (next-id!)))]
                                 (IFn'''invoke (Expr'''eval fexpr))
                             )
@@ -18707,7 +18452,7 @@
                         (throw! "splice not in list")
                     (coll? form)
                         (cond
-                            (record? form)
+                            (record? form)
                                 form
                             (map? form)
                                 (list `apply `hash-map (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList (seq (SyntaxQuoteReader'flattened form))))))
