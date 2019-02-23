@@ -6,13 +6,13 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn get identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
     (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
 )
 
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
-(import! [java.lang Class Error #_String System Thread] #_[java.lang.reflect Method] [clojure.lang ILookup ITransientAssociative Namespace Symbol])
+(import! [java.lang Class Error #_String Thread] #_[java.lang.reflect Method] [clojure.lang ILookup ITransientAssociative Namespace Symbol])
 
 (defn #_"void" Bore'import-as [#_"Symbol" sym, #_"String" sig]
     (-/doto (#_"Class" .getDeclaredMethod Namespace, "referenceClass", (-/into-array [Symbol Class]))
@@ -120,32 +120,16 @@
 (def >>  -/bit-shift-right)
 (def >>> -/unsigned-bit-shift-right)
 
-(refer! - [aget alength])
-
-(defn aclone [a]         (when (some? a) (-/aclone a)))
-(defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
-(defn aset!  [a i x]     (-/aset a i x) a)
-(defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
-
-(def assoc!! -/assoc!)
-
-(defn update!!
-    ([m k f] (assoc!! m k (f (get m k))))
-    ([m k f x] (assoc!! m k (f (get m k) x)))
-    ([m k f x y] (assoc!! m k (f (get m k) x y)))
-    ([m k f x y & z] (assoc!! m k (apply f (get m k) x y z)))
-)
-
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn identical? int intern let list long loop make-array object-array satisfies? symbol to-array]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn identical? int intern let list long loop satisfies? symbol to-array]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
-    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about aclone acopy! aget alength aset! assoc!! aswap! bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! update!! zero? |])
+    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! zero? |])
 )
 
 (import!
-    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception Integer Long NoSuchMethodException Number Object String StringBuilder ThreadLocal Throwable Void]
+    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception Integer Long NoSuchMethodException Number Object String StringBuilder System ThreadLocal Throwable Void]
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue SoftReference WeakReference]
     [java.lang.reflect Array #_Constructor #_Field #_Method Modifier]
@@ -590,6 +574,8 @@
     )
 )
 
+(defn int! [n] (.intValue #_"Number" n))
+
 (defn type?   [x] false)
 (defn record? [x] false)
 
@@ -732,11 +718,11 @@
      ; consistent with =, and thus is different from .hashCode for Integer,
      ; Byte and Clojure collections.
      ;;
-    (defn f'hash [x] (if (some? x) (Hashed'''hash x) 0))
+    (defn f'hash [x] (if (some? x) (Hashed'''hash x) (int 0)))
 
     (defn hash-combine [seed x]
         ;; a la boost
-        (bit-xor seed (+ (f'hash x) 0x9e3779b9 (<< seed 6) (>> seed 2)))
+        (bit-xor seed (+ (f'hash x) (int! 0x9e3779b9) (<< seed 6) (>> seed 2)))
     )
 )
 
@@ -865,6 +851,11 @@
      ; Returns the metadata of obj, returns nil if there is no metadata.
      ;;
     (defn meta [x] (when (satisfies? IMeta x) (IMeta'''meta #_"IMeta" x)))
+
+    ;;;
+     ; Returns the :type metadata of x, or its Class if none.
+     ;;
+    (defn type [x] (or (:type (meta x)) (class x)))
 )
 
 (about #_"arbace.IObj"
@@ -1084,9 +1075,13 @@
      ;;
     (defn conj
         ([] [])
-        ([coll] coll)
-        ([coll x] (if (some? coll) (IPersistentCollection'''conj coll, x) (list x)))
-        ([coll x & s] (recur-when s [(conj coll x) (first s) (next s)] => (conj coll x)))
+        ([c] c)
+        ([c x] (if (some? c) (IPersistentCollection'''conj c, x) (list x)))
+        ([c x & s]
+            (let [c (conj c x)]
+                (recur-when s [c (first s) (next s)] => c)
+            )
+        )
     )
 
     ;;;
@@ -1114,6 +1109,11 @@
     )
 
     (defn editable? [x] (satisfies? IEditableCollection x))
+
+    ;;;
+     ; Returns a new, transient version of the collection, in constant time.
+     ;;
+    (defn transient [#_"IEditableCollection" coll] (IEditableCollection'''asTransient coll))
 )
 
 (about #_"arbace.IMapEntry"
@@ -1158,6 +1158,32 @@
     )
 
     (defn associative? [x] (satisfies? Associative x))
+
+    (declare anew)
+    (declare PersistentArrayMap'new)
+
+    ;;;
+     ; assoc[iate].
+     ; When applied to a map, returns a new map of the same (hashed/sorted) type,
+     ; that contains the mapping of key(s) to val(s).
+     ; When applied to a vector, returns a new vector that contains val at index.
+     ; Note - index must be <= (count vector).
+     ;;
+    (defn assoc
+        ([#_"Associative" a k v]
+            (if (some? a)
+                (Associative'''assoc a, k, v)
+                (PersistentArrayMap'new (anew [ k, v ]))
+            )
+        )
+        ([a k v & kvs]
+            (let-when [a (assoc a k v)] kvs => a
+                (when (next kvs) => (throw! "assoc expects even number of arguments after map/vector, found odd number")
+                    (recur a (first kvs) (second kvs) (next (next kvs)))
+                )
+            )
+        )
+    )
 )
 
 (about #_"arbace.IPersistentMap"
@@ -1170,6 +1196,20 @@
     )
 
     (defn map? [x] (satisfies? IPersistentMap x))
+
+    ;;;
+     ; dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
+     ; that does not contain a mapping for key(s).
+     ;;
+    (defn dissoc
+        ([m] m)
+        ([#_"IPersistentMap" m k] (when (some? m) (IPersistentMap'''dissoc m, k)))
+        ([m k & ks]
+            (when-some [m (dissoc m k)]
+                (recur-when ks [m (first ks) (next ks)] => m)
+            )
+        )
+    )
 )
 
 (about #_"arbace.IPersistentSet"
@@ -1186,6 +1226,20 @@
     )
 
     (defn set? [x] (satisfies? IPersistentSet x))
+
+    ;;;
+     ; disj[oin]. Returns a new set of the same (hashed/sorted) type,
+     ; that does not contain key(s).
+     ;;
+    (defn disj
+        ([s] s)
+        ([#_"IPersistentSet" s k] (when (some? s) (IPersistentSet'''disj s, k)))
+        ([s k & ks]
+            (when-some [s (disj s k)]
+                (recur-when ks [s (first ks) (next ks)] => s)
+            )
+        )
+    )
 )
 
 (about #_"arbace.IPersistentStack"
@@ -1268,6 +1322,29 @@
         (ITransientCollection'''conj! [this, val] (.conj this, val))
         (ITransientCollection'''persistent! [this] (.persistent this))
     )
+
+    ;;;
+     ; conj[oin].
+     ; Adds x to the transient collection, and return c.
+     ; The 'addition' may happen at different 'places' depending on the concrete type.
+     ;;
+    (defn conj!
+        ([] (transient []))
+        ([c] c)
+        ([#_"ITransientCollection" c x] (ITransientCollection'''conj! c, x))
+        ([c x & s]
+            (let [c (conj! c x)]
+                (recur-when s [c (first s) (next s)] => c)
+            )
+        )
+    )
+
+    ;;;
+     ; Returns a new, persistent version of the transient collection, in
+     ; constant time. The transient collection cannot be used after this
+     ; call, any such use will throw an exception.
+     ;;
+    (defn persistent! [#_"ITransientCollection" coll] (ITransientCollection'''persistent! coll))
 )
 
 (about #_"arbace.ITransientAssociative"
@@ -1282,6 +1359,23 @@
         (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
         (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
     )
+
+    ;;;
+     ; assoc[iate].
+     ; When applied to a transient map, adds mapping of key(s) to val(s).
+     ; When applied to a transient vector, sets the val at index.
+     ; Note - index must be <= (count vector). Returns coll.
+     ;;
+    (defn assoc!
+        ([#_"ITransientAssociative" a k v] (ITransientAssociative'''assoc! a, k, v))
+        ([a k v & kvs]
+            (let-when [a (assoc! a k v)] kvs => a
+                (when (next kvs) => (throw! "assoc! expects even number of arguments after map/vector, found odd number")
+                    (recur a (first kvs) (second kvs) (next (next kvs)))
+                )
+            )
+        )
+    )
 )
 
 (about #_"arbace.ITransientMap"
@@ -1291,6 +1385,20 @@
 
     (-/extend-protocol ITransientMap clojure.lang.ITransientMap
         (ITransientMap'''dissoc! [this, key] (.without this, key))
+    )
+
+    ;;;
+     ; dissoc[iate]. Returns a transient map of the same (hashed/sorted) type,
+     ; that doesn't contain a mapping for key(s).
+     ;;
+    (defn dissoc!
+        ([m] m)
+        ([#_"ITransientMap" m k] (ITransientMap'''dissoc! m, k))
+        ([m k & ks]
+            (let [m (dissoc! m k)]
+                (recur-when ks [m (first ks) (next ks)] => m)
+            )
+        )
     )
 )
 
@@ -1306,6 +1414,20 @@
         (ITransientSet'''contains? [this, key] (.contains this, key))
         (ITransientSet'''get [this, key] (.get this, key))
     )
+
+    ;;;
+     ; disj[oin]. Returns a transient set of the same (hashed/sorted) type,
+     ; that does not contain key(s).
+     ;;
+    (defn disj!
+        ([s] s)
+        ([#_"ITransientSet" s k] (ITransientSet'''disj! s, k))
+        ([s k & ks]
+            (let [s (disj! s k)]
+                (recur-when ks [s (first ks) (next ks)] => s)
+            )
+        )
+    )
 )
 
 (about #_"arbace.ITransientVector"
@@ -1318,34 +1440,12 @@
         (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
         (ITransientVector'''pop! [this] (.pop this))
     )
-)
 
-(about #_"arbace.PersistentHashMap"
-    (defp INode
-        (#_"INode" INode'''assoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf])
-        (#_"INode" INode'''dissoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key])
-        (#_"IMapEntry|Object" INode'''find
-            [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key]
-            [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not-found]
-        )
-        (#_"seq" INode'''nodeSeq [#_"INode" this])
-        (#_"INode" INode'''assocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf])
-        (#_"INode" INode'''dissocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"boolean'" removedLeaf])
-        (#_"Object" INode'''kvreduce [#_"INode" this, #_"fn" f, #_"Object" r])
-    )
-
-    (-/extend-protocol INode clojure.lang.PersistentHashMap$INode
-        (INode'''assoc [this, shift, hash, key, val, addedLeaf] (.assoc this, shift, hash, key, val, addedLeaf))
-        (INode'''dissoc [this, shift, hash, key] (.without this, shift, hash, key))
-        (INode'''find
-            ([this, shift, hash, key] (.find this, shift, hash, key))
-            ([this, shift, hash, key, not-found] (.find this, shift, hash, key, not-found))
-        )
-        (INode'''nodeSeq [this] (.nodeSeq this))
-        (INode'''assocT [this, edit, shift, hash, key, val, addedLeaf] (.assoc this, edit, shift, hash, key, val, addedLeaf))
-        (INode'''dissocT [this, edit, shift, hash, key, removedLeaf] (.without this, edit, shift, hash, key, removedLeaf))
-        (INode'''kvreduce [this, f, r] (.kvreduce this, f, r))
-    )
+    ;;;
+     ; Removes the last item from a transient vector.
+     ; If the collection is empty, throws an exception. Returns coll.
+     ;;
+    (defn pop! [#_"ITransientVector" coll] (ITransientVector'''pop! coll))
 )
 
 (about #_"arbace.IReduce"
@@ -1382,6 +1482,16 @@
 
 (about #_"arbace.Ratio"
     (defp Ratio)
+
+    ;;;
+     ; Returns true if n is a Ratio.
+     ;;
+    (defn ratio? [n] (satisfies? Ratio n))
+
+    ;;;
+     ; Returns true if n is a rational number.
+     ;;
+    (defn rational? [n] (or (integer? n) (ratio? n)))
 )
 
 (about #_"arbace.Numbers"
@@ -1545,6 +1655,19 @@
 )
 
 (about #_"arbace.PersistentHashMap"
+    (defp INode
+        (#_"INode" INode'''assoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf])
+        (#_"INode" INode'''dissoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key])
+        (#_"IMapEntry|Object" INode'''find
+            [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+            [#_"INode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not-found]
+        )
+        (#_"seq" INode'''nodeSeq [#_"INode" this])
+        (#_"INode" INode'''assocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"boolean'" addedLeaf])
+        (#_"INode" INode'''dissocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"boolean'" removedLeaf])
+        (#_"Object" INode'''kvreduce [#_"INode" this, #_"fn" f, #_"Object" r])
+    )
+
     (defp HSeq)
     (defp NSeq)
     (defp TransientHashMap)
@@ -1641,38 +1764,37 @@
     (defn var? [v] (satisfies? Var v))
 )
 
-;; naïve reduce to be redefined later with IReduce
+(about #_"defarray"
+    (refer! - [aget alength])
 
-(defn reduce
-    ([f s] (if-some [s (seq s)] (reduce f (first s) (next s)) (f)))
-    ([f r s] (if-some [s (seq s)] (recur f (f r (first s)) (next s)) r))
-)
+    (defn aclone [a]         (when (some? a) (-/aclone a)))
+    (defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
+    (defn aset!  [a i x]     (-/aset a i x) a)
+    (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
-(declare persistent!)
-(declare transient)
-
-(defn reduce!
-    ([f s] (if-some [s (seq s)] (reduce! f (first s) (next s)) (f)))
-    ([f r s] (persistent! (reduce f (transient r) s)))
-)
-
-(declare conj!)
-
-(defn into [to from]
-    (if (editable? to)
-        (reduce! conj! to from)
-        (reduce conj to from)
-    )
-)
-
-(defmacro update! [x f & z] `(set! ~x (~f ~x ~@z)))
-
-(defn anew [size-or-seq]
-    (if (number? size-or-seq)
-        (make-array Object (int size-or-seq))
-        (let [#_"seq" s (seq size-or-seq) #_"int" n (count s)]
-            (loop-when-recur [#_"array" a (make-array Object n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
+    (defn anew [size-or-seq]
+        (if (number? size-or-seq)
+            (-/make-array Object (int! size-or-seq))
+            (let [#_"seq" s (seq size-or-seq) #_"int" n (count s)]
+                (loop-when-recur [#_"array" a (-/make-array Object n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
+            )
         )
+    )
+
+    (defn- assoc!!
+        ([a k v]    (.assoc a, k, v))
+        ([a k v & kvs]
+            (let [a (.assoc a, k, v)]
+                (recur-when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
+            )
+        )
+    )
+
+    (defn- update!!
+        ([a k f]         (.assoc a, k,       (f (.valAt a, k))))
+        ([a k f x]       (.assoc a, k,       (f (.valAt a, k) x)))
+        ([a k f x y]     (.assoc a, k,       (f (.valAt a, k) x y)))
+        ([a k f x y & z] (.assoc a, k, (apply f (.valAt a, k) x y z)))
     )
 )
 
@@ -1694,45 +1816,45 @@
  ; @author Kurt Alfred Kluever
  ;;
 (about #_"Murmur3"
-    (def- #_"int" Murmur3'seed 0)
-    (def- #_"int" Murmur3'C1 0xcc9e2d51)
-    (def- #_"int" Murmur3'C2 0x1b873593)
+    (def- #_"int" Murmur3'seed (int 0))
+    (def- #_"int" Murmur3'C1 (int! 0xcc9e2d51))
+    (def- #_"int" Murmur3'C2 (int! 0x1b873593))
 
     (defn- #_"int" Murmur3'mixK1 [#_"int" k1]
         (-> k1 (* Murmur3'C1) (Integer/rotateLeft 15) (* Murmur3'C2))
     )
 
     (defn- #_"int" Murmur3'mixH1 [#_"int" h1, #_"int" k1]
-        (-> h1 (bit-xor k1) (Integer/rotateLeft 13) (* 5) (+ 0xe6546b64))
+        (-> h1 (bit-xor k1) (Integer/rotateLeft 13) (* (int 5)) (+ (int! 0xe6546b64)))
     )
 
     ;; finalization mix - force all bits of a hash block to avalanche
     (defn- #_"int" Murmur3'fmix [#_"int" h1, #_"int" n]
         (let [h1 (bit-xor h1 n)    h1 (bit-xor h1 (>>> h1 16))
-              h1 (* h1 0x85ebca6b) h1 (bit-xor h1 (>>> h1 13))
-              h1 (* h1 0xc2b2ae35) h1 (bit-xor h1 (>>> h1 16))]
+              h1 (* (int! h1) (int! 0x85ebca6b)) h1 (bit-xor h1 (>>> h1 13))
+              h1 (* (int! h1) (int! 0xc2b2ae35)) h1 (bit-xor h1 (>>> h1 16))]
             h1
         )
     )
 
     (defn #_"int" Murmur3'hashInt [#_"int" input]
-        (when-not (zero? input) => 0
+        (when-not (zero? input) => (int 0)
             (let [#_"int" k1 (Murmur3'mixK1 input)
                   #_"int" h1 (Murmur3'mixH1 Murmur3'seed, k1)]
-                (Murmur3'fmix h1, 4)
+                (Murmur3'fmix h1, (int 4))
             )
         )
     )
 
     (defn #_"int" Murmur3'hashLong [#_"long" input]
-        (when-not (zero? input) => 0
-            (let [#_"int" low (int input)
-                  #_"int" high (int (>>> input 32))
+        (when-not (zero? input) => (int 0)
+            (let [#_"int" low (int! input)
+                  #_"int" high (int! (>>> input 32))
                   #_"int" k1 (Murmur3'mixK1 low)
                   #_"int" h1 (Murmur3'mixH1 Murmur3'seed, k1)
                   k1 (Murmur3'mixK1 high)
                   h1 (Murmur3'mixH1 h1, k1)]
-                (Murmur3'fmix h1, 8)
+                (Murmur3'fmix h1, (int 8))
             )
         )
     )
@@ -1752,7 +1874,7 @@
                         (bit-xor h1 (Murmur3'mixK1 k1))
                     )
                 )]
-            (Murmur3'fmix h1, (* 2 (.length s)))
+            (Murmur3'fmix h1, (<< (.length s) 1))
         )
     )
 
@@ -1761,15 +1883,15 @@
     )
 
     (defn #_"int" Murmur3'hashOrdered [#_"Seqable" items]
-        (loop-when-recur [#_"int" hash 1 #_"int" n 0 #_"seq" s (seq items)]
+        (loop-when-recur [#_"int" hash (int 1) #_"int" n (int 0) #_"seq" s (seq items)]
                          (some? s)
-                         [(+ (* 31 hash) (f'hash (first s))) (inc n) (next s)]
+                         [(+ (* (int 31) hash) (f'hash (first s))) (inc n) (next s)]
                       => (Murmur3'mixCollHash hash, n)
         )
     )
 
     (defn #_"int" Murmur3'hashUnordered [#_"Seqable" items]
-        (loop-when-recur [#_"int" hash 0 #_"int" n 0 #_"seq" s (seq items)]
+        (loop-when-recur [#_"int" hash (int 0) #_"int" n (int 0) #_"seq" s (seq items)]
                          (some? s)
                          [(+ hash (f'hash (first s))) (inc n) (next s)]
                       => (Murmur3'mixCollHash hash, n)
@@ -1974,6 +2096,18 @@
 
 (defn- preserving-reduced [f] #(let [r (f %1 %2)] (if (reduced? r) (reduced r) r)))
 
+;; naïve reduce to be redefined later with IReduce
+
+(defn reduce
+    ([f s] (if-some [s (seq s)] (reduce f (first s) (next s)) (f)))
+    ([f r s] (if-some [s (seq s)] (recur f (f r (first s)) (next s)) r))
+)
+
+(defn reduce!
+    ([f s] (if-some [s (seq s)] (reduce! f (first s) (next s)) (f)))
+    ([f r s] (persistent! (reduce f (transient r) s)))
+)
+
 ;;;
  ; A transducer which concatenates the contents of each input, which must
  ; be a collection, into the reduction.
@@ -1987,6 +2121,18 @@
         )
     )
 )
+
+(defn into [to from]
+    (if (editable? to)
+        (reduce! conj! to from)
+        (reduce conj to from)
+    )
+)
+
+;;;
+ ; Returns a seq of the items in coll in reverse order. Not lazy.
+ ;;
+(defn reverse [s] (into () s))
 )
 
 (about #_"arbace.Util"
@@ -2096,6 +2242,18 @@
         (#_"int" Comparable'''compareTo [#_"Ratio" this, #_"Object" that]
             (Numbers'compare this, (cast Number that))
         )
+    )
+)
+
+;;;
+ ; Coerce to BigInteger.
+ ;;
+(defn #_"BigInteger" biginteger [x]
+    (cond
+        (instance? BigInteger x) x
+        (ratio? x)               (Ratio''bigIntegerValue #_"Ratio" x)
+        (number? x)              (BigInteger/valueOf (long x))
+        :else                    (BigInteger. x)
     )
 )
 )
@@ -2808,12 +2966,10 @@
     (def- #_"ReferenceQueue" Keyword'queue (ReferenceQueue.))
 
     (defn- #_"Keyword" Keyword'new [#_"Symbol" sym]
-        (Keyword'class. (anew [sym, (+ (f'hash sym) 0x9e3779b9)]))
+        (Keyword'class. (anew [sym, (+ (f'hash sym) (int! 0x9e3779b9))]))
     )
 
     (declare Cache'purge)
-    (declare assoc)
-    (declare dissoc)
 
     (defn #_"Keyword" Keyword'intern [#_"Symbol" sym]
         (let [#_"Reference<Keyword>" r (get @Keyword'cache sym)
@@ -2932,7 +3088,7 @@
             (let [#_"Object" o (IFn'''invoke this, o1, o2)]
                 (if (boolean? o)
                     (cond (boolean o) -1 (boolean (IFn'''invoke this, o2, o1)) 1 :else 0)
-                    (.intValue (cast Number o))
+                    (int! o)
                 )
             )
         )
@@ -3225,6 +3381,124 @@
 (defn cons [x s] (Cons'new x, (seq s)))
 )
 
+(about #_"arbace.Repeat"
+
+(about #_"Repeat"
+    (declare Repeat''seq Repeat''next)
+
+    (defq Repeat [#_"meta" _meta, #_"long" cnt, #_"Object" val] #_"SeqForm"
+        clojure.lang.ISeq (seq [_] (Repeat''seq _)) (first [_] (:val _)) (next [_] (Repeat''next _))
+    )
+
+    #_inherit
+    (defm Repeat ASeq)
+
+    (def- #_"long" Repeat'INFINITE -1)
+
+    (defn- #_"Repeat" Repeat'new
+        ([#_"long" cnt, #_"Object" val] (Repeat'new nil, cnt, val))
+        ([#_"meta" meta, #_"long" cnt, #_"Object" val]
+            (Repeat'class. (anew [meta, cnt, val])) ;; cnt always INFINITE or pos?
+        )
+    )
+
+    (defn- #_"Repeat" Repeat''withMeta [#_"Repeat" this, #_"meta" meta]
+        (when-not (= meta (:_meta this)) => this
+            (Repeat'new meta, (:cnt this), (:val this))
+        )
+    )
+
+    (defn #_"Repeat|ISeq" Repeat'create
+        ([#_"Object" val] (Repeat'new Repeat'INFINITE, val))
+        ([#_"long" n, #_"Object" val] (if (pos? n) (Repeat'new n, val) ()))
+    )
+
+    (defn- #_"seq" Repeat''seq [#_"Repeat" this]
+        this
+    )
+
+    (defn- #_"seq" Repeat''next [#_"Repeat" this]
+        (cond
+            (< 1 (:cnt this))               (Repeat'new (dec (:cnt this)), (:val this))
+            (= (:cnt this) Repeat'INFINITE) this
+        )
+    )
+
+    (defn- #_"Object" Repeat''reduce
+        ([#_"Repeat" this, #_"fn" f]
+            (let [#_"Object" r (:val this)]
+                (if (= (:cnt this) Repeat'INFINITE)
+                    (loop [r r]
+                        (let [r (f r (:val this))]
+                            (if (reduced? r) @r (recur r))
+                        )
+                    )
+                    (loop-when [r r #_"long" i 1] (< i (:cnt this)) => r
+                        (let [r (f r (:val this))]
+                            (if (reduced? r) @r (recur r (inc i)))
+                        )
+                    )
+                )
+            )
+        )
+        ([#_"Repeat" this, #_"fn" f, #_"Object" r]
+            (if (= (:cnt this) Repeat'INFINITE)
+                (loop [r r]
+                    (let [r (f r (:val this))]
+                        (if (reduced? r) @r (recur r))
+                    )
+                )
+                (loop-when [r r #_"long" i 0] (< i (:cnt this)) => r
+                    (let [r (f r (:val this))]
+                        (if (reduced? r) @r (recur r (inc i)))
+                    )
+                )
+            )
+        )
+    )
+
+    (defm Repeat IMeta
+        (IMeta'''meta => :_meta)
+    )
+
+    (defm Repeat IObj
+        (IObj'''withMeta => Repeat''withMeta)
+    )
+
+    (defm Repeat Sequential)
+
+    (defm Repeat Seqable
+        (Seqable'''seq => Repeat''seq)
+    )
+
+    (defm Repeat ISeq
+        (ISeq'''first => :val)
+        (ISeq'''next => Repeat''next)
+    )
+
+    (defm Repeat IReduce
+        (IReduce'''reduce => Repeat''reduce)
+    )
+
+    (defm Repeat Hashed
+        (Hashed'''hash => Murmur3'hashOrdered)
+    )
+
+    (defm Repeat IObject
+        (IObject'''equals => ASeq''equals)
+        (IObject'''toString => RT'printString)
+    )
+)
+
+;;;
+ ; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
+ ;;
+(defn repeat
+    ([  x] (Repeat'create   x))
+    ([n x] (Repeat'create n x))
+)
+)
+
 (about #_"arbace.LazySeq"
 
 (about #_"LazySeq"
@@ -3342,6 +3616,41 @@
  ; seq calls. See also - realized?
  ;;
 (defmacro lazy-seq [& body] `(LazySeq'new (^{:once true} fn* [] ~@body)))
+
+;;;
+ ; When lazy sequences are produced via functions that have side
+ ; effects, any effects other than those needed to produce the first
+ ; element in the seq do not occur until the seq is consumed. dorun can
+ ; be used to force any effects. Walks through the successive nexts of
+ ; the seq, does not retain the head and returns nil.
+ ;;
+(defn dorun
+    ([s]
+        (when-some [s (seq s)]
+            (recur (next s))
+        )
+    )
+    ([n s]
+        (when (pos? n)
+            (when-some [s (seq s)]
+                (recur (dec n) (next s))
+            )
+        )
+    )
+)
+
+;;;
+ ; When lazy sequences are produced via functions that have side
+ ; effects, any effects other than those needed to produce the first
+ ; element in the seq do not occur until the seq is consumed. doall can
+ ; be used to force any effects. Walks through the successive nexts of
+ ; the seq, retains the head and returns it, thus causing the entire
+ ; seq to reside in memory at one time.
+ ;;
+(defn doall
+    ([s] (dorun s) s)
+    ([n s] (dorun n s) s)
+)
 
 ;;;
  ; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
@@ -3570,6 +3879,38 @@
 )
 
 ;;;
+ ; Returns a lazy sequence consisting of the result of applying f to 0
+ ; and the first item of coll, followed by applying f to 1 and the second
+ ; item in coll, etc, until coll is exhausted. Thus function f should
+ ; accept 2 arguments, index and item. Returns a stateful transducer when
+ ; no collection is provided.
+ ;;
+(defn map-indexed
+    ([f]
+        (fn [g]
+            (let [i' (atom -1)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x] (g s (f (swap! i' inc) x)))
+                )
+            )
+        )
+    )
+    ([f s]
+        (letfn [(mapi- [i s]
+                    (lazy-seq
+                        (when-some [s (seq s)]
+                            (cons (f i (first s)) (mapi- (inc i) (next s)))
+                        )
+                    )
+                )]
+            (mapi- 0 s)
+        )
+    )
+)
+
+;;;
  ; Returns the result of applying concat to the result of applying map to f and colls.
  ; Thus function f should return a collection.
  ; Returns a transducer when no collections are provided.
@@ -3577,6 +3918,83 @@
 (defn mapcat
     ([f] (comp (map f) cat))
     ([f & s] (apply concat (apply map f s)))
+)
+
+;;;
+ ; Expands to code which yields a lazy sequence of the concatenation of
+ ; the supplied colls. Each coll expr is not evaluated until it is needed.
+ ;
+ ; (lazy-cat xs ys zs) === (concat (lazy-seq xs) (lazy-seq ys) (lazy-seq zs))
+ ;;
+(defmacro lazy-cat [& s]
+    `(concat ~@(map #(list `lazy-seq %) s))
+)
+
+;;;
+ ; Returns a lazy sequence of the non-nil results of (f item). Note,
+ ; this means false return values will be included. f must be free of
+ ; side-effects. Returns a transducer when no collection is provided.
+ ;;
+(defn keep
+    ([f]
+        (fn [g]
+            (fn
+                ([] (g))
+                ([s] (g s))
+                ([s x]
+                    (let-when [y (f x)] (some? y) => s
+                        (g s y)
+                    )
+                )
+            )
+        )
+    )
+    ([f s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let-when [y (f (first s))] (some? y) => (keep f (next s))
+                    (cons y (keep f (next s)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy sequence of the non-nil results of (f index item).
+ ; Note, this means false return values will be included. f must be free
+ ; of side-effects. Returns a stateful transducer when no collection is
+ ; provided.
+ ;;
+(defn keep-indexed
+    ([f]
+        (fn [g]
+            (let [i' (atom -1)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x]
+                        (let-when [y (f (swap! i' inc) x)] (some? y) => s
+                            (g s y)
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([f s]
+        (letfn [(keepi- [i s]
+                    (lazy-seq
+                        (when-some [s (seq s)]
+                            (let-when [y (f i (first s))] (some? y) => (keepi- (inc i) (next s))
+                                (cons y (keepi- (inc i) (next s)))
+                            )
+                        )
+                    )
+                )]
+            (keepi- 0 s)
+        )
+    )
 )
 
 ;;;
@@ -3757,6 +4175,163 @@
  ; Returns a vector of [(take-while f? coll) (drop-while f? coll)].
  ;;
 (defn split-with [f? s] [(take-while f? s) (drop-while f? s)])
+
+;;;
+ ; Returns a lazy seq of every nth item in coll.
+ ; Returns a stateful transducer when no collection is provided.
+ ;;
+(defn take-nth
+    ([n]
+        (fn [g]
+            (let [i' (atom -1)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x]
+                        (let-when [i (swap! i' inc)] (zero? (rem i n)) => s
+                            (g s x)
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([n s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (cons (first s) (take-nth n (drop n s)))
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy seq of the first item in each coll, then the second, etc.
+ ;;
+(defn interleave
+    ([] ())
+    ([c1] (lazy-seq c1))
+    ([c1 c2]
+        (lazy-seq
+            (let-when [s1 (seq c1) s2 (seq c2)] (and s1 s2)
+                (cons (first s1) (cons (first s2) (interleave (next s1) (next s2))))
+            )
+        )
+    )
+    ([c1 c2 & cs]
+        (lazy-seq
+            (let-when [ss (map seq (conj cs c2 c1))] (every? identity ss)
+                (concat (map first ss) (apply interleave (map next ss)))
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy seq of the elements of coll separated by sep.
+ ; Returns a stateful transducer when no collection is provided.
+ ;;
+(defn interpose
+    ([sep]
+        (fn [g]
+            (let [started (atom false)]
+                (fn
+                    ([] (g))
+                    ([s] (g s))
+                    ([s x]
+                        (when @started => (do (reset! started true) (g s x))
+                            (let [r (g s sep)]
+                                (if (reduced? r) r (g r x))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([sep coll] (drop 1 (interleave (repeat sep) coll)))
+)
+
+;;;
+ ; Returns a lazy sequence of lists of n items each, at offsets step apart.
+ ; If step is not supplied, defaults to n, i.e. the partitions do not overlap.
+ ; If a pad is supplied, use it as necessary to complete the last partition upto n items.
+ ; In case there are not enough padding elements, return a partition with less than n items.
+ ;;
+(defn partition
+    ([n s] (partition n n s))
+    ([n step s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let-when [p (take n s)] (= (count p) n)
+                    (cons p (partition n step (nthnext s step)))
+                )
+            )
+        )
+    )
+    ([n step pad s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let-when [p (take n s)] (= (count p) n) => (list (take n (concat p pad)))
+                    (cons p (partition n step pad (nthnext s step)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a lazy sequence of lists like partition, but may include
+ ; partitions with fewer than n items at the end. Returns a stateful
+ ; transducer when no collection is provided.
+ ;;
+(defn partition-all
+    ([n]
+        (fn [g]
+            (let [v' (atom [])]
+                (fn
+                    ([] (g))
+                    ([x]
+                        (let [x (when (seq @v') => x
+                                    (let [v @v' _ (swap! v' empty)]
+                                        (unreduced (g x v))
+                                    )
+                                )]
+                            (g x)
+                        )
+                    )
+                    ([x y]
+                        (swap! v' conj y)
+                        (when (= (count @v') n) => x
+                            (let [v @v' _ (swap! v' empty)]
+                                (g x v)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+    ([n s] (partition-all n n s))
+    ([n step s]
+        (lazy-seq
+            (when-some [s (seq s)]
+                (let [p (doall (take n s))]
+                    (cons p (partition-all n step (nthnext s step)))
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Takes a function of no args, presumably with side effects, and returns
+ ; an infinite (or length n if supplied) lazy sequence of calls to it.
+ ;;
+(defn repeatedly
+    ([f] (lazy-seq (cons (f) (repeatedly f))))
+    ([n f] (take n (repeatedly f)))
+)
 )
 
 (about #_"arbace.APersistentMap"
@@ -4040,8 +4615,8 @@
     )
 
     (defn #_"int" AMapEntry''hash [#_"AMapEntry" this]
-        (loop-when [#_"int" hash 1 #_"int" i 0] (< i 2) => (Murmur3'mixCollHash hash, i)
-            (recur (+ (* 31 hash) (f'hash (Indexed'''nth this, i))) (inc i))
+        (loop-when [#_"int" hash (int 1) #_"int" i (int 0)] (< i 2) => (Murmur3'mixCollHash hash, i)
+            (recur (+ (* (int 31) hash) (f'hash (Indexed'''nth this, i))) (inc i))
         )
     )
 
@@ -4758,7 +5333,6 @@
     )
 
     (declare PersistentHashMap'create-1a)
-    (declare assoc!)
 
     (defn- #_"ITransientMap" TransientArrayMap''assoc! [#_"TransientArrayMap" this, #_"key" key, #_"value" val]
         (TransientArrayMap''assert-editable this)
@@ -4819,8 +5393,6 @@
                 )
         )
     )
-
-    (declare PersistentArrayMap'new)
 
     (defn- #_"IPersistentMap" TransientArrayMap''persistent! [#_"TransientArrayMap" this]
         (TransientArrayMap''assert-editable this)
@@ -6357,8 +6929,6 @@
         (PersistentHashSet'new nil, (persistent! (:impl this)))
     )
 
-    (declare dissoc!)
-
     (defn- #_"ITransientSet" TransientHashSet''disj! [#_"TransientHashSet" this, #_"key" key]
         (let [#_"ITransientMap" m (dissoc! (:impl this) key)]
             (when-not (= m (:impl this)) => this
@@ -6558,7 +7128,7 @@
         )
     )
 
-    (def #_"int" EmptyList'HASH (§ soon Murmur3'hashOrdered nil))
+    (def #_"int" EmptyList'HASH (Murmur3'hashOrdered nil))
 
     (defn- #_"int" EmptyList''hash [#_"EmptyList" this]
         EmptyList'HASH
@@ -7094,9 +7664,15 @@
     )
 
     (defm BlackVal ITNode
-        ;; inherit Black left right addLeft addRight removeLeft removeRight blacken
+        (ITNode'''addLeft => Black''addLeft)
+        (ITNode'''addRight => Black''addRight)
+        (ITNode'''removeLeft => Black''removeLeft)
+        (ITNode'''removeRight => Black''removeRight)
+        (ITNode'''blacken => Black''blacken)
         (ITNode'''redden => BlackVal''redden)
-        ;; inherit Black balanceLeft balanceRight replace
+        (ITNode'''balanceLeft => Black''balanceLeft)
+        (ITNode'''balanceRight => Black''balanceRight)
+        (ITNode'''replace => Black''replace)
     )
 
     (defm BlackVal Sequential)
@@ -7158,9 +7734,15 @@
     )
 
     (defm BlackBranch ITNode
-        ;; inherit Black addLeft addRight removeLeft removeRight blacken
+        (ITNode'''addLeft => Black''addLeft)
+        (ITNode'''addRight => Black''addRight)
+        (ITNode'''removeLeft => Black''removeLeft)
+        (ITNode'''removeRight => Black''removeRight)
+        (ITNode'''blacken => Black''blacken)
         (ITNode'''redden => BlackBranch''redden)
-        ;; inherit Black balanceLeft balanceRight replace
+        (ITNode'''balanceLeft => Black''balanceLeft)
+        (ITNode'''balanceRight => Black''balanceRight)
+        (ITNode'''replace => Black''replace)
     )
 
     (defm BlackBranch Sequential)
@@ -7222,9 +7804,15 @@
     )
 
     (defm BlackBranchVal ITNode
-        ;; inherit BlackBranch left right addLeft addRight removeLeft removeRight blacken
+        (ITNode'''addLeft => Black''addLeft)
+        (ITNode'''addRight => Black''addRight)
+        (ITNode'''removeLeft => Black''removeLeft)
+        (ITNode'''removeRight => Black''removeRight)
+        (ITNode'''blacken => Black''blacken)
         (ITNode'''redden => BlackBranchVal''redden)
-        ;; inherit BlackBranch balanceLeft balanceRight replace
+        (ITNode'''balanceLeft => Black''balanceLeft)
+        (ITNode'''balanceRight => Black''balanceRight)
+        (ITNode'''replace => Black''replace)
     )
 
     (defm BlackBranchVal Sequential)
@@ -7386,9 +7974,15 @@
     )
 
     (defm RedVal ITNode
-        ;; inherit Red left right addLeft addRight removeLeft removeRight
+        (ITNode'''addLeft => Red''addLeft)
+        (ITNode'''addRight => Red''addRight)
+        (ITNode'''removeLeft => Red''removeLeft)
+        (ITNode'''removeRight => Red''removeRight)
         (ITNode'''blacken => RedVal''blacken)
-        ;; inherit Red redden balanceLeft balanceRight replace
+        (ITNode'''redden => Red''redden)
+        (ITNode'''balanceLeft => Red''balanceLeft)
+        (ITNode'''balanceRight => Red''balanceRight)
+        (ITNode'''replace => Red''replace)
     )
 
     (defm RedVal Sequential)
@@ -7480,12 +8074,15 @@
     )
 
     (defm RedBranch ITNode
-        ;; inherit Red addLeft addRight removeLeft removeRight
+        (ITNode'''addLeft => Red''addLeft)
+        (ITNode'''addRight => Red''addRight)
+        (ITNode'''removeLeft => Red''removeLeft)
+        (ITNode'''removeRight => Red''removeRight)
         (ITNode'''blacken => RedBranch''blacken)
-        ;; inherit Red redden
+        (ITNode'''redden => Red''redden)
         (ITNode'''balanceLeft => RedBranch''balanceLeft)
         (ITNode'''balanceRight => RedBranch''balanceRight)
-        ;; inherit Red replace
+        (ITNode'''replace => Red''replace)
     )
 
     (defm RedBranch Sequential)
@@ -7545,9 +8142,15 @@
     )
 
     (defm RedBranchVal ITNode
-        ;; inherit RedBranch left right addLeft addRight removeLeft removeRight
+        (ITNode'''addLeft => Red''addLeft)
+        (ITNode'''addRight => Red''addRight)
+        (ITNode'''removeLeft => Red''removeLeft)
+        (ITNode'''removeRight => Red''removeRight)
         (ITNode'''blacken => RedBranchVal''blacken)
-        ;; inherit RedBranch redden balanceLeft balanceRight replace
+        (ITNode'''redden => Red''redden)
+        (ITNode'''balanceLeft => RedBranch''balanceLeft)
+        (ITNode'''balanceRight => RedBranch''balanceRight)
+        (ITNode'''replace => Red''replace)
     )
 
     (defm RedBranchVal Sequential)
@@ -8811,7 +9414,7 @@
         ]
             (when (< WNode'max-extra-search-steps (- (+ (WNode''leaf-count node1, 5) (WNode''leaf-count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
                 (let [
-                    #_"seq" s (map #(WNode'new nil, (anew %), nil) (-/partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
+                    #_"seq" s (map #(WNode'new nil, (anew %), nil) (partition-all 32 (concat (WNode''leaf-seq node1) (WNode''leaf-seq node2))))
                 ]
                     (if (<= n (* 32 32))
                         (let [
@@ -8863,7 +9466,7 @@
                                     )
                                 )
                             )
-                        #_"seq" s (-/partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
+                        #_"seq" s (partition-all 32 (concat (WNode''child-seq node1, shift, cnt1) (WNode''child-seq node2, shift, cnt2)))
                     ]
                         (if (<= n (* 32 32))
                             (loop [#_"array" a (anew 32) #_"index" x (-> (anew 33) (aset! 32 0)) #_"int" i 0 s s]
@@ -9036,7 +9639,7 @@
         ([#_"TransientWector" this, #_"key" key, #_"value" not-found]
             (WNode''assert-editable (:root this))
             (when (integer? key) => not-found
-                (let-when [#_"int" i (int key)] (< -1 i (:cnt this)) => not-found
+                (let-when [#_"int" i (int! key)] (< -1 i (:cnt this)) => not-found
                     (TransientWector''value-for this, i)
                 )
             )
@@ -9045,7 +9648,7 @@
 
     (defn- #_"value" TransientWector''invoke [#_"TransientWector" this, #_"key" arg]
         (when (integer? arg) => (throw! "arg must be integer")
-            (Indexed'''nth this, (int arg))
+            (Indexed'''nth this, (int! arg))
         )
     )
 
@@ -9183,17 +9786,17 @@
 
     (defn- #_"TransientWector" TransientWector''assoc! [#_"TransientWector" this, #_"key" key, #_"value" val]
         (when (integer? key) => (throw! "key must be integer")
-            (ITransientVector'''assocN! this, (int key), val)
+            (ITransientVector'''assocN! this, (int! key), val)
         )
     )
 
     (defn- #_"boolean" TransientWector''containsKey [#_"TransientWector" this, #_"key" key]
-        (and (integer? key) (< -1 (int key) (:cnt this)))
+        (and (integer? key) (< -1 (int! key) (:cnt this)))
     )
 
     (defn- #_"IMapEntry" TransientWector''entryAt [#_"TransientWector" this, #_"key" key]
         (when (integer? key)
-            (let-when [#_"int" i (int key)] (< -1 i (:cnt this))
+            (let-when [#_"int" i (int! key)] (< -1 i (:cnt this))
                 (MapEntry'new key, (Indexed'''nth this, i))
             )
         )
@@ -9287,8 +9890,8 @@
     )
 
     (defn- #_"int" PersistentWector''hash [#_"PersistentWector" this]
-        (loop-when [#_"int" hash 1 #_"int" i 0] (< i (:cnt this)) => (Murmur3'mixCollHash hash, i)
-            (recur (+ (* 31 hash) (f'hash (Indexed'''nth this, i))) (inc i))
+        (loop-when [#_"int" hash (int 1) #_"int" i (int 0)] (< i (:cnt this)) => (Murmur3'mixCollHash hash, i)
+            (recur (+ (* (int 31) hash) (f'hash (Indexed'''nth this, i))) (inc i))
         )
     )
 
@@ -9420,7 +10023,7 @@
 
     (defn- #_"value" PersistentWector''invoke [#_"PersistentWector" this, #_"key" arg]
         (when (integer? arg) => (throw! "arg must be integer")
-            (Indexed'''nth this, (int arg))
+            (Indexed'''nth this, (int! arg))
         )
     )
 
@@ -9491,17 +10094,17 @@
 
     (defn- #_"IPersistentVector" PersistentWector''assoc [#_"PersistentWector" this, #_"key" key, #_"value" val]
         (when (integer? key) => (throw! "key must be integer")
-            (IPersistentVector'''assocN this, (int key), val)
+            (IPersistentVector'''assocN this, (int! key), val)
         )
     )
 
     (defn- #_"boolean" PersistentWector''containsKey [#_"PersistentWector" this, #_"key" key]
-        (and (integer? key) (< -1 (int key) (:cnt this)))
+        (and (integer? key) (< -1 (int! key) (:cnt this)))
     )
 
     (defn- #_"IMapEntry" PersistentWector''entryAt [#_"PersistentWector" this, #_"key" key]
         (when (integer? key)
-            (let-when [#_"int" i (int key)] (< -1 i (:cnt this))
+            (let-when [#_"int" i (int! key)] (< -1 i (:cnt this))
                 (MapEntry'new key, (Indexed'''nth this, i))
             )
         )
@@ -9511,7 +10114,7 @@
         ([#_"PersistentWector" this, #_"key" key] (PersistentWector''valAt this, key, nil))
         ([#_"PersistentWector" this, #_"key" key, #_"value" not-found]
             (when (integer? key) => not-found
-                (let-when [#_"int" i (int key)] (< -1 i (:cnt this)) => not-found
+                (let-when [#_"int" i (int! key)] (< -1 i (:cnt this)) => not-found
                     (PersistentWector''value-for this, i)
                 )
             )
@@ -9757,124 +10360,6 @@
 
 (defn wec [s]
     (if (wector? s) s (apply wector s))
-)
-)
-
-(about #_"arbace.Repeat"
-
-(about #_"Repeat"
-    (declare Repeat''seq Repeat''next)
-
-    (defq Repeat [#_"meta" _meta, #_"long" cnt, #_"Object" val] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (Repeat''seq _)) (first [_] (:val _)) (next [_] (Repeat''next _))
-    )
-
-    #_inherit
-    (defm Repeat ASeq)
-
-    (def- #_"long" Repeat'INFINITE -1)
-
-    (defn- #_"Repeat" Repeat'new
-        ([#_"long" cnt, #_"Object" val] (Repeat'new nil, cnt, val))
-        ([#_"meta" meta, #_"long" cnt, #_"Object" val]
-            (Repeat'class. (anew [meta, cnt, val])) ;; cnt always INFINITE or pos?
-        )
-    )
-
-    (defn- #_"Repeat" Repeat''withMeta [#_"Repeat" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (Repeat'new meta, (:cnt this), (:val this))
-        )
-    )
-
-    (defn #_"Repeat|ISeq" Repeat'create
-        ([#_"Object" val] (Repeat'new Repeat'INFINITE, val))
-        ([#_"long" n, #_"Object" val] (if (pos? n) (Repeat'new n, val) ()))
-    )
-
-    (defn- #_"seq" Repeat''seq [#_"Repeat" this]
-        this
-    )
-
-    (defn- #_"seq" Repeat''next [#_"Repeat" this]
-        (cond
-            (< 1 (:cnt this))               (Repeat'new (dec (:cnt this)), (:val this))
-            (= (:cnt this) Repeat'INFINITE) this
-        )
-    )
-
-    (defn- #_"Object" Repeat''reduce
-        ([#_"Repeat" this, #_"fn" f]
-            (let [#_"Object" r (:val this)]
-                (if (= (:cnt this) Repeat'INFINITE)
-                    (loop [r r]
-                        (let [r (f r (:val this))]
-                            (if (reduced? r) @r (recur r))
-                        )
-                    )
-                    (loop-when [r r #_"long" i 1] (< i (:cnt this)) => r
-                        (let [r (f r (:val this))]
-                            (if (reduced? r) @r (recur r (inc i)))
-                        )
-                    )
-                )
-            )
-        )
-        ([#_"Repeat" this, #_"fn" f, #_"Object" r]
-            (if (= (:cnt this) Repeat'INFINITE)
-                (loop [r r]
-                    (let [r (f r (:val this))]
-                        (if (reduced? r) @r (recur r))
-                    )
-                )
-                (loop-when [r r #_"long" i 0] (< i (:cnt this)) => r
-                    (let [r (f r (:val this))]
-                        (if (reduced? r) @r (recur r (inc i)))
-                    )
-                )
-            )
-        )
-    )
-
-    (defm Repeat IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm Repeat IObj
-        (IObj'''withMeta => Repeat''withMeta)
-    )
-
-    (defm Repeat Sequential)
-
-    (defm Repeat Seqable
-        (Seqable'''seq => Repeat''seq)
-    )
-
-    (defm Repeat ISeq
-        (ISeq'''first => :val)
-        (ISeq'''next => Repeat''next)
-    )
-
-    (defm Repeat IReduce
-        (IReduce'''reduce => Repeat''reduce)
-    )
-
-    (defm Repeat Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
-    (defm Repeat IObject
-        (IObject'''equals => ASeq''equals)
-        (IObject'''toString => RT'printString)
-    )
-)
-
-;;;
- ; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
- ;;
-(defn repeat
-    ([  x] (Repeat'create   x))
-    ([n x] (Repeat'create n x))
 )
 )
 
@@ -10396,7 +10881,7 @@
                 (set? coll)
                     (IPersistentSet'''get coll, key)
                 (and (number? key) (or (string? coll) (.isArray (class coll))))
-                    (let-when [#_"int" n (.intValue #_"Number" key)] (< -1 n (count coll))
+                    (let-when [#_"int" n (int! key)] (< -1 n (count coll))
                         (nth coll n)
                     )
                 (satisfies? ITransientSet coll)
@@ -10412,7 +10897,7 @@
                 (set? coll)
                     (if (contains? coll key) (IPersistentSet'''get coll, key) not-found)
                 (and (number? key) (or (string? coll) (.isArray (class coll))))
-                    (let [#_"int" n (.intValue #_"Number" key)]
+                    (let [#_"int" n (int! key)]
                         (if (< -1 n (count coll)) (nth coll n) not-found)
                     )
                 (satisfies? ITransientSet coll)
@@ -10431,29 +10916,6 @@
     ([coll key not-found] (RT'get coll key not-found))
 )
 
-    (defn #_"Associative" RT'assoc [#_"Object" coll, #_"Object" key, #_"Object" val]
-        (if (some? coll)
-            (Associative'''assoc #_"Associative" coll, key, val)
-            #_(PersistentArrayMap'new (object-array [ key, val ])) (-/assoc coll key val)
-        )
-    )
-
-;;;
- ; assoc[iate].
- ; When applied to a map, returns a new map of the same (hashed/sorted) type, that contains the mapping of key(s) to val(s).
- ; When applied to a vector, returns a new vector that contains val at index. Note - index must be <= (count vector).
- ;;
-(defn assoc
-    ([a k v] (RT'assoc a k v))
-    ([a k v & kvs]
-        (let-when [a (assoc a k v)] kvs => a
-            (when (next kvs) => (throw! "assoc expects even number of arguments after map/vector, found odd number")
-                (recur a (first kvs) (second kvs) (next (next kvs)))
-            )
-        )
-    )
-)
-
     (defn #_"Object" RT'contains [#_"Object" coll, #_"Object" key]
         (cond
             (nil? coll)
@@ -10463,7 +10925,7 @@
             (set? coll)
                 (if (IPersistentSet'''contains? coll, key) true false)
             (and (number? key) (or (string? coll) (.isArray (class coll))))
-                (let [#_"int" n (.intValue #_"Number" key)]
+                (let [#_"int" n (int! key)]
                     (if (< -1 n (count coll)) true false)
                 )
             (satisfies? ITransientSet coll)
@@ -10514,22 +10976,6 @@
             )
         )
     )
-
-    (defn #_"Object" RT'dissoc [#_"Object" coll, #_"Object" key]
-        (when (some? coll)
-            (IPersistentMap'''dissoc #_"IPersistentMap" coll, key)
-        )
-    )
-
-;;;
- ; dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
- ; that does not contain a mapping for key(s).
- ;;
-(defn dissoc
-    ([m] m)
-    ([m k] (RT'dissoc m k))
-    ([m k & ks] (let [m (dissoc m k)] (recur-when ks [m (first ks) (next ks)] => m)))
-)
 
     (declare Reflector'prepRet)
 
@@ -10623,7 +11069,7 @@
     (defn #_"int" RT'intCast-1i [#_"int"   x] x)
 
     (defn #_"int" RT'intCast-1l [#_"long" x]
-        (let [#_"int" i (int x)]
+        (let [#_"int" i (int! x)]
             (when (= i x) => (throw! (str "value out of range for int: " x))
                 i
             )
@@ -10659,6 +11105,13 @@
         )
     )
 
+;;;
+ ; Coerce to boolean/int/long.
+ ;;
+(§ defn boolean [x] (RT'booleanCast x))
+(§ defn int     [x] (RT'intCast     x))
+(§ defn long    [x] (RT'longCast    x))
+
     (defn #_"IPersistentMap" RT'map [& #_"Object..." init]
         (cond
             (nil? init)
@@ -10690,7 +11143,7 @@
     )
 
     (defn #_"array" RT'seqToArray [#_"seq" s]
-        (let [#_"array" a (make-array Object (count s))]
+        (let [#_"array" a (-/make-array Object (count s))]
             (loop-when-recur [#_"int" i 0 s s] (some? s) [(inc i) (next s)]
                 (aset! a i (first s))
             )
@@ -10699,7 +11152,7 @@
     )
 
     (defn #_"?[]" RT'seqToTypedArray [#_"Class" type, #_"seq" s]
-        (let [#_"?[]" a (make-array (or type (class (first s)) Object) (count s))]
+        (let [#_"?[]" a (-/make-array (or type (class (first s)) Object) (count s))]
             (loop-when-recur [#_"int" i 0 s s] (some? s) [(inc i) (next s)]
                 (aset! a i (first s))
             )
@@ -10710,11 +11163,11 @@
     (defn #_"array" RT'toArray [#_"Object" coll]
         (cond
             (nil? coll)
-                (object-array 0)
+                (-/object-array 0)
             (instance? Object'array coll)
                 coll
             (indexed? coll)
-                (let [#_"int" n (count coll) #_"array" a (object-array n)]
+                (let [#_"int" n (count coll) #_"array" a (-/object-array n)]
                     (dotimes [#_"int" i n]
                         (aset! a i (nth coll i))
                     )
@@ -10724,7 +11177,7 @@
                 (RT'seqToArray (seq coll))
             (string? coll)
                 (let [#_"char[]" chars (.toCharArray coll)
-                      #_"array" a (object-array (count chars))]
+                      #_"array" a (-/object-array (count chars))]
                     (dotimes [#_"int" i (count chars)]
                         (aset! a i (aget chars i))
                     )
@@ -10732,7 +11185,7 @@
                 )
             (.isArray (class coll))
                 (let [#_"seq" s (seq coll)
-                      #_"array" a (object-array (count s))]
+                      #_"array" a (-/object-array (count s))]
                     (loop-when-recur [#_"int" i 0 s s] (< i (count a)) [(inc i) (next s)]
                         (aset! a i (first s))
                     )
@@ -10795,7 +11248,6 @@
     )
 )
 
-(declare some)
 (declare Interop'maybeSpecialTag)
 (declare Interop'maybeClass)
 (declare mapv)
@@ -10955,38 +11407,6 @@
         )
     )
     ([ns name] (Keyword'find (symbol ns name)))
-)
-
-;;;
- ; Coerce to boolean/int/long.
- ;;
-(§ defn boolean [x] (RT'booleanCast x))
-(§ defn int     [x] (RT'intCast     x))
-(§ defn long    [x] (RT'longCast    x))
-
-;;;
- ; Returns a seq of the items in coll in reverse order. Not lazy.
- ;;
-(defn reverse [s] (into () s))
-
-;;;
- ; disj[oin]. Returns a new set of the same (hashed/sorted) type,
- ; that does not contain key(s).
- ;;
-(defn disj
-    ([s] s)
-    ([#_"IPersistentSet" s k]
-        (when s
-            (IPersistentSet'''disj s, k)
-        )
-    )
-    ([s k & ks]
-        (when s
-            (let [s (disj s k)]
-                (recur-when ks [s (first ks) (next ks)] => s)
-            )
-        )
-    )
 )
 
 ;;;
@@ -11189,181 +11609,6 @@
 )
 
 ;;;
- ; When lazy sequences are produced via functions that have side
- ; effects, any effects other than those needed to produce the first
- ; element in the seq do not occur until the seq is consumed. dorun can
- ; be used to force any effects. Walks through the successive nexts of
- ; the seq, does not retain the head and returns nil.
- ;;
-(defn dorun
-    ([s]
-        (when-some [s (seq s)]
-            (recur (next s))
-        )
-    )
-    ([n s]
-        (when (pos? n)
-            (when-some [s (seq s)]
-                (recur (dec n) (next s))
-            )
-        )
-    )
-)
-
-;;;
- ; When lazy sequences are produced via functions that have side
- ; effects, any effects other than those needed to produce the first
- ; element in the seq do not occur until the seq is consumed. doall can
- ; be used to force any effects. Walks through the successive nexts of
- ; the seq, retains the head and returns it, thus causing the entire
- ; seq to reside in memory at one time.
- ;;
-(defn doall
-    ([s] (dorun s) s)
-    ([n s] (dorun n s) s)
-)
-
-;;;
- ; Returns a lazy sequence of lists of n items each, at offsets step apart.
- ; If step is not supplied, defaults to n, i.e. the partitions do not overlap.
- ; If a pad is supplied, use it as necessary to complete the last partition upto n items.
- ; In case there are not enough padding elements, return a partition with less than n items.
- ;;
-(defn partition
-    ([n s] (partition n n s))
-    ([n step s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let-when [p (take n s)] (= (count p) n)
-                    (cons p (partition n step (nthnext s step)))
-                )
-            )
-        )
-    )
-    ([n step pad s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let-when [p (take n s)] (= (count p) n) => (list (take n (concat p pad)))
-                    (cons p (partition n step pad (nthnext s step)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of lists like partition, but may include
- ; partitions with fewer than n items at the end. Returns a stateful
- ; transducer when no collection is provided.
- ;;
-(defn partition-all
-    ([n]
-        (fn [g]
-            (let [v' (atom [])]
-                (fn
-                    ([] (g))
-                    ([x]
-                        (let [x (when (seq @v') => x
-                                    (let [v @v' _ (swap! v' empty)]
-                                        (unreduced (g x v))
-                                    )
-                                )]
-                            (g x)
-                        )
-                    )
-                    ([x y]
-                        (swap! v' conj y)
-                        (when (= (count @v') n) => x
-                            (let [v @v' _ (swap! v' empty)]
-                                (g x v)
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([n s] (partition-all n n s))
-    ([n step s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let [p (doall (take n s))]
-                    (cons p (partition-all n step (nthnext s step)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a new, transient version of the collection, in constant time.
- ;;
-(defn transient [#_"IEditableCollection" coll] (IEditableCollection'''asTransient coll))
-
-;;;
- ; Returns a new, persistent version of the transient collection, in
- ; constant time. The transient collection cannot be used after this
- ; call, any such use will throw an exception.
- ;;
-(defn persistent! [#_"ITransientCollection" coll] (ITransientCollection'''persistent! coll))
-
-;;;
- ; Adds x to the transient collection, and return coll. The 'addition'
- ; may happen at different 'places' depending on the concrete type.
- ;;
-(defn conj!
-    ([] (transient []))
-    ([coll] coll)
-    ([#_"ITransientCollection" coll x] (ITransientCollection'''conj! coll, x))
-)
-
-;;;
- ; When applied to a transient map, adds mapping of key(s) to val(s).
- ; When applied to a transient vector, sets the val at index.
- ; Note - index must be <= (count vector). Returns coll.
- ;;
-(defn assoc!
-    ([#_"ITransientAssociative" a k v] (ITransientAssociative'''assoc! a, k, v))
-    ([a k v & kvs]
-        (let [a (assoc! a k v)]
-            (recur-when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
-        )
-    )
-)
-
-;;;
- ; Returns a transient map that doesn't contain a mapping for key(s).
- ;;
-(defn dissoc!
-    ([#_"ITransientMap" m k] (ITransientMap'''dissoc! m, k))
-    ([m k & ks]
-        (let [m (dissoc! m k)]
-            (recur-when ks [m (first ks) (next ks)] => m)
-        )
-    )
-)
-
-;;;
- ; Removes the last item from a transient vector.
- ; If the collection is empty, throws an exception. Returns coll.
- ;;
-(defn pop! [#_"ITransientVector" coll] (ITransientVector'''pop! coll))
-
-;;;
- ; disj[oin].
- ; Returns a transient set of the same (hashed/sorted) type, that does not contain key(s).
- ;;
-(defn disj!
-    ([s] s)
-    ([#_"ITransientSet" s k] (ITransientSet'''disj! s, k))
-    ([s k & ks]
-        (let [s (disj! s k)]
-            (recur-when ks [s (first ks) (next ks)] => s)
-        )
-    )
-)
-
-;;;
  ; Returns an array with components set to the values in aseq.
  ; The array's component type is type if provided, or the type of the first value in aseq if present, or Object.
  ; All values in aseq must be compatible with the component type.
@@ -11374,33 +11619,6 @@
 )
 
 (defn array [& s] (into-array s))
-
-;;;
- ; Returns the :type metadata of x, or its Class if none.
- ;;
-(defn type [x] (or (:type (meta x)) (class x)))
-
-;;;
- ; Returns true if n is a Ratio.
- ;;
-(defn ratio? [n] (satisfies? Ratio n))
-
-;;;
- ; Returns true if n is a rational number.
- ;;
-(defn rational? [n] (or (integer? n) (ratio? n)))
-
-;;;
- ; Coerce to BigInteger.
- ;;
-(defn #_"BigInteger" biginteger [x]
-    (cond
-        (instance? BigInteger x) x
-        (ratio? x)               (Ratio''bigIntegerValue #_"Ratio" x)
-        (number? x)              (BigInteger/valueOf (long x))
-        :else                    (BigInteger. x)
-    )
-)
 
 ;;;
  ; Reads the next object from stream, which must be an instance of
@@ -11565,57 +11783,6 @@
  ;;
 (defn ns-unalias [ns sym]
     (Namespace''removeAlias (the-ns ns) sym)
-)
-
-;;;
- ; Returns a lazy seq of every nth item in coll.
- ; Returns a stateful transducer when no collection is provided.
- ;;
-(defn take-nth
-    ([n]
-        (fn [g]
-            (let [i' (atom -1)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x]
-                        (let-when [i (swap! i' inc)] (zero? (rem i n)) => s
-                            (g s x)
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([n s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (cons (first s) (take-nth n (drop n s)))
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy seq of the first item in each coll, then the second, etc.
- ;;
-(defn interleave
-    ([] ())
-    ([c1] (lazy-seq c1))
-    ([c1 c2]
-        (lazy-seq
-            (let-when [s1 (seq c1) s2 (seq c2)] (and s1 s2)
-                (cons (first s1) (cons (first s2) (interleave (next s1) (next s2))))
-            )
-        )
-    )
-    ([c1 c2 & cs]
-        (lazy-seq
-            (let-when [ss (map seq (conj cs c2 c1))] (every? identity ss)
-                (concat (map first ss) (apply interleave (map next ss)))
-            )
-        )
-    )
 )
 
 ;;;
@@ -11844,16 +12011,6 @@
             )
         )
     )
-)
-
-;;;
- ; Expands to code which yields a lazy sequence of the concatenation of
- ; the supplied colls. Each coll expr is not evaluated until it is needed.
- ;
- ; (lazy-cat xs ys zs) === (concat (lazy-seq xs) (lazy-seq ys) (lazy-seq zs))
- ;;
-(defmacro lazy-cat [& s]
-    `(concat ~@(map #(list `lazy-seq %) s))
 )
 
 ;;;
@@ -12168,40 +12325,6 @@
             (take-while (mk-bound-fn sc test key) (if ((mk-bound-fn sc test' key') e) s (next s)))
         )
     )
-)
-
-;;;
- ; Takes a function of no args, presumably with side effects, and returns
- ; an infinite (or length n if supplied) lazy sequence of calls to it.
- ;;
-(defn repeatedly
-    ([f] (lazy-seq (cons (f) (repeatedly f))))
-    ([n f] (take n (repeatedly f)))
-)
-
-;;;
- ; Returns a lazy seq of the elements of coll separated by sep.
- ; Returns a stateful transducer when no collection is provided.
- ;;
-(defn interpose
-    ([sep]
-        (fn [g]
-            (let [started (atom false)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x]
-                        (when @started => (do (reset! started true) (g s x))
-                            (let [r (g s sep)]
-                                (if (reduced? r) r (g r x))
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([sep coll] (drop 1 (interleave (repeat sep) coll)))
 )
 
 (declare eval)
@@ -12918,105 +13041,6 @@
 )
 
 ;;;
- ; Returns a lazy sequence consisting of the result of applying f to 0
- ; and the first item of coll, followed by applying f to 1 and the second
- ; item in coll, etc, until coll is exhausted. Thus function f should
- ; accept 2 arguments, index and item. Returns a stateful transducer when
- ; no collection is provided.
- ;;
-(defn map-indexed
-    ([f]
-        (fn [g]
-            (let [i' (atom -1)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x] (g s (f (swap! i' inc) x)))
-                )
-            )
-        )
-    )
-    ([f s]
-        (letfn [(mapi- [i s]
-                    (lazy-seq
-                        (when-some [s (seq s)]
-                            (cons (f i (first s)) (mapi- (inc i) (next s)))
-                        )
-                    )
-                )]
-            (mapi- 0 s)
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of the non-nil results of (f item). Note,
- ; this means false return values will be included. f must be free of
- ; side-effects. Returns a transducer when no collection is provided.
- ;;
-(defn keep
-    ([f]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([s] (g s))
-                ([s x]
-                    (let-when [y (f x)] (some? y) => s
-                        (g s y)
-                    )
-                )
-            )
-        )
-    )
-    ([f s]
-        (lazy-seq
-            (when-some [s (seq s)]
-                (let-when [y (f (first s))] (some? y) => (keep f (next s))
-                    (cons y (keep f (next s)))
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a lazy sequence of the non-nil results of (f index item).
- ; Note, this means false return values will be included. f must be free
- ; of side-effects. Returns a stateful transducer when no collection is
- ; provided.
- ;;
-(defn keep-indexed
-    ([f]
-        (fn [g]
-            (let [i' (atom -1)]
-                (fn
-                    ([] (g))
-                    ([s] (g s))
-                    ([s x]
-                        (let-when [y (f (swap! i' inc) x)] (some? y) => s
-                            (g s y)
-                        )
-                    )
-                )
-            )
-        )
-    )
-    ([f s]
-        (letfn [(keepi- [i s]
-                    (lazy-seq
-                        (when-some [s (seq s)]
-                            (let-when [y (f i (first s))] (some? y) => (keepi- (inc i) (next s))
-                                (cons y (keepi- (inc i) (next s)))
-                            )
-                        )
-                    )
-                )]
-            (keepi- 0 s)
-        )
-    )
-)
-
-;;;
  ; Takes a set of predicates and returns a function f that returns true if all
  ; of its composing predicates return a logical true value against all of its
  ; arguments, else it returns false. Note that f is short-circuiting in that
@@ -13439,6 +13463,8 @@
 
 (defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 
+(defmacro update! [x f & z] `(set! ~x (~f ~x ~@z)))
+
 (about #_"graalfn.HotSpot"
 
 (about #_"HotSpot"
@@ -13816,17 +13842,17 @@
 
     (def- #_"Type[][]" Compiler'ARG_TYPES
         (let [#_"int" n Compiler'MAX_POSITIONAL_ARITY
-              #_"Type[][]" a (make-array (Class/forName "[Lcloiure.asm.Type;") (+ n 2))
+              #_"Type[][]" a (-/make-array (Class/forName "[Lcloiure.asm.Type;") (+ n 2))
               #_"Type" t (Type/getType Object)]
             (dotimes [#_"int" i (inc n)]
-                (let [#_"Type[]" b (make-array Type i)]
+                (let [#_"Type[]" b (-/make-array Type i)]
                     (dotimes [#_"int" j i]
                         (aset! b j t)
                     )
                     (aset! a i b)
                 )
             )
-            (let [#_"Type[]" b (make-array Type (inc n))]
+            (let [#_"Type[]" b (-/make-array Type (inc n))]
                 (dotimes [#_"int" j n]
                     (aset! b j t)
                 )
@@ -13837,7 +13863,7 @@
         )
     )
 
-    (def- #_"Type[]" Compiler'EXCEPTION_TYPES (make-array Type 0))
+    (def- #_"Type[]" Compiler'EXCEPTION_TYPES (-/make-array Type 0))
 
     (defn #_"boolean" Compiler'inTailCall [#_"Context" context]
         (and (= context :Context'RETURN) *in-return-context* (not *in-catch-finally*))
@@ -14992,7 +15018,7 @@
 
     (defn- #_"void" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen]
         (let [#_"Label" startTry (.newLabel gen) #_"Label" endTry (.newLabel gen) #_"Label" end (.newLabel gen) #_"Label" ret (.newLabel gen) #_"Label" finallyLabel (.newLabel gen)
-              #_"int" n (count (:catchExprs this)) #_"Label[]" labels (make-array Label n) #_"Label[]" endLabels (make-array Label n)]
+              #_"int" n (count (:catchExprs this)) #_"Label[]" labels (-/make-array Label n) #_"Label[]" endLabels (-/make-array Label n)]
             (dotimes [#_"int" i n]
                 (aset! labels i (.newLabel gen))
                 (aset! endLabels i (.newLabel gen))
@@ -15376,7 +15402,7 @@
     )
 
     (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
-        (let [#_"array" a (object-array (count (:keyvals this)))]
+        (let [#_"array" a (-/object-array (count (:keyvals this)))]
             (dotimes [#_"int" i (count (:keyvals this))]
                 (aset! a i (Expr'''eval (nth (:keyvals this) i)))
             )
@@ -15465,7 +15491,7 @@
     )
 
     (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
-        (let [#_"array" a (object-array (count (:keys this)))]
+        (let [#_"array" a (-/object-array (count (:keys this)))]
             (dotimes [#_"int" i (count (:keys this))]
                 (aset! a i (Expr'''eval (nth (:keys this) i)))
             )
@@ -16018,7 +16044,7 @@
 
     (defn- #_"Type[]" FnMethod''getArgTypes [#_"FnMethod" this]
         (if (and (FnMethod''isVariadic this) (= (count (:reqParms this)) Compiler'MAX_POSITIONAL_ARITY))
-            (let [#_"int" n (inc Compiler'MAX_POSITIONAL_ARITY) #_"Type[]" a (make-array Type n)]
+            (let [#_"int" n (inc Compiler'MAX_POSITIONAL_ARITY) #_"Type[]" a (-/make-array Type n)]
                 (dotimes [#_"int" i n]
                     (aset! a i (Type/getType Object))
                 )
@@ -16204,7 +16230,7 @@
                         (recur (conj v (if (some? c) (Type/getType c) (Type/getType Object))) (next s))
                     )
                 )]
-            (let [#_"Type[]" a (make-array Type (count v))]
+            (let [#_"Type[]" a (-/make-array Type (count v))]
                 (dotimes [#_"int" i (count v)]
                     (aset! a i (nth v i))
                 )
@@ -16642,7 +16668,7 @@
                             (let [#_"Type[]" ctorTypes (IopObject''ctorTypes this)]
 
                                 ;; ctor that takes closed-overs and inits base + fields
-                                (let [#_"Type[]" altCtorTypes (make-array Type (- (count ctorTypes) (:altCtorDrops this)))
+                                (let [#_"Type[]" altCtorTypes (-/make-array Type (- (count ctorTypes) (:altCtorDrops this)))
                                       _ (dotimes [#_"int" i (count altCtorTypes)]
                                             (aset! altCtorTypes i (aget ctorTypes i))
                                         )
@@ -16663,7 +16689,7 @@
                                 )
 
                                 ;; alt ctor w/o __hash
-                                (let [#_"Type[]" altCtorTypes (make-array Type (- (count ctorTypes) 2))
+                                (let [#_"Type[]" altCtorTypes (-/make-array Type (- (count ctorTypes) 2))
                                       _ (dotimes [#_"int" i (count altCtorTypes)]
                                             (aset! altCtorTypes i (aget ctorTypes i))
                                         )
@@ -16687,7 +16713,7 @@
                             (let [#_"Type[]" ctorTypes (IopObject''ctorTypes this)]
 
                                 ;; ctor that takes closed-overs but not meta
-                                (let [#_"Type[]" noMetaCtorTypes (make-array Type (dec (count ctorTypes)))
+                                (let [#_"Type[]" noMetaCtorTypes (-/make-array Type (dec (count ctorTypes)))
                                       _ (loop-when-recur [#_"int" i 1] (< i (count ctorTypes)) [(inc i)]
                                             (aset! noMetaCtorTypes (dec i) (aget ctorTypes i))
                                         )
@@ -16867,7 +16893,7 @@
                             (when (vector? (second form)) => form
                                 (list 'fn* (next form))
                             )
-                          #_"FnMethod[]" a (make-array #_"FnMethod" Object (inc Compiler'MAX_POSITIONAL_ARITY))
+                          #_"FnMethod[]" a (-/make-array #_"FnMethod" Object (inc Compiler'MAX_POSITIONAL_ARITY))
                           #_"FnMethod" variadic
                             (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
                                 (let [#_"FnMethod" f (FnMethod'parse fn, (first s), rettag)
@@ -17612,7 +17638,7 @@
                     (let [#_"Label[]" la (into-array Label (vals labels))]
                         (.visitLookupSwitchInsn gen, defaultLabel, (-/int-array (keys (:tests this))), la)
                     )
-                    (let [#_"Label[]" la (make-array Label (inc (- (:high this) (:low this))))]
+                    (let [#_"Label[]" la (-/make-array Label (inc (- (:high this) (:low this))))]
                         (loop-when-recur [#_"int" i (:low this)] (<= i (:high this)) [(inc i)]
                             (aset! la (- i (:low this)) (if (contains? labels i) (get labels i) defaultLabel))
                         )
@@ -18326,7 +18352,7 @@
                     (let [#_"Object" n (LispReader'read r)]
                         (cond
                             (= n '&)    (LispReader'registerArg -1)
-                            (number? n) (LispReader'registerArg (.intValue #_"Number" n))
+                            (number? n) (LispReader'registerArg (int! n))
                             :else       (throw! "arg literal must be %, %& or %integer")
                         )
                     )
