@@ -6,7 +6,7 @@
 (defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*ns* -> = apply case conj cons defmacro defn defn- doseq fn identity if-some int keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
     (:require [flatland.ordered.map :refer [ordered-map]] #_[flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -103,7 +103,15 @@
 
 (refer! - [< <= > >= neg? pos? zero?])
 
-(def +    -/unchecked-add-int)
+(defn int! [n] (.intValue #_"Number" n))
+
+(defn +
+    ([] (int 0))
+    ([x] (int! x))
+    ([x y] (-/unchecked-add-int (int! x) (int! y)))
+    ([x y & s] (-/reduce + (+ x y) s))
+)
+
 (def neg  -/unchecked-negate-int)
 (def -    -/unchecked-subtract-int)
 (def inc  -/unchecked-inc-int)
@@ -123,7 +131,7 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn identical? int intern let list long loop satisfies? symbol to-array]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*err* *in* *ns* *out* *print-length* *warn-on-reflection* = boolean case char compare defn fn identical? int intern let list long loop satisfies? to-array]) (:require [clojure.core :as -])
     (:require [clojure.core.rrb-vector :refer [catvec subvec vec vector]])
     (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about bit-and bit-xor dec defm defp defq defr import! import-as inc neg? pos? quot refer! rem thread throw! zero? |])
 )
@@ -161,7 +169,7 @@
  ;;
 (defn gensym
     ([] (gensym "G__"))
-    ([prefix] (symbol (-/str prefix (next-id!))))
+    ([prefix] (-/symbol (-/str prefix (next-id!))))
 )
 
 ;;;
@@ -1864,13 +1872,13 @@
     (defn #_"int" Murmur3'hashUnencodedChars [#_"CharSequence" s]
         (let [#_"int" h1 ;; step through the input 2 chars at a time
                 (loop-when [h1 Murmur3'seed #_"int" i 1] (< i (.length s)) => h1
-                    (let [#_"int" k1 (| (.charAt s, (dec i)) (<< (.charAt s, i) 16))]
+                    (let [#_"int" k1 (| (int (.charAt s, (dec i))) (<< (int (.charAt s, i)) 16))]
                         (recur (Murmur3'mixH1 h1, (Murmur3'mixK1 k1)) (+ i 2))
                     )
                 )
               h1 ;; deal with any remaining characters
                 (when (odd? (.length s)) => h1
-                    (let [#_"int" k1 (.charAt s, (dec (.length s)))]
+                    (let [#_"int" k1 (int (.charAt s, (dec (.length s))))]
                         (bit-xor h1 (Murmur3'mixK1 k1))
                     )
                 )]
@@ -2952,6 +2960,18 @@
         )
     )
 )
+
+(-/defmethod -/print-method Symbol'iface [#_"Symbol" s, #_"Writer" w]
+    (.write w (str s))
+)
+
+;;;
+ ; Returns a Symbol with the given namespace and name.
+ ;;
+(defn #_"Symbol" symbol
+    ([name] (if (symbol? name) name (Symbol'intern name)))
+    ([ns name] (Symbol'intern ns name))
+)
 )
 
 (about #_"arbace.Keyword"
@@ -3048,6 +3068,42 @@
             (compare (:sym this) (:sym that))
         )
     )
+)
+
+(-/defmethod -/print-method Keyword'iface [#_"Keyword" k, #_"Writer" w]
+    (.write w (str k))
+)
+
+;;;
+ ; Returns a Keyword with the given namespace and name.
+ ; Do not use ":" in the keyword strings, it will be added automatically.
+ ;;
+(defn #_"Keyword" keyword
+    ([name]
+        (cond
+            (keyword? name) name
+            (symbol? name) (Keyword'intern #_"Symbol" name)
+            (string? name) (Keyword'intern (symbol #_"String" name))
+        )
+    )
+    ([ns name] (Keyword'intern (symbol ns name)))
+)
+
+;;;
+ ; Returns a Keyword with the given namespace and name if one already exists.
+ ; This function will not intern a new keyword. If the keyword has not already
+ ; been interned, it will return nil.
+ ; Do not use ":" in the keyword strings, it will be added automatically.
+ ;;
+(defn #_"Keyword" find-keyword
+    ([name]
+        (cond
+            (keyword? name) name
+            (symbol? name) (Keyword'find #_"Symbol" name)
+            (string? name) (Keyword'find (symbol #_"String" name))
+        )
+    )
+    ([ns name] (Keyword'find (symbol ns name)))
 )
 )
 
@@ -3942,7 +3998,7 @@
                 ([] (g))
                 ([s] (g s))
                 ([s x]
-                    (let-when [y (f x)] (some? y) => s
+                    (when-some [y (f x)] => s
                         (g s y)
                     )
                 )
@@ -3952,7 +4008,7 @@
     ([f s]
         (lazy-seq
             (when-some [s (seq s)]
-                (let-when [y (f (first s))] (some? y) => (keep f (next s))
+                (when-some [y (f (first s))] => (keep f (next s))
                     (cons y (keep f (next s)))
                 )
             )
@@ -3974,7 +4030,7 @@
                     ([] (g))
                     ([s] (g s))
                     ([s x]
-                        (let-when [y (f (swap! i' inc) x)] (some? y) => s
+                        (when-some [y (f (swap! i' inc) x)] => s
                             (g s y)
                         )
                     )
@@ -3986,7 +4042,7 @@
         (letfn [(keepi- [i s]
                     (lazy-seq
                         (when-some [s (seq s)]
-                            (let-when [y (f i (first s))] (some? y) => (keepi- (inc i) (next s))
+                            (when-some [y (f i (first s))] => (keepi- (inc i) (next s))
                                 (cons y (keepi- (inc i) (next s)))
                             )
                         )
@@ -5719,8 +5775,8 @@
     (defn- #_"seq" HSeq'create-4 [#_"meta" meta, #_"node[]" nodes, #_"int" i, #_"seq" s]
         (when (nil? s) => (HSeq'new meta, nodes, i, s)
             (loop-when i (< i (alength nodes))
-                (let-when [#_"node" node (aget nodes i)] (some? node) => (recur (inc i))
-                    (let-when [s (INode'''nodeSeq node)] (some? s) => (recur (inc i))
+                (when-some [#_"node" node (aget nodes i)] => (recur (inc i))
+                    (when-some [s (INode'''nodeSeq node)] => (recur (inc i))
                         (HSeq'new meta, nodes, (inc i), s)
                     )
                 )
@@ -5885,7 +5941,7 @@
     )
 
     (defn- #_"int" PersistentHashMap'bitpos [#_"int" hash, #_"int" shift]
-        (<< 1 (PersistentHashMap'mask hash, shift))
+        (int! (<< 1 (PersistentHashMap'mask hash, shift)))
     )
 
     (defn- #_"array" PersistentHashMap'cloneAndSet
@@ -6027,7 +6083,7 @@
 
     (defn- #_"value" ANode''kvreduce [#_"ANode" this, #_"fn" f, #_"value" r]
         (loop-when [r r #_"int" i 0] (< i (alength (:a this))) => r
-            (let-when [#_"node" node (aget (:a this) i)] (some? node) => (recur r (inc i))
+            (when-some [#_"node" node (aget (:a this) i)] => (recur r (inc i))
                 (let [r (INode'''kvreduce node, f, r)]
                     (when-not (reduced? r) => r
                         (recur r (inc i))
@@ -7112,10 +7168,11 @@
 (about #_"arbace.PersistentList"
 
 (about #_"EmptyList"
-    (declare EmptyList''seq EmptyList''first EmptyList''next)
+    (declare EmptyList''seq EmptyList''first EmptyList''next EmptyList''conj EmptyList''empty)
 
     (defq EmptyList [#_"meta" _meta] #_"SeqForm"
         clojure.lang.ISeq (seq [_] (EmptyList''seq _)) (first [_] (EmptyList''first _)) (next [_] (EmptyList''next _))
+        clojure.lang.IPersistentCollection (cons [_ o] (EmptyList''conj _, o)) (empty [_] (EmptyList''empty _))
     )
 
     (defn #_"EmptyList" EmptyList'new [#_"meta" meta]
@@ -7237,6 +7294,10 @@
     )
 
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new nil))
+
+    (defn #_"PersistentList" PersistentList'create [#_"array" init]
+        (loop-when-recur [#_"PersistentList" l PersistentList'EMPTY #_"int" i (dec (alength init))] (<= 0 i) [(conj l (aget init i)) (dec i)] => l)
+    )
 
     (defn- #_"PersistentList" PersistentList''withMeta [#_"PersistentList" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
@@ -10811,7 +10872,7 @@
     )
 
     (defn #_"void" Var'popThreadBindings []
-        (let-when [#_"seq" s (.get Var'dvals)] (some? s) => (throw! "pop without matching push")
+        (when-some [#_"seq" s (.get Var'dvals)] => (throw! "pop without matching push")
             (.set Var'dvals, (next s))
         )
         nil
@@ -10969,7 +11030,7 @@
 
     (defn #_"seq" RT'findKey [#_"Keyword" key, #_"seq" keyvals]
         (loop-when keyvals (some? keyvals)
-            (let-when [#_"seq" s (next keyvals)] (some? s) => (throw! "malformed keyword argslist")
+            (when-some [#_"seq" s (next keyvals)] => (throw! "malformed keyword argslist")
                 (when-not (= (first keyvals) key) => s
                     (recur (next s))
                 )
@@ -11112,34 +11173,30 @@
 (§ defn int     [x] (RT'intCast     x))
 (§ defn long    [x] (RT'longCast    x))
 
-    (defn #_"IPersistentMap" RT'map [& #_"Object..." init]
+    (defn #_"IPersistentMap" RT'map [#_"array" init]
         (cond
             (nil? init)
                 PersistentArrayMap'EMPTY
-            (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
+            (<= (alength init) PersistentArrayMap'HASHTABLE_THRESHOLD)
                 (PersistentArrayMap'createWithCheck init)
             :else
                 (PersistentHashMap'createWithCheck-1a init)
         )
     )
 
-    (defn #_"IPersistentMap" RT'mapUniqueKeys [& #_"Object..." init]
+    (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"array" init]
         (cond
             (nil? init)
                 PersistentArrayMap'EMPTY
-            (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
+            (<= (alength init) PersistentArrayMap'HASHTABLE_THRESHOLD)
                 (PersistentArrayMap'new init)
             :else
                 (PersistentHashMap'create-1a init)
         )
     )
 
-    (defn #_"IPersistentSet" RT'set [& #_"Object..." init]
-        (PersistentHashSet'createWithCheck-1a init)
-    )
-
     (defn #_"seq" RT'arrayToSeq [#_"array" a]
-        (loop-when-recur [#_"seq" s nil #_"int" i (dec (count a))] (<= 0 i) [(cons (aget a i) s) (dec i)] => s)
+        (loop-when-recur [#_"seq" s nil #_"int" i (dec (alength a))] (<= 0 i) [(cons (aget a i) s) (dec i)] => s)
     )
 
     (defn #_"array" RT'seqToArray [#_"seq" s]
@@ -11200,14 +11257,6 @@
  ; Returns an array of Objects containing the contents of s.
  ;;
 (§ defn #_"array" to-array [s] (RT'toArray s))
-
-    (declare LispReader'read)
-
-    (defn #_"Object" RT'readString [#_"String" s]
-        (let [#_"PushbackReader" r (PushbackReader. (java.io.StringReader. s))]
-            (LispReader'read r)
-        )
-    )
 
     (declare pr-on)
 
@@ -11367,46 +11416,6 @@
           s (map (fn [bindings & body] (cons (apply vector '&form '&env bindings) body)) s)]
         `(do (defn ~name ~@m ~@s) (Var''setMacro (var ~name)) (var ~name))
     )
-)
-
-;;;
- ; Returns a Symbol with the given namespace and name.
- ;;
-(§ defn #_"Symbol" symbol
-    ([name] (if (symbol? name) name (Symbol'intern name)))
-    ([ns name] (Symbol'intern ns name))
-)
-
-;;;
- ; Returns a Keyword with the given namespace and name.
- ; Do not use ":" in the keyword strings, it will be added automatically.
- ;;
-(defn #_"Keyword" keyword
-    ([name]
-        (cond
-            (keyword? name) name
-            (symbol? name) (Keyword'intern #_"Symbol" name)
-            (string? name) (Keyword'intern (symbol #_"String" name))
-        )
-    )
-    ([ns name] (Keyword'intern (symbol ns name)))
-)
-
-;;;
- ; Returns a Keyword with the given namespace and name if one already exists.
- ; This function will not intern a new keyword. If the keyword has not already
- ; been interned, it will return nil.
- ; Do not use ":" in the keyword strings, it will be added automatically.
- ;;
-(defn #_"Keyword" find-keyword
-    ([name]
-        (cond
-            (keyword? name) name
-            (symbol? name) (Keyword'find #_"Symbol" name)
-            (string? name) (Keyword'find (symbol #_"String" name))
-        )
-    )
-    ([ns name] (Keyword'find (symbol ns name)))
 )
 
 ;;;
@@ -11621,27 +11630,6 @@
 (defn array [& s] (into-array s))
 
 ;;;
- ; Reads the next object from stream, which must be an instance of
- ; java.io.PushbackReader or some derivee. stream defaults to the
- ; current value of *in*.
- ;
- ; Opts is a persistent map with valid keys:
- ;
- ; :eof - on eof, return value unless :eofthrow, then throw.
- ;        if not specified, will throw.
- ;;
-(defn read
-    ([] (read *in*))
-    ([s] (read s true nil))
-    ([s eof-error? eof-value] (LispReader'read s (boolean eof-error?) eof-value))
-)
-
-;;;
- ; Reads one object from the string s.
- ;;
-(defn read-string [s] (RT'readString s))
-
-;;;
  ; Returns a set of the distinct elements of coll.
  ;;
 (defn set [s] (if (set? s) (with-meta s nil) (into #{} s)))
@@ -11740,7 +11728,7 @@
         (when (sequential? s) => (throw! "the value of :only/:refer must be a sequential collection of symbols")
             (let [es* (set (:exclude fs*)) rs* (or (:rename fs*) {})]
                 (doseq [x (remove es* s)]
-                    (let-when [v (ps* x)] (some? v) => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
+                    (when-some [v (ps* x)] => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
                         (Namespace''refer *ns* (or (rs* x) x) v)
                     )
                 )
@@ -13705,7 +13693,7 @@
 (about #_"arbace.Compiler"
 
 (def Context'enum-set
-    (-/hash-set
+    (hash-set
         :Context'STATEMENT ;; value ignored
         :Context'EXPRESSION ;; value required
         :Context'RETURN ;; tail position relative to enclosing recur frame
@@ -13926,7 +13914,7 @@
     )
 
     (def #_"map" Compiler'CHAR_MAP
-        (-/hash-map
+        (hash-map
             \- "_"
             \: "_COLON_"
             \+ "_PLUS_"
@@ -14191,9 +14179,9 @@
         ;; note - ns-qualified vars must already exist
         (cond
             (some? (:ns sym))
-                (let-when [#_"Namespace" ns (Compiler'namespaceFor n, sym)] (some? ns)                    => (throw! (str "no such namespace: " (:ns sym)))
-                    (let-when [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))] (some? v) => (throw! (str "no such var: " sym))
-                        (when (or (= (:ns v) *ns*) (not (get (meta v) :private)) allowPrivate)            => (throw! (str "var: " sym " is private"))
+                (when-some [#_"Namespace" ns (Compiler'namespaceFor n, sym)]                     => (throw! (str "no such namespace: " (:ns sym)))
+                    (when-some [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))] => (throw! (str "no such var: " sym))
+                        (when (or (= (:ns v) *ns*) (not (get (meta v) :private)) allowPrivate)   => (throw! (str "var: " sym " is private"))
                             v
                         )
                     )
@@ -15491,12 +15479,7 @@
     )
 
     (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
-        (let [#_"array" a (-/object-array (count (:keys this)))]
-            (dotimes [#_"int" i (count (:keys this))]
-                (aset! a i (Expr'''eval (nth (:keys this) i)))
-            )
-            (RT'set a)
-        )
+        (PersistentHashSet'createWithCheck-1s (map Expr'''eval (:keys this)))
     )
 
     (defn- #_"void" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen]
@@ -17388,7 +17371,7 @@
     )
 
     (defn- #_"void" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"IopObject" objx, #_"GeneratorAdapter" gen]
-        (let-when [#_"Label" loopLabel *loop-label*] (some? loopLabel) => (throw! "recur misses loop label")
+        (when-some [#_"Label" loopLabel *loop-label*] => (throw! "recur misses loop label")
             (dotimes [#_"int" i (count (:loopLocals this))]
                 (let [#_"LocalBinding" lb (nth (:loopLocals this) i) #_"Expr" arg (nth (:args this) i)]
                     (when (some? (LocalBinding''getPrimitiveType lb)) => (Expr'''emit arg, :Context'EXPRESSION, objx, gen)
@@ -17741,7 +17724,7 @@
 
 (about #_"Compiler"
     (def #_"map" Compiler'specials
-        (-/hash-map
+        (hash-map
             'def           (DefParser'new)
             'loop*         (LetParser'new)
             'recur         (RecurParser'new)
@@ -17857,7 +17840,7 @@
         (let [#_"meta" meta (meta form)]
             (binding [*line* (if (contains? meta :line) (get meta :line) *line*)]
                 (let-when [#_"Object" me (Compiler'macroexpand1 form)] (= me form) => (Compiler'analyze context, me, name)
-                    (let-when [#_"Object" op (first form)] (some? op) => (throw! (str "can't call nil, form: " form))
+                    (when-some [#_"Object" op (first form)] => (throw! (str "can't call nil, form: " form))
                         (let [#_"IFn" inline (Compiler'isInline op, (count (next form)))]
                             (cond
                                 (some? inline)
@@ -18001,7 +17984,7 @@
     )
 
     (defn- #_"void" LispReader'consumeWhitespaces [#_"PushbackReader" r]
-        (loop-when-recur [#_"char" ch (LispReader'read1 r)] (LispReader'isWhitespace ch) [(LispReader'read1 r)] => (LispReader'unread r, ch))
+        (loop-when-recur [#_"char" ch (LispReader'read1 r)] (and (some? ch) (LispReader'isWhitespace ch)) [(LispReader'read1 r)] => (LispReader'unread r, ch))
         nil
     )
 
@@ -18116,7 +18099,7 @@
         ([#_"PushbackReader" r, #_"boolean" eofIsError, #_"Object" eofValue] (LispReader'read r, eofIsError, eofValue, nil, nil))
         ([#_"PushbackReader" r, #_"boolean" eofIsError, #_"Object" eofValue, #_"Character" returnOn, #_"Object" returnOnValue]
             (loop []
-                (let [#_"char" ch (loop-when-recur [ch (LispReader'read1 r)] (LispReader'isWhitespace ch) [(LispReader'read1 r)] => ch)]
+                (let [#_"char" ch (loop-when-recur [ch (LispReader'read1 r)] (and (some? ch) (LispReader'isWhitespace ch)) [(LispReader'read1 r)] => ch)]
                     (cond
                         (nil? ch)
                             (if eofIsError (throw! "EOF while reading") eofValue)
@@ -18133,9 +18116,8 @@
                                     )
                                     (or
                                         (when (any = ch \+ \-)
-                                            (let [#_"char" ch' (LispReader'read1 r) ? (LispReader'isDigit ch', 10)]
-                                                (LispReader'unread r, ch')
-                                                (when ?
+                                            (let [#_"char" ch' (LispReader'read1 r) _ (LispReader'unread r, ch')]
+                                                (when (and (some? ch') (LispReader'isDigit ch', 10))
                                                     (LispReader'readNumber r, ch)
                                                 )
                                             )
@@ -18209,11 +18191,11 @@
     (defn #_"Object" regex-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
-                (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading regex")
+                (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
                     (when-not (= ch \") ;; oops! "
                         (.append sb, ch)
                         (when (= ch \\) ;; escape
-                            (let-when [ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading regex")
+                            (when-some [ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
                                 (.append sb, ch)
                             )
                         )
@@ -18228,7 +18210,7 @@
 
 (about #_"StringReader"
     (defn- #_"char" StringReader'escape [#_"PushbackReader" r]
-        (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading string")
+        (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading string")
             (case ch
                 \t  \tab
                 \r  \return
@@ -18238,7 +18220,7 @@
                 \b  \backspace
                 \f  \formfeed
                 \u  (let [ch (LispReader'read1 r)]
-                        (when (LispReader'isDigit ch, 16) => (throw! (str "invalid unicode escape: \\u" ch))
+                        (when (and (some? ch) (LispReader'isDigit ch, 16)) => (throw! (str "invalid unicode escape: \\u" ch))
                             (char (LispReader'readDigits r, ch, 16, 4, true))
                         )
                     )
@@ -18257,7 +18239,7 @@
     (defn #_"Object" string-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
-                (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading string")
+                (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading string")
                     (when-not (= ch \") ;; oops! "
                         (.append sb, (if (= ch \\) (StringReader'escape r) ch))
                         (recur)
@@ -18305,7 +18287,7 @@
     (declare LispReader'dispatchMacros)
 
     (defn #_"Object" dispatch-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading character")
+        (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (let-when [#_"IFn" fn (get LispReader'dispatchMacros ch)] (nil? fn) => (fn r ch)
                 (LispReader'unread r, ch)
                 (throw! (str "no dispatch macro for: " ch))
@@ -18321,7 +18303,7 @@
                 (LispReader'unread r, \()
                 (let [#_"vector" args []
                       args
-                        (let-when [#_"seq" rs (rseq *arg-env*)] (some? rs) => args
+                        (when-some [#_"seq" rs (rseq *arg-env*)] => args
                             (let [args
                                     (let-when [#_"int" n (key (first rs))] (pos? n) => args
                                         (loop-when-recur [args args #_"int" i 1]
@@ -18330,7 +18312,7 @@
                                                       => args
                                         )
                                     )]
-                                (let-when [#_"Object" rest (get *arg-env* -1)] (some? rest) => args
+                                (when-some [#_"Object" rest (get *arg-env* -1)] => args
                                     (conj args '& rest)
                                 )
                             )
@@ -18463,7 +18445,7 @@
                             (set? form)
                                 (list `apply `hash-set (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList (seq form)))))
                             (or (seq? form) (list? form))
-                                (let-when [#_"seq" s (seq form)] (some? s) => (cons `list nil)
+                                (when-some [#_"seq" s (seq form)] => (cons `list nil)
                                     (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList s)))
                                 )
                             :else
@@ -18489,7 +18471,7 @@
 
 (about #_"UnquoteReader"
     (defn #_"Object" unquote-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading character")
+        (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (if (= ch \@)
                 (list `unquote-splicing (LispReader'read r))
                 (do
@@ -18503,7 +18485,7 @@
 
 (about #_"CharacterReader"
     (defn #_"Object" character-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let-when [#_"char" ch (LispReader'read1 r)] (some? ch) => (throw! "EOF while reading character")
+        (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (let [#_"String" token (LispReader'readToken r, ch)]
                 (when-not (= (count token) 1) => (Character/valueOf (nth token 0))
                     (case token
@@ -18543,7 +18525,7 @@
 (about #_"ListReader"
     (defn #_"Object" list-reader [#_"PushbackReader" r, #_"char" _delim]
         (let-when [#_"vector" v (LispReader'readDelimitedForms r, \))] (seq v) => ()
-            (ß PersistentList/create #_(to-array v) v)
+            (PersistentList'create (to-array v))
         )
     )
 )
@@ -18578,7 +18560,7 @@
 
 (about #_"LispReader"
     (def #_"{char IFn}" LispReader'macros
-        (-/hash-map
+        (hash-map
             \"  string-reader ;; oops! "
             \;  comment-reader
             \'  quote-reader
@@ -18596,7 +18578,7 @@
     )
 
     (def #_"{char IFn}" LispReader'dispatchMacros
-        (-/hash-map
+        (hash-map
             \^  meta-reader
             \'  var-reader
             \"  regex-reader ;; oops! "
@@ -18607,6 +18589,31 @@
         )
     )
 )
+)
+
+;;;
+ ; Reads the next object from stream, which must be an instance of
+ ; java.io.PushbackReader or some derivee. stream defaults to the
+ ; current value of *in*.
+ ;
+ ; Opts is a persistent map with valid keys:
+ ;
+ ; :eof - on eof, return value unless :eofthrow, then throw.
+ ;        if not specified, will throw.
+ ;;
+(defn read
+    ([] (read *in*))
+    ([s] (read s true nil))
+    ([s eof-error? eof-value] (LispReader'read s (boolean eof-error?) eof-value))
+)
+
+;;;
+ ; Reads one object from the string s.
+ ;;
+(defn read-string [s]
+    (let [#_"PushbackReader" r (PushbackReader. (java.io.StringReader. s))]
+        (LispReader'read r)
+    )
 )
 
 (about #_"arbace.Compiler"
