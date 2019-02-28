@@ -136,11 +136,10 @@
 )
 
 (import!
-    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException ClassLoader ClassNotFoundException Comparable Exception Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException Comparable Exception Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
-    [java.lang.ref #_Reference ReferenceQueue SoftReference WeakReference]
+    [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
-    [java.security AccessController PrivilegedAction]
     [java.util Arrays Comparator IdentityHashMap]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
@@ -10639,23 +10638,6 @@
 (defn dissoc' [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 )
 
-(about #_"arbace.Tuple"
-
-(about #_"Tuple"
-    (def #_"int" Tuple'MAX_SIZE 6)
-
-    (defn #_"vector" Tuple'create
-        ([] (vector))
-        ([#_"Object" v0] (vector v0))
-        ([#_"Object" v0, #_"Object" v1] (vector v0 v1))
-        ([#_"Object" v0, #_"Object" v1, #_"Object" v2] (vector v0 v1 v2))
-        ([#_"Object" v0, #_"Object" v1, #_"Object" v2, #_"Object" v3] (vector v0 v1 v2 v3))
-        ([#_"Object" v0, #_"Object" v1, #_"Object" v2, #_"Object" v3, #_"Object" v4] (vector v0 v1 v2 v3 v4))
-        ([#_"Object" v0, #_"Object" v1, #_"Object" v2, #_"Object" v3, #_"Object" v4, #_"Object" v5] (vector v0 v1 v2 v3 v4 v5))
-    )
-)
-)
-
 (about #_"arbace.PersistentQueue"
 
 (about #_"QSeq"
@@ -11523,16 +11505,6 @@
     )
 )
 
-(declare ^:dynamic *class-loader*)
-
-(defmacro- with-loading-context [& body]
-    `((fn loading# []
-        (binding [*class-loader* (.getClassLoader (.getClass #_"Object" loading#))]
-            ~@body
-        )
-    ))
-)
-
 ;;;
  ; Sets *ns* to the namespace named by name (unevaluated), creating it if needed.
  ;;
@@ -11543,12 +11515,10 @@
             ~@(when m
                 `((reset-meta! (Namespace'find '~n) ~m))
             )
-            (with-loading-context
-                ~@(when (and (not= n 'arbace.core) (not-any? #(= :refer-arbace (first %)) s))
-                    `((refer '~'arbace.core))
-                )
-                ~@(map (fn [[k & s]] `(~(symbol "arbace.core" (name k)) ~@(map #(list 'quote %) s))) s)
+            ~@(when (and (not= n 'arbace.core) (not-any? #(= :refer-arbace (first %)) s))
+                `((refer '~'arbace.core))
             )
+            ~@(map (fn [[k & s]] `(~(symbol "arbace.core" (name k)) ~@(map #(list 'quote %) s))) s)
             nil
         )
     )
@@ -13396,93 +13366,6 @@
 )
 )
 
-(about #_"arbace.Loader"
-
-(about #_"Loader"
-    (def- #_"{String Reference<Class>}'" Loader'cache (atom (hash-map)))
-    (def- #_"ReferenceQueue" Loader'queue (ReferenceQueue.))
-
-    (defn #_"Class<?>" Loader'findCached [#_"String" name]
-        (when-some [#_"Reference<Class>" r (get @Loader'cache name)]
-            (or (.get r) (do (swap! Loader'cache #(if (identical? (get % name) r) (dissoc % name) %)) nil))
-        )
-    )
-
-    (defp Loader)
-
-    (defn #_"Loader" Loader'new [#_"ClassLoader" parent]
-        (-/proxy [ClassLoader arbace.core.Loader] [parent]
-            (#_"Class<?>" findClass [#_"Loader" #_this, #_"String" name]
-                (or (Loader'findCached name) (throw (ClassNotFoundException. name)))
-            )
-        )
-    )
-
-    (defn #_"ClassLoader" Loader'context [] (if (bound? #'*class-loader*) *class-loader* (.getContextClassLoader (thread))))
-
-    (defn #_"ClassLoader" Loader'create [] (AccessController/doPrivileged (-/reify PrivilegedAction (run [_] (Loader'new (Loader'context))))))
-
-    (defn #_"Class" Loader''defineClass [#_"Loader" this, #_"String" name, #_"byte[]" bytes]
-        (Cache'purge Loader'queue, Loader'cache)
-        (let [#_"Class" c (.defineClass #_"ClassLoader" this, name, bytes, 0, (count bytes))]
-            (swap! Loader'cache assoc name (SoftReference. c, Loader'queue))
-            c
-        )
-    )
-
-    (defn #_"Class" Loader'classForName
-        ([#_"String" name] (Loader'classForName name, true))
-        ([#_"String" name, #_"boolean" load?]
-            (let [#_"ClassLoader" loader (Loader'context)
-                  #_"Class" c
-                    (when-not (satisfies? Loader loader)
-                        (Loader'findCached name)
-                    )]
-                (or c (Class/forName name, load?, loader))
-            )
-        )
-    )
-
-    (defn #_"Class" Loader'classForNameNonLoading [#_"String" name]
-        (Loader'classForName name, false)
-    )
-
-    (declare ^:dynamic *local-env*)
-
-    (defn #_"Class" Loader'maybeClass [#_"Object" form, #_"boolean" stringOk]
-        (cond
-            (class? form)
-                form
-            (symbol? form)
-                (when (nil? (:ns form)) ;; if ns-qualified can't be classname
-                    (cond
-                        (or (pos? (.indexOf (:name form), (int \.))) (= (nth (:name form) 0) \[))
-                            (Loader'classForNameNonLoading (:name form))
-                        :else
-                            (let [#_"Object" o (Namespace''getMapping *ns*, form)]
-                                (cond
-                                    (class? o)
-                                        o
-                                    (contains? *local-env* form)
-                                        nil
-                                    :else
-                                        (try
-                                            (Loader'classForNameNonLoading (:name form))
-                                            (catch Exception _
-                                                nil
-                                            )
-                                        )
-                                )
-                            )
-                    )
-                )
-            (and stringOk (string? form))
-                (Loader'classForNameNonLoading form)
-        )
-    )
-)
-)
-
 (about #_"arbace.Compiler"
 
 (def Context'enum-set
@@ -13496,8 +13379,6 @@
 
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
-
-    (def #_"String" Compiler'COMPILE_STUB_PREFIX "compile__stub")
 
     (def #_"Symbol" Compiler'FNONCE (with-meta 'fn* {:once true}))
 
@@ -13578,7 +13459,6 @@
 )
 
 (about #_"Compiler"
-    (def #_"Var" ^:dynamic *class-loader*      ) ;; Loader
     (def #_"Var" ^:dynamic *last-unique-id*    ) ;; Integer
     (def #_"Var" ^:dynamic *closes*            ) ;; IPersistentMap
     (def #_"Var" ^:dynamic *method*            ) ;; FnFrame
@@ -13595,18 +13475,6 @@
     (def #_"Var" ^:dynamic *no-recur*          ) ;; Boolean
     (def #_"Var" ^:dynamic *in-catch-finally*  ) ;; Boolean
     (def #_"Var" ^:dynamic *in-return-context* ) ;; Boolean
-
-    (def #_"[Method]" Compiler'createTupleMethods
-        (vector
-            (Method/getMethod "arbace.core.IPersistentVector create()")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object)")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object, Object)")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object, Object, Object)")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object, Object, Object, Object)")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object, Object, Object, Object, Object)")
-            (Method/getMethod "arbace.core.IPersistentVector create(Object, Object, Object, Object, Object, Object)")
-        )
-    )
 
     (def- #_"Type[][]" Compiler'ARG_TYPES
         (let [#_"int" n Compiler'MAX_POSITIONAL_ARITY
@@ -13893,23 +13761,6 @@
         )
     )
 
-    (defn #_"String" Compiler'destubClassName [#_"String" name]
-        ;; skip over prefix + '.' or '/'
-        (when (.startsWith name, Compiler'COMPILE_STUB_PREFIX) => name
-            (.substring name, (inc (count Compiler'COMPILE_STUB_PREFIX)))
-        )
-    )
-
-    (defn #_"Type" Compiler'getType [#_"Class" c]
-        (let [#_"String" desc (.getDescriptor (Type/getType c))
-              desc
-                (when (.startsWith desc, "L") => desc
-                    (str "L" (Compiler'destubClassName (.substring desc, 1)))
-                )]
-            (Type/getType desc)
-        )
-    )
-
     (defn #_"Object" Compiler'resolveIn [#_"Namespace" n, #_"Symbol" sym, #_"boolean" allowPrivate]
         ;; note - ns-qualified vars must already exist
         (cond
@@ -13921,7 +13772,6 @@
                         )
                     )
                 )
-            (or (pos? (.indexOf (:name sym), (int \.))) (= (nth (:name sym) 0) \[)) (Loader'classForName (:name sym))
             (= sym 'ns)                #'ns
             (= sym 'in-ns)             #'in-ns
             :else (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
@@ -13942,8 +13792,6 @@
                         v
                     )
                 )
-            (or (and (pos? (.indexOf (:name sym), (int \.))) (not (.endsWith (:name sym), "."))) (= (nth (:name sym) 0) \[))
-                (Loader'classForName (:name sym))
             (= sym 'ns)
                 #'ns
             (= sym 'in-ns)
@@ -14519,7 +14367,7 @@
                                                     )
                                                 )]
                                             (if (= op 'catch)
-                                                (let-when [#_"Class" c (Loader'maybeClass (second f), false)] (some? c) => (throw! (str "unable to resolve classname: " (second f)))
+                                                (let-when [#_"Class" c (ß Loader'maybeClass (second f), false)] (some? c) => (throw! (str "unable to resolve classname: " (second f)))
                                                     (let-when [#_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                                         (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
                                                             (let [catches
@@ -14870,21 +14718,9 @@
         )
     )
 
-    (defp Tuple)
-
     (defn- #_"void" VectorExpr''emit [#_"VectorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"GeneratorAdapter" gen]
-        (if (<= (count (:args this)) Tuple'MAX_SIZE)
-            (do
-                (dotimes [#_"int" i (count (:args this))]
-                    (Expr'''emit (nth (:args this) i), :Context'EXPRESSION, fun, gen)
-                )
-                (.invokeStatic gen, (Type/getType Tuple'iface), (nth Compiler'createTupleMethods (count (:args this))))
-            )
-            (do
-                (MethodExpr'emitArgsAsArray (:args this), fun, gen)
-                (.invokeStatic gen, (Type/getType RT'iface), (Method/getMethod "arbace.core.IPersistentVector vector(Object[])"))
-            )
-        )
+        (MethodExpr'emitArgsAsArray (:args this), fun, gen)
+        (.invokeStatic gen, (Type/getType RT'iface), (Method/getMethod "arbace.core.IPersistentVector vector(Object[])"))
 
         (when (= context :Context'STATEMENT)
             (.pop gen)
@@ -15349,27 +15185,6 @@
                         (.invokeStatic gen, (Type/getType Character), (Method/getMethod "Character valueOf(char)"))
                         true
                     )
-                    (class? value)
-                    (do
-                        (if (.isPrimitive value)
-                            (let [#_"Type" t
-                                    (condp = value
-                                        Integer/TYPE   (Type/getType Integer)
-                                        Long/TYPE      (Type/getType Long)
-                                        Boolean/TYPE   (Type/getType Boolean)
-                                        Byte/TYPE      (Type/getType Byte)
-                                        Character/TYPE (Type/getType Character)
-                                        (throw! (str "can't embed unknown primitive in code: " value))
-                                    )]
-                                (.getStatic gen, t, "TYPE", (Type/getType Class))
-                            )
-                            (do
-                                (.push gen, (Compiler'destubClassName (.getName value)))
-                                (.invokeStatic gen, (Type/getType Loader'iface), (Method/getMethod "Class classForName(String)"))
-                            )
-                        )
-                        true
-                    )
                     (symbol? value)
                     (do
                         (.push gen, (:ns value))
@@ -15404,18 +15219,8 @@
                     )
                     (vector? value)
                     (let [#_"vector" args value]
-                        (if (<= (count args) Tuple'MAX_SIZE)
-                            (do
-                                (dotimes [#_"int" i (count args)]
-                                    (FnExpr''emitValue this, (nth args i), gen)
-                                )
-                                (.invokeStatic gen, (Type/getType Tuple'iface), (nth Compiler'createTupleMethods (count args)))
-                            )
-                            (do
-                                (FnExpr''emitObjectArray this, (-/to-array args), gen)
-                                (.invokeStatic gen, (Type/getType RT'iface), (Method/getMethod "arbace.core.IPersistentVector vector(Object[])"))
-                            )
-                        )
+                        (FnExpr''emitObjectArray this, (-/to-array args), gen)
+                        (.invokeStatic gen, (Type/getType RT'iface), (Method/getMethod "arbace.core.IPersistentVector vector(Object[])"))
                         true
                     )
                     (satisfies? PersistentHashSet value)
@@ -15698,7 +15503,7 @@
                         ;; end of class
                         (.visitEnd cv)
 
-                        (assoc this :compiledClass (Loader''defineClass *class-loader*, (:name this), (.toByteArray cw)))
+                        (assoc this :compiledClass (ß Loader''defineClass *class-loader*, (:name this), (.toByteArray cw)))
                     )
                 )
             )
@@ -16409,35 +16214,8 @@
     (defn #_"Object" Compiler'macroexpand1 [#_"Object" form]
         (when (seq? form) => form
             (let-when [#_"Object" op (first form)] (not (Compiler'isSpecial op)) => form
-                (let-when [#_"Var" v (Compiler'isMacro op)] (nil? v) => (apply v form *local-env* (next form)) ;; macro expansion
-                    (when (symbol? op) => form
-                        (let [#_"String" n (:name op)]
-                            ;; (.substring s 2 5) => (. s substring 2 5)
-                            (cond
-                                (= (nth n 0) \.)
-                                    (when (< 1 (count form)) => (throw! "malformed member expression, expecting (.member target ...)")
-                                        (let [#_"Object" target (second form)
-                                              target
-                                                (when (some? (Loader'maybeClass target, false)) => target
-                                                    (list `identity target)
-                                                )]
-                                            (list* '. target (symbol (.substring n, 1)) (next (next form)))
-                                        )
-                                    )
-                                (and (some? (:ns op)) (nil? (Compiler'namespaceFor op)))
-                                    (let-when [#_"Symbol" target (symbol (:ns op))] (some? (Loader'maybeClass target, false)) => form
-                                        (list* '. target (symbol n) (next form))
-                                    )
-                                :else
-                                    ;; (s.substring ...) => (. s substring ...)
-                                    ;; (package.class.name ...) => (. package.class name ...)
-                                    ;; (StringBuilder. ...) => (new StringBuilder ...)
-                                    (let-when [#_"int" i (.lastIndexOf n, (int \.))] (= i (dec (count n))) => form
-                                        (list* 'new (symbol (.substring n, 0, i)) (next form))
-                                    )
-                            )
-                        )
-                    )
+                (let-when [#_"Var" v (Compiler'isMacro op)] (some? v) => form
+                    (apply v form *local-env* (next form)) ;; macro expansion
                 )
             )
         )
@@ -16538,22 +16316,20 @@
     )
 
     (defn #_"Object" Compiler'eval [#_"Object" form]
-        (binding [*class-loader* (Loader'create)]
-            (let [form (Compiler'macroexpand form)]
-                (cond
-                    (and (seq? form) (= (first form) 'do))
-                        (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
-                            (Compiler'eval (first s))
-                        )
-                    (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def"))))
-                        (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list 'fn* [] form), (str "eval" (next-id!)))]
-                            (IFn'''invoke (Expr'''eval fexpr))
-                        )
-                    :else
-                        (let [#_"Expr" expr (Compiler'analyze :Context'EVAL, form)]
-                            (Expr'''eval expr)
-                        )
-                )
+        (let [form (Compiler'macroexpand form)]
+            (cond
+                (and (seq? form) (= (first form) 'do))
+                    (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
+                        (Compiler'eval (first s))
+                    )
+                (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def"))))
+                    (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list 'fn* [] form), (str "eval" (next-id!)))]
+                        (IFn'''invoke (Expr'''eval fexpr))
+                    )
+                :else
+                    (let [#_"Expr" expr (Compiler'analyze :Context'EVAL, form)]
+                        (Expr'''eval expr)
+                    )
             )
         )
     )
