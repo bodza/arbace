@@ -126,7 +126,7 @@
 )
 
 (import!
-    [java.lang ArithmeticException Boolean Byte Character CharSequence Class Comparable Exception Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.lang ArithmeticException Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
@@ -3093,7 +3093,7 @@
  ;;
 (defn #_"Symbol" symbol
     ([name] (if (symbol? name) name (Symbol'intern name)))
-    ([ns name] (Symbol'intern ns name))
+    ([ns name] (Symbol'intern ns, name))
 )
 )
 
@@ -5701,8 +5701,8 @@
 
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new nil))
 
-    (defn #_"PersistentList" PersistentList'create [#_"array" init]
-        (loop-when-recur [#_"PersistentList" l PersistentList'EMPTY #_"int" i (dec (alength init))] (<= 0 i) [(conj l (aget init i)) (dec i)] => l)
+    (defn #_"PersistentList" PersistentList'create [#_"Reversible" init]
+        (into PersistentList'EMPTY (rseq init))
     )
 
     (defn- #_"PersistentList" PersistentList''withMeta [#_"PersistentList" this, #_"meta" meta]
@@ -5791,7 +5791,7 @@
 
 (defn list
     ([] PersistentList'EMPTY)
-    ([& s] (PersistentList'create (-/to-array s)))
+    ([& s] (PersistentList'create s))
 )
 
 ;;;
@@ -7583,35 +7583,11 @@
 
     (def #_"PersistentHashSet" PersistentHashSet'EMPTY (PersistentHashSet'new nil, PersistentHashMap'EMPTY))
 
-    (defn #_"PersistentHashSet" PersistentHashSet'create-1a [#_"array" init]
-        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"int" i 0]
-                         (< i (alength init))
-                         [(conj! s (aget init i)) (inc i)]
-                      => (persistent! s)
-        )
+    (defn #_"PersistentHashSet" PersistentHashSet'create [#_"Seqable" init]
+        (into PersistentHashSet'EMPTY init)
     )
 
-    (defn #_"PersistentHashSet" PersistentHashSet'create-1s [#_"Seqable" init]
-        (loop-when-recur [#_"ITransientSet" s (transient PersistentHashSet'EMPTY) #_"seq" q (seq init)]
-                         (some? q)
-                         [(conj! s (first q)) (next q)]
-                      => (persistent! s)
-        )
-    )
-
-    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1a [#_"array" init]
-        (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)]
-            (loop-when [s s #_"int" i 0] (< i (alength init)) => (persistent! s)
-                (let [s (conj! s (aget init i))]
-                    (when (= (count s) (inc i)) => (throw! (str "duplicate key: " (aget init i)))
-                        (recur s (inc i))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck-1s [#_"Seqable" init]
+    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck [#_"Seqable" init]
         (let [#_"ITransientSet" s (transient PersistentHashSet'EMPTY)]
             (loop-when [s s #_"seq" q (seq init) #_"int" n 0] (some? q) => (persistent! s)
                 (let [s (conj! s (first q))]
@@ -7719,7 +7695,7 @@
  ;;
 (defn hash-set
     ([] PersistentHashSet'EMPTY)
-    ([& keys] (PersistentHashSet'create-1s keys))
+    ([& keys] (PersistentHashSet'create keys))
 )
 
 ;;;
@@ -10939,6 +10915,8 @@
 
 (declare the-ns)
 
+(defn- var [ns name] (Var'intern (the-ns (Symbol'intern nil, ns)), (Symbol'intern nil, name)))
+
 ;;;
  ; Finds or creates a var named by the symbol name in the namespace
  ; ns (which can be a symbol or a namespace), setting its root binding
@@ -10947,7 +10925,7 @@
  ;;
 (defn intern
     ([ns name]
-        (let [v (Var'intern (the-ns ns) name)]
+        (let [v (Var'intern (the-ns ns), name)]
             (when-some [m (meta name)]
                 (reset-meta! v m)
             )
@@ -10955,7 +10933,7 @@
         )
     )
     ([ns name o]
-        (let [v (Var'intern (the-ns ns) name o)]
+        (let [v (Var'intern (the-ns ns), name, o)]
             (when-some [m (meta name)]
                 (reset-meta! v m)
             )
@@ -11758,30 +11736,26 @@
 (§ defn int     [x] (RT'intCast     x))
 (§ defn long    [x] (RT'longCast    x))
 
-    (defn #_"IPersistentMap" RT'map [#_"array" init]
+    (defn #_"IPersistentMap" RT'map [#_"Seqable" init]
         (cond
-            (nil? init)
+            (empty? init)
                 PersistentArrayMap'EMPTY
-            (<= (alength init) PersistentArrayMap'HASHTABLE_THRESHOLD)
-                (PersistentArrayMap'createWithCheck init)
+            (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
+                (PersistentArrayMap'createWithCheck (-/to-array init))
             :else
-                (PersistentHashMap'createWithCheck-1a init)
+                (PersistentHashMap'createWithCheck-1s init)
         )
     )
 
-    (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"array" init]
+    (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"Seqable" init]
         (cond
-            (nil? init)
+            (empty? init)
                 PersistentArrayMap'EMPTY
-            (<= (alength init) PersistentArrayMap'HASHTABLE_THRESHOLD)
-                (PersistentArrayMap'new init)
+            (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
+                (PersistentArrayMap'new (-/to-array init))
             :else
-                (PersistentHashMap'create-1a init)
+                (PersistentHashMap'create-1s init)
         )
-    )
-
-    (defn #_"seq" RT'arrayToSeq [#_"array" a]
-        (loop-when-recur [#_"seq" s nil #_"int" i (dec (alength a))] (<= 0 i) [(cons (aget a i) s) (dec i)] => s)
     )
 )
 )
@@ -11825,7 +11799,7 @@
                     )
                 )]
             (when (seq? (first s)) => (list (sig- s))
-                (seq (mapv sig- s))
+                (seq (map sig- s))
             )
         )
     )
@@ -13364,8 +13338,8 @@
 (declare Gen''instanceOf) ;; 1
 (declare Gen''invokeConstructor) ;; 5
 (declare Gen''invokeInterface) ;; 6
-(declare Gen''invokeStatic) ;; 20
-(declare Gen''invokeVirtual) ;; 6
+(declare Gen''invokeStatic) ;; 21
+(declare Gen''invokeVirtual) ;; 5
 (declare Gen''loadArg) ;; 2
 (declare Gen''loadArgs) ;; 1
 (declare Gen''loadThis) ;; 7
@@ -13463,7 +13437,7 @@
     )
 
     (defn- #_"void" BooleanExpr''emit [#_"BooleanExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (Gen''getStatic gen, "Boolean", (if (:val this) "TRUE" "FALSE"))
+        (Gen''getStatic gen, (if (:val this) "Boolean/TRUE" "Boolean/FALSE"))
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
         )
@@ -13872,11 +13846,10 @@
 
     (defn- #_"void" EmptyExpr''emit [#_"EmptyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (condp satisfies? (:coll this)
-            IPersistentList   (Gen''getStatic gen, "PersistentList", "EMPTY")
-            IPersistentVector (Gen''getStatic gen, "PersistentVector", "EMPTY")
-            IPersistentMap    (Gen''getStatic gen, "PersistentArrayMap", "EMPTY")
-            IPersistentSet    (Gen''getStatic gen, "PersistentHashSet", "EMPTY")
-                              (throw! "unknown collection type")
+            IPersistentList   (Gen''getStatic gen, "PersistentList'EMPTY")
+            IPersistentVector (Gen''getStatic gen, "PersistentVector'EMPTY")
+            IPersistentMap    (Gen''getStatic gen, "PersistentArrayMap'EMPTY")
+            IPersistentSet    (Gen''getStatic gen, "PersistentHashSet'EMPTY")
         )
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
@@ -14036,20 +14009,6 @@
                 )
             )
         )
-    )
-)
-
-(about #_"MethodExpr"
-    (defn #_"void" MethodExpr'emitArgsAsArray [#_"vector" args, #_"FnExpr" fun, #_"gen" gen]
-        (Gen''push gen, (count args))
-        (Gen''newArray gen)
-        (dotimes [#_"int" i (count args)]
-            (Gen''dup gen)
-            (Gen''push gen, i)
-            (Expr'''emit (nth args i), :Context'EXPRESSION, fun, gen)
-            (Gen''arrayStore gen)
-        )
-        nil
     )
 )
 
@@ -14442,7 +14401,7 @@
             (Expr'''emit (:testExpr this), :Context'EXPRESSION, fun, gen)
             (Gen''dup gen)
             (Gen''ifNull gen, nullLabel)
-            (Gen''getStatic gen, "Boolean", "FALSE")
+            (Gen''getStatic gen, "Boolean/FALSE")
             (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, falseLabel)
 
             (Expr'''emit (:thenExpr this), context, fun, gen)
@@ -14498,16 +14457,16 @@
     )
 
     (defn- #_"Object" ListExpr''eval [#_"ListExpr" this]
-        (loop-when-recur [#_"vector" v (vector) #_"int" i 0]
-                         (< i (count (:args this)))
-                         [(conj v (Expr'''eval (nth (:args this) i))) (inc i)]
-                      => (seq v)
-        )
+        (seq (map Expr'''eval (:args this)))
     )
 
+    (declare FnExpr''emitArgs)
+
     (defn- #_"void" ListExpr''emit [#_"ListExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (MethodExpr'emitArgsAsArray (:args this), fun, gen)
-        (Gen''invokeStatic gen, "RT'arrayToSeq")
+        (when (seq (:args this)) => (Gen''getStatic gen, "PersistentList'EMPTY")
+            (FnExpr''emitArgs fun, (:args this), gen)
+            (Gen''invokeStatic gen, "PersistentList'create")
+        )
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
         )
@@ -14528,7 +14487,7 @@
     )
 
     (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
-        (RT'map (anew (map Expr'''eval (:keyvals this))))
+        (RT'map (map Expr'''eval (:keyvals this)))
     )
 
     (defn- #_"void" MapExpr''emit [#_"MapExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14544,7 +14503,7 @@
                         (recur constant? unique? keys (+ i 2))
                     )
                 )]
-            (MethodExpr'emitArgsAsArray (:keyvals this), fun, gen)
+            (FnExpr''emitArgs fun, (:keyvals this), gen)
             (if (or (and allKeysConstant allConstantKeysUnique) (<= (count (:keyvals this)) 2))
                 (Gen''invokeStatic gen, "RT'mapUniqueKeys")
                 (Gen''invokeStatic gen, "RT'map")
@@ -14607,12 +14566,14 @@
     )
 
     (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
-        (PersistentHashSet'createWithCheck-1s (map Expr'''eval (:keys this)))
+        (PersistentHashSet'createWithCheck (map Expr'''eval (:keys this)))
     )
 
     (defn- #_"void" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (MethodExpr'emitArgsAsArray (:keys this), fun, gen)
-        (Gen''invokeStatic gen, "RT'set")
+        (when (seq (:keys this)) => (Gen''getStatic gen, "PersistentHashSet'EMPTY")
+            (FnExpr''emitArgs fun, (:keys this), gen)
+            (Gen''invokeStatic gen, "PersistentHashSet'createWithCheck")
+        )
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
         )
@@ -14655,16 +14616,14 @@
     )
 
     (defn- #_"Object" VectorExpr''eval [#_"VectorExpr" this]
-        (loop-when-recur [#_"vector" v (vector) #_"int" i 0]
-                         (< i (count (:args this)))
-                         [(conj v (Expr'''eval (nth (:args this) i))) (inc i)]
-                      => v
-        )
+        (mapv Expr'''eval (:args this))
     )
 
     (defn- #_"void" VectorExpr''emit [#_"VectorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (MethodExpr'emitArgsAsArray (:args this), fun, gen)
-        (Gen''invokeStatic gen, "RT'vector")
+        (when (seq (:args this)) => (Gen''getStatic gen, "PersistentVector'EMPTY")
+            (FnExpr''emitArgs fun, (:args this), gen)
+            (Gen''invokeStatic gen, "vec")
+        )
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
         )
@@ -14766,7 +14725,7 @@
                                      [(conj restArgs (nth (:args this) i)) (inc i)]
                                   => restArgs
                     )]
-                (MethodExpr'emitArgsAsArray restArgs, fun, gen)
+                (FnExpr''emitArgs fun, restArgs, gen)
             )
         )
         (when (:tailPosition this)
@@ -15018,7 +14977,7 @@
         (if (contains? (get *closes* (:uid this)) (:uid lb))
             (do
                 (Gen''loadThis gen)
-                (Gen''getField gen, (§ typeof this), (:name lb))
+                (Gen''getField gen, (:name lb))
             )
             (if (:isArg lb)
                 (Gen''loadArg gen, (dec (:idx lb)))
@@ -15050,15 +15009,27 @@
         nil
     )
 
-    (declare FnExpr''emitValue)
-
-    (defn- #_"void" FnExpr''emitObjectArray [#_"FnExpr" this, #_"array" a, #_"gen" gen]
-        (Gen''push gen, (count a))
+    (defn #_"void" FnExpr''emitArgs [#_"FnExpr" this, #_"indexed" args, #_"gen" gen]
+        (Gen''push gen, (count args))
         (Gen''newArray gen)
-        (dotimes [#_"int" i (count a)]
+        (dotimes [#_"int" i (count args)]
             (Gen''dup gen)
             (Gen''push gen, i)
-            (FnExpr''emitValue this, (aget a i), gen)
+            (Expr'''emit (nth args i), :Context'EXPRESSION, this, gen)
+            (Gen''arrayStore gen)
+        )
+        nil
+    )
+
+    (declare FnExpr''emitValue)
+
+    (defn- #_"void" FnExpr''emitValues [#_"FnExpr" this, #_"indexed" values, #_"gen" gen]
+        (Gen''push gen, (count values))
+        (Gen''newArray gen)
+        (dotimes [#_"int" i (count values)]
+            (Gen''dup gen)
+            (Gen''push gen, i)
+            (FnExpr''emitValue this, (nth values i), gen)
             (Gen''arrayStore gen)
         )
         nil
@@ -15078,7 +15049,7 @@
                     )
                     (boolean? value)
                     (do
-                        (Gen''getStatic gen, "Boolean", (if (.booleanValue #_"Boolean" value) "TRUE" "FALSE"))
+                        (Gen''getStatic gen, (if (.booleanValue #_"Boolean" value) "Boolean/TRUE" "Boolean/FALSE"))
                         true
                     )
                     (instance? Integer value)
@@ -15103,57 +15074,56 @@
                     (do
                         (Gen''push gen, (:ns value))
                         (Gen''push gen, (:name value))
-                        (Gen''invokeStatic gen, "Symbol'intern")
+                        (Gen''invokeStatic gen, "symbol")
                         true
                     )
                     (keyword? value)
                     (do
                         (Gen''push gen, (:ns (:sym value)))
                         (Gen''push gen, (:name (:sym value)))
-                        (Gen''invokeStatic gen, "RT'keyword")
+                        (Gen''invokeStatic gen, "keyword")
                         true
                     )
                     (var? value)
                     (do
                         (Gen''push gen, (str (:name (:ns value))))
                         (Gen''push gen, (str (:sym value)))
-                        (Gen''invokeStatic gen, "RT'var")
+                        (Gen''invokeStatic gen, "var")
                         true
                     )
-                    (map? value)
+                    (or (satisfies? PersistentArrayMap value) (satisfies? PersistentHashMap value))
                     (let [#_"vector" v
                             (loop-when [v (vector) #_"seq" s (seq value)] (some? s) => v
                                 (let [#_"pair" e (first s)]
                                     (recur (conj v (key e) (val e)) (next s))
                                 )
                             )]
-                        (FnExpr''emitObjectArray this, (-/to-array v), gen)
+                        (FnExpr''emitValues this, v, gen)
                         (Gen''invokeStatic gen, "RT'map")
                         true
                     )
                     (vector? value)
-                    (let [#_"vector" args value]
-                        (FnExpr''emitObjectArray this, (-/to-array args), gen)
-                        (Gen''invokeStatic gen, "RT'vector")
+                    (do
+                        (when (seq value) => (Gen''getStatic gen, "PersistentVector'EMPTY")
+                            (FnExpr''emitValues this, value, gen)
+                            (Gen''invokeStatic gen, "vec")
+                        )
                         true
                     )
-                    (satisfies? PersistentHashSet value)
-                    (let [#_"seq" vs (seq value)]
-                        (if (nil? vs)
-                            (do
-                                (Gen''getStatic gen, "PersistentHashSet", "EMPTY")
-                            )
-                            (do
-                                (FnExpr''emitObjectArray this, (ß RT'seqToArray vs), gen)
-                                (Gen''invokeStatic gen, "PersistentHashSet'create")
-                            )
+                    (satisfies? PersistentHashSet value)
+                    (do
+                        (when-some [#_"seq" vs (seq value)] => (Gen''getStatic gen, "PersistentHashSet'EMPTY")
+                            (FnExpr''emitValues this, vs, gen)
+                            (Gen''invokeStatic gen, "PersistentHashSet'create")
                         )
                         true
                     )
                     (or (seq? value) (list? value))
-                    (let [#_"seq" vs (seq value)]
-                        (FnExpr''emitObjectArray this, (ß RT'seqToArray vs), gen)
-                        (Gen''invokeStatic gen, "PersistentList'create")
+                    (do
+                        (when-some [#_"seq" vs (seq value)] => (Gen''getStatic gen, "PersistentList'EMPTY")
+                            (FnExpr''emitValues this, vs, gen)
+                            (Gen''invokeStatic gen, "PersistentList'create")
+                        )
                         true
                     )
                     (instance? Pattern value)
@@ -15163,13 +15133,7 @@
                         true
                     )
                     :else
-                    (let [#_"String" cs
-                            (try
-                                (print-string value)
-                                (catch Exception _
-                                    (throw! (str "can't embed object in code: " value))
-                                )
-                            )]
+                    (let [#_"String" cs (print-string value)]
                         (when (zero? (count cs))
                             (throw! (str "can't embed unreadable object in code: " value))
                         )
@@ -15177,7 +15141,7 @@
                             (throw! (str "can't embed unreadable object in code: " cs))
                         )
                         (Gen''push gen, cs)
-                        (Gen''invokeStatic gen, "RT'readString")
+                        (Gen''invokeStatic gen, "read-string")
                         false
                     )
                 )]
@@ -15258,7 +15222,7 @@
             (let [#_"ClassVisitor" cv nil]
                 (ClassVisitor''visit cv, superName)
                 (when (:hasMeta this)
-                    (ClassVisitor''visitField cv, nil, "__meta")
+                    (ClassVisitor''visitField cv, nil, "__meta")
                 )
                 ;; instance fields for closed-overs
                 (doseq [#_"LocalBinding" lb (vals (get *closes* (:uid this)))]
@@ -15276,7 +15240,7 @@
                     (when (:hasMeta this)
                         (Gen''loadThis ctorgen)
                         (Gen''visitVarInsn ctorgen, :Opcode'ALOAD, 1)
-                        (Gen''putField ctorgen, (§ typeof this), "__meta")
+                        (Gen''putField ctorgen, (§ typeof this), "__meta")
                     )
 
                     (let [[this #_"int" a]
@@ -15311,7 +15275,7 @@
                                 (let [#_"gen" gen (Gen'new nil, "IMeta'''meta", cv)]
                                     (Gen''visitCode gen)
                                     (Gen''loadThis gen)
-                                    (Gen''getField gen, (§ typeof this), "__meta")
+                                    (Gen''getField gen, "__meta")
                                     (Gen''returnValue gen)
                                     (Gen''endMethod gen)
                                 )
@@ -15325,7 +15289,7 @@
                                     (loop-when-recur [a a #_"seq" s (vals (get *closes* (:uid this)))] (some? s) [(inc a) (next s)]
                                         (let [#_"LocalBinding" lb (first s)]
                                             (Gen''loadThis gen)
-                                            (Gen''getField gen, (§ typeof this), (:name lb))
+                                            (Gen''getField gen, (:name lb))
                                         )
                                     )
                                     (Gen''invokeConstructor gen, (§ typeof this), ctorTypes)
@@ -15493,10 +15457,10 @@
         (FnExpr''emitVar fun, gen, (:var this))
         (when (:shadowsCoreMapping this)
             (Gen''dup gen)
-            (Gen''getField gen, "Var", "ns")
+            (Gen''getField gen, ":ns")
             (Gen''swap gen)
             (Gen''dup gen)
-            (Gen''getField gen, "Var", "sym")
+            (Gen''getField gen, ":sym")
             (Gen''swap gen)
             (Gen''invokeVirtual gen, "Namespace''refer")
         )
@@ -15504,7 +15468,7 @@
             (Gen''dup gen)
             (Expr'''emit (:meta this), :Context'EXPRESSION, fun, gen)
             (Gen''checkCast gen, "IPersistentMap")
-            (Gen''invokeVirtual gen, "Var''setMeta")
+            (Gen''invokeVirtual gen, "Var''resetMeta")
         )
         (when (:initProvided this)
             (Gen''dup gen)
@@ -15814,7 +15778,7 @@
             (dotimes [#_"int" i (count (:loopLocals this))]
                 (Expr'''emit (nth (:args this) i), :Context'EXPRESSION, fun, gen)
             )
-            (loop-when-recur [#_"int" i (dec (count (:loopLocals this)))] (<= 0 i) [(dec i)]
+            (loop-when-recur [#_"int" i (dec (count (:loopLocals this)))] (< -1 i) [(dec i)]
                 (let [#_"LocalBinding" lb (nth (:loopLocals this) i)]
                     (if (:isArg lb)
                         (Gen''storeArg gen, (dec (:idx lb)))
@@ -15893,7 +15857,7 @@
         (Gen''ifZCmp gen, "EQ", defaultLabel)
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Gen''checkCast gen, "Number")
-        (Gen''invokeVirtual gen, "Number .intValue")
+        (Gen''invokeStatic gen, "int!")
         (CaseExpr''emitShiftMask this, gen)
         nil
     )
@@ -16002,22 +15966,22 @@
                     (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
                     (let [#_"vector" args (vec (next form))
                           #_"Object" exprForm (nth args 0)
-                          #_"int" shift (.intValue (nth args 1))
-                          #_"int" mask (.intValue (nth args 2))
+                          #_"int" shift (int! (nth args 1))
+                          #_"int" mask (int! (nth args 2))
                           #_"Object" defaultForm (nth args 3)
                           #_"map" caseMap (nth args 4)
                           #_"Keyword" switchType (nth args 5)
                           #_"Keyword" testType (nth args 6)
                           #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
                           #_"seq" keys (keys caseMap)
-                          #_"int" low (.intValue (first keys))
-                          #_"int" high (.intValue (nth keys (dec (count keys))))
+                          #_"int" low (int! (first keys))
+                          #_"int" high (int! (nth keys (dec (count keys))))
                           #_"LocalBindingExpr" testExpr (Compiler'analyze :Context'EXPRESSION, exprForm)
                           [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
                             (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
                                 (let [#_"pair" e (first s)
-                                      #_"Integer" minhash (.intValue (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
-                                      #_"Expr" test (if (= testType :int) (NumberExpr'parse (.intValue (first pair))) (ConstantExpr'new (first pair)))
+                                      #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
+                                      #_"Expr" test (if (= testType :int) (NumberExpr'parse (int! (first pair))) (ConstantExpr'new (first pair)))
                                       #_"Expr" then (Compiler'analyze context, (second pair))]
                                     (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
                                 )
@@ -16793,15 +16757,13 @@
 
 (about #_"ListReader"
     (defn #_"Object" list-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let-when [#_"vector" v (LispReader'readDelimitedForms r, \))] (seq v) => (list)
-            (PersistentList'create (-/to-array v))
-        )
+        (apply list (LispReader'readDelimitedForms r, \)))
     )
 )
 
 (about #_"VectorReader"
     (defn #_"Object" vector-reader [#_"PushbackReader" r, #_"char" _delim]
-        (identity (LispReader'readDelimitedForms r, \]))
+        (vec (LispReader'readDelimitedForms r, \]))
     )
 )
 
@@ -16809,7 +16771,7 @@
     (defn #_"Object" map-reader [#_"PushbackReader" r, #_"char" _delim]
         (let [#_"vector" v (LispReader'readDelimitedForms r, \})]
             (when (even? (count v)) => (throw! "map literal must contain an even number of forms")
-                (RT'map (-/to-array v))
+                (RT'map v)
             )
         )
     )
@@ -16817,7 +16779,7 @@
 
 (about #_"SetReader"
     (defn #_"Object" set-reader [#_"PushbackReader" r, #_"char" _delim]
-        (PersistentHashSet'createWithCheck-1s (LispReader'readDelimitedForms r, \}))
+        (PersistentHashSet'createWithCheck (LispReader'readDelimitedForms r, \}))
     )
 )
 
@@ -16828,7 +16790,7 @@
 )
 
 (about #_"LispReader"
-    (def #_"{char IFn}" LispReader'macros
+    (def #_"{char fn}" LispReader'macros
         (hash-map
             \"  string-reader ;; oops! "
             \;  comment-reader
@@ -16837,16 +16799,16 @@
             \^  meta-reader
             \`  syntax-quote-reader
             \~  unquote-reader
-            \(  list-reader,    \) unmatched-delimiter-reader
-            \[  vector-reader,  \] unmatched-delimiter-reader
-            \{  map-reader,     \} unmatched-delimiter-reader
+            \(  list-reader,    \)  unmatched-delimiter-reader
+            \[  vector-reader,  \]  unmatched-delimiter-reader
+            \{  map-reader,     \}  unmatched-delimiter-reader
             \\  character-reader
             \%  arg-reader
             \#  dispatch-reader
         )
     )
 
-    (def #_"{char IFn}" LispReader'dispatchMacros
+    (def #_"{char fn}" LispReader'dispatchMacros
         (hash-map
             \^  meta-reader
             \'  var-reader
