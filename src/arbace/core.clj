@@ -13321,25 +13321,22 @@
 
 (about #_"arbace.Compiler"
 
-(declare ClassVisitor''visit) ;; 1
-(declare ClassVisitor''visitEnd) ;; 1
 (declare ClassVisitor''visitField) ;; 5
 (declare Gen'new) ;; 7
 (declare Gen''arrayStore) ;; 2
-(declare Gen''checkCast) ;; 10
 (declare Gen''dup) ;; 15
 (declare Gen''dupX2) ;; 2
-(declare Gen''endMethod) ;; 7
 (declare Gen''getField) ;; 5
 (declare Gen''getStatic) ;; 11
 (declare Gen''goTo) ;; 6
 (declare Gen''ifNull) ;; 1
-(declare Gen''ifZCmp) ;; 3
+(declare Gen''ifZero) ;; 3
 (declare Gen''instanceOf) ;; 1
 (declare Gen''invokeConstructor) ;; 5
 (declare Gen''invokeInterface) ;; 6
 (declare Gen''invokeStatic) ;; 21
 (declare Gen''invokeVirtual) ;; 5
+(declare Gen''label) ;; 17
 (declare Gen''loadArg) ;; 2
 (declare Gen''loadArgs) ;; 1
 (declare Gen''loadThis) ;; 7
@@ -13348,7 +13345,6 @@
 (declare Gen''monitorExit) ;; 1
 (declare Gen''newArray) ;; 2
 (declare Gen''newInstance) ;; 3
-(declare Gen''newLabel) ;; 17
 (declare Gen''pop) ;; 22
 (declare Gen''push) ;; 19
 (declare Gen''putField) ;; 3
@@ -13357,10 +13353,8 @@
 (declare Gen''storeArg) ;; 1
 (declare Gen''swap) ;; 5
 (declare Gen''throwException) ;; 2
-(declare Gen''visitCode) ;; 7
 (declare Gen''visitInsn) ;; 8
 (declare Gen''visitJumpInsn) ;; 3
-(declare Gen''visitLabel) ;; 2
 (declare Gen''visitLocalVariable) ;; 5
 (declare Gen''visitLookupSwitchInsn) ;; 1
 (declare Gen''visitTableSwitchInsn) ;; 1
@@ -13464,7 +13458,7 @@
     (def #_"Var" ^:dynamic *local-env*         ) ;; symbol->localbinding
     (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
     (def #_"Var" ^:dynamic *loop-locals*       ) ;; vector<localbinding>
-    (def #_"Var" ^:dynamic *loop-label*        ) ;; Label
+    (def #_"Var" ^:dynamic *loop-label*        ) ;; label
     (def #_"Var" ^:dynamic *constants*         ) ;; vector<object>
     (def #_"Var" ^:dynamic *constant-ids*      ) ;; IdentityHashMap
     (def #_"Var" ^:dynamic *used-constants*    ) ;; IPersistentSet
@@ -13510,44 +13504,6 @@
                         (var? o)   (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
                 )
-        )
-    )
-
-    (def- #_"map" Compiler'CHAR_MAP
-        (hash-map
-            \- "_"
-            \: "_COLON_"
-            \+ "_PLUS_"
-            \> "_GT_"
-            \< "_LT_"
-            \= "_EQ_"
-            \~ "_TILDE_"
-            \! "_BANG_"
-            \@ "_CIRCA_"
-            \# "_SHARP_"
-            \' "_SINGLEQUOTE_"
-            \" "_DOUBLEQUOTE_" ;; oops! "
-            \% "_PERCENT_"
-            \^ "_CARET_"
-            \& "_AMPERSAND_"
-            \* "_STAR_"
-            \| "_BAR_"
-            \{ "_LBRACE_"
-            \} "_RBRACE_"
-            \[ "_LBRACK_"
-            \] "_RBRACK_"
-            \/ "_SLASH_"
-            \\ "_BSLASH_"
-            \? "_QMARK_"
-        )
-    )
-
-    (defn #_"String" Compiler'munge [#_"String" name]
-        (let [#_"StringBuilder" sb (StringBuilder.)]
-            (doseq [#_"char" ch name]
-                (.append sb, (or (get Compiler'CHAR_MAP ch) ch))
-            )
-            (.toString sb)
         )
     )
 
@@ -14183,71 +14139,68 @@
     )
 
     (defn- #_"void" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" startTry (Gen''newLabel gen) #_"Label" endTry (Gen''newLabel gen) #_"Label" end (Gen''newLabel gen) #_"Label" ret (Gen''newLabel gen) #_"Label" finallyLabel (Gen''newLabel gen)
-              #_"int" n (count (:catchExprs this)) #_"Label[]" labels (anew #_"Label" n) #_"Label[]" endLabels (anew #_"Label" n)]
-            (dotimes [#_"int" i n]
-                (aset! labels i (Gen''newLabel gen))
-                (aset! endLabels i (Gen''newLabel gen))
-            )
-
-            (Gen''mark gen, startTry)
+        (let [#_"label" l'start (Gen''mark gen)]
             (Expr'''emit (:tryExpr this), context, fun, gen)
             (when-not (= context :Context'STATEMENT)
                 (Gen''visitVarInsn gen, :Opcode'ASTORE, (:retLocal this))
             )
-            (Gen''mark gen, endTry)
-            (when (some? (:finallyExpr this))
-                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-            )
-            (Gen''goTo gen, ret)
-
-            (dotimes [#_"int" i n]
-                (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
-                    (Gen''mark gen, (aget labels i))
-                    ;; exception should be on stack
-                    ;; put in clause local
-                    (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:lb clause)))
-                    (Expr'''emit (:handler clause), context, fun, gen)
-                    (when-not (= context :Context'STATEMENT)
-                        (Gen''visitVarInsn gen, :Opcode'ASTORE, (:retLocal this))
-                    )
-                    (Gen''mark gen, (aget endLabels i))
-
-                    (when (some? (:finallyExpr this))
-                        (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                    )
-                    (Gen''goTo gen, ret)
+            (let [#_"label" l'end (Gen''mark gen)]
+                (when (some? (:finallyExpr this))
+                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
                 )
-            )
-            (when (some? (:finallyExpr this))
-                (Gen''mark gen, finallyLabel)
-                ;; exception should be on stack
-                (Gen''visitVarInsn gen, :Opcode'ASTORE, (:finallyLocal this))
-                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:finallyLocal this))
-                (Gen''throwException gen)
-            )
-            (Gen''mark gen, ret)
-            (when-not (= context :Context'STATEMENT)
-                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:retLocal this))
-            )
-            (Gen''mark gen, end)
-            (dotimes [#_"int" i n]
-                (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
-                    (Gen''visitTryCatchBlock gen, startTry, endTry, (aget labels i))
-                )
-            )
-            (when (some? (:finallyExpr this))
-                (Gen''visitTryCatchBlock gen, startTry, endTry, finallyLabel)
-                (dotimes [#_"int" i n]
-                    (let [#_"CatchClause" _clause (nth (:catchExprs this) i)]
-                        (Gen''visitTryCatchBlock gen, (aget labels i), (aget endLabels i), finallyLabel)
+                (let [#_"label" l'return (Gen''label gen)]
+                    (Gen''goTo gen, l'return)
+                    (let [#_"int" n (count (:catchExprs this)) #_"labels" l'starts (mapv Gen''label (repeat n gen)) #_"labels" l'ends (mapv Gen''label (repeat n gen))]
+                        (dotimes [#_"int" i n]
+                            (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
+                                (Gen''mark gen, (nth l'starts i))
+                                ;; exception should be on stack
+                                ;; put in clause local
+                                (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:lb clause)))
+                                (Expr'''emit (:handler clause), context, fun, gen)
+                                (when-not (= context :Context'STATEMENT)
+                                    (Gen''visitVarInsn gen, :Opcode'ASTORE, (:retLocal this))
+                                )
+                                (Gen''mark gen, (nth l'ends i))
+                                (when (some? (:finallyExpr this))
+                                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                                )
+                                (Gen''goTo gen, l'return)
+                            )
+                        )
+                        (let [#_"label" l'finally (Gen''label gen)]
+                            (when (some? (:finallyExpr this))
+                                (Gen''mark gen, l'finally)
+                                ;; exception should be on stack
+                                (Gen''visitVarInsn gen, :Opcode'ASTORE, (:finallyLocal this))
+                                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:finallyLocal this))
+                                (Gen''throwException gen)
+                            )
+                            (Gen''mark gen, l'return)
+                            (when-not (= context :Context'STATEMENT)
+                                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:retLocal this))
+                            )
+                            (dotimes [#_"int" i n]
+                                (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
+                                    (Gen''visitTryCatchBlock gen, l'start, l'end, (nth l'starts i))
+                                )
+                            )
+                            (when (some? (:finallyExpr this))
+                                (Gen''visitTryCatchBlock gen, l'start, l'end, l'finally)
+                                (dotimes [#_"int" i n]
+                                    (let [#_"CatchClause" _clause (nth (:catchExprs this) i)]
+                                        (Gen''visitTryCatchBlock gen, (nth l'starts i), (nth l'ends i), l'finally)
+                                    )
+                                )
+                            )
+                            (dotimes [#_"int" i n]
+                                (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
+                                    (Gen''visitLocalVariable gen, (:name (:lb clause)), (nth l'starts i), (nth l'ends i), (:idx (:lb clause)))
+                                )
+                            )
+                        )
                     )
-                )
-            )
-            (dotimes [#_"int" i n]
-                (let [#_"CatchClause" clause (nth (:catchExprs this) i)]
-                    (Gen''visitLocalVariable gen, (:name (:lb clause)), (aget labels i), (aget endLabels i), (:idx (:lb clause)))
                 )
             )
         )
@@ -14334,7 +14287,6 @@
 
     (defn- #_"void" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (Expr'''emit (:excExpr this), :Context'EXPRESSION, fun, gen)
-        (Gen''checkCast gen, "Throwable")
         (Gen''throwException gen)
         nil
     )
@@ -14373,9 +14325,7 @@
 
     (defn- #_"void" MetaExpr''emit [#_"MetaExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-        (Gen''checkCast gen, "IObj")
         (Expr'''emit (:meta this), :Context'EXPRESSION, fun, gen)
-        (Gen''checkCast gen, "IPersistentMap")
         (Gen''invokeInterface gen, "IObj'''withMeta")
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
@@ -14390,33 +14340,33 @@
 )
 
 (about #_"IfExpr"
-    (defq IfExpr [#_"Expr" testExpr, #_"Expr" thenExpr, #_"Expr" elseExpr])
+    (defq IfExpr [#_"Expr" test, #_"Expr" then, #_"Expr" else])
 
-    (defn #_"IfExpr" IfExpr'new [#_"Expr" testExpr, #_"Expr" thenExpr, #_"Expr" elseExpr]
-        (IfExpr'class. (anew [testExpr, thenExpr, elseExpr]))
+    (defn #_"IfExpr" IfExpr'new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
+        (IfExpr'class. (anew [test, then, else]))
     )
 
     (defn- #_"void" IfExpr''doEmit [#_"IfExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" nullLabel (Gen''newLabel gen) #_"Label" falseLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)]
-            (Expr'''emit (:testExpr this), :Context'EXPRESSION, fun, gen)
+        (let [#_"label" l'null (Gen''label gen) #_"label" l'false (Gen''label gen) #_"label" l'end (Gen''label gen)]
+            (Expr'''emit (:test this), :Context'EXPRESSION, fun, gen)
             (Gen''dup gen)
-            (Gen''ifNull gen, nullLabel)
+            (Gen''ifNull gen, l'null)
             (Gen''getStatic gen, "Boolean/FALSE")
-            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, falseLabel)
+            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, l'false)
 
-            (Expr'''emit (:thenExpr this), context, fun, gen)
-            (Gen''goTo gen, endLabel)
-            (Gen''mark gen, nullLabel)
+            (Expr'''emit (:then this), context, fun, gen)
+            (Gen''goTo gen, l'end)
+            (Gen''mark gen, l'null)
             (Gen''pop gen)
-            (Gen''mark gen, falseLabel)
-            (Expr'''emit (:elseExpr this), context, fun, gen)
-            (Gen''mark gen, endLabel)
+            (Gen''mark gen, l'false)
+            (Expr'''emit (:else this), context, fun, gen)
+            (Gen''mark gen, l'end)
         )
         nil
     )
 
     (defn- #_"Object" IfExpr''eval [#_"IfExpr" this]
-        (Expr'''eval (if (any = (Expr'''eval (:testExpr this)) nil false) (:elseExpr this) (:thenExpr this)))
+        (Expr'''eval (if (any = (Expr'''eval (:test this)) nil false) (:else this) (:then this)))
     )
 
     (defn- #_"void" IfExpr''emit [#_"IfExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14670,18 +14620,18 @@
     )
 
     (defn- #_"void" KeywordInvokeExpr''emit [#_"KeywordInvokeExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" endLabel (Gen''newLabel gen) #_"Label" faultLabel (Gen''newLabel gen)]
+        (let [#_"label" l'end (Gen''label gen) #_"label" l'fault (Gen''label gen)]
             (Gen''getStatic gen, (§ typeof fun), (Compiler'thunkNameStatic (:siteIndex this)))
             (Gen''dup gen) ;; thunk, thunk
             (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen) ;; thunk, thunk, target
             (Gen''dupX2 gen) ;; target, thunk, thunk, target
             (Gen''invokeInterface gen, "ILookupThunk'''get") ;; target, thunk, result
             (Gen''dupX2 gen) ;; result, target, thunk, result
-            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, faultLabel) ;; result, target
+            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, l'fault) ;; result, target
             (Gen''pop gen) ;; result
-            (Gen''goTo gen, endLabel)
+            (Gen''goTo gen, l'end)
 
-            (Gen''mark gen, faultLabel) ;; result, target
+            (Gen''mark gen, l'fault) ;; result, target
             (Gen''swap gen) ;; target, result
             (Gen''pop gen) ;; target
             (Gen''dup gen) ;; target, target
@@ -14693,7 +14643,7 @@
             (Gen''swap gen) ;; new-thunk, target
             (Gen''invokeInterface gen, "ILookupThunk'''get") ;; result
 
-            (Gen''mark gen, endLabel)
+            (Gen''mark gen, l'end)
             (when (= context :Context'STATEMENT)
                 (Gen''pop gen)
             )
@@ -14745,7 +14695,6 @@
 
     (defn- #_"void" InvokeExpr''emit [#_"InvokeExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (Expr'''emit (:fexpr this), :Context'EXPRESSION, fun, gen)
-        (Gen''checkCast gen, "IFn")
         (InvokeExpr''emitArgsAndCall this, 0, context, fun, gen)
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
@@ -14785,7 +14734,7 @@
     (defq LocalBinding [#_"int" uid, #_"int" idx, #_"Symbol" sym, #_"Expr" init, #_"boolean" isArg, #_"String" name])
 
     (defn #_"LocalBinding" LocalBinding'new [#_"int" idx, #_"Symbol" sym, #_"Expr" init, #_"boolean" isArg]
-        (LocalBinding'class. (anew [(Compiler'nextUniqueId), idx, sym, init, isArg, (Compiler'munge (:name sym))]))
+        (LocalBinding'class. (anew [(Compiler'nextUniqueId), idx, sym, init, isArg, (:name sym)]))
     )
 )
 
@@ -14853,41 +14802,10 @@
         (some? (:restParm this))
     )
 
-    (defn- #_"int" FnMethod''numParams [#_"FnMethod" this]
-        (+ (count (:reqParms this)) (if (FnMethod''isVariadic this) 1 0))
-    )
-
-    (defn- #_"String" FnMethod''getMethodName [#_"FnMethod" this]
-        (if (FnMethod''isVariadic this) "IRestFn'''doInvoke" "IFn'''invoke")
-    )
-
-    (defn- #_"Type[]" FnMethod''getArgTypes [#_"FnMethod" this]
-        (let [#_"int" m Compiler'MAX_POSITIONAL_ARITY
-              #_"int" n (if (and (FnMethod''isVariadic this) (= (count (:reqParms this)) m)) (inc m) (FnMethod''numParams this))]
-            (repeat n nil)
+    (defn #_"String" FnMethod''getMethodName [#_"FnMethod" this]
+        (let [#_"boolean" variadic? (FnMethod''isVariadic this) #_"int" n (count (:reqParms this)) #_"int" m Compiler'MAX_POSITIONAL_ARITY]
+            (str (if variadic? "IRestFn'''doInvoke" "IFn'''invoke") \- (if (and variadic? (= n m)) (inc m) (+ n (if variadic? 1 0))))
         )
-    )
-
-    (defn- #_"void" FnMethod''emit [#_"FnMethod" this, #_"FnExpr" fn, #_"ClassVisitor" cv]
-        (let [#_"gen" gen (Gen'new nil, (FnMethod''getMethodName this), (FnMethod''getArgTypes this), cv)]
-            (Gen''visitCode gen)
-            (let [#_"Label" loopLabel (Gen''mark gen)]
-                (binding [*loop-label* loopLabel, *method* this]
-                    (Expr'''emit (:body this), :Context'RETURN, fn, gen)
-                    (let [#_"Label" end (Gen''mark gen)]
-                        (Gen''visitLocalVariable gen, "this", loopLabel, end, 0)
-                        (loop-when-recur [#_"seq" lbs (seq (:argLocals this))] (some? lbs) [(next lbs)]
-                            (let [#_"LocalBinding" lb (first lbs)]
-                                (Gen''visitLocalVariable gen, (:name lb), loopLabel, end, (:idx lb))
-                            )
-                        )
-                    )
-                )
-                (Gen''returnValue gen)
-                (Gen''endMethod gen)
-            )
-        )
-        nil
     )
 
     (defn #_"FnMethod" FnMethod'parse [#_"FnExpr" fun, #_"seq" form]
@@ -14954,13 +14872,11 @@
                 #_"vector" :constants nil
                 #_"vector" :keywordCallsites nil
                 #_"boolean" :onceOnly false
-                #_"map" :opts (hash-map)
-                ;; if there is a variadic overload (there can only be one) it is stored here
-                #_"FnMethod" :variadicMethod nil
-                #_"IPersistentCollection" :methods nil
+                #_"vector" :methods nil
+                #_"FnMethod" :variadicMethod nil ;; optional variadic overload (there can only be one)
                 #_"boolean" :hasMeta false
 
-                #_"Class" :compiledClass nil
+                #_"map" :class nil
             )
         )
     )
@@ -14970,7 +14886,7 @@
     )
 
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (.newInstance (:compiledClass this))
+        (ß .newInstance (:class this))
     )
 
     (defn #_"void" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
@@ -15147,9 +15063,7 @@
                 )]
             (when partial?
                 (when (and (satisfies? IObj value) (pos? (count (meta value))))
-                    (Gen''checkCast gen, "IObj")
                     (FnExpr''emitValue this, (meta value), gen)
-                    (Gen''checkCast gen, "IPersistentMap")
                     (Gen''invokeInterface gen, "IObj'''withMeta")
                 )
             )
@@ -15175,162 +15089,178 @@
         nil
     )
 
-    (defn- #_"void" FnExpr''emitMethods [#_"FnExpr" this, #_"ClassVisitor" cv]
-        ;; override of invoke/doInvoke for each method
-        (loop-when-recur [#_"seq" s (seq (:methods this))] (some? s) [(next s)]
-            (FnMethod''emit (first s), this, cv)
+    (defn- #_"FnExpr" FnExpr''emitMethod [#_"FnExpr" this, #_"FnMethod" fm]
+        (let [
+            #_"gen" gen (Gen'new)
+            #_"label" l'loop (Gen''mark gen)
+            _
+                (binding [*loop-label* l'loop, *method* fm]
+                    (Expr'''emit (:body fm), :Context'RETURN, this, gen)
+                    (let [#_"label" l'end (Gen''mark gen)]
+                        (Gen''visitLocalVariable gen, "this", l'loop, l'end, 0)
+                        (doseq [#_"LocalBinding" lb (:argLocals fm)]
+                            (Gen''visitLocalVariable gen, (:name lb), l'loop, l'end, (:idx lb))
+                        )
+                    )
+                )
+            _ (Gen''returnValue gen)
+        ]
+            (assoc-in this [:class (keyword (FnMethod''getMethodName fm))] gen)
         )
-        (when (FnExpr''isVariadic this)
-            (let [#_"gen" gen (Gen'new nil, "IRestFn'''requiredArity", cv)]
-                (Gen''visitCode gen)
-                (Gen''push gen, (count (:reqParms (:variadicMethod this))))
-                (Gen''returnValue gen)
-                (Gen''endMethod gen)
-            )
-        )
-        nil
     )
 
-    (defn- #_"void" FnExpr''emitConstants [#_"FnExpr" this, #_"gen" clinitgen]
+    (defn- #_"FnExpr" FnExpr''emitMethods [#_"FnExpr" this]
+        ;; override of invoke/doInvoke for each method
+        (let [
+            this (reduce FnExpr''emitMethod this (:methods this))
+        ]
+            (when (FnExpr''isVariadic this) => this
+                (let [
+                    #_"gen" gen (Gen'new)
+                    _ (Gen''push gen, (count (:reqParms (:variadicMethod this))))
+                    _ (Gen''returnValue gen)
+                ]
+                    (assoc-in this [:class :IRestFn'''requiredArity] gen)
+                )
+            )
+        )
+    )
+
+    (defn- #_"gen" FnExpr''emitConstants [#_"FnExpr" this, #_"gen" gen]
         (dotimes [#_"int" i (count (:constants this))]
             (when (contains? *used-constants* i)
-                (FnExpr''emitValue this, (nth (:constants this) i), clinitgen)
-                (Gen''checkCast clinitgen, (§ typeof (nth (:constants this) i)))
-                (Gen''putStatic clinitgen, (§ typeof this), (Compiler'constantName i))
+                (FnExpr''emitValue this, (nth (:constants this) i), gen)
+                (Gen''putStatic gen, (§ typeof this), (Compiler'constantName i))
             )
         )
-        nil
+        gen
     )
 
-    (defn- #_"void" FnExpr''emitKeywordCallsites [#_"FnExpr" this, #_"gen" clinitgen]
+    (defn- #_"gen" FnExpr''emitKeywordCallsites [#_"FnExpr" this, #_"gen" gen]
         (dotimes [#_"int" i (count (:keywordCallsites this))]
             (let [#_"Keyword" k (nth (:keywordCallsites this) i)]
-                (Gen''newInstance clinitgen, "KeywordLookupSite")
-                (Gen''dup clinitgen)
-                (FnExpr''emitValue this, k, clinitgen)
-                (Gen''invokeConstructor clinitgen, "KeywordLookupSite", "(arbace.core.Keyword)")
-                (Gen''dup clinitgen)
-                (Gen''putStatic clinitgen, (§ typeof this), (Compiler'siteNameStatic i))
-                (Gen''putStatic clinitgen, (§ typeof this), (Compiler'thunkNameStatic i))
+                (Gen''newInstance gen, "KeywordLookupSite")
+                (Gen''dup gen)
+                (FnExpr''emitValue this, k, gen)
+                (Gen''invokeConstructor gen, "KeywordLookupSite", "(arbace.core.Keyword)")
+                (Gen''dup gen)
+                (Gen''putStatic gen, (§ typeof this), (Compiler'siteNameStatic i))
+                (Gen''putStatic gen, (§ typeof this), (Compiler'thunkNameStatic i))
             )
         )
-        nil
+        gen
     )
 
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"String" superName, #_"boolean" _oneTimeUse]
         (binding [*used-constants* (hash-set)]
-            (let [#_"ClassVisitor" cv nil]
-                (ClassVisitor''visit cv, superName)
-                (when (:hasMeta this)
-                    (ClassVisitor''visitField cv, nil, "__meta")
-                )
-                ;; instance fields for closed-overs
-                (doseq [#_"LocalBinding" lb (vals (get *closes* (:uid this)))]
-                    (ClassVisitor''visitField cv, nil, (:name lb))
-                )
-
-                ;; ctor that takes closed-overs and inits base + fields
-                (let [#_"gen" ctorgen (Gen'new nil, "<init>", (ß IopObject''ctorTypes this), cv)
-                      #_"Label" start (Gen''newLabel ctorgen) #_"Label" end (Gen''newLabel ctorgen)]
-                    (Gen''visitCode ctorgen)
-                    (Gen''visitLabel ctorgen, start)
-                    (Gen''loadThis ctorgen)
-                    (Gen''invokeConstructor ctorgen, "super", "()")
-
+            (let [
+                this (assoc this :class (hash-map :'name (:name this), :'super superName))
+                _
                     (when (:hasMeta this)
-                        (Gen''loadThis ctorgen)
-                        (Gen''visitVarInsn ctorgen, :Opcode'ALOAD, 1)
-                        (Gen''putField ctorgen, (§ typeof this), "__meta")
+                        (ClassVisitor''visitField (:class this), nil, "__meta")
                     )
-
-                    (let [[this #_"int" a]
-                            (loop-when [this this a (if (:hasMeta this) 2 1) #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => [this a]
+                ;; instance fields for closed-overs
+                _
+                    (doseq [#_"LocalBinding" lb (vals (get *closes* (:uid this)))]
+                        (ClassVisitor''visitField (:class this), nil, (:name lb))
+                    )
+                ;; ctor that takes closed-overs and inits base + fields
+                this
+                    (let [
+                        #_"gen" gen (Gen'new)
+                        _
+                            (when (:hasMeta this)
+                                (Gen''loadThis gen)
+                                (Gen''visitVarInsn gen, :Opcode'ALOAD, 1)
+                                (Gen''putField gen, (§ typeof this), "__meta")
+                            )
+                        this
+                            (loop-when [this this #_"int" i (if (:hasMeta this) 2 1) #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => this
                                 (let [#_"LocalBinding" lb (first s)]
-                                    (Gen''loadThis ctorgen)
-                                    (Gen''visitVarInsn ctorgen, :Opcode'ALOAD, a)
-                                    (Gen''putField ctorgen, (§ typeof this), (:name lb))
-                                    (recur (update this :closesExprs conj (LocalBindingExpr'new lb)) (inc a) (next s))
-                                )
-                            )]
-
-                        (Gen''visitLabel ctorgen, end)
-                        (Gen''returnValue ctorgen)
-                        (Gen''endMethod ctorgen)
-
-                        (when (:hasMeta this)
-                            (let [#_"Type[]" ctorTypes (ß IopObject''ctorTypes this)]
-
-                                ;; ctor that takes closed-overs but not meta
-                                (let [#_"gen" ctorgen (Gen'new nil, "<init>", (next ctorTypes), cv)]
-                                    (Gen''visitCode ctorgen)
-                                    (Gen''loadThis ctorgen)
-                                    (Gen''visitInsn ctorgen, :Opcode'ACONST_NULL) ;; nil meta
-                                    (Gen''loadArgs ctorgen)
-                                    (Gen''invokeConstructor ctorgen, (§ typeof this), ctorTypes)
-                                    (Gen''returnValue ctorgen)
-                                    (Gen''endMethod ctorgen)
-                                )
-
-                                ;; meta()
-                                (let [#_"gen" gen (Gen'new nil, "IMeta'''meta", cv)]
-                                    (Gen''visitCode gen)
                                     (Gen''loadThis gen)
-                                    (Gen''getField gen, "__meta")
-                                    (Gen''returnValue gen)
-                                    (Gen''endMethod gen)
-                                )
-
-                                ;; withMeta()
-                                (let [#_"gen" gen (Gen'new nil, "IObj'''withMeta", cv)]
-                                    (Gen''visitCode gen)
-                                    (Gen''newInstance gen, (§ typeof this))
-                                    (Gen''dup gen)
-                                    (Gen''loadArg gen, 0)
-                                    (loop-when-recur [a a #_"seq" s (vals (get *closes* (:uid this)))] (some? s) [(inc a) (next s)]
-                                        (let [#_"LocalBinding" lb (first s)]
-                                            (Gen''loadThis gen)
-                                            (Gen''getField gen, (:name lb))
-                                        )
-                                    )
-                                    (Gen''invokeConstructor gen, (§ typeof this), ctorTypes)
-                                    (Gen''returnValue gen)
-                                    (Gen''endMethod gen)
+                                    (Gen''visitVarInsn gen, :Opcode'ALOAD, i)
+                                    (Gen''putField gen, (§ typeof this), (:name lb))
+                                    (recur (update this :closesExprs conj (LocalBindingExpr'new lb)) (inc i) (next s))
                                 )
                             )
-                        )
-
-                        (FnExpr''emitMethods this, cv)
-
-                        ;; static fields for constants
-                        (dotimes [#_"int" i (count (:constants this))]
-                            (when (contains? *used-constants* i)
-                                (ClassVisitor''visitField cv, "static", (Compiler'constantName i))
-                            )
-                        )
-
-                        ;; static fields for lookup sites
-                        (dotimes [#_"int" i (count (:keywordCallsites this))]
-                            (ClassVisitor''visitField cv, "static", (Compiler'siteNameStatic i))
-                            (ClassVisitor''visitField cv, "static", (Compiler'thunkNameStatic i))
-                        )
-
-                        ;; static init for constants, keywords and vars
-                        (let [#_"gen" clinitgen (Gen'new "static", "<clinit>", cv)]
-                            (Gen''visitCode clinitgen)
-
-                            (FnExpr''emitConstants this, clinitgen)
-                            (FnExpr''emitKeywordCallsites this, clinitgen)
-
-                            (Gen''returnValue clinitgen)
-                            (Gen''endMethod clinitgen)
-                        )
-
-                        ;; end of class
-                        (ClassVisitor''visitEnd cv)
-
-                        (assoc this :compiledClass (ß Loader''defineClass *class-loader*, (:name this), (.toByteArray cv)))
+                        _ (Gen''returnValue gen)
+                    ]
+                        (assoc-in this [:class :'init] gen)
                     )
-                )
+                this
+                    (when (:hasMeta this) => this
+                        (let [
+                            ;; ctor that takes closed-overs but not meta
+                            this
+                                (let [
+                                    #_"gen" gen (Gen'new)
+                                    _ (Gen''loadThis gen)
+                                    _ (Gen''visitInsn gen, :Opcode'ACONST_NULL) ;; nil meta
+                                    _ (Gen''loadArgs gen)
+                                    _ (Gen''invokeConstructor gen, (§ typeof this), :'init)
+                                    _ (Gen''returnValue gen)
+                                ]
+                                    (assoc-in this [:class :'init-meta] gen)
+                                )
+                            ;; meta()
+                            this
+                                (let [
+                                    #_"gen" gen (Gen'new)
+                                    _ (Gen''loadThis gen)
+                                    _ (Gen''getField gen, "__meta")
+                                    _ (Gen''returnValue gen)
+                                ]
+                                    (assoc-in this [:class :IMeta'''meta] gen)
+                                )
+                            ;; withMeta()
+                            this
+                                (let [
+                                    #_"gen" gen (Gen'new)
+                                    _ (Gen''newInstance gen, (§ typeof this))
+                                    _ (Gen''dup gen)
+                                    _ (Gen''loadArg gen, 0)
+                                    _
+                                        (loop-when-recur [#_"seq" s (vals (get *closes* (:uid this)))] (some? s) [(next s)]
+                                            (let [#_"LocalBinding" lb (first s)]
+                                                (Gen''loadThis gen)
+                                                (Gen''getField gen, (:name lb))
+                                            )
+                                        )
+                                    _ (Gen''invokeConstructor gen, (§ typeof this), :'init)
+                                    _ (Gen''returnValue gen)
+                                ]
+                                    (assoc-in this [:class :IObj'''withMeta] gen)
+                                )
+                        ]
+                            this
+                        )
+                    )
+                this (FnExpr''emitMethods this)
+                ;; static fields for constants
+                _
+                    (dotimes [#_"int" i (count (:constants this))]
+                        (when (contains? *used-constants* i)
+                            (ClassVisitor''visitField (:class this), "static", (Compiler'constantName i))
+                        )
+                    )
+                ;; static fields for lookup sites
+                _
+                    (dotimes [#_"int" i (count (:keywordCallsites this))]
+                        (ClassVisitor''visitField (:class this), "static", (Compiler'siteNameStatic i))
+                        (ClassVisitor''visitField (:class this), "static", (Compiler'thunkNameStatic i))
+                    )
+                ;; static init for constants, keywords and vars
+                this
+                    (let [
+                        #_"gen" gen (Gen'new)
+                        gen (FnExpr''emitConstants this, gen)
+                        gen (FnExpr''emitKeywordCallsites this, gen)
+                        _ (Gen''returnValue gen)
+                    ]
+                        (assoc-in this [:class :'clinit] gen)
+                    )
+            ]
+                this
             )
         )
     )
@@ -15342,7 +15272,7 @@
               fn (when (some? (meta (first form))) => fn
                     (assoc fn :onceOnly (boolean (get (meta (first form)) :once)))
                 )
-              #_"String" basename (if (some? owner) (:name (:fun owner)) (Compiler'munge (:name (:name *ns*))))
+              #_"String" basename (if (some? owner) (:name (:fun owner)) (:name (:name *ns*)))
               [#_"Symbol" nm name]
                 (if (symbol? (second form))
                     (let [nm (second form)]
@@ -15354,7 +15284,7 @@
                         :else         [nil name]
                     )
                 )
-              fn (assoc fn :name (str basename "$" (.replace (Compiler'munge name), ".", "_DOT_")))
+              fn (assoc fn :name (str basename "$" name))
               fn
                 (binding [*constants*          (vector)
                           *constant-ids*       (IdentityHashMap.)
@@ -15399,8 +15329,8 @@
                                 )
                             )
                         )
-                        (let [#_"IPersistentCollection" methods
-                                (loop-when-recur [methods nil #_"int" i 0]
+                        (let [#_"vector" methods
+                                (loop-when-recur [methods (vector) #_"int" i 0]
                                                  (< i (count a))
                                                  [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
                                               => (if (some? variadic) (conj methods variadic) methods)
@@ -15467,7 +15397,6 @@
         (when (some? (:meta this))
             (Gen''dup gen)
             (Expr'''emit (:meta this), :Context'EXPRESSION, fun, gen)
-            (Gen''checkCast gen, "IPersistentMap")
             (Gen''invokeVirtual gen, "Var''resetMeta")
         )
         (when (:initProvided this)
@@ -15554,7 +15483,6 @@
                 )]
             (doseq [#_"BindingInit" bi (:bindingInits this)]
                 (Gen''visitVarInsn gen, :Opcode'ALOAD, (:idx (:binding bi)))
-                (Gen''checkCast gen, (§ typeof (:init bi)))
                 (loop-when-recur [#_"seq" s (vals (get *closes* (:uid (:init bi))))] (some? s) [(next s)]
                     (let-when [#_"LocalBinding" lb (first s)] (contains? lbset lb)
                         (Gen''dup gen)
@@ -15564,13 +15492,13 @@
                 )
                 (Gen''pop gen)
             )
-            (let [#_"Label" loopLabel (Gen''mark gen)]
+            (let [#_"label" l'loop (Gen''mark gen)]
                 (Expr'''emit (:body this), context, fun, gen)
-                (let [#_"Label" end (Gen''mark gen)]
+                (let [#_"label" l'end (Gen''mark gen)]
                     (loop-when-recur [#_"seq" bis (seq (:bindingInits this))] (some? bis) [(next bis)]
                         (let [#_"BindingInit" bi (first bis)
                               #_"String" lname (:name (:binding bi)) lname (if (.endsWith lname, "__auto__") (str lname (next-id!)) lname)]
-                            (Gen''visitLocalVariable gen, lname, loopLabel, end, (:idx (:binding bi)))
+                            (Gen''visitLocalVariable gen, lname, l'loop, l'end, (:idx (:binding bi)))
                         )
                     )
                 )
@@ -15640,18 +15568,18 @@
                         (recur (assoc bindingLabels bi (Gen''mark gen)) (inc i))
                     )
                 )
-              #_"Label" loopLabel (Gen''mark gen)]
+              #_"label" l'loop (Gen''mark gen)]
             (if (:isLoop this)
-                (binding [*loop-label* loopLabel]
+                (binding [*loop-label* l'loop]
                     (Expr'''emit (:body this), context, fun, gen)
                 )
                 (Expr'''emit (:body this), context, fun, gen)
             )
-            (let [#_"Label" end (Gen''mark gen)]
+            (let [#_"label" l'end (Gen''mark gen)]
                 (loop-when-recur [#_"seq" bis (seq (:bindingInits this))] (some? bis) [(next bis)]
                     (let [#_"BindingInit" bi (first bis)
                           #_"String" lname (:name (:binding bi)) lname (if (.endsWith lname, "__auto__") (str lname (next-id!)) lname)]
-                        (Gen''visitLocalVariable gen, lname, (get bindingLabels bi), end, (:idx (:binding bi)))
+                        (Gen''visitLocalVariable gen, lname, (get bindingLabels bi), l'end, (:idx (:binding bi)))
                     )
                 )
             )
@@ -15774,7 +15702,7 @@
     )
 
     (defn- #_"void" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-some [#_"Label" loopLabel *loop-label*] => (throw! "recur misses loop label")
+        (when-some [#_"label" l'loop *loop-label*] => (throw! "recur misses loop label")
             (dotimes [#_"int" i (count (:loopLocals this))]
                 (Expr'''emit (nth (:args this) i), :Context'EXPRESSION, fun, gen)
             )
@@ -15786,7 +15714,7 @@
                     )
                 )
             )
-            (Gen''goTo gen, loopLabel)
+            (Gen''goTo gen, l'loop)
         )
         nil
     )
@@ -15851,12 +15779,11 @@
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"label" l'default]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Gen''instanceOf gen, "Number")
-        (Gen''ifZCmp gen, "EQ", defaultLabel)
+        (Gen''ifZero gen, l'default)
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-        (Gen''checkCast gen, "Number")
         (Gen''invokeStatic gen, "int!")
         (CaseExpr''emitShiftMask this, gen)
         nil
@@ -15867,11 +15794,11 @@
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Expr'''emit test, :Context'EXPRESSION, fun, gen)
         (Gen''invokeStatic gen, "Util'equiv")
-        (Gen''ifZCmp gen, "EQ", defaultLabel)
+        (Gen''ifZero gen, l'default)
         (CaseExpr'emitExpr fun, gen, then)
         nil
     )
@@ -15883,16 +15810,16 @@
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Expr'''emit test, :Context'EXPRESSION, fun, gen)
         (if (= (:testType this) :hash-identity)
             (do
-                (Gen''visitJumpInsn gen, :Opcode'IF_ACMPNE, defaultLabel)
+                (Gen''visitJumpInsn gen, :Opcode'IF_ACMPNE, l'default)
             )
             (do
                 (Gen''invokeStatic gen, "Util'equiv")
-                (Gen''ifZCmp gen, "EQ", defaultLabel)
+                (Gen''ifZero gen, l'default)
             )
         )
         (CaseExpr'emitExpr fun, gen, then)
@@ -15900,38 +15827,38 @@
     )
 
     (defn- #_"void" CaseExpr''doEmit [#_"CaseExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" defaultLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)
-              #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''newLabel gen)) (sorted-map) (keys (:tests this)))]
+        (let [#_"label" l'default (Gen''label gen) #_"label" l'end (Gen''label gen)
+              #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''label gen)) (sorted-map) (keys (:tests this)))]
             (if (= (:testType this) :int)
-                (CaseExpr''emitExprForInts this, fun, gen, defaultLabel)
+                (CaseExpr''emitExprForInts this, fun, gen, l'default)
                 (CaseExpr''emitExprForHashes this, fun, gen)
             )
             (if (= (:switchType this) :sparse)
                 (let [#_"Label[]" la (anew #_"Label" (vals labels))]
-                    (Gen''visitLookupSwitchInsn gen, defaultLabel, (-/int-array (keys (:tests this))), la)
+                    (Gen''visitLookupSwitchInsn gen, l'default, (-/int-array (keys (:tests this))), la)
                 )
                 (let [#_"Label[]" la (anew #_"Label" (inc (- (:high this) (:low this))))]
                     (loop-when-recur [#_"int" i (:low this)] (<= i (:high this)) [(inc i)]
-                        (aset! la (- i (:low this)) (if (contains? labels i) (get labels i) defaultLabel))
+                        (aset! la (- i (:low this)) (if (contains? labels i) (get labels i) l'default))
                     )
-                    (Gen''visitTableSwitchInsn gen, (:low this), (:high this), defaultLabel, la)
+                    (Gen''visitTableSwitchInsn gen, (:low this), (:high this), l'default, la)
                 )
             )
             (doseq [#_"Integer" i (keys labels)]
                 (Gen''mark gen, (get labels i))
                 (cond
                     (= (:testType this) :int)
-                        (CaseExpr''emitThenForInts this, fun, gen, (get (:tests this) i), (get (:thens this) i), defaultLabel)
+                        (CaseExpr''emitThenForInts this, fun, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                     (contains? (:skipCheck this) i)
                         (CaseExpr'emitExpr fun, gen, (get (:thens this) i))
                     :else
-                        (CaseExpr''emitThenForHashes this, fun, gen, (get (:tests this) i), (get (:thens this) i), defaultLabel)
+                        (CaseExpr''emitThenForHashes this, fun, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                 )
-                (Gen''goTo gen, endLabel)
+                (Gen''goTo gen, l'end)
             )
-            (Gen''mark gen, defaultLabel)
+            (Gen''mark gen, l'default)
             (CaseExpr'emitExpr fun, gen, (:defaultExpr this))
-            (Gen''mark gen, endLabel)
+            (Gen''mark gen, l'end)
             (when (= context :Context'STATEMENT)
                 (Gen''pop gen)
             )
