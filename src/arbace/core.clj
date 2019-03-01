@@ -126,14 +126,13 @@
 )
 
 (import!
-    [java.lang ArithmeticException Boolean Byte Character CharSequence Class #_ClassCastException Comparable Exception Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.lang ArithmeticException Boolean Byte Character CharSequence Class Comparable Exception Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.util Arrays Comparator IdentityHashMap]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
-    [cloiure.asm #_ClassVisitor ClassWriter Label Opcodes]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
@@ -535,11 +534,6 @@
  ; Returns the Class of x.
  ;;
 (defn #_"Class" class [#_"Object" x] (when (some? x) (.getClass x)))
-
-;;;
- ; Throws a ClassCastException if x is not a c, else returns x.
- ;;
-(defn cast [#_"Class" c x] (.cast c x))
 
 ;;;
  ; Evaluates x and tests if it is an instance of class c. Returns true or false.
@@ -2300,7 +2294,7 @@
             (nil? k1)    -1
             (nil? k2)    1
             (number? k1) (Numbers'compare k1, k2)
-            :else        (.compareTo (cast Comparable k1), k2)
+            :else        (.compareTo #_"Comparable" k1, k2)
         )
     )
 )
@@ -2381,7 +2375,7 @@
     #_foreign
     (§ defm Ratio #_"Comparable"
         (#_"int" Comparable'''compareTo [#_"Ratio" this, #_"Object" that]
-            (Numbers'compare this, (cast Number that))
+            (Numbers'compare this, #_"Number" that)
         )
     )
 )
@@ -2672,65 +2666,65 @@
     )
 
     (defn #_"boolean" Numbers'lt [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt (cast Number x), (cast Number y)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt #_"Number" x, #_"Number" y))
     )
 
     (defn #_"boolean" Numbers'lte [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte (cast Number x), (cast Number y)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte #_"Number" x, #_"Number" y))
     )
 
     (defn #_"boolean" Numbers'gt [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt (cast Number y), (cast Number x)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt #_"Number" y, #_"Number" x))
     )
 
     (defn #_"boolean" Numbers'gte [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte (cast Number y), (cast Number x)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte #_"Number" y, #_"Number" x))
     )
 
-    (defn #_"boolean" Numbers'isZero [#_"Object" x] (Ops'''isZero (Numbers'ops x), (cast Number x)))
-    (defn #_"boolean" Numbers'isPos  [#_"Object" x] (Ops'''isPos  (Numbers'ops x), (cast Number x)))
-    (defn #_"boolean" Numbers'isNeg  [#_"Object" x] (Ops'''isNeg  (Numbers'ops x), (cast Number x)))
+    (defn #_"boolean" Numbers'isZero [#_"Object" x] (Ops'''isZero (Numbers'ops x), #_"Number" x))
+    (defn #_"boolean" Numbers'isPos  [#_"Object" x] (Ops'''isPos  (Numbers'ops x), #_"Number" x))
+    (defn #_"boolean" Numbers'isNeg  [#_"Object" x] (Ops'''isNeg  (Numbers'ops x), #_"Number" x))
 
     (defn #_"Number" Numbers'add [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''add (cast Number x), (cast Number y)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''add #_"Number" x, #_"Number" y))
     )
 
     (defn #_"Number" Numbers'subtract [#_"Object" x, #_"Object" y]
-        (let [#_"Number" negativeY (Ops'''negate (Numbers'ops y), (cast Number y))]
-            (-> (Ops'''combine (Numbers'ops x), (Numbers'ops negativeY)) (Ops'''add (cast Number x), negativeY))
+        (let [#_"Number" negativeY (Ops'''negate (Numbers'ops y), #_"Number" y)]
+            (-> (Ops'''combine (Numbers'ops x), (Numbers'ops negativeY)) (Ops'''add #_"Number" x, negativeY))
         )
     )
 
-    (defn #_"Number" Numbers'negate [#_"Object" x] (Ops'''negate (Numbers'ops x), (cast Number x)))
-    (defn #_"Number" Numbers'inc    [#_"Object" x] (Ops'''inc    (Numbers'ops x), (cast Number x)))
-    (defn #_"Number" Numbers'dec    [#_"Object" x] (Ops'''dec    (Numbers'ops x), (cast Number x)))
+    (defn #_"Number" Numbers'negate [#_"Object" x] (Ops'''negate (Numbers'ops x), #_"Number" x))
+    (defn #_"Number" Numbers'inc    [#_"Object" x] (Ops'''inc    (Numbers'ops x), #_"Number" x))
+    (defn #_"Number" Numbers'dec    [#_"Object" x] (Ops'''dec    (Numbers'ops x), #_"Number" x))
 
     (defn #_"Number" Numbers'multiply [#_"Object" x, #_"Object" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''multiply (cast Number x), (cast Number y)))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''multiply #_"Number" x, #_"Number" y))
     )
 
     (defn #_"Number" Numbers'divide [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, (cast Number y)) => (throw (ArithmeticException. "Divide by zero"))
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''divide (cast Number x), (cast Number y)))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''divide #_"Number" x, #_"Number" y))
         )
     )
 
     (defn #_"Number" Numbers'quotient [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, (cast Number y)) => (throw (ArithmeticException. "Divide by zero"))
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''quotient (cast Number x), (cast Number y)))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''quotient #_"Number" x, #_"Number" y))
         )
     )
 
     (defn #_"Number" Numbers'remainder [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, (cast Number y)) => (throw (ArithmeticException. "Divide by zero"))
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''remainder (cast Number x), (cast Number y)))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''remainder #_"Number" x, #_"Number" y))
         )
     )
 
     (defn #_"BigInteger" Numbers'toBigInteger [#_"Object" x]
         (condp instance? x
             BigInteger x
-                       (BigInteger/valueOf (.longValue (cast Number x)))
+                       (BigInteger/valueOf (.longValue #_"Number" x))
         )
     )
 
@@ -2834,7 +2828,7 @@
  ;;
 (§ defn +
     ([] 0)
-    ([x] (cast Number x))
+    ([x] #_"Number" x)
     ([x y] (Numbers'add x y))
     ([x y & s] (reduce + (+ x y) s))
 )
@@ -2866,7 +2860,7 @@
  ;;
 (§ defn *
     ([] 1)
-    ([x] (cast Number x))
+    ([x] #_"Number" x)
     ([x y] (Numbers'multiply x y))
     ([x y & s] (reduce * (* x y) s))
 )
@@ -11732,7 +11726,7 @@
         (cond
             (instance? Integer x) (.intValue #_"Integer" x)
             (number? x)           (RT'intCast-1l (long x))
-            :else                 (.charValue (cast Character x))
+            :else                 (.charValue #_"Character" x)
         )
     )
 
@@ -13434,7 +13428,7 @@
     )
 
     (defn- #_"void" NilExpr''emit [#_"NilExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (Gen''visitInsn gen, Opcodes/ACONST_NULL)
+        (Gen''visitInsn gen, :Opcode'ACONST_NULL)
         (when (= context :Context'STATEMENT)
             (Gen''pop gen)
         )
@@ -13496,7 +13490,7 @@
     (def #_"Var" ^:dynamic *local-env*         ) ;; symbol->localbinding
     (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
     (def #_"Var" ^:dynamic *loop-locals*       ) ;; vector<localbinding>
-    (def #_"Var" ^:dynamic *loop-label*        ) ;; Label
+    (def #_"Var" ^:dynamic *loop-label*        ) ;; Label
     (def #_"Var" ^:dynamic *constants*         ) ;; vector<object>
     (def #_"Var" ^:dynamic *constant-ids*      ) ;; IdentityHashMap
     (def #_"Var" ^:dynamic *used-constants*    ) ;; IPersistentSet
@@ -14230,8 +14224,8 @@
     )
 
     (defn- #_"void" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" startTry (Gen''newLabel gen) #_"Label" endTry (Gen''newLabel gen) #_"Label" end (Gen''newLabel gen) #_"Label" ret (Gen''newLabel gen) #_"Label" finallyLabel (Gen''newLabel gen)
-              #_"int" n (count (:catchExprs this)) #_"Label[]" labels (-/make-array Label n) #_"Label[]" endLabels (-/make-array Label n)]
+        (let [#_"Label" startTry (Gen''newLabel gen) #_"Label" endTry (Gen''newLabel gen) #_"Label" end (Gen''newLabel gen) #_"Label" ret (Gen''newLabel gen) #_"Label" finallyLabel (Gen''newLabel gen)
+              #_"int" n (count (:catchExprs this)) #_"Label[]" labels (anew #_"Label" n) #_"Label[]" endLabels (anew #_"Label" n)]
             (dotimes [#_"int" i n]
                 (aset! labels i (Gen''newLabel gen))
                 (aset! endLabels i (Gen''newLabel gen))
@@ -14240,7 +14234,7 @@
             (Gen''mark gen, startTry)
             (Expr'''emit (:tryExpr this), context, fun, gen)
             (when-not (= context :Context'STATEMENT)
-                (Gen''visitVarInsn gen, Opcodes/ASTORE, (:retLocal this))
+                (Gen''visitVarInsn gen, :Opcode'ASTORE, (:retLocal this))
             )
             (Gen''mark gen, endTry)
             (when (some? (:finallyExpr this))
@@ -14253,10 +14247,10 @@
                     (Gen''mark gen, (aget labels i))
                     ;; exception should be on stack
                     ;; put in clause local
-                    (Gen''visitVarInsn gen, Opcodes/ASTORE, (:idx (:lb clause)))
+                    (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:lb clause)))
                     (Expr'''emit (:handler clause), context, fun, gen)
                     (when-not (= context :Context'STATEMENT)
-                        (Gen''visitVarInsn gen, Opcodes/ASTORE, (:retLocal this))
+                        (Gen''visitVarInsn gen, :Opcode'ASTORE, (:retLocal this))
                     )
                     (Gen''mark gen, (aget endLabels i))
 
@@ -14269,14 +14263,14 @@
             (when (some? (:finallyExpr this))
                 (Gen''mark gen, finallyLabel)
                 ;; exception should be on stack
-                (Gen''visitVarInsn gen, Opcodes/ASTORE, (:finallyLocal this))
+                (Gen''visitVarInsn gen, :Opcode'ASTORE, (:finallyLocal this))
                 (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                (Gen''visitVarInsn gen, Opcodes/ALOAD, (:finallyLocal this))
+                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:finallyLocal this))
                 (Gen''throwException gen)
             )
             (Gen''mark gen, ret)
             (when-not (= context :Context'STATEMENT)
-                (Gen''visitVarInsn gen, Opcodes/ALOAD, (:retLocal this))
+                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:retLocal this))
             )
             (Gen''mark gen, end)
             (dotimes [#_"int" i n]
@@ -14444,12 +14438,12 @@
     )
 
     (defn- #_"void" IfExpr''doEmit [#_"IfExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" nullLabel (Gen''newLabel gen) #_"Label" falseLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)]
+        (let [#_"Label" nullLabel (Gen''newLabel gen) #_"Label" falseLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)]
             (Expr'''emit (:testExpr this), :Context'EXPRESSION, fun, gen)
             (Gen''dup gen)
             (Gen''ifNull gen, nullLabel)
             (Gen''getStatic gen, "Boolean", "FALSE")
-            (Gen''visitJumpInsn gen, Opcodes/IF_ACMPEQ, falseLabel)
+            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, falseLabel)
 
             (Expr'''emit (:thenExpr this), context, fun, gen)
             (Gen''goTo gen, endLabel)
@@ -14534,12 +14528,7 @@
     )
 
     (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
-        (let [#_"array" a (-/object-array (count (:keyvals this)))]
-            (dotimes [#_"int" i (count (:keyvals this))]
-                (aset! a i (Expr'''eval (nth (:keyvals this) i)))
-            )
-            (RT'map a)
-        )
+        (RT'map (anew (map Expr'''eval (:keyvals this))))
     )
 
     (defn- #_"void" MapExpr''emit [#_"MapExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14722,14 +14711,14 @@
     )
 
     (defn- #_"void" KeywordInvokeExpr''emit [#_"KeywordInvokeExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" endLabel (Gen''newLabel gen) #_"Label" faultLabel (Gen''newLabel gen)]
+        (let [#_"Label" endLabel (Gen''newLabel gen) #_"Label" faultLabel (Gen''newLabel gen)]
             (Gen''getStatic gen, (§ typeof fun), (Compiler'thunkNameStatic (:siteIndex this)))
             (Gen''dup gen) ;; thunk, thunk
             (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen) ;; thunk, thunk, target
             (Gen''dupX2 gen) ;; target, thunk, thunk, target
             (Gen''invokeInterface gen, "ILookupThunk'''get") ;; target, thunk, result
             (Gen''dupX2 gen) ;; result, target, thunk, result
-            (Gen''visitJumpInsn gen, Opcodes/IF_ACMPEQ, faultLabel) ;; result, target
+            (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, faultLabel) ;; result, target
             (Gen''pop gen) ;; result
             (Gen''goTo gen, endLabel)
 
@@ -14781,8 +14770,8 @@
             )
         )
         (when (:tailPosition this)
-            (Gen''visitInsn gen, Opcodes/ACONST_NULL)
-            (Gen''visitVarInsn gen, Opcodes/ASTORE, 0)
+            (Gen''visitInsn gen, :Opcode'ACONST_NULL)
+            (Gen''visitVarInsn gen, :Opcode'ASTORE, 0)
         )
         (Gen''invokeInterface gen, "IFn'''invoke", "Object", (repeat (min (inc Compiler'MAX_POSITIONAL_ARITY) (count (:args this))) nil))
         nil
@@ -14920,13 +14909,13 @@
         )
     )
 
-    (defn- #_"void" FnMethod''emit [#_"FnMethod" this, #_"FnExpr" fn, #_"ClassVisitor" cv]
+    (defn- #_"void" FnMethod''emit [#_"FnMethod" this, #_"FnExpr" fn, #_"ClassVisitor" cv]
         (let [#_"gen" gen (Gen'new nil, (FnMethod''getMethodName this), (FnMethod''getArgTypes this), cv)]
             (Gen''visitCode gen)
-            (let [#_"Label" loopLabel (Gen''mark gen)]
+            (let [#_"Label" loopLabel (Gen''mark gen)]
                 (binding [*loop-label* loopLabel, *method* this]
                     (Expr'''emit (:body this), :Context'RETURN, fn, gen)
-                    (let [#_"Label" end (Gen''mark gen)]
+                    (let [#_"Label" end (Gen''mark gen)]
                         (Gen''visitLocalVariable gen, "this", loopLabel, end, 0)
                         (loop-when-recur [#_"seq" lbs (seq (:argLocals this))] (some? lbs) [(next lbs)]
                             (let [#_"LocalBinding" lb (first lbs)]
@@ -15033,7 +15022,7 @@
             )
             (if (:isArg lb)
                 (Gen''loadArg gen, (dec (:idx lb)))
-                (Gen''visitVarInsn gen, Opcodes/ALOAD, (:idx lb))
+                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:idx lb))
             )
         )
         nil
@@ -15079,7 +15068,7 @@
         (let [#_"boolean" partial?
                 (cond (nil? value)
                     (do
-                        (Gen''visitInsn gen, Opcodes/ACONST_NULL)
+                        (Gen''visitInsn gen, :Opcode'ACONST_NULL)
                         true
                     )
                     (string? value)
@@ -15210,7 +15199,7 @@
         (Gen''newInstance gen, (§ typeof this))
         (Gen''dup gen)
         (when (:hasMeta this)
-            (Gen''visitInsn gen, Opcodes/ACONST_NULL)
+            (Gen''visitInsn gen, :Opcode'ACONST_NULL)
         )
         (loop-when-recur [#_"seq" s (seq (:closesExprs this))] (some? s) [(next s)]
             (FnExpr''emitLocal fun, gen, (:lb (first s)))
@@ -15222,7 +15211,7 @@
         nil
     )
 
-    (defn- #_"void" FnExpr''emitMethods [#_"FnExpr" this, #_"ClassVisitor" cv]
+    (defn- #_"void" FnExpr''emitMethods [#_"FnExpr" this, #_"ClassVisitor" cv]
         ;; override of invoke/doInvoke for each method
         (loop-when-recur [#_"seq" s (seq (:methods this))] (some? s) [(next s)]
             (FnMethod''emit (first s), this, cv)
@@ -15266,7 +15255,7 @@
 
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"String" superName, #_"boolean" _oneTimeUse]
         (binding [*used-constants* (hash-set)]
-            (let [#_"ClassWriter" cw (ClassWriter. 0) #_"ClassVisitor" cv cw]
+            (let [#_"ClassVisitor" cv nil]
                 (ClassVisitor''visit cv, superName)
                 (when (:hasMeta this)
                     (ClassVisitor''visitField cv, nil, "__meta")
@@ -15278,7 +15267,7 @@
 
                 ;; ctor that takes closed-overs and inits base + fields
                 (let [#_"gen" ctorgen (Gen'new nil, "<init>", (ß IopObject''ctorTypes this), cv)
-                      #_"Label" start (Gen''newLabel ctorgen) #_"Label" end (Gen''newLabel ctorgen)]
+                      #_"Label" start (Gen''newLabel ctorgen) #_"Label" end (Gen''newLabel ctorgen)]
                     (Gen''visitCode ctorgen)
                     (Gen''visitLabel ctorgen, start)
                     (Gen''loadThis ctorgen)
@@ -15286,7 +15275,7 @@
 
                     (when (:hasMeta this)
                         (Gen''loadThis ctorgen)
-                        (Gen''visitVarInsn ctorgen, Opcodes/ALOAD, 1)
+                        (Gen''visitVarInsn ctorgen, :Opcode'ALOAD, 1)
                         (Gen''putField ctorgen, (§ typeof this), "__meta")
                     )
 
@@ -15294,7 +15283,7 @@
                             (loop-when [this this a (if (:hasMeta this) 2 1) #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => [this a]
                                 (let [#_"LocalBinding" lb (first s)]
                                     (Gen''loadThis ctorgen)
-                                    (Gen''visitVarInsn ctorgen, Opcodes/ALOAD, a)
+                                    (Gen''visitVarInsn ctorgen, :Opcode'ALOAD, a)
                                     (Gen''putField ctorgen, (§ typeof this), (:name lb))
                                     (recur (update this :closesExprs conj (LocalBindingExpr'new lb)) (inc a) (next s))
                                 )
@@ -15311,7 +15300,7 @@
                                 (let [#_"gen" ctorgen (Gen'new nil, "<init>", (next ctorTypes), cv)]
                                     (Gen''visitCode ctorgen)
                                     (Gen''loadThis ctorgen)
-                                    (Gen''visitInsn ctorgen, Opcodes/ACONST_NULL) ;; nil meta
+                                    (Gen''visitInsn ctorgen, :Opcode'ACONST_NULL) ;; nil meta
                                     (Gen''loadArgs ctorgen)
                                     (Gen''invokeConstructor ctorgen, (§ typeof this), ctorTypes)
                                     (Gen''returnValue ctorgen)
@@ -15375,7 +15364,7 @@
                         ;; end of class
                         (ClassVisitor''visitEnd cv)
 
-                        (assoc this :compiledClass (ß Loader''defineClass *class-loader*, (:name this), (.toByteArray cw)))
+                        (assoc this :compiledClass (ß Loader''defineClass *class-loader*, (:name this), (.toByteArray cv)))
                     )
                 )
             )
@@ -15420,7 +15409,7 @@
                             (when (vector? (second form)) => form
                                 (list 'fn* (next form))
                             )
-                          #_"FnMethod[]" a (-/make-array #_"FnMethod" Object (inc Compiler'MAX_POSITIONAL_ARITY))
+                          #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
                           #_"FnMethod" variadic
                             (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
                                 (let [#_"FnMethod" f (FnMethod'parse fn, (first s))
@@ -15588,19 +15577,19 @@
 
     (defn- #_"void" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (doseq [#_"BindingInit" bi (:bindingInits this)]
-            (Gen''visitInsn gen, Opcodes/ACONST_NULL)
-            (Gen''visitVarInsn gen, Opcodes/ASTORE, (:idx (:binding bi)))
+            (Gen''visitInsn gen, :Opcode'ACONST_NULL)
+            (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:binding bi)))
         )
         (let [#_"IPersistentSet" lbset
                 (loop-when [lbset (hash-set) #_"int" i 0] (< i (count (:bindingInits this))) => lbset
                     (let [#_"BindingInit" bi (nth (:bindingInits this) i)]
                         (Expr'''emit (:init bi), :Context'EXPRESSION, fun, gen)
-                        (Gen''visitVarInsn gen, Opcodes/ASTORE, (:idx (:binding bi)))
+                        (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:binding bi)))
                         (recur (conj lbset (:binding bi)) (inc i))
                     )
                 )]
             (doseq [#_"BindingInit" bi (:bindingInits this)]
-                (Gen''visitVarInsn gen, Opcodes/ALOAD, (:idx (:binding bi)))
+                (Gen''visitVarInsn gen, :Opcode'ALOAD, (:idx (:binding bi)))
                 (Gen''checkCast gen, (§ typeof (:init bi)))
                 (loop-when-recur [#_"seq" s (vals (get *closes* (:uid (:init bi))))] (some? s) [(next s)]
                     (let-when [#_"LocalBinding" lb (first s)] (contains? lbset lb)
@@ -15611,9 +15600,9 @@
                 )
                 (Gen''pop gen)
             )
-            (let [#_"Label" loopLabel (Gen''mark gen)]
+            (let [#_"Label" loopLabel (Gen''mark gen)]
                 (Expr'''emit (:body this), context, fun, gen)
-                (let [#_"Label" end (Gen''mark gen)]
+                (let [#_"Label" end (Gen''mark gen)]
                     (loop-when-recur [#_"seq" bis (seq (:bindingInits this))] (some? bis) [(next bis)]
                         (let [#_"BindingInit" bi (first bis)
                               #_"String" lname (:name (:binding bi)) lname (if (.endsWith lname, "__auto__") (str lname (next-id!)) lname)]
@@ -15679,22 +15668,22 @@
     )
 
     (defn- #_"void" LetExpr''doEmit [#_"LetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"{BindingInit Label}" bindingLabels
+        (let [#_"{BindingInit Label}" bindingLabels
                 (loop-when [bindingLabels (hash-map) #_"int" i 0] (< i (count (:bindingInits this))) => bindingLabels
                     (let [#_"BindingInit" bi (nth (:bindingInits this) i)]
                         (Expr'''emit (:init bi), :Context'EXPRESSION, fun, gen)
-                        (Gen''visitVarInsn gen, Opcodes/ASTORE, (:idx (:binding bi)))
+                        (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx (:binding bi)))
                         (recur (assoc bindingLabels bi (Gen''mark gen)) (inc i))
                     )
                 )
-              #_"Label" loopLabel (Gen''mark gen)]
+              #_"Label" loopLabel (Gen''mark gen)]
             (if (:isLoop this)
                 (binding [*loop-label* loopLabel]
                     (Expr'''emit (:body this), context, fun, gen)
                 )
                 (Expr'''emit (:body this), context, fun, gen)
             )
-            (let [#_"Label" end (Gen''mark gen)]
+            (let [#_"Label" end (Gen''mark gen)]
                 (loop-when-recur [#_"seq" bis (seq (:bindingInits this))] (some? bis) [(next bis)]
                     (let [#_"BindingInit" bi (first bis)
                           #_"String" lname (:name (:binding bi)) lname (if (.endsWith lname, "__auto__") (str lname (next-id!)) lname)]
@@ -15821,7 +15810,7 @@
     )
 
     (defn- #_"void" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-some [#_"Label" loopLabel *loop-label*] => (throw! "recur misses loop label")
+        (when-some [#_"Label" loopLabel *loop-label*] => (throw! "recur misses loop label")
             (dotimes [#_"int" i (count (:loopLocals this))]
                 (Expr'''emit (nth (:args this) i), :Context'EXPRESSION, fun, gen)
             )
@@ -15829,7 +15818,7 @@
                 (let [#_"LocalBinding" lb (nth (:loopLocals this) i)]
                     (if (:isArg lb)
                         (Gen''storeArg gen, (dec (:idx lb)))
-                        (Gen''visitVarInsn gen, Opcodes/ASTORE, (:idx lb))
+                        (Gen''visitVarInsn gen, :Opcode'ASTORE, (:idx lb))
                     )
                 )
             )
@@ -15891,14 +15880,14 @@
     (defn- #_"void" CaseExpr''emitShiftMask [#_"CaseExpr" this, #_"gen" gen]
         (when (CaseExpr''isShiftMasked this)
             (Gen''push gen, (:shift this))
-            (Gen''visitInsn gen, Opcodes/ISHR)
+            (Gen''visitInsn gen, :Opcode'ISHR)
             (Gen''push gen, (:mask this))
-            (Gen''visitInsn gen, Opcodes/IAND)
+            (Gen''visitInsn gen, :Opcode'IAND)
         )
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Label" defaultLabel]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Gen''instanceOf gen, "Number")
         (Gen''ifZCmp gen, "EQ", defaultLabel)
@@ -15914,7 +15903,7 @@
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Expr'''emit test, :Context'EXPRESSION, fun, gen)
         (Gen''invokeStatic gen, "Util'equiv")
@@ -15930,12 +15919,12 @@
         nil
     )
 
-    (defn- #_"void" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
+    (defn- #_"void" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"Label" defaultLabel]
         (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
         (Expr'''emit test, :Context'EXPRESSION, fun, gen)
         (if (= (:testType this) :hash-identity)
             (do
-                (Gen''visitJumpInsn gen, Opcodes/IF_ACMPNE, defaultLabel)
+                (Gen''visitJumpInsn gen, :Opcode'IF_ACMPNE, defaultLabel)
             )
             (do
                 (Gen''invokeStatic gen, "Util'equiv")
@@ -15947,17 +15936,17 @@
     )
 
     (defn- #_"void" CaseExpr''doEmit [#_"CaseExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [#_"Label" defaultLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)
-              #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''newLabel gen)) (sorted-map) (keys (:tests this)))]
+        (let [#_"Label" defaultLabel (Gen''newLabel gen) #_"Label" endLabel (Gen''newLabel gen)
+              #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''newLabel gen)) (sorted-map) (keys (:tests this)))]
             (if (= (:testType this) :int)
                 (CaseExpr''emitExprForInts this, fun, gen, defaultLabel)
                 (CaseExpr''emitExprForHashes this, fun, gen)
             )
             (if (= (:switchType this) :sparse)
-                (let [#_"Label[]" la (-/into-array Label (vals labels))]
+                (let [#_"Label[]" la (anew #_"Label" (vals labels))]
                     (Gen''visitLookupSwitchInsn gen, defaultLabel, (-/int-array (keys (:tests this))), la)
                 )
-                (let [#_"Label[]" la (-/make-array Label (inc (- (:high this) (:low this))))]
+                (let [#_"Label[]" la (anew #_"Label" (inc (- (:high this) (:low this))))]
                     (loop-when-recur [#_"int" i (:low this)] (<= i (:high this)) [(inc i)]
                         (aset! la (- i (:low this)) (if (contains? labels i) (get labels i) defaultLabel))
                     )
