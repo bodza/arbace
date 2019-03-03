@@ -644,9 +644,13 @@
     )
 
     (-/extend-protocol Counted
-        clojure.lang.Counted  (Counted'''count [o] (.count o))
-        #_"[Ljava.lang.Object;" #_(Counted'''count [a] (Array/getLength a))
-        CharSequence          (Counted'''count [s] (.length s))
+        clojure.lang.Counted                  (Counted'''count [o] (.count o))
+      ; (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array/getLength a))
+        CharSequence                          (Counted'''count [s] (.length s))
+    )
+
+    (-/extend-protocol Counted
+        (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array/getLength a))
     )
 
     (defn counted? [x] (satisfies? Counted x))
@@ -1790,6 +1794,7 @@
     (defp VecForm)
     (defp MapForm)
     (defp SetForm)
+    (defp RecForm)
 
     (defn- print-sequential [#_"String" begin, f'p, #_"String" sep, #_"String" end, s'q, #_"Writer" w]
         (.write w begin)
@@ -1818,12 +1823,18 @@
         (print-sequential "[" pr-on " " "]" q w)
     )
 
+    (-/prefer-method -/print-method VecForm'iface clojure.lang.ISeq)
+
     (-/defmethod -/print-method MapForm'iface [#_"Seqable" q, #_"Writer" w]
         (print-sequential "{" (fn [e #_"Writer" w] (pr-on (key e) w) (.append w \space) (pr-on (val e) w)) ", " "}" q w)
     )
 
     (-/defmethod -/print-method SetForm'iface [#_"Seqable" q, #_"Writer" w]
         (print-sequential "#{" pr-on " " "}" q w)
+    )
+
+    (-/defmethod -/print-method RecForm'iface [#_"Seqable" q, #_"Writer" w]
+        (print-sequential "[" pr-on " " "]" (.__data q) w)
     )
 
     (defn #_"String" print-string [#_"Object" o]
@@ -3946,8 +3957,8 @@
         )
     )
 
-    (§ -/extend-protocol Seqable #_"[Ljava.lang.Object;"
-        (#_"ArraySeq" Seqable'''seq [#_"array" a] (#_ArraySeq'create -/seq a))
+    (-/extend-protocol Seqable (Class/forName "[Ljava.lang.Object;")
+        (#_"ArraySeq" Seqable'''seq [#_"array" a] (ArraySeq'create a))
     )
 
     (defn- #_"seq" ArraySeq''seq [#_"ArraySeq" this]
@@ -4060,7 +4071,7 @@
     )
 
     (-/extend-protocol Seqable CharSequence
-        (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (#_StringSeq'create -/seq s))
+        (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (StringSeq'create s))
     )
 
     (defn- #_"seq" StringSeq''seq [#_"StringSeq" this]
@@ -7208,7 +7219,11 @@
  ; Any errors are my own.
  ;;
 (about #_"PersistentHashMap"
-    (defq PersistentHashMap [#_"meta" _meta, #_"int" cnt, #_"node" root, #_"boolean" has-nil?, #_"value" nil-value] MapForm)
+    (declare PersistentHashMap''seq)
+
+    (defq PersistentHashMap [#_"meta" _meta, #_"int" cnt, #_"node" root, #_"boolean" has-nil?, #_"value" nil-value] MapForm
+        clojure.lang.ISeq (seq [_] (PersistentHashMap''seq _))
+    )
 
     #_inherit
     (defm PersistentHashMap APersistentMap AFn)
@@ -10777,7 +10792,9 @@
     )
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
-        (or (Var''hasRoot this) (contains? (first (.get Var'dvals)) this))
+        (when-not (instance? clojure.lang.Var this) => (.isBound this)
+            (or (Var''hasRoot this) (contains? (first (.get Var'dvals)) this))
+        )
     )
 
     (defn #_"atom" Var''getThreadBinding [#_"Var" this]
@@ -11113,7 +11130,9 @@
     )
 
     (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (get @(:mappings this) name)
+        (when-not (instance? clojure.lang.Namespace this) => (.getMapping this, name)
+            (get @(:mappings this) name)
+        )
     )
 
     (defn- #_"void" Namespace''warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
@@ -13298,9 +13317,17 @@
     (defn- #_"gen" Gen''visitInsn         [#_"gen" gen, #_"Keyword" opcode] (conj gen [:visitInsn opcode]))
     (defn- #_"gen" Gen''visitJumpInsn     [#_"gen" gen, #_"Keyword" opcode, #_"label" label] (conj gen [:visitJumpInsn opcode @label]))
 
-    (defn- #_"gen" Gen''visitLookupSwitchInsn [#_"gen" gen, #_"ints" values, #_"labels" labels, #_"label" default] gen)
-    (defn- #_"gen" Gen''visitTableSwitchInsn  [#_"gen" gen, #_"int" low, #_"int" high, #_"labels" labels, #_"label" default] gen)
-    (defn- #_"gen" Gen''visitTryCatchBlock    [#_"gen" gen, #_"label" start, #_"label" end, #_"label" finally] gen)
+    (defn- #_"gen" Gen''visitLookupSwitchInsn [#_"gen" gen, #_"ints" values, #_"labels" labels, #_"label" default]
+        (conj gen [:visitLookupSwitchInsn (vec values) (mapv deref labels) @default])
+    )
+
+    (defn- #_"gen" Gen''visitTableSwitchInsn  [#_"gen" gen, #_"int" low, #_"int" high, #_"labels" labels, #_"label" default]
+        (conj gen [:visitTableSwitchInsn low high (mapv deref labels) @default])
+    )
+
+    (defn- #_"gen" Gen''visitTryCatchBlock    [#_"gen" gen, #_"label" start, #_"label" end, #_"label" finally]
+        (conj gen [:visitTryCatchBlock @start @end @finally])
+    )
 )
 
 (def Context'enum-set
@@ -14171,7 +14198,7 @@
                                     (if (any = op 'catch 'finally)
                                         (let [bodyExpr
                                                 (when (nil? bodyExpr) => bodyExpr
-                                                    (binding [*no-recur* true, *in-return-context* false]
+                                                    (-/binding [*no-recur* true, *in-return-context* false]
                                                         (IParser'''parse (BodyParser'new), context, (seq body))
                                                     )
                                                 )]
@@ -14179,7 +14206,7 @@
                                                 (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                                     (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
                                                         (let [catches
-                                                                (binding [*local-env* *local-env*, *last-local-num* *last-local-num*, *in-catch-finally* true]
+                                                                (-/binding [*local-env* *local-env*, *last-local-num* *last-local-num*, *in-catch-finally* true]
                                                                     (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil, false)
                                                                           #_"Expr" handler (IParser'''parse (BodyParser'new), :Context'EXPRESSION, (next (next (next f))))]
                                                                         (conj catches (CatchClause'new nil, lb, handler))
@@ -14191,7 +14218,7 @@
                                                 )
                                                 (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
                                                     (let [finallyExpr
-                                                            (binding [*in-catch-finally* true]
+                                                            (-/binding [*in-catch-finally* true]
                                                                 (IParser'''parse (BodyParser'new), :Context'STATEMENT, (next f))
                                                             )]
                                                         (recur bodyExpr catches finallyExpr body caught? (next fs))
@@ -14207,7 +14234,7 @@
                             )]
                         (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
                             ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
-                            (binding [*no-recur* true]
+                            (-/binding [*no-recur* true]
                                 (IParser'''parse (BodyParser'new), context, (seq body))
                             )
                         )
@@ -14709,7 +14736,7 @@
         (let [#_"vector" parms (first form) #_"seq" body (next form)
               #_"FnMethod" fm (FnMethod'new fun, *method*)]
             ;; register as the current method and set up a new env frame
-            (binding [*method*            fm
+            (-/binding [*method*            fm
                       *local-env*         *local-env*
                       *last-local-num*    -1
                       *loop-locals*       nil
@@ -14979,7 +15006,7 @@
         (let [
             #_"gen" gen (Gen'new)
             gen
-                (binding [*loop-label* (Gen''mark gen), *method* fm]
+                (-/binding [*loop-label* (Gen''mark gen), *method* fm]
                     (Expr'''emit (:body fm), :Context'RETURN, this, gen)
                 )
             gen (Gen''returnValue gen)
@@ -15021,7 +15048,7 @@
     )
 
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"String" superName, #_"boolean" _oneTimeUse]
-        (binding [*used-constants* (hash-set)]
+        (-/binding [*used-constants* (hash-set)]
             (let [
                 this (assoc this :class (hash-map :'name (:name this), :'super superName))
                 this
@@ -15163,7 +15190,7 @@
                 )
               fn (assoc fn :name (str basename "$" name))
               fn
-                (binding [*constants*          (vector)
+                (-/binding [*constants*          (vector)
                           *constant-ids*       (IdentityHashMap.)
                           *keywords*           (hash-map)
                           *vars*               (hash-map)
@@ -15430,7 +15457,7 @@
                         (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                             (if (= context :Context'EVAL)
                                 (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                                (binding [*local-env* *local-env*, *last-local-num* *last-local-num*]
+                                (-/binding [*local-env* *local-env*, *last-local-num* *last-local-num*]
                                     ;; pre-seed env (like Lisp labels)
                                     (let [#_"vector" lbs
                                             (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
@@ -15484,7 +15511,7 @@
                 )
         ]
             (if (:isLoop this)
-                (binding [*loop-label* (Gen''mark gen)]
+                (-/binding [*loop-label* (Gen''mark gen)]
                     (Expr'''emit (:body this), context, fun, gen)
                 )
                 (Expr'''emit (:body this), context, fun, gen)
@@ -15891,7 +15918,7 @@
 
     (defn #_"Object" Compiler'macroexpand [#_"Object" form]
         (let [#_"Object" f (Compiler'macroexpand1 form)]
-            (if (= f form) form (recur f))
+            (if (identical? f form) form (recur f))
         )
     )
 
@@ -16385,7 +16412,7 @@
 (about #_"FnReader"
     (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"char" _delim]
         (when-not (bound? #'*arg-env*) => (throw! "nested #()s are not allowed")
-            (binding [*arg-env* (sorted-map)]
+            (-/binding [*arg-env* (sorted-map)]
                 (LispReader'unread r, \()
                 (let [#_"vector" args (vector)
                       args
@@ -16546,7 +16573,7 @@
     )
 
     (defn #_"Object" syntax-quote-reader [#_"PushbackReader" r, #_"char" _delim]
-        (binding [*gensym-env* (hash-map)]
+        (-/binding [*gensym-env* (hash-map)]
             (SyntaxQuoteReader'syntaxQuote (LispReader'read r))
         )
     )
@@ -16703,12 +16730,12 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
-            (binding [*ns* *ns*]
+            (-/binding [*ns* *ns*]
                 (loop [#_"Object" val nil]
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
                         (recur
-                            (binding [*last-unique-id*     -1
+                            (-/binding [*last-unique-id*     -1
                                       *closes*             (hash-map)
                                       *no-recur*           false
                                       *in-catch-finally*   false
