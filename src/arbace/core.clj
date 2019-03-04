@@ -89,6 +89,8 @@
 (defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
 (defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                               ~i)))
 
+(defmacro class! [r] (let [c (symbol (str r "'class"))] (-/list 'assoc (-/list 'new c) :class c)))
+
 (defmacro throw! [#_"String" s] `(throw (Error. ~s)))
 
 (refer! - [< <= > >= neg? pos? zero?])
@@ -121,8 +123,8 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*ns* = boolean case char compare defn fn identical? int let long loop satisfies?]) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about bit-and bit-xor dec defm defp defq defr import! inc neg? pos? quot refer! rem thread throw! zero? |])
+    (:refer-clojure :only [*ns* boolean case char compare defn fn identical? int let long loop satisfies?]) (:require [clojure.core :as -])
+    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about bit-and bit-xor class! dec defm defp defq defr import! inc neg? pos? quot refer! rem thread throw! zero? |])
 )
 
 (import!
@@ -215,7 +217,7 @@
     `(letfn* ~(-/vec (-/interleave (-/map -/first fnspecs) (-/map #(-/cons `fn %) fnspecs))) ~@body)
 )
 
-(letfn [(=> [s] (if (= '=> (-/first s)) (-/next s) (-/cons nil s)))]
+(letfn [(=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))]
     (defmacro     when       [? & s] (let [[e & s] (=> s)]                 `(if     ~? (do ~@s) ~e)))
     (defmacro     when-not   [? & s] (let [[e & s] (=> s)]                 `(if-not ~? (do ~@s) ~e)))
     (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(-/vec v) (if     ~? (do ~@s) ~e))))
@@ -252,7 +254,7 @@
     ([bind then else & _]
         (assert-args
             (-/vector? bind) "a vector for its binding"
-            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] x# ~'=> ~else
@@ -274,7 +276,7 @@
     ([bind then else & _]
         (assert-args
             (-/vector? bind) "a vector for its binding"
-            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] (some? x#) ~'=> ~else
@@ -296,7 +298,7 @@
     ([bind then else & _]
         (assert-args
             (-/vector? bind) "a vector for its binding"
-            (= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [s# (-/seq ~(bind 1))] (some? s#) ~'=> ~else
@@ -310,7 +312,7 @@
 (ß defmacro when-let [bindings & body]
     (assert-args
         (-/vector? bindings) "a vector for its binding"
-        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] x#
         (let [~(bindings 0) x#]
@@ -322,7 +324,7 @@
 (ß defmacro when-some [bindings & body]
     (assert-args
         (-/vector? bindings) "a vector for its binding"
-        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] (some? x#)
         (let [~(bindings 0) x#]
@@ -334,7 +336,7 @@
 (ß defmacro when-first [bindings & body]
     (assert-args
         (-/vector? bindings) "a vector for its binding"
-        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     `(when-some [s# (-/seq ~(bindings 1))]
         (let [~(bindings 0) (-/first s#)]
@@ -343,7 +345,7 @@
     )
 )
 
-(letfn [(=> [s] (if (= '=> (-/first s)) (-/next s) (-/cons nil s)))]
+(letfn [(=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))]
     (defmacro when-let   [v & s] (let [[e & s] (=> s)] `(if-let   ~(-/vec v) (do ~@s) ~e)))
     (defmacro when-some  [v & s] (let [[e & s] (=> s)] `(if-some  ~(-/vec v) (do ~@s) ~e)))
     (defmacro when-first [v & s] (let [[e & s] (=> s)] `(if-first ~(-/vec v) (do ~@s) ~e)))
@@ -371,11 +373,11 @@
     (let [gpred (gensym "pred__") gexpr (gensym "expr__")
           emit-
             (fn emit- [f? expr args]
-                (let [[[a b c :as clause] more] (-/split-at (if (= :>> (-/second args)) 3 2) args) n (-/count clause)]
+                (let [[[a b c :as clause] more] (-/split-at (if (-/= :>> (-/second args)) 3 2) args) n (-/count clause)]
                     (cond
-                        (= 0 n) `(throw! (-/str "no matching clause: " ~expr))
-                        (= 1 n) a
-                        (= 2 n) `(if (~f? ~a ~expr)
+                        (-/= 0 n) `(throw! (-/str "no matching clause: " ~expr))
+                        (-/= 1 n) a
+                        (-/= 2 n) `(if (~f? ~a ~expr)
                                     ~b
                                     ~(emit- f? expr more)
                                 )
@@ -394,14 +396,14 @@
 
 (letfn [(v' [v] (cond (-/vector? v) v (-/symbol? v) [v v] :else [`_# v]))
         (r' [r] (cond (-/vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
-        (=> [s] (if (= '=> (-/first s)) (-/next s) (-/cons nil s)))
+        (=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))
         (l' [v ? r s] (let [r (r' r) [e & s] (=> s)] `(loop ~(v' v) (if ~? (do ~@s ~@r) ~e))))]
     (defmacro loop-when [v ? & s] (l' v ? nil s))
     (defmacro loop-when-recur [v ? r & s] (l' v ? r s))
 )
 
 (letfn [(r' [r] (cond (-/vector? r) `(recur ~@r) (some? r) `(recur ~r)))
-        (=> [s] (if (= '=> (-/first s)) (-/second s)))]
+        (=> [s] (if (-/= '=> (-/first s)) (-/second s)))]
     (defmacro recur-when [? r & s] `(if ~? ~(r' r) ~(=> s)))
 )
 
@@ -453,7 +455,7 @@
 (defmacro dotimes [bindings & body]
     (assert-args
         (-/vector? bindings) "a vector for its binding"
-        (= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
     )
     (let [[i n] bindings]
         `(let [n# (long ~n)]
@@ -1829,6 +1831,8 @@
         (print-sequential "{" (fn [e #_"Writer" w] (pr-on (key e) w) (.append w \space) (pr-on (val e) w)) ", " "}" q w)
     )
 
+    (-/prefer-method -/print-method MapForm'iface clojure.lang.ISeq)
+
     (-/defmethod -/print-method SetForm'iface [#_"Seqable" q, #_"Writer" w]
         (print-sequential "#{" pr-on " " "}" q w)
     )
@@ -2261,6 +2265,7 @@
 
 (about #_"Util"
     (declare Numbers'equal)
+    (declare Symbol''equals)
 
     (defn #_"boolean" Util'equiv [#_"Object" k1, #_"Object" k2]
         (cond
@@ -2269,19 +2274,9 @@
             (and (number? k1) (number? k2)) (Numbers'equal k1, k2)
             (coll? k1)                      (IObject'''equals k1, k2)
             (coll? k2)                      (IObject'''equals k2, k1)
+            (instance? Symbol'iface k1)   (Symbol''equals k1, k2)
+            (instance? Symbol'iface k2)   (Symbol''equals k2, k1)
             :else                           (IObject'''equals k1, k2)
-        )
-    )
-
-    (declare Numbers'compare)
-
-    (defn #_"int" Util'compare [#_"Object" k1, #_"Object" k2]
-        (cond
-            (= k1 k2)    0
-            (nil? k1)    -1
-            (nil? k2)    1
-            (number? k1) (Numbers'compare k1, k2)
-            :else        (.compareTo #_"Comparable" k1, k2)
         )
     )
 )
@@ -2291,7 +2286,7 @@
  ; works for nil, and compares numbers and collections in a type-independent manner. Arbace's
  ; immutable data structures define equals() (and thus =) as a value, not an identity, comparison.
  ;;
-(§ defn =
+(defn =
     ([x] true)
     ([x y] (Util'equiv x y))
     ([x y & s] (and (= x y) (recur-when (next s) [y (first s) (next s)] => (= y (first s)))))
@@ -2304,6 +2299,20 @@
     ([x] false)
     ([x y] (not (= x y)))
     ([x y & s] (not (apply = x y s)))
+)
+
+(about #_"Util"
+    (declare Numbers'compare)
+
+    (defn #_"int" Util'compare [#_"Object" k1, #_"Object" k2]
+        (cond
+            (= k1 k2)    0
+            (nil? k1)    -1
+            (nil? k2)    1
+            (number? k1) (Numbers'compare k1, k2)
+            :else        (.compareTo #_"Comparable" k1, k2)
+        )
+    )
 )
 
 ;;;
@@ -2649,7 +2658,7 @@
     )
 
     (defn #_"boolean" Numbers'equal [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''eq x, y))
+        #_(-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''eq x, y)) (-/== x y)
     )
 
     (defn #_"boolean" Numbers'lt [#_"Object" x, #_"Object" y]
@@ -3010,7 +3019,7 @@
 
     (defn- #_"boolean" Symbol''equals [#_"Symbol" this, #_"Object" that]
         (or (identical? this that)
-            (and (symbol? that) (= (:ns this) (:ns that)) (= (:name this) (:name that)))
+            (and (symbol? that) (= (:ns this) (#_:ns namespace that)) (= (:name this) (#_:name name that)))
         )
     )
 
@@ -5432,7 +5441,9 @@
 (about #_"arbace.MapEntry"
 
 (about #_"MapEntry"
-    (defq MapEntry [#_"key" k, #_"value" v] VecForm)
+    (defq MapEntry [#_"key" k, #_"value" v] VecForm
+        java.util.Map$Entry (getKey [_] (:k _)) (getValue [_] (:v _))
+    )
 
     #_inherit
     (defm MapEntry AMapEntry APersistentVector AFn)
@@ -5626,10 +5637,11 @@
 )
 
 (about #_"PersistentList"
-    (declare PersistentList''seq)
+    (declare PersistentList''seq PersistentList''conj PersistentList''empty)
 
     (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] #_"SeqForm"
         clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _))
+        clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o))
     )
 
     #_inherit
@@ -5644,8 +5656,10 @@
 
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new nil))
 
+    (declare reverse)
+
     (defn #_"PersistentList" PersistentList'create [#_"Reversible" init]
-        (into PersistentList'EMPTY (rseq init))
+        (into PersistentList'EMPTY (if (satisfies? Reversible init) (rseq init) (reverse init)))
     )
 
     (defn- #_"PersistentList" PersistentList''withMeta [#_"PersistentList" this, #_"meta" meta]
@@ -6315,7 +6329,7 @@
     (declare NSeq''seq NSeq''first NSeq''next)
 
     (defq NSeq [#_"meta" _meta, #_"array" a, #_"int" i, #_"seq" s] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (NSeq''seq _)) (first [_] (NSeq''first _)) (next [_] (NSeq''next _))
+        clojure.lang.ISeq (seq [_] (NSeq''seq _)) (first [_] (NSeq''first _)) (next [_] (NSeq''next _)) (more [_] (or (.next _) ()))
     )
 
     #_inherit
@@ -7222,7 +7236,7 @@
     (declare PersistentHashMap''seq)
 
     (defq PersistentHashMap [#_"meta" _meta, #_"int" cnt, #_"node" root, #_"boolean" has-nil?, #_"value" nil-value] MapForm
-        clojure.lang.ISeq (seq [_] (PersistentHashMap''seq _))
+        clojure.lang.Seqable (seq [_] (PersistentHashMap''seq _))
     )
 
     #_inherit
@@ -7448,6 +7462,46 @@
 (defn hash-map
     ([] PersistentHashMap'EMPTY)
     ([& keyvals] (PersistentHashMap'create-1s keyvals))
+)
+
+;;;
+ ; Returns a map that consists of the rest of the maps conj-ed onto
+ ; the first. If a key occurs in more than one map, the mapping from
+ ; the latter (left-to-right) will be the mapping in the result.
+ ;;
+(defn merge [& maps]
+    (when (some identity maps)
+        (reduce #(conj (or %1 (hash-map)) %2) maps)
+    )
+)
+
+;;;
+ ; Returns a map that consists of the rest of the maps conj-ed onto
+ ; the first. If a key occurs in more than one map, the mapping(s)
+ ; from the latter (left-to-right) will be combined with the mapping in
+ ; the result by calling (f val-in-result val-in-latter).
+ ;;
+(defn merge-with [f & maps]
+    (when (some identity maps)
+        (letfn [(merge- [m e]
+                    (let [k (key e) v (val e)]
+                        (assoc m k (if (contains? m k) (f (get m k) v) v))
+                    )
+                )]
+            (reduce #(reduce merge- (or %1 (hash-map)) %2) maps)
+        )
+    )
+)
+
+;;;
+ ; Returns a map with the keys mapped to the corresponding vals.
+ ;;
+(defn zipmap [keys vals]
+    (loop-when-recur [m (transient (hash-map)) ks (seq keys) vs (seq vals)]
+                     (and ks vs)
+                     [(assoc! m (first ks) (first vs)) (next ks) (next vs)]
+                  => (persistent! m)
+    )
 )
 )
 
@@ -10006,7 +10060,7 @@
     (declare PersistentVector''seq PersistentVector''conj PersistentVector''empty)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
-        clojure.lang.ISeq (seq [_] (PersistentVector''seq _))
+        clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
         clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _))
     )
 
@@ -10728,711 +10782,6 @@
 )
 )
 
-(about #_"arbace.Var"
-
-(about #_"Var"
-    (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
-
-    (defn- #_"String" Var'toString [#_"Namespace" ns, #_"Symbol" sym]
-        (if (some? ns)
-            (str "#'" (:name ns) "/" sym)
-            (str "#<Var: " (or sym "--unnamed--") ">")
-        )
-    )
-)
-
-(about #_"Unbound"
-    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
-
-    #_inherit
-    (defm Unbound AFn)
-
-    (defn #_"Unbound" Unbound'new [#_"Namespace" ns, #_"Symbol" sym]
-        (Unbound'class. (anew [ns, sym]))
-    )
-
-    (defn- #_"String" Unbound''toString [#_"Unbound" this]
-        (str "Unbound: " (Var'toString (:ns this), (:sym this)))
-    )
-
-    (defm Unbound IObject
-        ;; abstract IObject equals
-        (IObject'''toString => Unbound''toString)
-    )
-)
-
-(about #_"Var"
-    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root])
-
-    (defn #_"Var" Var'new
-        ([#_"Namespace" ns, #_"Symbol" sym] (Var'new ns, sym, (Unbound'new ns, sym)))
-        ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
-            (Var'class. (anew [ns, sym, (atom root)]))
-        )
-    )
-
-    (defn- #_"meta" Var''meta [#_"Var" this]
-        (meta (:root this))
-    )
-
-    (defn- #_"meta" Var''alterMeta [#_"Var" this, #_"fn" f, #_"seq" args]
-        (apply alter-meta! (:root this) f args)
-    )
-
-    (defn- #_"meta" Var''resetMeta [#_"Var" this, #_"meta" m]
-        (reset-meta! (:root this) m)
-    )
-
-    (defn- #_"String" Var''toString [#_"Var" this]
-        (Var'toString (:ns this), (:sym this))
-    )
-
-    (defn #_"boolean" Var''hasRoot [#_"Var" this]
-        (not (satisfies? Unbound @(:root this)))
-    )
-
-    (defn #_"boolean" Var''isBound [#_"Var" this]
-        (when-not (instance? clojure.lang.Var this) => (.isBound this)
-            (or (Var''hasRoot this) (contains? (first (.get Var'dvals)) this))
-        )
-    )
-
-    (defn #_"atom" Var''getThreadBinding [#_"Var" this]
-        (get (first (.get Var'dvals)) this)
-    )
-
-    (defn- #_"Object" Var''get [#_"Var" this]
-        @(or (Var''getThreadBinding this) (:root this))
-    )
-
-;;;
- ; Gets the value in the var object.
- ;;
-(defn var-get [#_"var" x] (Var''get x))
-
-    (defn- #_"Object" Var''set [#_"Var" this, #_"Object" val]
-        (let [#_"atom" v (Var''getThreadBinding this)]
-            (when (some? v) => (throw! (str "can't change/establish root binding of: " (:sym this) " with var-set/set!"))
-                (reset! v val)
-            )
-        )
-    )
-
-;;;
- ; Sets the value in the var object to val.
- ; The var must be thread-locally bound.
- ;;
-(defn var-set [#_"var" x val] (Var''set x val))
-
-    (defn #_"void" Var''setMacro [#_"Var" this]
-        (alter-meta! this assoc :macro true)
-        nil
-    )
-
-    (defn #_"boolean" Var''isMacro [#_"Var" this]
-        (boolean (:macro (meta this)))
-    )
-
-    (defn #_"boolean" Var''isPublic [#_"Var" this]
-        (not (:private (meta this)))
-    )
-
-    (defn #_"void" Var''bindRoot [#_"Var" this, #_"Object" root]
-        ;; binding root always clears macro flag
-        (alter-meta! this dissoc :macro)
-        (reset! (:root this) root)
-        nil
-    )
-
-    (defn #_"Object" Var''alterRoot [#_"Var" this, #_"fn" f, #_"seq" args]
-        (apply swap! (:root this) f args)
-    )
-
-    (declare Namespace''intern)
-
-    (defn- #_"Var" Var'intern
-        ([#_"Namespace" ns, #_"Symbol" sym]
-            (Namespace''intern ns, sym)
-        )
-        ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
-            (let [#_"Var" v (Namespace''intern ns, sym)]
-                (Var''bindRoot v, root)
-                v
-            )
-        )
-    )
-
-(declare the-ns)
-
-(defn- var [ns name] (Var'intern (the-ns (Symbol'intern nil, ns)), (Symbol'intern nil, name)))
-
-;;;
- ; Finds or creates a var named by the symbol name in the namespace
- ; ns (which can be a symbol or a namespace), setting its root binding
- ; to val if supplied. The namespace must exist. The var will adopt
- ; any metadata from the name symbol. Returns the var.
- ;;
-(defn intern
-    ([ns name]
-        (let [v (Var'intern (the-ns ns), name)]
-            (when-some [m (meta name)]
-                (reset-meta! v m)
-            )
-            v
-        )
-    )
-    ([ns name o]
-        (let [v (Var'intern (the-ns ns), name, o)]
-            (when-some [m (meta name)]
-                (reset-meta! v m)
-            )
-            v
-        )
-    )
-)
-
-;;;
- ; WARNING: This is a low-level function.
- ; Prefer high-level macros like binding where ever possible.
- ;
- ; Takes a map of Var/value pairs. Binds each Var to the associated value for
- ; the current thread. Each call *MUST* be accompanied by a matching call to
- ; pop-thread-bindings wrapped in a try-finally!
- ;
- ; (push-thread-bindings bindings)
- ; (try
- ; ...
- ; (finally
- ; (pop-thread-bindings)))
- ;;
-(defn #_"void" push-thread-bindings [#_"{var value}" bindings]
-    (let [#_"seq" l (.get Var'dvals)]
-        (loop-when [#_"{var atom}" m (first l) #_"seq" s (seq bindings)] (some? s) => (.set Var'dvals, (cons m l))
-            (let [#_"pair" e (first s)]
-                (recur (assoc m (key e) (atom (val e))) (next s))
-            )
-        )
-    )
-    nil
-)
-
-;;;
- ; Pop one set of bindings pushed with push-binding before.
- ; It is an error to pop bindings without pushing before.
- ;;
-(defn #_"void" pop-thread-bindings []
-    (when-some [#_"seq" s (.get Var'dvals)] => (throw! "pop without matching push")
-        (.set Var'dvals, (next s))
-    )
-    nil
-)
-
-;;;
- ; Get a map with the Var/value pairs which is currently in effect for the current thread.
- ;;
-(defn #_"{var value}" get-thread-bindings []
-    (loop-when [#_"{var value}" m (transient (hash-map)) #_"seq" s (seq (first (.get Var'dvals)))] (some? s) => (persistent! m)
-        (let [#_"pair" e (first s)]
-            (recur (assoc! m (key e) @(val e)) (next s))
-        )
-    )
-)
-
-;;;
- ; binding => var-symbol init-expr
- ;
- ; Creates new bindings for the (already-existing) vars, with the
- ; supplied initial values, executes the exprs in an implicit do, then
- ; re-establishes the bindings that existed before. The new bindings
- ; are made in parallel (unlike let); all init-exprs are evaluated
- ; before the vars are bound to their new values.
- ;;
-(defmacro binding [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
-    )
-    (letfn [(var-ize [var-vals]
-                (loop-when-recur [v (vector) s (seq var-vals)] s [(conj v `(var ~(first s)) (second s)) (next (next s))] => (seq v))
-            )]
-        `(do
-            (push-thread-bindings (hash-map ~@(var-ize bindings)))
-            (try
-                ~@body
-                (finally
-                    (pop-thread-bindings)
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Takes a map of Var/value pairs. Installs for the given Vars the associated
- ; values as thread-local bindings. Then calls f with the supplied arguments.
- ; Pops the installed bindings after f returned. Returns whatever f returns.
- ;;
-(defn with-bindings* [binding-map f & args]
-    (push-thread-bindings binding-map)
-    (try
-        (apply f args)
-        (finally
-            (pop-thread-bindings)
-        )
-    )
-)
-
-;;;
- ; Takes a map of Var/value pairs. Installs for the given Vars the associated
- ; values as thread-local bindings. Then executes body. Pops the installed
- ; bindings after body was evaluated. Returns the value of body.
- ;;
-(defmacro with-bindings [binding-map & body]
-    `(with-bindings* ~binding-map (fn [] ~@body))
-)
-
-;;;
- ; varbinding => symbol init-expr
- ;
- ; Executes the exprs in a context in which the symbols are bound to vars
- ; with per-thread bindings to the init-exprs. The symbols refer to the
- ; var objects themselves, and must be accessed with var-get and var-set.
- ;;
-(defmacro with-local-vars [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
-    )
-    `(let [~@(interleave (take-nth 2 bindings) (repeat '(Var'new nil, nil)))]
-        (push-thread-bindings (hash-map ~@bindings))
-        (try
-            ~@body
-            (finally
-                (pop-thread-bindings)
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a function, which will install the same bindings in effect as in
- ; the thread at the time bound-fn* was called and then call f with any given
- ; arguments. This may be used to define a helper function which runs on a
- ; different thread, but needs the same bindings in place.
- ;;
-(defn- bound-fn* [f]
-    (let [bindings (get-thread-bindings)]
-        (fn [& args] (apply with-bindings* bindings f args))
-    )
-)
-
-;;;
- ; Returns a function defined by the given tail, which will install the
- ; same bindings in effect as in the thread at the time bound-fn was called.
- ; This may be used to define a helper function which runs on a different
- ; thread, but needs the same bindings in place.
- ;;
-(defmacro bound-fn [& tail] `(bound-fn* (fn ~@tail)))
-
-    (defn- #_"Object" Var''invoke
-        ([#_"Var" this]                                                   (IFn'''invoke @this))
-        ([#_"Var" this, a1]                                               (IFn'''invoke @this, a1))
-        ([#_"Var" this, a1, a2]                                           (IFn'''invoke @this, a1, a2))
-        ([#_"Var" this, a1, a2, a3]                                       (IFn'''invoke @this, a1, a2, a3))
-        ([#_"Var" this, a1, a2, a3, a4]                                   (IFn'''invoke @this, a1, a2, a3, a4))
-        ([#_"Var" this, a1, a2, a3, a4, a5]                               (IFn'''invoke @this, a1, a2, a3, a4, a5))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6]                           (IFn'''invoke @this, a1, a2, a3, a4, a5, a6))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7]                       (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8]                   (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
-    )
-
-    (defn- #_"Object" Var''applyTo [#_"Var" this, #_"seq" args]
-        (IFn'''applyTo @this, args)
-    )
-
-    (defm Var IMeta
-        (IMeta'''meta => Var''meta)
-    )
-
-    (defm Var IReference
-        (IReference'''alterMeta => Var''alterMeta)
-        (IReference'''resetMeta => Var''resetMeta)
-    )
-
-    (defm Var IObject
-        ;; abstract IObject equals
-        (IObject'''toString => Var''toString)
-    )
-
-    (defm Var IDeref
-        (IDeref'''deref => Var''get)
-    )
-
-    (defm Var IFn
-        (IFn'''invoke => Var''invoke)
-        (IFn'''applyTo => Var''applyTo)
-    )
-)
-
-;;;
- ; Atomically alters the root binding of var v by applying f to its current value plus any args.
- ;;
-(defn alter-var-root [#_"var" v f & args] (Var''alterRoot v f args))
-
-;;;
- ; Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
- ; Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided.
- ;;
-(defn bound? [& vars] (every? #(Var''isBound #_"var" %) vars))
-
-;;;
- ; Returns true if all of the vars provided as arguments have thread-local bindings.
- ; Implies that set!'ing the provided vars will succeed. Returns true if no vars are provided.
- ;;
-(defn thread-bound? [& vars] (every? #(Var''getThreadBinding #_"var" %) vars))
-
-;;;
- ; defs name to have the root value of the expr iff the named var has no root value,
- ; else expr is unevaluated.
- ;;
-(defmacro defonce [name expr]
-    `(let-when [v# (def ~name)] (not (Var''hasRoot v#))
-        (def ~name ~expr)
-    )
-)
-
-(defmacro update! [x f & z] `(set! ~x (~f ~x ~@z)))
-)
-
-(about #_"arbace.Namespace"
-
-(about #_"Namespace"
-    (defq Namespace [#_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
-
-    (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
-
-    (defn #_"Namespace" Namespace'new [#_"Symbol" name]
-        (Namespace'class. (anew [name, (atom (hash-map)), (atom (hash-map))]))
-    )
-
-    (defn- #_"String" Namespace''toString [#_"Namespace" this]
-        (:name (:name this))
-    )
-
-    (defn #_"seq" Namespace'all []
-        (vals @Namespace'namespaces)
-    )
-
-    (defn #_"map" Namespace''getMappings [#_"Namespace" this]
-        @(:mappings this)
-    )
-
-    (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (when-not (instance? clojure.lang.Namespace this) => (.getMapping this, name)
-            (get @(:mappings this) name)
-        )
-    )
-
-    (defn- #_"void" Namespace''warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
-        (or
-            (when (var? o)
-                (when (= (:ns o) this) => (throw! (str sym " already refers to: " o " in namespace: " (:name this)))
-                    :ok
-                )
-            )
-            (.println -/*err*, (str "WARNING: " sym " already refers to: " o " in namespace: " (:name this) ", being replaced by: " var))
-        )
-        nil
-    )
-
-    (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
-        (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
-            (let [#_"Object" o
-                    (or (get @(:mappings this) sym)
-                        (let [#_"var" v (Var'new this, sym)]
-                            (swap! (:mappings this) assoc sym v)
-                            v
-                        )
-                    )]
-                (when-not (and (var? o) (= (:ns o) this)) => o
-                    (let [#_"var" v (Var'new this, sym)]
-                        (Namespace''warnOrFailOnReplace this, sym, o, v)
-                        (swap! (:mappings this) assoc sym v)
-                        v
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"var" Namespace''referenceVar [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
-        (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
-            (let [#_"Object" o
-                    (or (get @(:mappings this) sym)
-                        (do
-                            (swap! (:mappings this) assoc sym var)
-                            var
-                        )
-                    )]
-                (when-not (= o var)
-                    (Namespace''warnOrFailOnReplace this, sym, o, var)
-                    (swap! (:mappings this) assoc sym var)
-                )
-                var
-            )
-        )
-    )
-
-    (defn #_"void" Namespace''unmap [#_"Namespace" this, #_"Symbol" sym]
-        (when (nil? (:ns sym)) => (throw! "can't unintern namespace-qualified symbol")
-            (swap! (:mappings this) dissoc sym)
-        )
-        nil
-    )
-
-    (defn #_"var" Namespace''refer [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
-        (Namespace''referenceVar this, sym, var)
-    )
-
-    (defn #_"Namespace" Namespace'find [#_"Symbol" name]
-        (get @Namespace'namespaces name)
-    )
-
-    (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
-        (or (Namespace'find name)
-            (let [#_"Namespace" ns (Namespace'new name)]
-                (swap! Namespace'namespaces assoc name ns)
-                ns
-            )
-        )
-    )
-
-    (defn #_"Namespace" Namespace'remove [#_"Symbol" name]
-        (when-not (= name 'arbace.core) => (throw! "cannot remove core namespace")
-            (get (first (swap-vals! Namespace'namespaces dissoc name)) name)
-        )
-    )
-
-    (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (let [#_"Object" o (get @(:mappings this) name)]
-            (when (and (var? o) (= (:ns o) this))
-                o
-            )
-        )
-    )
-
-    (defn #_"map" Namespace''getAliases [#_"Namespace" this]
-        @(:aliases this)
-    )
-
-    (defn #_"Namespace" Namespace''getAlias [#_"Namespace" this, #_"Symbol" alias]
-        (get @(:aliases this) alias)
-    )
-
-    (defn #_"void" Namespace''addAlias [#_"Namespace" this, #_"Symbol" alias, #_"Namespace" ns]
-        (when (and (some? alias) (some? ns)) => (throw! "expecting Symbol + Namespace")
-            (let [#_"Object" o
-                    (or (get @(:aliases this) alias)
-                        (do
-                            (swap! (:aliases this) assoc alias ns)
-                            ns
-                        )
-                    )]
-                ;; you can rebind an alias, but only to the initially-aliased namespace
-                (when-not (= o ns)
-                    (throw! (str "alias " alias " already exists in namespace " (:name this) ", aliasing " o))
-                )
-            )
-        )
-        nil
-    )
-
-    (defn #_"void" Namespace''removeAlias [#_"Namespace" this, #_"Symbol" alias]
-        (swap! (:aliases this) dissoc alias)
-        nil
-    )
-
-    (defm Namespace IObject
-        ;; abstract IObject equals
-        (IObject'''toString => Namespace''toString)
-    )
-)
-
-(defn- filter-key [f f? m]
-    (loop-when-recur [s (seq m) m (transient (hash-map))]
-                     s
-                     [(next s) (let [e (first s)] (if (f? (f e)) (assoc m (key e) (val e)) m))]
-                  => (persistent! m)
-    )
-)
-
-;;;
- ; Returns the namespace named by the symbol or nil if it doesn't exist.
- ;;
-(defn find-ns [sym] (Namespace'find sym))
-
-;;;
- ; Create a new namespace named by the symbol if one doesn't already exist,
- ; returns it or the already-existing namespace of the same name.
- ;;
-(defn create-ns [sym] (Namespace'findOrCreate sym))
-
-;;;
- ; Removes the namespace named by the symbol. Use with caution.
- ; Cannot be used to remove the arbace namespace.
- ;;
-(defn remove-ns [sym] (Namespace'remove sym))
-
-;;;
- ; Returns a sequence of all namespaces.
- ;;
-(defn all-ns [] (Namespace'all))
-
-;;;
- ; If passed a namespace, returns it. Else, when passed a symbol,
- ; returns the namespace named by it, throwing an exception if not found.
- ;;
-(defn #_"Namespace" the-ns [x]
-    (if (satisfies? Namespace x)
-        x
-        (or (find-ns x) (throw! (str "no namespace: " x " found")))
-    )
-)
-
-;;;
- ; Returns the name of the namespace, a symbol.
- ;;
-(defn ns-name [ns] (:name (the-ns ns)))
-
-;;;
- ; Returns a map of all the mappings for the namespace.
- ;;
-(defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
-
-;;;
- ; Removes the mappings for the symbol from the namespace.
- ;;
-(defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
-
-;;;
- ; Returns a map of the intern mappings for the namespace.
- ;;
-(defn ns-interns [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)))) (ns-map ns))
-    )
-)
-
-;;;
- ; Returns a map of the public intern mappings for the namespace.
- ;;
-(defn ns-publics [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)) (Var''isPublic v))) (ns-map ns))
-    )
-)
-
-;;;
- ; refers to all public vars of ns, subject to filters.
- ; filters can include at most one each of:
- ;
- ; :exclude list-of-symbols
- ; :only    list-of-symbols
- ; :rename  map-of-fromsymbol-tosymbol
- ;
- ; For each public interned var in the namespace named by the symbol, adds a mapping
- ; from the name of the var to the var to the current namespace. Throws an exception
- ; if name is already mapped to something else in the current namespace. Filters can
- ; be used to select a subset, via inclusion or exclusion, or to provide a mapping
- ; to a symbol different from the var's name, in order to prevent clashes.
- ;;
-(defn refer [ns-sym & filters]
-    (let [ns (the-ns ns-sym) ps* (ns-publics ns) fs* (apply hash-map filters)
-          r (:refer fs*) s (if (= r :all) (keys ps*) (or r (:only fs*) (keys ps*)))]
-        (when (sequential? s) => (throw! "the value of :only/:refer must be a sequential collection of symbols")
-            (let [es* (set (:exclude fs*)) rs* (or (:rename fs*) (hash-map))]
-                (doseq [x (remove es* s)]
-                    (when-some [v (ps* x)] => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
-                        (Namespace''refer *ns* (or (rs* x) x) v)
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defmacro refer-arbace [& filters]
-    `(refer '~'arbace.core ~@filters)
-)
-
-;;;
- ; Returns a map of the refer mappings for the namespace.
- ;;
-(defn ns-refers [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (not= ns (:ns v)))) (ns-map ns))
-    )
-)
-
-;;;
- ; Add an alias in the current namespace to another namespace.
- ; Arguments are two symbols: the alias to be used, and [the symbolic name of] the target namespace.
- ; Use :as in the ns macro in preference to calling this directly.
- ;;
-(defn alias [sym ns]
-    (Namespace''addAlias *ns* sym (the-ns ns))
-)
-
-;;;
- ; Returns a map of the aliases for the namespace.
- ;;
-(defn ns-aliases [ns]
-    (Namespace''getAliases (the-ns ns))
-)
-
-;;;
- ; Removes the alias for the symbol from the namespace.
- ;;
-(defn ns-unalias [ns sym]
-    (Namespace''removeAlias (the-ns ns) sym)
-)
-
-;;;
- ; Returns the global var named by the namespace-qualified symbol,
- ; or nil if no var with that name.
- ;;
-(defn #_"Var" find-var [#_"Symbol" sym]
-    (when (some? (:ns sym)) => (throw! "symbol must be namespace-qualified")
-        (let [#_"Namespace" ns (Namespace'find (Symbol'intern (:ns sym)))]
-            (when (some? ns) => (throw! (str "no such namespace: " (:ns sym)))
-                (Namespace''findInternedVar ns, (Symbol'intern (:name sym)))
-            )
-        )
-    )
-)
-
-;;;
- ; Sets *ns* to the namespace named by name (unevaluated), creating it if needed.
- ;;
-(§ defmacro ns [n & s]
-    (let [m (let-when [m (first s)] (map? m) m) s (if m (next s) s) n (if m (vary-meta n merge m) n) m (meta n)]
-        `(do
-            (in-ns '~n)
-            ~@(when m
-                `((reset-meta! (Namespace'find '~n) ~m))
-            )
-            ~@(when (and (not= n 'arbace.core) (not-any? #(= :refer-arbace (first %)) s))
-                `((refer '~'arbace.core))
-            )
-            ~@(map (fn [[k & s]] `(~(symbol "arbace.core" (name k)) ~@(map #(list 'quote %) s))) s)
-            nil
-        )
-    )
-)
-)
-
 (about #_"arbace.RT"
 
 (about #_"RT"
@@ -11711,6 +11060,715 @@
 )
 )
 
+(about #_"arbace.Var"
+
+(about #_"Var"
+    (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
+
+    (defn- #_"String" Var'toString [#_"Namespace" ns, #_"Symbol" sym]
+        (if (some? ns)
+            (str "#'" (:name ns) "/" sym)
+            (str "#<Var: " (or sym "--unnamed--") ">")
+        )
+    )
+)
+
+(about #_"Unbound"
+    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
+
+    #_inherit
+    (defm Unbound AFn)
+
+    (defn #_"Unbound" Unbound'new [#_"Namespace" ns, #_"Symbol" sym]
+        (Unbound'class. (anew [ns, sym]))
+    )
+
+    (defn- #_"String" Unbound''toString [#_"Unbound" this]
+        (str "Unbound: " (Var'toString (:ns this), (:sym this)))
+    )
+
+    (defm Unbound IObject
+        ;; abstract IObject equals
+        (IObject'''toString => Unbound''toString)
+    )
+)
+
+(about #_"Var"
+    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root])
+
+    (defn #_"Var" Var'new
+        ([#_"Namespace" ns, #_"Symbol" sym] (Var'new ns, sym, (Unbound'new ns, sym)))
+        ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
+            (Var'class. (anew [ns, sym, (atom root)]))
+        )
+    )
+
+    (defn- #_"meta" Var''meta [#_"Var" this]
+        (meta (:root this))
+    )
+
+    (defn- #_"meta" Var''alterMeta [#_"Var" this, #_"fn" f, #_"seq" args]
+        (apply alter-meta! (:root this) f args)
+    )
+
+    (defn- #_"meta" Var''resetMeta [#_"Var" this, #_"meta" m]
+        (reset-meta! (:root this) m)
+    )
+
+    (defn- #_"String" Var''toString [#_"Var" this]
+        (Var'toString (:ns this), (:sym this))
+    )
+
+    (defn #_"boolean" Var''hasRoot [#_"Var" this]
+        (not (satisfies? Unbound @(:root this)))
+    )
+
+    (defn #_"boolean" Var''isBound [#_"Var" this]
+        (when-not (instance? clojure.lang.Var this) => (.isBound this)
+            (or (Var''hasRoot this) (contains? (first (.get Var'dvals)) this))
+        )
+    )
+
+    (defn #_"atom" Var''getThreadBinding [#_"Var" this]
+        (get (first (.get Var'dvals)) this)
+    )
+
+    (defn- #_"Object" Var''get [#_"Var" this]
+        @(or (Var''getThreadBinding this) (:root this))
+    )
+
+;;;
+ ; Gets the value in the var object.
+ ;;
+(defn var-get [#_"var" x] (Var''get x))
+
+    (defn- #_"Object" Var''set [#_"Var" this, #_"Object" val]
+        (let [#_"atom" v (Var''getThreadBinding this)]
+            (when (some? v) => (throw! (str "can't change/establish root binding of: " (:sym this) " with var-set/set!"))
+                (reset! v val)
+            )
+        )
+    )
+
+;;;
+ ; Sets the value in the var object to val.
+ ; The var must be thread-locally bound.
+ ;;
+(defn var-set [#_"var" x val] (Var''set x val))
+
+    (defn #_"void" Var''setMacro [#_"Var" this]
+        (alter-meta! this assoc :macro true)
+        nil
+    )
+
+    (defn #_"boolean" Var''isMacro [#_"Var" this]
+        (boolean (:macro (meta this)))
+    )
+
+    (defn #_"boolean" Var''isPublic [#_"Var" this]
+        (not (:private (meta this)))
+    )
+
+    (defn #_"void" Var''bindRoot [#_"Var" this, #_"Object" root]
+        ;; binding root always clears macro flag
+        (alter-meta! this dissoc :macro)
+        (reset! (:root this) root)
+        nil
+    )
+
+    (defn #_"Object" Var''alterRoot [#_"Var" this, #_"fn" f, #_"seq" args]
+        (apply swap! (:root this) f args)
+    )
+
+    (declare Namespace''intern)
+
+    (defn- #_"Var" Var'intern
+        ([#_"Namespace" ns, #_"Symbol" sym]
+            (Namespace''intern ns, sym)
+        )
+        ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
+            (let [#_"Var" v (Namespace''intern ns, sym)]
+                (Var''bindRoot v, root)
+                v
+            )
+        )
+    )
+
+(declare the-ns)
+
+(defn- var! [ns name] (Var'intern (the-ns (Symbol'intern nil, ns)), (Symbol'intern nil, name)))
+
+;;;
+ ; Finds or creates a var named by the symbol name in the namespace
+ ; ns (which can be a symbol or a namespace), setting its root binding
+ ; to val if supplied. The namespace must exist. The var will adopt
+ ; any metadata from the name symbol. Returns the var.
+ ;;
+(defn intern
+    ([ns name]
+        (let [v (Var'intern (the-ns ns), name)]
+            (when-some [m (meta name)]
+                (reset-meta! v m)
+            )
+            v
+        )
+    )
+    ([ns name o]
+        (let [v (Var'intern (the-ns ns), name, o)]
+            (when-some [m (meta name)]
+                (reset-meta! v m)
+            )
+            v
+        )
+    )
+)
+
+;;;
+ ; WARNING: This is a low-level function.
+ ; Prefer high-level macros like binding where ever possible.
+ ;
+ ; Takes a map of Var/value pairs. Binds each Var to the associated value for
+ ; the current thread. Each call *MUST* be accompanied by a matching call to
+ ; pop-thread-bindings wrapped in a try-finally!
+ ;
+ ; (push-thread-bindings bindings)
+ ; (try
+ ; ...
+ ; (finally
+ ; (pop-thread-bindings)))
+ ;;
+(defn #_"void" push-thread-bindings [#_"{var value}" bindings]
+    (let [#_"seq" l (.get Var'dvals)]
+        (loop-when [#_"{var atom}" m (first l) #_"seq" s (seq bindings)] (some? s) => (.set Var'dvals, (cons m l))
+            (let [#_"pair" e (first s)]
+                (recur (assoc m (key e) (atom (val e))) (next s))
+            )
+        )
+    )
+    nil
+)
+
+;;;
+ ; Pop one set of bindings pushed with push-binding before.
+ ; It is an error to pop bindings without pushing before.
+ ;;
+(defn #_"void" pop-thread-bindings []
+    (when-some [#_"seq" s (.get Var'dvals)] => (throw! "pop without matching push")
+        (.set Var'dvals, (next s))
+    )
+    nil
+)
+
+;;;
+ ; Get a map with the Var/value pairs which is currently in effect for the current thread.
+ ;;
+(defn #_"{var value}" get-thread-bindings []
+    (loop-when [#_"{var value}" m (transient (hash-map)) #_"seq" s (seq (first (.get Var'dvals)))] (some? s) => (persistent! m)
+        (let [#_"pair" e (first s)]
+            (recur (assoc! m (key e) @(val e)) (next s))
+        )
+    )
+)
+
+;;;
+ ; binding => var-symbol init-expr
+ ;
+ ; Creates new bindings for the (already-existing) vars, with the
+ ; supplied initial values, executes the exprs in an implicit do, then
+ ; re-establishes the bindings that existed before. The new bindings
+ ; are made in parallel (unlike let); all init-exprs are evaluated
+ ; before the vars are bound to their new values.
+ ;;
+(defmacro binding [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (even? (count bindings)) "an even number of forms in binding vector"
+    )
+    (letfn [(var-ize [var-vals]
+                (loop-when-recur [v (vector) s (seq var-vals)] s [(conj v `(var ~(first s)) (second s)) (next (next s))] => (seq v))
+            )]
+        `(do
+            (push-thread-bindings (hash-map ~@(var-ize bindings)))
+            (try
+                ~@body
+                (finally
+                    (pop-thread-bindings)
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Takes a map of Var/value pairs. Installs for the given Vars the associated
+ ; values as thread-local bindings. Then calls f with the supplied arguments.
+ ; Pops the installed bindings after f returned. Returns whatever f returns.
+ ;;
+(defn with-bindings* [binding-map f & args]
+    (push-thread-bindings binding-map)
+    (try
+        (apply f args)
+        (finally
+            (pop-thread-bindings)
+        )
+    )
+)
+
+;;;
+ ; Takes a map of Var/value pairs. Installs for the given Vars the associated
+ ; values as thread-local bindings. Then executes body. Pops the installed
+ ; bindings after body was evaluated. Returns the value of body.
+ ;;
+(defmacro with-bindings [binding-map & body]
+    `(with-bindings* ~binding-map (fn [] ~@body))
+)
+
+;;;
+ ; varbinding => symbol init-expr
+ ;
+ ; Executes the exprs in a context in which the symbols are bound to vars
+ ; with per-thread bindings to the init-exprs. The symbols refer to the
+ ; var objects themselves, and must be accessed with var-get and var-set.
+ ;;
+(defmacro with-local-vars [bindings & body]
+    (assert-args
+        (vector? bindings) "a vector for its binding"
+        (even? (count bindings)) "an even number of forms in binding vector"
+    )
+    `(let [~@(interleave (take-nth 2 bindings) (repeat '(Var'new nil, nil)))]
+        (push-thread-bindings (hash-map ~@bindings))
+        (try
+            ~@body
+            (finally
+                (pop-thread-bindings)
+            )
+        )
+    )
+)
+
+;;;
+ ; Returns a function, which will install the same bindings in effect as in
+ ; the thread at the time bound-fn* was called and then call f with any given
+ ; arguments. This may be used to define a helper function which runs on a
+ ; different thread, but needs the same bindings in place.
+ ;;
+(defn- bound-fn* [f]
+    (let [bindings (get-thread-bindings)]
+        (fn [& args] (apply with-bindings* bindings f args))
+    )
+)
+
+;;;
+ ; Returns a function defined by the given tail, which will install the
+ ; same bindings in effect as in the thread at the time bound-fn was called.
+ ; This may be used to define a helper function which runs on a different
+ ; thread, but needs the same bindings in place.
+ ;;
+(defmacro bound-fn [& tail] `(bound-fn* (fn ~@tail)))
+
+    (defn- #_"Object" Var''invoke
+        ([#_"Var" this]                                                   (IFn'''invoke @this))
+        ([#_"Var" this, a1]                                               (IFn'''invoke @this, a1))
+        ([#_"Var" this, a1, a2]                                           (IFn'''invoke @this, a1, a2))
+        ([#_"Var" this, a1, a2, a3]                                       (IFn'''invoke @this, a1, a2, a3))
+        ([#_"Var" this, a1, a2, a3, a4]                                   (IFn'''invoke @this, a1, a2, a3, a4))
+        ([#_"Var" this, a1, a2, a3, a4, a5]                               (IFn'''invoke @this, a1, a2, a3, a4, a5))
+        ([#_"Var" this, a1, a2, a3, a4, a5, a6]                           (IFn'''invoke @this, a1, a2, a3, a4, a5, a6))
+        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7]                       (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7))
+        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8]                   (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8))
+        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
+        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (IFn'''invoke @this, a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
+    )
+
+    (defn- #_"Object" Var''applyTo [#_"Var" this, #_"seq" args]
+        (IFn'''applyTo @this, args)
+    )
+
+    (defm Var IMeta
+        (IMeta'''meta => Var''meta)
+    )
+
+    (defm Var IReference
+        (IReference'''alterMeta => Var''alterMeta)
+        (IReference'''resetMeta => Var''resetMeta)
+    )
+
+    (defm Var IObject
+        ;; abstract IObject equals
+        (IObject'''toString => Var''toString)
+    )
+
+    (defm Var IDeref
+        (IDeref'''deref => Var''get)
+    )
+
+    (defm Var IFn
+        (IFn'''invoke => Var''invoke)
+        (IFn'''applyTo => Var''applyTo)
+    )
+)
+
+;;;
+ ; Atomically alters the root binding of var v by applying f to its current value plus any args.
+ ;;
+(defn alter-var-root [#_"var" v f & args] (Var''alterRoot v f args))
+
+;;;
+ ; Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+ ; Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided.
+ ;;
+(defn bound? [& vars] (every? #(Var''isBound #_"var" %) vars))
+
+;;;
+ ; Returns true if all of the vars provided as arguments have thread-local bindings.
+ ; Implies that set!'ing the provided vars will succeed. Returns true if no vars are provided.
+ ;;
+(defn thread-bound? [& vars] (every? #(Var''getThreadBinding #_"var" %) vars))
+
+;;;
+ ; defs name to have the root value of the expr iff the named var has no root value,
+ ; else expr is unevaluated.
+ ;;
+(defmacro defonce [name expr]
+    `(let-when [v# (def ~name)] (not (Var''hasRoot v#))
+        (def ~name ~expr)
+    )
+)
+
+(defmacro update! [x f & z] `(set! ~x (~f ~x ~@z)))
+)
+
+(about #_"arbace.Namespace"
+
+(about #_"Namespace"
+    (defq Namespace [#_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
+
+    (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
+
+    (defn #_"seq" Namespace'all []
+        (vals @Namespace'namespaces)
+    )
+
+;;;
+ ; Returns a sequence of all namespaces.
+ ;;
+(defn all-ns [] (Namespace'all))
+
+    (defn #_"Namespace" Namespace'find [#_"Symbol" name]
+        (get @Namespace'namespaces name)
+    )
+
+;;;
+ ; Returns the namespace named by the symbol or nil if it doesn't exist.
+ ;;
+(defn find-ns [sym] (Namespace'find sym))
+
+;;;
+ ; If passed a namespace, returns it. Else, when passed a symbol,
+ ; returns the namespace named by it, throwing an exception if not found.
+ ;;
+(defn #_"Namespace" the-ns [x]
+    (if (satisfies? Namespace x)
+        x
+        (or (find-ns x) (throw! (str "no namespace: " x " found")))
+    )
+)
+
+    (defn- #_"Namespace" Namespace'new [#_"Symbol" name]
+        (Namespace'class. (anew [name, (atom (hash-map)), (atom (hash-map))]))
+    )
+
+    (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
+        (or (Namespace'find name)
+            (let [#_"Namespace" ns (Namespace'new name)]
+                (swap! Namespace'namespaces assoc name ns)
+                ns
+            )
+        )
+    )
+
+;;;
+ ; Create a new namespace named by the symbol if one doesn't already exist,
+ ; returns it or the already-existing namespace of the same name.
+ ;;
+(defn create-ns [sym] (Namespace'findOrCreate sym))
+
+(def #_"Var" ^:dynamic *arbace-ns* (create-ns (symbol "arbace.core")))
+
+    (defn #_"Namespace" Namespace'remove [#_"Symbol" name]
+        (when-not (= name 'arbace.core) => (throw! "cannot remove core namespace")
+            (get (first (swap-vals! Namespace'namespaces dissoc name)) name)
+        )
+    )
+
+;;;
+ ; Removes the namespace named by the symbol. Use with caution.
+ ; Cannot be used to remove the arbace namespace.
+ ;;
+(defn remove-ns [sym] (Namespace'remove sym))
+
+    (defn- #_"String" Namespace''toString [#_"Namespace" this]
+        (:name (:name this))
+    )
+
+;;;
+ ; Returns the name of the namespace, a symbol.
+ ;;
+(defn ns-name [ns] (:name (the-ns ns)))
+
+    (defn #_"map" Namespace''getMappings [#_"Namespace" this]
+        @(:mappings this)
+    )
+
+;;;
+ ; Returns a map of all the mappings for the namespace.
+ ;;
+(defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
+
+    (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
+        (when-not (instance? clojure.lang.Namespace this) => (.getMapping this, name)
+            (get @(:mappings this) name)
+        )
+    )
+
+    (defn- #_"void" Namespace''warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
+        (or
+            (when (var? o)
+                (when (= (:ns o) this) => (throw! (str sym " already refers to: " o " in namespace: " (:name this)))
+                    :ok
+                )
+            )
+            (.println -/*err*, (str "WARNING: " sym " already refers to: " o " in namespace: " (:name this) ", being replaced by: " var))
+        )
+        nil
+    )
+
+    (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
+        (when-not (instance? clojure.lang.Namespace this) => (.intern this, sym)
+            (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
+                (let [#_"Object" o
+                        (or (get @(:mappings this) sym)
+                            (let [#_"var" v (Var'new this, sym)]
+                                (swap! (:mappings this) assoc sym v)
+                                v
+                            )
+                        )]
+                    (when-not (and (var? o) (= (:ns o) this)) => o
+                        (let [#_"var" v (Var'new this, sym)]
+                            (Namespace''warnOrFailOnReplace this, sym, o, v)
+                            (swap! (:mappings this) assoc sym v)
+                            v
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"var" Namespace''referenceVar [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
+        (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
+            (let [#_"Object" o
+                    (or (get @(:mappings this) sym)
+                        (do
+                            (swap! (:mappings this) assoc sym var)
+                            var
+                        )
+                    )]
+                (when-not (= o var)
+                    (Namespace''warnOrFailOnReplace this, sym, o, var)
+                    (swap! (:mappings this) assoc sym var)
+                )
+                var
+            )
+        )
+    )
+
+    (defn #_"void" Namespace''unmap [#_"Namespace" this, #_"Symbol" sym]
+        (when (nil? (:ns sym)) => (throw! "can't unintern namespace-qualified symbol")
+            (swap! (:mappings this) dissoc sym)
+        )
+        nil
+    )
+
+;;;
+ ; Removes the mappings for the symbol from the namespace.
+ ;;
+(defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
+
+    (defn #_"var" Namespace''refer [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
+        (Namespace''referenceVar this, sym, var)
+    )
+
+    (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
+        (let [#_"Object" o (get @(:mappings this) name)]
+            (when (and (var? o) (= (:ns o) this))
+                o
+            )
+        )
+    )
+
+;;;
+ ; Returns the global var named by the namespace-qualified symbol,
+ ; or nil if no var with that name.
+ ;;
+(defn #_"Var" find-var [#_"Symbol" sym]
+    (when (some? (:ns sym)) => (throw! "symbol must be namespace-qualified")
+        (let [#_"Namespace" ns (Namespace'find (Symbol'intern (:ns sym)))]
+            (when (some? ns) => (throw! (str "no such namespace: " (:ns sym)))
+                (Namespace''findInternedVar ns, (Symbol'intern (:name sym)))
+            )
+        )
+    )
+)
+
+    (defn #_"map" Namespace''getAliases [#_"Namespace" this]
+        @(:aliases this)
+    )
+
+;;;
+ ; Returns a map of the aliases for the namespace.
+ ;;
+(defn ns-aliases [ns]
+    (Namespace''getAliases (the-ns ns))
+)
+
+    (defn #_"Namespace" Namespace''getAlias [#_"Namespace" this, #_"Symbol" alias]
+        (get @(:aliases this) alias)
+    )
+
+    (defn #_"void" Namespace''addAlias [#_"Namespace" this, #_"Symbol" alias, #_"Namespace" ns]
+        (when (and (some? alias) (some? ns)) => (throw! "expecting Symbol + Namespace")
+            (let [#_"Object" o
+                    (or (get @(:aliases this) alias)
+                        (do
+                            (swap! (:aliases this) assoc alias ns)
+                            ns
+                        )
+                    )]
+                ;; you can rebind an alias, but only to the initially-aliased namespace
+                (when-not (= o ns)
+                    (throw! (str "alias " alias " already exists in namespace " (:name this) ", aliasing " o))
+                )
+            )
+        )
+        nil
+    )
+
+;;;
+ ; Add an alias in the current namespace to another namespace.
+ ; Arguments are two symbols: the alias to be used, and [the symbolic name of] the target namespace.
+ ; Use :as in the ns macro in preference to calling this directly.
+ ;;
+(defn alias [sym ns]
+    (Namespace''addAlias *arbace-ns* sym (the-ns ns))
+)
+
+    (defn #_"void" Namespace''removeAlias [#_"Namespace" this, #_"Symbol" alias]
+        (swap! (:aliases this) dissoc alias)
+        nil
+    )
+
+;;;
+ ; Removes the alias for the symbol from the namespace.
+ ;;
+(defn ns-unalias [ns sym]
+    (Namespace''removeAlias (the-ns ns) sym)
+)
+
+    (defm Namespace IObject
+        ;; abstract IObject equals
+        (IObject'''toString => Namespace''toString)
+    )
+)
+
+(defn- filter-key [f f? m]
+    (loop-when-recur [s (seq m) m (transient (hash-map))]
+                     s
+                     [(next s) (let [e (first s)] (if (f? (f e)) (assoc m (key e) (val e)) m))]
+                  => (persistent! m)
+    )
+)
+
+;;;
+ ; Returns a map of the intern mappings for the namespace.
+ ;;
+(defn ns-interns [ns]
+    (let [ns (the-ns ns)]
+        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)))) (ns-map ns))
+    )
+)
+
+;;;
+ ; Returns a map of the public intern mappings for the namespace.
+ ;;
+(defn ns-publics [ns]
+    (let [ns (the-ns ns)]
+        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)) (Var''isPublic v))) (ns-map ns))
+    )
+)
+
+;;;
+ ; refers to all public vars of ns, subject to filters.
+ ; filters can include at most one each of:
+ ;
+ ; :exclude list-of-symbols
+ ; :only    list-of-symbols
+ ; :rename  map-of-fromsymbol-tosymbol
+ ;
+ ; For each public interned var in the namespace named by the symbol, adds a mapping
+ ; from the name of the var to the var to the current namespace. Throws an exception
+ ; if name is already mapped to something else in the current namespace. Filters can
+ ; be used to select a subset, via inclusion or exclusion, or to provide a mapping
+ ; to a symbol different from the var's name, in order to prevent clashes.
+ ;;
+(defn refer [ns-sym & filters]
+    (let [ns (the-ns ns-sym) ps* (ns-publics ns) fs* (apply hash-map filters)
+          r (:refer fs*) s (if (= r :all) (keys ps*) (or r (:only fs*) (keys ps*)))]
+        (when (sequential? s) => (throw! "the value of :only/:refer must be a sequential collection of symbols")
+            (let [es* (set (:exclude fs*)) rs* (or (:rename fs*) (hash-map))]
+                (doseq [x (remove es* s)]
+                    (when-some [v (ps* x)] => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
+                        (Namespace''refer *arbace-ns* (or (rs* x) x) v)
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defmacro refer-arbace [& filters]
+    `(refer '~'arbace.core ~@filters)
+)
+
+;;;
+ ; Returns a map of the refer mappings for the namespace.
+ ;;
+(defn ns-refers [ns]
+    (let [ns (the-ns ns)]
+        (filter-key val (fn [#_"var" v] (and (var? v) (not= ns (:ns v)))) (ns-map ns))
+    )
+)
+
+;;;
+ ; Sets *arbace-ns* to the namespace named by name (unevaluated), creating it if needed.
+ ;;
+(defmacro arbace-ns [n & s]
+    (let [m (let-when [m (first s)] (map? m) m) s (if m (next s) s) n (if m (vary-meta n merge m) n) m (meta n)]
+        `(do
+            (ß in-ns '~n)
+            ~@(when m
+                `((reset-meta! (Namespace'find '~n) ~m))
+            )
+            ~@(when (and (not= n 'arbace.core) (not-any? #(= :refer-arbace (first %)) s))
+                `((refer '~'arbace.core))
+            )
+            ~@(map (fn [[k & s]] `(~(symbol "arbace.core" (name k)) ~@(map #(list 'quote %) s))) s)
+            nil
+        )
+    )
+)
+)
+
 (about #_"cloiure.core"
 
 (about #_"def{n,macro}"
@@ -11786,46 +11844,6 @@
               s (map (fn [bindings & body] (cons (apply vector '&form '&env bindings) body)) s)]
             `(do (defn ~name ~@m ~@s) (Var''setMacro (var ~name)) (var ~name))
         )
-    )
-)
-
-;;;
- ; Returns a map that consists of the rest of the maps conj-ed onto
- ; the first. If a key occurs in more than one map, the mapping from
- ; the latter (left-to-right) will be the mapping in the result.
- ;;
-(defn merge [& maps]
-    (when (some identity maps)
-        (reduce #(conj (or %1 (hash-map)) %2) maps)
-    )
-)
-
-;;;
- ; Returns a map that consists of the rest of the maps conj-ed onto
- ; the first. If a key occurs in more than one map, the mapping(s)
- ; from the latter (left-to-right) will be combined with the mapping in
- ; the result by calling (f val-in-result val-in-latter).
- ;;
-(defn merge-with [f & maps]
-    (when (some identity maps)
-        (letfn [(merge- [m e]
-                    (let [k (key e) v (val e)]
-                        (assoc m k (if (contains? m k) (f (get m k) v) v))
-                    )
-                )]
-            (reduce #(reduce merge- (or %1 (hash-map)) %2) maps)
-        )
-    )
-)
-
-;;;
- ; Returns a map with the keys mapped to the corresponding vals.
- ;;
-(defn zipmap [keys vals]
-    (loop-when-recur [m (transient (hash-map)) ks (seq keys) vs (seq vals)]
-                     (and ks vs)
-                     [(assoc! m (first ks) (first vs)) (next ks) (next vs)]
-                  => (persistent! m)
     )
 )
 
@@ -13208,10 +13226,6 @@
         (#_"Object" Literal'''literal [#_"Literal" this])
     )
 
-    (defp IParser
-        (#_"Expr" IParser'''parse [#_"IParser" this, #_"Context" context, #_"seq" form])
-    )
-
     (defp Recur)
 )
 
@@ -13276,7 +13290,7 @@
         (update this (if static? :static :fields) #(conj (vec %) name))
     )
 
-    (defn- #_"gen" Gen'new [#_"gen" gen] (vector))
+    (defn- #_"gen" Gen'new [] (vector))
 
     (defn- #_"label" Gen''label [#_"gen" gen] (atom nil))
 
@@ -13348,10 +13362,10 @@
 )
 
 (about #_"NilExpr"
-    (defq NilExpr [])
+    (defr NilExpr [])
 
     (defn #_"NilExpr" NilExpr'new []
-        (NilExpr'class. (anew []))
+        (class! NilExpr)
     )
 
     (defn- #_"Object" NilExpr''literal [#_"NilExpr" this]
@@ -13383,10 +13397,14 @@
 )
 
 (about #_"BooleanExpr"
-    (defq BooleanExpr [#_"boolean" val])
+    (defr BooleanExpr [])
 
     (defn #_"BooleanExpr" BooleanExpr'new [#_"boolean" val]
-        (BooleanExpr'class. (anew [val]))
+        (merge (class! BooleanExpr)
+            (hash-map
+                #_"boolean" :val val
+            )
+        )
     )
 
     (defn- #_"Object" BooleanExpr''literal [#_"BooleanExpr" this]
@@ -13440,7 +13458,7 @@
     )
 
     (defn #_"Namespace" Compiler'namespaceFor
-        ([#_"Symbol" sym] (Compiler'namespaceFor *ns*, sym))
+        ([#_"Symbol" sym] (Compiler'namespaceFor *arbace-ns*, sym))
         ([#_"Namespace" inns, #_"Symbol" sym]
             ;; note, presumes non-nil sym.ns
             (let [#_"Symbol" nsSym (symbol (:ns sym))]
@@ -13463,9 +13481,9 @@
                     )
                 )
             :else
-                (let [#_"Object" o (Namespace''getMapping *ns*, sym)]
+                (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
                     (cond
-                        (nil? o)   (symbol (:name (:name *ns*)) (:name sym))
+                        (nil? o)   (symbol (:name (:name *arbace-ns*)) (:name sym))
                         (class? o) (symbol (.getName #_"Class" o))
                         (var? o)   (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
@@ -13542,20 +13560,20 @@
                         (some? (:ns sym))
                             (when-some [#_"Namespace" ns (Compiler'namespaceFor sym)]
                                 (let [#_"Symbol" name (symbol (:name sym))]
-                                    (if (and internNew (= ns *ns*))
+                                    (if (and internNew (= ns *arbace-ns*))
                                         (Namespace''intern ns, name)
                                         (Namespace''findInternedVar ns, name)
                                     )
                                 )
                             )
-                        (= sym 'ns)    #'ns
-                        (= sym 'in-ns) #'in-ns
+                        (= sym 'ns)    #'ns
+                        (= sym 'in-ns) #'in-ns
                         :else ;; is it mapped?
-                            (let [#_"Object" o (Namespace''getMapping *ns*, sym)]
+                            (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
                                 (cond
                                     (nil? o) ;; introduce a new var in the current ns
                                         (when internNew
-                                            (Namespace''intern *ns*, (symbol (:name sym)))
+                                            (Namespace''intern *arbace-ns*, (symbol (:name sym)))
                                         )
                                     (var? o)
                                         o
@@ -13572,13 +13590,13 @@
         )
     )
 
-    (defn #_"Var" Compiler'isMacro [#_"Object" op]
+    (defn #_"Var" Compiler'maybeMacro [#_"Object" op]
         ;; no local macros for now
         (when-not (and (symbol? op) (some? (Compiler'referenceLocal op)))
             (when (or (symbol? op) (var? op))
                 (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false, false))]
                     (when (and (some? v) (get (meta v) :macro))
-                        (when (or (= (:ns v) *ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
+                        (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
                             v
                         )
                     )
@@ -13587,12 +13605,12 @@
         )
     )
 
-    (defn #_"IFn" Compiler'isInline [#_"Object" op, #_"int" arity]
+    (defn #_"IFn" Compiler'maybeInline [#_"Object" op, #_"int" arity]
         ;; no local inlines for now
         (when-not (and (symbol? op) (some? (Compiler'referenceLocal op)))
             (when (or (symbol? op) (var? op))
                 (when-some [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
-                    (when (or (= (:ns v) *ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
+                    (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
                         (when-some [#_"IFn" f (get (meta v) :inline)]
                             (let [#_"IFn" arityPred (get (meta v) :inline-arities)]
                                 (when (or (nil? arityPred) (IFn'''invoke arityPred, arity))
@@ -13610,22 +13628,22 @@
         ;; note - ns-qualified vars must already exist
         (cond
             (some? (:ns sym))
-                (when-some [#_"Namespace" ns (Compiler'namespaceFor n, sym)]                     => (throw! (str "no such namespace: " (:ns sym)))
-                    (when-some [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))] => (throw! (str "no such var: " sym))
-                        (when (or (= (:ns v) *ns*) (not (get (meta v) :private)) allowPrivate)   => (throw! (str "var: " sym " is private"))
+                (when-some [#_"Namespace" ns (Compiler'namespaceFor n, sym)]                          => (throw! (str "no such namespace: " (:ns sym)))
+                    (when-some [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))]      => (throw! (str "no such var: " sym))
+                        (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private)) allowPrivate) => (throw! (str "var: " sym " is private"))
                             v
                         )
                     )
                 )
-            (= sym 'ns)                #'ns
-            (= sym 'in-ns)             #'in-ns
-            :else (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
+            (= sym 'ns)    #'ns
+            (= sym 'in-ns) #'in-ns
+            :else          (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
         )
     )
 
     (defn #_"Object" Compiler'resolve
-        ([#_"Symbol" sym                          ] (Compiler'resolveIn *ns*, sym, false       ))
-        ([#_"Symbol" sym, #_"boolean" allowPrivate] (Compiler'resolveIn *ns*, sym, allowPrivate))
+        ([#_"Symbol" sym                          ] (Compiler'resolveIn *arbace-ns*, sym, false       ))
+        ([#_"Symbol" sym, #_"boolean" allowPrivate] (Compiler'resolveIn *arbace-ns*, sym, allowPrivate))
     )
 
     (defn #_"Object" Compiler'maybeResolveIn [#_"Namespace" n, #_"Symbol" sym]
@@ -13637,21 +13655,28 @@
                         v
                     )
                 )
-            (= sym 'ns)
-                #'ns
-            (= sym 'in-ns)
-                #'in-ns
-            :else
-                (Namespace''getMapping n, sym)
+            (= sym 'ns)    #'ns
+            (= sym 'in-ns) #'in-ns
+            :else          (Namespace''getMapping n, sym)
         )
     )
 )
 
 (about #_"MonitorEnterExpr"
-    (defq MonitorEnterExpr [#_"Expr" target])
+    (defr MonitorEnterExpr [])
 
     (defn #_"MonitorEnterExpr" MonitorEnterExpr'new [#_"Expr" target]
-        (MonitorEnterExpr'class. (anew [target]))
+        (merge (class! MonitorEnterExpr)
+            (hash-map
+                #_"Expr" :target target
+            )
+        )
+    )
+
+    (declare Compiler'analyze)
+
+    (defn #_"Expr" MonitorEnterExpr'parse [#_"Context" context, #_"seq" form]
+        (MonitorEnterExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
     )
 
     (defn- #_"Object" MonitorEnterExpr''eval [#_"MonitorEnterExpr" this]
@@ -13674,23 +13699,19 @@
     )
 )
 
-(declare Compiler'analyze)
+(about #_"MonitorExitExpr"
+    (defr MonitorExitExpr [])
 
-(about #_"MonitorEnterParser"
-    (defn #_"IParser" MonitorEnterParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (MonitorEnterExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
+    (defn #_"MonitorExitExpr" MonitorExitExpr'new [#_"Expr" target]
+        (merge (class! MonitorExitExpr)
+            (hash-map
+                #_"Expr" :target target
             )
         )
     )
-)
 
-(about #_"MonitorExitExpr"
-    (defq MonitorExitExpr [#_"Expr" target])
-
-    (defn #_"MonitorExitExpr" MonitorExitExpr'new [#_"Expr" target]
-        (MonitorExitExpr'class. (anew [target]))
+    (defn #_"Expr" MonitorExitExpr'parse [#_"Context" context, #_"seq" form]
+        (MonitorExitExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
     )
 
     (defn- #_"Object" MonitorExitExpr''eval [#_"MonitorExitExpr" this]
@@ -13713,21 +13734,26 @@
     )
 )
 
-(about #_"MonitorExitParser"
-    (defn #_"IParser" MonitorExitParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (MonitorExitExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
+(about #_"AssignExpr"
+    (defr AssignExpr [])
+
+    (defn #_"AssignExpr" AssignExpr'new [#_"Assignable" target, #_"Expr" val]
+        (merge (class! AssignExpr)
+            (hash-map
+                #_"Assignable" :target target
+                #_"Expr" :val val
             )
         )
     )
-)
 
-(about #_"AssignExpr"
-    (defq AssignExpr [#_"Assignable" target, #_"Expr" val])
-
-    (defn #_"AssignExpr" AssignExpr'new [#_"Assignable" target, #_"Expr" val]
-        (AssignExpr'class. (anew [target, val]))
+    (defn #_"Expr" AssignExpr'parse [#_"Context" context, #_"seq" form]
+        (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
+            (let [#_"Expr" target (Compiler'analyze :Context'EXPRESSION, (second form))]
+                (when (satisfies? Assignable target) => (throw! "invalid assignment target")
+                    (AssignExpr'new target, (Compiler'analyze :Context'EXPRESSION, (third form)))
+                )
+            )
+        )
     )
 
     (defn- #_"Object" AssignExpr''eval [#_"AssignExpr" this]
@@ -13744,27 +13770,15 @@
     )
 )
 
-(about #_"AssignParser"
-    (defn #_"IParser" AssignParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
-                    (let [#_"Expr" target (Compiler'analyze :Context'EXPRESSION, (second form))]
-                        (when (satisfies? Assignable target) => (throw! "invalid assignment target")
-                            (AssignExpr'new target, (Compiler'analyze :Context'EXPRESSION, (third form)))
-                        )
-                    )
-                )
-            )
-        )
-    )
-)
-
 (about #_"EmptyExpr"
-    (defq EmptyExpr [#_"Object" coll])
+    (defr EmptyExpr [])
 
     (defn #_"EmptyExpr" EmptyExpr'new [#_"Object" coll]
-        (EmptyExpr'class. (anew [coll]))
+        (merge (class! EmptyExpr)
+            (hash-map
+                #_"Object" :coll coll
+            )
+        )
     )
 
     (defn- #_"gen" EmptyExpr''emit [#_"EmptyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -13789,53 +13803,31 @@
     )
 )
 
-(about #_"ConstantExpr"
-    (defq ConstantExpr [#_"Object" v, #_"int" id])
-
-    (defn #_"ConstantExpr" ConstantExpr'new [#_"Object" v]
-        (ConstantExpr'class. (anew [v, (Compiler'registerConstant v)]))
-    )
-
-    (defn- #_"Object" ConstantExpr''eval [#_"ConstantExpr" this]
-        (Literal'''literal this)
-    )
-
-    (declare FnExpr''emitConstant)
-
-    (defn- #_"gen" ConstantExpr''emit [#_"ConstantExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (FnExpr''emitConstant fun, gen, (:id this))]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (defm ConstantExpr Literal
-        (Literal'''literal => :v)
-    )
-
-    (defm ConstantExpr Expr
-        (Expr'''eval => ConstantExpr''eval)
-        (Expr'''emit => ConstantExpr''emit)
-    )
-)
-
 (about #_"NumberExpr"
-    (defq NumberExpr [#_"Number" n, #_"int" id])
+    (defr NumberExpr [])
 
     (defn #_"NumberExpr" NumberExpr'new [#_"Number" n]
-        (NumberExpr'class. (anew [n, (Compiler'registerConstant n)]))
+        (merge (class! NumberExpr)
+            (hash-map
+                #_"Number" :n n
+                #_"int" :id (Compiler'registerConstant n)
+            )
+        )
     )
 
     (defn- #_"Object" NumberExpr''eval [#_"NumberExpr" this]
         (Literal'''literal this)
     )
 
+    (declare FnExpr''emitConstant)
+
     (defn- #_"gen" NumberExpr''emit [#_"NumberExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
             (FnExpr''emitConstant fun, gen, (:id this))
         )
     )
+
+    (declare ConstantExpr'new)
 
     (defn #_"Expr" NumberExpr'parse [#_"Number" form]
         (if (or (instance? Integer form) (instance? Long form))
@@ -13855,10 +13847,14 @@
 )
 
 (about #_"StringExpr"
-    (defq StringExpr [#_"String" str])
+    (defr StringExpr [])
 
     (defn #_"StringExpr" StringExpr'new [#_"String" str]
-        (StringExpr'class. (anew [str]))
+        (merge (class! StringExpr)
+            (hash-map
+                #_"String" :str str
+            )
+        )
     )
 
     (defn- #_"Object" StringExpr''eval [#_"StringExpr" this]
@@ -13881,11 +13877,67 @@
     )
 )
 
+(about #_"ConstantExpr"
+    (defr ConstantExpr [])
+
+    (defn #_"ConstantExpr" ConstantExpr'new [#_"Object" v]
+        (merge (class! ConstantExpr)
+            (hash-map
+                #_"Object" :v v
+                #_"int" :id (Compiler'registerConstant v)
+            )
+        )
+    )
+
+    (defn #_"Expr" ConstantExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"int" n (dec (count form))]
+            (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
+                (let [#_"Object" v (second form)]
+                    (cond
+                        (nil? v)                          Compiler'NIL_EXPR
+                        (= v true)                        Compiler'TRUE_EXPR
+                        (= v false)                       Compiler'FALSE_EXPR
+                        (number? v)                       (NumberExpr'parse v)
+                        (string? v)                       (StringExpr'new v)
+                        (and (coll? v) (zero? (count v))) (EmptyExpr'new v)
+                        :else                             (ConstantExpr'new v)
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"Object" ConstantExpr''eval [#_"ConstantExpr" this]
+        (Literal'''literal this)
+    )
+
+    (defn- #_"gen" ConstantExpr''emit [#_"ConstantExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+        (let [gen (FnExpr''emitConstant fun, gen, (:id this))]
+            (when (= context :Context'STATEMENT) => gen
+                (Gen''pop gen)
+            )
+        )
+    )
+
+    (defm ConstantExpr Literal
+        (Literal'''literal => :v)
+    )
+
+    (defm ConstantExpr Expr
+        (Expr'''eval => ConstantExpr''eval)
+        (Expr'''emit => ConstantExpr''emit)
+    )
+)
+
 (about #_"KeywordExpr"
-    (defq KeywordExpr [#_"Keyword" k])
+    (defr KeywordExpr [])
 
     (defn #_"KeywordExpr" KeywordExpr'new [#_"Keyword" k]
-        (KeywordExpr'class. (anew [k]))
+        (merge (class! KeywordExpr)
+            (hash-map
+                #_"Keyword" :k k
+            )
+        )
     )
 
     (defn- #_"Object" KeywordExpr''eval [#_"KeywordExpr" this]
@@ -13912,35 +13964,15 @@
     )
 )
 
-(about #_"ConstantParser"
-    (defn #_"IParser" ConstantParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (let [#_"int" n (dec (count form))]
-                    (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
-                        (let [#_"Object" v (second form)]
-                            (cond
-                                (nil? v)                          Compiler'NIL_EXPR
-                                (= v true)                        Compiler'TRUE_EXPR
-                                (= v false)                       Compiler'FALSE_EXPR
-                                (number? v)                       (NumberExpr'parse v)
-                                (string? v)                       (StringExpr'new v)
-                                (and (coll? v) (zero? (count v))) (EmptyExpr'new v)
-                                :else                             (ConstantExpr'new v)
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-)
-
 (about #_"UnresolvedVarExpr"
-    (defq UnresolvedVarExpr [#_"Symbol" symbol])
+    (defr UnresolvedVarExpr [])
 
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
-        (UnresolvedVarExpr'class. (anew [symbol]))
+        (merge (class! UnresolvedVarExpr)
+            (hash-map
+                #_"Symbol" :symbol symbol
+            )
+        )
     )
 
     (defn- #_"Object" UnresolvedVarExpr''eval [#_"UnresolvedVarExpr" this]
@@ -13958,10 +13990,14 @@
 )
 
 (about #_"VarExpr"
-    (defq VarExpr [#_"Var" var])
+    (defr VarExpr [])
 
     (defn #_"VarExpr" VarExpr'new [#_"Var" var]
-        (VarExpr'class. (anew [var]))
+        (merge (class! VarExpr)
+            (hash-map
+                #_"Var" :var var
+            )
+        )
     )
 
     (defn- #_"Object" VarExpr''eval [#_"VarExpr" this]
@@ -14008,10 +14044,22 @@
 )
 
 (about #_"TheVarExpr"
-    (defq TheVarExpr [#_"Var" var])
+    (defr TheVarExpr [])
 
     (defn #_"TheVarExpr" TheVarExpr'new [#_"Var" var]
-        (TheVarExpr'class. (anew [var]))
+        (merge (class! TheVarExpr)
+            (hash-map
+                #_"Var" :var var
+            )
+        )
+    )
+
+    (defn #_"Expr" TheVarExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, false)]
+            (when (some? v) => (throw! (str "unable to resolve var: " sym " in this context"))
+                (TheVarExpr'new v)
+            )
+        )
     )
 
     (defn- #_"gen" TheVarExpr''emit [#_"TheVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14028,25 +14076,27 @@
     )
 )
 
-(about #_"TheVarParser"
-    (defn #_"IParser" TheVarParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, false)]
-                    (when (some? v) => (throw! (str "unable to resolve var: " sym " in this context"))
-                        (TheVarExpr'new v)
-                    )
-                )
+(about #_"BodyExpr"
+    (defr BodyExpr [])
+
+    (defn #_"BodyExpr" BodyExpr'new [#_"vector" exprs]
+        (merge (class! BodyExpr)
+            (hash-map
+                #_"vector" :exprs exprs
             )
         )
     )
-)
 
-(about #_"BodyExpr"
-    (defq BodyExpr [#_"vector" exprs])
-
-    (defn #_"BodyExpr" BodyExpr'new [#_"vector" exprs]
-        (BodyExpr'class. (anew [exprs]))
+    (defn #_"Expr" BodyExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
+              #_"vector" v
+                (loop-when [v (vector) s s] (some? s) => v
+                    (let [#_"Context" c (if (and (not= context :Context'EVAL) (or (= context :Context'STATEMENT) (some? (next s)))) :Context'STATEMENT context)]
+                        (recur (conj v (Compiler'analyze c, (first s))) (next s))
+                    )
+                )]
+            (BodyExpr'new (if (pos? (count v)) v (conj v Compiler'NIL_EXPR)))
+        )
     )
 
     (defn- #_"Expr" BodyExpr''lastExpr [#_"BodyExpr" this]
@@ -14071,37 +14121,91 @@
     )
 )
 
-(about #_"BodyParser"
-    (defn #_"IParser" BodyParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
-                      #_"vector" v
-                        (loop-when [v (vector) s s] (some? s) => v
-                            (let [#_"Context" c (if (and (not= context :Context'EVAL) (or (= context :Context'STATEMENT) (some? (next s)))) :Context'STATEMENT context)]
-                                (recur (conj v (Compiler'analyze c, (first s))) (next s))
-                            )
-                        )]
-                    (BodyExpr'new (if (pos? (count v)) v (conj v Compiler'NIL_EXPR)))
-                )
+(about #_"CatchClause"
+    (defr CatchClause [])
+
+    (defn #_"CatchClause" CatchClause'new [#_"LocalBinding" lb, #_"Expr" handler]
+        (merge (class! CatchClause)
+            (hash-map
+                #_"LocalBinding" :lb lb
+                #_"Expr" :handler handler
             )
         )
     )
 )
 
-(about #_"CatchClause"
-    (defq CatchClause [#_"Class" c, #_"LocalBinding" lb, #_"Expr" handler])
-
-    (defn #_"CatchClause" CatchClause'new [#_"Class" c, #_"LocalBinding" lb, #_"Expr" handler]
-        (CatchClause'class. (anew [c, lb, handler]))
-    )
-)
-
 (about #_"TryExpr"
-    (defq TryExpr [#_"Expr" tryExpr, #_"vector" catchExprs, #_"Expr" finallyExpr, #_"int" retLocal, #_"int" finallyLocal])
+    (defr TryExpr [])
 
     (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"vector" catchExprs, #_"Expr" finallyExpr]
-        (TryExpr'class. (anew [tryExpr, catchExprs, finallyExpr, (Compiler'nextLocalNum), (Compiler'nextLocalNum)]))
+        (merge (class! TryExpr)
+            (hash-map
+                #_"Expr" :tryExpr tryExpr
+                #_"vector" :catchExprs catchExprs
+                #_"Expr" :finallyExpr finallyExpr
+
+                #_"int" :retLocal (Compiler'nextLocalNum)
+                #_"int" :finallyLocal (Compiler'nextLocalNum)
+            )
+        )
+    )
+
+    ;; (try try-expr* catch-expr* finally-expr?)
+    ;; catch-expr: (catch class sym expr*)
+    ;; finally-expr: (finally expr*)
+    (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form]
+        (when (= context :Context'RETURN) => (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+            (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
+                    (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
+                        (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
+                            (if (any = op 'catch 'finally)
+                                (let [bodyExpr
+                                        (when (nil? bodyExpr) => bodyExpr
+                                            (-/binding [*no-recur*          true
+                                                      *in-return-context* false]
+                                                (BodyExpr'parse context, (seq body))
+                                            )
+                                        )]
+                                    (if (= op 'catch)
+                                        (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                            (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
+                                                (let [catches
+                                                        (-/binding [*local-env*        *local-env*
+                                                                  *last-local-num*   *last-local-num*
+                                                                  *in-catch-finally* true]
+                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil, false)
+                                                                  #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
+                                                                (conj catches (CatchClause'new lb, handler))
+                                                            )
+                                                        )]
+                                                    (recur bodyExpr catches finallyExpr body true (next fs))
+                                                )
+                                            )
+                                        )
+                                        (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
+                                            (let [finallyExpr
+                                                    (-/binding [*in-catch-finally* true]
+                                                        (BodyExpr'parse :Context'STATEMENT, (next f))
+                                                    )]
+                                                (recur bodyExpr catches finallyExpr body caught? (next fs))
+                                            )
+                                        )
+                                    )
+                                )
+                                (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
+                                    (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
+                                )
+                            )
+                        )
+                    )]
+                (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
+                    ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
+                    (-/binding [*no-recur* true]
+                        (BodyExpr'parse context, (seq body))
+                    )
+                )
+            )
+        )
     )
 
     (defn- #_"Object" TryExpr''eval [#_"TryExpr" this]
@@ -14184,72 +14288,24 @@
     )
 )
 
-(about #_"TryParser"
-    (defn #_"IParser" TryParser'new []
-        (-/reify IParser
-            ;; (try try-expr* catch-expr* finally-expr?)
-            ;; catch-expr: (catch class sym expr*)
-            ;; finally-expr: (finally expr*)
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (when (= context :Context'RETURN) => (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                    (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
-                            (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
-                                (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
-                                    (if (any = op 'catch 'finally)
-                                        (let [bodyExpr
-                                                (when (nil? bodyExpr) => bodyExpr
-                                                    (-/binding [*no-recur* true, *in-return-context* false]
-                                                        (IParser'''parse (BodyParser'new), context, (seq body))
-                                                    )
-                                                )]
-                                            (if (= op 'catch)
-                                                (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                                    (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
-                                                        (let [catches
-                                                                (-/binding [*local-env* *local-env*, *last-local-num* *last-local-num*, *in-catch-finally* true]
-                                                                    (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil, false)
-                                                                          #_"Expr" handler (IParser'''parse (BodyParser'new), :Context'EXPRESSION, (next (next (next f))))]
-                                                                        (conj catches (CatchClause'new nil, lb, handler))
-                                                                    )
-                                                                )]
-                                                            (recur bodyExpr catches finallyExpr body true (next fs))
-                                                        )
-                                                    )
-                                                )
-                                                (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                                    (let [finallyExpr
-                                                            (-/binding [*in-catch-finally* true]
-                                                                (IParser'''parse (BodyParser'new), :Context'STATEMENT, (next f))
-                                                            )]
-                                                        (recur bodyExpr catches finallyExpr body caught? (next fs))
-                                                    )
-                                                )
-                                            )
-                                        )
-                                        (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
-                                            (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
-                                        )
-                                    )
-                                )
-                            )]
-                        (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
-                            ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
-                            (-/binding [*no-recur* true]
-                                (IParser'''parse (BodyParser'new), context, (seq body))
-                            )
-                        )
-                    )
-                )
+(about #_"ThrowExpr"
+    (defr ThrowExpr [])
+
+    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
+        (merge (class! ThrowExpr)
+            (hash-map
+                #_"Expr" :excExpr excExpr
             )
         )
     )
-)
 
-(about #_"ThrowExpr"
-    (defq ThrowExpr [#_"Expr" excExpr])
-
-    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
-        (ThrowExpr'class. (anew [excExpr]))
+    (defn #_"Expr" ThrowExpr'parse [#_"Context" context, #_"seq" form]
+        (cond
+            (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+            (= (count form) 1)        (throw! "too few arguments to throw: single Throwable expected")
+            (< 2 (count form))        (throw! "too many arguments to throw: single Throwable expected")
+            :else                     (ThrowExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
+        )
     )
 
     (defn- #_"Object" ThrowExpr''eval [#_"ThrowExpr" this]
@@ -14271,26 +14327,16 @@
     )
 )
 
-(about #_"ThrowParser"
-    (defn #_"IParser" ThrowParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (cond
-                    (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                    (= (count form) 1)        (throw! "too few arguments to throw: single Throwable expected")
-                    (< 2 (count form))        (throw! "too many arguments to throw: single Throwable expected")
-                    :else                     (ThrowExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
-                )
-            )
-        )
-    )
-)
-
 (about #_"MetaExpr"
-    (defq MetaExpr [#_"Expr" expr, #_"Expr" meta])
+    (defr MetaExpr [])
 
     (defn #_"MetaExpr" MetaExpr'new [#_"Expr" expr, #_"Expr" meta]
-        (MetaExpr'class. (anew [expr, meta]))
+        (merge (class! MetaExpr)
+            (hash-map
+                #_"Expr" :expr expr
+                #_"Expr" :meta meta
+            )
+        )
     )
 
     (defn- #_"Object" MetaExpr''eval [#_"MetaExpr" this]
@@ -14316,10 +14362,29 @@
 )
 
 (about #_"IfExpr"
-    (defq IfExpr [#_"Expr" test, #_"Expr" then, #_"Expr" else])
+    (defr IfExpr [])
 
     (defn #_"IfExpr" IfExpr'new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
-        (IfExpr'class. (anew [test, then, else]))
+        (merge (class! IfExpr)
+            (hash-map
+                #_"Expr" :test test
+                #_"Expr" :then then
+                #_"Expr" :else else
+            )
+        )
+    )
+
+    ;; (if test then) or (if test then else)
+    (defn #_"Expr" IfExpr'parse [#_"Context" context, #_"seq" form]
+        (cond
+            (< 4 (count form)) (throw! "too many arguments to if")
+            (< (count form) 3) (throw! "too few arguments to if")
+        )
+        (let [#_"Expr" test (Compiler'analyze (if (= context :Context'EVAL) context :Context'EXPRESSION), (second form))
+              #_"Expr" then (Compiler'analyze context, (third form))
+              #_"Expr" else (Compiler'analyze context, (fourth form))]
+            (IfExpr'new test, then, else)
+        )
     )
 
     (defn- #_"Object" IfExpr''eval [#_"IfExpr" this]
@@ -14352,30 +14417,15 @@
     )
 )
 
-(about #_"IfParser"
-    (defn #_"IParser" IfParser'new []
-        (-/reify IParser
-            ;; (if test then) or (if test then else)
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (cond
-                    (< 4 (count form)) (throw! "too many arguments to if")
-                    (< (count form) 3) (throw! "too few arguments to if")
-                )
-                (let [#_"Expr" test (Compiler'analyze (if (= context :Context'EVAL) context :Context'EXPRESSION), (second form))
-                      #_"Expr" then (Compiler'analyze context, (third form))
-                      #_"Expr" else (Compiler'analyze context, (fourth form))]
-                    (IfExpr'new test, then, else)
-                )
-            )
-        )
-    )
-)
-
 (about #_"ListExpr"
-    (defq ListExpr [#_"vector" args])
+    (defr ListExpr [])
 
     (defn #_"ListExpr" ListExpr'new [#_"vector" args]
-        (ListExpr'class. (anew [args]))
+        (merge (class! ListExpr)
+            (hash-map
+                #_"vector" :args args
+            )
+        )
     )
 
     (defn- #_"Object" ListExpr''eval [#_"ListExpr" this]
@@ -14406,10 +14456,14 @@
 )
 
 (about #_"MapExpr"
-    (defq MapExpr [#_"vector" keyvals])
+    (defr MapExpr [])
 
     (defn #_"MapExpr" MapExpr'new [#_"vector" keyvals]
-        (MapExpr'class. (anew [keyvals]))
+        (merge (class! MapExpr)
+            (hash-map
+                #_"vector" :keyvals keyvals
+            )
+        )
     )
 
     (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
@@ -14487,10 +14541,14 @@
 )
 
 (about #_"SetExpr"
-    (defq SetExpr [#_"vector" keys])
+    (defr SetExpr [])
 
     (defn #_"SetExpr" SetExpr'new [#_"vector" keys]
-        (SetExpr'class. (anew [keys]))
+        (merge (class! SetExpr)
+            (hash-map
+                #_"vector" :keys keys
+            )
+        )
     )
 
     (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
@@ -14541,10 +14599,14 @@
 )
 
 (about #_"VectorExpr"
-    (defq VectorExpr [#_"vector" args])
+    (defr VectorExpr [])
 
     (defn #_"VectorExpr" VectorExpr'new [#_"vector" args]
-        (VectorExpr'class. (anew [args]))
+        (merge (class! VectorExpr)
+            (hash-map
+                #_"vector" :args args
+            )
+        )
     )
 
     (defn- #_"Object" VectorExpr''eval [#_"VectorExpr" this]
@@ -14595,10 +14657,16 @@
 )
 
 (about #_"InvokeExpr"
-    (defq InvokeExpr [#_"Expr" fexpr, #_"vector" args, #_"boolean" tailPosition])
+    (defr InvokeExpr [])
 
     (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args, #_"boolean" tailPosition]
-        (InvokeExpr'class. (anew [fexpr, args, tailPosition]))
+        (merge (class! InvokeExpr)
+            (hash-map
+                #_"Expr" :fexpr fexpr
+                #_"vector" :args args
+                #_"boolean" :tailPosition tailPosition
+            )
+        )
     )
 
     (defn- #_"Object" InvokeExpr''eval [#_"InvokeExpr" this]
@@ -14655,18 +14723,32 @@
 )
 
 (about #_"LocalBinding"
-    (defq LocalBinding [#_"int" uid, #_"int" idx, #_"Symbol" sym, #_"Expr" init, #_"boolean" isArg, #_"String" name])
+    (defr LocalBinding [])
 
     (defn #_"LocalBinding" LocalBinding'new [#_"int" idx, #_"Symbol" sym, #_"Expr" init, #_"boolean" isArg]
-        (LocalBinding'class. (anew [(Compiler'nextUniqueId), idx, sym, init, isArg, (:name sym)]))
+        (merge (class! LocalBinding)
+            (hash-map
+                #_"int" :uid (Compiler'nextUniqueId)
+                #_"int" :idx idx
+                #_"Symbol" :sym sym
+                #_"Expr" :init init
+                #_"boolean" :isArg isArg
+
+                #_"String" :name (:name sym)
+            )
+        )
     )
 )
 
 (about #_"LocalBindingExpr"
-    (defq LocalBindingExpr [#_"LocalBinding" lb])
+    (defr LocalBindingExpr [])
 
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb]
-        (LocalBindingExpr'class. (anew [lb]))
+        (merge (class! LocalBindingExpr)
+            (hash-map
+                #_"LocalBinding" :lb lb
+            )
+        )
     )
 
     (defn- #_"Object" LocalBindingExpr''eval [#_"LocalBindingExpr" this]
@@ -14704,7 +14786,7 @@
     (defr FnMethod [])
 
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
-        (merge (FnMethod'class.)
+        (merge (class! FnMethod)
             (hash-map
                 #_"FnExpr" :fun fun
                 ;; when closures are defined inside other closures,
@@ -14773,7 +14855,7 @@
                         (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " params"))
                     )
                     (set! *loop-locals* (:argLocals fm))
-                    (assoc fm :body (IParser'''parse (BodyParser'new), :Context'RETURN, body))
+                    (assoc fm :body (BodyExpr'parse :Context'RETURN, body))
                 )
             )
         )
@@ -14784,7 +14866,7 @@
     (defr FnExpr [])
 
     (defn #_"FnExpr" FnExpr'new []
-        (merge (FnExpr'class.)
+        (merge (class! FnExpr)
             (hash-map
                 #_"int" :uid (Compiler'nextUniqueId)
                 #_"String" :name nil
@@ -14795,10 +14877,11 @@
                 #_"vector" :constants nil
                 #_"boolean" :onceOnly false
                 #_"vector" :methods nil
-                #_"FnMethod" :variadicMethod nil ;; optional variadic overload (there can only be one)
+                ;; optional variadic overload (there can only be one)
+                #_"FnMethod" :variadicMethod nil
                 #_"boolean" :hasMeta false
 
-                #_"map" :class nil
+                #_"map" :code nil
             )
         )
     )
@@ -14808,7 +14891,7 @@
     )
 
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (ß .newInstance (:class this))
+        (ß .newInstance (:code this))
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
@@ -14826,6 +14909,11 @@
         )
     )
 
+    (defn #_"gen" FnExpr''emitConstant [#_"FnExpr" this, #_"gen" gen, #_"int" id]
+        (update! *used-constants* conj id)
+        (Gen''getStatic gen, (Compiler'constantName id))
+    )
+
     (defn #_"gen" FnExpr''emitVar [#_"FnExpr" this, #_"gen" gen, #_"Var" var]
         (FnExpr''emitConstant this, gen, (get (:vars this) var))
     )
@@ -14841,11 +14929,6 @@
 
     (defn #_"gen" FnExpr''emitKeyword [#_"FnExpr" this, #_"gen" gen, #_"Keyword" k]
         (FnExpr''emitConstant this, gen, (get (:keywords this) k))
-    )
-
-    (defn #_"gen" FnExpr''emitConstant [#_"FnExpr" this, #_"gen" gen, #_"int" id]
-        (update! *used-constants* conj id)
-        (Gen''getStatic gen, (Compiler'constantName id))
     )
 
     (defn #_"gen" FnExpr''emitArgs [#_"FnExpr" this, #_"indexed" args, #_"gen" gen]
@@ -14907,7 +14990,7 @@
 
                 (symbol? value)  (meta+ (-> gen (Gen''push (:ns value))               (Gen''push (:name value))        (Gen''invokeStatic "symbol")))
                 (keyword? value) (meta+ (-> gen (Gen''push (:ns (:sym value)))        (Gen''push (:name (:sym value))) (Gen''invokeStatic "keyword")))
-                (var? value)     (meta+ (-> gen (Gen''push (str (:name (:ns value)))) (Gen''push (str (:sym value)))   (Gen''invokeStatic "var")))
+                (var? value)     (meta+ (-> gen (Gen''push (str (:name (:ns value)))) (Gen''push (str (:sym value)))   (Gen''invokeStatic "var!")))
 
                 (or (satisfies? PersistentArrayMap value) (satisfies? PersistentHashMap value))
                     (let [
@@ -15006,12 +15089,13 @@
         (let [
             #_"gen" gen (Gen'new)
             gen
-                (-/binding [*loop-label* (Gen''mark gen), *method* fm]
+                (-/binding [*loop-label* (Gen''mark gen)
+                          *method*     fm]
                     (Expr'''emit (:body fm), :Context'RETURN, this, gen)
                 )
             gen (Gen''returnValue gen)
         ]
-            (assoc-in this [:class (keyword (FnMethod''getMethodName fm))] gen)
+            (assoc-in this [:code (keyword (FnMethod''getMethodName fm))] gen)
         )
     )
 
@@ -15026,7 +15110,7 @@
                     gen (Gen''push gen, (count (:reqParms (:variadicMethod this))))
                     gen (Gen''returnValue gen)
                 ]
-                    (assoc-in this [:class :IRestFn'''requiredArity] gen)
+                    (assoc-in this [:code :IRestFn'''requiredArity] gen)
                 )
             )
         )
@@ -15050,16 +15134,16 @@
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"String" superName, #_"boolean" _oneTimeUse]
         (-/binding [*used-constants* (hash-set)]
             (let [
-                this (assoc this :class (hash-map :'name (:name this), :'super superName))
+                this (assoc this :code (hash-map :'name (:name this), :'super superName))
                 this
                     (when (:hasMeta this) => this
-                        (update this :class ClassVisitor''visitField false, "__meta")
+                        (update this :code ClassVisitor''visitField false, "__meta")
                     )
                 ;; instance fields for closed-overs
                 this
                     (loop-when [this this #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => this
                         (let [#_"LocalBinding" lb (first s)]
-                            (recur (update this :class ClassVisitor''visitField false, (:name lb)) (next s))
+                            (recur (update this :code ClassVisitor''visitField false, (:name lb)) (next s))
                         )
                     )
                 ;; ctor that takes closed-overs and inits base + fields
@@ -15089,7 +15173,7 @@
                             )
                         gen (Gen''returnValue gen)
                     ]
-                        (assoc-in this [:class :'init] gen)
+                        (assoc-in this [:code :'init] gen)
                     )
                 this
                     (when (:hasMeta this) => this
@@ -15104,7 +15188,7 @@
                                     gen (Gen''invokeConstructor gen, :'init)
                                     gen (Gen''returnValue gen)
                                 ]
-                                    (assoc-in this [:class :'init-meta] gen)
+                                    (assoc-in this [:code :'init-meta] gen)
                                 )
                             ;; meta()
                             this
@@ -15114,7 +15198,7 @@
                                     gen (Gen''getField gen, "__meta")
                                     gen (Gen''returnValue gen)
                                 ]
-                                    (assoc-in this [:class :IMeta'''meta] gen)
+                                    (assoc-in this [:code :IMeta'''meta] gen)
                                 )
                             ;; withMeta()
                             this
@@ -15135,7 +15219,7 @@
                                     gen (Gen''invokeConstructor gen, :'init)
                                     gen (Gen''returnValue gen)
                                 ]
-                                    (assoc-in this [:class :IObj'''withMeta] gen)
+                                    (assoc-in this [:code :IObj'''withMeta] gen)
                                 )
                         ]
                             this
@@ -15148,7 +15232,7 @@
                         (let [
                             this
                                 (when (contains? *used-constants* i) => this
-                                    (update this :class ClassVisitor''visitField true, (Compiler'constantName i))
+                                    (update this :code ClassVisitor''visitField true, (Compiler'constantName i))
                                 )
                         ]
                             (recur this (inc i))
@@ -15161,7 +15245,7 @@
                         gen (FnExpr''emitConstants this, gen)
                         gen (Gen''returnValue gen)
                     ]
-                        (assoc-in this [:class :'clinit] gen)
+                        (assoc-in this [:code :'clinit] gen)
                     )
             ]
                 this
@@ -15176,7 +15260,7 @@
               fn (when (some? (meta (first form))) => fn
                     (assoc fn :onceOnly (boolean (get (meta (first form)) :once)))
                 )
-              #_"String" basename (if (some? owner) (:name (:fun owner)) (:name (:name *ns*)))
+              #_"String" basename (if (some? owner) (:name (:fun owner)) (:name (:name *arbace-ns*)))
               [#_"Symbol" nm name]
                 (if (symbol? (second form))
                     (let [nm (second form)]
@@ -15190,11 +15274,11 @@
                 )
               fn (assoc fn :name (str basename "$" name))
               fn
-                (-/binding [*constants*          (vector)
-                          *constant-ids*       (IdentityHashMap.)
-                          *keywords*           (hash-map)
-                          *vars*               (hash-map)
-                          *no-recur*           false]
+                (-/binding [*constants*    (vector)
+                          *constant-ids* (IdentityHashMap.)
+                          *keywords*     (hash-map)
+                          *vars*         (hash-map)
+                          *no-recur*     false]
                     ;; arglist might be preceded by symbol naming this fn
                     (let [[fn form]
                             (when (some? nm) => [fn form]
@@ -15263,10 +15347,45 @@
 )
 
 (about #_"DefExpr"
-    (defq DefExpr [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided, #_"boolean" shadowsCoreMapping])
+    (defr DefExpr [])
 
     (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided, #_"boolean" shadowsCoreMapping]
-        (DefExpr'class. (anew [var, init, meta, initProvided, shadowsCoreMapping]))
+        (merge (class! DefExpr)
+            (hash-map
+                #_"Var" :var var
+                #_"Expr" :init init
+                #_"Expr" :meta meta
+                #_"boolean" :initProvided initProvided
+                #_"boolean" :shadowsCoreMapping shadowsCoreMapping
+            )
+        )
+    )
+
+    ;; (def x) or (def x initexpr)
+    (defn #_"Expr" DefExpr'parse [#_"Context" context, #_"seq" form]
+        (cond
+            (< 3 (count form))            (throw! "too many arguments to def")
+            (< (count form) 2)            (throw! "too few arguments to def")
+            (not (symbol? (second form))) (throw! "first argument to def must be a Symbol")
+        )
+        (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, true)]
+            (when (some? v) => (throw! "can't refer to qualified var that doesn't exist")
+                (let [[v #_"boolean" shadowsCoreMapping]
+                        (when-not (= (:ns v) *arbace-ns*) => [v false]
+                            (when (nil? (:ns sym)) => (throw! "can't create defs outside of current ns")
+                                (let [v (Namespace''intern *arbace-ns*, sym)]
+                                    (Compiler'registerVar v)
+                                    [v true]
+                                )
+                            )
+                        )
+                      #_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
+                      #_"Expr" init (Compiler'analyze c, (third form), (:name (:sym v)))
+                      #_"Expr" _meta (Compiler'analyze c, (meta sym))]
+                    (DefExpr'new v, init, _meta, (= (count form) 3), shadowsCoreMapping)
+                )
+            )
+        )
     )
 
     (defn- #_"boolean" DefExpr''includesExplicitMetadata [#_"DefExpr" this, #_"MapExpr" expr]
@@ -15335,52 +15454,63 @@
     )
 )
 
-(about #_"DefParser"
-    (defn #_"IParser" DefParser'new []
-        (-/reify IParser
-            ;; (def x) or (def x initexpr)
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (cond
-                    (< 3 (count form))            (throw! "too many arguments to def")
-                    (< (count form) 2)            (throw! "too few arguments to def")
-                    (not (symbol? (second form))) (throw! "first argument to def must be a Symbol")
-                )
-                (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, true)]
-                    (when (some? v) => (throw! "can't refer to qualified var that doesn't exist")
-                        (let [[v #_"boolean" shadowsCoreMapping]
-                                (when-not (= (:ns v) *ns*) => [v false]
-                                    (when (nil? (:ns sym)) => (throw! "can't create defs outside of current ns")
-                                        (let [v (Namespace''intern *ns*, sym)]
-                                            (Compiler'registerVar v)
-                                            [v true]
-                                        )
-                                    )
-                                )
-                              #_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-                              #_"Expr" init (Compiler'analyze c, (third form), (:name (:sym v)))
-                              #_"Expr" _meta (Compiler'analyze c, (meta sym))]
-                            (DefExpr'new v, init, _meta, (= (count form) 3), shadowsCoreMapping)
-                        )
-                    )
-                )
+(about #_"BindingInit"
+    (defr BindingInit [])
+
+    (defn #_"BindingInit" BindingInit'new [#_"LocalBinding" binding, #_"Expr" init]
+        (merge (class! BindingInit)
+            (hash-map
+                #_"LocalBinding" :binding binding
+                #_"Expr" :init init
             )
         )
     )
 )
 
-(about #_"BindingInit"
-    (defq BindingInit [#_"LocalBinding" binding, #_"Expr" init])
-
-    (defn #_"BindingInit" BindingInit'new [#_"LocalBinding" binding, #_"Expr" init]
-        (BindingInit'class. (anew [binding, init]))
-    )
-)
-
 (about #_"LetFnExpr"
-    (defq LetFnExpr [#_"vector" bindingInits, #_"Expr" body])
+    (defr LetFnExpr [])
 
     (defn #_"LetFnExpr" LetFnExpr'new [#_"vector" bindingInits, #_"Expr" body]
-        (LetFnExpr'class. (anew [bindingInits, body]))
+        (merge (class! LetFnExpr)
+            (hash-map
+                #_"vector" :bindingInits bindingInits
+                #_"Expr" :body body
+            )
+        )
+    )
+
+    ;; (letfns* [var (fn [args] body) ...] body...)
+    (defn #_"Expr" LetFnExpr'parse [#_"Context" context, #_"seq" form]
+        (when (vector? (second form)) => (throw! "bad binding form, expected vector")
+            (let [#_"vector" bindings (second form)]
+                (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
+                    (if (= context :Context'EVAL)
+                        (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+                        (-/binding [*local-env*      *local-env*
+                                  *last-local-num* *last-local-num*]
+                            ;; pre-seed env (like Lisp labels)
+                            (let [#_"vector" lbs
+                                    (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
+                                        (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                            (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
+                                                (recur (conj lbs (Compiler'registerLocal sym, nil, false)) (+ i 2))
+                                            )
+                                        )
+                                    )
+                                  #_"vector" bis
+                                    (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
+                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name (nth bindings i)))
+                                              #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
+                                            (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
+                                        )
+                                    )]
+                                (LetFnExpr'new bis, (BodyExpr'parse context, (next (next form))))
+                            )
+                        )
+                    )
+                )
+            )
+        )
     )
 
     (defn- #_"Object" LetFnExpr''eval [#_"LetFnExpr" this]
@@ -15447,34 +15577,91 @@
     )
 )
 
-(about #_"LetFnParser"
-    (defn #_"IParser" LetFnParser'new []
-        (-/reify IParser
-            ;; (letfns* [var (fn [args] body) ...] body...)
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (when (vector? (second form)) => (throw! "bad binding form, expected vector")
-                    (let [#_"vector" bindings (second form)]
-                        (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                            (if (= context :Context'EVAL)
-                                (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                                (-/binding [*local-env* *local-env*, *last-local-num* *last-local-num*]
-                                    ;; pre-seed env (like Lisp labels)
-                                    (let [#_"vector" lbs
-                                            (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
+(about #_"LetExpr"
+    (defr LetExpr [])
+
+    (defn #_"LetExpr" LetExpr'new [#_"vector" bindingInits, #_"Expr" body, #_"boolean" isLoop]
+        (merge (class! LetExpr)
+            (hash-map
+                #_"vector" :bindingInits bindingInits
+                #_"Expr" :body body
+                #_"boolean" :isLoop isLoop
+            )
+        )
+    )
+
+    ;; (let [var val var2 val2 ...] body...)
+    (defn #_"Expr" LetExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"boolean" isLoop (= (first form) 'loop*)]
+            (when (vector? (second form)) => (throw! "bad binding form, expected vector")
+                (let [#_"vector" bindings (second form)]
+                    (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
+                        (if (or (= context :Context'EVAL) (and (= context :Context'EXPRESSION) isLoop))
+                            (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+                            (let [#_"seq" body (next (next form))
+                                  #_"map" locals' (:locals *method*)
+                                  #_"map" dynamicBindings
+                                    (hash-map
+                                        #'*local-env*      *local-env*
+                                        #'*last-local-num* *last-local-num*
+                                    )
+                                  dynamicBindings
+                                    (when isLoop => dynamicBindings
+                                        (assoc dynamicBindings #'*loop-locals* nil)
+                                    )
+                                  _ (update! *method* assoc :locals locals')]
+                                (try
+                                    (push-thread-bindings dynamicBindings)
+                                    (let [[#_"vector" bindingInits #_"vector" loopLocals]
+                                            (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
                                                 (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                                     (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                        (recur (conj lbs (Compiler'registerLocal sym, nil, false)) (+ i 2))
+                                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name sym))
+                                                              ;; sequential enhancement of env (like Lisp let*)
+                                                              [bindingInits loopLocals]
+                                                                (try
+                                                                    (when isLoop
+                                                                        (push-thread-bindings (hash-map #'*no-recur* false))
+                                                                    )
+                                                                    (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init, false)]
+                                                                        [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
+                                                                    )
+                                                                    (finally
+                                                                        (when isLoop
+                                                                            (pop-thread-bindings)
+                                                                        )
+                                                                    )
+                                                                )]
+                                                            (recur bindingInits loopLocals (+ i 2))
+                                                        )
                                                     )
                                                 )
-                                            )
-                                          #_"vector" bis
-                                            (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
-                                                (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name (nth bindings i)))
-                                                      #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
-                                                    (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
-                                                )
                                             )]
-                                        (LetFnExpr'new bis, (IParser'''parse (BodyParser'new), context, (next (next form))))
+                                        (when isLoop
+                                            (set! *loop-locals* loopLocals)
+                                        )
+                                        (let [#_"Expr" bodyExpr
+                                                (try
+                                                    (when isLoop
+                                                        (push-thread-bindings
+                                                            (hash-map
+                                                                #'*no-recur*          false
+                                                                #'*in-return-context* (and (= context :Context'RETURN) *in-return-context*)
+                                                            )
+                                                        )
+                                                    )
+                                                    (BodyExpr'parse (if isLoop :Context'RETURN context), body)
+                                                    (finally
+                                                        (when isLoop
+                                                            (pop-thread-bindings)
+                                                        )
+                                                    )
+                                                )]
+                                            (LetExpr'new bindingInits, bodyExpr, isLoop)
+                                        )
+                                    )
+                                    (finally
+                                        (pop-thread-bindings)
                                     )
                                 )
                             )
@@ -15483,14 +15670,6 @@
                 )
             )
         )
-    )
-)
-
-(about #_"LetExpr"
-    (defq LetExpr [#_"vector" bindingInits, #_"Expr" body, #_"boolean" isLoop])
-
-    (defn #_"LetExpr" LetExpr'new [#_"vector" bindingInits, #_"Expr" body, #_"boolean" isLoop]
-        (LetExpr'class. (anew [bindingInits, body, isLoop]))
     )
 
     (defn- #_"Object" LetExpr''eval [#_"LetExpr" this]
@@ -15525,99 +15704,36 @@
     )
 )
 
-(about #_"LetParser"
-    (defn #_"IParser" LetParser'new []
-        (-/reify IParser
-            ;; (let [var val var2 val2 ...] body...)
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (let [#_"boolean" isLoop (= (first form) 'loop*)]
-                    (when (vector? (second form)) => (throw! "bad binding form, expected vector")
-                        (let [#_"vector" bindings (second form)]
-                            (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                                (if (or (= context :Context'EVAL) (and (= context :Context'EXPRESSION) isLoop))
-                                    (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                                    (let [#_"seq" body (next (next form))
-                                          #_"map" locals' (:locals *method*)
-                                          #_"map" dynamicBindings
-                                            (hash-map
-                                                #'*local-env*      *local-env*
-                                                #'*last-local-num* *last-local-num*
-                                            )
-                                          dynamicBindings
-                                            (when isLoop => dynamicBindings
-                                                (assoc dynamicBindings #'*loop-locals* nil)
-                                            )
-                                          _ (update! *method* assoc :locals locals')]
-                                        (try
-                                            (push-thread-bindings dynamicBindings)
-                                            (let [[#_"vector" bindingInits #_"vector" loopLocals]
-                                                    (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
-                                                        (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                                            (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                                (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name sym))
-                                                                      ;; sequential enhancement of env (like Lisp let*)
-                                                                      [bindingInits loopLocals]
-                                                                        (try
-                                                                            (when isLoop
-                                                                                (push-thread-bindings (hash-map #'*no-recur* false))
-                                                                            )
-                                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init, false)]
-                                                                                [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
-                                                                            )
-                                                                            (finally
-                                                                                (when isLoop
-                                                                                    (pop-thread-bindings)
-                                                                                )
-                                                                            )
-                                                                        )]
-                                                                    (recur bindingInits loopLocals (+ i 2))
-                                                                )
-                                                            )
-                                                        )
-                                                    )]
-                                                (when isLoop
-                                                    (set! *loop-locals* loopLocals)
-                                                )
-                                                (let [#_"Expr" bodyExpr
-                                                        (try
-                                                            (when isLoop
-                                                                (push-thread-bindings
-                                                                    (hash-map
-                                                                        #'*no-recur*          false
-                                                                        #'*in-return-context* (and (= context :Context'RETURN) *in-return-context*)
-                                                                    )
-                                                                )
-                                                            )
-                                                            (IParser'''parse (BodyParser'new), (if isLoop :Context'RETURN context), body)
-                                                            (finally
-                                                                (when isLoop
-                                                                    (pop-thread-bindings)
-                                                                )
-                                                            )
-                                                        )]
-                                                    (LetExpr'new bindingInits, bodyExpr, isLoop)
-                                                )
-                                            )
-                                            (finally
-                                                (pop-thread-bindings)
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
+(about #_"RecurExpr"
+    (defr RecurExpr [])
+
+    (defn #_"RecurExpr" RecurExpr'new [#_"vector" loopLocals, #_"vector" args]
+        (merge (class! RecurExpr)
+            (hash-map
+                #_"vector" :loopLocals loopLocals
+                #_"vector" :args args
             )
         )
     )
-)
 
-(about #_"RecurExpr"
-    (defq RecurExpr [#_"vector" loopLocals, #_"vector" args])
-
-    (defn #_"RecurExpr" RecurExpr'new [#_"vector" loopLocals, #_"vector" args]
-        (RecurExpr'class. (anew [loopLocals, args]))
+    (defn #_"Expr" RecurExpr'parse [#_"Context" context, #_"seq" form]
+        (when-not (and (= context :Context'RETURN) (some? *loop-locals*))
+            (throw! "can only recur from tail position")
+        )
+        (when *no-recur*
+            (throw! "cannot recur across try")
+        )
+        (let [#_"vector" args
+                (loop-when-recur [args (vector) #_"seq" s (seq (next form))]
+                                 (some? s)
+                                 [(conj args (Compiler'analyze :Context'EXPRESSION, (first s))) (next s)]
+                              => args
+                )]
+            (when-not (= (count args) (count *loop-locals*))
+                (throw! (str "mismatched argument count to recur, expected: " (count *loop-locals*) " args, got: " (count args)))
+            )
+            (RecurExpr'new *loop-locals*, args)
+        )
     )
 
     (defn- #_"Object" RecurExpr''eval [#_"RecurExpr" this]
@@ -15658,34 +15774,8 @@
     )
 )
 
-(about #_"RecurParser"
-    (defn #_"IParser" RecurParser'new []
-        (-/reify IParser
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (when-not (and (= context :Context'RETURN) (some? *loop-locals*))
-                    (throw! "can only recur from tail position")
-                )
-                (when *no-recur*
-                    (throw! "cannot recur across try")
-                )
-                (let [#_"vector" args
-                        (loop-when-recur [args (vector) #_"seq" s (seq (next form))]
-                                         (some? s)
-                                         [(conj args (Compiler'analyze :Context'EXPRESSION, (first s))) (next s)]
-                                      => args
-                        )]
-                    (when-not (= (count args) (count *loop-locals*))
-                        (throw! (str "mismatched argument count to recur, expected: " (count *loop-locals*) " args, got: " (count args)))
-                    )
-                    (RecurExpr'new *loop-locals*, args)
-                )
-            )
-        )
-    )
-)
-
 (about #_"CaseExpr"
-    (defq CaseExpr [#_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck])
+    (defr CaseExpr [])
 
     ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
     (defn #_"CaseExpr" CaseExpr'new [#_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck]
@@ -15695,7 +15785,56 @@
         (when-not (any = testType :int :hash-equiv :hash-identity)
             (throw! (str "unexpected test type: " testType))
         )
-        (CaseExpr'class. (anew [expr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck]))
+        (merge (class! CaseExpr)
+            (hash-map
+                #_"LocalBindingExpr" :expr expr
+                #_"int" :shift shift
+                #_"int" :mask mask
+                #_"int" :low low
+                #_"int" :high high
+                #_"Expr" :defaultExpr defaultExpr
+                #_"sorted {Integer Expr}" :tests tests
+                #_"{Integer Expr}" :thens thens
+                #_"Keyword" :switchType switchType
+                #_"Keyword" :testType testType
+                #_"{Integer}" :skipCheck skipCheck
+            )
+        )
+    )
+
+    ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
+    ;; prepared by case macro and presumed correct
+    ;; case macro binds actual expr in let so expr is always a local,
+    ;; no need to worry about multiple evaluation
+    (defn #_"Expr" CaseExpr'parse [#_"Context" context, #_"seq" form]
+        (if (= context :Context'EVAL)
+            (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+            (let [#_"vector" args (vec (next form))
+                  #_"Object" exprForm (nth args 0)
+                  #_"int" shift (int! (nth args 1))
+                  #_"int" mask (int! (nth args 2))
+                  #_"Object" defaultForm (nth args 3)
+                  #_"map" caseMap (nth args 4)
+                  #_"Keyword" switchType (nth args 5)
+                  #_"Keyword" testType (nth args 6)
+                  #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
+                  #_"seq" keys (keys caseMap)
+                  #_"int" low (int! (first keys))
+                  #_"int" high (int! (nth keys (dec (count keys))))
+                  #_"LocalBindingExpr" testExpr (Compiler'analyze :Context'EXPRESSION, exprForm)
+                  [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
+                    (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
+                        (let [#_"pair" e (first s)
+                              #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
+                              #_"Expr" test (if (= testType :int) (NumberExpr'parse (int! (first pair))) (ConstantExpr'new (first pair)))
+                              #_"Expr" then (Compiler'analyze context, (second pair))]
+                            (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
+                        )
+                    )
+                  #_"Expr" defaultExpr (Compiler'analyze context, (nth args 3))]
+                (CaseExpr'new testExpr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck)
+            )
+        )
     )
 
     (defn- #_"boolean" CaseExpr''isShiftMasked [#_"CaseExpr" this]
@@ -15831,69 +15970,33 @@
     )
 )
 
-(about #_"CaseParser"
-    (defn #_"IParser" CaseParser'new []
-        (-/reify IParser
-            ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
-            ;; prepared by case macro and presumed correct
-            ;; case macro binds actual expr in let so expr is always a local,
-            ;; no need to worry about multiple evaluation
-            (#_"Expr" IParser'''parse [#_"IParser" _self, #_"Context" context, #_"seq" form]
-                (if (= context :Context'EVAL)
-                    (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                    (let [#_"vector" args (vec (next form))
-                          #_"Object" exprForm (nth args 0)
-                          #_"int" shift (int! (nth args 1))
-                          #_"int" mask (int! (nth args 2))
-                          #_"Object" defaultForm (nth args 3)
-                          #_"map" caseMap (nth args 4)
-                          #_"Keyword" switchType (nth args 5)
-                          #_"Keyword" testType (nth args 6)
-                          #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
-                          #_"seq" keys (keys caseMap)
-                          #_"int" low (int! (first keys))
-                          #_"int" high (int! (nth keys (dec (count keys))))
-                          #_"LocalBindingExpr" testExpr (Compiler'analyze :Context'EXPRESSION, exprForm)
-                          [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
-                            (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
-                                (let [#_"pair" e (first s)
-                                      #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
-                                      #_"Expr" test (if (= testType :int) (NumberExpr'parse (int! (first pair))) (ConstantExpr'new (first pair)))
-                                      #_"Expr" then (Compiler'analyze context, (second pair))]
-                                    (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
-                                )
-                            )
-                          #_"Expr" defaultExpr (Compiler'analyze context, (nth args 3))]
-                        (CaseExpr'new testExpr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck)
-                    )
-                )
-            )
-        )
-    )
-)
-
 (about #_"Compiler"
     (def #_"map" Compiler'specials
-        (hash-map
-            'def           (DefParser'new)
-            'loop*         (LetParser'new)
-            'recur         (RecurParser'new)
-            'if            (IfParser'new)
-            'case*         (CaseParser'new)
-            'let*          (LetParser'new)
-            'letfn*        (LetFnParser'new)
-            'do            (BodyParser'new)
-            'fn*           nil
-            'quote         (ConstantParser'new)
-            'var           (TheVarParser'new)
-            'set!          (AssignParser'new)
-            'try           (TryParser'new)
-            'throw         (ThrowParser'new)
-            'monitor-enter (MonitorEnterParser'new)
-            'monitor-exit  (MonitorExitParser'new)
-            'catch         nil
-            'finally       nil
-            '&             nil
+        (let [
+            #_"map" m
+                (hash-map
+                    'def           DefExpr'parse
+                    'loop*         LetExpr'parse
+                    'recur         RecurExpr'parse
+                    'if            IfExpr'parse
+                    'case*         CaseExpr'parse
+                    'let*          LetExpr'parse
+                    'letfn*        LetFnExpr'parse
+                    'do            BodyExpr'parse
+                    'fn*           nil
+                    'quote         ConstantExpr'parse
+                    'var           TheVarExpr'parse
+                    'set!          AssignExpr'parse
+                    'try           TryExpr'parse
+                    'throw         ThrowExpr'parse
+                    'monitor-enter MonitorEnterExpr'parse
+                    'monitor-exit  MonitorExitExpr'parse
+                    'catch         nil
+                    'finally       nil
+                    '&             nil
+                )
+        ]
+            (into m (map (fn [[s f]] [(symbol (name s)) f]) m))
         )
     )
 
@@ -15909,7 +16012,7 @@
     (defn #_"Object" Compiler'macroexpand1 [#_"Object" form]
         (when (seq? form) => form
             (let-when [#_"Object" op (first form)] (not (Compiler'isSpecial op)) => form
-                (let-when [#_"Var" v (Compiler'isMacro op)] (some? v) => form
+                (let-when [#_"Var" v (Compiler'maybeMacro op)] (some? v) => form
                     (apply v form *local-env* (next form)) ;; macro expansion
                 )
             )
@@ -15933,7 +16036,7 @@
             (let [#_"Object" o (Compiler'resolve sym)]
                 (cond
                     (var? o)
-                        (when (nil? (Compiler'isMacro o)) => (throw! (str "can't take value of a macro: " o))
+                        (when (nil? (Compiler'maybeMacro o)) => (throw! (str "can't take value of a macro: " o))
                             (Compiler'registerVar o)
                             (VarExpr'new o)
                         )
@@ -15960,16 +16063,16 @@
     (defn- #_"Expr" Compiler'analyzeSeq [#_"Context" context, #_"seq" form, #_"String" name]
         (let-when [#_"Object" me (Compiler'macroexpand1 form)] (= me form) => (Compiler'analyze context, me, name)
             (when-some [#_"Object" op (first form)] => (throw! (str "can't call nil, form: " form))
-                (let [#_"IFn" inline (Compiler'isInline op, (count (next form)))]
+                (let [#_"IFn" inline (Compiler'maybeInline op, (count (next form)))]
                     (cond
                         (some? inline)
                             (Compiler'analyze context, (IFn'''applyTo inline, (next form)))
                         (= op 'fn*)
                             (FnExpr'parse context, form, name)
                         :else
-                            (let [#_"IParser" p (get Compiler'specials op)]
-                                (if (some? p)
-                                    (IParser'''parse p, context, form)
+                            (let [#_"fn" f'parse (get Compiler'specials op)]
+                                (if (some? f'parse)
+                                    (f'parse context, form)
                                     (InvokeExpr'parse context, form)
                                 )
                             )
@@ -16186,7 +16289,7 @@
                         nil
                     (.startsWith s, "::")
                         (let [#_"Symbol" ks (symbol (.substring s, 2))
-                              #_"Namespace" kns (if (some? (:ns ks)) (Namespace''getAlias *ns*, (symbol (:ns ks))) *ns*)]
+                              #_"Namespace" kns (if (some? (:ns ks)) (Namespace''getAlias *arbace-ns*, (symbol (:ns ks))) *arbace-ns*)]
                             ;; auto-resolving keyword
                             (when (some? kns)
                                 (keyword (:name (:name kns)) (:name ks))
@@ -16535,7 +16638,7 @@
                                     (and (nil? ns) (.startsWith n, "."))
                                         form ;; simply quote method names
                                     :else
-                                        (let-when [#_"Object" c (when (some? ns) (Namespace''getMapping *ns*, (symbol ns)))] (class? c) => (Compiler'resolveSymbol form)
+                                        (let-when [#_"Object" c (when (some? ns) (Namespace''getMapping *arbace-ns*, (symbol ns)))] (class? c) => (Compiler'resolveSymbol form)
                                             ;; Classname/foo -> package.qualified.Classname/foo
                                             (symbol (.getName c) n)
                                         )
@@ -16730,16 +16833,16 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
-            (-/binding [*ns* *ns*]
+            (-/binding [*arbace-ns* *arbace-ns*]
                 (loop [#_"Object" val nil]
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
                         (recur
-                            (-/binding [*last-unique-id*     -1
-                                      *closes*             (hash-map)
-                                      *no-recur*           false
-                                      *in-catch-finally*   false
-                                      *in-return-context*  false]
+                            (-/binding [*last-unique-id*    -1
+                                      *closes*            (hash-map)
+                                      *no-recur*          false
+                                      *in-catch-finally*  false
+                                      *in-return-context* false]
                                 (Compiler'eval form)
                             )
                         )
@@ -16817,8 +16920,8 @@
 )
 
 (defn resolve
-    ([    sym] (ns-resolve *ns*     sym))
-    ([env sym] (ns-resolve *ns* env sym))
+    ([    sym] (ns-resolve *arbace-ns*     sym))
+    ([env sym] (ns-resolve *arbace-ns* env sym))
 )
 
 (about #_"Arbace")
