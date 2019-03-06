@@ -727,6 +727,8 @@
         (#_"Object" IFn'''applyTo [#_"fn" this, #_"seq" args])
     )
 
+    (declare anew)
+
     (-/extend-protocol IFn clojure.lang.IFn
         (IFn'''invoke
             ([this]                                                   (.invoke this))
@@ -739,7 +741,7 @@
             ([this, a1, a2, a3, a4, a5, a6, a7]                       (.invoke this, a1, a2, a3, a4, a5, a6, a7))
             ([this, a1, a2, a3, a4, a5, a6, a7, a8]                   (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
             ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (-/to-array args)))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (anew args)))
         )
         (IFn'''applyTo [this, args] (.applyTo this, args))
     )
@@ -842,7 +844,7 @@
     )
 
     (-/extend-protocol IObj clojure.lang.IObj
-        (IObj'''withMeta [this, meta] (.withMeta this, meta))
+        (IObj'''withMeta [this, meta] (.withMeta this, (-/into {} meta)))
     )
 
     ;;;
@@ -1120,7 +1122,6 @@
 
     (defn associative? [x] (satisfies? Associative x))
 
-    (declare anew)
     (declare PersistentArrayMap'new)
 
     ;;;
@@ -1826,6 +1827,7 @@
     )
 
     (-/prefer-method -/print-method VecForm'iface clojure.lang.ISeq)
+    (-/prefer-method -/print-method VecForm'iface clojure.lang.IPersistentVector)
 
     (-/defmethod -/print-method MapForm'iface [#_"Seqable" q, #_"Writer" w]
         (print-sequential "{" (fn [e #_"Writer" w] (pr-on (key e) w) (.append w \space) (pr-on (val e) w)) ", " "}" q w)
@@ -1973,14 +1975,14 @@
 (about #_"Atom"
     (declare Atom''deref)
 
-    (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data]
+    (defq Atom [#_"Class" class, #_"AtomicReference" meta, #_"AtomicReference" data] RecForm
         java.util.concurrent.Future (get [_] (Atom''deref _))
     )
 
     (defn #_"Atom" Atom'new
         ([#_"Object" data] (Atom'new nil, data))
         ([#_"meta" meta, #_"Object" data]
-            (Atom'class. (anew [(AtomicReference. meta), (AtomicReference. data)]))
+            (Atom'class. (anew [Atom'class, (AtomicReference. meta), (AtomicReference. data)]))
         )
     )
 
@@ -6256,7 +6258,7 @@
  ;;
 (defn array-map
     ([] PersistentArrayMap'EMPTY)
-    ([& keyvals] (PersistentArrayMap'createAsIfByAssoc (-/to-array keyvals)))
+    ([& keyvals] (PersistentArrayMap'createAsIfByAssoc (anew keyvals)))
 )
 )
 
@@ -10071,11 +10073,14 @@
 )
 
 (about #_"PersistentVector"
-    (declare PersistentVector''seq PersistentVector''conj PersistentVector''empty)
+    (declare PersistentVector''seq PersistentVector''conj PersistentVector''empty PersistentVector''nth)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
         clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _))
+        clojure.lang.IPersistentVector
+        clojure.lang.Counted (count [_] (:cnt _))
+        clojure.lang.Indexed (nth [_, i] (PersistentVector''nth _, i))
     )
 
     #_inherit
@@ -10814,6 +10819,8 @@
                     )
                 (satisfies? ITransientSet coll)
                     (ITransientSet'''get coll, key)
+                (instance? clojure.lang.ILookup coll)
+                    (.valAt coll, key)
             )
         )
         ([#_"Object" coll, #_"Object" key, #_"Object" not-found]
@@ -10830,6 +10837,8 @@
                     )
                 (satisfies? ITransientSet coll)
                     (if (contains? coll key) (ITransientSet'''get coll, key) not-found)
+                (instance? clojure.lang.ILookup coll)
+                    (.valAt coll, key, not-found)
                 :else
                     not-found
             )
@@ -11055,7 +11064,7 @@
             (empty? init)
                 PersistentArrayMap'EMPTY
             (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
-                (PersistentArrayMap'createWithCheck (-/to-array init))
+                (PersistentArrayMap'createWithCheck (anew init))
             :else
                 (PersistentHashMap'createWithCheck-1s init)
         )
@@ -11066,7 +11075,7 @@
             (empty? init)
                 PersistentArrayMap'EMPTY
             (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
-                (PersistentArrayMap'new (-/to-array init))
+                (PersistentArrayMap'new (anew init))
             :else
                 (PersistentHashMap'create-1s init)
         )
@@ -11218,7 +11227,7 @@
 
 (declare resolve)
 
-(defn- var! [v] (if (instance? clojure.lang.Var v) (resolve (.sym v)) v))
+(defmacro var! [v] `(resolve '~v))
 
 ;;;
  ; Finds or creates a var named by the symbol name in the namespace
@@ -11307,7 +11316,7 @@
         (even? (count bindings)) "an even number of forms in binding vector"
     )
     (letfn [(var-ize [var-vals]
-                (loop-when-recur [v (vector) s (seq var-vals)] s [(conj v `(var! (var ~(first s))) (second s)) (next (next s))] => (seq v))
+                (loop-when-recur [v (vector) s (seq var-vals)] s [(conj v `(var! ~(first s)) (second s)) (next (next s))] => (seq v))
             )]
         `(do
             (push-thread-bindings (hash-map ~@(var-ize bindings)))
@@ -11457,13 +11466,16 @@
     )
 )
 
-(defmacro update! [x f & z] `(#_set! var-set (var! (var ~x)) (~f (var-get (var! (var ~x))) ~@z)))
+(defmacro var-get! [x]   `(var-get (var! ~x)))
+(defmacro var-set! [x y] `(var-set (var! ~x) ~y))
+
+(defmacro var-swap! [x f & z] `(var-set! ~x (~f (var-get! ~x) ~@z)))
 )
 
 (about #_"arbace.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
+    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases] RecForm)
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
@@ -11497,7 +11509,7 @@
 )
 
     (defn- #_"Namespace" Namespace'new [#_"Symbol" name]
-        (Namespace'class. (anew [name, (atom (hash-map)), (atom (hash-map))]))
+        (Namespace'class. (anew [Namespace'class, name, (atom (hash-map)), (atom (hash-map))]))
     )
 
     (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
@@ -12067,7 +12079,7 @@
     ([s] (sort compare s))
     ([#_"Comparator" cmp s]
         (when (seq s) => (list)
-            (let [a (-/to-array s)]
+            (let [a (anew s)]
                 (Arrays/sort a cmp)
                 (seq a)
             )
@@ -13472,7 +13484,7 @@
     (def #_"Var" ^:dynamic *in-return-context* ) ;; Boolean
 
     (defn #_"boolean" Compiler'inTailCall [#_"Context" context]
-        (and (= context :Context'RETURN) *in-return-context* (not *in-catch-finally*))
+        (and (= context :Context'RETURN) (var-get! *in-return-context*) (not (var-get! *in-catch-finally*)))
     )
 
     (defn #_"Namespace" Compiler'namespaceFor
@@ -13510,52 +13522,52 @@
     )
 
     (defn #_"int" Compiler'nextUniqueId []
-        (update! *last-unique-id* inc)
+        (var-swap! *last-unique-id* inc)
     )
 
     (defn- #_"int" Compiler'nextLocalNum []
-        (update! *last-local-num* inc)
+        (var-swap! *last-local-num* inc)
     )
 
     (declare LocalBinding'new)
 
     (defn #_"LocalBinding" Compiler'registerLocal [#_"Symbol" sym, #_"Expr" init, #_"boolean" isArg]
         (let [#_"LocalBinding" lb (LocalBinding'new (Compiler'nextLocalNum), sym, init, isArg)]
-            (update! *local-env* assoc (:sym lb) lb)
-            (update! *method* update :locals assoc (:uid lb) lb)
+            (var-swap! *local-env* assoc (:sym lb) lb)
+            (var-swap! *method* update :locals assoc (:uid lb) lb)
             lb
         )
     )
 
     (defn #_"LocalBinding" Compiler'complementLocalInit [#_"LocalBinding" lb, #_"Expr" init]
         (let [lb (assoc lb :init init)]
-            (update! *local-env* assoc (:sym lb) lb)
-            (update! *method* update :locals assoc (:uid lb) lb)
+            (var-swap! *local-env* assoc (:sym lb) lb)
+            (var-swap! *method* update :locals assoc (:uid lb) lb)
             lb
         )
     )
 
     (defn- #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" m]
         (when (and (some? lb) (some? m) (not (contains? (:locals m) (:uid lb))))
-            (update! *closes* update (:uid (:fun m)) assoc (:uid lb) lb)
+            (var-swap! *closes* update (:uid (:fun m)) assoc (:uid lb) lb)
             (Compiler'closeOver lb, (:parent m))
         )
         nil
     )
 
     (defn #_"LocalBinding" Compiler'referenceLocal [#_"Symbol" sym]
-        (when-some [#_"LocalBinding" lb (get *local-env* sym)]
-            (Compiler'closeOver lb, *method*)
+        (when-some [#_"LocalBinding" lb (get (var-get! *local-env*) sym)]
+            (Compiler'closeOver lb, (var-get! *method*))
             lb
         )
     )
 
     (defn- #_"int" Compiler'registerConstant [#_"Object" o]
-        (when (bound? (var! #'*constants*)) => -1
-            (or (.get *constant-ids*, o)
-                (let [#_"int" n (count *constants*)]
-                    (update! *constants* conj o)
-                    (.put *constant-ids*, o, n)
+        (when (bound? (var! *constants*)) => -1
+            (or (.get (var-get! *constant-ids*), o)
+                (let [#_"int" n (count (var-get! *constants*))]
+                    (var-swap! *constants* conj o)
+                    (.put (var-get! *constant-ids*), o, n)
                     n
                 )
             )
@@ -13563,8 +13575,8 @@
     )
 
     (defn- #_"void" Compiler'registerVar [#_"Var" var]
-        (when (and (bound? (var! #'*vars*)) (nil? (get *vars* var)))
-            (update! *vars* assoc var (Compiler'registerConstant var))
+        (when (and (bound? (var! *vars*)) (nil? (get (var-get! *vars*) var)))
+            (var-swap! *vars* assoc var (Compiler'registerConstant var))
         )
         nil
     )
@@ -14194,8 +14206,8 @@
                                         (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                             (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
                                                 (let [catches
-                                                        (binding [*local-env*        *local-env*
-                                                                  *last-local-num*   *last-local-num*
+                                                        (binding [*local-env*        (var-get! *local-env*)
+                                                                  *last-local-num*   (var-get! *last-local-num*)
                                                                   *in-catch-finally* true]
                                                             (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil, false)
                                                                   #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
@@ -14840,10 +14852,10 @@
     (defn #_"FnMethod" FnMethod'parse [#_"FnExpr" fun, #_"seq" form]
         ;; ([args] body...)
         (let [#_"vector" parms (first form) #_"seq" body (next form)
-              #_"FnMethod" fm (FnMethod'new fun, *method*)]
+              #_"FnMethod" fm (FnMethod'new fun, (var-get! *method*))]
             ;; register as the current method and set up a new env frame
             (binding [*method*            fm
-                      *local-env*         *local-env*
+                      *local-env*         (var-get! *local-env*)
                       *last-local-num*    -1
                       *loop-locals*       nil
                       *in-return-context* true]
@@ -14878,7 +14890,7 @@
                     (when (< Compiler'MAX_POSITIONAL_ARITY (count (:reqParms fm)))
                         (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " params"))
                     )
-                    (#_set! var-set (var! (var *loop-locals*)) (:argLocals fm))
+                    (var-set! *loop-locals* (:argLocals fm))
                     (assoc fm :body (BodyExpr'parse :Context'RETURN, body))
                 )
             )
@@ -14919,7 +14931,7 @@
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
-        (if (contains? (get *closes* (:uid this)) (:uid lb))
+        (if (contains? (get (var-get! *closes*) (:uid this)) (:uid lb))
             (let [
                 gen (Gen''loadThis gen)
                 gen (Gen''getField gen, (:name lb))
@@ -14934,7 +14946,7 @@
     )
 
     (defn #_"gen" FnExpr''emitConstant [#_"FnExpr" this, #_"gen" gen, #_"int" id]
-        (update! *used-constants* conj id)
+        (var-swap! *used-constants* conj id)
         (Gen''getStatic gen, (Compiler'constantName id))
     )
 
@@ -15144,7 +15156,7 @@
         (loop-when [gen gen #_"int" i 0] (< i (count (:constants this))) => gen
             (let [
                 gen
-                    (when (contains? *used-constants* i) => gen
+                    (when (contains? (var-get! *used-constants*) i) => gen
                         (let [gen (FnExpr''emitValue this, (nth (:constants this) i), gen)]
                             (Gen''putStatic gen, (Compiler'constantName i))
                         )
@@ -15165,7 +15177,7 @@
                     )
                 ;; instance fields for closed-overs
                 this
-                    (loop-when [this this #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => this
+                    (loop-when [this this #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => this
                         (let [#_"LocalBinding" lb (first s)]
                             (recur (update this :code ClassVisitor''visitField false, (:name lb)) (next s))
                         )
@@ -15185,7 +15197,7 @@
                                 )
                             )
                         [this gen]
-                            (loop-when [this this gen gen #_"int" i (if (:hasMeta this) 2 1) #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => [this gen]
+                            (loop-when [this this gen gen #_"int" i (if (:hasMeta this) 2 1) #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
                                 (let [
                                     #_"LocalBinding" lb (first s)
                                     gen (Gen''loadThis gen)
@@ -15232,7 +15244,7 @@
                                     gen (Gen''dup gen)
                                     gen (Gen''loadArg gen, 0)
                                     gen
-                                        (loop-when [gen gen #_"seq" s (vals (get *closes* (:uid this)))] (some? s) => gen
+                                        (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => gen
                                             (let [
                                                 gen (Gen''loadThis gen)
                                                 gen (Gen''getField gen, (:name (first s)))
@@ -15255,7 +15267,7 @@
                     (loop-when [this this #_"int" i 0] (< i (count (:constants this))) => this
                         (let [
                             this
-                                (when (contains? *used-constants* i) => this
+                                (when (contains? (var-get! *used-constants*) i) => this
                                     (update this :code ClassVisitor''visitField true, (Compiler'constantName i))
                                 )
                         ]
@@ -15279,7 +15291,7 @@
 
     (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form, #_"String" name]
         (let [#_"meta" fmeta (meta form)
-              #_"FnMethod" owner *method*
+              #_"FnMethod" owner (var-get! *method*)
               #_"FnExpr" fn (FnExpr'new)
               fn (when (some? (meta (first form))) => fn
                     (assoc fn :onceOnly (boolean (get (meta (first form)) :once)))
@@ -15349,9 +15361,9 @@
                             (assoc fn
                                 :methods methods
                                 :variadicMethod variadic
-                                :keywords *keywords*
-                                :vars *vars*
-                                :constants *constants*
+                                :keywords (var-get! *keywords*)
+                                :vars (var-get! *vars*)
+                                :constants (var-get! *constants*)
                             )
                         )
                     )
@@ -15510,8 +15522,8 @@
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                     (if (= context :Context'EVAL)
                         (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                        (binding [*local-env*      *local-env*
-                                  *last-local-num* *last-local-num*]
+                        (binding [*local-env*      (var-get! *local-env*)
+                                  *last-local-num* (var-get! *last-local-num*)]
                             ;; pre-seed env (like Lisp labels)
                             (let [#_"vector" lbs
                                     (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
@@ -15569,7 +15581,7 @@
                         #_"BindingInit" bi (first s)
                         gen (Gen''loadVar gen, (:idx (:binding bi)))
                         gen
-                            (loop-when [gen gen #_"seq" s (vals (get *closes* (:uid (:init bi))))] (some? s) => gen
+                            (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid (:init bi))))] (some? s) => gen
                                 (let [
                                     gen
                                         (let-when [#_"LocalBinding" lb (first s)] (contains? lbset lb) => gen
@@ -15623,17 +15635,17 @@
                         (if (or (= context :Context'EVAL) (and (= context :Context'EXPRESSION) isLoop))
                             (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
                             (let [#_"seq" body (next (next form))
-                                  #_"map" locals' (:locals *method*)
+                                  #_"map" locals' (:locals (var-get! *method*))
                                   #_"map" dynamicBindings
                                     (hash-map
-                                        (var! #'*local-env*)      *local-env*
-                                        (var! #'*last-local-num*) *last-local-num*
+                                        (var! *local-env*)      (var-get! *local-env*)
+                                        (var! *last-local-num*) (var-get! *last-local-num*)
                                     )
                                   dynamicBindings
                                     (when isLoop => dynamicBindings
-                                        (assoc dynamicBindings (var! #'*loop-locals*) nil)
+                                        (assoc dynamicBindings (var! *loop-locals*) nil)
                                     )
-                                  _ (update! *method* assoc :locals locals')]
+                                  _ (var-swap! *method* assoc :locals locals')]
                                 (try
                                     (push-thread-bindings dynamicBindings)
                                     (let [[#_"vector" bindingInits #_"vector" loopLocals]
@@ -15645,7 +15657,7 @@
                                                               [bindingInits loopLocals]
                                                                 (try
                                                                     (when isLoop
-                                                                        (push-thread-bindings (hash-map (var! #'*no-recur*) false))
+                                                                        (push-thread-bindings (hash-map (var! *no-recur*) false))
                                                                     )
                                                                     (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init, false)]
                                                                         [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
@@ -15662,15 +15674,15 @@
                                                 )
                                             )]
                                         (when isLoop
-                                            (#_set! var-set (var! (var *loop-locals*)) loopLocals)
+                                            (var-set! *loop-locals* loopLocals)
                                         )
                                         (let [#_"Expr" bodyExpr
                                                 (try
                                                     (when isLoop
                                                         (push-thread-bindings
                                                             (hash-map
-                                                                (var! #'*no-recur*)          false
-                                                                (var! #'*in-return-context*) (and (= context :Context'RETURN) *in-return-context*)
+                                                                (var! *no-recur*)          false
+                                                                (var! *in-return-context*) (and (= context :Context'RETURN) (var-get! *in-return-context*))
                                                             )
                                                         )
                                                     )
@@ -15741,10 +15753,10 @@
     )
 
     (defn #_"Expr" RecurExpr'parse [#_"Context" context, #_"seq" form]
-        (when-not (and (= context :Context'RETURN) (some? *loop-locals*))
+        (when-not (and (= context :Context'RETURN) (some? (var-get! *loop-locals*)))
             (throw! "can only recur from tail position")
         )
-        (when *no-recur*
+        (when (var-get! *no-recur*)
             (throw! "cannot recur across try")
         )
         (let [#_"vector" args
@@ -15753,10 +15765,10 @@
                                  [(conj args (Compiler'analyze :Context'EXPRESSION, (first s))) (next s)]
                               => args
                 )]
-            (when-not (= (count args) (count *loop-locals*))
-                (throw! (str "mismatched argument count to recur, expected: " (count *loop-locals*) " args, got: " (count args)))
+            (when-not (= (count args) (count (var-get! *loop-locals*)))
+                (throw! (str "mismatched argument count to recur, expected: " (count (var-get! *loop-locals*)) " args, got: " (count args)))
             )
-            (RecurExpr'new *loop-locals*, args)
+            (RecurExpr'new (var-get! *loop-locals*), args)
         )
     )
 
@@ -15765,7 +15777,7 @@
     )
 
     (defn- #_"gen" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-some [#_"label" l'loop *loop-label*] => (throw! "recur misses loop label")
+        (when-some [#_"label" l'loop (var-get! *loop-label*)] => (throw! "recur misses loop label")
             (let [
                 gen
                     (loop-when-recur [gen gen #_"seq" s (seq (:args this))]
@@ -16037,7 +16049,7 @@
         (when (seq? form) => form
             (let-when [#_"Object" op (first form)] (not (Compiler'isSpecial op)) => form
                 (let-when [#_"Var" v (Compiler'maybeMacro op)] (some? v) => form
-                    (apply v form *local-env* (next form)) ;; macro expansion
+                    (apply v form (var-get! *local-env*) (next form)) ;; macro expansion
                 )
             )
         )
@@ -16076,9 +16088,9 @@
     )
 
     (defn- #_"KeywordExpr" Compiler'registerKeyword [#_"Keyword" k]
-        (when (bound? (var! #'*keywords*))
-            (let-when [#_"map" m *keywords*] (nil? (get m k))
-                (#_set! var-set (var! (var *keywords*)) (assoc m k (Compiler'registerConstant k)))
+        (when (bound? (var! *keywords*))
+            (let-when [#_"map" m (var-get! *keywords*)] (nil? (get m k))
+                (var-set! *keywords* (assoc m k (Compiler'registerConstant k)))
             )
         )
         (KeywordExpr'new k)
@@ -16169,10 +16181,10 @@
     )
 
     (defn #_"Symbol" LispReader'registerArg [#_"int" n]
-        (when (bound? (var! #'*arg-env*)) => (throw! "arg literal not in #()")
-            (or (get *arg-env* n)
+        (when (bound? (var! *arg-env*)) => (throw! "arg literal not in #()")
+            (or (get (var-get! *arg-env*) n)
                 (let [#_"Symbol" sym (LispReader'garg n)]
-                    (update! *arg-env* assoc n sym)
+                    (var-swap! *arg-env* assoc n sym)
                     sym
                 )
             )
@@ -16180,10 +16192,10 @@
     )
 
     (defn #_"Symbol" LispReader'registerGensym [#_"Symbol" sym]
-        (when (bound? (var! #'*gensym-env*)) => (throw! "gensym literal not in syntax-quote")
-            (or (get *gensym-env* sym)
+        (when (bound? (var! *gensym-env*)) => (throw! "gensym literal not in syntax-quote")
+            (or (get (var-get! *gensym-env*) sym)
                 (let [#_"Symbol" gsym (symbol (str (:name sym) "__" (next-id!) "__auto__"))]
-                    (update! *gensym-env* assoc sym gsym)
+                    (var-swap! *gensym-env* assoc sym gsym)
                     gsym
                 )
             )
@@ -16538,21 +16550,21 @@
 
 (about #_"FnReader"
     (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"char" _delim]
-        (when-not (bound? (var! #'*arg-env*)) => (throw! "nested #()s are not allowed")
+        (when-not (bound? (var! *arg-env*)) => (throw! "nested #()s are not allowed")
             (binding [*arg-env* (sorted-map)]
                 (LispReader'unread r, \()
                 (let [#_"vector" args (vector)
                       args
-                        (when-some [#_"seq" rs (rseq *arg-env*)] => args
+                        (when-some [#_"seq" rs (rseq (var-get! *arg-env*))] => args
                             (let [args
                                     (let-when [#_"int" n (key (first rs))] (pos? n) => args
                                         (loop-when-recur [args args #_"int" i 1]
                                                          (<= i n)
-                                                         [(conj args (or (get *arg-env* i) (LispReader'garg i))) (inc i)]
+                                                         [(conj args (or (get (var-get! *arg-env*) i) (LispReader'garg i))) (inc i)]
                                                       => args
                                         )
                                     )]
-                                (when-some [#_"Object" rest (get *arg-env* -1)] => args
+                                (when-some [#_"Object" rest (get (var-get! *arg-env*) -1)] => args
                                     (conj args (symbol! '&) rest)
                                 )
                             )
@@ -16566,7 +16578,7 @@
 
 (about #_"ArgReader"
     (defn #_"Object" arg-reader [#_"PushbackReader" r, #_"char" _delim]
-        (when (bound? (var! #'*arg-env*)) => (LispReader'interpretToken (LispReader'readToken r, \%))
+        (when (bound? (var! *arg-env*)) => (LispReader'interpretToken (LispReader'readToken r, \%))
             (let [#_"char" ch (LispReader'read1 r) _ (LispReader'unread r, ch)]
                 ;; % alone is first arg
                 (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isTerminatingMacro ch))
@@ -16962,6 +16974,17 @@
     )
 
     (alias (symbol "-"), *arbace-ns*)
+)
+
+(defn repl []
+    (binding [*last-unique-id* -1]
+        (loop []
+            (-/print "\033[31mArbace \033[32m=> \033[0m")
+            (.flush -/*out*)
+            (-> (read) (eval) (-/prn))
+            (recur)
+        )
+    )
 )
 )
 
