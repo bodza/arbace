@@ -1576,6 +1576,11 @@
     (defp RestFn)
 )
 
+(about #_"arbace.Lambda"
+    #_abstract
+    (defp Lambda)
+)
+
 (about #_"arbace.ASeq"
     #_abstract
     (defp ASeq)
@@ -3245,30 +3250,13 @@
 (about #_"arbace.Fn"
 
 (about #_"Fn"
-    (defq Fn [#_"meta" _meta])
+    (defq Fn [])
 
     #_inherit
     (defm Fn AFn)
 
-    (defn #_"Fn" Fn'new
-        ([] (Fn'new nil))
-        ([#_"meta" meta]
-            (Fn'class. (anew [meta]))
-        )
-    )
-
-    (defn- #_"Fn" Fn''withMeta [#_"Fn" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (Fn'new meta)
-        )
-    )
-
-    (defm Fn IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm Fn IObj
-        (IObj'''withMeta => Fn''withMeta)
+    (defn #_"Fn" Fn'new []
+        (Fn'class. (anew []))
     )
 
     (defn- #_"Object" Fn''invoke
@@ -3307,30 +3295,13 @@
 (about #_"arbace.RestFn"
 
 (about #_"RestFn"
-    (defq RestFn [#_"meta" _meta])
+    (defq RestFn [])
 
     #_inherit
     (defm RestFn Fn AFn)
 
-    (defn #_"RestFn" RestFn'new
-        ([] (RestFn'new nil))
-        ([#_"meta" meta]
-            (RestFn'class. (anew [meta]))
-        )
-    )
-
-    (defn- #_"RestFn" RestFn''withMeta [#_"RestFn" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (RestFn'new meta)
-        )
-    )
-
-    (defm RestFn IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm RestFn IObj
-        (IObj'''withMeta => RestFn''withMeta)
+    (defn #_"RestFn" RestFn'new []
+        (RestFn'class. (anew []))
     )
 
     (defn- #_"Object" RestFn''doInvoke
@@ -3509,6 +3480,64 @@
 
     (§ defm RestFn #_"Comparator"
         ;; inherit Fn compare
+    )
+)
+)
+
+(about #_"arbace.Lambda"
+
+(about #_"Lambda"
+    (defq Lambda [#_"meta" _meta])
+
+    #_inherit
+    (defm Lambda RestFn Fn AFn)
+
+    (defn #_"Lambda" Lambda'new
+        ([] (Lambda'new nil))
+        ([#_"meta" meta]
+            (Lambda'class. (anew [meta]))
+        )
+    )
+
+    (defn- #_"Lambda" Lambda''withMeta [#_"Lambda" this, #_"meta" meta]
+        (when-not (= meta (:_meta this)) => this
+            (Lambda'new meta)
+        )
+    )
+
+    (defn- #_"Object" Lambda''doInvoke
+        ([#_"Lambda" this, #_"seq" args]                                     (AFn'throwArity this, 0))
+        ([#_"Lambda" this, a1, #_"seq" args]                                 (AFn'throwArity this, 1))
+        ([#_"Lambda" this, a1, a2, #_"seq" args]                             (AFn'throwArity this, 2))
+        ([#_"Lambda" this, a1, a2, a3, #_"seq" args]                         (AFn'throwArity this, 3))
+        ([#_"Lambda" this, a1, a2, a3, a4, #_"seq" args]                     (AFn'throwArity this, 4))
+        ([#_"Lambda" this, a1, a2, a3, a4, a5, #_"seq" args]                 (AFn'throwArity this, 5))
+        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, #_"seq" args]             (AFn'throwArity this, 6))
+        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]         (AFn'throwArity this, 7))
+        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]     (AFn'throwArity this, 8))
+        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (AFn'throwArity this, 9))
+    )
+
+    (defm Lambda IMeta
+        (IMeta'''meta => :_meta)
+    )
+
+    (defm Lambda IObj
+        (IObj'''withMeta => Lambda''withMeta)
+    )
+
+    (defm Lambda IRestFn
+        ;; abstract IRestFn requiredArity
+        (IRestFn'''doInvoke => Lambda''doInvoke)
+    )
+
+    (defm Lambda IFn
+        (IFn'''invoke => RestFn''invoke)
+        (IFn'''applyTo => RestFn''applyTo)
+    )
+
+    (§ defm Lambda #_"Comparator"
+        ;; inherit RestFn compare
     )
 )
 )
@@ -14796,8 +14825,6 @@
                 #_"int" :idx (Compiler'nextLocalNum)
                 #_"Symbol" :sym sym
                 #_"Expr" :init init
-
-                #_"String" :name (:name sym)
             )
         )
     )
@@ -14887,8 +14914,8 @@
                       *loop-locals*       nil
                       *in-return-context* true]
                 ;; register 'this' as local 0
-                (if (some? (:thisName fun))
-                    (Compiler'registerLocal (symbol (:thisName fun)), nil)
+                (if (some? (:name fun))
+                    (Compiler'registerLocal (symbol (:name fun)), nil)
                     (Compiler'nextLocalNum)
                 )
                 (let [fm (assoc fm :reqParms (vector) :restParm nil :argLocals (vector))
@@ -14933,7 +14960,6 @@
             (hash-map
                 #_"int" :uid (Compiler'nextUniqueId)
                 #_"String" :name nil
-                #_"String" :thisName nil
                 #_"vector" :closesExprs (vector)
                 #_"map" :keywords (hash-map)
                 #_"map" :vars (hash-map)
@@ -14952,14 +14978,14 @@
     )
 
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (if (FnExpr''isVariadic this) (RestFn'new) (Fn'new))
+        (Lambda'new)
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
         (if (contains? (get (var-get! *closes*) (:uid this)) (:uid lb))
             (let [
                 gen (Gen''loadVar gen, 0) ;; this
-                gen (Gen''getField gen, (:name lb))
+                gen (Gen''getField gen, (:name (:sym lb)))
             ]
                 gen
             )
@@ -15125,7 +15151,6 @@
         (let [
             gen (Gen''newInstance gen)
             gen (Gen''dup gen)
-            gen (Gen''push gen, nil) ;; _meta
             gen
                 (loop-when-recur [gen gen #_"seq" s (seq (:closesExprs this))]
                                  (some? s)
@@ -15174,25 +15199,16 @@
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"boolean" _once?]
         (binding [*used-constants* (hash-set)]
             (let [
-                this (assoc this :code (hash-map :'name (:name this)))
+                this (assoc this :code (hash-map))
                 this
                     (let [
-                        #_"gen" gen (Gen'new)
-                        gen
-                            (let [
-                                gen (Gen''loadVar gen, 0) ;; this
-                                gen (Gen''loadVar gen, 1) ;; meta
-                                gen (Gen''putField gen, "_meta")
-                            ]
-                                gen
-                            )
-                        [this gen]
-                            (loop-when [this this gen gen #_"int" i 2 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
+                        [this #_"gen" gen]
+                            (loop-when [this this gen (Gen'new) #_"int" i 1 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
                                 (let [
                                     #_"LocalBinding" lb (first s)
                                     gen (Gen''loadVar gen, 0) ;; this
                                     gen (Gen''loadVar gen, i)
-                                    gen (Gen''putField gen, (:name lb))
+                                    gen (Gen''putField gen, (:name (:sym lb)))
                                 ]
                                     (recur (update this :closesExprs conj (LocalBindingExpr'new lb)) gen (inc i) (next s))
                                 )
@@ -15200,35 +15216,6 @@
                         gen (Gen''returnValue gen)
                     ]
                         (assoc-in this [:code :'init] gen)
-                    )
-                this
-                    (let [
-                        #_"gen" gen (Gen'new)
-                        gen (Gen''loadVar gen, 0) ;; this
-                        gen (Gen''getField gen, "_meta")
-                        gen (Gen''returnValue gen)
-                    ]
-                        (assoc-in this [:code :IMeta'''meta] gen)
-                    )
-                this
-                    (let [
-                        #_"gen" gen (Gen'new)
-                        gen (Gen''newInstance gen)
-                        gen (Gen''dup gen)
-                        gen (Gen''loadVar gen, 1) ;; meta
-                        gen
-                            (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => gen
-                                (let [
-                                    gen (Gen''loadVar gen, 0) ;; this
-                                    gen (Gen''getField gen, (:name (first s)))
-                                ]
-                                    (recur gen (next s))
-                                )
-                            )
-                        gen (Gen''invokeConstructor gen, :'init)
-                        gen (Gen''returnValue gen)
-                    ]
-                        (assoc-in this [:code :IObj'''withMeta] gen)
                     )
                 this (FnExpr''emitMethods this)
                 this
@@ -15257,21 +15244,8 @@
         )
     )
 
-    (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form, #_"String" name]
-        (let [#_"FnMethod" owner (var-get! *method*)
-              #_"String" basename (if (some? owner) (:name (:fun owner)) (:name (:name *arbace-ns*)))
-              [#_"Symbol" nm name]
-                (if (symbol? (second form))
-                    (let [nm (second form)]
-                        [nm (str (:name nm) "__" (next-id!))]
-                    )
-                    (cond
-                        (nil? name)   [nil (str "fn__" (next-id!))]
-                        (some? owner) [nil (str name "__"(next-id!))]
-                        :else         [nil name]
-                    )
-                )
-              #_"FnExpr" fun (assoc (FnExpr'new) :name (str basename "$" name))
+    (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"FnExpr" fun (FnExpr'new)
               fun
                 (binding [*constants*    (vector)
                           *constant-ids* (IdentityHashMap.)
@@ -15280,8 +15254,8 @@
                           *no-recur*     false]
                     ;; arglist might be preceded by symbol naming this fn
                     (let [[fun form]
-                            (when (some? nm) => [fun form]
-                                [(assoc fun :thisName (:name nm)) (cons (symbol! 'fn*) (next (next form)))]
+                            (when (symbol? (second form)) => [fun form]
+                                [(assoc fun :name (:name (second form))) (cons (symbol! 'fn*) (next (next form)))]
                             )
                           ;; now (fn [args] body...) or (fn ([args] body...) ([args2] body2...) ...)
                           ;; turn former into latter
@@ -15376,7 +15350,7 @@
                             )
                         )
                       #_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-                      #_"Expr" init (Compiler'analyze c, (third form), (:name (:sym v)))
+                      #_"Expr" init (Compiler'analyze c, (third form))
                       #_"Expr" _meta (Compiler'analyze c, (meta sym))]
                     (DefExpr'new v, init, _meta, (= (count form) 3), shadowsCoreMapping)
                 )
@@ -15495,7 +15469,7 @@
                                     )
                                   #_"vector" bis
                                     (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
-                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name (nth bindings i)))
+                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)))
                                               #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
                                             (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
                                         )
@@ -15548,7 +15522,7 @@
                                             (let [
                                                 gen (Gen''dup gen)
                                                 gen (FnExpr''emitLocal fun, gen, lb)
-                                                gen (Gen''putField gen, (:name lb))
+                                                gen (Gen''putField gen, (:name (:sym lb)))
                                             ]
                                                 gen
                                             )
@@ -15612,7 +15586,7 @@
                                             (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
                                                 (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                                     (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)), (:name sym))
+                                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)))
                                                               ;; sequential enhancement of env (like Lisp let*)
                                                               [bindingInits loopLocals]
                                                                 (try
@@ -16049,15 +16023,15 @@
         (KeywordExpr'new k)
     )
 
-    (defn- #_"Expr" Compiler'analyzeSeq [#_"Context" context, #_"seq" form, #_"String" name]
-        (let-when [#_"Object" me (Compiler'macroexpand1 form)] (= me form) => (Compiler'analyze context, me, name)
+    (defn- #_"Expr" Compiler'analyzeSeq [#_"Context" context, #_"seq" form]
+        (let-when [#_"Object" me (Compiler'macroexpand1 form)] (= me form) => (Compiler'analyze context, me)
             (when-some [#_"Object" op (first form)] => (throw! (str "can't call nil, form: " form))
                 (let [#_"IFn" inline (Compiler'maybeInline op, (count (next form)))]
                     (cond
                         (some? inline)
                             (Compiler'analyze context, (IFn'''applyTo inline, (next form)))
                         (= op 'fn*)
-                            (FnExpr'parse context, form, name)
+                            (FnExpr'parse context, form)
                         :else
                             (let [#_"fn" f'parse (get Compiler'specials op)]
                                 (if (some? f'parse)
@@ -16071,32 +16045,29 @@
         )
     )
 
-    (defn #_"Expr" Compiler'analyze
-        ([#_"Context" context, #_"Object" form] (Compiler'analyze context, form, nil))
-        ([#_"Context" context, #_"Object" form, #_"String" name]
-            (let [form
-                    (when (satisfies? LazySeq form) => form
-                        (with-meta (or (seq form) (list)) (meta form))
-                    )]
-                (case form
-                    nil                 Compiler'NIL_EXPR
-                    true                Compiler'TRUE_EXPR
-                    false               Compiler'FALSE_EXPR
-                    (cond
-                        (symbol? form)  (Compiler'analyzeSymbol form)
-                        (keyword? form) (Compiler'registerKeyword form)
-                        (number? form)  (NumberExpr'parse form)
-                        (string? form)  (StringExpr'new (.intern #_"String" form))
-                        (and (coll? form) (zero? (count form)))
-                            (let-when [#_"Expr" e (EmptyExpr'new form)] (some? (meta form)) => e
-                                (MetaExpr'new e, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
-                            )
-                        (seq? form)     (Compiler'analyzeSeq context, form, name)
-                        (vector? form)  (VectorExpr'parse context, form)
-                        (map? form)     (MapExpr'parse context, form)
-                        (set? form)     (SetExpr'parse context, form)
-                        :else           (ConstantExpr'new form)
-                    )
+    (defn #_"Expr" Compiler'analyze [#_"Context" context, #_"Object" form]
+        (let [form
+                (when (satisfies? LazySeq form) => form
+                    (with-meta (or (seq form) (list)) (meta form))
+                )]
+            (case form
+                nil                 Compiler'NIL_EXPR
+                true                Compiler'TRUE_EXPR
+                false               Compiler'FALSE_EXPR
+                (cond
+                    (symbol? form)  (Compiler'analyzeSymbol form)
+                    (keyword? form) (Compiler'registerKeyword form)
+                    (number? form)  (NumberExpr'parse form)
+                    (string? form)  (StringExpr'new (.intern #_"String" form))
+                    (and (coll? form) (zero? (count form)))
+                        (let-when [#_"Expr" e (EmptyExpr'new form)] (some? (meta form)) => e
+                            (MetaExpr'new e, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
+                        )
+                    (seq? form)     (Compiler'analyzeSeq context, form)
+                    (vector? form)  (VectorExpr'parse context, form)
+                    (map? form)     (MapExpr'parse context, form)
+                    (set? form)     (SetExpr'parse context, form)
+                    :else           (ConstantExpr'new form)
                 )
             )
         )
@@ -16110,7 +16081,7 @@
                         (Compiler'eval (first s))
                     )
                 (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def"))))
-                    (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list (symbol! 'fn*) [] form), (str "eval" (next-id!)))]
+                    (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list (symbol! 'fn*) [] form))]
                         (IFn'''invoke (Expr'''eval fexpr))
                     )
                 :else
