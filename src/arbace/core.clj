@@ -3245,13 +3245,30 @@
 (about #_"arbace.Fn"
 
 (about #_"Fn"
-    (defq Fn [])
+    (defq Fn [#_"meta" _meta])
 
     #_inherit
     (defm Fn AFn)
 
-    (defn #_"Fn" Fn'new []
-        (Fn'class. (anew []))
+    (defn #_"Fn" Fn'new
+        ([] (Fn'new nil))
+        ([#_"meta" meta]
+            (Fn'class. (anew [meta]))
+        )
+    )
+
+    (defn- #_"Fn" Fn''withMeta [#_"Fn" this, #_"meta" meta]
+        (when-not (= meta (:_meta this)) => this
+            (Fn'new meta)
+        )
+    )
+
+    (defm Fn IMeta
+        (IMeta'''meta => :_meta)
+    )
+
+    (defm Fn IObj
+        (IObj'''withMeta => Fn''withMeta)
     )
 
     (defn- #_"Object" Fn''invoke
@@ -3290,13 +3307,30 @@
 (about #_"arbace.RestFn"
 
 (about #_"RestFn"
-    (defq RestFn [])
+    (defq RestFn [#_"meta" _meta])
 
     #_inherit
     (defm RestFn Fn AFn)
 
-    (defn #_"RestFn" RestFn'new []
-        (RestFn'class. (anew []))
+    (defn #_"RestFn" RestFn'new
+        ([] (RestFn'new nil))
+        ([#_"meta" meta]
+            (RestFn'class. (anew [meta]))
+        )
+    )
+
+    (defn- #_"RestFn" RestFn''withMeta [#_"RestFn" this, #_"meta" meta]
+        (when-not (= meta (:_meta this)) => this
+            (RestFn'new meta)
+        )
+    )
+
+    (defm RestFn IMeta
+        (IMeta'''meta => :_meta)
+    )
+
+    (defm RestFn IObj
+        (IObj'''withMeta => RestFn''withMeta)
     )
 
     (defn- #_"Object" RestFn''doInvoke
@@ -13316,10 +13350,6 @@
 (about #_"arbace.Compiler"
 
 (about #_"asm"
-    (defn- #_"map" ClassVisitor''visitField [#_"map" this, #_"boolean" static?, #_"String" name]
-        (update this (if static? :static :fields) #(conj (vec %) name))
-    )
-
     (defn- #_"gen" Gen'new [] (vector))
 
     (defn- #_"label" Gen''label [#_"gen" gen] (atom nil))
@@ -13329,11 +13359,14 @@
         (#_"void" [#_"gen" gen, #_"label" label] (reset! label (count gen)) nil)
     )
 
+    (defn- #_"gen" Gen''and               [#_"gen" gen]                     (conj gen :and))
     (defn- #_"gen" Gen''arrayStore        [#_"gen" gen]                     (conj gen :arrayStore))
     (defn- #_"gen" Gen''dup               [#_"gen" gen]                     (conj gen :dup))
     (defn- #_"gen" Gen''getField          [#_"gen" gen, #_"String" name]    (conj gen [:getField name]))
     (defn- #_"gen" Gen''getStatic         [#_"gen" gen, #_"String" name]    (conj gen [:getStatic name]))
     (defn- #_"gen" Gen''goTo              [#_"gen" gen, #_"label" label]    (conj gen [:goTo @label]))
+    (defn- #_"gen" Gen''ifCmpEq           [#_"gen" gen, #_"label" label]    (conj gen [:ifCmpEq @label]))
+    (defn- #_"gen" Gen''ifCmpNe           [#_"gen" gen, #_"label" label]    (conj gen [:ifCmpNe @label]))
     (defn- #_"gen" Gen''ifNull            [#_"gen" gen, #_"label" label]    (conj gen [:ifNull @label]))
     (defn- #_"gen" Gen''ifZero            [#_"gen" gen, #_"label" label]    (conj gen [:ifZero @label]))
     (defn- #_"gen" Gen''instanceOf        [#_"gen" gen, #_"String" name]    (conj gen [:instanceOf name]))
@@ -13341,9 +13374,6 @@
     (defn- #_"gen" Gen''invokeInterface   [#_"gen" gen, #_"String" name]    (conj gen [:invokeInterface name]))
     (defn- #_"gen" Gen''invokeStatic      [#_"gen" gen, #_"String" name]    (conj gen [:invokeStatic name]))
     (defn- #_"gen" Gen''invokeVirtual     [#_"gen" gen, #_"String" name]    (conj gen [:invokeVirtual name]))
-    (defn- #_"gen" Gen''loadArg           [#_"gen" gen, #_"int" index]      (conj gen [:loadArg index]))
-    (defn- #_"gen" Gen''loadArgs          [#_"gen" gen]                     (conj gen :loadArgs))
-    (defn- #_"gen" Gen''loadThis          [#_"gen" gen]                     (conj gen :loadThis))
     (defn- #_"gen" Gen''loadVar           [#_"gen" gen, #_"int" index]      (conj gen [:loadVar index]))
     (defn- #_"gen" Gen''monitorEnter      [#_"gen" gen]                     (conj gen :monitorEnter))
     (defn- #_"gen" Gen''monitorExit       [#_"gen" gen]                     (conj gen :monitorExit))
@@ -13354,12 +13384,10 @@
     (defn- #_"gen" Gen''putField          [#_"gen" gen, #_"String" name]    (conj gen [:putField name]))
     (defn- #_"gen" Gen''putStatic         [#_"gen" gen, #_"String" name]    (conj gen [:putStatic name]))
     (defn- #_"gen" Gen''returnValue       [#_"gen" gen]                     (conj gen :returnValue))
-    (defn- #_"gen" Gen''storeArg          [#_"gen" gen, #_"int" index]      (conj gen [:storeArg index]))
     (defn- #_"gen" Gen''storeVar          [#_"gen" gen, #_"int" index]      (conj gen [:storeVar index]))
+    (defn- #_"gen" Gen''shr               [#_"gen" gen]                     (conj gen :shr))
     (defn- #_"gen" Gen''swap              [#_"gen" gen]                     (conj gen :swap))
     (defn- #_"gen" Gen''throwException    [#_"gen" gen]                     (conj gen :throwException))
-    (defn- #_"gen" Gen''visitInsn         [#_"gen" gen, #_"Keyword" opcode] (conj gen [:visitInsn opcode]))
-    (defn- #_"gen" Gen''visitJumpInsn     [#_"gen" gen, #_"Keyword" opcode, #_"label" label] (conj gen [:visitJumpInsn opcode @label]))
 
     (defn- #_"gen" Gen''visitLookupSwitchInsn [#_"gen" gen, #_"ints" values, #_"labels" labels, #_"label" default]
         (conj gen [:visitLookupSwitchInsn (vec values) (mapv deref labels) @default])
@@ -13531,8 +13559,8 @@
 
     (declare LocalBinding'new)
 
-    (defn #_"LocalBinding" Compiler'registerLocal [#_"Symbol" sym, #_"Expr" init, #_"boolean" isArg]
-        (let [#_"LocalBinding" lb (LocalBinding'new (Compiler'nextLocalNum), sym, init, isArg)]
+    (defn #_"LocalBinding" Compiler'registerLocal [#_"Symbol" sym, #_"Expr" init]
+        (let [#_"LocalBinding" lb (LocalBinding'new sym, init)]
             (var-swap! *local-env* assoc (:sym lb) lb)
             (var-swap! *method* update :locals assoc (:uid lb) lb)
             lb
@@ -14209,7 +14237,7 @@
                                                         (binding [*local-env*        (var-get! *local-env*)
                                                                   *last-local-num*   (var-get! *last-local-num*)
                                                                   *in-catch-finally* true]
-                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil, false)
+                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
                                                                   #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
                                                                 (conj catches (CatchClause'new lb, handler))
                                                             )
@@ -14434,7 +14462,7 @@
             gen (Gen''dup gen)
             gen (Gen''ifNull gen, l'null)
             gen (Gen''getStatic gen, "Boolean/FALSE")
-            gen (Gen''visitJumpInsn gen, :Opcode'IF_ACMPEQ, l'false)
+            gen (Gen''ifCmpEq gen, l'false)
             gen (Expr'''emit (:then this), context, fun, gen)
             gen (Gen''goTo gen, l'end)
             _ (Gen''mark gen, l'null)
@@ -14761,14 +14789,13 @@
 (about #_"LocalBinding"
     (defr LocalBinding [])
 
-    (defn #_"LocalBinding" LocalBinding'new [#_"int" idx, #_"Symbol" sym, #_"Expr" init, #_"boolean" isArg]
+    (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init]
         (merge (class! LocalBinding)
             (hash-map
                 #_"int" :uid (Compiler'nextUniqueId)
-                #_"int" :idx idx
+                #_"int" :idx (Compiler'nextLocalNum)
                 #_"Symbol" :sym sym
                 #_"Expr" :init init
-                #_"boolean" :isArg isArg
 
                 #_"String" :name (:name sym)
             )
@@ -14861,7 +14888,7 @@
                       *in-return-context* true]
                 ;; register 'this' as local 0
                 (if (some? (:thisName fun))
-                    (Compiler'registerLocal (symbol (:thisName fun)), nil, false)
+                    (Compiler'registerLocal (symbol (:thisName fun)), nil)
                     (Compiler'nextLocalNum)
                 )
                 (let [fm (assoc fm :reqParms (vector) :restParm nil :argLocals (vector))
@@ -14876,7 +14903,7 @@
                                                 (recur fm true (inc i))
                                             )
                                         :else
-                                            (let [#_"LocalBinding" lb (Compiler'registerLocal p, nil, true)
+                                            (let [#_"LocalBinding" lb (Compiler'registerLocal p, nil)
                                                   fm (update fm :argLocals conj lb)]
                                                 (if-not rest?
                                                     (update fm :reqParms conj lb)
@@ -14911,11 +14938,9 @@
                 #_"map" :keywords (hash-map)
                 #_"map" :vars (hash-map)
                 #_"vector" :constants nil
-                #_"boolean" :onceOnly false
                 #_"vector" :methods nil
                 ;; optional variadic overload (there can only be one)
                 #_"FnMethod" :variadicMethod nil
-                #_"boolean" :hasMeta false
 
                 #_"map" :code nil
             )
@@ -14927,21 +14952,18 @@
     )
 
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (ß .newInstance (:code this))
+        (if (FnExpr''isVariadic this) (RestFn'new) (Fn'new))
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
         (if (contains? (get (var-get! *closes*) (:uid this)) (:uid lb))
             (let [
-                gen (Gen''loadThis gen)
+                gen (Gen''loadVar gen, 0) ;; this
                 gen (Gen''getField gen, (:name lb))
             ]
                 gen
             )
-            (if (:isArg lb)
-                (Gen''loadArg gen, (dec (:idx lb)))
-                (Gen''loadVar gen, (:idx lb))
-            )
+            (Gen''loadVar gen, (:idx lb))
         )
     )
 
@@ -15103,10 +15125,7 @@
         (let [
             gen (Gen''newInstance gen)
             gen (Gen''dup gen)
-            gen
-                (when (:hasMeta this) => gen
-                    (Gen''push gen, nil)
-                )
+            gen (Gen''push gen, nil) ;; _meta
             gen
                 (loop-when-recur [gen gen #_"seq" s (seq (:closesExprs this))]
                                  (some? s)
@@ -15152,55 +15171,26 @@
         )
     )
 
-    (defn- #_"gen" FnExpr''emitConstants [#_"FnExpr" this, #_"gen" gen]
-        (loop-when [gen gen #_"int" i 0] (< i (count (:constants this))) => gen
-            (let [
-                gen
-                    (when (contains? (var-get! *used-constants*) i) => gen
-                        (let [gen (FnExpr''emitValue this, (nth (:constants this) i), gen)]
-                            (Gen''putStatic gen, (Compiler'constantName i))
-                        )
-                    )
-            ]
-                (recur gen (inc i))
-            )
-        )
-    )
-
-    (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"String" superName, #_"boolean" _oneTimeUse]
+    (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"boolean" _once?]
         (binding [*used-constants* (hash-set)]
             (let [
-                this (assoc this :code (hash-map :'name (:name this), :'super superName))
-                this
-                    (when (:hasMeta this) => this
-                        (update this :code ClassVisitor''visitField false, "__meta")
-                    )
-                ;; instance fields for closed-overs
-                this
-                    (loop-when [this this #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => this
-                        (let [#_"LocalBinding" lb (first s)]
-                            (recur (update this :code ClassVisitor''visitField false, (:name lb)) (next s))
-                        )
-                    )
-                ;; ctor that takes closed-overs and inits base + fields
+                this (assoc this :code (hash-map :'name (:name this)))
                 this
                     (let [
                         #_"gen" gen (Gen'new)
                         gen
-                            (when (:hasMeta this) => gen
-                                (let [
-                                    gen (Gen''loadThis gen)
-                                    gen (Gen''loadVar gen, 1)
-                                    gen (Gen''putField gen, "__meta")
-                                ]
-                                    gen
-                                )
+                            (let [
+                                gen (Gen''loadVar gen, 0) ;; this
+                                gen (Gen''loadVar gen, 1) ;; meta
+                                gen (Gen''putField gen, "_meta")
+                            ]
+                                gen
                             )
                         [this gen]
-                            (loop-when [this this gen gen #_"int" i (if (:hasMeta this) 2 1) #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
+                            (loop-when [this this gen gen #_"int" i 2 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
                                 (let [
                                     #_"LocalBinding" lb (first s)
-                                    gen (Gen''loadThis gen)
+                                    gen (Gen''loadVar gen, 0) ;; this
                                     gen (Gen''loadVar gen, i)
                                     gen (Gen''putField gen, (:name lb))
                                 ]
@@ -15212,73 +15202,51 @@
                         (assoc-in this [:code :'init] gen)
                     )
                 this
-                    (when (:hasMeta this) => this
-                        (let [
-                            ;; ctor that takes closed-overs but not meta
-                            this
-                                (let [
-                                    #_"gen" gen (Gen'new)
-                                    gen (Gen''loadThis gen)
-                                    gen (Gen''push gen, nil) ;; nil meta
-                                    gen (Gen''loadArgs gen)
-                                    gen (Gen''invokeConstructor gen, :'init)
-                                    gen (Gen''returnValue gen)
-                                ]
-                                    (assoc-in this [:code :'init-meta] gen)
-                                )
-                            ;; meta()
-                            this
-                                (let [
-                                    #_"gen" gen (Gen'new)
-                                    gen (Gen''loadThis gen)
-                                    gen (Gen''getField gen, "__meta")
-                                    gen (Gen''returnValue gen)
-                                ]
-                                    (assoc-in this [:code :IMeta'''meta] gen)
-                                )
-                            ;; withMeta()
-                            this
-                                (let [
-                                    #_"gen" gen (Gen'new)
-                                    gen (Gen''newInstance gen)
-                                    gen (Gen''dup gen)
-                                    gen (Gen''loadArg gen, 0)
-                                    gen
-                                        (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => gen
-                                            (let [
-                                                gen (Gen''loadThis gen)
-                                                gen (Gen''getField gen, (:name (first s)))
-                                            ]
-                                                (recur gen (next s))
-                                            )
-                                        )
-                                    gen (Gen''invokeConstructor gen, :'init)
-                                    gen (Gen''returnValue gen)
-                                ]
-                                    (assoc-in this [:code :IObj'''withMeta] gen)
-                                )
-                        ]
-                            this
-                        )
+                    (let [
+                        #_"gen" gen (Gen'new)
+                        gen (Gen''loadVar gen, 0) ;; this
+                        gen (Gen''getField gen, "_meta")
+                        gen (Gen''returnValue gen)
+                    ]
+                        (assoc-in this [:code :IMeta'''meta] gen)
                     )
-                this (FnExpr''emitMethods this)
-                ;; static fields for constants
-                this
-                    (loop-when [this this #_"int" i 0] (< i (count (:constants this))) => this
-                        (let [
-                            this
-                                (when (contains? (var-get! *used-constants*) i) => this
-                                    (update this :code ClassVisitor''visitField true, (Compiler'constantName i))
-                                )
-                        ]
-                            (recur this (inc i))
-                        )
-                    )
-                ;; static init for constants, keywords and vars
                 this
                     (let [
                         #_"gen" gen (Gen'new)
-                        gen (FnExpr''emitConstants this, gen)
+                        gen (Gen''newInstance gen)
+                        gen (Gen''dup gen)
+                        gen (Gen''loadVar gen, 1) ;; meta
+                        gen
+                            (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => gen
+                                (let [
+                                    gen (Gen''loadVar gen, 0) ;; this
+                                    gen (Gen''getField gen, (:name (first s)))
+                                ]
+                                    (recur gen (next s))
+                                )
+                            )
+                        gen (Gen''invokeConstructor gen, :'init)
+                        gen (Gen''returnValue gen)
+                    ]
+                        (assoc-in this [:code :IObj'''withMeta] gen)
+                    )
+                this (FnExpr''emitMethods this)
+                this
+                    (let [
+                        #_"gen" gen (Gen'new)
+                        gen
+                            (loop-when [gen gen #_"int" i 0] (< i (count (:constants this))) => gen
+                                (let [
+                                    gen
+                                        (when (contains? (var-get! *used-constants*) i) => gen
+                                            (let [gen (FnExpr''emitValue this, (nth (:constants this) i), gen)]
+                                                (Gen''putStatic gen, (Compiler'constantName i))
+                                            )
+                                        )
+                                ]
+                                    (recur gen (inc i))
+                                )
+                            )
                         gen (Gen''returnValue gen)
                     ]
                         (assoc-in this [:code :'clinit] gen)
@@ -15290,12 +15258,7 @@
     )
 
     (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form, #_"String" name]
-        (let [#_"meta" fmeta (meta form)
-              #_"FnMethod" owner (var-get! *method*)
-              #_"FnExpr" fn (FnExpr'new)
-              fn (when (some? (meta (first form))) => fn
-                    (assoc fn :onceOnly (boolean (get (meta (first form)) :once)))
-                )
+        (let [#_"FnMethod" owner (var-get! *method*)
               #_"String" basename (if (some? owner) (:name (:fun owner)) (:name (:name *arbace-ns*)))
               [#_"Symbol" nm name]
                 (if (symbol? (second form))
@@ -15308,17 +15271,17 @@
                         :else         [nil name]
                     )
                 )
-              fn (assoc fn :name (str basename "$" name))
-              fn
+              #_"FnExpr" fun (assoc (FnExpr'new) :name (str basename "$" name))
+              fun
                 (binding [*constants*    (vector)
                           *constant-ids* (IdentityHashMap.)
                           *keywords*     (hash-map)
                           *vars*         (hash-map)
                           *no-recur*     false]
                     ;; arglist might be preceded by symbol naming this fn
-                    (let [[fn form]
-                            (when (some? nm) => [fn form]
-                                [(assoc fn :thisName (:name nm)) (cons (symbol! 'fn*) (next (next form)))]
+                    (let [[fun form]
+                            (when (some? nm) => [fun form]
+                                [(assoc fun :thisName (:name nm)) (cons (symbol! 'fn*) (next (next form)))]
                             )
                           ;; now (fn [args] body...) or (fn ([args] body...) ([args2] body2...) ...)
                           ;; turn former into latter
@@ -15329,7 +15292,7 @@
                           #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
                           #_"FnMethod" variadic
                             (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
-                                (let [#_"FnMethod" f (FnMethod'parse fn, (first s))
+                                (let [#_"FnMethod" f (FnMethod'parse fun, (first s))
                                       variadic
                                         (if (FnMethod''isVariadic f)
                                             (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
@@ -15358,7 +15321,7 @@
                                                  [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
                                               => (if (some? variadic) (conj methods variadic) methods)
                                 )]
-                            (assoc fn
+                            (assoc fun
                                 :methods methods
                                 :variadicMethod variadic
                                 :keywords (var-get! *keywords*)
@@ -15368,11 +15331,8 @@
                         )
                     )
                 )
-              fn (assoc fn :hasMeta (pos? (count fmeta)))
-              fn (FnExpr''compile fn, (if (FnExpr''isVariadic fn) "arbace/core/RestFn" "arbace/core/Fn"), (:onceOnly fn))]
-            (when (:hasMeta fn) => fn
-                (MetaExpr'new fn, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), fmeta))
-            )
+              fun (FnExpr''compile fun, (boolean (:once (meta (first form)))))]
+            (MetaExpr'new fun, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
         )
     )
 
@@ -15529,7 +15489,7 @@
                                     (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
                                         (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
                                             (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                (recur (conj lbs (Compiler'registerLocal sym, nil, false)) (+ i 2))
+                                                (recur (conj lbs (Compiler'registerLocal sym, nil)) (+ i 2))
                                             )
                                         )
                                     )
@@ -15659,7 +15619,7 @@
                                                                     (when isLoop
                                                                         (push-thread-bindings (hash-map (var! *no-recur*) false))
                                                                     )
-                                                                    (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init, false)]
+                                                                    (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init)]
                                                                         [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
                                                                     )
                                                                     (finally
@@ -15786,17 +15746,10 @@
                                   => gen
                     )
                 gen
-                    (loop-when [gen gen #_"seq" s (rseq (:loopLocals this))] (some? s) => gen
-                        (let [
-                            #_"LocalBinding" lb (first s)
-                            gen
-                                (if (:isArg lb)
-                                    (Gen''storeArg gen, (dec (:idx lb)))
-                                    (Gen''storeVar gen, (:idx lb))
-                                )
-                        ]
-                            (recur gen (next s))
-                        )
+                    (loop-when-recur [gen gen #_"seq" s (rseq (:loopLocals this))]
+                                     (some? s)
+                                     [(Gen''storeVar gen, (:idx (first s))) (next s)]
+                                  => gen
                     )
             ]
                 (Gen''goTo gen, l'loop)
@@ -15881,9 +15834,9 @@
         (when (CaseExpr''isShiftMasked this) => gen
             (let [
                 gen (Gen''push gen, (:shift this))
-                gen (Gen''visitInsn gen, :Opcode'ISHR)
+                gen (Gen''shr gen)
                 gen (Gen''push gen, (:mask this))
-                gen (Gen''visitInsn gen, :Opcode'IAND)
+                gen (Gen''and gen)
             ]
                 gen
             )
@@ -15932,7 +15885,7 @@
             gen (Expr'''emit test, :Context'EXPRESSION, fun, gen)
             gen
                 (if (= (:testType this) :hash-identity)
-                    (Gen''visitJumpInsn gen, :Opcode'IF_ACMPNE, l'default)
+                    (Gen''ifCmpNe gen, l'default)
                     (let [
                         gen (Gen''invokeStatic gen, "Util'equiv")
                         gen (Gen''ifZero gen, l'default)
