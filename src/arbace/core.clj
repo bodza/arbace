@@ -5299,7 +5299,7 @@
     (declare VSeq''seq VSeq''first VSeq''next)
 
     (defq VSeq [#_"meta" _meta, #_"vector" v, #_"int" i] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (VSeq''seq _)) (first [_] (VSeq''first _)) (next [_] (VSeq''next _))
+        clojure.lang.ISeq (seq [_] (VSeq''seq _)) (first [_] (VSeq''first _)) (next [_] (VSeq''next _)) (more [_] (or (.next _) ()))
         clojure.lang.Sequential
     )
 
@@ -10151,10 +10151,11 @@
 )
 
 (about #_"PersistentVector"
-    (declare PersistentVector''seq PersistentVector''conj PersistentVector''empty PersistentVector''nth)
+    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''nth)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
+        clojure.lang.Reversible (rseq [_] (PersistentVector''rseq _))
         clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _))
         clojure.lang.IPersistentVector
         clojure.lang.Counted (count [_] (:cnt _))
@@ -11958,7 +11959,7 @@
  ; Evaluates the exprs in a lexical context in which the symbols in the
  ; binding-forms are bound to their respective init-exprs or parts therein.
  ;;
-(§ defmacro let [bindings & body]
+(defmacro let [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
         (even? (count bindings)) "an even number of forms in binding vector"
@@ -12029,7 +12030,7 @@
  ; the binding-forms are bound to their respective init-exprs or parts
  ; therein. Acts as a recur target.
  ;;
-(§ defmacro loop [bindings & body]
+(defmacro loop [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
         (even? (count bindings)) "an even number of forms in binding vector"
@@ -16782,7 +16783,8 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
-            (binding [*arbace-ns* *arbace-ns*]
+            (binding [*arbace-ns* *arbace-ns*
+                      *local-env* (hash-map)]
                 (loop [#_"Object" val nil]
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
@@ -16885,10 +16887,14 @@
 )
 
 (defn repl []
-    (-/print "\033[31mArbace \033[32m=> \033[0m")
-    (.flush -/*out*)
-    (-> (read) (eval) (-/prn))
-    (recur)
+    (binding [*local-env* (hash-map)]
+        (loop []
+            (-/print "\033[31mArbace \033[32m=> \033[0m")
+            (.flush -/*out*)
+            (-> (read) (eval) (-/prn))
+            (recur)
+        )
+    )
 )
 )
 
