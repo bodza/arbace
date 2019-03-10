@@ -3575,10 +3575,14 @@
 (about #_"arbace.Cons"
 
 (about #_"Cons"
-    (declare Cons''seq Cons''next)
+    (declare Cons''withMeta Cons''seq Cons''next Cons''count)
 
     (defq Cons [#_"meta" _meta, #_"Object" car, #_"seq" cdr] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _))
+        clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
+        clojure.lang.IObj (withMeta [_, m] (Cons''withMeta _, m))
+        clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.IPersistentCollection (count [_] (Cons''count _))
+        clojure.lang.Sequential
     )
 
     #_inherit
@@ -5735,7 +5739,7 @@
 
     (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] #_"SeqForm"
         clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _)) (more [_] (or (.next _) ()))
-        clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o))
+        clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o)) (count [_] (:cnt _))
     )
 
     #_inherit
@@ -10853,7 +10857,7 @@
 
     (defm PersistentQueue IObject
         (IObject'''equals => PersistentQueue''equals)
-        ;; abstract IObject toString
+        (IObject'''toString => print-string)
     )
 
     (defm PersistentQueue Hashed
@@ -11554,7 +11558,7 @@
 (about #_"arbace.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases] RecForm)
+    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases] #_RecForm)
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
@@ -11581,9 +11585,11 @@
  ; returns the namespace named by it, throwing an exception if not found.
  ;;
 (defn #_"Namespace" the-ns [x]
-    (if (satisfies? Namespace x)
-        x
-        (or (find-ns x) (throw! (str "no namespace: " x " found")))
+    (when-not (instance? clojure.lang.Namespace x) => x
+        (if (satisfies? Namespace x)
+            x
+            (or (find-ns x) (throw! (str "no namespace: " x " found")))
+        )
     )
 )
 
@@ -11991,7 +11997,7 @@
  ;
  ; Defines a function.
  ;;
-(§ defmacro fn [& s]
+(defmacro fn [& s]
     (let [name (when (symbol? (first s)) (first s)) s (if name (next s) s)
           s (if (vector? (first s))
                 (list s)
@@ -12080,31 +12086,16 @@
         )
     )
 
-    (defn- sigs [s]
-        (assert-valid-fdecl s)
-        (letfn [(sig- [s]
-                    (let [v (first s) s (next s) v (if (= '&form (first v)) (subvec v 2) v)]
-                        (let-when [m (first s)] (and (map? m) (next s)) => v
-                            (with-meta v (conj (or (meta v) (hash-map)) m))
-                        )
-                    )
-                )]
-            (when (seq? (first s)) => (list (sig- s))
-                (seq (map sig- s))
-            )
-        )
-    )
-
     ;;;
      ; Same as (def name (fn [params*] exprs*)) or (def name (fn ([params*] exprs*)+)) with any attrs added to the var metadata.
      ;;
-    (§ defmacro defn [&form &env fname & s]
+    (defmacro defn [fname & s]
         ;; note: cannot delegate this check to def because of the call to (with-meta name ...)
         (when (symbol? fname) => (throw! "first argument to defn must be a symbol")
             (let [m (if (map?    (first s)) (first s) (hash-map))
                   s (if (map?    (first s)) (next s)   s)
                   s (if (vector? (first s)) (list s)   s)
-                  m (conj {:arglists (list 'quote (sigs s))} m)
+                  _ (assert-valid-fdecl s)
                   m (let [inline (:inline m) ifn (first inline) iname (second inline)]
                         (when (and (= 'fn ifn) (not (symbol? iname))) => m
                             ;; inserts the same fn name to the inline fn if it does not have one
@@ -12121,7 +12112,7 @@
      ; Like defn, but the resulting function name is declared as a macro
      ; and will be used as a macro by the compiler when it is called.
      ;;
-    (§ defmacro defmacro [&form &env name & args]
+    (§ defmacro defmacro [name & args]
         (let [[m s] (split-with map? args) s (if (vector? (first s)) (list s) s)
               s (map (fn [bindings & body] (cons (apply vector '&form '&env bindings) body)) s)]
             `(do (defn ~name ~@m ~@s) (Var''setMacro (var ~name)) (var ~name))
@@ -16066,7 +16057,7 @@
                     (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
                         (Compiler'eval (first s))
                     )
-                (and (coll? form) (not (and (symbol? (first form)) (.startsWith (:name (first form)), "def"))))
+                (and (coll? form) (not (and (symbol? (first form)) (.startsWith (#_:name name (first form)), "def"))))
                     (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list (symbol! 'fn*) [] form))]
                         (IFn'''invoke (Expr'''eval fexpr))
                     )
@@ -16883,7 +16874,7 @@
         (intern *arbace-ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
     )
 
-    (alias (symbol "-"), *arbace-ns*)
+    (alias (symbol "-"), *ns*)
 )
 
 (defn repl []
