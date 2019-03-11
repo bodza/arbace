@@ -694,6 +694,7 @@
         String               (Hashed'''hash [s] (Murmur3'hashInt (.hashCode s)))
         Number               (Hashed'''hash [n] (Murmur3'hashLong (.longValue n)))
         BigInteger           (Hashed'''hash [i] (if (< (.bitLength i) 64) (Murmur3'hashLong (.longValue i)) (.hashCode i)))
+        clojure.lang.Ratio   (Hashed'''hash [r] (.hashCode r))
         clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
     )
 
@@ -706,9 +707,11 @@
      ;;
     (defn f'hash [x] (if (some? x) (Hashed'''hash x) (int 0)))
 
+    (defn f'hashcode [x] (if (some? x) (.hashCode x) (int 0)))
+
     (defn hash-combine [seed x]
         ;; a la boost
-        (bit-xor seed (+ (f'hash x) (int! 0x9e3779b9) (<< seed 6) (>> seed 2)))
+        (bit-xor seed (+ (f'hashcode x) (int! 0x9e3779b9) (<< seed 6) (>> seed 2)))
     )
 )
 
@@ -1842,6 +1845,7 @@
     )
 
     (-/prefer-method -/print-method MapForm'iface clojure.lang.ISeq)
+    (-/prefer-method -/print-method MapForm'iface java.util.Map)
 
     (-/defmethod -/print-method SetForm'iface [#_"Seqable" q, #_"Writer" w]
         (print-sequential "#{" pr-on " " "}" q w)
@@ -2344,24 +2348,16 @@
 (about #_"arbace.Ratio"
 
 (about #_"Ratio"
-    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d])
+    (declare Ratio''hashcode)
+
+    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d]
+        java.lang.Object (hashCode [_] (Ratio''hashcode _))
+    )
 
     (§ inherit Ratio #_"Number")
 
     (defn #_"Ratio" Ratio'new [#_"BigInteger" numerator, #_"BigInteger" denominator]
         (Ratio'class. (anew [numerator, denominator]))
-    )
-
-    (defn- #_"int" Ratio''hash [#_"Ratio" this]
-        (bit-xor (f'hash (:n this)) (f'hash (:d this)))
-    )
-
-    (defn- #_"boolean" Ratio''equals [#_"Ratio" this, #_"Object" that]
-        (and (satisfies? Ratio that) (= (:n that) (:n this)) (= (:d that) (:d this)))
-    )
-
-    (defn- #_"String" Ratio''toString [#_"Ratio" this]
-        (str (:n this) "/" (:d this))
     )
 
     (defn #_"BigInteger" Ratio''bigIntegerValue [#_"Ratio" this]
@@ -2376,8 +2372,20 @@
         (.intValue (Ratio''bigIntegerValue this))
     )
 
+    (defn- #_"int" Ratio''hashcode [#_"Ratio" this]
+        (bit-xor (.hashCode (:n this)) (.hashCode (:d this)))
+    )
+
+    (defn- #_"boolean" Ratio''equals [#_"Ratio" this, #_"Object" that]
+        (and (satisfies? Ratio that) (= (:n that) (:n this)) (= (:d that) (:d this)))
+    )
+
+    (defn- #_"String" Ratio''toString [#_"Ratio" this]
+        (str (:n this) "/" (:d this))
+    )
+
     (defm Ratio Hashed
-        (Hashed'''hash => Ratio''hash)
+        (Hashed'''hash => Ratio''hashcode)
     )
 
     (defm Ratio IObject
@@ -3008,7 +3016,7 @@
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
-        java.lang.Object (equals [_, o] (Symbol''equals _, o))
+        java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (.hashCode (:name _)) (:ns _)))
     )
 
     #_inherit
@@ -3126,7 +3134,7 @@
 
     (defq Keyword [#_"Symbol" sym, #_"int" _hash]
         clojure.lang.IHashEq (hasheq [_] (:_hash _))
-        java.lang.Object (equals [_, o] (Keyword''equals _, o))
+        java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (.hashCode (:sym _)) (int! 0x9e3779b9)))
         clojure.lang.IFn (invoke [_, a] (Keyword''invoke _, a))
     )
 
@@ -3890,7 +3898,7 @@
     (declare Range''seq Range''next)
 
     (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _))
+        clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _)) (more [_] (or (.next _) ()))
     )
 
     #_inherit
@@ -4262,7 +4270,7 @@
     (declare LazySeq''seq LazySeq''first LazySeq''next)
 
     (defq LazySeq [#_"meta" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] #_"SeqForm"
-        clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _))
+        clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _)) (more [_] (or (.next _) ()))
         clojure.lang.Sequential
     )
 
@@ -7935,7 +7943,9 @@
 )
 
 (about #_"BlackVal"
-    (defq BlackVal [#_"key" key, #_"value" val])
+    (defq BlackVal [#_"key" key, #_"value" val]
+        java.util.Map$Entry (getKey [_] (:key _)) (getValue [_] (:val _))
+    )
 
     #_inherit
     (defm BlackVal Black TNode AMapEntry APersistentVector AFn)
@@ -8075,7 +8085,9 @@
 )
 
 (about #_"BlackBranchVal"
-    (defq BlackBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
+    (defq BlackBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
+        java.util.Map$Entry (getKey [_] (:key _)) (getValue [_] (:val _))
+    )
 
     #_inherit
     (defm BlackBranchVal BlackBranch Black TNode AMapEntry APersistentVector AFn)
@@ -8247,7 +8259,9 @@
 )
 
 (about #_"RedVal"
-    (defq RedVal [#_"key" key, #_"value" val])
+    (defq RedVal [#_"key" key, #_"value" val]
+        java.util.Map$Entry (getKey [_] (:key _)) (getValue [_] (:val _))
+    )
 
     #_inherit
     (defm RedVal Red TNode AMapEntry APersistentVector AFn)
@@ -8415,7 +8429,9 @@
 )
 
 (about #_"RedBranchVal"
-    (defq RedBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
+    (defq RedBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
+        java.util.Map$Entry (getKey [_] (:key _)) (getValue [_] (:val _))
+    )
 
     #_inherit
     (defm RedBranchVal RedBranch Red TNode AMapEntry APersistentVector AFn)
@@ -8580,7 +8596,12 @@
  ; See Okasaki, Kahrs, Larsen, et al.
  ;;
 (about #_"PersistentTreeMap"
-    (defq PersistentTreeMap [#_"meta" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm)
+    (declare PersistentTreeMap''seq)
+
+    (defq PersistentTreeMap [#_"meta" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm
+        clojure.lang.Seqable (seq [_] (PersistentTreeMap''seq _))
+        java.util.Map (entrySet [_] (-/into #{} _))
+    )
 
     #_inherit
     (defm PersistentTreeMap APersistentMap AFn)
@@ -11558,7 +11579,7 @@
 (about #_"arbace.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases] #_RecForm)
+    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
@@ -12112,9 +12133,9 @@
      ; Like defn, but the resulting function name is declared as a macro
      ; and will be used as a macro by the compiler when it is called.
      ;;
-    (§ defmacro defmacro [name & args]
+    (defmacro defmacro [name & args]
         (let [[m s] (split-with map? args) s (if (vector? (first s)) (list s) s)
-              s (map (fn [bindings & body] (cons (apply vector '&form '&env bindings) body)) s)]
+              s (map (fn [[bindings & body]] (cons (apply vector '&form '&env bindings) body)) s)]
             `(do (defn ~name ~@m ~@s) (Var''setMacro (var ~name)) (var ~name))
         )
     )
@@ -12512,8 +12533,8 @@
  ;;
 (defn- maybe-min-hash [hashes]
     (first
-        (filter (fn [[s m]] (apply distinct? (map #(shift-mask s m %) hashes)))
-            (for [mask (map #(dec (<< 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
+        (-/filter (fn [[s m]] (apply distinct? (map #(shift-mask s m %) hashes)))
+            (-/for [mask (map #(dec (<< 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
                 [shift mask]
             )
         )
@@ -12539,7 +12560,7 @@
  ; false otherwise.
  ;;
 (defn- fits-table? [ints]
-    (< (- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size)
+    (< (-/- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size)
 )
 
 ;;;
@@ -12579,7 +12600,7 @@
     (let [buckets
             (loop-when-recur [m (hash-map) ks tests vs thens]
                              (and ks vs)
-                             [(update m (f'hash (first ks)) (fnil conj (vector)) [(first ks) (first vs)]) (next ks) (next vs)]
+                             [(update m (f'hashcode (first ks)) (fnil conj (vector)) [(first ks) (first vs)]) (next ks) (next vs)]
                           => m
             )
           assoc-multi
@@ -12612,17 +12633,17 @@
  ; post-switch equivalence checking must not be done (occurs with hash collisions).
  ;;
 (defn- prep-hashes [expr-sym default tests thens]
-    (let [hashes (into (hash-set) (map f'hash tests))]
+    (let [hashes (into (hash-set) (map f'hashcode tests))]
         (if (= (count tests) (count hashes))
             (if (fits-table? hashes)
                 ;; compact case ints, no shift-mask
-                [0 0 (case-map f'hash identity tests thens) :compact]
+                [0 0 (case-map f'hashcode identity tests thens) :compact]
                 (let [[shift mask] (or (maybe-min-hash hashes) [0 0])]
                     (if (zero? mask)
                         ;; sparse case ints, no shift-mask
-                        [0 0 (case-map f'hash identity tests thens) :sparse]
+                        [0 0 (case-map f'hashcode identity tests thens) :sparse]
                         ;; compact case ints, with shift-mask
-                        [shift mask (case-map #(shift-mask shift mask (f'hash %)) identity tests thens) :compact]
+                        [shift mask (case-map #(shift-mask shift mask (f'hashcode %)) identity tests thens) :compact]
                     )
                 )
             )
@@ -12664,7 +12685,7 @@
  ; expression, a vector can be used to match a list if needed. The
  ; test-constants need not be all of the same type.
  ;;
-(§ defmacro case [e & clauses]
+(defmacro case [e & clauses]
     (let [e' (gensym)
           default
             (when (odd? (count clauses)) => `(throw! (str "no matching clause: " ~e'))
@@ -14925,11 +14946,13 @@
                                             )
                                         :else
                                             (let [#_"LocalBinding" lb (Compiler'registerLocal p, nil)
-                                                  fm (update fm :argLocals conj lb)]
-                                                (if-not rest?
-                                                    (update fm :reqParms conj lb)
-                                                    (assoc fm :restParm lb)
-                                                )
+                                                  fm (update fm :argLocals conj lb)
+                                                  fm
+                                                    (if-not rest?
+                                                        (update fm :reqParms conj lb)
+                                                        (assoc fm :restParm lb)
+                                                    )]
+                                                (recur fm rest? (inc i))
                                             )
                                     )
                                 )
@@ -15824,7 +15847,7 @@
     (defn- #_"gen" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-            gen (Gen''invoke gen, 'f'hash)
+            gen (Gen''invoke gen, 'f'hashcode)
         ]
             (CaseExpr''emitShiftMask this, gen)
         )
