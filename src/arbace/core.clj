@@ -135,7 +135,7 @@
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
-    [java.util Arrays Comparator IdentityHashMap]
+    [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
     [arbace.math BigInteger]
@@ -11325,13 +11325,11 @@
         )
     )
 
-(declare the-ns)
-
-(defn- var* [ns name] (Var'intern (the-ns (Symbol'intern nil, ns)), (Symbol'intern nil, name)))
-
 (declare resolve)
 
 (defmacro var! [v] `(resolve '~v))
+
+(declare the-ns)
 
 ;;;
  ; Finds or creates a var named by the symbol name in the namespace
@@ -13358,9 +13356,6 @@
     (defp AssignExpr)
     (defp EmptyExpr)
     (defp ConstantExpr)
-    (defp NumberExpr)
-    (defp StringExpr)
-    (defp KeywordExpr)
     (defp UnresolvedVarExpr)
     (defp VarExpr)
     (defp TheVarExpr)
@@ -13419,8 +13414,6 @@
     (defn- #_"gen" Gen''and             [#_"gen" gen]                   (conj gen :and))
     (defn- #_"gen" Gen''anew            [#_"gen" gen]                   (conj gen :anew))
     (defn- #_"gen" Gen''aset            [#_"gen" gen]                   (conj gen :aset))
-    (defn- #_"gen" Gen''const           [#_"gen" gen, #_"int" index]    (conj gen [:const index]))
-    (defn- #_"gen" Gen''const!          [#_"gen" gen, #_"int" index]    (conj gen [:const! index]))
     (defn- #_"gen" Gen''create          [#_"gen" gen]                   (conj gen :create))
     (defn- #_"gen" Gen''dup             [#_"gen" gen]                   (conj gen :dup))
     (defn- #_"gen" Gen''get             [#_"gen" gen, #_"Symbol" name]  (conj gen [:get name]))
@@ -13554,11 +13547,6 @@
     (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
     (def #_"Var" ^:dynamic *loop-locals*       ) ;; vector<localbinding>
     (def #_"Var" ^:dynamic *loop-label*        ) ;; label
-    (def #_"Var" ^:dynamic *constants*         ) ;; vector<object>
-    (def #_"Var" ^:dynamic *constant-ids*      ) ;; IdentityHashMap
-    (def #_"Var" ^:dynamic *used-constants*    ) ;; IPersistentSet
-    (def #_"Var" ^:dynamic *keywords*          ) ;; keyword->constid
-    (def #_"Var" ^:dynamic *vars*              ) ;; var->constid
     (def #_"Var" ^:dynamic *no-recur*          ) ;; Boolean
     (def #_"Var" ^:dynamic *in-catch-finally*  ) ;; Boolean
     (def #_"Var" ^:dynamic *in-return-context* ) ;; Boolean
@@ -13638,62 +13626,34 @@
         )
     )
 
-    (defn- #_"int" Compiler'registerConstant [#_"Object" o]
-        (when (bound? (var! *constants*)) => -1
-            (or (.get (var-get! *constant-ids*), o)
-                (let [#_"int" n (count (var-get! *constants*))]
-                    (var-swap! *constants* conj o)
-                    (.put (var-get! *constant-ids*), o, n)
-                    n
-                )
-            )
-        )
-    )
-
-    (defn- #_"void" Compiler'registerVar [#_"Var" var]
-        (when (and (bound? (var! *vars*)) (nil? (get (var-get! *vars*) var)))
-            (var-swap! *vars* assoc var (Compiler'registerConstant var))
-        )
-        nil
-    )
-
-    (defn #_"Var" Compiler'lookupVar
-        ([#_"Symbol" sym, #_"boolean" internNew] (Compiler'lookupVar sym, internNew, true))
-        ([#_"Symbol" sym, #_"boolean" internNew, #_"boolean" registerMacro]
-            (let [sym (symbol! sym)]
-                ;; note - ns-qualified vars in other namespaces must already exist
-                (let [#_"Var" var
-                        (cond
-                            (some? (:ns sym))
-                                (when-some [#_"Namespace" ns (Compiler'namespaceFor sym)]
-                                    (let [#_"Symbol" name (symbol (:name sym))]
-                                        (if (and internNew (= ns *arbace-ns*))
-                                            (Namespace''intern ns, name)
-                                            (Namespace''findInternedVar ns, name)
-                                        )
-                                    )
-                                )
-                            (= sym 'ns)    #'ns
-                            (= sym 'in-ns) #'in-ns
-                            :else ;; is it mapped?
-                                (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
-                                    (cond
-                                        (nil? o) ;; introduce a new var in the current ns
-                                            (when internNew
-                                                (Namespace''intern *arbace-ns*, (symbol (:name sym)))
-                                            )
-                                        (var? o)
-                                            o
-                                        :else
-                                            (throw! (str "expecting var, but " sym " is mapped to " o))
-                                    )
-                                )
-                        )]
-                    (when (and (some? var) (or (not (get (meta var) :macro)) registerMacro))
-                        (Compiler'registerVar var)
+    (defn #_"Var" Compiler'lookupVar [#_"Symbol" sym, #_"boolean" intern?]
+        (let [sym (symbol! sym)]
+            ;; note - ns-qualified vars in other namespaces must already exist
+            (cond
+                (some? (:ns sym))
+                    (when-some [#_"Namespace" ns (Compiler'namespaceFor sym)]
+                        (let [#_"Symbol" name (symbol (:name sym))]
+                            (if (and intern? (= ns *arbace-ns*))
+                                (Namespace''intern ns, name)
+                                (Namespace''findInternedVar ns, name)
+                            )
+                        )
                     )
-                    var
-                )
+                (= sym 'ns)    #'ns
+                (= sym 'in-ns) #'in-ns
+                :else ;; is it mapped?
+                    (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
+                        (cond
+                            (nil? o) ;; introduce a new var in the current ns
+                                (when intern?
+                                    (Namespace''intern *arbace-ns*, (symbol (:name sym)))
+                                )
+                            (var? o)
+                                o
+                            :else
+                                (throw! (str "expecting var, but " sym " is mapped to " o))
+                        )
+                    )
             )
         )
     )
@@ -13702,7 +13662,7 @@
         ;; no local macros for now
         (when-not (and (symbol? op) (some? (Compiler'referenceLocal op)))
             (when (or (symbol? op) (var? op))
-                (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false, false))]
+                (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (and (some? v) (get (meta v) :macro))
                         (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
                             v
@@ -13915,80 +13875,6 @@
     )
 )
 
-(about #_"NumberExpr"
-    (defr NumberExpr [])
-
-    (defn #_"NumberExpr" NumberExpr'new [#_"Number" n]
-        (merge (class! NumberExpr)
-            (hash-map
-                #_"Number" :n n
-                #_"int" :id (Compiler'registerConstant n)
-            )
-        )
-    )
-
-    (defn- #_"Object" NumberExpr''eval [#_"NumberExpr" this]
-        (Literal'''literal this)
-    )
-
-    (declare FnExpr''emitConstant)
-
-    (defn- #_"gen" NumberExpr''emit [#_"NumberExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-not (= context :Context'STATEMENT) => gen
-            (FnExpr''emitConstant fun, gen, (:id this))
-        )
-    )
-
-    (declare ConstantExpr'new)
-
-    (defn #_"Expr" NumberExpr'parse [#_"Number" form]
-        (if (or (instance? Integer form) (instance? Long form))
-            (NumberExpr'new form)
-            (ConstantExpr'new form)
-        )
-    )
-
-    (defm NumberExpr Literal
-        (Literal'''literal => :n)
-    )
-
-    (defm NumberExpr Expr
-        (Expr'''eval => NumberExpr''eval)
-        (Expr'''emit => NumberExpr''emit)
-    )
-)
-
-(about #_"StringExpr"
-    (defr StringExpr [])
-
-    (defn #_"StringExpr" StringExpr'new [#_"String" str]
-        (merge (class! StringExpr)
-            (hash-map
-                #_"String" :str str
-            )
-        )
-    )
-
-    (defn- #_"Object" StringExpr''eval [#_"StringExpr" this]
-        (Literal'''literal this)
-    )
-
-    (defn- #_"gen" StringExpr''emit [#_"StringExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-not (= context :Context'STATEMENT) => gen
-            (Gen''push gen, (:str this))
-        )
-    )
-
-    (defm StringExpr Literal
-        (Literal'''literal => :str)
-    )
-
-    (defm StringExpr Expr
-        (Expr'''eval => StringExpr''eval)
-        (Expr'''emit => StringExpr''emit)
-    )
-)
-
 (about #_"ConstantExpr"
     (defr ConstantExpr [])
 
@@ -13996,7 +13882,6 @@
         (merge (class! ConstantExpr)
             (hash-map
                 #_"Object" :v v
-                #_"int" :id (Compiler'registerConstant v)
             )
         )
     )
@@ -14005,14 +13890,15 @@
         (let [#_"int" n (dec (count form))]
             (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
                 (let [#_"Object" v (second form)]
-                    (cond
-                        (nil? v)                          Compiler'NIL_EXPR
-                        (= v true)                        Compiler'TRUE_EXPR
-                        (= v false)                       Compiler'FALSE_EXPR
-                        (number? v)                       (NumberExpr'parse v)
-                        (string? v)                       (StringExpr'new v)
-                        (and (coll? v) (zero? (count v))) (EmptyExpr'new v)
-                        :else                             (ConstantExpr'new v)
+                    (case v
+                        nil                                   Compiler'NIL_EXPR
+                        true                                  Compiler'TRUE_EXPR
+                        false                                 Compiler'FALSE_EXPR
+                        (cond
+                            (string? v)                       (ConstantExpr'new (.intern #_"String" v))
+                            (and (coll? v) (zero? (count v))) (EmptyExpr'new v)
+                            :else                             (ConstantExpr'new v)
+                        )
                     )
                 )
             )
@@ -14024,10 +13910,8 @@
     )
 
     (defn- #_"gen" ConstantExpr''emit [#_"ConstantExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (FnExpr''emitConstant fun, gen, (:id this))]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
+        (when-not (= context :Context'STATEMENT) => gen
+            (Gen''push gen, (:v this))
         )
     )
 
@@ -14038,41 +13922,6 @@
     (defm ConstantExpr Expr
         (Expr'''eval => ConstantExpr''eval)
         (Expr'''emit => ConstantExpr''emit)
-    )
-)
-
-(about #_"KeywordExpr"
-    (defr KeywordExpr [])
-
-    (defn #_"KeywordExpr" KeywordExpr'new [#_"Keyword" k]
-        (merge (class! KeywordExpr)
-            (hash-map
-                #_"Keyword" :k k
-            )
-        )
-    )
-
-    (defn- #_"Object" KeywordExpr''eval [#_"KeywordExpr" this]
-        (Literal'''literal this)
-    )
-
-    (declare FnExpr''emitKeyword)
-
-    (defn- #_"gen" KeywordExpr''emit [#_"KeywordExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (FnExpr''emitKeyword fun, gen, (:k this))]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (defm KeywordExpr Literal
-        (Literal'''literal => :k)
-    )
-
-    (defm KeywordExpr Expr
-        (Expr'''eval => KeywordExpr''eval)
-        (Expr'''emit => KeywordExpr''emit)
     )
 )
 
@@ -14116,10 +13965,11 @@
         (deref (:var this))
     )
 
-    (declare FnExpr''emitVarValue)
-
     (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (FnExpr''emitVarValue fun, gen, (:var this))]
+        (let [
+            gen (Gen''push gen, (:var this))
+            gen (Gen''invoke gen, 'Var''get)
+        ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
             )
@@ -14130,11 +13980,9 @@
         (var-set (:var this) (Expr'''eval val))
     )
 
-    (declare FnExpr''emitVar)
-
     (defn- #_"gen" VarExpr''emitAssign [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val]
         (let [
-            gen (FnExpr''emitVar fun, gen, (:var this))
+            gen (Gen''push gen, (:var this))
             gen (Expr'''emit val, :Context'EXPRESSION, fun, gen)
             gen (Gen''invoke gen, 'Var''set)
         ]
@@ -14175,7 +14023,7 @@
     )
 
     (defn- #_"gen" TheVarExpr''emit [#_"TheVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (FnExpr''emitVar fun, gen, (:var this))]
+        (let [gen (Gen''push gen, (:var this))]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
             )
@@ -14978,9 +14826,6 @@
                 #_"int" :uid (next-id!)
                 #_"String" :name nil
                 #_"[LocalBinding]" :closes (vector)
-                #_"map" :keywords (hash-map)
-                #_"map" :vars (hash-map)
-                #_"vector" :constants nil
                 #_"vector" :methods nil
                 ;; optional variadic overload (there can only be one)
                 #_"FnMethod" :variadic nil
@@ -15010,28 +14855,6 @@
         )
     )
 
-    (defn #_"gen" FnExpr''emitConstant [#_"FnExpr" this, #_"gen" gen, #_"int" id]
-        (var-swap! *used-constants* conj id)
-        (Gen''const gen, id)
-    )
-
-    (defn #_"gen" FnExpr''emitVar [#_"FnExpr" this, #_"gen" gen, #_"Var" var]
-        (FnExpr''emitConstant this, gen, (get (:vars this) var))
-    )
-
-    (defn #_"gen" FnExpr''emitVarValue [#_"FnExpr" this, #_"gen" gen, #_"Var" v]
-        (let [
-            gen (FnExpr''emitConstant this, gen, (get (:vars this) v))
-            gen (Gen''invoke gen, 'Var''get)
-        ]
-            gen
-        )
-    )
-
-    (defn #_"gen" FnExpr''emitKeyword [#_"FnExpr" this, #_"gen" gen, #_"Keyword" k]
-        (FnExpr''emitConstant this, gen, (get (:keywords this) k))
-    )
-
     (defn #_"gen" FnExpr''emitArgs [#_"FnExpr" this, #_"indexed" args, #_"gen" gen]
         (let [
             gen (Gen''push gen, (count args))
@@ -15046,99 +14869,6 @@
                 ]
                     (recur gen (inc i))
                 )
-            )
-        )
-    )
-
-    (declare FnExpr''emitValue)
-
-    (defn- #_"gen" FnExpr''emitValues [#_"FnExpr" this, #_"indexed" values, #_"gen" gen]
-        (let [
-            gen (Gen''push gen, (count values))
-            gen (Gen''anew gen)
-        ]
-            (loop-when [gen gen #_"int" i 0] (< i (count values)) => gen
-                (let [
-                    gen (Gen''dup gen)
-                    gen (Gen''push gen, i)
-                    gen (FnExpr''emitValue this, (nth values i), gen)
-                    gen (Gen''aset gen)
-                ]
-                    (recur gen (inc i))
-                )
-            )
-        )
-    )
-
-    (defn #_"gen" FnExpr''emitValue [#_"FnExpr" this, #_"Object" value, #_"gen" gen]
-        (letfn [
-            (meta+ [gen]
-                (when (and (satisfies? IObj value) (seq (meta value))) => gen
-                    (let [gen (FnExpr''emitValue this, (meta value), gen)]
-                        (Gen''invoke gen, 'IObj'''withMeta)
-                    )
-                )
-            )
-        ]
-            (cond
-                (nil? value)     (meta+ (Gen''push gen, nil))
-                (string? value)  (meta+ (Gen''push gen, value))
-                (boolean? value) (meta+ (Gen''push gen, value))
-
-                (integer? value) (meta+ (Gen''push gen, (int value)))
-
-                (symbol? value)  (meta+ (-> gen (Gen''push (:ns value))               (Gen''push (:name value))        (Gen''invoke 'symbol)))
-                (keyword? value) (meta+ (-> gen (Gen''push (:ns (:sym value)))        (Gen''push (:name (:sym value))) (Gen''invoke 'keyword)))
-                (var? value)     (meta+ (-> gen (Gen''push (str (:name (:ns value)))) (Gen''push (str (:sym value)))   (Gen''invoke 'var*)))
-
-                (or (satisfies? PersistentArrayMap value) (satisfies? PersistentHashMap value))
-                    (let [
-                        gen
-                            (when-some [#_"seq" s (seq (mapcat identity value))] => (Gen''push gen, PersistentArrayMap'EMPTY)
-                                (let [gen (FnExpr''emitValues this, s, gen)]
-                                    (Gen''invoke gen, 'RT'map)
-                                )
-                            )
-                    ]
-                        (meta+ gen)
-                    )
-                (vector? value)
-                    (let [
-                        gen
-                            (when (seq value) => (Gen''push gen, PersistentVector'EMPTY)
-                                (let [gen (FnExpr''emitValues this, value, gen)]
-                                    (Gen''invoke gen, 'vec)
-                                )
-                            )
-                    ]
-                        (meta+ gen)
-                    )
-                (satisfies? PersistentHashSet value)
-                    (let [
-                        gen
-                            (when-some [#_"seq" s (seq value)] => (Gen''push gen, PersistentHashSet'EMPTY)
-                                (let [gen (FnExpr''emitValues this, s, gen)]
-                                    (Gen''invoke gen, 'PersistentHashSet'create)
-                                )
-                            )
-                    ]
-                        (meta+ gen)
-                    )
-                (or (seq? value) (list? value))
-                    (let [
-                        gen
-                            (when-some [#_"seq" s (seq value)] => (Gen''push gen, PersistentList'EMPTY)
-                                (let [gen (FnExpr''emitValues this, s, gen)]
-                                    (Gen''invoke gen, 'PersistentList'create)
-                                )
-                            )
-                    ]
-                        (meta+ gen)
-                    )
-                (instance? Pattern value)
-                    (meta+ (Gen''push gen, value))
-                :else
-                    (throw! (str "can't embed unreadable object in code: " value))
             )
         )
     )
@@ -15190,61 +14920,34 @@
     )
 
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"boolean" _once?]
-        (binding [*used-constants* (hash-set)]
-            (let [
-                this (assoc this :code (hash-map))
-                this
-                    (let [
-                        [this #_"gen" gen]
-                            (loop-when [this this gen (Gen'new) #_"int" i 1 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
-                                (let [
-                                    #_"LocalBinding" lb (first s)
-                                    gen (Gen''load gen, 0) ;; this
-                                    gen (Gen''load gen, i)
-                                    gen (Gen''put gen, (:sym lb))
-                                ]
-                                    (recur (update this :closes conj lb) gen (inc i) (next s))
-                                )
+        (let [
+            this (assoc this :code (hash-map))
+            this
+                (let [
+                    [this #_"gen" gen]
+                        (loop-when [this this gen (Gen'new) #_"int" i 1 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
+                            (let [
+                                #_"LocalBinding" lb (first s)
+                                gen (Gen''load gen, 0) ;; this
+                                gen (Gen''load gen, i)
+                                gen (Gen''put gen, (:sym lb))
+                            ]
+                                (recur (update this :closes conj lb) gen (inc i) (next s))
                             )
-                        gen (Gen''return gen)
-                    ]
-                        (assoc-in this [:code :'init] gen)
-                    )
-                this (FnExpr''emitMethods this)
-                this
-                    (let [
-                        #_"gen" gen (Gen'new)
-                        gen
-                            (loop-when [gen gen #_"int" i 0] (< i (count (:constants this))) => gen
-                                (let [
-                                    gen
-                                        (when (contains? (var-get! *used-constants*) i) => gen
-                                            (let [gen (FnExpr''emitValue this, (nth (:constants this) i), gen)]
-                                                (Gen''const! gen, i)
-                                            )
-                                        )
-                                ]
-                                    (recur gen (inc i))
-                                )
-                            )
-                        gen (Gen''return gen)
-                    ]
-                        (assoc-in this [:code :'clinit] gen)
-                    )
-            ]
-                this
-            )
+                        )
+                    gen (Gen''return gen)
+                ]
+                    (assoc-in this [:code :'init] gen)
+                )
+        ]
+            (FnExpr''emitMethods this)
         )
     )
 
     (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form]
         (let [#_"FnExpr" fun (FnExpr'new)
               fun
-                (binding [*constants*    (vector)
-                          *constant-ids* (IdentityHashMap.)
-                          *keywords*     (hash-map)
-                          *vars*         (hash-map)
-                          *no-recur*     false]
+                (binding [*no-recur* false]
                     ;; arglist might be preceded by symbol naming this fn
                     (let [[fun form]
                             (when (symbol? (second form)) => [fun form]
@@ -15291,9 +14994,6 @@
                             (assoc fun
                                 :methods methods
                                 :variadic variadic
-                                :keywords (var-get! *keywords*)
-                                :vars (var-get! *vars*)
-                                :constants (var-get! *constants*)
                             )
                         )
                     )
@@ -15336,10 +15036,7 @@
                 (let [[v #_"boolean" shadowsCoreMapping]
                         (when-not (= (:ns v) *arbace-ns*) => [v false]
                             (when (nil? (:ns sym)) => (throw! "can't create defs outside of current ns")
-                                (let [v (Namespace''intern *arbace-ns*, sym)]
-                                    (Compiler'registerVar v)
-                                    [v true]
-                                )
+                                [(Namespace''intern *arbace-ns*, sym) true]
                             )
                         )
                       #_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
@@ -15369,7 +15066,7 @@
 
     (defn- #_"gen" DefExpr''emit [#_"DefExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
-            gen (FnExpr''emitVar fun, gen, (:var this))
+            gen (Gen''push gen, (:var this))
             gen
                 (when (ß :shadowsCoreMapping this) => gen
                     (let [
@@ -15782,7 +15479,7 @@
                     (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
                         (let [#_"pair" e (first s)
                               #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
-                              #_"Expr" test (if (= testType :int) (NumberExpr'parse (int! (first pair))) (ConstantExpr'new (first pair)))
+                              #_"Expr" test (ConstantExpr'new (first pair))
                               #_"Expr" then (Compiler'analyze context, (second pair))]
                             (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
                         )
@@ -15993,7 +15690,6 @@
                 (cond
                     (var? o)
                         (when (nil? (Compiler'maybeMacro o)) => (throw! (str "can't take value of a macro: " o))
-                            (Compiler'registerVar o)
                             (VarExpr'new o)
                         )
                     (class? o)
@@ -16005,15 +15701,6 @@
                 )
             )
         )
-    )
-
-    (defn- #_"KeywordExpr" Compiler'registerKeyword [#_"Keyword" k]
-        (when (bound? (var! *keywords*))
-            (let-when [#_"map" m (var-get! *keywords*)] (nil? (get m k))
-                (var-set! *keywords* (assoc m k (Compiler'registerConstant k)))
-            )
-        )
-        (KeywordExpr'new k)
     )
 
     (defn- #_"Expr" Compiler'analyzeSeq [#_"Context" context, #_"seq" form]
@@ -16049,9 +15736,7 @@
                 false               Compiler'FALSE_EXPR
                 (cond
                     (symbol? form)  (Compiler'analyzeSymbol form)
-                    (keyword? form) (Compiler'registerKeyword form)
-                    (number? form)  (NumberExpr'parse form)
-                    (string? form)  (StringExpr'new (.intern #_"String" form))
+                    (string? form)  (ConstantExpr'new (.intern #_"String" form))
                     (and (coll? form) (zero? (count form)))
                         (let-when [#_"Expr" e (EmptyExpr'new form)] (some? (meta form)) => e
                             (MetaExpr'new e, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
