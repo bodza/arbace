@@ -13549,8 +13549,8 @@
 
 (about #_"Compiler"
     (def #_"Var" ^:dynamic *closes*            ) ;; IPersistentMap
-    (def #_"Var" ^:dynamic *method*            ) ;; FnFrame
-    (def #_"Var" ^:dynamic *local-env*         ) ;; symbol->localbinding
+    (def #_"Var" ^:dynamic *method*            nil) ;; FnFrame
+    (def #_"Var" ^:dynamic *local-env*         nil) ;; symbol->localbinding
     (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
     (def #_"Var" ^:dynamic *loop-locals*       ) ;; vector<localbinding>
     (def #_"Var" ^:dynamic *loop-label*        ) ;; label
@@ -14977,13 +14977,13 @@
             (hash-map
                 #_"int" :uid (next-id!)
                 #_"String" :name nil
-                #_"vector" :closesExprs (vector)
+                #_"[LocalBinding]" :closes (vector)
                 #_"map" :keywords (hash-map)
                 #_"map" :vars (hash-map)
                 #_"vector" :constants nil
                 #_"vector" :methods nil
                 ;; optional variadic overload (there can only be one)
-                #_"FnMethod" :variadicMethod nil
+                #_"FnMethod" :variadic nil
 
                 #_"map" :code nil
             )
@@ -14991,7 +14991,7 @@
     )
 
     (defn #_"boolean" FnExpr''isVariadic [#_"FnExpr" this]
-        (some? (:variadicMethod this))
+        (some? (:variadic this))
     )
 
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
@@ -15093,14 +15093,12 @@
 
                 (or (satisfies? PersistentArrayMap value) (satisfies? PersistentHashMap value))
                     (let [
-                        #_"vector" v
-                            (loop-when [v (vector) #_"seq" s (seq value)] (some? s) => v
-                                (let [#_"pair" e (first s)]
-                                    (recur (conj v (key e) (val e)) (next s))
+                        gen
+                            (when-some [#_"seq" s (seq (mapcat identity value))] => (Gen''push gen, PersistentArrayMap'EMPTY)
+                                (let [gen (FnExpr''emitValues this, s, gen)]
+                                    (Gen''invoke gen, 'RT'map)
                                 )
                             )
-                        gen (FnExpr''emitValues this, v, gen)
-                        gen (Gen''invoke gen, 'RT'map)
                     ]
                         (meta+ gen)
                     )
@@ -15118,8 +15116,8 @@
                 (satisfies? PersistentHashSet value)
                     (let [
                         gen
-                            (when-some [#_"seq" vs (seq value)] => (Gen''push gen, PersistentHashSet'EMPTY)
-                                (let [gen (FnExpr''emitValues this, vs, gen)]
+                            (when-some [#_"seq" s (seq value)] => (Gen''push gen, PersistentHashSet'EMPTY)
+                                (let [gen (FnExpr''emitValues this, s, gen)]
                                     (Gen''invoke gen, 'PersistentHashSet'create)
                                 )
                             )
@@ -15129,8 +15127,8 @@
                 (or (seq? value) (list? value))
                     (let [
                         gen
-                            (when-some [#_"seq" vs (seq value)] => (Gen''push gen, PersistentList'EMPTY)
-                                (let [gen (FnExpr''emitValues this, vs, gen)]
+                            (when-some [#_"seq" s (seq value)] => (Gen''push gen, PersistentList'EMPTY)
+                                (let [gen (FnExpr''emitValues this, s, gen)]
                                     (Gen''invoke gen, 'PersistentList'create)
                                 )
                             )
@@ -15151,12 +15149,7 @@
         (let [
             gen (Gen''create gen)
             gen (Gen''dup gen)
-            gen
-                (loop-when-recur [gen gen #_"seq" s (seq (:closesExprs this))]
-                                 (some? s)
-                                 [(FnExpr''emitLocal fun, gen, (:lb (first s))) (next s)]
-                              => gen
-                )
+            gen (reduce (partial FnExpr''emitLocal fun) gen (:closes this))
             gen (Gen''init gen)
         ]
             (when (= context :Context'STATEMENT) => gen
@@ -15187,7 +15180,7 @@
             (when (FnExpr''isVariadic this) => this
                 (let [
                     #_"gen" gen (Gen'new)
-                    gen (Gen''push gen, (count (:reqParms (:variadicMethod this))))
+                    gen (Gen''push gen, (count (:reqParms (:variadic this))))
                     gen (Gen''return gen)
                 ]
                     (assoc-in this [:code :IRestFn'''requiredArity] gen)
@@ -15210,7 +15203,7 @@
                                     gen (Gen''load gen, i)
                                     gen (Gen''put gen, (:sym lb))
                                 ]
-                                    (recur (update this :closesExprs conj (LocalBindingExpr'new lb)) gen (inc i) (next s))
+                                    (recur (update this :closes conj lb) gen (inc i) (next s))
                                 )
                             )
                         gen (Gen''return gen)
@@ -15297,7 +15290,7 @@
                                 )]
                             (assoc fun
                                 :methods methods
-                                :variadicMethod variadic
+                                :variadic variadic
                                 :keywords (var-get! *keywords*)
                                 :vars (var-get! *vars*)
                                 :constants (var-get! *constants*)
@@ -15378,13 +15371,13 @@
         (let [
             gen (FnExpr''emitVar fun, gen, (:var this))
             gen
-                (when (:shadowsCoreMapping this) => gen
+                (when (ß :shadowsCoreMapping this) => gen
                     (let [
                         gen (Gen''dup gen)
-                        gen (Gen''get gen, 'ns)
+                        gen (ß Gen''get gen, 'ns)
                         gen (Gen''swap gen)
                         gen (Gen''dup gen)
-                        gen (Gen''get gen, 'sym)
+                        gen (ß Gen''get gen, 'sym)
                         gen (Gen''swap gen)
                         gen (Gen''invoke gen, 'Namespace''refer)
                     ]
@@ -16551,14 +16544,6 @@
 )
 
 (about #_"SyntaxQuoteReader"
-    (defn- #_"vector" SyntaxQuoteReader'flattened [#_"map" m]
-        (loop-when [#_"vector" v (vector) #_"seq" s (seq m)] (some? s) => v
-            (let [#_"pair" e (first s)]
-                (recur (conj v (key e) (val e)) (next s))
-            )
-        )
-    )
-
 (def unquote)
 
     (defn #_"boolean" SyntaxQuoteReader'isUnquote [#_"Object" form]
@@ -16616,7 +16601,7 @@
                     (coll? form)
                         (cond
                             (map? form)
-                                (list (symbol! `apply) (symbol! `hash-map) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq (SyntaxQuoteReader'flattened form))))))
+                                (list (symbol! `apply) (symbol! `hash-map) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq (mapcat identity form))))))
                             (vector? form)
                                 (list (symbol! `apply) (symbol! `vector) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq form)))))
                             (set? form)
@@ -16797,8 +16782,8 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
-            (binding [*arbace-ns* *arbace-ns*
-                      *local-env* (hash-map)]
+            (binding [*method*    (var-get! *method*)
+                      *local-env* (var-get! *local-env*)]
                 (loop [#_"Object" val nil]
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
@@ -16901,7 +16886,8 @@
 )
 
 (defn repl []
-    (binding [*local-env* (hash-map)]
+    (binding [*method*    (var-get! *method*)
+              *local-env* (var-get! *local-env*)]
         (loop []
             (-/print "\033[31mArbace \033[32m=> \033[0m")
             (.flush -/*out*)
