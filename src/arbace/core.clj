@@ -3510,22 +3510,26 @@
 (about #_"arbace.Lambda"
 
 (about #_"Lambda"
-    (defq Lambda [#_"meta" _meta])
+    (defq Lambda [#_"meta" _meta, #_"map" code])
 
     #_inherit
     (defm Lambda RestFn Fn AFn)
 
     (defn #_"Lambda" Lambda'new
-        ([] (Lambda'new nil))
-        ([#_"meta" meta]
-            (Lambda'class. (anew [meta]))
+        ([#_"map" code] (Lambda'new nil, code))
+        ([#_"meta" meta, #_"map" code]
+            (Lambda'class. (anew [meta, code]))
         )
     )
 
     (defn- #_"Lambda" Lambda''withMeta [#_"Lambda" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
-            (Lambda'new meta)
+            (Lambda'new meta, (:code this))
         )
+    )
+
+    (defn- #_"int" Lambda''requiredArity [#_"Lambda" this]
+        (or (:requiredArity (:code this)) (throw! ":requiredArity is indeed required this time"))
     )
 
     (defn- #_"Object" Lambda''doInvoke
@@ -3549,14 +3553,14 @@
         (IObj'''withMeta => Lambda''withMeta)
     )
 
-    (defm Lambda IRestFn
-        ;; abstract IRestFn requiredArity
-        (IRestFn'''doInvoke => Lambda''doInvoke)
-    )
-
     (defm Lambda IFn
         (IFn'''invoke => RestFn''invoke)
         (IFn'''applyTo => RestFn''applyTo)
+    )
+
+    (defm Lambda IRestFn
+        (IRestFn'''requiredArity => Lambda''requiredArity)
+        (IRestFn'''doInvoke => Lambda''doInvoke)
     )
 
     (§ defm Lambda #_"Comparator"
@@ -14835,12 +14839,8 @@
         )
     )
 
-    (defn #_"boolean" FnExpr''isVariadic [#_"FnExpr" this]
-        (some? (:variadic this))
-    )
-
     (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (Lambda'new)
+        (Lambda'new (:code this))
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
@@ -14907,14 +14907,8 @@
         (let [
             this (reduce FnExpr''emitMethod this (:methods this))
         ]
-            (when (FnExpr''isVariadic this) => this
-                (let [
-                    #_"gen" gen (Gen'new)
-                    gen (Gen''push gen, (count (:reqParms (:variadic this))))
-                    gen (Gen''return gen)
-                ]
-                    (assoc-in this [:code :IRestFn'''requiredArity] gen)
-                )
+            (when-some [#_"FnMethod" fm (:variadic this)] => this
+                (assoc-in this [:code :requiredArity] (count (:reqParms fm)))
             )
         )
     )
