@@ -2182,7 +2182,7 @@
  ; will cache the result and return it on all subsequent force calls.
  ; See also - realized?
  ;;
-(defmacro delay [& body] `(Delay'new (^{:once true} fn* [] ~@body)))
+(defmacro delay [& body] `(Delay'new (fn* [] ~@body)))
 
 ;;;
  ; Returns true if x is a Delay created with delay.
@@ -4385,7 +4385,7 @@
  ; is called, and will cache the result and return it on all subsequent
  ; seq calls. See also - realized?
  ;;
-(defmacro lazy-seq [& body] `(LazySeq'new (^{:once true} fn* [] ~@body)))
+(defmacro lazy-seq [& body] `(LazySeq'new (fn* [] ~@body)))
 
 ;;;
  ; When lazy sequences are produced via functions that have side
@@ -13336,12 +13336,10 @@
 
 (about #_"arbace.Compiler"
     (defp Expr
-        (#_"Object" Expr'''eval [#_"Expr" this])
         (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen])
     )
 
     (defp Assignable
-        (#_"Object" Assignable'''evalAssign [#_"Assignable" this, #_"Expr" val])
         (#_"gen" Assignable'''emitAssign [#_"Assignable" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val])
     )
 
@@ -13450,14 +13448,11 @@
         :Context'STATEMENT ;; value ignored
         :Context'EXPRESSION ;; value required
         :Context'RETURN ;; tail position relative to enclosing recur frame
-        :Context'EVAL
     )
 )
 
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
-
-    (def #_"Symbol" Compiler'FNONCE (with-meta (symbol! 'fn*) {:once true}))
 )
 
 (about #_"Compiler"
@@ -13694,7 +13689,6 @@
     )
 
     (defm LiteralExpr Expr
-        (Expr'''eval => :value)
         (Expr'''emit => LiteralExpr''emit)
     )
 )
@@ -13715,16 +13709,12 @@
 
     (defn #_"Expr" AssignExpr'parse [#_"Context" context, #_"seq" form]
         (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
-            (let [#_"Expr" target (Compiler'analyze :Context'EXPRESSION, (second form))]
+            (let [#_"Expr" target (Compiler'analyze (second form))]
                 (when (satisfies? Assignable target) => (throw! "invalid assignment target")
-                    (AssignExpr'new target, (Compiler'analyze :Context'EXPRESSION, (third form)))
+                    (AssignExpr'new target, (Compiler'analyze (third form)))
                 )
             )
         )
-    )
-
-    (defn- #_"Object" AssignExpr''eval [#_"AssignExpr" this]
-        (Assignable'''evalAssign (:target this), (:val this))
     )
 
     (defn- #_"gen" AssignExpr''emit [#_"AssignExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -13732,7 +13722,6 @@
     )
 
     (defm AssignExpr Expr
-        (Expr'''eval => AssignExpr''eval)
         (Expr'''emit => AssignExpr''emit)
     )
 )
@@ -13748,16 +13737,11 @@
         )
     )
 
-    (defn- #_"Object" UnresolvedVarExpr''eval [#_"UnresolvedVarExpr" this]
-        (throw! "can't eval")
-    )
-
     (defn- #_"gen" UnresolvedVarExpr''emit [#_"UnresolvedVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         gen
     )
 
     (defm UnresolvedVarExpr Expr
-        (Expr'''eval => UnresolvedVarExpr''eval)
         (Expr'''emit => UnresolvedVarExpr''emit)
     )
 )
@@ -13773,10 +13757,6 @@
         )
     )
 
-    (defn- #_"Object" VarExpr''eval [#_"VarExpr" this]
-        (deref (:var this))
-    )
-
     (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen (Gen''push gen, (:var this))
@@ -13786,10 +13766,6 @@
                 (Gen''pop gen)
             )
         )
-    )
-
-    (defn- #_"Object" VarExpr''evalAssign [#_"VarExpr" this, #_"Expr" val]
-        (var-set (:var this) (Expr'''eval val))
     )
 
     (defn- #_"gen" VarExpr''emitAssign [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val]
@@ -13805,12 +13781,10 @@
     )
 
     (defm VarExpr Expr
-        (Expr'''eval => VarExpr''eval)
         (Expr'''emit => VarExpr''emit)
     )
 
     (defm VarExpr Assignable
-        (Assignable'''evalAssign => VarExpr''evalAssign)
         (Assignable'''emitAssign => VarExpr''emitAssign)
     )
 )
@@ -13841,7 +13815,6 @@
     )
 
     (defm TheVarExpr Expr
-        (Expr'''eval => :var)
         (Expr'''emit => TheVarExpr''emit)
     )
 )
@@ -13861,16 +13834,12 @@
         (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
               #_"vector" v
                 (loop-when [v (vector) s s] (some? s) => v
-                    (let [#_"Context" c (if (and (not= context :Context'EVAL) (or (= context :Context'STATEMENT) (some? (next s)))) :Context'STATEMENT context)]
+                    (let [#_"Context" c (if (or (= context :Context'STATEMENT) (some? (next s))) :Context'STATEMENT context)]
                         (recur (conj v (Compiler'analyze c, (first s))) (next s))
                     )
                 )]
             (BodyExpr'new (if (pos? (count v)) v (conj v LiteralExpr'NIL)))
         )
-    )
-
-    (defn- #_"Object" BodyExpr''eval [#_"BodyExpr" this]
-        (loop-when-recur [#_"Object" val nil #_"seq" s (seq (:exprs this))] (some? s) [(Expr'''eval (first s)) (next s)] => val)
     )
 
     (defn- #_"gen" BodyExpr''emit [#_"BodyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -13882,7 +13851,6 @@
     )
 
     (defm BodyExpr Expr
-        (Expr'''eval => BodyExpr''eval)
         (Expr'''emit => BodyExpr''emit)
     )
 )
@@ -13899,10 +13867,6 @@
         )
     )
 
-    (defn- #_"Object" MetaExpr''eval [#_"MetaExpr" this]
-        (with-meta (Expr'''eval (:expr this)) (Expr'''eval (:meta this)))
-    )
-
     (defn- #_"gen" MetaExpr''emit [#_"MetaExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
@@ -13916,7 +13880,6 @@
     )
 
     (defm MetaExpr Expr
-        (Expr'''eval => MetaExpr''eval)
         (Expr'''emit => MetaExpr''emit)
     )
 )
@@ -13940,15 +13903,11 @@
             (< 4 (count form)) (throw! "too many arguments to if")
             (< (count form) 3) (throw! "too few arguments to if")
         )
-        (let [#_"Expr" test (Compiler'analyze (if (= context :Context'EVAL) context :Context'EXPRESSION), (second form))
+        (let [#_"Expr" test (Compiler'analyze (second form))
               #_"Expr" then (Compiler'analyze context, (third form))
               #_"Expr" else (Compiler'analyze context, (fourth form))]
             (IfExpr'new test, then, else)
         )
-    )
-
-    (defn- #_"Object" IfExpr''eval [#_"IfExpr" this]
-        (Expr'''eval (if (any = (Expr'''eval (:test this)) nil false) (:else this) (:then this)))
     )
 
     (defn- #_"gen" IfExpr''emit [#_"IfExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -13972,7 +13931,6 @@
     )
 
     (defm IfExpr Expr
-        (Expr'''eval => IfExpr''eval)
         (Expr'''emit => IfExpr''emit)
     )
 )
@@ -13988,11 +13946,10 @@
         )
     )
 
-    (defn #_"Expr" MapExpr'parse [#_"Context" context, #_"map" form]
-        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              [#_"vector" args #_"boolean" literal?]
+    (defn #_"Expr" MapExpr'parse [#_"map" form]
+        (let [[#_"vector" args #_"boolean" literal?]
                 (loop-when [args (vector), literal? true, #_"set" keys (hash-set), #_"seq" s (seq form)] (some? s) => [args literal?]
-                    (let [#_"pair" e (first s) #_"Expr" k (Compiler'analyze c, (key e)) #_"Expr" v (Compiler'analyze c, (val e))
+                    (let [#_"pair" e (first s) #_"Expr" k (Compiler'analyze (key e)) #_"Expr" v (Compiler'analyze (val e))
                           [literal? keys]
                             (when (satisfies? LiteralExpr k) => [false keys]
                                 (when-not (contains? keys (:value k)) => (throw! "duplicate constant keys in map")
@@ -14007,13 +13964,9 @@
                     (LiteralExpr'new (apply hash-map (map :value args)))
                 )]
             (when-some [#_"meta" m (meta form)] => e
-                (MetaExpr'new e, (MapExpr'parse c, m))
+                (MetaExpr'new e, (MapExpr'parse m))
             )
         )
-    )
-
-    (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
-        (RT'map (map Expr'''eval (:args this)))
     )
 
     (declare FnExpr''emitArgs)
@@ -14043,7 +13996,6 @@
     )
 
     (defm MapExpr Expr
-        (Expr'''eval => MapExpr''eval)
         (Expr'''emit => MapExpr''emit)
     )
 )
@@ -14059,11 +14011,10 @@
         )
     )
 
-    (defn #_"Expr" SetExpr'parse [#_"Context" context, #_"set" form]
-        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              [#_"vector" args #_"boolean" literal?]
+    (defn #_"Expr" SetExpr'parse [#_"set" form]
+        (let [[#_"vector" args #_"boolean" literal?]
                 (loop-when [args (vector) literal? true #_"seq" s (seq form)] (some? s) => [args literal?]
-                    (let [#_"Expr" e (Compiler'analyze c, (first s))]
+                    (let [#_"Expr" e (Compiler'analyze (first s))]
                         (recur (conj args e) (and literal? (satisfies? LiteralExpr e)) (next s))
                     )
                 )
@@ -14072,13 +14023,9 @@
                     (LiteralExpr'new (apply hash-set (map :value args)))
                 )]
             (when-some [#_"meta" m (meta form)] => e
-                (MetaExpr'new e, (MapExpr'parse c, m))
+                (MetaExpr'new e, (MapExpr'parse m))
             )
         )
-    )
-
-    (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
-        (PersistentHashSet'createWithCheck (map Expr'''eval (:args this)))
     )
 
     (defn- #_"gen" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14097,7 +14044,6 @@
     )
 
     (defm SetExpr Expr
-        (Expr'''eval => SetExpr''eval)
         (Expr'''emit => SetExpr''emit)
     )
 )
@@ -14113,11 +14059,10 @@
         )
     )
 
-    (defn #_"Expr" VectorExpr'parse [#_"Context" context, #_"vector" form]
-        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              [#_"vector" args #_"boolean" literal?]
+    (defn #_"Expr" VectorExpr'parse [#_"vector" form]
+        (let [[#_"vector" args #_"boolean" literal?]
                 (loop-when [args (vector) literal? true #_"seq" s (seq form)] (some? s) => [args literal?]
-                    (let [#_"Expr" e (Compiler'analyze c, (first s))]
+                    (let [#_"Expr" e (Compiler'analyze (first s))]
                         (recur (conj args e) (and literal? (satisfies? LiteralExpr e)) (next s))
                     )
                 )
@@ -14126,13 +14071,9 @@
                     (LiteralExpr'new (mapv :value args))
                 )]
             (when-some [#_"meta" m (meta form)] => e
-                (MetaExpr'new e, (MapExpr'parse c, m))
+                (MetaExpr'new e, (MapExpr'parse m))
             )
         )
-    )
-
-    (defn- #_"Object" VectorExpr''eval [#_"VectorExpr" this]
-        (mapv Expr'''eval (:args this))
     )
 
     (defn- #_"gen" VectorExpr''emit [#_"VectorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14151,7 +14092,6 @@
     )
 
     (defm VectorExpr Expr
-        (Expr'''eval => VectorExpr''eval)
         (Expr'''emit => VectorExpr''emit)
     )
 )
@@ -14170,16 +14110,10 @@
     )
 
     (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form]
-        (let [#_"boolean" tailPosition (Compiler'inTailCall context) context (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              #_"Expr" fexpr (Compiler'analyze context, (first form)) #_"vector" args (mapv (partial Compiler'analyze context) (next form))]
+        (let [#_"boolean" tailPosition (Compiler'inTailCall context)
+              #_"Expr" fexpr (Compiler'analyze (first form))
+              #_"vector" args (mapv Compiler'analyze (next form))]
             (InvokeExpr'new fexpr, args, tailPosition)
-        )
-    )
-
-    (defn- #_"Object" InvokeExpr''eval [#_"InvokeExpr" this]
-        (let [#_"IFn" fn (Expr'''eval (:fexpr this))
-              #_"vector" v (loop-when-recur [v (vector) #_"int" i 0] (< i (count (:args this))) [(conj v (Expr'''eval (nth (:args this) i))) (inc i)] => v)]
-            (IFn'''applyTo fn, (seq v))
         )
     )
 
@@ -14217,7 +14151,6 @@
     )
 
     (defm InvokeExpr Expr
-        (Expr'''eval => InvokeExpr''eval)
         (Expr'''emit => InvokeExpr''emit)
     )
 )
@@ -14248,10 +14181,6 @@
         )
     )
 
-    (defn- #_"Object" LocalBindingExpr''eval [#_"LocalBindingExpr" this]
-        (throw! "can't eval locals")
-    )
-
     (declare FnExpr''emitLocal)
 
     (defn- #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14261,7 +14190,6 @@
     )
 
     (defm LocalBindingExpr Expr
-        (Expr'''eval => LocalBindingExpr''eval)
         (Expr'''emit => LocalBindingExpr''emit)
     )
 )
@@ -14366,10 +14294,6 @@
         )
     )
 
-    (defn- #_"Object" FnExpr''eval [#_"FnExpr" this]
-        (Lambda'new (:code this))
-    )
-
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
         (if (contains? (get (var-get! *closes*) (:uid this)) (:uid lb))
             (let [
@@ -14440,7 +14364,7 @@
         )
     )
 
-    (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this, #_"boolean" _once?]
+    (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this]
         (let [
             this (assoc this :code (hash-map))
             this
@@ -14519,13 +14443,12 @@
                         )
                     )
                 )
-              fun (FnExpr''compile fun, (boolean (:once (meta (first form)))))]
-            (MetaExpr'new fun, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
+              fun (FnExpr''compile fun)]
+            (MetaExpr'new fun, (MapExpr'parse (meta form)))
         )
     )
 
     (defm FnExpr Expr
-        (Expr'''eval => FnExpr''eval)
         (Expr'''emit => FnExpr''emit)
     )
 )
@@ -14560,9 +14483,8 @@
                                 [(Namespace''intern *arbace-ns*, sym) true]
                             )
                         )
-                      #_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-                      #_"Expr" init (Compiler'analyze c, (third form))
-                      #_"Expr" _meta (Compiler'analyze c, (meta sym))]
+                      #_"Expr" init (Compiler'analyze (third form))
+                      #_"Expr" _meta (Compiler'analyze (meta sym))]
                     (DefExpr'new v, init, _meta, (= (count form) 3), shadowsCoreMapping)
                 )
             )
@@ -14573,16 +14495,6 @@
         (loop-when [#_"int" i 0] (< i (count (:keyvals expr))) => false
             (recur-when (= (:k (nth (:keyvals expr) i)) :declared) [(+ i 2)] => true)
         )
-    )
-
-    (defn- #_"Object" DefExpr''eval [#_"DefExpr" this]
-        (when (:initProvided this)
-            (Var''bindRoot (:var this), (Expr'''eval (:init this)))
-        )
-        (when (some? (:meta this))
-            (reset-meta! (:var this) (Expr'''eval (:meta this)))
-        )
-        (:var this)
     )
 
     (defn- #_"gen" DefExpr''emit [#_"DefExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14630,7 +14542,6 @@
     )
 
     (defm DefExpr Expr
-        (Expr'''eval => DefExpr''eval)
         (Expr'''emit => DefExpr''emit)
     )
 )
@@ -14665,37 +14576,30 @@
         (when (vector? (second form)) => (throw! "bad binding form, expected vector")
             (let [#_"vector" bindings (second form)]
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                    (if (= context :Context'EVAL)
-                        (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                        (binding [*local-env*      (var-get! *local-env*)
-                                  *last-local-num* (var-get! *last-local-num*)]
-                            ;; pre-seed env (like Lisp labels)
-                            (let [#_"vector" lbs
-                                    (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
-                                        (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                            (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                (recur (conj lbs (Compiler'registerLocal sym, nil)) (+ i 2))
-                                            )
+                    (binding [*local-env*      (var-get! *local-env*)
+                              *last-local-num* (var-get! *last-local-num*)]
+                        ;; pre-seed env (like Lisp labels)
+                        (let [#_"vector" lbs
+                                (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
+                                    (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                        (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
+                                            (recur (conj lbs (Compiler'registerLocal sym, nil)) (+ i 2))
                                         )
                                     )
-                                  #_"vector" bis
-                                    (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
-                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)))
-                                              #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
-                                            (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
-                                        )
-                                    )]
-                                (LetFnExpr'new bis, (BodyExpr'parse context, (next (next form))))
-                            )
+                                )
+                              #_"vector" bis
+                                (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
+                                    (let [#_"Expr" init (Compiler'analyze (nth bindings (inc i)))
+                                          #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
+                                        (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
+                                    )
+                                )]
+                            (LetFnExpr'new bis, (BodyExpr'parse context, (next (next form))))
                         )
                     )
                 )
             )
         )
-    )
-
-    (defn- #_"Object" LetFnExpr''eval [#_"LetFnExpr" this]
-        (throw! "can't eval letfns")
     )
 
     (defn- #_"gen" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14753,7 +14657,6 @@
     )
 
     (defm LetFnExpr Expr
-        (Expr'''eval => LetFnExpr''eval)
         (Expr'''emit => LetFnExpr''emit)
     )
 )
@@ -14777,73 +14680,70 @@
             (when (vector? (second form)) => (throw! "bad binding form, expected vector")
                 (let [#_"vector" bindings (second form)]
                     (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                        (if (or (= context :Context'EVAL) (and (= context :Context'EXPRESSION) isLoop))
-                            (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-                            (let [#_"seq" body (next (next form))
-                                  #_"map" locals' (:locals (var-get! *method*))
-                                  #_"map" dynamicBindings
-                                    (hash-map
-                                        (var! *local-env*)      (var-get! *local-env*)
-                                        (var! *last-local-num*) (var-get! *last-local-num*)
-                                    )
-                                  dynamicBindings
-                                    (when isLoop => dynamicBindings
-                                        (assoc dynamicBindings (var! *loop-locals*) nil)
-                                    )
-                                  _ (var-swap! *method* assoc :locals locals')]
-                                (try
-                                    (push-thread-bindings dynamicBindings)
-                                    (let [[#_"vector" bindingInits #_"vector" loopLocals]
-                                            (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
-                                                (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                                    (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                                        (let [#_"Expr" init (Compiler'analyze :Context'EXPRESSION, (nth bindings (inc i)))
-                                                              ;; sequential enhancement of env (like Lisp let*)
-                                                              [bindingInits loopLocals]
-                                                                (try
+                        (let [#_"seq" body (next (next form))
+                              #_"map" locals' (:locals (var-get! *method*))
+                              #_"map" dynamicBindings
+                                (hash-map
+                                    (var! *local-env*)      (var-get! *local-env*)
+                                    (var! *last-local-num*) (var-get! *last-local-num*)
+                                )
+                              dynamicBindings
+                                (when isLoop => dynamicBindings
+                                    (assoc dynamicBindings (var! *loop-locals*) nil)
+                                )
+                              _ (var-swap! *method* assoc :locals locals')]
+                            (try
+                                (push-thread-bindings dynamicBindings)
+                                (let [[#_"vector" bindingInits #_"vector" loopLocals]
+                                        (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
+                                            (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                                (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
+                                                    (let [#_"Expr" init (Compiler'analyze (nth bindings (inc i)))
+                                                          ;; sequential enhancement of env (like Lisp let*)
+                                                          [bindingInits loopLocals]
+                                                            (try
+                                                                (when isLoop
+                                                                    (push-thread-bindings (hash-map (var! *no-recur*) false))
+                                                                )
+                                                                (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init)]
+                                                                    [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
+                                                                )
+                                                                (finally
                                                                     (when isLoop
-                                                                        (push-thread-bindings (hash-map (var! *no-recur*) false))
+                                                                        (pop-thread-bindings)
                                                                     )
-                                                                    (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init)]
-                                                                        [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
-                                                                    )
-                                                                    (finally
-                                                                        (when isLoop
-                                                                            (pop-thread-bindings)
-                                                                        )
-                                                                    )
-                                                                )]
-                                                            (recur bindingInits loopLocals (+ i 2))
+                                                                )
+                                                            )]
+                                                        (recur bindingInits loopLocals (+ i 2))
+                                                    )
+                                                )
+                                            )
+                                        )]
+                                    (when isLoop
+                                        (var-set! *loop-locals* loopLocals)
+                                    )
+                                    (let [#_"Expr" bodyExpr
+                                            (try
+                                                (when isLoop
+                                                    (push-thread-bindings
+                                                        (hash-map
+                                                            (var! *no-recur*)          false
+                                                            (var! *in-return-context*) (and (= context :Context'RETURN) (var-get! *in-return-context*))
                                                         )
                                                     )
                                                 )
-                                            )]
-                                        (when isLoop
-                                            (var-set! *loop-locals* loopLocals)
-                                        )
-                                        (let [#_"Expr" bodyExpr
-                                                (try
+                                                (BodyExpr'parse (if isLoop :Context'RETURN context), body)
+                                                (finally
                                                     (when isLoop
-                                                        (push-thread-bindings
-                                                            (hash-map
-                                                                (var! *no-recur*)          false
-                                                                (var! *in-return-context*) (and (= context :Context'RETURN) (var-get! *in-return-context*))
-                                                            )
-                                                        )
+                                                        (pop-thread-bindings)
                                                     )
-                                                    (BodyExpr'parse (if isLoop :Context'RETURN context), body)
-                                                    (finally
-                                                        (when isLoop
-                                                            (pop-thread-bindings)
-                                                        )
-                                                    )
-                                                )]
-                                            (LetExpr'new bindingInits, bodyExpr, isLoop)
-                                        )
+                                                )
+                                            )]
+                                        (LetExpr'new bindingInits, bodyExpr, isLoop)
                                     )
-                                    (finally
-                                        (pop-thread-bindings)
-                                    )
+                                )
+                                (finally
+                                    (pop-thread-bindings)
                                 )
                             )
                         )
@@ -14851,10 +14751,6 @@
                 )
             )
         )
-    )
-
-    (defn- #_"Object" LetExpr''eval [#_"LetExpr" this]
-        (throw! "can't eval let/loop")
     )
 
     (defn- #_"gen" LetExpr''emit [#_"LetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14880,7 +14776,6 @@
     )
 
     (defm LetExpr Expr
-        (Expr'''eval => LetExpr''eval)
         (Expr'''emit => LetExpr''emit)
     )
 )
@@ -14904,21 +14799,12 @@
         (when (var-get! *no-recur*)
             (throw! "cannot recur across try")
         )
-        (let [#_"vector" args
-                (loop-when-recur [args (vector) #_"seq" s (seq (next form))]
-                                 (some? s)
-                                 [(conj args (Compiler'analyze :Context'EXPRESSION, (first s))) (next s)]
-                              => args
-                )]
-            (when-not (= (count args) (count (var-get! *loop-locals*)))
-                (throw! (str "mismatched argument count to recur, expected: " (count (var-get! *loop-locals*)) " args, got: " (count args)))
+        (let [#_"vector" args (mapv Compiler'analyze (next form)) #_"int" n (count args) #_"int" m (count (var-get! *loop-locals*))]
+            (when-not (= n m)
+                (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
             )
             (RecurExpr'new (var-get! *loop-locals*), args)
         )
-    )
-
-    (defn- #_"Object" RecurExpr''eval [#_"RecurExpr" this]
-        (throw! "can't eval recur")
     )
 
     (defn- #_"gen" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -14943,7 +14829,6 @@
     )
 
     (defm RecurExpr Expr
-        (Expr'''eval => RecurExpr''eval)
         (Expr'''emit => RecurExpr''emit)
     )
 )
@@ -14981,38 +14866,31 @@
     ;; case macro binds actual expr in let so expr is always a local,
     ;; no need to worry about multiple evaluation
     (defn #_"Expr" CaseExpr'parse [#_"Context" context, #_"seq" form]
-        (if (= context :Context'EVAL)
-            (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-            (let [#_"vector" args (vec (next form))
-                  #_"Object" exprForm (nth args 0)
-                  #_"int" shift (int! (nth args 1))
-                  #_"int" mask (int! (nth args 2))
-                  #_"Object" defaultForm (nth args 3)
-                  #_"map" caseMap (nth args 4)
-                  #_"Keyword" switchType (nth args 5)
-                  #_"Keyword" testType (nth args 6)
-                  #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
-                  #_"seq" keys (keys caseMap)
-                  #_"int" low (int! (first keys))
-                  #_"int" high (int! (nth keys (dec (count keys))))
-                  #_"LocalBindingExpr" testExpr (Compiler'analyze :Context'EXPRESSION, exprForm)
-                  [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
-                    (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
-                        (let [#_"pair" e (first s)
-                              #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
-                              #_"Expr" test (LiteralExpr'new (first pair))
-                              #_"Expr" then (Compiler'analyze context, (second pair))]
-                            (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
-                        )
+        (let [#_"vector" args (vec (next form))
+              #_"Object" exprForm (nth args 0)
+              #_"int" shift (int! (nth args 1))
+              #_"int" mask (int! (nth args 2))
+              #_"Object" defaultForm (nth args 3)
+              #_"map" caseMap (nth args 4)
+              #_"Keyword" switchType (nth args 5)
+              #_"Keyword" testType (nth args 6)
+              #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
+              #_"seq" keys (keys caseMap)
+              #_"int" low (int! (first keys))
+              #_"int" high (int! (nth keys (dec (count keys))))
+              #_"LocalBindingExpr" testExpr (Compiler'analyze exprForm)
+              [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
+                (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
+                    (let [#_"pair" e (first s)
+                          #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
+                          #_"Expr" test (LiteralExpr'new (first pair))
+                          #_"Expr" then (Compiler'analyze context, (second pair))]
+                        (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
                     )
-                  #_"Expr" defaultExpr (Compiler'analyze context, (nth args 3))]
-                (CaseExpr'new testExpr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck)
-            )
+                )
+              #_"Expr" defaultExpr (Compiler'analyze context, (nth args 3))]
+            (CaseExpr'new testExpr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck)
         )
-    )
-
-    (defn- #_"Object" CaseExpr''eval [#_"CaseExpr" this]
-        (throw! "can't eval case")
     )
 
     (defn- #_"gen" CaseExpr''emitShiftMask [#_"CaseExpr" this, #_"gen" gen]
@@ -15135,7 +15013,6 @@
     )
 
     (defm CaseExpr Expr
-        (Expr'''eval => CaseExpr''eval)
         (Expr'''emit => CaseExpr''emit)
     )
 )
@@ -15153,11 +15030,7 @@
     )
 
     (defn #_"Expr" MonitorExpr'parse [#_"Context" context, #_"seq" form]
-        (MonitorExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)), (= (first form) 'monitor-enter))
-    )
-
-    (defn- #_"Object" MonitorExpr''eval [#_"MonitorExpr" this]
-        (throw! (str "can't eval monitor-" (if (:enter? this) "enter" "exit")))
+        (MonitorExpr'new (Compiler'analyze (second form)), (= (first form) 'monitor-enter))
     )
 
     (defn- #_"gen" MonitorExpr''emit [#_"MonitorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -15171,7 +15044,6 @@
     )
 
     (defm MonitorExpr Expr
-        (Expr'''eval => MonitorExpr''eval)
         (Expr'''emit => MonitorExpr''emit)
     )
 )
@@ -15209,62 +15081,56 @@
     ;; catch-expr: (catch class sym expr*)
     ;; finally-expr: (finally expr*)
     (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form]
-        (when (= context :Context'RETURN) => (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-            (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
-                    (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
-                        (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
-                            (if (any = op 'catch 'finally)
-                                (let [bodyExpr
-                                        (when (nil? bodyExpr) => bodyExpr
-                                            (binding [*no-recur*          true
-                                                      *in-return-context* false]
-                                                (BodyExpr'parse context, (seq body))
-                                            )
-                                        )]
-                                    (if (= op 'catch)
-                                        (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                            (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
-                                                (let [catches
-                                                        (binding [*local-env*        (var-get! *local-env*)
-                                                                  *last-local-num*   (var-get! *last-local-num*)
-                                                                  *in-catch-finally* true]
-                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
-                                                                  #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
-                                                                (conj catches (CatchClause'new lb, handler))
-                                                            )
-                                                        )]
-                                                    (recur bodyExpr catches finallyExpr body true (next fs))
-                                                )
-                                            )
+        (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
+                (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
+                    (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
+                        (if (any = op 'catch 'finally)
+                            (let [bodyExpr
+                                    (when (nil? bodyExpr) => bodyExpr
+                                        (binding [*no-recur*          true
+                                                  *in-return-context* false]
+                                            (BodyExpr'parse context, (seq body))
                                         )
-                                        (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                            (let [finallyExpr
-                                                    (binding [*in-catch-finally* true]
-                                                        (BodyExpr'parse :Context'STATEMENT, (next f))
+                                    )]
+                                (if (= op 'catch)
+                                    (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                        (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
+                                            (let [catches
+                                                    (binding [*local-env*        (var-get! *local-env*)
+                                                              *last-local-num*   (var-get! *last-local-num*)
+                                                              *in-catch-finally* true]
+                                                        (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
+                                                              #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
+                                                            (conj catches (CatchClause'new lb, handler))
+                                                        )
                                                     )]
-                                                (recur bodyExpr catches finallyExpr body caught? (next fs))
+                                                (recur bodyExpr catches finallyExpr body true (next fs))
                                             )
                                         )
                                     )
-                                )
-                                (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
-                                    (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
+                                    (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
+                                        (let [finallyExpr
+                                                (binding [*in-catch-finally* true]
+                                                    (BodyExpr'parse :Context'STATEMENT, (next f))
+                                                )]
+                                            (recur bodyExpr catches finallyExpr body caught? (next fs))
+                                        )
+                                    )
                                 )
                             )
+                            (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
+                                (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
+                            )
                         )
-                    )]
-                (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
-                    ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
-                    (binding [*no-recur* true]
-                        (BodyExpr'parse context, (seq body))
                     )
+                )]
+            (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
+                ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
+                (binding [*no-recur* true]
+                    (BodyExpr'parse context, (seq body))
                 )
             )
         )
-    )
-
-    (defn- #_"Object" TryExpr''eval [#_"TryExpr" this]
-        (throw! "can't eval try")
     )
 
     (defn- #_"gen" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -15338,7 +15204,6 @@
     )
 
     (defm TryExpr Expr
-        (Expr'''eval => TryExpr''eval)
         (Expr'''emit => TryExpr''emit)
     )
 )
@@ -15356,15 +15221,10 @@
 
     (defn #_"Expr" ThrowExpr'parse [#_"Context" context, #_"seq" form]
         (cond
-            (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-            (= (count form) 1)        (throw! "too few arguments to throw: single Throwable expected")
-            (< 2 (count form))        (throw! "too many arguments to throw: single Throwable expected")
-            :else                     (ThrowExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
+            (= (count form) 1) (throw! "too few arguments to throw: single Throwable expected")
+            (< 2 (count form)) (throw! "too many arguments to throw: single Throwable expected")
+            :else              (ThrowExpr'new (Compiler'analyze (second form)))
         )
-    )
-
-    (defn- #_"Object" ThrowExpr''eval [#_"ThrowExpr" this]
-        (throw! "can't eval throw")
     )
 
     (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
@@ -15377,7 +15237,6 @@
     )
 
     (defm ThrowExpr Expr
-        (Expr'''eval => ThrowExpr''eval)
         (Expr'''emit => ThrowExpr''emit)
     )
 )
@@ -15484,24 +15343,27 @@
         )
     )
 
-    (defn #_"Expr" Compiler'analyze [#_"Context" context, #_"Object" form]
-        (let [form
-                (when (satisfies? LazySeq form) => form
-                    (with-meta (or (seq form) (list)) (meta form))
-                )]
-            (case form
-                nil                                  LiteralExpr'NIL
-                true                                 LiteralExpr'TRUE
-                false                                LiteralExpr'FALSE
-                (cond
-                    (symbol? form)                   (Compiler'analyzeSymbol form)
-                    (string? form)                   (LiteralExpr'new (.intern #_"String" form))
-                    (and (coll? form) (empty? form)) (LiteralExpr'new form)
-                    (seq? form)                      (Compiler'analyzeSeq context, form)
-                    (vector? form)                   (VectorExpr'parse context, form)
-                    (map? form)                      (MapExpr'parse context, form)
-                    (set? form)                      (SetExpr'parse context, form)
-                    :else                            (LiteralExpr'new form)
+    (defn #_"Expr" Compiler'analyze
+        ([#_"Object" form] (Compiler'analyze :Context'EXPRESSION, form))
+        ([#_"Context" context, #_"Object" form]
+            (let [form
+                    (when (satisfies? LazySeq form) => form
+                        (with-meta (or (seq form) (list)) (meta form))
+                    )]
+                (case form
+                    nil                                  LiteralExpr'NIL
+                    true                                 LiteralExpr'TRUE
+                    false                                LiteralExpr'FALSE
+                    (cond
+                        (symbol? form)                   (Compiler'analyzeSymbol form)
+                        (string? form)                   (LiteralExpr'new (.intern #_"String" form))
+                        (and (coll? form) (empty? form)) (LiteralExpr'new form)
+                        (seq? form)                      (Compiler'analyzeSeq context, form)
+                        (vector? form)                   (VectorExpr'parse form)
+                        (map? form)                      (MapExpr'parse form)
+                        (set? form)                      (SetExpr'parse form)
+                        :else                            (LiteralExpr'new form)
+                    )
                 )
             )
         )
@@ -15509,19 +15371,13 @@
 
     (defn #_"Object" Compiler'eval [#_"Object" form]
         (let [form (Compiler'macroexpand form)]
-            (cond
-                (and (seq? form) (= (first form) 'do))
-                    (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
-                        (Compiler'eval (first s))
-                    )
-                (and (coll? form) (not (and (symbol? (first form)) (.startsWith (#_:name name (first form)), "def"))))
-                    (let [#_"FnExpr" fexpr (Compiler'analyze :Context'EXPRESSION, (list (symbol! 'fn*) [] form))]
-                        (IFn'''invoke (Expr'''eval fexpr))
-                    )
-                :else
-                    (let [#_"Expr" expr (Compiler'analyze :Context'EVAL, form)]
-                        (Expr'''eval expr)
-                    )
+            (if (and (seq? form) (= (first form) 'do))
+                (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
+                    (Compiler'eval (first s))
+                )
+                (let [#_"FnExpr" fun (Compiler'analyze (list (symbol! 'fn*) [] form))]
+                    (IFn'''invoke (Lambda'new (:code fun)))
+                )
             )
         )
     )
