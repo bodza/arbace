@@ -13345,31 +13345,18 @@
         (#_"gen" Assignable'''emitAssign [#_"Assignable" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val])
     )
 
-    (defp Literal
-        (#_"Object" Literal'''literal [#_"Literal" this])
-    )
-
     (defp Recur)
 )
 
 (about #_"arbace.Compiler"
-    (defp NilExpr)
-    (defp BooleanExpr)
-    (defp MonitorEnterExpr)
-    (defp MonitorExitExpr)
+    (defp LiteralExpr)
     (defp AssignExpr)
-    (defp EmptyExpr)
-    (defp ConstantExpr)
     (defp UnresolvedVarExpr)
     (defp VarExpr)
     (defp TheVarExpr)
     (defp BodyExpr)
-    (defp CatchClause)
-    (defp TryExpr)
-    (defp ThrowExpr)
     (defp MetaExpr)
     (defp IfExpr)
-    (defp ListExpr)
     (defp MapExpr)
     (defp SetExpr)
     (defp VectorExpr)
@@ -13384,6 +13371,10 @@
     (defp LetExpr)
     (defp RecurExpr)
     (defp CaseExpr)
+    (defp MonitorExpr)
+    (defp CatchClause)
+    (defp TryExpr)
+    (defp ThrowExpr)
 )
 
 (about #_"arbace.Cache"
@@ -13467,81 +13458,6 @@
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
 
     (def #_"Symbol" Compiler'FNONCE (with-meta (symbol! 'fn*) {:once true}))
-)
-
-(about #_"NilExpr"
-    (defr NilExpr [])
-
-    (defn #_"NilExpr" NilExpr'new []
-        (class! NilExpr)
-    )
-
-    (defn- #_"Object" NilExpr''literal [#_"NilExpr" this]
-        nil
-    )
-
-    (defn- #_"Object" NilExpr''eval [#_"NilExpr" this]
-        (Literal'''literal this)
-    )
-
-    (defn- #_"gen" NilExpr''emit [#_"NilExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (Gen''push gen, nil)]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (def #_"NilExpr" Compiler'NIL_EXPR (NilExpr'new))
-
-    (defm NilExpr Literal
-        (Literal'''literal => NilExpr''literal)
-    )
-
-    (defm NilExpr Expr
-        (Expr'''eval => NilExpr''eval)
-        (Expr'''emit => NilExpr''emit)
-    )
-)
-
-(about #_"BooleanExpr"
-    (defr BooleanExpr [])
-
-    (defn #_"BooleanExpr" BooleanExpr'new [#_"boolean" val]
-        (merge (class! BooleanExpr)
-            (hash-map
-                #_"boolean" :val val
-            )
-        )
-    )
-
-    (defn- #_"Object" BooleanExpr''literal [#_"BooleanExpr" this]
-        (if (:val this) true false)
-    )
-
-    (defn- #_"Object" BooleanExpr''eval [#_"BooleanExpr" this]
-        (Literal'''literal this)
-    )
-
-    (defn- #_"gen" BooleanExpr''emit [#_"BooleanExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (Gen''push gen, (:val this))]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (def #_"BooleanExpr" Compiler'TRUE_EXPR  (BooleanExpr'new true))
-    (def #_"BooleanExpr" Compiler'FALSE_EXPR (BooleanExpr'new false))
-
-    (defm BooleanExpr Literal
-        (Literal'''literal => BooleanExpr''literal)
-    )
-
-    (defm BooleanExpr Expr
-        (Expr'''eval => BooleanExpr''eval)
-        (Expr'''emit => BooleanExpr''emit)
-    )
 )
 
 (about #_"Compiler"
@@ -13738,75 +13654,48 @@
     )
 )
 
-(about #_"MonitorEnterExpr"
-    (defr MonitorEnterExpr [])
+(about #_"LiteralExpr"
+    (defr LiteralExpr [])
 
-    (defn #_"MonitorEnterExpr" MonitorEnterExpr'new [#_"Expr" target]
-        (merge (class! MonitorEnterExpr)
+    (defn #_"LiteralExpr" LiteralExpr'new [#_"Object" value]
+        (merge (class! LiteralExpr)
             (hash-map
-                #_"Expr" :target target
+                #_"Object" :value value
             )
         )
     )
 
-    (declare Compiler'analyze)
+    (def #_"LiteralExpr" LiteralExpr'NIL   (LiteralExpr'new nil))
+    (def #_"LiteralExpr" LiteralExpr'TRUE  (LiteralExpr'new true))
+    (def #_"LiteralExpr" LiteralExpr'FALSE (LiteralExpr'new false))
 
-    (defn #_"Expr" MonitorEnterExpr'parse [#_"Context" context, #_"seq" form]
-        (MonitorEnterExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
-    )
-
-    (defn- #_"Object" MonitorEnterExpr''eval [#_"MonitorEnterExpr" this]
-        (throw! "can't eval monitor-enter")
-    )
-
-    (defn- #_"gen" MonitorEnterExpr''emit [#_"MonitorEnterExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            gen (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen)
-            gen (Gen''monitor-enter gen)
-            gen (Expr'''emit Compiler'NIL_EXPR, context, fun, gen)
-        ]
-            gen
-        )
-    )
-
-    (defm MonitorEnterExpr Expr
-        (Expr'''eval => MonitorEnterExpr''eval)
-        (Expr'''emit => MonitorEnterExpr''emit)
-    )
-)
-
-(about #_"MonitorExitExpr"
-    (defr MonitorExitExpr [])
-
-    (defn #_"MonitorExitExpr" MonitorExitExpr'new [#_"Expr" target]
-        (merge (class! MonitorExitExpr)
-            (hash-map
-                #_"Expr" :target target
+    (defn #_"Expr" LiteralExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"int" n (dec (count form))]
+            (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
+                (let [#_"Object" value (second form)]
+                    (case value
+                        nil                 LiteralExpr'NIL
+                        true                LiteralExpr'TRUE
+                        false               LiteralExpr'FALSE
+                        (cond
+                            (string? value) (LiteralExpr'new (.intern #_"String" value))
+                            :else           (LiteralExpr'new value)
+                        )
+                    )
+                )
             )
         )
     )
 
-    (defn #_"Expr" MonitorExitExpr'parse [#_"Context" context, #_"seq" form]
-        (MonitorExitExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
-    )
-
-    (defn- #_"Object" MonitorExitExpr''eval [#_"MonitorExitExpr" this]
-        (throw! "can't eval monitor-exit")
-    )
-
-    (defn- #_"gen" MonitorExitExpr''emit [#_"MonitorExitExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            gen (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen)
-            gen (Gen''monitor-exit gen)
-            gen (Expr'''emit Compiler'NIL_EXPR, context, fun, gen)
-        ]
-            gen
+    (defn- #_"gen" LiteralExpr''emit [#_"LiteralExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+        (when-not (= context :Context'STATEMENT) => gen
+            (Gen''push gen, (:value this))
         )
     )
 
-    (defm MonitorExitExpr Expr
-        (Expr'''eval => MonitorExitExpr''eval)
-        (Expr'''emit => MonitorExitExpr''emit)
+    (defm LiteralExpr Expr
+        (Expr'''eval => :value)
+        (Expr'''emit => LiteralExpr''emit)
     )
 )
 
@@ -13821,6 +13710,8 @@
             )
         )
     )
+
+    (declare Compiler'analyze)
 
     (defn #_"Expr" AssignExpr'parse [#_"Context" context, #_"seq" form]
         (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
@@ -13843,89 +13734,6 @@
     (defm AssignExpr Expr
         (Expr'''eval => AssignExpr''eval)
         (Expr'''emit => AssignExpr''emit)
-    )
-)
-
-(about #_"EmptyExpr"
-    (defr EmptyExpr [])
-
-    (defn #_"EmptyExpr" EmptyExpr'new [#_"Object" coll]
-        (merge (class! EmptyExpr)
-            (hash-map
-                #_"Object" :coll coll
-            )
-        )
-    )
-
-    (defn- #_"gen" EmptyExpr''emit [#_"EmptyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            gen
-                (condp satisfies? (:coll this)
-                    IPersistentList   (Gen''push gen, PersistentList'EMPTY)
-                    IPersistentVector (Gen''push gen, PersistentVector'EMPTY)
-                    IPersistentMap    (Gen''push gen, PersistentArrayMap'EMPTY)
-                    IPersistentSet    (Gen''push gen, PersistentHashSet'EMPTY)
-                )
-        ]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (defm EmptyExpr Expr
-        (Expr'''eval => :coll)
-        (Expr'''emit => EmptyExpr''emit)
-    )
-)
-
-(about #_"ConstantExpr"
-    (defr ConstantExpr [])
-
-    (defn #_"ConstantExpr" ConstantExpr'new [#_"Object" v]
-        (merge (class! ConstantExpr)
-            (hash-map
-                #_"Object" :v v
-            )
-        )
-    )
-
-    (defn #_"Expr" ConstantExpr'parse [#_"Context" context, #_"seq" form]
-        (let [#_"int" n (dec (count form))]
-            (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
-                (let [#_"Object" v (second form)]
-                    (case v
-                        nil                                   Compiler'NIL_EXPR
-                        true                                  Compiler'TRUE_EXPR
-                        false                                 Compiler'FALSE_EXPR
-                        (cond
-                            (string? v)                       (ConstantExpr'new (.intern #_"String" v))
-                            (and (coll? v) (zero? (count v))) (EmptyExpr'new v)
-                            :else                             (ConstantExpr'new v)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"Object" ConstantExpr''eval [#_"ConstantExpr" this]
-        (Literal'''literal this)
-    )
-
-    (defn- #_"gen" ConstantExpr''emit [#_"ConstantExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-not (= context :Context'STATEMENT) => gen
-            (Gen''push gen, (:v this))
-        )
-    )
-
-    (defm ConstantExpr Literal
-        (Literal'''literal => :v)
-    )
-
-    (defm ConstantExpr Expr
-        (Expr'''eval => ConstantExpr''eval)
-        (Expr'''emit => ConstantExpr''emit)
     )
 )
 
@@ -14027,10 +13835,8 @@
     )
 
     (defn- #_"gen" TheVarExpr''emit [#_"TheVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [gen (Gen''push gen, (:var this))]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
+        (when-not (= context :Context'STATEMENT) => gen
+            (Gen''push gen, (:var this))
         )
     )
 
@@ -14059,7 +13865,7 @@
                         (recur (conj v (Compiler'analyze c, (first s))) (next s))
                     )
                 )]
-            (BodyExpr'new (if (pos? (count v)) v (conj v Compiler'NIL_EXPR)))
+            (BodyExpr'new (if (pos? (count v)) v (conj v LiteralExpr'NIL)))
         )
     )
 
@@ -14078,212 +13884,6 @@
     (defm BodyExpr Expr
         (Expr'''eval => BodyExpr''eval)
         (Expr'''emit => BodyExpr''emit)
-    )
-)
-
-(about #_"CatchClause"
-    (defr CatchClause [])
-
-    (defn #_"CatchClause" CatchClause'new [#_"LocalBinding" lb, #_"Expr" handler]
-        (merge (class! CatchClause)
-            (hash-map
-                #_"LocalBinding" :lb lb
-                #_"Expr" :handler handler
-            )
-        )
-    )
-)
-
-(about #_"TryExpr"
-    (defr TryExpr [])
-
-    (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"vector" catchExprs, #_"Expr" finallyExpr]
-        (merge (class! TryExpr)
-            (hash-map
-                #_"Expr" :tryExpr tryExpr
-                #_"vector" :catchExprs catchExprs
-                #_"Expr" :finallyExpr finallyExpr
-
-                #_"int" :retLocal (Compiler'nextLocalNum)
-                #_"int" :finallyLocal (Compiler'nextLocalNum)
-            )
-        )
-    )
-
-    ;; (try try-expr* catch-expr* finally-expr?)
-    ;; catch-expr: (catch class sym expr*)
-    ;; finally-expr: (finally expr*)
-    (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form]
-        (when (= context :Context'RETURN) => (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-            (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
-                    (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
-                        (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
-                            (if (any = op 'catch 'finally)
-                                (let [bodyExpr
-                                        (when (nil? bodyExpr) => bodyExpr
-                                            (binding [*no-recur*          true
-                                                      *in-return-context* false]
-                                                (BodyExpr'parse context, (seq body))
-                                            )
-                                        )]
-                                    (if (= op 'catch)
-                                        (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                            (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
-                                                (let [catches
-                                                        (binding [*local-env*        (var-get! *local-env*)
-                                                                  *last-local-num*   (var-get! *last-local-num*)
-                                                                  *in-catch-finally* true]
-                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
-                                                                  #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
-                                                                (conj catches (CatchClause'new lb, handler))
-                                                            )
-                                                        )]
-                                                    (recur bodyExpr catches finallyExpr body true (next fs))
-                                                )
-                                            )
-                                        )
-                                        (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                            (let [finallyExpr
-                                                    (binding [*in-catch-finally* true]
-                                                        (BodyExpr'parse :Context'STATEMENT, (next f))
-                                                    )]
-                                                (recur bodyExpr catches finallyExpr body caught? (next fs))
-                                            )
-                                        )
-                                    )
-                                )
-                                (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
-                                    (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
-                                )
-                            )
-                        )
-                    )]
-                (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
-                    ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
-                    (binding [*no-recur* true]
-                        (BodyExpr'parse context, (seq body))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn- #_"Object" TryExpr''eval [#_"TryExpr" this]
-        (throw! "can't eval try")
-    )
-
-    (defn- #_"gen" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            #_"label" l'start (Gen''mark gen)
-            gen (Expr'''emit (:tryExpr this), context, fun, gen)
-            gen
-                (when-not (= context :Context'STATEMENT) => gen
-                    (Gen''store gen, (:retLocal this))
-                )
-            #_"label" l'end (Gen''mark gen)
-            gen
-                (when (some? (:finallyExpr this)) => gen
-                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                )
-            #_"label" l'return (Gen''label gen)
-            gen (Gen''goto gen, l'return)
-            #_"int" n (count (:catchExprs this)) #_"labels" l'starts (mapv Gen''label (repeat n gen)) #_"labels" l'ends (mapv Gen''label (repeat n gen))
-            gen
-                (loop-when [gen gen #_"int" i 0] (< i n) => gen
-                    (let [
-                        #_"CatchClause" clause (nth (:catchExprs this) i)
-                        gen (Gen''mark gen, (nth l'starts i))
-                        ;; exception should be on stack
-                        ;; put in clause local
-                        gen (Gen''store gen, (:idx (:lb clause)))
-                        gen (Expr'''emit (:handler clause), context, fun, gen)
-                        gen
-                            (when-not (= context :Context'STATEMENT) => gen
-                                (Gen''store gen, (:retLocal this))
-                            )
-                        gen (Gen''mark gen, (nth l'ends i))
-                        gen
-                            (when (some? (:finallyExpr this)) => gen
-                                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                            )
-                        gen (Gen''goto gen, l'return)
-                    ]
-                        (recur gen (inc i))
-                    )
-                )
-            #_"label" l'finally (Gen''label gen)
-            gen
-                (when (some? (:finallyExpr this)) => gen
-                    (let [
-                        gen (Gen''mark gen, l'finally)
-                        ;; exception should be on stack
-                        gen (Gen''store gen, (:finallyLocal this))
-                        gen (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
-                        gen (Gen''load gen, (:finallyLocal this))
-                        gen (Gen''throw gen)
-                    ]
-                        gen
-                    )
-                )
-            gen (Gen''mark gen, l'return)
-            gen
-                (when-not (= context :Context'STATEMENT) => gen
-                    (Gen''load gen, (:retLocal this))
-                )
-            gen (loop-when-recur [gen gen #_"int" i 0] (< i n) [(Gen''try-catch-finally gen, l'start, l'end, (nth l'starts i)) (inc i)] => gen)
-        ]
-            (when (some? (:finallyExpr this)) => gen
-                (let [
-                    gen (Gen''try-catch-finally gen, l'start, l'end, l'finally)
-                ]
-                    (loop-when-recur [gen gen #_"int" i 0] (< i n) [(Gen''try-catch-finally gen, (nth l'starts i), (nth l'ends i), l'finally) (inc i)] => gen)
-                )
-            )
-        )
-    )
-
-    (defm TryExpr Expr
-        (Expr'''eval => TryExpr''eval)
-        (Expr'''emit => TryExpr''emit)
-    )
-)
-
-(about #_"ThrowExpr"
-    (defr ThrowExpr [])
-
-    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
-        (merge (class! ThrowExpr)
-            (hash-map
-                #_"Expr" :excExpr excExpr
-            )
-        )
-    )
-
-    (defn #_"Expr" ThrowExpr'parse [#_"Context" context, #_"seq" form]
-        (cond
-            (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
-            (= (count form) 1)        (throw! "too few arguments to throw: single Throwable expected")
-            (< 2 (count form))        (throw! "too many arguments to throw: single Throwable expected")
-            :else                     (ThrowExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
-        )
-    )
-
-    (defn- #_"Object" ThrowExpr''eval [#_"ThrowExpr" this]
-        (throw! "can't eval throw")
-    )
-
-    (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            gen (Expr'''emit (:excExpr this), :Context'EXPRESSION, fun, gen)
-            gen (Gen''throw gen)
-        ]
-            gen
-        )
-    )
-
-    (defm ThrowExpr Expr
-        (Expr'''eval => ThrowExpr''eval)
-        (Expr'''emit => ThrowExpr''emit)
     )
 )
 
@@ -14377,119 +13977,67 @@
     )
 )
 
-(about #_"ListExpr"
-    (defr ListExpr [])
+(about #_"MapExpr"
+    (defr MapExpr [])
 
-    (defn #_"ListExpr" ListExpr'new [#_"vector" args]
-        (merge (class! ListExpr)
+    (defn #_"MapExpr" MapExpr'new [#_"vector" args]
+        (merge (class! MapExpr)
             (hash-map
                 #_"vector" :args args
             )
         )
     )
 
-    (defn- #_"Object" ListExpr''eval [#_"ListExpr" this]
-        (seq (map Expr'''eval (:args this)))
-    )
-
-    (declare FnExpr''emitArgs)
-
-    (defn- #_"gen" ListExpr''emit [#_"ListExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (let [
-            gen
-                (when (seq (:args this)) => (Gen''push gen, PersistentList'EMPTY)
-                    (let [gen (FnExpr''emitArgs fun, (:args this), gen)]
-                        (Gen''invoke gen, 'PersistentList'create)
+    (defn #_"Expr" MapExpr'parse [#_"Context" context, #_"map" form]
+        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
+              [#_"vector" args #_"boolean" literal?]
+                (loop-when [args (vector), literal? true, #_"set" keys (hash-set), #_"seq" s (seq form)] (some? s) => [args literal?]
+                    (let [#_"pair" e (first s) #_"Expr" k (Compiler'analyze c, (key e)) #_"Expr" v (Compiler'analyze c, (val e))
+                          [literal? keys]
+                            (when (satisfies? LiteralExpr k) => [false keys]
+                                (when-not (contains? keys (:value k)) => (throw! "duplicate constant keys in map")
+                                    [literal? (conj keys (:value k))]
+                                )
+                            )]
+                        (recur (conj args k v) (and literal? (satisfies? LiteralExpr v)) keys (next s))
                     )
                 )
-        ]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (defm ListExpr Expr
-        (Expr'''eval => ListExpr''eval)
-        (Expr'''emit => ListExpr''emit)
-    )
-)
-
-(about #_"MapExpr"
-    (defr MapExpr [])
-
-    (defn #_"MapExpr" MapExpr'new [#_"vector" keyvals]
-        (merge (class! MapExpr)
-            (hash-map
-                #_"vector" :keyvals keyvals
+              #_"Expr" e
+                (when literal? => (MapExpr'new args)
+                    (LiteralExpr'new (apply hash-map (map :value args)))
+                )]
+            (when-some [#_"meta" m (meta form)] => e
+                (MetaExpr'new e, (MapExpr'parse c, m))
             )
         )
     )
 
     (defn- #_"Object" MapExpr''eval [#_"MapExpr" this]
-        (RT'map (map Expr'''eval (:keyvals this)))
+        (RT'map (map Expr'''eval (:args this)))
     )
+
+    (declare FnExpr''emitArgs)
 
     (defn- #_"gen" MapExpr''emit [#_"MapExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
-            [#_"boolean" allKeysConstant #_"boolean" allConstantKeysUnique]
-                (loop-when [constant? true unique? true #_"IPersistentSet" keys (hash-set) #_"int" i 0] (< i (count (:keyvals this))) => [constant? unique?]
-                    (let [#_"Expr" k (nth (:keyvals this) i)
-                          [constant? unique? keys]
-                            (when (satisfies? Literal k) => [false unique? keys]
-                                (let-when-not [#_"Object" v (Expr'''eval k)] (contains? keys v) => [constant? false keys]
-                                    [constant? unique? (conj keys v)]
+            #_"int" n (count (:args this))
+            [#_"boolean" literal? #_"boolean" unique?]
+                (loop-when [literal? true, unique? true, #_"set" keys (hash-set), #_"int" i 0] (< i n) => [literal? unique?]
+                    (let [#_"Expr" k (nth (:args this) i)
+                          [literal? unique? keys]
+                            (when (satisfies? LiteralExpr k) => [false unique? keys]
+                                (when-not (contains? keys (:value k)) => [literal? false keys]
+                                    [literal? unique? (conj keys (:value k))]
                                 )
                             )]
-                        (recur constant? unique? keys (+ i 2))
+                        (recur literal? unique? keys (+ i 2))
                     )
                 )
-            gen (FnExpr''emitArgs fun, (:keyvals this), gen)
-            gen
-                (if (or (and allKeysConstant allConstantKeysUnique) (<= (count (:keyvals this)) 2))
-                    (Gen''invoke gen, 'RT'mapUniqueKeys)
-                    (Gen''invoke gen, 'RT'map)
-                )
+            gen (FnExpr''emitArgs fun, (:args this), gen)
+            gen (Gen''invoke gen, (if (or (and literal? unique?) (<= n 2)) 'RT'mapUniqueKeys 'RT'map))
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
-            )
-        )
-    )
-
-    (defn #_"Expr" MapExpr'parse [#_"Context" context, #_"map" form]
-        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              [#_"vector" keyvals #_"boolean" keysConstant #_"boolean" allConstantKeysUnique #_"boolean" valsConstant]
-                (loop-when [keyvals (vector), keysConstant true, allConstantKeysUnique true, #_"IPersistentSet" constantKeys (hash-set), valsConstant true, #_"seq" s (seq form)] (some? s) => [keyvals keysConstant allConstantKeysUnique valsConstant]
-                    (let [#_"pair" e (first s) #_"Expr" k (Compiler'analyze c, (key e)) #_"Expr" v (Compiler'analyze c, (val e))
-                          [keysConstant allConstantKeysUnique constantKeys]
-                            (when (satisfies? Literal k) => [false allConstantKeysUnique constantKeys]
-                                (let [#_"Object" kval (Expr'''eval k)]
-                                    (if (contains? constantKeys kval)
-                                        [keysConstant false constantKeys]
-                                        [keysConstant allConstantKeysUnique (conj constantKeys kval)]
-                                    )
-                                )
-                            )]
-                        (recur (conj keyvals k v) keysConstant allConstantKeysUnique constantKeys (and valsConstant (satisfies? Literal v)) (next s))
-                    )
-                )
-              #_"Expr" e (MapExpr'new keyvals)]
-            (cond
-                (and (satisfies? IObj form) (some? (meta form)))
-                    (MetaExpr'new e, (MapExpr'parse c, (meta form)))
-                keysConstant
-                    (when allConstantKeysUnique => (throw! "duplicate constant keys in map")
-                        (when valsConstant => e
-                            (loop-when-recur [#_"map" m (hash-map) #_"int" i 0]
-                                             (< i (count keyvals))
-                                             [(assoc m (Literal'''literal (nth keyvals i)) (Literal'''literal (nth keyvals (inc i)))) (+ i 2)]
-                                          => (ConstantExpr'new m)
-                            )
-                        )
-                    )
-                :else
-                    e
             )
         )
     )
@@ -14503,51 +14051,47 @@
 (about #_"SetExpr"
     (defr SetExpr [])
 
-    (defn #_"SetExpr" SetExpr'new [#_"vector" keys]
+    (defn #_"SetExpr" SetExpr'new [#_"vector" args]
         (merge (class! SetExpr)
             (hash-map
-                #_"vector" :keys keys
+                #_"vector" :args args
+            )
+        )
+    )
+
+    (defn #_"Expr" SetExpr'parse [#_"Context" context, #_"set" form]
+        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
+              [#_"vector" args #_"boolean" literal?]
+                (loop-when [args (vector) literal? true #_"seq" s (seq form)] (some? s) => [args literal?]
+                    (let [#_"Expr" e (Compiler'analyze c, (first s))]
+                        (recur (conj args e) (and literal? (satisfies? LiteralExpr e)) (next s))
+                    )
+                )
+              #_"Expr" e
+                (when literal? => (SetExpr'new args)
+                    (LiteralExpr'new (apply hash-set (map :value args)))
+                )]
+            (when-some [#_"meta" m (meta form)] => e
+                (MetaExpr'new e, (MapExpr'parse c, m))
             )
         )
     )
 
     (defn- #_"Object" SetExpr''eval [#_"SetExpr" this]
-        (PersistentHashSet'createWithCheck (map Expr'''eval (:keys this)))
+        (PersistentHashSet'createWithCheck (map Expr'''eval (:args this)))
     )
 
     (defn- #_"gen" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen
-                (when (seq (:keys this)) => (Gen''push gen, PersistentHashSet'EMPTY)
-                    (let [gen (FnExpr''emitArgs fun, (:keys this), gen)]
+                (when (seq (:args this)) => (Gen''push gen, PersistentHashSet'EMPTY)
+                    (let [gen (FnExpr''emitArgs fun, (:args this), gen)]
                         (Gen''invoke gen, 'PersistentHashSet'createWithCheck)
                     )
                 )
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
-            )
-        )
-    )
-
-    (defn #_"Expr" SetExpr'parse [#_"Context" context, #_"IPersistentSet" form]
-        (let [[#_"vector" keys #_"boolean" constant?]
-                (loop-when [keys (vector) constant? true #_"seq" s (seq form)] (some? s) => [keys constant?]
-                    (let [#_"Expr" e (Compiler'analyze (if (= context :Context'EVAL) context :Context'EXPRESSION), (first s))]
-                        (recur (conj keys e) (and constant? (satisfies? Literal e)) (next s))
-                    )
-                )]
-            (cond
-                (and (satisfies? IObj form) (some? (meta form)))
-                    (MetaExpr'new (SetExpr'new keys), (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
-                constant?
-                    (loop-when-recur [#_"IPersistentSet" s (hash-set) #_"int" i 0]
-                                     (< i (count keys))
-                                     [(conj s (Literal'''literal (nth keys i))) (inc i)]
-                                  => (ConstantExpr'new s)
-                    )
-                :else
-                    (SetExpr'new keys)
             )
         )
     )
@@ -14565,6 +14109,24 @@
         (merge (class! VectorExpr)
             (hash-map
                 #_"vector" :args args
+            )
+        )
+    )
+
+    (defn #_"Expr" VectorExpr'parse [#_"Context" context, #_"vector" form]
+        (let [#_"Context" c (if (= context :Context'EVAL) context :Context'EXPRESSION)
+              [#_"vector" args #_"boolean" literal?]
+                (loop-when [args (vector) literal? true #_"seq" s (seq form)] (some? s) => [args literal?]
+                    (let [#_"Expr" e (Compiler'analyze c, (first s))]
+                        (recur (conj args e) (and literal? (satisfies? LiteralExpr e)) (next s))
+                    )
+                )
+              #_"Expr" e
+                (when literal? => (VectorExpr'new args)
+                    (LiteralExpr'new (mapv :value args))
+                )]
+            (when-some [#_"meta" m (meta form)] => e
+                (MetaExpr'new e, (MapExpr'parse c, m))
             )
         )
     )
@@ -14588,28 +14150,6 @@
         )
     )
 
-    (defn #_"Expr" VectorExpr'parse [#_"Context" context, #_"vector" form]
-        (let [[#_"vector" args #_"boolean" constant?]
-                (loop-when [args (vector) constant? true #_"int" i 0] (< i (count form)) => [args constant?]
-                    (let [#_"Expr" e (Compiler'analyze (if (= context :Context'EVAL) context :Context'EXPRESSION), (nth form i))]
-                        (recur (conj args e) (and constant? (satisfies? Literal e)) (inc i))
-                    )
-                )]
-            (cond
-                (and (satisfies? IObj form) (some? (meta form)))
-                    (MetaExpr'new (VectorExpr'new args), (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
-                constant?
-                    (loop-when-recur [#_"vector" v (vector) #_"int" i 0]
-                                     (< i (count args))
-                                     [(conj v (Literal'''literal (nth args i))) (inc i)]
-                                  => (ConstantExpr'new v)
-                    )
-                :else
-                    (VectorExpr'new args)
-            )
-        )
-    )
-
     (defm VectorExpr Expr
         (Expr'''eval => VectorExpr''eval)
         (Expr'''emit => VectorExpr''emit)
@@ -14626,6 +14166,13 @@
                 #_"vector" :args args
                 #_"boolean" :tailPosition tailPosition
             )
+        )
+    )
+
+    (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form]
+        (let [#_"boolean" tailPosition (Compiler'inTailCall context) context (if (= context :Context'EVAL) context :Context'EXPRESSION)
+              #_"Expr" fexpr (Compiler'analyze context, (first form)) #_"vector" args (mapv (partial Compiler'analyze context) (next form))]
+            (InvokeExpr'new fexpr, args, tailPosition)
         )
     )
 
@@ -14666,13 +14213,6 @@
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
             )
-        )
-    )
-
-    (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form]
-        (let [#_"boolean" tailPosition (Compiler'inTailCall context) context (if (= context :Context'EVAL) context :Context'EXPRESSION)
-              #_"Expr" fexpr (Compiler'analyze context, (first form)) #_"vector" args (mapv (partial Compiler'analyze context) (next form))]
-            (InvokeExpr'new fexpr, args, tailPosition)
         )
     )
 
@@ -14720,22 +14260,9 @@
         )
     )
 
-    (defn- #_"Object" LocalBindingExpr''evalAssign [#_"LocalBindingExpr" this, #_"Expr" val]
-        (throw! "can't eval locals")
-    )
-
-    (defn- #_"gen" LocalBindingExpr''emitAssign [#_"LocalBindingExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val]
-        (throw! "can't assign to locals")
-    )
-
     (defm LocalBindingExpr Expr
         (Expr'''eval => LocalBindingExpr''eval)
         (Expr'''emit => LocalBindingExpr''emit)
-    )
-
-    (defm LocalBindingExpr Assignable
-        (Assignable'''evalAssign => LocalBindingExpr''evalAssign)
-        (Assignable'''emitAssign => LocalBindingExpr''emitAssign)
     )
 )
 
@@ -15473,7 +15000,7 @@
                     (loop-when [tests (sorted-map) thens (hash-map) #_"seq" s (seq caseMap)] (some? s) => [tests thens]
                         (let [#_"pair" e (first s)
                               #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
-                              #_"Expr" test (ConstantExpr'new (first pair))
+                              #_"Expr" test (LiteralExpr'new (first pair))
                               #_"Expr" then (Compiler'analyze context, (second pair))]
                             (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
                         )
@@ -15484,12 +15011,12 @@
         )
     )
 
-    (defn- #_"boolean" CaseExpr''isShiftMasked [#_"CaseExpr" this]
-        (not= (:mask this) 0)
+    (defn- #_"Object" CaseExpr''eval [#_"CaseExpr" this]
+        (throw! "can't eval case")
     )
 
     (defn- #_"gen" CaseExpr''emitShiftMask [#_"CaseExpr" this, #_"gen" gen]
-        (when (CaseExpr''isShiftMasked this) => gen
+        (when-not (zero? (:mask this)) => gen
             (let [
                 gen (Gen''push gen, (:shift this))
                 gen (Gen''shr gen)
@@ -15556,10 +15083,6 @@
         )
     )
 
-    (defn- #_"Object" CaseExpr''eval [#_"CaseExpr" this]
-        (throw! "can't eval case")
-    )
-
     (defn- #_"gen" CaseExpr''emit [#_"CaseExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             #_"label" l'default (Gen''label gen)
@@ -15617,6 +15140,248 @@
     )
 )
 
+(about #_"MonitorExpr"
+    (defr MonitorExpr [])
+
+    (defn #_"MonitorExpr" MonitorExpr'new [#_"Expr" target, #_"boolean" enter?]
+        (merge (class! MonitorExpr)
+            (hash-map
+                #_"Expr" :target target
+                #_"boolean" :enter? enter?
+            )
+        )
+    )
+
+    (defn #_"Expr" MonitorExpr'parse [#_"Context" context, #_"seq" form]
+        (MonitorExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)), (= (first form) 'monitor-enter))
+    )
+
+    (defn- #_"Object" MonitorExpr''eval [#_"MonitorExpr" this]
+        (throw! (str "can't eval monitor-" (if (:enter? this) "enter" "exit")))
+    )
+
+    (defn- #_"gen" MonitorExpr''emit [#_"MonitorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+        (let [
+            gen (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen)
+            gen (if (:enter? this) (Gen''monitor-enter gen) (Gen''monitor-exit gen))
+            gen (Expr'''emit LiteralExpr'NIL, context, fun, gen)
+        ]
+            gen
+        )
+    )
+
+    (defm MonitorExpr Expr
+        (Expr'''eval => MonitorExpr''eval)
+        (Expr'''emit => MonitorExpr''emit)
+    )
+)
+
+(about #_"CatchClause"
+    (defr CatchClause [])
+
+    (defn #_"CatchClause" CatchClause'new [#_"LocalBinding" lb, #_"Expr" handler]
+        (merge (class! CatchClause)
+            (hash-map
+                #_"LocalBinding" :lb lb
+                #_"Expr" :handler handler
+            )
+        )
+    )
+)
+
+(about #_"TryExpr"
+    (defr TryExpr [])
+
+    (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"vector" catchExprs, #_"Expr" finallyExpr]
+        (merge (class! TryExpr)
+            (hash-map
+                #_"Expr" :tryExpr tryExpr
+                #_"vector" :catchExprs catchExprs
+                #_"Expr" :finallyExpr finallyExpr
+
+                #_"int" :retLocal (Compiler'nextLocalNum)
+                #_"int" :finallyLocal (Compiler'nextLocalNum)
+            )
+        )
+    )
+
+    ;; (try try-expr* catch-expr* finally-expr?)
+    ;; catch-expr: (catch class sym expr*)
+    ;; finally-expr: (finally expr*)
+    (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form]
+        (when (= context :Context'RETURN) => (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+            (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
+                    (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
+                        (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
+                            (if (any = op 'catch 'finally)
+                                (let [bodyExpr
+                                        (when (nil? bodyExpr) => bodyExpr
+                                            (binding [*no-recur*          true
+                                                      *in-return-context* false]
+                                                (BodyExpr'parse context, (seq body))
+                                            )
+                                        )]
+                                    (if (= op 'catch)
+                                        (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                            (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
+                                                (let [catches
+                                                        (binding [*local-env*        (var-get! *local-env*)
+                                                                  *last-local-num*   (var-get! *last-local-num*)
+                                                                  *in-catch-finally* true]
+                                                            (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
+                                                                  #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
+                                                                (conj catches (CatchClause'new lb, handler))
+                                                            )
+                                                        )]
+                                                    (recur bodyExpr catches finallyExpr body true (next fs))
+                                                )
+                                            )
+                                        )
+                                        (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
+                                            (let [finallyExpr
+                                                    (binding [*in-catch-finally* true]
+                                                        (BodyExpr'parse :Context'STATEMENT, (next f))
+                                                    )]
+                                                (recur bodyExpr catches finallyExpr body caught? (next fs))
+                                            )
+                                        )
+                                    )
+                                )
+                                (when-not caught? => (throw! "only catch or finally clause can follow catch in try expression")
+                                    (recur bodyExpr catches finallyExpr (conj body f) caught? (next fs))
+                                )
+                            )
+                        )
+                    )]
+                (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr)
+                    ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
+                    (binding [*no-recur* true]
+                        (BodyExpr'parse context, (seq body))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn- #_"Object" TryExpr''eval [#_"TryExpr" this]
+        (throw! "can't eval try")
+    )
+
+    (defn- #_"gen" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+        (let [
+            #_"label" l'start (Gen''mark gen)
+            gen (Expr'''emit (:tryExpr this), context, fun, gen)
+            gen
+                (when-not (= context :Context'STATEMENT) => gen
+                    (Gen''store gen, (:retLocal this))
+                )
+            #_"label" l'end (Gen''mark gen)
+            gen
+                (when (some? (:finallyExpr this)) => gen
+                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                )
+            #_"label" l'return (Gen''label gen)
+            gen (Gen''goto gen, l'return)
+            #_"int" n (count (:catchExprs this)) #_"labels" l'starts (mapv Gen''label (repeat n gen)) #_"labels" l'ends (mapv Gen''label (repeat n gen))
+            gen
+                (loop-when [gen gen #_"int" i 0] (< i n) => gen
+                    (let [
+                        #_"CatchClause" clause (nth (:catchExprs this) i)
+                        gen (Gen''mark gen, (nth l'starts i))
+                        ;; exception should be on stack
+                        ;; put in clause local
+                        gen (Gen''store gen, (:idx (:lb clause)))
+                        gen (Expr'''emit (:handler clause), context, fun, gen)
+                        gen
+                            (when-not (= context :Context'STATEMENT) => gen
+                                (Gen''store gen, (:retLocal this))
+                            )
+                        gen (Gen''mark gen, (nth l'ends i))
+                        gen
+                            (when (some? (:finallyExpr this)) => gen
+                                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                            )
+                        gen (Gen''goto gen, l'return)
+                    ]
+                        (recur gen (inc i))
+                    )
+                )
+            #_"label" l'finally (Gen''label gen)
+            gen
+                (when (some? (:finallyExpr this)) => gen
+                    (let [
+                        gen (Gen''mark gen, l'finally)
+                        ;; exception should be on stack
+                        gen (Gen''store gen, (:finallyLocal this))
+                        gen (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                        gen (Gen''load gen, (:finallyLocal this))
+                        gen (Gen''throw gen)
+                    ]
+                        gen
+                    )
+                )
+            gen (Gen''mark gen, l'return)
+            gen
+                (when-not (= context :Context'STATEMENT) => gen
+                    (Gen''load gen, (:retLocal this))
+                )
+            gen (loop-when-recur [gen gen #_"int" i 0] (< i n) [(Gen''try-catch-finally gen, l'start, l'end, (nth l'starts i)) (inc i)] => gen)
+        ]
+            (when (some? (:finallyExpr this)) => gen
+                (let [
+                    gen (Gen''try-catch-finally gen, l'start, l'end, l'finally)
+                ]
+                    (loop-when-recur [gen gen #_"int" i 0] (< i n) [(Gen''try-catch-finally gen, (nth l'starts i), (nth l'ends i), l'finally) (inc i)] => gen)
+                )
+            )
+        )
+    )
+
+    (defm TryExpr Expr
+        (Expr'''eval => TryExpr''eval)
+        (Expr'''emit => TryExpr''emit)
+    )
+)
+
+(about #_"ThrowExpr"
+    (defr ThrowExpr [])
+
+    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
+        (merge (class! ThrowExpr)
+            (hash-map
+                #_"Expr" :excExpr excExpr
+            )
+        )
+    )
+
+    (defn #_"Expr" ThrowExpr'parse [#_"Context" context, #_"seq" form]
+        (cond
+            (= context :Context'EVAL) (Compiler'analyze context, (list (list Compiler'FNONCE [] form)))
+            (= (count form) 1)        (throw! "too few arguments to throw: single Throwable expected")
+            (< 2 (count form))        (throw! "too many arguments to throw: single Throwable expected")
+            :else                     (ThrowExpr'new (Compiler'analyze :Context'EXPRESSION, (second form)))
+        )
+    )
+
+    (defn- #_"Object" ThrowExpr''eval [#_"ThrowExpr" this]
+        (throw! "can't eval throw")
+    )
+
+    (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+        (let [
+            gen (Expr'''emit (:excExpr this), :Context'EXPRESSION, fun, gen)
+            gen (Gen''throw gen)
+        ]
+            gen
+        )
+    )
+
+    (defm ThrowExpr Expr
+        (Expr'''eval => ThrowExpr''eval)
+        (Expr'''emit => ThrowExpr''emit)
+    )
+)
+
 (about #_"Compiler"
     (def #_"map" Compiler'specials
         (let [
@@ -15631,13 +15396,13 @@
                     'letfn*        LetFnExpr'parse
                     'do            BodyExpr'parse
                     'fn*           nil
-                    'quote         ConstantExpr'parse
+                    'quote         LiteralExpr'parse
                     'var           TheVarExpr'parse
                     'set!          AssignExpr'parse
                     'try           TryExpr'parse
                     'throw         ThrowExpr'parse
-                    'monitor-enter MonitorEnterExpr'parse
-                    'monitor-exit  MonitorExitExpr'parse
+                    'monitor-enter MonitorExpr'parse
+                    'monitor-exit  MonitorExpr'parse
                     'catch         nil
                     'finally       nil
                     '&             nil
@@ -15687,7 +15452,7 @@
                             (VarExpr'new o)
                         )
                     (class? o)
-                        (ConstantExpr'new o)
+                        (LiteralExpr'new o)
                     (symbol? o)
                         (UnresolvedVarExpr'new o)
                     :else
@@ -15725,21 +15490,18 @@
                     (with-meta (or (seq form) (list)) (meta form))
                 )]
             (case form
-                nil                 Compiler'NIL_EXPR
-                true                Compiler'TRUE_EXPR
-                false               Compiler'FALSE_EXPR
+                nil                                  LiteralExpr'NIL
+                true                                 LiteralExpr'TRUE
+                false                                LiteralExpr'FALSE
                 (cond
-                    (symbol? form)  (Compiler'analyzeSymbol form)
-                    (string? form)  (ConstantExpr'new (.intern #_"String" form))
-                    (and (coll? form) (zero? (count form)))
-                        (let-when [#_"Expr" e (EmptyExpr'new form)] (some? (meta form)) => e
-                            (MetaExpr'new e, (MapExpr'parse (if (= context :Context'EVAL) context :Context'EXPRESSION), (meta form)))
-                        )
-                    (seq? form)     (Compiler'analyzeSeq context, form)
-                    (vector? form)  (VectorExpr'parse context, form)
-                    (map? form)     (MapExpr'parse context, form)
-                    (set? form)     (SetExpr'parse context, form)
-                    :else           (ConstantExpr'new form)
+                    (symbol? form)                   (Compiler'analyzeSymbol form)
+                    (string? form)                   (LiteralExpr'new (.intern #_"String" form))
+                    (and (coll? form) (empty? form)) (LiteralExpr'new form)
+                    (seq? form)                      (Compiler'analyzeSeq context, form)
+                    (vector? form)                   (VectorExpr'parse context, form)
+                    (map? form)                      (MapExpr'parse context, form)
+                    (set? form)                      (SetExpr'parse context, form)
+                    :else                            (LiteralExpr'new form)
                 )
             )
         )
