@@ -1582,9 +1582,9 @@
     (defp RestFn)
 )
 
-(about #_"arbace.Lambda"
+(about #_"arbace.Closure"
     #_abstract
-    (defp Lambda)
+    (defp Closure)
 )
 
 (about #_"arbace.ASeq"
@@ -2864,7 +2864,7 @@
     ([x y & s] (reduce - (- x y) s))
 )
 
-(defn abs [a] (if (neg? a) (- a) a))
+(defn abs [a] (if (neg? a) (-/- a) a))
 
 ;;;
  ; Returns a number one greater than num. Supports arbitrary precision.
@@ -3507,63 +3507,65 @@
 )
 )
 
-(about #_"arbace.Lambda"
+(about #_"arbace.Closure"
 
-(about #_"Lambda"
-    (defq Lambda [#_"meta" _meta, #_"map" code])
+(about #_"Closure"
+    (defq Closure [#_"meta" _meta, #_"FnExpr" fun])
 
     #_inherit
-    (defm Lambda RestFn Fn AFn)
+    (defm Closure RestFn Fn AFn)
 
-    (defn #_"Lambda" Lambda'new
-        ([#_"map" code] (Lambda'new nil, code))
-        ([#_"meta" meta, #_"map" code]
-            (Lambda'class. (anew [meta, code]))
+    (defn #_"Closure" Closure'new
+        ([#_"FnExpr" fun] (Closure'new nil, fun))
+        ([#_"meta" meta, #_"FnExpr" fun]
+            (Closure'class. (anew [meta, fun]))
         )
     )
 
-    (defn- #_"Lambda" Lambda''withMeta [#_"Lambda" this, #_"meta" meta]
+    (defn- #_"Closure" Closure''withMeta [#_"Closure" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
-            (Lambda'new meta, (:code this))
+            (Closure'new meta, (:fun this))
         )
     )
 
-    (defn- #_"int" Lambda''requiredArity [#_"Lambda" this]
-        (or (:requiredArity (:code this)) (throw! ":requiredArity is indeed required this time"))
+    (defn- #_"int" Closure''requiredArity [#_"Closure" this]
+        (when-some [#_"FnMethod" fm (:variadic (:fun this))] => (throw! "'requiredArity is indeed required")
+            (dec (-/- (:arity fm)))
+        )
     )
 
-    (defn- #_"Object" Lambda''doInvoke
-        ([#_"Lambda" this, #_"seq" args]                                     (AFn'throwArity this, 0))
-        ([#_"Lambda" this, a1, #_"seq" args]                                 (AFn'throwArity this, 1))
-        ([#_"Lambda" this, a1, a2, #_"seq" args]                             (AFn'throwArity this, 2))
-        ([#_"Lambda" this, a1, a2, a3, #_"seq" args]                         (AFn'throwArity this, 3))
-        ([#_"Lambda" this, a1, a2, a3, a4, #_"seq" args]                     (AFn'throwArity this, 4))
-        ([#_"Lambda" this, a1, a2, a3, a4, a5, #_"seq" args]                 (AFn'throwArity this, 5))
-        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, #_"seq" args]             (AFn'throwArity this, 6))
-        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]         (AFn'throwArity this, 7))
-        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]     (AFn'throwArity this, 8))
-        ([#_"Lambda" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (AFn'throwArity this, 9))
+    (defn- #_"Object" Closure''doInvoke
+        ([#_"Closure" this, #_"seq" args]                                     (AFn'throwArity this, 0))
+        ([#_"Closure" this, a1, #_"seq" args]                                 (AFn'throwArity this, 1))
+        ([#_"Closure" this, a1, a2, #_"seq" args]                             (AFn'throwArity this, 2))
+        ([#_"Closure" this, a1, a2, a3, #_"seq" args]                         (AFn'throwArity this, 3))
+        ([#_"Closure" this, a1, a2, a3, a4, #_"seq" args]                     (AFn'throwArity this, 4))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, #_"seq" args]                 (AFn'throwArity this, 5))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, #_"seq" args]             (AFn'throwArity this, 6))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]         (AFn'throwArity this, 7))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]     (AFn'throwArity this, 8))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (AFn'throwArity this, 9))
     )
 
-    (defm Lambda IMeta
+    (defm Closure IMeta
         (IMeta'''meta => :_meta)
     )
 
-    (defm Lambda IObj
-        (IObj'''withMeta => Lambda''withMeta)
+    (defm Closure IObj
+        (IObj'''withMeta => Closure''withMeta)
     )
 
-    (defm Lambda IFn
+    (defm Closure IFn
         (IFn'''invoke => RestFn''invoke)
         (IFn'''applyTo => RestFn''applyTo)
     )
 
-    (defm Lambda IRestFn
-        (IRestFn'''requiredArity => Lambda''requiredArity)
-        (IRestFn'''doInvoke => Lambda''doInvoke)
+    (defm Closure IRestFn
+        (IRestFn'''requiredArity => Closure''requiredArity)
+        (IRestFn'''doInvoke => Closure''doInvoke)
     )
 
-    (§ defm Lambda #_"Comparator"
+    (§ defm Closure #_"Comparator"
         ;; inherit RestFn compare
     )
 )
@@ -13456,7 +13458,6 @@
 )
 
 (about #_"Compiler"
-    (def #_"Var" ^:dynamic *closes*            ) ;; IPersistentMap
     (def #_"Var" ^:dynamic *method*            nil) ;; FnFrame
     (def #_"Var" ^:dynamic *local-env*         nil) ;; symbol->localbinding
     (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
@@ -13526,21 +13527,6 @@
         )
     )
 
-    (defn- #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" m]
-        (when (and (some? lb) (some? m) (not (contains? (:locals m) (:uid lb))))
-            (var-swap! *closes* update (:uid (:fun m)) assoc (:uid lb) lb)
-            (Compiler'closeOver lb, (:parent m))
-        )
-        nil
-    )
-
-    (defn #_"LocalBinding" Compiler'referenceLocal [#_"Symbol" sym]
-        (when-some [#_"LocalBinding" lb (get (var-get! *local-env*) sym)]
-            (Compiler'closeOver lb, (var-get! *method*))
-            lb
-        )
-    )
-
     (defn #_"Var" Compiler'lookupVar [#_"Symbol" sym, #_"boolean" intern?]
         (let [sym (symbol! sym)]
             ;; note - ns-qualified vars in other namespaces must already exist
@@ -13575,7 +13561,7 @@
 
     (defn #_"Var" Compiler'maybeMacro [#_"Object" op]
         ;; no local macros for now
-        (when-not (and (symbol? op) (some? (Compiler'referenceLocal op)))
+        (when-not (and (symbol? op) (some? (get (var-get! *local-env*) op)))
             (when (or (symbol? op) (var? op))
                 (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (and (some? v) (get (meta v) :macro))
@@ -13590,7 +13576,7 @@
 
     (defn #_"IFn" Compiler'maybeInline [#_"Object" op, #_"int" arity]
         ;; no local inlines for now
-        (when-not (and (symbol? op) (some? (Compiler'referenceLocal op)))
+        (when-not (and (symbol? op) (some? (get (var-get! *local-env*) op)))
             (when (or (symbol? op) (var? op))
                 (when-some [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
@@ -14205,71 +14191,54 @@
                 ;; the closed over locals need to be propagated to the enclosing fun
                 #_"FnMethod" :parent parent
                 ;; uid->localbinding
-                #_"map" :locals (hash-map)
+                #_"{int LocalBinding}" :locals (hash-map)
+                #_"Integer" :arity nil
                 #_"Expr" :body nil
-                #_"vector" :argLocals nil
-                ;; localbinding->localbinding
-                #_"vector" :reqParms nil
-                #_"LocalBinding" :restParm nil
             )
-        )
-    )
-
-    (defn #_"boolean" FnMethod''isVariadic [#_"FnMethod" this]
-        (some? (:restParm this))
-    )
-
-    (defn #_"String" FnMethod''getMethodName [#_"FnMethod" this]
-        (let [#_"boolean" variadic? (FnMethod''isVariadic this) #_"int" n (count (:reqParms this)) #_"int" m Compiler'MAX_POSITIONAL_ARITY]
-            (str (if variadic? "IRestFn'''doInvoke" "IFn'''invoke") \- (if (and variadic? (= n m)) (inc m) (+ n (if variadic? 1 0))))
         )
     )
 
     (defn #_"FnMethod" FnMethod'parse [#_"FnExpr" fun, #_"seq" form]
         ;; ([args] body...)
-        (let [#_"vector" parms (first form) #_"seq" body (next form)
-              #_"FnMethod" fm (FnMethod'new fun, (var-get! *method*))]
+        (let [#_"FnMethod" fm (FnMethod'new fun, (var-get! *method*))]
             ;; register as the current method and set up a new env frame
             (binding [*method*            fm
                       *local-env*         (var-get! *local-env*)
                       *last-local-num*    -1
-                      *loop-locals*       nil
+                      *loop-locals*       (vector)
                       *in-return-context* true]
-                ;; register 'this' as local 0
-                (if (some? (:name fun))
-                    (Compiler'registerLocal (symbol (:name fun)), nil)
-                    (Compiler'nextLocalNum)
-                )
-                (let [fm (assoc fm :reqParms (vector) :restParm nil :argLocals (vector))
-                      fm (loop-when [fm fm #_"boolean" rest? false #_"int" i 0] (< i (count parms)) => fm
-                            (when (symbol? (nth parms i)) => (throw! "fn params must be Symbols")
-                                (let [#_"Symbol" p (nth parms i)]
-                                    (cond
-                                        (some? (namespace p))
-                                            (throw! (str "can't use qualified name as parameter: " p))
-                                        (= p '&)
-                                            (when-not rest? => (throw! "invalid parameter list")
-                                                (recur fm true (inc i))
-                                            )
-                                        :else
-                                            (let [#_"LocalBinding" lb (Compiler'registerLocal p, nil)
-                                                  fm (update fm :argLocals conj lb)
-                                                  fm
-                                                    (if-not rest?
-                                                        (update fm :reqParms conj lb)
-                                                        (assoc fm :restParm lb)
-                                                    )]
-                                                (recur fm rest? (inc i))
-                                            )
-                                    )
+                (let [
+                    _
+                        (if (some? (:fname fun))
+                            (Compiler'registerLocal (:fname fun), nil)
+                            (Compiler'nextLocalNum)
+                        )
+                    #_"int" arity
+                        (loop-when [arity 0 #_"boolean" variadic? false #_"seq" s (seq (first form))] (some? s) => (if (and variadic? (not (neg? arity))) (throw! "missing variadic parameter") arity)
+                            (let [#_"Symbol?" sym (first s)]
+                                (cond
+                                    (not (symbol? sym))
+                                        (throw! "function parameters must be symbols")
+                                    (some? (:ns sym))
+                                        (throw! (str "can't use qualified name as parameter: " sym))
+                                    (= sym '&)
+                                        (when-not variadic? => (throw! "overkill variadic parameter list")
+                                            (recur arity true (next s))
+                                        )
+                                    (neg? arity)
+                                        (throw! (str "excess variadic parameter: " sym))
+                                    ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
+                                        (let [arity (if-not variadic? (inc arity) (-/- (inc arity)))]
+                                            (var-swap! *loop-locals* conj (Compiler'registerLocal sym, nil))
+                                            (recur arity variadic? (next s))
+                                        )
+                                    :else
+                                        (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " positional parameters"))
                                 )
                             )
-                        )]
-                    (when (< Compiler'MAX_POSITIONAL_ARITY (count (:reqParms fm)))
-                        (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " params"))
-                    )
-                    (var-set! *loop-locals* (:argLocals fm))
-                    (assoc fm :body (BodyExpr'parse :Context'RETURN, body))
+                        )
+                ]
+                    (assoc fm :arity arity, :body (BodyExpr'parse :Context'RETURN, (next form)))
                 )
             )
         )
@@ -14282,12 +14251,12 @@
     (defn #_"FnExpr" FnExpr'new []
         (merge (class! FnExpr)
             (hash-map
-                #_"int" :uid (next-id!)
-                #_"String" :name nil
-                #_"[LocalBinding]" :closes (vector)
-                #_"vector" :methods nil
+                #_"Symbol" :fname nil
+                #_"[FnMethod]" :methods nil
                 ;; optional variadic overload (there can only be one)
                 #_"FnMethod" :variadic nil
+                ;; uid->localbinding
+                #_"{int LocalBinding}'" :closes' (atom (hash-map))
 
                 #_"map" :code nil
             )
@@ -14295,7 +14264,7 @@
     )
 
     (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
-        (if (contains? (get (var-get! *closes*) (:uid this)) (:uid lb))
+        (if (contains? @(:closes' this) (:uid lb))
             (let [
                 gen (Gen''load gen, 0) ;; this
                 gen (Gen''get gen, (:sym lb))
@@ -14330,12 +14299,32 @@
         (let [
             gen (Gen''create gen)
             gen (Gen''dup gen)
-            gen (reduce (partial FnExpr''emitLocal fun) gen (:closes this))
+            gen (reduce (partial FnExpr''emitLocal fun) gen (vals @(:closes' this)))
             gen (Gen''init gen)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
             )
+        )
+    )
+
+    (defn- #_"FnExpr" FnExpr''emitClosure [#_"FnExpr" this]
+        (let [
+            #_"gen" gen (Gen'new)
+            gen
+                (loop-when [gen gen #_"int" i 1 #_"seq" s (vals @(:closes' this))] (some? s) => gen
+                    (let [
+                        #_"LocalBinding" lb (first s)
+                        gen (Gen''load gen, 0) ;; this
+                        gen (Gen''load gen, i)
+                        gen (Gen''put gen, (:sym lb))
+                    ]
+                        (recur gen (inc i) (next s))
+                    )
+                )
+            gen (Gen''return gen)
+        ]
+            (assoc-in this [:code :'init] gen)
         )
     )
 
@@ -14349,43 +14338,18 @@
                 )
             gen (Gen''return gen)
         ]
-            (assoc-in this [:code (keyword (FnMethod''getMethodName fm))] gen)
+            (assoc-in this [:code (keyword (str (if (neg? (:arity fm)) "IRestFn'''doInvoke" "IFn'''invoke") \- (abs (:arity fm))))] gen)
         )
     )
 
     (defn- #_"FnExpr" FnExpr''emitMethods [#_"FnExpr" this]
-        ;; override of invoke/doInvoke for each method
-        (let [
-            this (reduce FnExpr''emitMethod this (:methods this))
-        ]
-            (when-some [#_"FnMethod" fm (:variadic this)] => this
-                (assoc-in this [:code :requiredArity] (count (:reqParms fm)))
-            )
-        )
+        (reduce FnExpr''emitMethod this (:methods this))
     )
 
     (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this]
-        (let [
-            this (assoc this :code (hash-map))
-            this
-                (let [
-                    [this #_"gen" gen]
-                        (loop-when [this this gen (Gen'new) #_"int" i 1 #_"seq" s (vals (get (var-get! *closes*) (:uid this)))] (some? s) => [this gen]
-                            (let [
-                                #_"LocalBinding" lb (first s)
-                                gen (Gen''load gen, 0) ;; this
-                                gen (Gen''load gen, i)
-                                gen (Gen''put gen, (:sym lb))
-                            ]
-                                (recur (update this :closes conj lb) gen (inc i) (next s))
-                            )
-                        )
-                    gen (Gen''return gen)
-                ]
-                    (assoc-in this [:code :'init] gen)
-                )
-        ]
-            (FnExpr''emitMethods this)
+        (-> (assoc this :code (hash-map))
+            (FnExpr''emitClosure)
+            (FnExpr''emitMethods)
         )
     )
 
@@ -14396,7 +14360,7 @@
                     ;; arglist might be preceded by symbol naming this fn
                     (let [[fun form]
                             (when (symbol? (second form)) => [fun form]
-                                [(assoc fun :name (:name (second form))) (cons (symbol! 'fn*) (next (next form)))]
+                                [(assoc fun :fname (second form)) (cons (symbol! 'fn*) (next (next form)))]
                             )
                           ;; now (fn [args] body...) or (fn ([args] body...) ([args2] body2...) ...)
                           ;; turn former into latter
@@ -14407,24 +14371,22 @@
                           #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
                           #_"FnMethod" variadic
                             (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
-                                (let [#_"FnMethod" f (FnMethod'parse fun, (first s))
+                                (let [#_"FnMethod" fm (FnMethod'parse fun, (first s))
                                       variadic
-                                        (if (FnMethod''isVariadic f)
+                                        (if (neg? (:arity fm))
                                             (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
-                                                f
+                                                fm
                                             )
-                                            (let [#_"int" n (count (:reqParms f))]
-                                                (when (nil? (aget a n)) => (throw! "can't have 2 overloads with same arity")
-                                                    (aset! a n f)
-                                                    variadic
-                                                )
+                                            (let-when [#_"int" n (:arity fm)] (nil? (aget a n)) => (throw! "can't have 2 overloads with same arity")
+                                                (aset! a n fm)
+                                                variadic
                                             )
                                         )]
                                     (recur variadic (next s))
                                 )
                             )]
                         (when (some? variadic)
-                            (loop-when-recur [#_"int" i (inc (count (:reqParms variadic)))] (<= i Compiler'MAX_POSITIONAL_ARITY) [(inc i)]
+                            (loop-when-recur [#_"int" i (-/- (:arity variadic))] (<= i Compiler'MAX_POSITIONAL_ARITY) [(inc i)]
                                 (when (some? (aget a i))
                                     (throw! "can't have fixed arity function with more params than variadic function")
                                 )
@@ -14436,10 +14398,7 @@
                                                  [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
                                               => (if (some? variadic) (conj methods variadic) methods)
                                 )]
-                            (assoc fun
-                                :methods methods
-                                :variadic variadic
-                            )
+                            (assoc fun :methods methods, :variadic variadic)
                         )
                     )
                 )
@@ -14630,7 +14589,7 @@
                         #_"BindingInit" bi (first s)
                         gen (Gen''load gen, (:idx (:binding bi)))
                         gen
-                            (loop-when [gen gen #_"seq" s (vals (get (var-get! *closes*) (:uid (:init bi))))] (some? s) => gen
+                            (loop-when [gen gen #_"seq" s (vals @(:closes' (:init bi)))] (some? s) => gen
                                 (let [
                                     gen
                                         (let-when [#_"LocalBinding" lb (first s)] (contains? lbset lb) => gen
@@ -14681,7 +14640,6 @@
                 (let [#_"vector" bindings (second form)]
                     (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                         (let [#_"seq" body (next (next form))
-                              #_"map" locals' (:locals (var-get! *method*))
                               #_"map" dynamicBindings
                                 (hash-map
                                     (var! *local-env*)      (var-get! *local-env*)
@@ -14690,8 +14648,7 @@
                               dynamicBindings
                                 (when isLoop => dynamicBindings
                                     (assoc dynamicBindings (var! *loop-locals*) nil)
-                                )
-                              _ (var-swap! *method* assoc :locals locals')]
+                                )]
                             (try
                                 (push-thread-bindings dynamicBindings)
                                 (let [[#_"vector" bindingInits #_"vector" loopLocals]
@@ -15296,13 +15253,21 @@
         )
     )
 
+    (defn- #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" fm]
+        (when (and (some? lb) (some? fm) (not (contains? (:locals fm) (:uid lb))))
+            (swap! (:closes' (:fun fm)) assoc (:uid lb) lb)
+            (Compiler'closeOver lb, (:parent fm))
+        )
+        nil
+    )
+
     (defn- #_"Expr" Compiler'analyzeSymbol [#_"Symbol" sym]
         (or
-            (cond
-                (nil? (:ns sym)) ;; ns-qualified syms are always Vars
-                    (when-some [#_"LocalBinding" lb (Compiler'referenceLocal sym)]
-                        (LocalBindingExpr'new lb)
-                    )
+            (when (nil? (:ns sym)) ;; ns-qualified syms are always Vars
+                (when-some [#_"LocalBinding" lb (get (var-get! *local-env*) sym)]
+                    (Compiler'closeOver lb, (var-get! *method*))
+                    (LocalBindingExpr'new lb)
+                )
             )
             (let [#_"Object" o (Compiler'resolve sym)]
                 (cond
@@ -15376,7 +15341,7 @@
                     (Compiler'eval (first s))
                 )
                 (let [#_"FnExpr" fun (Compiler'analyze (list (symbol! 'fn*) [] form))]
-                    (IFn'''invoke (Lambda'new (:code fun)))
+                    (IFn'''invoke (Closure'new fun))
                 )
             )
         )
@@ -16085,8 +16050,7 @@
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
                         (recur
-                            (binding [*closes*            (hash-map)
-                                      *no-recur*          false
+                            (binding [*no-recur*          false
                                       *in-catch-finally*  false
                                       *in-return-context* false]
                                 (Compiler'eval form)
