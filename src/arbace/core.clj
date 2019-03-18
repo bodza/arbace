@@ -3510,21 +3510,21 @@
 (about #_"arbace.Closure"
 
 (about #_"Closure"
-    (defq Closure [#_"meta" _meta, #_"FnExpr" fun])
+    (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map" env])
 
     #_inherit
     (defm Closure RestFn Fn AFn)
 
     (defn #_"Closure" Closure'new
-        ([#_"FnExpr" fun] (Closure'new nil, fun))
-        ([#_"meta" meta, #_"FnExpr" fun]
-            (Closure'class. (anew [meta, fun]))
+        ([#_"FnExpr" fun, #_"map" env] (Closure'new nil, fun, env))
+        ([#_"meta" meta, #_"FnExpr" fun, #_"map" env]
+            (Closure'class. (anew [meta, fun, env]))
         )
     )
 
     (defn- #_"Closure" Closure''withMeta [#_"Closure" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
-            (Closure'new meta, (:fun this))
+            (Closure'new meta, (:fun this), (:env this))
         )
     )
 
@@ -13366,7 +13366,6 @@
     (defp FnMethod)
     (defp FnExpr)
     (defp DefExpr)
-    (defp BindingInit)
     (defp LetFnExpr)
     (defp LetExpr)
     (defp RecurExpr)
@@ -13458,18 +13457,14 @@
 )
 
 (about #_"Compiler"
-    (def #_"Var" ^:dynamic *method*            nil) ;; FnFrame
-    (def #_"Var" ^:dynamic *local-env*         nil) ;; symbol->localbinding
-    (def #_"Var" ^:dynamic *last-local-num*    ) ;; Integer
+    (def #_"Var" ^:dynamic *fn-method*         ) ;; FnMethod
+    (def #_"Var" ^:dynamic *local-env*         ) ;; symbol->localbinding
+    (def #_"Var" ^:dynamic *local-num*         ) ;; Integer
     (def #_"Var" ^:dynamic *loop-locals*       ) ;; vector<localbinding>
     (def #_"Var" ^:dynamic *loop-label*        ) ;; label
     (def #_"Var" ^:dynamic *no-recur*          ) ;; Boolean
     (def #_"Var" ^:dynamic *in-catch-finally*  ) ;; Boolean
     (def #_"Var" ^:dynamic *in-return-context* ) ;; Boolean
-
-    (defn #_"boolean" Compiler'inTailCall [#_"Context" context]
-        (and (= context :Context'RETURN) (var-get! *in-return-context*) (not (var-get! *in-catch-finally*)))
-    )
 
     (defn #_"Namespace" Compiler'namespaceFor
         ([#_"Symbol" sym] (Compiler'namespaceFor *arbace-ns*, sym))
@@ -13502,28 +13497,6 @@
                         (var? o)   (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
                 )
-        )
-    )
-
-    (defn- #_"int" Compiler'nextLocalNum []
-        (var-swap! *last-local-num* inc)
-    )
-
-    (declare LocalBinding'new)
-
-    (defn #_"LocalBinding" Compiler'registerLocal [#_"Symbol" sym, #_"Expr" init]
-        (let [#_"LocalBinding" lb (LocalBinding'new sym, init)]
-            (var-swap! *local-env* assoc (:sym lb) lb)
-            (var-swap! *method* update :locals assoc (:uid lb) lb)
-            lb
-        )
-    )
-
-    (defn #_"LocalBinding" Compiler'complementLocalInit [#_"LocalBinding" lb, #_"Expr" init]
-        (let [lb (assoc lb :init init)]
-            (var-swap! *local-env* assoc (:sym lb) lb)
-            (var-swap! *method* update :locals assoc (:uid lb) lb)
-            lb
         )
     )
 
@@ -14096,7 +14069,7 @@
     )
 
     (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form]
-        (let [#_"boolean" tailPosition (Compiler'inTailCall context)
+        (let [#_"boolean" tailPosition (and (= context :Context'RETURN) (var-get! *in-return-context*) (not (var-get! *in-catch-finally*)))
               #_"Expr" fexpr (Compiler'analyze (first form))
               #_"vector" args (mapv Compiler'analyze (next form))]
             (InvokeExpr'new fexpr, args, tailPosition)
@@ -14144,13 +14117,13 @@
 (about #_"LocalBinding"
     (defr LocalBinding [])
 
-    (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init]
+    (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
         (merge (class! LocalBinding)
             (hash-map
                 #_"int" :uid (next-id!)
-                #_"int" :idx (Compiler'nextLocalNum)
                 #_"Symbol" :sym sym
-                #_"Expr" :init init
+                #_"Expr'" :init' (atom init)
+                #_"int" :idx idx
             )
         )
     )
@@ -14200,19 +14173,20 @@
 
     (defn #_"FnMethod" FnMethod'parse [#_"FnExpr" fun, #_"seq" form]
         ;; ([args] body...)
-        (let [#_"FnMethod" fm (FnMethod'new fun, (var-get! *method*))]
+        (let [#_"FnMethod" fm (FnMethod'new fun, (var-get! *fn-method*))]
             ;; register as the current method and set up a new env frame
-            (binding [*method*            fm
+            (binding [*fn-method*         fm
                       *local-env*         (var-get! *local-env*)
-                      *last-local-num*    -1
+                      *local-num*         0
                       *loop-locals*       (vector)
                       *in-return-context* true]
+                (when-some [#_"Symbol" f (:fname fun)]
+                    (let [#_"LocalBinding" lb (LocalBinding'new f, nil, (var-get! *local-num*))]
+                        (var-swap! *local-env* assoc (:sym lb) lb)
+                        (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                    )
+                )
                 (let [
-                    _
-                        (if (some? (:fname fun))
-                            (Compiler'registerLocal (:fname fun), nil)
-                            (Compiler'nextLocalNum)
-                        )
                     #_"int" arity
                         (loop-when [arity 0 #_"boolean" variadic? false #_"seq" s (seq (first form))] (some? s) => (if (and variadic? (not (neg? arity))) (throw! "missing variadic parameter") arity)
                             (let [#_"Symbol?" sym (first s)]
@@ -14228,8 +14202,13 @@
                                     (neg? arity)
                                         (throw! (str "excess variadic parameter: " sym))
                                     ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
-                                        (let [arity (if-not variadic? (inc arity) (-/- (inc arity)))]
-                                            (var-swap! *loop-locals* conj (Compiler'registerLocal sym, nil))
+                                        (let [
+                                            arity (if-not variadic? (inc arity) (-/- (inc arity)))
+                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))
+                                        ]
+                                            (var-swap! *local-env* assoc (:sym lb) lb)
+                                            (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                            (var-swap! *loop-locals* conj lb)
                                             (recur arity variadic? (next s))
                                         )
                                     :else
@@ -14241,6 +14220,19 @@
                     (assoc fm :arity arity, :body (BodyExpr'parse :Context'RETURN, (next form)))
                 )
             )
+        )
+    )
+
+    (defn #_"gen" FnMethod''compile [#_"FnMethod" this]
+        (let [
+            #_"gen" gen (Gen'new)
+            gen
+                (binding [*loop-label* (Gen''mark gen)]
+                    (Expr'''emit (:body this), :Context'RETURN, (:fun this), gen)
+                )
+            gen (Gen''return gen)
+        ]
+            gen
         )
     )
 )
@@ -14257,8 +14249,6 @@
                 #_"FnMethod" :variadic nil
                 ;; uid->localbinding
                 #_"{int LocalBinding}'" :closes' (atom (hash-map))
-
-                #_"map" :code nil
             )
         )
     )
@@ -14298,58 +14288,13 @@
         ;; fun arg is enclosing fun, not this
         (let [
             gen (Gen''create gen)
-            gen (Gen''dup gen)
-            gen (reduce (partial FnExpr''emitLocal fun) gen (vals @(:closes' this)))
-            gen (Gen''init gen)
+            gen (Gen''dup gen)
+            gen (reduce (partial FnExpr''emitLocal fun) gen (vals @(:closes' this)))
+            gen (Gen''init gen)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
             )
-        )
-    )
-
-    (defn- #_"FnExpr" FnExpr''emitClosure [#_"FnExpr" this]
-        (let [
-            #_"gen" gen (Gen'new)
-            gen
-                (loop-when [gen gen #_"int" i 1 #_"seq" s (vals @(:closes' this))] (some? s) => gen
-                    (let [
-                        #_"LocalBinding" lb (first s)
-                        gen (Gen''load gen, 0) ;; this
-                        gen (Gen''load gen, i)
-                        gen (Gen''put gen, (:sym lb))
-                    ]
-                        (recur gen (inc i) (next s))
-                    )
-                )
-            gen (Gen''return gen)
-        ]
-            (assoc-in this [:code :'init] gen)
-        )
-    )
-
-    (defn- #_"FnExpr" FnExpr''emitMethod [#_"FnExpr" this, #_"FnMethod" fm]
-        (let [
-            #_"gen" gen (Gen'new)
-            gen
-                (binding [*loop-label* (Gen''mark gen)
-                          *method*     fm]
-                    (Expr'''emit (:body fm), :Context'RETURN, this, gen)
-                )
-            gen (Gen''return gen)
-        ]
-            (assoc-in this [:code (keyword (str (if (neg? (:arity fm)) "IRestFn'''doInvoke" "IFn'''invoke") \- (abs (:arity fm))))] gen)
-        )
-    )
-
-    (defn- #_"FnExpr" FnExpr''emitMethods [#_"FnExpr" this]
-        (reduce FnExpr''emitMethod this (:methods this))
-    )
-
-    (defn #_"FnExpr" FnExpr''compile [#_"FnExpr" this]
-        (-> (assoc this :code (hash-map))
-            (FnExpr''emitClosure)
-            (FnExpr''emitMethods)
         )
     )
 
@@ -14401,8 +14346,7 @@
                             (assoc fun :methods methods, :variadic variadic)
                         )
                     )
-                )
-              fun (FnExpr''compile fun)]
+                )]
             (MetaExpr'new fun, (MapExpr'parse (meta form)))
         )
     )
@@ -14505,26 +14449,13 @@
     )
 )
 
-(about #_"BindingInit"
-    (defr BindingInit [])
-
-    (defn #_"BindingInit" BindingInit'new [#_"LocalBinding" binding, #_"Expr" init]
-        (merge (class! BindingInit)
-            (hash-map
-                #_"LocalBinding" :binding binding
-                #_"Expr" :init init
-            )
-        )
-    )
-)
-
 (about #_"LetFnExpr"
     (defr LetFnExpr [])
 
-    (defn #_"LetFnExpr" LetFnExpr'new [#_"vector" bindingInits, #_"Expr" body]
+    (defn #_"LetFnExpr" LetFnExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body]
         (merge (class! LetFnExpr)
             (hash-map
-                #_"vector" :bindingInits bindingInits
+                #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
             )
         )
@@ -14535,25 +14466,26 @@
         (when (vector? (second form)) => (throw! "bad binding form, expected vector")
             (let [#_"vector" bindings (second form)]
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                    (binding [*local-env*      (var-get! *local-env*)
-                              *last-local-num* (var-get! *last-local-num*)]
+                    (binding [*local-env* (var-get! *local-env*)
+                              *local-num* (var-get! *local-num*)]
                         ;; pre-seed env (like Lisp labels)
-                        (let [#_"vector" lbs
+                        (let [#_"[LocalBinding]" lbs
                                 (loop-when [lbs (vector) #_"int" i 0] (< i (count bindings)) => lbs
-                                    (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                        (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
-                                            (recur (conj lbs (Compiler'registerLocal sym, nil)) (+ i 2))
+                                    (let-when [#_"Symbol?" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                        (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
+                                            (let [#_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))]
+                                                (var-swap! *local-env* assoc (:sym lb) lb)
+                                                (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                (recur (conj lbs lb) (+ i 2))
+                                            )
                                         )
                                     )
                                 )
-                              #_"vector" bis
-                                (loop-when [bis (vector) #_"int" i 0] (< i (count bindings)) => bis
-                                    (let [#_"Expr" init (Compiler'analyze (nth bindings (inc i)))
-                                          #_"LocalBinding" lb (Compiler'complementLocalInit (nth lbs (quot i 2)), init)]
-                                        (recur (conj bis (BindingInit'new lb, init)) (+ i 2))
-                                    )
+                              _
+                                (loop-when-recur [#_"int" i 0] (< i (count bindings)) [(+ i 2)]
+                                    (reset! (:init' (nth lbs (quot i 2))) (Compiler'analyze (nth bindings (inc i))))
                                 )]
-                            (LetFnExpr'new bis, (BodyExpr'parse context, (next (next form))))
+                            (LetFnExpr'new lbs, (BodyExpr'parse context, (next (next form))))
                         )
                     )
                 )
@@ -14564,35 +14496,35 @@
     (defn- #_"gen" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen
-                (loop-when [gen gen #_"seq" s (seq (:bindingInits this))] (some? s) => gen
+                (loop-when [gen gen #_"seq" s (seq (:bindings this))] (some? s) => gen
                     (let [
-                        #_"BindingInit" bi (first s)
+                        #_"LocalBinding" lb (first s)
                         gen (Gen''push gen, nil)
-                        gen (Gen''store gen, (:idx (:binding bi)))
+                        gen (Gen''store gen, (:idx lb))
                     ]
                         (recur gen (next s))
                     )
                 )
-            [#_"IPersistentSet" lbset gen]
-                (loop-when [lbset (hash-set) gen gen #_"seq" s (seq (:bindingInits this))] (some? s) => [lbset gen]
+            [#_"{int}" lbset gen]
+                (loop-when [lbset (hash-set) gen gen #_"seq" s (seq (:bindings this))] (some? s) => [lbset gen]
                     (let [
-                        #_"BindingInit" bi (first s)
-                        gen (Expr'''emit (:init bi), :Context'EXPRESSION, fun, gen)
-                        gen (Gen''store gen, (:idx (:binding bi)))
+                        #_"LocalBinding" lb (first s)
+                        gen (Expr'''emit @(:init' lb), :Context'EXPRESSION, fun, gen)
+                        gen (Gen''store gen, (:idx lb))
                     ]
-                        (recur (conj lbset (:binding bi)) gen (next s))
+                        (recur (conj lbset (:uid lb)) gen (next s))
                     )
                 )
             gen
-                (loop-when [gen gen #_"seq" s (seq (:bindingInits this))] (some? s) => gen
+                (loop-when [gen gen #_"seq" s (seq (:bindings this))] (some? s) => gen
                     (let [
-                        #_"BindingInit" bi (first s)
-                        gen (Gen''load gen, (:idx (:binding bi)))
+                        #_"LocalBinding" lb (first s)
+                        gen (Gen''load gen, (:idx lb))
                         gen
-                            (loop-when [gen gen #_"seq" s (vals @(:closes' (:init bi)))] (some? s) => gen
+                            (loop-when [gen gen #_"seq" s (vals @(:closes' @(:init' lb)))] (some? s) => gen
                                 (let [
                                     gen
-                                        (let-when [#_"LocalBinding" lb (first s)] (contains? lbset lb) => gen
+                                        (let-when [#_"LocalBinding" lb (first s)] (contains? lbset (:uid lb)) => gen
                                             (let [
                                                 gen (Gen''dup gen)
                                                 gen (FnExpr''emitLocal fun, gen, lb)
@@ -14623,65 +14555,67 @@
 (about #_"LetExpr"
     (defr LetExpr [])
 
-    (defn #_"LetExpr" LetExpr'new [#_"vector" bindingInits, #_"Expr" body, #_"boolean" isLoop]
+    (defn #_"LetExpr" LetExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body, #_"boolean" loop?]
         (merge (class! LetExpr)
             (hash-map
-                #_"vector" :bindingInits bindingInits
+                #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
-                #_"boolean" :isLoop isLoop
+                #_"boolean" :loop? loop?
             )
         )
     )
 
     ;; (let [var val var2 val2 ...] body...)
     (defn #_"Expr" LetExpr'parse [#_"Context" context, #_"seq" form]
-        (let [#_"boolean" isLoop (= (first form) 'loop*)]
+        (let [#_"boolean" loop? (= (first form) 'loop*)]
             (when (vector? (second form)) => (throw! "bad binding form, expected vector")
                 (let [#_"vector" bindings (second form)]
                     (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                         (let [#_"seq" body (next (next form))
-                              #_"map" dynamicBindings
+                              #_"map" m
                                 (hash-map
-                                    (var! *local-env*)      (var-get! *local-env*)
-                                    (var! *last-local-num*) (var-get! *last-local-num*)
+                                    (var! *local-env*) (var-get! *local-env*)
+                                    (var! *local-num*) (var-get! *local-num*)
                                 )
-                              dynamicBindings
-                                (when isLoop => dynamicBindings
-                                    (assoc dynamicBindings (var! *loop-locals*) nil)
+                              m
+                                (when loop? => m
+                                    (assoc m (var! *loop-locals*) nil)
                                 )]
                             (try
-                                (push-thread-bindings dynamicBindings)
-                                (let [[#_"vector" bindingInits #_"vector" loopLocals]
-                                        (loop-when [bindingInits (vector) loopLocals (vector) #_"int" i 0] (< i (count bindings)) => [bindingInits loopLocals]
-                                            (let-when [#_"Object" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                                (when (nil? (namespace sym)) => (throw! (str "can't let qualified name: " sym))
+                                (push-thread-bindings m)
+                                (let [[#_"[LocalBinding]" lbs #_"[LocalBinding]" lls]
+                                        (loop-when [lbs (vector) lls (vector) #_"int" i 0] (< i (count bindings)) => [lbs lls]
+                                            (let-when [#_"Symbol?" sym (nth bindings i)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                                (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                                     (let [#_"Expr" init (Compiler'analyze (nth bindings (inc i)))
                                                           ;; sequential enhancement of env (like Lisp let*)
-                                                          [bindingInits loopLocals]
+                                                          [lbs lls]
                                                             (try
-                                                                (when isLoop
+                                                                (when loop?
                                                                     (push-thread-bindings (hash-map (var! *no-recur*) false))
                                                                 )
-                                                                (let [#_"LocalBinding" lb (Compiler'registerLocal sym, init)]
-                                                                    [(conj bindingInits (BindingInit'new lb, init)) (if isLoop (conj loopLocals lb) loopLocals)]
+                                                                (let [#_"LocalBinding" lb (LocalBinding'new sym, init, (var-swap! *local-num* inc))]
+                                                                    (var-swap! *local-env* assoc (:sym lb) lb)
+                                                                    (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                                    [(conj lbs lb) (if loop? (conj lls lb) lls)]
                                                                 )
                                                                 (finally
-                                                                    (when isLoop
+                                                                    (when loop?
                                                                         (pop-thread-bindings)
                                                                     )
                                                                 )
                                                             )]
-                                                        (recur bindingInits loopLocals (+ i 2))
+                                                        (recur lbs lls (+ i 2))
                                                     )
                                                 )
                                             )
                                         )]
-                                    (when isLoop
-                                        (var-set! *loop-locals* loopLocals)
+                                    (when loop?
+                                        (var-set! *loop-locals* lls)
                                     )
                                     (let [#_"Expr" bodyExpr
                                             (try
-                                                (when isLoop
+                                                (when loop?
                                                     (push-thread-bindings
                                                         (hash-map
                                                             (var! *no-recur*)          false
@@ -14689,14 +14623,14 @@
                                                         )
                                                     )
                                                 )
-                                                (BodyExpr'parse (if isLoop :Context'RETURN context), body)
+                                                (BodyExpr'parse (if loop? :Context'RETURN context), body)
                                                 (finally
-                                                    (when isLoop
+                                                    (when loop?
                                                         (pop-thread-bindings)
                                                     )
                                                 )
                                             )]
-                                        (LetExpr'new bindingInits, bodyExpr, isLoop)
+                                        (LetExpr'new lbs, bodyExpr, loop?)
                                     )
                                 )
                                 (finally
@@ -14713,17 +14647,17 @@
     (defn- #_"gen" LetExpr''emit [#_"LetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
             gen
-                (loop-when [gen gen #_"seq" s (seq (:bindingInits this))] (some? s) => gen
+                (loop-when [gen gen #_"seq" s (seq (:bindings this))] (some? s) => gen
                     (let [
-                        #_"BindingInit" bi (first s)
-                        gen (Expr'''emit (:init bi), :Context'EXPRESSION, fun, gen)
-                        gen (Gen''store gen, (:idx (:binding bi)))
+                        #_"LocalBinding" lb (first s)
+                        gen (Expr'''emit @(:init' lb), :Context'EXPRESSION, fun, gen)
+                        gen (Gen''store gen, (:idx lb))
                     ]
                         (recur gen (next s))
                     )
                 )
         ]
-            (if (:isLoop this)
+            (if (:loop? this)
                 (binding [*loop-label* (Gen''mark gen)]
                     (Expr'''emit (:body this), context, fun, gen)
                 )
@@ -15021,15 +14955,15 @@
 (about #_"TryExpr"
     (defr TryExpr [])
 
-    (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"vector" catchExprs, #_"Expr" finallyExpr]
+    (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"[CatchClause]" catches, #_"Expr" finallyExpr]
         (merge (class! TryExpr)
             (hash-map
                 #_"Expr" :tryExpr tryExpr
-                #_"vector" :catchExprs catchExprs
+                #_"[CatchClause]" :catches catches
                 #_"Expr" :finallyExpr finallyExpr
 
-                #_"int" :retLocal (Compiler'nextLocalNum)
-                #_"int" :finallyLocal (Compiler'nextLocalNum)
+                #_"int" :retLocal (var-swap! *local-num* inc)
+                #_"int" :finallyLocal (var-swap! *local-num* inc)
             )
         )
     )
@@ -15038,7 +14972,7 @@
     ;; catch-expr: (catch class sym expr*)
     ;; finally-expr: (finally expr*)
     (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form]
-        (let [[#_"Expr" bodyExpr #_"vector" catches #_"Expr" finallyExpr #_"vector" body]
+        (let [[#_"Expr" bodyExpr #_"[CatchClause]" catches #_"Expr" finallyExpr #_"vector" body]
                 (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
                     (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
                         (if (any = op 'catch 'finally)
@@ -15050,14 +14984,18 @@
                                         )
                                     )]
                                 (if (= op 'catch)
-                                    (let-when [_ (second f) #_"Symbol" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                        (when (nil? (namespace sym)) => (throw! (str "can't bind qualified name: " sym))
+                                    (let-when [_ (second f) #_"Symbol?" sym (third f)] (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                        (when (nil? (:ns sym)) => (throw! (str "can't bind qualified name: " sym))
                                             (let [catches
                                                     (binding [*local-env*        (var-get! *local-env*)
-                                                              *last-local-num*   (var-get! *last-local-num*)
+                                                              *local-num*        (var-get! *local-num*)
                                                               *in-catch-finally* true]
-                                                        (let [#_"LocalBinding" lb (Compiler'registerLocal sym, nil)
-                                                              #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))]
+                                                        (let [
+                                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))
+                                                            _ (var-swap! *local-env* assoc (:sym lb) lb)
+                                                            _ (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                            #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))
+                                                        ]
                                                             (conj catches (CatchClause'new lb, handler))
                                                         )
                                                     )]
@@ -15105,11 +15043,11 @@
                 )
             #_"label" l'return (Gen''label gen)
             gen (Gen''goto gen, l'return)
-            #_"int" n (count (:catchExprs this)) #_"labels" l'starts (mapv Gen''label (repeat n gen)) #_"labels" l'ends (mapv Gen''label (repeat n gen))
+            #_"int" n (count (:catches this)) #_"labels" l'starts (mapv Gen''label (repeat n gen)) #_"labels" l'ends (mapv Gen''label (repeat n gen))
             gen
                 (loop-when [gen gen #_"int" i 0] (< i n) => gen
                     (let [
-                        #_"CatchClause" clause (nth (:catchExprs this) i)
+                        #_"CatchClause" clause (nth (:catches this) i)
                         gen (Gen''mark gen, (nth l'starts i))
                         ;; exception should be on stack
                         ;; put in clause local
@@ -15168,10 +15106,10 @@
 (about #_"ThrowExpr"
     (defr ThrowExpr [])
 
-    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" excExpr]
+    (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" throwable]
         (merge (class! ThrowExpr)
             (hash-map
-                #_"Expr" :excExpr excExpr
+                #_"Expr" :throwable throwable
             )
         )
     )
@@ -15186,7 +15124,7 @@
 
     (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:excExpr this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:throwable this), :Context'EXPRESSION, fun, gen)
             gen (Gen''throw gen)
         ]
             gen
@@ -15235,7 +15173,7 @@
 ;;;
  ; Returns true if s names a special form.
  ;;
-(defn special-symbol? [s] (contains? Compiler'specials s))
+(defn special-symbol? [s] (Compiler'isSpecial s))
 
     (defn #_"Object" Compiler'macroexpand1 [#_"Object" form]
         (when (seq? form) => form
@@ -15265,7 +15203,7 @@
         (or
             (when (nil? (:ns sym)) ;; ns-qualified syms are always Vars
                 (when-some [#_"LocalBinding" lb (get (var-get! *local-env*) sym)]
-                    (Compiler'closeOver lb, (var-get! *method*))
+                    (Compiler'closeOver lb, (var-get! *fn-method*))
                     (LocalBindingExpr'new lb)
                 )
             )
@@ -15341,7 +15279,7 @@
                     (Compiler'eval (first s))
                 )
                 (let [#_"FnExpr" fun (Compiler'analyze (list (symbol! 'fn*) [] form))]
-                    (IFn'''invoke (Closure'new fun))
+                    (IFn'''invoke (Closure'new fun, nil))
                 )
             )
         )
@@ -16044,8 +15982,8 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [#_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader))
               #_"Object" EOF (Object.)]
-            (binding [*method*    (var-get! *method*)
-                      *local-env* (var-get! *local-env*)]
+            (binding [*fn-method* nil
+                      *local-env* nil]
                 (loop [#_"Object" val nil]
                     (LispReader'consumeWhitespaces r)
                     (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
@@ -16147,8 +16085,8 @@
 )
 
 (defn repl []
-    (binding [*method*    (var-get! *method*)
-              *local-env* (var-get! *local-env*)]
+    (binding [*fn-method* nil
+              *local-env* nil]
         (loop []
             (-/print "\033[31mArbace \033[32m=> \033[0m")
             (.flush -/*out*)
