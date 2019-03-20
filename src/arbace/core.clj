@@ -13802,10 +13802,10 @@
     )
 
     (defn- #_"gen" BodyExpr''emit [#_"BodyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (loop-when-recur [gen gen #_"int" i 0]
-                         (< i (dec (count (:exprs this))))
-                         [(Expr'''emit (nth (:exprs this) i), :Context'STATEMENT, fun, gen) (inc i)]
-                      => (Expr'''emit (nth (:exprs this) i), context, fun, gen)
+        (loop-when-recur [gen gen #_"seq" s (seq (:exprs this))]
+                         (some? (next s))
+                         [(Expr'''emit (first s), :Context'STATEMENT, fun, gen) (next s)]
+                      => (Expr'''emit (first s), context, fun, gen)
         )
     )
 
@@ -14164,7 +14164,7 @@
                 ;; the closed over locals need to be propagated to the enclosing fun
                 #_"FnMethod" :parent parent
                 ;; uid->localbinding
-                #_"{int LocalBinding}" :locals (hash-map)
+                #_"{int LocalBinding}'" :locals' (atom (hash-map))
                 #_"Integer" :arity nil
                 #_"Expr" :body nil
             )
@@ -14183,7 +14183,7 @@
                 (when-some [#_"Symbol" f (:fname fun)]
                     (let [#_"LocalBinding" lb (LocalBinding'new f, nil, (var-get! *local-num*))]
                         (var-swap! *local-env* assoc (:sym lb) lb)
-                        (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                        (swap! (:locals' *fn-method*) assoc (:uid lb) lb)
                     )
                 )
                 (let [
@@ -14207,7 +14207,7 @@
                                             #_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))
                                         ]
                                             (var-swap! *local-env* assoc (:sym lb) lb)
-                                            (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                            (swap! (:locals' *fn-method*) assoc (:uid lb) lb)
                                             (var-swap! *loop-locals* conj lb)
                                             (recur arity variadic? (next s))
                                         )
@@ -14475,7 +14475,7 @@
                                         (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                             (let [#_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))]
                                                 (var-swap! *local-env* assoc (:sym lb) lb)
-                                                (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                (swap! (:locals' *fn-method*) assoc (:uid lb) lb)
                                                 (recur (conj lbs lb) (+ i 2))
                                             )
                                         )
@@ -14596,7 +14596,7 @@
                                                                 )
                                                                 (let [#_"LocalBinding" lb (LocalBinding'new sym, init, (var-swap! *local-num* inc))]
                                                                     (var-swap! *local-env* assoc (:sym lb) lb)
-                                                                    (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                                    (swap! (:locals' *fn-method*) assoc (:uid lb) lb)
                                                                     [(conj lbs lb) (if loop? (conj lls lb) lls)]
                                                                 )
                                                                 (finally
@@ -14993,7 +14993,7 @@
                                                         (let [
                                                             #_"LocalBinding" lb (LocalBinding'new sym, nil, (var-swap! *local-num* inc))
                                                             _ (var-swap! *local-env* assoc (:sym lb) lb)
-                                                            _ (var-swap! *fn-method* update :locals assoc (:uid lb) lb)
+                                                            _ (swap! (:locals' *fn-method*) assoc (:uid lb) lb)
                                                             #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))))
                                                         ]
                                                             (conj catches (CatchClause'new lb, handler))
@@ -15192,7 +15192,7 @@
     )
 
     (defn- #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" fm]
-        (when (and (some? lb) (some? fm) (not (contains? (:locals fm) (:uid lb))))
+        (when (and (some? lb) (some? fm) (not (contains? @(:locals' fm) (:uid lb))))
             (swap! (:closes' (:fun fm)) assoc (:uid lb) lb)
             (Compiler'closeOver lb, (:parent fm))
         )
@@ -15272,15 +15272,11 @@
         )
     )
 
-    (defn #_"Object" Compiler'eval [#_"Object" form]
+    (defn #_"edn" Compiler'eval [#_"edn" form]
         (let [form (Compiler'macroexpand form)]
-            (if (and (seq? form) (= (first form) 'do))
-                (loop-when-recur [#_"seq" s (next form)] (some? (next s)) [(next s)] => (Compiler'eval (first s))
-                    (Compiler'eval (first s))
-                )
-                (let [#_"FnExpr" fun (Compiler'analyze (list (symbol! 'fn*) [] form))]
-                    (IFn'''invoke (Closure'new fun, nil))
-                )
+            (-> (Compiler'analyze (list (symbol! 'fn*) [] form))
+                (Closure'new nil)
+                (IFn'''invoke)
             )
         )
     )
