@@ -13338,11 +13338,11 @@
 
 (about #_"arbace.Compiler"
     (defp Expr
-        (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen])
+        (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"map" scope, #_"gen" gen])
     )
 
     (defp Assignable
-        (#_"gen" Assignable'''emitAssign [#_"Assignable" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val])
+        (#_"gen" Assignable'''emitAssign [#_"Assignable" this, #_"Context" context, #_"map" scope, #_"gen" gen, #_"Expr" val])
     )
 
     (defp Recur)
@@ -13455,8 +13455,6 @@
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
 
-    (def #_"Var" ^:dynamic *loop-label*) ;; label
-
     (defn #_"Namespace" Compiler'namespaceFor
         ([#_"Symbol" sym] (Compiler'namespaceFor *arbace-ns*, sym))
         ([#_"Namespace" inns, #_"Symbol" sym]
@@ -13525,7 +13523,7 @@
 
     (defn #_"Var" Compiler'maybeMacro [#_"Object" op, #_"map" scope]
         ;; no local macros for now
-        (when-not (and (symbol? op) (some? (get @(:local-env' scope) op)))
+        (when-not (and (symbol? op) (some? (get @(:'local-env scope) op)))
             (when (or (symbol? op) (var? op))
                 (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (and (some? v) (get (meta v) :macro))
@@ -13540,7 +13538,7 @@
 
     (defn #_"IFn" Compiler'maybeInline [#_"Object" op, #_"int" arity, #_"map" scope]
         ;; no local inlines for now
-        (when-not (and (symbol? op) (some? (get @(:local-env' scope) op)))
+        (when-not (and (symbol? op) (some? (get @(:'local-env scope) op)))
             (when (or (symbol? op) (var? op))
                 (when-some [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
@@ -13597,6 +13595,24 @@
             )
         )
     )
+
+    (defn #_"gen" Compiler'emitArgs [#_"map" scope, #_"gen" gen, #_"indexed" args]
+        (let [
+            gen (Gen''push gen, (count args))
+            gen (Gen''anew gen)
+        ]
+            (loop-when [gen gen #_"int" i 0] (< i (count args)) => gen
+                (let [
+                    gen (Gen''dup gen)
+                    gen (Gen''push gen, i)
+                    gen (Expr'''emit (nth args i), :Context'EXPRESSION, scope, gen)
+                    gen (Gen''aset gen)
+                ]
+                    (recur gen (inc i))
+                )
+            )
+        )
+    )
 )
 
 (about #_"LiteralExpr"
@@ -13614,7 +13630,7 @@
     (def #_"LiteralExpr" LiteralExpr'TRUE  (LiteralExpr'new true))
     (def #_"LiteralExpr" LiteralExpr'FALSE (LiteralExpr'new false))
 
-    (defn #_"Expr" LiteralExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" LiteralExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"int" n (dec (count form))]
             (when (= n 1) => (throw! (str "wrong number of arguments passed to quote: " n))
                 (let [#_"Object" value (second form)]
@@ -13632,7 +13648,7 @@
         )
     )
 
-    (defn- #_"gen" LiteralExpr''emit [#_"LiteralExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" LiteralExpr''emit [#_"LiteralExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
             (Gen''push gen, (:value this))
         )
@@ -13657,7 +13673,7 @@
 
     (declare Compiler'analyze)
 
-    (defn #_"Expr" AssignExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" AssignExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
             (let [#_"Expr" target (Compiler'analyze (second form), scope)]
                 (when (satisfies? Assignable target) => (throw! "invalid assignment target")
@@ -13667,8 +13683,8 @@
         )
     )
 
-    (defn- #_"gen" AssignExpr''emit [#_"AssignExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (Assignable'''emitAssign (:target this), context, fun, gen, (:val this))
+    (defn- #_"gen" AssignExpr''emit [#_"AssignExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
+        (Assignable'''emitAssign (:target this), context, scope, gen, (:val this))
     )
 
     (defm AssignExpr Expr
@@ -13687,7 +13703,7 @@
         )
     )
 
-    (defn- #_"gen" UnresolvedVarExpr''emit [#_"UnresolvedVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" UnresolvedVarExpr''emit [#_"UnresolvedVarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         gen
     )
 
@@ -13707,7 +13723,7 @@
         )
     )
 
-    (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen (Gen''push gen, (:var this))
             gen (Gen''invoke gen, 'Var''get)
@@ -13718,10 +13734,10 @@
         )
     )
 
-    (defn- #_"gen" VarExpr''emitAssign [#_"VarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen, #_"Expr" val]
+    (defn- #_"gen" VarExpr''emitAssign [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen, #_"Expr" val]
         (let [
             gen (Gen''push gen, (:var this))
-            gen (Expr'''emit val, :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit val, :Context'EXPRESSION, scope, gen)
             gen (Gen''invoke gen, 'Var''set)
         ]
             (when (= context :Context'STATEMENT) => gen
@@ -13750,7 +13766,7 @@
         )
     )
 
-    (defn #_"Expr" TheVarExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" TheVarExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, false)]
             (when (some? v) => (throw! (str "unable to resolve var: " sym " in this context"))
                 (TheVarExpr'new v)
@@ -13758,7 +13774,7 @@
         )
     )
 
-    (defn- #_"gen" TheVarExpr''emit [#_"TheVarExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" TheVarExpr''emit [#_"TheVarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
             (Gen''push gen, (:var this))
         )
@@ -13780,23 +13796,23 @@
         )
     )
 
-    (defn #_"Expr" BodyExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" BodyExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
               #_"vector" v
                 (loop-when [v (vector) s s] (some? s) => v
                     (let [#_"Context" c (if (or (= context :Context'STATEMENT) (some? (next s))) :Context'STATEMENT context)]
-                        (recur (conj v (Compiler'analyze c, (first s), scope)) (next s))
+                        (recur (conj v (Compiler'analyze (first s), c, scope)) (next s))
                     )
                 )]
             (BodyExpr'new (if (pos? (count v)) v (conj v LiteralExpr'NIL)))
         )
     )
 
-    (defn- #_"gen" BodyExpr''emit [#_"BodyExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" BodyExpr''emit [#_"BodyExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (loop-when-recur [gen gen #_"seq" s (seq (:exprs this))]
                          (some? (next s))
-                         [(Expr'''emit (first s), :Context'STATEMENT, fun, gen) (next s)]
-                      => (Expr'''emit (first s), context, fun, gen)
+                         [(Expr'''emit (first s), :Context'STATEMENT, scope, gen) (next s)]
+                      => (Expr'''emit (first s), context, scope, gen)
         )
     )
 
@@ -13817,10 +13833,10 @@
         )
     )
 
-    (defn- #_"gen" MetaExpr''emit [#_"MetaExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" MetaExpr''emit [#_"MetaExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-            gen (Expr'''emit (:meta this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
+            gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
             gen (Gen''invoke gen, 'IObj'''withMeta)
         ]
             (when (= context :Context'STATEMENT) => gen
@@ -13848,32 +13864,32 @@
     )
 
     ;; (if test then) or (if test then else)
-    (defn #_"Expr" IfExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" IfExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (cond
             (< 4 (count form)) (throw! "too many arguments to if")
             (< (count form) 3) (throw! "too few arguments to if")
         )
         (let [#_"Expr" test (Compiler'analyze (second form), scope)
-              #_"Expr" then (Compiler'analyze context, (third form), scope)
-              #_"Expr" else (Compiler'analyze context, (fourth form), scope)]
+              #_"Expr" then (Compiler'analyze (third form), context, scope)
+              #_"Expr" else (Compiler'analyze (fourth form), context, scope)]
             (IfExpr'new test, then, else)
         )
     )
 
-    (defn- #_"gen" IfExpr''emit [#_"IfExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" IfExpr''emit [#_"IfExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             #_"label" l'nil (Gen''label gen) #_"label" l'false (Gen''label gen) #_"label" l'end (Gen''label gen)
-            gen (Expr'''emit (:test this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:test this), :Context'EXPRESSION, scope, gen)
             gen (Gen''dup gen)
             gen (Gen''if-nil? gen, l'nil)
             gen (Gen''push gen, false)
             gen (Gen''if-eq? gen, l'false)
-            gen (Expr'''emit (:then this), context, fun, gen)
+            gen (Expr'''emit (:then this), context, scope, gen)
             gen (Gen''goto gen, l'end)
             gen (Gen''mark gen, l'nil)
             gen (Gen''pop gen)
             gen (Gen''mark gen, l'false)
-            gen (Expr'''emit (:else this), context, fun, gen)
+            gen (Expr'''emit (:else this), context, scope, gen)
             gen (Gen''mark gen, l'end)
         ]
             gen
@@ -13919,9 +13935,7 @@
         )
     )
 
-    (declare FnExpr''emitArgs)
-
-    (defn- #_"gen" MapExpr''emit [#_"MapExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" MapExpr''emit [#_"MapExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             #_"int" n (count (:args this))
             [#_"boolean" literal? #_"boolean" unique?]
@@ -13936,7 +13950,7 @@
                         (recur literal? unique? keys (+ i 2))
                     )
                 )
-            gen (FnExpr''emitArgs fun, (:args this), gen)
+            gen (Compiler'emitArgs scope, gen, (:args this))
             gen (Gen''invoke gen, (if (or (and literal? unique?) (<= n 2)) 'RT'mapUniqueKeys 'RT'map))
         ]
             (when (= context :Context'STATEMENT) => gen
@@ -13978,11 +13992,11 @@
         )
     )
 
-    (defn- #_"gen" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" SetExpr''emit [#_"SetExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentHashSet'EMPTY)
-                    (let [gen (FnExpr''emitArgs fun, (:args this), gen)]
+                    (let [gen (Compiler'emitArgs scope, gen, (:args this))]
                         (Gen''invoke gen, 'PersistentHashSet'createWithCheck)
                     )
                 )
@@ -14026,11 +14040,11 @@
         )
     )
 
-    (defn- #_"gen" VectorExpr''emit [#_"VectorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" VectorExpr''emit [#_"VectorExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentVector'EMPTY)
-                    (let [gen (FnExpr''emitArgs fun, (:args this), gen)]
+                    (let [gen (Compiler'emitArgs scope, gen, (:args this))]
                         (Gen''invoke gen, 'vec)
                     )
                 )
@@ -14058,20 +14072,20 @@
         )
     )
 
-    (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" InvokeExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"Expr" fexpr (Compiler'analyze (first form), scope)
               #_"vector" args (mapv #(Compiler'analyze %, scope) (next form))]
             (InvokeExpr'new fexpr, args)
         )
     )
 
-    (defn- #_"gen" InvokeExpr''emit [#_"InvokeExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" InvokeExpr''emit [#_"InvokeExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:fexpr this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:fexpr this), :Context'EXPRESSION, scope, gen)
             gen
                 (loop-when-recur [gen gen #_"int" i 0]
                                  (< i (min (count (:args this)) Compiler'MAX_POSITIONAL_ARITY))
-                                 [(Expr'''emit (nth (:args this) i), :Context'EXPRESSION, fun, gen) (inc i)]
+                                 [(Expr'''emit (nth (:args this) i), :Context'EXPRESSION, scope, gen) (inc i)]
                               => gen
                 )
             gen
@@ -14082,7 +14096,7 @@
                                              [(conj restArgs (nth (:args this) i)) (inc i)]
                                           => restArgs
                             )]
-                        (FnExpr''emitArgs fun, restArgs, gen)
+                        (Compiler'emitArgs scope, gen, restArgs)
                     )
                 )
             gen (Gen''invoke gen, (symbol (str "IFn'''invoke" \- (min (count (:args this)) (inc Compiler'MAX_POSITIONAL_ARITY)))))
@@ -14106,7 +14120,7 @@
             (hash-map
                 #_"int" :uid (next-id!)
                 #_"Symbol" :sym sym
-                #_"Expr'" :init' (atom init)
+                #_"Expr'" :'init (atom init)
                 #_"int" :idx idx
             )
         )
@@ -14124,11 +14138,11 @@
         )
     )
 
-    (declare FnExpr''emitLocal)
+    (declare FnMethod''emitLocal)
 
-    (defn- #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
-            (FnExpr''emitLocal fun, gen, (:lb this))
+            (FnMethod''emitLocal (:fm scope), gen, (:lb this))
         )
     )
 
@@ -14148,7 +14162,7 @@
                 ;; the closed over locals need to be propagated to the enclosing fun
                 #_"FnMethod" :parent parent
                 ;; uid->localbinding
-                #_"{int LocalBinding}'" :locals' (atom (hash-map))
+                #_"{int LocalBinding}'" :'locals (atom (hash-map))
                 #_"Integer" :arity nil
                 #_"Expr" :body nil
             )
@@ -14161,14 +14175,14 @@
             scope
                 (-> scope
                     (update :fm (partial FnMethod'new fun))
-                    (update :local-env' (comp atom deref))
-                    (assoc :local-num' (atom 0))
+                    (update :'local-env (comp atom deref))
+                    (assoc :'local-num (atom 0))
                 )
             _
                 (when-some [#_"Symbol" f (:fname fun)]
-                    (let [#_"LocalBinding" lb (LocalBinding'new f, nil, @(:local-num' scope))]
-                        (swap! (:local-env' scope) assoc (:sym lb) lb)
-                        (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
+                    (let [#_"LocalBinding" lb (LocalBinding'new f, nil, @(:'local-num scope))]
+                        (swap! (:'local-env scope) assoc (:sym lb) lb)
+                        (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
                     )
                 )
             [#_"[LocalBinding]" lbs #_"int" arity]
@@ -14186,10 +14200,10 @@
                                     ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
                                         (let [
                                             arity (if-not variadic? (inc arity) (-/- (inc arity)))
-                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:local-num' scope) inc))
+                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
                                         ]
-                                            (swap! (:local-env' scope) assoc (:sym lb) lb)
-                                            (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
+                                            (swap! (:'local-env scope) assoc (:sym lb) lb)
+                                            (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
                                             (recur (conj lbs lb) arity variadic? (next s))
                                         )
                                     :else
@@ -14205,20 +14219,30 @@
                     (update :fm assoc :arity arity)
                 )
         ]
-            (assoc (:fm scope) :body (BodyExpr'parse :Context'RETURN, (next form), scope))
+            (assoc (:fm scope) :body (BodyExpr'parse (next form), :Context'RETURN, scope))
+        )
+    )
+
+    (defn #_"gen" FnMethod''emitLocal [#_"FnMethod" this, #_"gen" gen, #_"LocalBinding" lb]
+        (if (contains? @(:'closes (:fun this)) (:uid lb))
+            (let [
+                gen (Gen''load gen, 0) ;; this
+                gen (Gen''get gen, (:sym lb))
+            ]
+                gen
+            )
+            (Gen''load gen, (:idx lb))
         )
     )
 
     (defn #_"gen" FnMethod''compile [#_"FnMethod" this]
         (let [
+            #_"map" scope (-/hash-map :fm this)
             #_"gen" gen (Gen'new)
-            gen
-                (binding [*loop-label* (Gen''mark gen)]
-                    (Expr'''emit (:body this), :Context'RETURN, (:fun this), gen)
-                )
-            gen (Gen''return gen)
+            scope (assoc scope :loop-label (Gen''mark gen))
+            gen (Expr'''emit (:body this), :Context'RETURN, scope, gen)
         ]
-            gen
+            (Gen''return gen)
         )
     )
 )
@@ -14234,57 +14258,12 @@
                 ;; optional variadic overload (there can only be one)
                 #_"FnMethod" :variadic nil
                 ;; uid->localbinding
-                #_"{int LocalBinding}'" :closes' (atom (hash-map))
+                #_"{int LocalBinding}'" :'closes (atom (hash-map))
             )
         )
     )
 
-    (defn #_"gen" FnExpr''emitLocal [#_"FnExpr" this, #_"gen" gen, #_"LocalBinding" lb]
-        (if (contains? @(:closes' this) (:uid lb))
-            (let [
-                gen (Gen''load gen, 0) ;; this
-                gen (Gen''get gen, (:sym lb))
-            ]
-                gen
-            )
-            (Gen''load gen, (:idx lb))
-        )
-    )
-
-    (defn #_"gen" FnExpr''emitArgs [#_"FnExpr" this, #_"indexed" args, #_"gen" gen]
-        (let [
-            gen (Gen''push gen, (count args))
-            gen (Gen''anew gen)
-        ]
-            (loop-when [gen gen #_"int" i 0] (< i (count args)) => gen
-                (let [
-                    gen (Gen''dup gen)
-                    gen (Gen''push gen, i)
-                    gen (Expr'''emit (nth args i), :Context'EXPRESSION, this, gen)
-                    gen (Gen''aset gen)
-                ]
-                    (recur gen (inc i))
-                )
-            )
-        )
-    )
-
-    (defn- #_"gen" FnExpr''emit [#_"FnExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        ;; emitting a Fn means constructing an instance, feeding closed-overs from enclosing scope, if any
-        ;; fun arg is enclosing fun, not this
-        (let [
-            gen (Gen''create gen)
-            gen (Gen''dup gen)
-            gen (reduce (partial FnExpr''emitLocal fun) gen (vals @(:closes' this)))
-            gen (Gen''init gen)
-        ]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
-    (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" FnExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [
             #_"FnExpr" fun (FnExpr'new)
             ;; arglist might be preceded by symbol naming this fn
@@ -14339,6 +14318,21 @@
         )
     )
 
+    (defn- #_"gen" FnExpr''emit [#_"FnExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
+        ;; emitting a Fn means constructing an instance, feeding closed-overs from enclosing scope, if any
+        ;; fun arg is enclosing fun, not this
+        (let [
+            gen (Gen''create gen)
+            gen (Gen''dup gen)
+            gen (reduce (partial FnMethod''emitLocal (:fm scope)) gen (vals @(:'closes this)))
+            gen (Gen''init gen)
+        ]
+            (when (= context :Context'STATEMENT) => gen
+                (Gen''pop gen)
+            )
+        )
+    )
+
     (defm FnExpr Expr
         (Expr'''emit => FnExpr''emit)
     )
@@ -14360,7 +14354,7 @@
     )
 
     ;; (def x) or (def x initexpr)
-    (defn #_"Expr" DefExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" DefExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (cond
             (< 3 (count form))            (throw! "too many arguments to def")
             (< (count form) 2)            (throw! "too few arguments to def")
@@ -14388,7 +14382,7 @@
         )
     )
 
-    (defn- #_"gen" DefExpr''emit [#_"DefExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" DefExpr''emit [#_"DefExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen (Gen''push gen, (:var this))
             gen
@@ -14409,7 +14403,7 @@
                 (when (some? (:meta this)) => gen
                     (let [
                         gen (Gen''dup gen)
-                        gen (Expr'''emit (:meta this), :Context'EXPRESSION, fun, gen)
+                        gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
                         gen (Gen''invoke gen, 'Var''resetMeta)
                     ]
                         gen
@@ -14419,7 +14413,7 @@
                 (when (:initProvided this) => gen
                     (let [
                         gen (Gen''dup gen)
-                        gen (Expr'''emit (:init this), :Context'EXPRESSION, fun, gen)
+                        gen (Expr'''emit (:init this), :Context'EXPRESSION, scope, gen)
                         gen (Gen''invoke gen, 'Var''bindRoot)
                     ]
                         gen
@@ -14450,13 +14444,13 @@
     )
 
     ;; (letfn* [var (fn [args] body) ...] body...)
-    (defn #_"Expr" LetFnExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" LetFnExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"vector?" bindings (second form)]
             (when (vector? bindings)           => (throw! "bad binding form, expected vector")
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                     (let [
-                        scope (update scope :local-env' (comp atom deref))
-                        scope (update scope :local-num' (comp atom deref))
+                        scope (update scope :'local-env (comp atom deref))
+                        scope (update scope :'local-num (comp atom deref))
                         ;; pre-seed env (like Lisp labels)
                         #_"[LocalBinding]" lbs
                             (loop-when [lbs (vector) #_"seq" s (seq bindings)] (some? s) => lbs
@@ -14464,10 +14458,10 @@
                                     (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
                                         (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                             (let [
-                                                #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:local-num' scope) inc))
+                                                #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
                                             ]
-                                                (swap! (:local-env' scope) assoc (:sym lb) lb)
-                                                (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
+                                                (swap! (:'local-env scope) assoc (:sym lb) lb)
+                                                (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
                                                 (recur (conj lbs lb) (next (next s)))
                                             )
                                         )
@@ -14476,17 +14470,17 @@
                             )
                         _
                             (loop-when-recur [#_"int" i 0] (< i (count bindings)) [(+ i 2)]
-                                (reset! (:init' (nth lbs (quot i 2))) (Compiler'analyze (nth bindings (inc i)), scope))
+                                (reset! (:'init (nth lbs (quot i 2))) (Compiler'analyze (nth bindings (inc i)), scope))
                             )
                     ]
-                        (LetFnExpr'new lbs, (BodyExpr'parse context, (next (next form)), scope))
+                        (LetFnExpr'new lbs, (BodyExpr'parse (next (next form)), context, scope))
                     )
                 )
             )
         )
     )
 
-    (defn- #_"gen" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen
                 (loop-when [gen gen #_"seq" s (seq (:bindings this))] (some? s) => gen
@@ -14502,7 +14496,7 @@
                 (loop-when [lbset (hash-set) gen gen #_"seq" s (seq (:bindings this))] (some? s) => [lbset gen]
                     (let [
                         #_"LocalBinding" lb (first s)
-                        gen (Expr'''emit @(:init' lb), :Context'EXPRESSION, fun, gen)
+                        gen (Expr'''emit @(:'init lb), :Context'EXPRESSION, scope, gen)
                         gen (Gen''store gen, (:idx lb))
                     ]
                         (recur (conj lbset (:uid lb)) gen (next s))
@@ -14514,13 +14508,13 @@
                         #_"LocalBinding" lb (first s)
                         gen (Gen''load gen, (:idx lb))
                         gen
-                            (loop-when [gen gen #_"seq" s (vals @(:closes' @(:init' lb)))] (some? s) => gen
+                            (loop-when [gen gen #_"seq" s (vals @(:'closes @(:'init lb)))] (some? s) => gen
                                 (let [
                                     gen
                                         (let-when [#_"LocalBinding" lb (first s)] (contains? lbset (:uid lb)) => gen
                                             (let [
                                                 gen (Gen''dup gen)
-                                                gen (FnExpr''emitLocal fun, gen, lb)
+                                                gen (FnMethod''emitLocal (:fm scope), gen, lb)
                                                 gen (Gen''put gen, (:sym lb))
                                             ]
                                                 gen
@@ -14536,7 +14530,7 @@
                     )
                 )
         ]
-            (Expr'''emit (:body this), context, fun, gen)
+            (Expr'''emit (:body this), context, scope, gen)
         )
     )
 
@@ -14559,13 +14553,13 @@
     )
 
     ;; (let* [var val var2 val2 ...] body...)
-    (defn #_"Expr" LetExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" LetExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"vector?" bindings (second form)]
             (when (vector? bindings)           => (throw! "bad binding form, expected vector")
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                     (let [
-                        scope (update scope :local-env' (comp atom deref))
-                        scope (update scope :local-num' (comp atom deref))
+                        scope (update scope :'local-env (comp atom deref))
+                        scope (update scope :'local-num (comp atom deref))
                         #_"boolean" loop? (= (first form) 'loop*)
                         scope
                             (when loop? => scope
@@ -14579,10 +14573,10 @@
                                         (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                             (let [
                                                 #_"Expr" init (Compiler'analyze (second s), scope)
-                                                #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (:local-num' scope) inc))
+                                                #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (:'local-num scope) inc))
                                             ]
-                                                (swap! (:local-env' scope) assoc (:sym lb) lb)
-                                                (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
+                                                (swap! (:'local-env scope) assoc (:sym lb) lb)
+                                                (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
                                                 (recur (conj lbs lb) (next (next s)))
                                             )
                                         )
@@ -14593,7 +14587,7 @@
                             (when loop? => scope
                                 (assoc scope :loop-locals lbs)
                             )
-                        #_"Expr" body (BodyExpr'parse (if loop? :Context'RETURN context), (next (next form)), scope)
+                        #_"Expr" body (BodyExpr'parse (next (next form)), (if loop? :Context'RETURN context), scope)
                     ]
                         (LetExpr'new lbs, body, loop?)
                     )
@@ -14602,25 +14596,24 @@
         )
     )
 
-    (defn- #_"gen" LetExpr''emit [#_"LetExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" LetExpr''emit [#_"LetExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen
                 (loop-when [gen gen #_"seq" s (seq (:bindings this))] (some? s) => gen
                     (let [
                         #_"LocalBinding" lb (first s)
-                        gen (Expr'''emit @(:init' lb), :Context'EXPRESSION, fun, gen)
+                        gen (Expr'''emit @(:'init lb), :Context'EXPRESSION, scope, gen)
                         gen (Gen''store gen, (:idx lb))
                     ]
                         (recur gen (next s))
                     )
                 )
-        ]
-            (if (:loop? this)
-                (binding [*loop-label* (Gen''mark gen)]
-                    (Expr'''emit (:body this), context, fun, gen)
+            scope
+                (when (:loop? this) => scope
+                    (assoc scope :loop-label (Gen''mark gen))
                 )
-                (Expr'''emit (:body this), context, fun, gen)
-            )
+        ]
+            (Expr'''emit (:body this), context, scope, gen)
         )
     )
 
@@ -14641,7 +14634,7 @@
         )
     )
 
-    (defn #_"Expr" RecurExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" RecurExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (when (and (= context :Context'RETURN) (some? (:loop-locals scope))) => (throw! "can only recur from tail position")
             (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (:loop-locals scope))]
                 (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
@@ -14651,13 +14644,13 @@
         )
     )
 
-    (defn- #_"gen" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
-        (when-some [#_"label" l'loop (var-get! *loop-label*)] => (throw! "recur misses loop label")
+    (defn- #_"gen" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
+        (when-some [#_"label" l'loop (:loop-label scope)] => (throw! "recur misses loop label")
             (let [
                 gen
                     (loop-when-recur [gen gen #_"seq" s (seq (:args this))]
                                      (some? s)
-                                     [(Expr'''emit (first s), :Context'EXPRESSION, fun, gen) (next s)]
+                                     [(Expr'''emit (first s), :Context'EXPRESSION, scope, gen) (next s)]
                                   => gen
                     )
                 gen
@@ -14709,7 +14702,7 @@
     ;; prepared by case macro and presumed correct
     ;; case macro binds actual expr in let so expr is always a local,
     ;; no need to worry about multiple evaluation
-    (defn #_"Expr" CaseExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" CaseExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"vector" args (vec (next form))
               #_"Object" exprForm (nth args 0)
               #_"int" shift (int! (nth args 1))
@@ -14728,11 +14721,11 @@
                     (let [#_"pair" e (first s)
                           #_"Integer" minhash (int! (key e)) #_"Object" pair (val e) ;; [test-val then-expr]
                           #_"Expr" test (LiteralExpr'new (first pair))
-                          #_"Expr" then (Compiler'analyze context, (second pair), scope)]
+                          #_"Expr" then (Compiler'analyze (second pair), context, scope)]
                         (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
                     )
                 )
-              #_"Expr" defaultExpr (Compiler'analyze context, (nth args 3), scope)]
+              #_"Expr" defaultExpr (Compiler'analyze (nth args 3), context, scope)]
             (CaseExpr'new testExpr, shift, mask, low, high, defaultExpr, tests, thens, switchType, testType, skipCheck)
         )
     )
@@ -14750,46 +14743,46 @@
         )
     )
 
-    (defn- #_"gen" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"label" l'default]
+    (defn- #_"gen" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"label" l'default]
         (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Gen''number? gen)
             gen (Gen''if-not gen, l'default)
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Gen''invoke gen, 'int!)
         ]
             (CaseExpr''emitShiftMask this, gen)
         )
     )
 
-    (defn- #_"gen" CaseExpr'emitExpr [#_"FnExpr" fun, #_"gen" gen, #_"Expr" expr]
-        (Expr'''emit expr, :Context'EXPRESSION, fun, gen)
+    (defn- #_"gen" CaseExpr'emitExpr [#_"map" scope, #_"gen" gen, #_"Expr" expr]
+        (Expr'''emit expr, :Context'EXPRESSION, scope, gen)
     )
 
-    (defn- #_"gen" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
+    (defn- #_"gen" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
         (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-            gen (Expr'''emit test, :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
+            gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
             gen (Gen''invoke gen, 'Util'equiv)
             gen (Gen''if-not gen, l'default)
         ]
-            (CaseExpr'emitExpr fun, gen, then)
+            (CaseExpr'emitExpr scope, gen, then)
         )
     )
 
-    (defn- #_"gen" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"map" scope, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Gen''invoke gen, 'f'hashcode)
         ]
             (CaseExpr''emitShiftMask this, gen)
         )
     )
 
-    (defn- #_"gen" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"FnExpr" fun, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
+    (defn- #_"gen" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
         (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, fun, gen)
-            gen (Expr'''emit test, :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
+            gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
             gen
                 (if (= (:testType this) :hash-identity)
                     (Gen''if-ne? gen, l'default)
@@ -14801,17 +14794,17 @@
                     )
                 )
         ]
-            (CaseExpr'emitExpr fun, gen, then)
+            (CaseExpr'emitExpr scope, gen, then)
         )
     )
 
-    (defn- #_"gen" CaseExpr''emit [#_"CaseExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" CaseExpr''emit [#_"CaseExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             #_"label" l'default (Gen''label gen)
             gen
                 (if (= (:testType this) :int)
-                    (CaseExpr''emitExprForInts this, fun, gen, l'default)
-                    (CaseExpr''emitExprForHashes this, fun, gen)
+                    (CaseExpr''emitExprForInts this, scope, gen, l'default)
+                    (CaseExpr''emitExprForHashes this, scope, gen)
                 )
             #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''label gen)) (sorted-map) (keys (:tests this)))
             gen
@@ -14835,11 +14828,11 @@
                         gen
                             (cond
                                 (= (:testType this) :int)
-                                    (CaseExpr''emitThenForInts this, fun, gen, (get (:tests this) i), (get (:thens this) i), l'default)
+                                    (CaseExpr''emitThenForInts this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                                 (contains? (:skipCheck this) i)
-                                    (CaseExpr'emitExpr fun, gen, (get (:thens this) i))
+                                    (CaseExpr'emitExpr scope, gen, (get (:thens this) i))
                                 :else
-                                    (CaseExpr''emitThenForHashes this, fun, gen, (get (:tests this) i), (get (:thens this) i), l'default)
+                                    (CaseExpr''emitThenForHashes this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                             )
                         gen (Gen''goto gen, l'end)
                     ]
@@ -14847,7 +14840,7 @@
                     )
                 )
             gen (Gen''mark gen, l'default)
-            gen (CaseExpr'emitExpr fun, gen, (:defaultExpr this))
+            gen (CaseExpr'emitExpr scope, gen, (:defaultExpr this))
             gen (Gen''mark gen, l'end)
         ]
             (when (= context :Context'STATEMENT) => gen
@@ -14873,15 +14866,15 @@
         )
     )
 
-    (defn #_"Expr" MonitorExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" MonitorExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (MonitorExpr'new (Compiler'analyze (second form), scope), (= (first form) 'monitor-enter))
     )
 
-    (defn- #_"gen" MonitorExpr''emit [#_"MonitorExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" MonitorExpr''emit [#_"MonitorExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:target this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:target this), :Context'EXPRESSION, scope, gen)
             gen (if (:enter? this) (Gen''monitor-enter gen) (Gen''monitor-exit gen))
-            gen (Expr'''emit LiteralExpr'NIL, context, fun, gen)
+            gen (Expr'''emit LiteralExpr'NIL, context, scope, gen)
         ]
             gen
         )
@@ -14915,8 +14908,8 @@
                 #_"[CatchClause]" :catches catches
                 #_"Expr" :finallyExpr finallyExpr
 
-                #_"int" :retLocal (swap! (:local-num' scope) inc)
-                #_"int" :finallyLocal (swap! (:local-num' scope) inc)
+                #_"int" :retLocal (swap! (:'local-num scope) inc)
+                #_"int" :finallyLocal (swap! (:'local-num scope) inc)
             )
         )
     )
@@ -14924,25 +14917,25 @@
     ;; (try try-expr* catch-expr* finally-expr?)
     ;; catch-expr: (catch class sym expr*)
     ;; finally-expr: (finally expr*)
-    (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" TryExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [
             scope (dissoc scope :loop-locals)
             [#_"Expr" bodyExpr #_"[CatchClause]" catches #_"Expr" finallyExpr #_"vector" body]
                 (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
                     (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
                         (if (any = op 'catch 'finally)
-                            (let [bodyExpr (or bodyExpr (BodyExpr'parse context, (seq body), scope))]
+                            (let [bodyExpr (or bodyExpr (BodyExpr'parse (seq body), context, scope))]
                                 (if (= op 'catch)
                                     (let [#_"symbol?" sym (third f)]
                                         (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
                                             (when (nil? (:ns sym)) => (throw! (str "can't bind qualified name: " sym))
                                                 (let [
-                                                    scope (update scope :local-env' (comp atom deref))
-                                                    scope (update scope :local-num' (comp atom deref))
-                                                    #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:local-num' scope) inc))
-                                                    _ (swap! (:local-env' scope) assoc (:sym lb) lb)
-                                                    _ (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
-                                                    #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))), scope)
+                                                    scope (update scope :'local-env (comp atom deref))
+                                                    scope (update scope :'local-num (comp atom deref))
+                                                    #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
+                                                    _ (swap! (:'local-env scope) assoc (:sym lb) lb)
+                                                    _ (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                                                    #_"Expr" handler (BodyExpr'parse (next (next (next f))), :Context'EXPRESSION, scope)
                                                     #_"CatchClause" clause (CatchClause'new lb, handler)
                                                 ]
                                                     (recur bodyExpr (conj catches clause) finallyExpr body true (next fs))
@@ -14951,7 +14944,7 @@
                                         )
                                     )
                                     (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                        (let [finallyExpr (BodyExpr'parse :Context'STATEMENT, (next f), scope)]
+                                        (let [finallyExpr (BodyExpr'parse (next f), :Context'STATEMENT, scope)]
                                             (recur bodyExpr catches finallyExpr body caught? (next fs))
                                         )
                                     )
@@ -14966,15 +14959,15 @@
         ]
             (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr, scope)
                 ;; when there is neither catch nor finally, return a body expr directly
-                (BodyExpr'parse context, (seq body), scope)
+                (BodyExpr'parse (seq body), context, scope)
             )
         )
     )
 
-    (defn- #_"gen" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" TryExpr''emit [#_"TryExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             #_"label" l'start (Gen''mark gen)
-            gen (Expr'''emit (:tryExpr this), context, fun, gen)
+            gen (Expr'''emit (:tryExpr this), context, scope, gen)
             gen
                 (when-not (= context :Context'STATEMENT) => gen
                     (Gen''store gen, (:retLocal this))
@@ -14982,7 +14975,7 @@
             #_"label" l'end (Gen''mark gen)
             gen
                 (when (some? (:finallyExpr this)) => gen
-                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                    (Expr'''emit (:finallyExpr this), :Context'STATEMENT, scope, gen)
                 )
             #_"label" l'return (Gen''label gen)
             gen (Gen''goto gen, l'return)
@@ -14995,7 +14988,7 @@
                         ;; exception should be on stack
                         ;; put in clause local
                         gen (Gen''store gen, (:idx (:lb clause)))
-                        gen (Expr'''emit (:handler clause), context, fun, gen)
+                        gen (Expr'''emit (:handler clause), context, scope, gen)
                         gen
                             (when-not (= context :Context'STATEMENT) => gen
                                 (Gen''store gen, (:retLocal this))
@@ -15003,7 +14996,7 @@
                         gen (Gen''mark gen, (nth l'ends i))
                         gen
                             (when (some? (:finallyExpr this)) => gen
-                                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                                (Expr'''emit (:finallyExpr this), :Context'STATEMENT, scope, gen)
                             )
                         gen (Gen''goto gen, l'return)
                     ]
@@ -15017,7 +15010,7 @@
                         gen (Gen''mark gen, l'finally)
                         ;; exception should be on stack
                         gen (Gen''store gen, (:finallyLocal this))
-                        gen (Expr'''emit (:finallyExpr this), :Context'STATEMENT, fun, gen)
+                        gen (Expr'''emit (:finallyExpr this), :Context'STATEMENT, scope, gen)
                         gen (Gen''load gen, (:finallyLocal this))
                         gen (Gen''throw gen)
                     ]
@@ -15057,7 +15050,7 @@
         )
     )
 
-    (defn #_"Expr" ThrowExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
+    (defn #_"Expr" ThrowExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (cond
             (= (count form) 1) (throw! "too few arguments to throw: single Throwable expected")
             (< 2 (count form)) (throw! "too many arguments to throw: single Throwable expected")
@@ -15065,9 +15058,9 @@
         )
     )
 
-    (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"FnExpr" fun, #_"gen" gen]
+    (defn- #_"gen" ThrowExpr''emit [#_"ThrowExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
-            gen (Expr'''emit (:throwable this), :Context'EXPRESSION, fun, gen)
+            gen (Expr'''emit (:throwable this), :Context'EXPRESSION, scope, gen)
             gen (Gen''throw gen)
         ]
             gen
@@ -15124,7 +15117,7 @@
             (when (seq? form) => form
                 (let-when [#_"Object" op (first form)] (not (Compiler'isSpecial op)) => form
                     (let-when [#_"Var" v (Compiler'maybeMacro op, scope)] (some? v) => form
-                        (apply v form @(:local-env' scope) (next form)) ;; macro expansion
+                        (apply v form @(:'local-env scope) (next form)) ;; macro expansion
                     )
                 )
             )
@@ -15138,8 +15131,8 @@
     )
 
     (defn- #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" fm]
-        (when (and (some? lb) (some? fm) (not (contains? @(:locals' fm) (:uid lb))))
-            (swap! (:closes' (:fun fm)) assoc (:uid lb) lb)
+        (when (and (some? lb) (some? fm) (not (contains? @(:'locals fm) (:uid lb))))
+            (swap! (:'closes (:fun fm)) assoc (:uid lb) lb)
             (Compiler'closeOver lb, (:parent fm))
         )
         nil
@@ -15148,7 +15141,7 @@
     (defn- #_"Expr" Compiler'analyzeSymbol [#_"Symbol" sym, #_"map" scope]
         (or
             (when (nil? (:ns sym)) ;; ns-qualified syms are always Vars
-                (when-some [#_"LocalBinding" lb (get @(:local-env' scope) sym)]
+                (when-some [#_"LocalBinding" lb (get @(:'local-env scope) sym)]
                     (Compiler'closeOver lb, (:fm scope))
                     (LocalBindingExpr'new lb)
                 )
@@ -15170,14 +15163,14 @@
         )
     )
 
-    (defn- #_"Expr" Compiler'analyzeSeq [#_"Context" context, #_"seq" form, #_"map" scope]
-        (let-when [#_"Object" me (Compiler'macroexpand1 form, scope)] (= me form) => (Compiler'analyze context, me, scope)
+    (defn- #_"Expr" Compiler'analyzeSeq [#_"seq" form, #_"Context" context, #_"map" scope]
+        (let-when [#_"Object" me (Compiler'macroexpand1 form, scope)] (= me form) => (Compiler'analyze me, context, scope)
             (when-some [#_"Object" op (first form)] => (throw! (str "can't call nil, form: " form))
                 (let [#_"IFn" inline (Compiler'maybeInline op, (count (next form)), scope)]
                     (if (some? inline)
-                        (Compiler'analyze context, (IFn'''applyTo inline, (next form)), scope)
+                        (Compiler'analyze (IFn'''applyTo inline, (next form)), context, scope)
                         (let [#_"fn" f'parse (get Compiler'specials op InvokeExpr'parse)]
-                            (f'parse context, form, scope)
+                            (f'parse form, context, scope)
                         )
                     )
                 )
@@ -15186,8 +15179,8 @@
     )
 
     (defn #_"Expr" Compiler'analyze
-        ([#_"edn" form, #_"map" scope] (Compiler'analyze :Context'EXPRESSION, form, scope))
-        ([#_"Context" context, #_"edn" form, #_"map" scope]
+        ([#_"edn" form, #_"map" scope] (Compiler'analyze form, :Context'EXPRESSION, scope))
+        ([#_"edn" form, #_"Context" context, #_"map" scope]
             (let [form
                     (when (satisfies? LazySeq form) => form
                         (with-meta (or (seq form) (list)) (meta form))
@@ -15200,7 +15193,7 @@
                         (symbol? form)                   (Compiler'analyzeSymbol form, scope)
                         (string? form)                   (LiteralExpr'new (.intern #_"String" form))
                         (and (coll? form) (empty? form)) (LiteralExpr'new form)
-                        (seq? form)                      (Compiler'analyzeSeq context, form, scope)
+                        (seq? form)                      (Compiler'analyzeSeq form, context, scope)
                         (vector? form)                   (VectorExpr'parse form, scope)
                         (map? form)                      (MapExpr'parse form, scope)
                         (set? form)                      (SetExpr'parse form, scope)
@@ -15921,7 +15914,7 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [
             #_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader)) #_"Object" EOF (Object.)
-            #_"map" scope (-/hash-map :local-env' (atom (hash-map)))
+            #_"map" scope (-/hash-map :'local-env (atom (hash-map)))
         ]
             (loop [#_"value" value nil]
                 (LispReader'consumeWhitespaces r)
@@ -16017,7 +16010,7 @@
 )
 
 (defn repl []
-    (let [#_"map" scope (-/hash-map :local-env' (atom (hash-map)))]
+    (let [#_"map" scope (-/hash-map :'local-env (atom (hash-map)))]
         (loop []
             (-/print "\033[31mArbace \033[32m=> \033[0m")
             (.flush -/*out*)
