@@ -13455,10 +13455,7 @@
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
 
-    (def #_"Var" ^:dynamic *no-recur*         ) ;; Boolean
-    (def #_"Var" ^:dynamic *in-catch-finally* ) ;; Boolean
-    (def #_"Var" ^:dynamic *in-return-context*) ;; Boolean
-    (def #_"Var" ^:dynamic *loop-label*       ) ;; label
+    (def #_"Var" ^:dynamic *loop-label*) ;; label
 
     (defn #_"Namespace" Compiler'namespaceFor
         ([#_"Symbol" sym] (Compiler'namespaceFor *arbace-ns*, sym))
@@ -14063,7 +14060,7 @@
     )
 
     (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
-        (let [#_"boolean" tailPosition (and (= context :Context'RETURN) (var-get! *in-return-context*) (not (var-get! *in-catch-finally*)))
+        (let [#_"boolean" tailPosition (and (= context :Context'RETURN) (:in-return? scope) (not (:in-catch? scope)) (not (:in-finally? scope)))
               #_"Expr" fexpr (Compiler'analyze (first form), scope)
               #_"vector" args (mapv #(Compiler'analyze %, scope) (next form))]
             (InvokeExpr'new fexpr, args, tailPosition)
@@ -14215,9 +14212,7 @@
                     (update :fm assoc :arity arity)
                 )
         ]
-            (binding [*in-return-context* true]
-                (assoc (:fm scope) :body (BodyExpr'parse :Context'RETURN, (next form), scope))
-            )
+            (assoc (:fm scope) :body (BodyExpr'parse :Context'RETURN, (next form), (assoc scope :in-return? true)))
         )
     )
 
@@ -14297,54 +14292,57 @@
     )
 
     (defn #_"Expr" FnExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
-        (let [#_"FnExpr" fun (FnExpr'new)
-              ;; arglist might be preceded by symbol naming this fn
-              [fun form]
+        (let [
+            #_"FnExpr" fun (FnExpr'new)
+            ;; arglist might be preceded by symbol naming this fn
+            [fun form]
                 (when (symbol? (second form)) => [fun form]
                     [(assoc fun :fname (second form)) (cons (symbol! 'fn*) (next (next form)))]
                 )
-              ;; now (fn [args] body...) or (fn ([args] body...) ([args2] body2...) ...)
-              ;; turn former into latter
-              form
+            ;; now (fn [args] body...) or (fn ([args] body...) ([args2] body2...) ...)
+            ;; turn former into latter
+            form
                 (when (vector? (second form)) => form
                     (list (symbol! 'fn*) (next form))
                 )
-              fun
-                (binding [*no-recur* false]
-                    (let [#_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
-                          #_"FnMethod" variadic
-                            (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
-                                (let [#_"FnMethod" fm (FnMethod'parse fun, (first s), scope)
-                                      variadic
-                                        (if (neg? (:arity fm))
-                                            (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
-                                                fm
-                                            )
-                                            (let-when [#_"int" n (:arity fm)] (nil? (aget a n)) => (throw! "can't have 2 overloads with same arity")
-                                                (aset! a n fm)
-                                                variadic
-                                            )
-                                        )]
-                                    (recur variadic (next s))
-                                )
-                            )]
-                        (when (some? variadic)
-                            (loop-when-recur [#_"int" i (-/- (:arity variadic))] (<= i Compiler'MAX_POSITIONAL_ARITY) [(inc i)]
-                                (when (some? (aget a i))
-                                    (throw! "can't have fixed arity function with more params than variadic function")
-                                )
+            fun
+                (let [
+                    scope (assoc scope :in-try? false)
+                    #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
+                    #_"FnMethod" variadic
+                        (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
+                            (let [#_"FnMethod" fm (FnMethod'parse fun, (first s), scope)
+                                  variadic
+                                    (if (neg? (:arity fm))
+                                        (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
+                                            fm
+                                        )
+                                        (let-when [#_"int" n (:arity fm)] (nil? (aget a n)) => (throw! "can't have 2 overloads with same arity")
+                                            (aset! a n fm)
+                                            variadic
+                                        )
+                                    )]
+                                (recur variadic (next s))
                             )
                         )
-                        (let [#_"vector" methods
-                                (loop-when-recur [methods (vector) #_"int" i 0]
-                                                 (< i (count a))
-                                                 [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
-                                              => (if (some? variadic) (conj methods variadic) methods)
-                                )]
-                            (assoc fun :methods methods, :variadic variadic)
+                ]
+                    (when (some? variadic)
+                        (loop-when-recur [#_"int" i (-/- (:arity variadic))] (<= i Compiler'MAX_POSITIONAL_ARITY) [(inc i)]
+                            (when (some? (aget a i))
+                                (throw! "can't have fixed arity function with more params than variadic function")
+                            )
                         )
                     )
-                )]
+                    (let [#_"vector" methods
+                            (loop-when-recur [methods (vector) #_"int" i 0]
+                                             (< i (count a))
+                                             [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
+                                          => (if (some? variadic) (conj methods variadic) methods)
+                            )]
+                        (assoc fun :methods methods, :variadic variadic)
+                    )
+                )
+        ]
             (MetaExpr'new fun, (MapExpr'parse (meta form), scope))
         )
     )
@@ -14601,25 +14599,13 @@
                             )
                         scope
                             (when loop? => scope
-                                (assoc scope :loop-locals lbs)
-                            )
-                        #_"Expr" body
-                            (try
-                                (when loop?
-                                    (push-thread-bindings
-                                        (hash-map
-                                            (var! *no-recur*)          false
-                                            (var! *in-return-context*) (and (= context :Context'RETURN) (var-get! *in-return-context*))
-                                        )
-                                    )
-                                )
-                                (BodyExpr'parse (if loop? :Context'RETURN context), (next (next form)), scope)
-                                (finally
-                                    (when loop?
-                                        (pop-thread-bindings)
-                                    )
+                                (-> scope
+                                    (assoc :loop-locals lbs)
+                                    (assoc :in-try? false)
+                                    (update :in-return? #(and (boolean %) (= context :Context'RETURN)))
                                 )
                             )
+                        #_"Expr" body (BodyExpr'parse (if loop? :Context'RETURN context), (next (next form)), scope)
                     ]
                         (LetExpr'new lbs, body, loop?)
                     )
@@ -14669,7 +14655,7 @@
 
     (defn #_"Expr" RecurExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
         (when (and (= context :Context'RETURN) (some? (:loop-locals scope))) => (throw! "can only recur from tail position")
-            (when-not (var-get! *no-recur*) => (throw! "cannot recur across try")
+            (when-not (:in-try? scope) => (throw! "cannot recur across try")
                 (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (:loop-locals scope))]
                     (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
                         (RecurExpr'new (:loop-locals scope), args)
@@ -14957,13 +14943,7 @@
                 (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
                     (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
                         (if (any = op 'catch 'finally)
-                            (let [bodyExpr
-                                    (when (nil? bodyExpr) => bodyExpr
-                                        (binding [*no-recur*          true
-                                                  *in-return-context* false]
-                                            (BodyExpr'parse context, (seq body), scope)
-                                        )
-                                    )]
+                            (let [bodyExpr (or bodyExpr (BodyExpr'parse context, (seq body), (assoc scope :in-try? true, :in-return? false)))]
                                 (if (= op 'catch)
                                     (let [#_"symbol?" sym (third f)]
                                         (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
@@ -14974,10 +14954,7 @@
                                                     #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:local-num' scope) inc))
                                                     _ (swap! (:local-env' scope) assoc (:sym lb) lb)
                                                     _ (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
-                                                    #_"Expr" handler
-                                                        (binding [*in-catch-finally* true]
-                                                            (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))), scope)
-                                                        )
+                                                    #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))), (assoc scope :in-catch? true))
                                                     #_"CatchClause" clause (CatchClause'new lb, handler)
                                                 ]
                                                     (recur bodyExpr (conj catches clause) finallyExpr body true (next fs))
@@ -14986,10 +14963,7 @@
                                         )
                                     )
                                     (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                        (let [finallyExpr
-                                                (binding [*in-catch-finally* true]
-                                                    (BodyExpr'parse :Context'STATEMENT, (next f), scope)
-                                                )]
+                                        (let [finallyExpr (BodyExpr'parse :Context'STATEMENT, (next f), (assoc scope :in-finally? true))]
                                             (recur bodyExpr catches finallyExpr body caught? (next fs))
                                         )
                                     )
@@ -15002,10 +14976,8 @@
                     )
                 )]
             (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr, scope)
-                ;; when there is neither catch nor finally, e.g. (try (expr)) return a body expr directly
-                (binding [*no-recur* true]
-                    (BodyExpr'parse context, (seq body), scope)
-                )
+                ;; when there is neither catch nor finally, return a body expr directly
+                (BodyExpr'parse context, (seq body), (assoc scope :in-try? true))
             )
         )
     )
@@ -15962,16 +15934,10 @@
             #_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader)) #_"Object" EOF (Object.)
             #_"map" scope (-/hash-map :local-env' (atom (hash-map)))
         ]
-            (loop [#_"Object" val nil]
+            (loop [#_"value" value nil]
                 (LispReader'consumeWhitespaces r)
-                (let-when-not [#_"Object" form (LispReader'read r, false, EOF)] (identical? form EOF) => val
-                    (recur
-                        (binding [*no-recur*          false
-                                  *in-catch-finally*  false
-                                  *in-return-context* false]
-                            (Compiler'eval form, scope)
-                        )
-                    )
+                (let-when [#_"edn" form (LispReader'read r, false, EOF)] (identical? form EOF) => (recur (Compiler'eval form, scope))
+                    value
                 )
             )
         )
