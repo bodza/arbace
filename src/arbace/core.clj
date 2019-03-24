@@ -14049,21 +14049,19 @@
 (about #_"InvokeExpr"
     (defr InvokeExpr [])
 
-    (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args, #_"boolean" tailPosition]
+    (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args]
         (merge (class! InvokeExpr)
             (hash-map
                 #_"Expr" :fexpr fexpr
                 #_"vector" :args args
-                #_"boolean" :tailPosition tailPosition
             )
         )
     )
 
     (defn #_"Expr" InvokeExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
-        (let [#_"boolean" tailPosition (and (= context :Context'RETURN) (:in-return? scope) (not (:in-catch? scope)) (not (:in-finally? scope)))
-              #_"Expr" fexpr (Compiler'analyze (first form), scope)
+        (let [#_"Expr" fexpr (Compiler'analyze (first form), scope)
               #_"vector" args (mapv #(Compiler'analyze %, scope) (next form))]
-            (InvokeExpr'new fexpr, args, tailPosition)
+            (InvokeExpr'new fexpr, args)
         )
     )
 
@@ -14086,11 +14084,6 @@
                             )]
                         (FnExpr''emitArgs fun, restArgs, gen)
                     )
-                )
-            gen
-                (when (:tailPosition this) => gen
-                    (Gen''push gen, nil)
-                    (Gen''store gen, 0)
                 )
             gen (Gen''invoke gen, (symbol (str "IFn'''invoke" \- (min (count (:args this)) (inc Compiler'MAX_POSITIONAL_ARITY)))))
         ]
@@ -14212,7 +14205,7 @@
                     (update :fm assoc :arity arity)
                 )
         ]
-            (assoc (:fm scope) :body (BodyExpr'parse :Context'RETURN, (next form), (assoc scope :in-return? true)))
+            (assoc (:fm scope) :body (BodyExpr'parse :Context'RETURN, (next form), scope))
         )
     )
 
@@ -14307,7 +14300,6 @@
                 )
             fun
                 (let [
-                    scope (assoc scope :in-try? false)
                     #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
                     #_"FnMethod" variadic
                         (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
@@ -14599,11 +14591,7 @@
                             )
                         scope
                             (when loop? => scope
-                                (-> scope
-                                    (assoc :loop-locals lbs)
-                                    (assoc :in-try? false)
-                                    (update :in-return? #(and (boolean %) (= context :Context'RETURN)))
-                                )
+                                (assoc scope :loop-locals lbs)
                             )
                         #_"Expr" body (BodyExpr'parse (if loop? :Context'RETURN context), (next (next form)), scope)
                     ]
@@ -14655,11 +14643,9 @@
 
     (defn #_"Expr" RecurExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
         (when (and (= context :Context'RETURN) (some? (:loop-locals scope))) => (throw! "can only recur from tail position")
-            (when-not (:in-try? scope) => (throw! "cannot recur across try")
-                (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (:loop-locals scope))]
-                    (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
-                        (RecurExpr'new (:loop-locals scope), args)
-                    )
+            (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (:loop-locals scope))]
+                (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
+                    (RecurExpr'new (:loop-locals scope), args)
                 )
             )
         )
@@ -14939,11 +14925,13 @@
     ;; catch-expr: (catch class sym expr*)
     ;; finally-expr: (finally expr*)
     (defn #_"Expr" TryExpr'parse [#_"Context" context, #_"seq" form, #_"map" scope]
-        (let [[#_"Expr" bodyExpr #_"[CatchClause]" catches #_"Expr" finallyExpr #_"vector" body]
+        (let [
+            scope (dissoc scope :loop-locals)
+            [#_"Expr" bodyExpr #_"[CatchClause]" catches #_"Expr" finallyExpr #_"vector" body]
                 (loop-when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"boolean" caught? false #_"seq" fs (next form)] (some? fs) => [bodyExpr catches finallyExpr body]
                     (let [#_"Object" f (first fs) #_"Object" op (when (seq? f) (first f))]
                         (if (any = op 'catch 'finally)
-                            (let [bodyExpr (or bodyExpr (BodyExpr'parse context, (seq body), (assoc scope :in-try? true, :in-return? false)))]
+                            (let [bodyExpr (or bodyExpr (BodyExpr'parse context, (seq body), scope))]
                                 (if (= op 'catch)
                                     (let [#_"symbol?" sym (third f)]
                                         (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
@@ -14954,7 +14942,7 @@
                                                     #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:local-num' scope) inc))
                                                     _ (swap! (:local-env' scope) assoc (:sym lb) lb)
                                                     _ (swap! (:locals' (:fm scope)) assoc (:uid lb) lb)
-                                                    #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))), (assoc scope :in-catch? true))
+                                                    #_"Expr" handler (BodyExpr'parse :Context'EXPRESSION, (next (next (next f))), scope)
                                                     #_"CatchClause" clause (CatchClause'new lb, handler)
                                                 ]
                                                     (recur bodyExpr (conj catches clause) finallyExpr body true (next fs))
@@ -14963,7 +14951,7 @@
                                         )
                                     )
                                     (when (nil? (next fs)) => (throw! "finally clause must be last in try expression")
-                                        (let [finallyExpr (BodyExpr'parse :Context'STATEMENT, (next f), (assoc scope :in-finally? true))]
+                                        (let [finallyExpr (BodyExpr'parse :Context'STATEMENT, (next f), scope)]
                                             (recur bodyExpr catches finallyExpr body caught? (next fs))
                                         )
                                     )
@@ -14974,10 +14962,11 @@
                             )
                         )
                     )
-                )]
+                )
+        ]
             (when (nil? bodyExpr) => (TryExpr'new bodyExpr, catches, finallyExpr, scope)
                 ;; when there is neither catch nor finally, return a body expr directly
-                (BodyExpr'parse context, (seq body), (assoc scope :in-try? true))
+                (BodyExpr'parse context, (seq body), scope)
             )
         )
     )
