@@ -1561,27 +1561,6 @@
     (defn fn? [x] (satisfies? Fn x))
 )
 
-(about #_"arbace.RestFn"
-    (defp IRestFn
-        (#_"int" IRestFn'''requiredArity [#_"IRestFn" this])
-        (#_"Object" IRestFn'''doInvoke
-            [#_"IRestFn" this, #_"seq" args]
-            [#_"IRestFn" this, a1, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, a5, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, a5, a6, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]
-            [#_"IRestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args]
-        )
-    )
-
-    #_abstract
-    (defp RestFn)
-)
-
 (about #_"arbace.Closure"
     #_abstract
     (defp Closure)
@@ -2989,7 +2968,7 @@
         (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to: " (class f)))
     )
 
-    (defn #_"Object" AFn'applyToHelper [#_"fn" f, #_"seq" s]
+    (defn #_"Object" AFn'applyTo [#_"fn" f, #_"seq" s]
         (case (count s (inc 9))
             0                                           (IFn'''invoke f)
             1 (let [[a1] s]                             (IFn'''invoke f, a1))
@@ -3092,7 +3071,7 @@
 
     (defm Symbol IFn
         (IFn'''invoke => Symbol''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     #_foreign
@@ -3220,7 +3199,7 @@
 
     (defm Keyword IFn
         (IFn'''invoke => Keyword''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     #_foreign
@@ -3278,7 +3257,7 @@
     #_inherit
     (defm Fn AFn)
 
-    (defn #_"Fn" Fn'new []
+    (defn #_"Fn" Fn'new []
         (Fn'class. (anew []))
     )
 
@@ -3298,7 +3277,7 @@
 
     (defm Fn IFn
         (IFn'''invoke => Fn''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     #_foreign
@@ -3315,205 +3294,13 @@
 )
 )
 
-(about #_"arbace.RestFn"
-
-(about #_"RestFn"
-    (defq RestFn [])
-
-    #_inherit
-    (defm RestFn Fn AFn)
-
-    (defn #_"RestFn" RestFn'new []
-        (RestFn'class. (anew []))
-    )
-
-    (defn- #_"Object" RestFn''doInvoke
-        ([#_"RestFn" this, #_"seq" args]                                     nil)
-        ([#_"RestFn" this, a1, #_"seq" args]                                 nil)
-        ([#_"RestFn" this, a1, a2, #_"seq" args]                             nil)
-        ([#_"RestFn" this, a1, a2, a3, #_"seq" args]                         nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, #_"seq" args]                     nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, #_"seq" args]                 nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, #_"seq" args]             nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]         nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]     nil)
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] nil)
-    )
-
-    (defn- #_"Object" RestFn''invoke
-        ([#_"RestFn" this]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, nil)
-                  (AFn'throwArity this, 0)
-            )
-        )
-
-        ([#_"RestFn" this, a1]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1))
-                1 (IRestFn'''doInvoke this, a1, nil)
-                  (AFn'throwArity this, 1)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2))
-                1 (IRestFn'''doInvoke this, a1, (list a2))
-                2 (IRestFn'''doInvoke this, a1, a2, nil)
-                  (AFn'throwArity this, 2)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, nil)
-                  (AFn'throwArity this, 3)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, nil)
-                  (AFn'throwArity this, 4)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4 a5))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4 a5))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4 a5))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4 a5))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list a5))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, nil)
-                  (AFn'throwArity this, 5)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4 a5 a6))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4 a5 a6))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4 a5 a6))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4 a5 a6))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list a5 a6))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, (list a6))
-                6 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, nil)
-                  (AFn'throwArity this, 6)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4 a5 a6 a7))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4 a5 a6 a7))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4 a5 a6 a7))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4 a5 a6 a7))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list a5 a6 a7))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, (list a6 a7))
-                6 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, (list a7))
-                7 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, nil)
-                  (AFn'throwArity this, 7)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, a8]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4 a5 a6 a7 a8))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4 a5 a6 a7 a8))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4 a5 a6 a7 a8))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4 a5 a6 a7 a8))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list a5 a6 a7 a8))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, (list a6 a7 a8))
-                6 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, (list a7 a8))
-                7 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, (list a8))
-                8 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, nil)
-                  (AFn'throwArity this, 8)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list a1 a2 a3 a4 a5 a6 a7 a8 a9))
-                1 (IRestFn'''doInvoke this, a1, (list a2 a3 a4 a5 a6 a7 a8 a9))
-                2 (IRestFn'''doInvoke this, a1, a2, (list a3 a4 a5 a6 a7 a8 a9))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list a4 a5 a6 a7 a8 a9))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list a5 a6 a7 a8 a9))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, (list a6 a7 a8 a9))
-                6 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, (list a7 a8 a9))
-                7 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, (list a8 a9))
-                8 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, (list a9))
-                9 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, nil)
-                  (AFn'throwArity this, 9)
-            )
-        )
-
-        ([#_"RestFn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args]
-            (case (IRestFn'''requiredArity this)
-                0 (IRestFn'''doInvoke this, (list* a1 a2 a3 a4 a5 a6 a7 a8 a9 args))
-                1 (IRestFn'''doInvoke this, a1, (list* a2 a3 a4 a5 a6 a7 a8 a9 args))
-                2 (IRestFn'''doInvoke this, a1, a2, (list* a3 a4 a5 a6 a7 a8 a9 args))
-                3 (IRestFn'''doInvoke this, a1, a2, a3, (list* a4 a5 a6 a7 a8 a9 args))
-                4 (IRestFn'''doInvoke this, a1, a2, a3, a4, (list* a5 a6 a7 a8 a9 args))
-                5 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, (list* a6 a7 a8 a9 args))
-                6 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, (list* a7 a8 a9 args))
-                7 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, (list* a8 a9 args))
-                8 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, (list* a9 args))
-                9 (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, args)
-                  (AFn'throwArity this, -10)
-            )
-        )
-    )
-
-    (defn- #_"Object" RestFn''applyTo [#_"RestFn" this, #_"seq" s]
-        (let-when [#_"int" n (IRestFn'''requiredArity this)] (< n (count s (inc n))) => (AFn'applyToHelper this, s)
-            (case n
-                0                                           (IRestFn'''doInvoke this, s)
-                1 (let [[a1 & s] s]                         (IRestFn'''doInvoke this, a1, s))
-                2 (let [[a1 a2 & s] s]                      (IRestFn'''doInvoke this, a1, a2, s))
-                3 (let [[a1 a2 a3 & s] s]                   (IRestFn'''doInvoke this, a1, a2, a3, s))
-                4 (let [[a1 a2 a3 a4 & s] s]                (IRestFn'''doInvoke this, a1, a2, a3, a4, s))
-                5 (let [[a1 a2 a3 a4 a5 & s] s]             (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, s))
-                6 (let [[a1 a2 a3 a4 a5 a6 & s] s]          (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, s))
-                7 (let [[a1 a2 a3 a4 a5 a6 a7 & s] s]       (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, s))
-                8 (let [[a1 a2 a3 a4 a5 a6 a7 a8 & s] s]    (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, s))
-                9 (let [[a1 a2 a3 a4 a5 a6 a7 a8 a9 & s] s] (IRestFn'''doInvoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, s))
-                  (AFn'throwArity this, -10)
-            )
-        )
-    )
-
-    (defm RestFn IRestFn
-        ;; abstract IRestFn requiredArity
-        (IRestFn'''doInvoke => RestFn''doInvoke)
-    )
-
-    (defm RestFn IFn
-        (IFn'''invoke => RestFn''invoke)
-        (IFn'''applyTo => RestFn''applyTo)
-    )
-
-    (§ defm RestFn #_"Comparator"
-        ;; inherit Fn compare
-    )
-)
-)
-
 (about #_"arbace.Closure"
 
 (about #_"Closure"
     (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map" env])
 
     #_inherit
-    (defm Closure RestFn Fn AFn)
+    (defm Closure Fn AFn)
 
     (defn #_"Closure" Closure'new
         ([#_"FnExpr" fun, #_"map" env] (Closure'new nil, fun, env))
@@ -3528,23 +3315,22 @@
         )
     )
 
-    (defn- #_"int" Closure''requiredArity [#_"Closure" this]
-        (when-some [#_"FnMethod" fm (:variadic (:fun this))] => (throw! "'requiredArity is indeed required")
-            (dec (-/- (:arity fm)))
-        )
+    (defn- #_"Object" Closure''invoke
+        ([#_"Closure" this]                                                 (IFn'''applyTo this, nil))
+        ([#_"Closure" this, a1]                                             (IFn'''applyTo this, (list a1)))
+        ([#_"Closure" this, a1, a2]                                         (IFn'''applyTo this, (list a1 a2)))
+        ([#_"Closure" this, a1, a2, a3]                                     (IFn'''applyTo this, (list a1 a2 a3)))
+        ([#_"Closure" this, a1, a2, a3, a4]                                 (IFn'''applyTo this, (list a1 a2 a3 a4)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5]                             (IFn'''applyTo this, (list a1 a2 a3 a4 a5)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6]                         (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7]                     (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8]                 (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7 a8)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]             (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7 a8 a9)))
+        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" a*] (IFn'''applyTo this, (list* a1 a2 a3 a4 a5 a6 a7 a8 a9 a*)))
     )
 
-    (defn- #_"Object" Closure''doInvoke
-        ([#_"Closure" this, #_"seq" args]                                     (AFn'throwArity this, 0))
-        ([#_"Closure" this, a1, #_"seq" args]                                 (AFn'throwArity this, 1))
-        ([#_"Closure" this, a1, a2, #_"seq" args]                             (AFn'throwArity this, 2))
-        ([#_"Closure" this, a1, a2, a3, #_"seq" args]                         (AFn'throwArity this, 3))
-        ([#_"Closure" this, a1, a2, a3, a4, #_"seq" args]                     (AFn'throwArity this, 4))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, #_"seq" args]                 (AFn'throwArity this, 5))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, #_"seq" args]             (AFn'throwArity this, 6))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, #_"seq" args]         (AFn'throwArity this, 7))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, #_"seq" args]     (AFn'throwArity this, 8))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (AFn'throwArity this, 9))
+    (defn- #_"Object" Closure''applyTo [#_"Closure" this, #_"seq" args]
+        nil
     )
 
     (defm Closure IMeta
@@ -3556,17 +3342,12 @@
     )
 
     (defm Closure IFn
-        (IFn'''invoke => RestFn''invoke)
-        (IFn'''applyTo => RestFn''applyTo)
-    )
-
-    (defm Closure IRestFn
-        (IRestFn'''requiredArity => Closure''requiredArity)
-        (IRestFn'''doInvoke => Closure''doInvoke)
+        (IFn'''invoke => Closure''invoke)
+        (IFn'''applyTo => Closure''applyTo)
     )
 
     (§ defm Closure #_"Comparator"
-        ;; inherit RestFn compare
+        ;; inherit Fn compare
     )
 )
 )
@@ -6069,7 +5850,7 @@
 
     (defm TransientArrayMap IFn
         (IFn'''invoke => ATransientMap''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm TransientArrayMap ITransientAssociative
@@ -6308,7 +6089,7 @@
 
     (defm PersistentArrayMap IFn
         (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentArrayMap Associative
@@ -7315,7 +7096,7 @@
 
     (defm TransientHashMap IFn
         (IFn'''invoke => ATransientMap''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm TransientHashMap ITransientAssociative
@@ -7526,7 +7307,7 @@
 
     (defm PersistentHashMap IFn
         (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentHashMap Associative
@@ -7680,7 +7461,7 @@
 
     (defm TransientHashSet IFn
         (IFn'''invoke => ATransientSet''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 )
 
@@ -7789,7 +7570,7 @@
 
     (defm PersistentHashSet IFn
         (IFn'''invoke => APersistentSet''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentHashSet IObject
@@ -8948,7 +8729,7 @@
 
     (defm PersistentTreeMap IFn
         (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentTreeMap Seqable
@@ -9130,7 +8911,7 @@
 
     (defm PersistentTreeSet IFn
         (IFn'''invoke => APersistentSet''invoke)
-        (IFn'''applyTo => AFn'applyToHelper)
+        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentTreeSet IObject
@@ -13408,6 +13189,7 @@
     (defn- #_"gen" Gen''and             [#_"gen" gen]                   (conj gen :and))
     (defn- #_"gen" Gen''anew            [#_"gen" gen]                   (conj gen :anew))
     (defn- #_"gen" Gen''aset            [#_"gen" gen]                   (conj gen :aset))
+    (defn- #_"gen" Gen''call            [#_"gen" gen, #_"Symbol" name, #_"int" arity] (conj gen [:call name arity]))
     (defn- #_"gen" Gen''create          [#_"gen" gen]                   (conj gen :create))
     (defn- #_"gen" Gen''dup             [#_"gen" gen]                   (conj gen :dup))
     (defn- #_"gen" Gen''get             [#_"gen" gen, #_"Symbol" name]  (conj gen [:get name]))
@@ -13417,7 +13199,6 @@
     (defn- #_"gen" Gen''if-nil?         [#_"gen" gen, #_"label" label]  (conj gen [:if-nil? label]))
     (defn- #_"gen" Gen''if-not          [#_"gen" gen, #_"label" label]  (conj gen [:if-not label]))
     (defn- #_"gen" Gen''init            [#_"gen" gen]                   (conj gen :init))
-    (defn- #_"gen" Gen''invoke          [#_"gen" gen, #_"Symbol" name]  (conj gen [:invoke name]))
     (defn- #_"gen" Gen''load            [#_"gen" gen, #_"int" index]    (conj gen [:load index]))
     (defn- #_"gen" Gen''monitor-enter   [#_"gen" gen]                   (conj gen :monitor-enter))
     (defn- #_"gen" Gen''monitor-exit    [#_"gen" gen]                   (conj gen :monitor-exit))
@@ -13726,7 +13507,7 @@
     (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen (Gen''push gen, (:var this))
-            gen (Gen''invoke gen, 'Var''get)
+            gen (Gen''call gen, 'Var''get, 1)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13738,7 +13519,7 @@
         (let [
             gen (Gen''push gen, (:var this))
             gen (Expr'''emit val, :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, 'Var''set)
+            gen (Gen''call gen, 'Var''set, 2)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13837,7 +13618,7 @@
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, 'IObj'''withMeta)
+            gen (Gen''call gen, 'IObj'''withMeta, 2)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13951,7 +13732,7 @@
                     )
                 )
             gen (Compiler'emitArgs scope, gen, (:args this))
-            gen (Gen''invoke gen, (if (or (and literal? unique?) (<= n 2)) 'RT'mapUniqueKeys 'RT'map))
+            gen (Gen''call gen, (if (or (and literal? unique?) (<= n 2)) 'RT'mapUniqueKeys 'RT'map), 1)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13997,7 +13778,7 @@
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentHashSet'EMPTY)
                     (let [gen (Compiler'emitArgs scope, gen, (:args this))]
-                        (Gen''invoke gen, 'PersistentHashSet'createWithCheck)
+                        (Gen''call gen, 'PersistentHashSet'createWithCheck, 1)
                     )
                 )
         ]
@@ -14045,7 +13826,7 @@
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentVector'EMPTY)
                     (let [gen (Compiler'emitArgs scope, gen, (:args this))]
-                        (Gen''invoke gen, 'vec)
+                        (Gen''call gen, 'vec, 1)
                     )
                 )
         ]
@@ -14099,7 +13880,10 @@
                         (Compiler'emitArgs scope, gen, restArgs)
                     )
                 )
-            gen (Gen''invoke gen, (symbol (str "IFn'''invoke" \- (min (count (:args this)) (inc Compiler'MAX_POSITIONAL_ARITY)))))
+            gen
+                (let [#_"int" n (min (count (:args this)) (inc Compiler'MAX_POSITIONAL_ARITY))]
+                    (Gen''call gen, 'IFn'''invoke, (if (< Compiler'MAX_POSITIONAL_ARITY n) (-/- n) n))
+                )
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -14394,7 +14178,7 @@
                         gen (Gen''dup gen)
                         gen (ß Gen''get gen, 'sym)
                         gen (Gen''swap gen)
-                        gen (Gen''invoke gen, 'Namespace''refer)
+                        gen (Gen''call gen, 'Namespace''refer, 3)
                     ]
                         gen
                     )
@@ -14404,7 +14188,7 @@
                     (let [
                         gen (Gen''dup gen)
                         gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
-                        gen (Gen''invoke gen, 'Var''resetMeta)
+                        gen (Gen''call gen, 'Var''resetMeta, 2)
                     ]
                         gen
                     )
@@ -14414,7 +14198,7 @@
                     (let [
                         gen (Gen''dup gen)
                         gen (Expr'''emit (:init this), :Context'EXPRESSION, scope, gen)
-                        gen (Gen''invoke gen, 'Var''bindRoot)
+                        gen (Gen''call gen, 'Var''bindRoot, 2)
                     ]
                         gen
                     )
@@ -14749,7 +14533,7 @@
             gen (Gen''number? gen)
             gen (Gen''if-not gen, l'default)
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, 'int!)
+            gen (Gen''call gen, 'int!, 1)
         ]
             (CaseExpr''emitShiftMask this, gen)
         )
@@ -14763,7 +14547,7 @@
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, 'Util'equiv)
+            gen (Gen''call gen, 'Util'equiv, 2)
             gen (Gen''if-not gen, l'default)
         ]
             (CaseExpr'emitExpr scope, gen, then)
@@ -14773,7 +14557,7 @@
     (defn- #_"gen" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"map" scope, #_"gen" gen]
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, 'f'hashcode)
+            gen (Gen''call gen, 'f'hashcode, 1)
         ]
             (CaseExpr''emitShiftMask this, gen)
         )
@@ -14787,7 +14571,7 @@
                 (if (= (:testType this) :hash-identity)
                     (Gen''if-ne? gen, l'default)
                     (let [
-                        gen (Gen''invoke gen, 'Util'equiv)
+                        gen (Gen''call gen, 'Util'equiv, 2)
                         gen (Gen''if-not gen, l'default)
                     ]
                         gen
