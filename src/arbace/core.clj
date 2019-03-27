@@ -2965,7 +2965,7 @@
 
 (about #_"AFn"
     (defn #_"void" AFn'throwArity [#_"fn" f, #_"int" n]
-        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to: " (class f)))
+        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (-/- n))) n) ") passed to: " (class f)))
     )
 
     (defn #_"Object" AFn'applyTo [#_"fn" f, #_"seq" s]
@@ -3329,8 +3329,20 @@
         ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" a*] (IFn'''applyTo this, (list* a1 a2 a3 a4 a5 a6 a7 a8 a9 a*)))
     )
 
+    (declare Compiler'MAX_POSITIONAL_ARITY)
+
     (defn- #_"Object" Closure''applyTo [#_"Closure" this, #_"seq" args]
-        nil
+        (let [
+            #_"int" m (inc Compiler'MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)
+            #_"FnMethod" fm
+                (or (get (:regulars (:fun this)) n)
+                    (let-when [fm (:variadic (:fun this))] (and (some? fm) (<= (dec (-/- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (-/- m)))
+                        fm
+                    )
+                )
+        ]
+            fm
+        )
     )
 
     (defm Closure IMeta
@@ -13863,27 +13875,8 @@
     (defn- #_"gen" InvokeExpr''emit [#_"InvokeExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen (Expr'''emit (:fexpr this), :Context'EXPRESSION, scope, gen)
-            gen
-                (loop-when-recur [gen gen #_"int" i 0]
-                                 (< i (min (count (:args this)) Compiler'MAX_POSITIONAL_ARITY))
-                                 [(Expr'''emit (nth (:args this) i), :Context'EXPRESSION, scope, gen) (inc i)]
-                              => gen
-                )
-            gen
-                (when (< Compiler'MAX_POSITIONAL_ARITY (count (:args this))) => gen
-                    (let [#_"vector" restArgs
-                            (loop-when-recur [restArgs (vector) #_"int" i Compiler'MAX_POSITIONAL_ARITY]
-                                             (< i (count (:args this)))
-                                             [(conj restArgs (nth (:args this) i)) (inc i)]
-                                          => restArgs
-                            )]
-                        (Compiler'emitArgs scope, gen, restArgs)
-                    )
-                )
-            gen
-                (let [#_"int" n (min (count (:args this)) (inc Compiler'MAX_POSITIONAL_ARITY))]
-                    (Gen''call gen, 'IFn'''invoke, (if (< Compiler'MAX_POSITIONAL_ARITY n) (-/- n) n))
-                )
+            gen (Compiler'emitArgs scope, gen, (:args this))
+            gen (Gen''call gen, 'IFn'''applyTo, 2)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13941,10 +13934,10 @@
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
         (merge (class! FnMethod)
             (hash-map
-                #_"FnExpr" :fun fun
+                #_"FnExpr" :fun fun
                 ;; when closures are defined inside other closures,
                 ;; the closed over locals need to be propagated to the enclosing fun
-                #_"FnMethod" :parent parent
+                #_"FnMethod" :parent parent
                 ;; uid->localbinding
                 #_"{int LocalBinding}'" :'locals (atom (hash-map))
                 #_"Integer" :arity nil
@@ -14038,7 +14031,7 @@
         (merge (class! FnExpr)
             (hash-map
                 #_"Symbol" :fname nil
-                #_"[FnMethod]" :methods nil
+                #_"{int FnMethod}" :regulars nil
                 ;; optional variadic overload (there can only be one)
                 #_"FnMethod" :variadic nil
                 ;; uid->localbinding
@@ -14063,42 +14056,31 @@
                 )
             fun
                 (let [
-                    #_"FnMethod[]" a (anew #_"FnMethod" (inc Compiler'MAX_POSITIONAL_ARITY))
-                    #_"FnMethod" variadic
-                        (loop-when [variadic nil #_"seq" s (next form)] (some? s) => variadic
-                            (let [#_"FnMethod" fm (FnMethod'parse fun, (first s), scope)
-                                  variadic
-                                    (if (neg? (:arity fm))
-                                        (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
-                                            fm
-                                        )
-                                        (let-when [#_"int" n (:arity fm)] (nil? (aget a n)) => (throw! "can't have 2 overloads with same arity")
-                                            (aset! a n fm)
-                                            variadic
-                                        )
-                                    )]
-                                (recur variadic (next s))
+                    [#_"{int FnMethod}" regulars #_"FnMethod" variadic]
+                        (loop-when [regulars (hash-map) variadic nil #_"seq" s (next form)] (some? s) => [regulars variadic]
+                            (let [#_"FnMethod" fm (FnMethod'parse fun, (first s), scope) #_"int" n (:arity fm)]
+                                (if (neg? n)
+                                    (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
+                                        (recur regulars fm (next s))
+                                    )
+                                    (when (nil? (get regulars n)) => (throw! "can't have 2 overloads with same arity")
+                                        (recur (assoc regulars n fm) variadic (next s))
+                                    )
+                                )
                             )
                         )
                 ]
                     (when (some? variadic)
-                        (loop-when-recur [#_"int" i (-/- (:arity variadic))] (<= i Compiler'MAX_POSITIONAL_ARITY) [(inc i)]
-                            (when (some? (aget a i))
+                        (loop-when-recur [#_"int" n (-/- (:arity variadic))] (<= n Compiler'MAX_POSITIONAL_ARITY) [(inc n)]
+                            (when (some? (get regulars n))
                                 (throw! "can't have fixed arity function with more params than variadic function")
                             )
                         )
                     )
-                    (let [#_"vector" methods
-                            (loop-when-recur [methods (vector) #_"int" i 0]
-                                             (< i (count a))
-                                             [(if (some? (aget a i)) (conj methods (aget a i)) methods) (inc i)]
-                                          => (if (some? variadic) (conj methods variadic) methods)
-                            )]
-                        (assoc fun :methods methods, :variadic variadic)
-                    )
+                    (assoc fun :regulars regulars, :variadic variadic)
                 )
         ]
-            (MetaExpr'new fun, (MapExpr'parse (meta form), scope))
+            (MetaExpr'new fun, (MapExpr'parse (meta form), scope)) fun
         )
     )
 
