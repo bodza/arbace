@@ -1562,7 +1562,6 @@
 )
 
 (about #_"arbace.Closure"
-    #_abstract
     (defp Closure)
 )
 
@@ -3330,18 +3329,32 @@
     )
 
     (declare Compiler'MAX_POSITIONAL_ARITY)
+    (declare Machine'compute)
+    (declare FnMethod''compile)
 
     (defn- #_"Object" Closure''applyTo [#_"Closure" this, #_"seq" args]
         (let [
-            #_"int" m (inc Compiler'MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)
             #_"FnMethod" fm
-                (or (get (:regulars (:fun this)) n)
-                    (let-when [fm (:variadic (:fun this))] (and (some? fm) (<= (dec (-/- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (-/- m)))
-                        fm
+                (let [#_"int" m (inc Compiler'MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)]
+                    (or (get (:regulars (:fun this)) n)
+                        (let-when [fm (:variadic (:fun this))] (and (some? fm) (<= (dec (-/- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (-/- m)))
+                            fm
+                        )
+                    )
+                )
+            #_"array" vars
+                (let [
+                    #_"int" m (inc (reduce max -1 (map :idx (vals @(:'locals fm)))))
+                    #_"int" n (:arity fm) n (if (neg? n) (-/- n) (inc n))
+                ]
+                    (loop-when-recur [vars (anew m) #_"int" i 1 #_"seq" s (seq args)]
+                                     (< i n)
+                                     [(aset! vars i (first s)) (inc i) (next s)]
+                                  => (if (some? s) (aset! vars i s) vars)
                     )
                 )
         ]
-            fm
+            (Machine'compute (FnMethod''compile fm), vars, (:env this))
         )
     )
 
@@ -13186,6 +13199,15 @@
 )
 )
 
+(about #_"arbace.Machine"
+
+(about #_"Machine"
+    (defn #_"Object" Machine'compute [#_"code" code, #_"array" vars, #_"map" env]
+        nil
+    )
+)
+)
+
 (about #_"arbace.Compiler"
 
 (about #_"asm"
@@ -13198,31 +13220,31 @@
         (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) (conj gen [:label label]))
     )
 
-    (defn- #_"gen" Gen''and             [#_"gen" gen]                   (conj gen :and))
-    (defn- #_"gen" Gen''anew            [#_"gen" gen]                   (conj gen :anew))
-    (defn- #_"gen" Gen''aset            [#_"gen" gen]                   (conj gen :aset))
-    (defn- #_"gen" Gen''call            [#_"gen" gen, #_"Symbol" name, #_"int" arity] (conj gen [:call name arity]))
-    (defn- #_"gen" Gen''create          [#_"gen" gen]                   (conj gen :create))
-    (defn- #_"gen" Gen''dup             [#_"gen" gen]                   (conj gen :dup))
-    (defn- #_"gen" Gen''get             [#_"gen" gen, #_"Symbol" name]  (conj gen [:get name]))
-    (defn- #_"gen" Gen''goto            [#_"gen" gen, #_"label" label]  (conj gen [:goto label]))
-    (defn- #_"gen" Gen''if-eq?          [#_"gen" gen, #_"label" label]  (conj gen [:if-eq? label]))
-    (defn- #_"gen" Gen''if-ne?          [#_"gen" gen, #_"label" label]  (conj gen [:if-ne? label]))
-    (defn- #_"gen" Gen''if-nil?         [#_"gen" gen, #_"label" label]  (conj gen [:if-nil? label]))
-    (defn- #_"gen" Gen''if-not          [#_"gen" gen, #_"label" label]  (conj gen [:if-not label]))
-    (defn- #_"gen" Gen''init            [#_"gen" gen]                   (conj gen :init))
-    (defn- #_"gen" Gen''load            [#_"gen" gen, #_"int" index]    (conj gen [:load index]))
-    (defn- #_"gen" Gen''monitor-enter   [#_"gen" gen]                   (conj gen :monitor-enter))
-    (defn- #_"gen" Gen''monitor-exit    [#_"gen" gen]                   (conj gen :monitor-exit))
-    (defn- #_"gen" Gen''number?         [#_"gen" gen]                   (conj gen :number?))
-    (defn- #_"gen" Gen''pop             [#_"gen" gen]                   (conj gen :pop))
-    (defn- #_"gen" Gen''push            [#_"gen" gen, #_"value" value]  (conj gen [:push value]))
-    (defn- #_"gen" Gen''put             [#_"gen" gen, #_"Symbol" name]  (conj gen [:put name]))
-    (defn- #_"gen" Gen''return          [#_"gen" gen]                   (conj gen :return))
-    (defn- #_"gen" Gen''store           [#_"gen" gen, #_"int" index]    (conj gen [:store index]))
-    (defn- #_"gen" Gen''shr             [#_"gen" gen]                   (conj gen :shr))
-    (defn- #_"gen" Gen''swap            [#_"gen" gen]                   (conj gen :swap))
-    (defn- #_"gen" Gen''throw           [#_"gen" gen]                   (conj gen :throw))
+    (defn- #_"gen" Gen''and                 [#_"gen" gen]                       (conj gen [:and]))
+    (defn- #_"gen" Gen''anew                [#_"gen" gen]                       (conj gen [:anew]))
+    (defn- #_"gen" Gen''aset                [#_"gen" gen]                       (conj gen [:aset]))
+    (defn- #_"gen" Gen''call      [#_"gen" gen, #_"Symbol" name, #_"int" arity] (conj gen [:call name arity]))
+    (defn- #_"gen" Gen''create              [#_"gen" gen]                       (conj gen [:create]))
+    (defn- #_"gen" Gen''dup                 [#_"gen" gen]                       (conj gen [:dup]))
+    (defn- #_"gen" Gen''get                 [#_"gen" gen, #_"Symbol" name]      (conj gen [:get name]))
+    (defn- #_"gen" Gen''goto                [#_"gen" gen, #_"label" label]      (conj gen [:goto label]))
+    (defn- #_"gen" Gen''if-eq?              [#_"gen" gen, #_"label" label]      (conj gen [:if-eq? label]))
+    (defn- #_"gen" Gen''if-ne?              [#_"gen" gen, #_"label" label]      (conj gen [:if-ne? label]))
+    (defn- #_"gen" Gen''if-nil?             [#_"gen" gen, #_"label" label]      (conj gen [:if-nil? label]))
+    (defn- #_"gen" Gen''if-not              [#_"gen" gen, #_"label" label]      (conj gen [:if-not label]))
+    (defn- #_"gen" Gen''init                [#_"gen" gen]                       (conj gen [:init]))
+    (defn- #_"gen" Gen''load                [#_"gen" gen, #_"int" index]        (conj gen [:load index]))
+    (defn- #_"gen" Gen''monitor-enter       [#_"gen" gen]                       (conj gen [:monitor-enter]))
+    (defn- #_"gen" Gen''monitor-exit        [#_"gen" gen]                       (conj gen [:monitor-exit]))
+    (defn- #_"gen" Gen''number?             [#_"gen" gen]                       (conj gen [:number?]))
+    (defn- #_"gen" Gen''pop                 [#_"gen" gen]                       (conj gen [:pop]))
+    (defn- #_"gen" Gen''push                [#_"gen" gen, #_"value" value]      (conj gen [:push value]))
+    (defn- #_"gen" Gen''put                 [#_"gen" gen, #_"Symbol" name]      (conj gen [:put name]))
+    (defn- #_"gen" Gen''return              [#_"gen" gen]                       (conj gen [:return]))
+    (defn- #_"gen" Gen''store               [#_"gen" gen, #_"int" index]        (conj gen [:store index]))
+    (defn- #_"gen" Gen''shr                 [#_"gen" gen]                       (conj gen [:shr]))
+    (defn- #_"gen" Gen''swap                [#_"gen" gen]                       (conj gen [:swap]))
+    (defn- #_"gen" Gen''throw               [#_"gen" gen]                       (conj gen [:throw]))
 
     (defn- #_"gen" Gen''lookup-switch [#_"gen" gen, #_"ints" values, #_"labels" labels, #_"label" default]
         (conj gen [:lookup-switch (vec values) (mapv deref labels) @default])
@@ -13934,10 +13956,10 @@
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
         (merge (class! FnMethod)
             (hash-map
-                #_"FnExpr" :fun fun
+                #_"FnExpr" :fun fun
                 ;; when closures are defined inside other closures,
                 ;; the closed over locals need to be propagated to the enclosing fun
-                #_"FnMethod" :parent parent
+                #_"FnMethod" :parent parent
                 ;; uid->localbinding
                 #_"{int LocalBinding}'" :'locals (atom (hash-map))
                 #_"Integer" :arity nil
