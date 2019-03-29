@@ -13206,31 +13206,32 @@
         (loop [#_"stack" s nil #_"int" i 0]
             (let [[x y z] (nth code i)]
                 (case x
-                    :and               (let [[  b a & s] s]                  (recur (cons (& a b) s)          (inc i)))
-                    :anew              (let [[    a & s] s]                  (recur (cons (anew a) s)         (inc i)))
-                    :aset              (let [[c b a & s] s] (aset! a b c)    (recur s                         (inc i)))
-                 ;; :call
-                 ;; :create
-                    :dup               (let [[    a]     s]                  (recur (cons a s)                (inc i)))
-                    :get               (let [[    a & s] s]                  (recur (cons (get (:env a) y) s) (inc i)))
-                    :goto                                                    (recur s                      @y)
-                    :if-eq?            (let [[  b a & s] s]                  (recur s      (if     (= a b) @y (inc i))))
-                    :if-ne?            (let [[  b a & s] s]                  (recur s      (if-not (= a b) @y (inc i))))
-                    :if-nil?           (let [[    a & s] s]                  (recur s      (if  (nil? a)   @y (inc i))))
-                    :if-not            (let [[    a & s] s]                  (recur s      (if-not    a    @y (inc i))))
-                 ;; :init
-                    :load                                                    (recur (cons (aget vars y) s)    (inc i))
+                    :and               (let [[  b a & s] s]                  (recur (cons (& a b) s)            (inc i)))
+                    :anew              (let [[    a & s] s]                  (recur (cons (anew a) s)           (inc i)))
+                    :apply             (let [[  b a & s] s]                  (recur (cons (apply a b) s)        (inc i)))
+                    :aset              (let [[c b a & s] s] (aset! a b c)    (recur s                           (inc i)))
+                    :create            (let [[    a & s] s]                  (recur (cons (Closure'new y, a) s) (inc i)))
+                    :dup               (let [[    a]     s]                  (recur (cons a s)                  (inc i)))
+                    :get               (let [[    a & s] s]                  (recur (cons (get (:env a) y) s)   (inc i)))
+                    :goto                                                    (recur s                        @y)
+                    :if-eq?            (let [[  b a & s] s]                  (recur s        (if     (= a b) @y (inc i))))
+                    :if-ne?            (let [[  b a & s] s]                  (recur s        (if-not (= a b) @y (inc i))))
+                    :if-nil?           (let [[    a & s] s]                  (recur s        (if  (nil? a)   @y (inc i))))
+                    :if-not            (let [[    a & s] s]                  (recur s        (if-not    a    @y (inc i))))
+                    :invoke-1          (let [[    a & s] s]                  (recur (cons (y a) s)              (inc i)))
+                    :invoke-2          (let [[  b a & s] s]                  (recur (cons (y a b) s)            (inc i)))
+                    :load                                                    (recur (cons (aget vars y) s)      (inc i))
                  ;; :lookup-switch
                  ;; :monitor-enter
                  ;; :monitor-exit
-                    :number?           (let [[    a & s] s]                  (recur (cons (number? a) s)      (inc i)))
-                    :pop                                                     (recur (next s)                  (inc i))
-                    :push                                                    (recur (cons y s)                (inc i))
+                    :number?           (let [[    a & s] s]                  (recur (cons (number? a) s)        (inc i)))
+                    :pop                                                     (recur (next s)                    (inc i))
+                    :push                                                    (recur (cons y s)                  (inc i))
                  ;; :put
                     :return                                 (first s)
-                    :shr               (let [[  b a & s] s]                  (recur (cons (>> a b) s)         (inc i)))
-                    :store             (let [[    a & s] s] (aset! vars y a) (recur s                         (inc i)))
-                    :swap              (let [[  b a & s] s]                  (recur (list* a b s)             (inc i)))
+                    :shr               (let [[  b a & s] s]                  (recur (cons (>> a b) s)           (inc i)))
+                    :store             (let [[    a & s] s] (aset! vars y a) (recur s                           (inc i)))
+                    :swap              (let [[  b a & s] s]                  (recur (list* a b s)               (inc i)))
                  ;; :table-switch
                  ;; :throw
                  ;; :try-catch-finally
@@ -13253,31 +13254,31 @@
         (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) gen)
     )
 
-    (defn- #_"gen" Gen''and                 [#_"gen" gen]                       (conj gen [:and]))
-    (defn- #_"gen" Gen''anew                [#_"gen" gen]                       (conj gen [:anew]))
-    (defn- #_"gen" Gen''aset                [#_"gen" gen]                       (conj gen [:aset]))
-    (defn- #_"gen" Gen''call      [#_"gen" gen, #_"Symbol" name, #_"int" arity] (conj gen [:call name arity]))
-    (defn- #_"gen" Gen''create              [#_"gen" gen]                       (conj gen [:create]))
-    (defn- #_"gen" Gen''dup                 [#_"gen" gen]                       (conj gen [:dup]))
-    (defn- #_"gen" Gen''get                 [#_"gen" gen, #_"Symbol" name]      (conj gen [:get name]))
-    (defn- #_"gen" Gen''goto                [#_"gen" gen, #_"label" label]      (conj gen [:goto label]))
-    (defn- #_"gen" Gen''if-eq?              [#_"gen" gen, #_"label" label]      (conj gen [:if-eq? label]))
-    (defn- #_"gen" Gen''if-ne?              [#_"gen" gen, #_"label" label]      (conj gen [:if-ne? label]))
-    (defn- #_"gen" Gen''if-nil?             [#_"gen" gen, #_"label" label]      (conj gen [:if-nil? label]))
-    (defn- #_"gen" Gen''if-not              [#_"gen" gen, #_"label" label]      (conj gen [:if-not label]))
-    (defn- #_"gen" Gen''init                [#_"gen" gen]                       (conj gen [:init]))
-    (defn- #_"gen" Gen''load                [#_"gen" gen, #_"int" index]        (conj gen [:load index]))
-    (defn- #_"gen" Gen''monitor-enter       [#_"gen" gen]                       (conj gen [:monitor-enter]))
-    (defn- #_"gen" Gen''monitor-exit        [#_"gen" gen]                       (conj gen [:monitor-exit]))
-    (defn- #_"gen" Gen''number?             [#_"gen" gen]                       (conj gen [:number?]))
-    (defn- #_"gen" Gen''pop                 [#_"gen" gen]                       (conj gen [:pop]))
-    (defn- #_"gen" Gen''push                [#_"gen" gen, #_"value" value]      (conj gen [:push value]))
-    (defn- #_"gen" Gen''put                 [#_"gen" gen, #_"Symbol" name]      (conj gen [:put name]))
-    (defn- #_"gen" Gen''return              [#_"gen" gen]                       (conj gen [:return]))
-    (defn- #_"gen" Gen''shr                 [#_"gen" gen]                       (conj gen [:shr]))
-    (defn- #_"gen" Gen''store               [#_"gen" gen, #_"int" index]        (conj gen [:store index]))
-    (defn- #_"gen" Gen''swap                [#_"gen" gen]                       (conj gen [:swap]))
-    (defn- #_"gen" Gen''throw               [#_"gen" gen]                       (conj gen [:throw]))
+    (defn- #_"gen" Gen''and           [#_"gen" gen]                          (conj gen [:and]))
+    (defn- #_"gen" Gen''anew          [#_"gen" gen]                          (conj gen [:anew]))
+    (defn- #_"gen" Gen''apply         [#_"gen" gen]                          (conj gen [:apply]))
+    (defn- #_"gen" Gen''aset          [#_"gen" gen]                          (conj gen [:aset]))
+    (defn- #_"gen" Gen''create        [#_"gen" gen, #_"FnExpr" fun]          (conj gen [:create fun]))
+    (defn- #_"gen" Gen''dup           [#_"gen" gen]                          (conj gen [:dup]))
+    (defn- #_"gen" Gen''get           [#_"gen" gen, #_"Symbol" name]         (conj gen [:get name]))
+    (defn- #_"gen" Gen''goto          [#_"gen" gen, #_"label" label]         (conj gen [:goto label]))
+    (defn- #_"gen" Gen''if-eq?        [#_"gen" gen, #_"label" label]         (conj gen [:if-eq? label]))
+    (defn- #_"gen" Gen''if-ne?        [#_"gen" gen, #_"label" label]         (conj gen [:if-ne? label]))
+    (defn- #_"gen" Gen''if-nil?       [#_"gen" gen, #_"label" label]         (conj gen [:if-nil? label]))
+    (defn- #_"gen" Gen''if-not        [#_"gen" gen, #_"label" label]         (conj gen [:if-not label]))
+    (defn- #_"gen" Gen''invoke        [#_"gen" gen, #_"fn" f, #_"int" arity] (conj gen [(-/keyword (str "invoke" \- arity)) f]))
+    (defn- #_"gen" Gen''load          [#_"gen" gen, #_"int" index]           (conj gen [:load index]))
+    (defn- #_"gen" Gen''monitor-enter [#_"gen" gen]                          (conj gen [:monitor-enter]))
+    (defn- #_"gen" Gen''monitor-exit  [#_"gen" gen]                          (conj gen [:monitor-exit]))
+    (defn- #_"gen" Gen''number?       [#_"gen" gen]                          (conj gen [:number?]))
+    (defn- #_"gen" Gen''pop           [#_"gen" gen]                          (conj gen [:pop]))
+    (defn- #_"gen" Gen''push          [#_"gen" gen, #_"value" value]         (conj gen [:push value]))
+    (defn- #_"gen" Gen''put           [#_"gen" gen, #_"Symbol" name]         (conj gen [:put name]))
+    (defn- #_"gen" Gen''return        [#_"gen" gen]                          (conj gen [:return]))
+    (defn- #_"gen" Gen''shr           [#_"gen" gen]                          (conj gen [:shr]))
+    (defn- #_"gen" Gen''store         [#_"gen" gen, #_"int" index]           (conj gen [:store index]))
+    (defn- #_"gen" Gen''swap          [#_"gen" gen]                          (conj gen [:swap]))
+    (defn- #_"gen" Gen''throw         [#_"gen" gen]                          (conj gen [:throw]))
 
     (defn- #_"gen" Gen''lookup-switch [#_"gen" gen, #_"ints" values, #_"labels" labels, #_"label" default]
         (conj gen [:lookup-switch (vec values) (mapv deref labels) @default])
@@ -13461,6 +13462,33 @@
             )
         )
     )
+
+    (declare FnMethod''emitLocal)
+
+    (defn #_"gen" Compiler'emitLocals [#_"map" scope, #_"gen" gen, #_"map" locals]
+        (let [
+            gen (Gen''push gen, (<< (count locals) 1))
+            gen (Gen''anew gen)
+        ]
+            (loop-when [gen gen #_"int" i 0 #_"seq" s (vals locals)] (some? s) => gen
+                (let [
+                    #_"LocalBinding" lb (first s)
+                    gen (Gen''dup gen)
+                    gen (Gen''push gen, i)
+                    gen (Gen''push gen, (:sym lb))
+                    gen (Gen''aset gen)
+                    i (inc i)
+                    gen (Gen''dup gen)
+                    gen (Gen''push gen, i)
+                    gen (FnMethod''emitLocal (:fm scope), gen, lb)
+                    gen (Gen''aset gen)
+                    i (inc i)
+                ]
+                    (recur gen i (next s))
+                )
+            )
+        )
+    )
 )
 
 (about #_"LiteralExpr"
@@ -13574,7 +13602,7 @@
     (defn- #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             gen (Gen''push gen, (:var this))
-            gen (Gen''call gen, 'Var''get, 1)
+            gen (Gen''invoke gen, var-get, 1)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13586,7 +13614,7 @@
         (let [
             gen (Gen''push gen, (:var this))
             gen (Expr'''emit val, :Context'EXPRESSION, scope, gen)
-            gen (Gen''call gen, 'Var''set, 2)
+            gen (Gen''invoke gen, var-set, 2)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13685,7 +13713,7 @@
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
             gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''call gen, 'IObj'''withMeta, 2)
+            gen (Gen''invoke gen, with-meta, 2)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13799,7 +13827,7 @@
                     )
                 )
             gen (Compiler'emitArgs scope, gen, (:args this))
-            gen (Gen''call gen, (if (or (and literal? unique?) (<= n 2)) 'RT'mapUniqueKeys 'RT'map), 1)
+            gen (Gen''invoke gen, (if (or (and literal? unique?) (<= n 2)) RT'mapUniqueKeys RT'map), 1)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13845,7 +13873,7 @@
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentHashSet'EMPTY)
                     (let [gen (Compiler'emitArgs scope, gen, (:args this))]
-                        (Gen''call gen, 'PersistentHashSet'createWithCheck, 1)
+                        (Gen''invoke gen, PersistentHashSet'createWithCheck, 1)
                     )
                 )
         ]
@@ -13893,7 +13921,7 @@
             gen
                 (when (seq (:args this)) => (Gen''push gen, PersistentVector'EMPTY)
                     (let [gen (Compiler'emitArgs scope, gen, (:args this))]
-                        (Gen''call gen, 'vec, 1)
+                        (Gen''invoke gen, vec, 1)
                     )
                 )
         ]
@@ -13931,7 +13959,7 @@
         (let [
             gen (Expr'''emit (:fexpr this), :Context'EXPRESSION, scope, gen)
             gen (Compiler'emitArgs scope, gen, (:args this))
-            gen (Gen''call gen, 'IFn'''applyTo, 2)
+            gen (Gen''apply gen)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -13969,8 +13997,6 @@
             )
         )
     )
-
-    (declare FnMethod''emitLocal)
 
     (defn- #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
@@ -14142,14 +14168,12 @@
     (defn- #_"gen" FnExpr''emit [#_"FnExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         ;; emitting a Fn means constructing an instance, feeding closed-overs from enclosing scope, if any
         ;; fun arg is enclosing fun, not this
-        (let [
-            gen (Gen''create gen)
-            gen (Gen''dup gen)
-            gen (reduce (partial FnMethod''emitLocal (:fm scope)) gen (vals @(:'closes this)))
-            gen (Gen''init gen)
-        ]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
+        (when-not (= context :Context'STATEMENT) => gen
+            (let [
+                gen (Compiler'emitLocals scope, gen, @(:'closes this))
+                gen (Gen''invoke gen, RT'mapUniqueKeys, 1)
+            ]
+                (Gen''create gen, this)
             )
         )
     )
@@ -14162,37 +14186,35 @@
 (about #_"DefExpr"
     (defr DefExpr [])
 
-    (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided, #_"boolean" shadowsCoreMapping]
+    (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided]
         (merge (class! DefExpr)
             (hash-map
                 #_"Var" :var var
                 #_"Expr" :init init
                 #_"Expr" :meta meta
                 #_"boolean" :initProvided initProvided
-                #_"boolean" :shadowsCoreMapping shadowsCoreMapping
             )
         )
     )
 
     ;; (def x) or (def x initexpr)
     (defn #_"Expr" DefExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
-        (cond
-            (< 3 (count form))            (throw! "too many arguments to def")
-            (< (count form) 2)            (throw! "too few arguments to def")
-            (not (symbol? (second form))) (throw! "first argument to def must be a Symbol")
-        )
-        (let [#_"Symbol" sym (second form) #_"Var" v (Compiler'lookupVar sym, true)]
-            (when (some? v) => (throw! "can't refer to qualified var that doesn't exist")
-                (let [[v #_"boolean" shadowsCoreMapping]
-                        (when-not (= (:ns v) *arbace-ns*) => [v false]
-                            (when (nil? (:ns sym)) => (throw! "can't create defs outside of current ns")
-                                [(Namespace''intern *arbace-ns*, sym) true]
+        (let [#_"int" n (count form)]
+            (cond
+                (< 3 n) (throw! "too many arguments to def")
+                (< n 2) (throw! "too few arguments to def")
+                :else
+                    (let-when [#_"symbol?" s (second form)] (symbol? s)     => (throw! "first argument to def must be a symbol")
+                        (when-some [#_"Var" v (Compiler'lookupVar s, true)] => (throw! "can't refer to qualified var that doesn't exist")
+                            (let [v (when-not (= (:ns v) *arbace-ns*) => v
+                                        (when (nil? (:ns s))                => (throw! "can't create defs outside of current ns")
+                                            (Namespace''intern *arbace-ns*, s)
+                                        )
+                                    )]
+                                (DefExpr'new v, (Compiler'analyze (third form), scope), (Compiler'analyze (meta s), scope), (= n 3))
                             )
                         )
-                      #_"Expr" init (Compiler'analyze (third form), scope)
-                      #_"Expr" _meta (Compiler'analyze (meta sym), scope)]
-                    (DefExpr'new v, init, _meta, (= (count form) 3), shadowsCoreMapping)
-                )
+                    )
             )
         )
     )
@@ -14207,25 +14229,11 @@
         (let [
             gen (Gen''push gen, (:var this))
             gen
-                (when (ß :shadowsCoreMapping this) => gen
-                    (let [
-                        gen (Gen''dup gen)
-                        gen (ß Gen''get gen, 'ns)
-                        gen (Gen''swap gen)
-                        gen (Gen''dup gen)
-                        gen (ß Gen''get gen, 'sym)
-                        gen (Gen''swap gen)
-                        gen (Gen''call gen, 'Namespace''refer, 3)
-                    ]
-                        gen
-                    )
-                )
-            gen
                 (when (some? (:meta this)) => gen
                     (let [
                         gen (Gen''dup gen)
                         gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
-                        gen (Gen''call gen, 'Var''resetMeta, 2)
+                        gen (Gen''invoke gen, Var''resetMeta, 2)
                     ]
                         gen
                     )
@@ -14235,7 +14243,7 @@
                     (let [
                         gen (Gen''dup gen)
                         gen (Expr'''emit (:init this), :Context'EXPRESSION, scope, gen)
-                        gen (Gen''call gen, 'Var''bindRoot, 2)
+                        gen (Gen''invoke gen, Var''bindRoot, 2)
                     ]
                         gen
                     )
@@ -14564,69 +14572,38 @@
         )
     )
 
-    (defn- #_"gen" CaseExpr''emitExprForInts [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"label" l'default]
+    (defn- #_"gen" CaseExpr''emitExpr [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"label" l'default]
         (let [
             gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''number? gen)
-            gen (Gen''if-not gen, l'default)
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''call gen, 'int!, 1)
-        ]
-            (CaseExpr''emitShiftMask this, gen)
-        )
-    )
-
-    (defn- #_"gen" CaseExpr'emitExpr [#_"map" scope, #_"gen" gen, #_"Expr" expr]
-        (Expr'''emit expr, :Context'EXPRESSION, scope, gen)
-    )
-
-    (defn- #_"gen" CaseExpr''emitThenForInts [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
-        (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
-            gen (Gen''call gen, 'Util'equiv, 2)
-            gen (Gen''if-not gen, l'default)
-        ]
-            (CaseExpr'emitExpr scope, gen, then)
-        )
-    )
-
-    (defn- #_"gen" CaseExpr''emitExprForHashes [#_"CaseExpr" this, #_"map" scope, #_"gen" gen]
-        (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Gen''call gen, 'f'hashcode, 1)
-        ]
-            (CaseExpr''emitShiftMask this, gen)
-        )
-    )
-
-    (defn- #_"gen" CaseExpr''emitThenForHashes [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
-        (let [
-            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
-            gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
             gen
-                (if (= (:testType this) :hash-identity)
-                    (Gen''if-ne? gen, l'default)
+                (when (= (:testType this) :int) => (Gen''invoke gen, f'hashcode, 1)
                     (let [
-                        gen (Gen''call gen, 'Util'equiv, 2)
+                        gen (Gen''number? gen)
                         gen (Gen''if-not gen, l'default)
+                        gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
                     ]
-                        gen
+                        (Gen''invoke gen, int!, 1)
                     )
                 )
         ]
-            (CaseExpr'emitExpr scope, gen, then)
+            (CaseExpr''emitShiftMask this, gen)
+        )
+    )
+
+    (defn- #_"gen" CaseExpr''emitThen [#_"CaseExpr" this, #_"map" scope, #_"gen" gen, #_"Expr" test, #_"Expr" then, #_"label" l'default]
+        (let [
+            gen (Expr'''emit (:expr this), :Context'EXPRESSION, scope, gen)
+            gen (Expr'''emit test, :Context'EXPRESSION, scope, gen)
+            gen (Gen''if-ne? gen, l'default)
+        ]
+            (Expr'''emit then, :Context'EXPRESSION, scope, gen)
         )
     )
 
     (defn- #_"gen" CaseExpr''emit [#_"CaseExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let [
             #_"label" l'default (Gen''label gen)
-            gen
-                (if (= (:testType this) :int)
-                    (CaseExpr''emitExprForInts this, scope, gen, l'default)
-                    (CaseExpr''emitExprForHashes this, scope, gen)
-                )
+            gen (CaseExpr''emitExpr this, scope, gen, l'default)
             #_"sorted {Integer Label}" labels (reduce! #(assoc! %1 %2 (Gen''label gen)) (sorted-map) (keys (:tests this)))
             gen
                 (if (= (:switchType this) :sparse)
@@ -14649,11 +14626,11 @@
                         gen
                             (cond
                                 (= (:testType this) :int)
-                                    (CaseExpr''emitThenForInts this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
+                                    (CaseExpr''emitThen this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                                 (contains? (:skipCheck this) i)
-                                    (CaseExpr'emitExpr scope, gen, (get (:thens this) i))
+                                    (Expr'''emit (get (:thens this) i), :Context'EXPRESSION, scope, gen)
                                 :else
-                                    (CaseExpr''emitThenForHashes this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
+                                    (CaseExpr''emitThen this, scope, gen, (get (:tests this) i), (get (:thens this) i), l'default)
                             )
                         gen (Gen''goto gen, l'end)
                     ]
@@ -14661,7 +14638,7 @@
                     )
                 )
             gen (Gen''mark gen, l'default)
-            gen (CaseExpr'emitExpr scope, gen, (:defaultExpr this))
+            gen (Expr'''emit (:defaultExpr this), :Context'EXPRESSION, scope, gen)
             gen (Gen''mark gen, l'end)
         ]
             (when (= context :Context'STATEMENT) => gen
