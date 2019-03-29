@@ -3344,17 +3344,17 @@
                 )
             #_"array" vars
                 (let [
-                    #_"int" m (inc (reduce max -1 (map :idx (vals @(:'locals fm)))))
+                    #_"int" m (inc (reduce max (inc -1) (map :idx (vals @(:'locals fm)))))
                     #_"int" n (:arity fm) n (if (neg? n) (-/- n) (inc n))
                 ]
-                    (loop-when-recur [vars (anew m) #_"int" i 1 #_"seq" s (seq args)]
+                    (loop-when-recur [vars (-> (anew m) (aset! 0 this)) #_"int" i 1 #_"seq" s (seq args)]
                                      (< i n)
                                      [(aset! vars i (first s)) (inc i) (next s)]
                                   => (if (some? s) (aset! vars i s) vars)
                     )
                 )
         ]
-            (Machine'compute (FnMethod''compile fm), vars, (:env this))
+            (Machine'compute (FnMethod''compile fm), vars)
         )
     )
 
@@ -13202,8 +13202,41 @@
 (about #_"arbace.Machine"
 
 (about #_"Machine"
-    (defn #_"Object" Machine'compute [#_"code" code, #_"array" vars, #_"map" env]
-        nil
+    (defn #_"Object" Machine'compute [#_"code" code, #_"array" vars]
+        (loop [#_"stack" s nil #_"int" i 0]
+            (let [[x y z] (nth code i)]
+                (case x
+                    :and               (let [[  b a & s] s]                  (recur (cons (& a b) s)          (inc i)))
+                    :anew              (let [[    a & s] s]                  (recur (cons (anew a) s)         (inc i)))
+                    :aset              (let [[c b a & s] s] (aset! a b c)    (recur s                         (inc i)))
+                 ;; :call
+                 ;; :create
+                    :dup               (let [[    a]     s]                  (recur (cons a s)                (inc i)))
+                    :get               (let [[    a & s] s]                  (recur (cons (get (:env a) y) s) (inc i)))
+                    :goto                                                    (recur s                      @y)
+                    :if-eq?            (let [[  b a & s] s]                  (recur s      (if     (= a b) @y (inc i))))
+                    :if-ne?            (let [[  b a & s] s]                  (recur s      (if-not (= a b) @y (inc i))))
+                    :if-nil?           (let [[    a & s] s]                  (recur s      (if  (nil? a)   @y (inc i))))
+                    :if-not            (let [[    a & s] s]                  (recur s      (if-not    a    @y (inc i))))
+                 ;; :init
+                    :load                                                    (recur (cons (aget vars y) s)    (inc i))
+                 ;; :lookup-switch
+                 ;; :monitor-enter
+                 ;; :monitor-exit
+                    :number?           (let [[    a & s] s]                  (recur (cons (number? a) s)      (inc i)))
+                    :pop                                                     (recur (next s)                  (inc i))
+                    :push                                                    (recur (cons y s)                (inc i))
+                 ;; :put
+                    :return                                 (first s)
+                    :shr               (let [[  b a & s] s]                  (recur (cons (>> a b) s)         (inc i)))
+                    :store             (let [[    a & s] s] (aset! vars y a) (recur s                         (inc i)))
+                    :swap              (let [[  b a & s] s]                  (recur (list* a b s)             (inc i)))
+                 ;; :table-switch
+                 ;; :throw
+                 ;; :try-catch-finally
+                )
+            )
+        )
     )
 )
 )
@@ -13217,7 +13250,7 @@
 
     (defn- Gen''mark
         (#_"label" [#_"gen" gen] (atom (count gen)))
-        (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) (conj gen [:label label]))
+        (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) gen)
     )
 
     (defn- #_"gen" Gen''and                 [#_"gen" gen]                       (conj gen [:and]))
@@ -13241,8 +13274,8 @@
     (defn- #_"gen" Gen''push                [#_"gen" gen, #_"value" value]      (conj gen [:push value]))
     (defn- #_"gen" Gen''put                 [#_"gen" gen, #_"Symbol" name]      (conj gen [:put name]))
     (defn- #_"gen" Gen''return              [#_"gen" gen]                       (conj gen [:return]))
-    (defn- #_"gen" Gen''store               [#_"gen" gen, #_"int" index]        (conj gen [:store index]))
     (defn- #_"gen" Gen''shr                 [#_"gen" gen]                       (conj gen [:shr]))
+    (defn- #_"gen" Gen''store               [#_"gen" gen, #_"int" index]        (conj gen [:store index]))
     (defn- #_"gen" Gen''swap                [#_"gen" gen]                       (conj gen [:swap]))
     (defn- #_"gen" Gen''throw               [#_"gen" gen]                       (conj gen [:throw]))
 
