@@ -104,8 +104,12 @@
     ([x y & s] (-/reduce + (+ x y) s))
 )
 
-(def neg  -/unchecked-negate-int)
-(def -    -/unchecked-subtract-int)
+(defn -
+    ([x] (-/unchecked-negate-int (int! x)))
+    ([x y] (-/unchecked-subtract-int (int! x) (int! y)))
+    ([x y & s] (-/reduce - (- x y) s))
+)
+
 (def inc  -/unchecked-inc-int)
 (def dec  -/unchecked-dec-int)
 (def *    -/unchecked-multiply-int)
@@ -2842,7 +2846,7 @@
     ([x y & s] (reduce - (- x y) s))
 )
 
-(defn abs [a] (if (neg? a) (-/- a) a))
+(defn abs [a] (if (neg? a) (- a) a))
 
 ;;;
  ; Returns a number one greater than num. Supports arbitrary precision.
@@ -2964,7 +2968,7 @@
 
 (about #_"AFn"
     (defn #_"void" AFn'throwArity [#_"fn" f, #_"int" n]
-        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (-/- n))) n) ") passed to: " (class f)))
+        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to: " (class f)))
     )
 
     (defn #_"Object" AFn'applyTo [#_"fn" f, #_"seq" s]
@@ -3296,7 +3300,7 @@
 (about #_"arbace.Closure"
 
 (about #_"Closure"
-    (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map" env])
+    (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map'" _env])
 
     #_inherit
     (defm Closure Fn AFn)
@@ -3304,13 +3308,13 @@
     (defn #_"Closure" Closure'new
         ([#_"FnExpr" fun, #_"map" env] (Closure'new nil, fun, env))
         ([#_"meta" meta, #_"FnExpr" fun, #_"map" env]
-            (Closure'class. (anew [meta, fun, env]))
+            (Closure'class. (anew [meta, fun, (atom env)]))
         )
     )
 
     (defn- #_"Closure" Closure''withMeta [#_"Closure" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
-            (Closure'new meta, (:fun this), (:env this))
+            (Closure'class. (anew [meta, (:fun this), (:_env this)]))
         )
     )
 
@@ -3337,7 +3341,7 @@
             #_"FnMethod" fm
                 (let [#_"int" m (inc Compiler'MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)]
                     (or (get (:regulars (:fun this)) n)
-                        (let-when [fm (:variadic (:fun this))] (and (some? fm) (<= (dec (-/- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (-/- m)))
+                        (let-when [fm (:variadic (:fun this))] (and (some? fm) (<= (dec (- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (- m)))
                             fm
                         )
                     )
@@ -3345,7 +3349,7 @@
             #_"array" vars
                 (let [
                     #_"int" m (inc (reduce max (inc -1) (map :idx (vals @(:'locals fm)))))
-                    #_"int" n (:arity fm) n (if (neg? n) (-/- n) (inc n))
+                    #_"int" n (:arity fm) n (if (neg? n) (- n) (inc n))
                 ]
                     (loop-when-recur [vars (-> (anew m) (aset! 0 this)) #_"int" i 1 #_"seq" s (seq args)]
                                      (< i n)
@@ -5902,7 +5906,11 @@
  ; ok, but you won't be able to distinguish a nil value via valAt, use contains/entryAt for that.
  ;;
 (about #_"PersistentArrayMap"
-    (defq PersistentArrayMap [#_"meta" _meta, #_"array" array] MapForm)
+    (declare PersistentArrayMap''seq)
+
+    (defq PersistentArrayMap [#_"meta" _meta, #_"array" array] MapForm
+        clojure.lang.Seqable (seq [_] (PersistentArrayMap''seq _))
+    )
 
     #_inherit
     (defm PersistentArrayMap APersistentMap AFn)
@@ -13204,36 +13212,36 @@
 (about #_"Machine"
     (defn #_"Object" Machine'compute [#_"code" code, #_"array" vars]
         (loop [#_"stack" s nil #_"int" i 0]
-            (let [[x y z] (nth code i)]
+            (let [[x y] (nth code i)]
                 (case x
-                    :and               (let [[  b a & s] s]                  (recur (cons (& a b) s)            (inc i)))
-                    :anew              (let [[    a & s] s]                  (recur (cons (anew a) s)           (inc i)))
-                    :apply             (let [[  b a & s] s]                  (recur (cons (apply a b) s)        (inc i)))
-                    :aset              (let [[c b a & s] s] (aset! a b c)    (recur s                           (inc i)))
-                    :create            (let [[    a & s] s]                  (recur (cons (Closure'new y, a) s) (inc i)))
-                    :dup               (let [[    a]     s]                  (recur (cons a s)                  (inc i)))
-                    :get               (let [[    a & s] s]                  (recur (cons (get (:env a) y) s)   (inc i)))
-                    :goto                                                    (recur s                        @y)
-                    :if-eq?            (let [[  b a & s] s]                  (recur s        (if     (= a b) @y (inc i))))
-                    :if-ne?            (let [[  b a & s] s]                  (recur s        (if-not (= a b) @y (inc i))))
-                    :if-nil?           (let [[    a & s] s]                  (recur s        (if  (nil? a)   @y (inc i))))
-                    :if-not            (let [[    a & s] s]                  (recur s        (if-not    a    @y (inc i))))
-                    :invoke-1          (let [[    a & s] s]                  (recur (cons (y a) s)              (inc i)))
-                    :invoke-2          (let [[  b a & s] s]                  (recur (cons (y a b) s)            (inc i)))
-                    :load                                                    (recur (cons (aget vars y) s)      (inc i))
+                    :and               (let [[  b a & s] s]                             (recur (cons (& a b) s)            (inc i)))
+                    :anew              (let [[    a & s] s]                             (recur (cons (anew a) s)           (inc i)))
+                    :apply             (let [[  b a & s] s]                             (recur (cons (apply a b) s)        (inc i)))
+                    :aset              (let [[c b a & s] s] (aset! a b c)               (recur s                           (inc i)))
+                    :create            (let [[    a & s] s]                             (recur (cons (Closure'new y, a) s) (inc i)))
+                    :dup               (let [[    a]     s]                             (recur (cons a s)                  (inc i)))
+                    :get               (let [[    a & s] s]                             (recur (cons (get @(:_env a) y) s) (inc i)))
+                    :goto                                                               (recur s                        @y)
+                    :if-eq?            (let [[  b a & s] s]                             (recur s        (if     (= a b) @y (inc i))))
+                    :if-ne?            (let [[  b a & s] s]                             (recur s        (if-not (= a b) @y (inc i))))
+                    :if-nil?           (let [[    a & s] s]                             (recur s        (if  (nil? a)   @y (inc i))))
+                    :if-not            (let [[    a & s] s]                             (recur s        (if-not    a    @y (inc i))))
+                    :invoke-1          (let [[    a & s] s]                             (recur (cons (y a) s)              (inc i)))
+                    :invoke-2          (let [[  b a & s] s]                             (recur (cons (y a b) s)            (inc i)))
+                    :load                                                               (recur (cons (aget vars y) s)      (inc i))
                  ;; :lookup-switch
-                 ;; :monitor-enter
-                 ;; :monitor-exit
-                    :number?           (let [[    a & s] s]                  (recur (cons (number? a) s)        (inc i)))
-                    :pop                                                     (recur (next s)                    (inc i))
-                    :push                                                    (recur (cons y s)                  (inc i))
-                 ;; :put
+                    :monitor-enter     (let [[    a & s] s] (monitor-enter a)           (recur s                           (inc i)))
+                    :monitor-exit      (let [[    a & s] s] (monitor-exit a)            (recur s                           (inc i)))
+                    :number?           (let [[    a & s] s]                             (recur (cons (number? a) s)        (inc i)))
+                    :pop                                                                (recur (next s)                    (inc i))
+                    :push                                                               (recur (cons y s)                  (inc i))
+                    :put               (let [[  b a & s] s] (swap! (:_env a) assoc y b) (recur s                           (inc i)))
                     :return                                 (first s)
-                    :shr               (let [[  b a & s] s]                  (recur (cons (>> a b) s)           (inc i)))
-                    :store             (let [[    a & s] s] (aset! vars y a) (recur s                           (inc i)))
-                    :swap              (let [[  b a & s] s]                  (recur (list* a b s)               (inc i)))
+                    :shr               (let [[  b a & s] s]                             (recur (cons (>> a b) s)           (inc i)))
+                    :store             (let [[    a & s] s] (aset! vars y a)            (recur s                           (inc i)))
+                    :swap              (let [[  b a & s] s]                             (recur (list* a b s)               (inc i)))
                  ;; :table-switch
-                 ;; :throw
+                    :throw                                  (throw (first s))
                  ;; :try-catch-finally
                 )
             )
@@ -13372,7 +13380,7 @@
 
     (defn #_"Var" Compiler'maybeMacro [#_"Object" op, #_"map" scope]
         ;; no local macros for now
-        (when-not (and (symbol? op) (some? (get @(:'local-env scope) op)))
+        (when-not (and (symbol? op) (some? (get @(get scope :'local-env) op)))
             (when (or (symbol? op) (var? op))
                 (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (and (some? v) (get (meta v) :macro))
@@ -13387,7 +13395,7 @@
 
     (defn #_"IFn" Compiler'maybeInline [#_"Object" op, #_"int" arity, #_"map" scope]
         ;; no local inlines for now
-        (when-not (and (symbol? op) (some? (get @(:'local-env scope) op)))
+        (when-not (and (symbol? op) (some? (get @(get scope :'local-env) op)))
             (when (or (symbol? op) (var? op))
                 (when-some [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
@@ -13480,7 +13488,7 @@
                     i (inc i)
                     gen (Gen''dup gen)
                     gen (Gen''push gen, i)
-                    gen (FnMethod''emitLocal (:fm scope), gen, lb)
+                    gen (FnMethod''emitLocal (get scope :fm), gen, lb)
                     gen (Gen''aset gen)
                     i (inc i)
                 ]
@@ -14000,7 +14008,7 @@
 
     (defn- #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (when-not (= context :Context'STATEMENT) => gen
-            (FnMethod''emitLocal (:fm scope), gen, (:lb this))
+            (FnMethod''emitLocal (get scope :fm), gen, (:lb this))
         )
     )
 
@@ -14038,9 +14046,9 @@
                 )
             _
                 (when-some [#_"Symbol" f (:fname fun)]
-                    (let [#_"LocalBinding" lb (LocalBinding'new f, nil, @(:'local-num scope))]
-                        (swap! (:'local-env scope) assoc (:sym lb) lb)
-                        (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                    (let [#_"LocalBinding" lb (LocalBinding'new f, nil, @(get scope :'local-num))]
+                        (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                        (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
                     )
                 )
             [#_"[LocalBinding]" lbs #_"int" arity]
@@ -14057,11 +14065,11 @@
                                         (throw! (str "excess variadic parameter: " sym))
                                     ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
                                         (let [
-                                            arity (if-not variadic? (inc arity) (-/- (inc arity)))
-                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
+                                            arity (if-not variadic? (inc arity) (- (inc arity)))
+                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
                                         ]
-                                            (swap! (:'local-env scope) assoc (:sym lb) lb)
-                                            (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                                            (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                            (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
                                             (recur (conj lbs lb) arity variadic? (next s))
                                         )
                                     :else
@@ -14077,7 +14085,7 @@
                     (update :fm assoc :arity arity)
                 )
         ]
-            (assoc (:fm scope) :body (BodyExpr'parse (next form), :Context'RETURN, scope))
+            (assoc (get scope :fm) :body (BodyExpr'parse (next form), :Context'RETURN, scope))
         )
     )
 
@@ -14095,7 +14103,7 @@
 
     (defn #_"gen" FnMethod''compile [#_"FnMethod" this]
         (let [
-            #_"map" scope (-/hash-map :fm this)
+            #_"map" scope (hash-map :fm this)
             #_"gen" gen (Gen'new)
             scope (assoc scope :loop-label (Gen''mark gen))
             gen (Expr'''emit (:body this), :Context'RETURN, scope, gen)
@@ -14152,7 +14160,7 @@
                         )
                 ]
                     (when (some? variadic)
-                        (loop-when-recur [#_"int" n (-/- (:arity variadic))] (<= n Compiler'MAX_POSITIONAL_ARITY) [(inc n)]
+                        (loop-when-recur [#_"int" n (- (:arity variadic))] (<= n Compiler'MAX_POSITIONAL_ARITY) [(inc n)]
                             (when (some? (get regulars n))
                                 (throw! "can't have fixed arity function with more params than variadic function")
                             )
@@ -14235,7 +14243,7 @@
                         gen (Expr'''emit (:meta this), :Context'EXPRESSION, scope, gen)
                         gen (Gen''invoke gen, Var''resetMeta, 2)
                     ]
-                        gen
+                        (Gen''pop gen)
                     )
                 )
             gen
@@ -14245,7 +14253,7 @@
                         gen (Expr'''emit (:init this), :Context'EXPRESSION, scope, gen)
                         gen (Gen''invoke gen, Var''bindRoot, 2)
                     ]
-                        gen
+                        (Gen''pop gen)
                     )
                 )
         ]
@@ -14287,10 +14295,10 @@
                                     (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
                                         (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                             (let [
-                                                #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
+                                                #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
                                             ]
-                                                (swap! (:'local-env scope) assoc (:sym lb) lb)
-                                                (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                                                (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                                (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
                                                 (recur (conj lbs lb) (next (next s)))
                                             )
                                         )
@@ -14343,7 +14351,7 @@
                                         (let-when [#_"LocalBinding" lb (first s)] (contains? lbset (:uid lb)) => gen
                                             (let [
                                                 gen (Gen''dup gen)
-                                                gen (FnMethod''emitLocal (:fm scope), gen, lb)
+                                                gen (FnMethod''emitLocal (get scope :fm), gen, lb)
                                                 gen (Gen''put gen, (:sym lb))
                                             ]
                                                 gen
@@ -14402,10 +14410,10 @@
                                         (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
                                             (let [
                                                 #_"Expr" init (Compiler'analyze (second s), scope)
-                                                #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (:'local-num scope) inc))
+                                                #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (get scope :'local-num) inc))
                                             ]
-                                                (swap! (:'local-env scope) assoc (:sym lb) lb)
-                                                (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                                                (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                                (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
                                                 (recur (conj lbs lb) (next (next s)))
                                             )
                                         )
@@ -14464,17 +14472,17 @@
     )
 
     (defn #_"Expr" RecurExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
-        (when (and (= context :Context'RETURN) (some? (:loop-locals scope))) => (throw! "can only recur from tail position")
-            (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (:loop-locals scope))]
+        (when (and (= context :Context'RETURN) (some? (get scope :loop-locals))) => (throw! "can only recur from tail position")
+            (let [#_"vector" args (mapv #(Compiler'analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (get scope :loop-locals))]
                 (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
-                    (RecurExpr'new (:loop-locals scope), args)
+                    (RecurExpr'new (get scope :loop-locals), args)
                 )
             )
         )
     )
 
     (defn- #_"gen" RecurExpr''emit [#_"RecurExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (when-some [#_"label" l'loop (:loop-label scope)] => (throw! "recur misses loop label")
+        (when-some [#_"label" l'loop (get scope :loop-label)] => (throw! "recur misses loop label")
             (let [
                 gen
                     (loop-when-recur [gen gen #_"seq" s (seq (:args this))]
@@ -14706,8 +14714,8 @@
                 #_"[CatchClause]" :catches catches
                 #_"Expr" :finallyExpr finallyExpr
 
-                #_"int" :retLocal (swap! (:'local-num scope) inc)
-                #_"int" :finallyLocal (swap! (:'local-num scope) inc)
+                #_"int" :retLocal (swap! (get scope :'local-num) inc)
+                #_"int" :finallyLocal (swap! (get scope :'local-num) inc)
             )
         )
     )
@@ -14730,9 +14738,9 @@
                                                 (let [
                                                     scope (update scope :'local-env (comp atom deref))
                                                     scope (update scope :'local-num (comp atom deref))
-                                                    #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (:'local-num scope) inc))
-                                                    _ (swap! (:'local-env scope) assoc (:sym lb) lb)
-                                                    _ (swap! (:'locals (:fm scope)) assoc (:uid lb) lb)
+                                                    #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
+                                                    _ (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                                    _ (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
                                                     #_"Expr" handler (BodyExpr'parse (next (next (next f))), :Context'EXPRESSION, scope)
                                                     #_"CatchClause" clause (CatchClause'new lb, handler)
                                                 ]
@@ -14915,7 +14923,7 @@
             (when (seq? form) => form
                 (let-when [#_"Object" op (first form)] (not (Compiler'isSpecial op)) => form
                     (let-when [#_"Var" v (Compiler'maybeMacro op, scope)] (some? v) => form
-                        (apply v form @(:'local-env scope) (next form)) ;; macro expansion
+                        (apply v form @(get scope :'local-env) (next form)) ;; macro expansion
                     )
                 )
             )
@@ -14939,8 +14947,8 @@
     (defn- #_"Expr" Compiler'analyzeSymbol [#_"Symbol" sym, #_"map" scope]
         (or
             (when (nil? (:ns sym)) ;; ns-qualified syms are always Vars
-                (when-some [#_"LocalBinding" lb (get @(:'local-env scope) sym)]
-                    (Compiler'closeOver lb, (:fm scope))
+                (when-some [#_"LocalBinding" lb (get @(get scope :'local-env) sym)]
+                    (Compiler'closeOver lb, (get scope :fm))
                     (LocalBindingExpr'new lb)
                 )
             )
@@ -15712,7 +15720,7 @@
     (defn #_"Object" Compiler'load [#_"Reader" reader]
         (let [
             #_"PushbackReader" r (if (instance? PushbackReader reader) reader (PushbackReader. reader)) #_"Object" EOF (Object.)
-            #_"map" scope (-/hash-map :'local-env (atom (hash-map)))
+            #_"map" scope (hash-map :'local-env (atom (hash-map)))
         ]
             (loop [#_"value" value nil]
                 (LispReader'consumeWhitespaces r)
@@ -15804,11 +15812,11 @@
         (intern *arbace-ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
     )
 
-    (alias (symbol "-"), *ns*)
+    (alias (symbol "-"), *arbace-ns*)
 )
 
 (defn repl []
-    (let [#_"map" scope (-/hash-map :'local-env (atom (hash-map)))]
+    (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
         (loop []
             (-/print "\033[31mArbace \033[32m=> \033[0m")
             (.flush -/*out*)
