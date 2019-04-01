@@ -1,9 +1,9 @@
 (ns arbace.core
-    (:refer-clojure :only [defmacro])
+    (:refer-clojure :only []) (:require [clojure.core :as -])
 )
 
-(defmacro § [& _])
-(defmacro ß [& _])
+(-/defmacro § [& _])
+(-/defmacro ß [& _])
 
 (ns arbace.bore
     (:refer-clojure :only [*ns* -> = case conj cons defmacro defn defn- doseq fn identity if-some int keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
@@ -91,7 +91,7 @@
 
 (defmacro class! [r] (let [c (symbol (str r "'class"))] (-/list 'assoc (-/list 'new c) :class c)))
 
-(defmacro throw! [#_"String" s] `(throw (Error. ~s)))
+#_(defmacro throw! [#_"String" s] `(throw (Error. ~s))) (defn throw! [#_"String" s] (throw (Error. s)))
 
 (refer! - [< <= > >= neg? pos? zero?])
 
@@ -130,12 +130,12 @@
 (defn thread [] (Thread/currentThread))
 
 (ns arbace.core
-    (:refer-clojure :only [*ns* boolean case char compare defn fn identical? int let long loop satisfies?]) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [& * + - < << <= > >= >> >>> about bit-xor class! dec defm defp defq defr import! inc neg? pos? quot refer! rem thread throw! zero? |])
+    (:refer-clojure :only [*ns* boolean char compare identical? int long satisfies?]) (:require [clojure.core :as -])
+    (:refer arbace.bore :only [class! defm defp defq defr import! refer!])
 )
 
 (import!
-    [java.lang ArithmeticException Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.lang Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
     [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
@@ -146,7 +146,10 @@
     [arbace.util.concurrent.atomic AtomicReference]
 )
 
-(let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
+(refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
+(refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
+
+(let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
 
 ;;;
  ; Returns a new symbol with a unique name. If a prefix string is supplied,
@@ -155,17 +158,17 @@
  ;;
 (defn gensym
     ([] (gensym "G__"))
-    ([prefix] (-/symbol (-/str prefix (next-id!))))
+    ([prefix] (-/symbol (str prefix (next-id!))))
 )
 
 ;;;
  ; defs the supplied var names with no bindings, useful for making forward declarations.
  ;;
-(defmacro declare [& names] `(do ~@(-/map #(-/list 'def (-/vary-meta % -/assoc :declared true)) names)))
+(defmacro declare [& names] `(do ~@(map #(list 'def (vary-meta % -/assoc :declared true)) names)))
 
-(defmacro def-      [x & s] `(def      ~(-/vary-meta x -/assoc :private true) ~@s))
-(defmacro defn-     [x & s] `(defn     ~(-/vary-meta x -/assoc :private true) ~@s))
-(defmacro defmacro- [x & s] `(defmacro ~(-/vary-meta x -/assoc :private true) ~@s))
+(defmacro def-      [x & s] `(def      ~(vary-meta x -/assoc :private true) ~@s))
+(defmacro defn-     [x & s] `(defn     ~(vary-meta x -/assoc :private true) ~@s))
+(defmacro defmacro- [x & s] `(defmacro ~(vary-meta x -/assoc :private true) ~@s))
 
 (defn identity   [x] x)
 (defn constantly [x] (fn [& _] x))
@@ -183,7 +186,7 @@
  ;;
 (defmacro if-not
     ([? then] (if-not ? then nil))
-    ([? then else] (-/list 'if ? else then))
+    ([? then else] (list 'if ? else then))
 )
 
 ;;;
@@ -221,14 +224,14 @@
  ; in all of the definitions of the functions, as well as the body.
  ;;
 (defmacro letfn [fnspecs & body]
-    `(letfn* ~(-/vec (-/interleave (-/map -/first fnspecs) (-/map #(-/cons `fn %) fnspecs))) ~@body)
+    `(letfn* ~(vec (interleave (map first fnspecs) (map #(cons `fn %) fnspecs))) ~@body)
 )
 
-(letfn [(=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))]
-    (defmacro     when       [? & s] (let [[e & s] (=> s)]                 `(if     ~? (do ~@s) ~e)))
-    (defmacro     when-not   [? & s] (let [[e & s] (=> s)]                 `(if-not ~? (do ~@s) ~e)))
-    (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(-/vec v) (if     ~? (do ~@s) ~e))))
-    (defmacro let-when-not [v ? & s] (let [[e & s] (=> s)] `(let ~(-/vec v) (if-not ~? (do ~@s) ~e))))
+(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+    (defmacro     when       [? & s] (let [[e & s] (=> s)]               `(if     ~? (do ~@s) ~e)))
+    (defmacro     when-not   [? & s] (let [[e & s] (=> s)]               `(if-not ~? (do ~@s) ~e)))
+    (defmacro let-when     [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if     ~? (do ~@s) ~e))))
+    (defmacro let-when-not [v ? & s] (let [[e & s] (=> s)] `(let ~(vec v) (if-not ~? (do ~@s) ~e))))
 )
 
 ;;;
@@ -239,18 +242,18 @@
  ;;
 (defmacro cond [& s]
     (when s
-        `(if ~(-/first s)
-            ~(when (-/next s) => (throw! "cond requires an even number of forms")
-                (-/second s)
+        `(if ~(first s)
+            ~(when (next s) => (throw! "cond requires an even number of forms")
+                (second s)
             )
-            (cond ~@(-/next (-/next s)))
+            (cond ~@(next (next s)))
         )
     )
 )
 
 (defmacro- assert-args [& s]
-    `(when ~(-/first s) ~'=> (throw! (-/str (-/first ~'&form) " requires " ~(-/second s)))
-        ~(let-when [s (-/next (-/next s))] s
+    `(when ~(first s) ~'=> (throw! (str (first ~'&form) " requires " ~(second s)))
+        ~(let-when [s (next (next s))] s
             `(assert-args ~@s)
         )
     )
@@ -260,8 +263,8 @@
     ([bind then] `(if-let ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (-/vector? bind) "a vector for its binding"
-            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] x# ~'=> ~else
@@ -273,7 +276,7 @@
 )
 
 (defmacro cond-let [bind then & else]
-    (let [bind (if (-/vector? bind) bind [`_# bind])]
+    (let [bind (if (vector? bind) bind [`_# bind])]
         `(if-let ~bind ~then ~(when else `(cond-let ~@else)))
     )
 )
@@ -282,8 +285,8 @@
     ([bind then] `(if-some ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (-/vector? bind) "a vector for its binding"
-            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
         `(let-when [x# ~(bind 1)] (some? x#) ~'=> ~else
@@ -295,7 +298,7 @@
 )
 
 (defmacro cond-some [bind then & else]
-    (let [bind (if (-/vector? bind) bind [`_# bind])]
+    (let [bind (if (vector? bind) bind [`_# bind])]
         `(if-some ~bind ~then ~(when else `(cond-some ~@else)))
     )
 )
@@ -304,12 +307,12 @@
     ([bind then] `(if-first ~bind ~then nil))
     ([bind then else & _]
         (assert-args
-            (-/vector? bind) "a vector for its binding"
-            (-/= 2 (-/count bind)) "exactly 2 forms in binding vector"
+            (vector? bind) "a vector for its binding"
+            (= 2 (count bind)) "exactly 2 forms in binding vector"
             (nil? _) "1 or 2 forms after binding vector"
         )
-        `(let-when [s# (-/seq ~(bind 1))] (some? s#) ~'=> ~else
-            (let [~(bind 0) (-/first s#)]
+        `(let-when [s# (seq ~(bind 1))] (some? s#) ~'=> ~else
+            (let [~(bind 0) (first s#)]
                 ~then
             )
         )
@@ -318,8 +321,8 @@
 
 (ß defmacro when-let [bindings & body]
     (assert-args
-        (-/vector? bindings) "a vector for its binding"
-        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] x#
         (let [~(bindings 0) x#]
@@ -330,8 +333,8 @@
 
 (ß defmacro when-some [bindings & body]
     (assert-args
-        (-/vector? bindings) "a vector for its binding"
-        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
     )
     `(let-when [x# ~(bindings 1)] (some? x#)
         (let [~(bindings 0) x#]
@@ -342,20 +345,20 @@
 
 (ß defmacro when-first [bindings & body]
     (assert-args
-        (-/vector? bindings) "a vector for its binding"
-        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
     )
-    `(when-some [s# (-/seq ~(bindings 1))]
-        (let [~(bindings 0) (-/first s#)]
+    `(when-some [s# (seq ~(bindings 1))]
+        (let [~(bindings 0) (first s#)]
             ~@body
         )
     )
 )
 
-(letfn [(=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))]
-    (defmacro when-let   [v & s] (let [[e & s] (=> s)] `(if-let   ~(-/vec v) (do ~@s) ~e)))
-    (defmacro when-some  [v & s] (let [[e & s] (=> s)] `(if-some  ~(-/vec v) (do ~@s) ~e)))
-    (defmacro when-first [v & s] (let [[e & s] (=> s)] `(if-first ~(-/vec v) (do ~@s) ~e)))
+(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+    (defmacro when-let   [v & s] (let [[e & s] (=> s)] `(if-let   ~(vec v) (do ~@s) ~e)))
+    (defmacro when-some  [v & s] (let [[e & s] (=> s)] `(if-some  ~(vec v) (do ~@s) ~e)))
+    (defmacro when-first [v & s] (let [[e & s] (=> s)] `(if-first ~(vec v) (do ~@s) ~e)))
 )
 
 ;;;
@@ -380,11 +383,11 @@
     (let [gpred (gensym "pred__") gexpr (gensym "expr__")
           emit-
             (fn emit- [f? expr args]
-                (let [[[a b c :as clause] more] (-/split-at (if (-/= :>> (-/second args)) 3 2) args) n (-/count clause)]
+                (let [[[a b c :as clause] more] (split-at (if (= :>> (second args)) 3 2) args) n (count clause)]
                     (cond
-                        (-/= 0 n) `(throw! (-/str "no matching clause: " ~expr))
-                        (-/= 1 n) a
-                        (-/= 2 n) `(if (~f? ~a ~expr)
+                        (= 0 n) `(throw! (str "no matching clause: " ~expr))
+                        (= 1 n) a
+                        (= 2 n) `(if (~f? ~a ~expr)
                                     ~b
                                     ~(emit- f? expr more)
                                 )
@@ -401,16 +404,16 @@
     )
 )
 
-(letfn [(v' [v] (cond (-/vector? v) v (-/symbol? v) [v v] :else [`_# v]))
-        (r' [r] (cond (-/vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
-        (=> [s] (if (-/= '=> (-/first s)) (-/next s) (-/cons nil s)))
+(letfn [(v' [v] (cond (vector? v) v (symbol? v) [v v] :else [`_# v]))
+        (r' [r] (cond (vector? r) `((recur ~@r)) (some? r) `((recur ~r))))
+        (=> [s] (if (= '=> (first s)) (next s) (cons nil s)))
         (l' [v ? r s] (let [r (r' r) [e & s] (=> s)] `(loop ~(v' v) (if ~? (do ~@s ~@r) ~e))))]
     (defmacro loop-when [v ? & s] (l' v ? nil s))
     (defmacro loop-when-recur [v ? r & s] (l' v ? r s))
 )
 
-(letfn [(r' [r] (cond (-/vector? r) `(recur ~@r) (some? r) `(recur ~r)))
-        (=> [s] (if (-/= '=> (-/first s)) (-/second s)))]
+(letfn [(r' [r] (cond (vector? r) `(recur ~@r) (some? r) `(recur ~r)))
+        (=> [s] (if (= '=> (first s)) (second s)))]
     (defmacro recur-when [? r & s] `(if ~? ~(r' r) ~(=> s)))
 )
 
@@ -428,13 +431,13 @@
  ;;
 (defmacro doseq [bindings & body]
     (assert-args
-        (-/vector? bindings) "a vector for its binding"
-        (-/even? (-/count bindings)) "an even number of forms in binding vector"
+        (vector? bindings) "a vector for its binding"
+        (even? (count bindings)) "an even number of forms in binding vector"
     )
     (letfn [(emit- [e r]
                 (when e => [`(do ~@body) true]
                     (let [[k v & e] e]
-                        (if (-/keyword? k)
+                        (if (keyword? k)
                             (let [[f r?] (emit- e r)]
                                 (case k
                                     :let   [`(let ~v ~f) r?]
@@ -442,14 +445,14 @@
                                     :when  [`(if ~v (do ~f ~@(when r? [r])) ~r) false]
                                 )
                             )
-                            (let [s (gensym "s__") r `(recur (-/next ~s)) [f r?] (emit- e r)]
-                                [`(loop-when [~s (-/seq ~v)] ~s (let [~k (-/first ~s)] ~f ~@(when r? [r]))) true]
+                            (let [s (gensym "s__") r `(recur (next ~s)) [f r?] (emit- e r)]
+                                [`(loop-when [~s (seq ~v)] ~s (let [~k (first ~s)] ~f ~@(when r? [r]))) true]
                             )
                         )
                     )
                 )
             )]
-        (-/first (emit- (-/seq bindings) nil))
+        (first (emit- (seq bindings) nil))
     )
 )
 
@@ -461,8 +464,8 @@
  ;;
 (defmacro dotimes [bindings & body]
     (assert-args
-        (-/vector? bindings) "a vector for its binding"
-        (-/= 2 (-/count bindings)) "exactly 2 forms in binding vector"
+        (vector? bindings) "a vector for its binding"
+        (= 2 (count bindings)) "exactly 2 forms in binding vector"
     )
     (let [[i n] bindings]
         `(let [n# (long ~n)]
@@ -483,7 +486,7 @@
 (defmacro doto [x & s]
     (let [x' (gensym)]
         `(let [~x' ~x]
-            ~@(-/map (fn [f] (-/with-meta (if (-/seq? f) `(~(-/first f) ~x' ~@(-/next f)) `(~f ~x')) (-/meta f))) s)
+            ~@(map (fn [f] (with-meta (if (seq? f) `(~(first f) ~x' ~@(next f)) `(~f ~x')) (meta f))) s)
             ~x'
         )
     )
@@ -498,10 +501,10 @@
 (defmacro -> [x & s]
     (when s => x
         (recur &form &env
-            (let-when [f (-/first s)] (-/seq? f) => (-/list f x)
-                (-/with-meta `(~(-/first f) ~x ~@(-/next f)) (-/meta f))
+            (let-when [f (first s)] (seq? f) => (list f x)
+                (with-meta `(~(first f) ~x ~@(next f)) (meta f))
             )
-            (-/next s)
+            (next s)
         )
     )
 )
@@ -515,10 +518,10 @@
 (defmacro ->> [x & s]
     (when s => x
         (recur &form &env
-            (let-when [f (-/first s)] (-/seq? f) => (-/list f x)
-                (-/with-meta `(~(-/first f) ~@(-/next f) ~x) (-/meta f))
+            (let-when [f (first s)] (seq? f) => (list f x)
+                (with-meta `(~(first f) ~@(next f) ~x) (meta f))
             )
-            (-/next s)
+            (next s)
         )
     )
 )
@@ -2264,7 +2267,6 @@
 (about #_"arbace.Util"
 
 (about #_"Util"
-    (declare Numbers'equal)
     (declare Symbol''equals)
     (declare Keyword''equals)
 
@@ -2272,7 +2274,7 @@
         (cond
             (identical? k1 k2)              true
             (nil? k1)                       false
-            (and (number? k1) (number? k2)) (Numbers'equal k1, k2)
+            (and (number? k1) (number? k2)) #_(Numbers'equal k1, k2) (-/== k1 k2)
             (coll? k1)                      (IObject'''equals k1, k2)
             (coll? k2)                      (IObject'''equals k2, k1)
             (instance? Symbol'iface k1)   (Symbol''equals k1, k2)
@@ -2619,7 +2621,7 @@
 
         (#_"Number" Ops'''divide [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
             (let [#_"BigInteger" n (Numbers'toBigInteger x) #_"BigInteger" d (Numbers'toBigInteger y)]
-                (when-not (-/= d BigInteger/ZERO) => (throw (ArithmeticException. "Divide by zero"))
+                (when-not (-/= d BigInteger/ZERO) => (throw! "divide by zero")
                     (let [#_"BigInteger" gcd (.gcd n, d)]
                         (when-not (-/= gcd BigInteger/ZERO) => BigInteger/ZERO
                             (let [n (.divide n, gcd) d (.divide d, gcd)]
@@ -2665,7 +2667,7 @@
     )
 
     (defn #_"boolean" Numbers'equal [#_"Number" x, #_"Number" y]
-        #_(-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''eq x, y)) (-/== x y)
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''eq x, y))
     )
 
     (defn #_"boolean" Numbers'lt [#_"Object" x, #_"Object" y]
@@ -2707,19 +2709,19 @@
     )
 
     (defn #_"Number" Numbers'divide [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
             (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''divide #_"Number" x, #_"Number" y))
         )
     )
 
     (defn #_"Number" Numbers'quotient [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
             (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''quotient #_"Number" x, #_"Number" y))
         )
     )
 
     (defn #_"Number" Numbers'remainder [#_"Object" x, #_"Object" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw (ArithmeticException. "Divide by zero"))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
             (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''remainder #_"Number" x, #_"Number" y))
         )
     )
@@ -3106,7 +3108,7 @@
     ([ns name] (Symbol'intern ns, name))
 )
 
-(defn- symbol! [s] (symbol (if (instance? clojure.lang.Symbol s) (name s) s)))
+(defn- symbol! [s] (symbol (if (instance? clojure.lang.Symbol s) (str s) s)))
 )
 
 (about #_"arbace.Keyword"
@@ -3300,7 +3302,11 @@
 (about #_"arbace.Closure"
 
 (about #_"Closure"
-    (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map'" _env])
+    (declare Closure''invoke)
+
+    (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map'" _env]
+        clojure.lang.IFn (invoke [_] (Closure''invoke _)) (invoke [_, a1] (Closure''invoke _, a1))
+    )
 
     #_inherit
     (defm Closure Fn AFn)
@@ -11085,7 +11091,9 @@
     )
 
     (defn- #_"Object" Var''get [#_"Var" this]
-        @(or (Var''getThreadBinding this) (:root this))
+        (when-not (instance? clojure.lang.Var this) => (.get this)
+            @(or (Var''getThreadBinding this) (:root this))
+        )
     )
 
 ;;;
@@ -11622,9 +11630,11 @@
 (defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
 
     (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (let [#_"Object" o (get @(:mappings this) name)]
-            (when (and (var? o) (= (:ns o) this))
-                o
+        (when-not (instance? clojure.lang.Namespace this) => (.findInternedVar this, (-/symbol (str name)))
+            (let [#_"Object" o (get @(:mappings this) name)]
+                (when (and (var? o) (= (:ns o) this))
+                    o
+                )
             )
         )
     )
@@ -15032,7 +15042,7 @@
     (def #_"Var" ^:dynamic *gensym-env*) ;; symbol->gensymbol
 
     (defn #_"Symbol" LispReader'garg [#_"int" n]
-        (symbol (str (if (= n -1) "rest" (str "p" n)) "__" (next-id!) "#"))
+        (symbol (str (if (= n -1) "args" (str "arg" n)) "__" (next-id!) "#"))
     )
 
     (defn #_"Symbol" LispReader'registerArg [#_"int" n]
@@ -15408,8 +15418,10 @@
         (when-not (bound? (var! *arg-env*)) => (throw! "nested #()s are not allowed")
             (binding [*arg-env* (sorted-map)]
                 (LispReader'unread r, \()
-                (let [#_"vector" args (vector)
-                      args
+                (let [
+                    #_"Object" form (LispReader'read r)
+                    #_"vector" args (vector)
+                    args
                         (when-some [#_"seq" rs (rseq (var-get! *arg-env*))] => args
                             (let [args
                                     (let-when [#_"int" n (key (first rs))] (pos? n) => args
@@ -15423,8 +15435,9 @@
                                     (conj args (symbol! '&) rest)
                                 )
                             )
-                        )]
-                    (list (symbol! 'fn*) args (LispReader'read r))
+                        )
+                ]
+                    (list (symbol! 'fn*) args form)
                 )
             )
         )
@@ -15812,7 +15825,7 @@
         (intern *arbace-ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
     )
 
-    (alias (symbol "-"), *arbace-ns*)
+    (alias (symbol "-"), (-/the-ns 'clojure.core))
 )
 
 (defn repl []
