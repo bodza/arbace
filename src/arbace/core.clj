@@ -137,8 +137,8 @@
 )
 
 (import!
-    [java.lang Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
-    [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter Writer]
+    [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.util Arrays Comparator]
@@ -1764,58 +1764,40 @@
     )
 )
 
-(about #_"-/print-method"
+(about #_"print-method"
+    (defp StrForm)
+    (defp RefForm)
     (defp SeqForm)
     (defp VecForm)
     (defp MapForm)
     (defp SetForm)
 
-    (defn- print-sequential [#_"String" begin, f'p, #_"String" sep, #_"String" end, s'q, #_"Writer" w]
-        (.write w, begin)
-        (when-some [s (seq s'q)]
-            (loop [[x & s] s]
-                (f'p x w)
-                (when s
-                    (.write w, sep)
-                    (recur s)
-                )
-            )
+    (defn- #_"Appendable" append-seq [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
+        (let [a (let-when [a (.append a, b) #_"seq" s (seq q)] (some? s) => a
+                    (loop [a a s s]
+                        (let-when [a (f'append a (first s)) s (next s)] (some? s) => a
+                            (recur (.append a, c) s)
+                        )
+                    )
+                )]
+            (.append a, d)
         )
-        (.write w, end)
     )
 
-    (defn- pr-on [#_"Object" o, #_"Writer" w]
-        (-/print-method o w)
-        nil
-    )
-
-    (-/defmethod -/print-method SeqForm'iface [#_"Seqable" q, #_"Writer" w]
-        (print-sequential "(" pr-on " " ")" q w)
-    )
-
-    (-/defmethod -/print-method VecForm'iface [#_"Seqable" q, #_"Writer" w]
-        (print-sequential "[" pr-on " " "]" q w)
-    )
-
-    (-/prefer-method -/print-method VecForm'iface clojure.lang.ISeq)
-    (-/prefer-method -/print-method VecForm'iface clojure.lang.IPersistentVector)
-
-    (-/defmethod -/print-method MapForm'iface [#_"Seqable" q, #_"Writer" w]
-        (print-sequential "{" (fn [e #_"Writer" w] (pr-on (key e) w) (.append w \space) (pr-on (val e) w)) ", " "}" q w)
-    )
-
-    (-/prefer-method -/print-method MapForm'iface clojure.lang.ISeq)
-    (-/prefer-method -/print-method MapForm'iface java.util.Map)
-
-    (-/defmethod -/print-method SetForm'iface [#_"Seqable" q, #_"Writer" w]
-        (print-sequential "#{" pr-on " " "}" q w)
-    )
-
-    (defn #_"String" print-string [#_"Object" o]
-        (let [#_"StringWriter" w (StringWriter. (<< 1 5))]
-            (pr-on o w)
-            (.toString w)
+    (defn- #_"Appendable" append [#_"Appendable" a, #_"any" x]
+        (condp satisfies? x
+            StrForm (.append a, (str x))
+            RefForm (-> a (append (deref x)) (.append "'"))
+            SeqForm (append-seq a "(" append " " ")" x)
+            VecForm (append-seq a "[" append " " "]" x)
+            MapForm (append-seq a "{" (fn [a e] (-> a (append (key e)) (.append " ") (append (val e)))) ", " "}" x)
+            SetForm (append-seq a "#{" append " " "}" x)
+            #_else 
         )
+    )
+
+    (defn #_"String" print-string [#_"any" x]
+        (-> (StringWriter. (<< 1 5)) (append x) (.toString))
     )
 )
 
@@ -1943,7 +1925,7 @@
 (about #_"Atom"
     (declare Atom''deref)
 
-    (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data]
+    (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data] RefForm
         java.util.concurrent.Future (get [_] (Atom''deref _))
     )
 
@@ -2038,10 +2020,6 @@
     )
 )
 
-(-/defmethod -/print-method Atom'iface [#_"Atom" a, #_"Writer" w]
-    (.write w, (str (Atom''deref a) \'))
-)
-
 ;;;
  ; Creates and returns an Atom with an initial value of x and optional meta m.
  ;;
@@ -2086,7 +2064,7 @@
 (about #_"arbace.Delay"
 
 (about #_"Delay"
-    (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e])
+    (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e] #_"RefForm")
 
     (defn #_"Delay" Delay'new [#_"fn" f]
         (Delay'class. (anew [(atom f), (atom nil), (atom nil)]))
@@ -2154,7 +2132,7 @@
 (about #_"arbace.Reduced"
 
 (about #_"Reduced"
-    (defq Reduced [#_"Object" val])
+    (defq Reduced [#_"Object" val] RefForm)
 
     (defn #_"Reduced" Reduced'new [#_"Object" val]
         (Reduced'class. (anew [val]))
@@ -2305,7 +2283,7 @@
 (about #_"Ratio"
     (declare Ratio''hashcode)
 
-    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d]
+    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d] StrForm
         java.lang.Object (hashCode [_] (Ratio''hashcode _))
     )
 
@@ -2967,7 +2945,7 @@
 (about #_"Symbol"
     (declare Symbol''withMeta Symbol''hash Symbol''equals)
 
-    (defq Symbol [#_"meta" _meta, #_"String" ns, #_"String" name]
+    (defq Symbol [#_"meta" _meta, #_"String" ns, #_"String" name] StrForm
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
@@ -3067,10 +3045,6 @@
     )
 )
 
-(-/defmethod -/print-method Symbol'iface [#_"Symbol" s, #_"Writer" w]
-    (.write w, (str s))
-)
-
 ;;;
  ; Returns a Symbol with the given namespace and name.
  ;;
@@ -3087,7 +3061,7 @@
 (about #_"Keyword"
     (declare Keyword''equals Keyword''invoke)
 
-    (defq Keyword [#_"Symbol" sym, #_"int" _hash]
+    (defq Keyword [#_"Symbol" sym, #_"int" _hash] StrForm
         clojure.lang.IHashEq (hasheq [_] (:_hash _))
         java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (.hashCode (:sym _)) (int! 0x9e3779b9)))
         clojure.lang.IFn (invoke [_, a] (Keyword''invoke _, a))
@@ -3184,10 +3158,6 @@
             (compare (:sym this) (:sym that))
         )
     )
-)
-
-(-/defmethod -/print-method Keyword'iface [#_"Keyword" k, #_"Writer" w]
-    (.write w, (str k))
 )
 
 ;;;
@@ -3378,7 +3348,7 @@
 (about #_"Cons"
     (declare Cons''withMeta Cons''seq Cons''next Cons''count)
 
-    (defq Cons [#_"meta" _meta, #_"Object" car, #_"seq" cdr] #_"SeqForm"
+    (defq Cons [#_"meta" _meta, #_"Object" car, #_"seq" cdr] SeqForm
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Cons''withMeta _, m))
         clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _)) (more [_] (or (.next _) ()))
@@ -3458,7 +3428,7 @@
 (about #_"Iterate"
     (declare Iterate''seq Iterate''first Iterate''next)
 
-    (defq Iterate [#_"meta" _meta, #_"fn" f, #_"Object" x, #_"Object'" y] #_"SeqForm"
+    (defq Iterate [#_"meta" _meta, #_"fn" f, #_"Object" x, #_"Object'" y] SeqForm
         clojure.lang.ISeq (seq [_] (Iterate''seq _)) (first [_] (Iterate''first _)) (next [_] (Iterate''next _))
     )
 
@@ -3567,7 +3537,7 @@
 (about #_"Repeat"
     (declare Repeat''seq Repeat''next)
 
-    (defq Repeat [#_"meta" _meta, #_"long" cnt, #_"Object" val] #_"SeqForm"
+    (defq Repeat [#_"meta" _meta, #_"long" cnt, #_"Object" val] SeqForm
         clojure.lang.ISeq (seq [_] (Repeat''seq _)) (first [_] (:val _)) (next [_] (Repeat''next _))
     )
 
@@ -3690,7 +3660,7 @@
 (about #_"Range"
     (declare Range''seq Range''next)
 
-    (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck] #_"SeqForm"
+    (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck] SeqForm
         clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _)) (more [_] (or (.next _) ()))
     )
 
@@ -3839,7 +3809,7 @@
 (about #_"ArraySeq"
     (declare ArraySeq''seq ArraySeq''first ArraySeq''next)
 
-    (defq ArraySeq [#_"meta" _meta, #_"array" a, #_"int" i] #_"SeqForm"
+    (defq ArraySeq [#_"meta" _meta, #_"array" a, #_"int" i] SeqForm
         clojure.lang.ISeq (seq [_] (ArraySeq''seq _)) (first [_] (ArraySeq''first _)) (next [_] (ArraySeq''next _))
     )
 
@@ -3955,7 +3925,7 @@
 (about #_"StringSeq"
     (declare StringSeq''seq StringSeq''first StringSeq''next)
 
-    (defq StringSeq [#_"meta" _meta, #_"CharSequence" s, #_"int" i] #_"SeqForm"
+    (defq StringSeq [#_"meta" _meta, #_"CharSequence" s, #_"int" i] SeqForm
         clojure.lang.ISeq (seq [_] (StringSeq''seq _)) (first [_] (StringSeq''first _)) (next [_] (StringSeq''next _))
     )
 
@@ -4062,7 +4032,7 @@
 (about #_"LazySeq"
     (declare LazySeq''seq LazySeq''first LazySeq''next)
 
-    (defq LazySeq [#_"meta" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] #_"SeqForm"
+    (defq LazySeq [#_"meta" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm
         clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _)) (more [_] (or (.next _) ()))
         clojure.lang.Sequential
     )
@@ -5103,7 +5073,7 @@
 (about #_"VSeq"
     (declare VSeq''seq VSeq''first VSeq''next)
 
-    (defq VSeq [#_"meta" _meta, #_"vector" v, #_"int" i] #_"SeqForm"
+    (defq VSeq [#_"meta" _meta, #_"vector" v, #_"int" i] SeqForm
         clojure.lang.ISeq (seq [_] (VSeq''seq _)) (first [_] (VSeq''first _)) (next [_] (VSeq''next _)) (more [_] (or (.next _) ()))
         clojure.lang.Sequential
     )
@@ -5203,7 +5173,7 @@
 (about #_"RSeq"
     (declare RSeq''seq RSeq''first RSeq''next)
 
-    (defq RSeq [#_"meta" _meta, #_"vector" v, #_"int" i] #_"SeqForm"
+    (defq RSeq [#_"meta" _meta, #_"vector" v, #_"int" i] SeqForm
         clojure.lang.ISeq (seq [_] (RSeq''seq _)) (first [_] (RSeq''first _)) (next [_] (RSeq''next _))
     )
 
@@ -5429,7 +5399,7 @@
 (about #_"EmptyList"
     (declare EmptyList''seq EmptyList''first EmptyList''next EmptyList''conj EmptyList''empty)
 
-    (defq EmptyList [#_"meta" _meta] #_"SeqForm"
+    (defq EmptyList [#_"meta" _meta] SeqForm
         clojure.lang.ISeq (seq [_] (EmptyList''seq _)) (first [_] (EmptyList''first _)) (next [_] (EmptyList''next _))
         clojure.lang.IPersistentCollection (cons [_ o] (EmptyList''conj _, o)) (empty [_] (EmptyList''empty _))
     )
@@ -5538,7 +5508,7 @@
 (about #_"PersistentList"
     (declare PersistentList''seq PersistentList''conj PersistentList''empty)
 
-    (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] #_"SeqForm"
+    (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm
         clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _)) (more [_] (or (.next _) ()))
         clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o)) (count [_] (:cnt _))
     )
@@ -5661,7 +5631,7 @@
 (about #_"MSeq"
     (declare MSeq''seq MSeq''first MSeq''next)
 
-    (defq MSeq [#_"meta" _meta, #_"array" a, #_"int" i] #_"SeqForm"
+    (defq MSeq [#_"meta" _meta, #_"array" a, #_"int" i] SeqForm
         clojure.lang.ISeq (seq [_] (MSeq''seq _)) (first [_] (MSeq''first _)) (next [_] (MSeq''next _))
     )
 
@@ -6154,7 +6124,7 @@
 (about #_"HSeq"
     (declare HSeq''seq HSeq''first HSeq''next)
 
-    (defq HSeq [#_"meta" _meta, #_"node[]" nodes, #_"int" i, #_"seq" s] #_"SeqForm"
+    (defq HSeq [#_"meta" _meta, #_"node[]" nodes, #_"int" i, #_"seq" s] SeqForm
         clojure.lang.ISeq (seq [_] (HSeq''seq _)) (first [_] (HSeq''first _)) (next [_] (HSeq''next _))
     )
 
@@ -6231,7 +6201,7 @@
 (about #_"NSeq"
     (declare NSeq''seq NSeq''first NSeq''next)
 
-    (defq NSeq [#_"meta" _meta, #_"array" a, #_"int" i, #_"seq" s] #_"SeqForm"
+    (defq NSeq [#_"meta" _meta, #_"array" a, #_"int" i, #_"seq" s] SeqForm
         clojure.lang.ISeq (seq [_] (NSeq''seq _)) (first [_] (NSeq''first _)) (next [_] (NSeq''next _)) (more [_] (or (.next _) ()))
     )
 
@@ -8298,7 +8268,7 @@
 (about #_"TSeq"
     (declare TSeq''seq TSeq''first TSeq''next)
 
-    (defq TSeq [#_"meta" _meta, #_"seq" stack, #_"boolean" asc?, #_"int" cnt] #_"SeqForm"
+    (defq TSeq [#_"meta" _meta, #_"seq" stack, #_"boolean" asc?, #_"int" cnt] SeqForm
         clojure.lang.ISeq (seq [_] (TSeq''seq _)) (first [_] (TSeq''first _)) (next [_] (TSeq''next _))
     )
 
@@ -10519,7 +10489,7 @@
 (about #_"QSeq"
     (declare QSeq''seq QSeq''first QSeq''next)
 
-    (defq QSeq [#_"meta" _meta, #_"seq" f, #_"seq" rseq] #_"SeqForm"
+    (defq QSeq [#_"meta" _meta, #_"seq" f, #_"seq" rseq] SeqForm
         clojure.lang.ISeq (seq [_] (QSeq''seq _)) (first [_] (QSeq''first _)) (next [_] (QSeq''next _))
     )
 
@@ -10932,13 +10902,13 @@
     (defn- #_"String" Var'toString [#_"Namespace" ns, #_"Symbol" sym]
         (if (some? ns)
             (str "#'" (:name ns) "/" sym)
-            (str "#<Var: " (or sym "--unnamed--") ">")
+            (str "#_var " nil " #_\"" "/" sym "\"")
         )
     )
 )
 
 (about #_"Unbound"
-    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
+    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym] StrForm)
 
     #_inherit
     (defm Unbound AFn)
@@ -10948,7 +10918,7 @@
     )
 
     (defn- #_"String" Unbound''toString [#_"Unbound" this]
-        (str "Unbound: " (Var'toString (:ns this), (:sym this)))
+        (str "#_unbound " (Var'toString (:ns this), (:sym this)))
     )
 
     (defm Unbound IObject
@@ -10960,14 +10930,14 @@
 (about #_"Var"
     (declare Var''get)
 
-    (defq Var [#_"Class" class, #_"Namespace" ns, #_"Symbol" sym, #_"Object'" root]
+    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root] StrForm
         java.util.concurrent.Future (get [_] (Var''get _))
     )
 
     (defn #_"Var" Var'new
         ([#_"Namespace" ns, #_"Symbol" sym] (Var'new ns, sym, (Unbound'new ns, sym)))
         ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
-            (Var'class. (anew [Var'class, ns, sym, (atom root)]))
+            (Var'class. (anew [ns, sym, (atom root)]))
         )
     )
 
@@ -11316,7 +11286,7 @@
 (about #_"arbace.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Class" class, #_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
+    (defq Namespace [#_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
@@ -11352,7 +11322,7 @@
 )
 
     (defn- #_"Namespace" Namespace'new [#_"Symbol" name]
-        (Namespace'class. (anew [Namespace'class, name, (atom (hash-map)), (atom (hash-map))]))
+        (Namespace'class. (anew [name, (atom (hash-map)), (atom (hash-map))]))
     )
 
     (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
