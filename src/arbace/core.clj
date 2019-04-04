@@ -138,7 +138,7 @@
 
 (import!
     [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
-    [java.io BufferedReader PushbackReader #_Reader #_StringReader StringWriter]
+    [java.io BufferedReader PushbackReader #_Reader]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.util Arrays Comparator]
@@ -148,7 +148,7 @@
     [arbace.util.concurrent.atomic AtomicReference]
 )
 
-(refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
+(refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
@@ -602,27 +602,16 @@
 (about #_"arbace.IObject"
     (defp IObject
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
-        (#_"String" IObject'''toString [#_"IObject" this])
     )
 
-    (-/extend-type Object IObject
-        (#_"boolean" IObject'''equals [#_"Object" this, #_"Object" that] (.equals this, that))
-        (#_"String" IObject'''toString [#_"Object" this] (.toString this))
+    (-/extend-protocol IObject Object
+        (IObject'''equals [this, that] (.equals this, that))
     )
+)
 
-    ;;;
-     ; With no args, returns the empty string. With one arg x, returns x.toString().
-     ; (str nil) returns the empty string.
-     ; With more than one arg, returns the concatenation of the str values of the args.
-     ;;
-    (defn #_"String" str
-        ([] "")
-        ([x] (if (some? x) (IObject'''toString x) ""))
-        ([x & y]
-            ((fn [#_"StringBuilder" sb s] (recur-when s [(.append sb (str (first s))) (next s)] => (str sb)))
-                (StringBuilder. (str x)) y
-            )
-        )
+(about #_"arbace.IAppend"
+    (defp IAppend
+        (#_"Appendable" IAppend'''append [#_"IAppend" this, #_"Appendable" a])
     )
 )
 
@@ -1469,9 +1458,8 @@
 (about #_"arbace.Ratio"
     (defp Ratio)
 
-    ;;;
-     ; Returns true if n is a Ratio.
-     ;;
+    (-/extend-protocol Ratio clojure.lang.Ratio)
+
     (defn ratio? [n] (satisfies? Ratio n))
 
     ;;;
@@ -1764,15 +1752,68 @@
     )
 )
 
-(about #_"print-method"
-    (defp StrForm)
+(about #_"append, str, pr, prn"
+    (def- #_"{char String}" char-name-string
+        (-/hash-map
+            \newline   "newline"
+            \tab       "tab"
+            \space     "space"
+            \backspace "backspace"
+            \formfeed  "formfeed"
+            \return    "return"
+        )
+    )
+
+    (defn- #_"Appendable" append-chr [#_"Appendable" a, #_"char" x]
+        (-> a (.append "\\") (.append (-/get char-name-string x x)))
+    )
+
+    (def- #_"{char String}" char-escape-string
+        (-/hash-map
+            \newline   "\\n"
+            \tab       "\\t"
+            \return    "\\r"
+            \"         "\\\""
+            \\         "\\\\"
+            \formfeed  "\\f"
+            \backspace "\\b"
+        )
+    )
+
+    (defn- #_"Appendable" append-str [#_"Appendable" a, #_"String" x]
+        (let [
+            a (.append a, "\"")
+            a (-/reduce #(.append %1, (-/get char-escape-string %2 %2)) a x)
+            a (.append a, "\"")
+        ]
+            a
+        )
+    )
+
+    (defn- #_"Appendable" append-rex [#_"Appendable" a, #_"Pattern" x]
+        (let [
+            a (.append a, "#\"")
+            a
+                (loop-when [a a [#_"char" c & #_"seq" r :as #_"seq" s] (seq (.pattern x)) q? false] (some? s) => a
+                    (case c
+                        \\  (let [[c & r] r] (recur (-> a (.append "\\") (.append c))            r (if q? (not= c \E) (= c \Q))))
+                        \"                   (recur (-> a (.append (if q? "\\E\\\"\\Q" "\\\""))) r q?)
+                                             (recur (-> a (.append c))                           r q?)
+                    )
+                )
+            a (.append a, "\"")
+        ]
+            a
+        )
+    )
+
     (defp RefForm)
     (defp SeqForm)
     (defp VecForm)
     (defp MapForm)
     (defp SetForm)
 
-    (defn- #_"Appendable" append-seq [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
+    (defn- #_"Appendable" append* [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
         (let [a (let-when [a (.append a, b) #_"seq" s (seq q)] (some? s) => a
                     (loop [a a s s]
                         (let-when [a (f'append a (first s)) s (next s)] (some? s) => a
@@ -1784,20 +1825,81 @@
         )
     )
 
-    (defn- #_"Appendable" append [#_"Appendable" a, #_"any" x]
-        (condp satisfies? x
-            StrForm (.append a, (str x))
-            RefForm (-> a (append (deref x)) (.append "'"))
-            SeqForm (append-seq a "(" append " " ")" x)
-            VecForm (append-seq a "[" append " " "]" x)
-            MapForm (append-seq a "{" (fn [a e] (-> a (append (key e)) (.append " ") (append (val e)))) ", " "}" x)
-            SetForm (append-seq a "#{" append " " "}" x)
-            #_else 
+    (declare append)
+
+    (defn- #_"Appendable" append-ref [#_"Appendable" a, #_"ref" x]    (-> a (append (deref x)) (.append "'")))
+    (defn- #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
+    (defn- #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
+    (defn- #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn [a e] (-> a (append (key e)) (.append " ") (append (val e)))) ", " "}" x))
+    (defn- #_"Appendable" append-set [#_"Appendable" a, #_"set" x]    (append* a "#{" append " " "}" x))
+
+    (defn #_"Appendable" append [#_"Appendable" a, #_"any" x]
+        (case x
+            nil   (.append a, "nil")
+            false (.append a, "false")
+            true  (.append a, "true")
+            (cond
+                (number? x) (.append a, (.toString x)) ;; %% ratio!
+                (string? x) (append-str a x)
+                :else
+                (condp satisfies? x
+                    IAppend (IAppend'''append x, a)
+                    RefForm (append-ref a x) ;; %% delay?
+                    SeqForm (append-seq a x)
+                    VecForm (append-vec a x)
+                    MapForm (append-map a x)
+                    SetForm (append-set a x)
+                    (cond
+                        (seq? x)    (append-seq a x)
+                        (vector? x) (append-vec a x)
+                        (map? x)    (append-map a x)
+                        (set? x)    (append-set a x)
+                        (-/char? x) (append-chr a x)
+                        (-/instance? Pattern x) (append-rex a x)
+                        :else       (.append a, (.toString x))
+                    )
+                )
+            )
         )
     )
 
-    (defn #_"String" print-string [#_"any" x]
-        (-> (StringWriter. (<< 1 5)) (append x) (.toString))
+    (defn #_"String" str
+        ([] "")
+        ([x] (if (some? x) (-> (StringBuilder.) (append x) (.toString)) ""))
+        ([x & s]
+            ((fn [#_"StringBuilder" sb s] (recur-when s [(append sb (first s)) (next s)] => (.toString sb)))
+                (-> (StringBuilder.) (append x)) s
+            )
+        )
+    )
+
+    (defn pr
+        ([] nil)
+        ([x] (append -/*out* x))
+        ([x & s] (-> -/*out* (append x) (.append " "))
+            (if-some [r (next s)]
+                (recur (first s) r)
+                (apply pr s)
+            )
+        )
+    )
+
+    (defn newline []
+        (.append -/*out* \newline)
+        nil
+    )
+
+    (defn flush []
+        (.flush -/*out*)
+        nil
+    )
+
+    (defn prn [& s]
+        (apply pr s)
+        (newline)
+        (when -/*flush-on-newline*
+            (flush)
+        )
     )
 )
 
@@ -2283,7 +2385,7 @@
 (about #_"Ratio"
     (declare Ratio''hashcode)
 
-    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d] StrForm
+    (defq Ratio [#_"BigInteger" n, #_"BigInteger" d]
         java.lang.Object (hashCode [_] (Ratio''hashcode _))
     )
 
@@ -2313,8 +2415,8 @@
         (and (satisfies? Ratio that) (= (:n that) (:n this)) (= (:d that) (:d this)))
     )
 
-    (defn- #_"String" Ratio''toString [#_"Ratio" this]
-        (str (:n this) "/" (:d this))
+    (defn- #_"Appendable" Ratio''append [#_"Ratio" this, #_"Appendable" a]
+        (-> a (.append (.toString (:n this))) (.append "/") (.append (.toString (:d this))))
     )
 
     (defm Ratio Hashed
@@ -2323,7 +2425,10 @@
 
     (defm Ratio IObject
         (IObject'''equals => Ratio''equals)
-        (IObject'''toString => Ratio''toString)
+    )
+
+    (defm Ratio IAppend
+        (IAppend'''append => Ratio''append)
     )
 
     #_foreign
@@ -2945,7 +3050,7 @@
 (about #_"Symbol"
     (declare Symbol''withMeta Symbol''hash Symbol''equals)
 
-    (defq Symbol [#_"meta" _meta, #_"String" ns, #_"String" name] StrForm
+    (defq Symbol [#_"meta" _meta, #_"String" ns, #_"String" name]
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
@@ -2988,8 +3093,8 @@
         )
     )
 
-    (defn- #_"String" Symbol''toString [#_"Symbol" this]
-        (if (some? (:ns this)) (str (:ns this) "/" (:name this)) (:name this))
+    (defn- #_"Appendable" Symbol''append [#_"Symbol" this, #_"Appendable" a]
+        (if (some? (:ns this)) (-> a (.append (:ns this)) (.append "/") (.append (:name this))) (.append a, (:name this)))
     )
 
     (defn- #_"int" Symbol''hash [#_"Symbol" this]
@@ -3016,7 +3121,10 @@
 
     (defm Symbol IObject
         (IObject'''equals => Symbol''equals)
-        (IObject'''toString => Symbol''toString)
+    )
+
+    (defm Symbol IAppend
+        (IAppend'''append => Symbol''append)
     )
 
     (defm Symbol Hashed
@@ -3061,7 +3169,7 @@
 (about #_"Keyword"
     (declare Keyword''equals Keyword''invoke)
 
-    (defq Keyword [#_"Symbol" sym, #_"int" _hash] StrForm
+    (defq Keyword [#_"Symbol" sym, #_"int" _hash]
         clojure.lang.IHashEq (hasheq [_] (:_hash _))
         java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (.hashCode (:sym _)) (int! 0x9e3779b9)))
         clojure.lang.IFn (invoke [_, a] (Keyword''invoke _, a))
@@ -3124,8 +3232,8 @@
         )
     )
 
-    (defn- #_"String" Keyword''toString [#_"Keyword" this]
-        (str ":" (:sym this))
+    (defn- #_"Appendable" Keyword''append [#_"Keyword" this, #_"Appendable" a]
+        (-> a (.append ":") (append (:sym this)))
     )
 
     (defn- #_"Object" Keyword''invoke
@@ -3144,7 +3252,10 @@
 
     (defm Keyword IObject
         (IObject'''equals => Keyword''equals)
-        (IObject'''toString => Keyword''toString)
+    )
+
+    (defm Keyword IAppend
+        (IAppend'''append => Keyword''append)
     )
 
     (defm Keyword IFn
@@ -3413,7 +3524,6 @@
 
     (defm Cons IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -3521,7 +3631,6 @@
 
     (defm Iterate IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -3639,7 +3748,6 @@
 
     (defm Repeat IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -3786,7 +3894,6 @@
 
     (defm Range IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -3915,7 +4022,6 @@
 
     (defm ArraySeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 )
@@ -4022,7 +4128,6 @@
 
     (defm StringSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 )
@@ -5166,7 +5271,6 @@
 
     (defm VSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -5240,7 +5344,6 @@
 
     (defm RSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 )
@@ -5346,7 +5449,6 @@
 
     (defm MapEntry IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm MapEntry Hashed
@@ -5424,10 +5526,6 @@
         (and (sequential? that) (nil? (seq that)))
     )
 
-    (defn- #_"String" EmptyList''toString [#_"EmptyList" this]
-        "()"
-    )
-
     (defn- #_"seq" EmptyList''seq [#_"EmptyList" this]
         nil
     )
@@ -5478,7 +5576,6 @@
 
     (defm EmptyList IObject
         (IObject'''equals => EmptyList''equals)
-        (IObject'''toString => EmptyList''toString)
     )
 
     (defm EmptyList Seqable
@@ -5611,7 +5708,6 @@
 
     (defm PersistentList IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -5698,12 +5794,11 @@
 
     (defm MSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
 (about #_"TransientArrayMap"
-    (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] MapForm)
+    (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] #_"MapForm")
 
     #_inherit
     (defm TransientArrayMap ATransientMap AFn)
@@ -6101,7 +6196,6 @@
 
     (defm PersistentArrayMap IObject
         (IObject'''equals => APersistentMap''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentArrayMap Hashed
@@ -6194,7 +6288,6 @@
 
     (defm HSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -6300,7 +6393,6 @@
 
     (defm NSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -6959,7 +7051,7 @@
 )
 
 (about #_"TransientHashMap"
-    (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"boolean" has-nil?, #_"value" nil-value] MapForm)
+    (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"boolean" has-nil?, #_"value" nil-value] #_"MapForm")
 
     #_inherit
     (defm TransientHashMap ATransientMap AFn)
@@ -7319,7 +7411,6 @@
 
     (defm PersistentHashMap IObject
         (IObject'''equals => APersistentMap''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentHashMap Hashed
@@ -7381,7 +7472,7 @@
 (about #_"arbace.PersistentHashSet"
 
 (about #_"TransientHashSet"
-    (defq TransientHashSet [#_"ITransientMap" impl] SetForm)
+    (defq TransientHashSet [#_"ITransientMap" impl] #_"SetForm")
 
     #_inherit
     (defm TransientHashSet ATransientSet AFn)
@@ -7555,7 +7646,6 @@
 
     (defm PersistentHashSet IObject
         (IObject'''equals => APersistentSet''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentHashSet Hashed
@@ -7692,7 +7782,6 @@
 
     (defm Black IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm Black Hashed
@@ -7764,7 +7853,6 @@
 
     (defm BlackVal IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm BlackVal Hashed
@@ -7834,7 +7922,6 @@
 
     (defm BlackBranch IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm BlackBranch Hashed
@@ -7906,7 +7993,6 @@
 
     (defm BlackBranchVal IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm BlackBranchVal Hashed
@@ -8008,7 +8094,6 @@
 
     (defm Red IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm Red Hashed
@@ -8078,7 +8163,6 @@
 
     (defm RedVal IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm RedVal Hashed
@@ -8178,7 +8262,6 @@
 
     (defm RedBranch IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm RedBranch Hashed
@@ -8248,7 +8331,6 @@
 
     (defm RedBranchVal IObject
         (IObject'''equals => AMapEntry''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm RedBranchVal Hashed
@@ -8350,7 +8432,6 @@
 
     (defm TSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -8748,7 +8829,6 @@
 
     (defm PersistentTreeMap IObject
         (IObject'''equals => APersistentMap''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentTreeMap Hashed
@@ -8896,7 +8976,6 @@
 
     (defm PersistentTreeSet IObject
         (IObject'''equals => APersistentSet''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentTreeSet Hashed
@@ -9696,7 +9775,7 @@
 )
 
 (about #_"TransientVector"
-    (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] VecForm)
+    (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] #_"VecForm")
 
     #_inherit
     (defm TransientVector AFn)
@@ -10360,7 +10439,6 @@
 
     (defm PersistentVector IObject
         (IObject'''equals => PersistentVector''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentVector Hashed
@@ -10559,7 +10637,6 @@
 
     (defm QSeq IObject
         (IObject'''equals => ASeq''equals)
-        (IObject'''toString => print-string)
     )
 )
 
@@ -10645,7 +10722,6 @@
 
     (defm PersistentQueue IObject
         (IObject'''equals => PersistentQueue''equals)
-        (IObject'''toString => print-string)
     )
 
     (defm PersistentQueue Hashed
@@ -10899,16 +10975,16 @@
 (about #_"Var"
     (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
 
-    (defn- #_"String" Var'toString [#_"Namespace" ns, #_"Symbol" sym]
+    (defn- #_"Appendable" Var'append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
         (if (some? ns)
-            (str "#'" (:name ns) "/" sym)
-            (str "#_var " nil " #_\"" "/" sym "\"")
+            (-> a (.append "#'") (append (:name ns)) (.append "/") (append sym))
+            (-> a (.append "#_var nil #_\"") (append sym) (.append "\""))
         )
     )
 )
 
 (about #_"Unbound"
-    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym] StrForm)
+    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
 
     #_inherit
     (defm Unbound AFn)
@@ -10917,20 +10993,23 @@
         (Unbound'class. (anew [ns, sym]))
     )
 
-    (defn- #_"String" Unbound''toString [#_"Unbound" this]
-        (str "#_unbound " (Var'toString (:ns this), (:sym this)))
+    (defn- #_"Appendable" Unbound''append [#_"Unbound" this, #_"Appendable" a]
+        (-> a (.append "#_unbound ") (Var'append (:ns this), (:sym this)))
     )
 
     (defm Unbound IObject
         (IObject'''equals => identical?)
-        (IObject'''toString => Unbound''toString)
+    )
+
+    (defm Unbound IAppend
+        (IAppend'''append => Unbound''append)
     )
 )
 
 (about #_"Var"
     (declare Var''get)
 
-    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root] StrForm
+    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root]
         java.util.concurrent.Future (get [_] (Var''get _))
     )
 
@@ -10953,8 +11032,8 @@
         (reset-meta! (:root this) m)
     )
 
-    (defn- #_"String" Var''toString [#_"Var" this]
-        (Var'toString (:ns this), (:sym this))
+    (defn- #_"Appendable" Var''append [#_"Var" this, #_"Appendable" a]
+        (Var'append a, (:ns this), (:sym this))
     )
 
     (defn #_"boolean" Var''hasRoot [#_"Var" this]
@@ -11237,7 +11316,10 @@
 
     (defm Var IObject
         (IObject'''equals => identical?)
-        (IObject'''toString => Var''toString)
+    )
+
+    (defm Var IAppend
+        (IAppend'''append => Var''append)
     )
 
     (defm Var IDeref
@@ -11352,8 +11434,8 @@
  ;;
 (defn remove-ns [sym] (Namespace'remove sym))
 
-    (defn- #_"String" Namespace''toString [#_"Namespace" this]
-        (:name (:name this))
+    (defn- #_"Appendable" Namespace''append [#_"Namespace" this, #_"Appendable" a]
+        (.append a, (:name (:name this)))
     )
 
 ;;;
@@ -11590,7 +11672,10 @@
 
     (defm Namespace IObject
         (IObject'''equals => identical?)
-        (IObject'''toString => Namespace''toString)
+    )
+
+    (defm Namespace IAppend
+        (IAppend'''append => Namespace''append)
     )
 )
 
@@ -15586,15 +15671,6 @@
     ([s eof-error? eof-value] (LispReader'read s (boolean eof-error?) eof-value))
 )
 
-;;;
- ; Reads one object from the string s.
- ;;
-(defn read-string [s]
-    (let [#_"PushbackReader" r (PushbackReader. (java.io.StringReader. s))]
-        (LispReader'read r)
-    )
-)
-
 (about #_"arbace.Compiler"
 
 (about #_"Compiler"
@@ -15656,16 +15732,6 @@
 )
 
 ;;;
- ; Sequentially read and evaluate the set of forms contained in the stream.
- ;;
-(defn load-reader [r] (Compiler'load r))
-
-;;;
- ; Sequentially read and evaluate the set of forms contained in the string.
- ;;
-(defn load-string [s] (load-reader (-> s (java.io.StringReader.) (PushbackReader.))))
-
-;;;
  ; Returns the var or Class to which a symbol will be resolved in the namespace
  ; (unless found in the environment), else nil. Note that if the symbol is fully qualified,
  ; the var/Class to which it resolves need not be present in the namespace.
@@ -15700,8 +15766,8 @@
     (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
         (loop []
             (-/print "\033[31mArbace \033[32m=> \033[0m")
-            (.flush -/*out*)
-            (-> (read) (Compiler'eval scope) (-/prn))
+            (flush)
+            (-> (read) (Compiler'eval scope) (prn))
             (recur)
         )
     )
