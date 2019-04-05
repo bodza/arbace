@@ -1807,7 +1807,6 @@
         )
     )
 
-    (defp RefForm)
     (defp SeqForm)
     (defp VecForm)
     (defp MapForm)
@@ -1827,7 +1826,6 @@
 
     (declare append)
 
-    (defn- #_"Appendable" append-ref [#_"Appendable" a, #_"ref" x]    (-> a (append (deref x)) (.append "'")))
     (defn- #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn- #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
     (defn- #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn [a e] (-> a (append (key e)) (.append " ") (append (val e)))) ", " "}" x))
@@ -1844,7 +1842,6 @@
                 :else
                 (condp satisfies? x
                     IAppend (IAppend'''append x, a)
-                    RefForm (append-ref a x) ;; %% delay?
                     SeqForm (append-seq a x)
                     VecForm (append-vec a x)
                     MapForm (append-map a x)
@@ -1863,55 +1860,54 @@
         )
     )
 
+    (defn #_"Appendable" append! [#_"Appendable" a, #_"any" x]
+        (if (or (string? x) (-/char? x)) (.append a, x) (append a x))
+    )
+
     (defn #_"String" str
         ([] "")
-        ([x] (if (some? x) (-> (StringBuilder.) (append x) (.toString)) ""))
+        ([x] (if (some? x) (-> (StringBuilder.) (append! x) (.toString)) ""))
         ([x & s]
-            ((fn [#_"StringBuilder" sb s] (recur-when s [(append sb (first s)) (next s)] => (.toString sb)))
-                (-> (StringBuilder.) (append x)) s
+            ((fn [#_"StringBuilder" sb s] (recur-when s [(append! sb (first s)) (next s)] => (.toString sb)))
+                (-> (StringBuilder.) (append! x)) s
             )
         )
     )
+
+    (defn space   [] (.append -/*out* \space)   nil)
+    (defn newline [] (.append -/*out* \newline) nil)
+    (defn flush   [] (.flush  -/*out*)          nil)
 
     (defn pr
         ([] nil)
-        ([x] (append -/*out* x))
-        ([x & s] (-> -/*out* (append x) (.append " "))
-            (if-some [r (next s)]
-                (recur (first s) r)
-                (apply pr s)
+        ([x] (append -/*out* x) nil)
+        ([x & s]
+            (pr x) (space)
+            (let-when [[x & s] s] (some? s) => (pr x)
+                (recur x s)
             )
         )
     )
 
-    (defn newline []
-        (.append -/*out* \newline)
-        nil
-    )
-
-    (defn flush []
-        (.flush -/*out*)
-        nil
-    )
-
-    (defn prn [& s]
-        (apply pr s)
-        (newline)
-        (when -/*flush-on-newline*
-            (flush)
+    (defn print
+        ([] nil)
+        ([x] (append! -/*out* x) nil)
+        ([x & s]
+            (print x) (space)
+            (let-when [[x & s] s] (some? s) => (print x)
+                (recur x s)
+            )
         )
     )
+
+    (defn prn     [& s] (apply pr    s) (newline) (flush) nil)
+    (defn println [& s] (apply print s) (newline) (flush) nil)
 )
 
 (about #_"arbace.Murmur3"
 
 ;;;
- ; See http://smhasher.googlecode.com/svn/trunk/MurmurHash3.cpp
  ; MurmurHash3_x86_32
- ;
- ; @author Austin Appleby
- ; @author Dimitris Andreou
- ; @author Kurt Alfred Kluever
  ;;
 (about #_"Murmur3"
     (def- #_"int" Murmur3'seed (int 0))
@@ -2027,7 +2023,7 @@
 (about #_"Atom"
     (declare Atom''deref)
 
-    (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data] RefForm
+    (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data]
         java.util.concurrent.Future (get [_] (Atom''deref _))
     )
 
@@ -2166,7 +2162,7 @@
 (about #_"arbace.Delay"
 
 (about #_"Delay"
-    (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e] #_"RefForm")
+    (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e])
 
     (defn #_"Delay" Delay'new [#_"fn" f]
         (Delay'class. (anew [(atom f), (atom nil), (atom nil)]))
@@ -2234,7 +2230,7 @@
 (about #_"arbace.Reduced"
 
 (about #_"Reduced"
-    (defq Reduced [#_"Object" val] RefForm)
+    (defq Reduced [#_"Object" val])
 
     (defn #_"Reduced" Reduced'new [#_"Object" val]
         (Reduced'class. (anew [val]))
@@ -15765,7 +15761,7 @@
 (defn repl []
     (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
         (loop []
-            (-/print "\033[31mArbace \033[32m=> \033[0m")
+            (print "\033[31mArbace \033[32m=> \033[0m")
             (flush)
             (-> (read) (Compiler'eval scope) (prn))
             (recur)
