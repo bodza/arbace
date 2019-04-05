@@ -14987,29 +14987,26 @@
 (about #_"arbace.LispReader"
 
 (about #_"LispReader"
-    (def #_"Var" ^:dynamic *arg-env*   ) ;; sorted-map num->gensymbol
-    (def #_"Var" ^:dynamic *gensym-env*) ;; symbol->gensymbol
-
     (defn #_"Symbol" LispReader'garg [#_"int" n]
         (symbol (str (if (= n -1) "args" (str "arg" n)) "__" (next-id!) "#"))
     )
 
-    (defn #_"Symbol" LispReader'registerArg [#_"int" n]
-        (when (bound? (var! *arg-env*)) => (throw! "arg literal not in #()")
-            (or (get (var-get! *arg-env*) n)
+    (defn #_"Symbol" LispReader'registerArg [#_"map" scope, #_"int" n]
+        (when (contains? scope :'arg-env) => (throw! "arg literal not in #()")
+            (or (get @(get scope :'arg-env) n)
                 (let [#_"Symbol" sym (LispReader'garg n)]
-                    (var-swap! *arg-env* assoc n sym)
+                    (swap! (get scope :'arg-env) assoc n sym)
                     sym
                 )
             )
         )
     )
 
-    (defn #_"Symbol" LispReader'registerGensym [#_"Symbol" sym]
-        (when (bound? (var! *gensym-env*)) => (throw! "gensym literal not in syntax-quote")
-            (or (get (var-get! *gensym-env*) sym)
+    (defn #_"Symbol" LispReader'registerGensym [#_"map" scope, #_"Symbol" sym]
+        (when (contains? scope :'gensym-env) => (throw! "gensym literal not in syntax-quote")
+            (or (get @(get scope :'gensym-env) sym)
                 (let [#_"Symbol" gsym (symbol (str (:name sym) "__" (next-id!) "__auto__"))]
-                    (var-swap! *gensym-env* assoc sym gsym)
+                    (swap! (get scope :'gensym-env) assoc sym gsym)
                     gsym
                 )
             )
@@ -15161,9 +15158,9 @@
     )
 
     (defn #_"Object" LispReader'read
-        ([#_"PushbackReader" r] (LispReader'read r, true, nil))
-        ([#_"PushbackReader" r, #_"boolean" eofIsError, #_"Object" eofValue] (LispReader'read r, eofIsError, eofValue, nil, nil))
-        ([#_"PushbackReader" r, #_"boolean" eofIsError, #_"Object" eofValue, #_"Character" returnOn, #_"Object" returnOnValue]
+        ([#_"PushbackReader" r, #_"map" scope] (LispReader'read r, scope, true, nil))
+        ([#_"PushbackReader" r, #_"map" scope, #_"boolean" eofIsError, #_"Object" eofValue] (LispReader'read r, scope, eofIsError, eofValue, nil, nil))
+        ([#_"PushbackReader" r, #_"map" scope, #_"boolean" eofIsError, #_"Object" eofValue, #_"Character" returnOn, #_"Object" returnOnValue]
             (loop []
                 (let [#_"char" ch (loop-when-recur [ch (LispReader'read1 r)] (and (some? ch) (LispReader'isWhitespace ch)) [(LispReader'read1 r)] => ch)]
                     (cond
@@ -15174,9 +15171,9 @@
                         (LispReader'isDigit ch, 10)
                             (LispReader'readNumber r, ch)
                         :else
-                            (let [#_"IFn" fn (get LispReader'macros ch)]
-                                (if (some? fn)
-                                    (let [#_"Object" o (fn r ch)]
+                            (let [#_"fn" f'macro (get LispReader'macros ch)]
+                                (if (some? f'macro)
+                                    (let [#_"Object" o (f'macro r scope ch)]
                                         ;; no op macros return the reader
                                         (recur-when (identical? o r) [] => o)
                                     )
@@ -15238,9 +15235,9 @@
     (def- #_"any" LispReader'READ_EOF (anew 0))
     (def- #_"any" LispReader'READ_FINISHED (anew 0))
 
-    (defn #_"vector" LispReader'readDelimitedForms [#_"PushbackReader" r, #_"char" delim]
+    (defn #_"vector" LispReader'readDelimitedForms [#_"PushbackReader" r, #_"map" scope, #_"char" delim]
         (loop [#_"vector" v (vector)]
-            (let [#_"Object" form (LispReader'read r, false, LispReader'READ_EOF, delim, LispReader'READ_FINISHED)]
+            (let [#_"Object" form (LispReader'read r, scope, false, LispReader'READ_EOF, delim, LispReader'READ_FINISHED)]
                 (condp identical? form
                     LispReader'READ_EOF
                         (throw! "EOF while reading")
@@ -15254,7 +15251,7 @@
 )
 
 (about #_"RegexReader"
-    (defn #_"Object" regex-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" regex-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
                 (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
@@ -15302,7 +15299,7 @@
         )
     )
 
-    (defn #_"Object" string-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" string-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
                 (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading string")
@@ -15318,43 +15315,43 @@
 )
 
 (about #_"CommentReader"
-    (defn #_"Object" comment-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" comment-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (while (not (any = (LispReader'read1 r) nil \newline \return)))
         r
     )
 )
 
 (about #_"DiscardReader"
-    (defn #_"Object" discard-reader [#_"PushbackReader" r, #_"char" _delim]
-        (LispReader'read r)
+    (defn #_"Object" discard-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (LispReader'read r, scope)
         r
     )
 )
 
 (about #_"QuoteReader"
-    (defn #_"Object" quote-reader [#_"PushbackReader" r, #_"char" _delim]
-        (list (symbol! 'quote) (LispReader'read r))
+    (defn #_"Object" quote-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (list (symbol! 'quote) (LispReader'read r, scope))
     )
 )
 
 (about #_"DerefReader"
-    (defn #_"Object" deref-reader [#_"PushbackReader" r, #_"char" _delim]
-        (list (symbol! `deref) (LispReader'read r))
+    (defn #_"Object" deref-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (list (symbol! `deref) (LispReader'read r, scope))
     )
 )
 
 (about #_"VarReader"
-    (defn #_"Object" var-reader [#_"PushbackReader" r, #_"char" _delim]
-        (list (symbol! 'var) (LispReader'read r))
+    (defn #_"Object" var-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (list (symbol! 'var) (LispReader'read r, scope))
     )
 )
 
 (about #_"DispatchReader"
     (declare LispReader'dispatchMacros)
 
-    (defn #_"Object" dispatch-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" dispatch-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
-            (let-when [#_"IFn" fn (get LispReader'dispatchMacros ch)] (nil? fn) => (fn r ch)
+            (let-when [#_"fn" f'macro (get LispReader'dispatchMacros ch)] (nil? f'macro) => (f'macro r scope ch)
                 (LispReader'unread r, ch)
                 (throw! (str "no dispatch macro for: " ch))
             )
@@ -15363,24 +15360,24 @@
 )
 
 (about #_"FnReader"
-    (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"char" _delim]
-        (when-not (bound? (var! *arg-env*)) => (throw! "nested #()s are not allowed")
-            (binding [*arg-env* (sorted-map)]
+    (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (when-not (contains? scope :'arg-env) => (throw! "nested #()s are not allowed")
+            (let [scope (assoc scope :'arg-env (atom (sorted-map)))]
                 (LispReader'unread r, \()
                 (let [
-                    #_"Object" form (LispReader'read r)
+                    #_"Object" form (LispReader'read r, scope)
                     #_"vector" args (vector)
                     args
-                        (when-some [#_"seq" rs (rseq (var-get! *arg-env*))] => args
+                        (when-some [#_"seq" rs (rseq @(get scope :'arg-env))] => args
                             (let [args
                                     (let-when [#_"int" n (key (first rs))] (pos? n) => args
                                         (loop-when-recur [args args #_"int" i 1]
                                                          (<= i n)
-                                                         [(conj args (or (get (var-get! *arg-env*) i) (LispReader'garg i))) (inc i)]
+                                                         [(conj args (or (get @(get scope :'arg-env) i) (LispReader'garg i))) (inc i)]
                                                       => args
                                         )
                                     )]
-                                (when-some [#_"Object" rest (get (var-get! *arg-env*) -1)] => args
+                                (when-some [#_"Object" rest (get @(get scope :'arg-env) -1)] => args
                                     (conj args (symbol! '&) rest)
                                 )
                             )
@@ -15394,16 +15391,16 @@
 )
 
 (about #_"ArgReader"
-    (defn #_"Object" arg-reader [#_"PushbackReader" r, #_"char" _delim]
-        (when (bound? (var! *arg-env*)) => (LispReader'interpretToken (LispReader'readToken r, \%))
+    (defn #_"Object" arg-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (when (contains? scope :'arg-env) => (LispReader'interpretToken (LispReader'readToken r, \%))
             (let [#_"char" ch (LispReader'read1 r) _ (LispReader'unread r, ch)]
                 ;; % alone is first arg
                 (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isTerminatingMacro ch))
-                    (LispReader'registerArg 1)
-                    (let [#_"Object" n (LispReader'read r)]
+                    (LispReader'registerArg scope, 1)
+                    (let [#_"Object" n (LispReader'read r, scope)]
                         (cond
-                            (= n '&)    (LispReader'registerArg -1)
-                            (number? n) (LispReader'registerArg (int! n))
+                            (= n '&)    (LispReader'registerArg scope, -1)
+                            (number? n) (LispReader'registerArg scope, (int! n))
                             :else       (throw! "arg literal must be %, %& or %integer")
                         )
                     )
@@ -15414,15 +15411,15 @@
 )
 
 (about #_"MetaReader"
-    (defn #_"Object" meta-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let [#_"Object" _meta (LispReader'read r)
+    (defn #_"Object" meta-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (let [#_"Object" _meta (LispReader'read r, scope)
               _meta
                 (cond
                     (keyword? _meta) {_meta true}
                     (map? _meta)      _meta
                     :else (throw! "metadata must be Keyword or Map")
                 )
-              #_"Object" o (LispReader'read r)]
+              #_"Object" o (LispReader'read r, scope)]
             (when (satisfies? IMeta o) => (throw! "metadata can only be applied to IMetas")
                 (if (satisfies? IReference o)
                     (do
@@ -15458,20 +15455,20 @@
 
     (declare SyntaxQuoteReader'syntaxQuote)
 
-    (defn- #_"seq" SyntaxQuoteReader'sqExpandList [#_"seq" s]
+    (defn- #_"seq" SyntaxQuoteReader'sqExpandList [#_"map" scope, #_"seq" s]
         (loop-when [#_"vector" v (vector) s s] (some? s) => (seq v)
             (let [#_"Object" item (first s)
                   v (cond
                         (SyntaxQuoteReader'isUnquote item)         (conj v (list (symbol! `list) (second item)))
                         (SyntaxQuoteReader'isUnquoteSplicing item) (conj v (second item))
-                        :else                                      (conj v (list (symbol! `list) (SyntaxQuoteReader'syntaxQuote item)))
+                        :else                                      (conj v (list (symbol! `list) (SyntaxQuoteReader'syntaxQuote scope, item)))
                     )]
                 (recur v (next s))
             )
         )
     )
 
-    (defn #_"Object" SyntaxQuoteReader'syntaxQuote [#_"Object" form]
+    (defn #_"Object" SyntaxQuoteReader'syntaxQuote [#_"map" scope, #_"Object" form]
         (let [#_"Object" q
                 (cond
                     (Compiler'isSpecial form)
@@ -15481,7 +15478,7 @@
                               form
                                 (cond
                                     (and (nil? ns) (.endsWith n, "#"))
-                                        (LispReader'registerGensym (symbol (.substring n, 0, (dec (count n)))))
+                                        (LispReader'registerGensym scope, (symbol (.substring n, 0, (dec (count n)))))
                                     (and (nil? ns) (.endsWith n, "."))
                                         (symbol (str (:name (Compiler'resolveSymbol (symbol (.substring n, 0, (dec (count n)))))) "."))
                                     (and (nil? ns) (.startsWith n, "."))
@@ -15501,14 +15498,14 @@
                     (coll? form)
                         (cond
                             (map? form)
-                                (list (symbol! `apply) (symbol! `hash-map) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq (mapcat identity form))))))
+                                (list (symbol! `apply) (symbol! `hash-map) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList scope, (seq (mapcat identity form))))))
                             (vector? form)
-                                (list (symbol! `apply) (symbol! `vector) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq form)))))
+                                (list (symbol! `apply) (symbol! `vector) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
                             (set? form)
-                                (list (symbol! `apply) (symbol! `hash-set) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList (seq form)))))
+                                (list (symbol! `apply) (symbol! `hash-set) (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
                             (or (seq? form) (list? form))
                                 (when-some [#_"seq" s (seq form)] => (cons (symbol! `list) nil)
-                                    (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList s)))
+                                    (list (symbol! `seq) (cons (symbol! `concat) (SyntaxQuoteReader'sqExpandList scope, s)))
                                 )
                             :else
                                 (throw! "unknown collection type")
@@ -15519,26 +15516,26 @@
                         (list (symbol! 'quote) form)
                 )]
             (when (and (satisfies? IObj form) (seq (meta form)) (not (SyntaxQuoteReader'isUnquote form))) => q
-                (list (symbol! `with-meta) q (SyntaxQuoteReader'syntaxQuote (meta form)))
+                (list (symbol! `with-meta) q (SyntaxQuoteReader'syntaxQuote scope, (meta form)))
             )
         )
     )
 
-    (defn #_"Object" syntax-quote-reader [#_"PushbackReader" r, #_"char" _delim]
-        (binding [*gensym-env* (hash-map)]
-            (SyntaxQuoteReader'syntaxQuote (LispReader'read r))
+    (defn #_"Object" syntax-quote-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (let [scope (assoc scope :'gensym-env (atom (hash-map)))]
+            (SyntaxQuoteReader'syntaxQuote scope, (LispReader'read r, scope))
         )
     )
 )
 
 (about #_"UnquoteReader"
-    (defn #_"Object" unquote-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" unquote-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (if (= ch \@)
-                (list (symbol! `unquote-splicing) (LispReader'read r))
+                (list (symbol! `unquote-splicing) (LispReader'read r, scope))
                 (do
                     (LispReader'unread r, ch)
-                    (list (symbol! `unquote) (LispReader'read r))
+                    (list (symbol! `unquote) (LispReader'read r, scope))
                 )
             )
         )
@@ -15546,7 +15543,7 @@
 )
 
 (about #_"CharacterReader"
-    (defn #_"Object" character-reader [#_"PushbackReader" r, #_"char" _delim]
+    (defn #_"Object" character-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (let [#_"String" token (LispReader'readToken r, ch)]
                 (when-not (= (count token) 1) => (Character/valueOf (nth token 0))
@@ -15585,20 +15582,20 @@
 )
 
 (about #_"ListReader"
-    (defn #_"Object" list-reader [#_"PushbackReader" r, #_"char" _delim]
-        (apply list (LispReader'readDelimitedForms r, \)))
+    (defn #_"Object" list-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (apply list (LispReader'readDelimitedForms r, scope, \)))
     )
 )
 
 (about #_"VectorReader"
-    (defn #_"Object" vector-reader [#_"PushbackReader" r, #_"char" _delim]
-        (vec (LispReader'readDelimitedForms r, \]))
+    (defn #_"Object" vector-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (vec (LispReader'readDelimitedForms r, scope, \]))
     )
 )
 
 (about #_"MapReader"
-    (defn #_"Object" map-reader [#_"PushbackReader" r, #_"char" _delim]
-        (let [#_"vector" v (LispReader'readDelimitedForms r, \})]
+    (defn #_"Object" map-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (let [#_"vector" v (LispReader'readDelimitedForms r, scope, \})]
             (when (even? (count v)) => (throw! "map literal must contain an even number of forms")
                 (RT'map v)
             )
@@ -15607,13 +15604,13 @@
 )
 
 (about #_"SetReader"
-    (defn #_"Object" set-reader [#_"PushbackReader" r, #_"char" _delim]
-        (PersistentHashSet'createWithCheck (LispReader'readDelimitedForms r, \}))
+    (defn #_"Object" set-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+        (PersistentHashSet'createWithCheck (LispReader'readDelimitedForms r, scope, \}))
     )
 )
 
 (about #_"UnmatchedDelimiterReader"
-    (defn #_"Object" unmatched-delimiter-reader [#_"PushbackReader" _r, #_"char" delim]
+    (defn #_"Object" unmatched-delimiter-reader [#_"PushbackReader" _r, #_"map" scope, #_"char" delim]
         (throw! (str "unmatched delimiter: " delim))
     )
 )
@@ -15652,19 +15649,13 @@
 )
 
 ;;;
- ; Reads the next object from stream, which must be an instance of
- ; java.io.PushbackReader or some derivee. stream defaults to the
- ; current value of *in*.
- ;
- ; Opts is a persistent map with valid keys:
- ;
- ; :eof - on eof, return value unless :eofthrow, then throw.
- ;        if not specified, will throw.
+ ; Reads the next object from stream, which must be an instance of java.io.PushbackReader
+ ; or some derivee. stream defaults to the current value of *in*.
  ;;
 (defn read
     ([] (read -/*in*))
     ([s] (read s true nil))
-    ([s eof-error? eof-value] (LispReader'read s (boolean eof-error?) eof-value))
+    ([s eof-error? eof-value] (LispReader'read s, nil, (boolean eof-error?), eof-value))
 )
 
 (about #_"arbace.Compiler"
@@ -15677,7 +15668,7 @@
         ]
             (loop [#_"value" value nil]
                 (LispReader'consumeWhitespaces r)
-                (let-when [#_"edn" form (LispReader'read r, false, EOF)] (identical? form EOF) => (recur (Compiler'eval form, scope))
+                (let-when [#_"edn" form (LispReader'read r, nil, false, EOF)] (identical? form EOF) => (recur (Compiler'eval form, scope))
                     value
                 )
             )
