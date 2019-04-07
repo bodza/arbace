@@ -6,13 +6,17 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* -> = case conj cons defmacro defn defn- doseq fn identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [*ns* -> = and case conj cons defmacro defn defn- doseq fn identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when when-not with-meta]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
-(import! [java.lang Error #_String Thread])
+(import!
+    [java.lang Boolean #_CharSequence Error #_String Thread]
+    [java.util.regex Matcher Pattern]
+    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
+)
 
 (defmacro refer! [ns s]
     (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (-/select-keys (meta v) [:dynamic :macro :private]))] `(def ~n ~v))]
@@ -129,27 +133,69 @@
 
 (defn thread [] (Thread/currentThread))
 
+(about #_"graalfn.HotSpot"
+
+(about #_"HotSpot"
+    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
+
+    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
+    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
+
+    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
+    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
+
+    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
+        (throw! "use G1 with compressed oops")
+    )
+)
+)
+
+(about #_"java.util.regex"
+
+(about #_"Pattern"
+
+(defn pattern? [x] (-/instance? Pattern x))
+
+(defn #_"Pattern" Pattern'compile  [#_"String" s]                         (Pattern/compile s))
+(defn #_"Matcher" Pattern''matcher [#_"Pattern" this, #_"CharSequence" s] (.matcher this, s))
+(defn #_"String"  Pattern''pattern [#_"Pattern" this]                     (.pattern this))
+)
+
+(about #_"Matcher"
+
+(defn matcher? [x] (-/instance? Matcher x))
+
+(defn #_"boolean" Matcher''find       [#_"Matcher" this] (.find this))
+(defn #_"String"  Matcher''group     ([#_"Matcher" this] (.group this)) ([#_"Matcher" this, #_"int" n] (.group this, n)))
+(defn #_"int"     Matcher''groupCount [#_"Matcher" this] (.groupCount this))
+(defn #_"boolean" Matcher''matches    [#_"Matcher" this] (.matches this))
+)
+)
+
 (refer! - [boolean boolean? identical? integer? long number? satisfies? string?])
 
 (ns arbace.core
     (:refer-clojure :only []) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [boolean boolean? class! defm defp defq defr identical? import! int int! integer? long number? refer! satisfies? string?])
+    (:refer arbace.bore :only [boolean boolean? class! defm defp defq defr identical? import! int int! integer? long matcher? number? pattern? refer! satisfies? string?])
 )
 
 (import!
-    [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System Throwable]
+    [java.lang Appendable Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System Throwable]
     [java.io BufferedReader PushbackReader #_Reader]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.util Arrays Comparator]
-    [java.util.regex Matcher Pattern]
-    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
 
 (refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
+
+(refer! arbace.bore [Pattern'compile Pattern''matcher Pattern''pattern])
+(refer! arbace.bore [Matcher''find Matcher''group Matcher''groupCount Matcher''matches])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
 
@@ -1794,7 +1840,7 @@
         (let [
             a (.append a, "#\"")
             a
-                (loop-when [a a [#_"char" c & #_"seq" r :as #_"seq" s] (seq (.pattern x)) q? false] (some? s) => a
+                (loop-when [a a [#_"char" c & #_"seq" r :as #_"seq" s] (seq (Pattern''pattern x)) q? false] (some? s) => a
                     (case c
                         \\  (let [[c & r] r] (recur (-> a (.append "\\") (.append c))            r (if q? (not= c \E) (= c \Q))))
                         \"                   (recur (-> a (.append (if q? "\\E\\\"\\Q" "\\\""))) r q?)
@@ -1852,7 +1898,7 @@
                         (map? x)    (append-map a x)
                         (set? x)    (append-set a x)
                         (-/char? x) (append-chr a x)
-                        (-/instance? Pattern x) (append-rex a x)
+                        (pattern? x) (append-rex a x)
                         :else       (.append a, (.toString x))
                     )
                 )
@@ -10884,8 +10930,8 @@
                     (Character/valueOf (.charAt #_"CharSequence" coll, n))
                 (.isArray (-/class coll))
                     (Array/get coll, n)
-                (-/instance? Matcher coll)
-                    (.group #_"Matcher" coll, n)
+                (matcher? coll)
+                    (Matcher''group #_"Matcher" coll, n)
                 (map-entry? coll)
                     (let [#_"pair" e coll]
                         (case n 0 (key e) 1 (val e) (throw! "index is out of bounds"))
@@ -10914,9 +10960,9 @@
                     (when (< n (Array/getLength coll)) => not-found
                         (Array/get coll, n)
                     )
-                (-/instance? Matcher coll)
-                    (let-when [#_"Matcher" m coll] (< n (.groupCount m)) => not-found
-                        (.group m, n)
+                (matcher? coll)
+                    (let-when [#_"Matcher" m coll] (< n (Matcher''groupCount m)) => not-found
+                        (Matcher''group m, n)
                     )
                 (map-entry? coll)
                     (let [#_"pair" e coll]
@@ -11881,12 +11927,12 @@
 ;;;
  ; Returns an instance of java.util.regex.Pattern, for use, e.g. in re-matcher.
  ;;
-(defn #_"Pattern" re-pattern [s] (if (-/instance? Pattern s) s (Pattern/compile s)))
+(defn #_"Pattern" re-pattern [s] (if (pattern? s) s (Pattern'compile s)))
 
 ;;;
  ; Returns an instance of java.util.regex.Matcher, for use, e.g. in re-find.
  ;;
-(defn #_"Matcher" re-matcher [#_"Pattern" re s] (.matcher re s))
+(defn #_"Matcher" re-matcher [#_"Pattern" re s] (Pattern''matcher re, s))
 
 ;;;
  ; Returns the groups from the most recent match/find. If there are no
@@ -11895,8 +11941,8 @@
  ; being the entire match.
  ;;
 (defn re-groups [#_"Matcher" m]
-    (let-when [n (.groupCount m)] (pos? n) => (.group m)
-        (into (vector) (for [i (range (inc n))] (.group m i)))
+    (let-when [n (Matcher''groupCount m)] (pos? n) => (Matcher''group m)
+        (into (vector) (for [i (range (inc n))] (Matcher''group m, i)))
     )
 )
 
@@ -11908,7 +11954,7 @@
 (defn re-seq [#_"Pattern" re s]
     (let [m (re-matcher re s)]
         ((fn step []
-            (when (.find m)
+            (when (Matcher''find m)
                 (cons (re-groups m) (lazy-seq (step)))
             )
         ))
@@ -11921,7 +11967,7 @@
  ; Uses re-groups to return the groups.
  ;;
 (defn re-matches [#_"Pattern" re s]
-    (let-when [m (re-matcher re s)] (.matches m)
+    (let-when [m (re-matcher re s)] (Matcher''matches m)
         (re-groups m)
     )
 )
@@ -11933,7 +11979,7 @@
  ;;
 (defn re-find
     ([#_"Matcher" m]
-        (when (.find m)
+        (when (Matcher''find m)
             (re-groups m)
         )
     )
@@ -12910,25 +12956,6 @@
  ; replacement at the leaves of the tree first.
  ;;
 (defn postwalk-replace [m form] (postwalk #(if (contains? m %) (m %) %) form))
-)
-
-(about #_"graalfn.HotSpot"
-
-(about #_"HotSpot"
-    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
-
-    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
-    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
-
-    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
-
-    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
-    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
-
-    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
-        (throw! "use G1 with compressed oops")
-    )
-)
 )
 
 (about #_"arbace.Compiler"
@@ -14825,17 +14852,17 @@
 
     (defn- #_"Object" LispReader'matchNumber [#_"String" s]
         (let [_ (or
-                    (let-when [#_"Matcher" m (.matcher LispReader'rxInteger, s)] (.matches m)
-                        (when (nil? (.group m, 2)) => (Long/valueOf 0)
+                    (let-when [#_"Matcher" m (Pattern''matcher LispReader'rxInteger, s)] (Matcher''matches m)
+                        (when (nil? (Matcher''group m, 2)) => (Long/valueOf 0)
                             (let [[#_"String" n #_"int" radix]
                                     (cond-some
-                                        [n (.group m, 3)] [n 10]
-                                        [n (.group m, 4)] [n 16]
-                                        [n (.group m, 5)] [n 8]
-                                        [n (.group m, 7)] [n (Integer/parseInt (.group m, 6))]
+                                        [n (Matcher''group m, 3)] [n 10]
+                                        [n (Matcher''group m, 4)] [n 16]
+                                        [n (Matcher''group m, 5)] [n 8]
+                                        [n (Matcher''group m, 7)] [n (Integer/parseInt (Matcher''group m, 6))]
                                     )]
                                 (when (some? n) => :nil
-                                    (let [#_"BigInteger" bn (BigInteger. n, radix) bn (if (= (.group m, 1) "-") (.negate bn) bn)]
+                                    (let [#_"BigInteger" bn (BigInteger. n, radix) bn (if (= (Matcher''group m, 1) "-") (.negate bn) bn)]
                                         (when (< (.bitLength bn) 64) => bn
                                             (Long/valueOf (.longValue bn))
                                         )
@@ -14844,9 +14871,9 @@
                             )
                         )
                     )
-                    (let-when [#_"Matcher" m (.matcher LispReader'rxRatio, s)] (.matches m)
-                        (let [#_"String" n (.group m, 1) n (if (.startsWith n, "+") (.substring n, 1) n)]
-                            (Numbers'divide (BigInteger. n), (BigInteger. (.group m, 2)))
+                    (let-when [#_"Matcher" m (Pattern''matcher LispReader'rxRatio, s)] (Matcher''matches m)
+                        (let [#_"String" n (Matcher''group m, 1) n (if (.startsWith n, "+") (.substring n, 1) n)]
+                            (Numbers'divide (BigInteger. n), (BigInteger. (Matcher''group m, 2)))
                         )
                     )
                 )]
@@ -14898,8 +14925,8 @@
     (def- #_"Pattern" LispReader'rxSymbol #"[:]?([\D&&[^/]].*/)?(/|[\D&&[^/]][^/]*)")
 
     (defn- #_"Object" LispReader'matchSymbol [#_"String" s]
-        (let-when [#_"Matcher" m (.matcher LispReader'rxSymbol, s)] (.matches m)
-            (let [#_"String" ns (.group m, 1) #_"String" n (.group m, 2)]
+        (let-when [#_"Matcher" m (Pattern''matcher LispReader'rxSymbol, s)] (Matcher''matches m)
+            (let [#_"String" ns (Matcher''group m, 1) #_"String" n (Matcher''group m, 2)]
                 (cond
                     (or (and (some? ns) (.endsWith ns, ":/")) (.endsWith n, ":") (not= (.indexOf s, "::", 1) -1))
                         nil
@@ -15020,7 +15047,7 @@
 )
 
 (about #_"RegexReader"
-    (defn #_"Object" regex-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
+    (defn #_"Pattern" regex-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (let [#_"StringBuilder" sb (StringBuilder.)]
             (loop []
                 (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
@@ -15035,7 +15062,7 @@
                     )
                 )
             )
-            (Pattern/compile (.toString sb))
+            (Pattern'compile (.toString sb))
         )
     )
 )
