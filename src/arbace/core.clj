@@ -137,7 +137,7 @@
 )
 
 (import!
-    [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System ThreadLocal Throwable Void]
+    [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Integer Long Number Object String StringBuilder System Throwable]
     [java.io BufferedReader PushbackReader #_Reader]
     [java.lang.ref #_Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array]
@@ -10969,8 +10969,6 @@
 (about #_"arbace.Var"
 
 (about #_"Var"
-    (def #_"ThreadLocal" Var'dvals (ThreadLocal.))
-
     (defn- #_"Appendable" Var'append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
         (if (some? ns)
             (-> a (.append "#'") (append (:name ns)) (.append "/") (append sym))
@@ -11038,17 +11036,13 @@
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
         (when-not (-/instance? clojure.lang.Var this) => (.isBound this)
-            (or (Var''hasRoot this) (contains? (first (.get Var'dvals)) this))
+            (Var''hasRoot this)
         )
-    )
-
-    (defn #_"atom" Var''getThreadBinding [#_"Var" this]
-        (get (first (.get Var'dvals)) this)
     )
 
     (defn- #_"Object" Var''get [#_"Var" this]
         (when-not (-/instance? clojure.lang.Var this) => (.get this)
-            @(or (Var''getThreadBinding this) (:root this))
+            @(:root this)
         )
     )
 
@@ -11056,20 +11050,6 @@
  ; Gets the value in the var object.
  ;;
 (defn var-get [#_"var" x] (Var''get x))
-
-    (defn- #_"Object" Var''set [#_"Var" this, #_"Object" val]
-        (let [#_"atom" v (Var''getThreadBinding this)]
-            (when (some? v) => (throw! (str "can't change/establish root binding of: " (:sym this) " with var-set/set!"))
-                (reset! v val)
-            )
-        )
-    )
-
-;;;
- ; Sets the value in the var object to val.
- ; The var must be thread-locally bound.
- ;;
-(defn var-set [#_"var" x val] (Var''set x val))
 
     (defn #_"void" Var''setMacro [#_"Var" this]
         (alter-meta! this assoc :macro true)
@@ -11109,10 +11089,6 @@
         )
     )
 
-(declare resolve)
-
-(defmacro var! [v] `(resolve '~v))
-
 (declare the-ns)
 
 ;;;
@@ -11139,149 +11115,6 @@
         )
     )
 )
-
-;;;
- ; WARNING: This is a low-level function.
- ; Prefer high-level macros like binding where ever possible.
- ;
- ; Takes a map of Var/value pairs. Binds each Var to the associated value for
- ; the current thread. Each call *MUST* be accompanied by a matching call to
- ; pop-thread-bindings wrapped in a try-finally!
- ;
- ; (push-thread-bindings bindings)
- ; (try
- ; ...
- ; (finally
- ; (pop-thread-bindings)))
- ;;
-(defn #_"void" push-thread-bindings [#_"{var value}" bindings]
-    (let [#_"seq" l (.get Var'dvals)]
-        (loop-when [#_"{var atom}" m (first l) #_"seq" s (seq bindings)] (some? s) => (.set Var'dvals, (cons m l))
-            (let [#_"pair" e (first s)]
-                (recur (assoc m (key e) (atom (val e))) (next s))
-            )
-        )
-    )
-    nil
-)
-
-;;;
- ; Pop one set of bindings pushed with push-binding before.
- ; It is an error to pop bindings without pushing before.
- ;;
-(defn #_"void" pop-thread-bindings []
-    (when-some [#_"seq" s (.get Var'dvals)] => (throw! "pop without matching push")
-        (.set Var'dvals, (next s))
-    )
-    nil
-)
-
-;;;
- ; Get a map with the Var/value pairs which is currently in effect for the current thread.
- ;;
-(defn #_"{var value}" get-thread-bindings []
-    (loop-when [#_"{var value}" m (transient (hash-map)) #_"seq" s (seq (first (.get Var'dvals)))] (some? s) => (persistent! m)
-        (let [#_"pair" e (first s)]
-            (recur (assoc! m (key e) @(val e)) (next s))
-        )
-    )
-)
-
-;;;
- ; binding => var-symbol init-expr
- ;
- ; Creates new bindings for the (already-existing) vars, with the
- ; supplied initial values, executes the exprs in an implicit do, then
- ; re-establishes the bindings that existed before. The new bindings
- ; are made in parallel (unlike let); all init-exprs are evaluated
- ; before the vars are bound to their new values.
- ;;
-(defmacro binding [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
-    )
-    (letfn [(var-ize [var-vals]
-                (loop-when-recur [v (vector) s (seq var-vals)] s [(conj v `(var! ~(first s)) (second s)) (next (next s))] => (seq v))
-            )]
-        `(do
-            (push-thread-bindings (hash-map ~@(var-ize bindings)))
-            (try
-                ~@body
-                (finally
-                    (pop-thread-bindings)
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Takes a map of Var/value pairs. Installs for the given Vars the associated
- ; values as thread-local bindings. Then calls f with the supplied arguments.
- ; Pops the installed bindings after f returned. Returns whatever f returns.
- ;;
-(defn with-bindings* [binding-map f & args]
-    (push-thread-bindings binding-map)
-    (try
-        (apply f args)
-        (finally
-            (pop-thread-bindings)
-        )
-    )
-)
-
-;;;
- ; Takes a map of Var/value pairs. Installs for the given Vars the associated
- ; values as thread-local bindings. Then executes body. Pops the installed
- ; bindings after body was evaluated. Returns the value of body.
- ;;
-(defmacro with-bindings [binding-map & body]
-    `(with-bindings* ~binding-map (fn [] ~@body))
-)
-
-;;;
- ; varbinding => symbol init-expr
- ;
- ; Executes the exprs in a context in which the symbols are bound to vars
- ; with per-thread bindings to the init-exprs. The symbols refer to the
- ; var objects themselves, and must be accessed with var-get and var-set.
- ;;
-(defmacro with-local-vars [bindings & body]
-    (assert-args
-        (vector? bindings) "a vector for its binding"
-        (even? (count bindings)) "an even number of forms in binding vector"
-    )
-    `(let [~@(interleave (take-nth 2 bindings) (repeat '(Var'new nil, nil)))]
-        (push-thread-bindings (hash-map ~@bindings))
-        (try
-            ~@body
-            (finally
-                (pop-thread-bindings)
-            )
-        )
-    )
-)
-
-;;;
- ; Returns a function, which will install the same bindings in effect as in
- ; the thread at the time bound-fn* was called and then call f with any given
- ; arguments. This may be used to define a helper function which runs on a
- ; different thread, but needs the same bindings in place.
- ;;
-(defn- bound-fn* [f]
-    (let [bindings (get-thread-bindings)]
-        (fn [& args] (apply with-bindings* bindings f args))
-    )
-)
-
-;;;
- ; Returns a function defined by the given tail, which will install the
- ; same bindings in effect as in the thread at the time bound-fn was called.
- ; This may be used to define a helper function which runs on a different
- ; thread, but needs the same bindings in place.
- ;;
-(defmacro bound-fn [& tail] `(bound-fn* (fn ~@tail)))
 
     (defn- #_"Object" Var''invoke
         ([#_"Var" this]                                                   (IFn'''invoke @this))
@@ -11340,12 +11173,6 @@
 (defn bound? [& vars] (every? #(Var''isBound #_"var" %) vars))
 
 ;;;
- ; Returns true if all of the vars provided as arguments have thread-local bindings.
- ; Implies that set!'ing the provided vars will succeed. Returns true if no vars are provided.
- ;;
-(defn thread-bound? [& vars] (every? #(Var''getThreadBinding #_"var" %) vars))
-
-;;;
  ; defs name to have the root value of the expr iff the named var has no root value,
  ; else expr is unevaluated.
  ;;
@@ -11354,11 +11181,6 @@
         (def ~name ~expr)
     )
 )
-
-(defmacro var-get! [x]   `(var-get (var! ~x)))
-(defmacro var-set! [x y] `(var-set (var! ~x) ~y))
-
-(defmacro var-swap! [x f & z] `(var-set! ~x (~f (var-get! ~x) ~@z)))
 )
 
 (about #_"arbace.Namespace"
@@ -13114,16 +12936,11 @@
         (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"map" scope, #_"gen" gen])
     )
 
-    (defp Assignable
-        (#_"gen" Assignable'''emitAssign [#_"Assignable" this, #_"Context" context, #_"map" scope, #_"gen" gen, #_"Expr" val])
-    )
-
     (defp Recur)
 )
 
 (about #_"arbace.Compiler"
     (defp LiteralExpr)
-    (defp AssignExpr)
     (defp UnresolvedVarExpr)
     (defp VarExpr)
     (defp TheVarExpr)
@@ -13502,39 +13319,6 @@
     )
 )
 
-(about #_"AssignExpr"
-    (defr AssignExpr [])
-
-    (defn #_"AssignExpr" AssignExpr'new [#_"Assignable" target, #_"Expr" val]
-        (merge (class! AssignExpr)
-            (hash-map
-                #_"Assignable" :target target
-                #_"Expr" :val val
-            )
-        )
-    )
-
-    (declare Compiler'analyze)
-
-    (defn #_"Expr" AssignExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
-        (when (= (count form) 3) => (throw! "malformed assignment, expecting (set! target val)")
-            (let [#_"Expr" target (Compiler'analyze (second form), scope)]
-                (when (satisfies? Assignable target) => (throw! "invalid assignment target")
-                    (AssignExpr'new target, (Compiler'analyze (third form), scope))
-                )
-            )
-        )
-    )
-
-    (defn- #_"gen" AssignExpr''emit [#_"AssignExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (Assignable'''emitAssign (:target this), context, scope, gen, (:val this))
-    )
-
-    (defm AssignExpr Expr
-        (Expr'''emit => AssignExpr''emit)
-    )
-)
-
 (about #_"UnresolvedVarExpr"
     (defr UnresolvedVarExpr [])
 
@@ -13577,24 +13361,8 @@
         )
     )
 
-    (defn- #_"gen" VarExpr''emitAssign [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen, #_"Expr" val]
-        (let [
-            gen (Gen''push gen, (:var this))
-            gen (Expr'''emit val, :Context'EXPRESSION, scope, gen)
-            gen (Gen''invoke gen, var-set, 2)
-        ]
-            (when (= context :Context'STATEMENT) => gen
-                (Gen''pop gen)
-            )
-        )
-    )
-
     (defm VarExpr Expr
         (Expr'''emit => VarExpr''emit)
-    )
-
-    (defm VarExpr Assignable
-        (Assignable'''emitAssign => VarExpr''emitAssign)
     )
 )
 
@@ -13638,6 +13406,8 @@
             )
         )
     )
+
+    (declare Compiler'analyze)
 
     (defn #_"Expr" BodyExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let [#_"seq" s form s (if (= (first s) 'do) (next s) s)
@@ -14857,7 +14627,6 @@
                     'monitor-exit  MonitorExpr'parse
                     'quote         LiteralExpr'parse
                     'recur         RecurExpr'parse
-                    'set!          AssignExpr'parse
                     'throw         ThrowExpr'parse
                     'try           TryExpr'parse
                     'var           TheVarExpr'parse
