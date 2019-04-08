@@ -13,13 +13,13 @@
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
 (import!
-    [java.lang Boolean Character CharSequence Error Integer Long #_String Thread]
-    [java.lang.ref #_Reference ReferenceQueue WeakReference]
+    [java.lang Boolean Character CharSequence Error Integer Long StringBuilder System Thread]
+    [java.lang.ref ReferenceQueue WeakReference]
     [java.lang.reflect Array]
-    [java.io BufferedReader PushbackReader #_Reader]
+    [java.io PushbackReader]
     [java.util Arrays #_Comparator]
     [java.util.regex Matcher Pattern]
-    [jdk.vm.ci.hotspot CompilerToVM HotSpotJVMCIRuntime HotSpotVMConfig]
+    [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
@@ -141,10 +141,14 @@
 
 (about #_"java.lang"
 
+(about #_"Appendable"
+    (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|CharSequence" x] (.append this, x))
+)
+
 (about #_"Character"
-    (defn #_"int"       Character'digit        [#_"char" ch, #_"int" radix] (.digit ch, radix))
-    (defn #_"boolean"   Character'isWhitespace [#_"char" ch]                (.isWhitespace ch))
-    (defn #_"Character" Character'valueOf      [#_"char" ch]                (.valueOf ch))
+    (defn #_"int"       Character'digit        [#_"char" ch, #_"int" radix] (Character/digit ch, radix))
+    (defn #_"boolean"   Character'isWhitespace [#_"char" ch]                (Character/isWhitespace ch))
+    (defn #_"Character" Character'valueOf      [#_"char" ch]                (Character/valueOf ch))
 )
 
 (about #_"CharSequence"
@@ -168,7 +172,38 @@
     (def #_"long" Long'MAX_VALUE Long/MAX_VALUE)
     (def #_"long" Long'MIN_VALUE Long/MIN_VALUE)
 
-    (defn #_"Long" Long'valueOf [#_"long" l] (.valueOf l))
+    (defn #_"Long" Long'valueOf [#_"long" l] (Long/valueOf l))
+)
+
+(about #_"Number"
+    (defn #_"long"   Number''longValue [#_"Number" this] (.longValue this))
+    (defn #_"String" Number''toString  [#_"Number" this] (.toString this))
+)
+
+(about #_"Object"
+    (defn #_"int"    Object''hashCode [#_"Object" this] (.hashCode this))
+    (defn #_"String" Object''toString [#_"Object" this] (.toString this))
+)
+
+(about #_"String"
+    (defn #_"char"    String''charAt     [#_"String" this, #_"int" i]    (.charAt this, i))
+    (defn #_"boolean" String''endsWith   [#_"String" this, #_"String" s] (.endsWith this, s))
+    (defn #_"int"     String''indexOf   ([#_"String" this, #_"int" ch]   (.indexOf this, ch))     ([#_"String" this, #_"String" s, #_"int" from] (.indexOf this, s, from)))
+    (defn #_"String"  String''intern     [#_"String" this]               (.intern this))
+    (defn #_"int"     String''length     [#_"String" this]               (.length this))
+    (defn #_"boolean" String''startsWith [#_"String" this, #_"String" s] (.startsWith this, s))
+    (defn #_"String"  String''substring ([#_"String" this, #_"int" from] (.substring this, from)) ([#_"String" this, #_"int" from, #_"int" over] (.substring this, from, over)))
+)
+
+(about #_"StringBuilder"
+    (defn #_"StringBuilder" StringBuilder'new [] (StringBuilder.))
+
+    (defn #_"StringBuilder" StringBuilder''append   [#_"StringBuilder" this, #_"char" ch] (.append this, ch))
+    (defn #_"String"        StringBuilder''toString [#_"StringBuilder" this]              (.toString this))
+)
+
+(about #_"System"
+    (defn #_"void" System'arraycopy [#_"array" a, #_"int" i, #_"array" b, #_"int" j, #_"int" n] (System/arraycopy a, i, b, j, n))
 )
 )
 
@@ -203,6 +238,14 @@
 
 (about #_"BufferedReader"
     (defn #_"String" BufferedReader''readLine [#_"BufferedReader" this] (.readLine this))
+)
+
+(about #_"Flushable"
+    (defn #_"void" Flushable''flush [#_"Flushable" this] (.flush this))
+)
+
+(about #_"PrintWriter"
+    (defn #_"void" PrintWriter''println [#_"PrintWriter" this, #_"String" s] (.println this, s))
 )
 
 (about #_"PushbackReader"
@@ -285,6 +328,7 @@
     (defn #_"BigInteger" BigInteger''remainder [#_"BigInteger" this, #_"BigInteger" x] (.remainder this, x))
     (defn #_"int"        BigInteger''signum    [#_"BigInteger" this]                   (.signum this))
     (defn #_"BigInteger" BigInteger''subtract  [#_"BigInteger" this, #_"BigInteger" x] (.subtract this, x))
+    (defn #_"String"     BigInteger''toString  [#_"BigInteger" this]                   (.toString this))
     (defn #_"BigInteger" BigInteger'valueOf    [#_"long" x]                            (BigInteger/valueOf x))
 )
 )
@@ -308,28 +352,36 @@
 )
 
 (import!
-    [java.lang Appendable Byte CharSequence Class Comparable Integer Long Number Object String StringBuilder System Throwable]
+    [java.lang Byte CharSequence Class #_Comparable Integer Long Number Object String Throwable]
     [arbace.math BigInteger]
 )
 
 (refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
 
+(refer! arbace.bore [Appendable''append])
 (refer! arbace.bore [Character'digit Character'isWhitespace Character'valueOf])
 (refer! arbace.bore [char-sequence? CharSequence''charAt CharSequence''length])
 (refer! arbace.bore [Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString])
 (refer! arbace.bore [Long'MAX_VALUE Long'MIN_VALUE Long'valueOf])
+(refer! arbace.bore [Number''longValue Number''toString])
+(refer! arbace.bore [Object''hashCode Object''toString])
+(refer! arbace.bore [String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring])
+(refer! arbace.bore [StringBuilder'new StringBuilder''append StringBuilder''toString])
+(refer! arbace.bore [System'arraycopy])
 (refer! arbace.bore [Reference''get])
 (refer! arbace.bore [ReferenceQueue'new ReferenceQueue''poll])
 (refer! arbace.bore [WeakReference'new])
 (refer! arbace.bore [array? Array'get Array'getLength])
 (refer! arbace.bore [BufferedReader''readLine])
+(refer! arbace.bore [Flushable''flush])
+(refer! arbace.bore [PrintWriter''println])
 (refer! arbace.bore [pushback-reader? PushbackReader'new PushbackReader''unread])
 (refer! arbace.bore [Reader''read])
 (refer! arbace.bore [Arrays'sort])
 (refer! arbace.bore [pattern? Pattern'compile Pattern''matcher Pattern''pattern])
 (refer! arbace.bore [matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches])
-(refer! arbace.bore [biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger'valueOf])
+(refer! arbace.bore [biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf])
 (refer! arbace.bore [AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
@@ -731,7 +783,7 @@
     )
 
     (-/extend-protocol Seqable clojure.lang.Seqable
-        (Seqable'''seq [x] (.seq x))
+        (Seqable'''seq [x] (.seq x))
     )
 
     (defn seqable? [x] (satisfies? Seqable x))
@@ -756,8 +808,8 @@
     )
 
     (-/extend-protocol ISeq clojure.lang.ISeq
-        (ISeq'''first [s] (.first s))
-        (ISeq'''next [s] (.next s))
+        (ISeq'''first [s] (.first s))
+        (ISeq'''next [s] (.next s))
     )
 
     (defn seq? [x] (satisfies? ISeq x))
@@ -785,8 +837,8 @@
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
     )
 
-    (-/extend-protocol IObject Object
-        (IObject'''equals [this, that] (.equals this, that))
+    (-/extend-protocol IObject Object
+        (IObject'''equals [this, that] (.equals this, that))
     )
 )
 
@@ -802,13 +854,13 @@
     )
 
     (-/extend-protocol Counted
-        clojure.lang.Counted                  (Counted'''count [o] (.count o))
-      ; (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
-        CharSequence                          (Counted'''count [s] (.length s))
+        clojure.lang.Counted                  (Counted'''count [o] (.count o))
+      ; (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
+        CharSequence                          (Counted'''count [s] (.length s))
     )
 
     (-/extend-protocol Counted
-        (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
+        (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
     )
 
     (defn counted? [x] (satisfies? Counted x))
@@ -843,12 +895,12 @@
     (declare Murmur3'hashLong)
 
     (-/extend-protocol Hashed
-        Object               (Hashed'''hash [o] (.hashCode o))
-        String               (Hashed'''hash [s] (Murmur3'hashInt (.hashCode s)))
-        Number               (Hashed'''hash [n] (Murmur3'hashLong (.longValue n)))
-        BigInteger           (Hashed'''hash [i] (if (< (BigInteger''bitLength i) 64) (Murmur3'hashLong (BigInteger''longValue i)) (.hashCode i)))
-        clojure.lang.Ratio   (Hashed'''hash [r] (.hashCode r))
-        clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
+        Object               (Hashed'''hash [o] (Object''hashCode o))
+        String               (Hashed'''hash [s] (Murmur3'hashInt (Object''hashCode s)))
+        Number               (Hashed'''hash [n] (Murmur3'hashLong (Number''longValue n)))
+        BigInteger           (Hashed'''hash [i] (if (< (BigInteger''bitLength i) 64) (Murmur3'hashLong (BigInteger''longValue i)) (Object''hashCode i)))
+        clojure.lang.Ratio   (Hashed'''hash [r] (Object''hashCode r))
+        clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
     )
 
     (defn hashed? [x] (satisfies? Hashed x))
@@ -860,7 +912,7 @@
      ;;
     (defn f'hash [x] (if (some? x) (Hashed'''hash x) (int 0)))
 
-    (defn f'hashcode [x] (if (some? x) (.hashCode x) (int 0)))
+    (defn f'hashcode [x] (if (some? x) (Object''hashCode x) (int 0)))
 
     (defn hash-combine [seed x]
         ;; a la boost
@@ -890,19 +942,19 @@
 
     (-/extend-protocol IFn clojure.lang.IFn
         (IFn'''invoke
-            ([this]                                                   (.invoke this))
-            ([this, a1]                                               (.invoke this, a1))
-            ([this, a1, a2]                                           (.invoke this, a1, a2))
-            ([this, a1, a2, a3]                                       (.invoke this, a1, a2, a3))
-            ([this, a1, a2, a3, a4]                                   (.invoke this, a1, a2, a3, a4))
-            ([this, a1, a2, a3, a4, a5]                               (.invoke this, a1, a2, a3, a4, a5))
-            ([this, a1, a2, a3, a4, a5, a6]                           (.invoke this, a1, a2, a3, a4, a5, a6))
-            ([this, a1, a2, a3, a4, a5, a6, a7]                       (.invoke this, a1, a2, a3, a4, a5, a6, a7))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8]                   (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (anew args)))
+            ([this]                                                   (.invoke this))
+            ([this, a1]                                               (.invoke this, a1))
+            ([this, a1, a2]                                           (.invoke this, a1, a2))
+            ([this, a1, a2, a3]                                       (.invoke this, a1, a2, a3))
+            ([this, a1, a2, a3, a4]                                   (.invoke this, a1, a2, a3, a4))
+            ([this, a1, a2, a3, a4, a5]                               (.invoke this, a1, a2, a3, a4, a5))
+            ([this, a1, a2, a3, a4, a5, a6]                           (.invoke this, a1, a2, a3, a4, a5, a6))
+            ([this, a1, a2, a3, a4, a5, a6, a7]                       (.invoke this, a1, a2, a3, a4, a5, a6, a7))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8]                   (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (anew args)))
         )
-        (IFn'''applyTo [this, args] (.applyTo this, args))
+        (IFn'''applyTo [this, args] (.applyTo this, args))
     )
 
     ;;;
@@ -965,8 +1017,8 @@
     )
 
     (-/extend-protocol INamed clojure.lang.Named
-        (INamed'''getNamespace [this] (.getNamespace this))
-        (INamed'''getName [this] (.getName this))
+        (INamed'''getNamespace [this] (.getNamespace this))
+        (INamed'''getName [this] (.getName this))
     )
 
     (defn named? [x] (satisfies? INamed x))
@@ -988,7 +1040,7 @@
     )
 
     (-/extend-protocol IMeta clojure.lang.IMeta
-        (IMeta'''meta [this] (.meta this))
+        (IMeta'''meta [this] (.meta this))
     )
 
     ;;;
@@ -1003,7 +1055,7 @@
     )
 
     (-/extend-protocol IObj clojure.lang.IObj
-        (IObj'''withMeta [this, meta] (.withMeta this, (-/into {} meta)))
+        (IObj'''withMeta [this, meta] (.withMeta this, (-/into {} meta)))
     )
 
     ;;;
@@ -1025,8 +1077,8 @@
     )
 
     (-/extend-protocol IReference clojure.lang.IReference
-        (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
-        (IReference'''resetMeta [this, m] (.resetMeta this, m))
+        (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
+        (IReference'''resetMeta [this, m] (.resetMeta this, m))
     )
 
     ;;;
@@ -1047,7 +1099,7 @@
     )
 
     (-/extend-protocol IDeref clojure.lang.IDeref
-        (IDeref'''deref [this] (.deref this))
+        (IDeref'''deref [this] (.deref this))
     )
 
     ;;;
@@ -1067,9 +1119,9 @@
         (#_"[Object Object]" IAtom'''resetVals [#_"IAtom" this, #_"Object" o'])
     )
 
-    (-/extend-protocol IAtom clojure.lang.IAtom2                         (IAtom'''compareAndSet [this, o, o'] (.compareAndSet this, o, o'))
-        (IAtom'''swap     [this, f, args] (.swap     this, f, args)) (IAtom'''reset         [this,    o'] (.reset         this,    o'))
-        (IAtom'''swapVals [this, f, args] (.swapVals this, f, args)) (IAtom'''resetVals     [this,    o'] (.resetVals     this,    o'))
+    (-/extend-protocol IAtom clojure.lang.IAtom2                         (IAtom'''compareAndSet [this, o, o'] (.compareAndSet this, o, o'))
+        (IAtom'''swap     [this, f, args] (.swap     this, f, args)) (IAtom'''reset         [this,    o'] (.reset         this,    o'))
+        (IAtom'''swapVals [this, f, args] (.swapVals this, f, args)) (IAtom'''resetVals     [this,    o'] (.resetVals     this,    o'))
     )
 )
 
@@ -1079,7 +1131,7 @@
     )
 
     (-/extend-protocol IPending clojure.lang.IPending
-        (IPending'''isRealized [this] (.isRealized this))
+        (IPending'''isRealized [this] (.isRealized this))
     )
 
     ;;;
@@ -1102,7 +1154,7 @@
     )
 
     (-/extend-protocol Reversible clojure.lang.Reversible
-        (Reversible'''rseq [this] (.rseq this))
+        (Reversible'''rseq [this] (.rseq this))
     )
 
     (defn reversible? [x] (satisfies? Reversible x))
@@ -1123,10 +1175,10 @@
     )
 
     (-/extend-protocol Sorted clojure.lang.Sorted
-        (Sorted'''comparator [this] (.comparator this))
-        (Sorted'''entryKey [this, entry] (.entryKey this, entry))
-        (Sorted'''seq [this, ascending?] (.seq this, ascending?))
-        (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
+        (Sorted'''comparator [this] (.comparator this))
+        (Sorted'''entryKey [this, entry] (.entryKey this, entry))
+        (Sorted'''seq [this, ascending?] (.seq this, ascending?))
+        (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
     )
 
     (defn sorted? [x] (satisfies? Sorted x))
@@ -1142,8 +1194,8 @@
 
     (-/extend-protocol Indexed clojure.lang.Indexed
         (Indexed'''nth
-            ([this, i] (.nth this, i))
-            ([this, i, not-found] (.nth this, i, not-found))
+            ([this, i] (.nth this, i))
+            ([this, i, not-found] (.nth this, i, not-found))
         )
     )
 
@@ -1168,8 +1220,8 @@
 
     (§ -/extend-protocol ILookup clojure.lang.ILookup
         (ILookup'''valAt
-            ([this, key] (.valAt this, key))
-            ([this, key, not-found] (.valAt this, key, not-found))
+            ([this, key] (.valAt this, key))
+            ([this, key, not-found] (.valAt this, key, not-found))
         )
     )
 )
@@ -1181,8 +1233,8 @@
     )
 
     (-/extend-protocol IPersistentCollection clojure.lang.IPersistentCollection
-        (IPersistentCollection'''conj [this, o] (.cons this, o))
-        (IPersistentCollection'''empty [this] (.empty this))
+        (IPersistentCollection'''conj [this, o] (.cons this, o))
+        (IPersistentCollection'''empty [this] (.empty this))
     )
 
     (defn coll? [x] (satisfies? IPersistentCollection x))
@@ -1227,7 +1279,7 @@
     )
 
     (-/extend-protocol IEditableCollection clojure.lang.IEditableCollection
-        (IEditableCollection'''asTransient [this] (.asTransient this))
+        (IEditableCollection'''asTransient [this] (.asTransient this))
     )
 
     (defn editable? [x] (satisfies? IEditableCollection x))
@@ -1245,8 +1297,8 @@
     )
 
     (-/extend-protocol IMapEntry clojure.lang.IMapEntry
-        (IMapEntry'''key [this] (.key this))
-        (IMapEntry'''val [this] (.val this))
+        (IMapEntry'''key [this] (.key this))
+        (IMapEntry'''val [this] (.val this))
     )
 
     (defn map-entry? [x] (satisfies? IMapEntry x))
@@ -1274,9 +1326,9 @@
     )
 
     (-/extend-protocol Associative clojure.lang.Associative
-        (Associative'''assoc [this, key, val] (.assoc this, key, val))
-        (Associative'''containsKey [this, key] (.containsKey this, key))
-        (Associative'''entryAt [this, key] (.entryAt this, key))
+        (Associative'''assoc [this, key, val] (.assoc this, key, val))
+        (Associative'''containsKey [this, key] (.containsKey this, key))
+        (Associative'''entryAt [this, key] (.entryAt this, key))
     )
 
     (defn associative? [x] (satisfies? Associative x))
@@ -1355,7 +1407,7 @@
     )
 
     (-/extend-protocol IPersistentMap clojure.lang.IPersistentMap
-        (IPersistentMap'''dissoc [this, key] (.without this, key))
+        (IPersistentMap'''dissoc [this, key] (.without this, key))
     )
 
     (defn map? [x] (satisfies? IPersistentMap x))
@@ -1383,9 +1435,9 @@
     )
 
     (-/extend-protocol IPersistentSet clojure.lang.IPersistentSet
-        (IPersistentSet'''disj [this, key] (.disjoin this, key))
-        (IPersistentSet'''contains? [this, key] (.contains this, key))
-        (IPersistentSet'''get [this, key] (.get this, key))
+        (IPersistentSet'''disj [this, key] (.disjoin this, key))
+        (IPersistentSet'''contains? [this, key] (.contains this, key))
+        (IPersistentSet'''get [this, key] (.get this, key))
     )
 
     (defn set? [x] (satisfies? IPersistentSet x))
@@ -1412,8 +1464,8 @@
     )
 
     (-/extend-protocol IPersistentStack clojure.lang.IPersistentStack
-        (IPersistentStack'''peek [this] (.peek this))
-        (IPersistentStack'''pop [this] (.pop this))
+        (IPersistentStack'''peek [this] (.peek this))
+        (IPersistentStack'''pop [this] (.pop this))
     )
 
     (defn stack? [x] (satisfies? IPersistentStack x))
@@ -1462,7 +1514,7 @@
     )
 
     (-/extend-protocol IPersistentVector clojure.lang.IPersistentVector
-        (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
+        (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
     )
 
     (defn vector? [x] (satisfies? IPersistentVector x))
@@ -1475,8 +1527,8 @@
     )
 
     (§ -/extend-protocol ITransientCollection clojure.lang.ITransientCollection
-        (ITransientCollection'''conj! [this, val] (.conj this, val))
-        (ITransientCollection'''persistent! [this] (.persistent this))
+        (ITransientCollection'''conj! [this, val] (.conj this, val))
+        (ITransientCollection'''persistent! [this] (.persistent this))
     )
 
     ;;;
@@ -1511,9 +1563,9 @@
     )
 
     (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
-        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
-        (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
-        (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
+        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
+        (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
+        (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
     )
 
     ;;;
@@ -1540,7 +1592,7 @@
     )
 
     (-/extend-protocol ITransientMap clojure.lang.ITransientMap
-        (ITransientMap'''dissoc! [this, key] (.without this, key))
+        (ITransientMap'''dissoc! [this, key] (.without this, key))
     )
 
     ;;;
@@ -1566,9 +1618,9 @@
     )
 
     (-/extend-protocol ITransientSet clojure.lang.ITransientSet
-        (ITransientSet'''disj! [this, key] (.disjoin this, key))
-        (ITransientSet'''contains? [this, key] (.contains this, key))
-        (ITransientSet'''get [this, key] (.get this, key))
+        (ITransientSet'''disj! [this, key] (.disjoin this, key))
+        (ITransientSet'''contains? [this, key] (.contains this, key))
+        (ITransientSet'''get [this, key] (.get this, key))
     )
 
     ;;;
@@ -1593,8 +1645,8 @@
     )
 
     (-/extend-protocol ITransientVector clojure.lang.ITransientVector
-        (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
-        (ITransientVector'''pop! [this] (.pop this))
+        (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
+        (ITransientVector'''pop! [this] (.pop this))
     )
 
     ;;;
@@ -1614,8 +1666,8 @@
 
     (-/extend-protocol IReduce clojure.lang.IReduce
         (IReduce'''reduce
-            ([this, f] (.reduce this, f))
-            ([this, f, r] (.reduce this, f, r))
+            ([this, f] (.reduce this, f))
+            ([this, f, r] (.reduce this, f, r))
         )
     )
 )
@@ -1626,7 +1678,7 @@
     )
 
     (-/extend-protocol IKVReduce clojure.lang.IKVReduce
-        (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
+        (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
     )
 )
 
@@ -1903,33 +1955,33 @@
     (refer! - [aget alength])
 
     (defn aclone [a]         (when (some? a) (-/aclone a)))
-    (defn acopy! [a i b j n] (System/arraycopy b, j, a, i, n) a)
+    (defn acopy! [a i b j n] (System'arraycopy b, j, a, i, n) a)
     (defn aset!  [a i x]     (-/aset a i x) a)
     (defn aswap! [a i f & s] (aset! a i (apply f (aget a i) s)))
 
     (defn anew [size-or-seq]
         (if (number? size-or-seq)
-            (-/make-array Object (int! size-or-seq))
+            (-/make-array Object (int! size-or-seq))
             (let [#_"seq" s (seq size-or-seq) #_"int" n (count s)]
-                (loop-when-recur [#_"array" a (-/make-array Object n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
+                (loop-when-recur [#_"array" a (-/make-array Object n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
             )
         )
     )
 
     (defn- assoc!!
-        ([a k v]    (.assoc a, k, v))
+        ([a k v]    (.assoc a, k, v))
         ([a k v & kvs]
-            (let [a (.assoc a, k, v)]
+            (let [a (.assoc a, k, v)]
                 (recur-when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
             )
         )
     )
 
     (defn- update!!
-        ([a k f]         (.assoc a, k,       (f (.valAt a, k))))
-        ([a k f x]       (.assoc a, k,       (f (.valAt a, k) x)))
-        ([a k f x y]     (.assoc a, k,       (f (.valAt a, k) x y)))
-        ([a k f x y & z] (.assoc a, k, (apply f (.valAt a, k) x y z)))
+        ([a k f]         (.assoc a, k,       (f (.valAt a, k))))
+        ([a k f x]       (.assoc a, k,       (f (.valAt a, k) x)))
+        ([a k f x y]     (.assoc a, k,       (f (.valAt a, k) x y)))
+        ([a k f x y & z] (.assoc a, k, (apply f (.valAt a, k) x y z)))
     )
 )
 
@@ -1946,7 +1998,7 @@
     )
 
     (defn- #_"Appendable" append-chr [#_"Appendable" a, #_"char" x]
-        (-> a (.append "\\") (.append (-/get char-name-string x x)))
+        (-> a (Appendable''append "\\") (Appendable''append (-/get char-name-string x x)))
     )
 
     (def- #_"{char String}" char-escape-string
@@ -1963,9 +2015,9 @@
 
     (defn- #_"Appendable" append-str [#_"Appendable" a, #_"String" x]
         (let [
-            a (.append a, "\"")
-            a (-/reduce #(.append %1, (-/get char-escape-string %2 %2)) a x)
-            a (.append a, "\"")
+            a (Appendable''append a, "\"")
+            a (-/reduce #(Appendable''append %1, (-/get char-escape-string %2 %2)) a x)
+            a (Appendable''append a, "\"")
         ]
             a
         )
@@ -1973,16 +2025,16 @@
 
     (defn- #_"Appendable" append-rex [#_"Appendable" a, #_"Pattern" x]
         (let [
-            a (.append a, "#\"")
+            a (Appendable''append a, "#\"")
             a
                 (loop-when [a a [#_"char" c & #_"seq" r :as #_"seq" s] (seq (Pattern''pattern x)) q? false] (some? s) => a
                     (case c
-                        \\  (let [[c & r] r] (recur (-> a (.append "\\") (.append c))            r (if q? (not= c \E) (= c \Q))))
-                        \"                   (recur (-> a (.append (if q? "\\E\\\"\\Q" "\\\""))) r q?)
-                                             (recur (-> a (.append c))                           r q?)
+                        \\  (let [[c & r] r] (recur (-> a (Appendable''append "\\") (Appendable''append c)) r (if q? (not= c \E) (= c \Q))))
+                        \"                   (recur (-> a (Appendable''append (if q? "\\E\\\"\\Q" "\\\""))) r q?)
+                                             (recur (-> a (Appendable''append c))                           r q?)
                     )
                 )
-            a (.append a, "\"")
+            a (Appendable''append a, "\"")
         ]
             a
         )
@@ -1994,14 +2046,14 @@
     (defp SetForm)
 
     (defn- #_"Appendable" append* [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
-        (let [a (let-when [a (.append a, b) #_"seq" s (seq q)] (some? s) => a
+        (let [a (let-when [a (Appendable''append a, b) #_"seq" s (seq q)] (some? s) => a
                     (loop [a a s s]
                         (let-when [a (f'append a (first s)) s (next s)] (some? s) => a
-                            (recur (.append a, c) s)
+                            (recur (Appendable''append a, c) s)
                         )
                     )
                 )]
-            (.append a, d)
+            (Appendable''append a, d)
         )
     )
 
@@ -2009,16 +2061,16 @@
 
     (defn- #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn- #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
-    (defn- #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn [a e] (-> a (append (key e)) (.append " ") (append (val e)))) ", " "}" x))
+    (defn- #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn [a e] (-> a (append (key e)) (Appendable''append " ") (append (val e)))) ", " "}" x))
     (defn- #_"Appendable" append-set [#_"Appendable" a, #_"set" x]    (append* a "#{" append " " "}" x))
 
     (defn #_"Appendable" append [#_"Appendable" a, #_"any" x]
         (case x
-            nil   (.append a, "nil")
-            false (.append a, "false")
-            true  (.append a, "true")
+            nil   (Appendable''append a, "nil")
+            false (Appendable''append a, "false")
+            true  (Appendable''append a, "true")
             (cond
-                (number? x) (.append a, (.toString x)) ;; %% ratio!
+                (number? x) (Appendable''append a, (Number''toString x)) ;; %% ratio!
                 (string? x) (append-str a x)
                 :else
                 (condp satisfies? x
@@ -2034,7 +2086,7 @@
                         (set? x)    (append-set a x)
                         (-/char? x) (append-chr a x)
                         (pattern? x) (append-rex a x)
-                        :else       (.append a, (.toString x))
+                        :else       (Appendable''append a, (Object''toString x))
                     )
                 )
             )
@@ -2042,22 +2094,22 @@
     )
 
     (defn #_"Appendable" append! [#_"Appendable" a, #_"any" x]
-        (if (or (string? x) (-/char? x)) (.append a, x) (append a x))
+        (if (or (char-sequence? x) (-/char? x)) (Appendable''append a, x) (append a x))
     )
 
     (defn #_"String" str
         ([] "")
-        ([x] (if (some? x) (-> (StringBuilder.) (append! x) (.toString)) ""))
+        ([x] (if (some? x) (-> (StringBuilder'new) (append! x) (StringBuilder''toString)) ""))
         ([x & s]
-            ((fn [#_"StringBuilder" sb s] (recur-when s [(append! sb (first s)) (next s)] => (.toString sb)))
-                (-> (StringBuilder.) (append! x)) s
+            ((fn [#_"StringBuilder" sb s] (recur-when s [(append! sb (first s)) (next s)] => (StringBuilder''toString sb)))
+                (-> (StringBuilder'new) (append! x)) s
             )
         )
     )
 
-    (defn space   [] (.append -/*out* \space)   nil)
-    (defn newline [] (.append -/*out* \newline) nil)
-    (defn flush   [] (.flush  -/*out*)          nil)
+    (defn space   [] (Appendable''append -/*out* \space)   nil)
+    (defn newline [] (Appendable''append -/*out* \newline) nil)
+    (defn flush   [] (Flushable''flush   -/*out*)          nil)
 
     (defn pr
         ([] nil)
@@ -2179,14 +2231,12 @@
  ; hash-basis is the combined collection hash, n is the number
  ; of elements included in the basis. Note this is the hash code
  ; consistent with =, different from .hashCode.
- ; See http://clojure.org/data_structures#hash for full algorithms.
  ;;
 (defn #_"long" mix-collection-hash [#_"long" hash-basis #_"long" n] (Murmur3'mixCollHash hash-basis n))
 
 ;;;
  ; Returns the hash code, consistent with =, for an external, ordered
  ; collection implementing Seqable.
- ; See http://clojure.org/data_structures#hash for full algorithms.
  ;;
 (defn #_"long" hash-ordered-coll [s] (Murmur3'hashOrdered s))
 
@@ -2194,7 +2244,6 @@
  ; Returns the hash code, consistent with =, for an external, unordered
  ; collection implementing Seqable. For maps, it should return
  ; map entries, whose hash is computed as (hash-ordered-coll [k v]).
- ; See http://clojure.org/data_structures#hash for full algorithms.
  ;;
 (defn #_"long" hash-unordered-coll [s] (Murmur3'hashUnordered s))
 )
@@ -2361,7 +2410,7 @@
                     (reset! (:f this) nil)
                     (try
                         (reset! (:o this) (f))
-                        (catch Throwable t
+                        (catch Throwable t
                             (reset! (:e this) t)
                         )
                     )
@@ -2543,7 +2592,7 @@
             (nil? a)   -1
             (nil? b)    1
             (number? a) #_(Numbers'compare a, b) (-/compare a b)
-            :else       (.compareTo #_"Comparable" a, b)
+            :else       (.compareTo #_"Comparable" a, b)
         )
     )
 )
@@ -2585,7 +2634,7 @@
     )
 
     (defn- #_"int" Ratio''hashcode [#_"Ratio" this]
-        (bit-xor (.hashCode (:n this)) (.hashCode (:d this)))
+        (bit-xor (Object''hashCode (:n this)) (Object''hashCode (:d this)))
     )
 
     (defn- #_"boolean" Ratio''equals [#_"Ratio" this, #_"Object" that]
@@ -2593,7 +2642,7 @@
     )
 
     (defn- #_"Appendable" Ratio''append [#_"Ratio" this, #_"Appendable" a]
-        (-> a (.append (.toString (:n this))) (.append "/") (.append (.toString (:d this))))
+        (-> a (Appendable''append (BigInteger''toString (:n this))) (Appendable''append "/") (Appendable''append (BigInteger''toString (:d this))))
     )
 
     (defm Ratio Hashed
@@ -2650,16 +2699,16 @@
         (#_"Ops" Ops'''opsWithRatio [#_"LongOps" this, #_"RatioOps" x] Numbers'RATIO_OPS)
         (#_"Ops" Ops'''opsWithBigInt [#_"LongOps" this, #_"BigIntOps" x] Numbers'BIGINT_OPS)
 
-        (#_"boolean" Ops'''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/= (.longValue x) (.longValue y)))
-        (#_"boolean" Ops'''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/< (.longValue x) (.longValue y)))
-        (#_"boolean" Ops'''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/<= (.longValue x) (.longValue y)))
+        (#_"boolean" Ops'''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/= (Number''longValue x) (Number''longValue y)))
+        (#_"boolean" Ops'''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/< (Number''longValue x) (Number''longValue y)))
+        (#_"boolean" Ops'''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/<= (Number''longValue x) (Number''longValue y)))
 
-        (#_"boolean" Ops'''isZero [#_"LongOps" this, #_"Number" x] (-/= (.longValue x) 0))
-        (#_"boolean" Ops'''isPos [#_"LongOps" this, #_"Number" x] (-/> (.longValue x) 0))
-        (#_"boolean" Ops'''isNeg [#_"LongOps" this, #_"Number" x] (-/< (.longValue x) 0))
+        (#_"boolean" Ops'''isZero [#_"LongOps" this, #_"Number" x] (-/= (Number''longValue x) 0))
+        (#_"boolean" Ops'''isPos [#_"LongOps" this, #_"Number" x] (-/> (Number''longValue x) 0))
+        (#_"boolean" Ops'''isNeg [#_"LongOps" this, #_"Number" x] (-/< (Number''longValue x) 0))
 
         (#_"Number" Ops'''add [#_"LongOps" this, #_"Number" x, #_"Number" y]
-            (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y) #_"long" lz (-/+ lx ly)]
+            (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y) #_"long" lz (-/+ lx ly)]
                 (when (and (-/< (-/bit-xor lz lx) 0) (-/< (-/bit-xor lz ly) 0)) => (Long'valueOf lz)
                     (Ops'''add Numbers'BIGINT_OPS, x, y)
                 )
@@ -2667,7 +2716,7 @@
         )
 
         (#_"Number" Ops'''negate [#_"LongOps" this, #_"Number" x]
-            (let [#_"long" lx (.longValue x)]
+            (let [#_"long" lx (Number''longValue x)]
                 (when (-/= lx Long'MIN_VALUE) => (Long'valueOf (-/- lx))
                     (BigInteger''negate (BigInteger'valueOf lx))
                 )
@@ -2675,7 +2724,7 @@
         )
 
         (#_"Number" Ops'''inc [#_"LongOps" this, #_"Number" x]
-            (let [#_"long" lx (.longValue x)]
+            (let [#_"long" lx (Number''longValue x)]
                 (when (-/= lx Long'MAX_VALUE) => (Long'valueOf (-/+ lx 1))
                     (Ops'''inc Numbers'BIGINT_OPS, x)
                 )
@@ -2683,7 +2732,7 @@
         )
 
         (#_"Number" Ops'''dec [#_"LongOps" this, #_"Number" x]
-            (let [#_"long" lx (.longValue x)]
+            (let [#_"long" lx (Number''longValue x)]
                 (when (-/= lx Long'MIN_VALUE) => (Long'valueOf (-/- lx 1))
                     (Ops'''dec Numbers'BIGINT_OPS, x)
                 )
@@ -2691,7 +2740,7 @@
         )
 
         (#_"Number" Ops'''multiply [#_"LongOps" this, #_"Number" x, #_"Number" y]
-            (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y)]
+            (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y)]
                 (when-not (and (-/= lx Long'MIN_VALUE) (-/< ly 0)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
                     (let [#_"long" lz (-/* lx ly)]
                         (when (or (-/= ly 0) (-/= (-/quot lz ly) lx)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
@@ -2703,7 +2752,7 @@
         )
 
         (#_"Number" Ops'''divide [#_"LongOps" this, #_"Number" x, #_"Number" y]
-            (let [#_"long" lx (.longValue x) #_"long" ly (.longValue y)]
+            (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y)]
                 (let-when-not [#_"long" gcd (LongOps'gcd lx, ly)] (-/= gcd 0) => (Long'valueOf 0)
                     (let-when-not [lx (-/quot lx gcd) ly (-/quot ly gcd)] (-/= ly 1) => (Long'valueOf lx)
                         (let [[lx ly]
@@ -2717,8 +2766,8 @@
             )
         )
 
-        (#_"Number" Ops'''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/quot (.longValue x) (.longValue y))))
-        (#_"Number" Ops'''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/rem (.longValue x) (.longValue y))))
+        (#_"Number" Ops'''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/quot (Number''longValue x) (Number''longValue y))))
+        (#_"Number" Ops'''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/rem (Number''longValue x) (Number''longValue y))))
 )
 )
 
@@ -2795,7 +2844,7 @@
 
         (#_"Number" Ops'''quotient [#_"RatioOps" this, #_"Number" x, #_"Number" y]
             (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
-               (.divide (BigInteger''multiply (:n rx), (:d ry)), (BigInteger''multiply (:d rx), (:n ry)))
+               (BigInteger''divide (BigInteger''multiply (:n rx), (:d ry)), (BigInteger''multiply (:d rx), (:n ry)))
             )
         )
 
@@ -2826,11 +2875,11 @@
         )
 
         (#_"boolean" Ops'''lt [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (-/< (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/< (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
         (#_"boolean" Ops'''lte [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (-/<= (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/<= (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
         (#_"boolean" Ops'''isZero [#_"BigIntOps" this, #_"Number" x] (-/= (BigInteger''signum (Numbers'toBigInteger x)) 0))
@@ -2902,63 +2951,63 @@
     )
 
     (defn #_"boolean" Numbers'lt [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt #_"Number" x, #_"Number" y))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt x, y))
     )
 
     (defn #_"boolean" Numbers'lte [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte #_"Number" x, #_"Number" y))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte x, y))
     )
 
     (defn #_"boolean" Numbers'gt [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt #_"Number" y, #_"Number" x))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lt y, x))
     )
 
     (defn #_"boolean" Numbers'gte [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte #_"Number" y, #_"Number" x))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''lte y, x))
     )
 
-    (defn #_"boolean" Numbers'isZero [#_"Number" x] (Ops'''isZero (Numbers'ops x), #_"Number" x))
-    (defn #_"boolean" Numbers'isPos  [#_"Number" x] (Ops'''isPos  (Numbers'ops x), #_"Number" x))
-    (defn #_"boolean" Numbers'isNeg  [#_"Number" x] (Ops'''isNeg  (Numbers'ops x), #_"Number" x))
+    (defn #_"boolean" Numbers'isZero [#_"Number" x] (Ops'''isZero (Numbers'ops x), x))
+    (defn #_"boolean" Numbers'isPos  [#_"Number" x] (Ops'''isPos  (Numbers'ops x), x))
+    (defn #_"boolean" Numbers'isNeg  [#_"Number" x] (Ops'''isNeg  (Numbers'ops x), x))
 
     (defn #_"Number" Numbers'add [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''add #_"Number" x, #_"Number" y))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''add x, y))
     )
 
     (defn #_"Number" Numbers'subtract [#_"Number" x, #_"Number" y]
-        (let [#_"Number" negativeY (Ops'''negate (Numbers'ops y), #_"Number" y)]
-            (-> (Ops'''combine (Numbers'ops x), (Numbers'ops negativeY)) (Ops'''add #_"Number" x, negativeY))
+        (let [#_"Number" negativeY (Ops'''negate (Numbers'ops y), y)]
+            (-> (Ops'''combine (Numbers'ops x), (Numbers'ops negativeY)) (Ops'''add x, negativeY))
         )
     )
 
-    (defn #_"Number" Numbers'negate [#_"Number" x] (Ops'''negate (Numbers'ops x), #_"Number" x))
-    (defn #_"Number" Numbers'inc    [#_"Number" x] (Ops'''inc    (Numbers'ops x), #_"Number" x))
-    (defn #_"Number" Numbers'dec    [#_"Number" x] (Ops'''dec    (Numbers'ops x), #_"Number" x))
+    (defn #_"Number" Numbers'negate [#_"Number" x] (Ops'''negate (Numbers'ops x), x))
+    (defn #_"Number" Numbers'inc    [#_"Number" x] (Ops'''inc    (Numbers'ops x), x))
+    (defn #_"Number" Numbers'dec    [#_"Number" x] (Ops'''dec    (Numbers'ops x), x))
 
     (defn #_"Number" Numbers'multiply [#_"Number" x, #_"Number" y]
-        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''multiply #_"Number" x, #_"Number" y))
+        (-> (Ops'''combine (Numbers'ops x), (Numbers'ops y)) (Ops'''multiply x, y))
     )
 
     (defn #_"Number" Numbers'divide [#_"Number" x, #_"Number" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''divide #_"Number" x, #_"Number" y))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, y) => (throw! "divide by zero")
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''divide x, y))
         )
     )
 
     (defn #_"Number" Numbers'quotient [#_"Number" x, #_"Number" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''quotient #_"Number" x, #_"Number" y))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, y) => (throw! "divide by zero")
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''quotient x, y))
         )
     )
 
     (defn #_"Number" Numbers'remainder [#_"Number" x, #_"Number" y]
-        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, #_"Number" y) => (throw! "divide by zero")
-            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''remainder #_"Number" x, #_"Number" y))
+        (let-when-not [#_"Ops" yops (Numbers'ops y)] (Ops'''isZero yops, y) => (throw! "divide by zero")
+            (-> (Ops'''combine (Numbers'ops x), yops) (Ops'''remainder x, y))
         )
     )
 
     (defn #_"BigInteger" Numbers'toBigInteger [#_"Number" x]
-        (if (biginteger? x) x (BigInteger'valueOf (.longValue x)))
+        (if (biginteger? x) x (BigInteger'valueOf (Number''longValue x)))
     )
 
     (defn #_"Ratio" Numbers'toRatio [#_"Number" x]
@@ -3225,7 +3274,7 @@
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
-        java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (.hashCode (:name _)) (:ns _)))
+        java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (Object''hashCode (:name _)) (:ns _)))
     )
 
     #_inherit
@@ -3246,10 +3295,10 @@
 
     (defn #_"Symbol" Symbol'intern
         ([#_"String" nsname]
-            (let [#_"int" i (.indexOf nsname, (int \/))]
+            (let [#_"int" i (String''indexOf nsname, (int \/))]
                 (if (or (= i -1) (= nsname "/"))
                     (Symbol'new nil, nsname)
-                    (Symbol'new (.substring nsname, 0, i), (.substring nsname, (inc i)))
+                    (Symbol'new (String''substring nsname, 0, i), (String''substring nsname, (inc i)))
                 )
             )
         )
@@ -3265,7 +3314,7 @@
     )
 
     (defn- #_"Appendable" Symbol''append [#_"Symbol" this, #_"Appendable" a]
-        (if (some? (:ns this)) (-> a (.append (:ns this)) (.append "/") (.append (:name this))) (.append a, (:name this)))
+        (if (some? (:ns this)) (-> a (Appendable''append (:ns this)) (Appendable''append "/") (Appendable''append (:name this))) (Appendable''append a, (:name this)))
     )
 
     (defn- #_"int" Symbol''hash [#_"Symbol" this]
@@ -3342,7 +3391,7 @@
 
     (defq Keyword [#_"Symbol" sym, #_"int" _hash]
         clojure.lang.IHashEq (hasheq [_] (:_hash _))
-        java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (.hashCode (:sym _)) (int! 0x9e3779b9)))
+        java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (Object''hashCode (:sym _)) (int! 0x9e3779b9)))
         clojure.lang.IFn (invoke [_, a] (Keyword''invoke _, a))
     )
 
@@ -3404,7 +3453,7 @@
     )
 
     (defn- #_"Appendable" Keyword''append [#_"Keyword" this, #_"Appendable" a]
-        (-> a (.append ":") (append (:sym this)))
+        (-> a (Appendable''append ":") (append (:sym this)))
     )
 
     (defn- #_"Object" Keyword''invoke
@@ -3633,7 +3682,7 @@
     (defq Cons [#_"meta" _meta, #_"Object" car, #_"seq" cdr] SeqForm
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Cons''withMeta _, m))
-        clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _)) (more [_] (or (Cons''next _) ()))
         clojure.lang.IPersistentCollection (count [_] (Cons''count _))
         clojure.lang.Sequential
     )
@@ -3940,7 +3989,7 @@
     (declare Range''seq Range''next)
 
     (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck] SeqForm
-        clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _)) (more [_] (or (Range''next _) ()))
     )
 
     #_inherit
@@ -4113,7 +4162,7 @@
         )
     )
 
-    (-/extend-protocol Seqable (Class/forName "[Ljava.lang.Object;")
+    (-/extend-protocol Seqable (Class/forName "[Ljava.lang.Object;")
         (#_"ArraySeq" Seqable'''seq [#_"array" a] (ArraySeq'create a))
     )
 
@@ -4220,7 +4269,7 @@
     )
 
     (defn #_"StringSeq" StringSeq'create [#_"CharSequence" s]
-        (when (pos? (.length s))
+        (when (pos? (CharSequence''length s))
             (StringSeq'new nil, s, 0)
         )
     )
@@ -4309,7 +4358,7 @@
     (declare LazySeq''seq LazySeq''first LazySeq''next)
 
     (defq LazySeq [#_"meta" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm
-        clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _)) (more [_] (or (LazySeq''next _) ()))
         clojure.lang.Sequential
     )
 
@@ -5350,7 +5399,7 @@
     (declare VSeq''seq VSeq''first VSeq''next)
 
     (defq VSeq [#_"meta" _meta, #_"vector" v, #_"int" i] SeqForm
-        clojure.lang.ISeq (seq [_] (VSeq''seq _)) (first [_] (VSeq''first _)) (next [_] (VSeq''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (VSeq''seq _)) (first [_] (VSeq''first _)) (next [_] (VSeq''next _)) (more [_] (or (VSeq''next _) ()))
         clojure.lang.Sequential
     )
 
@@ -5777,7 +5826,7 @@
     (declare PersistentList''seq PersistentList''conj PersistentList''empty)
 
     (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm
-        clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _)) (more [_] (or (:cdr _) ()))
         clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o)) (count [_] (:cnt _))
     )
 
@@ -6466,7 +6515,7 @@
     (declare NSeq''seq NSeq''first NSeq''next)
 
     (defq NSeq [#_"meta" _meta, #_"array" a, #_"int" i, #_"seq" s] SeqForm
-        clojure.lang.ISeq (seq [_] (NSeq''seq _)) (first [_] (NSeq''first _)) (next [_] (NSeq''next _)) (more [_] (or (.next _) ()))
+        clojure.lang.ISeq (seq [_] (NSeq''seq _)) (first [_] (NSeq''first _)) (next [_] (NSeq''next _)) (more [_] (or (NSeq''next _) ()))
     )
 
     #_inherit
@@ -8660,7 +8709,7 @@
     )
 
     (defn- #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"key" a, #_"key" b]
-        (.compare (:cmp this), a, b)
+        (.compare (:cmp this), a, b)
     )
 
     (defn- #_"key" PersistentTreeMap''entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
@@ -10938,7 +10987,7 @@
                 (satisfies? ITransientSet coll)
                     (ITransientSet'''get coll, key)
                 (-/instance? clojure.lang.ILookup coll)
-                    (.valAt coll, key)
+                    (.valAt coll, key)
             )
         )
         ([#_"Object" coll, #_"key" key, #_"value" not-found]
@@ -10956,7 +11005,7 @@
                 (satisfies? ITransientSet coll)
                     (if (contains? coll key) (ITransientSet'''get coll, key) not-found)
                 (-/instance? clojure.lang.ILookup coll)
-                    (.valAt coll, key, not-found)
+                    (.valAt coll, key, not-found)
                 :else
                     not-found
             )
@@ -11146,8 +11195,8 @@
 (about #_"Var"
     (defn- #_"Appendable" Var'append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
         (if (some? ns)
-            (-> a (.append "#'") (append (:name ns)) (.append "/") (append sym))
-            (-> a (.append "#_var nil #_\"") (append sym) (.append "\""))
+            (-> a (Appendable''append "#'") (append (:name ns)) (Appendable''append "/") (append sym))
+            (-> a (Appendable''append "#_var nil #_\"") (append sym) (Appendable''append "\""))
         )
     )
 )
@@ -11163,7 +11212,7 @@
     )
 
     (defn- #_"Appendable" Unbound''append [#_"Unbound" this, #_"Appendable" a]
-        (-> a (.append "#_unbound ") (Var'append (:ns this), (:sym this)))
+        (-> a (Appendable''append "#_unbound ") (Var'append (:ns this), (:sym this)))
     )
 
     (defm Unbound IObject
@@ -11210,13 +11259,13 @@
     )
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (.isBound this)
+        (when-not (-/instance? clojure.lang.Var this) => (.isBound this)
             (Var''hasRoot this)
         )
     )
 
     (defn- #_"Object" Var''get [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (.get this)
+        (when-not (-/instance? clojure.lang.Var this) => (.get this)
             @(:root this)
         )
     )
@@ -11428,7 +11477,7 @@
 (defn remove-ns [sym] (Namespace'remove sym))
 
     (defn- #_"Appendable" Namespace''append [#_"Namespace" this, #_"Appendable" a]
-        (.append a, (:name (:name this)))
+        (Appendable''append a, (:name (:name this)))
     )
 
 ;;;
@@ -11446,7 +11495,7 @@
 (defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
 
     (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.getMapping this, name)
+        (when-not (-/instance? clojure.lang.Namespace this) => (.getMapping this, name)
             (get @(:mappings this) name)
         )
     )
@@ -11493,13 +11542,13 @@
                     :ok
                 )
             )
-            (.println -/*err*, (str "WARNING: " sym " already refers to: " o " in namespace: " (:name this) ", being replaced by: " var))
+            (PrintWriter''println -/*err*, (str "WARNING: " sym " already refers to: " o " in namespace: " (:name this) ", being replaced by: " var))
         )
         nil
     )
 
     (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.intern this, sym)
+        (when-not (-/instance? clojure.lang.Namespace this) => (.intern this, sym)
             (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
                 (let [#_"Object" o
                         (or (get @(:mappings this) sym)
@@ -11586,7 +11635,7 @@
 (defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
 
     (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.findInternedVar this, (-/symbol (str name)))
+        (when-not (-/instance? clojure.lang.Namespace this) => (.findInternedVar this, (-/symbol (str name)))
             (let [#_"Object" o (get @(:mappings this) name)]
                 (when (and (var? o) (= (:ns o) this))
                     o
@@ -11973,7 +12022,7 @@
  ;;
 (defn sort-by
     ([f s] (sort-by f compare s))
-    ([f #_"Comparator" cmp s] (sort #(.compare cmp (f %1) (f %2)) s))
+    ([f #_"Comparator" cmp s] (sort #(.compare cmp (f %1) (f %2)) s))
 )
 
 ;;;
@@ -12209,7 +12258,7 @@
 )
 
 (defn- mk-bound-fn [#_"Sorted" sc test key]
-    (fn [e] (test (.compare (Sorted'''comparator sc) (Sorted'''entryKey sc, e) key) 0))
+    (fn [e] (test (.compare (Sorted'''comparator sc) (Sorted'''entryKey sc, e) key) 0))
 )
 
 ;;;
@@ -13074,14 +13123,14 @@
 
 ;;;
  ; Recursively transforms form by replacing keys in m with their
- ; values. Like arbace/replace but works on any data structure. Does
+ ; values. Like replace, but works on any data structure. Does
  ; replacement at the root of the tree first.
  ;;
 (defn prewalk-replace [m form] (prewalk #(if (contains? m %) (m %) %) form))
 
 ;;;
  ; Recursively transforms form by replacing keys in m with their
- ; values. Like arbace/replace but works on any data structure. Does
+ ; values. Like replace, but works on any data structure. Does
  ; replacement at the leaves of the tree first.
  ;;
 (defn postwalk-replace [m form] (postwalk #(if (contains? m %) (m %) %) form))
@@ -13258,7 +13307,7 @@
     (defn #_"Symbol" Compiler'resolveSymbol [#_"Symbol" sym]
         ;; already qualified or classname?
         (cond
-            (pos? (.indexOf (:name sym), (int \.)))
+            (pos? (String''indexOf (:name sym), (int \.)))
                 sym
             (some? (:ns sym))
                 (let [#_"Namespace" ns (Compiler'namespaceFor sym)]
@@ -13271,7 +13320,7 @@
                 (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
                     (cond
                         (nil? o)   (symbol (:name (:name *arbace-ns*)) (:name sym))
-                        (-/class? o) (symbol (.getName #_"Class" o))
+                        (-/class? o) (symbol (.getName #_"Class" o))
                         (var? o)   (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
                 )
@@ -13455,7 +13504,7 @@
                         true                LiteralExpr'TRUE
                         false               LiteralExpr'FALSE
                         (cond
-                            (string? value) (LiteralExpr'new (.intern #_"String" value))
+                            (string? value) (LiteralExpr'new (String''intern value))
                             :else           (LiteralExpr'new value)
                         )
                     )
@@ -14881,7 +14930,7 @@
                     false                                LiteralExpr'FALSE
                     (cond
                         (symbol? form)                   (Compiler'analyzeSymbol form, scope)
-                        (string? form)                   (LiteralExpr'new (.intern #_"String" form))
+                        (string? form)                   (LiteralExpr'new (String''intern form))
                         (and (coll? form) (empty? form)) (LiteralExpr'new form)
                         (seq? form)                      (Compiler'analyzeSeq form, context, scope)
                         (vector? form)                   (VectorExpr'parse form, scope)
@@ -15001,7 +15050,7 @@
                         )
                     )
                     (let-when [#_"Matcher" m (Pattern''matcher LispReader'rxRatio, s)] (Matcher''matches m)
-                        (let [#_"String" n (Matcher''group m, 1) n (if (.startsWith n, "+") (.substring n, 1) n)]
+                        (let [#_"String" n (Matcher''group m, 1) n (if (String''startsWith n, "+") (String''substring n, 1) n)]
                             (Numbers'divide (BigInteger'new n), (BigInteger'new (Matcher''group m, 2)))
                         )
                     )
@@ -15012,16 +15061,16 @@
 
     (defn- #_"Object" LispReader'readNumber [#_"PushbackReader" r, #_"char" ch]
         (let [#_"String" s
-                (let [#_"StringBuilder" sb (StringBuilder.) _ (.append sb, ch)]
+                (let [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
                     (loop []
                         (let [ch (LispReader'read1 r)]
                             (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isMacro ch))
                                 (do
                                     (LispReader'unread r, ch)
-                                    (.toString sb)
+                                    (StringBuilder''toString sb)
                                 )
                                 (do
-                                    (.append sb, ch)
+                                    (StringBuilder''append sb, ch)
                                     (recur)
                                 )
                             )
@@ -15033,16 +15082,16 @@
     )
 
     (defn- #_"String" LispReader'readToken [#_"PushbackReader" r, #_"char" ch]
-        (let [#_"StringBuilder" sb (StringBuilder.) _ (.append sb, ch)]
+        (let [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
             (loop []
                 (let [ch (LispReader'read1 r)]
                     (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isTerminatingMacro ch))
                         (do
                             (LispReader'unread r, ch)
-                            (.toString sb)
+                            (StringBuilder''toString sb)
                         )
                         (do
-                            (.append sb, ch)
+                            (StringBuilder''append sb, ch)
                             (recur)
                         )
                     )
@@ -15057,10 +15106,10 @@
         (let-when [#_"Matcher" m (Pattern''matcher LispReader'rxSymbol, s)] (Matcher''matches m)
             (let [#_"String" ns (Matcher''group m, 1) #_"String" n (Matcher''group m, 2)]
                 (cond
-                    (or (and (some? ns) (.endsWith ns, ":/")) (.endsWith n, ":") (not= (.indexOf s, "::", 1) -1))
+                    (or (and (some? ns) (String''endsWith ns, ":/")) (String''endsWith n, ":") (not= (String''indexOf s, "::", 1) -1))
                         nil
-                    (.startsWith s, "::")
-                        (let [#_"Symbol" ks (symbol (.substring s, 2))
+                    (String''startsWith s, "::")
+                        (let [#_"Symbol" ks (symbol (String''substring s, 2))
                               #_"Namespace" kns (if (some? (:ns ks)) (Namespace''getAlias *arbace-ns*, (symbol (:ns ks))) *arbace-ns*)]
                             ;; auto-resolving keyword
                             (when (some? kns)
@@ -15068,7 +15117,7 @@
                             )
                         )
                     :else
-                        (let [#_"boolean" kw? (= (nth s 0) \:) #_"Symbol" sym (symbol (.substring s, (if kw? 1 0)))]
+                        (let [#_"boolean" kw? (= (String''charAt s, 0) \:) #_"Symbol" sym (symbol (String''substring s, (if kw? 1 0)))]
                             (if kw? (keyword sym) sym)
                         )
                 )
@@ -15121,9 +15170,9 @@
     )
 
     (defn- #_"int" LispReader'scanDigits [#_"String" token, #_"int" offset, #_"int" n, #_"int" base]
-        (when (= (+ offset n) (count token)) => (throw! (str "invalid unicode character: \\" token))
+        (when (= (+ offset n) (String''length token)) => (throw! (str "invalid unicode character: \\" token))
             (loop-when [#_"int" c 0 #_"int" i 0] (< i n) => c
-                (let [#_"char" ch (nth token (+ offset i)) #_"int" d (Character'digit ch, base)]
+                (let [#_"char" ch (String''charAt token, (+ offset i)) #_"int" d (Character'digit ch, base)]
                     (when-not (= d -1) => (throw! (str "invalid digit: " ch))
                         (recur (+ (* c base) d) (inc i))
                     )
@@ -15177,21 +15226,21 @@
 
 (about #_"RegexReader"
     (defn #_"Pattern" regex-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
-        (let [#_"StringBuilder" sb (StringBuilder.)]
+        (let [#_"StringBuilder" sb (StringBuilder'new)]
             (loop []
                 (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
                     (when-not (= ch \") ;; oops! "
-                        (.append sb, ch)
+                        (StringBuilder''append sb, ch)
                         (when (= ch \\) ;; escape
                             (when-some [ch (LispReader'read1 r)] => (throw! "EOF while reading regex")
-                                (.append sb, ch)
+                                (StringBuilder''append sb, ch)
                             )
                         )
                         (recur)
                     )
                 )
             )
-            (Pattern'compile (.toString sb))
+            (Pattern'compile (StringBuilder''toString sb))
         )
     )
 )
@@ -15225,16 +15274,16 @@
     )
 
     (defn #_"Object" string-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
-        (let [#_"StringBuilder" sb (StringBuilder.)]
+        (let [#_"StringBuilder" sb (StringBuilder'new)]
             (loop []
                 (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading string")
                     (when-not (= ch \") ;; oops! "
-                        (.append sb, (if (= ch \\) (StringReader'escape r) ch))
+                        (StringBuilder''append sb, (if (= ch \\) (StringReader'escape r) ch))
                         (recur)
                     )
                 )
             )
-            (.toString sb)
+            (StringBuilder''toString sb)
         )
     )
 )
@@ -15402,16 +15451,16 @@
                         (let [#_"String" ns (:ns form) #_"String" n (:name form)
                               form
                                 (cond
-                                    (and (nil? ns) (.endsWith n, "#"))
-                                        (LispReader'registerGensym scope, (symbol (.substring n, 0, (dec (count n)))))
-                                    (and (nil? ns) (.endsWith n, "."))
-                                        (symbol (str (:name (Compiler'resolveSymbol (symbol (.substring n, 0, (dec (count n)))))) "."))
-                                    (and (nil? ns) (.startsWith n, "."))
+                                    (and (nil? ns) (String''endsWith n, "#"))
+                                        (LispReader'registerGensym scope, (symbol (String''substring n, 0, (dec (String''length n)))))
+                                    (and (nil? ns) (String''endsWith n, "."))
+                                        (symbol (str (:name (Compiler'resolveSymbol (symbol (String''substring n, 0, (dec (String''length n)))))) "."))
+                                    (and (nil? ns) (String''startsWith n, "."))
                                         form ;; simply quote method names
                                     :else
                                         (let-when [#_"Object" c (when (some? ns) (Namespace''getMapping *arbace-ns*, (symbol ns)))] (-/class? c) => (Compiler'resolveSymbol form)
                                             ;; Classname/foo -> package.qualified.Classname/foo
-                                            (symbol (.getName c) n)
+                                            (symbol (.getName c) n)
                                         )
                                 )]
                             (list (symbol! 'quote) form)
@@ -15471,7 +15520,7 @@
     (defn #_"Object" character-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (when-some [#_"char" ch (LispReader'read1 r)] => (throw! "EOF while reading character")
             (let [#_"String" token (LispReader'readToken r, ch)]
-                (when-not (= (count token) 1) => (Character'valueOf (nth token 0))
+                (when-not (= (String''length token) 1) => (Character'valueOf (String''charAt token, 0))
                     (case token
                         "newline"   \newline
                         "space"     \space
@@ -15479,14 +15528,14 @@
                         "backspace" \backspace
                         "formfeed"  \formfeed
                         "return"    \return
-                        (case (nth token 0)
+                        (case (String''charAt token, 0)
                             \u  (let [#_"int" c (LispReader'scanDigits token, 1, 4, 16)]
                                     (when (<= 0xd800 c 0xdfff) ;; surrogate code unit?
                                         (throw! (str "invalid character constant: \\u" (Integer'toString c, 16)))
                                     )
                                     (-/char c)
                                 )
-                            \o  (let [#_"int" n (dec (count token))]
+                            \o  (let [#_"int" n (dec (String''length token))]
                                     (when (< 3 n)
                                         (throw! (str "invalid octal escape sequence length: " n))
                                     )
