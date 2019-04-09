@@ -13,7 +13,7 @@
 (defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
 
 (import!
-    [java.lang Boolean Character CharSequence Error Integer Long StringBuilder System Thread]
+    [java.lang Boolean Byte Character CharSequence Class #_Comparable Error Integer Long Number String StringBuilder System Thread]
     [java.lang.ref ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.io PushbackReader]
@@ -145,7 +145,17 @@
     (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|CharSequence" x] (.append this, x))
 )
 
+(about #_"Boolean"
+    (defn boolean? [x] (-/instance? Boolean x))
+)
+
+(about #_"Byte"
+    (defn byte? [x] (-/instance? Byte x))
+)
+
 (about #_"Character"
+    (defn char? [x] (-/instance? Character x))
+
     (defn #_"int"       Character'digit        [#_"char" ch, #_"int" radix] (Character/digit ch, radix))
     (defn #_"boolean"   Character'isWhitespace [#_"char" ch]                (Character/isWhitespace ch))
     (defn #_"Character" Character'valueOf      [#_"char" ch]                (Character/valueOf ch))
@@ -159,6 +169,8 @@
 )
 
 (about #_"Integer"
+    (defn int? [x] (-/instance? Integer x))
+
     (def #_"int" Integer'MAX_VALUE Integer/MAX_VALUE)
     (def #_"int" Integer'MIN_VALUE Integer/MIN_VALUE)
 
@@ -169,6 +181,8 @@
 )
 
 (about #_"Long"
+    (defn long? [x] (-/instance? Long x))
+
     (def #_"long" Long'MAX_VALUE Long/MAX_VALUE)
     (def #_"long" Long'MIN_VALUE Long/MIN_VALUE)
 
@@ -176,16 +190,22 @@
 )
 
 (about #_"Number"
+    (defn number? [x] (-/instance? Number x))
+
     (defn #_"long"   Number''longValue [#_"Number" this] (.longValue this))
     (defn #_"String" Number''toString  [#_"Number" this] (.toString this))
 )
 
 (about #_"Object"
+    (def Object'array (Class/forName "[Ljava.lang.Object;"))
+
     (defn #_"int"    Object''hashCode [#_"Object" this] (.hashCode this))
     (defn #_"String" Object''toString [#_"Object" this] (.toString this))
 )
 
 (about #_"String"
+    (defn string? [x] (-/instance? String x))
+
     (defn #_"char"    String''charAt     [#_"String" this, #_"int" i]    (.charAt this, i))
     (defn #_"boolean" String''endsWith   [#_"String" this, #_"String" s] (.endsWith this, s))
     (defn #_"int"     String''indexOf   ([#_"String" this, #_"int" ch]   (.indexOf this, ch))     ([#_"String" this, #_"String" s, #_"int" from] (.indexOf this, s, from)))
@@ -344,29 +364,28 @@
 )
 )
 
-(refer! - [boolean boolean? identical? integer? long number? satisfies? string?])
+(refer! - [boolean identical? long satisfies?])
 
 (ns arbace.core
     (:refer-clojure :only []) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [boolean boolean? class! defm defp defq defr identical? import! int int! integer? long number? refer! satisfies? string?])
+    (:refer arbace.bore :only [boolean class! defm defp defq defr identical? import! int int! long refer! satisfies?])
 )
 
-(import!
-    [java.lang Byte CharSequence Class #_Comparable Integer Long Number Object String Throwable]
-    [arbace.math BigInteger]
-)
+(import!)
 
 (refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
 
 (refer! arbace.bore [Appendable''append])
-(refer! arbace.bore [Character'digit Character'isWhitespace Character'valueOf])
+(refer! arbace.bore [boolean?])
+(refer! arbace.bore [byte?])
+(refer! arbace.bore [char? Character'digit Character'isWhitespace Character'valueOf])
 (refer! arbace.bore [char-sequence? CharSequence''charAt CharSequence''length])
-(refer! arbace.bore [Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString])
-(refer! arbace.bore [Long'MAX_VALUE Long'MIN_VALUE Long'valueOf])
-(refer! arbace.bore [Number''longValue Number''toString])
-(refer! arbace.bore [Object''hashCode Object''toString])
-(refer! arbace.bore [String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring])
+(refer! arbace.bore [int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString])
+(refer! arbace.bore [long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf])
+(refer! arbace.bore [number? Number''longValue Number''toString])
+(refer! arbace.bore [Object'array Object''hashCode Object''toString])
+(refer! arbace.bore [string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring])
 (refer! arbace.bore [StringBuilder'new StringBuilder''append StringBuilder''toString])
 (refer! arbace.bore [System'arraycopy])
 (refer! arbace.bore [Reference''get])
@@ -715,8 +734,6 @@
  ; Evaluates x, then calls all of the methods and functions with the
  ; value of x supplied at the front of the given arguments. The forms
  ; are evaluated in order. Returns x.
- ;
- ; (doto (new java.util.HashMap) (.put "a" 1) (.put "b" 2))
  ;;
 (defmacro doto [x & s]
     (let [x' (gensym)]
@@ -782,8 +799,8 @@
         (#_"seq" Seqable'''seq [#_"Seqable" this])
     )
 
-    (-/extend-protocol Seqable clojure.lang.Seqable
-        (Seqable'''seq [x] (.seq x))
+    (-/extend-protocol Seqable clojure.lang.Seqable
+        (Seqable'''seq [x] (.seq x))
     )
 
     (defn seqable? [x] (satisfies? Seqable x))
@@ -807,9 +824,9 @@
         (#_"seq" ISeq'''next [#_"seq" this])
     )
 
-    (-/extend-protocol ISeq clojure.lang.ISeq
-        (ISeq'''first [s] (.first s))
-        (ISeq'''next [s] (.next s))
+    (-/extend-protocol ISeq clojure.lang.ISeq
+        (ISeq'''first [s] (.first s))
+        (ISeq'''next [s] (.next s))
     )
 
     (defn seq? [x] (satisfies? ISeq x))
@@ -837,8 +854,8 @@
         (#_"boolean" IObject'''equals [#_"IObject" this, #_"Object" that])
     )
 
-    (-/extend-protocol IObject Object
-        (IObject'''equals [this, that] (.equals this, that))
+    (-/extend-protocol IObject java.lang.Object
+        (IObject'''equals [this, that] (.equals this, that))
     )
 )
 
@@ -854,13 +871,12 @@
     )
 
     (-/extend-protocol Counted
-        clojure.lang.Counted                  (Counted'''count [o] (.count o))
-      ; (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
-        CharSequence                          (Counted'''count [s] (.length s))
+        clojure.lang.Counted   (Counted'''count [o] (.count o))
+        java.lang.CharSequence (Counted'''count [s] (.length s))
     )
 
     (-/extend-protocol Counted
-        (Class/forName "[Ljava.lang.Object;") (Counted'''count [a] (Array'getLength a))
+        @Object'array (Counted'''count [a] (Array'getLength a))
     )
 
     (defn counted? [x] (satisfies? Counted x))
@@ -880,7 +896,7 @@
                         )
                     )
                 :else
-                    (throw! (str "count not supported on " (-/class x)))
+                    (throw! (str "count not supported on " x))
             )
         )
     )
@@ -895,12 +911,12 @@
     (declare Murmur3'hashLong)
 
     (-/extend-protocol Hashed
-        Object               (Hashed'''hash [o] (Object''hashCode o))
-        String               (Hashed'''hash [s] (Murmur3'hashInt (Object''hashCode s)))
-        Number               (Hashed'''hash [n] (Murmur3'hashLong (Number''longValue n)))
-        BigInteger           (Hashed'''hash [i] (if (< (BigInteger''bitLength i) 64) (Murmur3'hashLong (BigInteger''longValue i)) (Object''hashCode i)))
-        clojure.lang.Ratio   (Hashed'''hash [r] (Object''hashCode r))
-        clojure.lang.IHashEq (Hashed'''hash [o] (.hasheq o))
+        java.lang.Object       (Hashed'''hash [o] (Object''hashCode o))
+        java.lang.String       (Hashed'''hash [s] (Murmur3'hashInt (Object''hashCode s)))
+        java.lang.Number       (Hashed'''hash [n] (Murmur3'hashLong (Number''longValue n)))
+        arbace.math.BigInteger (Hashed'''hash [i] (if (< (BigInteger''bitLength i) 64) (Murmur3'hashLong (BigInteger''longValue i)) (Object''hashCode i)))
+        clojure.lang.Ratio     (Hashed'''hash [r] (Object''hashCode r))
+        clojure.lang.IHashEq   (Hashed'''hash [o] (.hasheq o))
     )
 
     (defn hashed? [x] (satisfies? Hashed x))
@@ -940,21 +956,21 @@
 
     (declare anew)
 
-    (-/extend-protocol IFn clojure.lang.IFn
+    (-/extend-protocol IFn clojure.lang.IFn
         (IFn'''invoke
-            ([this]                                                   (.invoke this))
-            ([this, a1]                                               (.invoke this, a1))
-            ([this, a1, a2]                                           (.invoke this, a1, a2))
-            ([this, a1, a2, a3]                                       (.invoke this, a1, a2, a3))
-            ([this, a1, a2, a3, a4]                                   (.invoke this, a1, a2, a3, a4))
-            ([this, a1, a2, a3, a4, a5]                               (.invoke this, a1, a2, a3, a4, a5))
-            ([this, a1, a2, a3, a4, a5, a6]                           (.invoke this, a1, a2, a3, a4, a5, a6))
-            ([this, a1, a2, a3, a4, a5, a6, a7]                       (.invoke this, a1, a2, a3, a4, a5, a6, a7))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8]                   (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
-            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (anew args)))
+            ([this]                                                   (.invoke this))
+            ([this, a1]                                               (.invoke this, a1))
+            ([this, a1, a2]                                           (.invoke this, a1, a2))
+            ([this, a1, a2, a3]                                       (.invoke this, a1, a2, a3))
+            ([this, a1, a2, a3, a4]                                   (.invoke this, a1, a2, a3, a4))
+            ([this, a1, a2, a3, a4, a5]                               (.invoke this, a1, a2, a3, a4, a5))
+            ([this, a1, a2, a3, a4, a5, a6]                           (.invoke this, a1, a2, a3, a4, a5, a6))
+            ([this, a1, a2, a3, a4, a5, a6, a7]                       (.invoke this, a1, a2, a3, a4, a5, a6, a7))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8]                   (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9))
+            ([this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (.invoke this, a1, a2, a3, a4, a5, a6, a7, a8, a9, (anew args)))
         )
-        (IFn'''applyTo [this, args] (.applyTo this, args))
+        (IFn'''applyTo [this, args] (.applyTo this, args))
     )
 
     ;;;
@@ -1016,9 +1032,9 @@
         (#_"String" INamed'''getName [#_"INamed" this])
     )
 
-    (-/extend-protocol INamed clojure.lang.Named
-        (INamed'''getNamespace [this] (.getNamespace this))
-        (INamed'''getName [this] (.getName this))
+    (-/extend-protocol INamed clojure.lang.Named
+        (INamed'''getNamespace [this] (.getNamespace this))
+        (INamed'''getName [this] (.getName this))
     )
 
     (defn named? [x] (satisfies? INamed x))
@@ -1039,8 +1055,8 @@
         (#_"meta" IMeta'''meta [#_"IMeta" this])
     )
 
-    (-/extend-protocol IMeta clojure.lang.IMeta
-        (IMeta'''meta [this] (.meta this))
+    (-/extend-protocol IMeta clojure.lang.IMeta
+        (IMeta'''meta [this] (.meta this))
     )
 
     ;;;
@@ -1054,8 +1070,8 @@
         (#_"IObj" IObj'''withMeta [#_"IObj" this, #_"meta" meta])
     )
 
-    (-/extend-protocol IObj clojure.lang.IObj
-        (IObj'''withMeta [this, meta] (.withMeta this, (-/into {} meta)))
+    (-/extend-protocol IObj clojure.lang.IObj
+        (IObj'''withMeta [this, meta] (.withMeta this, (-/into {} meta)))
     )
 
     ;;;
@@ -1076,9 +1092,9 @@
         (#_"meta" IReference'''resetMeta [#_"IReference" this, #_"meta" m])
     )
 
-    (-/extend-protocol IReference clojure.lang.IReference
-        (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
-        (IReference'''resetMeta [this, m] (.resetMeta this, m))
+    (-/extend-protocol IReference clojure.lang.IReference
+        (IReference'''alterMeta [this, f, args] (.alterMeta this, f, args))
+        (IReference'''resetMeta [this, m] (.resetMeta this, m))
     )
 
     ;;;
@@ -1098,8 +1114,8 @@
         (#_"Object" IDeref'''deref [#_"IDeref" this])
     )
 
-    (-/extend-protocol IDeref clojure.lang.IDeref
-        (IDeref'''deref [this] (.deref this))
+    (-/extend-protocol IDeref clojure.lang.IDeref
+        (IDeref'''deref [this] (.deref this))
     )
 
     ;;;
@@ -1119,9 +1135,9 @@
         (#_"[Object Object]" IAtom'''resetVals [#_"IAtom" this, #_"Object" o'])
     )
 
-    (-/extend-protocol IAtom clojure.lang.IAtom2                         (IAtom'''compareAndSet [this, o, o'] (.compareAndSet this, o, o'))
-        (IAtom'''swap     [this, f, args] (.swap     this, f, args)) (IAtom'''reset         [this,    o'] (.reset         this,    o'))
-        (IAtom'''swapVals [this, f, args] (.swapVals this, f, args)) (IAtom'''resetVals     [this,    o'] (.resetVals     this,    o'))
+    (-/extend-protocol IAtom clojure.lang.IAtom2                         (IAtom'''compareAndSet [this, o, o'] (.compareAndSet this, o, o'))
+        (IAtom'''swap     [this, f, args] (.swap     this, f, args)) (IAtom'''reset         [this,    o'] (.reset         this,    o'))
+        (IAtom'''swapVals [this, f, args] (.swapVals this, f, args)) (IAtom'''resetVals     [this,    o'] (.resetVals     this,    o'))
     )
 )
 
@@ -1130,8 +1146,8 @@
         (#_"boolean" IPending'''isRealized [#_"IPending" this])
     )
 
-    (-/extend-protocol IPending clojure.lang.IPending
-        (IPending'''isRealized [this] (.isRealized this))
+    (-/extend-protocol IPending clojure.lang.IPending
+        (IPending'''isRealized [this] (.isRealized this))
     )
 
     ;;;
@@ -1143,7 +1159,7 @@
 (about #_"arbace.Sequential"
     (defp Sequential)
 
-    (-/extend-protocol Sequential clojure.lang.Sequential)
+    (-/extend-protocol Sequential clojure.lang.Sequential)
 
     (defn sequential? [x] (satisfies? Sequential x))
 )
@@ -1153,8 +1169,8 @@
         (#_"seq" Reversible'''rseq [#_"Reversible" this])
     )
 
-    (-/extend-protocol Reversible clojure.lang.Reversible
-        (Reversible'''rseq [this] (.rseq this))
+    (-/extend-protocol Reversible clojure.lang.Reversible
+        (Reversible'''rseq [this] (.rseq this))
     )
 
     (defn reversible? [x] (satisfies? Reversible x))
@@ -1174,11 +1190,11 @@
         (#_"seq" Sorted'''seqFrom [#_"Sorted" this, #_"Object" key, #_"boolean" ascending?])
     )
 
-    (-/extend-protocol Sorted clojure.lang.Sorted
-        (Sorted'''comparator [this] (.comparator this))
-        (Sorted'''entryKey [this, entry] (.entryKey this, entry))
-        (Sorted'''seq [this, ascending?] (.seq this, ascending?))
-        (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
+    (-/extend-protocol Sorted clojure.lang.Sorted
+        (Sorted'''comparator [this] (.comparator this))
+        (Sorted'''entryKey [this, entry] (.entryKey this, entry))
+        (Sorted'''seq [this, ascending?] (.seq this, ascending?))
+        (Sorted'''seqFrom [this, key, ascending?] (.seqFrom this, key, ascending?))
     )
 
     (defn sorted? [x] (satisfies? Sorted x))
@@ -1192,10 +1208,10 @@
         )
     )
 
-    (-/extend-protocol Indexed clojure.lang.Indexed
+    (-/extend-protocol Indexed clojure.lang.Indexed
         (Indexed'''nth
-            ([this, i] (.nth this, i))
-            ([this, i, not-found] (.nth this, i, not-found))
+            ([this, i] (.nth this, i))
+            ([this, i, not-found] (.nth this, i, not-found))
         )
     )
 
@@ -1218,10 +1234,10 @@
         )
     )
 
-    (§ -/extend-protocol ILookup clojure.lang.ILookup
+    (§ -/extend-protocol ILookup clojure.lang.ILookup
         (ILookup'''valAt
-            ([this, key] (.valAt this, key))
-            ([this, key, not-found] (.valAt this, key, not-found))
+            ([this, key] (.valAt this, key))
+            ([this, key, not-found] (.valAt this, key, not-found))
         )
     )
 )
@@ -1232,9 +1248,9 @@
         (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
     )
 
-    (-/extend-protocol IPersistentCollection clojure.lang.IPersistentCollection
-        (IPersistentCollection'''conj [this, o] (.cons this, o))
-        (IPersistentCollection'''empty [this] (.empty this))
+    (-/extend-protocol IPersistentCollection clojure.lang.IPersistentCollection
+        (IPersistentCollection'''conj [this, o] (.cons this, o))
+        (IPersistentCollection'''empty [this] (.empty this))
     )
 
     (defn coll? [x] (satisfies? IPersistentCollection x))
@@ -1278,8 +1294,8 @@
         (#_"ITransientCollection" IEditableCollection'''asTransient [#_"IEditableCollection" this])
     )
 
-    (-/extend-protocol IEditableCollection clojure.lang.IEditableCollection
-        (IEditableCollection'''asTransient [this] (.asTransient this))
+    (-/extend-protocol IEditableCollection clojure.lang.IEditableCollection
+        (IEditableCollection'''asTransient [this] (.asTransient this))
     )
 
     (defn editable? [x] (satisfies? IEditableCollection x))
@@ -1296,9 +1312,9 @@
         (#_"Object" IMapEntry'''val [#_"IMapEntry" this])
     )
 
-    (-/extend-protocol IMapEntry clojure.lang.IMapEntry
-        (IMapEntry'''key [this] (.key this))
-        (IMapEntry'''val [this] (.val this))
+    (-/extend-protocol IMapEntry clojure.lang.IMapEntry
+        (IMapEntry'''key [this] (.key this))
+        (IMapEntry'''val [this] (.val this))
     )
 
     (defn map-entry? [x] (satisfies? IMapEntry x))
@@ -1325,10 +1341,10 @@
         (#_"IMapEntry" Associative'''entryAt [#_"Associative" this, #_"key" key])
     )
 
-    (-/extend-protocol Associative clojure.lang.Associative
-        (Associative'''assoc [this, key, val] (.assoc this, key, val))
-        (Associative'''containsKey [this, key] (.containsKey this, key))
-        (Associative'''entryAt [this, key] (.entryAt this, key))
+    (-/extend-protocol Associative clojure.lang.Associative
+        (Associative'''assoc [this, key, val] (.assoc this, key, val))
+        (Associative'''containsKey [this, key] (.containsKey this, key))
+        (Associative'''entryAt [this, key] (.entryAt this, key))
     )
 
     (defn associative? [x] (satisfies? Associative x))
@@ -1406,8 +1422,8 @@
         (#_"IPersistentMap" IPersistentMap'''dissoc [#_"IPersistentMap" this, #_"key" key])
     )
 
-    (-/extend-protocol IPersistentMap clojure.lang.IPersistentMap
-        (IPersistentMap'''dissoc [this, key] (.without this, key))
+    (-/extend-protocol IPersistentMap clojure.lang.IPersistentMap
+        (IPersistentMap'''dissoc [this, key] (.without this, key))
     )
 
     (defn map? [x] (satisfies? IPersistentMap x))
@@ -1434,10 +1450,10 @@
         (#_"Object" IPersistentSet'''get [#_"IPersistentSet" this, #_"key" key])
     )
 
-    (-/extend-protocol IPersistentSet clojure.lang.IPersistentSet
-        (IPersistentSet'''disj [this, key] (.disjoin this, key))
-        (IPersistentSet'''contains? [this, key] (.contains this, key))
-        (IPersistentSet'''get [this, key] (.get this, key))
+    (-/extend-protocol IPersistentSet clojure.lang.IPersistentSet
+        (IPersistentSet'''disj [this, key] (.disjoin this, key))
+        (IPersistentSet'''contains? [this, key] (.contains this, key))
+        (IPersistentSet'''get [this, key] (.get this, key))
     )
 
     (defn set? [x] (satisfies? IPersistentSet x))
@@ -1463,9 +1479,9 @@
         (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
     )
 
-    (-/extend-protocol IPersistentStack clojure.lang.IPersistentStack
-        (IPersistentStack'''peek [this] (.peek this))
-        (IPersistentStack'''pop [this] (.pop this))
+    (-/extend-protocol IPersistentStack clojure.lang.IPersistentStack
+        (IPersistentStack'''peek [this] (.peek this))
+        (IPersistentStack'''pop [this] (.pop this))
     )
 
     (defn stack? [x] (satisfies? IPersistentStack x))
@@ -1501,7 +1517,7 @@
 (about #_"arbace.IPersistentList"
     (defp IPersistentList)
 
-    (-/extend-protocol IPersistentList clojure.lang.IPersistentList)
+    (-/extend-protocol IPersistentList clojure.lang.IPersistentList)
 
     (defn list? [x] (satisfies? IPersistentList x))
 )
@@ -1513,8 +1529,8 @@
         (#_"IPersistentVector" IPersistentVector'''splicev [#_"IPersistentVector" this, #_"IPersistentVector" that])
     )
 
-    (-/extend-protocol IPersistentVector clojure.lang.IPersistentVector
-        (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
+    (-/extend-protocol IPersistentVector clojure.lang.IPersistentVector
+        (IPersistentVector'''assocN [this, i, val] (.assocN this, i, val))
     )
 
     (defn vector? [x] (satisfies? IPersistentVector x))
@@ -1526,9 +1542,9 @@
         (#_"IPersistentCollection" ITransientCollection'''persistent! [#_"ITransientCollection" this])
     )
 
-    (§ -/extend-protocol ITransientCollection clojure.lang.ITransientCollection
-        (ITransientCollection'''conj! [this, val] (.conj this, val))
-        (ITransientCollection'''persistent! [this] (.persistent this))
+    (§ -/extend-protocol ITransientCollection clojure.lang.ITransientCollection
+        (ITransientCollection'''conj! [this, val] (.conj this, val))
+        (ITransientCollection'''persistent! [this] (.persistent this))
     )
 
     ;;;
@@ -1562,10 +1578,10 @@
         (#_"IMapEntry" ITransientAssociative'''entryAt [#_"ITransientAssociative" this, #_"key" key])
     )
 
-    (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
-        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
-        (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
-        (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
+    (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
+        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
+        (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
+        (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
     )
 
     ;;;
@@ -1591,8 +1607,8 @@
         (#_"ITransientMap" ITransientMap'''dissoc! [#_"ITransientMap" this, #_"key" key])
     )
 
-    (-/extend-protocol ITransientMap clojure.lang.ITransientMap
-        (ITransientMap'''dissoc! [this, key] (.without this, key))
+    (-/extend-protocol ITransientMap clojure.lang.ITransientMap
+        (ITransientMap'''dissoc! [this, key] (.without this, key))
     )
 
     ;;;
@@ -1617,10 +1633,10 @@
         (#_"Object" ITransientSet'''get [#_"ITransientSet" this, #_"key" key])
     )
 
-    (-/extend-protocol ITransientSet clojure.lang.ITransientSet
-        (ITransientSet'''disj! [this, key] (.disjoin this, key))
-        (ITransientSet'''contains? [this, key] (.contains this, key))
-        (ITransientSet'''get [this, key] (.get this, key))
+    (-/extend-protocol ITransientSet clojure.lang.ITransientSet
+        (ITransientSet'''disj! [this, key] (.disjoin this, key))
+        (ITransientSet'''contains? [this, key] (.contains this, key))
+        (ITransientSet'''get [this, key] (.get this, key))
     )
 
     ;;;
@@ -1644,9 +1660,9 @@
         (#_"ITransientVector" ITransientVector'''pop! [#_"ITransientVector" this])
     )
 
-    (-/extend-protocol ITransientVector clojure.lang.ITransientVector
-        (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
-        (ITransientVector'''pop! [this] (.pop this))
+    (-/extend-protocol ITransientVector clojure.lang.ITransientVector
+        (ITransientVector'''assocN! [this, i, val] (.assocN this, i, val))
+        (ITransientVector'''pop! [this] (.pop this))
     )
 
     ;;;
@@ -1664,10 +1680,10 @@
         )
     )
 
-    (-/extend-protocol IReduce clojure.lang.IReduce
+    (-/extend-protocol IReduce clojure.lang.IReduce
         (IReduce'''reduce
-            ([this, f] (.reduce this, f))
-            ([this, f, r] (.reduce this, f, r))
+            ([this, f] (.reduce this, f))
+            ([this, f, r] (.reduce this, f, r))
         )
     )
 )
@@ -1677,8 +1693,8 @@
         (#_"Object" IKVReduce'''kvreduce [#_"IKVReduce" this, #_"fn" f, #_"Object" r])
     )
 
-    (-/extend-protocol IKVReduce clojure.lang.IKVReduce
-        (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
+    (-/extend-protocol IKVReduce clojure.lang.IKVReduce
+        (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
     )
 )
 
@@ -1691,9 +1707,14 @@
 (about #_"arbace.Ratio"
     (defp Ratio)
 
-    (-/extend-protocol Ratio clojure.lang.Ratio)
+    (-/extend-protocol Ratio clojure.lang.Ratio)
 
     (defn ratio? [n] (satisfies? Ratio n))
+
+    ;;;
+     ; Returns true if n is an integer number.
+     ;;
+    (defn integer? [n] (or (int? n) (long? n) (biginteger? n) (byte? n)))
 
     ;;;
      ; Returns true if n is a rational number.
@@ -1740,7 +1761,7 @@
 (about #_"arbace.Symbol"
     (defp Symbol)
 
-    (-/extend-protocol Symbol clojure.lang.Symbol)
+    (-/extend-protocol Symbol clojure.lang.Symbol)
 
     (defn symbol? [x] (satisfies? Symbol x))
 )
@@ -1748,7 +1769,7 @@
 (about #_"arbace.Keyword"
     (defp Keyword)
 
-    (-/extend-protocol Keyword clojure.lang.Keyword)
+    (-/extend-protocol Keyword clojure.lang.Keyword)
 
     (defn keyword? [x] (satisfies? Keyword x))
 )
@@ -1757,7 +1778,7 @@
     #_abstract
     (defp Fn)
 
-    (-/extend-protocol Fn clojure.lang.Fn)
+    (-/extend-protocol Fn clojure.lang.Fn)
 
     ;;;
      ; Returns true if x is an object created via fn.
@@ -1926,7 +1947,7 @@
 (about #_"arbace.Reduced"
     (defp Reduced)
 
-    (-/extend-protocol Reduced clojure.lang.Reduced)
+    (-/extend-protocol Reduced clojure.lang.Reduced)
 
     ;;;
      ; Returns true if x is the result of a call to reduced.
@@ -1942,8 +1963,8 @@
     (defp Unbound)
     (defp Var)
 
-    (-/extend-protocol Unbound clojure.lang.Var$Unbound)
-    (-/extend-protocol Var clojure.lang.Var)
+    (-/extend-protocol Unbound clojure.lang.Var$Unbound)
+    (-/extend-protocol Var clojure.lang.Var)
 
     ;;;
      ; Returns true if v is of type Var.
@@ -1961,9 +1982,9 @@
 
     (defn anew [size-or-seq]
         (if (number? size-or-seq)
-            (-/make-array Object (int! size-or-seq))
+            (-/object-array (int! size-or-seq))
             (let [#_"seq" s (seq size-or-seq) #_"int" n (count s)]
-                (loop-when-recur [#_"array" a (-/make-array Object n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
+                (loop-when-recur [#_"array" a (-/object-array n) #_"int" i 0 s s] (and (< i n) (some? s)) [(aset! a i (first s)) (inc i) (next s)] => a)
             )
         )
     )
@@ -2080,13 +2101,13 @@
                     MapForm (append-map a x)
                     SetForm (append-set a x)
                     (cond
-                        (seq? x)    (append-seq a x)
-                        (vector? x) (append-vec a x)
-                        (map? x)    (append-map a x)
-                        (set? x)    (append-set a x)
-                        (-/char? x) (append-chr a x)
+                        (seq? x)     (append-seq a x)
+                        (vector? x)  (append-vec a x)
+                        (map? x)     (append-map a x)
+                        (set? x)     (append-set a x)
+                        (char? x)    (append-chr a x)
                         (pattern? x) (append-rex a x)
-                        :else       (Appendable''append a, (Object''toString x))
+                        :else        (Appendable''append a, (Object''toString x))
                     )
                 )
             )
@@ -2094,7 +2115,7 @@
     )
 
     (defn #_"Appendable" append! [#_"Appendable" a, #_"any" x]
-        (if (or (char-sequence? x) (-/char? x)) (Appendable''append a, x) (append a x))
+        (if (or (char-sequence? x) (char? x)) (Appendable''append a, x) (append a x))
     )
 
     (defn #_"String" str
@@ -2410,7 +2431,7 @@
                     (reset! (:f this) nil)
                     (try
                         (reset! (:o this) (f))
-                        (catch Throwable t
+                        (catch java.lang.Throwable t
                             (reset! (:e this) t)
                         )
                     )
@@ -3015,10 +3036,8 @@
     )
 
     (defn- #_"long" Numbers'bitOpsCast [#_"Number" x]
-        (let [#_"Class" c (-/class x)]
-            (when (any = c Long Integer Byte) => (throw! (str "bit operation not supported on " c))
-                (long x)
-            )
+        (when (or (long? x) (int? x) (byte? x)) => (throw! (str "bit operation not supported on " x))
+            (long x)
         )
     )
 
@@ -3244,7 +3263,7 @@
 
 (about #_"AFn"
     (defn #_"void" AFn'throwArity [#_"fn" f, #_"int" n]
-        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to: " (-/class f)))
+        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to " f))
     )
 
     (defn #_"Object" AFn'applyTo [#_"fn" f, #_"seq" s]
@@ -4162,7 +4181,7 @@
         )
     )
 
-    (-/extend-protocol Seqable (Class/forName "[Ljava.lang.Object;")
+    (-/extend-protocol Seqable @Object'array
         (#_"ArraySeq" Seqable'''seq [#_"array" a] (ArraySeq'create a))
     )
 
@@ -4274,7 +4293,7 @@
         )
     )
 
-    (-/extend-protocol Seqable CharSequence
+    (-/extend-protocol Seqable java.lang.CharSequence
         (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (StringSeq'create s))
     )
 
@@ -11053,7 +11072,7 @@
             (satisfies? ITransientAssociative coll)
                 (if (ITransientAssociative'''containsKey coll, key) true false)
             :else
-                (throw! (str "contains? not supported on " (-/class coll)))
+                (throw! (str "contains? not supported on " coll))
         )
     )
 
@@ -11075,7 +11094,7 @@
             (satisfies? ITransientAssociative coll)
                 (ITransientAssociative'''entryAt coll, key)
             :else
-                (throw! (str "find not supported on " (-/class coll)))
+                (throw! (str "find not supported on " coll))
         )
     )
 
@@ -11119,7 +11138,7 @@
                         (recur-when (< i n) [(inc i) (next s)] => (first s))
                     )
                 :else
-                    (throw! (str "nth not supported on " (-/class coll)))
+                    (throw! (str "nth not supported on " coll))
             )
         )
         ([#_"Object" coll, #_"int" n, #_"value" not-found]
@@ -11151,7 +11170,7 @@
                         (recur-when (< i n) [(inc i) (next s)] => (first s))
                     )
                 :else
-                    (throw! (str "nth not supported on " (-/class coll)))
+                    (throw! (str "nth not supported on " coll))
             )
         )
     )
@@ -11410,7 +11429,7 @@
 (about #_"arbace.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Symbol" name, #_"{Symbol Class|Var}'" mappings, #_"{Symbol Namespace}'" aliases])
+    (defq Namespace [#_"Symbol" name, #_"{Symbol Var}'" mappings, #_"{Symbol Namespace}'" aliases])
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
@@ -11979,7 +11998,7 @@
 
 ;;;
  ; Returns the lines of text from r as a lazy sequence of strings.
- ; r must implement java.io.BufferedReader.
+ ; r must implement java.io.BufferedReader.
  ;;
 (defn line-seq [#_"BufferedReader" r]
     (when-some [line (BufferedReader''readLine r)]
@@ -11988,7 +12007,7 @@
 )
 
 ;;;
- ; Returns an implementation of java.util.Comparator based upon f?.
+ ; Returns an implementation of java.util.Comparator based upon f?.
  ;;
 (defn comparator [f?]
     (fn [x y]
@@ -11998,7 +12017,7 @@
 
 ;;;
  ; Returns a sorted sequence of the items in coll.
- ; If no comparator is supplied, uses compare. comparator must implement java.util.Comparator.
+ ; If no comparator is supplied, uses compare. comparator must implement java.util.Comparator.
  ; Guaranteed to be stable: equal elements will not be reordered.
  ; If coll is a Java array, it will be modified. To avoid this, sort a copy of the array.
  ;;
@@ -12016,7 +12035,7 @@
 
 ;;;
  ; Returns a sorted sequence of the items in coll, where the sort order is determined by comparing (keyfn item).
- ; If no comparator is supplied, uses compare. comparator must implement java.util.Comparator.
+ ; If no comparator is supplied, uses compare. comparator must implement java.util.Comparator.
  ; Guaranteed to be stable: equal elements will not be reordered.
  ; If coll is a Java array, it will be modified. To avoid this, sort a copy of the array.
  ;;
@@ -12103,12 +12122,12 @@
 )
 
 ;;;
- ; Returns an instance of java.util.regex.Pattern, for use, e.g. in re-matcher.
+ ; Returns an instance of java.util.regex.Pattern, for use, e.g. in re-matcher.
  ;;
 (defn #_"Pattern" re-pattern [s] (if (pattern? s) s (Pattern'compile s)))
 
 ;;;
- ; Returns an instance of java.util.regex.Matcher, for use, e.g. in re-find.
+ ; Returns an instance of java.util.regex.Matcher, for use, e.g. in re-find.
  ;;
 (defn #_"Matcher" re-matcher [#_"Pattern" re s] (Pattern''matcher re, s))
 
@@ -12126,8 +12145,7 @@
 
 ;;;
  ; Returns a lazy sequence of successive matches of pattern in string,
- ; using java.util.regex.Matcher.find(), each such match processed with
- ; re-groups.
+ ; each such match processed with re-groups.
  ;;
 (defn re-seq [#_"Pattern" re s]
     (let [m (re-matcher re s)]
@@ -12140,8 +12158,7 @@
 )
 
 ;;;
- ; Returns the match, if any, of string to pattern,
- ; using java.util.regex.Matcher.matches().
+ ; Returns the match, if any, of string to pattern.
  ; Uses re-groups to return the groups.
  ;;
 (defn re-matches [#_"Pattern" re s]
@@ -12151,8 +12168,7 @@
 )
 
 ;;;
- ; Returns the next regex match, if any, of string to pattern,
- ; using java.util.regex.Matcher.find().
+ ; Returns the next regex match, if any, of string to pattern.
  ; Uses re-groups to return the groups.
  ;;
 (defn re-find
@@ -13305,7 +13321,7 @@
     )
 
     (defn #_"Symbol" Compiler'resolveSymbol [#_"Symbol" sym]
-        ;; already qualified or classname?
+        ;; already qualified?
         (cond
             (pos? (String''indexOf (:name sym), (int \.)))
                 sym
@@ -13319,9 +13335,8 @@
             :else
                 (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
                     (cond
-                        (nil? o)   (symbol (:name (:name *arbace-ns*)) (:name sym))
-                        (-/class? o) (symbol (.getName #_"Class" o))
-                        (var? o)   (symbol (:name (:name (:ns o))) (:name (:sym o)))
+                        (nil? o) (symbol (:name (:name *arbace-ns*)) (:name sym))
+                        (var? o) (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
                 )
         )
@@ -14891,8 +14906,6 @@
                         (when (nil? (Compiler'maybeMacro o, scope)) => (throw! (str "can't take value of a macro: " o))
                             (VarExpr'new o)
                         )
-                    (-/class? o)
-                        (LiteralExpr'new o)
                     (symbol? o)
                         (UnresolvedVarExpr'new o)
                     :else
@@ -15458,10 +15471,7 @@
                                     (and (nil? ns) (String''startsWith n, "."))
                                         form ;; simply quote method names
                                     :else
-                                        (let-when [#_"Object" c (when (some? ns) (Namespace''getMapping *arbace-ns*, (symbol ns)))] (-/class? c) => (Compiler'resolveSymbol form)
-                                            ;; Classname/foo -> package.qualified.Classname/foo
-                                            (symbol (.getName c) n)
-                                        )
+                                        (Compiler'resolveSymbol form)
                                 )]
                             (list (symbol! 'quote) form)
                         )
@@ -15484,7 +15494,7 @@
                             :else
                                 (throw! "unknown collection type")
                         )
-                    (or (keyword? form) (number? form) (-/char? form) (string? form))
+                    (or (keyword? form) (number? form) (char? form) (string? form))
                         form
                     :else
                         (list (symbol! 'quote) form)
@@ -15623,7 +15633,7 @@
 )
 
 ;;;
- ; Reads the next object from stream, which must be an instance of java.io.PushbackReader
+ ; Reads the next object from stream, which must be an instance of java.io.PushbackReader
  ; or some derivee. stream defaults to the current value of *in*.
  ;;
 (defn read
@@ -15693,9 +15703,9 @@
 )
 
 ;;;
- ; Returns the var or Class to which a symbol will be resolved in the namespace
+ ; Returns the var to which a symbol will be resolved in the namespace
  ; (unless found in the environment), else nil. Note that if the symbol is fully qualified,
- ; the var/Class to which it resolves need not be present in the namespace.
+ ; the var to which it resolves need not be present in the namespace.
  ;;
 (defn ns-resolve
     ([ns sym] (ns-resolve ns nil sym))
@@ -15716,7 +15726,7 @@
 (about #_"*arbace-ns*"
     (def #_"Var" ^:dynamic *arbace-ns* (create-ns (symbol "arbace.core")))
 
-    (doseq [[#_"symbol" s #_"class|var" v] (-/ns-map -/*ns*)]
+    (doseq [[#_"symbol" s #_"var" v] (-/ns-map -/*ns*)]
         (intern *arbace-ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
     )
 
