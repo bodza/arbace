@@ -6,14 +6,14 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [*ns* -> = and case conj cons defmacro defn defn- doseq fn identity if-some keys keyword let letfn map mapcat merge meta partial some? str symbol symbol? vary-meta vec vector when when-not with-meta]) (:require [clojure.core :as -])
+    (:refer-clojure :only [-> = and case conj cons defmacro defn defn- doseq first fn identity if-some keys keyword let letfn list map mapcat merge meta next partial range reduce second select-keys some? str symbol symbol? vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
-(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports *ns*))] (-/ns-unmap *ns* n#)) (-/import ~@syms-or-seqs)))
+(defmacro import! [& syms-or-seqs] `(do (doseq [n# (keys (-/ns-imports -/*ns*))] (-/ns-unmap -/*ns* n#)) (-/import ~@syms-or-seqs)))
 
 (import!
-    [java.lang Boolean Byte Character CharSequence Class #_Comparable Error Integer Long Number String StringBuilder System Thread]
+    [java.lang Boolean Byte Character CharSequence Class Error Integer Long Number String StringBuilder System Thread]
     [java.lang.ref ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.io PushbackReader]
@@ -25,7 +25,7 @@
 )
 
 (defmacro refer! [ns s]
-    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (-/select-keys (meta v) [:dynamic :macro :private]))] `(def ~n ~v))]
+    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:dynamic :macro :private]))] `(def ~n ~v))]
         (if (symbol? s) (f s) (cons 'do (map f s)))
     )
 )
@@ -36,11 +36,11 @@
 
 (defn- emit-defarray* [tname cname fields interfaces methods opts]
     (let [
-        classname  (with-meta (symbol (str (-/namespace-munge *ns*) "." cname)) (meta cname))
+        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
         interfaces (vec interfaces)
         fields     (map #(with-meta % nil) fields)
     ]
-        (let [a '__data s (mapcat (fn [x y] [(keyword y) x]) (-/range) fields)]
+        (let [a '__data s (mapcat (fn [x y] [(keyword y) x]) (range) fields)]
             (letfn [(ilookup [[i m]]
                         [
                             (conj i 'clojure.lang.ILookup)
@@ -59,7 +59,7 @@
                         ]
                     )]
                 (let [[i m] (-> [interfaces methods] ilookup imap)]
-                    `(deftype* ~(symbol (-/name (-/ns-name *ns*)) (-/name tname))
+                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
                         ~classname
                         ~(vector a)
                         :implements ~(vec i)
@@ -77,7 +77,7 @@
     (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
         `(do
             ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
-            (-/import ~(symbol (str (-/namespace-munge *ns*) "." name)))
+            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
         )
     )
 )
@@ -86,7 +86,7 @@
 (about #_"extend-type"
 
 (defn- emit-hinted-impl [_ [p fs]]
-    [p (-/zipmap (map #(-> % -/first -/name keyword) fs) (map #(let [% (-/next %)] (if (= '=> (-/first %)) (-/second %) (cons `fn %))) fs))]
+    [p (zipmap (map #(-> % first -/name keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
 )
 
 (defmacro extend-type [t & specs]
@@ -99,43 +99,45 @@
 (defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
 (defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                               ~i)))
 
-(defmacro class! [r] (let [c (symbol (str r "'class"))] (-/list 'assoc (-/list 'new c) :class c)))
+(defmacro class! [r] (let [c (symbol (str r "'class"))] (list 'assoc (list 'new c) :class c)))
 
 #_(defmacro throw! [#_"String" s] `(throw (Error. ~s))) (defn throw! [#_"String" s] (throw (Error. s)))
 
-(refer! - [< <= > >= int neg? pos? zero?])
+(about #_"Numbers"
+    (refer! - [< <= > >= int neg? pos? zero?])
 
-(defn int! [n] (.intValue #_"Number" n))
+    (defn int! [n] (.intValue #_"Number" n))
 
-(defn +
-    ([] (int 0))
-    ([x] (int! x))
-    ([x y] (-/unchecked-add-int (int! x) (int! y)))
-    ([x y & s] (-/reduce + (+ x y) s))
+    (defn +
+        ([] (int 0))
+        ([x] (int! x))
+        ([x y] (-/unchecked-add-int (int! x) (int! y)))
+        ([x y & s] (reduce + (+ x y) s))
+    )
+
+    (defn -
+        ([x] (-/unchecked-negate-int (int! x)))
+        ([x y] (-/unchecked-subtract-int (int! x) (int! y)))
+        ([x y & s] (reduce - (- x y) s))
+    )
+
+    (def inc  -/unchecked-inc-int)
+    (def dec  -/unchecked-dec-int)
+    (def *    -/unchecked-multiply-int)
+    (def quot -/unchecked-divide-int)
+    (def rem  -/unchecked-remainder-int)
+
+    (defn bit-and [x y] (int! (-/bit-and x y)))
+    (defn bit-or  [x y] (int! (-/bit-or x y)))
+    (defn bit-xor [x y] (int! (-/bit-xor x y)))
+
+    (def & bit-and)
+    (def | bit-or)
+
+    (defn <<  [x y] (int! (-/bit-shift-left x y)))
+    (defn >>  [x y] (int! (-/bit-shift-right x y)))
+    (defn >>> [x y] (int! (-/unsigned-bit-shift-right (-/bit-and x 0xffffffff) y)))
 )
-
-(defn -
-    ([x] (-/unchecked-negate-int (int! x)))
-    ([x y] (-/unchecked-subtract-int (int! x) (int! y)))
-    ([x y & s] (-/reduce - (- x y) s))
-)
-
-(def inc  -/unchecked-inc-int)
-(def dec  -/unchecked-dec-int)
-(def *    -/unchecked-multiply-int)
-(def quot -/unchecked-divide-int)
-(def rem  -/unchecked-remainder-int)
-
-(defn bit-and [x y] (int! (-/bit-and x y)))
-(defn bit-or  [x y] (int! (-/bit-or x y)))
-(defn bit-xor [x y] (int! (-/bit-xor x y)))
-
-(def & bit-and)
-(def | bit-or)
-
-(defn <<  [x y] (int! (-/bit-shift-left x y)))
-(defn >>  [x y] (int! (-/bit-shift-right x y)))
-(defn >>> [x y] (int! (-/unsigned-bit-shift-right (-/bit-and x 0xffffffff) y)))
 
 (defn thread [] (Thread/currentThread))
 
@@ -166,6 +168,10 @@
 
     (defn #_"char" CharSequence''charAt [#_"CharSequence" this, #_"int" i] (.charAt this, i))
     (defn #_"int"  CharSequence''length [#_"CharSequence" this]            (.length this))
+)
+
+(about #_"Comparable"
+    (defn #_"int" Comparable''compareTo [#_"Comparable" this, #_"any" that] (.compareTo this, that))
 )
 
 (about #_"Integer"
@@ -286,6 +292,10 @@
 (about #_"Arrays"
     (defn #_"void" Arrays'sort [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
 )
+
+(about #_"Comparator"
+    (defn #_"int" Comparator''compare [#_"Comparator" this, #_"any" x, #_"any" y] (.compare this, x, y))
+)
 )
 
 (about #_"java.util.regex"
@@ -305,6 +315,29 @@
     (defn #_"String"  Matcher''group     ([#_"Matcher" this] (.group this)) ([#_"Matcher" this, #_"int" n] (.group this, n)))
     (defn #_"int"     Matcher''groupCount [#_"Matcher" this] (.groupCount this))
     (defn #_"boolean" Matcher''matches    [#_"Matcher" this] (.matches this))
+)
+)
+
+(about #_"clojure.lang"
+
+(about #_"ILookup"
+    (defn #_"value" ILookup''valAt ([#_"ILookup" this, #_"key" key] (.valAt this, key)) ([#_"ILookup" this, #_"key" key, #_"value" not-found] (.valAt this, key, not-found)))
+)
+
+(about #_"ITransientAssociative"
+    (defn #_"ITransientAssociative" ITransientAssociative''assoc! [#_"ITransientAssociative" this, #_"key" key, #_"value" val] (.assoc this, key, val))
+)
+
+(about #_"Namespace"
+    (defn #_"map"    Namespace''-getMappings     [#_"Namespace" this]                  (.getMappings this))
+    (defn #_"Object" Namespace''-getMapping      [#_"Namespace" this, #_"Symbol" name] (.getMapping this, name))
+    (defn #_"var"    Namespace''-intern          [#_"Namespace" this, #_"Symbol" sym]  (.intern this, sym))
+    (defn #_"var"    Namespace''-findInternedVar [#_"Namespace" this, #_"Symbol" name] (.findInternedVar this, name))
+)
+
+(about #_"Var"
+    (defn #_"boolean" Var''-isBound [#_"Var" this] (.isBound this))
+    (defn #_"Object"  Var''-get     [#_"Var" this] (.get this))
 )
 )
 
@@ -364,44 +397,53 @@
 )
 )
 
-(refer! - [boolean identical? long satisfies?])
-
 (ns arbace.core
-    (:refer-clojure :only []) (:require [clojure.core :as -])
-    (:refer arbace.bore :only [boolean class! defm defp defq defr identical? import! int int! long refer! satisfies?])
+    (:refer-clojure :only [boolean char identical? long satisfies?]) (:require [clojure.core :as -])
+    (:refer arbace.bore :only
+        [
+            class! defm defp defq defr import! int int! refer!
+            Appendable''append
+            boolean?
+            byte?
+            char? Character'digit Character'isWhitespace Character'valueOf
+            char-sequence? CharSequence''charAt CharSequence''length
+            Comparable''compareTo
+            int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString
+            long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf
+            number? Number''longValue Number''toString
+            Object'array Object''hashCode Object''toString
+            string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring
+            StringBuilder'new StringBuilder''append StringBuilder''toString
+            System'arraycopy
+            Reference''get
+            ReferenceQueue'new ReferenceQueue''poll
+            WeakReference'new
+            array? Array'get Array'getLength
+            BufferedReader''readLine
+            Flushable''flush
+            PrintWriter''println
+            pushback-reader? PushbackReader'new PushbackReader''unread
+            Reader''read
+            Arrays'sort
+            Comparator''compare
+            pattern? Pattern'compile Pattern''matcher Pattern''pattern
+            matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
+            ILookup''valAt
+            ITransientAssociative''assoc!
+            Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
+            Var''-isBound Var''-get
+            biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
+                        BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
+                        BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
+            AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set
+        ]
+    )
 )
 
 (import!)
 
 (refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
-
-(refer! arbace.bore [Appendable''append])
-(refer! arbace.bore [boolean?])
-(refer! arbace.bore [byte?])
-(refer! arbace.bore [char? Character'digit Character'isWhitespace Character'valueOf])
-(refer! arbace.bore [char-sequence? CharSequence''charAt CharSequence''length])
-(refer! arbace.bore [int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString])
-(refer! arbace.bore [long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf])
-(refer! arbace.bore [number? Number''longValue Number''toString])
-(refer! arbace.bore [Object'array Object''hashCode Object''toString])
-(refer! arbace.bore [string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring])
-(refer! arbace.bore [StringBuilder'new StringBuilder''append StringBuilder''toString])
-(refer! arbace.bore [System'arraycopy])
-(refer! arbace.bore [Reference''get])
-(refer! arbace.bore [ReferenceQueue'new ReferenceQueue''poll])
-(refer! arbace.bore [WeakReference'new])
-(refer! arbace.bore [array? Array'get Array'getLength])
-(refer! arbace.bore [BufferedReader''readLine])
-(refer! arbace.bore [Flushable''flush])
-(refer! arbace.bore [PrintWriter''println])
-(refer! arbace.bore [pushback-reader? PushbackReader'new PushbackReader''unread])
-(refer! arbace.bore [Reader''read])
-(refer! arbace.bore [Arrays'sort])
-(refer! arbace.bore [pattern? Pattern'compile Pattern''matcher Pattern''pattern])
-(refer! arbace.bore [matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches])
-(refer! arbace.bore [biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf])
-(refer! arbace.bore [AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
 
@@ -865,6 +907,18 @@
     )
 )
 
+(about #_"arbace.Comparable"
+    (defp Comparable
+        (#_"int" Comparable'''compareTo [#_"Comparable" this, #_"any" that])
+    )
+
+    (-/extend-protocol Comparable java.lang.Comparable
+        (Comparable'''compareTo [this, that] (.compareTo this, that))
+    )
+
+    (defn comparable? [x] (satisfies? Comparable x))
+)
+
 (about #_"arbace.Counted"
     (defp Counted
         (#_"int" Counted'''count [#_"Counted" this])
@@ -876,7 +930,7 @@
     )
 
     (-/extend-protocol Counted
-        @Object'array (Counted'''count [a] (Array'getLength a))
+        (do Object'array) (Counted'''count [a] (Array'getLength a))
     )
 
     (defn counted? [x] (satisfies? Counted x))
@@ -1236,8 +1290,8 @@
 
     (§ -/extend-protocol ILookup clojure.lang.ILookup
         (ILookup'''valAt
-            ([this, key] (.valAt this, key))
-            ([this, key, not-found] (.valAt this, key, not-found))
+            ([this, key] (ILookup''valAt this, key))
+            ([this, key, not-found] (ILookup''valAt this, key, not-found))
         )
     )
 )
@@ -1579,7 +1633,7 @@
     )
 
     (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
-        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
+        (ITransientAssociative'''assoc! [this, key, val] (ITransientAssociative''assoc! this, key, val))
         (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
         (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
     )
@@ -1990,19 +2044,19 @@
     )
 
     (defn- assoc!!
-        ([a k v]    (.assoc a, k, v))
+        ([a k v]    (ITransientAssociative''assoc! a, k, v))
         ([a k v & kvs]
-            (let [a (.assoc a, k, v)]
+            (let [a (ITransientAssociative''assoc! a, k, v)]
                 (recur-when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
             )
         )
     )
 
     (defn- update!!
-        ([a k f]         (.assoc a, k,       (f (.valAt a, k))))
-        ([a k f x]       (.assoc a, k,       (f (.valAt a, k) x)))
-        ([a k f x y]     (.assoc a, k,       (f (.valAt a, k) x y)))
-        ([a k f x y & z] (.assoc a, k, (apply f (.valAt a, k) x y z)))
+        ([a k f]         (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k))))
+        ([a k f x]       (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k) x)))
+        ([a k f x y]     (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k) x y)))
+        ([a k f x y & z] (ITransientAssociative''assoc! a, k, (apply f (ILookup''valAt a, k) x y z)))
     )
 )
 
@@ -2613,15 +2667,15 @@
             (nil? a)   -1
             (nil? b)    1
             (number? a) #_(Numbers'compare a, b) (-/compare a b)
-            :else       (.compareTo #_"Comparable" a, b)
+            :else       (Comparable''compareTo a, b)
         )
     )
 )
 
 ;;;
  ; Comparator. Returns a negative number, zero, or a positive number when x is logically
- ; 'less than', 'equal to', or 'greater than' y. Same as Java x.compareTo(y) except it also
- ; works for nil, and compares numbers and collections in a type-independent manner.
+ ; 'less than', 'equal to', or 'greater than' y. Same as Java x.compareTo(y) except it
+ ; also works for nil, and compares numbers and collections in a type-independent manner.
  ; x must implement Comparable.
  ;;
 (defn compare [x y] (Util'compare x y))
@@ -2666,6 +2720,10 @@
         (-> a (Appendable''append (BigInteger''toString (:n this))) (Appendable''append "/") (Appendable''append (BigInteger''toString (:d this))))
     )
 
+    (defn- #_"int" Ratio''compareTo [#_"Ratio" this, #_"Object" that]
+        #_(Numbers'compare this, #_"Number" that) (-/compare this that)
+    )
+
     (defm Ratio Hashed
         (Hashed'''hash => Ratio''hashcode)
     )
@@ -2678,11 +2736,8 @@
         (IAppend'''append => Ratio''append)
     )
 
-    #_foreign
-    (§ defm Ratio #_"Comparable"
-        (#_"int" Comparable'''compareTo [#_"Ratio" this, #_"Object" that]
-            (Numbers'compare this, #_"Number" that)
-        )
+    (defm Ratio Comparable
+        (Comparable'''compareTo => Ratio''compareTo)
     )
 )
 
@@ -2896,11 +2951,11 @@
         )
 
         (#_"boolean" Ops'''lt [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (-/< (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/< (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
         (#_"boolean" Ops'''lte [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-            (-/<= (.compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+            (-/<= (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
         )
 
         (#_"boolean" Ops'''isZero [#_"BigIntOps" this, #_"Number" x] (-/= (BigInteger''signum (Numbers'toBigInteger x)) 0))
@@ -3345,6 +3400,19 @@
         ([#_"Symbol" this, #_"Object" obj, #_"value" not-found] (get obj this not-found))
     )
 
+    (defn- #_"int" Symbol''compareTo [#_"Symbol" this, #_"Symbol" that]
+        (cond
+            (= this that)                              0
+            (and (nil? (:ns this)) (some? (:ns that))) -1
+            (nil? (:ns this))                          (compare (:name this) (:name that))
+            (nil? (:ns that))                          1
+            :else
+                (let-when [#_"int" cmp (compare (:ns this) (:ns that))] (zero? cmp) => cmp
+                    (compare (:name this) (:name that))
+                )
+        )
+    )
+
     (defm Symbol IMeta
         (IMeta'''meta => :_meta)
     )
@@ -3375,20 +3443,8 @@
         (IFn'''applyTo => AFn'applyTo)
     )
 
-    #_foreign
-    (§ defm Symbol #_"Comparable"
-        (#_"int" Comparable'''compareTo [#_"Symbol" this, #_"Symbol" that]
-            (cond
-                (= this that)                              0
-                (and (nil? (:ns this)) (some? (:ns that))) -1
-                (nil? (:ns this))                          (compare (:name this) (:name that))
-                (nil? (:ns that))                          1
-                :else
-                    (let-when [#_"int" cmp (compare (:ns this) (:ns that))] (zero? cmp) => cmp
-                        (compare (:name this) (:name that))
-                    )
-            )
-        )
+    (defm Symbol Comparable
+        (Comparable'''compareTo => Symbol''compareTo)
     )
 )
 
@@ -3480,6 +3536,10 @@
         ([#_"Keyword" this, #_"Object" obj, #_"value" not-found] (get obj this not-found))
     )
 
+    (defn- #_"int" Keyword''compareTo [#_"Keyword" this, #_"Keyword" that]
+        (compare (:sym this) (:sym that))
+    )
+
     (defm Keyword INamed
         (INamed'''getNamespace => Keyword''getNamespace)
         (INamed'''getName => Keyword''getName)
@@ -3502,11 +3562,8 @@
         (IFn'''applyTo => AFn'applyTo)
     )
 
-    #_foreign
-    (§ defm Keyword #_"Comparable"
-        (#_"int" Comparable'''compareTo [#_"Keyword" this, #_"Keyword" that]
-            (compare (:sym this) (:sym that))
-        )
+    (defm Keyword Comparable
+        (Comparable'''compareTo => Keyword''compareTo)
     )
 )
 
@@ -3576,9 +3633,8 @@
         (IFn'''applyTo => AFn'applyTo)
     )
 
-    #_foreign
     (§ defm Fn #_"Comparator"
-        (#_"int" Comparator'''compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
+        (#_"int" Comparator'''compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
             (let [#_"Object" o (IFn'''invoke this, o1, o2)]
                 (if (boolean? o)
                     (cond (boolean o) -1 (boolean (IFn'''invoke this, o2, o1)) 1 :else 0)
@@ -4018,7 +4074,7 @@
     (defm Range Counted)
 
     (defn- #_"RangeBoundsCheck" Range'positiveStep [#_"Object" end]
-        (-/reify RangeBoundsCheck
+        (-/reify RangeBoundsCheck
             (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
                 (<= end val)
             )
@@ -4026,7 +4082,7 @@
     )
 
     (defn- #_"RangeBoundsCheck" Range'negativeStep [#_"Object" end]
-        (-/reify RangeBoundsCheck
+        (-/reify RangeBoundsCheck
             (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
                 (<= val end)
             )
@@ -4181,7 +4237,7 @@
         )
     )
 
-    (-/extend-protocol Seqable @Object'array
+    (-/extend-protocol Seqable (do Object'array)
         (#_"ArraySeq" Seqable'''seq [#_"array" a] (ArraySeq'create a))
     )
 
@@ -5694,8 +5750,7 @@
         (Hashed'''hash => AMapEntry''hash)
     )
 
-    #_foreign
-    (§ defm MapEntry #_"Comparable"
+    (defm MapEntry Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8031,8 +8086,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm Black #_"Comparable"
+    (defm Black Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8102,8 +8156,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm BlackVal #_"Comparable"
+    (defm BlackVal Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8171,8 +8224,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm BlackBranch #_"Comparable"
+    (defm BlackBranch Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8242,8 +8294,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm BlackBranchVal #_"Comparable"
+    (defm BlackBranchVal Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8343,8 +8394,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm Red #_"Comparable"
+    (defm Red Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8412,8 +8462,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm RedVal #_"Comparable"
+    (defm RedVal Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8511,8 +8560,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm RedBranch #_"Comparable"
+    (defm RedBranch Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8580,8 +8628,7 @@
         (IKVReduce'''kvreduce => TNode''kvreduce)
     )
 
-    #_foreign
-    (§ defm RedBranchVal #_"Comparable"
+    (defm RedBranchVal Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
@@ -8728,7 +8775,7 @@
     )
 
     (defn- #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"key" a, #_"key" b]
-        (.compare (:cmp this), a, b)
+        (Comparator''compare (:cmp this), a, b)
     )
 
     (defn- #_"key" PersistentTreeMap''entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
@@ -10668,6 +10715,21 @@
         )
     )
 
+    (defn- #_"int" PersistentVector''compareTo [#_"PersistentVector" this, #_"IPersistentVector" that]
+        (when-not (identical? this that) => 0
+            (let [#_"int" n (:cnt this) #_"int" m (count that)]
+                (cond (< n m) -1 (< m n) 1
+                    :else
+                        (loop-when [#_"int" i 0] (< i n) => 0
+                            (let [#_"int" cmp (compare (Indexed'''nth this, i) (Indexed'''nth that, i))]
+                                (recur-when (zero? cmp) [(inc i)] => cmp)
+                            )
+                        )
+                )
+            )
+        )
+    )
+
     (defm PersistentVector IMeta
         (IMeta'''meta => :_meta)
     )
@@ -10745,22 +10807,8 @@
         (Reversible'''rseq => PersistentVector''rseq)
     )
 
-    #_foreign
-    (§ defm PersistentVector #_"Comparable"
-        (#_"int" Comparable'''compareTo [#_"PersistentVector" this, #_"IPersistentVector" that]
-            (when-not (identical? this that) => 0
-                (let [#_"int" n (:cnt this) #_"int" m (count that)]
-                    (cond (< n m) -1 (< m n) 1
-                        :else
-                            (loop-when [#_"int" i 0] (< i n) => 0
-                                (let [#_"int" cmp (compare (Indexed'''nth this, i) (Indexed'''nth that, i))]
-                                    (recur-when (zero? cmp) [(inc i)] => cmp)
-                                )
-                            )
-                    )
-                )
-            )
-        )
+    (defm PersistentVector Comparable
+        (Comparable'''compareTo => PersistentVector''compareTo)
     )
 )
 
@@ -11006,7 +11054,7 @@
                 (satisfies? ITransientSet coll)
                     (ITransientSet'''get coll, key)
                 (-/instance? clojure.lang.ILookup coll)
-                    (.valAt coll, key)
+                    (ILookup''valAt coll, key)
             )
         )
         ([#_"Object" coll, #_"key" key, #_"value" not-found]
@@ -11024,7 +11072,7 @@
                 (satisfies? ITransientSet coll)
                     (if (contains? coll key) (ITransientSet'''get coll, key) not-found)
                 (-/instance? clojure.lang.ILookup coll)
-                    (.valAt coll, key, not-found)
+                    (ILookup''valAt coll, key, not-found)
                 :else
                     not-found
             )
@@ -11278,13 +11326,13 @@
     )
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (.isBound this)
+        (when-not (-/instance? clojure.lang.Var this) => (Var''-isBound this)
             (Var''hasRoot this)
         )
     )
 
     (defn- #_"Object" Var''get [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (.get this)
+        (when-not (-/instance? clojure.lang.Var this) => (Var''-get this)
             @(:root this)
         )
     )
@@ -11505,7 +11553,9 @@
 (defn ns-name [ns] (:name (the-ns ns)))
 
     (defn #_"map" Namespace''getMappings [#_"Namespace" this]
-        @(:mappings this)
+        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-getMappings this)
+            @(:mappings this)
+        )
     )
 
 ;;;
@@ -11514,7 +11564,7 @@
 (defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
 
     (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.getMapping this, name)
+        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-getMapping this, name)
             (get @(:mappings this) name)
         )
     )
@@ -11567,7 +11617,7 @@
     )
 
     (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.intern this, sym)
+        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-intern this, sym)
             (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
                 (let [#_"Object" o
                         (or (get @(:mappings this) sym)
@@ -11606,7 +11656,7 @@
         )
     )
 
-(declare ^:dynamic *arbace-ns*)
+(declare ^:dynamic *ns*)
 
 ;;;
  ; refers to all public vars of ns, subject to filters.
@@ -11629,7 +11679,7 @@
             (let [es* (set (:exclude fs*)) rs* (or (:rename fs*) (hash-map))]
                 (doseq [x (remove es* s)]
                     (when-some [v (ps* x)] => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
-                        (Namespace''refer *arbace-ns* (or (rs* x) x) v)
+                        (Namespace''refer *ns* (or (rs* x) x) v)
                     )
                 )
             )
@@ -11654,7 +11704,7 @@
 (defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
 
     (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (.findInternedVar this, (-/symbol (str name)))
+        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-findInternedVar this, (-/symbol (str name)))
             (let [#_"Object" o (get @(:mappings this) name)]
                 (when (and (var? o) (= (:ns o) this))
                     o
@@ -11716,7 +11766,7 @@
  ; Use :as in the ns macro in preference to calling this directly.
  ;;
 (defn alias [sym ns]
-    (Namespace''addAlias *arbace-ns* sym (the-ns ns))
+    (Namespace''addAlias *ns* sym (the-ns ns))
 )
 
     (defn #_"void" Namespace''removeAlias [#_"Namespace" this, #_"Symbol" alias]
@@ -11741,7 +11791,7 @@
 )
 
 ;;;
- ; Sets *arbace-ns* to the namespace named by name (unevaluated), creating it if needed.
+ ; Sets *ns* to the namespace named by name (unevaluated), creating it if needed.
  ;;
 (defmacro arbace-ns [n & s]
     (let [m (let-when [m (first s)] (map? m) m) s (if m (next s) s) n (if m (vary-meta n merge m) n) m (meta n)]
@@ -12041,7 +12091,7 @@
  ;;
 (defn sort-by
     ([f s] (sort-by f compare s))
-    ([f #_"Comparator" cmp s] (sort #(.compare cmp (f %1) (f %2)) s))
+    ([f #_"Comparator" cmp s] (sort #(Comparator''compare cmp, (f %1), (f %2)) s))
 )
 
 ;;;
@@ -12273,8 +12323,8 @@
     )
 )
 
-(defn- mk-bound-fn [#_"Sorted" sc test key]
-    (fn [e] (test (.compare (Sorted'''comparator sc) (Sorted'''entryKey sc, e) key) 0))
+(defn- mk-bound-fn [#_"Sorted" sc f'test key]
+    (fn [e] (f'test (Comparator''compare (Sorted'''comparator sc), (Sorted'''entryKey sc, e), key) 0))
 )
 
 ;;;
@@ -12283,9 +12333,9 @@
  ; (test (.. sc comparator (compare ek key)) 0) is true.
  ;;
 (defn subseq
-    ([#_"Sorted" sc test key]
-        (let [keep? (mk-bound-fn sc test key)]
-            (if (#{> >=} test)
+    ([#_"Sorted" sc f'test key]
+        (let [keep? (mk-bound-fn sc f'test key)]
+            (if (#{> >=} f'test)
                 (when-some [[e :as s] (Sorted'''seqFrom sc, key, true)]
                     (if (keep? e) s (next s))
                 )
@@ -12293,9 +12343,9 @@
             )
         )
     )
-    ([#_"Sorted" sc test key test' key']
+    ([#_"Sorted" sc f'test key f'test' key']
         (when-some [[e :as s] (Sorted'''seqFrom sc, key, true)]
-            (take-while (mk-bound-fn sc test' key') (if ((mk-bound-fn sc test key) e) s (next s)))
+            (take-while (mk-bound-fn sc f'test' key') (if ((mk-bound-fn sc f'test key) e) s (next s)))
         )
     )
 )
@@ -12306,9 +12356,9 @@
  ; (test (.. sc comparator (compare ek key)) 0) is true.
  ;;
 (defn rsubseq
-    ([#_"Sorted" sc test key]
-        (let [keep? (mk-bound-fn sc test key)]
-            (if (#{< <=} test)
+    ([#_"Sorted" sc f'test key]
+        (let [keep? (mk-bound-fn sc f'test key)]
+            (if (#{< <=} f'test)
                 (when-some [[e :as s] (Sorted'''seqFrom sc, key, false)]
                     (if (keep? e) s (next s))
                 )
@@ -12316,9 +12366,9 @@
             )
         )
     )
-    ([#_"Sorted" sc test key test' key']
+    ([#_"Sorted" sc f'test key f'test' key']
         (when-some [[e :as s] (Sorted'''seqFrom sc, key', false)]
-            (take-while (mk-bound-fn sc test key) (if ((mk-bound-fn sc test' key') e) s (next s)))
+            (take-while (mk-bound-fn sc f'test key) (if ((mk-bound-fn sc f'test' key') e) s (next s)))
         )
     )
 )
@@ -13310,7 +13360,7 @@
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
 
     (defn #_"Namespace" Compiler'namespaceFor
-        ([#_"Symbol" sym] (Compiler'namespaceFor *arbace-ns*, sym))
+        ([#_"Symbol" sym] (Compiler'namespaceFor *ns*, sym))
         ([#_"Namespace" inns, #_"Symbol" sym]
             ;; note, presumes non-nil sym.ns
             (let [#_"Symbol" nsSym (symbol (:ns sym))]
@@ -13333,9 +13383,9 @@
                     )
                 )
             :else
-                (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
+                (let [#_"Object" o (Namespace''getMapping *ns*, sym)]
                     (cond
-                        (nil? o) (symbol (:name (:name *arbace-ns*)) (:name sym))
+                        (nil? o) (symbol (:name (:name *ns*)) (:name sym))
                         (var? o) (symbol (:name (:name (:ns o))) (:name (:sym o)))
                     )
                 )
@@ -13349,7 +13399,7 @@
                 (some? (:ns sym))
                     (when-some [#_"Namespace" ns (Compiler'namespaceFor sym)]
                         (let [#_"Symbol" name (symbol (:name sym))]
-                            (if (and intern? (= ns *arbace-ns*))
+                            (if (and intern? (= ns *ns*))
                                 (Namespace''intern ns, name)
                                 (Namespace''findInternedVar ns, name)
                             )
@@ -13358,11 +13408,11 @@
                 (= sym 'ns)    #'ns
                 (= sym 'in-ns) #'in-ns
                 :else ;; is it mapped?
-                    (let [#_"Object" o (Namespace''getMapping *arbace-ns*, sym)]
+                    (let [#_"Object" o (Namespace''getMapping *ns*, sym)]
                         (cond
                             (nil? o) ;; introduce a new var in the current ns
                                 (when intern?
-                                    (Namespace''intern *arbace-ns*, (symbol (:name sym)))
+                                    (Namespace''intern *ns*, (symbol (:name sym)))
                                 )
                             (var? o)
                                 o
@@ -13380,7 +13430,7 @@
             (when (or (symbol? op) (var? op))
                 (let [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
                     (when (and (some? v) (get (meta v) :macro))
-                        (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
+                        (when (or (= (:ns v) *ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
                             v
                         )
                     )
@@ -13394,7 +13444,7 @@
         (when-not (and (symbol? op) (some? (get @(get scope :'local-env) op)))
             (when (or (symbol? op) (var? op))
                 (when-some [#_"Var" v (if (var? op) op (Compiler'lookupVar op, false))]
-                    (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
+                    (when (or (= (:ns v) *ns*) (not (get (meta v) :private))) => (throw! (str "var: " v " is private"))
                         (when-some [#_"IFn" f (get (meta v) :inline)]
                             (let [#_"IFn" arityPred (get (meta v) :inline-arities)]
                                 (when (or (nil? arityPred) (IFn'''invoke arityPred, arity))
@@ -13413,9 +13463,9 @@
             ;; note - ns-qualified vars must already exist
             (cond
                 (some? (:ns sym))
-                    (when-some [#_"Namespace" ns (Compiler'namespaceFor n, sym)]                          => (throw! (str "no such namespace: " (:ns sym)))
-                        (when-some [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))]      => (throw! (str "no such var: " sym))
-                            (when (or (= (:ns v) *arbace-ns*) (not (get (meta v) :private)) allowPrivate) => (throw! (str "var: " sym " is private"))
+                    (when-some [#_"Namespace" ns (Compiler'namespaceFor n, sym)]                     => (throw! (str "no such namespace: " (:ns sym)))
+                        (when-some [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))] => (throw! (str "no such var: " sym))
+                            (when (or (= (:ns v) *ns*) (not (get (meta v) :private)) allowPrivate)   => (throw! (str "var: " sym " is private"))
                                 v
                             )
                         )
@@ -13428,8 +13478,8 @@
     )
 
     (defn #_"Object" Compiler'resolve
-        ([#_"Symbol" sym                          ] (Compiler'resolveIn *arbace-ns*, sym, false       ))
-        ([#_"Symbol" sym, #_"boolean" allowPrivate] (Compiler'resolveIn *arbace-ns*, sym, allowPrivate))
+        ([#_"Symbol" sym                          ] (Compiler'resolveIn *ns*, sym, false       ))
+        ([#_"Symbol" sym, #_"boolean" allowPrivate] (Compiler'resolveIn *ns*, sym, allowPrivate))
     )
 
     (defn #_"Object" Compiler'maybeResolveIn [#_"Namespace" n, #_"Symbol" sym]
@@ -14163,9 +14213,9 @@
                 :else
                     (let-when [#_"symbol?" s (second form)] (symbol? s)     => (throw! "first argument to def must be a symbol")
                         (when-some [#_"Var" v (Compiler'lookupVar s, true)] => (throw! "can't refer to qualified var that doesn't exist")
-                            (let [v (when-not (= (:ns v) *arbace-ns*) => v
+                            (let [v (when-not (= (:ns v) *ns*) => v
                                         (when (nil? (:ns s))                => (throw! "can't create defs outside of current ns")
-                                            (Namespace''intern *arbace-ns*, s)
+                                            (Namespace''intern *ns*, s)
                                         )
                                     )]
                                 (DefExpr'new v, (Compiler'analyze (third form), scope), (Compiler'analyze (meta s), scope), (= n 3))
@@ -15021,7 +15071,7 @@
     (defn #_"Character" LispReader'read1 [#_"Reader" r]
         (let [#_"int" c (Reader''read r)]
             (when-not (= c -1)
-                (-/char c)
+                (char c)
             )
         )
     )
@@ -15123,7 +15173,7 @@
                         nil
                     (String''startsWith s, "::")
                         (let [#_"Symbol" ks (symbol (String''substring s, 2))
-                              #_"Namespace" kns (if (some? (:ns ks)) (Namespace''getAlias *arbace-ns*, (symbol (:ns ks))) *arbace-ns*)]
+                              #_"Namespace" kns (if (some? (:ns ks)) (Namespace''getAlias *ns*, (symbol (:ns ks))) *ns*)]
                             ;; auto-resolving keyword
                             (when (some? kns)
                                 (keyword (:name (:name kns)) (:name ks))
@@ -15271,7 +15321,7 @@
                 \f  \formfeed
                 \u  (let [ch (LispReader'read1 r)]
                         (when (and (some? ch) (LispReader'isDigit ch, 16)) => (throw! (str "invalid unicode escape: \\u" ch))
-                            (-/char (LispReader'readDigits r, ch, 16, 4, true))
+                            (char (LispReader'readDigits r, ch, 16, 4, true))
                         )
                     )
                 (when (LispReader'isDigit ch, #_8 4) => (throw! (str "unsupported escape character: \\" ch))
@@ -15279,7 +15329,7 @@
                       #_(when (< 0377 c)
                             (throw! "octal escape sequence must be in range [0, 377]")
                         )
-                        (-/char c)
+                        (char c)
                     )
                 )
             )
@@ -15543,7 +15593,7 @@
                                     (when (<= 0xd800 c 0xdfff) ;; surrogate code unit?
                                         (throw! (str "invalid character constant: \\u" (Integer'toString c, 16)))
                                     )
-                                    (-/char c)
+                                    (char c)
                                 )
                             \o  (let [#_"int" n (dec (String''length token))]
                                     (when (< 3 n)
@@ -15553,7 +15603,7 @@
                                         (when (< 0377 c)
                                             (throw! "octal escape sequence must be in range [0, 377]")
                                         )
-                                        (-/char c)
+                                        (char c)
                                     )
                                 )
                             (throw! (str "unsupported character: \\" token))
@@ -15717,20 +15767,22 @@
 )
 
 (defn resolve
-    ([    sym] (ns-resolve *arbace-ns*     sym))
-    ([env sym] (ns-resolve *arbace-ns* env sym))
+    ([    sym] (ns-resolve *ns*     sym))
+    ([env sym] (ns-resolve *ns* env sym))
 )
 
 (about #_"Arbace"
 
-(about #_"*arbace-ns*"
-    (def #_"Var" ^:dynamic *arbace-ns* (create-ns (symbol "arbace.core")))
+(about #_"*ns*"
+    (swap! Namespace'namespaces assoc 'clojure.core (-/the-ns 'clojure.core), 'arbace.bore (-/the-ns 'arbace.bore))
 
-    (doseq [[#_"symbol" s #_"var" v] (-/ns-map -/*ns*)]
-        (intern *arbace-ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
+    (def #_"Var" ^:dynamic *ns* (create-ns (symbol "arbace.core")))
+
+    (doseq [[#_"symbol" s #_"class|var" v] (ns-map -/*ns*)]
+        (intern *ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
     )
 
-    (alias (symbol "-"), (-/the-ns 'clojure.core))
+    (alias (symbol "-"), (the-ns 'clojure.core))
 )
 
 (defn repl []
