@@ -6,7 +6,7 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [-> = and case conj cons defmacro defn defn- doseq first fn identity if-some keys keyword let letfn list map mapcat merge meta next partial range reduce second select-keys some? str symbol symbol? vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
+    (:refer-clojure :only [-> = and case conj cons defmacro defn defn- doseq first fn identity if-some keys keyword let letfn list map mapcat merge meta next partial range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -17,7 +17,7 @@
     [java.lang.ref ReferenceQueue WeakReference]
     [java.lang.reflect Array]
     [java.io PushbackReader]
-    [java.util Arrays #_Comparator]
+    [java.util Arrays]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
     [arbace.math BigInteger]
@@ -25,7 +25,7 @@
 )
 
 (defmacro refer! [ns s]
-    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:dynamic :macro :private]))] `(def ~n ~v))]
+    (let [f #(let [v (-/ns-resolve (-/the-ns (if (= ns '-) 'clojure.core ns)) %) n (vary-meta % merge (select-keys (meta v) [:dynamic :macro :private]))] `(def ~n ~(var-get v)))]
         (if (symbol? s) (f s) (cons 'do (map f s)))
     )
 )
@@ -329,6 +329,8 @@
 )
 
 (about #_"Namespace"
+    (defn clojure-namespace? [x] (-/instance? clojure.lang.Namespace x))
+
     (defn #_"map"    Namespace''-getMappings     [#_"Namespace" this]                  (.getMappings this))
     (defn #_"Object" Namespace''-getMapping      [#_"Namespace" this, #_"Symbol" name] (.getMapping this, name))
     (defn #_"var"    Namespace''-intern          [#_"Namespace" this, #_"Symbol" sym]  (.intern this, sym))
@@ -336,6 +338,8 @@
 )
 
 (about #_"Var"
+    (defn clojure-var? [x] (-/instance? clojure.lang.Var x))
+
     (defn #_"boolean" Var''-isBound [#_"Var" this] (.isBound this))
     (defn #_"Object"  Var''-get     [#_"Var" this] (.get this))
 )
@@ -430,8 +434,8 @@
             matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
             ILookup''valAt
             ITransientAssociative''assoc!
-            Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
-            Var''-isBound Var''-get
+            clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
+            clojure-var? Var''-isBound Var''-get
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -917,6 +921,18 @@
     )
 
     (defn comparable? [x] (satisfies? Comparable x))
+)
+
+(about #_"arbace.Comparator"
+    (defp Comparator
+        (#_"int" Comparator'''compare [#_"Comparator" this, #_"any" x, #_"any" y])
+    )
+
+    (-/extend-protocol Comparator java.util.Comparator
+        (Comparator'''compare [this, x, y] (.compare this, x, y))
+    )
+
+    (defn comparator? [x] (satisfies? Comparator x))
 )
 
 (about #_"arbace.Counted"
@@ -1749,12 +1765,6 @@
 
     (-/extend-protocol IKVReduce clojure.lang.IKVReduce
         (IKVReduce'''kvreduce [this, f, r] (.kvreduce this, f, r))
-    )
-)
-
-(about #_"arbace.Range"
-    (defp RangeBoundsCheck
-        (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" this, #_"Object" val])
     )
 )
 
@@ -2678,7 +2688,7 @@
  ; also works for nil, and compares numbers and collections in a type-independent manner.
  ; x must implement Comparable.
  ;;
-(defn compare [x y] (Util'compare x y))
+(defn compare [x y] (Util'compare x, y))
 )
 
 (about #_"arbace.Ratio"
@@ -3628,20 +3638,22 @@
         ([#_"Fn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (AFn'throwArity this, -10))
     )
 
+    (defn- #_"int" Fn''compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
+        (let [#_"Object" o (IFn'''invoke this, o1, o2)]
+            (if (boolean? o)
+                (cond (boolean o) -1 (boolean (IFn'''invoke this, o2, o1)) 1 :else 0)
+                (int! o)
+            )
+        )
+    )
+
     (defm Fn IFn
         (IFn'''invoke => Fn''invoke)
         (IFn'''applyTo => AFn'applyTo)
     )
 
-    (§ defm Fn #_"Comparator"
-        (#_"int" Comparator'''compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
-            (let [#_"Object" o (IFn'''invoke this, o1, o2)]
-                (if (boolean? o)
-                    (cond (boolean o) -1 (boolean (IFn'''invoke this, o2, o1)) 1 :else 0)
-                    (int! o)
-                )
-            )
-        )
+    (defm Fn Comparator
+        (Comparator'''compare => Fn''compare)
     )
 )
 )
@@ -3728,8 +3740,8 @@
         (IFn'''applyTo => Closure''applyTo)
     )
 
-    (§ defm Closure #_"Comparator"
-        ;; inherit Fn compare
+    (defm Closure Comparator
+        (Comparator'''compare => Fn''compare)
     )
 )
 )
@@ -4063,7 +4075,7 @@
 (about #_"Range"
     (declare Range''seq Range''next)
 
-    (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck] SeqForm
+    (defq Range [#_"meta" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"fn" f'boundsCheck] SeqForm
         clojure.lang.ISeq (seq [_] (Range''seq _)) (first [_] (:start _)) (next [_] (Range''next _)) (more [_] (or (Range''next _) ()))
     )
 
@@ -4073,37 +4085,24 @@
     #_abstract
     (defm Range Counted)
 
-    (defn- #_"RangeBoundsCheck" Range'positiveStep [#_"Object" end]
-        (-/reify RangeBoundsCheck
-            (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
-                (<= end val)
-            )
-        )
-    )
-
-    (defn- #_"RangeBoundsCheck" Range'negativeStep [#_"Object" end]
-        (-/reify RangeBoundsCheck
-            (#_"boolean" RangeBoundsCheck'''exceededBounds [#_"RangeBoundsCheck" _self, #_"Object" val]
-                (<= val end)
-            )
-        )
-    )
-
     (defn- #_"Range" Range'new
-        ([#_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck]
-            (Range'new nil, start, end, step, boundsCheck)
+        ([#_"Object" start, #_"Object" end, #_"Object" step, #_"fn" f'boundsCheck]
+            (Range'new nil, start, end, step, f'boundsCheck)
         )
-        ([#_"meta" meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"RangeBoundsCheck" boundsCheck]
+        ([#_"meta" meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"fn" f'boundsCheck]
             ;; invariants guarantee this is never an "empty" seq
-            (Range'class. (anew [meta, start, end, step, boundsCheck]))
+            (Range'class. (anew [meta, start, end, step, f'boundsCheck]))
         )
     )
 
     (defn- #_"Range" Range''withMeta [#_"Range" this, #_"meta" meta]
         (when-not (= meta (:_meta this)) => this
-            (Range'new meta, (:end this), (:start this), (:step this), (:boundsCheck this))
+            (Range'new meta, (:end this), (:start this), (:step this), (:f'boundsCheck this))
         )
     )
+
+    (defn- #_"fn" Range'positiveStep [#_"Object" end] #(<= end %))
+    (defn- #_"fn" Range'negativeStep [#_"Object" end] #(<= % end))
 
     (defn #_"seq" Range'create
         ([#_"Object" end]
@@ -4134,15 +4133,15 @@
     )
 
     (defn- #_"seq" Range''next [#_"Range" this]
-        (let-when-not [#_"Object" n (+ (:start this) (:step this))] (RangeBoundsCheck'''exceededBounds (:boundsCheck this), n)
-            (Range'new n, (:end this), (:step this), (:boundsCheck this))
+        (let-when-not [#_"Object" n (+ (:start this) (:step this))] ((:f'boundsCheck this) n)
+            (Range'new n, (:end this), (:step this), (:f'boundsCheck this))
         )
     )
 
     (defn- #_"Object" Range''reduce
         ([#_"Range" this, #_"fn" f]
             (loop [#_"Object" r (:start this) #_"Number" n r]
-                (let-when-not [n (+ n (:step this))] (RangeBoundsCheck'''exceededBounds (:boundsCheck this), n) => r
+                (let-when-not [n (+ n (:step this))] ((:f'boundsCheck this) n) => r
                     (let-when-not [r (f r n)] (reduced? r) => @r
                         (recur r n)
                     )
@@ -4152,7 +4151,7 @@
         ([#_"Range" this, #_"fn" f, #_"Object" r]
             (loop [r r #_"Object" n (:start this)]
                 (let-when-not [r (f r n)] (reduced? r) => @r
-                    (let-when-not [n (+ n (:step this))] (RangeBoundsCheck'''exceededBounds (:boundsCheck this), n) => r
+                    (let-when-not [n (+ n (:step this))] ((:f'boundsCheck this) n) => r
                         (recur r n)
                     )
                 )
@@ -11326,13 +11325,13 @@
     )
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (Var''-isBound this)
+        (when-not (clojure-var? this) => (Var''-isBound this)
             (Var''hasRoot this)
         )
     )
 
     (defn- #_"Object" Var''get [#_"Var" this]
-        (when-not (-/instance? clojure.lang.Var this) => (Var''-get this)
+        (when-not (clojure-var? this) => (Var''-get this)
             @(:root this)
         )
     )
@@ -11504,7 +11503,7 @@
  ; returns the namespace named by it, throwing an exception if not found.
  ;;
 (defn #_"Namespace" the-ns [x]
-    (when-not (-/instance? clojure.lang.Namespace x) => x
+    (when-not (clojure-namespace? x) => x
         (if (satisfies? Namespace x)
             x
             (or (find-ns x) (throw! (str "no namespace: " x " found")))
@@ -11553,7 +11552,7 @@
 (defn ns-name [ns] (:name (the-ns ns)))
 
     (defn #_"map" Namespace''getMappings [#_"Namespace" this]
-        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-getMappings this)
+        (when-not (clojure-namespace? this) => (Namespace''-getMappings this)
             @(:mappings this)
         )
     )
@@ -11564,7 +11563,7 @@
 (defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
 
     (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-getMapping this, name)
+        (when-not (clojure-namespace? this) => (Namespace''-getMapping this, name)
             (get @(:mappings this) name)
         )
     )
@@ -11617,7 +11616,7 @@
     )
 
     (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
-        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-intern this, sym)
+        (when-not (clojure-namespace? this) => (Namespace''-intern this, sym)
             (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
                 (let [#_"Object" o
                         (or (get @(:mappings this) sym)
@@ -11704,7 +11703,7 @@
 (defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
 
     (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (when-not (-/instance? clojure.lang.Namespace this) => (Namespace''-findInternedVar this, (-/symbol (str name)))
+        (when-not (clojure-namespace? this) => (Namespace''-findInternedVar this, (-/symbol (str name)))
             (let [#_"Object" o (get @(:mappings this) name)]
                 (when (and (var? o) (= (:ns o) this))
                     o
