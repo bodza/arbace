@@ -6,7 +6,7 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [-> = and case conj cons defmacro defn defn- doseq first fn identity if-some keys keyword let letfn list map mapcat merge meta next partial range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
+    (:refer-clojure :only [-> = and case conj cons defmacro defn defn- doseq first fn identical? identity if-some keys keyword let letfn list map mapcat merge meta next or partial range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -31,77 +31,6 @@
 )
 
 (defmacro about [& s] (cons 'do s))
-
-(about #_"defarray"
-
-(defn- emit-defarray* [tname cname fields interfaces methods opts]
-    (let [
-        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
-        interfaces (vec interfaces)
-        fields     (map #(with-meta % nil) fields)
-    ]
-        (let [a '__data s (mapcat (fn [x y] [(keyword y) x]) (range) fields)]
-            (letfn [(ilookup [[i m]]
-                        [
-                            (conj i 'clojure.lang.ILookup)
-                            (conj m
-                                `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (if-some [x# (case k# ~@s nil)] (-/aget ~a x#) else#))
-                            )
-                        ]
-                    )
-                    (imap [[i m]]
-                        [
-                            (conj i 'clojure.lang.ITransientAssociative)
-                            (conj m
-                                `(assoc [this# k# v#] (let [x# (case k# ~@s)] (-/aset ~a x# v#) this#))
-                            )
-                        ]
-                    )]
-                (let [[i m] (-> [interfaces methods] ilookup imap)]
-                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
-                        ~classname
-                        ~(vector a)
-                        :implements ~(vec i)
-                        ~@(mapcat identity opts)
-                        ~@m
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defmacro defarray [name fields & opts+specs]
-    (#'-/validate-fields fields name)
-    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
-        `(do
-            ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
-            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
-        )
-    )
-)
-)
-
-(about #_"extend-type"
-
-(defn- emit-hinted-impl [_ [p fs]]
-    [p (zipmap (map #(-> % first -/name keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
-)
-
-(defmacro extend-type [t & specs]
-    `(-/extend ~t ~@(mapcat (partial emit-hinted-impl t) (#'-/parse-impls specs)))
-)
-)
-
-(defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (-/defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defq [r f & s] (let [c (symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                      ~c)))
-(defmacro defr [r [& s]] (let [c (symbol (str r "'class"))] `(do (-/defrecord ~c [] ~r ~@s)                         ~c)))
-(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                               ~i)))
-
-(defmacro class! [r] (let [c (symbol (str r "'class"))] (list 'assoc (list 'new c) :class c)))
-
-#_(defmacro throw! [#_"String" s] `(throw (Error. ~s))) (defn throw! [#_"String" s] (throw (Error. s)))
 
 (about #_"Numbers"
     (refer! - [< <= > >= int neg? pos? zero?])
@@ -138,6 +67,161 @@
     (defn >>  [x y] (int! (-/bit-shift-right x y)))
     (defn >>> [x y] (int! (-/unsigned-bit-shift-right (-/bit-and x 0xffffffff) y)))
 )
+
+(about #_"defarray"
+
+(defn- emit-defarray* [tname cname fields interfaces methods opts]
+    (let [
+        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
+        interfaces (vec interfaces)
+        fields     (map #(with-meta % nil) fields)
+    ]
+        (let [a '__array s (mapcat (fn [x y] [(keyword y) x]) (range) fields)]
+            (letfn [(ilookup [[i m]]
+                        [
+                            (conj i 'clojure.lang.ILookup)
+                            (conj m
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (if-some [x# (case k# ~@s nil)] (-/aget (. this# ~a) x#) else#))
+                            )
+                        ]
+                    )
+                    (imap [[i m]]
+                        [
+                            (conj i 'clojure.lang.ITransientAssociative)
+                            (conj m
+                                `(assoc [this# k# v#] (let [x# (case k# ~@s)] (-/aset (. this# ~a) x# v#) this#))
+                            )
+                        ]
+                    )]
+                (let [[i m] (-> [interfaces methods] ilookup imap)]
+                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
+                        ~classname
+                        ~(vector a)
+                        :implements ~(vec i)
+                        ~@(mapcat identity opts)
+                        ~@m
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defmacro defarray [name fields & opts+specs]
+    (#'-/validate-fields fields name)
+    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+        `(do
+            ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
+            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
+        )
+    )
+)
+)
+
+(about #_"defassoc"
+
+(defn- emit-defassoc* [tname cname interfaces methods opts]
+    (let [
+        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
+        interfaces (vec interfaces)
+        type-hash  (.hasheq classname)
+    ]
+        (let [a '__assoc]
+            (letfn [(eqhash [[i m]]
+                        [
+                            (conj i 'clojure.lang.IHashEq)
+                            (conj m
+                                `(hasheq [this#] (int (bit-xor ~type-hash (.hasheq (. this# ~a)))))
+                                `(hashCode [this#] (.hashCode (. this# ~a)))
+                                `(equals [this# that#] (and (some? that#) (.equals (. this# ~a) (. that# ~a))))
+                            )
+                        ]
+                    )
+                    (iobj [[i m]]
+                        [
+                            (conj i 'clojure.lang.IObj)
+                            (conj m
+                                `(meta [this#] (.meta (. this# ~a)))
+                                `(withMeta [this# m#] (new ~tname (.withMeta (. this# ~a) m#)))
+                            )
+                        ]
+                    )
+                    (ilookup [[i m]]
+                        [
+                            (conj i 'clojure.lang.ILookup)
+                            (conj m
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
+                            )
+                        ]
+                    )
+                    (imap [[i m]]
+                        [
+                            (conj i 'clojure.lang.IPersistentMap)
+                            (conj m
+                                `(count [this#] (.count (. this# ~a)))
+                                `(empty [this#] (new ~tname (.empty (. this# ~a))))
+                                `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
+                                `(equiv [this# that#]
+                                    (or (identical? this# that#)
+                                        (and (identical? (-/class this#) (-/class that#))
+                                            (= (. this# ~a) (. that# ~a))
+                                        )
+                                    )
+                                )
+                                `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
+                                `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
+                                `(seq [this#] (.seq (. this# ~a)))
+                                `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
+                                `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
+                            )
+                        ]
+                    )]
+                (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap)]
+                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
+                        ~classname
+                        ~(vector a)
+                        :implements ~(vec i)
+                        ~@(mapcat identity opts)
+                        ~@m
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defmacro defassoc [name & opts+specs]
+    (#'-/validate-fields [] name)
+    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+        `(do
+            ~(emit-defassoc* name name (vec interfaces) methods opts)
+            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
+        )
+    )
+)
+)
+
+(about #_"extend-type"
+
+(defn- emit-hinted-impl [_ [p fs]]
+    [p (zipmap (map #(-> % first -/name keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
+)
+
+(defmacro extend-type [t & specs]
+    `(-/extend ~t ~@(mapcat (partial emit-hinted-impl t) (#'-/parse-impls specs)))
+)
+)
+
+(defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (-/defprotocol ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
+(defmacro defq [r f & s] (let [c (symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                      ~c)))
+(defmacro defr [r]       (let [c (symbol (str r "'class"))] `(do (defassoc ~c ~r)                                   ~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                               ~i)))
+
+(defmacro class! [r] (let [c (symbol (str r "'class"))] (list 'new c {})))
+
+#_(defmacro throw! [#_"String" s] `(throw (Error. ~s))) (defn throw! [#_"String" s] (throw (Error. s)))
 
 (defn thread [] (Thread/currentThread))
 
@@ -13545,7 +13629,7 @@
 )
 
 (about #_"LiteralExpr"
-    (defr LiteralExpr [])
+    (defr LiteralExpr)
 
     (defn #_"LiteralExpr" LiteralExpr'new [#_"Object" value]
         (merge (class! LiteralExpr)
@@ -13589,7 +13673,7 @@
 )
 
 (about #_"UnresolvedVarExpr"
-    (defr UnresolvedVarExpr [])
+    (defr UnresolvedVarExpr)
 
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
         (merge (class! UnresolvedVarExpr)
@@ -13609,7 +13693,7 @@
 )
 
 (about #_"VarExpr"
-    (defr VarExpr [])
+    (defr VarExpr)
 
     (defn #_"VarExpr" VarExpr'new [#_"Var" var]
         (merge (class! VarExpr)
@@ -13636,7 +13720,7 @@
 )
 
 (about #_"TheVarExpr"
-    (defr TheVarExpr [])
+    (defr TheVarExpr)
 
     (defn #_"TheVarExpr" TheVarExpr'new [#_"Var" var]
         (merge (class! TheVarExpr)
@@ -13666,7 +13750,7 @@
 )
 
 (about #_"BodyExpr"
-    (defr BodyExpr [])
+    (defr BodyExpr)
 
     (defn #_"BodyExpr" BodyExpr'new [#_"vector" exprs]
         (merge (class! BodyExpr)
@@ -13704,7 +13788,7 @@
 )
 
 (about #_"MetaExpr"
-    (defr MetaExpr [])
+    (defr MetaExpr)
 
     (defn #_"MetaExpr" MetaExpr'new [#_"Expr" expr, #_"Expr" meta]
         (merge (class! MetaExpr)
@@ -13733,7 +13817,7 @@
 )
 
 (about #_"IfExpr"
-    (defr IfExpr [])
+    (defr IfExpr)
 
     (defn #_"IfExpr" IfExpr'new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
         (merge (class! IfExpr)
@@ -13784,7 +13868,7 @@
 )
 
 (about #_"MapExpr"
-    (defr MapExpr [])
+    (defr MapExpr)
 
     (defn #_"MapExpr" MapExpr'new [#_"vector" args]
         (merge (class! MapExpr)
@@ -13847,7 +13931,7 @@
 )
 
 (about #_"SetExpr"
-    (defr SetExpr [])
+    (defr SetExpr)
 
     (defn #_"SetExpr" SetExpr'new [#_"vector" args]
         (merge (class! SetExpr)
@@ -13895,7 +13979,7 @@
 )
 
 (about #_"VectorExpr"
-    (defr VectorExpr [])
+    (defr VectorExpr)
 
     (defn #_"VectorExpr" VectorExpr'new [#_"vector" args]
         (merge (class! VectorExpr)
@@ -13943,7 +14027,7 @@
 )
 
 (about #_"InvokeExpr"
-    (defr InvokeExpr [])
+    (defr InvokeExpr)
 
     (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args]
         (merge (class! InvokeExpr)
@@ -13979,7 +14063,7 @@
 )
 
 (about #_"LocalBinding"
-    (defr LocalBinding [])
+    (defr LocalBinding)
 
     (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
         (merge (class! LocalBinding)
@@ -13994,7 +14078,7 @@
 )
 
 (about #_"LocalBindingExpr"
-    (defr LocalBindingExpr [])
+    (defr LocalBindingExpr)
 
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb]
         (merge (class! LocalBindingExpr)
@@ -14016,7 +14100,7 @@
 )
 
 (about #_"FnMethod"
-    (defr FnMethod [])
+    (defr FnMethod)
 
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
         (merge (class! FnMethod)
@@ -14112,7 +14196,7 @@
 )
 
 (about #_"FnExpr"
-    (defr FnExpr [])
+    (defr FnExpr)
 
     (defn #_"FnExpr" FnExpr'new []
         (merge (class! FnExpr)
@@ -14190,7 +14274,7 @@
 )
 
 (about #_"DefExpr"
-    (defr DefExpr [])
+    (defr DefExpr)
 
     (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided]
         (merge (class! DefExpr)
@@ -14267,7 +14351,7 @@
 )
 
 (about #_"LetFnExpr"
-    (defr LetFnExpr [])
+    (defr LetFnExpr)
 
     (defn #_"LetFnExpr" LetFnExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body]
         (merge (class! LetFnExpr)
@@ -14375,7 +14459,7 @@
 )
 
 (about #_"LetExpr"
-    (defr LetExpr [])
+    (defr LetExpr)
 
     (defn #_"LetExpr" LetExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body, #_"boolean" loop?]
         (merge (class! LetExpr)
@@ -14458,7 +14542,7 @@
 )
 
 (about #_"RecurExpr"
-    (defr RecurExpr [])
+    (defr RecurExpr)
 
     (defn #_"RecurExpr" RecurExpr'new [#_"vector" loopLocals, #_"vector" args]
         (merge (class! RecurExpr)
@@ -14506,7 +14590,7 @@
 )
 
 (about #_"CaseExpr"
-    (defr CaseExpr [])
+    (defr CaseExpr)
 
     ;; (case* expr shift mask default map<minhash, [test then]> table-type test-type skip-check?)
     (defn #_"CaseExpr" CaseExpr'new [#_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck]
@@ -14659,7 +14743,7 @@
 )
 
 (about #_"MonitorExpr"
-    (defr MonitorExpr [])
+    (defr MonitorExpr)
 
     (defn #_"MonitorExpr" MonitorExpr'new [#_"Expr" target, #_"boolean" enter?]
         (merge (class! MonitorExpr)
@@ -14690,7 +14774,7 @@
 )
 
 (about #_"CatchClause"
-    (defr CatchClause [])
+    (defr CatchClause)
 
     (defn #_"CatchClause" CatchClause'new [#_"LocalBinding" lb, #_"Expr" handler]
         (merge (class! CatchClause)
@@ -14703,7 +14787,7 @@
 )
 
 (about #_"TryExpr"
-    (defr TryExpr [])
+    (defr TryExpr)
 
     (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"[CatchClause]" catches, #_"Expr" finallyExpr, #_"map" scope]
         (merge (class! TryExpr)
@@ -14844,7 +14928,7 @@
 )
 
 (about #_"ThrowExpr"
-    (defr ThrowExpr [])
+    (defr ThrowExpr)
 
     (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" throwable]
         (merge (class! ThrowExpr)
