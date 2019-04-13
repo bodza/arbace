@@ -6,7 +6,7 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [-> = alter-var-root and assoc-in case conj cons defmacro defn defn- defonce doseq first fn gen-interface hash-map identical? identity if-some keys keyword let letfn list list* map mapcat merge meta next or partial partition range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
+    (:refer-clojure :only [-> = alter-var-root and assoc-in case conj cons defmacro defn defn- defonce doseq first fn hash-map identical? identity if-some keys keyword let letfn list list* map mapcat merge meta next or partial partition range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -72,17 +72,23 @@
 
 (about #_"defproto"
 
+(defn #_- gen-interface* [sym]
+    (.defineClass #_"DynamicClassLoader" (var-get clojure.lang.Compiler/LOADER), (str sym), (second (#'-/generate-interface {:name sym})), nil)
+)
+
 (defn- emit-defproto* [name sigs]
     (let [
-        iname (symbol (str (-/munge (-/namespace-munge -/*ns*)) "." (-/munge name)))
+        iname (-/symbol (str (-/munge (-/namespace-munge -/*ns*)) "." (-/munge name)))
+        alter-var-root 'alter-var-root
+        defmacro 'defmacro
     ]
         `(do
             (defonce ~name {})
-            (gen-interface :name ~iname)
-            (alter-var-root (var ~name) merge
-                ~(hash-map :var (list 'var name), :on (list 'quote iname), :on-interface iname)
+            (gen-interface* '~iname)
+            (~alter-var-root (var ~name) merge
+                ~(hash-map :var (list 'var name), :on (list 'quote iname), :on-interface (list -/resolve (list 'quote iname)))
             )
-            ~@(map (fn [[f & _]] `(defmacro ~f [x# & s#] (list* (list -/find-protocol-method '~name (keyword '~f) x#) x# s#))) sigs)
+            ~@(map (fn [[f & _]] `(~defmacro ~f [x# & s#] (list* (list -/find-protocol-method '~name (keyword '~f) x#) x# s#))) sigs)
             '~name
         )
     )
@@ -459,8 +465,9 @@
 (about #_"Var"
     (defn clojure-var? [x] (-/instance? clojure.lang.Var x))
 
-    (defn #_"boolean" Var''-isBound [#_"Var" this] (.isBound this))
-    (defn #_"Object"  Var''-get     [#_"Var" this] (.get this))
+    (defn #_"Object"  Var''-alterRoot [#_"Var" this, #_"IFn" fn, #_"ISeq" args] (.alterRoot this, fn, args))
+    (defn #_"boolean" Var''-isBound   [#_"Var" this]                            (.isBound this))
+    (defn #_"Object"  Var''-get       [#_"Var" this]                            (.get this))
 )
 )
 
@@ -554,7 +561,7 @@
             ILookup''valAt
             ITransientAssociative''assoc!
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
-            clojure-var? Var''-isBound Var''-get
+            clojure-var? Var''-alterRoot Var''-isBound Var''-get
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -565,7 +572,7 @@
 
 (import!)
 
-(refer! - [= case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
+(refer! - [= alter-var-root case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
@@ -3534,7 +3541,7 @@
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
-        java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (Object''hashCode (:name _)) (:ns _)))
+        java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (Object''hashCode (:name _)) (:ns _))) (toString [_] (str _))
     )
 
     #_inherit
@@ -3652,7 +3659,7 @@
 
     (defq Keyword [#_"Symbol" sym, #_"int" _hash]
         clojure.lang.IHashEq (hasheq [_] (:_hash _))
-        java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (Object''hashCode (:sym _)) (int! 0x9e3779b9)))
+        java.lang.Object (equals [_, o] (Keyword''equals _, o)) (hashCode [_] (+ (Object''hashCode (:sym _)) (int! 0x9e3779b9))) (toString [_] (str _))
         clojure.lang.IFn (invoke [_, a] (Keyword''invoke _, a))
     )
 
@@ -10483,12 +10490,12 @@
 )
 
 (about #_"PersistentVector"
-    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''nth)
+    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''equals PersistentVector''nth)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
         clojure.lang.Reversible (rseq [_] (PersistentVector''rseq _))
-        clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _))
+        clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _)) (equiv [_, o] (PersistentVector''equals _, o))
         clojure.lang.IPersistentVector
         clojure.lang.Counted (count [_] (:cnt _))
         clojure.lang.Indexed (nth [_, i] (PersistentVector''nth _, i))
@@ -11538,7 +11545,9 @@
     )
 
     (defn #_"Object" Var''alterRoot [#_"Var" this, #_"fn" f, #_"seq" args]
-        (apply swap! (:root this) f args)
+        (when-not (clojure-var? this) => (Var''-alterRoot this, f, args)
+            (apply swap! (:root this) f args)
+        )
     )
 
     (declare Namespace''intern)
@@ -15958,6 +15967,10 @@
     )
 
     (alias (symbol "-"), (the-ns 'clojure.core))
+
+    (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
+        (Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)) scope)
+    )
 )
 
 (defn repl []
