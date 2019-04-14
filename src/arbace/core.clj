@@ -6,7 +6,7 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [-> = alter-var-root and assoc-in case conj cons defmacro defn defn- defonce doseq first fn hash-map identical? identity if-some keys keyword let letfn list list* map mapcat merge meta next or partial partition range reduce second select-keys some? str symbol symbol? var-get vary-meta vec vector when when-not with-meta zipmap]) (:require [clojure.core :as -])
+    (:refer-clojure :only [= and cons defmacro defn doseq keys let map merge meta reduce select-keys symbol? var-get vary-meta when-not]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -282,6 +282,7 @@
     (defn clojure-var? [x] (-/instance? clojure.lang.Var x))
 
     (defn #_"Object"  Var''-alterRoot [#_"Var" this, #_"IFn" fn, #_"ISeq" args] (.alterRoot this, fn, args))
+    (defn #_"boolean" Var''-hasRoot   [#_"Var" this]                            (.hasRoot this))
     (defn #_"boolean" Var''-isBound   [#_"Var" this]                            (.isBound this))
     (defn #_"Object"  Var''-get       [#_"Var" this]                            (.get this))
 )
@@ -343,208 +344,11 @@
 )
 )
 
-(about #_"defp, defq, defr, defm, class!"
-
-(about #_"defproto"
-
-(defn #_- gen-interface* [sym]
-    (DynamicClassLoader''defineClass (var-get Compiler'LOADER), (str sym), (second (#'-/generate-interface {:name sym})), nil)
-)
-
-(defn- emit-defproto* [name sigs]
-    (let [
-        iname (-/symbol (str (-/munge (-/namespace-munge -/*ns*)) "." (-/munge name)))
-        alter-var-root 'alter-var-root
-        defmacro 'defmacro
-    ]
-        `(do
-            (defonce ~name {})
-            (gen-interface* '~iname)
-            (~alter-var-root (var ~name) merge
-                ~(hash-map :var (list 'var name), :on (list 'quote iname), :on-interface (list -/resolve (list 'quote iname)))
-            )
-            ~@(map (fn [[f & _]] `(~defmacro ~f [x# & s#] (list* (list -/find-protocol-method '~name (keyword '~f) x#) x# s#))) sigs)
-            '~name
-        )
-    )
-)
-
-(defmacro defproto [name & sigs]
-    (emit-defproto* name sigs)
-)
-)
-
-(about #_"defarray"
-
-(defn- emit-defarray* [tname cname fields interfaces methods opts]
-    (let [
-        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
-        interfaces (vec interfaces)
-        fields     (map #(with-meta % nil) fields)
-    ]
-        (let [a '__array s (mapcat (fn [x y] [(keyword y) x]) (range) fields)]
-            (letfn [(ilookup [[i m]]
-                        [
-                            (conj i 'clojure.lang.ILookup)
-                            (conj m
-                                `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (if-some [x# (case k# ~@s nil)] (-/aget (. this# ~a) x#) else#))
-                            )
-                        ]
-                    )
-                    (imap [[i m]]
-                        [
-                            (conj i 'clojure.lang.ITransientAssociative)
-                            (conj m
-                                `(assoc [this# k# v#] (let [x# (case k# ~@s)] (-/aset (. this# ~a) x# v#) this#))
-                            )
-                        ]
-                    )]
-                (let [[i m] (-> [interfaces methods] ilookup imap)]
-                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
-                        ~classname
-                        ~(vector a)
-                        :implements ~(vec i)
-                        ~@(mapcat identity opts)
-                        ~@m
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defmacro defarray [name fields & opts+specs]
-    (#'-/validate-fields fields name)
-    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
-        `(do
-            ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
-            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
-        )
-    )
-)
-)
-
-(about #_"defassoc"
-
-(defn- emit-defassoc* [tname cname interfaces methods opts]
-    (let [
-        classname  (with-meta (symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
-        interfaces (vec interfaces)
-        type-hash  (.hasheq classname)
-    ]
-        (let [a '__assoc]
-            (letfn [(eqhash [[i m]]
-                        [
-                            (conj i 'clojure.lang.IHashEq)
-                            (conj m
-                                `(hasheq [this#] (int (bit-xor ~type-hash (.hasheq (. this# ~a)))))
-                                `(hashCode [this#] (.hashCode (. this# ~a)))
-                                `(equals [this# that#] (and (some? that#) (.equals (. this# ~a) (. that# ~a))))
-                            )
-                        ]
-                    )
-                    (iobj [[i m]]
-                        [
-                            (conj i 'clojure.lang.IObj)
-                            (conj m
-                                `(meta [this#] (.meta (. this# ~a)))
-                                `(withMeta [this# m#] (new ~tname (.withMeta (. this# ~a) m#)))
-                            )
-                        ]
-                    )
-                    (ilookup [[i m]]
-                        [
-                            (conj i 'clojure.lang.ILookup)
-                            (conj m
-                                `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
-                            )
-                        ]
-                    )
-                    (imap [[i m]]
-                        [
-                            (conj i 'clojure.lang.IPersistentMap)
-                            (conj m
-                                `(count [this#] (.count (. this# ~a)))
-                                `(empty [this#] (new ~tname (.empty (. this# ~a))))
-                                `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
-                                `(equiv [this# that#]
-                                    (or (identical? this# that#)
-                                        (and (identical? (-/class this#) (-/class that#))
-                                            (= (. this# ~a) (. that# ~a))
-                                        )
-                                    )
-                                )
-                                `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
-                                `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
-                                `(seq [this#] (.seq (. this# ~a)))
-                                `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
-                                `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
-                            )
-                        ]
-                    )]
-                (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap)]
-                    `(deftype* ~(symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
-                        ~classname
-                        ~(vector a)
-                        :implements ~(vec i)
-                        ~@(mapcat identity opts)
-                        ~@m
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defmacro defassoc [name & opts+specs]
-    (#'-/validate-fields [] name)
-    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
-        `(do
-            ~(emit-defassoc* name name (vec interfaces) methods opts)
-            (-/import ~(symbol (str (-/namespace-munge -/*ns*) "." name)))
-        )
-    )
-)
-)
-
-(about #_"extend"
-
-(defn extend [atype & proto+mmaps]
-    (doseq [[proto mmap] (partition 2 proto+mmaps)]
-        (when-not (#'-/protocol? proto)
-            (throw! (str proto " is not a protocol"))
-        )
-        (when (#'-/implements? proto atype)
-            (throw! (str atype " already directly implements " (:on-interface proto) " for protocol " (:var proto)))
-        )
-        (alter-var-root (:var proto) assoc-in [:impls atype] mmap)
-    )
-)
-
-(defn- emit-hinted-impl [_ [p fs]]
-    [p (zipmap (map #(-> % first -/name keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
-)
-
-(defmacro extend-type [t & specs]
-    `(extend ~t ~@(mapcat (partial emit-hinted-impl t) (#'-/parse-impls specs)))
-)
-)
-
-(defmacro defp [p & s]   (let [i (symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defq [r f & s] (let [c (symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 ~c)))
-(defmacro defr [r]       (let [c (symbol (str r "'class"))] `(do (defassoc ~c ~r)                              ~c)))
-(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          ~i)))
-
-(defmacro class! [r] (let [c (symbol (str r "'class"))] (list 'new c {})))
-)
-
 (ns arbace.core
     (:refer-clojure :only [boolean char identical? long satisfies?]) (:require [clojure.core :as -])
     (:refer arbace.bore :only
         [
-            class! defm defp defq defr import! int int! refer!
+            about import! int int! refer! throw!
             Appendable''append
             boolean?
             byte?
@@ -558,6 +362,7 @@
             string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring
             StringBuilder'new StringBuilder''append StringBuilder''toString
             System'arraycopy
+            thread
             Reference''get
             ReferenceQueue'new ReferenceQueue''poll
             WeakReference'new
@@ -571,10 +376,12 @@
             Comparator''compare
             pattern? Pattern'compile Pattern''matcher Pattern''pattern
             matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
+            Compiler'LOADER
+            DynamicClassLoader''defineClass
             ILookup''valAt
             ITransientAssociative''assoc!
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
-            clojure-var? Var''-alterRoot Var''-isBound Var''-get
+            clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -585,8 +392,8 @@
 
 (import!)
 
-(refer! - [= alter-var-root case cons count defmacro defn even? first fn interleave keyword? let list loop map meta next not= second seq seq? split-at str symbol? vary-meta vec vector? with-meta])
-(refer! arbace.bore [& * + - < << <= > >= >> >>> about bit-xor dec inc neg? pos? quot rem thread throw! zero? |])
+(refer! - [= alter-var-root case conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
+(refer! arbace.bore [& * + - < << <= > >= >> >>> bit-xor dec inc neg? pos? quot rem zero? |])
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
 
@@ -977,6 +784,199 @@
             )
         )
     )
+)
+
+(about #_"defp, defq, defr, defm"
+
+(about #_"defproto"
+
+(defn- gen-interface* [sym]
+    (DynamicClassLoader''defineClass (var-get Compiler'LOADER), (str sym), (second (#'-/generate-interface (-/hash-map :name sym))), nil)
+)
+
+(defn- emit-defproto* [name sigs]
+    (let [
+        iname (-/symbol (str (-/munge (-/namespace-munge -/*ns*)) "." (-/munge name)))
+    ]
+        `(do
+            (defonce ~name (-/hash-map))
+            (gen-interface* '~iname)
+            (alter-var-root (var ~name) merge
+                ~(-/hash-map :var (list 'var name), :on (list 'quote iname), :on-interface (list -/resolve (list 'quote iname)))
+            )
+            ~@(map (fn [[f & _]] `(defmacro ~f [x# & s#] (list* (list -/find-protocol-method '~name ~(-/keyword (str f)) x#) x# s#))) sigs)
+            '~name
+        )
+    )
+)
+
+(defmacro defproto [name & sigs]
+    (emit-defproto* name sigs)
+)
+)
+
+(about #_"defarray"
+
+(defn- emit-defarray* [tname cname fields interfaces methods opts]
+    (let [
+        classname  (-/with-meta (-/symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
+        interfaces (vec interfaces)
+        fields     (map #(with-meta % nil) fields)
+    ]
+        (let [a '__array s (mapcat (fn [x y] [(-/keyword y) x]) (range) fields)]
+            (letfn [(ilookup [[i m]]
+                        [
+                            (conj i 'clojure.lang.ILookup)
+                            (conj m
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (if-some [x# (case k# ~@s nil)] (-/aget (. this# ~a) x#) else#))
+                            )
+                        ]
+                    )
+                    (imap [[i m]]
+                        [
+                            (conj i 'clojure.lang.ITransientAssociative)
+                            (conj m
+                                `(assoc [this# k# v#] (let [x# (case k# ~@s)] (-/aset (. this# ~a) x# v#) this#))
+                            )
+                        ]
+                    )]
+                (let [[i m] (-> [interfaces methods] ilookup imap)]
+                    `(deftype* ~(-/symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
+                        ~classname
+                        ~(vector a)
+                        :implements ~(vec i)
+                        ~@(mapcat identity opts)
+                        ~@m
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defmacro defarray [name fields & opts+specs]
+    (#'-/validate-fields fields name)
+    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+        `(do
+            ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
+            (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
+        )
+    )
+)
+)
+
+(about #_"defassoc"
+
+(defn- emit-defassoc* [tname cname interfaces methods opts]
+    (let [
+        classname  (-/with-meta (-/symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
+        interfaces (vec interfaces)
+        type-hash  (.hasheq classname)
+    ]
+        (let [a '__assoc]
+            (letfn [(eqhash [[i m]]
+                        [
+                            (conj i 'clojure.lang.IHashEq)
+                            (conj m
+                                `(hasheq [this#] (int (bit-xor ~type-hash (.hasheq (. this# ~a)))))
+                                `(hashCode [this#] (.hashCode (. this# ~a)))
+                                `(equals [this# that#] (and (some? that#) (.equals (. this# ~a) (. that# ~a))))
+                            )
+                        ]
+                    )
+                    (iobj [[i m]]
+                        [
+                            (conj i 'clojure.lang.IObj)
+                            (conj m
+                                `(meta [this#] (.meta (. this# ~a)))
+                                `(withMeta [this# m#] (new ~tname (.withMeta (. this# ~a) m#)))
+                            )
+                        ]
+                    )
+                    (ilookup [[i m]]
+                        [
+                            (conj i 'clojure.lang.ILookup)
+                            (conj m
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
+                            )
+                        ]
+                    )
+                    (imap [[i m]]
+                        [
+                            (conj i 'clojure.lang.IPersistentMap)
+                            (conj m
+                                `(count [this#] (.count (. this# ~a)))
+                                `(empty [this#] (new ~tname (.empty (. this# ~a))))
+                                `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
+                                `(equiv [this# that#]
+                                    (or (identical? this# that#)
+                                        (and (identical? (-/class this#) (-/class that#))
+                                            (= (. this# ~a) (. that# ~a))
+                                        )
+                                    )
+                                )
+                                `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
+                                `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
+                                `(seq [this#] (.seq (. this# ~a)))
+                                `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
+                                `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
+                            )
+                        ]
+                    )]
+                (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap)]
+                    `(deftype* ~(-/symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
+                        ~classname
+                        ~(vector a)
+                        :implements ~(vec i)
+                        ~@(mapcat identity opts)
+                        ~@m
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defmacro defassoc [name & opts+specs]
+    (#'-/validate-fields [] name)
+    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+        `(do
+            ~(emit-defassoc* name name (vec interfaces) methods opts)
+            (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
+        )
+    )
+)
+)
+
+(about #_"extend"
+
+(defn extend [atype & proto+mmaps]
+    (doseq [[proto mmap] (partition 2 proto+mmaps)]
+        (when-not (#'-/protocol? proto)
+            (throw! (str proto " is not a protocol"))
+        )
+        (when (#'-/implements? proto atype)
+            (throw! (str atype " already directly implements " (:on-interface proto) " for protocol " (:var proto)))
+        )
+        (alter-var-root (:var proto) -/assoc-in [:impls atype] mmap)
+    )
+)
+
+(defn- emit-hinted-impl [_ [p fs]]
+    [p (-/zipmap (map #(-> % first -/name -/keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
+)
+
+(defmacro extend-type [t & specs]
+    `(extend ~t ~@(mapcat (partial emit-hinted-impl t) (#'-/parse-impls specs)))
+)
+)
+
+(defmacro defp [p & s]   (let [i (-/symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
+(defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 ~c)))
+(defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)                              ~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          ~i)))
 )
 
 (about #_"arbace.Seqable"
@@ -2211,7 +2211,7 @@
 
 (about #_"append, str, pr, prn"
     (def- #_"{char String}" char-name-string
-        (-/hash-map
+        (hash-map
             \newline   "newline"
             \tab       "tab"
             \space     "space"
@@ -2226,7 +2226,7 @@
     )
 
     (def- #_"{char String}" char-escape-string
-        (-/hash-map
+        (hash-map
             \newline   "\\n"
             \tab       "\\t"
             \return    "\\r"
@@ -3554,6 +3554,7 @@
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Symbol''withMeta _, m))
         clojure.lang.IHashEq (hasheq [_] (Symbol''hash _))
+        clojure.lang.Named (getNamespace [_] (:ns _)) (getName [_] (:name _))
         java.lang.Object (equals [_, o] (Symbol''equals _, o)) (hashCode [_] (hash-combine (Object''hashCode (:name _)) (:ns _))) (toString [_] (str _))
     )
 
@@ -3679,7 +3680,7 @@
     #_inherit
     (defm Keyword AFn)
 
-    (def- #_"{Symbol Reference<Keyword>}'" Keyword'cache (atom (-/hash-map)))
+    (def- #_"{Symbol Reference<Keyword>}'" Keyword'cache (atom (hash-map)))
     (def- #_"ReferenceQueue" Keyword'queue (ReferenceQueue'new))
 
     (defn- #_"Keyword" Keyword'new [#_"Symbol" sym]
@@ -4042,7 +4043,7 @@
     (declare Iterate''seq Iterate''first Iterate''next)
 
     (defq Iterate [#_"meta" _meta, #_"fn" f, #_"Object" x, #_"Object'" y] SeqForm
-        clojure.lang.ISeq (seq [_] (Iterate''seq _)) (first [_] (Iterate''first _)) (next [_] (Iterate''next _))
+        clojure.lang.ISeq (seq [_] (Iterate''seq _)) (first [_] (Iterate''first _)) (next [_] (Iterate''next _)) (more [_] (or (Iterate''next _) ()))
     )
 
     #_inherit
@@ -4150,7 +4151,7 @@
     (declare Repeat''seq Repeat''next)
 
     (defq Repeat [#_"meta" _meta, #_"long" cnt, #_"Object" val] SeqForm
-        clojure.lang.ISeq (seq [_] (Repeat''seq _)) (first [_] (:val _)) (next [_] (Repeat''next _))
+        clojure.lang.ISeq (seq [_] (Repeat''seq _)) (first [_] (:val _)) (next [_] (Repeat''next _)) (more [_] (or (Repeat''next _) ()))
     )
 
     #_inherit
@@ -4407,7 +4408,7 @@
     (declare ArraySeq''seq ArraySeq''first ArraySeq''next)
 
     (defq ArraySeq [#_"meta" _meta, #_"array" a, #_"int" i] SeqForm
-        clojure.lang.ISeq (seq [_] (ArraySeq''seq _)) (first [_] (ArraySeq''first _)) (next [_] (ArraySeq''next _))
+        clojure.lang.ISeq (seq [_] (ArraySeq''seq _)) (first [_] (ArraySeq''first _)) (next [_] (ArraySeq''next _)) (more [_] (or (ArraySeq''next _) ()))
     )
 
     #_inherit
@@ -4522,7 +4523,7 @@
     (declare StringSeq''seq StringSeq''first StringSeq''next)
 
     (defq StringSeq [#_"meta" _meta, #_"CharSequence" s, #_"int" i] SeqForm
-        clojure.lang.ISeq (seq [_] (StringSeq''seq _)) (first [_] (StringSeq''first _)) (next [_] (StringSeq''next _))
+        clojure.lang.ISeq (seq [_] (StringSeq''seq _)) (first [_] (StringSeq''first _)) (next [_] (StringSeq''next _)) (more [_] (or (StringSeq''next _) ()))
     )
 
     #_inherit
@@ -5768,7 +5769,7 @@
     (declare RSeq''seq RSeq''first RSeq''next)
 
     (defq RSeq [#_"meta" _meta, #_"vector" v, #_"int" i] SeqForm
-        clojure.lang.ISeq (seq [_] (RSeq''seq _)) (first [_] (RSeq''first _)) (next [_] (RSeq''next _))
+        clojure.lang.ISeq (seq [_] (RSeq''seq _)) (first [_] (RSeq''first _)) (next [_] (RSeq''next _)) (more [_] (or (RSeq''next _) ()))
     )
 
     #_inherit
@@ -5991,7 +5992,7 @@
     (declare EmptyList''seq EmptyList''first EmptyList''next EmptyList''conj EmptyList''empty)
 
     (defq EmptyList [#_"meta" _meta] SeqForm
-        clojure.lang.ISeq (seq [_] (EmptyList''seq _)) (first [_] (EmptyList''first _)) (next [_] (EmptyList''next _))
+        clojure.lang.ISeq (seq [_] (EmptyList''seq _)) (first [_] (EmptyList''first _)) (next [_] (EmptyList''next _)) (more [_] (or (EmptyList''next _) ()))
         clojure.lang.IPersistentCollection (cons [_ o] (EmptyList''conj _, o)) (empty [_] (EmptyList''empty _))
     )
 
@@ -6217,7 +6218,7 @@
     (declare MSeq''seq MSeq''first MSeq''next)
 
     (defq MSeq [#_"meta" _meta, #_"array" a, #_"int" i] SeqForm
-        clojure.lang.ISeq (seq [_] (MSeq''seq _)) (first [_] (MSeq''first _)) (next [_] (MSeq''next _))
+        clojure.lang.ISeq (seq [_] (MSeq''seq _)) (first [_] (MSeq''first _)) (next [_] (MSeq''next _)) (more [_] (or (MSeq''next _) ()))
     )
 
     #_inherit
@@ -6708,7 +6709,7 @@
     (declare HSeq''seq HSeq''first HSeq''next)
 
     (defq HSeq [#_"meta" _meta, #_"node[]" nodes, #_"int" i, #_"seq" s] SeqForm
-        clojure.lang.ISeq (seq [_] (HSeq''seq _)) (first [_] (HSeq''first _)) (next [_] (HSeq''next _))
+        clojure.lang.ISeq (seq [_] (HSeq''seq _)) (first [_] (HSeq''first _)) (next [_] (HSeq''next _)) (more [_] (or (HSeq''next _) ()))
     )
 
     #_inherit
@@ -8832,7 +8833,7 @@
     (declare TSeq''seq TSeq''first TSeq''next)
 
     (defq TSeq [#_"meta" _meta, #_"seq" stack, #_"boolean" asc?, #_"int" cnt] SeqForm
-        clojure.lang.ISeq (seq [_] (TSeq''seq _)) (first [_] (TSeq''first _)) (next [_] (TSeq''next _))
+        clojure.lang.ISeq (seq [_] (TSeq''seq _)) (first [_] (TSeq''first _)) (next [_] (TSeq''next _)) (more [_] (or (TSeq''next _) ()))
     )
 
     #_inherit
@@ -11050,7 +11051,7 @@
     (declare QSeq''seq QSeq''first QSeq''next)
 
     (defq QSeq [#_"meta" _meta, #_"seq" f, #_"seq" rseq] SeqForm
-        clojure.lang.ISeq (seq [_] (QSeq''seq _)) (first [_] (QSeq''first _)) (next [_] (QSeq''next _))
+        clojure.lang.ISeq (seq [_] (QSeq''seq _)) (first [_] (QSeq''first _)) (next [_] (QSeq''next _)) (more [_] (or (QSeq''next _) ()))
     )
 
     #_inherit
@@ -11517,7 +11518,9 @@
     )
 
     (defn #_"boolean" Var''hasRoot [#_"Var" this]
-        (not (satisfies? Unbound @(:root this)))
+        (when-not (clojure-var? this) => (Var''-hasRoot this)
+            (not (satisfies? Unbound @(:root this)))
+        )
     )
 
     (defn #_"boolean" Var''isBound [#_"Var" this]
@@ -13746,7 +13749,7 @@
     (defr LiteralExpr)
 
     (defn #_"LiteralExpr" LiteralExpr'new [#_"Object" value]
-        (merge (class! LiteralExpr)
+        (merge (LiteralExpr'class. {})
             (hash-map
                 #_"Object" :value value
             )
@@ -13790,7 +13793,7 @@
     (defr UnresolvedVarExpr)
 
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
-        (merge (class! UnresolvedVarExpr)
+        (merge (UnresolvedVarExpr'class. {})
             (hash-map
                 #_"Symbol" :symbol symbol
             )
@@ -13810,7 +13813,7 @@
     (defr VarExpr)
 
     (defn #_"VarExpr" VarExpr'new [#_"Var" var]
-        (merge (class! VarExpr)
+        (merge (VarExpr'class. {})
             (hash-map
                 #_"Var" :var var
             )
@@ -13837,7 +13840,7 @@
     (defr TheVarExpr)
 
     (defn #_"TheVarExpr" TheVarExpr'new [#_"Var" var]
-        (merge (class! TheVarExpr)
+        (merge (TheVarExpr'class. {})
             (hash-map
                 #_"Var" :var var
             )
@@ -13867,7 +13870,7 @@
     (defr BodyExpr)
 
     (defn #_"BodyExpr" BodyExpr'new [#_"vector" exprs]
-        (merge (class! BodyExpr)
+        (merge (BodyExpr'class. {})
             (hash-map
                 #_"vector" :exprs exprs
             )
@@ -13905,7 +13908,7 @@
     (defr MetaExpr)
 
     (defn #_"MetaExpr" MetaExpr'new [#_"Expr" expr, #_"Expr" meta]
-        (merge (class! MetaExpr)
+        (merge (MetaExpr'class. {})
             (hash-map
                 #_"Expr" :expr expr
                 #_"Expr" :meta meta
@@ -13934,7 +13937,7 @@
     (defr IfExpr)
 
     (defn #_"IfExpr" IfExpr'new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
-        (merge (class! IfExpr)
+        (merge (IfExpr'class. {})
             (hash-map
                 #_"Expr" :test test
                 #_"Expr" :then then
@@ -13985,7 +13988,7 @@
     (defr MapExpr)
 
     (defn #_"MapExpr" MapExpr'new [#_"vector" args]
-        (merge (class! MapExpr)
+        (merge (MapExpr'class. {})
             (hash-map
                 #_"vector" :args args
             )
@@ -14048,7 +14051,7 @@
     (defr SetExpr)
 
     (defn #_"SetExpr" SetExpr'new [#_"vector" args]
-        (merge (class! SetExpr)
+        (merge (SetExpr'class. {})
             (hash-map
                 #_"vector" :args args
             )
@@ -14096,7 +14099,7 @@
     (defr VectorExpr)
 
     (defn #_"VectorExpr" VectorExpr'new [#_"vector" args]
-        (merge (class! VectorExpr)
+        (merge (VectorExpr'class. {})
             (hash-map
                 #_"vector" :args args
             )
@@ -14144,7 +14147,7 @@
     (defr InvokeExpr)
 
     (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args]
-        (merge (class! InvokeExpr)
+        (merge (InvokeExpr'class. {})
             (hash-map
                 #_"Expr" :fexpr fexpr
                 #_"vector" :args args
@@ -14180,7 +14183,7 @@
     (defr LocalBinding)
 
     (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
-        (merge (class! LocalBinding)
+        (merge (LocalBinding'class. {})
             (hash-map
                 #_"int" :uid (next-id!)
                 #_"Symbol" :sym sym
@@ -14195,7 +14198,7 @@
     (defr LocalBindingExpr)
 
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb]
-        (merge (class! LocalBindingExpr)
+        (merge (LocalBindingExpr'class. {})
             (hash-map
                 #_"LocalBinding" :lb lb
             )
@@ -14217,7 +14220,7 @@
     (defr FnMethod)
 
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
-        (merge (class! FnMethod)
+        (merge (FnMethod'class. {})
             (hash-map
                 #_"FnExpr" :fun fun
                 ;; when closures are defined inside other closures,
@@ -14313,7 +14316,7 @@
     (defr FnExpr)
 
     (defn #_"FnExpr" FnExpr'new []
-        (merge (class! FnExpr)
+        (merge (FnExpr'class. {})
             (hash-map
                 #_"Symbol" :fname nil
                 #_"{int FnMethod}" :regulars nil
@@ -14391,7 +14394,7 @@
     (defr DefExpr)
 
     (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"boolean" initProvided]
-        (merge (class! DefExpr)
+        (merge (DefExpr'class. {})
             (hash-map
                 #_"Var" :var var
                 #_"Expr" :init init
@@ -14468,7 +14471,7 @@
     (defr LetFnExpr)
 
     (defn #_"LetFnExpr" LetFnExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body]
-        (merge (class! LetFnExpr)
+        (merge (LetFnExpr'class. {})
             (hash-map
                 #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
@@ -14576,7 +14579,7 @@
     (defr LetExpr)
 
     (defn #_"LetExpr" LetExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body, #_"boolean" loop?]
-        (merge (class! LetExpr)
+        (merge (LetExpr'class. {})
             (hash-map
                 #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
@@ -14659,7 +14662,7 @@
     (defr RecurExpr)
 
     (defn #_"RecurExpr" RecurExpr'new [#_"vector" loopLocals, #_"vector" args]
-        (merge (class! RecurExpr)
+        (merge (RecurExpr'class. {})
             (hash-map
                 #_"vector" :loopLocals loopLocals
                 #_"vector" :args args
@@ -14714,7 +14717,7 @@
         (when-not (any = testType :int :hash-equiv :hash-identity)
             (throw! (str "unexpected test type: " testType))
         )
-        (merge (class! CaseExpr)
+        (merge (CaseExpr'class. {})
             (hash-map
                 #_"LocalBindingExpr" :expr expr
                 #_"int" :shift shift
@@ -14860,7 +14863,7 @@
     (defr MonitorExpr)
 
     (defn #_"MonitorExpr" MonitorExpr'new [#_"Expr" target, #_"boolean" enter?]
-        (merge (class! MonitorExpr)
+        (merge (MonitorExpr'class. {})
             (hash-map
                 #_"Expr" :target target
                 #_"boolean" :enter? enter?
@@ -14891,7 +14894,7 @@
     (defr CatchClause)
 
     (defn #_"CatchClause" CatchClause'new [#_"LocalBinding" lb, #_"Expr" handler]
-        (merge (class! CatchClause)
+        (merge (CatchClause'class. {})
             (hash-map
                 #_"LocalBinding" :lb lb
                 #_"Expr" :handler handler
@@ -14904,7 +14907,7 @@
     (defr TryExpr)
 
     (defn #_"TryExpr" TryExpr'new [#_"Expr" tryExpr, #_"[CatchClause]" catches, #_"Expr" finallyExpr, #_"map" scope]
-        (merge (class! TryExpr)
+        (merge (TryExpr'class. {})
             (hash-map
                 #_"Expr" :tryExpr tryExpr
                 #_"[CatchClause]" :catches catches
@@ -15045,7 +15048,7 @@
     (defr ThrowExpr)
 
     (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" throwable]
-        (merge (class! ThrowExpr)
+        (merge (ThrowExpr'class. {})
             (hash-map
                 #_"Expr" :throwable throwable
             )
