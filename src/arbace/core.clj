@@ -70,10 +70,285 @@
     (defn >>> [x y] (int! (-/unsigned-bit-shift-right (-/bit-and x 0xffffffff) y)))
 )
 
+(about #_"java.lang"
+
+(about #_"Appendable"
+    (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|CharSequence" x] (.append this, x))
+)
+
+(about #_"Boolean"
+    (defn boolean? [x] (-/instance? Boolean x))
+)
+
+(about #_"Byte"
+    (defn byte? [x] (-/instance? Byte x))
+)
+
+(about #_"Character"
+    (defn char? [x] (-/instance? Character x))
+
+    (defn #_"int"       Character'digit        [#_"char" ch, #_"int" radix] (Character/digit ch, radix))
+    (defn #_"boolean"   Character'isWhitespace [#_"char" ch]                (Character/isWhitespace ch))
+    (defn #_"Character" Character'valueOf      [#_"char" ch]                (Character/valueOf ch))
+)
+
+(about #_"CharSequence"
+    (defn char-sequence? [x] (-/instance? CharSequence x))
+
+    (defn #_"char" CharSequence''charAt [#_"CharSequence" this, #_"int" i] (.charAt this, i))
+    (defn #_"int"  CharSequence''length [#_"CharSequence" this]            (.length this))
+)
+
+(about #_"Comparable"
+    (defn #_"int" Comparable''compareTo [#_"Comparable" this, #_"any" that] (.compareTo this, that))
+)
+
+(about #_"Integer"
+    (defn int? [x] (-/instance? Integer x))
+
+    (def #_"int" Integer'MAX_VALUE Integer/MAX_VALUE)
+    (def #_"int" Integer'MIN_VALUE Integer/MIN_VALUE)
+
+    (defn #_"int"    Integer'bitCount   [#_"int" i]                (Integer/bitCount i))
+    (defn #_"int"    Integer'parseInt   [#_"String" s]             (Integer/parseInt s))
+    (defn #_"int"    Integer'rotateLeft [#_"int" x, #_"int" y]     (Integer/rotateLeft x, y))
+    (defn #_"String" Integer'toString   [#_"int" i, #_"int" radix] (Integer/toString i, radix))
+)
+
+(about #_"Long"
+    (defn long? [x] (-/instance? Long x))
+
+    (def #_"long" Long'MAX_VALUE Long/MAX_VALUE)
+    (def #_"long" Long'MIN_VALUE Long/MIN_VALUE)
+
+    (defn #_"Long" Long'valueOf [#_"long" l] (Long/valueOf l))
+)
+
+(about #_"Number"
+    (defn number? [x] (-/instance? Number x))
+
+    (defn #_"long"   Number''longValue [#_"Number" this] (.longValue this))
+    (defn #_"String" Number''toString  [#_"Number" this] (.toString this))
+)
+
+(about #_"Object"
+    (def Object'array (Class/forName "[Ljava.lang.Object;"))
+
+    (defn #_"int"    Object''hashCode [#_"Object" this] (.hashCode this))
+    (defn #_"String" Object''toString [#_"Object" this] (.toString this))
+)
+
+(about #_"String"
+    (defn string? [x] (-/instance? String x))
+
+    (defn #_"char"    String''charAt     [#_"String" this, #_"int" i]    (.charAt this, i))
+    (defn #_"boolean" String''endsWith   [#_"String" this, #_"String" s] (.endsWith this, s))
+    (defn #_"int"     String''indexOf   ([#_"String" this, #_"int" ch]   (.indexOf this, ch))     ([#_"String" this, #_"String" s, #_"int" from] (.indexOf this, s, from)))
+    (defn #_"String"  String''intern     [#_"String" this]               (.intern this))
+    (defn #_"int"     String''length     [#_"String" this]               (.length this))
+    (defn #_"boolean" String''startsWith [#_"String" this, #_"String" s] (.startsWith this, s))
+    (defn #_"String"  String''substring ([#_"String" this, #_"int" from] (.substring this, from)) ([#_"String" this, #_"int" from, #_"int" over] (.substring this, from, over)))
+)
+
+(about #_"StringBuilder"
+    (defn #_"StringBuilder" StringBuilder'new [] (StringBuilder.))
+
+    (defn #_"StringBuilder" StringBuilder''append   [#_"StringBuilder" this, #_"char" ch] (.append this, ch))
+    (defn #_"String"        StringBuilder''toString [#_"StringBuilder" this]              (.toString this))
+)
+
+(about #_"System"
+    (defn #_"void" System'arraycopy [#_"array" a, #_"int" i, #_"array" b, #_"int" j, #_"int" n] (System/arraycopy a, i, b, j, n))
+)
+
+(about #_"Thread"
+    (defn thread [] (Thread/currentThread))
+)
+)
+
+(about #_"java.lang.ref"
+
+(about #_"Reference"
+    (defn #_"any" Reference''get [#_"Reference" this] (.get this))
+)
+
+(about #_"ReferenceQueue"
+    (defn #_"ReferenceQueue" ReferenceQueue'new [] (ReferenceQueue.))
+
+    (defn #_"Reference" ReferenceQueue''poll [#_"ReferenceQueue" this] (.poll this))
+)
+
+(about #_"WeakReference"
+    (defn #_"WeakReference" WeakReference'new [#_"any" x, #_"ReferenceQueue" q] (WeakReference. x, q))
+)
+)
+
+(about #_"java.lang.reflect"
+
+(about #_"Array"
+    (defn array? [x] (.isArray (-/class x)))
+
+    (defn #_"any" Array'get       [#_"array" a, #_"int" i] (Array/get a, i))
+    (defn #_"int" Array'getLength [#_"array" a]            (Array/getLength a))
+)
+)
+
+(about #_"java.io"
+
+(about #_"BufferedReader"
+    (defn #_"String" BufferedReader''readLine [#_"BufferedReader" this] (.readLine this))
+)
+
+(about #_"Flushable"
+    (defn #_"void" Flushable''flush [#_"Flushable" this] (.flush this))
+)
+
+(about #_"PrintWriter"
+    (defn #_"void" PrintWriter''println [#_"PrintWriter" this, #_"String" s] (.println this, s))
+)
+
+(about #_"PushbackReader"
+    (defn pushback-reader? [x] (-/instance? PushbackReader x))
+
+    (defn #_"PushbackReader" PushbackReader'new [#_"Reader" in] (PushbackReader. in))
+
+    (defn #_"void" PushbackReader''unread [#_"PushbackReader" this, #_"int" x] (.unread this, x))
+)
+
+(about #_"Reader"
+    (defn #_"int" Reader''read [#_"Reader" this] (.read this))
+)
+)
+
+(about #_"java.util"
+
+(about #_"Arrays"
+    (defn #_"void" Arrays'sort [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
+)
+
+(about #_"Comparator"
+    (defn #_"int" Comparator''compare [#_"Comparator" this, #_"any" x, #_"any" y] (.compare this, x, y))
+)
+)
+
+(about #_"java.util.regex"
+
+(about #_"Pattern"
+    (defn pattern? [x] (-/instance? Pattern x))
+
+    (defn #_"Pattern" Pattern'compile  [#_"String" s]                         (Pattern/compile s))
+    (defn #_"Matcher" Pattern''matcher [#_"Pattern" this, #_"CharSequence" s] (.matcher this, s))
+    (defn #_"String"  Pattern''pattern [#_"Pattern" this]                     (.pattern this))
+)
+
+(about #_"Matcher"
+    (defn matcher? [x] (-/instance? Matcher x))
+
+    (defn #_"boolean" Matcher''find       [#_"Matcher" this] (.find this))
+    (defn #_"String"  Matcher''group     ([#_"Matcher" this] (.group this)) ([#_"Matcher" this, #_"int" n] (.group this, n)))
+    (defn #_"int"     Matcher''groupCount [#_"Matcher" this] (.groupCount this))
+    (defn #_"boolean" Matcher''matches    [#_"Matcher" this] (.matches this))
+)
+)
+
+(about #_"clojure.lang"
+
+(about #_"Compiler"
+    (def #_"var" Compiler'LOADER clojure.lang.Compiler/LOADER)
+)
+
+(about #_"DynamicClassLoader"
+    (defn #_"Class" DynamicClassLoader''defineClass [#_"DynamicClassLoader" this, #_"String" name, #_"byte[]" bytes, #_"form" _] (.defineClass this, name, bytes, _))
+)
+
+(about #_"ILookup"
+    (defn #_"value" ILookup''valAt ([#_"ILookup" this, #_"key" key] (.valAt this, key)) ([#_"ILookup" this, #_"key" key, #_"value" not-found] (.valAt this, key, not-found)))
+)
+
+(about #_"ITransientAssociative"
+    (defn #_"ITransientAssociative" ITransientAssociative''assoc! [#_"ITransientAssociative" this, #_"key" key, #_"value" val] (.assoc this, key, val))
+)
+
+(about #_"Namespace"
+    (defn clojure-namespace? [x] (-/instance? clojure.lang.Namespace x))
+
+    (defn #_"map"    Namespace''-getMappings     [#_"Namespace" this]                  (.getMappings this))
+    (defn #_"Object" Namespace''-getMapping      [#_"Namespace" this, #_"Symbol" name] (.getMapping this, name))
+    (defn #_"var"    Namespace''-intern          [#_"Namespace" this, #_"Symbol" sym]  (.intern this, sym))
+    (defn #_"var"    Namespace''-findInternedVar [#_"Namespace" this, #_"Symbol" name] (.findInternedVar this, name))
+)
+
+(about #_"Var"
+    (defn clojure-var? [x] (-/instance? clojure.lang.Var x))
+
+    (defn #_"Object"  Var''-alterRoot [#_"Var" this, #_"IFn" fn, #_"ISeq" args] (.alterRoot this, fn, args))
+    (defn #_"boolean" Var''-isBound   [#_"Var" this]                            (.isBound this))
+    (defn #_"Object"  Var''-get       [#_"Var" this]                            (.get this))
+)
+)
+
+(about #_"graalfn.HotSpot"
+
+(about #_"HotSpot"
+    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
+
+    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
+    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
+
+    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
+    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
+
+    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
+        (throw! "use G1 with compressed oops")
+    )
+)
+)
+
+(about #_"arbace.math"
+
+(about #_"BigInteger"
+    (defn biginteger? [x] (-/instance? BigInteger x))
+
+    (defn #_"BigInteger" BigInteger'new ([#_"String" s] (BigInteger. s)) ([#_"String" s, #_"int" radix] (BigInteger. s, radix)))
+
+    (def #_"BigInteger" BigInteger'ZERO BigInteger/ZERO)
+    (def #_"BigInteger" BigInteger'ONE  BigInteger/ONE)
+
+    (defn #_"BigInteger" BigInteger''add       [#_"BigInteger" this, #_"BigInteger" x] (.add this, x))
+    (defn #_"int"        BigInteger''bitLength [#_"BigInteger" this]                   (.bitLength this))
+    (defn #_"BigInteger" BigInteger''divide    [#_"BigInteger" this, #_"BigInteger" x] (.divide this, x))
+    (defn #_"BigInteger" BigInteger''gcd       [#_"BigInteger" this, #_"BigInteger" x] (.gcd this, x))
+    (defn #_"int"        BigInteger''intValue  [#_"BigInteger" this]                   (.intValue this))
+    (defn #_"long"       BigInteger''longValue [#_"BigInteger" this]                   (.longValue this))
+    (defn #_"BigInteger" BigInteger''multiply  [#_"BigInteger" this, #_"BigInteger" x] (.multiply this, x))
+    (defn #_"BigInteger" BigInteger''negate    [#_"BigInteger" this]                   (.negate this))
+    (defn #_"BigInteger" BigInteger''remainder [#_"BigInteger" this, #_"BigInteger" x] (.remainder this, x))
+    (defn #_"int"        BigInteger''signum    [#_"BigInteger" this]                   (.signum this))
+    (defn #_"BigInteger" BigInteger''subtract  [#_"BigInteger" this, #_"BigInteger" x] (.subtract this, x))
+    (defn #_"String"     BigInteger''toString  [#_"BigInteger" this]                   (.toString this))
+    (defn #_"BigInteger" BigInteger'valueOf    [#_"long" x]                            (BigInteger/valueOf x))
+)
+)
+
+(about #_"arbace.util.concurrent.atomic"
+
+(about #_"AtomicReference"
+    (defn #_"AtomicReference" AtomicReference'new [#_"any" init] (AtomicReference. init))
+
+    (defn #_"boolean" AtomicReference''compareAndSet [#_"AtomicReference" this, #_"any" x, #_"any" y] (.compareAndSet this, x, y))
+    (defn #_"any"     AtomicReference''get           [#_"AtomicReference" this]                       (.get this))
+    (defn #_"void"    AtomicReference''set           [#_"AtomicReference" this, #_"any" x]            (.set this, x))
+)
+)
+
+(about #_"defp, defq, defr, defm, class!"
+
 (about #_"defproto"
 
 (defn #_- gen-interface* [sym]
-    (.defineClass #_"DynamicClassLoader" (var-get clojure.lang.Compiler/LOADER), (str sym), (second (#'-/generate-interface {:name sym})), nil)
+    (DynamicClassLoader''defineClass (var-get Compiler'LOADER), (str sym), (second (#'-/generate-interface {:name sym})), nil)
 )
 
 (defn- emit-defproto* [name sigs]
@@ -263,268 +538,6 @@
 (defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          ~i)))
 
 (defmacro class! [r] (let [c (symbol (str r "'class"))] (list 'new c {})))
-
-(defn thread [] (Thread/currentThread))
-
-(about #_"java.lang"
-
-(about #_"Appendable"
-    (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|CharSequence" x] (.append this, x))
-)
-
-(about #_"Boolean"
-    (defn boolean? [x] (-/instance? Boolean x))
-)
-
-(about #_"Byte"
-    (defn byte? [x] (-/instance? Byte x))
-)
-
-(about #_"Character"
-    (defn char? [x] (-/instance? Character x))
-
-    (defn #_"int"       Character'digit        [#_"char" ch, #_"int" radix] (Character/digit ch, radix))
-    (defn #_"boolean"   Character'isWhitespace [#_"char" ch]                (Character/isWhitespace ch))
-    (defn #_"Character" Character'valueOf      [#_"char" ch]                (Character/valueOf ch))
-)
-
-(about #_"CharSequence"
-    (defn char-sequence? [x] (-/instance? CharSequence x))
-
-    (defn #_"char" CharSequence''charAt [#_"CharSequence" this, #_"int" i] (.charAt this, i))
-    (defn #_"int"  CharSequence''length [#_"CharSequence" this]            (.length this))
-)
-
-(about #_"Comparable"
-    (defn #_"int" Comparable''compareTo [#_"Comparable" this, #_"any" that] (.compareTo this, that))
-)
-
-(about #_"Integer"
-    (defn int? [x] (-/instance? Integer x))
-
-    (def #_"int" Integer'MAX_VALUE Integer/MAX_VALUE)
-    (def #_"int" Integer'MIN_VALUE Integer/MIN_VALUE)
-
-    (defn #_"int"    Integer'bitCount   [#_"int" i]                (Integer/bitCount i))
-    (defn #_"int"    Integer'parseInt   [#_"String" s]             (Integer/parseInt s))
-    (defn #_"int"    Integer'rotateLeft [#_"int" x, #_"int" y]     (Integer/rotateLeft x, y))
-    (defn #_"String" Integer'toString   [#_"int" i, #_"int" radix] (Integer/toString i, radix))
-)
-
-(about #_"Long"
-    (defn long? [x] (-/instance? Long x))
-
-    (def #_"long" Long'MAX_VALUE Long/MAX_VALUE)
-    (def #_"long" Long'MIN_VALUE Long/MIN_VALUE)
-
-    (defn #_"Long" Long'valueOf [#_"long" l] (Long/valueOf l))
-)
-
-(about #_"Number"
-    (defn number? [x] (-/instance? Number x))
-
-    (defn #_"long"   Number''longValue [#_"Number" this] (.longValue this))
-    (defn #_"String" Number''toString  [#_"Number" this] (.toString this))
-)
-
-(about #_"Object"
-    (def Object'array (Class/forName "[Ljava.lang.Object;"))
-
-    (defn #_"int"    Object''hashCode [#_"Object" this] (.hashCode this))
-    (defn #_"String" Object''toString [#_"Object" this] (.toString this))
-)
-
-(about #_"String"
-    (defn string? [x] (-/instance? String x))
-
-    (defn #_"char"    String''charAt     [#_"String" this, #_"int" i]    (.charAt this, i))
-    (defn #_"boolean" String''endsWith   [#_"String" this, #_"String" s] (.endsWith this, s))
-    (defn #_"int"     String''indexOf   ([#_"String" this, #_"int" ch]   (.indexOf this, ch))     ([#_"String" this, #_"String" s, #_"int" from] (.indexOf this, s, from)))
-    (defn #_"String"  String''intern     [#_"String" this]               (.intern this))
-    (defn #_"int"     String''length     [#_"String" this]               (.length this))
-    (defn #_"boolean" String''startsWith [#_"String" this, #_"String" s] (.startsWith this, s))
-    (defn #_"String"  String''substring ([#_"String" this, #_"int" from] (.substring this, from)) ([#_"String" this, #_"int" from, #_"int" over] (.substring this, from, over)))
-)
-
-(about #_"StringBuilder"
-    (defn #_"StringBuilder" StringBuilder'new [] (StringBuilder.))
-
-    (defn #_"StringBuilder" StringBuilder''append   [#_"StringBuilder" this, #_"char" ch] (.append this, ch))
-    (defn #_"String"        StringBuilder''toString [#_"StringBuilder" this]              (.toString this))
-)
-
-(about #_"System"
-    (defn #_"void" System'arraycopy [#_"array" a, #_"int" i, #_"array" b, #_"int" j, #_"int" n] (System/arraycopy a, i, b, j, n))
-)
-)
-
-(about #_"java.lang.ref"
-
-(about #_"Reference"
-    (defn #_"any" Reference''get [#_"Reference" this] (.get this))
-)
-
-(about #_"ReferenceQueue"
-    (defn #_"ReferenceQueue" ReferenceQueue'new [] (ReferenceQueue.))
-
-    (defn #_"Reference" ReferenceQueue''poll [#_"ReferenceQueue" this] (.poll this))
-)
-
-(about #_"WeakReference"
-    (defn #_"WeakReference" WeakReference'new [#_"any" x, #_"ReferenceQueue" q] (WeakReference. x, q))
-)
-)
-
-(about #_"java.lang.reflect"
-
-(about #_"Array"
-    (defn array? [x] (.isArray (-/class x)))
-
-    (defn #_"any" Array'get       [#_"array" a, #_"int" i] (Array/get a, i))
-    (defn #_"int" Array'getLength [#_"array" a]            (Array/getLength a))
-)
-)
-
-(about #_"java.io"
-
-(about #_"BufferedReader"
-    (defn #_"String" BufferedReader''readLine [#_"BufferedReader" this] (.readLine this))
-)
-
-(about #_"Flushable"
-    (defn #_"void" Flushable''flush [#_"Flushable" this] (.flush this))
-)
-
-(about #_"PrintWriter"
-    (defn #_"void" PrintWriter''println [#_"PrintWriter" this, #_"String" s] (.println this, s))
-)
-
-(about #_"PushbackReader"
-    (defn pushback-reader? [x] (-/instance? PushbackReader x))
-
-    (defn #_"PushbackReader" PushbackReader'new [#_"Reader" in] (PushbackReader. in))
-
-    (defn #_"void" PushbackReader''unread [#_"PushbackReader" this, #_"int" x] (.unread this, x))
-)
-
-(about #_"Reader"
-    (defn #_"int" Reader''read [#_"Reader" this] (.read this))
-)
-)
-
-(about #_"java.util"
-
-(about #_"Arrays"
-    (defn #_"void" Arrays'sort [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
-)
-
-(about #_"Comparator"
-    (defn #_"int" Comparator''compare [#_"Comparator" this, #_"any" x, #_"any" y] (.compare this, x, y))
-)
-)
-
-(about #_"java.util.regex"
-
-(about #_"Pattern"
-    (defn pattern? [x] (-/instance? Pattern x))
-
-    (defn #_"Pattern" Pattern'compile  [#_"String" s]                         (Pattern/compile s))
-    (defn #_"Matcher" Pattern''matcher [#_"Pattern" this, #_"CharSequence" s] (.matcher this, s))
-    (defn #_"String"  Pattern''pattern [#_"Pattern" this]                     (.pattern this))
-)
-
-(about #_"Matcher"
-    (defn matcher? [x] (-/instance? Matcher x))
-
-    (defn #_"boolean" Matcher''find       [#_"Matcher" this] (.find this))
-    (defn #_"String"  Matcher''group     ([#_"Matcher" this] (.group this)) ([#_"Matcher" this, #_"int" n] (.group this, n)))
-    (defn #_"int"     Matcher''groupCount [#_"Matcher" this] (.groupCount this))
-    (defn #_"boolean" Matcher''matches    [#_"Matcher" this] (.matches this))
-)
-)
-
-(about #_"clojure.lang"
-
-(about #_"ILookup"
-    (defn #_"value" ILookup''valAt ([#_"ILookup" this, #_"key" key] (.valAt this, key)) ([#_"ILookup" this, #_"key" key, #_"value" not-found] (.valAt this, key, not-found)))
-)
-
-(about #_"ITransientAssociative"
-    (defn #_"ITransientAssociative" ITransientAssociative''assoc! [#_"ITransientAssociative" this, #_"key" key, #_"value" val] (.assoc this, key, val))
-)
-
-(about #_"Namespace"
-    (defn clojure-namespace? [x] (-/instance? clojure.lang.Namespace x))
-
-    (defn #_"map"    Namespace''-getMappings     [#_"Namespace" this]                  (.getMappings this))
-    (defn #_"Object" Namespace''-getMapping      [#_"Namespace" this, #_"Symbol" name] (.getMapping this, name))
-    (defn #_"var"    Namespace''-intern          [#_"Namespace" this, #_"Symbol" sym]  (.intern this, sym))
-    (defn #_"var"    Namespace''-findInternedVar [#_"Namespace" this, #_"Symbol" name] (.findInternedVar this, name))
-)
-
-(about #_"Var"
-    (defn clojure-var? [x] (-/instance? clojure.lang.Var x))
-
-    (defn #_"Object"  Var''-alterRoot [#_"Var" this, #_"IFn" fn, #_"ISeq" args] (.alterRoot this, fn, args))
-    (defn #_"boolean" Var''-isBound   [#_"Var" this]                            (.isBound this))
-    (defn #_"Object"  Var''-get       [#_"Var" this]                            (.get this))
-)
-)
-
-(about #_"graalfn.HotSpot"
-
-(about #_"HotSpot"
-    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
-
-    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
-    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
-
-    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
-
-    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
-    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
-
-    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
-        (throw! "use G1 with compressed oops")
-    )
-)
-)
-
-(about #_"arbace.math"
-
-(about #_"BigInteger"
-    (defn biginteger? [x] (-/instance? BigInteger x))
-
-    (defn #_"BigInteger" BigInteger'new ([#_"String" s] (BigInteger. s)) ([#_"String" s, #_"int" radix] (BigInteger. s, radix)))
-
-    (def #_"BigInteger" BigInteger'ZERO BigInteger/ZERO)
-    (def #_"BigInteger" BigInteger'ONE  BigInteger/ONE)
-
-    (defn #_"BigInteger" BigInteger''add       [#_"BigInteger" this, #_"BigInteger" x] (.add this, x))
-    (defn #_"int"        BigInteger''bitLength [#_"BigInteger" this]                   (.bitLength this))
-    (defn #_"BigInteger" BigInteger''divide    [#_"BigInteger" this, #_"BigInteger" x] (.divide this, x))
-    (defn #_"BigInteger" BigInteger''gcd       [#_"BigInteger" this, #_"BigInteger" x] (.gcd this, x))
-    (defn #_"int"        BigInteger''intValue  [#_"BigInteger" this]                   (.intValue this))
-    (defn #_"long"       BigInteger''longValue [#_"BigInteger" this]                   (.longValue this))
-    (defn #_"BigInteger" BigInteger''multiply  [#_"BigInteger" this, #_"BigInteger" x] (.multiply this, x))
-    (defn #_"BigInteger" BigInteger''negate    [#_"BigInteger" this]                   (.negate this))
-    (defn #_"BigInteger" BigInteger''remainder [#_"BigInteger" this, #_"BigInteger" x] (.remainder this, x))
-    (defn #_"int"        BigInteger''signum    [#_"BigInteger" this]                   (.signum this))
-    (defn #_"BigInteger" BigInteger''subtract  [#_"BigInteger" this, #_"BigInteger" x] (.subtract this, x))
-    (defn #_"String"     BigInteger''toString  [#_"BigInteger" this]                   (.toString this))
-    (defn #_"BigInteger" BigInteger'valueOf    [#_"long" x]                            (BigInteger/valueOf x))
-)
-)
-
-(about #_"arbace.util.concurrent.atomic"
-
-(about #_"AtomicReference"
-    (defn #_"AtomicReference" AtomicReference'new [#_"any" init] (AtomicReference. init))
-
-    (defn #_"boolean" AtomicReference''compareAndSet [#_"AtomicReference" this, #_"any" x, #_"any" y] (.compareAndSet this, x, y))
-    (defn #_"any"     AtomicReference''get           [#_"AtomicReference" this]                       (.get this))
-    (defn #_"void"    AtomicReference''set           [#_"AtomicReference" this, #_"any" x]            (.set this, x))
-)
 )
 
 (ns arbace.core
@@ -15969,7 +15982,7 @@
     (alias (symbol "-"), (the-ns 'clojure.core))
 
     (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
-        (Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)) scope)
+        (Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)), scope)
     )
 )
 
