@@ -6,7 +6,7 @@
 (-/defmacro ß [& _])
 
 (ns arbace.bore
-    (:refer-clojure :only [= and cons count defmacro defn doseq first keys let map merge meta odd? reduce select-keys str symbol? var-get vary-meta when-not]) (:require [clojure.core :as -])
+    (:refer-clojure :only [= and cons defmacro defn doseq first keys let map merge meta reduce select-keys symbol? var-get vary-meta when-not]) (:require [clojure.core :as -])
     #_(:require [flatland.ordered.map :refer [ordered-map]] [flatland.ordered.set :refer [ordered-set]])
 )
 
@@ -381,8 +381,6 @@
 )
 )
 
-(defmacro case! [e & clauses] (if (odd? (count clauses)) `(-/condp = ~e ~@clauses) `(-/condp = ~e ~@clauses (throw! (str ~e " is definitely not that case!")))))
-
 (defn A'new [n] (-/object-array n))
 
 (defn A'clone  [^"[Ljava.lang.Object;" a]     (-/aclone a))
@@ -399,7 +397,6 @@
     (:refer arbace.bore :only
         [
             about import! int int! refer! throw!
-            case! A'new A'clone A'get A'length A'set new* M'get
             Appendable''append
             boolean?
             byte?
@@ -445,14 +442,17 @@
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
             AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set
+            A'new A'clone A'get A'length A'set new* M'get
         ]
     )
 )
 
 (import!)
 
-(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
+(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= odd? partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> bit-xor dec inc neg? pos? quot rem zero? |])
+
+(defmacro case! [e & clauses] (if (odd? (count clauses)) `(condp = ~e ~@clauses) `(condp = ~e ~@clauses (throw! (str ~e " is definitely not that case!")))))
 
 (let [last-id' (-/atom 0)] (defn next-id! [] (-/swap! last-id' inc)))
 
@@ -874,6 +874,29 @@
 )
 )
 
+(defn- parse-opts [s]
+    (loop-when-recur [opts {} [k v & rs :as s] s] (keyword? k) [(-/assoc opts k v) rs] => [opts s])
+)
+
+(refer! - [take-while drop-while])
+
+(defn- parse-impls [specs]
+    (loop-when-recur [impls {} s specs] (seq s) [(-/assoc impls (first s) (take-while seq? (next s))) (drop-while seq? (next s))] => impls)
+)
+
+(refer! - [var? resolve deref keys maybe-destructured apply concat vals])
+
+(defn- parse-opts+specs [opts+specs]
+    (let [
+        [opts specs] (parse-opts opts+specs)
+        impls        (parse-impls specs)
+        interfaces   (-> (map #(if (var? (resolve %)) (:on (deref (resolve %))) %) (keys impls)) -/set (-/disj 'Object 'java.lang.Object) vec)
+        methods      (map (fn [[name params & body]] (-/cons name (maybe-destructured params body))) (apply concat (vals impls)))
+    ]
+        [interfaces methods opts]
+    )
+)
+
 (about #_"defarray"
 
 (defn- emit-defarray* [tname cname fields interfaces methods opts]
@@ -918,7 +941,7 @@
 
 (defmacro defarray [name fields & opts+specs]
     (ß #'-/validate-fields fields name)
-    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+    (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
             (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
@@ -1004,7 +1027,7 @@
 
 (defmacro defassoc [name & opts+specs]
     (ß #'-/validate-fields [] name)
-    (let [[interfaces methods opts] (#'-/parse-opts+specs opts+specs)]
+    (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defassoc* name name (vec interfaces) methods opts)
             (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
@@ -3923,10 +3946,10 @@
 (about #_"arbace.Closure"
 
 (about #_"Closure"
-    (declare Closure''invoke)
+    (declare Closure''invoke Closure''applyTo)
 
     (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map'" _env]
-        clojure.lang.IFn (invoke [_] (Closure''invoke _)) (invoke [_, a1] (Closure''invoke _, a1))
+        clojure.lang.IFn (invoke [_] (Closure''invoke _)) (invoke [_, a1] (Closure''invoke _, a1)) (applyTo [_, args] (Closure''applyTo _, args))
     )
 
     #_inherit
@@ -4027,12 +4050,13 @@
 
 (about #_"Cons"
     (declare Cons''withMeta Cons''seq Cons''next Cons''count)
+    (declare cons)
 
     (defq Cons [#_"meta" _meta, #_"Object" car, #_"seq" cdr] SeqForm
         clojure.lang.IMeta (meta [_] (-/into {} (:_meta _)))
         clojure.lang.IObj (withMeta [_, m] (Cons''withMeta _, m))
         clojure.lang.ISeq (seq [_] (Cons''seq _)) (first [_] (:car _)) (next [_] (Cons''next _)) (more [_] (or (Cons''next _) ()))
-        clojure.lang.IPersistentCollection (count [_] (Cons''count _)) (equiv [_, o] (ASeq''equals _, o))
+        clojure.lang.IPersistentCollection (cons [_, o] (cons o _)) (count [_] (Cons''count _)) (equiv [_, o] (ASeq''equals _, o))
         clojure.lang.Sequential
     )
 
@@ -4692,9 +4716,10 @@
 (about #_"arbace.LazySeq"
 
 (about #_"LazySeq"
-    (declare LazySeq''seq LazySeq''first LazySeq''next)
+    (declare LazySeq''conj LazySeq''seq LazySeq''first LazySeq''next)
 
     (defq LazySeq [#_"meta" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm
+        clojure.lang.IPersistentCollection (cons [_, o] (LazySeq''conj _, o))
         clojure.lang.ISeq (seq [_] (LazySeq''seq _)) (first [_] (LazySeq''first _)) (next [_] (LazySeq''next _)) (more [_] (or (LazySeq''next _) ()))
         clojure.lang.Sequential
     )
@@ -4712,6 +4737,10 @@
         (when-not (= meta (:_meta this)) => this
             (LazySeq'new meta, (seq this))
         )
+    )
+
+    (defn- #_"cons" LazySeq''conj [#_"LazySeq" this, #_"Object" o]
+        (cons o this)
     )
 
     (defn- #_"IPersistentCollection" LazySeq''empty [#_"LazySeq" this]
@@ -4771,7 +4800,7 @@
     )
 
     (defm LazySeq IPersistentCollection
-        ;; abstract IPersistentCollection conj
+        (IPersistentCollection'''conj => LazySeq''conj)
         (IPersistentCollection'''empty => LazySeq''empty)
     )
 
@@ -6059,7 +6088,7 @@
 
     (defq EmptyList [#_"meta" _meta] SeqForm
         clojure.lang.ISeq (seq [_] (EmptyList''seq _)) (first [_] (EmptyList''first _)) (next [_] (EmptyList''next _)) (more [_] (or (EmptyList''next _) ()))
-        clojure.lang.IPersistentCollection (cons [_ o] (EmptyList''conj _, o)) (empty [_] (EmptyList''empty _)) (equiv [_, o] (EmptyList''equals _, o))
+        clojure.lang.IPersistentCollection (cons [_, o] (EmptyList''conj _, o)) (empty [_] (EmptyList''empty _)) (equiv [_, o] (EmptyList''equals _, o))
     )
 
     (defn #_"EmptyList" EmptyList'new [#_"meta" meta]
@@ -6163,7 +6192,7 @@
 
     (defq PersistentList [#_"meta" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm
         clojure.lang.ISeq (seq [_] (PersistentList''seq _)) (first [_] (:car _)) (next [_] (:cdr _)) (more [_] (or (:cdr _) ()))
-        clojure.lang.IPersistentCollection (cons [_ o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o)) (count [_] (:cnt _))
+        clojure.lang.IPersistentCollection (cons [_, o] (PersistentList''conj _, o)) (empty [_] (PersistentList''empty _)) (equiv [_, o] (ASeq''equals _, o)) (count [_] (:cnt _))
     )
 
     #_inherit
@@ -10575,7 +10604,7 @@
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
         clojure.lang.Reversible (rseq [_] (PersistentVector''rseq _))
-        clojure.lang.IPersistentCollection (cons [_ o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _)) (equiv [_, o] (PersistentVector''equals _, o))
+        clojure.lang.IPersistentCollection (cons [_, o] (PersistentVector''conj _, o)) (empty [_] (PersistentVector''empty _)) (equiv [_, o] (PersistentVector''equals _, o))
         clojure.lang.IPersistentVector
         clojure.lang.Counted (count [_] (:cnt _))
         clojure.lang.Indexed (nth [_, i] (PersistentVector''nth _, i)) (nth [_, i, not-found] (PersistentVector''nth _, i, not-found))
