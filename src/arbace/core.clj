@@ -20,7 +20,7 @@
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
-    [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap ITransientAssociative Namespace Seqable Var]
+    [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Namespace Seqable Var]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
@@ -298,8 +298,8 @@
     (defn #_"IPersistentMap" IPersistentMap''without [^IPersistentMap this, #_"key" key]                (.without this, key))
 )
 
-(about #_"ITransientAssociative"
-    (defn #_"ITransientAssociative" ITransientAssociative''assoc! [^ITransientAssociative this, #_"key" key, #_"value" val] (.assoc this, key, val))
+(about #_"Keyword"
+    (defn clojure-keyword? [x] (-/instance? clojure.lang.Keyword x))
 )
 
 (about #_"Namespace"
@@ -313,6 +313,10 @@
 
 (about #_"Seqable"
     (defn #_"seq" Seqable''seq [^Seqable this] (.seq this))
+)
+
+(about #_"Symbol"
+    (defn clojure-symbol? [x] (-/instance? clojure.lang.Symbol x))
 )
 
 (about #_"Var"
@@ -392,6 +396,10 @@
 
 (defn M'get ([m k] (-/get m k)) ([m k not-found] (-/get m k not-found)))
 
+(about #_"arbace.Mutable"
+    (defn #_"Mutable" Mutable''mutate! [#_"Mutable" this, #_"key" key, #_"value" val] (.mutate this, key, val))
+)
+
 (ns arbace.core
     (:refer-clojure :only [boolean char identical? long satisfies?]) (:require [clojure.core :as -])
     (:refer arbace.bore :only
@@ -434,22 +442,24 @@
             IObj''withMeta
             IPersistentCollection''cons IPersistentCollection''empty
             IPersistentMap''assoc IPersistentMap''without
-            ITransientAssociative''assoc!
+            clojure-keyword?
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
             Seqable''seq
+            clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
             AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set
             A'new A'clone A'get A'length A'set new* M'get
+            Mutable''mutate!
         ]
     )
 )
 
 (import!)
 
-(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= odd? partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
+(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= nth odd? partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> bit-xor dec inc neg? pos? quot rem zero? |])
 
 (defmacro case! [e & clauses] (if (odd? (count clauses)) `(condp = ~e ~@clauses) `(condp = ~e ~@clauses (throw! (str ~e " is definitely not that case!")))))
@@ -897,6 +907,23 @@
     )
 )
 
+(about #_"arbace.Mutable"
+    (ß defp Mutable
+        (#_"Mutable" Mutable'''mutate! [#_"Mutable" this, #_"key" key, #_"value" val])
+    )
+
+    (defonce Mutable (-/hash-map))
+    (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.core.Mutable", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.core.Mutable, (-/keyword (-/name :methods)) '[[mutate [java.lang.Object java.lang.Object] java.lang.Object nil]]))), nil)
+    (alter-var-root #'Mutable merge (-/hash-map :var #'Mutable, :on 'arbace.core.Mutable, :on-interface (-/resolve (-/symbol "arbace.core.Mutable"))))
+    (ß defmacro Mutable'''mutate! [this, key, val] ((-/find-protocol-method 'Mutable (-/keyword "Mutable'''mutate!") this) this, key, val))
+
+    (ß -/extend-protocol Mutable arbace.core.Mutable
+        (Mutable'''mutate! [this, key, val] (Mutable''mutate! this, key, val))
+    )
+
+    (defn mutable? [x] (satisfies? Mutable x))
+)
+
 (about #_"defarray"
 
 (defn- emit-defarray* [tname cname fields interfaces methods opts]
@@ -911,28 +938,20 @@
                             (conj i 'clojure.lang.ILookup)
                             (conj m
                                 `(valAt [this# k#] (ILookup''valAt this# k# nil))
-                                `(valAt [this# k# else#] (if-some [x# (case! (-/name k#) ~@s nil)] (A'get (. this# ~a) x#) else#))
+                                `(valAt [this# k# else#] (if-some [x# (case! (-/name k#) ~@s nil)] (#_A'get -/aget (. this# ~a) x#) else#))
                             )
                         ]
                     )
                     (imap [[i m]]
                         [
-                            (conj i 'clojure.lang.ITransientAssociative)
+                            (conj i 'arbace.core.Mutable)
                             (conj m
-                                `(assoc [this# k# v#] (let [x# (case! (-/name k#) ~@s)] (A'set (. this# ~a) x# v#) this#))
+                                `(mutate [this# k# v#] (let [x# (case! (-/name k#) ~@s)] (#_A'set -/aset (. this# ~a) x# v#) this#))
                             )
                         ]
                     )]
                 (let [[i m] (-> [interfaces methods] ilookup imap)]
-                    `(-/eval
-                        '(deftype* ~(-/symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
-                            ~classname
-                            ~(vector a)
-                            :implements ~(vec i)
-                            ~@(mapcat identity opts)
-                            ~@m
-                        )
-                    )
+                    `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
                 )
             )
         )
@@ -944,7 +963,7 @@
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
-            (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
+            (-/eval '(-/import* ~(str (-/namespace-munge -/*ns*) "." name)))
         )
     )
 )
@@ -1010,15 +1029,7 @@
                         ]
                     )]
                 (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap)]
-                    `(-/eval
-                        '(deftype* ~(-/symbol (-/name (-/ns-name -/*ns*)) (-/name tname))
-                            ~classname
-                            ~(vector a)
-                            :implements ~(vec i)
-                            ~@(mapcat identity opts)
-                            ~@m
-                        )
-                    )
+                    `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
                 )
             )
         )
@@ -1030,7 +1041,7 @@
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defassoc* name name (vec interfaces) methods opts)
-            (-/import ~(-/symbol (str (-/namespace-munge -/*ns*) "." name)))
+            (-/eval '(-/import* ~(str (-/namespace-munge -/*ns*) "." name)))
         )
     )
 )
@@ -1874,7 +1885,7 @@
     )
 
     (§ -/extend-protocol ITransientAssociative clojure.lang.ITransientAssociative2
-        (ITransientAssociative'''assoc! [this, key, val] (ITransientAssociative''assoc! this, key, val))
+        (ITransientAssociative'''assoc! [this, key, val] (.assoc this, key, val))
         (ITransientAssociative'''containsKey [this, key] (.containsKey this, key))
         (ITransientAssociative'''entryAt [this, key] (.entryAt this, key))
     )
@@ -2279,20 +2290,20 @@
         )
     )
 
-    (defn- assoc!!
-        ([a k v]    (ITransientAssociative''assoc! a, k, v))
+    (defn- qset!
+        ([a k v]    (Mutable''mutate! a, k, v))
         ([a k v & kvs]
-            (let [a (ITransientAssociative''assoc! a, k, v)]
+            (let [a (Mutable''mutate! a, k, v)]
                 (recur-when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
             )
         )
     )
 
-    (defn- update!!
-        ([a k f]         (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k))))
-        ([a k f x]       (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k) x)))
-        ([a k f x y]     (ITransientAssociative''assoc! a, k,       (f (ILookup''valAt a, k) x y)))
-        ([a k f x y & z] (ITransientAssociative''assoc! a, k, (apply f (ILookup''valAt a, k) x y z)))
+    (defn- qswap!
+        ([a k f]         (Mutable''mutate! a, k,       (f (ILookup''valAt a, k))))
+        ([a k f x]       (Mutable''mutate! a, k,       (f (ILookup''valAt a, k) x)))
+        ([a k f x y]     (Mutable''mutate! a, k,       (f (ILookup''valAt a, k) x y)))
+        ([a k f x y & z] (Mutable''mutate! a, k, (apply f (ILookup''valAt a, k) x y z)))
     )
 )
 
@@ -3750,7 +3761,9 @@
     ([ns name] (Symbol'intern ns, name))
 )
 
-(defn- symbol! [s] (symbol (if (-/instance? clojure.lang.Symbol s) (str s) s)))
+(defn- symbol! [s] (symbol (if (clojure-symbol? s) (str s) s)))
+
+(-/defmethod -/print-method Symbol'iface [o w] (.write w, (str o)))
 )
 
 (about #_"arbace.Keyword"
@@ -3818,7 +3831,7 @@
 
     (defn- #_"boolean" Keyword''equals [#_"Keyword" this, #_"Object" that]
         (or (identical? this that)
-            (and (-/instance? clojure.lang.Keyword that) (Symbol''equals (:sym this), (.sym that)))
+            (and (clojure-keyword? that) (Symbol''equals (:sym this), (.sym that)))
         )
     )
 
@@ -3877,7 +3890,7 @@
     ([ns name] (Keyword'intern (symbol ns name)))
 )
 
-(defn- keyword! [k] (keyword (if (-/instance? clojure.lang.Keyword k) (name k) k)))
+(defn- keyword! [k] (keyword (if (clojure-keyword? k) (name k) k)))
 
 ;;;
  ; Returns a Keyword with the given namespace and name if one already exists.
@@ -3895,6 +3908,8 @@
     )
     ([ns name] (Keyword'find (symbol ns name)))
 )
+
+(-/defmethod -/print-method Keyword'iface [o w] (.write w, (str o)))
 )
 
 (about #_"arbace.Fn"
@@ -3949,7 +3964,7 @@
     (declare Closure''invoke Closure''applyTo)
 
     (defq Closure [#_"meta" _meta, #_"FnExpr" fun, #_"map'" _env]
-        clojure.lang.IFn (invoke [_] (Closure''invoke _)) (invoke [_, a1] (Closure''invoke _, a1)) (applyTo [_, args] (Closure''applyTo _, args))
+        clojure.lang.IFn (invoke [_] (Closure''invoke _)) (invoke [_, a1] (Closure''invoke _, a1)) (invoke [_, a1, a2] (Closure''invoke _, a1, a2)) (applyTo [_, args] (Closure''applyTo _, args))
     )
 
     #_inherit
@@ -5699,8 +5714,6 @@
 (about #_"arbace.APersistentMap"
 
 (about #_"APersistentMap"
-    (declare nth)
-
     (defn #_"IPersistentCollection" APersistentMap''conj [#_"APersistentMap" this, #_"Object" o]
         (condp satisfies? o
             IMapEntry
@@ -6441,7 +6454,7 @@
                     (do
                         (aset! a      n  key)
                         (aset! a (inc n) val)
-                        (assoc!! this :cnt (+ n 2))
+                        (qset! this :cnt (+ n 2))
                     )
                 :else
                     (-> (PersistentHashMap'create-1a a) (transient) (assoc! key val))
@@ -6462,7 +6475,7 @@
                         (aset! a      i  (aget a      n))
                         (aset! a (inc i) (aget a (inc n)))
                     )
-                    (assoc!! this :cnt n)
+                    (qset! this :cnt n)
                 )
             )
         )
@@ -6533,10 +6546,11 @@
  ; ok, but you won't be able to distinguish a nil value via valAt, use contains/entryAt for that.
  ;;
 (about #_"PersistentArrayMap"
-    (declare PersistentArrayMap''seq)
+    (declare PersistentArrayMap''seq PersistentArrayMap''assoc PersistentArrayMap''containsKey)
 
     (defq PersistentArrayMap [#_"meta" _meta, #_"array" array] MapForm
         clojure.lang.Seqable (seq [_] (PersistentArrayMap''seq _))
+        clojure.lang.Associative (assoc [_, key, val] (PersistentArrayMap''assoc _, key, val)) (containsKey [_, key] (PersistentArrayMap''containsKey _, key))
     )
 
     #_inherit
@@ -7109,7 +7123,7 @@
                     )
                 )
                 (let [#_"node" node (INode'''assocT BNode'EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf)]
-                    (-> (ANode''editAndSet this, edit, i, node) (update!! :n inc))
+                    (-> (ANode''editAndSet this, edit, i, node) (qswap! :n inc))
                 )
             )
         )
@@ -7121,7 +7135,7 @@
                 (cond
                     (some? node)     (ANode''editAndSet this, edit, i, node)
                     (<= (:n this) 8) (ANode''pack this, edit, i) ;; shrink
-                    :else            (-> (ANode''editAndSet this, edit, i, node) (update!! :n dec))
+                    :else            (-> (ANode''editAndSet this, edit, i, node) (qswap! :n dec))
                 )
             )
         )
@@ -7205,7 +7219,7 @@
     (defn- #_"BNode" BNode''editAndRemovePair [#_"BNode" this, #_"thread'" edit, #_"int" bit, #_"int" i]
         (when-not (= (:bitmap this) bit)
             (let [
-                #_"BNode" e (-> (BNode''ensureEditable this, edit) (update!! :bitmap bit-xor bit))
+                #_"BNode" e (-> (BNode''ensureEditable this, edit) (qswap! :bitmap bit-xor bit))
                 #_"array" a (:a e) #_"int" n (alength a) #_"int" m (* 2 (inc i))
             ]
                 (acopy! a (* 2 i) a m (- n m))
@@ -7381,7 +7395,7 @@
                     (cond
                         (< (* n 2) (alength (:a this)))
                             (let [
-                                #_"BNode" e (-> (BNode''ensureEditable this, edit) (update!! :bitmap | bit)) _ (reset! addedLeaf true)
+                                #_"BNode" e (-> (BNode''ensureEditable this, edit) (qswap! :bitmap | bit)) _ (reset! addedLeaf true)
                                 _ (acopy! (:a e) (* 2 (inc x)) (:a e) (* 2 x) (* 2 (- n x)))
                                 _ (aset! (:a e) (* 2 x) key)
                                 _ (aset! (:a e) (inc (* 2 x)) val)
@@ -7417,8 +7431,8 @@
                                 _ (acopy! a' (* 2 (inc x)) (:a this) (* 2 x) (* 2 (- n x)))
                             ]
                                 (-> (BNode''ensureEditable this, edit)
-                                    (assoc!! :a a')
-                                    (update!! :bitmap | bit)
+                                    (qset! :a a')
+                                    (qswap! :bitmap | bit)
                                 )
                             )
                     )
@@ -7498,7 +7512,7 @@
             )
         )
         ([#_"CNode" this, #_"thread'" edit, #_"int" n, #_"array" a]
-            (when-not (identical? (:edit this) edit) => (assoc!! this :a a, :n n)
+            (when-not (identical? (:edit this) edit) => (qset! this :a a, :n n)
                 (CNode'new edit, (:hash this), n, a)
             )
         )
@@ -7582,7 +7596,7 @@
                         (if (< (* 2 n) m)
                             (let [_ (reset! addedLeaf true)]
                                 (-> (CNode''editAndSet this, edit, (* 2 n), key, (inc (* 2 n)), val)
-                                    (update!! :n inc)
+                                    (qswap! :n inc)
                                 )
                             )
                             (let [
@@ -7607,7 +7621,7 @@
             (reset! removedLeaf true)
             (let-when [#_"int" n (:n this)] (< 1 n)
                 (let [
-                    #_"CNode" e (-> (CNode''ensureEditable this, edit) (update!! :n dec))
+                    #_"CNode" e (-> (CNode''ensureEditable this, edit) (qswap! :n dec))
                     #_"int" m (* 2 n)
                     _ (aset! (:a e) i (aget (:a e) (- m 2)))
                     _ (aset! (:a e) (inc i) (aget (:a e) (- m 1)))
@@ -7679,19 +7693,19 @@
         (TransientHashMap''assert-editable this)
         (if (nil? key)
             (let [
-                this (if (= (:nil-value this) val) this (assoc!! this :nil-value val))
+                this (if (= (:nil-value this) val) this (qset! this :nil-value val))
             ]
                 (when-not (:has-nil? this) => this
-                    (-> this (update!! :cnt inc) (assoc!! :has-nil? true))
+                    (-> this (qswap! :cnt inc) (qset! :has-nil? true))
                 )
             )
             (let [
                 #_"boolean'" addedLeaf (atom false)
                 #_"node" node (INode'''assocT (or (:root this) BNode'EMPTY), (:edit this), 0, (f'hash key), key, val, addedLeaf)
-                this (if (= (:root this) node) this (assoc!! this :root node))
+                this (if (= (:root this) node) this (qset! this :root node))
             ]
                 (when @addedLeaf => this
-                    (-> this (update!! :cnt inc))
+                    (-> this (qswap! :cnt inc))
                 )
             )
         )
@@ -7701,16 +7715,16 @@
         (TransientHashMap''assert-editable this)
         (if (nil? key)
             (when (:has-nil? this) => this
-                (-> this (update!! :cnt dec) (assoc!! :has-nil? false, :nil-value nil))
+                (-> this (qswap! :cnt dec) (qset! :has-nil? false, :nil-value nil))
             )
             (when (some? (:root this)) => this
                 (let [
                     #_"boolean'" removedLeaf (atom false)
                     #_"node" node (INode'''dissocT (:root this), (:edit this), 0, (f'hash key), key, removedLeaf)
-                    this (if (= (:root this) node) this (assoc!! this :root node))
+                    this (if (= (:root this) node) this (qset! this :root node))
                 ]
                     (when @removedLeaf => this
-                        (-> this (update!! :cnt dec))
+                        (-> this (qswap! :cnt dec))
                     )
                 )
             )
@@ -8073,7 +8087,7 @@
     (defn- #_"ITransientSet" TransientHashSet''conj! [#_"TransientHashSet" this, #_"value" val]
         (let [#_"ITransientMap" m (assoc! (:impl this) val val)]
             (when-not (= m (:impl this)) => this
-                (assoc!! this :impl m)
+                (qset! this :impl m)
             )
         )
     )
@@ -8087,7 +8101,7 @@
     (defn- #_"ITransientSet" TransientHashSet''disj! [#_"TransientHashSet" this, #_"key" key]
         (let [#_"ITransientMap" m (dissoc! (:impl this) key)]
             (when-not (= m (:impl this)) => this
-                (assoc!! this :impl m)
+                (qset! this :impl m)
             )
         )
     )
@@ -10426,11 +10440,11 @@
             (let [
                 _ (aset! (:tail this) (:tlen this) val)
             ]
-                (-> this (update!! :cnt inc) (update!! :tlen inc))
+                (-> this (qswap! :cnt inc) (qswap! :tlen inc))
             )
             (let [
                 #_"node" tail-node (VNode'new (:edit (:root this)), (:tail this), nil)
-                this (assoc!! this :tail (-> (anew 32) (aset! 0 val)), :tlen 1)
+                this (qset! this :tail (-> (anew 32) (aset! 0 val)), :tlen 1)
             ]
                 (if (VNode''overflow? (:root this), (:shift this), (:cnt this))
                     (let [
@@ -10449,12 +10463,12 @@
                             )
                         #_"node" root (VNode'new (:edit (:root this)), a, x)
                     ]
-                        (-> this (assoc!! :root root) (update!! :shift + 5) (update!! :cnt inc))
+                        (-> this (qset! :root root) (qswap! :shift + 5) (qswap! :cnt inc))
                     )
                     (let [
                         #_"node" root (VNode''push-tail (:root this), (:edit (:root this)), (:shift this), (:cnt this), tail-node)
                     ]
-                        (-> this (assoc!! :root root) (update!! :cnt inc))
+                        (-> this (qset! :root root) (qswap! :cnt inc))
                     )
                 )
             )
@@ -10485,7 +10499,7 @@
                         this
                     )
                     (do
-                        (assoc!! this :root (VNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val))
+                        (qset! this :root (VNode''do-assoc (:root this), (:edit (:root this)), (:shift this), i, val))
                     )
                 )
             )
@@ -10502,16 +10516,16 @@
                 (throw! "can't pop the empty vector")
             (= (:cnt this) 1)
                 (let [
-                    this (assoc!! this :cnt 0)
-                    this (assoc!! this :tlen 0)
+                    this (qset! this :cnt 0)
+                    this (qset! this :tlen 0)
                     _ (aset! (:tail this) 0 nil)
                 ]
                     this
                 )
             (< 1 (:tlen this))
                 (let [
-                    this (update!! this :cnt dec)
-                    this (update!! this :tlen dec)
+                    this (qswap! this :cnt dec)
+                    this (qswap! this :tlen dec)
                     _ (aset! (:tail this) (:tlen this) nil)
                 ]
                     this
@@ -10524,23 +10538,23 @@
                         (cond
                             (nil? root)
                                 (-> this
-                                    (assoc!! :root (VNode'new (:edit (:root this)), nil, nil))
+                                    (qset! :root (VNode'new (:edit (:root this)), nil, nil))
                                 )
                             (and (< 5 (:shift this)) (nil? (aget (:array root) 1)))
                                 (-> this
-                                    (update!! :shift - 5)
-                                    (assoc!! :root (aget (:array root) 0))
+                                    (qswap! :shift - 5)
+                                    (qset! :root (aget (:array root) 0))
                                 )
                             :else
                                 (-> this
-                                    (assoc!! :root root)
+                                    (qset! :root root)
                                 )
                         )
                 ]
                     (-> this
-                        (update!! :cnt dec)
-                        (assoc!! :tail tail)
-                        (assoc!! :tlen (alength tail))
+                        (qswap! :cnt dec)
+                        (qset! :tail tail)
+                        (qset! :tlen (alength tail))
                     )
                 )
         )
