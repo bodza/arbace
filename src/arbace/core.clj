@@ -20,7 +20,7 @@
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
-    [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Namespace Seqable Var]
+    [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Keyword Namespace Seqable Var]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
 )
@@ -300,6 +300,8 @@
 
 (about #_"Keyword"
     (defn clojure-keyword? [x] (-/instance? clojure.lang.Keyword x))
+
+    (defn #_"Symbol" Keyword''sym [^Keyword this] (.sym this))
 )
 
 (about #_"Namespace"
@@ -385,6 +387,25 @@
 )
 )
 
+(defn -'=       [a b] (-/= a b))
+(defn -'==      [a b] (-/== a b))
+(defn -'<       [a b] (-/< a b))
+(defn -'<=      [a b] (-/<= a b))
+(defn -'>       [a b] (-/> a b))
+(defn -'compare [a b] (-/compare a b))
+(defn -'+       [a b] (-/+ a b))
+(defn -'-       [a b] (-/- a b))
+(defn -'*       [a b] (-/* a b))
+(defn -'quot    [a b] (-/quot a b))
+(defn -'rem     [a b] (-/rem a b))
+(defn -'bit-not [a]   (-/bit-not a))
+(defn -'bit-and [a b] (-/bit-and a b))
+(defn -'bit-or  [a b] (-/bit-or a b))
+(defn -'bit-xor [a b] (-/bit-xor a b))
+(defn -'bit-shift-left [a b] (-/bit-shift-left a b))
+(defn -'bit-shift-right [a b] (-/bit-shift-right a b))
+(defn -'unsigned-bit-shift-right [a b] (-/unsigned-bit-shift-right a b))
+
 (defn A'new [n] (-/object-array n))
 
 (defn A'clone  [^"[Ljava.lang.Object;" a]     (-/aclone a))
@@ -442,7 +463,7 @@
             IObj''withMeta
             IPersistentCollection''cons IPersistentCollection''empty
             IPersistentMap''assoc IPersistentMap''without
-            clojure-keyword?
+            clojure-keyword? Keyword''sym
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
             Seqable''seq
             clojure-symbol?
@@ -451,6 +472,7 @@
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
             AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set
+            -'= -'== -'< -'<= -'> -'compare -'+ -'- -'* -'quot -'rem -'bit-not -'bit-and -'bit-or -'bit-xor -'bit-shift-left -'bit-shift-right -'unsigned-bit-shift-right
             A'new A'clone A'get A'length A'set new* M'get
             Mutable''mutate!
         ]
@@ -894,13 +916,13 @@
     (loop-when-recur [impls {} s specs] (seq s) [(-/assoc impls (first s) (take-while seq? (next s))) (drop-while seq? (next s))] => impls)
 )
 
-(refer! - [var? resolve deref keys maybe-destructured apply concat vals])
+(refer! - [#_var? complement resolve deref keys maybe-destructured apply concat vals])
 
 (defn- parse-opts+specs [opts+specs]
     (let [
         [opts specs] (parse-opts opts+specs)
         impls        (parse-impls specs)
-        interfaces   (-> (map #(if (var? (resolve %)) (:on (deref (resolve %))) %) (keys impls)) -/set (-/disj 'Object 'java.lang.Object) vec)
+        interfaces   (-> (map #(if (#_var? (complement -/class?) (resolve %)) (:on (deref (resolve %))) %) (keys impls)) -/set (-/disj 'Object 'java.lang.Object) vec)
         methods      (map (fn [[name params & body]] (-/cons name (maybe-destructured params body))) (apply concat (vals impls)))
     ]
         [interfaces methods opts]
@@ -963,7 +985,7 @@
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
-            (-/eval '(-/import* ~(str (-/namespace-munge -/*ns*) "." name)))
+            (-/eval '~(-/list (-/symbol "clojure.core/import*") (str (-/namespace-munge -/*ns*) "." name)))
         )
     )
 )
@@ -982,9 +1004,9 @@
                         [
                             (conj i 'clojure.lang.IHashEq)
                             (conj m
-                                `(hasheq [this#] (int (bit-xor ~type-hash (IHashEq''hasheq (. this# ~a)))))
-                                `(hashCode [this#] (Object''hashCode (. this# ~a)))
-                                `(equals [this# that#] (and (some? that#) (Object''equals (. this# ~a) (. that# ~a))))
+                                `(hasheq [this#] (-/int (bit-xor ~type-hash (#_IHashEq''hasheq .hasheq (. this# ~a)))))
+                                `(hashCode [this#] (#_Object''hashCode .hashCode (. this# ~a)))
+                                `(equals [this# that#] (and (some? that#) (#_Object''equals .equals (. this# ~a) (. that# ~a))))
                             )
                         ]
                     )
@@ -992,8 +1014,8 @@
                         [
                             (conj i 'clojure.lang.IObj)
                             (conj m
-                                `(meta [this#] (IMeta''meta (. this# ~a)))
-                                `(withMeta [this# m#] (new* ~tname (IObj''withMeta (. this# ~a) m#)))
+                                `(meta [this#] (#_IMeta''meta .meta (. this# ~a)))
+                                `(withMeta [this# m#] ('new #_* ~tname (#_IObj''withMeta .withMeta (. this# ~a) m#)))
                             )
                         ]
                     )
@@ -1001,8 +1023,8 @@
                         [
                             (conj i 'clojure.lang.ILookup)
                             (conj m
-                                `(valAt [this# k#] (ILookup''valAt this# k# nil))
-                                `(valAt [this# k# else#] (ILookup''valAt (. this# ~a) k# else#))
+                                `(valAt [this# k#] (#_ILookup''valAt .valAt this# k# nil))
+                                `(valAt [this# k# else#] (#_ILookup''valAt .valAt (. this# ~a) k# else#))
                             )
                         ]
                     )
@@ -1010,21 +1032,21 @@
                         [
                             (conj i 'clojure.lang.IPersistentMap)
                             (conj m
-                                `(count [this#] (Counted''count (. this# ~a)))
-                                `(empty [this#] (new* ~tname (IPersistentCollection''empty (. this# ~a))))
-                                `(cons [this# e#] (new* ~tname (IPersistentCollection''cons (. this# ~a) e#)))
+                                `(count [this#] (#_Counted''count .count (. this# ~a)))
+                                `(empty [this#] ('new #_* ~tname (#_IPersistentCollection''empty .empty (. this# ~a))))
+                                `(cons [this# e#] ('new #_* ~tname (#_IPersistentCollection''cons .cons (. this# ~a) e#)))
                                 `(equiv [this# that#]
-                                    (or (identical? this# that#)
-                                        (and (identical? (-/class this#) (-/class that#))
+                                    (or (-/identical? this# that#)
+                                        (and (-/identical? (-/class this#) (-/class that#))
                                             (= (. this# ~a) (. that# ~a))
                                         )
                                     )
                                 )
-                                `(containsKey [this# k#] (Associative''containsKey (. this# ~a) k#))
-                                `(entryAt [this# k#] (Associative''entryAt (. this# ~a) k#))
-                                `(seq [this#] (Seqable''seq (. this# ~a)))
-                                `(assoc [this# k# v#] (new* ~tname (IPersistentMap''assoc (. this# ~a) k# v#)))
-                                `(without [this# k#] (new* ~tname (IPersistentMap''without (. this# ~a) k#)))
+                                `(containsKey [this# k#] (#_Associative''containsKey .containsKey (. this# ~a) k#))
+                                `(entryAt [this# k#] (#_Associative''entryAt .entryAt (. this# ~a) k#))
+                                `(seq [this#] (#_Seqable''seq .seq (. this# ~a)))
+                                `(assoc [this# k# v#] ('new #_* ~tname (#_IPersistentMap''assoc .assoc (. this# ~a) k# v#)))
+                                `(without [this# k#] ('new #_* ~tname (#_IPersistentMap''without .without (. this# ~a) k#)))
                             )
                         ]
                     )]
@@ -1041,7 +1063,7 @@
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defassoc* name name (vec interfaces) methods opts)
-            (-/eval '(-/import* ~(str (-/namespace-munge -/*ns*) "." name)))
+            (-/eval '~(-/list (-/symbol "clojure.core/import*") (str (-/namespace-munge -/*ns*) "." name)))
         )
     )
 )
@@ -1070,10 +1092,10 @@
 )
 )
 
-(defmacro defp [p & s]   (let [i (-/symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) ~p)))
-(defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 ~c)))
-(defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)                              ~c)))
-(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          ~i)))
+(defmacro defp [p & s]   (let [i (-/symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) '~p)))
+(defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 '~c)))
+(defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)                              '~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          '~i)))
 )
 
 (about #_"arbace.Seqable"
@@ -2873,7 +2895,7 @@
         (cond
             (identical? a b)              true
             (nil? a)                      false
-            (and (number? a) (number? b)) #_(Numbers'equal a, b) (-/== a b)
+            (and (number? a) (number? b)) #_(Numbers'equal a, b) (-'== a b)
             (coll? a)                     (IObject'''equals a, b)
             (coll? b)                     (IObject'''equals b, a)
             (-/instance? Symbol'iface a)  (Symbol''equals a, b)
@@ -2913,7 +2935,7 @@
             (= a b)     0
             (nil? a)   -1
             (nil? b)    1
-            (number? a) #_(Numbers'compare a, b) (-/compare a b)
+            (number? a) #_(Numbers'compare a, b) (-'compare a b)
             :else       (Comparable''compareTo a, b)
         )
     )
@@ -2968,7 +2990,7 @@
     )
 
     (defn- #_"int" Ratio''compareTo [#_"Ratio" this, #_"Object" that]
-        #_(Numbers'compare this, #_"Number" that) (-/compare this that)
+        #_(Numbers'compare this, #_"Number" that) (-'compare this that)
     )
 
     (defm Ratio Hashed
@@ -3010,7 +3032,7 @@
         (new* LongOps'class (anew []))
     )
 
-    (defn #_"long" LongOps'gcd [#_"long" u, #_"long" v] (if (-/= v 0) u (recur v (-/rem u v))))
+    (defn #_"long" LongOps'gcd [#_"long" u, #_"long" v] (if (-'= v 0) u (recur v (-'rem u v))))
 
     (declare Numbers'RATIO_OPS)
     (declare Numbers'BIGINT_OPS)
@@ -3021,17 +3043,17 @@
     (defn- #_"Ops" LongOps''opsWithRatio [#_"LongOps" this, #_"RatioOps" x] Numbers'RATIO_OPS)
     (defn- #_"Ops" LongOps''opsWithBigInt [#_"LongOps" this, #_"BigIntOps" x] Numbers'BIGINT_OPS)
 
-    (defn- #_"boolean" LongOps''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/= (Number''longValue x) (Number''longValue y)))
-    (defn- #_"boolean" LongOps''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/< (Number''longValue x) (Number''longValue y)))
-    (defn- #_"boolean" LongOps''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-/<= (Number''longValue x) (Number''longValue y)))
+    (defn- #_"boolean" LongOps''eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'= (Number''longValue x) (Number''longValue y)))
+    (defn- #_"boolean" LongOps''lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'< (Number''longValue x) (Number''longValue y)))
+    (defn- #_"boolean" LongOps''lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'<= (Number''longValue x) (Number''longValue y)))
 
-    (defn- #_"boolean" LongOps''isZero [#_"LongOps" this, #_"Number" x] (-/= (Number''longValue x) 0))
-    (defn- #_"boolean" LongOps''isPos [#_"LongOps" this, #_"Number" x] (-/> (Number''longValue x) 0))
-    (defn- #_"boolean" LongOps''isNeg [#_"LongOps" this, #_"Number" x] (-/< (Number''longValue x) 0))
+    (defn- #_"boolean" LongOps''isZero [#_"LongOps" this, #_"Number" x] (-'= (Number''longValue x) 0))
+    (defn- #_"boolean" LongOps''isPos [#_"LongOps" this, #_"Number" x] (-'> (Number''longValue x) 0))
+    (defn- #_"boolean" LongOps''isNeg [#_"LongOps" this, #_"Number" x] (-'< (Number''longValue x) 0))
 
     (defn- #_"Number" LongOps''add [#_"LongOps" this, #_"Number" x, #_"Number" y]
-        (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y) #_"long" lz (-/+ lx ly)]
-            (when (and (-/< (-/bit-xor lz lx) 0) (-/< (-/bit-xor lz ly) 0)) => (Long'valueOf lz)
+        (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y) #_"long" lz (-'+ lx ly)]
+            (when (and (-'< (-'bit-xor lz lx) 0) (-'< (-'bit-xor lz ly) 0)) => (Long'valueOf lz)
                 (Ops'''add Numbers'BIGINT_OPS, x, y)
             )
         )
@@ -3039,7 +3061,7 @@
 
     (defn- #_"Number" LongOps''negate [#_"LongOps" this, #_"Number" x]
         (let [#_"long" lx (Number''longValue x)]
-            (when (-/= lx Long'MIN_VALUE) => (Long'valueOf (-/- lx))
+            (when (-'= lx Long'MIN_VALUE) => (Long'valueOf (-'- lx))
                 (BigInteger''negate (BigInteger'valueOf lx))
             )
         )
@@ -3047,7 +3069,7 @@
 
     (defn- #_"Number" LongOps''inc [#_"LongOps" this, #_"Number" x]
         (let [#_"long" lx (Number''longValue x)]
-            (when (-/= lx Long'MAX_VALUE) => (Long'valueOf (-/+ lx 1))
+            (when (-'= lx Long'MAX_VALUE) => (Long'valueOf (-'+ lx 1))
                 (Ops'''inc Numbers'BIGINT_OPS, x)
             )
         )
@@ -3055,7 +3077,7 @@
 
     (defn- #_"Number" LongOps''dec [#_"LongOps" this, #_"Number" x]
         (let [#_"long" lx (Number''longValue x)]
-            (when (-/= lx Long'MIN_VALUE) => (Long'valueOf (-/- lx 1))
+            (when (-'= lx Long'MIN_VALUE) => (Long'valueOf (-'- lx 1))
                 (Ops'''dec Numbers'BIGINT_OPS, x)
             )
         )
@@ -3063,9 +3085,9 @@
 
     (defn- #_"Number" LongOps''multiply [#_"LongOps" this, #_"Number" x, #_"Number" y]
         (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y)]
-            (when-not (and (-/= lx Long'MIN_VALUE) (-/< ly 0)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
-                (let [#_"long" lz (-/* lx ly)]
-                    (when (or (-/= ly 0) (-/= (-/quot lz ly) lx)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
+            (when-not (and (-'= lx Long'MIN_VALUE) (-'< ly 0)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
+                (let [#_"long" lz (-'* lx ly)]
+                    (when (or (-'= ly 0) (-'= (-'quot lz ly) lx)) => (Ops'''multiply Numbers'BIGINT_OPS, x, y)
                         (Long'valueOf lz)
                     )
                 )
@@ -3075,11 +3097,11 @@
 
     (defn- #_"Number" LongOps''divide [#_"LongOps" this, #_"Number" x, #_"Number" y]
         (let [#_"long" lx (Number''longValue x) #_"long" ly (Number''longValue y)]
-            (let-when-not [#_"long" gcd (LongOps'gcd lx, ly)] (-/= gcd 0) => (Long'valueOf 0)
-                (let-when-not [lx (-/quot lx gcd) ly (-/quot ly gcd)] (-/= ly 1) => (Long'valueOf lx)
+            (let-when-not [#_"long" gcd (LongOps'gcd lx, ly)] (-'= gcd 0) => (Long'valueOf 0)
+                (let-when-not [lx (-'quot lx gcd) ly (-'quot ly gcd)] (-'= ly 1) => (Long'valueOf lx)
                     (let [[lx ly]
-                            (when (-/< ly 0) => [lx ly]
-                                [(-/- lx) (-/- ly)]
+                            (when (-'< ly 0) => [lx ly]
+                                [(-'- lx) (-'- ly)]
                             )]
                         (Ratio'new (BigInteger'valueOf lx), (BigInteger'valueOf ly))
                     )
@@ -3088,8 +3110,8 @@
         )
     )
 
-    (defn- #_"Number" LongOps''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/quot (Number''longValue x) (Number''longValue y))))
-    (defn- #_"Number" LongOps''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-/rem (Number''longValue x) (Number''longValue y))))
+    (defn- #_"Number" LongOps''quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-'quot (Number''longValue x) (Number''longValue y))))
+    (defn- #_"Number" LongOps''remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long'valueOf (-'rem (Number''longValue x) (Number''longValue y))))
 
     (defm LongOps Ops
         (Ops'''combine => LongOps''combine)
@@ -3136,7 +3158,7 @@
 
     (defn- #_"boolean" RatioOps''eq [#_"RatioOps" this, #_"Number" x, #_"Number" y]
         (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
-            (and (-/= (:n rx) (:n ry)) (-/= (:d rx) (:d ry)))
+            (and (-'= (:n rx) (:n ry)) (-'= (:d rx) (:d ry)))
         )
     )
 
@@ -3152,9 +3174,9 @@
         )
     )
 
-    (defn- #_"boolean" RatioOps''isZero [#_"RatioOps" this, #_"Number" x] (-/= (BigInteger''signum (:n #_"Ratio" x)) 0))
-    (defn- #_"boolean" RatioOps''isPos [#_"RatioOps" this, #_"Number" x] (-/> (BigInteger''signum (:n #_"Ratio" x)) 0))
-    (defn- #_"boolean" RatioOps''isNeg [#_"RatioOps" this, #_"Number" x] (-/< (BigInteger''signum (:n #_"Ratio" x)) 0))
+    (defn- #_"boolean" RatioOps''isZero [#_"RatioOps" this, #_"Number" x] (-'= (BigInteger''signum (:n #_"Ratio" x)) 0))
+    (defn- #_"boolean" RatioOps''isPos [#_"RatioOps" this, #_"Number" x] (-'> (BigInteger''signum (:n #_"Ratio" x)) 0))
+    (defn- #_"boolean" RatioOps''isNeg [#_"RatioOps" this, #_"Number" x] (-'< (BigInteger''signum (:n #_"Ratio" x)) 0))
 
     (defn- #_"Number" RatioOps''add [#_"RatioOps" this, #_"Number" x, #_"Number" y]
         (let [#_"Ratio" rx (Numbers'toRatio x) #_"Ratio" ry (Numbers'toRatio y)]
@@ -3231,20 +3253,20 @@
     (defn- #_"Ops" BigIntOps''opsWithBigInt [#_"BigIntOps" this, #_"BigIntOps" x] this)
 
     (defn- #_"boolean" BigIntOps''eq [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-        (-/= (Numbers'toBigInteger x) (Numbers'toBigInteger y))
+        (-'= (Numbers'toBigInteger x) (Numbers'toBigInteger y))
     )
 
     (defn- #_"boolean" BigIntOps''lt [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-        (-/< (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+        (-'< (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
     )
 
     (defn- #_"boolean" BigIntOps''lte [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-        (-/<= (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
+        (-'<= (Comparable''compareTo (Numbers'toBigInteger x), (Numbers'toBigInteger y)) 0)
     )
 
-    (defn- #_"boolean" BigIntOps''isZero [#_"BigIntOps" this, #_"Number" x] (-/= (BigInteger''signum (Numbers'toBigInteger x)) 0))
-    (defn- #_"boolean" BigIntOps''isPos [#_"BigIntOps" this, #_"Number" x] (-/> (BigInteger''signum (Numbers'toBigInteger x)) 0))
-    (defn- #_"boolean" BigIntOps''isNeg [#_"BigIntOps" this, #_"Number" x] (-/< (BigInteger''signum (Numbers'toBigInteger x)) 0))
+    (defn- #_"boolean" BigIntOps''isZero [#_"BigIntOps" this, #_"Number" x] (-'= (BigInteger''signum (Numbers'toBigInteger x)) 0))
+    (defn- #_"boolean" BigIntOps''isPos [#_"BigIntOps" this, #_"Number" x] (-'> (BigInteger''signum (Numbers'toBigInteger x)) 0))
+    (defn- #_"boolean" BigIntOps''isNeg [#_"BigIntOps" this, #_"Number" x] (-'< (BigInteger''signum (Numbers'toBigInteger x)) 0))
 
     (defn- #_"Number" BigIntOps''add [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
         (BigInteger''add (Numbers'toBigInteger x), (Numbers'toBigInteger y))
@@ -3261,14 +3283,14 @@
 
     (defn- #_"Number" BigIntOps''divide [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
         (let [#_"BigInteger" n (Numbers'toBigInteger x) #_"BigInteger" d (Numbers'toBigInteger y)]
-            (when-not (-/= d BigInteger'ZERO) => (throw! "divide by zero")
+            (when-not (-'= d BigInteger'ZERO) => (throw! "divide by zero")
                 (let [#_"BigInteger" gcd (BigInteger''gcd n, d)]
-                    (when-not (-/= gcd BigInteger'ZERO) => BigInteger'ZERO
+                    (when-not (-'= gcd BigInteger'ZERO) => BigInteger'ZERO
                         (let [n (BigInteger''divide n, gcd) d (BigInteger''divide d, gcd)]
-                            (condp -/= d
+                            (condp -'= d
                                 BigInteger'ONE           n
                                 (BigInteger''negate BigInteger'ONE) (BigInteger''negate n)
-                                                            (Ratio'new (if (-/< (BigInteger''signum d) 0) (BigInteger''negate n) n), (if (-/< (BigInteger''signum d) 0) (BigInteger''negate d) d))
+                                                            (Ratio'new (if (-'< (BigInteger''signum d) 0) (BigInteger''negate n) n), (if (-'< (BigInteger''signum d) 0) (BigInteger''negate d) d))
                             )
                         )
                     )
@@ -3400,23 +3422,23 @@
         )
     )
 
-    (defn #_"long" Numbers'not [#_"Number" x] (-/bit-not (Numbers'bitOpsCast x)))
+    (defn #_"long" Numbers'not [#_"Number" x] (-'bit-not (Numbers'bitOpsCast x)))
 
-    (defn #_"long" Numbers'and [#_"Number" x, #_"Number" y] (-/bit-and (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
-    (defn #_"long" Numbers'or  [#_"Number" x, #_"Number" y] (-/bit-or (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
-    (defn #_"long" Numbers'xor [#_"Number" x, #_"Number" y] (-/bit-xor (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'and [#_"Number" x, #_"Number" y] (-'bit-and (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'or  [#_"Number" x, #_"Number" y] (-'bit-or (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
+    (defn #_"long" Numbers'xor [#_"Number" x, #_"Number" y] (-'bit-xor (Numbers'bitOpsCast x) (Numbers'bitOpsCast y)))
 
-    (defn #_"long" Numbers'andNot [#_"Number" x, #_"Number" y] (-/bit-and (Numbers'bitOpsCast x) (-/bit-not (Numbers'bitOpsCast y))))
+    (defn #_"long" Numbers'andNot [#_"Number" x, #_"Number" y] (-'bit-and (Numbers'bitOpsCast x) (-'bit-not (Numbers'bitOpsCast y))))
 
-    (defn #_"long" Numbers'shiftLeft          [#_"Number" x, #_"Number" n] (-/bit-shift-left (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
-    (defn #_"long" Numbers'shiftRight         [#_"Number" x, #_"Number" n] (-/bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
-    (defn #_"long" Numbers'unsignedShiftRight [#_"Number" x, #_"Number" n] (-/unsigned-bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'shiftLeft          [#_"Number" x, #_"Number" n] (-'bit-shift-left (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'shiftRight         [#_"Number" x, #_"Number" n] (-'bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
+    (defn #_"long" Numbers'unsignedShiftRight [#_"Number" x, #_"Number" n] (-'unsigned-bit-shift-right (Numbers'bitOpsCast x) (Numbers'bitOpsCast n)))
 
-    (defn #_"long" Numbers'clearBit [#_"Number" x, #_"Number" n] (-/bit-and (Numbers'bitOpsCast x) (-/bit-not (-/bit-shift-left 1 (Numbers'bitOpsCast n)))))
-    (defn #_"long" Numbers'setBit   [#_"Number" x, #_"Number" n] (-/bit-or (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))))
-    (defn #_"long" Numbers'flipBit  [#_"Number" x, #_"Number" n] (-/bit-xor (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))))
+    (defn #_"long" Numbers'clearBit [#_"Number" x, #_"Number" n] (-'bit-and (Numbers'bitOpsCast x) (-'bit-not (-'bit-shift-left 1 (Numbers'bitOpsCast n)))))
+    (defn #_"long" Numbers'setBit   [#_"Number" x, #_"Number" n] (-'bit-or (Numbers'bitOpsCast x) (-'bit-shift-left 1 (Numbers'bitOpsCast n))))
+    (defn #_"long" Numbers'flipBit  [#_"Number" x, #_"Number" n] (-'bit-xor (Numbers'bitOpsCast x) (-'bit-shift-left 1 (Numbers'bitOpsCast n))))
 
-    (defn #_"boolean" Numbers'testBit [#_"Number" x, #_"Number" n] (-/not= (-/bit-and (Numbers'bitOpsCast x) (-/bit-shift-left 1 (Numbers'bitOpsCast n))) 0))
+    (defn #_"boolean" Numbers'testBit [#_"Number" x, #_"Number" n] (-/not= (-'bit-and (Numbers'bitOpsCast x) (-'bit-shift-left 1 (Numbers'bitOpsCast n))) 0))
 )
 
 ;;;
@@ -3831,7 +3853,7 @@
 
     (defn- #_"boolean" Keyword''equals [#_"Keyword" this, #_"Object" that]
         (or (identical? this that)
-            (and (clojure-keyword? that) (Symbol''equals (:sym this), (.sym that)))
+            (and (clojure-keyword? that) (Symbol''equals (:sym this), (Keyword''sym that)))
         )
     )
 
@@ -12758,7 +12780,7 @@
  ; false otherwise.
  ;;
 (defn- fits-table? [ints]
-    (< (-/- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size)
+    (< (-'- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size)
 )
 
 ;;;
