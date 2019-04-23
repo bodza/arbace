@@ -277,6 +277,8 @@
 )
 
 (about #_"ILookup"
+    (defn clojure-ilookup? [x] (-/instance? clojure.lang.ILookup x))
+
     (defn #_"value" ILookup''valAt ([^ILookup this, #_"key" key] (.valAt this, key)) ([^ILookup this, #_"key" key, #_"value" not-found] (.valAt this, key, not-found)))
 )
 
@@ -458,7 +460,7 @@
             Counted''count
             DynamicClassLoader''defineClass
             IHashEq''hasheq
-            ILookup''valAt
+            clojure-ilookup? ILookup''valAt
             IMeta''meta
             IObj''withMeta
             IPersistentCollection''cons IPersistentCollection''empty
@@ -1006,7 +1008,7 @@
                             (conj m
                                 `(hasheq [this#] (-/int (bit-xor ~type-hash (#_IHashEq''hasheq .hasheq (. this# ~a)))))
                                 `(hashCode [this#] (#_Object''hashCode .hashCode (. this# ~a)))
-                                `(equals [this# that#] (and (some? that#) (#_Object''equals .equals (. this# ~a) (. that# ~a))))
+                                `(equals [this# that#] (and #_(some? that#) (-/instance? ~tname that#) (#_Object''equals .equals (. this# ~a) (. that# ~a))))
                             )
                         ]
                     )
@@ -1015,7 +1017,7 @@
                             (conj i 'clojure.lang.IObj)
                             (conj m
                                 `(meta [this#] (#_IMeta''meta .meta (. this# ~a)))
-                                `(withMeta [this# m#] ('new #_* ~tname (#_IObj''withMeta .withMeta (. this# ~a) m#)))
+                                `(withMeta [this# m#] (new #_* ~tname (#_IObj''withMeta .withMeta (. this# ~a) m#)))
                             )
                         ]
                     )
@@ -1033,8 +1035,8 @@
                             (conj i 'clojure.lang.IPersistentMap)
                             (conj m
                                 `(count [this#] (#_Counted''count .count (. this# ~a)))
-                                `(empty [this#] ('new #_* ~tname (#_IPersistentCollection''empty .empty (. this# ~a))))
-                                `(cons [this# e#] ('new #_* ~tname (#_IPersistentCollection''cons .cons (. this# ~a) e#)))
+                                `(empty [this#] (new #_* ~tname (#_IPersistentCollection''empty .empty (. this# ~a))))
+                                `(cons [this# e#] (new #_* ~tname (#_IPersistentCollection''cons .cons (. this# ~a) e#)))
                                 `(equiv [this# that#]
                                     (or (-/identical? this# that#)
                                         (and (-/identical? (-/class this#) (-/class that#))
@@ -1045,8 +1047,8 @@
                                 `(containsKey [this# k#] (#_Associative''containsKey .containsKey (. this# ~a) k#))
                                 `(entryAt [this# k#] (#_Associative''entryAt .entryAt (. this# ~a) k#))
                                 `(seq [this#] (#_Seqable''seq .seq (. this# ~a)))
-                                `(assoc [this# k# v#] ('new #_* ~tname (#_IPersistentMap''assoc .assoc (. this# ~a) k# v#)))
-                                `(without [this# k#] ('new #_* ~tname (#_IPersistentMap''without .without (. this# ~a) k#)))
+                                `(assoc [this# k# v#] (new #_* ~tname (#_IPersistentMap''assoc .assoc (. this# ~a) k# v#)))
+                                `(without [this# k#] (new #_* ~tname (#_IPersistentMap''without .without (. this# ~a) k#)))
                             )
                         ]
                     )]
@@ -1095,7 +1097,7 @@
 (defmacro defp [p & s]   (let [i (-/symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) '~p)))
 (defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 '~c)))
 (defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)                              '~c)))
-(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                          '~i)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                           ~i)))
 )
 
 (about #_"arbace.Seqable"
@@ -8158,7 +8160,9 @@
 )
 
 (about #_"PersistentHashSet"
-    (defq PersistentHashSet [#_"meta" _meta, #_"map" impl] SetForm)
+    (defq PersistentHashSet [#_"meta" _meta, #_"map" impl] SetForm
+        clojure.lang.IFn (invoke [_, a] (APersistentSet''invoke _, a))
+    )
 
     #_inherit
     (defm PersistentHashSet APersistentSet AFn)
@@ -10635,7 +10639,7 @@
 )
 
 (about #_"PersistentVector"
-    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''equals PersistentVector''nth)
+    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''equals PersistentVector''nth PersistentVector''invoke)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
@@ -10644,6 +10648,7 @@
         clojure.lang.IPersistentVector
         clojure.lang.Counted (count [_] (:cnt _))
         clojure.lang.Indexed (nth [_, i] (PersistentVector''nth _, i)) (nth [_, i, not-found] (PersistentVector''nth _, i, not-found))
+        clojure.lang.IFn (invoke [_, a] (PersistentVector''invoke _, a))
     )
 
     #_inherit
@@ -11380,7 +11385,7 @@
                     )
                 (satisfies? ITransientSet coll)
                     (ITransientSet'''get coll, key)
-                (-/instance? clojure.lang.ILookup coll)
+                (clojure-ilookup? coll)
                     (ILookup''valAt coll, key)
             )
         )
@@ -11398,7 +11403,7 @@
                     )
                 (satisfies? ITransientSet coll)
                     (if (contains? coll key) (ITransientSet'''get coll, key) not-found)
-                (-/instance? clojure.lang.ILookup coll)
+                (clojure-ilookup? coll)
                     (ILookup''valAt coll, key, not-found)
                 :else
                     not-found
@@ -12753,8 +12758,8 @@
  ;;
 (defn- maybe-min-hash [hashes]
     (first
-        (-/filter (fn [[s m]] (apply distinct? (map #(shift-mask s m %) hashes)))
-            (-/for [mask (map #(dec (<< 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
+        (#_"-/" filter (fn [[s m]] (apply distinct? (map #(shift-mask s m %) hashes)))
+            (#_"-/" for [mask (map #(dec (<< 1 %)) (range 1 (inc max-mask-bits))) shift (range 0 31)]
                 [shift mask]
             )
         )
@@ -15221,7 +15226,7 @@
         (let [
             #_"map" m
                 (hash-map
-                    '&             nil
+                    #_'&             #_nil
                     'case*         CaseExpr'parse
                     'catch         nil
                     'def           DefExpr'parse
