@@ -135,9 +135,8 @@
 (about #_"Object"
     (def Object'array (Class/forName "[Ljava.lang.Object;"))
 
-    (defn #_"boolean" Object''equals   [^Object this, #_"Object" that] (.equals this, that))
-    (defn #_"int"     Object''hashCode [^Object this]                  (.hashCode this))
-    (defn #_"String"  Object''toString [^Object this]                  (.toString this))
+    (defn #_"int"    Object''hashCode [^Object this] (.hashCode this))
+    (defn #_"String" Object''toString [^Object this] (.toString this))
 )
 
 (about #_"String"
@@ -255,17 +254,8 @@
 
 (about #_"clojure.lang"
 
-(about #_"Associative"
-    (defn #_"boolean"   Associative''containsKey [^Associative this, #_"key" key] (.containsKey this, key))
-    (defn #_"IMapEntry" Associative''entryAt     [^Associative this, #_"key" key] (.entryAt this, key))
-)
-
 (about #_"Compiler"
     (def #_"var" Compiler'LOADER clojure.lang.Compiler/LOADER)
-)
-
-(about #_"Counted"
-    (defn #_"int" Counted''count [^Counted this] (.count this))
 )
 
 (about #_"DynamicClassLoader"
@@ -282,24 +272,6 @@
     (defn #_"value" ILookup''valAt ([^ILookup this, #_"key" key] (.valAt this, key)) ([^ILookup this, #_"key" key, #_"value" not-found] (.valAt this, key, not-found)))
 )
 
-(about #_"IMeta"
-    (defn #_"meta" IMeta''meta [^IMeta this] (.meta this))
-)
-
-(about #_"IObj"
-    (defn #_"IObj" IObj''withMeta [^IObj this, #_"meta" meta] (.withMeta this, meta))
-)
-
-(about #_"IPersistentCollection"
-    (defn #_"IPersistentCollection" IPersistentCollection''cons  [^IPersistentCollection this, #_"value" val] (.cons this, val))
-    (defn #_"IPersistentCollection" IPersistentCollection''empty [^IPersistentCollection this]                (.empty this))
-)
-
-(about #_"IPersistentMap"
-    (defn #_"IPersistentMap" IPersistentMap''assoc   [^IPersistentMap this, #_"key" key, #_"value" val] (.assoc this, key, val))
-    (defn #_"IPersistentMap" IPersistentMap''without [^IPersistentMap this, #_"key" key]                (.without this, key))
-)
-
 (about #_"Keyword"
     (defn clojure-keyword? [x] (-/instance? clojure.lang.Keyword x))
 
@@ -313,10 +285,6 @@
     (defn #_"Object" Namespace''-getMapping      [^Namespace this, #_"Symbol" name] (.getMapping this, name))
     (defn #_"var"    Namespace''-intern          [^Namespace this, #_"Symbol" sym]  (.intern this, sym))
     (defn #_"var"    Namespace''-findInternedVar [^Namespace this, #_"Symbol" name] (.findInternedVar this, name))
-)
-
-(about #_"Seqable"
-    (defn #_"seq" Seqable''seq [^Seqable this] (.seq this))
 )
 
 (about #_"Symbol"
@@ -389,6 +357,8 @@
 )
 )
 
+(defn identical? [a b] (-/identical? a b))
+
 (defn -'=       [a b] (-/= a b))
 (defn -'==      [a b] (-/== a b))
 (defn -'<       [a b] (-/< a b))
@@ -423,8 +393,12 @@
     (defn #_"Mutable" Mutable''mutate! [#_"Mutable" this, #_"key" key, #_"value" val] (.mutate this, key, val))
 )
 
+(about #_"arbace.Typed"
+    (defn #_"type" Typed''type [#_"Typed" this] (.type this))
+)
+
 (ns arbace.core
-    (:refer-clojure :only [boolean char identical? long satisfies?]) (:require [clojure.core :as -])
+    (:refer-clojure :only [boolean char long satisfies?]) (:require [clojure.core :as -])
     (:refer arbace.bore :only
         [
             about import! int int! refer! throw!
@@ -437,7 +411,7 @@
             int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString
             long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf
             number? Number''longValue Number''toString
-            Object'array Object''equals Object''hashCode Object''toString
+            Object'array Object''hashCode Object''toString
             string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring
             StringBuilder'new StringBuilder''append StringBuilder''toString
             System'arraycopy
@@ -455,28 +429,22 @@
             Comparator''compare
             pattern? Pattern'compile Pattern''matcher Pattern''pattern
             matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
-            Associative''containsKey Associative''entryAt
             Compiler'LOADER
-            Counted''count
             DynamicClassLoader''defineClass
             IHashEq''hasheq
             clojure-ilookup? ILookup''valAt
-            IMeta''meta
-            IObj''withMeta
-            IPersistentCollection''cons IPersistentCollection''empty
-            IPersistentMap''assoc IPersistentMap''without
             clojure-keyword? Keyword''sym
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
-            Seqable''seq
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
             AtomicReference'new AtomicReference''compareAndSet AtomicReference''get AtomicReference''set
+            identical?
             -'= -'== -'< -'<= -'> -'compare -'+ -'- -'* -'quot -'rem -'bit-not -'bit-and -'bit-or -'bit-xor -'bit-shift-left -'bit-shift-right -'unsigned-bit-shift-right
             A'new A'clone A'get A'length A'set new* M'get
-            Mutable''mutate!
+            Mutable''mutate! Typed''type
         ]
     )
 )
@@ -948,6 +916,23 @@
     (defn mutable? [x] (satisfies? Mutable x))
 )
 
+(about #_"arbace.Typed"
+    (ß defp Typed
+        (#_"type" Typed'''type [#_"Typed" this])
+    )
+
+    (defonce Typed (-/hash-map))
+    (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.core.Typed", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.core.Typed, (-/keyword (-/name :methods)) '[[type [] java.lang.Object nil]]))), nil)
+    (alter-var-root #'Typed merge (-/hash-map :var #'Typed, :on 'arbace.core.Typed, :on-interface (-/resolve (-/symbol "arbace.core.Typed"))))
+    (ß defmacro Typed'''type [this] ((-/find-protocol-method 'Typed (-/keyword "Typed'''type") this) this))
+
+    (ß -/extend-protocol Typed arbace.core.Typed
+        (Typed'''type [this] (Typed''type this))
+    )
+
+    (defn typed? [x] (satisfies? Typed x))
+)
+
 (about #_"defarray"
 
 (defn- emit-defarray* [tname cname fields interfaces methods opts]
@@ -966,15 +951,23 @@
                             )
                         ]
                     )
-                    (imap [[i m]]
+                    (mutable [[i m]]
                         [
                             (conj i 'arbace.core.Mutable)
                             (conj m
                                 `(mutate [this# k# v#] (let [x# (case! (-/name k#) ~@s)] (#_A'set -/aset (. this# ~a) x# v#) this#))
                             )
                         ]
+                    )
+                    (typed [[i m]]
+                        [
+                            (conj i 'arbace.core.Typed)
+                            (conj m
+                                `(type [this#] '~classname)
+                            )
+                        ]
                     )]
-                (let [[i m] (-> [interfaces methods] ilookup imap)]
+                (let [[i m] (-> [interfaces methods] ilookup mutable typed)]
                     `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
                 )
             )
@@ -1006,9 +999,9 @@
                         [
                             (conj i 'clojure.lang.IHashEq)
                             (conj m
-                                `(hasheq [this#] (-/int (bit-xor ~type-hash (#_IHashEq''hasheq .hasheq (. this# ~a)))))
-                                `(hashCode [this#] (#_Object''hashCode .hashCode (. this# ~a)))
-                                `(equals [this# that#] (and #_(some? that#) (-/instance? ~tname that#) (#_Object''equals .equals (. this# ~a) (. that# ~a))))
+                                `(hasheq [this#] (-/int (bit-xor ~type-hash (.hasheq (. this# ~a)))))
+                                `(hashCode [this#] (.hashCode (. this# ~a)))
+                                `(equals [this# that#] (and #_(some? that#) (-/instance? ~tname that#) (.equals (. this# ~a) (. that# ~a))))
                             )
                         ]
                     )
@@ -1016,8 +1009,8 @@
                         [
                             (conj i 'clojure.lang.IObj)
                             (conj m
-                                `(meta [this#] (#_IMeta''meta .meta (. this# ~a)))
-                                `(withMeta [this# m#] (new #_* ~tname (#_IObj''withMeta .withMeta (. this# ~a) m#)))
+                                `(meta [this#] (.meta (. this# ~a)))
+                                `(withMeta [this# m#] (new ~tname (.withMeta (. this# ~a) m#)))
                             )
                         ]
                     )
@@ -1025,8 +1018,8 @@
                         [
                             (conj i 'clojure.lang.ILookup)
                             (conj m
-                                `(valAt [this# k#] (#_ILookup''valAt .valAt this# k# nil))
-                                `(valAt [this# k# else#] (#_ILookup''valAt .valAt (. this# ~a) k# else#))
+                                `(valAt [this# k#] (.valAt this# k# nil))
+                                `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
                             )
                         ]
                     )
@@ -1034,25 +1027,33 @@
                         [
                             (conj i 'clojure.lang.IPersistentMap)
                             (conj m
-                                `(count [this#] (#_Counted''count .count (. this# ~a)))
-                                `(empty [this#] (new #_* ~tname (#_IPersistentCollection''empty .empty (. this# ~a))))
-                                `(cons [this# e#] (new #_* ~tname (#_IPersistentCollection''cons .cons (. this# ~a) e#)))
+                                `(count [this#] (.count (. this# ~a)))
+                                `(empty [this#] (new ~tname (.empty (. this# ~a))))
+                                `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
                                 `(equiv [this# that#]
-                                    (or (-/identical? this# that#)
-                                        (and (-/identical? (-/class this#) (-/class that#))
-                                            (= (. this# ~a) (. that# ~a))
+                                    (or (identical? this# that#)
+                                        (and (identical? (-/class this#) (-/class that#))
+                                            (= (. this# ~a) (. that# ~a))
                                         )
                                     )
                                 )
-                                `(containsKey [this# k#] (#_Associative''containsKey .containsKey (. this# ~a) k#))
-                                `(entryAt [this# k#] (#_Associative''entryAt .entryAt (. this# ~a) k#))
-                                `(seq [this#] (#_Seqable''seq .seq (. this# ~a)))
-                                `(assoc [this# k# v#] (new #_* ~tname (#_IPersistentMap''assoc .assoc (. this# ~a) k# v#)))
-                                `(without [this# k#] (new #_* ~tname (#_IPersistentMap''without .without (. this# ~a) k#)))
+                                `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
+                                `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
+                                `(seq [this#] (.seq (. this# ~a)))
+                                `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
+                                `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
+                            )
+                        ]
+                    )
+                    (typed [[i m]]
+                        [
+                            (conj i 'arbace.core.Typed)
+                            (conj m
+                                `(type [this#] '~classname)
                             )
                         ]
                     )]
-                (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap)]
+                (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap typed)]
                     `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
                 )
             )
@@ -12023,10 +12024,6 @@
     )
 )
 
-(defmacro refer-arbace [& filters]
-    `(refer '~'arbace.core ~@filters)
-)
-
     (defn #_"void" Namespace''unmap [#_"Namespace" this, #_"Symbol" sym]
         (when (nil? (:ns sym)) => (throw! "can't unintern namespace-qualified symbol")
             (swap! (:mappings this) dissoc sym)
@@ -12123,25 +12120,6 @@
 
     (defm Namespace IAppend
         (IAppend'''append => Namespace''append)
-    )
-)
-
-;;;
- ; Sets *ns* to the namespace named by name (unevaluated), creating it if needed.
- ;;
-(defmacro arbace-ns [n & s]
-    (let [m (let-when [m (first s)] (map? m) m) s (if m (next s) s) n (if m (vary-meta n merge m) n) m (meta n)]
-        `(do
-            (ß in-ns '~n)
-            ~@(when m
-                `((reset-meta! (Namespace'find '~n) ~m))
-            )
-            ~@(when (and (not= n 'arbace.core) (not-any? #(= :refer-arbace (first %)) s))
-                `((refer '~'arbace.core))
-            )
-            ~@(map (fn [[k & s]] `(~(symbol "arbace.core" (name k)) ~@(map #(list 'quote %) s))) s)
-            nil
-        )
     )
 )
 )
@@ -12962,6 +12940,8 @@
 )
 )
 
+;; redefine reduce with IReduce
+
 (defn- seq-reduce
     ([s f] (if-some [s (seq s)] (seq-reduce (next s) f (first s)) (f)))
     ([s f r]
@@ -12972,8 +12952,6 @@
         )
     )
 )
-
-;; redefine reduce with IReduce
 
 ;;;
  ; f should be a function of 2 arguments. If val is not supplied, returns
@@ -12988,37 +12966,16 @@
 (defn reduce
     ([f s]
         (if (satisfies? IReduce s)
-            (IReduce'''reduce #_"IReduce" s f)
+            (IReduce'''reduce s, f)
             (seq-reduce s f)
         )
     )
     ([f r s]
         (if (satisfies? IReduce s)
-            (IReduce'''reduce #_"IReduce" s f r)
+            (IReduce'''reduce s, f, r)
             (seq-reduce s f r)
         )
     )
-)
-
-;;;
- ; Protocol for concrete associative types that can reduce themselves via
- ; a function of key and val faster than first/next recursion over map entries.
- ; Called by reduce-kv, and has same semantics (just different arg order).
- ;;
-(§ -/defprotocol KVReduce
-    (kv-reduce [m f r])
-)
-
-(§ -/extend-protocol KVReduce
-    nil
-    (kv-reduce [_ _ r] r)
-
-    ;; slow path default
-    IPersistentMap
-    (kv-reduce [m f r] (reduce (fn [r [k v]] (f r k v)) r m))
-
-    IKVReduce
-    (kv-reduce [m f r] (IKVReduce'''kvreduce m, f, r))
 )
 
 ;;;
@@ -13028,7 +12985,14 @@
  ; If coll contains no entries, returns init and f is not called. Note that
  ; reduce-kv is supported on vectors, where the keys will be the ordinals.
  ;;
-(§ defn reduce-kv [f r m] (kv-reduce m f r))
+(defn reduce-kv [f r m]
+    (when (some? m) => r
+        (condp satisfies? m
+            IKVReduce      (IKVReduce'''kvreduce m, f, r)
+            IPersistentMap (reduce (fn [r [k v]] (f r k v)) r m)
+        )
+    )
+)
 
 ;;;
  ; Takes a reducing function f of 2 args and returns a fn suitable for
@@ -13747,8 +13711,6 @@
                             )
                         )
                     )
-                (= sym 'ns)    #'ns
-                (= sym 'in-ns) #'in-ns
                 :else ;; is it mapped?
                     (let [#_"Object" o (Namespace''getMapping *ns*, sym)]
                         (cond
@@ -13812,9 +13774,8 @@
                             )
                         )
                     )
-                (= sym 'ns)    #'ns
-                (= sym 'in-ns) #'in-ns
-                :else          (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
+                :else
+                    (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
             )
         )
     )
@@ -13834,9 +13795,8 @@
                             v
                         )
                     )
-                (= sym 'ns)    #'ns
-                (= sym 'in-ns) #'in-ns
-                :else          (Namespace''getMapping n, sym)
+                :else
+                    (Namespace''getMapping n, sym)
             )
         )
     )
@@ -15226,7 +15186,7 @@
         (let [
             #_"map" m
                 (hash-map
-                    #_'&             #_nil
+                    '&             nil
                     'case*         CaseExpr'parse
                     'catch         nil
                     'def           DefExpr'parse
@@ -16122,9 +16082,15 @@
 
     (def #_"Var" ^:dynamic *ns* (create-ns (symbol "arbace.core")))
 
-    (doseq [[#_"symbol" s #_"class|var" v] (ns-map -/*ns*)]
-        (intern *ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
+    (defn- refer* [& s*]
+        (doseq [#_"symbol" s s*]
+            (let [#_"class|var" v (-/ns-resolve -/*ns* (-/symbol (str s)))]
+                (intern *ns*, (with-meta (symbol! s) (when (var? v) (select-keys (meta v) [:dynamic :macro :private]))), (if (var? v) @v v))
+            )
+        )
     )
+
+    (apply refer* '[ß = alter-var-root applyi Compiler'LOADER complement concat conj cons count defmacro defn defn- defonce deref drop-while DynamicClassLoader''defineClass even? first fn identical? IHashEq''hasheq inc interleave keys keyword? let list list* loop map mapcat maybe-destructured merge meta next nth odd? partial partition range refer* resolve satisfies? second seq seq? split-at str symbol symbol? take-while throw! vals var-get Var''hasRoot Var''setMacro vary-meta vec vector vector? with-meta])
 
     (alias (symbol "-"), (the-ns 'clojure.core))
 
