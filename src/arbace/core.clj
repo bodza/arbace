@@ -16,7 +16,7 @@
     [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Error Integer Long Number Object String StringBuilder System Thread]
     [java.lang.ref Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array Constructor]
-    [java.io BufferedReader Flushable PrintWriter PushbackReader Reader]
+    [java.io Flushable PrintWriter PushbackReader Reader]
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
@@ -195,10 +195,6 @@
 )
 
 (about #_"java.io"
-
-(about #_"BufferedReader"
-    (defn #_"String" BufferedReader''readLine [^BufferedReader this] (.readLine this))
-)
 
 (about #_"Flushable"
     (defn #_"void" Flushable''flush [^Flushable this] (.flush this))
@@ -420,7 +416,6 @@
             ReferenceQueue'new ReferenceQueue''poll
             WeakReference'new
             array? Array'get Array'getLength
-            BufferedReader''readLine
             Flushable''flush
             PrintWriter''println
             pushback-reader? PushbackReader'new PushbackReader''unread
@@ -851,6 +846,7 @@
 
 (about #_"defproto"
 
+#_bore!
 (defn- gen-interface* [sym]
     (DynamicClassLoader''defineClass (var-get Compiler'LOADER), (str sym), (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) sym))), nil)
 )
@@ -860,7 +856,9 @@
         iname (-/symbol (str (-/munge (-/namespace-munge -/*ns*)) "." (-/munge name)))
     ]
         `(do
-            (defonce ~name (-/hash-map))
+            #_bore!
+            (defonce ~name (-/hash-map)) #_alt #_(declare ~name) #_(refer* '~name)
+            #_bore!
             (gen-interface* '~iname)
             (alter-var-root (var ~name) merge
                 ~(-/hash-map :var (list 'var name), :on (list 'quote iname), :on-interface (list `-/resolve (list 'quote iname)))
@@ -876,18 +874,23 @@
 )
 )
 
+#_bore!
 (defn- parse-opts [s]
     (loop-when-recur [opts {} [k v & rs :as s] s] (keyword? k) [(-/assoc opts k v) rs] => [opts s])
 )
 
+#_bore!
 (refer! - [take-while drop-while])
 
+#_bore!
 (defn- parse-impls [specs]
     (loop-when-recur [impls {} s specs] (seq s) [(-/assoc impls (first s) (take-while seq? (next s))) (drop-while seq? (next s))] => impls)
 )
 
+#_bore!
 (refer! - [#_var? complement resolve deref keys maybe-destructured apply concat vals])
 
+#_bore!
 (defn- parse-opts+specs [opts+specs]
     (let [
         [opts specs] (parse-opts opts+specs)
@@ -904,7 +907,9 @@
         (#_"Mutable" Mutable'''mutate! [#_"Mutable" this, #_"key" key, #_"value" val])
     )
 
-    (defonce Mutable (-/hash-map))
+    #_bore!
+    (defonce Mutable (-/hash-map)) #_alt #_(refer* 'Mutable)
+    #_bore!
     (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.core.Mutable", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.core.Mutable, (-/keyword (-/name :methods)) '[[mutate [java.lang.Object java.lang.Object] java.lang.Object nil]]))), nil)
     (alter-var-root #'Mutable merge (-/hash-map :var #'Mutable, :on 'arbace.core.Mutable, :on-interface (-/resolve (-/symbol "arbace.core.Mutable"))))
     (ß defmacro Mutable'''mutate! [this, key, val] ((-/find-protocol-method 'Mutable (-/keyword "Mutable'''mutate!") this) this, key, val))
@@ -921,7 +926,9 @@
         (#_"type" Typed'''type [#_"Typed" this])
     )
 
-    (defonce Typed (-/hash-map))
+    #_bore!
+    (defonce Typed (-/hash-map)) #_alt #_(refer* 'Typed)
+    #_bore!
     (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.core.Typed", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.core.Typed, (-/keyword (-/name :methods)) '[[type [] java.lang.Object nil]]))), nil)
     (alter-var-root #'Typed merge (-/hash-map :var #'Typed, :on 'arbace.core.Typed, :on-interface (-/resolve (-/symbol "arbace.core.Typed"))))
     (ß defmacro Typed'''type [this] ((-/find-protocol-method 'Typed (-/keyword "Typed'''type") this) this))
@@ -935,6 +942,7 @@
 
 (about #_"defarray"
 
+#_bore!
 (defn- emit-defarray* [tname cname fields interfaces methods opts]
     (let [
         classname  (-/with-meta (-/symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
@@ -975,7 +983,8 @@
     )
 )
 
-(defmacro defarray [name fields & opts+specs]
+#_bore!
+(defmacro defarray [name fields & opts+specs] #_alt #_`(refer* '~name)
     (ß #'-/validate-fields fields name)
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
@@ -988,6 +997,7 @@
 
 (about #_"defassoc"
 
+#_bore!
 (defn- emit-defassoc* [tname cname interfaces methods opts]
     (let [
         classname  (-/with-meta (-/symbol (str (-/namespace-munge -/*ns*) "." cname)) (meta cname))
@@ -1061,7 +1071,8 @@
     )
 )
 
-(defmacro defassoc [name & opts+specs]
+#_bore!
+(defmacro defassoc [name & opts+specs] #_alt #_`(refer* '~name)
     (ß #'-/validate-fields [] name)
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
@@ -1086,19 +1097,19 @@
     )
 )
 
-(defn- emit-hinted-impl [_ [p fs]]
+(defn- emit-impl* [_ [p fs]]
     [p (-/zipmap (map #(-> % first -/name -/keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons `fn %))) fs))]
 )
 
 (defmacro extend-type [t & specs]
-    `(extend ~t ~@(mapcat (partial emit-hinted-impl t) (#'-/parse-impls specs)))
+    `(extend ~t ~@(mapcat (partial emit-impl* t) (#'-/parse-impls specs)))
 )
 )
 
-(defmacro defp [p & s]   (let [i (-/symbol (str p "'iface"))] `(do (defproto ~p ~@s) (def ~i (:on-interface ~p)) '~p)))
-(defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s)                 '~c)))
-(defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)                              '~c)))
-(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)                           ~i)))
+(defmacro defp [p & s]                                      `(do (defproto ~p ~@s)             '~p))
+(defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s) '~c)))
+(defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)              '~c)))
+(defmacro defm [r & s]   (let [i `(:on-interface ~r)]       `(do (extend-type ~i ~@s)          ~i)))
 )
 
 (about #_"arbace.Seqable"
@@ -2901,10 +2912,10 @@
             (and (number? a) (number? b)) #_(Numbers'equal a, b) (-'== a b)
             (coll? a)                     (IObject'''equals a, b)
             (coll? b)                     (IObject'''equals b, a)
-            (-/instance? Symbol'iface a)  (Symbol''equals a, b)
-            (-/instance? Symbol'iface b)  (Symbol''equals b, a)
-            (-/instance? Keyword'iface a) (Keyword''equals a, b)
-            (-/instance? Keyword'iface b) (Keyword''equals b, a)
+            (-/instance? (:on-interface Symbol) a)  (Symbol''equals a, b)
+            (-/instance? (:on-interface Symbol) b)  (Symbol''equals b, a)
+            (-/instance? (:on-interface Keyword) a) (Keyword''equals a, b)
+            (-/instance? (:on-interface Keyword) b) (Keyword''equals b, a)
             :else                         (IObject'''equals a, b)
         )
     )
@@ -2915,6 +2926,7 @@
  ; works for nil, and compares numbers and collections in a type-independent manner.
  ; Immutable data structures define equals() (and thus =) as a value, not an identity, comparison.
  ;;
+#_oops!
 (defn =
     ([x] true)
     ([x y] (Util'equiv x y))
@@ -3788,7 +3800,7 @@
 
 (defn- symbol! [s] (symbol (if (clojure-symbol? s) (str s) s)))
 
-(-/defmethod -/print-method Symbol'iface [o w] (.write w, (str o)))
+(-/defmethod -/print-method (:on-interface Symbol) [o w] (.write w, (str o)))
 )
 
 (about #_"arbace.Keyword"
@@ -3934,7 +3946,7 @@
     ([ns name] (Keyword'find (symbol ns name)))
 )
 
-(-/defmethod -/print-method Keyword'iface [o w] (.write w, (str o)))
+(-/defmethod -/print-method (:on-interface Keyword) [o w] (.write w, (str o)))
 )
 
 (about #_"arbace.Fn"
@@ -12205,6 +12217,7 @@
  ; Evaluates the exprs in a lexical context in which the symbols in the
  ; binding-forms are bound to their respective init-exprs or parts therein.
  ;;
+#_oops!
 (defmacro let [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
@@ -12237,6 +12250,7 @@
  ;
  ; Defines a function.
  ;;
+#_oops!
 (defmacro fn [& s]
     (let [name (when (symbol? (first s)) (first s)) s (if name (next s) s)
           s (if (vector? (first s))
@@ -12276,6 +12290,7 @@
  ; the binding-forms are bound to their respective init-exprs or parts
  ; therein. Acts as a recur target.
  ;;
+#_oops!
 (defmacro loop [bindings & body]
     (assert-args
         (vector? bindings) "a vector for its binding"
@@ -12329,6 +12344,7 @@
     ;;;
      ; Same as (def name (fn [params*] exprs*)) or (def name (fn ([params*] exprs*)+)) with any attrs added to the var metadata.
      ;;
+    #_oops!
     (defmacro defn [fname & s]
         ;; note: cannot delegate this check to def because of the call to (with-meta name ...)
         (when (symbol? fname) => (throw! "first argument to defn must be a symbol")
@@ -12352,21 +12368,12 @@
      ; Like defn, but the resulting function name is declared as a macro
      ; and will be used as a macro by the compiler when it is called.
      ;;
+    #_oops!
     (defmacro defmacro [name & args]
         (let [[m s] (split-with map? args) s (if (vector? (first s)) (list s) s)
               s (map (fn [[bindings & body]] (cons (apply vector '&form '&env bindings) body)) s)]
             `(do (defn ~name ~@m ~@s) (Var''setMacro (var ~name)) (var ~name))
         )
-    )
-)
-
-;;;
- ; Returns the lines of text from r as a lazy sequence of strings.
- ; r must implement java.io.BufferedReader.
- ;;
-(defn line-seq [#_"BufferedReader" r]
-    (when-some [line (BufferedReader''readLine r)]
-        (cons line (lazy-seq (line-seq r)))
     )
 )
 
@@ -12419,6 +12426,7 @@
  ;
  ; (take 100 (for [x (range 100000000) y (range 1000000) :while (< y x)] [x y]))
  ;;
+#_oops!
 (defmacro for [bindings body]
     (assert-args
         (vector? bindings) "a vector for its binding"
@@ -16090,13 +16098,9 @@
         )
     )
 
-    (apply refer* '[& * + - -'* -'+ -'- -'< -'<= -'= -'== -'> -'bit-and -'bit-not -'bit-or -'bit-shift-left -'bit-shift-right -'unsigned-bit-shift-right -'bit-xor -'compare -'quot -'rem < << <= = > >> >>> >= A'clone A'get A'length alter-var-root A'new Appendable''append apply array? Array'get Array'getLength Arrays'sort A'set AtomicReference''compareAndSet AtomicReference''get AtomicReference'new AtomicReference''set biginteger? BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger'new BigInteger'ONE BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'ZERO bit-xor boolean boolean? BufferedReader''readLine byte? char char? Character'digit Character'isWhitespace Character'valueOf char-sequence? CharSequence''charAt CharSequence''length clojure-ilookup? clojure-keyword? clojure-namespace? clojure-symbol? clojure-var? Comparable''compareTo Comparator''compare concat cons count dec defmacro defn defn- deref even? first Flushable''flush fn hash-map identical? ILookup''valAt inc int int! int? Integer'bitCount Integer'MAX_VALUE Integer'MIN_VALUE Integer'parseInt Integer'rotateLeft Integer'toString interleave keyword? Keyword''sym let list list* long long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf loop map mapcat matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches merge meta M'get Mutable''mutate! Namespace''-findInternedVar Namespace''-getMapping Namespace''-getMappings Namespace''-intern neg? new* next not= nth number? Number''longValue Number''toString Object''hashCode Object''toString odd? partial partition pattern? Pattern'compile Pattern''matcher Pattern''pattern pos? PrintWriter''println pushback-reader? PushbackReader'new PushbackReader''unread quot Reader''read refer* Reference''get ReferenceQueue'new ReferenceQueue''poll rem satisfies? second seq seq? split-at str string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring StringBuilder''append StringBuilder'new StringBuilder''toString symbol? System'arraycopy thread throw! Var''-alterRoot Var''-get Var''-hasRoot Var''hasRoot Var''-isBound Var''setMacro vary-meta vec vector vector? WeakReference'new with-meta zero? | § ß])
+    (apply refer* '[& * + - -'* -'+ -'- -'< -'<= -'= -'== -'> -'bit-and -'bit-not -'bit-or -'bit-shift-left -'bit-shift-right -'unsigned-bit-shift-right -'bit-xor -'compare -'quot -'rem < << <= = > >> >>> >= A'clone A'get A'length alter-var-root A'new Appendable''append apply array? Array'get Array'getLength Arrays'sort A'set AtomicReference''compareAndSet AtomicReference''get AtomicReference'new AtomicReference''set biginteger? BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger'new BigInteger'ONE BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'ZERO bit-xor boolean boolean? byte? char char? Character'digit Character'isWhitespace Character'valueOf char-sequence? CharSequence''charAt CharSequence''length clojure-ilookup? clojure-keyword? clojure-namespace? clojure-symbol? clojure-var? Comparable''compareTo Comparator''compare concat cons count dec defmacro defn deref even? first Flushable''flush fn hash-map identical? ILookup''valAt inc int int! int? Integer'bitCount Integer'MAX_VALUE Integer'MIN_VALUE Integer'parseInt Integer'rotateLeft Integer'toString interleave keyword? Keyword''sym let list list* long long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf loop map mapcat matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches merge meta M'get Mutable''mutate! Namespace''-findInternedVar Namespace''-getMapping Namespace''-getMappings Namespace''-intern neg? new* next not= nth number? Number''longValue Number''toString Object''hashCode Object''toString odd? partial partition pattern? Pattern'compile Pattern''matcher Pattern''pattern pos? PrintWriter''println pushback-reader? PushbackReader'new PushbackReader''unread quot Reader''read refer* Reference''get ReferenceQueue'new ReferenceQueue''poll rem satisfies? second seq seq? split-at str string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring StringBuilder''append StringBuilder'new StringBuilder''toString symbol? System'arraycopy thread throw! Var''-alterRoot Var''-get Var''-hasRoot Var''-isBound Var''setMacro vary-meta vec vector vector? WeakReference'new with-meta zero? | § ß])
 
     (alias (symbol "-"), (the-ns 'clojure.core))
-
-    (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
-        (ß Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)), scope)
-    )
 )
 
 (defn repl []
