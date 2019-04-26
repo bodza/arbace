@@ -10640,7 +10640,7 @@
 )
 
 (about #_"PersistentVector"
-    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''equals PersistentVector''nth PersistentVector''invoke)
+    (declare PersistentVector''seq PersistentVector''rseq PersistentVector''conj PersistentVector''empty PersistentVector''equals PersistentVector''nth PersistentVector''invoke PersistentVector''applyTo)
 
     (defq PersistentVector [#_"meta" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
         clojure.lang.Seqable (seq [_] (PersistentVector''seq _))
@@ -10649,7 +10649,7 @@
         clojure.lang.IPersistentVector
         clojure.lang.Counted (count [_] (:cnt _))
         clojure.lang.Indexed (nth [_, i] (PersistentVector''nth _, i)) (nth [_, i, not-found] (PersistentVector''nth _, i, not-found))
-        clojure.lang.IFn (invoke [_, a] (PersistentVector''invoke _, a))
+        clojure.lang.IFn (invoke [_, a] (PersistentVector''invoke _, a)) (applyTo [_, args] (PersistentVector''applyTo _, args))
     )
 
     #_inherit
@@ -13657,7 +13657,7 @@
 )
 
 (about #_"Compiler"
-    (def #_"int" Compiler'MAX_POSITIONAL_ARITY 9)
+    (def #_"int" Compiler'MAX_POSITIONAL_ARITY #_9 (+ 9 2))
 
     (defn #_"Namespace" Compiler'namespaceFor
         ([#_"Symbol" sym] (Compiler'namespaceFor *ns*, sym))
@@ -15186,7 +15186,7 @@
         (let [
             #_"map" m
                 (hash-map
-                    '&             nil
+                    '&             nil
                     'case*         CaseExpr'parse
                     'catch         nil
                     'def           DefExpr'parse
@@ -15275,7 +15275,7 @@
                 (let [#_"IFn" inline (Compiler'maybeInline op, (count (next form)), scope)]
                     (if (some? inline)
                         (Compiler'analyze (IFn'''applyTo inline, (next form)), context, scope)
-                        (let [#_"fn" f'parse (get Compiler'specials op InvokeExpr'parse)]
+                        (let [#_"fn" f'parse (or (get Compiler'specials op) InvokeExpr'parse)]
                             (f'parse form, context, scope)
                         )
                     )
@@ -16090,12 +16090,12 @@
         )
     )
 
-    (apply refer* '[ß = alter-var-root applyi Compiler'LOADER complement concat conj cons count defmacro defn defn- defonce deref drop-while DynamicClassLoader''defineClass even? first fn identical? IHashEq''hasheq inc interleave keys keyword? let list list* loop map mapcat maybe-destructured merge meta next nth odd? partial partition range refer* resolve satisfies? second seq seq? split-at str symbol symbol? take-while throw! vals var-get Var''hasRoot Var''setMacro vary-meta vec vector vector? with-meta])
+    (apply refer* '[& * + - -'* -'+ -'- -'< -'<= -'= -'== -'> -'bit-and -'bit-not -'bit-or -'bit-shift-left -'bit-shift-right -'unsigned-bit-shift-right -'bit-xor -'compare -'quot -'rem < << <= = > >> >>> >= A'clone A'get A'length alter-var-root A'new Appendable''append apply array? Array'get Array'getLength Arrays'sort A'set AtomicReference''compareAndSet AtomicReference''get AtomicReference'new AtomicReference''set biginteger? BigInteger''add BigInteger''bitLength BigInteger''divide BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate BigInteger'new BigInteger'ONE BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'ZERO bit-xor boolean boolean? BufferedReader''readLine byte? char char? Character'digit Character'isWhitespace Character'valueOf char-sequence? CharSequence''charAt CharSequence''length clojure-ilookup? clojure-keyword? clojure-namespace? clojure-symbol? clojure-var? Comparable''compareTo Comparator''compare concat cons count dec defmacro defn defn- deref even? first Flushable''flush fn hash-map identical? ILookup''valAt inc int int! int? Integer'bitCount Integer'MAX_VALUE Integer'MIN_VALUE Integer'parseInt Integer'rotateLeft Integer'toString interleave keyword? Keyword''sym let list list* long long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf loop map mapcat matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches merge meta M'get Mutable''mutate! Namespace''-findInternedVar Namespace''-getMapping Namespace''-getMappings Namespace''-intern neg? new* next not= nth number? Number''longValue Number''toString Object''hashCode Object''toString odd? partial partition pattern? Pattern'compile Pattern''matcher Pattern''pattern pos? PrintWriter''println pushback-reader? PushbackReader'new PushbackReader''unread quot Reader''read refer* Reference''get ReferenceQueue'new ReferenceQueue''poll rem satisfies? second seq seq? split-at str string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring StringBuilder''append StringBuilder'new StringBuilder''toString symbol? System'arraycopy thread throw! Var''-alterRoot Var''-get Var''-hasRoot Var''hasRoot Var''-isBound Var''setMacro vary-meta vec vector vector? WeakReference'new with-meta zero? | § ß])
 
     (alias (symbol "-"), (the-ns 'clojure.core))
 
     (let [#_"map" scope (hash-map :'local-env (atom (hash-map)))]
-        (Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)), scope)
+        (ß Compiler'eval '(defn- .hasRoot [v] (Var''hasRoot v)), scope)
     )
 )
 
