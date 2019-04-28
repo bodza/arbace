@@ -17,9 +17,10 @@
     [java.lang.ref Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array Constructor]
     [java.io Flushable PrintWriter PushbackReader Reader]
-    [java.nio ByteBuffer]
+    [java.nio ByteBuffer ByteOrder]
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
+    [jdk.vm.ci.code.site Mark]
     [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
     [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Keyword Namespace Seqable Var]
     [arbace.math BigInteger]
@@ -39,6 +40,7 @@
 (about #_"Numbers"
     (refer! - [< <= > >= int neg? pos? zero?])
 
+    (defn byte! [^Number n] (.byteValue n))
     (defn int! [^Number n] (.intValue n))
 
     (defn +
@@ -111,10 +113,11 @@
     (def #_"int" Integer'MAX_VALUE Integer/MAX_VALUE)
     (def #_"int" Integer'MIN_VALUE Integer/MIN_VALUE)
 
-    (defn #_"int"    Integer'bitCount   [#_"int" i]                (Integer/bitCount i))
-    (defn #_"int"    Integer'parseInt   [#_"String" s]             (Integer/parseInt s))
-    (defn #_"int"    Integer'rotateLeft [#_"int" x, #_"int" y]     (Integer/rotateLeft x, y))
-    (defn #_"String" Integer'toString   [#_"int" i, #_"int" radix] (Integer/toString i, radix))
+    (defn #_"int"    Integer'bitCount        [#_"int" i]                (Integer/bitCount i))
+    (defn #_"int"    Integer'compareUnsigned [#_"int" x, #_"int" y]     (Integer/compareUnsigned x, y))
+    (defn #_"int"    Integer'parseInt        [#_"String" s]             (Integer/parseInt s))
+    (defn #_"int"    Integer'rotateLeft      [#_"int" x, #_"int" y]     (Integer/rotateLeft x, y))
+    (defn #_"String" Integer'toString        [#_"int" i, #_"int" radix] (Integer/toString i, radix))
 )
 
 (about #_"Long"
@@ -122,8 +125,11 @@
 
     (def #_"long" Long'MAX_VALUE Long/MAX_VALUE)
     (def #_"long" Long'MIN_VALUE Long/MIN_VALUE)
+    (def #_"int"  Long'SIZE      Long/SIZE)
 
-    (defn #_"Long" Long'valueOf [#_"long" l] (Long/valueOf l))
+    (defn #_"int"  Long'compareUnsigned      [#_"long" x, #_"long" y] (Long/compareUnsigned x, y))
+    (defn #_"int"  Long'numberOfLeadingZeros [#_"long" l]             (Long/numberOfLeadingZeros l))
+    (defn #_"Long" Long'valueOf              [#_"long" l]             (Long/valueOf l))
 )
 
 (about #_"Number"
@@ -238,12 +244,17 @@
     (defn #_"short" ByteBuffer''getShort [^ByteBuffer this, #_"int" i] (.getShort this, i))
     (defn #_"int"   ByteBuffer''getInt   [^ByteBuffer this, #_"int" i] (.getInt   this, i))
 )
+
+(about #_"ByteOrder"
+    (def #_"ByteOrder" ByteOrder'LITTLE_ENDIAN ByteOrder/LITTLE_ENDIAN)
+)
 )
 
 (about #_"java.util"
 
 (about #_"Arrays"
-    (defn #_"void" Arrays'sort [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
+    (defn #_"array" Arrays'copyOf [#_"array" a, #_"int" n]          (Arrays/copyOf a, n))
+    (defn #_"void"  Arrays'sort   [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
 )
 
 (about #_"Comparator"
@@ -320,6 +331,13 @@
 )
 )
 
+(about #_"jdk.vm.ci.code.site"
+
+(about #_"Mark"
+    (defn #_"Mark" Mark'new [#_"int" at, #_"Object" id] (Mark. at, id))
+)
+)
+
 (about #_"graalfn.HotSpot"
 
 (about #_"HotSpot"
@@ -328,10 +346,18 @@
     (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
     (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
 
-    (def #_"boolean" HotSpot'useG1GC (.getFlag HotSpot'config, "UseG1GC", Boolean))
-
+    (def #_"boolean" HotSpot'useG1GC                    (.getFlag HotSpot'config, "UseG1GC",                    Boolean))
+    (def #_"int"     HotSpot'codeEntryAlignment         (.getFlag HotSpot'config, "CodeEntryAlignment",         Integer))
     (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
     (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
+
+    (def #_"int" HotSpot'vmPageSize (.getFieldValue HotSpot'config, "CompilerToVM::Data::vm_page_size", Integer, "int"))
+
+    (def #_"boolean" HotSpot'useStackBanging  (.getFlag HotSpot'config, "UseStackBanging",  Boolean))
+    (def #_"int"     HotSpot'stackShadowPages (.getFlag HotSpot'config, "StackShadowPages", Integer))
+
+    (def #_"int" HotSpot'verifiedEntryMark     (.getConstant HotSpot'config, "CodeInstaller::VERIFIED_ENTRY",      Integer))
+    (def #_"int" HotSpot'deoptHandlerEntryMark (.getConstant HotSpot'config, "CodeInstaller::DEOPT_HANDLER_ENTRY", Integer))
 
     (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
         (throw! "use G1 with compressed oops")
@@ -417,18 +443,18 @@
 )
 
 (ns arbace.core
-    (:refer-clojure :only [boolean char long satisfies?]) (:require [clojure.core :as -])
+    (:refer-clojure :only [boolean byte char long satisfies? short]) (:require [clojure.core :as -])
     (:refer arbace.bore :only
         [
-            about import! int int! refer! throw!
+            about byte! import! int int! refer! throw!
             Appendable''append
             boolean?
             byte?
             char? Character'digit Character'isWhitespace Character'valueOf
             char-sequence? CharSequence''charAt CharSequence''length
             Comparable''compareTo
-            int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'parseInt Integer'rotateLeft Integer'toString
-            long? Long'MAX_VALUE Long'MIN_VALUE Long'valueOf
+            int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'compareUnsigned Integer'parseInt Integer'rotateLeft Integer'toString
+            long? Long'MAX_VALUE Long'MIN_VALUE Long'SIZE Long'compareUnsigned Long'numberOfLeadingZeros Long'valueOf
             number? Number''longValue Number''toString
             Object'array Object''hashCode Object''toString
             string? String''charAt String''endsWith String''indexOf String''intern String''length String''startsWith String''substring
@@ -443,7 +469,9 @@
             PrintWriter''println
             pushback-reader? PushbackReader'new PushbackReader''unread
             Reader''read
-            Arrays'sort
+            ByteBuffer'allocate ByteBuffer'wrap ByteBuffer''array ByteBuffer''order ByteBuffer''position ByteBuffer''limit ByteBuffer''put ByteBuffer''putShort ByteBuffer''putInt ByteBuffer''putLong ByteBuffer''get ByteBuffer''getShort ByteBuffer''getInt
+            ByteOrder'LITTLE_ENDIAN
+            Arrays'copyOf Arrays'sort
             Comparator''compare
             pattern? Pattern'compile Pattern''matcher Pattern''pattern
             matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
@@ -455,6 +483,8 @@
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
+            Mark'new
+            HotSpot'useG1GC HotSpot'codeEntryAlignment HotSpot'useCompressedOops HotSpot'useCompressedClassPointers HotSpot'vmPageSize HotSpot'useStackBanging HotSpot'stackShadowPages HotSpot'verifiedEntryMark HotSpot'deoptHandlerEntryMark
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -469,7 +499,7 @@
 
 (import!)
 
-(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= nth odd? partial partition range second seq seq? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
+(refer! - [= alter-var-root conj cons count defmacro defn defonce even? first fn hash-map interleave keyword keyword? let list list* loop map mapcat merge meta next not= nth odd? partial partition range second seq seq? sequential? split-at str symbol symbol? var-get vary-meta vec vector vector? with-meta zipmap])
 (refer! arbace.bore [& * + - < << <= > >= >> >>> bit-xor dec inc neg? pos? quot rem zero? |])
 
 (defmacro case! [e & clauses] (if (odd? (count clauses)) `(condp = ~e ~@clauses) `(condp = ~e ~@clauses (throw! (str ~e " is definitely not that case!")))))
@@ -540,6 +570,13 @@
     ([f x y] `(~f ~x ~y))
     ([f x y & s] `(let [f# ~f x# ~x] (or (f# x# ~y) (any f# x# ~@s))))
 )
+
+(defn =?
+    ([x y] (if (sequential? x) (if (seq x) (or (=? (first x) y) (recur (-/rest x) y)) false) (if (sequential? y) (recur y x) (= x y))))
+    ([x y & s] (=? x (cons y s)))
+)
+
+(defmacro case!? [e & clauses] (if (odd? (count clauses)) `(condp =? ~e ~@clauses) `(condp =? ~e ~@clauses (throw! (str ~e " is definitely not that case!?")))))
 
 ;;;
  ; fnspec => (fname [params*] exprs) or (fname ([params*] exprs)+)
@@ -2973,7 +3010,7 @@
             (= a b)     0
             (nil? a)   -1
             (nil? b)    1
-            (number? a) #_(Numbers'compare a, b) (-'compare a b)
+            (number? a) #_(Numbers'compare a, #_"Number" b) (-'compare a b)
             :else       (Comparable''compareTo a, b)
         )
     )
@@ -3027,8 +3064,8 @@
         (-> a (Appendable''append (BigInteger''toString (:n this))) (Appendable''append "/") (Appendable''append (BigInteger''toString (:d this))))
     )
 
-    (defn- #_"int" Ratio''compareTo [#_"Ratio" this, #_"Object" that]
-        #_(Numbers'compare this, #_"Number" that) (-'compare this that)
+    (defn- #_"int" Ratio''compareTo [#_"Ratio" this, #_"Number" that]
+        #_(Numbers'compare this, that) (-'compare this that)
     )
 
     (defm Ratio Hashed
@@ -13533,6 +13570,3762 @@
 (defn postwalk-replace [m form] (postwalk #(if (contains? m %) (m %) %) form))
 )
 
+(about #_"graalfn.Assembler"
+    (defp Condition)
+    (defp Register)
+    (defp Scale)
+    (defp AMD64Address)
+    (defp ConditionFlag)
+    #_abstract
+    (defp AMD64Op)
+    #_abstract
+    (defp AMD64ImmOp)
+    (defp AMD64MIOp)
+    (defp AMD64RMIOp)
+    (defp AMD64MOp)
+    ;;;
+     ; Opcode with operand order of either RM or MR for 2 address forms.
+     ;;
+    #_abstract
+    (defp AMD64RROp
+        (#_"Assembler" AMD64RROp'''emit [#_"AMD64RROp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Register" src])
+    )
+    (defp AMD64MROp)
+    (defp AMD64RMOp)
+    (defp AMD64Shift)
+    (defp BinaryArithmetic)
+    (defp CodeBuffer)
+    (defp Label)
+    (defp CompilationResult)
+    (defp FrameContext)
+    (defp Assembler)
+
+(about #_"NumUtil"
+    (def #_"int" NumUtil'K 1024)
+
+    ;;;
+     ; Determines if {@code n} is in the range of signed byte/int values.
+     ;;
+    (defn #_"boolean" NumUtil'isByte-1 [#_"int|long" n] (= (byte! n) n))
+    (defn #_"boolean" NumUtil'isInt-1  [    #_"long" n] (= (int!  n) n))
+
+    (defn #_"boolean" NumUtil'is32bit-1 [#_"long" n]
+        (and (<= -0x80000000 n) (< n 0x80000000))
+    )
+
+    ;;;
+     ; Checks whether {@code n} is a power of two.
+     ;;
+    (defn #_"boolean" NumUtil'isPowerOf2-1 [#_"int|long" n]
+        (and (pos? n) (zero? (& n (dec n))))
+    )
+
+    ;;;
+     ; Computes the log (base 2) of {@code n}, rounding down.
+     ; e.g. {@code log2(8) = 3}, {@code log2(21) = 4}
+     ;;
+    (defn #_"int" NumUtil'log2-1 [#_"int|long" n]
+        (- (dec Long'SIZE) (Long'numberOfLeadingZeros n))
+    )
+
+    (defn #_"int|long" NumUtil'roundUp-2 [#_"int|long" n, #_"int|long" m]
+        (* (quot (dec (+ n m)) m) m)
+    )
+
+    ;;;
+     ; Sign extend an integer.
+     ;
+     ; @return a signed long with the same value as the signed {@code bits}-bit number {@code n}
+     ;;
+    (defn #_"long" NumUtil'signExtend-2 [#_"long" n, #_"int" bits]
+        (when (< bits 64) => n
+            (if (= (& (>>> n (dec bits)) 1) 1)
+                (| n (<< -1 bits))
+                (& n (bit-not (<< -1 bits)))
+            )
+        )
+    )
+
+    ;;;
+     ; Zero extend an integer.
+     ;
+     ; @return an unsigned long with the same value as the unsigned {@code bits}-bit number {@code n}
+     ;;
+    (defn #_"long" NumUtil'zeroExtend-2 [#_"long" n, #_"int" bits]
+        (when (< bits 64) => n
+            (& n (bit-not (<< -1 bits)))
+        )
+    )
+
+    ;;;
+     ; Convert an integer to long.
+     ;
+     ; @param n the input value
+     ; @param bits the bit width of the input value
+     ; @param unsigned? whether the values should be interpreted as signed or unsigned
+     ; @return a long with the same value as the {@code bits}-bit number {@code n}
+     ;;
+    (defn #_"long" NumUtil'convert-3 [#_"long" n, #_"int" bits, #_"boolean" unsigned?]
+        (if unsigned?
+            (NumUtil'zeroExtend-2 n, bits)
+            (NumUtil'signExtend-2 n, bits)
+        )
+    )
+
+    ;;;
+     ; Get a bitmask with the low {@code bits} bit set and the high {@code 64 - bits} bit clear.
+     ;;
+    (defn #_"long" NumUtil'mask-1 [#_"int" bits]
+        (if (= bits 64) 0xffffffffffffffff (dec (<< 1 bits)))
+    )
+
+    ;;;
+     ; Narrow an integer value to a given bit width, and return the result as a signed long.
+     ;;
+    (defn #_"long" NumUtil'narrow-2 [#_"long" n, #_"int" bits]
+        (NumUtil'signExtend-2 (& n (NumUtil'mask-1 bits)), bits)
+    )
+
+    ;;;
+     ; Get the minimum value representable in a {@code bits} bit signed integer.
+     ;;
+    (defn #_"long" NumUtil'minValue-1 [#_"int" bits]
+        (<< -1 (dec bits))
+    )
+
+    ;;;
+     ; Get the maximum value representable in a {@code bits} bit signed integer.
+     ;;
+    (defn #_"long" NumUtil'maxValue-1 [#_"int" bits]
+        (NumUtil'mask-1 (dec bits))
+    )
+
+    ;;;
+     ; Get the maximum value representable in a {@code bits} bit unsigned integer.
+     ;;
+    (defn #_"long" NumUtil'maxUnsignedValue-1 [#_"int" bits]
+        (if (< bits 64) (dec (<< 1 bits)) 0xffffffffffffffff)
+    )
+
+    (defn #_"long" NumUtil'unsignedMax-2 [#_"long" a, #_"long" b] (if (pos? (Long'compareUnsigned a, b)) b a))
+    (defn #_"long" NumUtil'unsignedMin-2 [#_"long" a, #_"long" b] (if (pos? (Long'compareUnsigned a, b)) a b))
+
+    (defn #_"boolean" NumUtil'sameSign-2 [#_"long" a, #_"long" b]
+        (= (neg? a) (neg? b))
+    )
+)
+
+;;;
+ ; Utilities for unsigned comparisons.
+ ;;
+(about #_"UnsignedMath"
+    (defn #_"boolean" UnsignedMath'aboveThan-2i    [#_"int" a, #_"int" b] (>  (Integer'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'aboveOrEqual-2i [#_"int" a, #_"int" b] (>= (Integer'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'belowThan-2i    [#_"int" a, #_"int" b] (<  (Integer'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'belowOrEqual-2i [#_"int" a, #_"int" b] (<= (Integer'compareUnsigned a, b) 0))
+
+    (defn #_"boolean" UnsignedMath'aboveThan-2l    [#_"long" a, #_"long" b] (>  (Long'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'aboveOrEqual-2l [#_"long" a, #_"long" b] (>= (Long'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'belowThan-2l    [#_"long" a, #_"long" b] (<  (Long'compareUnsigned a, b) 0))
+    (defn #_"boolean" UnsignedMath'belowOrEqual-2l [#_"long" a, #_"long" b] (<= (Long'compareUnsigned a, b) 0))
+)
+
+;;;
+ ; Condition codes used in conditionals.
+ ;;
+(about #_"Condition"
+    (defr Condition)
+
+    (defn- #_"Condition" Condition'new-1 [#_"String" operator]
+        (new* Condition'class
+            (-/hash-map
+                #_"String" :operator operator
+            )
+        )
+    )
+
+    (def #_"Condition" Condition'EQ (Condition'new-1 "=="))   ;; equal
+    (def #_"Condition" Condition'NE (Condition'new-1 "!="))   ;; not equal
+    (def #_"Condition" Condition'LT (Condition'new-1 "<"))    ;; signed less than
+    (def #_"Condition" Condition'LE (Condition'new-1 "<="))   ;; signed less than or equal
+    (def #_"Condition" Condition'GT (Condition'new-1 ">"))    ;; signed greater than
+    (def #_"Condition" Condition'GE (Condition'new-1 ">="))   ;; signed greater than or equal
+    (def #_"Condition" Condition'AE (Condition'new-1 "|>=|")) ;; unsigned greater than or equal ("above than or equal")
+    (def #_"Condition" Condition'BE (Condition'new-1 "|<=|")) ;; unsigned less than or equal ("below than or equal")
+    (def #_"Condition" Condition'AT (Condition'new-1 "|>|"))  ;; unsigned greater than ("above than")
+    (def #_"Condition" Condition'BT (Condition'new-1 "|<|"))  ;; unsigned less than ("below than")
+
+    ;;;
+     ; Given a condition and its negation, this method returns true for one of the two and false
+     ; for the other one. This can be used to keep comparisons in a canonical form.
+     ;
+     ; @return true if this condition is considered to be the canonical form, false otherwise
+     ;;
+    #_unused
+    (defn #_"boolean" Condition''isCanonical-1 [#_"Condition" this]
+        (condp = this
+            Condition'EQ true
+            Condition'NE false
+            Condition'LT true
+            Condition'LE false
+            Condition'GT false
+            Condition'GE false
+            Condition'BT true
+            Condition'BE false
+            Condition'AT false
+            Condition'AE false
+        )
+    )
+
+    ;;;
+     ; Returns true if the condition needs to be mirrored to get to a canonical condition. The
+     ; result of the mirroring operation might still need to be negated to achieve a canonical form.
+     ;;
+    (defn- #_"boolean" Condition''canonicalMirror-1 [#_"Condition" this]
+        (condp = this
+            Condition'EQ false
+            Condition'NE false
+            Condition'LT false
+            Condition'LE true
+            Condition'GT true
+            Condition'GE false
+            Condition'BT false
+            Condition'BE true
+            Condition'AT true
+            Condition'AE false
+        )
+    )
+
+    ;;;
+     ; Returns true if the condition needs to be negated to get to a canonical condition. The result
+     ; of the negation might still need to be mirrored to achieve a canonical form.
+     ;;
+    (defn- #_"boolean" Condition''canonicalNegate-1 [#_"Condition" this]
+        (condp = this
+            Condition'EQ false
+            Condition'NE true
+            Condition'LT false
+            Condition'LE true
+            Condition'GT false
+            Condition'GE true
+            Condition'BT false
+            Condition'BE true
+            Condition'AT false
+            Condition'AE true
+        )
+    )
+
+    ;;;
+     ; Negate this conditional.
+     ;
+     ; @return the condition that represents the negation
+     ;;
+    (defn #_"Condition" Condition''negate-1 [#_"Condition" this]
+        (condp = this
+            Condition'EQ Condition'NE
+            Condition'NE Condition'EQ
+            Condition'LT Condition'GE
+            Condition'LE Condition'GT
+            Condition'GT Condition'LE
+            Condition'GE Condition'LT
+            Condition'BT Condition'AE
+            Condition'BE Condition'AT
+            Condition'AT Condition'BE
+            Condition'AE Condition'BT
+        )
+    )
+
+    #_unused
+    (defn #_"boolean" Condition''implies-2 [#_"Condition" this, #_"Condition" other]
+        (condp = this
+            other        true
+            Condition'EQ (any = other Condition'LE Condition'GE Condition'BE Condition'AE)
+            Condition'NE false
+            Condition'LT (any = other Condition'LE Condition'NE)
+            Condition'LE false
+            Condition'GT (any = other Condition'GE Condition'NE)
+            Condition'GE false
+            Condition'BT (any = other Condition'BE Condition'NE)
+            Condition'BE false
+            Condition'AT (any = other Condition'AE Condition'NE)
+            Condition'AE false
+        )
+    )
+
+    ;;;
+     ; Mirror this conditional (i.e. commute "a op b" to "b op' a")
+     ;
+     ; @return the condition representing the equivalent commuted operation
+     ;;
+    (defn #_"Condition" Condition''mirror-1 [#_"Condition" this]
+        (condp = this
+            Condition'EQ Condition'EQ
+            Condition'NE Condition'NE
+            Condition'LT Condition'GT
+            Condition'LE Condition'GE
+            Condition'GT Condition'LT
+            Condition'GE Condition'LE
+            Condition'BT Condition'AT
+            Condition'BE Condition'AE
+            Condition'AT Condition'BT
+            Condition'AE Condition'BE
+        )
+    )
+
+    ;;;
+     ; Returns true if this condition represents an unsigned comparison.
+     ; EQ and NE are not considered to be unsigned.
+     ;;
+    #_unused
+    (defn #_"boolean" Condition''isUnsigned-1 [#_"Condition" this]
+        (any = this Condition'BT Condition'BE Condition'AT Condition'AE)
+    )
+
+    ;;;
+     ; Checks if this conditional operation is commutative.
+     ;
+     ; @return true if this operation is commutative
+     ;;
+    #_unused
+    (defn #_"boolean" Condition''isCommutative-1 [#_"Condition" this]
+        (any = this Condition'EQ Condition'NE)
+    )
+
+    (defn #_"Condition" Condition''join-2 [#_"Condition" this, #_"Condition" other]
+        (condp = this
+            other this
+            Condition'EQ
+                (cond
+                    (any = other Condition'LE Condition'GE Condition'BE Condition'AE) Condition'EQ
+                )
+            Condition'NE
+                (cond
+                    (any = other Condition'LT Condition'GT Condition'BT Condition'AT) other
+                    (= other Condition'LE) Condition'LT
+                    (= other Condition'GE) Condition'GT
+                    (= other Condition'BE) Condition'BT
+                    (= other Condition'AE) Condition'AT
+                )
+            Condition'LE
+                (cond
+                    (any = other Condition'GE Condition'EQ) Condition'EQ
+                    (any = other Condition'NE Condition'LT) Condition'LT
+                )
+            Condition'LT
+                (cond
+                    (any = other Condition'NE Condition'LE) Condition'LT
+                )
+            Condition'GE
+                (cond
+                    (any = other Condition'LE Condition'EQ) Condition'EQ
+                    (any = other Condition'NE Condition'GT) Condition'GT
+                )
+            Condition'GT
+                (cond
+                    (any = other Condition'NE Condition'GE) Condition'GT
+                )
+            Condition'BE
+                (cond
+                    (any = other Condition'AE Condition'EQ) Condition'EQ
+                    (any = other Condition'NE Condition'BT) Condition'BT
+                )
+            Condition'BT
+                (cond
+                    (any = other Condition'NE Condition'BE) Condition'BT
+                )
+            Condition'AE
+                (cond
+                    (any = other Condition'BE Condition'EQ) Condition'EQ
+                    (any = other Condition'NE Condition'AT) Condition'AT
+                )
+            Condition'AT
+                (cond
+                    (any = other Condition'NE Condition'AE) Condition'AT
+                )
+        )
+    )
+
+    #_unused
+    (defn #_"Condition" Condition''meet-2 [#_"Condition" this, #_"Condition" other]
+        (condp = this
+            other this
+            Condition'EQ
+                (cond
+                    (any = other Condition'LE Condition'GE Condition'BE Condition'AE) other
+                    (= other Condition'LT) Condition'LE
+                    (= other Condition'GT) Condition'GE
+                    (= other Condition'BT) Condition'BE
+                    (= other Condition'AT) Condition'AE
+                )
+            Condition'NE
+                (cond
+                    (any = other Condition'LT Condition'GT Condition'BT Condition'AT) Condition'NE
+                )
+            Condition'LE
+                (cond
+                    (any = other Condition'EQ Condition'LT) Condition'LE
+                )
+            Condition'LT
+                (cond
+                    (any = other Condition'EQ Condition'LE) Condition'LE
+                    (any = other Condition'NE Condition'GT) Condition'NE
+                )
+            Condition'GE
+                (cond
+                    (any = other Condition'EQ Condition'GT) Condition'GE
+                )
+            Condition'GT
+                (cond
+                    (any = other Condition'EQ Condition'GE) Condition'GE
+                    (any = other Condition'NE Condition'LT) Condition'NE
+                )
+            Condition'BE
+                (cond
+                    (any = other Condition'EQ Condition'BT) Condition'BE
+                )
+            Condition'BT
+                (cond
+                    (any = other Condition'EQ Condition'BE) Condition'BE
+                    (any = other Condition'NE Condition'AT) Condition'NE
+                )
+            Condition'AE
+                (cond
+                    (any = other Condition'EQ Condition'AT) Condition'AE
+                )
+            Condition'AT
+                (cond
+                    (any = other Condition'EQ Condition'AE) Condition'AE
+                    (any = other Condition'NE Condition'BT) Condition'NE
+                )
+        )
+    )
+)
+
+;;;
+ ; Represents a target machine register.
+ ;;
+(about #_"Register"
+    (defr Register)
+
+    ;;;
+     ; Creates a {@link Register} instance.
+     ;
+     ; @param number unique identifier for the register
+     ; @param encoding the target machine encoding for the register
+     ; @param mnemonic the mnemonic name for the register
+     ;;
+    (defn #_"Register" Register'new-3 [#_"int" number, #_"int" encoding, #_"String" mnemonic]
+        (new* Register'class
+            (-/hash-map
+                ;;;
+                 ; An identifier for this register that is unique across all of the registers in this
+                 ; {@link Architecture}. A valid register has {@code number >= 0}.
+                 ;;
+                #_"int" :number number
+                ;;;
+                 ; The actual encoding in a target machine instruction for this register, which may or
+                 ; may not be the same as {@link #number}.
+                 ;;
+                #_"int" :encoding encoding
+                ;;;
+                 ; The mnemonic of this register.
+                 ;;
+                #_"String" :mnemonic mnemonic
+            )
+        )
+    )
+
+    ;;;
+     ; Determines if this is a valid register.
+     ;;
+    (defn #_"boolean" Register''isValid-1 [#_"Register" this]
+        (<= 0 (:number this))
+    )
+
+    ;;;
+     ; Sort registers in ascending order by their #numbers.
+     ;;
+    (defn- #_"int" Register''compareTo [#_"Register" this, #_"Register" that]
+        (cond (< (:number this) (:number that)) -1 (< (:number that) (:number this)) 1 :else 0)
+    )
+
+    (defm Register Comparable
+        (Comparable'''compareTo => Register''compareTo)
+    )
+)
+
+;;;
+ ; Constants and intrinsic definition for memory barriers.
+ ;
+ ; The documentation for each constant is taken from Doug Lea's
+ ; <a href="http://gee.cs.oswego.edu/dl/jmm/cookbook.html">The JSR-133 Cookbook for Compiler Writers</a>.
+ ;
+ ; The {@code JMM_*} constants capture the memory barriers necessary to implement the Java Memory
+ ; Model with respect to volatile field accesses. Their values are explained by this comment from
+ ; templateTable_i486.cpp in the HotSpot source code:
+ ;
+ ; Volatile variables demand their effects be made known to all CPU's in order. Store buffers on
+ ; most chips allow reads and writes to reorder; the JMM's ReadAfterWrite.java test fails in -Xint
+ ; mode without some kind of memory barrier (i.e., it's not sufficient that the interpreter does
+ ; not reorder volatile references, the hardware also must not reorder them).
+ ;
+ ; According to the new Java Memory Model (JMM):
+ ; (1) All volatiles are serialized wrt to each other.
+ ;
+ ; ALSO reads and writes act as acquire and release, so:
+ ; (2) A read cannot let unrelated NON-volatile memory refs that happen after the read float up to
+ ; before the read. It's OK for non-volatile memory refs that happen before the volatile read to
+ ; float down below it.
+ ; (3) Similarly, a volatile write cannot let unrelated NON-volatile memory refs that happen BEFORE
+ ; the write float down to after the write. It's OK for non-volatile memory refs that happen after
+ ; the volatile write to float up before it.
+ ;
+ ; We only put in barriers around volatile refs (they are expensive), not _between_ memory refs (which
+ ; would require us to track the flavor of the previous memory refs). Requirements (2) and (3) require
+ ; some barriers before volatile stores and after volatile loads. These nearly cover requirement (1)
+ ; but miss the volatile-store-volatile-load case. This final case is placed after volatile-stores
+ ; although it could just as well go before volatile-loads.
+ ;;
+(about #_"MemoryBarriers"
+    ;;;
+     ; The sequence {@code Load1; LoadLoad; Load2} ensures that {@code Load1}'s data are loaded before
+     ; data accessed by {@code Load2} and all subsequent load instructions are loaded. In general,
+     ; explicit {@code LoadLoad} barriers are needed on processors that perform speculative loads
+     ; and/or out-of-order processing in which waiting load instructions can bypass waiting stores.
+     ; On processors that guarantee to always preserve load ordering, these barriers amount to no-ops.
+     ;;
+    (def #_"int" MemoryBarriers'LOAD_LOAD 1)
+
+    ;;;
+     ; The sequence {@code Load1; LoadStore; Store2} ensures that {@code Load1}'s data are loaded
+     ; before all data associated with {@code Store2} and subsequent store instructions are flushed.
+     ; {@code LoadStore} barriers are needed only on those out-of-order processors in which waiting
+     ; store instructions can bypass loads.
+     ;;
+    (def #_"int" MemoryBarriers'LOAD_STORE 2)
+
+    ;;;
+     ; The sequence {@code Store1; StoreLoad; Load2} ensures that {@code Store1}'s data are made
+     ; visible to other processors (i.e., flushed to main memory) before data accessed by {@code Load2}
+     ; and all subsequent load instructions are loaded. {@code StoreLoad} barriers protect against
+     ; a subsequent load incorrectly using {@code Store1}'s data value rather than that from a more
+     ; recent store to the same location performed by a different processor.
+     ;
+     ; Because of this, on the processors discussed below, a {@code StoreLoad} is strictly necessary
+     ; only for separating stores from subsequent loads of the same location(s) as were stored
+     ; before the barrier. {@code StoreLoad} barriers are needed on nearly all recent multiprocessors,
+     ; and are usually the most expensive kind. Part of the reason they are expensive is that they
+     ; must disable mechanisms that ordinarily bypass cache to satisfy loads from write-buffers.
+     ; This might be implemented by letting the buffer fully flush, among other possible stalls.
+     ;;
+    (def #_"int" MemoryBarriers'STORE_LOAD 4)
+
+    ;;;
+     ; The sequence {@code Store1; StoreStore; Store2} ensures that {@code Store1}'s data are
+     ; visible to other processors (i.e., flushed to memory) before the data associated with
+     ; {@code Store2} and all subsequent store instructions. In general, {@code StoreStore} barriers
+     ; are needed on processors that do not otherwise guarantee strict ordering of flushes from
+     ; write buffers and/or caches to other processors or main memory.
+     ;;
+    (def #_"int" MemoryBarriers'STORE_STORE 8)
+
+    (def #_"int" MemoryBarriers'JMM_PRE_VOLATILE_WRITE  (| MemoryBarriers'LOAD_STORE MemoryBarriers'STORE_STORE))
+    (def #_"int" MemoryBarriers'JMM_POST_VOLATILE_WRITE (| MemoryBarriers'STORE_LOAD MemoryBarriers'STORE_STORE))
+    (def #_"int" MemoryBarriers'JMM_PRE_VOLATILE_READ   0)
+    (def #_"int" MemoryBarriers'JMM_POST_VOLATILE_READ  (| MemoryBarriers'LOAD_LOAD MemoryBarriers'LOAD_STORE))
+)
+
+;;;
+ ; Represents a platform-specific low-level type for values.
+ ;;
+(about #_"WordSize"
+    (def- #_"ordered {WordSize int}" WordSize'MAP
+        (-/hash-map
+            :WordSize'8bits  1
+            :WordSize'16bits 2
+            :WordSize'32bits 4
+            :WordSize'64bits 8
+        )
+    )
+
+    (defn #_"int" WordSize'inBytes-1 [#_"WordSize" size]
+        (or (get WordSize'MAP size) (throw! (str "unsupported WordSize " size)))
+    )
+)
+
+;;;
+ ; A scaling factor used in the SIB addressing mode.
+ ;;
+(about #_"Scale"
+    (defr Scale)
+
+    (defn- #_"Scale" Scale'new-2 [#_"int" value, #_"int" shift]
+        (new* Scale'class
+            (-/hash-map
+                ;;;
+                 ; The value (or multiplier) of this scale.
+                 ;;
+                #_"int" :value value
+                ;;;
+                 ; The shift (value log 2) of this scale.
+                 ;;
+                #_"int" :shift shift
+            )
+        )
+    )
+
+    (def #_"Scale" Scale'Times1 (Scale'new-2 1, 0))
+    (def #_"Scale" Scale'Times2 (Scale'new-2 2, 1))
+    (def #_"Scale" Scale'Times4 (Scale'new-2 4, 2))
+    (def #_"Scale" Scale'Times8 (Scale'new-2 8, 3))
+
+    (defn #_"Scale" Scale'fromInt-1   [#_"int" scale] (case! scale 1 Scale'Times1 2 Scale'Times2 4 Scale'Times4 8 Scale'Times8 nil))
+    (defn #_"Scale" Scale'fromShift-1 [#_"int" shift] (case! shift 0 Scale'Times1 1 Scale'Times2 2 Scale'Times4 3 Scale'Times8 nil))
+)
+
+;;;
+ ; Represents the AMD64 architecture.
+ ;;
+(about #_"AMD64"
+    ;;;
+     ; General purpose CPU registers.
+     ;;
+    (def #_"Register" AMD64'rax (Register'new-3 0, 0, "rax"))
+    (def #_"Register" AMD64'rcx (Register'new-3 1, 1, "rcx"))
+    (def #_"Register" AMD64'rdx (Register'new-3 2, 2, "rdx"))
+    (def #_"Register" AMD64'rbx (Register'new-3 3, 3, "rbx"))
+    (def #_"Register" AMD64'rsp (Register'new-3 4, 4, "rsp"))
+    (def #_"Register" AMD64'rbp (Register'new-3 5, 5, "rbp"))
+    (def #_"Register" AMD64'rsi (Register'new-3 6, 6, "rsi"))
+    (def #_"Register" AMD64'rdi (Register'new-3 7, 7, "rdi"))
+
+    (def #_"Register" AMD64'r8  (Register'new-3 8,  8,  "r8"))
+    (def #_"Register" AMD64'r9  (Register'new-3 9,  9,  "r9"))
+    (def #_"Register" AMD64'r10 (Register'new-3 10, 10, "r10"))
+    (def #_"Register" AMD64'r11 (Register'new-3 11, 11, "r11"))
+    (def #_"Register" AMD64'r12 (Register'new-3 12, 12, "r12"))
+    (def #_"Register" AMD64'r13 (Register'new-3 13, 13, "r13"))
+    (def #_"Register" AMD64'r14 (Register'new-3 14, 14, "r14"))
+    (def #_"Register" AMD64'r15 (Register'new-3 15, 15, "r15"))
+
+    ;;;
+     ; Register used to construct an instruction-relative address.
+     ;;
+    (def #_"Register" AMD64'rip (Register'new-3 16, -1, "rip"))
+
+    ;;;
+     ; Array of all available registers on this architecture. The index of each register in this array
+     ; is equal to its {@linkplain Register#number number}.
+     ;;
+    (def #_"[Register]" AMD64'registers
+        [
+            AMD64'rax, AMD64'rcx, AMD64'rdx, AMD64'rbx, AMD64'rsp, AMD64'rbp, AMD64'rsi, AMD64'rdi,
+            AMD64'r8, AMD64'r9, AMD64'r10, AMD64'r11, AMD64'r12, AMD64'r13, AMD64'r14, AMD64'r15,
+            AMD64'rip
+        ]
+    )
+
+    (defn #_"Register*" AMD64'valueRegisters-0 [] (remove #(= % AMD64'rip) AMD64'registers))
+
+    ;;;
+     ; The architecture specific size of a native word.
+     ;;
+    (def #_"WordSize" AMD64'wordSize :WordSize'64bits)
+
+    ;;;
+     ; Return the largest kind that can be stored in a register.
+     ;;
+    (def #_"WordSize" AMD64'largestStorable :WordSize'64bits)
+
+    ;;;
+     ; The byte ordering can be either little or big endian.
+     ;;
+    (def #_"ByteOrder" AMD64'byteOrder ByteOrder'LITTLE_ENDIAN)
+
+    ;;;
+     ; Whether the architecture supports unaligned memory accesses.
+     ;;
+    (def #_"boolean" AMD64'unalignedMemoryAccess true)
+
+    ;;;
+     ; Mask of the barrier constants denoting the barriers that are not required to be explicitly
+     ; inserted under this architecture.
+     ;;
+    (def #_"int" AMD64'implicitMemoryBarriers (| (| MemoryBarriers'LOAD_LOAD MemoryBarriers'LOAD_STORE) MemoryBarriers'STORE_STORE))
+
+    ;;;
+     ; Determines the barriers in a given barrier mask that are explicitly required on this architecture.
+     ;
+     ; @param barriers a mask of the barrier constants
+     ; @return the value of {@code barriers} minus the barriers unnecessary on this architecture
+     ;;
+    (defn #_"int" AMD64'requiredBarriers-1 [#_"int" barriers] (& barriers (bit-not AMD64'implicitMemoryBarriers)))
+
+    ;;;
+     ; Offset in bytes from the beginning of a call instruction to the displacement.
+     ;;
+    (def #_"int" AMD64'machineCodeCallDisplacementOffset 1)
+
+    ;;;
+     ; The size of the return address pushed to the stack by a call instruction. A value of 0
+     ; denotes that call linkage uses registers instead (e.g. SPARC).
+     ;;
+    (def #_"int" AMD64'returnAddressSize 8)
+
+    ;;;
+     ; Specifies if this is a multi-processor system.
+     ;;
+    (def #_"boolean" AMD64'isMP true)
+
+    ;;;
+     ; Specifies if this target supports encoding objects inline in the machine code.
+     ;;
+    (def #_"boolean" AMD64'inlineObjects true)
+
+    ;;;
+     ; The stack alignment requirement of the platform.
+     ;;
+    (def #_"int" AMD64'stackAlignment 16)
+
+    ;;;
+     ; Maximum constant displacement at which a memory access can no longer be an implicit null check.
+     ;;
+    (def #_"int" AMD64'implicitNullCheckLimit 4096)
+)
+
+;;;
+ ; Represents an address in target machine memory, specified via some combination of a base
+ ; register, an index register, a displacement and a scale. Note that the base and index registers
+ ; may be a variable that will get a register assigned later by the register allocator.
+ ;;
+(about #_"AMD64Address"
+    (defr AMD64Address)
+
+    ;;;
+     ; Creates an AMD64Address with given base and index registers, scaling and displacement.
+     ;;
+    (defn #_"AMD64Address" AMD64Address'new
+        ([#_"Register" base] (AMD64Address'new base, nil, Scale'Times1, 0))
+        ([#_"Register" base, #_"int" displacement] (AMD64Address'new base, nil, Scale'Times1, displacement))
+        ([#_"Register" base, #_"Register" index, #_"Scale" scale] (AMD64Address'new base, index, scale, 0))
+        ([#_"Register" base, #_"Register" index, #_"Scale" scale, #_"int" displacement]
+            (new* AMD64Address'class
+                (-/hash-map
+                    ;;;
+                     ; Base register that defines the start of the address computation.
+                     ;;
+                    #_"Register" :base base
+                    ;;;
+                     ; Index register, the value of which (possibly scaled by #getScale) is added to #getBase.
+                     ;;
+                    #_"Register" :index index
+                    ;;;
+                     ; Scaling factor for indexing, dependent on target operand size.
+                     ;;
+                    #_"Scale" :scale scale
+                    ;;;
+                     ; Optional additive displacement.
+                     ;;
+                    #_"int" :displacement displacement
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; A register configuration binds roles and attributes to physical registers.
+ ;;
+(about #_"RegisterConfig"
+    ;;;
+     ; The register used as the frame pointer. Spill slots and outgoing stack-based arguments
+     ; are addressed relative to this register.
+     ;;
+    (def #_"Register" RegisterConfig'frameRegister AMD64'rsp)
+
+    ;;;
+     ; The register to be used for returning a value.
+     ;;
+    (def #_"Register" RegisterConfig'returnRegister AMD64'rax)
+
+    ;;;
+     ; The set of registers that might be used by the register allocator.
+     ;
+     ; To get the set of registers the register allocator is allowed to use see
+     ; {@link RegisterAllocationConfig#getAllocatableRegisters()}.
+     ;;
+    (def #_"{Register}" RegisterConfig'allocatableRegisters
+        ;; omit reserved registers ;; omit heap base register
+        (set (remove #(or (contains? #{ AMD64'rsp, AMD64'r15 } %) (and HotSpot'useCompressedOops (= % AMD64'r12))) (§ soon AMD64'valueRegisters-0)))
+    )
+
+    ;;;
+     ; Filters a set of registers and returns only those that can be used by the register allocator
+     ; for a value of a particular size.
+     ;;
+    (defn #_"Register*" RegisterConfig'filterAllocatableRegisters-2 [#_"Register*" registers, #_"WordSize" size]
+        registers
+    )
+
+    (def- #_"[Register]" RegisterConfig'javaParameters   [ AMD64'rsi, AMD64'rdx, AMD64'rcx, AMD64'r8, AMD64'r9, AMD64'rdi ])
+    (def- #_"[Register]" RegisterConfig'nativeParameters [ AMD64'rdi, AMD64'rsi, AMD64'rdx, AMD64'rcx, AMD64'r8, AMD64'r9 ])
+
+    ;;;
+     ; The set of registers whose values must be preserved by a method across any call it makes.
+     ;
+     ; The caller saved registers always include all parameter registers.
+     ;;
+    (def #_"{Register}" RegisterConfig'callerSaveRegisters
+        (set (concat RegisterConfig'allocatableRegisters RegisterConfig'javaParameters RegisterConfig'nativeParameters))
+    )
+
+    ;;;
+     ; The set of registers whose values must be preserved by the callee.
+     ;;
+    #_unused
+    (def #_"{Register}" RegisterConfig'calleeSaveRegisters nil)
+
+    ;;;
+     ; Determines if all {@link #getAllocatableRegisters() allocatable} registers are
+     ; {@link #getCallerSaveRegisters() caller saved}.
+     ;;
+    (def #_"boolean" RegisterConfig'areAllAllocatableRegistersCallerSaved true)
+)
+
+;;;
+ ; The x86 condition codes used for conditional jumps/moves.
+ ;;
+(about #_"ConditionFlag"
+    (defr ConditionFlag)
+
+    (defn- #_"ConditionFlag" ConditionFlag'new-2 [#_"int" value, #_"String" operator]
+        (new* ConditionFlag'class
+            (-/hash-map
+                #_"int" :value value
+                #_"String" :operator operator
+            )
+        )
+    )
+
+    (def #_"ConditionFlag" ConditionFlag'Zero         (ConditionFlag'new-2 0x4, "|zero|"))
+    (def #_"ConditionFlag" ConditionFlag'NotZero      (ConditionFlag'new-2 0x5, "|nzero|"))
+    (def #_"ConditionFlag" ConditionFlag'Equal        (ConditionFlag'new-2 0x4, "="))
+    (def #_"ConditionFlag" ConditionFlag'NotEqual     (ConditionFlag'new-2 0x5, "!="))
+    (def #_"ConditionFlag" ConditionFlag'Less         (ConditionFlag'new-2 0xc, "<"))
+    (def #_"ConditionFlag" ConditionFlag'LessEqual    (ConditionFlag'new-2 0xe, "<="))
+    (def #_"ConditionFlag" ConditionFlag'Greater      (ConditionFlag'new-2 0xf, ">"))
+    (def #_"ConditionFlag" ConditionFlag'GreaterEqual (ConditionFlag'new-2 0xd, ">="))
+    (def #_"ConditionFlag" ConditionFlag'Below        (ConditionFlag'new-2 0x2, "|<|"))
+    (def #_"ConditionFlag" ConditionFlag'BelowEqual   (ConditionFlag'new-2 0x6, "|<=|"))
+    (def #_"ConditionFlag" ConditionFlag'Above        (ConditionFlag'new-2 0x7, "|>|"))
+    (def #_"ConditionFlag" ConditionFlag'AboveEqual   (ConditionFlag'new-2 0x3, "|>=|"))
+    (def #_"ConditionFlag" ConditionFlag'Overflow     (ConditionFlag'new-2 0x0, "|of|"))
+    (def #_"ConditionFlag" ConditionFlag'NoOverflow   (ConditionFlag'new-2 0x1, "|nof|"))
+    (def #_"ConditionFlag" ConditionFlag'CarrySet     (ConditionFlag'new-2 0x2, "|carry|"))
+    (def #_"ConditionFlag" ConditionFlag'CarryClear   (ConditionFlag'new-2 0x3, "|ncarry|"))
+    (def #_"ConditionFlag" ConditionFlag'Negative     (ConditionFlag'new-2 0x8, "|neg|"))
+    (def #_"ConditionFlag" ConditionFlag'Positive     (ConditionFlag'new-2 0x9, "|pos|"))
+    (def #_"ConditionFlag" ConditionFlag'Parity       (ConditionFlag'new-2 0xa, "|par|"))
+    (def #_"ConditionFlag" ConditionFlag'NoParity     (ConditionFlag'new-2 0xb, "|npar|"))
+
+    (defn #_"ConditionFlag" ConditionFlag''negate-1 [#_"ConditionFlag" this]
+        (condp = this
+            ConditionFlag'Zero         ConditionFlag'NotZero
+            ConditionFlag'NotZero      ConditionFlag'Zero
+            ConditionFlag'Equal        ConditionFlag'NotEqual
+            ConditionFlag'NotEqual     ConditionFlag'Equal
+            ConditionFlag'Less         ConditionFlag'GreaterEqual
+            ConditionFlag'LessEqual    ConditionFlag'Greater
+            ConditionFlag'Greater      ConditionFlag'LessEqual
+            ConditionFlag'GreaterEqual ConditionFlag'Less
+            ConditionFlag'Below        ConditionFlag'AboveEqual
+            ConditionFlag'BelowEqual   ConditionFlag'Above
+            ConditionFlag'Above        ConditionFlag'BelowEqual
+            ConditionFlag'AboveEqual   ConditionFlag'Below
+            ConditionFlag'Overflow     ConditionFlag'NoOverflow
+            ConditionFlag'NoOverflow   ConditionFlag'Overflow
+            ConditionFlag'CarrySet     ConditionFlag'CarryClear
+            ConditionFlag'CarryClear   ConditionFlag'CarrySet
+            ConditionFlag'Negative     ConditionFlag'Positive
+            ConditionFlag'Positive     ConditionFlag'Negative
+            ConditionFlag'Parity       ConditionFlag'NoParity
+            ConditionFlag'NoParity     ConditionFlag'Parity
+        )
+    )
+)
+
+;;;
+ ; Constants for X86 prefix bytes.
+ ;;
+(about #_"Prefix"
+    (def #_"int" Prefix'REX     0x40)
+    (def #_"int" Prefix'REXB    0x41)
+    (def #_"int" Prefix'REXX    0x42)
+    (def #_"int" Prefix'REXXB   0x43)
+    (def #_"int" Prefix'REXR    0x44)
+    (def #_"int" Prefix'REXRB   0x45)
+    (def #_"int" Prefix'REXRX   0x46)
+    (def #_"int" Prefix'REXRXB  0x47)
+    (def #_"int" Prefix'REXW    0x48)
+    (def #_"int" Prefix'REXWB   0x49)
+    (def #_"int" Prefix'REXWX   0x4a)
+    (def #_"int" Prefix'REXWXB  0x4b)
+    (def #_"int" Prefix'REXWR   0x4c)
+    (def #_"int" Prefix'REXWRB  0x4d)
+    (def #_"int" Prefix'REXWRX  0x4e)
+    (def #_"int" Prefix'REXWRXB 0x4f)
+)
+
+(about #_"CodeBuffer"
+    (defr CodeBuffer)
+
+    (def- #_"int" CodeBuffer'InitialSize 232)
+
+    (defn #_"CodeBuffer" CodeBuffer'new-1 [#_"ByteOrder" order]
+        (let [
+            #_"CodeBuffer" this
+                (new* CodeBuffer'class
+                    (-/hash-map
+                        #_"ByteBuffer" :data (ByteBuffer'allocate CodeBuffer'InitialSize)
+                    )
+                )
+        ]
+            (ByteBuffer''order (:data this), order)
+            this
+        )
+    )
+
+    (defn #_"int" CodeBuffer''position-1 [#_"CodeBuffer" this]
+        (ByteBuffer''position (:data this))
+    )
+
+    (defn- #_"this" CodeBuffer''ensureSize-2 [#_"CodeBuffer" this, #_"int" n]
+        (when (<= (ByteBuffer''limit (:data this)) n) => this
+            (let [
+                #_"ByteBuffer" data (ByteBuffer'wrap (Arrays'copyOf (ByteBuffer''array (:data this)), (<< n 2)))
+            ]
+                (ByteBuffer''order data, (ByteBuffer''order (:data this)))
+                (ByteBuffer''position data, (ByteBuffer''position (:data this)))
+                (assoc this :data data)
+            )
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitByte-2 [#_"CodeBuffer" this, #_"int" b]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 1))
+        ]
+            (ByteBuffer''put (:data this), (byte (& b 0xff)))
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitShort-2 [#_"CodeBuffer" this, #_"int" b]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 2))
+        ]
+            (ByteBuffer''putShort (:data this), (short b))
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitInt-2 [#_"CodeBuffer" this, #_"int" b]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 4))
+        ]
+            (ByteBuffer''putInt (:data this), b)
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitLong-2 [#_"CodeBuffer" this, #_"long" b]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 8))
+        ]
+            (ByteBuffer''putLong (:data this), b)
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitByte-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ i 1))
+        ]
+            (ByteBuffer''put (:data this), i, (byte (& b 0xff)))
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitShort-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ i 2))
+        ]
+            (ByteBuffer''putShort (:data this), i, (short b))
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitInt-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ i 4))
+        ]
+            (ByteBuffer''putInt (:data this), i, b)
+            this
+        )
+    )
+
+    (defn #_"this" CodeBuffer''emitLong-3 [#_"CodeBuffer" this, #_"long" b, #_"int" i]
+        (let [
+            this (CodeBuffer''ensureSize-2 this, (+ i 8))
+        ]
+            (ByteBuffer''putLong (:data this), i, b)
+            this
+        )
+    )
+
+    (defn #_"int" CodeBuffer''getByte-2 [#_"CodeBuffer" this, #_"int" i]
+        (let [
+            #_"int" b (ByteBuffer''get (:data this), i)
+        ]
+            (& b 0xff)
+        )
+    )
+
+    (defn #_"int" CodeBuffer''getShort-2 [#_"CodeBuffer" this, #_"int" i]
+        (let [
+            #_"short" s (ByteBuffer''getShort (:data this), i)
+        ]
+            (& s 0xffff)
+        )
+    )
+
+    (defn #_"int" CodeBuffer''getInt-2 [#_"CodeBuffer" this, #_"int" i]
+        (ByteBuffer''getInt (:data this), i)
+    )
+
+    ;;;
+     ; Closes this buffer. Any further operations on a closed buffer will result in a NullPointerException.
+     ;;
+    (defn #_"[byte]" CodeBuffer''close-1 [#_"CodeBuffer" this]
+        (let [
+            #_"[byte]" a (vec (ByteBuffer''array (:data this)))
+            _ (§ ass! this (assoc this :data nil))
+        ]
+            a
+        )
+    )
+)
+
+;;;
+ ; This class represents a label within assembly code.
+ ;;
+(about #_"Label"
+    (defr Label)
+
+    (defn #_"Label" Label'new-0 []
+        (new* Label'class
+            (-/hash-map
+                #_"int" :position -1
+                ;;;
+                 ; References to instructions that jump to this unresolved label. These instructions need to be
+                 ; patched when the label is bound using the #patchInstructions(Assembler) method.
+                 ;;
+                #_"int*" :patchPositions nil
+            )
+        )
+    )
+
+    ;;;
+     ; Binds the label to the specified position.
+     ;;
+    (defn #_"this" Label''bind-2 [#_"Label" this, #_"int" pos]
+        (assoc this :position pos)
+    )
+
+    (defn #_"boolean" Label''isBound-1 [#_"Label" this]
+        (< -1 (:position this))
+    )
+
+    (defn #_"this" Label''addPatchAt-2 [#_"Label" this, #_"int" pos]
+        (update this :patchPositions conj' pos)
+    )
+
+    (declare Assembler''patchJumpTarget-3)
+
+    (defn #_"Assembler" Label''patchInstructions-2 [#_"Label" this, #_"Assembler" asm]
+        (reduce #(Assembler''patchJumpTarget-3 %1, %2, (:position this)) asm (:patchPositions this))
+    )
+)
+
+(about #_"HotSpot"
+    ;;;
+     ; Special registers reserved by HotSpot for frequently used values.
+     ;;
+    (def #_"Register" HotSpot'threadRegister       AMD64'r15)
+    (def #_"Register" HotSpot'heapBaseRegister     AMD64'r12)
+    (def #_"Register" HotSpot'stackPointerRegister AMD64'rsp)
+)
+
+(about #_"GraalOptions"
+    (def #_"boolean" GraalOptions'canOmitFrame true)
+    (def #_"boolean" GraalOptions'zapStackOnMethodEntry false)
+)
+
+;;;
+ ; Represents the output from compiling a method, including the compiled machine code, associated
+ ; data and references, relocation information, deoptimization information, etc.
+ ;;
+(about #_"CompilationResult"
+    (defr CompilationResult)
+
+    (defn #_"CompilationResult" CompilationResult'new-1 [#_"int" totalFrameSize]
+        (new* CompilationResult'class
+            (-/hash-map
+                #_"boolean" :closed false
+                #_"[Mark]" :marks []
+                ;;;
+                 ; Total frame size in bytes. This includes the return address pushed onto the stack, if any.
+                 ;;
+                #_"int" :totalFrameSize totalFrameSize
+                ;;;
+                 ; The buffer containing the emitted machine code.
+                 ;;
+                #_"[byte]" :targetCode nil
+                ;;;
+                 ; The leading number of bytes in #targetCode containing the emitted machine code.
+                 ;;
+                #_"int" :targetCodeSize 0
+            )
+        )
+    )
+
+    (defn- #_"void" CompilationResult''checkOpen-1 [#_"CompilationResult" this]
+        (when (:closed this)
+            (throw! "the closet is closed")
+        )
+        nil
+    )
+
+    ;;;
+     ; Records an instruction mark within this method.
+     ;
+     ; @param at the position in the code that is covered by the handler
+     ; @param id the identifier for this mark
+     ;;
+    (defn #_"Mark" CompilationResult''recordMark-3 [#_"CompilationResult" this, #_"int" at, #_"Object" id]
+        (CompilationResult''checkOpen-1 this)
+        (let [
+            #_"Mark" mark (Mark'new at, id)
+            _ (§ ass! this (update this :marks conj' mark))
+        ]
+            mark
+        )
+    )
+
+    ;;;
+     ; Sets the machine that has been generated by the compiler.
+     ;
+     ; @param code the machine code generated
+     ; @param size the size of the machine code
+     ;;
+    (defn #_"this" CompilationResult''setTargetCode-3 [#_"CompilationResult" this, #_"[byte]" code, #_"int" size]
+        (CompilationResult''checkOpen-1 this)
+        (assoc this :targetCode code :targetCodeSize size)
+    )
+
+    ;;;
+     ; Closes this compilation result to future updates.
+     ;;
+    (defn #_"this" CompilationResult''close-1 [#_"CompilationResult" this]
+        (CompilationResult''checkOpen-1 this)
+        (assoc this :closed true)
+    )
+)
+
+(about #_"Compiler"
+    (declare Assembler''movl-3ar)
+
+    (defn #_"Assembler" Compiler'emitStackOverflowCheck-1 [#_"Assembler" asm]
+        (when HotSpot'useStackBanging => asm
+            ;; Each code entry causes one stack bang n pages down the stack where n is configurable
+            ;; by StackShadowPages. The setting depends on the maximum depth of VM call stack or native
+            ;; before going back into java code, since only java code can raise a stack overflow exception
+            ;; using the stack banging mechanism. The VM and native code does not detect stack overflow.
+            ;; The code in JavaCalls::call() checks that there is at least n pages available, so all
+            ;; entry code needs to do is bang once for the end of this shadow zone.
+            ;; The entry code may need to bang additional pages if the framesize is greater than a page.
+            (let [
+                #_"int" end (NumUtil'roundUp-2 (* HotSpot'stackShadowPages 4 NumUtil'K), HotSpot'vmPageSize)
+                ;; This is how far the previous frame's stack banging extended.
+                #_"int" frameSize (:frameSize (:frameMap asm))
+                #_"int" end' (if (< HotSpot'vmPageSize frameSize) (+ end frameSize) end)
+            ]
+                (loop-when-recur [asm asm #_"int" i end]
+                                 (<= i end')
+                                 ;; Need at least one stack bang at end of shadow zone.
+                                 [(Assembler''movl-3ar asm, (AMD64Address'new AMD64'rsp, (- i)), AMD64'rax) (+ i HotSpot'vmPageSize)]
+                              => asm
+                )
+            )
+        )
+    )
+)
+
+;;;
+ ; Code for managing a method's native frame.
+ ; Emits code at the verified entry point and return point(s) of a method.
+ ;;
+(about #_"FrameContext"
+    (defr FrameContext)
+
+    ;;;
+     ; The size of the instruction used to patch the verified entry point of an nmethod when the
+     ; nmethod is made non-entrant or a zombie (e.g. during deopt or class unloading). The first
+     ; instruction emitted at an nmethod's verified entry point must be at least this length to
+     ; ensure mt-safe patching.
+     ;;
+    (def #_"int" FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE 5)
+
+    (defn #_"FrameContext" FrameContext'new-1 [#_"boolean" omitFrame]
+        (new* FrameContext'class
+            (-/hash-map
+                #_"boolean" :omitFrame omitFrame
+            )
+        )
+    )
+
+    (declare Assembler''nop)
+    (declare Assembler''position-1)
+    (declare Assembler''subqWide-3)
+    (declare Assembler''decrementq-3r)
+    (declare Assembler''movl-3ai)
+
+    ;;;
+     ; Emits code common to all entry points of a method. This may include:
+     ;
+     ; - setting up the stack frame
+     ; - saving callee-saved registers
+     ; - stack overflow checking
+     ;;
+    (defn #_"Assembler" FrameContext''enter-2 [#_"FrameContext" this, #_"Assembler" asm]
+        (if (:omitFrame this)
+            (Assembler''nop asm, FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE)
+            (let [
+                #_"int" verifiedEntryPosition (Assembler''position-1 asm)
+                #_"int" frameSize (:frameSize (:frameMap asm))
+                asm (Compiler'emitStackOverflowCheck-1 asm)
+                asm
+                    (if (= (Assembler''position-1 asm) verifiedEntryPosition)
+                        (Assembler''subqWide-3 asm, AMD64'rsp, frameSize)
+                        (Assembler''decrementq-3r asm, AMD64'rsp, frameSize)
+                    )
+            ]
+                (when GraalOptions'zapStackOnMethodEntry => asm
+                    (let [
+                        #_"int" intSize 4
+                    ]
+                        (reduce #(Assembler''movl-3ai %1, (AMD64Address'new AMD64'rsp, (* %2 intSize)), 0xc1c1c1c1) asm (range (quot frameSize intSize)))
+                    )
+                )
+            )
+        )
+    )
+
+    (declare Assembler''incrementq-3r)
+
+    ;;;
+     ; Emits code to be executed just prior to returning from a method. This may include:
+     ;
+     ; - restoring callee-saved registers
+     ; - performing a safepoint
+     ; - destroying the stack frame
+     ;;
+    (defn #_"Assembler" FrameContext''leave-2 [#_"FrameContext" this, #_"Assembler" asm]
+        (when-not (:omitFrame this) => asm
+            (Assembler''incrementq-3r asm, AMD64'rsp, (:frameSize (:frameMap asm)))
+        )
+    )
+)
+
+(about #_"Assembler"
+    (defr Assembler)
+
+    (def- #_"boolean" Assembler'UseIncDec true)
+
+    (def- #_"int" Assembler'MinEncodingNeedsRex 8)
+
+    (defn #_"Assembler" Assembler'new [#_"FrameMap" frameMap]
+        (let [
+            #_"Assembler" this
+                (new* Assembler'class
+                    (-/hash-map
+                        #_"FrameMap" :frameMap frameMap
+                        #_"FrameContext" :frameContext nil
+                        #_"CompilationResult" :compilationResult nil
+                        #_"CodeBuffer" :codeBuffer (CodeBuffer'new-1 AMD64'byteOrder)
+                    )
+                )
+            ;; Omit the frame if the method:
+            ;; - has no spill slots or other slots allocated during register allocation
+            ;; - has no callee-saved registers
+            ;; - has no incoming arguments passed on the stack
+            ;; - has no deoptimization points
+            ;; - makes no foreign calls (which require an aligned stack)
+            #_"boolean" omit-frame? true
+                #_(and GraalOptions'canOmitFrame
+                    (not (FrameMap''frameNeedsAllocating-1 frameMap))
+                    (not (:hasArgInCallerFrame (:lir res)))
+                    (not (:hasForeignCall res))
+                )
+            this (assoc this :frameContext (FrameContext'new-1 omit-frame?))
+            this (assoc this :compilationResult (CompilationResult'new-1 (ß FrameMap''totalFrameSize-1 frameMap)))
+        ]
+            this
+        )
+    )
+
+    ;;;
+     ; Returns the current position of the underlying code buffer.
+     ;;
+    (defn #_"int" Assembler''position-1 [#_"Assembler" this]
+        (CodeBuffer''position-1 (:codeBuffer this))
+    )
+
+    (defn #_"this" Assembler''emitByte-2 [#_"Assembler" this, #_"int" x]
+        (update this :codeBuffer CodeBuffer''emitByte-2 x)
+    )
+
+    (defn #_"this" Assembler''emitShort-2 [#_"Assembler" this, #_"int" x]
+        (update this :codeBuffer CodeBuffer''emitShort-2 x)
+    )
+
+    (defn #_"this" Assembler''emitInt-2 [#_"Assembler" this, #_"int" x]
+        (update this :codeBuffer CodeBuffer''emitInt-2 x)
+    )
+
+    (defn #_"this" Assembler''emitLong-2 [#_"Assembler" this, #_"long" x]
+        (update this :codeBuffer CodeBuffer''emitLong-2 x)
+    )
+
+    (defn #_"this" Assembler''emitByte-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
+        (update this :codeBuffer CodeBuffer''emitByte-3 b, pos)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''emitShort-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
+        (update this :codeBuffer CodeBuffer''emitShort-3 b, pos)
+    )
+
+    (defn #_"this" Assembler''emitInt-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
+        (update this :codeBuffer CodeBuffer''emitInt-3 b, pos)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''emitLong-3 [#_"Assembler" this, #_"long" b, #_"int" pos]
+        (update this :codeBuffer CodeBuffer''emitLong-3 b, pos)
+    )
+
+    (defn #_"int" Assembler''getByte-2 [#_"Assembler" this, #_"int" pos]
+        (CodeBuffer''getByte-2 (:codeBuffer this), pos)
+    )
+
+    (defn #_"int" Assembler''getShort-2 [#_"Assembler" this, #_"int" pos]
+        (CodeBuffer''getShort-2 (:codeBuffer this), pos)
+    )
+
+    #_unused
+    (defn #_"int" Assembler''getInt-2 [#_"Assembler" this, #_"int" pos]
+        (CodeBuffer''getInt-2 (:codeBuffer this), pos)
+    )
+
+    ;;;
+     ; Closes this assembler. No extra data can be written to this assembler after this call.
+     ;;
+    (defn #_"[byte]" Assembler''close-1 [#_"Assembler" this]
+        (CodeBuffer''close-1 (:codeBuffer this))
+    )
+
+    (defn #_"this" Assembler''bind-2 [#_"Assembler" this, #_"Label" l]
+        (let [
+            _ (§ ass! l (Label''bind-2 l, (Assembler''position-1 this)))
+        ]
+            (Label''patchInstructions-2 l, this)
+        )
+    )
+
+    (defn- #_"int" Assembler'encode-1 [#_"Register" reg]
+        (& (:encoding reg) 0x7)
+    )
+
+    ;;;
+     ; Get RXB bits for register-register instruction. In that encoding, ModRM.rm contains a register index.
+     ; The R bit extends the ModRM.reg field and the B bit extends the ModRM.rm field. The X bit must be 0.
+     ;;
+    (defn #_"int" Assembler'getRXB-2rr [#_"Register" reg, #_"Register" rm]
+        (| (>> (if (nil? reg) 0 (& (:encoding reg) 0x08)) 1) (>> (if (nil? rm) 0 (& (:encoding rm) 0x08)) 3))
+    )
+
+    ;;;
+     ; Get RXB bits for register-memory instruction. The R bit extends the ModRM.reg field.
+     ; There are two cases for the memory operand:
+     ; ModRM.rm contains the base register: In that case, B extends the ModRM.rm field and X = 0.
+     ;
+     ; There is an SIB byte: In that case, X extends SIB.index and B extends SIB.base.
+     ;;
+    (defn #_"int" Assembler'getRXB-2ra [#_"Register" reg, #_"AMD64Address" rm]
+        (let [
+            #_"int" rxb (>> (if (nil? reg) 0 (& (:encoding reg) 0x08)) 1)
+            rxb
+                (when (some? (:index rm)) => rxb
+                    (| rxb (>> (& (:encoding (:index rm)) 0x08) 2))
+                )
+            rxb
+                (when (some? (:base rm)) => rxb
+                    (| rxb (>> (& (:encoding (:base rm)) 0x08) 3))
+                )
+        ]
+            rxb
+        )
+    )
+
+    ;;;
+     ; Emit the ModR/M byte for one register operand and an opcode extension in the R field.
+     ;
+     ; Format: [ 11 reg r/m ]
+     ;;
+    (defn #_"this" Assembler''emitModRM-3ir [#_"Assembler" this, #_"int" reg, #_"Register" rm]
+        (Assembler''emitByte-2 this, (| 0xc0 (<< reg 3) (& (:encoding rm) 0x07)))
+    )
+
+    ;;;
+     ; Emit the ModR/M byte for two register operands.
+     ;
+     ; Format: [ 11 reg r/m ]
+     ;;
+    (defn #_"this" Assembler''emitModRM-3rr [#_"Assembler" this, #_"Register" reg, #_"Register" rm]
+        (Assembler''emitModRM-3ir this, (& (:encoding reg) 0x07), rm)
+    )
+
+    ;;;
+     ; Emits the ModR/M byte and optionally the SIB byte for one memory operand and an opcode
+     ; extension in the R field.
+     ;
+     ; @param force4Byte use 4 byte encoding for displacements that would normally fit in a byte
+     ; @param additionalInstructionSize the number of bytes that will be emitted after the operand,
+     ;            so that the start position of the next instruction can be computed even though
+     ;            this instruction has not been completely emitted yet.
+     ;;
+    (defn #_"this" Assembler''emitOperand-5i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
+        (let [
+            #_"int" regenc (<< reg 3)
+            #_"Register" base (:base addr)
+            #_"Register" index (:index addr)
+            #_"Scale" scale (:scale addr)
+            #_"int" disp (:displacement addr)
+        ]
+            (cond
+                (= base AMD64'rip) ;; also matches addresses returned by getPlaceholder()
+                    (-> this ;; [00 000 101] disp32
+                        (Assembler''emitByte-2 (| 0x05 regenc))
+                        (Assembler''emitInt-2 disp)
+                    )
+                (Register''isValid-1 base)
+                    (let [
+                        #_"int" baseenc (Assembler'encode-1 base)
+                    ]
+                        (cond
+                            (Register''isValid-1 index)
+                                (let [
+                                    #_"int" indexenc (<< (Assembler'encode-1 index) 3)
+                                ]
+                                    ;; [base + indexscale + disp]
+                                    (cond
+                                        (and (zero? disp) (not (= base AMD64'rbp)) (not (= base AMD64'r13)))
+                                            (-> this ;; [base + indexscale] ;; [00 reg 100][ss index base]
+                                                (Assembler''emitByte-2 (| 0x04 regenc))
+                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
+                                            )
+                                        (and (NumUtil'isByte-1 disp) (not force4Byte))
+                                            (-> this ;; [base + indexscale + imm8] ;; [01 reg 100][ss index base] imm8
+                                                (Assembler''emitByte-2 (| 0x44 regenc))
+                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
+                                                (Assembler''emitByte-2 (& disp 0xff))
+                                            )
+                                        :else
+                                            (-> this ;; [base + indexscale + disp32] ;; [10 reg 100][ss index base] disp32
+                                                (Assembler''emitByte-2 (| 0x84 regenc))
+                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
+                                                (Assembler''emitInt-2 disp)
+                                            )
+                                    )
+                                )
+                            (any = base AMD64'rsp AMD64'r12)
+                                ;; [rsp + disp]
+                                (cond
+                                    (zero? disp)
+                                        (-> this ;; [rsp] ;; [00 reg 100][00 100 100]
+                                            (Assembler''emitByte-2 (| 0x04 regenc))
+                                            (Assembler''emitByte-2 0x24)
+                                        )
+                                    (and (NumUtil'isByte-1 disp) (not force4Byte))
+                                        (-> this ;; [rsp + imm8] ;; [01 reg 100][00 100 100] disp8
+                                            (Assembler''emitByte-2 (| 0x44 regenc))
+                                            (Assembler''emitByte-2 0x24)
+                                            (Assembler''emitByte-2 (& disp 0xff))
+                                        )
+                                    :else
+                                        (-> this ;; [rsp + imm32] ;; [10 reg 100][00 100 100] disp32
+                                            (Assembler''emitByte-2 (| 0x84 regenc))
+                                            (Assembler''emitByte-2 0x24)
+                                            (Assembler''emitInt-2 disp)
+                                        )
+                                )
+                            :else
+                                ;; [base + disp]
+                                (cond
+                                    (and (zero? disp) (not (= base AMD64'rbp)) (not (= base AMD64'r13)))
+                                        (-> this ;; [base] ;; [00 reg base]
+                                            (Assembler''emitByte-2 (| 0x00 regenc baseenc))
+                                        )
+                                    (and (NumUtil'isByte-1 disp) (not force4Byte))
+                                        (-> this ;; [base + disp8] ;; [01 reg base] disp8
+                                            (Assembler''emitByte-2 (| 0x40 regenc baseenc))
+                                            (Assembler''emitByte-2 (& disp 0xff))
+                                        )
+                                    :else
+                                        (-> this ;; [base + disp32] ;; [10 reg base] disp32
+                                            (Assembler''emitByte-2 (| 0x80 regenc baseenc))
+                                            (Assembler''emitInt-2 disp)
+                                        )
+                                )
+                        )
+                    )
+                :else
+                    (if (Register''isValid-1 index)
+                        (-> this ;; [indexscale + disp] ;; [00 reg 100][ss index 101] disp32
+                            (Assembler''emitByte-2 (| 0x04 regenc))
+                            (Assembler''emitByte-2 (| (<< (:shift scale) 6) (<< (Assembler'encode-1 index) 3) 0x05))
+                            (Assembler''emitInt-2 disp)
+                        )
+                        (-> this ;; [disp] ABSOLUTE ;; [00 reg 100][00 100 101] disp32
+                            (Assembler''emitByte-2 (| 0x04 regenc))
+                            (Assembler''emitByte-2 0x25)
+                            (Assembler''emitInt-2 disp)
+                        )
+                    )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''emitOperand-4r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
+        (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, false, additionalInstructionSize)
+    )
+
+    ;;;
+     ; Emits the ModR/M byte and optionally the SIB byte for one register and one memory operand.
+     ;
+     ; @param force4Byte use 4 byte encoding for displacements that would normally fit in a byte
+     ;;
+    (defn #_"this" Assembler''emitOperand-5r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
+        (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, force4Byte, additionalInstructionSize)
+    )
+
+    (defn #_"this" Assembler''emitOperand-4i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
+        (Assembler''emitOperand-5i this, reg, addr, false, additionalInstructionSize)
+    )
+
+    (defn- #_"[this int]" Assembler''prefixAndEncode-3b [#_"Assembler" this, #_"int" enc, #_"boolean" byte-inst?]
+        (if (< enc 8)
+            [(if (and byte-inst? (<= 4 enc)) (Assembler''emitByte-2 this, Prefix'REX ) this) enc   ]
+            [                                (Assembler''emitByte-2 this, Prefix'REXB)    (- enc 8)]
+        )
+    )
+
+    (defn- #_"[this int]" Assembler''prefixAndEncode-2 [#_"Assembler" this, #_"int" enc]
+        (Assembler''prefixAndEncode-3b this, enc, false)
+    )
+
+    (defn- #_"[this int]" Assembler''prefixqAndEncode-2 [#_"Assembler" this, #_"int" enc]
+        (if (< enc 8)
+            [(Assembler''emitByte-2 this, Prefix'REXW )    enc   ]
+            [(Assembler''emitByte-2 this, Prefix'REXWB) (- enc 8)]
+        )
+    )
+
+    (defn- #_"[this int]" Assembler''prefixAndEncode-5 [#_"Assembler" this, #_"int" dst, #_"boolean" byte-dst?, #_"int" src, #_"boolean" byte-src?]
+        (let [
+            [this src dst]
+                (if (< dst 8)
+                    (if (< src 8)
+                        [(if (or (and byte-src? (<= 4 src)) (and byte-dst? (<= 4 dst))) (Assembler''emitByte-2 this, Prefix'REX ) this) src    dst]
+                        [                                                               (Assembler''emitByte-2 this, Prefix'REXB)    (- src 8) dst]
+                    )
+                    (if (< src 8)
+                        [(Assembler''emitByte-2 this, Prefix'REXR )    src    (- dst 8)]
+                        [(Assembler''emitByte-2 this, Prefix'REXRB) (- src 8) (- dst 8)]
+                    )
+                )
+        ]
+            [this (| (<< dst 3) src)]
+        )
+    )
+
+    (defn- #_"[this int]" Assembler''prefixAndEncode-3i [#_"Assembler" this, #_"int" dst, #_"int" src]
+        (Assembler''prefixAndEncode-5 this, dst, false, src, false)
+    )
+
+    ;;;
+     ; Creates prefix and the encoding of the lower 6 bits of the ModRM-Byte. It emits an operand
+     ; prefix. If the given operands exceed 3 bits, the 4th bit is encoded in the prefix.
+     ;
+     ; @param reg the encoding of the register part of the ModRM-Byte
+     ; @param rm the encoding of the r/m part of the ModRM-Byte
+     ; @return the lower 6 bits of the ModRM-Byte that should be emitted
+     ;;
+    (defn- #_"[this int]" Assembler''prefixqAndEncode-3 [#_"Assembler" this, #_"int" reg, #_"int" rm]
+        (let [
+            [this rm reg]
+                (if (< reg 8)
+                    (if (< rm 8)
+                        [(Assembler''emitByte-2 this, Prefix'REXW )    rm    reg]
+                        [(Assembler''emitByte-2 this, Prefix'REXWB) (- rm 8) reg]
+                    )
+                    (if (< rm 8)
+                        [(Assembler''emitByte-2 this, Prefix'REXWR )    rm    (- reg 8)]
+                        [(Assembler''emitByte-2 this, Prefix'REXWRB) (- rm 8) (- reg 8)]
+                    )
+                )
+        ]
+            [this (| (<< reg 3) rm)]
+        )
+    )
+
+    (defn- #_"boolean" Assembler'needsRex-1 [#_"Register" reg]
+        (<= Assembler'MinEncodingNeedsRex (:encoding reg))
+    )
+
+    (defn- #_"this" Assembler''prefix-2 [#_"Assembler" this, #_"AMD64Address" adr]
+        (let [
+            #_"Integer" prefix
+                (if (Assembler'needsRex-1 (:base adr))
+                    (if (Assembler'needsRex-1 (:index adr))
+                        Prefix'REXXB
+                        Prefix'REXB
+                    )
+                    (when (Assembler'needsRex-1 (:index adr))
+                        Prefix'REXX
+                    )
+                )
+        ]
+            (if (some? prefix) (Assembler''emitByte-2 this, prefix) this)
+        )
+    )
+
+    (defn- #_"this" Assembler''prefixq-2 [#_"Assembler" this, #_"AMD64Address" adr]
+        (let [
+            #_"int" prefix
+                (if (Assembler'needsRex-1 (:base adr))
+                    (if (Assembler'needsRex-1 (:index adr))
+                        Prefix'REXWXB
+                        Prefix'REXWB
+                    )
+                    (if (Assembler'needsRex-1 (:index adr))
+                        Prefix'REXWX
+                        Prefix'REXW
+                    )
+                )
+        ]
+            (Assembler''emitByte-2 this, prefix)
+        )
+    )
+
+    (defn- #_"this" Assembler''prefix-4 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg, #_"boolean" byte-inst?]
+        (let [
+            #_"Integer" prefix
+                (if (< (:encoding reg) 8)
+                    (if (Assembler'needsRex-1 (:base adr))
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXXB
+                            Prefix'REXB
+                        )
+                        (cond
+                            (Assembler'needsRex-1 (:index adr))
+                                Prefix'REXX
+                            (and byte-inst? (<= 4 (:encoding reg)))
+                                Prefix'REX
+                        )
+                    )
+                    (if (Assembler'needsRex-1 (:base adr))
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXRXB
+                            Prefix'REXRB
+                        )
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXRX
+                            Prefix'REXR
+                        )
+                    )
+                )
+        ]
+            (if (some? prefix) (Assembler''emitByte-2 this, prefix) this)
+        )
+    )
+
+    (defn- #_"this" Assembler''prefix-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg]
+        (Assembler''prefix-4 this, adr, reg, false)
+    )
+
+    (defn- #_"this" Assembler''prefixq-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" src]
+        (let [
+            #_"int" prefix
+                (if (< (:encoding src) 8)
+                    (if (Assembler'needsRex-1 (:base adr))
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXWXB
+                            Prefix'REXWB
+                        )
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXWX
+                            Prefix'REXW
+                        )
+                    )
+                    (if (Assembler'needsRex-1 (:base adr))
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXWRXB
+                            Prefix'REXWRB
+                        )
+                        (if (Assembler'needsRex-1 (:index adr))
+                            Prefix'REXWRX
+                            Prefix'REXWR
+                        )
+                    )
+                )
+        ]
+            (Assembler''emitByte-2 this, prefix)
+        )
+    )
+)
+
+;;;
+ ; Base class for AMD64 opcodes.
+ ;;
+(about #_"AMD64Op"
+    (defn #_"AMD64Op" AMD64Op'init-5 [#_"int" prefix1, #_"int" prefix2, #_"int" op, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (-/hash-map
+            #_"int" :prefix1 prefix1
+            #_"int" :prefix2 prefix2
+            #_"int" :op op
+            #_"boolean" :dstIsByte dstIsByte
+            #_"boolean" :srcIsByte srcIsByte
+        )
+    )
+
+    (defn #_"Assembler" AMD64Op''emitOpcode-6 [#_"AMD64Op" this, #_"Assembler" asm, #_"WordSize" size, #_"int" rxb, #_"int" dstEnc, #_"int" srcEnc]
+        (let [
+            asm
+                (when-not (zero? (:prefix1 this)) => asm
+                    (Assembler''emitByte-2 asm, (:prefix1 this))
+                )
+            asm
+                (when (= size :WordSize'16bits) => asm
+                    (Assembler''emitByte-2 asm, 0x66)
+                )
+            #_"int" rexPrefix (| rxb (if (= size :WordSize'64bits) 0x48 0x40))
+            asm
+                (when (or (not= rexPrefix 0x40) (and (:dstIsByte this) (<= 4 dstEnc)) (and (:srcIsByte this) (<= 4 srcEnc))) => asm
+                    (Assembler''emitByte-2 asm, rexPrefix)
+                )
+            asm
+                (condp < (:prefix2 this)
+                    0xff (Assembler''emitShort-2 asm, (:prefix2 this))
+                    0x00 (Assembler''emitByte-2 asm, (:prefix2 this))
+                         asm
+                )
+        ]
+            (Assembler''emitByte-2 asm, (:op this))
+        )
+    )
+)
+
+;;;
+ ; Base class for AMD64 opcodes with immediate operands.
+ ;;
+(about #_"AMD64ImmOp"
+    #_inherit
+    (defm AMD64ImmOp AMD64Op)
+
+    (defn #_"AMD64ImmOp" AMD64ImmOp'init-5 [#_"int" prefix, #_"int" op, #_"boolean" immIsByte, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (merge (AMD64Op'init-5 0, prefix, op, dstIsByte, srcIsByte)
+            (-/hash-map
+                #_"boolean" :immIsByte immIsByte
+            )
+        )
+    )
+
+    (defn- #_"Assembler" AMD64ImmOp'emitImmediate-3 [#_"WordSize" size, #_"Assembler" asm, #_"int" imm]
+        (case!? size
+            :WordSize'8bits                    (Assembler''emitByte-2 asm, imm)
+            :WordSize'16bits                   (Assembler''emitShort-2 asm, imm)
+            ;; Immediate #QWORD operands are encoded as sign-extended 32-bit values.
+           [:WordSize'32bits :WordSize'64bits] (Assembler''emitInt-2 asm, imm)
+        )
+    )
+
+    (defn #_"Assembler" AMD64ImmOp''emitImmediate-4 [#_"AMD64ImmOp" this, #_"Assembler" asm, #_"WordSize" size, #_"int" imm]
+        (if (:immIsByte this)
+            (Assembler''emitByte-2 asm, imm)
+            (AMD64ImmOp'emitImmediate-3 size, asm, imm)
+        )
+    )
+
+    (defn #_"int" AMD64ImmOp''immediateSize-2 [#_"AMD64ImmOp" this, #_"WordSize" size]
+        (if (:immIsByte this) 1 (WordSize'inBytes-1 size))
+    )
+)
+
+;;;
+ ; Opcodes with operand order of MI.
+ ;;
+(about #_"AMD64MIOp"
+    (defr AMD64MIOp)
+
+    #_inherit
+    (defm AMD64MIOp AMD64ImmOp AMD64Op)
+
+    (declare AMD64MIOp'new-5)
+
+    (defn #_"AMD64MIOp" AMD64MIOp'new-1 [#_"int" op]
+        (AMD64MIOp'new-5 op, 0, false, false, false)
+    )
+
+    (defn #_"AMD64MIOp" AMD64MIOp'new-3 [#_"int" op, #_"int" ext, #_"boolean" immIsByte]
+        (AMD64MIOp'new-5 op, ext, immIsByte, false, false)
+    )
+
+    (defn #_"AMD64MIOp" AMD64MIOp'new-4 [#_"int" op, #_"boolean" immIsByte, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (AMD64MIOp'new-5 op, 0, immIsByte, dstIsByte, srcIsByte)
+    )
+
+    (defn #_"AMD64MIOp" AMD64MIOp'new-5 [#_"int" op, #_"int" ext, #_"boolean" immIsByte, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (new* AMD64MIOp'class
+            (merge (AMD64ImmOp'init-5 0, op, immIsByte, dstIsByte, srcIsByte)
+                (-/hash-map
+                    #_"int" :ext ext
+                )
+            )
+        )
+    )
+
+    (def #_"AMD64MIOp" AMD64MIOp'MOVB (AMD64MIOp'new-4 0xc6, true, true, true))
+    (def #_"AMD64MIOp" AMD64MIOp'MOV  (AMD64MIOp'new-1 0xc7))
+    (def #_"AMD64MIOp" AMD64MIOp'TEST (AMD64MIOp'new-1 0xf7))
+
+    (defn #_"Assembler" AMD64MIOp''emit-5r [#_"AMD64MIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"int" imm]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2rr nil, dst), 0, (:encoding dst))
+            asm (Assembler''emitModRM-3ir asm, (:ext this), dst)
+            asm (AMD64ImmOp''emitImmediate-4 this, asm, size, imm)
+        ]
+            asm
+        )
+    )
+
+    (defn #_"Assembler" AMD64MIOp''emit-5a [#_"AMD64MIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst, #_"int" imm]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra nil, dst), 0, 0)
+            asm (Assembler''emitOperand-4i asm, (:ext this), dst, (AMD64ImmOp''immediateSize-2 this, size))
+            asm (AMD64ImmOp''emitImmediate-4 this, asm, size, imm)
+        ]
+            asm
+        )
+    )
+)
+
+;;;
+ ; Opcodes with operand order of RMI.
+ ;;
+(about #_"AMD64RMIOp"
+    (defr AMD64RMIOp)
+
+    #_inherit
+    (defm AMD64RMIOp AMD64ImmOp AMD64Op)
+
+    (defn #_"AMD64RMIOp" AMD64RMIOp'new-2 [#_"int" op, #_"boolean" immIsByte]
+        (new* AMD64RMIOp'class (AMD64ImmOp'init-5 0, op, immIsByte, false, false))
+    )
+
+    (def #_"AMD64RMIOp" AMD64RMIOp'IMUL    (AMD64RMIOp'new-2 0x69, false))
+    (def #_"AMD64RMIOp" AMD64RMIOp'IMUL_SX (AMD64RMIOp'new-2 0x6b, true))
+
+    (defn #_"Assembler" AMD64RMIOp''emit-6r [#_"AMD64RMIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Register" src, #_"int" imm]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2rr dst, src), (:encoding dst), (:encoding src))
+            asm (Assembler''emitModRM-3rr asm, dst, src)
+            asm (AMD64ImmOp''emitImmediate-4 this, asm, size, imm)
+        ]
+            asm
+        )
+    )
+
+    (defn #_"Assembler" AMD64RMIOp''emit-6a [#_"AMD64RMIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"AMD64Address" src, #_"int" imm]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra dst, src), (:encoding dst), 0)
+            asm (Assembler''emitOperand-4r asm, dst, src, (AMD64ImmOp''immediateSize-2 this, size))
+            asm (AMD64ImmOp''emitImmediate-4 this, asm, size, imm)
+        ]
+            asm
+        )
+    )
+)
+
+;;;
+ ; Opcodes with operand order of M.
+ ;;
+(about #_"AMD64MOp"
+    (defr AMD64MOp)
+
+    #_inherit
+    (defm AMD64MOp AMD64Op)
+
+    (defn #_"AMD64MOp" AMD64MOp'new-2 [#_"int" op, #_"int" ext]
+        (new* AMD64MOp'class
+            (merge (AMD64Op'init-5 0, 0, op, false, false)
+                (-/hash-map
+                    #_"int" :ext ext
+                )
+            )
+        )
+    )
+
+    (def #_"AMD64MOp" AMD64MOp'NOT  (AMD64MOp'new-2 0xf7, 2))
+    (def #_"AMD64MOp" AMD64MOp'NEG  (AMD64MOp'new-2 0xf7, 3))
+    (def #_"AMD64MOp" AMD64MOp'MUL  (AMD64MOp'new-2 0xf7, 4))
+    (def #_"AMD64MOp" AMD64MOp'IMUL (AMD64MOp'new-2 0xf7, 5))
+    (def #_"AMD64MOp" AMD64MOp'DIV  (AMD64MOp'new-2 0xf7, 6))
+    (def #_"AMD64MOp" AMD64MOp'IDIV (AMD64MOp'new-2 0xf7, 7))
+    (def #_"AMD64MOp" AMD64MOp'INC  (AMD64MOp'new-2 0xff, 0))
+    (def #_"AMD64MOp" AMD64MOp'DEC  (AMD64MOp'new-2 0xff, 1))
+    (def #_"AMD64MOp" AMD64MOp'PUSH (AMD64MOp'new-2 0xff, 6))
+    (def #_"AMD64MOp" AMD64MOp'POP  (AMD64MOp'new-2 0x8f, 0))
+
+    (defn #_"Assembler" AMD64MOp''emit-4r [#_"AMD64MOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2rr nil, dst), 0, (:encoding dst))
+            asm (Assembler''emitModRM-3ir asm, (:ext this), dst)
+        ]
+            asm
+        )
+    )
+
+    (defn #_"Assembler" AMD64MOp''emit-4a [#_"AMD64MOp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra nil, dst), 0, 0)
+            asm (Assembler''emitOperand-4i asm, (:ext this), dst, 0)
+        ]
+            asm
+        )
+    )
+)
+
+(about #_"AMD64RROp"
+    #_inherit
+    (defm AMD64RROp AMD64Op)
+
+    (defn #_"AMD64RROp" AMD64RROp'init-5 [#_"int" prefix1, #_"int" prefix2, #_"int" op, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (AMD64Op'init-5 prefix1, prefix2, op, dstIsByte, srcIsByte)
+    )
+)
+
+;;;
+ ; Opcode with operand order of MR.
+ ;;
+(about #_"AMD64MROp"
+    (defr AMD64MROp)
+
+    #_inherit
+    (defm AMD64MROp AMD64RROp AMD64Op)
+
+    (defn #_"AMD64MROp" AMD64MROp'new-1 [#_"int" op]
+        (new* AMD64MROp'class (AMD64RROp'init-5 0, 0, op, false, false))
+    )
+
+    (defn #_"AMD64MROp" AMD64MROp'new-3 [#_"int" op, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (new* AMD64MROp'class (AMD64RROp'init-5 0, 0, op, dstIsByte, srcIsByte))
+    )
+
+    (def #_"AMD64MROp" AMD64MROp'MOVB (AMD64MROp'new-3 0x88, true, true))
+    (def #_"AMD64MROp" AMD64MROp'MOV  (AMD64MROp'new-1 0x89))
+
+    (defn- #_"Assembler" AMD64MROp''emit-5rr [#_"AMD64MROp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Register" src]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2rr src, dst), (:encoding src), (:encoding dst))
+            asm (Assembler''emitModRM-3rr asm, src, dst)
+        ]
+            asm
+        )
+    )
+
+    (defn #_"Assembler" AMD64MROp''emit-5ar [#_"AMD64MROp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst, #_"Register" src]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra src, dst), (:encoding src), 0)
+            asm (Assembler''emitOperand-4r asm, src, dst, 0)
+        ]
+            asm
+        )
+    )
+
+    (defm AMD64MROp AMD64RROp
+        (AMD64RROp'''emit => AMD64MROp''emit-5rr)
+    )
+)
+
+;;;
+ ; Opcode with operand order of RM.
+ ;;
+(about #_"AMD64RMOp"
+    (defr AMD64RMOp)
+
+    #_inherit
+    (defm AMD64RMOp AMD64RROp AMD64Op)
+
+    (defn #_"AMD64RMOp" AMD64RMOp'new-1 [#_"int" op]
+        (new* AMD64RMOp'class (AMD64RROp'init-5 0, 0, op, false, false))
+    )
+
+    (defn #_"AMD64RMOp" AMD64RMOp'new-2 [#_"int" prefix, #_"int" op]
+        (new* AMD64RMOp'class (AMD64RROp'init-5 0, prefix, op, false, false))
+    )
+
+    (defn #_"AMD64RMOp" AMD64RMOp'new-3b [#_"int" op, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (new* AMD64RMOp'class (AMD64RROp'init-5 0, 0, op, dstIsByte, srcIsByte))
+    )
+
+    (defn #_"AMD64RMOp" AMD64RMOp'new-4 [#_"int" prefix, #_"int" op, #_"boolean" dstIsByte, #_"boolean" srcIsByte]
+        (new* AMD64RMOp'class (AMD64RROp'init-5 0, prefix, op, dstIsByte, srcIsByte))
+    )
+
+    (defn- #_"AMD64RMOp" AMD64RMOp'new-3p [#_"int" prefix1, #_"int" prefix2, #_"int" op]
+        (new* AMD64RMOp'class (AMD64RROp'init-5 prefix1, prefix2, op, false, false))
+    )
+
+    (def #_"AMD64RMOp" AMD64RMOp'IMUL   (AMD64RMOp'new-2        0x0f, 0xaf))
+    (def #_"AMD64RMOp" AMD64RMOp'BSF    (AMD64RMOp'new-2        0x0f, 0xbc))
+    (def #_"AMD64RMOp" AMD64RMOp'BSR    (AMD64RMOp'new-2        0x0f, 0xbd))
+    (def #_"AMD64RMOp" AMD64RMOp'POPCNT (AMD64RMOp'new-3p 0xf3, 0x0f, 0xb8)) ;; requires CPUFeature'POPCNT
+    (def #_"AMD64RMOp" AMD64RMOp'TZCNT  (AMD64RMOp'new-3p 0xf3, 0x0f, 0xbc)) ;; requires CPUFeature'BMI1
+    (def #_"AMD64RMOp" AMD64RMOp'LZCNT  (AMD64RMOp'new-3p 0xf3, 0x0f, 0xbd)) ;; requires CPUFeature'LZCNT
+    (def #_"AMD64RMOp" AMD64RMOp'MOVZXB (AMD64RMOp'new-4        0x0f, 0xb6, false, true))
+    (def #_"AMD64RMOp" AMD64RMOp'MOVZX  (AMD64RMOp'new-2        0x0f, 0xb7))
+    (def #_"AMD64RMOp" AMD64RMOp'MOVSXB (AMD64RMOp'new-4        0x0f, 0xbe, false, true))
+    (def #_"AMD64RMOp" AMD64RMOp'MOVSX  (AMD64RMOp'new-2        0x0f, 0xbf))
+    (def #_"AMD64RMOp" AMD64RMOp'MOVSXD (AMD64RMOp'new-1              0x63))
+    (def #_"AMD64RMOp" AMD64RMOp'MOVB   (AMD64RMOp'new-3b             0x8a, true,  true))
+    (def #_"AMD64RMOp" AMD64RMOp'MOV    (AMD64RMOp'new-1              0x8b))
+
+    ;; TEST is documented as MR operation, but it's symmetric, and using it as RM operation is more convenient.
+    (def #_"AMD64RMOp" AMD64RMOp'TESTB  (AMD64RMOp'new-3b             0x84, true, true))
+    (def #_"AMD64RMOp" AMD64RMOp'TEST   (AMD64RMOp'new-1              0x85))
+
+    (defn- #_"Assembler" AMD64RMOp''emit-5rr [#_"AMD64RMOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Register" src]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2rr dst, src), (:encoding dst), (:encoding src))
+            asm (Assembler''emitModRM-3rr asm, dst, src)
+        ]
+            asm
+        )
+    )
+
+    (defn #_"Assembler" AMD64RMOp''emit-5ra [#_"AMD64RMOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"AMD64Address" src]
+        (let [
+            asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra dst, src), (:encoding dst), 0)
+            asm (Assembler''emitOperand-4r asm, dst, src, 0)
+        ]
+            asm
+        )
+    )
+
+    (defm AMD64RMOp AMD64RROp
+        (AMD64RROp'''emit => AMD64RMOp''emit-5rr)
+    )
+)
+
+;;;
+ ; Shift operation with operand order of M1, MC or MI.
+ ;;
+(about #_"AMD64Shift"
+    (defr AMD64Shift)
+
+    (defn- #_"AMD64Shift" AMD64Shift'new-1 [#_"int" code]
+        (new* AMD64Shift'class
+            (-/hash-map
+                #_"AMD64MOp" :m1Op (AMD64MOp'new-2 0xd1, code)
+                #_"AMD64MOp" :mcOp (AMD64MOp'new-2 0xd3, code)
+                #_"AMD64MIOp" :miOp (AMD64MIOp'new-3 0xc1, code, true)
+            )
+        )
+    )
+
+    (def #_"AMD64Shift" AMD64Shift'ROL (AMD64Shift'new-1 0))
+    (def #_"AMD64Shift" AMD64Shift'ROR (AMD64Shift'new-1 1))
+    (def #_"AMD64Shift" AMD64Shift'RCL (AMD64Shift'new-1 2))
+    (def #_"AMD64Shift" AMD64Shift'RCR (AMD64Shift'new-1 3))
+    (def #_"AMD64Shift" AMD64Shift'SHL (AMD64Shift'new-1 4))
+    (def #_"AMD64Shift" AMD64Shift'SHR (AMD64Shift'new-1 5))
+    (def #_"AMD64Shift" AMD64Shift'SAR (AMD64Shift'new-1 7))
+)
+
+;;;
+ ; Arithmetic operation with operand order of RM, MR or MI.
+ ;;
+(about #_"BinaryArithmetic"
+    (defr BinaryArithmetic)
+
+    (defn- #_"BinaryArithmetic" BinaryArithmetic'new-1 [#_"int" code]
+        (let [
+            #_"int" base (<< code 3)
+        ]
+            (new* BinaryArithmetic'class
+                (-/hash-map
+                    #_"AMD64MIOp" :byteImmOp (AMD64MIOp'new-5 0x80, code,       true, true, true)
+                    #_"AMD64MROp" :byteMrOp  (AMD64MROp'new-3       base,             true, true)
+                    #_"AMD64RMOp" :byteRmOp  (AMD64RMOp'new-3b   (| base 0x02),       true, true)
+                    #_"AMD64MIOp" :immOp     (AMD64MIOp'new-3 0x81, code,       false)
+                    #_"AMD64MIOp" :immSxOp   (AMD64MIOp'new-3 0x83, code,       true)
+                    #_"AMD64MROp" :mrOp      (AMD64MROp'new-1    (| base 0x01))
+                    #_"AMD64RMOp" :rmOp      (AMD64RMOp'new-1    (| base 0x03))
+                )
+            )
+        )
+    )
+
+    (def #_"BinaryArithmetic" BinaryArithmetic'ADD (BinaryArithmetic'new-1 0))
+    (def #_"BinaryArithmetic" BinaryArithmetic'OR  (BinaryArithmetic'new-1 1))
+    (def #_"BinaryArithmetic" BinaryArithmetic'ADC (BinaryArithmetic'new-1 2))
+    (def #_"BinaryArithmetic" BinaryArithmetic'SBB (BinaryArithmetic'new-1 3))
+    (def #_"BinaryArithmetic" BinaryArithmetic'AND (BinaryArithmetic'new-1 4))
+    (def #_"BinaryArithmetic" BinaryArithmetic'SUB (BinaryArithmetic'new-1 5))
+    (def #_"BinaryArithmetic" BinaryArithmetic'XOR (BinaryArithmetic'new-1 6))
+    (def #_"BinaryArithmetic" BinaryArithmetic'CMP (BinaryArithmetic'new-1 7))
+
+    (defn #_"AMD64MIOp" BinaryArithmetic''getMIOpcode-3 [#_"BinaryArithmetic" this, #_"WordSize" size, #_"boolean" sx?]
+        (cond
+            (= size :WordSize'8bits) (:byteImmOp this)
+            sx?                      (:immSxOp this)
+            :else                    (:immOp this)
+        )
+    )
+
+    #_unused
+    (defn #_"AMD64MROp" BinaryArithmetic''getMROpcode-2 [#_"BinaryArithmetic" this, #_"WordSize" size]
+        (if (= size :WordSize'8bits) (:byteMrOp this) (:mrOp this))
+    )
+
+    (defn #_"AMD64RMOp" BinaryArithmetic''getRMOpcode-2 [#_"BinaryArithmetic" this, #_"WordSize" size]
+        (if (= size :WordSize'8bits) (:byteRmOp this) (:rmOp this))
+    )
+)
+
+(about #_"Assembler"
+    (defn #_"this" Assembler''addl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''addl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''addl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'ADD), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''andl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'AND, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''andl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'AND), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''bsfq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (reduce Assembler''emitByte-2 this, 0x0f 0xbc (| 0xc0 encode))
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''bsrl-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
+        ]
+            (reduce Assembler''emitByte-2 this, 0x0f 0xbd (| 0xc0 encode))
+        )
+    )
+
+    (defn #_"this" Assembler''bswapl-2 [#_"Assembler" this, #_"Register" reg]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding reg))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 (| 0xc8 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''cdql-1 [#_"Assembler" this]
+        (Assembler''emitByte-2 this, 0x99)
+    )
+
+    (defn #_"this" Assembler''cmovl-4rr [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 (| 0x40 (:value cc)))
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''cmovl-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 (| 0x40 (:value cc)))
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''cmpl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''cmpl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'CMP), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''cmpl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (AMD64RMOp''emit-5ra (:rmOp BinaryArithmetic'CMP), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''cmpl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    ;; The 32-bit cmpxchg compares the value at adr with the contents of X86.rax,
+    ;; and stores reg into adr if so; otherwise, the value at adr is loaded into X86.rax.
+    ;; The ZF is set if the compared values were equal, and cleared otherwise.
+    (defn #_"this" Assembler''cmpxchgl-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr] ;; cmpxchg
+        (-> this
+            (Assembler''prefix-3 adr, reg)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xb1)
+            (Assembler''emitOperand-4r reg, adr, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''decl-2a [#_"Assembler" this, #_"AMD64Address" dst]
+        (-> this
+            (Assembler''prefix-2 dst)
+            (Assembler''emitByte-2 0xff)
+            (Assembler''emitOperand-4i 1, dst, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''hlt-1 [#_"Assembler" this]
+        (Assembler''emitByte-2 this, 0xf4)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''imull-4 [#_"Assembler" this, #_"Register" dst, #_"Register" src, #_"int" value]
+        (if (NumUtil'isByte-1 value)
+            (AMD64RMIOp''emit-6r AMD64RMIOp'IMUL_SX, this, :WordSize'32bits, dst, src, value)
+            (AMD64RMIOp''emit-6r AMD64RMIOp'IMUL, this, :WordSize'32bits, dst, src, value)
+        )
+    )
+
+    (defn #_"this" Assembler''incl-2a [#_"Assembler" this, #_"AMD64Address" dst]
+        (-> this
+            (Assembler''prefix-2 dst)
+            (Assembler''emitByte-2 0xff)
+            (Assembler''emitOperand-4i 0, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''jcc-4 [#_"Assembler" this, #_"ConditionFlag" cc, #_"int" jumpTarget, #_"boolean" forceDisp32]
+        (let [
+            #_"int" shortSize 2
+            #_"int" longSize 6
+            #_"long" disp (- jumpTarget (Assembler''position-1 this))
+        ]
+            (if (and (not forceDisp32) (NumUtil'isByte-1 (- disp shortSize)))
+                (-> this ;; 0111 tttn #8-bit disp
+                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
+                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
+                )
+                (-> this ;; 0000 1111 1000 tttn #32-bit disp
+                    (Assembler''emitByte-2 0x0f)
+                    (Assembler''emitByte-2 (| 0x80 (:value cc)))
+                    (Assembler''emitInt-2 (int (- disp longSize)))
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''jcc-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
+        (if (Label''isBound-1 l)
+            (Assembler''jcc-4 this, cc, (:position l), false)
+            ;; note: could eliminate cond. jumps to this jump if condition is the same however, seems to be rather unlikely case
+            ;; note: use jccb() if label to be bound is very close to get an 8-bit displacement
+            (let [
+                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 0x0f)
+                    (Assembler''emitByte-2 (| 0x80 (:value cc)))
+                    (Assembler''emitInt-2 0)
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''jccb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
+        (if (Label''isBound-1 l)
+            (let [
+                #_"int" shortSize 2
+                #_"int" entry (:position l)
+                #_"long" disp (- entry (Assembler''position-1 this))
+            ]
+                (-> this ;; 0111 tttn #8-bit disp
+                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
+                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
+                )
+            )
+            (let [
+                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
+                    (Assembler''emitByte-2 0)
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''jmp-3 [#_"Assembler" this, #_"int" jumpTarget, #_"boolean" forceDisp32]
+        (let [
+            #_"int" shortSize 2
+            #_"int" longSize 5
+            #_"long" disp (- jumpTarget (Assembler''position-1 this))
+        ]
+            (if (and (not forceDisp32) (NumUtil'isByte-1 (- disp shortSize)))
+                (-> this
+                    (Assembler''emitByte-2 0xeb)
+                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
+                )
+                (-> this
+                    (Assembler''emitByte-2 0xe9)
+                    (Assembler''emitInt-2 (int (- disp longSize)))
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''jmp-2l [#_"Assembler" this, #_"Label" l]
+        (if (Label''isBound-1 l)
+            (Assembler''jmp-3 this, (:position l), false)
+            ;; By default, forward jumps are always 32-bit displacements, since we can't yet know where the label will be bound.
+            ;; If you're sure that the forward jump will not run beyond 256 bytes, use jmpb to force an 8-bit displacement.
+            (let [
+                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 0xe9)
+                    (Assembler''emitInt-2 0)
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''jmp-2r [#_"Assembler" this, #_"Register" entry]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding entry))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xe0 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''jmp-2a [#_"Assembler" this, #_"AMD64Address" adr]
+        (-> this
+            (Assembler''prefix-2 adr)
+            (Assembler''emitByte-2 0xff)
+            (Assembler''emitOperand-4r AMD64'rsp, adr, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''jmpb-2 [#_"Assembler" this, #_"Label" l]
+        (if (Label''isBound-1 l)
+            (let [
+                #_"int" shortSize 2
+                #_"int" entry (:position l)
+                #_"long" offs (- entry (Assembler''position-1 this))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 0xeb)
+                    (Assembler''emitByte-2 (int (& (- offs shortSize) 0xff)))
+                )
+            )
+            (let [
+                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 0xeb)
+                    (Assembler''emitByte-2 0)
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''lead-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x8d)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''leaq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x8d)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''leave-1 [#_"Assembler" this]
+        (Assembler''emitByte-2 this, 0xc9)
+    )
+
+    (defn #_"this" Assembler''lock-1 [#_"Assembler" this]
+        (Assembler''emitByte-2 this, 0xf0)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movb-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm8]
+        (-> this
+            (Assembler''prefix-2 dst)
+            (Assembler''emitByte-2 0xc6)
+            (Assembler''emitOperand-4i 0, dst, 1)
+            (Assembler''emitByte-2 imm8)
+        )
+    )
+
+    (defn #_"this" Assembler''movb-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''prefix-4 dst, src, true)
+            (Assembler''emitByte-2 0x88)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 (| 0xb8 encode))
+                (Assembler''emitInt-2 imm32)
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x8b)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x8b)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    ;;;
+     ; @param wide? use 4 byte encoding for displacements that would normally fit in a byte
+     ;;
+    #_unused
+    (defn #_"this" Assembler''movl-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide?]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x8b)
+            (Assembler''emitOperand-5r dst, src, wide?, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (-> this
+            (Assembler''prefix-2 dst)
+            (Assembler''emitByte-2 0xc7)
+            (Assembler''emitOperand-4i 0, dst, 4)
+            (Assembler''emitInt-2 imm32)
+        )
+    )
+
+    (defn #_"this" Assembler''movl-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''prefix-3 dst, src)
+            (Assembler''emitByte-2 0x89)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movq-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x8b)
+            (Assembler''emitOperand-5r dst, src, wide, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (Assembler''movq-4 this, dst, src, false)
+    )
+
+    (defn #_"this" Assembler''movq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x8b)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''prefixq-3 dst, src)
+            (Assembler''emitByte-2 0x89)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movsbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xbe)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movsbl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-5 this, (:encoding dst), false, (:encoding src), true)
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 0xbe)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movsbq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xbe)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movsbq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 0xbe)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movswl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xbf)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movw-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm16]
+        (-> this
+            (Assembler''emitByte-2 0x66) ;; switch to 16-bit mode
+            (Assembler''prefix-2 dst)
+            (Assembler''emitByte-2 0xc7)
+            (Assembler''emitOperand-4i 0, dst, 2)
+            (Assembler''emitShort-2 imm16)
+        )
+    )
+
+    (defn #_"this" Assembler''movw-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''emitByte-2 0x66)
+            (Assembler''prefix-3 dst, src)
+            (Assembler''emitByte-2 0x89)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movzbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xb6)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''movzbl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit AMD64RMOp'MOVZXB, this, :WordSize'32bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''movzbq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit AMD64RMOp'MOVZXB, this, :WordSize'64bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movzwl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xb7)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''negl-2 [#_"Assembler" this, #_"Register" dst]
+        (AMD64MOp''emit-4r AMD64MOp'NEG, this, :WordSize'32bits, dst)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''notl-2 [#_"Assembler" this, #_"Register" dst]
+        (AMD64MOp''emit-4r AMD64MOp'NOT, this, :WordSize'32bits, dst)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''notq-2 [#_"Assembler" this, #_"Register" dst]
+        (AMD64MOp''emit-4r AMD64MOp'NOT, this, :WordSize'64bits, dst)
+    )
+
+    (defn #_"this" Assembler''nop
+        ([#_"Assembler" this] (Assembler''nop this, 1))
+        ([#_"Assembler" this, #_"int" n]
+            (reduce Assembler''emitByte-2 this (repeat n 0x90))
+        )
+    )
+
+    ;;;
+     ; Emits a NOP instruction to advance the current PC.
+     ;;
+    (defn #_"this" Assembler''ensureUniquePC-1 [#_"Assembler" this]
+        (Assembler''nop this)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''orl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'OR), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''orl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'OR, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''pop-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (Assembler''emitByte-2 this, (| 0x58 encode))
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''push-2 [#_"Assembler" this, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding src))
+        ]
+            (Assembler''emitByte-2 this, (| 0x50 encode))
+        )
+    )
+
+    (defn #_"this" Assembler''ret-2 [#_"Assembler" this, #_"int" imm16]
+        (if (zero? imm16)
+            (Assembler''emitByte-2 this, 0xc3)
+            (-> this
+                (Assembler''emitByte-2 0xc2)
+                (Assembler''emitShort-2 imm16)
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''sarl-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (if (= imm8 1)
+                (-> this
+                    (Assembler''emitByte-2 0xd1)
+                    (Assembler''emitByte-2 (| 0xf8 encode))
+                )
+                (-> this
+                    (Assembler''emitByte-2 0xc1)
+                    (Assembler''emitByte-2 (| 0xf8 encode))
+                    (Assembler''emitByte-2 imm8)
+                )
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shll-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (if (= imm8 1)
+                (-> this
+                    (Assembler''emitByte-2 0xd1)
+                    (Assembler''emitByte-2 (| 0xe0 encode))
+                )
+                (-> this
+                    (Assembler''emitByte-2 0xc1)
+                    (Assembler''emitByte-2 (| 0xe0 encode))
+                    (Assembler''emitByte-2 imm8)
+                )
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shll-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xd3)
+                (Assembler''emitByte-2 (| 0xe0 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shrl-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xc1)
+                (Assembler''emitByte-2 (| 0xe8 encode))
+                (Assembler''emitByte-2 imm8)
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shrl-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xd3)
+                (Assembler''emitByte-2 (| 0xe8 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''subl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''subl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''subl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'SUB), this, :WordSize'32bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''testl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        ;; not using emitArith because test doesn't support sign-extension of 8bit operands
+        (if (zero? (:encoding dst))
+            (-> this
+                (Assembler''emitByte-2 0xa9)
+                (Assembler''emitInt-2 imm32)
+            )
+            (let [
+                [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+            ]
+                (-> this
+                    (Assembler''emitByte-2 0xf7)
+                    (Assembler''emitByte-2 (| 0xc0 encode))
+                    (Assembler''emitInt-2 imm32)
+                )
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''testl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x85)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''testl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x85)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''xorl-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'XOR), this, :WordSize'32bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''decl-2r [#_"Assembler" this, #_"Register" dst]
+        ;; Use two-byte form (one-byte form is a REX prefix in 64-bit mode).
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xc8 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''incl-2r [#_"Assembler" this, #_"Register" dst]
+        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''addq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''addq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''addq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'ADD), this, :WordSize'64bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''addq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (AMD64MROp''emit-5ar (:mrOp BinaryArithmetic'ADD), this, :WordSize'64bits, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''andq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'AND, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''bsrq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 0xbd)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''bswapq-2 [#_"Assembler" this, #_"Register" reg]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding reg))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 (| 0xc8 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''cdqq-1 [#_"Assembler" this]
+        (-> this
+            (Assembler''emitByte-2 Prefix'REXW)
+            (Assembler''emitByte-2 0x99)
+        )
+    )
+
+    (defn #_"this" Assembler''cmovq-4rr [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 (| 0x40 (:value cc)))
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''setb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-3b this, (:encoding dst), true)
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 (| 0x90 (:value cc)))
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''cmovq-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 (| 0x40 (:value cc)))
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''cmpq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''cmpq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''cmpq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (AMD64RMOp''emit-5ra (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''cmpxchgq-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr]
+        (-> this
+            (Assembler''prefixq-3 adr, reg)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xb1)
+            (Assembler''emitOperand-4r reg, adr, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''decq-2r [#_"Assembler" this, #_"Register" dst]
+        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xc8 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''decq-2a [#_"Assembler" this, #_"AMD64Address" dst]
+        (AMD64MOp''emit-4a AMD64MOp'DEC, this, :WordSize'64bits, dst)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''imulq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x0f)
+                (Assembler''emitByte-2 0xaf)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''incq-2r [#_"Assembler" this, #_"Register" dst]
+        ;; Don't use it directly. Use the macro incrementq() instead.
+        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''incq-2a [#_"Assembler" this, #_"AMD64Address" dst]
+        (AMD64MOp''emit-4a AMD64MOp'INC, this, :WordSize'64bits, dst)
+    )
+
+    (defn #_"this" Assembler''movq-3rl [#_"Assembler" this, #_"Register" dst, #_"long" imm64]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 (| 0xb8 encode))
+                (Assembler''emitLong-2 imm64)
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movslq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xc7)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+                (Assembler''emitInt-2 imm32)
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''movslq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (-> this
+            (Assembler''prefixq-2 dst)
+            (Assembler''emitByte-2 0xc7)
+            (Assembler''emitOperand-4i 0, dst, 4)
+            (Assembler''emitInt-2 imm32)
+        )
+    )
+
+    (defn #_"this" Assembler''movslq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x63)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movslq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x63)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''negq-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xf7)
+                (Assembler''emitByte-2 (| 0xd8 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''orq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'OR), this, :WordSize'64bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''shlq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (if (= imm8 1)
+                (-> this
+                    (Assembler''emitByte-2 0xd1)
+                    (Assembler''emitByte-2 (| 0xe0 encode))
+                )
+                (-> this
+                    (Assembler''emitByte-2 0xc1)
+                    (Assembler''emitByte-2 (| 0xe0 encode))
+                    (Assembler''emitByte-2 imm8)
+                )
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shlq-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xd3)
+                (Assembler''emitByte-2 (| 0xe0 encode))
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''shrq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (if (= imm8 1)
+                (-> this
+                    (Assembler''emitByte-2 0xd1)
+                    (Assembler''emitByte-2 (| 0xe8 encode))
+                )
+                (-> this
+                    (Assembler''emitByte-2 0xc1)
+                    (Assembler''emitByte-2 (| 0xe8 encode))
+                    (Assembler''emitByte-2 imm8)
+                )
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''shrq-2 [#_"Assembler" this, #_"Register" dst]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xd3)
+                (Assembler''emitByte-2 (| 0xe8 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''sbbq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'SBB), this, :WordSize'64bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''subq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''subq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''subqWide-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
+        ;; do not use the sign-extending version, forcing a 32-bit immediate
+        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, false), this, :WordSize'64bits, dst, imm32)
+    )
+
+    (defn #_"this" Assembler''subq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (AMD64RROp'''emit (:rmOp BinaryArithmetic'SUB), this, :WordSize'64bits, dst, src)
+    )
+
+    (defn #_"this" Assembler''testq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0x85)
+                (Assembler''emitByte-2 (| 0xc0 encode))
+            )
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''btrq-3 [#_"Assembler" this, #_"Register" src, #_"int" imm8]
+        (let [
+            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding src))
+        ]
+            (reduce Assembler''emitByte-2 this, 0x0f 0xba (| 0xf0 encode) imm8)
+        )
+    )
+
+    (defn #_"this" Assembler''xaddl-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''prefix-3 dst, src)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xc1)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''xaddq-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (-> this
+            (Assembler''prefixq-3 dst, src)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xc1)
+            (Assembler''emitOperand-4r src, dst, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''xchgl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-3 src, dst)
+            (Assembler''emitByte-2 0x87)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''xchgq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefixq-3 src, dst)
+            (Assembler''emitByte-2 0x87)
+            (Assembler''emitOperand-4r dst, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''membar-2 [#_"Assembler" this, #_"int" barriers]
+        (when AMD64'isMP => this
+            ;; We only have to handle StoreLoad.
+            (when-not (zero? (& barriers MemoryBarriers'STORE_LOAD)) => this
+                ;; All usable chips support "locked" instructions which suffice as barriers,
+                ;; and are much faster than the alternative of using cpuid instruction.
+                ;; We use here a locked add [rsp],0. This is conveniently otherwise a no-op except
+                ;; for blowing flags. Any change to this code may need to revisit other places
+                ;; in the code where this idiom is used, in particular the orderAccess code.
+                (-> this
+                    (Assembler''lock-1)
+                    (Assembler''addl-3ai (AMD64Address'new AMD64'rsp, 0), 0) ;; Assert the lock# signal here.
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''patchJumpTarget-3 [#_"Assembler" this, #_"int" branch, #_"int" jumpTarget]
+        (let [
+            #_"int" op (Assembler''getByte-2 this, branch)
+        ]
+            (cond
+                (= op 0x00)
+                    (let [
+                        #_"int" offsetToJumpTableBase (Assembler''getShort-2 this, (inc branch))
+                        #_"int" jumpTableBase (- branch offsetToJumpTableBase)
+                        #_"int" imm32 (- jumpTarget jumpTableBase)
+                    ]
+                        (Assembler''emitInt-3 this, imm32, branch)
+                    )
+                (or (= op 0xeb) (= (& op 0xf0) 0x70))
+                    ;; short offset operators (jmp and jcc)
+                    (let [
+                        #_"int" imm8 (- jumpTarget (+ branch 2))
+                    ]
+                        ;; Since a wrongly patched short branch can potentially lead to working but really bad
+                        ;; behaving code we should always fail with an exception instead of having an assert.
+                        (when (NumUtil'isByte-1 imm8) => (throw! (str "branch displacement out of range: " imm8))
+                            (Assembler''emitByte-3 this, imm8, (inc branch))
+                        )
+                    )
+                :else
+                    (let [
+                        #_"int" off (if (= op 0x0f) 2 1)
+                        #_"int" imm32 (- jumpTarget (+ branch 4 off))
+                    ]
+                        (Assembler''emitInt-3 this, imm32, (+ branch off))
+                    )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''nullCheck-2 [#_"Assembler" this, #_"AMD64Address" address]
+        (Assembler''testl-3ra this, AMD64'rax, address)
+    )
+
+    (defn #_"this" Assembler''align-2 [#_"Assembler" this, #_"int" modulus]
+        (when-not (zero? (rem (Assembler''position-1 this) modulus)) => this
+            (Assembler''nop this, (- modulus (rem (Assembler''position-1 this) modulus)))
+        )
+    )
+
+    ;;;
+     ; Emits a direct call instruction. Note that the actual call target is not specified, because
+     ; all calls need patching anyway. Therefore, 0 is emitted as the call target, and the user is
+     ; responsible to add the call address to the appropriate patching tables.
+     ;;
+    (defn #_"this" Assembler''call-1 [#_"Assembler" this]
+        (-> this
+            (Assembler''emitByte-2 0xe8)
+            (Assembler''emitInt-2 0)
+        )
+    )
+
+    (defn #_"this" Assembler''call-2 [#_"Assembler" this, #_"Register" src]
+        (let [
+            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding src))
+        ]
+            (-> this
+                (Assembler''emitByte-2 0xff)
+                (Assembler''emitByte-2 (| 0xd0 encode))
+            )
+        )
+    )
+
+    (defn- #_"this" Assembler''prefetchPrefix-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-2 src)
+            (Assembler''emitByte-2 0x0f)
+        )
+    )
+
+    (defn #_"this" Assembler''prefetchnta-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefetchPrefix-2 src)
+            (Assembler''emitByte-2 0x18)
+            (Assembler''emitOperand-4i 0, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''prefetchr-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefetchPrefix-2 src)
+            (Assembler''emitByte-2 0x0d)
+            (Assembler''emitOperand-4i 0, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''prefetcht0-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefetchPrefix-2 src)
+            (Assembler''emitByte-2 0x18)
+            (Assembler''emitOperand-4i 1, src, 0)
+        )
+    )
+
+    #_unused
+    (defn #_"this" Assembler''prefetcht1-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefetchPrefix-2 src)
+            (Assembler''emitByte-2 0x18)
+            (Assembler''emitOperand-4i 2, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''prefetcht2-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-2 src)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0x18)
+            (Assembler''emitOperand-4i 3, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''prefetchw-2 [#_"Assembler" this, #_"AMD64Address" src]
+        (-> this
+            (Assembler''prefix-2 src)
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0x0d)
+            (Assembler''emitOperand-4i 1, src, 0)
+        )
+    )
+
+    (defn #_"this" Assembler''rdtsc-1 [#_"Assembler" this]
+        (-> this
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0x31)
+        )
+    )
+
+    ;;;
+     ; Emits an instruction which is considered to be illegal. This is used if we deliberately want
+     ; to crash the program (debugging etc.).
+     ;;
+    #_unused
+    (defn #_"this" Assembler''illegal-1 [#_"Assembler" this]
+        (-> this
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0x0b)
+        )
+    )
+
+    (defn #_"this" Assembler''lfence-1 [#_"Assembler" this]
+        (-> this
+            (Assembler''emitByte-2 0x0f)
+            (Assembler''emitByte-2 0xae)
+            (Assembler''emitByte-2 0xe8)
+        )
+    )
+
+    ;; masm
+
+    (defn #_"this" Assembler''decrementq-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''subq-3ri this, reg, value)
+            (neg? value)                          (Assembler''incrementq-3r this, reg, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''decq-2r this, reg)
+            :else                                 (Assembler''subq-3ri this, reg, value)
+        )
+    )
+
+    (declare Assembler''incrementq-3a)
+
+    (defn #_"this" Assembler''decrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''subq-3ai this, dst, value)
+            (neg? value)                          (Assembler''incrementq-3a this, dst, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''decq-2a this, dst)
+            :else                                 (Assembler''subq-3ai this, dst, value)
+        )
+    )
+
+    (defn #_"this" Assembler''incrementq-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''addq-3ri this, reg, value)
+            (neg? value)                          (Assembler''decrementq-3r this, reg, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''incq-2r this, reg)
+            :else                                 (Assembler''addq-3ri this, reg, value)
+        )
+    )
+
+    (defn #_"this" Assembler''incrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''addq-3ai this, dst, value)
+            (neg? value)                          (Assembler''decrementq-3a this, dst, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''incq-2a this, dst)
+            :else                                 (Assembler''addq-3ai this, dst, value)
+        )
+    )
+
+    (defn #_"this" Assembler''movptr-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+        (Assembler''movq-3ra this, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movptr-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+        (Assembler''movq-3ar this, dst, src)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''movptr-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" src]
+        (Assembler''movslq-3ai this, dst, src)
+    )
+
+    (defn #_"this" Assembler''cmpptr-3rr [#_"Assembler" this, #_"Register" src1, #_"Register" src2]
+        (Assembler''cmpq-3rr this, src1, src2)
+    )
+
+    #_unused
+    (defn #_"this" Assembler''cmpptr-3ra [#_"Assembler" this, #_"Register" src1, #_"AMD64Address" src2]
+        (Assembler''cmpq-3ra this, src1, src2)
+    )
+
+    (declare Assembler''decrementl-3r)
+
+    #_unused
+    (defn #_"this" Assembler''decrementl-2 [#_"Assembler" this, #_"Register" reg]
+        (Assembler''decrementl-3r this, reg, 1)
+    )
+
+    (declare Assembler''incrementl-3r)
+
+    (defn #_"this" Assembler''decrementl-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''subl-3ri this, reg, value)
+            (neg? value)                          (Assembler''incrementl-3r this, reg, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''decl-2r this, reg)
+            :else                                 (Assembler''subl-3ri this, reg, value)
+        )
+    )
+
+    (declare Assembler''incrementl-3a)
+
+    (defn #_"this" Assembler''decrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''subl-3ai this, dst, value)
+            (neg? value)                          (Assembler''incrementl-3a this, dst, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''decl-2a this, dst)
+            :else                                 (Assembler''subl-3ai this, dst, value)
+        )
+    )
+
+    (defn #_"this" Assembler''incrementl-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''addl-3ri this, reg, value)
+            (neg? value)                          (Assembler''decrementl-3r this, reg, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''incl-2r this, reg)
+            :else                                 (Assembler''addl-3ri this, reg, value)
+        )
+    )
+
+    (defn #_"this" Assembler''incrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+        (cond
+            (= value Integer'MIN_VALUE)           (Assembler''addl-3ai this, dst, value)
+            (neg? value)                          (Assembler''decrementl-3a this, dst, (- value))
+            (zero? value)                         this
+            (and (= value 1) Assembler'UseIncDec) (Assembler''incl-2a this, dst)
+            :else                                 (Assembler''addl-3ai this, dst, value)
+        )
+    )
+
+    ;;;
+     ; Non-atomic write of a 64-bit constant to memory.
+     ; Do not use if the address might be a volatile field!
+     ;;
+    (defn #_"this" Assembler''movlong-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"long" src]
+        (if (NumUtil'isInt-1 src)
+            (AMD64MIOp''emit-5a AMD64MIOp'MOV, this, :WordSize'64bits, dst, (int src))
+            (let [
+                #_"AMD64Address" high (AMD64Address'new (:base dst), (:index dst), (:scale dst), (+ (:displacement dst) 4))
+            ]
+                (-> this
+                    (Assembler''movl-3ai dst, (int (& src 0xffffffff)))
+                    (Assembler''movl-3ai high, (int (>> src 32)))
+                )
+            )
+        )
+    )
+
+    (defn #_"this" Assembler''setl-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
+        (-> this
+            (Assembler''setb-3 cc, dst)
+            (Assembler''movzbl-3rr dst, dst)
+        )
+    )
+
+    (defn #_"this" Assembler''setq-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
+        (-> this
+            (Assembler''setb-3 cc, dst)
+            (Assembler''movzbq-3 dst, dst)
+        )
+    )
+
+    (defn #_"AMD64Address" Assembler''asAddress-2 [#_"Assembler" this, #_"Value" value]
+        (AMD64Address'new RegisterConfig'frameRegister, (ß FrameMap''offsetForStackSlot-2 (:frameMap this), value))
+    )
+)
+
+(about #_"AMD64Call"
+    (defn- #_"Assembler" AMD64Call'emitAlignmentForDirectCall-1 [#_"Assembler" asm]
+        ;; make sure that the displacement word of the call ends up word aligned
+        (let [
+            #_"int" offset (+ (Assembler''position-1 asm) AMD64'machineCodeCallDisplacementOffset)
+            #_"int" modulus (WordSize'inBytes-1 AMD64'wordSize)
+        ]
+            (when-not (zero? (rem offset modulus)) => asm
+                (Assembler''nop asm, (- modulus (rem offset modulus)))
+            )
+        )
+    )
+
+    (defn #_"Assembler" AMD64Call'directCall-4 [#_"Assembler" asm, #_"InvokeTarget" callTarget, #_"Register" scratch, #_"boolean" align?]
+        (let [
+            asm
+                (when align? => asm
+                    (AMD64Call'emitAlignmentForDirectCall-1 asm)
+                )
+            asm
+                (if (some? scratch)
+                    (-> asm ;; offset might not fit a 32-bit immediate, generate an indirect call with a 64-bit immediate
+                        (Assembler''movq-3rl scratch, 0)
+                        (Assembler''call-2 scratch)
+                    )
+                    (Assembler''call-1 asm)
+                )
+        ]
+            (Assembler''ensureUniquePC-1 asm)
+        )
+    )
+
+    (defn #_"Assembler" AMD64Call'directJmp-2 [#_"Assembler" asm, #_"InvokeTarget" target]
+        (-> asm
+            (Assembler''jmp-3 0, true)
+            (Assembler''ensureUniquePC-1)
+        )
+    )
+
+    #_unused
+    (defn #_"Assembler" AMD64Call'directConditionalJmp-3 [#_"Assembler" asm, #_"InvokeTarget" target, #_"ConditionFlag" cond]
+        (-> asm
+            (Assembler''jcc-4 cond, 0, true)
+            (Assembler''ensureUniquePC-1)
+        )
+    )
+)
+
+(about #_"AMD64ControlFlow"
+    (§ defn #_"Assembler" AMD64ControlFlow'cmove-4 [#_"Assembler" asm, #_"Value" result, #_"ConditionFlag" cond, #_"Value" other]
+        (if (satisfies? RegisterValue other)
+            (case!? (:wordSize (:valueKind other))
+               [:WordSize'8bits :WordSize'16bits :WordSize'32bits]
+                    (Assembler''cmovl-4rr asm, cond, (:reg result), (:reg other))
+                :WordSize'64bits
+                    (Assembler''cmovq-4rr asm, cond, (:reg result), (:reg other))
+            )
+            (let [
+                #_"AMD64Address" addr (Assembler''asAddress-2 asm, other)
+            ]
+                (case!? (:wordSize (:valueKind other))
+                   [:WordSize'8bits :WordSize'16bits :WordSize'32bits]
+                        (Assembler''cmovl-4ra asm, cond, (:reg result), addr)
+                    :WordSize'64bits
+                        (Assembler''cmovq-4ra asm, cond, (:reg result), addr)
+                )
+            )
+        )
+    )
+
+    (defn #_"Assembler" AMD64ControlFlow'setcc-3 [#_"Assembler" asm, #_"Value" result, #_"ConditionFlag" cond]
+        (case!? (:wordSize (:valueKind result))
+           [:WordSize'8bits :WordSize'16bits :WordSize'32bits]
+                (Assembler''setl-3 asm, cond, (:reg result))
+            :WordSize'64bits
+                (Assembler''setq-3 asm, cond, (:reg result))
+        )
+    )
+
+    (defn #_"ConditionFlag" AMD64ControlFlow'intCond-1 [#_"Condition" cond]
+        (condp = cond
+            Condition'EQ ConditionFlag'Equal
+            Condition'NE ConditionFlag'NotEqual
+            Condition'LT ConditionFlag'Less
+            Condition'LE ConditionFlag'LessEqual
+            Condition'GE ConditionFlag'GreaterEqual
+            Condition'GT ConditionFlag'Greater
+            Condition'BE ConditionFlag'BelowEqual
+            Condition'AE ConditionFlag'AboveEqual
+            Condition'AT ConditionFlag'Above
+            Condition'BT ConditionFlag'Below
+        )
+    )
+)
+
+(about #_"AMD64Move"
+    (defn- #_"Assembler" AMD64Move'reg2reg-4 [#_"Assembler" asm, #_"Value" result, #_"Value" input, #_"WordSize" size]
+        (when-not (= (:reg input) (:reg result)) => asm
+            (case!? size
+               [:WordSize'8bits :WordSize'16bits :WordSize'32bits]
+                    (Assembler''movl-3rr asm, (:reg result), (:reg input))
+                :WordSize'64bits
+                    (Assembler''movq-3rr asm, (:reg result), (:reg input))
+            )
+        )
+    )
+
+    (defn #_"Assembler" AMD64Move'reg2stack-4 [#_"Assembler" asm, #_"Value" result, #_"Register" input, #_"WordSize" size]
+        (let [
+            #_"AMD64Address" dst (Assembler''asAddress-2 asm, result)
+        ]
+            (case! size
+                :WordSize'8bits  (Assembler''movb-3ar asm, dst, input)
+                :WordSize'16bits (Assembler''movw-3ar asm, dst, input)
+                :WordSize'32bits (Assembler''movl-3ar asm, dst, input)
+                :WordSize'64bits (Assembler''movq-3ar asm, dst, input)
+            )
+        )
+    )
+
+    (defn #_"Assembler" AMD64Move'stack2reg-4 [#_"Assembler" asm, #_"Register" result, #_"Value" input, #_"WordSize" size]
+        (let [
+            #_"AMD64Address" src (Assembler''asAddress-2 asm, input)
+        ]
+            (case! size
+                :WordSize'8bits  (Assembler''movsbl-3ra asm, result, src)
+                :WordSize'16bits (Assembler''movswl-3 asm, result, src)
+                :WordSize'32bits (Assembler''movl-3ra asm, result, src)
+                :WordSize'64bits (Assembler''movq-3ra asm, result, src)
+            )
+        )
+    )
+
+    (§ defn #_"Assembler" AMD64Move'move-4 [#_"Assembler" asm, #_"Value" result, #_"Value" input, #_"WordSize" size]
+        (cond
+            (satisfies? RegisterValue input)
+                (condp satisfies? result
+                    RegisterValue (AMD64Move'reg2reg-4 asm, result, input, size)
+                    StackSlot     (AMD64Move'reg2stack-4 asm, result, (:reg input), size)
+                )
+            (satisfies? StackSlot input)
+                (condp satisfies? result
+                    RegisterValue (AMD64Move'stack2reg-4 asm, (:reg result), input, size)
+                )
+            :else                 (throw! "should not reach here")
+        )
+    )
+
+    (§ defn #_"Assembler" AMD64Move'move-3 [#_"Assembler" asm, #_"Value" result, #_"Value" input]
+        (AMD64Move'move-4 asm, result, input, (:wordSize (:valueKind result)))
+    )
+)
+
+(about #_"Assembler"
+    (defn #_"Mark" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
+        (CompilationResult''recordMark-3 (:compilationResult this), (Assembler''position-1 this), id)
+    )
+
+    (defn #_"this" Assembler''assemble-1 [#_"Assembler" this]
+        (let [
+            this (Assembler''align-2 this, HotSpot'codeEntryAlignment)
+            _ (Assembler''recordMark-2 this, HotSpot'verifiedEntryMark)
+            this (FrameContext''enter-2 (:frameContext this), this)
+            
+            _ (Assembler''recordMark-2 this, HotSpot'deoptHandlerEntryMark)
+            this (AMD64Call'directCall-4 this, (ß ForeignCalls''lookupForeignCall-2 HotSpot'foreignCalls, ForeignCallDescriptor'DEOPTIMIZATION_HANDLER), nil, false)
+        ]
+            this
+        )
+    )
+
+    (defn #_"CompilationResult" Assembler''finish-1 [#_"Assembler" this]
+        (let [
+            _ (§ ass! this (update this :compilationResult CompilationResult''setTargetCode-3 (Assembler''close-1 this), (Assembler''position-1 this)))
+        ]
+            (CompilationResult''close-1 (:compilationResult this))
+        )
+    )
+)
+)
+
 (about #_"arbace.Compiler"
     (defp Expr
         (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"map" scope, #_"gen" gen])
@@ -16137,2280 +19930,3 @@
 )
 
 (defn -main [& args])
-
-(§ about #_"graalfn.Assembler"
-    (defp CodeBuffer)
-    (defp Assembler)
-
-(about #_"CodeBuffer"
-    (defr CodeBuffer)
-
-    (def- #_"int" CodeBuffer'InitialSize 232)
-
-    (defn #_"CodeBuffer" CodeBuffer'new-1 [#_"ByteOrder" order]
-        (let [
-            #_"CodeBuffer" this
-                (new* CodeBuffer'class
-                    (-/hash-map
-                        #_"ByteBuffer" :data (ByteBuffer'allocate CodeBuffer'InitialSize)
-                    )
-                )
-        ]
-            (ByteBuffer''order (:data this), order)
-            this
-        )
-    )
-
-    (defn #_"int" CodeBuffer''position-1 [#_"CodeBuffer" this]
-        (ByteBuffer''position (:data this))
-    )
-
-    (defn- #_"this" CodeBuffer''ensureSize-2 [#_"CodeBuffer" this, #_"int" n]
-        (when (<= (ByteBuffer''limit (:data this)) n) => this
-            (let [
-                #_"ByteBuffer" data (ByteBuffer'wrap (ß Arrays/copyOf (ByteBuffer''array (:data this)), (* n 4)))
-            ]
-                (ByteBuffer''order data, (ByteBuffer''order (:data this)))
-                (ByteBuffer''position data, (ByteBuffer''position (:data this)))
-                (assoc this :data data)
-            )
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitByte-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 1))
-        ]
-            (ByteBuffer''put (:data this), (byte (& b 0xff)))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitShort-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 2))
-        ]
-            (ByteBuffer''putShort (:data this), (short b))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitInt-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 4))
-        ]
-            (ByteBuffer''putInt (:data this), b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitLong-2 [#_"CodeBuffer" this, #_"long" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 8))
-        ]
-            (ByteBuffer''putLong (:data this), b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitByte-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 1))
-        ]
-            (ByteBuffer''put (:data this), i, (byte (& b 0xff)))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitShort-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 2))
-        ]
-            (ByteBuffer''putShort (:data this), i, (short b))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitInt-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 4))
-        ]
-            (ByteBuffer''putInt (:data this), i, b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitLong-3 [#_"CodeBuffer" this, #_"long" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 8))
-        ]
-            (ByteBuffer''putLong (:data this), i, b)
-            this
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getByte-2 [#_"CodeBuffer" this, #_"int" i]
-        (let [
-            #_"int" b (ByteBuffer''get (:data this), i)
-        ]
-            (& b 0xff)
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getShort-2 [#_"CodeBuffer" this, #_"int" i]
-        (let [
-            #_"short" s (ByteBuffer''getShort (:data this), i)
-        ]
-            (& s 0xffff)
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getInt-2 [#_"CodeBuffer" this, #_"int" i]
-        (ByteBuffer''getInt (:data this), i)
-    )
-
-    ;;;
-     ; Closes this buffer. Any further operations on a closed buffer will result in a NullPointerException.
-     ;;
-    (defn #_"[byte]" CodeBuffer''close-1 [#_"CodeBuffer" this]
-        (let [
-            #_"[byte]" a (vec (ByteBuffer''array (:data this)))
-            _ (§ ass! this (assoc this :data nil))
-        ]
-            a
-        )
-    )
-)
-
-;;;
- ; Constants and intrinsic definition for memory barriers.
- ;
- ; The documentation for each constant is taken from Doug Lea's
- ; <a href="http://gee.cs.oswego.edu/dl/jmm/cookbook.html">The JSR-133 Cookbook for Compiler Writers</a>.
- ;
- ; The {@code JMM_*} constants capture the memory barriers necessary to implement the Java Memory
- ; Model with respect to volatile field accesses. Their values are explained by this comment from
- ; templateTable_i486.cpp in the HotSpot source code:
- ;
- ; Volatile variables demand their effects be made known to all CPU's in order. Store buffers on
- ; most chips allow reads and writes to reorder; the JMM's ReadAfterWrite.java test fails in -Xint
- ; mode without some kind of memory barrier (i.e., it's not sufficient that the interpreter does
- ; not reorder volatile references, the hardware also must not reorder them).
- ;
- ; According to the new Java Memory Model (JMM):
- ; (1) All volatiles are serialized wrt to each other.
- ;
- ; ALSO reads and writes act as acquire and release, so:
- ; (2) A read cannot let unrelated NON-volatile memory refs that happen after the read float up to
- ; before the read. It's OK for non-volatile memory refs that happen before the volatile read to
- ; float down below it.
- ; (3) Similarly, a volatile write cannot let unrelated NON-volatile memory refs that happen BEFORE
- ; the write float down to after the write. It's OK for non-volatile memory refs that happen after
- ; the volatile write to float up before it.
- ;
- ; We only put in barriers around volatile refs (they are expensive), not _between_ memory refs (which
- ; would require us to track the flavor of the previous memory refs). Requirements (2) and (3) require
- ; some barriers before volatile stores and after volatile loads. These nearly cover requirement (1)
- ; but miss the volatile-store-volatile-load case. This final case is placed after volatile-stores
- ; although it could just as well go before volatile-loads.
- ;;
-(about #_"MemoryBarriers"
-    ;;;
-     ; The sequence {@code Load1; LoadLoad; Load2} ensures that {@code Load1}'s data are loaded before
-     ; data accessed by {@code Load2} and all subsequent load instructions are loaded. In general,
-     ; explicit {@code LoadLoad} barriers are needed on processors that perform speculative loads
-     ; and/or out-of-order processing in which waiting load instructions can bypass waiting stores.
-     ; On processors that guarantee to always preserve load ordering, these barriers amount to no-ops.
-     ;;
-    (def #_"int" MemoryBarriers'LOAD_LOAD 1)
-
-    ;;;
-     ; The sequence {@code Load1; LoadStore; Store2} ensures that {@code Load1}'s data are loaded
-     ; before all data associated with {@code Store2} and subsequent store instructions are flushed.
-     ; {@code LoadStore} barriers are needed only on those out-of-order processors in which waiting
-     ; store instructions can bypass loads.
-     ;;
-    (def #_"int" MemoryBarriers'LOAD_STORE 2)
-
-    ;;;
-     ; The sequence {@code Store1; StoreLoad; Load2} ensures that {@code Store1}'s data are made
-     ; visible to other processors (i.e., flushed to main memory) before data accessed by {@code Load2}
-     ; and all subsequent load instructions are loaded. {@code StoreLoad} barriers protect against
-     ; a subsequent load incorrectly using {@code Store1}'s data value rather than that from a more
-     ; recent store to the same location performed by a different processor.
-     ;
-     ; Because of this, on the processors discussed below, a {@code StoreLoad} is strictly necessary
-     ; only for separating stores from subsequent loads of the same location(s) as were stored
-     ; before the barrier. {@code StoreLoad} barriers are needed on nearly all recent multiprocessors,
-     ; and are usually the most expensive kind. Part of the reason they are expensive is that they
-     ; must disable mechanisms that ordinarily bypass cache to satisfy loads from write-buffers.
-     ; This might be implemented by letting the buffer fully flush, among other possible stalls.
-     ;;
-    (def #_"int" MemoryBarriers'STORE_LOAD 4)
-
-    ;;;
-     ; The sequence {@code Store1; StoreStore; Store2} ensures that {@code Store1}'s data are
-     ; visible to other processors (i.e., flushed to memory) before the data associated with
-     ; {@code Store2} and all subsequent store instructions. In general, {@code StoreStore} barriers
-     ; are needed on processors that do not otherwise guarantee strict ordering of flushes from
-     ; write buffers and/or caches to other processors or main memory.
-     ;;
-    (def #_"int" MemoryBarriers'STORE_STORE 8)
-
-    (def #_"int" MemoryBarriers'JMM_PRE_VOLATILE_WRITE  (| MemoryBarriers'LOAD_STORE MemoryBarriers'STORE_STORE))
-    (def #_"int" MemoryBarriers'JMM_POST_VOLATILE_WRITE (| MemoryBarriers'STORE_LOAD MemoryBarriers'STORE_STORE))
-    (def #_"int" MemoryBarriers'JMM_PRE_VOLATILE_READ   0)
-    (def #_"int" MemoryBarriers'JMM_POST_VOLATILE_READ  (| MemoryBarriers'LOAD_LOAD MemoryBarriers'LOAD_STORE))
-)
-
-;;;
- ; Represents a platform-specific low-level type for values.
- ;;
-(about #_"WordSize"
-    (def- #_"ordered {WordSize int}" WordSize'MAP
-        (ordered-map
-            :WordSize'8bits  1
-            :WordSize'16bits 2
-            :WordSize'32bits 4
-            :WordSize'64bits 8
-        )
-    )
-
-    (defn #_"int" WordSize'inBytes-1 [#_"WordSize" size]
-        (or (get WordSize'MAP size) (throw! (str "unsupported WordSize " size)))
-    )
-)
-
-;;;
- ; Constants for X86 prefix bytes.
- ;;
-(about #_"Prefix"
-    (def #_"int" Prefix'REX     0x40)
-    (def #_"int" Prefix'REXB    0x41)
-    (def #_"int" Prefix'REXX    0x42)
-    (def #_"int" Prefix'REXXB   0x43)
-    (def #_"int" Prefix'REXR    0x44)
-    (def #_"int" Prefix'REXRB   0x45)
-    (def #_"int" Prefix'REXRX   0x46)
-    (def #_"int" Prefix'REXRXB  0x47)
-    (def #_"int" Prefix'REXW    0x48)
-    (def #_"int" Prefix'REXWB   0x49)
-    (def #_"int" Prefix'REXWX   0x4a)
-    (def #_"int" Prefix'REXWXB  0x4b)
-    (def #_"int" Prefix'REXWR   0x4c)
-    (def #_"int" Prefix'REXWRB  0x4d)
-    (def #_"int" Prefix'REXWRX  0x4e)
-    (def #_"int" Prefix'REXWRXB 0x4f)
-)
-
-(about #_"Assembler"
-    (defr Assembler)
-
-    (def- #_"boolean" Assembler'UseIncDec true)
-
-    (def- #_"int" Assembler'MinEncodingNeedsRex 8)
-
-    (defn #_"Assembler" Assembler'new-1 [#_"LIRGenerationResult" res]
-        (let [
-            #_"Assembler" this
-                (new* Assembler'class
-                    (-/hash-map
-                        ;;;
-                         ; The LIR for which code is being generated.
-                         ;;
-                        #_"LIR" :lir (:lir res)
-                        #_"FrameMap" :frameMap (:frameMap res)
-                        ;;;
-                         ; The object that emits code for managing a method's frame.
-                         ;;
-                        #_"FrameContext" :frameContext nil
-                        #_"CompilationResult" :compilationResult nil
-                        ;;;
-                         ; The index of the block currently being emitted.
-                         ;;
-                        #_"int" :currentBlockIndex 0
-                        #_"CodeBuffer" :codeBuffer (CodeBuffer'new-1 AMD64'byteOrder)
-                    )
-                )
-            ;; Omit the frame if the method:
-            ;; - has no spill slots or other slots allocated during register allocation
-            ;; - has no callee-saved registers
-            ;; - has no incoming arguments passed on the stack
-            ;; - has no deoptimization points
-            ;; - makes no foreign calls (which require an aligned stack)
-            #_"boolean" omit-frame?
-                (and GraalOptions'canOmitFrame
-                    (not (FrameMap''frameNeedsAllocating-1 (:frameMap res)))
-                    (not (:hasArgInCallerFrame (:lir res)))
-                    (not (:hasForeignCall res))
-                )
-            this (assoc this :frameContext (FrameContext'new-1 omit-frame?))
-            this (assoc this :compilationResult (CompilationResult'new-1 (FrameMap''totalFrameSize-1 (:frameMap res))))
-        ]
-            this
-        )
-    )
-
-    ;;;
-     ; Returns the current position of the underlying code buffer.
-     ;;
-    (defn #_"int" Assembler''position-1 [#_"Assembler" this]
-        (CodeBuffer''position-1 (:codeBuffer this))
-    )
-
-    (defn #_"this" Assembler''emitByte-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitByte-2 x)
-    )
-
-    (defn #_"this" Assembler''emitShort-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitShort-2 x)
-    )
-
-    (defn #_"this" Assembler''emitInt-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitInt-2 x)
-    )
-
-    (defn #_"this" Assembler''emitLong-2 [#_"Assembler" this, #_"long" x]
-        (update this :codeBuffer CodeBuffer''emitLong-2 x)
-    )
-
-    (defn #_"this" Assembler''emitByte-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitByte-3 b, pos)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''emitShort-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitShort-3 b, pos)
-    )
-
-    (defn #_"this" Assembler''emitInt-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitInt-3 b, pos)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''emitLong-3 [#_"Assembler" this, #_"long" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitLong-3 b, pos)
-    )
-
-    (defn #_"int" Assembler''getByte-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getByte-2 (:codeBuffer this), pos)
-    )
-
-    (defn #_"int" Assembler''getShort-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getShort-2 (:codeBuffer this), pos)
-    )
-
-    #_unused
-    (defn #_"int" Assembler''getInt-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getInt-2 (:codeBuffer this), pos)
-    )
-
-    ;;;
-     ; Closes this assembler. No extra data can be written to this assembler after this call.
-     ;;
-    (defn #_"[byte]" Assembler''close-1 [#_"Assembler" this]
-        (CodeBuffer''close-1 (:codeBuffer this))
-    )
-
-    (defn #_"this" Assembler''bind-2 [#_"Assembler" this, #_"Label" l]
-        (let [
-            _ (§ ass! l (Label''bind-2 l, (Assembler''position-1 this)))
-        ]
-            (Label''patchInstructions-2 l, this)
-        )
-    )
-
-    (defn- #_"int" Assembler'encode-1 [#_"Register" reg]
-        (& (:encoding reg) 0x7)
-    )
-
-    ;;;
-     ; Get RXB bits for register-register instruction. In that encoding, ModRM.rm contains a register index.
-     ; The R bit extends the ModRM.reg field and the B bit extends the ModRM.rm field. The X bit must be 0.
-     ;;
-    (defn #_"int" Assembler'getRXB-2rr [#_"Register" reg, #_"Register" rm]
-        (| (>> (if (nil? reg) 0 (& (:encoding reg) 0x08)) 1) (>> (if (nil? rm) 0 (& (:encoding rm) 0x08)) 3))
-    )
-
-    ;;;
-     ; Get RXB bits for register-memory instruction. The R bit extends the ModRM.reg field.
-     ; There are two cases for the memory operand:
-     ; ModRM.rm contains the base register: In that case, B extends the ModRM.rm field and X = 0.
-     ;
-     ; There is an SIB byte: In that case, X extends SIB.index and B extends SIB.base.
-     ;;
-    (defn #_"int" Assembler'getRXB-2ra [#_"Register" reg, #_"AMD64Address" rm]
-        (let [
-            #_"int" rxb (>> (if (nil? reg) 0 (& (:encoding reg) 0x08)) 1)
-            rxb
-                (when (some? (:index rm)) => rxb
-                    (| rxb (>> (& (:encoding (:index rm)) 0x08) 2))
-                )
-            rxb
-                (when (some? (:base rm)) => rxb
-                    (| rxb (>> (& (:encoding (:base rm)) 0x08) 3))
-                )
-        ]
-            rxb
-        )
-    )
-
-    ;;;
-     ; Emit the ModR/M byte for one register operand and an opcode extension in the R field.
-     ;
-     ; Format: [ 11 reg r/m ]
-     ;;
-    (defn #_"this" Assembler''emitModRM-3ir [#_"Assembler" this, #_"int" reg, #_"Register" rm]
-        (Assembler''emitByte-2 this, (| 0xc0 (<< reg 3) (& (:encoding rm) 0x07)))
-    )
-
-    ;;;
-     ; Emit the ModR/M byte for two register operands.
-     ;
-     ; Format: [ 11 reg r/m ]
-     ;;
-    (defn #_"this" Assembler''emitModRM-3rr [#_"Assembler" this, #_"Register" reg, #_"Register" rm]
-        (Assembler''emitModRM-3ir this, (& (:encoding reg) 0x07), rm)
-    )
-
-    (defn #_"this" Assembler''emitOperand-4r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
-        (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, false, additionalInstructionSize)
-    )
-
-    ;;;
-     ; Emits the ModR/M byte and optionally the SIB byte for one register and one memory operand.
-     ;
-     ; @param force4Byte use 4 byte encoding for displacements that would normally fit in a byte
-     ;;
-    (defn #_"this" Assembler''emitOperand-5r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
-        (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, force4Byte, additionalInstructionSize)
-    )
-
-    (defn #_"this" Assembler''emitOperand-4i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
-        (Assembler''emitOperand-5i this, reg, addr, false, additionalInstructionSize)
-    )
-
-    ;;;
-     ; Emits the ModR/M byte and optionally the SIB byte for one memory operand and an opcode
-     ; extension in the R field.
-     ;
-     ; @param force4Byte use 4 byte encoding for displacements that would normally fit in a byte
-     ; @param additionalInstructionSize the number of bytes that will be emitted after the operand,
-     ;            so that the start position of the next instruction can be computed even though
-     ;            this instruction has not been completely emitted yet.
-     ;;
-    (defn #_"this" Assembler''emitOperand-5i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
-        (let [
-            #_"int" regenc (<< reg 3)
-            #_"Register" base (:base addr)
-            #_"Register" index (:index addr)
-            #_"Scale" scale (:scale addr)
-            #_"int" disp (:displacement addr)
-        ]
-            (cond
-                (= base AMD64'rip) ;; also matches addresses returned by getPlaceholder()
-                    (-> this ;; [00 000 101] disp32
-                        (Assembler''emitByte-2 (| 0x05 regenc))
-                        (Assembler''emitInt-2 disp)
-                    )
-                (Register''isValid-1 base)
-                    (let [
-                        #_"int" baseenc (Assembler'encode-1 base)
-                    ]
-                        (cond
-                            (Register''isValid-1 index)
-                                (let [
-                                    #_"int" indexenc (<< (Assembler'encode-1 index) 3)
-                                ]
-                                    ;; [base + indexscale + disp]
-                                    (cond
-                                        (and (zero? disp) (not (= base AMD64'rbp)) (not (= base AMD64'r13)))
-                                            (-> this ;; [base + indexscale] ;; [00 reg 100][ss index base]
-                                                (Assembler''emitByte-2 (| 0x04 regenc))
-                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
-                                            )
-                                        (and (NumUtil'isByte-1 disp) (not force4Byte))
-                                            (-> this ;; [base + indexscale + imm8] ;; [01 reg 100][ss index base] imm8
-                                                (Assembler''emitByte-2 (| 0x44 regenc))
-                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
-                                                (Assembler''emitByte-2 (& disp 0xff))
-                                            )
-                                        :else
-                                            (-> this ;; [base + indexscale + disp32] ;; [10 reg 100][ss index base] disp32
-                                                (Assembler''emitByte-2 (| 0x84 regenc))
-                                                (Assembler''emitByte-2 (| (<< (:shift scale) 6) indexenc baseenc))
-                                                (Assembler''emitInt-2 disp)
-                                            )
-                                    )
-                                )
-                            (any = base AMD64'rsp AMD64'r12)
-                                ;; [rsp + disp]
-                                (cond
-                                    (zero? disp)
-                                        (-> this ;; [rsp] ;; [00 reg 100][00 100 100]
-                                            (Assembler''emitByte-2 (| 0x04 regenc))
-                                            (Assembler''emitByte-2 0x24)
-                                        )
-                                    (and (NumUtil'isByte-1 disp) (not force4Byte))
-                                        (-> this ;; [rsp + imm8] ;; [01 reg 100][00 100 100] disp8
-                                            (Assembler''emitByte-2 (| 0x44 regenc))
-                                            (Assembler''emitByte-2 0x24)
-                                            (Assembler''emitByte-2 (& disp 0xff))
-                                        )
-                                    :else
-                                        (-> this ;; [rsp + imm32] ;; [10 reg 100][00 100 100] disp32
-                                            (Assembler''emitByte-2 (| 0x84 regenc))
-                                            (Assembler''emitByte-2 0x24)
-                                            (Assembler''emitInt-2 disp)
-                                        )
-                                )
-                            :else
-                                ;; [base + disp]
-                                (cond
-                                    (and (zero? disp) (not (= base AMD64'rbp)) (not (= base AMD64'r13)))
-                                        (-> this ;; [base] ;; [00 reg base]
-                                            (Assembler''emitByte-2 (| 0x00 regenc baseenc))
-                                        )
-                                    (and (NumUtil'isByte-1 disp) (not force4Byte))
-                                        (-> this ;; [base + disp8] ;; [01 reg base] disp8
-                                            (Assembler''emitByte-2 (| 0x40 regenc baseenc))
-                                            (Assembler''emitByte-2 (& disp 0xff))
-                                        )
-                                    :else
-                                        (-> this ;; [base + disp32] ;; [10 reg base] disp32
-                                            (Assembler''emitByte-2 (| 0x80 regenc baseenc))
-                                            (Assembler''emitInt-2 disp)
-                                        )
-                                )
-                        )
-                    )
-                :else
-                    (if (Register''isValid-1 index)
-                        (-> this ;; [indexscale + disp] ;; [00 reg 100][ss index 101] disp32
-                            (Assembler''emitByte-2 (| 0x04 regenc))
-                            (Assembler''emitByte-2 (| (<< (:shift scale) 6) (<< (Assembler'encode-1 index) 3) 0x05))
-                            (Assembler''emitInt-2 disp)
-                        )
-                        (-> this ;; [disp] ABSOLUTE ;; [00 reg 100][00 100 101] disp32
-                            (Assembler''emitByte-2 (| 0x04 regenc))
-                            (Assembler''emitByte-2 0x25)
-                            (Assembler''emitInt-2 disp)
-                        )
-                    )
-            )
-        )
-    )
-
-    (defn- #_"[this int]" Assembler''prefixAndEncode-3b [#_"Assembler" this, #_"int" enc, #_"boolean" byte-inst?]
-        (if (< enc 8)
-            [(if (and byte-inst? (<= 4 enc)) (Assembler''emitByte-2 this, Prefix'REX ) this) enc   ]
-            [                                (Assembler''emitByte-2 this, Prefix'REXB)    (- enc 8)]
-        )
-    )
-
-    (defn- #_"[this int]" Assembler''prefixAndEncode-2 [#_"Assembler" this, #_"int" enc]
-        (Assembler''prefixAndEncode-3b this, enc, false)
-    )
-
-    (defn- #_"[this int]" Assembler''prefixqAndEncode-2 [#_"Assembler" this, #_"int" enc]
-        (if (< enc 8)
-            [(Assembler''emitByte-2 this, Prefix'REXW )    enc   ]
-            [(Assembler''emitByte-2 this, Prefix'REXWB) (- enc 8)]
-        )
-    )
-
-    (defn- #_"[this int]" Assembler''prefixAndEncode-5 [#_"Assembler" this, #_"int" dst, #_"boolean" byte-dst?, #_"int" src, #_"boolean" byte-src?]
-        (let [
-            [this src dst]
-                (if (< dst 8)
-                    (if (< src 8)
-                        [(if (or (and byte-src? (<= 4 src)) (and byte-dst? (<= 4 dst))) (Assembler''emitByte-2 this, Prefix'REX ) this) src    dst]
-                        [                                                               (Assembler''emitByte-2 this, Prefix'REXB)    (- src 8) dst]
-                    )
-                    (if (< src 8)
-                        [(Assembler''emitByte-2 this, Prefix'REXR )    src    (- dst 8)]
-                        [(Assembler''emitByte-2 this, Prefix'REXRB) (- src 8) (- dst 8)]
-                    )
-                )
-        ]
-            [this (| (<< dst 3) src)]
-        )
-    )
-
-    (defn- #_"[this int]" Assembler''prefixAndEncode-3i [#_"Assembler" this, #_"int" dst, #_"int" src]
-        (Assembler''prefixAndEncode-5 this, dst, false, src, false)
-    )
-
-    ;;;
-     ; Creates prefix and the encoding of the lower 6 bits of the ModRM-Byte. It emits an operand
-     ; prefix. If the given operands exceed 3 bits, the 4th bit is encoded in the prefix.
-     ;
-     ; @param reg the encoding of the register part of the ModRM-Byte
-     ; @param rm the encoding of the r/m part of the ModRM-Byte
-     ; @return the lower 6 bits of the ModRM-Byte that should be emitted
-     ;;
-    (defn- #_"[this int]" Assembler''prefixqAndEncode-3 [#_"Assembler" this, #_"int" reg, #_"int" rm]
-        (let [
-            [this rm reg]
-                (if (< reg 8)
-                    (if (< rm 8)
-                        [(Assembler''emitByte-2 this, Prefix'REXW )    rm    reg]
-                        [(Assembler''emitByte-2 this, Prefix'REXWB) (- rm 8) reg]
-                    )
-                    (if (< rm 8)
-                        [(Assembler''emitByte-2 this, Prefix'REXWR )    rm    (- reg 8)]
-                        [(Assembler''emitByte-2 this, Prefix'REXWRB) (- rm 8) (- reg 8)]
-                    )
-                )
-        ]
-            [this (| (<< reg 3) rm)]
-        )
-    )
-
-    (defn- #_"boolean" Assembler'needsRex-1 [#_"Register" reg]
-        (<= Assembler'MinEncodingNeedsRex (:encoding reg))
-    )
-
-    (defn- #_"this" Assembler''prefix-2 [#_"Assembler" this, #_"AMD64Address" adr]
-        (let [
-            #_"Integer" prefix
-                (if (Assembler'needsRex-1 (:base adr))
-                    (if (Assembler'needsRex-1 (:index adr))
-                        Prefix'REXXB
-                        Prefix'REXB
-                    )
-                    (when (Assembler'needsRex-1 (:index adr))
-                        Prefix'REXX
-                    )
-                )
-        ]
-            (if (some? prefix) (Assembler''emitByte-2 this, prefix) this)
-        )
-    )
-
-    (defn- #_"this" Assembler''prefixq-2 [#_"Assembler" this, #_"AMD64Address" adr]
-        (let [
-            #_"int" prefix
-                (if (Assembler'needsRex-1 (:base adr))
-                    (if (Assembler'needsRex-1 (:index adr))
-                        Prefix'REXWXB
-                        Prefix'REXWB
-                    )
-                    (if (Assembler'needsRex-1 (:index adr))
-                        Prefix'REXWX
-                        Prefix'REXW
-                    )
-                )
-        ]
-            (Assembler''emitByte-2 this, prefix)
-        )
-    )
-
-    (defn- #_"this" Assembler''prefix-4 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg, #_"boolean" byte-inst?]
-        (let [
-            #_"Integer" prefix
-                (if (< (:encoding reg) 8)
-                    (if (Assembler'needsRex-1 (:base adr))
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXXB
-                            Prefix'REXB
-                        )
-                        (cond
-                            (Assembler'needsRex-1 (:index adr))
-                                Prefix'REXX
-                            (and byte-inst? (<= 4 (:encoding reg)))
-                                Prefix'REX
-                        )
-                    )
-                    (if (Assembler'needsRex-1 (:base adr))
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXRXB
-                            Prefix'REXRB
-                        )
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXRX
-                            Prefix'REXR
-                        )
-                    )
-                )
-        ]
-            (if (some? prefix) (Assembler''emitByte-2 this, prefix) this)
-        )
-    )
-
-    (defn- #_"this" Assembler''prefix-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg]
-        (Assembler''prefix-4 this, adr, reg, false)
-    )
-
-    (defn- #_"this" Assembler''prefixq-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" src]
-        (let [
-            #_"int" prefix
-                (if (< (:encoding src) 8)
-                    (if (Assembler'needsRex-1 (:base adr))
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXWXB
-                            Prefix'REXWB
-                        )
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXWX
-                            Prefix'REXW
-                        )
-                    )
-                    (if (Assembler'needsRex-1 (:base adr))
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXWRXB
-                            Prefix'REXWRB
-                        )
-                        (if (Assembler'needsRex-1 (:index adr))
-                            Prefix'REXWRX
-                            Prefix'REXWR
-                        )
-                    )
-                )
-        ]
-            (Assembler''emitByte-2 this, prefix)
-        )
-    )
-
-    (defn #_"this" Assembler''addl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''addl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''addl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'ADD), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''andl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'AND, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''andl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'AND), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''bsfq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (reduce Assembler''emitByte-2 this, 0x0f 0xbc (| 0xc0 encode))
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''bsrl-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
-        ]
-            (reduce Assembler''emitByte-2 this, 0x0f 0xbd (| 0xc0 encode))
-        )
-    )
-
-    (defn #_"this" Assembler''bswapl-2 [#_"Assembler" this, #_"Register" reg]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding reg))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 (| 0xc8 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''cdql-1 [#_"Assembler" this]
-        (Assembler''emitByte-2 this, 0x99)
-    )
-
-    (defn #_"this" Assembler''cmovl-4rr [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 (| 0x40 (:value cc)))
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''cmovl-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 (| 0x40 (:value cc)))
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''cmpl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''cmpl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'CMP), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''cmpl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (AMD64RMOp''emit-5 (:rmOp BinaryArithmetic'CMP), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''cmpl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    ;; The 32-bit cmpxchg compares the value at adr with the contents of X86.rax,
-    ;; and stores reg into adr if so; otherwise, the value at adr is loaded into X86.rax.
-    ;; The ZF is set if the compared values were equal, and cleared otherwise.
-    (defn #_"this" Assembler''cmpxchgl-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr] ;; cmpxchg
-        (-> this
-            (Assembler''prefix-3 adr, reg)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xb1)
-            (Assembler''emitOperand-4r reg, adr, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''decl-2a [#_"Assembler" this, #_"AMD64Address" dst]
-        (-> this
-            (Assembler''prefix-2 dst)
-            (Assembler''emitByte-2 0xff)
-            (Assembler''emitOperand-4i 1, dst, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''hlt-1 [#_"Assembler" this]
-        (Assembler''emitByte-2 this, 0xf4)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''imull-4 [#_"Assembler" this, #_"Register" dst, #_"Register" src, #_"int" value]
-        (if (NumUtil'isByte-1 value)
-            (AMD64RMIOp''emit-6r AMD64RMIOp'IMUL_SX, this, :WordSize'32bits, dst, src, value)
-            (AMD64RMIOp''emit-6r AMD64RMIOp'IMUL, this, :WordSize'32bits, dst, src, value)
-        )
-    )
-
-    (defn #_"this" Assembler''incl-2a [#_"Assembler" this, #_"AMD64Address" dst]
-        (-> this
-            (Assembler''prefix-2 dst)
-            (Assembler''emitByte-2 0xff)
-            (Assembler''emitOperand-4i 0, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''jcc-4 [#_"Assembler" this, #_"ConditionFlag" cc, #_"int" jumpTarget, #_"boolean" forceDisp32]
-        (let [
-            #_"int" shortSize 2
-            #_"int" longSize 6
-            #_"long" disp (- jumpTarget (Assembler''position-1 this))
-        ]
-            (if (and (not forceDisp32) (NumUtil'isByte-1 (- disp shortSize)))
-                (-> this ;; 0111 tttn #8-bit disp
-                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
-                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
-                )
-                (-> this ;; 0000 1111 1000 tttn #32-bit disp
-                    (Assembler''emitByte-2 0x0f)
-                    (Assembler''emitByte-2 (| 0x80 (:value cc)))
-                    (Assembler''emitInt-2 (int (- disp longSize)))
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''jcc-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (Assembler''jcc-4 this, cc, (:position l), false)
-            ;; note: could eliminate cond. jumps to this jump if condition is the same however, seems to be rather unlikely case
-            ;; note: use jccb() if label to be bound is very close to get an 8-bit displacement
-            (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 0x0f)
-                    (Assembler''emitByte-2 (| 0x80 (:value cc)))
-                    (Assembler''emitInt-2 0)
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''jccb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (let [
-                #_"int" shortSize 2
-                #_"int" entry (:position l)
-                #_"long" disp (- entry (Assembler''position-1 this))
-            ]
-                (-> this ;; 0111 tttn #8-bit disp
-                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
-                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
-                )
-            )
-            (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 (| 0x70 (:value cc)))
-                    (Assembler''emitByte-2 0)
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''jmp-3 [#_"Assembler" this, #_"int" jumpTarget, #_"boolean" forceDisp32]
-        (let [
-            #_"int" shortSize 2
-            #_"int" longSize 5
-            #_"long" disp (- jumpTarget (Assembler''position-1 this))
-        ]
-            (if (and (not forceDisp32) (NumUtil'isByte-1 (- disp shortSize)))
-                (-> this
-                    (Assembler''emitByte-2 0xeb)
-                    (Assembler''emitByte-2 (int (& (- disp shortSize) 0xff)))
-                )
-                (-> this
-                    (Assembler''emitByte-2 0xe9)
-                    (Assembler''emitInt-2 (int (- disp longSize)))
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''jmp-2l [#_"Assembler" this, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (Assembler''jmp-3 this, (:position l), false)
-            ;; By default, forward jumps are always 32-bit displacements, since we can't yet know where the label will be bound.
-            ;; If you're sure that the forward jump will not run beyond 256 bytes, use jmpb to force an 8-bit displacement.
-            (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 0xe9)
-                    (Assembler''emitInt-2 0)
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''jmp-2r [#_"Assembler" this, #_"Register" entry]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding entry))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xe0 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''jmp-2a [#_"Assembler" this, #_"AMD64Address" adr]
-        (-> this
-            (Assembler''prefix-2 adr)
-            (Assembler''emitByte-2 0xff)
-            (Assembler''emitOperand-4r AMD64'rsp, adr, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''jmpb-2 [#_"Assembler" this, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (let [
-                #_"int" shortSize 2
-                #_"int" entry (:position l)
-                #_"long" offs (- entry (Assembler''position-1 this))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 0xeb)
-                    (Assembler''emitByte-2 (int (& (- offs shortSize) 0xff)))
-                )
-            )
-            (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 0xeb)
-                    (Assembler''emitByte-2 0)
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''lead-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x8d)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''leaq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x8d)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''leave-1 [#_"Assembler" this]
-        (Assembler''emitByte-2 this, 0xc9)
-    )
-
-    (defn #_"this" Assembler''lock-1 [#_"Assembler" this]
-        (Assembler''emitByte-2 this, 0xf0)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movb-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm8]
-        (-> this
-            (Assembler''prefix-2 dst)
-            (Assembler''emitByte-2 0xc6)
-            (Assembler''emitOperand-4i 0, dst, 1)
-            (Assembler''emitByte-2 imm8)
-        )
-    )
-
-    (defn #_"this" Assembler''movb-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''prefix-4 dst, src, true)
-            (Assembler''emitByte-2 0x88)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 (| 0xb8 encode))
-                (Assembler''emitInt-2 imm32)
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x8b)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x8b)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    ;;;
-     ; @param wide? use 4 byte encoding for displacements that would normally fit in a byte
-     ;;
-    #_unused
-    (defn #_"this" Assembler''movl-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide?]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x8b)
-            (Assembler''emitOperand-5r dst, src, wide?, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (-> this
-            (Assembler''prefix-2 dst)
-            (Assembler''emitByte-2 0xc7)
-            (Assembler''emitOperand-4i 0, dst, 4)
-            (Assembler''emitInt-2 imm32)
-        )
-    )
-
-    (defn #_"this" Assembler''movl-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''prefix-3 dst, src)
-            (Assembler''emitByte-2 0x89)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (Assembler''movq-4 this, dst, src, false)
-    )
-
-    (defn #_"this" Assembler''movq-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x8b)
-            (Assembler''emitOperand-5r dst, src, wide, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x8b)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''prefixq-3 dst, src)
-            (Assembler''emitByte-2 0x89)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movsbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xbe)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movsbl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-5 this, (:encoding dst), false, (:encoding src), true)
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 0xbe)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movsbq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xbe)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movsbq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 0xbe)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movswl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xbf)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movw-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm16]
-        (-> this
-            (Assembler''emitByte-2 0x66) ;; switch to 16-bit mode
-            (Assembler''prefix-2 dst)
-            (Assembler''emitByte-2 0xc7)
-            (Assembler''emitOperand-4i 0, dst, 2)
-            (Assembler''emitShort-2 imm16)
-        )
-    )
-
-    (defn #_"this" Assembler''movw-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''emitByte-2 0x66)
-            (Assembler''prefix-3 dst, src)
-            (Assembler''emitByte-2 0x89)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movzbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xb6)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''movzbl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 AMD64RMOp'MOVZXB, this, :WordSize'32bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''movzbq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 AMD64RMOp'MOVZXB, this, :WordSize'64bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movzwl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xb7)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''negl-2 [#_"Assembler" this, #_"Register" dst]
-        (AMD64MOp''emit-4r AMD64MOp'NEG, this, :WordSize'32bits, dst)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''notl-2 [#_"Assembler" this, #_"Register" dst]
-        (AMD64MOp''emit-4r AMD64MOp'NOT, this, :WordSize'32bits, dst)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''notq-2 [#_"Assembler" this, #_"Register" dst]
-        (AMD64MOp''emit-4r AMD64MOp'NOT, this, :WordSize'64bits, dst)
-    )
-
-    ;;;
-     ; Emits a NOP instruction to advance the current PC.
-     ;;
-    (defn #_"this" Assembler''ensureUniquePC-1 [#_"Assembler" this]
-        (Assembler''nop-1 this)
-    )
-
-    (defn #_"this" Assembler''nop-1 [#_"Assembler" this]
-        (Assembler''nop-2 this, 1)
-    )
-
-    (defn #_"this" Assembler''nop-2 [#_"Assembler" this, #_"int" n]
-        (reduce Assembler''emitByte-2 this (repeat n 0x90))
-    )
-
-    #_unused
-    (defn #_"this" Assembler''orl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'OR), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''orl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'OR, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''pop-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (Assembler''emitByte-2 this, (| 0x58 encode))
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''push-2 [#_"Assembler" this, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding src))
-        ]
-            (Assembler''emitByte-2 this, (| 0x50 encode))
-        )
-    )
-
-    (defn #_"this" Assembler''ret-2 [#_"Assembler" this, #_"int" imm16]
-        (if (zero? imm16)
-            (Assembler''emitByte-2 this, 0xc3)
-            (-> this
-                (Assembler''emitByte-2 0xc2)
-                (Assembler''emitShort-2 imm16)
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''sarl-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (if (= imm8 1)
-                (-> this
-                    (Assembler''emitByte-2 0xd1)
-                    (Assembler''emitByte-2 (| 0xf8 encode))
-                )
-                (-> this
-                    (Assembler''emitByte-2 0xc1)
-                    (Assembler''emitByte-2 (| 0xf8 encode))
-                    (Assembler''emitByte-2 imm8)
-                )
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shll-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (if (= imm8 1)
-                (-> this
-                    (Assembler''emitByte-2 0xd1)
-                    (Assembler''emitByte-2 (| 0xe0 encode))
-                )
-                (-> this
-                    (Assembler''emitByte-2 0xc1)
-                    (Assembler''emitByte-2 (| 0xe0 encode))
-                    (Assembler''emitByte-2 imm8)
-                )
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shll-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xd3)
-                (Assembler''emitByte-2 (| 0xe0 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shrl-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xc1)
-                (Assembler''emitByte-2 (| 0xe8 encode))
-                (Assembler''emitByte-2 imm8)
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shrl-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xd3)
-                (Assembler''emitByte-2 (| 0xe8 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''subl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''subl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''subl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'SUB), this, :WordSize'32bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''testl-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        ;; not using emitArith because test doesn't support sign-extension of 8bit operands
-        (if (zero? (:encoding dst))
-            (-> this
-                (Assembler''emitByte-2 0xa9)
-                (Assembler''emitInt-2 imm32)
-            )
-            (let [
-                [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-            ]
-                (-> this
-                    (Assembler''emitByte-2 0xf7)
-                    (Assembler''emitByte-2 (| 0xc0 encode))
-                    (Assembler''emitInt-2 imm32)
-                )
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''testl-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-3i this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x85)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''testl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x85)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''xorl-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'XOR), this, :WordSize'32bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''decl-2r [#_"Assembler" this, #_"Register" dst]
-        ;; Use two-byte form (one-byte form is a REX prefix in 64-bit mode).
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xc8 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''incl-2r [#_"Assembler" this, #_"Register" dst]
-        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''addq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''addq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''addq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'ADD), this, :WordSize'64bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''addq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (AMD64MROp''emit-5 (:mrOp BinaryArithmetic'ADD), this, :WordSize'64bits, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''andq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'AND, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''bsrq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 0xbd)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''bswapq-2 [#_"Assembler" this, #_"Register" reg]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding reg))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 (| 0xc8 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''cdqq-1 [#_"Assembler" this]
-        (-> this
-            (Assembler''emitByte-2 Prefix'REXW)
-            (Assembler''emitByte-2 0x99)
-        )
-    )
-
-    (defn #_"this" Assembler''cmovq-4rr [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 (| 0x40 (:value cc)))
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''setb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-3b this, (:encoding dst), true)
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 (| 0x90 (:value cc)))
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''cmovq-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 (| 0x40 (:value cc)))
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''cmpq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''cmpq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''cmpq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (AMD64RMOp''emit-5 (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''cmpxchgq-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr]
-        (-> this
-            (Assembler''prefixq-3 adr, reg)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xb1)
-            (Assembler''emitOperand-4r reg, adr, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''decq-2r [#_"Assembler" this, #_"Register" dst]
-        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xc8 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''decq-2a [#_"Assembler" this, #_"AMD64Address" dst]
-        (AMD64MOp''emit-4a AMD64MOp'DEC, this, :WordSize'64bits, dst)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''imulq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x0f)
-                (Assembler''emitByte-2 0xaf)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''incq-2r [#_"Assembler" this, #_"Register" dst]
-        ;; Don't use it directly. Use the macro incrementq() instead.
-        ;; Use two-byte form (one-byte from is a REX prefix in 64-bit mode).
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''incq-2a [#_"Assembler" this, #_"AMD64Address" dst]
-        (AMD64MOp''emit-4a AMD64MOp'INC, this, :WordSize'64bits, dst)
-    )
-
-    (defn #_"this" Assembler''movq-3rl [#_"Assembler" this, #_"Register" dst, #_"long" imm64]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 (| 0xb8 encode))
-                (Assembler''emitLong-2 imm64)
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movslq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xc7)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-                (Assembler''emitInt-2 imm32)
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''movslq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (-> this
-            (Assembler''prefixq-2 dst)
-            (Assembler''emitByte-2 0xc7)
-            (Assembler''emitOperand-4i 0, dst, 4)
-            (Assembler''emitInt-2 imm32)
-        )
-    )
-
-    (defn #_"this" Assembler''movslq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x63)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movslq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x63)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''negq-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xf7)
-                (Assembler''emitByte-2 (| 0xd8 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''orq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'OR), this, :WordSize'64bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''shlq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (if (= imm8 1)
-                (-> this
-                    (Assembler''emitByte-2 0xd1)
-                    (Assembler''emitByte-2 (| 0xe0 encode))
-                )
-                (-> this
-                    (Assembler''emitByte-2 0xc1)
-                    (Assembler''emitByte-2 (| 0xe0 encode))
-                    (Assembler''emitByte-2 imm8)
-                )
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shlq-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xd3)
-                (Assembler''emitByte-2 (| 0xe0 encode))
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''shrq-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (if (= imm8 1)
-                (-> this
-                    (Assembler''emitByte-2 0xd1)
-                    (Assembler''emitByte-2 (| 0xe8 encode))
-                )
-                (-> this
-                    (Assembler''emitByte-2 0xc1)
-                    (Assembler''emitByte-2 (| 0xe8 encode))
-                    (Assembler''emitByte-2 imm8)
-                )
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''shrq-2 [#_"Assembler" this, #_"Register" dst]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding dst))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xd3)
-                (Assembler''emitByte-2 (| 0xe8 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''sbbq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'SBB), this, :WordSize'64bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''subq-3ri [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''subq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
-        (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''subqWide-3 [#_"Assembler" this, #_"Register" dst, #_"int" imm32]
-        ;; do not use the sign-extending version, forcing a 32-bit immediate
-        (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, false), this, :WordSize'64bits, dst, imm32)
-    )
-
-    (defn #_"this" Assembler''subq-3rr [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (AMD64RROp'''emit-5 (:rmOp BinaryArithmetic'SUB), this, :WordSize'64bits, dst, src)
-    )
-
-    (defn #_"this" Assembler''testq-3 [#_"Assembler" this, #_"Register" dst, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-3 this, (:encoding dst), (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0x85)
-                (Assembler''emitByte-2 (| 0xc0 encode))
-            )
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''btrq-3 [#_"Assembler" this, #_"Register" src, #_"int" imm8]
-        (let [
-            [this #_"int" encode] (Assembler''prefixqAndEncode-2 this, (:encoding src))
-        ]
-            (reduce Assembler''emitByte-2 this, 0x0f 0xba (| 0xf0 encode) imm8)
-        )
-    )
-
-    (defn #_"this" Assembler''xaddl-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''prefix-3 dst, src)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xc1)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''xaddq-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (-> this
-            (Assembler''prefixq-3 dst, src)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xc1)
-            (Assembler''emitOperand-4r src, dst, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''xchgl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-3 src, dst)
-            (Assembler''emitByte-2 0x87)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''xchgq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefixq-3 src, dst)
-            (Assembler''emitByte-2 0x87)
-            (Assembler''emitOperand-4r dst, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''membar-2 [#_"Assembler" this, #_"int" barriers]
-        (when AMD64'isMP => this
-            ;; We only have to handle StoreLoad.
-            (when-not (zero? (& barriers MemoryBarriers'STORE_LOAD)) => this
-                ;; All usable chips support "locked" instructions which suffice as barriers,
-                ;; and are much faster than the alternative of using cpuid instruction.
-                ;; We use here a locked add [rsp],0. This is conveniently otherwise a no-op except
-                ;; for blowing flags. Any change to this code may need to revisit other places
-                ;; in the code where this idiom is used, in particular the orderAccess code.
-                (-> this
-                    (Assembler''lock-1)
-                    (Assembler''addl-3ai (AMD64Address'new-2 AMD64'rsp, 0), 0) ;; Assert the lock# signal here.
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''patchJumpTarget-3 [#_"Assembler" this, #_"int" branch, #_"int" jumpTarget]
-        (let [
-            #_"int" op (Assembler''getByte-2 this, branch)
-        ]
-            (cond
-                (= op 0x00)
-                    (let [
-                        #_"int" offsetToJumpTableBase (Assembler''getShort-2 this, (inc branch))
-                        #_"int" jumpTableBase (- branch offsetToJumpTableBase)
-                        #_"int" imm32 (- jumpTarget jumpTableBase)
-                    ]
-                        (Assembler''emitInt-3 this, imm32, branch)
-                    )
-                (or (= op 0xeb) (= (& op 0xf0) 0x70))
-                    ;; short offset operators (jmp and jcc)
-                    (let [
-                        #_"int" imm8 (- jumpTarget (+ branch 2))
-                    ]
-                        ;; Since a wrongly patched short branch can potentially lead to working but really bad
-                        ;; behaving code we should always fail with an exception instead of having an assert.
-                        (when (NumUtil'isByte-1 imm8) => (throw! (str "branch displacement out of range: " imm8))
-                            (Assembler''emitByte-3 this, imm8, (inc branch))
-                        )
-                    )
-                :else
-                    (let [
-                        #_"int" off (if (= op 0x0f) 2 1)
-                        #_"int" imm32 (- jumpTarget (+ branch 4 off))
-                    ]
-                        (Assembler''emitInt-3 this, imm32, (+ branch off))
-                    )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''nullCheck-2 [#_"Assembler" this, #_"AMD64Address" address]
-        (Assembler''testl-3ra this, AMD64'rax, address)
-    )
-
-    (defn #_"this" Assembler''align-2 [#_"Assembler" this, #_"int" modulus]
-        (when-not (zero? (% (Assembler''position-1 this) modulus)) => this
-            (Assembler''nop-2 this, (- modulus (% (Assembler''position-1 this) modulus)))
-        )
-    )
-
-    ;;;
-     ; Emits a direct call instruction. Note that the actual call target is not specified, because
-     ; all calls need patching anyway. Therefore, 0 is emitted as the call target, and the user is
-     ; responsible to add the call address to the appropriate patching tables.
-     ;;
-    (defn #_"this" Assembler''call-1 [#_"Assembler" this]
-        (-> this
-            (Assembler''emitByte-2 0xe8)
-            (Assembler''emitInt-2 0)
-        )
-    )
-
-    (defn #_"this" Assembler''call-2 [#_"Assembler" this, #_"Register" src]
-        (let [
-            [this #_"int" encode] (Assembler''prefixAndEncode-2 this, (:encoding src))
-        ]
-            (-> this
-                (Assembler''emitByte-2 0xff)
-                (Assembler''emitByte-2 (| 0xd0 encode))
-            )
-        )
-    )
-
-    ;;;
-     ; Returns a target specific placeholder address that can be used for code patching.
-     ;
-     ; @param pos The start of the instruction, i.e. the value that is used as the key
-     ;            for looking up placeholder patching information.
-     ;;
-    (defn #_"AMD64Address" Assembler'createPlaceholder-1 [#_"int" pos]
-        (AMD64Address'new-4 AMD64'rip, nil, Scale'Times1, 0)
-    )
-
-    (defn- #_"this" Assembler''prefetchPrefix-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-2 src)
-            (Assembler''emitByte-2 0x0f)
-        )
-    )
-
-    (defn #_"this" Assembler''prefetchnta-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefetchPrefix-2 src)
-            (Assembler''emitByte-2 0x18)
-            (Assembler''emitOperand-4i 0, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''prefetchr-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefetchPrefix-2 src)
-            (Assembler''emitByte-2 0x0d)
-            (Assembler''emitOperand-4i 0, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''prefetcht0-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefetchPrefix-2 src)
-            (Assembler''emitByte-2 0x18)
-            (Assembler''emitOperand-4i 1, src, 0)
-        )
-    )
-
-    #_unused
-    (defn #_"this" Assembler''prefetcht1-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefetchPrefix-2 src)
-            (Assembler''emitByte-2 0x18)
-            (Assembler''emitOperand-4i 2, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''prefetcht2-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-2 src)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0x18)
-            (Assembler''emitOperand-4i 3, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''prefetchw-2 [#_"Assembler" this, #_"AMD64Address" src]
-        (-> this
-            (Assembler''prefix-2 src)
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0x0d)
-            (Assembler''emitOperand-4i 1, src, 0)
-        )
-    )
-
-    (defn #_"this" Assembler''rdtsc-1 [#_"Assembler" this]
-        (-> this
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0x31)
-        )
-    )
-
-    ;;;
-     ; Emits an instruction which is considered to be illegal. This is used if we deliberately want
-     ; to crash the program (debugging etc.).
-     ;;
-    #_unused
-    (defn #_"this" Assembler''illegal-1 [#_"Assembler" this]
-        (-> this
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0x0b)
-        )
-    )
-
-    (defn #_"this" Assembler''lfence-1 [#_"Assembler" this]
-        (-> this
-            (Assembler''emitByte-2 0x0f)
-            (Assembler''emitByte-2 0xae)
-            (Assembler''emitByte-2 0xe8)
-        )
-    )
-
-    ;; masm
-
-    (defn #_"this" Assembler''decrementq-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''subq-3ri this, reg, value)
-            (neg? value)                          (Assembler''incrementq-3r this, reg, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''decq-2r this, reg)
-            :else                                 (Assembler''subq-3ri this, reg, value)
-        )
-    )
-
-    (defn #_"this" Assembler''decrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''subq-3ai this, dst, value)
-            (neg? value)                          (Assembler''incrementq-3a this, dst, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''decq-2a this, dst)
-            :else                                 (Assembler''subq-3ai this, dst, value)
-        )
-    )
-
-    (defn #_"this" Assembler''incrementq-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''addq-3ri this, reg, value)
-            (neg? value)                          (Assembler''decrementq-3r this, reg, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''incq-2r this, reg)
-            :else                                 (Assembler''addq-3ri this, reg, value)
-        )
-    )
-
-    (defn #_"this" Assembler''incrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''addq-3ai this, dst, value)
-            (neg? value)                          (Assembler''decrementq-3a this, dst, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''incq-2a this, dst)
-            :else                                 (Assembler''addq-3ai this, dst, value)
-        )
-    )
-
-    (defn #_"this" Assembler''movptr-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
-        (Assembler''movq-3ra this, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movptr-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
-        (Assembler''movq-3ar this, dst, src)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''movptr-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" src]
-        (Assembler''movslq-3ai this, dst, src)
-    )
-
-    (defn #_"this" Assembler''cmpptr-3rr [#_"Assembler" this, #_"Register" src1, #_"Register" src2]
-        (Assembler''cmpq-3rr this, src1, src2)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''cmpptr-3ra [#_"Assembler" this, #_"Register" src1, #_"AMD64Address" src2]
-        (Assembler''cmpq-3ra this, src1, src2)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''decrementl-2 [#_"Assembler" this, #_"Register" reg]
-        (Assembler''decrementl-3r this, reg, 1)
-    )
-
-    (defn #_"this" Assembler''decrementl-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''subl-3ri this, reg, value)
-            (neg? value)                          (Assembler''incrementl-3r this, reg, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''decl-2r this, reg)
-            :else                                 (Assembler''subl-3ri this, reg, value)
-        )
-    )
-
-    (defn #_"this" Assembler''decrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''subl-3ai this, dst, value)
-            (neg? value)                          (Assembler''incrementl-3a this, dst, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''decl-2a this, dst)
-            :else                                 (Assembler''subl-3ai this, dst, value)
-        )
-    )
-
-    (defn #_"this" Assembler''incrementl-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''addl-3ri this, reg, value)
-            (neg? value)                          (Assembler''decrementl-3r this, reg, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''incl-2r this, reg)
-            :else                                 (Assembler''addl-3ri this, reg, value)
-        )
-    )
-
-    (defn #_"this" Assembler''incrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
-        (cond
-            (= value Integer'MIN_VALUE)           (Assembler''addl-3ai this, dst, value)
-            (neg? value)                          (Assembler''decrementl-3a this, dst, (- value))
-            (zero? value)                         this
-            (and (= value 1) Assembler'UseIncDec) (Assembler''incl-2a this, dst)
-            :else                                 (Assembler''addl-3ai this, dst, value)
-        )
-    )
-
-    ;;;
-     ; Non-atomic write of a 64-bit constant to memory.
-     ; Do not use if the address might be a volatile field!
-     ;;
-    (defn #_"this" Assembler''movlong-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"long" src]
-        (if (NumUtil'isInt-1 src)
-            (AMD64MIOp''emit-5a AMD64MIOp'MOV, this, :WordSize'64bits, dst, (int src))
-            (let [
-                #_"AMD64Address" high (AMD64Address'new-4 (:base dst), (:index dst), (:scale dst), (+ (:displacement dst) 4))
-            ]
-                (-> this
-                    (Assembler''movl-3ai dst, (int (& src 0xffffffff)))
-                    (Assembler''movl-3ai high, (int (>> src 32)))
-                )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''setl-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
-        (-> this
-            (Assembler''setb-3 cc, dst)
-            (Assembler''movzbl-3rr dst, dst)
-        )
-    )
-
-    (defn #_"this" Assembler''setq-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst]
-        (-> this
-            (Assembler''setb-3 cc, dst)
-            (Assembler''movzbq-3 dst, dst)
-        )
-    )
-
-    ;; crb
-
-    (defn #_"Mark" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
-        (CompilationResult''recordMark-3 (:compilationResult this), (Assembler''position-1 this), id)
-    )
-
-    (defn #_"this" Assembler''recordInlineDataInCode-2 [#_"Assembler" this, #_"Constant" data]
-        (when (satisfies? VMConstant data) => this
-            (update this :compilationResult CompilationResult''recordDataPatch-3 (Assembler''position-1 this), (ConstantReference. data))
-        )
-    )
-
-    (defn- #_"AbstractAddress" Assembler''recordDataSectionReference-2 [#_"Assembler" this, #_"Data" data]
-        (let [
-            #_"DataSectionReference" reference (DataSection''insertData-2 (:dataSection (:compilationResult this)), data)
-            #_"int" pos (Assembler''position-1 this)
-            _ (§ ass! this (update this :compilationResult CompilationResult''recordDataPatch-3 pos, reference))
-        ]
-            (Assembler'createPlaceholder-1 pos)
-        )
-    )
-
-    (defn- #_"Data" Assembler'createDataItem-1 [#_"Constant" constant]
-        (cond
-            (JavaConstant'isNull-1 constant)
-                (let [
-                    #_"int" size (if (= JavaConstant'COMPRESSED_NULL constant) 4 (WordSize'inBytes-1 AMD64'wordSize))
-                ]
-                    (§ proxy #_"Data" (Data'new-2 size, size)
-                        (#_"[DataPatch]" Data'''emit-3 [#_"Data" this, #_"ByteBuffer" buffer, #_"[DataPatch]" patches]
-                            (case! (:size this)
-                                4   (ByteBuffer''putInt buffer, 0)
-                                8   (ByteBuffer''putLong buffer, 0)
-                            )
-                            patches
-                        )
-                    )
-                )
-            (and (satisfies? VMConstant constant) (satisfies? HotSpotConstant constant))
-                (let [
-                    #_"int" size (if (HotSpotConstant'''isCompressed-1 constant) 4 (WordSize'inBytes-1 AMD64'wordSize))
-                ]
-                    (§ proxy #_"Data" (Data'new-2 size, size)
-                        (#_"[DataPatch]" Data'''emit-3 [#_"Data" this, #_"ByteBuffer" buffer, #_"[DataPatch]" patches]
-                            (let [
-                                #_"int" position (ByteBuffer''position buffer)
-                            ]
-                                (case! (:size this)
-                                    4   (ByteBuffer''putInt buffer, 0xdeaddead)
-                                    8   (ByteBuffer''putLong buffer, 0xdeaddeaddeaddead)
-                                )
-                                (conj' patches (DataPatch. position, (ConstantReference. constant)))
-                            )
-                        )
-                    )
-                )
-            :else
-                (throw! (str constant))
-        )
-    )
-
-    (defn #_"AbstractAddress" Assembler''recordDataReferenceInCode-3c [#_"Assembler" this, #_"Constant" constant, #_"int" alignment]
-        (Assembler''recordDataReferenceInCode-3d this, (Assembler'createDataItem-1 constant), alignment)
-    )
-
-    (defn #_"AbstractAddress" Assembler''recordDataReferenceInCode-3d [#_"Assembler" this, #_"Data" data, #_"int" alignment]
-        (Assembler''recordDataSectionReference-2 this, (Data''updateAlignment-2 data, alignment))
-    )
-
-    ;;;
-     ; Returns the address of a long constant that is embedded as a data reference into the code.
-     ;;
-    (defn #_"AbstractAddress" Assembler''asLongConstRef-2 [#_"Assembler" this, #_"JavaConstant" value]
-        (Assembler''recordDataReferenceInCode-3c this, value, 8)
-    )
-
-    (defn #_"AbstractAddress" Assembler''asAddress-2 [#_"Assembler" this, #_"Value" value]
-        (AMD64Address'new-2 RegisterConfig'frameRegister, (FrameMap''offsetForStackSlot-2 (:frameMap this), value))
-    )
-
-    ;;;
-     ; Determines if a given edge from the block currently being emitted goes to its lexical successor.
-     ;;
-    (defn #_"boolean" Assembler''isSuccessorEdge-2 [#_"Assembler" this, #_"LabelRef" edge]
-        (= (LIR'getNextBlock-2 (:codeEmittingOrder (:lir this)), (:currentBlockIndex this)) (LabelRef''getTargetBlock-1 edge))
-    )
-
-    ;;;
-     ; Emits code for {@code lir} in its {@linkplain LIR#codeEmittingOrder() code emitting order}.
-     ;;
-    (defn #_"this" Assembler''assemble-1 [#_"Assembler" this]
-        (let [
-            this (Assembler''align-2 this, HotSpot'codeEntryAlignment)
-        ]
-            (Assembler''recordMark-2 this, HotSpot'verifiedEntryMark)
-            (let [
-                this (FrameContext''enter-2 (:frameContext this), this)
-                this
-                    (loop-when [this this #_"seq" s (seq (:codeEmittingOrder (:lir this)))] (some? s) => this
-                        (let [
-                            #_"Block" block (first s)
-                            this
-                                (when (some? block) => this
-                                    (reduce #(LIRInstruction'''emitCode-2 %2, %1) this (get (:lirInstructions (:lir this)) block))
-                                )
-                        ]
-                            (recur (update this :currentBlockIndex inc) (next s))
-                        )
-                    )
-            ]
-                (Assembler''recordMark-2 this, HotSpot'deoptHandlerEntryMark)
-                (AMD64Call'directCall-4 this, (ForeignCalls''lookupForeignCall-2 HotSpot'foreignCalls, ForeignCallDescriptor'DEOPTIMIZATION_HANDLER), nil, false)
-            )
-        )
-    )
-
-    (defn #_"CompilationResult" Assembler''finish-1 [#_"Assembler" this]
-        (let [
-            _ (§ ass! this (update this :compilationResult CompilationResult''setTargetCode-3 (Assembler''close-1 this), (Assembler''position-1 this)))
-        ]
-            (CompilationResult''close-1 (:compilationResult this))
-        )
-    )
-)
-)
