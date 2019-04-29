@@ -17,11 +17,10 @@
     [java.lang.ref Reference ReferenceQueue WeakReference]
     [java.lang.reflect Array Constructor]
     [java.io Flushable PrintWriter PushbackReader Reader]
-    [java.nio ByteBuffer ByteOrder]
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.code.site Mark]
-    [jdk.vm.ci.hotspot HotSpotJVMCIRuntime]
+    [jdk.vm.ci.hotspot CompilerToVM HotSpotCompiledCode HotSpotInstalledCode HotSpotJVMCIRuntime]
     [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Keyword Namespace Seqable Var]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
@@ -224,37 +223,10 @@
 )
 )
 
-(about #_"java.nio"
-
-(about #_"ByteBuffer"
-    (defn #_"ByteBuffer" ByteBuffer'allocate [#_"int" capacity] (ByteBuffer/allocate capacity))
-    (defn #_"ByteBuffer" ByteBuffer'wrap     [#_"byte[]" array] (ByteBuffer/wrap array))
-
-    (defn #_"byte[]" ByteBuffer''array                   [^ByteBuffer this] (.array this))
-    (defn            ByteBuffer''order    (#_"ByteOrder" [^ByteBuffer this] (.order this))    (#_"ByteBuffer" [^ByteBuffer this, #_"ByteOrder" order] (.order this, order)))
-    (defn            ByteBuffer''position (#_"int"       [^ByteBuffer this] (.position this)) (#_"ByteBuffer" [^ByteBuffer this, #_"int" position]    (.position this, position)))
-    (defn            ByteBuffer''limit    (#_"int"       [^ByteBuffer this] (.limit this)))
-
-    (defn #_"ByteBuffer" ByteBuffer''put      ([^ByteBuffer this, #_"byte"  x] (.put      this, x)) ([^ByteBuffer this, #_"int" i, #_"byte"  x] (.put      this, i, x)))
-    (defn #_"ByteBuffer" ByteBuffer''putShort ([^ByteBuffer this, #_"short" x] (.putShort this, x)) ([^ByteBuffer this, #_"int" i, #_"short" x] (.putShort this, i, x)))
-    (defn #_"ByteBuffer" ByteBuffer''putInt   ([^ByteBuffer this, #_"int"   x] (.putInt   this, x)) ([^ByteBuffer this, #_"int" i, #_"int"   x] (.putInt   this, i, x)))
-    (defn #_"ByteBuffer" ByteBuffer''putLong  ([^ByteBuffer this, #_"long"  x] (.putLong  this, x)) ([^ByteBuffer this, #_"int" i, #_"long"  x] (.putLong  this, i, x)))
-
-    (defn #_"byte"  ByteBuffer''get      [^ByteBuffer this, #_"int" i] (.get      this, i))
-    (defn #_"short" ByteBuffer''getShort [^ByteBuffer this, #_"int" i] (.getShort this, i))
-    (defn #_"int"   ByteBuffer''getInt   [^ByteBuffer this, #_"int" i] (.getInt   this, i))
-)
-
-(about #_"ByteOrder"
-    (def #_"ByteOrder" ByteOrder'LITTLE_ENDIAN ByteOrder/LITTLE_ENDIAN)
-)
-)
-
 (about #_"java.util"
 
 (about #_"Arrays"
-    (defn #_"array" Arrays'copyOf [#_"array" a, #_"int" n]          (Arrays/copyOf a, n))
-    (defn #_"void"  Arrays'sort   [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
+    (defn #_"void" Arrays'sort [#_"array" a, #_"Comparator" cmp] (Arrays/sort a, cmp))
 )
 
 (about #_"Comparator"
@@ -338,6 +310,45 @@
 )
 )
 
+(about #_"jdk.vm.ci.hotspot"
+
+(about #_"CompilerToVM"
+    (defn #_"int" CompilerToVM''installCode [^CompilerToVM this, #_"TargetDescription" target, #_"HotSpotCompiledCode" compiledCode, #_"InstalledCode" code, #_"HotSpotSpeculationLog" speculationLog]
+        (let [
+            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "installCode", (-/into-array Class [jdk.vm.ci.code.TargetDescription, HotSpotCompiledCode, jdk.vm.ci.code.InstalledCode, jdk.vm.ci.hotspot.HotSpotSpeculationLog]))
+        ]
+            (.setAccessible m, true)
+            (.invoke m, this, (-/object-array [target, compiledCode, code, speculationLog]))
+        )
+    )
+
+    (defn #_"Object" CompilerToVM''executeInstalledCode [^CompilerToVM this, #_"Object[]" args, #_"InstalledCode" installedCode] #_(§ throws #_"InvalidInstalledCodeException")
+        (let [
+            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "executeInstalledCode", (-/into-array Class [Object'array, jdk.vm.ci.code.InstalledCode]))
+        ]
+            (.setAccessible m, true)
+            (.invoke m, this, (-/object-array [args, installedCode]))
+        )
+    )
+
+    (defn #_"void" CompilerToVM''invalidateInstalledCode [^CompilerToVM this, #_"InstalledCode" installedCode]
+        (let [
+            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "invalidateInstalledCode", (-/into-array Class [jdk.vm.ci.code.InstalledCode]))
+        ]
+            (.setAccessible m, true)
+            (.invoke m, this, (-/object-array [installedCode]))
+        )
+        nil
+    )
+)
+
+(about #_"HotSpotCompiledCode"
+    (defn #_"HotSpotCompiledCode" HotSpotCompiledCode'new [#_"String" name, #_"byte[]" targetCode, #_"int" targetCodeSize, #_"Site[]" sites, #_"Assumption[]" assumptions, #_"ResolvedJavaMethod[]" methods, #_"Comment[]" comments, #_"byte[]" dataSection, #_"int" dataSectionAlignment, #_"DataPatch[]" dataSectionPatches, #_"boolean" isImmutablePIC, #_"int" totalFrameSize, #_"StackSlot" deoptRescueSlot] (HotSpotCompiledCode. name, targetCode, targetCodeSize, sites, assumptions, methods, comments, dataSection, dataSectionAlignment, dataSectionPatches, isImmutablePIC, totalFrameSize, deoptRescueSlot))
+
+    (defn #_"String" HotSpotCompiledCode''getName [^HotSpotCompiledCode this] (.getName this))
+)
+)
+
 (about #_"graalfn.HotSpot"
 
 (about #_"HotSpot"
@@ -345,6 +356,8 @@
 
     (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
     (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"TargetDescription" HotSpot'target (#_"JVMCIBackend" .getTarget (#_"JVMCIRuntime" .getJVMCIBackend JVMCI'runtime, jdk.vm.ci.amd64.AMD64)))
 
     (def #_"boolean" HotSpot'useG1GC                    (.getFlag HotSpot'config, "UseG1GC",                    Boolean))
     (def #_"int"     HotSpot'codeEntryAlignment         (.getFlag HotSpot'config, "CodeEntryAlignment",         Integer))
@@ -358,6 +371,12 @@
 
     (def #_"int" HotSpot'verifiedEntryMark     (.getConstant HotSpot'config, "CodeInstaller::VERIFIED_ENTRY",      Integer))
     (def #_"int" HotSpot'deoptHandlerEntryMark (.getConstant HotSpot'config, "CodeInstaller::DEOPT_HANDLER_ENTRY", Integer))
+
+    (def #_"int" HotSpot'codeInstallResultOk                  (.getConstant HotSpot'config, "JVMCIEnv::ok",                   Integer))
+    (def #_"int" HotSpot'codeInstallResultDependenciesFailed  (.getConstant HotSpot'config, "JVMCIEnv::dependencies_failed",  Integer))
+    (def #_"int" HotSpot'codeInstallResultDependenciesInvalid (.getConstant HotSpot'config, "JVMCIEnv::dependencies_invalid", Integer))
+    (def #_"int" HotSpot'codeInstallResultCacheFull           (.getConstant HotSpot'config, "JVMCIEnv::cache_full",           Integer))
+    (def #_"int" HotSpot'codeInstallResultCodeTooLarge        (.getConstant HotSpot'config, "JVMCIEnv::code_too_large",       Integer))
 
     (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
         (throw! "use G1 with compressed oops")
@@ -443,7 +462,7 @@
 )
 
 (ns arbace.core
-    (:refer-clojure :only [boolean byte char long satisfies? short]) (:require [clojure.core :as -])
+    (:refer-clojure :only [boolean char long satisfies?]) (:require [clojure.core :as -])
     (:refer arbace.bore :only
         [
             about byte! import! int int! refer! throw!
@@ -469,9 +488,7 @@
             PrintWriter''println
             pushback-reader? PushbackReader'new PushbackReader''unread
             Reader''read
-            ByteBuffer'allocate ByteBuffer'wrap ByteBuffer''array ByteBuffer''order ByteBuffer''position ByteBuffer''limit ByteBuffer''put ByteBuffer''putShort ByteBuffer''putInt ByteBuffer''putLong ByteBuffer''get ByteBuffer''getShort ByteBuffer''getInt
-            ByteOrder'LITTLE_ENDIAN
-            Arrays'copyOf Arrays'sort
+            Arrays'sort
             Comparator''compare
             pattern? Pattern'compile Pattern''matcher Pattern''pattern
             matcher? Matcher''find Matcher''group Matcher''groupCount Matcher''matches
@@ -484,7 +501,9 @@
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             Mark'new
-            HotSpot'useG1GC HotSpot'codeEntryAlignment HotSpot'useCompressedOops HotSpot'useCompressedClassPointers HotSpot'vmPageSize HotSpot'useStackBanging HotSpot'stackShadowPages HotSpot'verifiedEntryMark HotSpot'deoptHandlerEntryMark
+            CompilerToVM''installCode CompilerToVM''executeInstalledCode CompilerToVM''invalidateInstalledCode
+            HotSpotCompiledCode'new HotSpotCompiledCode''getName
+            HotSpot'native HotSpot'target HotSpot'useG1GC HotSpot'codeEntryAlignment HotSpot'useCompressedOops HotSpot'useCompressedClassPointers HotSpot'vmPageSize HotSpot'useStackBanging HotSpot'stackShadowPages HotSpot'verifiedEntryMark HotSpot'deoptHandlerEntryMark HotSpot'codeInstallResultOk HotSpot'codeInstallResultDependenciesFailed HotSpot'codeInstallResultDependenciesInvalid HotSpot'codeInstallResultCacheFull HotSpot'codeInstallResultCodeTooLarge
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -13574,8 +13593,9 @@
     (defp Condition)
     (defp Register)
     (defp Scale)
-    (defp AMD64Address)
+    (defp Address)
     (defp ConditionFlag)
+    (defp Assembler)
     #_abstract
     (defp AMD64Op)
     #_abstract
@@ -13594,11 +13614,7 @@
     (defp AMD64RMOp)
     (defp AMD64Shift)
     (defp BinaryArithmetic)
-    (defp CodeBuffer)
-    (defp Label)
-    (defp CompilationResult)
     (defp FrameContext)
-    (defp Assembler)
 
 (about #_"NumUtil"
     (def #_"int" NumUtil'K 1024)
@@ -14240,7 +14256,7 @@
     ;;;
      ; The byte ordering can be either little or big endian.
      ;;
-    (def #_"ByteOrder" AMD64'byteOrder ByteOrder'LITTLE_ENDIAN)
+    (def #_"ByteOrder" AMD64'byteOrder :ByteOrder'LITTLE_ENDIAN)
 
     ;;;
      ; Whether the architecture supports unaligned memory accesses.
@@ -14298,18 +14314,18 @@
  ; register, an index register, a displacement and a scale. Note that the base and index registers
  ; may be a variable that will get a register assigned later by the register allocator.
  ;;
-(about #_"AMD64Address"
-    (defr AMD64Address)
+(about #_"Address"
+    (defr Address)
 
     ;;;
-     ; Creates an AMD64Address with given base and index registers, scaling and displacement.
+     ; Creates an Address with given base and index registers, scaling and displacement.
      ;;
-    (defn #_"AMD64Address" AMD64Address'new
-        ([#_"Register" base] (AMD64Address'new base, nil, Scale'Times1, 0))
-        ([#_"Register" base, #_"int" displacement] (AMD64Address'new base, nil, Scale'Times1, displacement))
-        ([#_"Register" base, #_"Register" index, #_"Scale" scale] (AMD64Address'new base, index, scale, 0))
+    (defn #_"Address" Address'new
+        ([#_"Register" base] (Address'new base, nil, Scale'Times1, 0))
+        ([#_"Register" base, #_"int" displacement] (Address'new base, nil, Scale'Times1, displacement))
+        ([#_"Register" base, #_"Register" index, #_"Scale" scale] (Address'new base, index, scale, 0))
         ([#_"Register" base, #_"Register" index, #_"Scale" scale, #_"int" displacement]
-            (new* AMD64Address'class
+            (new* Address'class
                 (-/hash-map
                     ;;;
                      ; Base register that defines the start of the address computation.
@@ -14476,187 +14492,6 @@
     (def #_"int" Prefix'REXWRXB 0x4f)
 )
 
-(about #_"CodeBuffer"
-    (defr CodeBuffer)
-
-    (def- #_"int" CodeBuffer'InitialSize 232)
-
-    (defn #_"CodeBuffer" CodeBuffer'new-1 [#_"ByteOrder" order]
-        (let [
-            #_"CodeBuffer" this
-                (new* CodeBuffer'class
-                    (-/hash-map
-                        #_"ByteBuffer" :data (ByteBuffer'allocate CodeBuffer'InitialSize)
-                    )
-                )
-        ]
-            (ByteBuffer''order (:data this), order)
-            this
-        )
-    )
-
-    (defn #_"int" CodeBuffer''position-1 [#_"CodeBuffer" this]
-        (ByteBuffer''position (:data this))
-    )
-
-    (defn- #_"this" CodeBuffer''ensureSize-2 [#_"CodeBuffer" this, #_"int" n]
-        (when (<= (ByteBuffer''limit (:data this)) n) => this
-            (let [
-                #_"ByteBuffer" data (ByteBuffer'wrap (Arrays'copyOf (ByteBuffer''array (:data this)), (<< n 2)))
-            ]
-                (ByteBuffer''order data, (ByteBuffer''order (:data this)))
-                (ByteBuffer''position data, (ByteBuffer''position (:data this)))
-                (assoc this :data data)
-            )
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitByte-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 1))
-        ]
-            (ByteBuffer''put (:data this), (byte (& b 0xff)))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitShort-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 2))
-        ]
-            (ByteBuffer''putShort (:data this), (short b))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitInt-2 [#_"CodeBuffer" this, #_"int" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 4))
-        ]
-            (ByteBuffer''putInt (:data this), b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitLong-2 [#_"CodeBuffer" this, #_"long" b]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ (ByteBuffer''position (:data this)) 8))
-        ]
-            (ByteBuffer''putLong (:data this), b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitByte-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 1))
-        ]
-            (ByteBuffer''put (:data this), i, (byte (& b 0xff)))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitShort-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 2))
-        ]
-            (ByteBuffer''putShort (:data this), i, (short b))
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitInt-3 [#_"CodeBuffer" this, #_"int" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 4))
-        ]
-            (ByteBuffer''putInt (:data this), i, b)
-            this
-        )
-    )
-
-    (defn #_"this" CodeBuffer''emitLong-3 [#_"CodeBuffer" this, #_"long" b, #_"int" i]
-        (let [
-            this (CodeBuffer''ensureSize-2 this, (+ i 8))
-        ]
-            (ByteBuffer''putLong (:data this), i, b)
-            this
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getByte-2 [#_"CodeBuffer" this, #_"int" i]
-        (let [
-            #_"int" b (ByteBuffer''get (:data this), i)
-        ]
-            (& b 0xff)
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getShort-2 [#_"CodeBuffer" this, #_"int" i]
-        (let [
-            #_"short" s (ByteBuffer''getShort (:data this), i)
-        ]
-            (& s 0xffff)
-        )
-    )
-
-    (defn #_"int" CodeBuffer''getInt-2 [#_"CodeBuffer" this, #_"int" i]
-        (ByteBuffer''getInt (:data this), i)
-    )
-
-    ;;;
-     ; Closes this buffer. Any further operations on a closed buffer will result in a NullPointerException.
-     ;;
-    (defn #_"[byte]" CodeBuffer''close-1 [#_"CodeBuffer" this]
-        (let [
-            #_"[byte]" a (vec (ByteBuffer''array (:data this)))
-            _ (§ ass! this (assoc this :data nil))
-        ]
-            a
-        )
-    )
-)
-
-;;;
- ; This class represents a label within assembly code.
- ;;
-(about #_"Label"
-    (defr Label)
-
-    (defn #_"Label" Label'new-0 []
-        (new* Label'class
-            (-/hash-map
-                #_"int" :position -1
-                ;;;
-                 ; References to instructions that jump to this unresolved label. These instructions need to be
-                 ; patched when the label is bound using the #patchInstructions(Assembler) method.
-                 ;;
-                #_"int*" :patchPositions nil
-            )
-        )
-    )
-
-    ;;;
-     ; Binds the label to the specified position.
-     ;;
-    (defn #_"this" Label''bind-2 [#_"Label" this, #_"int" pos]
-        (assoc this :position pos)
-    )
-
-    (defn #_"boolean" Label''isBound-1 [#_"Label" this]
-        (< -1 (:position this))
-    )
-
-    (defn #_"this" Label''addPatchAt-2 [#_"Label" this, #_"int" pos]
-        (update this :patchPositions conj' pos)
-    )
-
-    (declare Assembler''patchJumpTarget-3)
-
-    (defn #_"Assembler" Label''patchInstructions-2 [#_"Label" this, #_"Assembler" asm]
-        (reduce #(Assembler''patchJumpTarget-3 %1, %2, (:position this)) asm (:patchPositions this))
-    )
-)
-
 (about #_"HotSpot"
     ;;;
      ; Special registers reserved by HotSpot for frequently used values.
@@ -14671,182 +14506,6 @@
     (def #_"boolean" GraalOptions'zapStackOnMethodEntry false)
 )
 
-;;;
- ; Represents the output from compiling a method, including the compiled machine code, associated
- ; data and references, relocation information, deoptimization information, etc.
- ;;
-(about #_"CompilationResult"
-    (defr CompilationResult)
-
-    (defn #_"CompilationResult" CompilationResult'new-1 [#_"int" totalFrameSize]
-        (new* CompilationResult'class
-            (-/hash-map
-                #_"boolean" :closed false
-                #_"[Mark]" :marks []
-                ;;;
-                 ; Total frame size in bytes. This includes the return address pushed onto the stack, if any.
-                 ;;
-                #_"int" :totalFrameSize totalFrameSize
-                ;;;
-                 ; The buffer containing the emitted machine code.
-                 ;;
-                #_"[byte]" :targetCode nil
-                ;;;
-                 ; The leading number of bytes in #targetCode containing the emitted machine code.
-                 ;;
-                #_"int" :targetCodeSize 0
-            )
-        )
-    )
-
-    (defn- #_"void" CompilationResult''checkOpen-1 [#_"CompilationResult" this]
-        (when (:closed this)
-            (throw! "the closet is closed")
-        )
-        nil
-    )
-
-    ;;;
-     ; Records an instruction mark within this method.
-     ;
-     ; @param at the position in the code that is covered by the handler
-     ; @param id the identifier for this mark
-     ;;
-    (defn #_"Mark" CompilationResult''recordMark-3 [#_"CompilationResult" this, #_"int" at, #_"Object" id]
-        (CompilationResult''checkOpen-1 this)
-        (let [
-            #_"Mark" mark (Mark'new at, id)
-            _ (§ ass! this (update this :marks conj' mark))
-        ]
-            mark
-        )
-    )
-
-    ;;;
-     ; Sets the machine that has been generated by the compiler.
-     ;
-     ; @param code the machine code generated
-     ; @param size the size of the machine code
-     ;;
-    (defn #_"this" CompilationResult''setTargetCode-3 [#_"CompilationResult" this, #_"[byte]" code, #_"int" size]
-        (CompilationResult''checkOpen-1 this)
-        (assoc this :targetCode code :targetCodeSize size)
-    )
-
-    ;;;
-     ; Closes this compilation result to future updates.
-     ;;
-    (defn #_"this" CompilationResult''close-1 [#_"CompilationResult" this]
-        (CompilationResult''checkOpen-1 this)
-        (assoc this :closed true)
-    )
-)
-
-(about #_"Compiler"
-    (declare Assembler''movl-3ar)
-
-    (defn #_"Assembler" Compiler'emitStackOverflowCheck-1 [#_"Assembler" asm]
-        (when HotSpot'useStackBanging => asm
-            ;; Each code entry causes one stack bang n pages down the stack where n is configurable
-            ;; by StackShadowPages. The setting depends on the maximum depth of VM call stack or native
-            ;; before going back into java code, since only java code can raise a stack overflow exception
-            ;; using the stack banging mechanism. The VM and native code does not detect stack overflow.
-            ;; The code in JavaCalls::call() checks that there is at least n pages available, so all
-            ;; entry code needs to do is bang once for the end of this shadow zone.
-            ;; The entry code may need to bang additional pages if the framesize is greater than a page.
-            (let [
-                #_"int" end (NumUtil'roundUp-2 (* HotSpot'stackShadowPages 4 NumUtil'K), HotSpot'vmPageSize)
-                ;; This is how far the previous frame's stack banging extended.
-                #_"int" frameSize (:frameSize (:frameMap asm))
-                #_"int" end' (if (< HotSpot'vmPageSize frameSize) (+ end frameSize) end)
-            ]
-                (loop-when-recur [asm asm #_"int" i end]
-                                 (<= i end')
-                                 ;; Need at least one stack bang at end of shadow zone.
-                                 [(Assembler''movl-3ar asm, (AMD64Address'new AMD64'rsp, (- i)), AMD64'rax) (+ i HotSpot'vmPageSize)]
-                              => asm
-                )
-            )
-        )
-    )
-)
-
-;;;
- ; Code for managing a method's native frame.
- ; Emits code at the verified entry point and return point(s) of a method.
- ;;
-(about #_"FrameContext"
-    (defr FrameContext)
-
-    ;;;
-     ; The size of the instruction used to patch the verified entry point of an nmethod when the
-     ; nmethod is made non-entrant or a zombie (e.g. during deopt or class unloading). The first
-     ; instruction emitted at an nmethod's verified entry point must be at least this length to
-     ; ensure mt-safe patching.
-     ;;
-    (def #_"int" FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE 5)
-
-    (defn #_"FrameContext" FrameContext'new-1 [#_"boolean" omitFrame]
-        (new* FrameContext'class
-            (-/hash-map
-                #_"boolean" :omitFrame omitFrame
-            )
-        )
-    )
-
-    (declare Assembler''nop)
-    (declare Assembler''position-1)
-    (declare Assembler''subqWide-3)
-    (declare Assembler''decrementq-3r)
-    (declare Assembler''movl-3ai)
-
-    ;;;
-     ; Emits code common to all entry points of a method. This may include:
-     ;
-     ; - setting up the stack frame
-     ; - saving callee-saved registers
-     ; - stack overflow checking
-     ;;
-    (defn #_"Assembler" FrameContext''enter-2 [#_"FrameContext" this, #_"Assembler" asm]
-        (if (:omitFrame this)
-            (Assembler''nop asm, FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE)
-            (let [
-                #_"int" verifiedEntryPosition (Assembler''position-1 asm)
-                #_"int" frameSize (:frameSize (:frameMap asm))
-                asm (Compiler'emitStackOverflowCheck-1 asm)
-                asm
-                    (if (= (Assembler''position-1 asm) verifiedEntryPosition)
-                        (Assembler''subqWide-3 asm, AMD64'rsp, frameSize)
-                        (Assembler''decrementq-3r asm, AMD64'rsp, frameSize)
-                    )
-            ]
-                (when GraalOptions'zapStackOnMethodEntry => asm
-                    (let [
-                        #_"int" intSize 4
-                    ]
-                        (reduce #(Assembler''movl-3ai %1, (AMD64Address'new AMD64'rsp, (* %2 intSize)), 0xc1c1c1c1) asm (range (quot frameSize intSize)))
-                    )
-                )
-            )
-        )
-    )
-
-    (declare Assembler''incrementq-3r)
-
-    ;;;
-     ; Emits code to be executed just prior to returning from a method. This may include:
-     ;
-     ; - restoring callee-saved registers
-     ; - performing a safepoint
-     ; - destroying the stack frame
-     ;;
-    (defn #_"Assembler" FrameContext''leave-2 [#_"FrameContext" this, #_"Assembler" asm]
-        (when-not (:omitFrame this) => asm
-            (Assembler''incrementq-3r asm, AMD64'rsp, (:frameSize (:frameMap asm)))
-        )
-    )
-)
-
 (about #_"Assembler"
     (defr Assembler)
 
@@ -14854,17 +14513,10 @@
 
     (def- #_"int" Assembler'MinEncodingNeedsRex 8)
 
+    (declare FrameContext'new-1)
+
     (defn #_"Assembler" Assembler'new [#_"FrameMap" frameMap]
         (let [
-            #_"Assembler" this
-                (new* Assembler'class
-                    (-/hash-map
-                        #_"FrameMap" :frameMap frameMap
-                        #_"FrameContext" :frameContext nil
-                        #_"CompilationResult" :compilationResult nil
-                        #_"CodeBuffer" :codeBuffer (CodeBuffer'new-1 AMD64'byteOrder)
-                    )
-                )
             ;; Omit the frame if the method:
             ;; - has no spill slots or other slots allocated during register allocation
             ;; - has no callee-saved registers
@@ -14877,10 +14529,15 @@
                     (not (:hasArgInCallerFrame (:lir res)))
                     (not (:hasForeignCall res))
                 )
-            this (assoc this :frameContext (FrameContext'new-1 omit-frame?))
-            this (assoc this :compilationResult (CompilationResult'new-1 (ß FrameMap''totalFrameSize-1 frameMap)))
         ]
-            this
+            (new* Assembler'class
+                (-/hash-map
+                    #_"FrameMap" :frameMap frameMap
+                    #_"FrameContext" :frameContext (FrameContext'new-1 omit-frame?)
+                    #_"[byte]" :code (vector)
+                    #_"[Mark]" :marks (vector)
+                )
+            )
         )
     )
 
@@ -14888,69 +14545,23 @@
      ; Returns the current position of the underlying code buffer.
      ;;
     (defn #_"int" Assembler''position-1 [#_"Assembler" this]
-        (CodeBuffer''position-1 (:codeBuffer this))
+        (count (:code this))
     )
 
     (defn #_"this" Assembler''emitByte-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitByte-2 x)
+        (update this :code conj (byte! (& x 0xff)))
     )
 
     (defn #_"this" Assembler''emitShort-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitShort-2 x)
+        (update this :code conj (byte! (& x 0xff)) (byte! (& (>>> x 8) 0xff)))
     )
 
     (defn #_"this" Assembler''emitInt-2 [#_"Assembler" this, #_"int" x]
-        (update this :codeBuffer CodeBuffer''emitInt-2 x)
+        (update this :code conj (byte! (& x 0xff)) (byte! (& (>>> x 8) 0xff)) (byte! (& (>>> x 16) 0xff)) (byte! (& (>>> x 24) 0xff)))
     )
 
     (defn #_"this" Assembler''emitLong-2 [#_"Assembler" this, #_"long" x]
-        (update this :codeBuffer CodeBuffer''emitLong-2 x)
-    )
-
-    (defn #_"this" Assembler''emitByte-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitByte-3 b, pos)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''emitShort-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitShort-3 b, pos)
-    )
-
-    (defn #_"this" Assembler''emitInt-3 [#_"Assembler" this, #_"int" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitInt-3 b, pos)
-    )
-
-    #_unused
-    (defn #_"this" Assembler''emitLong-3 [#_"Assembler" this, #_"long" b, #_"int" pos]
-        (update this :codeBuffer CodeBuffer''emitLong-3 b, pos)
-    )
-
-    (defn #_"int" Assembler''getByte-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getByte-2 (:codeBuffer this), pos)
-    )
-
-    (defn #_"int" Assembler''getShort-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getShort-2 (:codeBuffer this), pos)
-    )
-
-    #_unused
-    (defn #_"int" Assembler''getInt-2 [#_"Assembler" this, #_"int" pos]
-        (CodeBuffer''getInt-2 (:codeBuffer this), pos)
-    )
-
-    ;;;
-     ; Closes this assembler. No extra data can be written to this assembler after this call.
-     ;;
-    (defn #_"[byte]" Assembler''close-1 [#_"Assembler" this]
-        (CodeBuffer''close-1 (:codeBuffer this))
-    )
-
-    (defn #_"this" Assembler''bind-2 [#_"Assembler" this, #_"Label" l]
-        (let [
-            _ (§ ass! l (Label''bind-2 l, (Assembler''position-1 this)))
-        ]
-            (Label''patchInstructions-2 l, this)
-        )
+        (update this :code conj (byte! (& x 0xff)) (byte! (& (>>> x 8) 0xff)) (byte! (& (>>> x 16) 0xff)) (byte! (& (>>> x 24) 0xff)) (byte! (& (>>> x 32) 0xff)) (byte! (& (>>> x 40) 0xff)) (byte! (& (>>> x 48) 0xff)) (byte! (& (>>> x 56) 0xff)))
     )
 
     (defn- #_"int" Assembler'encode-1 [#_"Register" reg]
@@ -14972,7 +14583,7 @@
      ;
      ; There is an SIB byte: In that case, X extends SIB.index and B extends SIB.base.
      ;;
-    (defn #_"int" Assembler'getRXB-2ra [#_"Register" reg, #_"AMD64Address" rm]
+    (defn #_"int" Assembler'getRXB-2ra [#_"Register" reg, #_"Address" rm]
         (let [
             #_"int" rxb (>> (if (nil? reg) 0 (& (:encoding reg) 0x08)) 1)
             rxb
@@ -15015,7 +14626,7 @@
      ;            so that the start position of the next instruction can be computed even though
      ;            this instruction has not been completely emitted yet.
      ;;
-    (defn #_"this" Assembler''emitOperand-5i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
+    (defn #_"this" Assembler''emitOperand-5i [#_"Assembler" this, #_"int" reg, #_"Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
         (let [
             #_"int" regenc (<< reg 3)
             #_"Register" base (:base addr)
@@ -15117,7 +14728,7 @@
         )
     )
 
-    (defn #_"this" Assembler''emitOperand-4r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
+    (defn #_"this" Assembler''emitOperand-4r [#_"Assembler" this, #_"Register" reg, #_"Address" addr, #_"int" additionalInstructionSize]
         (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, false, additionalInstructionSize)
     )
 
@@ -15126,11 +14737,11 @@
      ;
      ; @param force4Byte use 4 byte encoding for displacements that would normally fit in a byte
      ;;
-    (defn #_"this" Assembler''emitOperand-5r [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
+    (defn #_"this" Assembler''emitOperand-5r [#_"Assembler" this, #_"Register" reg, #_"Address" addr, #_"boolean" force4Byte, #_"int" additionalInstructionSize]
         (Assembler''emitOperand-5i this, (Assembler'encode-1 reg), addr, force4Byte, additionalInstructionSize)
     )
 
-    (defn #_"this" Assembler''emitOperand-4i [#_"Assembler" this, #_"int" reg, #_"AMD64Address" addr, #_"int" additionalInstructionSize]
+    (defn #_"this" Assembler''emitOperand-4i [#_"Assembler" this, #_"int" reg, #_"Address" addr, #_"int" additionalInstructionSize]
         (Assembler''emitOperand-5i this, reg, addr, false, additionalInstructionSize)
     )
 
@@ -15204,7 +14815,7 @@
         (<= Assembler'MinEncodingNeedsRex (:encoding reg))
     )
 
-    (defn- #_"this" Assembler''prefix-2 [#_"Assembler" this, #_"AMD64Address" adr]
+    (defn- #_"this" Assembler''prefix-2 [#_"Assembler" this, #_"Address" adr]
         (let [
             #_"Integer" prefix
                 (if (Assembler'needsRex-1 (:base adr))
@@ -15221,7 +14832,7 @@
         )
     )
 
-    (defn- #_"this" Assembler''prefixq-2 [#_"Assembler" this, #_"AMD64Address" adr]
+    (defn- #_"this" Assembler''prefixq-2 [#_"Assembler" this, #_"Address" adr]
         (let [
             #_"int" prefix
                 (if (Assembler'needsRex-1 (:base adr))
@@ -15239,7 +14850,7 @@
         )
     )
 
-    (defn- #_"this" Assembler''prefix-4 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg, #_"boolean" byte-inst?]
+    (defn- #_"this" Assembler''prefix-4 [#_"Assembler" this, #_"Address" adr, #_"Register" reg, #_"boolean" byte-inst?]
         (let [
             #_"Integer" prefix
                 (if (< (:encoding reg) 8)
@@ -15271,11 +14882,11 @@
         )
     )
 
-    (defn- #_"this" Assembler''prefix-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" reg]
+    (defn- #_"this" Assembler''prefix-3 [#_"Assembler" this, #_"Address" adr, #_"Register" reg]
         (Assembler''prefix-4 this, adr, reg, false)
     )
 
-    (defn- #_"this" Assembler''prefixq-3 [#_"Assembler" this, #_"AMD64Address" adr, #_"Register" src]
+    (defn- #_"this" Assembler''prefixq-3 [#_"Assembler" this, #_"Address" adr, #_"Register" src]
         (let [
             #_"int" prefix
                 (if (< (:encoding src) 8)
@@ -15430,7 +15041,7 @@
         )
     )
 
-    (defn #_"Assembler" AMD64MIOp''emit-5a [#_"AMD64MIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst, #_"int" imm]
+    (defn #_"Assembler" AMD64MIOp''emit-5a [#_"AMD64MIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Address" dst, #_"int" imm]
         (let [
             asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra nil, dst), 0, 0)
             asm (Assembler''emitOperand-4i asm, (:ext this), dst, (AMD64ImmOp''immediateSize-2 this, size))
@@ -15467,7 +15078,7 @@
         )
     )
 
-    (defn #_"Assembler" AMD64RMIOp''emit-6a [#_"AMD64RMIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"AMD64Address" src, #_"int" imm]
+    (defn #_"Assembler" AMD64RMIOp''emit-6a [#_"AMD64RMIOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Address" src, #_"int" imm]
         (let [
             asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra dst, src), (:encoding dst), 0)
             asm (Assembler''emitOperand-4r asm, dst, src, (AMD64ImmOp''immediateSize-2 this, size))
@@ -15517,7 +15128,7 @@
         )
     )
 
-    (defn #_"Assembler" AMD64MOp''emit-4a [#_"AMD64MOp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst]
+    (defn #_"Assembler" AMD64MOp''emit-4a [#_"AMD64MOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Address" dst]
         (let [
             asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra nil, dst), 0, 0)
             asm (Assembler''emitOperand-4i asm, (:ext this), dst, 0)
@@ -15565,7 +15176,7 @@
         )
     )
 
-    (defn #_"Assembler" AMD64MROp''emit-5ar [#_"AMD64MROp" this, #_"Assembler" asm, #_"WordSize" size, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"Assembler" AMD64MROp''emit-5ar [#_"AMD64MROp" this, #_"Assembler" asm, #_"WordSize" size, #_"Address" dst, #_"Register" src]
         (let [
             asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra src, dst), (:encoding src), 0)
             asm (Assembler''emitOperand-4r asm, src, dst, 0)
@@ -15635,7 +15246,7 @@
         )
     )
 
-    (defn #_"Assembler" AMD64RMOp''emit-5ra [#_"AMD64RMOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"Assembler" AMD64RMOp''emit-5ra [#_"AMD64RMOp" this, #_"Assembler" asm, #_"WordSize" size, #_"Register" dst, #_"Address" src]
         (let [
             asm (AMD64Op''emitOpcode-6 this, asm, size, (Assembler'getRXB-2ra dst, src), (:encoding dst), 0)
             asm (Assembler''emitOperand-4r asm, dst, src, 0)
@@ -15726,7 +15337,7 @@
 )
 
 (about #_"Assembler"
-    (defn #_"this" Assembler''addl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''addl-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
     )
 
@@ -15794,7 +15405,7 @@
         )
     )
 
-    (defn #_"this" Assembler''cmovl-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''cmovl-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -15813,19 +15424,19 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''cmpl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''cmpl-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (AMD64RMOp''emit-5ra (:rmOp BinaryArithmetic'CMP), this, :WordSize'32bits, dst, src)
     )
 
     #_unused
-    (defn #_"this" Assembler''cmpl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''cmpl-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'CMP, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
     )
 
     ;; The 32-bit cmpxchg compares the value at adr with the contents of X86.rax,
     ;; and stores reg into adr if so; otherwise, the value at adr is loaded into X86.rax.
     ;; The ZF is set if the compared values were equal, and cleared otherwise.
-    (defn #_"this" Assembler''cmpxchgl-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr] ;; cmpxchg
+    (defn #_"this" Assembler''cmpxchgl-3 [#_"Assembler" this, #_"Register" reg, #_"Address" adr] ;; cmpxchg
         (-> this
             (Assembler''prefix-3 adr, reg)
             (Assembler''emitByte-2 0x0f)
@@ -15834,7 +15445,7 @@
         )
     )
 
-    (defn #_"this" Assembler''decl-2a [#_"Assembler" this, #_"AMD64Address" dst]
+    (defn #_"this" Assembler''decl-2a [#_"Assembler" this, #_"Address" dst]
         (-> this
             (Assembler''prefix-2 dst)
             (Assembler''emitByte-2 0xff)
@@ -15855,7 +15466,7 @@
         )
     )
 
-    (defn #_"this" Assembler''incl-2a [#_"Assembler" this, #_"AMD64Address" dst]
+    (defn #_"this" Assembler''incl-2a [#_"Assembler" this, #_"Address" dst]
         (-> this
             (Assembler''prefix-2 dst)
             (Assembler''emitByte-2 0xff)
@@ -15883,13 +15494,13 @@
         )
     )
 
-    (defn #_"this" Assembler''jcc-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (Assembler''jcc-4 this, cc, (:position l), false)
+    (defn #_"this" Assembler''jcc-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
+        (if (ß Label''isBound-1 l)
+            (Assembler''jcc-4 this, cc, (:position l), false)
             ;; note: could eliminate cond. jumps to this jump if condition is the same however, seems to be rather unlikely case
             ;; note: use jccb() if label to be bound is very close to get an 8-bit displacement
             (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+                _ (§ ass! l (ß Label''addPatchAt-2 l, (Assembler''position-1 this)))
             ]
                 (-> this
                     (Assembler''emitByte-2 0x0f)
@@ -15900,11 +15511,11 @@
         )
     )
 
-    (defn #_"this" Assembler''jccb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
-        (if (Label''isBound-1 l)
+    (defn #_"this" Assembler''jccb-3 [#_"Assembler" this, #_"ConditionFlag" cc, #_"Label" l]
+        (if (ß Label''isBound-1 l)
             (let [
                 #_"int" shortSize 2
-                #_"int" entry (:position l)
+                #_"int" entry (:position l)
                 #_"long" disp (- entry (Assembler''position-1 this))
             ]
                 (-> this ;; 0111 tttn #8-bit disp
@@ -15913,7 +15524,7 @@
                 )
             )
             (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+                _ (§ ass! l (ß Label''addPatchAt-2 l, (Assembler''position-1 this)))
             ]
                 (-> this
                     (Assembler''emitByte-2 (| 0x70 (:value cc)))
@@ -15942,13 +15553,13 @@
         )
     )
 
-    (defn #_"this" Assembler''jmp-2l [#_"Assembler" this, #_"Label" l]
-        (if (Label''isBound-1 l)
-            (Assembler''jmp-3 this, (:position l), false)
+    (defn #_"this" Assembler''jmp-2l [#_"Assembler" this, #_"Label" l]
+        (if (ß Label''isBound-1 l)
+            (Assembler''jmp-3 this, (:position l), false)
             ;; By default, forward jumps are always 32-bit displacements, since we can't yet know where the label will be bound.
             ;; If you're sure that the forward jump will not run beyond 256 bytes, use jmpb to force an 8-bit displacement.
             (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+                _ (§ ass! l (ß Label''addPatchAt-2 l, (Assembler''position-1 this)))
             ]
                 (-> this
                     (Assembler''emitByte-2 0xe9)
@@ -15970,7 +15581,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''jmp-2a [#_"Assembler" this, #_"AMD64Address" adr]
+    (defn #_"this" Assembler''jmp-2a [#_"Assembler" this, #_"Address" adr]
         (-> this
             (Assembler''prefix-2 adr)
             (Assembler''emitByte-2 0xff)
@@ -15979,11 +15590,11 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''jmpb-2 [#_"Assembler" this, #_"Label" l]
-        (if (Label''isBound-1 l)
+    (defn #_"this" Assembler''jmpb-2 [#_"Assembler" this, #_"Label" l]
+        (if (ß Label''isBound-1 l)
             (let [
                 #_"int" shortSize 2
-                #_"int" entry (:position l)
+                #_"int" entry (:position l)
                 #_"long" offs (- entry (Assembler''position-1 this))
             ]
                 (-> this
@@ -15992,7 +15603,7 @@
                 )
             )
             (let [
-                _ (§ ass! l (Label''addPatchAt-2 l, (Assembler''position-1 this)))
+                _ (§ ass! l (ß Label''addPatchAt-2 l, (Assembler''position-1 this)))
             ]
                 (-> this
                     (Assembler''emitByte-2 0xeb)
@@ -16002,7 +15613,7 @@
         )
     )
 
-    (defn #_"this" Assembler''lead-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''lead-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x8d)
@@ -16010,7 +15621,7 @@
         )
     )
 
-    (defn #_"this" Assembler''leaq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''leaq-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x8d)
@@ -16027,7 +15638,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''movb-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm8]
+    (defn #_"this" Assembler''movb-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm8]
         (-> this
             (Assembler''prefix-2 dst)
             (Assembler''emitByte-2 0xc6)
@@ -16036,7 +15647,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movb-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''movb-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''prefix-4 dst, src, true)
             (Assembler''emitByte-2 0x88)
@@ -16066,7 +15677,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movl-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x8b)
@@ -16078,7 +15689,7 @@
      ; @param wide? use 4 byte encoding for displacements that would normally fit in a byte
      ;;
     #_unused
-    (defn #_"this" Assembler''movl-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide?]
+    (defn #_"this" Assembler''movl-4 [#_"Assembler" this, #_"Register" dst, #_"Address" src, #_"boolean" wide?]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x8b)
@@ -16086,7 +15697,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''movl-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (-> this
             (Assembler''prefix-2 dst)
             (Assembler''emitByte-2 0xc7)
@@ -16095,7 +15706,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movl-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''movl-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''prefix-3 dst, src)
             (Assembler''emitByte-2 0x89)
@@ -16103,7 +15714,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movq-4 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src, #_"boolean" wide]
+    (defn #_"this" Assembler''movq-4 [#_"Assembler" this, #_"Register" dst, #_"Address" src, #_"boolean" wide]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x8b)
@@ -16111,7 +15722,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movq-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (Assembler''movq-4 this, dst, src, false)
     )
 
@@ -16126,7 +15737,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''movq-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''prefixq-3 dst, src)
             (Assembler''emitByte-2 0x89)
@@ -16134,7 +15745,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movsbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movsbl-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16157,7 +15768,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''movsbq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movsbq-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16179,7 +15790,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movswl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movswl-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16189,7 +15800,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''movw-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm16]
+    (defn #_"this" Assembler''movw-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm16]
         (-> this
             (Assembler''emitByte-2 0x66) ;; switch to 16-bit mode
             (Assembler''prefix-2 dst)
@@ -16199,7 +15810,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movw-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''movw-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''emitByte-2 0x66)
             (Assembler''prefix-3 dst, src)
@@ -16209,7 +15820,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''movzbl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movzbl-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16227,7 +15838,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''movzwl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movzwl-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16378,7 +15989,7 @@
         )
     )
 
-    (defn #_"this" Assembler''subl-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''subl-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'32bits, (NumUtil'isByte-1 imm32)), this, :WordSize'32bits, dst, imm32)
     )
 
@@ -16423,7 +16034,7 @@
         )
     )
 
-    (defn #_"this" Assembler''testl-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''testl-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x85)
@@ -16464,7 +16075,7 @@
         (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
     )
 
-    (defn #_"this" Assembler''addq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''addq-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'ADD, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
     )
 
@@ -16473,7 +16084,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''addq-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''addq-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (AMD64MROp''emit-5ar (:mrOp BinaryArithmetic'ADD), this, :WordSize'64bits, dst, src)
     )
 
@@ -16537,7 +16148,7 @@
         )
     )
 
-    (defn #_"this" Assembler''cmovq-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''cmovq-4ra [#_"Assembler" this, #_"ConditionFlag" cc, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x0f)
@@ -16555,11 +16166,11 @@
         (AMD64RROp'''emit (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
     )
 
-    (defn #_"this" Assembler''cmpq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''cmpq-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (AMD64RMOp''emit-5ra (:rmOp BinaryArithmetic'CMP), this, :WordSize'64bits, dst, src)
     )
 
-    (defn #_"this" Assembler''cmpxchgq-3 [#_"Assembler" this, #_"Register" reg, #_"AMD64Address" adr]
+    (defn #_"this" Assembler''cmpxchgq-3 [#_"Assembler" this, #_"Register" reg, #_"Address" adr]
         (-> this
             (Assembler''prefixq-3 adr, reg)
             (Assembler''emitByte-2 0x0f)
@@ -16580,7 +16191,7 @@
         )
     )
 
-    (defn #_"this" Assembler''decq-2a [#_"Assembler" this, #_"AMD64Address" dst]
+    (defn #_"this" Assembler''decq-2a [#_"Assembler" this, #_"Address" dst]
         (AMD64MOp''emit-4a AMD64MOp'DEC, this, :WordSize'64bits, dst)
     )
 
@@ -16610,7 +16221,7 @@
         )
     )
 
-    (defn #_"this" Assembler''incq-2a [#_"Assembler" this, #_"AMD64Address" dst]
+    (defn #_"this" Assembler''incq-2a [#_"Assembler" this, #_"Address" dst]
         (AMD64MOp''emit-4a AMD64MOp'INC, this, :WordSize'64bits, dst)
     )
 
@@ -16637,7 +16248,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movslq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''movslq-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (-> this
             (Assembler''prefixq-2 dst)
             (Assembler''emitByte-2 0xc7)
@@ -16646,7 +16257,7 @@
         )
     )
 
-    (defn #_"this" Assembler''movslq-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movslq-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x63)
@@ -16752,7 +16363,7 @@
         (AMD64MIOp''emit-5r (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
     )
 
-    (defn #_"this" Assembler''subq-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" imm32]
+    (defn #_"this" Assembler''subq-3ai [#_"Assembler" this, #_"Address" dst, #_"int" imm32]
         (AMD64MIOp''emit-5a (BinaryArithmetic''getMIOpcode-3 BinaryArithmetic'SUB, :WordSize'64bits, (NumUtil'isByte-1 imm32)), this, :WordSize'64bits, dst, imm32)
     )
 
@@ -16785,7 +16396,7 @@
         )
     )
 
-    (defn #_"this" Assembler''xaddl-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''xaddl-3 [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''prefix-3 dst, src)
             (Assembler''emitByte-2 0x0f)
@@ -16794,7 +16405,7 @@
         )
     )
 
-    (defn #_"this" Assembler''xaddq-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''xaddq-3 [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (-> this
             (Assembler''prefixq-3 dst, src)
             (Assembler''emitByte-2 0x0f)
@@ -16803,7 +16414,7 @@
         )
     )
 
-    (defn #_"this" Assembler''xchgl-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''xchgl-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefix-3 src, dst)
             (Assembler''emitByte-2 0x87)
@@ -16811,7 +16422,7 @@
         )
     )
 
-    (defn #_"this" Assembler''xchgq-3 [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''xchgq-3 [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (-> this
             (Assembler''prefixq-3 src, dst)
             (Assembler''emitByte-2 0x87)
@@ -16830,48 +16441,13 @@
                 ;; in the code where this idiom is used, in particular the orderAccess code.
                 (-> this
                     (Assembler''lock-1)
-                    (Assembler''addl-3ai (AMD64Address'new AMD64'rsp, 0), 0) ;; Assert the lock# signal here.
+                    (Assembler''addl-3ai (Address'new AMD64'rsp, 0), 0) ;; Assert the lock# signal here.
                 )
             )
         )
     )
 
-    (defn #_"this" Assembler''patchJumpTarget-3 [#_"Assembler" this, #_"int" branch, #_"int" jumpTarget]
-        (let [
-            #_"int" op (Assembler''getByte-2 this, branch)
-        ]
-            (cond
-                (= op 0x00)
-                    (let [
-                        #_"int" offsetToJumpTableBase (Assembler''getShort-2 this, (inc branch))
-                        #_"int" jumpTableBase (- branch offsetToJumpTableBase)
-                        #_"int" imm32 (- jumpTarget jumpTableBase)
-                    ]
-                        (Assembler''emitInt-3 this, imm32, branch)
-                    )
-                (or (= op 0xeb) (= (& op 0xf0) 0x70))
-                    ;; short offset operators (jmp and jcc)
-                    (let [
-                        #_"int" imm8 (- jumpTarget (+ branch 2))
-                    ]
-                        ;; Since a wrongly patched short branch can potentially lead to working but really bad
-                        ;; behaving code we should always fail with an exception instead of having an assert.
-                        (when (NumUtil'isByte-1 imm8) => (throw! (str "branch displacement out of range: " imm8))
-                            (Assembler''emitByte-3 this, imm8, (inc branch))
-                        )
-                    )
-                :else
-                    (let [
-                        #_"int" off (if (= op 0x0f) 2 1)
-                        #_"int" imm32 (- jumpTarget (+ branch 4 off))
-                    ]
-                        (Assembler''emitInt-3 this, imm32, (+ branch off))
-                    )
-            )
-        )
-    )
-
-    (defn #_"this" Assembler''nullCheck-2 [#_"Assembler" this, #_"AMD64Address" address]
+    (defn #_"this" Assembler''nullCheck-2 [#_"Assembler" this, #_"Address" address]
         (Assembler''testl-3ra this, AMD64'rax, address)
     )
 
@@ -16904,14 +16480,14 @@
         )
     )
 
-    (defn- #_"this" Assembler''prefetchPrefix-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn- #_"this" Assembler''prefetchPrefix-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefix-2 src)
             (Assembler''emitByte-2 0x0f)
         )
     )
 
-    (defn #_"this" Assembler''prefetchnta-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetchnta-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefetchPrefix-2 src)
             (Assembler''emitByte-2 0x18)
@@ -16920,7 +16496,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''prefetchr-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetchr-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefetchPrefix-2 src)
             (Assembler''emitByte-2 0x0d)
@@ -16928,7 +16504,7 @@
         )
     )
 
-    (defn #_"this" Assembler''prefetcht0-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetcht0-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefetchPrefix-2 src)
             (Assembler''emitByte-2 0x18)
@@ -16937,7 +16513,7 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''prefetcht1-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetcht1-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefetchPrefix-2 src)
             (Assembler''emitByte-2 0x18)
@@ -16945,7 +16521,7 @@
         )
     )
 
-    (defn #_"this" Assembler''prefetcht2-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetcht2-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefix-2 src)
             (Assembler''emitByte-2 0x0f)
@@ -16954,7 +16530,7 @@
         )
     )
 
-    (defn #_"this" Assembler''prefetchw-2 [#_"Assembler" this, #_"AMD64Address" src]
+    (defn #_"this" Assembler''prefetchw-2 [#_"Assembler" this, #_"Address" src]
         (-> this
             (Assembler''prefix-2 src)
             (Assembler''emitByte-2 0x0f)
@@ -16992,6 +16568,8 @@
 
     ;; masm
 
+    (declare Assembler''incrementq-3r)
+
     (defn #_"this" Assembler''decrementq-3r [#_"Assembler" this, #_"Register" reg, #_"int" value]
         (cond
             (= value Integer'MIN_VALUE)           (Assembler''subq-3ri this, reg, value)
@@ -17004,7 +16582,7 @@
 
     (declare Assembler''incrementq-3a)
 
-    (defn #_"this" Assembler''decrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+    (defn #_"this" Assembler''decrementq-3a [#_"Assembler" this, #_"Address" dst, #_"int" value]
         (cond
             (= value Integer'MIN_VALUE)           (Assembler''subq-3ai this, dst, value)
             (neg? value)                          (Assembler''incrementq-3a this, dst, (- value))
@@ -17024,7 +16602,7 @@
         )
     )
 
-    (defn #_"this" Assembler''incrementq-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+    (defn #_"this" Assembler''incrementq-3a [#_"Assembler" this, #_"Address" dst, #_"int" value]
         (cond
             (= value Integer'MIN_VALUE)           (Assembler''addq-3ai this, dst, value)
             (neg? value)                          (Assembler''decrementq-3a this, dst, (- value))
@@ -17034,17 +16612,17 @@
         )
     )
 
-    (defn #_"this" Assembler''movptr-3ra [#_"Assembler" this, #_"Register" dst, #_"AMD64Address" src]
+    (defn #_"this" Assembler''movptr-3ra [#_"Assembler" this, #_"Register" dst, #_"Address" src]
         (Assembler''movq-3ra this, dst, src)
     )
 
     #_unused
-    (defn #_"this" Assembler''movptr-3ar [#_"Assembler" this, #_"AMD64Address" dst, #_"Register" src]
+    (defn #_"this" Assembler''movptr-3ar [#_"Assembler" this, #_"Address" dst, #_"Register" src]
         (Assembler''movq-3ar this, dst, src)
     )
 
     #_unused
-    (defn #_"this" Assembler''movptr-3ai [#_"Assembler" this, #_"AMD64Address" dst, #_"int" src]
+    (defn #_"this" Assembler''movptr-3ai [#_"Assembler" this, #_"Address" dst, #_"int" src]
         (Assembler''movslq-3ai this, dst, src)
     )
 
@@ -17053,15 +16631,8 @@
     )
 
     #_unused
-    (defn #_"this" Assembler''cmpptr-3ra [#_"Assembler" this, #_"Register" src1, #_"AMD64Address" src2]
+    (defn #_"this" Assembler''cmpptr-3ra [#_"Assembler" this, #_"Register" src1, #_"Address" src2]
         (Assembler''cmpq-3ra this, src1, src2)
-    )
-
-    (declare Assembler''decrementl-3r)
-
-    #_unused
-    (defn #_"this" Assembler''decrementl-2 [#_"Assembler" this, #_"Register" reg]
-        (Assembler''decrementl-3r this, reg, 1)
     )
 
     (declare Assembler''incrementl-3r)
@@ -17078,7 +16649,7 @@
 
     (declare Assembler''incrementl-3a)
 
-    (defn #_"this" Assembler''decrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+    (defn #_"this" Assembler''decrementl-3a [#_"Assembler" this, #_"Address" dst, #_"int" value]
         (cond
             (= value Integer'MIN_VALUE)           (Assembler''subl-3ai this, dst, value)
             (neg? value)                          (Assembler''incrementl-3a this, dst, (- value))
@@ -17098,7 +16669,7 @@
         )
     )
 
-    (defn #_"this" Assembler''incrementl-3a [#_"Assembler" this, #_"AMD64Address" dst, #_"int" value]
+    (defn #_"this" Assembler''incrementl-3a [#_"Assembler" this, #_"Address" dst, #_"int" value]
         (cond
             (= value Integer'MIN_VALUE)           (Assembler''addl-3ai this, dst, value)
             (neg? value)                          (Assembler''decrementl-3a this, dst, (- value))
@@ -17112,11 +16683,11 @@
      ; Non-atomic write of a 64-bit constant to memory.
      ; Do not use if the address might be a volatile field!
      ;;
-    (defn #_"this" Assembler''movlong-3 [#_"Assembler" this, #_"AMD64Address" dst, #_"long" src]
+    (defn #_"this" Assembler''movlong-3 [#_"Assembler" this, #_"Address" dst, #_"long" src]
         (if (NumUtil'isInt-1 src)
             (AMD64MIOp''emit-5a AMD64MIOp'MOV, this, :WordSize'64bits, dst, (int src))
             (let [
-                #_"AMD64Address" high (AMD64Address'new (:base dst), (:index dst), (:scale dst), (+ (:displacement dst) 4))
+                #_"Address" high (Address'new (:base dst), (:index dst), (:scale dst), (+ (:displacement dst) 4))
             ]
                 (-> this
                     (Assembler''movl-3ai dst, (int (& src 0xffffffff)))
@@ -17140,8 +16711,8 @@
         )
     )
 
-    (defn #_"AMD64Address" Assembler''asAddress-2 [#_"Assembler" this, #_"Value" value]
-        (AMD64Address'new RegisterConfig'frameRegister, (ß FrameMap''offsetForStackSlot-2 (:frameMap this), value))
+    (defn #_"Address" Assembler''asAddress-2 [#_"Assembler" this, #_"Value" value]
+        (Address'new RegisterConfig'frameRegister, (ß FrameMap''offsetForStackSlot-2 (:frameMap this), value))
     )
 )
 
@@ -17203,7 +16774,7 @@
                     (Assembler''cmovq-4rr asm, cond, (:reg result), (:reg other))
             )
             (let [
-                #_"AMD64Address" addr (Assembler''asAddress-2 asm, other)
+                #_"Address" addr (Assembler''asAddress-2 asm, other)
             ]
                 (case!? (:wordSize (:valueKind other))
                    [:WordSize'8bits :WordSize'16bits :WordSize'32bits]
@@ -17254,7 +16825,7 @@
 
     (defn #_"Assembler" AMD64Move'reg2stack-4 [#_"Assembler" asm, #_"Value" result, #_"Register" input, #_"WordSize" size]
         (let [
-            #_"AMD64Address" dst (Assembler''asAddress-2 asm, result)
+            #_"Address" dst (Assembler''asAddress-2 asm, result)
         ]
             (case! size
                 :WordSize'8bits  (Assembler''movb-3ar asm, dst, input)
@@ -17267,7 +16838,7 @@
 
     (defn #_"Assembler" AMD64Move'stack2reg-4 [#_"Assembler" asm, #_"Register" result, #_"Value" input, #_"WordSize" size]
         (let [
-            #_"AMD64Address" src (Assembler''asAddress-2 asm, input)
+            #_"Address" src (Assembler''asAddress-2 asm, input)
         ]
             (case! size
                 :WordSize'8bits  (Assembler''movsbl-3ra asm, result, src)
@@ -17298,29 +16869,169 @@
     )
 )
 
+;;;
+ ; Code for managing a method's native frame.
+ ; Emits code at the verified entry point and return point(s) of a method.
+ ;;
+(about #_"FrameContext"
+    (defr FrameContext)
+
+    ;;;
+     ; The size of the instruction used to patch the verified entry point of an nmethod when the
+     ; nmethod is made non-entrant or a zombie (e.g. during deopt or class unloading). The first
+     ; instruction emitted at an nmethod's verified entry point must be at least this length to
+     ; ensure mt-safe patching.
+     ;;
+    (def #_"int" FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE 5)
+
+    (defn #_"FrameContext" FrameContext'new-1 [#_"boolean" omit-frame?]
+        (new* FrameContext'class
+            (-/hash-map
+                #_"boolean" :omit-frame? omit-frame?
+            )
+        )
+    )
+
+    (declare Compiler'emitStackOverflowCheck-1)
+
+    ;;;
+     ; Emits code common to all entry points of a method. This may include:
+     ;
+     ; - setting up the stack frame
+     ; - saving callee-saved registers
+     ; - stack overflow checking
+     ;;
+    (defn #_"Assembler" FrameContext''enter-2 [#_"FrameContext" this, #_"Assembler" asm]
+        (if (:omit-frame? this)
+            (Assembler''nop asm, FrameContext'PATCHED_VERIFIED_ENTRY_POINT_INSTRUCTION_SIZE)
+            (let [
+                #_"int" verifiedEntryPosition (Assembler''position-1 asm)
+                #_"int" frameSize (:frameSize (:frameMap asm))
+                asm (Compiler'emitStackOverflowCheck-1 asm)
+                asm
+                    (if (= (Assembler''position-1 asm) verifiedEntryPosition)
+                        (Assembler''subqWide-3 asm, AMD64'rsp, frameSize)
+                        (Assembler''decrementq-3r asm, AMD64'rsp, frameSize)
+                    )
+            ]
+                (when GraalOptions'zapStackOnMethodEntry => asm
+                    (let [
+                        #_"int" intSize 4
+                    ]
+                        (reduce #(Assembler''movl-3ai %1, (Address'new AMD64'rsp, (* %2 intSize)), 0xc1c1c1c1) asm (range (quot frameSize intSize)))
+                    )
+                )
+            )
+        )
+    )
+
+    ;;;
+     ; Emits code to be executed just prior to returning from a method. This may include:
+     ;
+     ; - restoring callee-saved registers
+     ; - performing a safepoint
+     ; - destroying the stack frame
+     ;;
+    (defn #_"Assembler" FrameContext''leave-2 [#_"FrameContext" this, #_"Assembler" asm]
+        (when-not (:omit-frame? this) => asm
+            (Assembler''incrementq-3r asm, AMD64'rsp, (:frameSize (:frameMap asm)))
+        )
+    )
+)
+
 (about #_"Assembler"
-    (defn #_"Mark" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
-        (CompilationResult''recordMark-3 (:compilationResult this), (Assembler''position-1 this), id)
+    ;;;
+     ; Records an instruction mark within this method.
+     ;;
+    (defn #_"Assembler" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
+        (update this :marks conj (Mark'new (Assembler''position-1 this), id))
     )
 
     (defn #_"this" Assembler''assemble-1 [#_"Assembler" this]
         (let [
             this (Assembler''align-2 this, HotSpot'codeEntryAlignment)
-            _ (Assembler''recordMark-2 this, HotSpot'verifiedEntryMark)
+            this (Assembler''recordMark-2 this, HotSpot'verifiedEntryMark)
             this (FrameContext''enter-2 (:frameContext this), this)
             
-            _ (Assembler''recordMark-2 this, HotSpot'deoptHandlerEntryMark)
-            this (AMD64Call'directCall-4 this, (ß ForeignCalls''lookupForeignCall-2 HotSpot'foreignCalls, ForeignCallDescriptor'DEOPTIMIZATION_HANDLER), nil, false)
+            this (Assembler''recordMark-2 this, HotSpot'deoptHandlerEntryMark)
         ]
-            this
+            (AMD64Call'directCall-4 this, (ß ForeignCalls''lookupForeignCall-2 HotSpot'foreignCalls, ForeignCallDescriptor'DEOPTIMIZATION_HANDLER), nil, false)
+        )
+    )
+)
+
+(about #_"Compiler"
+    (defn #_"Assembler" Compiler'emitStackOverflowCheck-1 [#_"Assembler" asm]
+        (when HotSpot'useStackBanging => asm
+            ;; Each code entry causes one stack bang n pages down the stack where n is configurable
+            ;; by StackShadowPages. The setting depends on the maximum depth of VM call stack or native
+            ;; before going back into java code, since only java code can raise a stack overflow exception
+            ;; using the stack banging mechanism. The VM and native code does not detect stack overflow.
+            ;; The code in JavaCalls::call() checks that there is at least n pages available, so all
+            ;; entry code needs to do is bang once for the end of this shadow zone.
+            ;; The entry code may need to bang additional pages if the framesize is greater than a page.
+            (let [
+                #_"int" end (NumUtil'roundUp-2 (* HotSpot'stackShadowPages 4 NumUtil'K), HotSpot'vmPageSize)
+                ;; This is how far the previous frame's stack banging extended.
+                #_"int" frameSize (:frameSize (:frameMap asm))
+                #_"int" end' (if (< HotSpot'vmPageSize frameSize) (+ end frameSize) end)
+            ]
+                (loop-when-recur [asm asm #_"int" i end]
+                                 (<= i end')
+                                 ;; Need at least one stack bang at end of shadow zone.
+                                 [(Assembler''movl-3ar asm, (Address'new AMD64'rsp, (- i)), AMD64'rax) (+ i HotSpot'vmPageSize)]
+                              => asm
+                )
+            )
         )
     )
 
-    (defn #_"CompilationResult" Assembler''finish-1 [#_"Assembler" this]
+    (defn #_"HotSpotCompiledCode" Compiler'createCompiledCode-1 [#_"Assembler" asm]
         (let [
-            _ (§ ass! this (update this :compilationResult CompilationResult''setTargetCode-3 (Assembler''close-1 this), (Assembler''position-1 this)))
+            #_"String" name (str "stub" (next-id!))
+            #_"byte[]" code! (-/byte-array (:code asm))
+            #_"int" codeSize (-/alength code!)
+            #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (:marks asm))
+            #_"byte[]" data! (-/byte-array 0)
+            #_"int" alignment 8
+            #_"DataPatch[]" patches! (-/make-array jdk.vm.ci.code.site.DataPatch 0)
+            #_"int" frameSize 8
         ]
-            (CompilationResult''close-1 (:compilationResult this))
+            (HotSpotCompiledCode'new name, code!, codeSize, sites!, nil, nil, nil, data!, alignment, patches!, false, frameSize, nil)
+        )
+    )
+
+    (defn- #_"String" Compiler'getCodeInstallResultDescription [#_"int" codeInstallResult]
+        (case! codeInstallResult
+            HotSpot'codeInstallResultOk                  "ok"
+            HotSpot'codeInstallResultDependenciesFailed  "dependencies failed"
+            HotSpot'codeInstallResultDependenciesInvalid "dependencies invalid"
+            HotSpot'codeInstallResultCacheFull           "code cache is full"
+            HotSpot'codeInstallResultCodeTooLarge        "code is too large"
+                                                         "unknown"
+        )
+    )
+
+    (defn #_"InstalledCode" Compiler'createInstalledCode-1 [#_"Assembler" asm]
+        (let [
+            #_"HotSpotCompiledCode" compiledCode (Compiler'createCompiledCode-1 asm)
+            #_"String" name (HotSpotCompiledCode''getName compiledCode)
+            #_"HotSpotInstalledCode" installedCode
+                (-/proxy [jdk.vm.ci.hotspot.HotSpotInstalledCode] [name]
+                    (#_"Object" executeVarargs [#_"InstalledCode" #_this, #_"Object[]" args] (§ throws #_"InvalidInstalledCodeException")
+                        (CompilerToVM''executeInstalledCode HotSpot'native, args, this)
+                    )
+
+                    (#_"void" invalidate [#_"InstalledCode" #_this]
+                        (CompilerToVM''invalidateInstalledCode HotSpot'native, this)
+                        nil
+                    )
+                )
+            #_"int" result (CompilerToVM''installCode HotSpot'native, HotSpot'target, compiledCode, installedCode, nil)
+        ]
+            (when (= result HotSpot'codeInstallResultOk) => (throw! (str "error installing " name ": " (Compiler'getCodeInstallResultDescription result)))
+                installedCode
+            )
         )
     )
 )
