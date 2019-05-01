@@ -15,12 +15,14 @@
 (import!
     [java.lang Appendable Boolean Byte Character CharSequence Class Comparable Error Integer Long Number Object String StringBuilder System Thread]
     [java.lang.ref Reference ReferenceQueue WeakReference]
-    [java.lang.reflect Array Constructor]
+    [java.lang.reflect Array Constructor Executable Method]
     [java.io Flushable PrintWriter PushbackReader Reader]
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
+    [jdk.vm.ci.code InstalledCode TargetDescription]
     [jdk.vm.ci.code.site Mark]
-    [jdk.vm.ci.hotspot CompilerToVM HotSpotCompiledCode HotSpotCompiledNmethod HotSpotJVMCIRuntime HotSpotNmethod]
+    [jdk.vm.ci.hotspot CompilerToVM HotSpotCompiledCode HotSpotCompiledNmethod HotSpotJVMCIRuntime HotSpotNmethod HotSpotResolvedJavaMethod HotSpotSpeculationLog]
+    [jdk.vm.ci.meta JavaMethod]
     [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Keyword Namespace Seqable Var]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
@@ -315,45 +317,33 @@
 (about #_"CompilerToVM"
     (defn #_"HotSpotResolvedJavaMethodImpl" CompilerToVM''asResolvedJavaMethod [^CompilerToVM this, #_"Executable" executable]
         (let [
-            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "asResolvedJavaMethod", (-/into-array Class [java.lang.reflect.Executable]))
+            #_"Method" m (.getDeclaredMethod CompilerToVM, "asResolvedJavaMethod", (-/into-array Class [Executable]))
         ]
             (.setAccessible m, true)
             (.invoke m, this, (-/object-array [executable]))
         )
     )
 
+    (defn #_"String" CompilerToVM''disassembleCodeBlob [^CompilerToVM this, #_"InstalledCode" installedCode]
+        (let [
+            #_"Method" m (.getDeclaredMethod CompilerToVM, "disassembleCodeBlob", (-/into-array Class [InstalledCode]))
+        ]
+            (.setAccessible m, true)
+            (.invoke m, this, (-/object-array [installedCode]))
+        )
+    )
+
     (defn #_"int" CompilerToVM''installCode [^CompilerToVM this, #_"TargetDescription" target, #_"HotSpotCompiledCode" compiledCode, #_"InstalledCode" code, #_"HotSpotSpeculationLog" speculationLog]
         (let [
-            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "installCode", (-/into-array Class [jdk.vm.ci.code.TargetDescription, HotSpotCompiledCode, jdk.vm.ci.code.InstalledCode, jdk.vm.ci.hotspot.HotSpotSpeculationLog]))
+            #_"Method" m (.getDeclaredMethod CompilerToVM, "installCode", (-/into-array Class [TargetDescription, HotSpotCompiledCode, InstalledCode, HotSpotSpeculationLog]))
         ]
             (.setAccessible m, true)
             (.invoke m, this, (-/object-array [target, compiledCode, code, speculationLog]))
         )
     )
-
-    (defn #_"Object" CompilerToVM''executeInstalledCode [^CompilerToVM this, #_"Object[]" args, #_"InstalledCode" installedCode] #_(§ throws #_"InvalidInstalledCodeException")
-        (let [
-            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "executeInstalledCode", (-/into-array Class [Object'array, jdk.vm.ci.code.InstalledCode]))
-        ]
-            (.setAccessible m, true)
-            (.invoke m, this, (-/object-array [args, installedCode]))
-        )
-    )
-
-    (defn #_"void" CompilerToVM''invalidateInstalledCode [^CompilerToVM this, #_"InstalledCode" installedCode]
-        (let [
-            #_"java.lang.reflect.Method" m (.getDeclaredMethod CompilerToVM, "invalidateInstalledCode", (-/into-array Class [jdk.vm.ci.code.InstalledCode]))
-        ]
-            (.setAccessible m, true)
-            (.invoke m, this, (-/object-array [installedCode]))
-        )
-        nil
-    )
 )
 
 (about #_"HotSpotCompiledCode"
-    (defn #_"HotSpotCompiledCode" HotSpotCompiledCode'new [#_"String" name, #_"byte[]" targetCode, #_"int" targetCodeSize, #_"Site[]" sites, #_"Assumption[]" assumptions, #_"ResolvedJavaMethod[]" methods, #_"Comment[]" comments, #_"byte[]" dataSection, #_"int" dataSectionAlignment, #_"DataPatch[]" dataSectionPatches, #_"boolean" isImmutablePIC, #_"int" totalFrameSize, #_"StackSlot" deoptRescueSlot] (HotSpotCompiledCode. name, targetCode, targetCodeSize, sites, assumptions, methods, comments, dataSection, dataSectionAlignment, dataSectionPatches, isImmutablePIC, totalFrameSize, deoptRescueSlot))
-
     (defn #_"String" HotSpotCompiledCode''getName [^HotSpotCompiledCode this] (.getName this))
 )
 
@@ -363,6 +353,17 @@
 
 (about #_"HotSpotNmethod"
     (defn #_"HotSpotNmethod" HotSpotNmethod'new [#_"HotSpotResolvedJavaMethod" method, #_"String" name, #_"boolean" isDefault] (HotSpotNmethod. method, name, isDefault))
+)
+
+(about #_"HotSpotResolvedJavaMethod"
+    (defn #_"int" HotSpotResolvedJavaMethod''allocateCompileId [^HotSpotResolvedJavaMethod this, #_"int" entryBCI] (.allocateCompileId this, entryBCI))
+)
+)
+
+(about #_"jdk.vm.ci.meta"
+
+(about #_"JavaMethod"
+    (defn #_"String" JavaMethod''getName [^JavaMethod this] (.getName this))
 )
 )
 
@@ -401,7 +402,7 @@
 )
 
 (let [
-    #_"java.lang.reflect.Method" m (.getDeclaredMethod java.util.concurrent.Callable, "call", (-/into-array Class []))
+    #_"Method" m (.getDeclaredMethod (-/class (fn* [] nil)), "invoke", (-/into-array Class []))
 ]
     (def #_"HotSpotResolvedJavaMethod" n'method (CompilerToVM''asResolvedJavaMethod HotSpot'native, m))
 )
@@ -524,10 +525,12 @@
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             Mark'new
-            CompilerToVM''asResolvedJavaMethod CompilerToVM''installCode CompilerToVM''executeInstalledCode CompilerToVM''invalidateInstalledCode
-            HotSpotCompiledCode'new HotSpotCompiledCode''getName
+            CompilerToVM''asResolvedJavaMethod CompilerToVM''disassembleCodeBlob CompilerToVM''installCode
+            HotSpotCompiledCode''getName
             HotSpotCompiledNmethod'new
             HotSpotNmethod'new
+            HotSpotResolvedJavaMethod''allocateCompileId
+            JavaMethod''getName
             HotSpot'native HotSpot'target HotSpot'useG1GC HotSpot'codeEntryAlignment HotSpot'useCompressedOops HotSpot'useCompressedClassPointers HotSpot'vmPageSize HotSpot'useStackBanging HotSpot'stackShadowPages HotSpot'verifiedEntryMark HotSpot'deoptHandlerEntryMark HotSpot'codeInstallResultOk HotSpot'codeInstallResultDependenciesFailed HotSpot'codeInstallResultDependenciesInvalid HotSpot'codeInstallResultCacheFull HotSpot'codeInstallResultCodeTooLarge
             n'method
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
@@ -17014,19 +17017,19 @@
 
     (defn #_"HotSpotCompiledCode" Compiler'createCompiledCode-1 [#_"Assembler" asm]
         (let [
-            #_"String" name (str "nmethod" (next-id!))
+            #_"String" name (JavaMethod''getName n'method)
             #_"byte[]" code! (-/byte-array (:code asm))
             #_"int" codeSize (-/alength code!)
             #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (:marks asm))
+            #_"ResolvedJavaMethod[]" methods! (-/into-array jdk.vm.ci.meta.ResolvedJavaMethod [n'method])
             #_"byte[]" data! (-/byte-array 0)
-            #_"int" alignment 8
+            #_"int" alignment 16
             #_"DataPatch[]" patches! (-/make-array jdk.vm.ci.code.site.DataPatch 0)
-            #_"int" frameSize 8
+            #_"int" frameSize 16
+            #_"int" bci -1
+            #_"int" id (HotSpotResolvedJavaMethod''allocateCompileId n'method, bci)
         ]
-            (#_HotSpotCompiledCode'new HotSpotCompiledNmethod'new
-                name, code!, codeSize, sites!, nil, nil, nil, data!, alignment, patches!, false, frameSize, nil
-              , n'method, 0, 0, 0, false
-            )
+            (HotSpotCompiledNmethod'new name, code!, codeSize, sites!, nil, methods!, nil, data!, alignment, patches!, false, frameSize, nil, n'method, bci, id, 0, false)
         )
     )
 
@@ -17046,16 +17049,6 @@
             #_"HotSpotCompiledCode" compiledCode (Compiler'createCompiledCode-1 asm)
             #_"String" name (HotSpotCompiledCode''getName compiledCode)
             #_"HotSpotNmethod" installedCode (HotSpotNmethod'new n'method, name, false)
-                #_(-/proxy [jdk.vm.ci.hotspot.HotSpotNmethod] [n'method, name, false]
-                    (#_"Object" executeVarargs [#_"InstalledCode" #_this, #_"Object[]" args] (§ throws #_"InvalidInstalledCodeException")
-                        (CompilerToVM''executeInstalledCode HotSpot'native, args, this)
-                    )
-
-                    (#_"void" invalidate [#_"InstalledCode" #_this]
-                        (CompilerToVM''invalidateInstalledCode HotSpot'native, this)
-                        nil
-                    )
-                )
             #_"int" result (CompilerToVM''installCode HotSpot'native, HotSpot'target, compiledCode, installedCode, nil)
         ]
             (when (= result HotSpot'codeInstallResultOk) => (throw! (str "error installing " name ": " (Compiler'getCodeInstallResultDescription result)))
