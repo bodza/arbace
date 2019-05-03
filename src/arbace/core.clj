@@ -23,6 +23,7 @@
     [jdk.vm.ci.code.site Mark]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotCompiledCode HotSpotCompiledNmethod HotSpotJVMCIRuntime HotSpotNmethod HotSpotResolvedJavaMethod HotSpotSpeculationLog]
     [jdk.vm.ci.meta JavaMethod]
+    [sun.misc Unsafe]
     [clojure.lang Associative Counted DynamicClassLoader IHashEq ILookup IMeta IObj IPersistentCollection IPersistentMap Keyword Namespace Seqable Var]
     [arbace.math BigInteger]
     [arbace.util.concurrent.atomic AtomicReference]
@@ -102,6 +103,14 @@
 
     (defn #_"char" CharSequence''charAt [^CharSequence this, #_"int" i] (.charAt this, i))
     (defn #_"int"  CharSequence''length [^CharSequence this]            (.length this))
+)
+
+(about #_"Class"
+    (defn #_"?" Class''peep [^Class this, #_"String" name] (let [#_"Field" f (.getDeclaredField this, name)] (.setAccessible f, true) (.get f, this)))
+
+    (defn #_"Method" Class''getDeclaredMethod [^Class this, #_"String" name & #_"Class..." pars] (.getDeclaredMethod this, name, (-/into-array Class pars)))
+
+    (defn #_"?" Unsafe'peep [#_"String" name] (Class''peep Unsafe, name))
 )
 
 (about #_"Comparable"
@@ -305,6 +314,31 @@
 )
 )
 
+(about #_"amd64, hotspot, graalfn"
+    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
+
+    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
+    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
+
+    (def #_"TargetDescription" HotSpot'target (#_"JVMCIBackend" .getTarget (#_"JVMCIRuntime" .getJVMCIBackend JVMCI'runtime, jdk.vm.ci.amd64.AMD64)))
+
+    (defn #_"long"    HotSpot'address       [#_"String" name]                                     (.getAddress     HotSpot'config, name))
+    (defn #_"byte"    HotSpot'byte-constant [#_"String" name]                                     (.getConstant    HotSpot'config, name, Byte))
+    (defn #_"int"     HotSpot'int-constant
+                                           ([#_"String" name]                                     (.getConstant    HotSpot'config, name, Integer))
+                                           ([#_"String" name,                  #_"int" not-found] (.getConstant    HotSpot'config, name, Integer,       not-found))
+    )
+    (defn #_"int"     HotSpot'offset
+                                           ([#_"String" name]                                     (.getFieldOffset HotSpot'config, name, Integer))
+                                           ([#_"String" name, #_"String" type]                    (.getFieldOffset HotSpot'config, name, Integer, type))
+                                           ([#_"String" name, #_"String" type, #_"int" not-found] (.getFieldOffset HotSpot'config, name, Integer, type, not-found))
+    )
+    (defn #_"int"     HotSpot'int-value     [#_"String" name, #_"String" type]                    (.getFieldValue  HotSpot'config, name, Integer, type))
+    (defn #_"long"    HotSpot'long-value    [#_"String" name, #_"String" type]                    (.getFieldValue  HotSpot'config, name, Long,    type))
+    (defn #_"boolean" HotSpot'boolean-flag  [#_"String" name]                                     (.getFlag        HotSpot'config, name, Boolean))
+    (defn #_"int"     HotSpot'int-flag      [#_"String" name]                                     (.getFlag        HotSpot'config, name, Integer))
+)
+
 (about #_"jdk.vm.ci.code.site"
 
 (about #_"Mark"
@@ -315,30 +349,30 @@
 (about #_"jdk.vm.ci.hotspot"
 
 (about #_"CompilerToVM"
-    (defn #_"HotSpotResolvedJavaMethodImpl" CompilerToVM''asResolvedJavaMethod [^CompilerToVM this, #_"Executable" executable]
+    (defn #_"HotSpotResolvedJavaMethodImpl" CompilerToVM'asResolvedJavaMethod [#_"Executable" executable]
         (let [
-            #_"Method" m (.getDeclaredMethod CompilerToVM, "asResolvedJavaMethod", (-/into-array Class [Executable]))
+            #_"Method" m (Class''getDeclaredMethod CompilerToVM, "asResolvedJavaMethod", Executable)
         ]
             (.setAccessible m, true)
-            (.invoke m, this, (-/object-array [executable]))
+            (.invoke m, HotSpot'native, (-/object-array [executable]))
         )
     )
 
-    (defn #_"String" CompilerToVM''disassembleCodeBlob [^CompilerToVM this, #_"InstalledCode" installedCode]
+    (defn #_"String" CompilerToVM'disassembleCodeBlob [#_"InstalledCode" installedCode]
         (let [
-            #_"Method" m (.getDeclaredMethod CompilerToVM, "disassembleCodeBlob", (-/into-array Class [InstalledCode]))
+            #_"Method" m (Class''getDeclaredMethod CompilerToVM, "disassembleCodeBlob", InstalledCode)
         ]
             (.setAccessible m, true)
-            (.invoke m, this, (-/object-array [installedCode]))
+            (.invoke m, HotSpot'native, (-/object-array [installedCode]))
         )
     )
 
-    (defn #_"int" CompilerToVM''installCode [^CompilerToVM this, #_"TargetDescription" target, #_"HotSpotCompiledCode" compiledCode, #_"InstalledCode" code, #_"HotSpotSpeculationLog" speculationLog]
+    (defn #_"int" CompilerToVM'installCode [#_"HotSpotCompiledCode" compiledCode, #_"InstalledCode" installedCode]
         (let [
-            #_"Method" m (.getDeclaredMethod CompilerToVM, "installCode", (-/into-array Class [TargetDescription, HotSpotCompiledCode, InstalledCode, HotSpotSpeculationLog]))
+            #_"Method" m (Class''getDeclaredMethod CompilerToVM, "installCode", TargetDescription, HotSpotCompiledCode, InstalledCode, HotSpotSpeculationLog)
         ]
             (.setAccessible m, true)
-            (.invoke m, this, (-/object-array [target, compiledCode, code, speculationLog]))
+            (.invoke m, HotSpot'native, (-/object-array [HotSpot'target, compiledCode, installedCode, nil]))
         )
     )
 )
@@ -364,47 +398,6 @@
 
 (about #_"JavaMethod"
     (defn #_"String" JavaMethod''getName [^JavaMethod this] (.getName this))
-)
-)
-
-(about #_"graalfn.HotSpot"
-
-(about #_"HotSpot"
-    (def #_"HotSpotJVMCIRuntime" JVMCI'runtime (HotSpotJVMCIRuntime/runtime))
-
-    (def #_"CompilerToVM"    HotSpot'native (#_"HotSpotJVMCIRuntime" .getCompilerToVM JVMCI'runtime))
-    (def #_"HotSpotVMConfig" HotSpot'config (#_"HotSpotJVMCIRuntime" .getConfig       JVMCI'runtime))
-
-    (def #_"TargetDescription" HotSpot'target (#_"JVMCIBackend" .getTarget (#_"JVMCIRuntime" .getJVMCIBackend JVMCI'runtime, jdk.vm.ci.amd64.AMD64)))
-
-    (def #_"boolean" HotSpot'useG1GC                    (.getFlag HotSpot'config, "UseG1GC",                    Boolean))
-    (def #_"int"     HotSpot'codeEntryAlignment         (.getFlag HotSpot'config, "CodeEntryAlignment",         Integer))
-    (def #_"boolean" HotSpot'useCompressedOops          (.getFlag HotSpot'config, "UseCompressedOops",          Boolean))
-    (def #_"boolean" HotSpot'useCompressedClassPointers (.getFlag HotSpot'config, "UseCompressedClassPointers", Boolean))
-
-    (def #_"int" HotSpot'vmPageSize (.getFieldValue HotSpot'config, "CompilerToVM::Data::vm_page_size", Integer, "int"))
-
-    (def #_"boolean" HotSpot'useStackBanging  (.getFlag HotSpot'config, "UseStackBanging",  Boolean))
-    (def #_"int"     HotSpot'stackShadowPages (.getFlag HotSpot'config, "StackShadowPages", Integer))
-
-    (def #_"int" HotSpot'verifiedEntryMark     (.getConstant HotSpot'config, "CodeInstaller::VERIFIED_ENTRY",      Integer))
-    (def #_"int" HotSpot'deoptHandlerEntryMark (.getConstant HotSpot'config, "CodeInstaller::DEOPT_HANDLER_ENTRY", Integer))
-
-    (def #_"int" HotSpot'codeInstallResultOk                  (.getConstant HotSpot'config, "JVMCIEnv::ok",                   Integer))
-    (def #_"int" HotSpot'codeInstallResultDependenciesFailed  (.getConstant HotSpot'config, "JVMCIEnv::dependencies_failed",  Integer))
-    (def #_"int" HotSpot'codeInstallResultDependenciesInvalid (.getConstant HotSpot'config, "JVMCIEnv::dependencies_invalid", Integer))
-    (def #_"int" HotSpot'codeInstallResultCacheFull           (.getConstant HotSpot'config, "JVMCIEnv::cache_full",           Integer))
-    (def #_"int" HotSpot'codeInstallResultCodeTooLarge        (.getConstant HotSpot'config, "JVMCIEnv::code_too_large",       Integer))
-
-    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
-        (throw! "use G1 with compressed oops")
-    )
-)
-
-(let [
-    #_"Method" m (.getDeclaredMethod (-/class (fn* [] nil)), "invoke", (-/into-array Class []))
-]
-    (def #_"HotSpotResolvedJavaMethod" n'method (CompilerToVM''asResolvedJavaMethod HotSpot'native, m))
 )
 )
 
@@ -495,6 +488,7 @@
             byte?
             char? Character'digit Character'isWhitespace Character'valueOf
             char-sequence? CharSequence''charAt CharSequence''length
+            Class''getDeclaredMethod Unsafe'peep
             Comparable''compareTo
             int? Integer'MAX_VALUE Integer'MIN_VALUE Integer'bitCount Integer'compareUnsigned Integer'parseInt Integer'rotateLeft Integer'toString
             long? Long'MAX_VALUE Long'MIN_VALUE Long'SIZE Long'compareUnsigned Long'numberOfLeadingZeros Long'valueOf
@@ -525,14 +519,13 @@
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
             Mark'new
-            CompilerToVM''asResolvedJavaMethod CompilerToVM''disassembleCodeBlob CompilerToVM''installCode
+            CompilerToVM'asResolvedJavaMethod CompilerToVM'disassembleCodeBlob CompilerToVM'installCode
             HotSpotCompiledCode''getName
             HotSpotCompiledNmethod'new
             HotSpotNmethod'new
             HotSpotResolvedJavaMethod''allocateCompileId
             JavaMethod''getName
-            HotSpot'native HotSpot'target HotSpot'useG1GC HotSpot'codeEntryAlignment HotSpot'useCompressedOops HotSpot'useCompressedClassPointers HotSpot'vmPageSize HotSpot'useStackBanging HotSpot'stackShadowPages HotSpot'verifiedEntryMark HotSpot'deoptHandlerEntryMark HotSpot'codeInstallResultOk HotSpot'codeInstallResultDependenciesFailed HotSpot'codeInstallResultDependenciesInvalid HotSpot'codeInstallResultCacheFull HotSpot'codeInstallResultCodeTooLarge
-            n'method
+            HotSpot'address HotSpot'byte-constant HotSpot'int-constant HotSpot'offset HotSpot'int-value HotSpot'long-value HotSpot'boolean-flag HotSpot'int-flag
             biginteger? BigInteger'new BigInteger'ZERO BigInteger'ONE BigInteger''add BigInteger''bitLength BigInteger''divide
                         BigInteger''gcd BigInteger''intValue BigInteger''longValue BigInteger''multiply BigInteger''negate
                         BigInteger''remainder BigInteger''signum BigInteger''subtract BigInteger''toString BigInteger'valueOf
@@ -13618,7 +13611,7 @@
 (defn postwalk-replace [m form] (postwalk #(if (contains? m %) (m %) %) form))
 )
 
-(about #_"graalfn.Assembler"
+(about #_"amd64, hotspot, graalfn"
     (defp Condition)
     (defp Register)
     (defp Scale)
@@ -13644,6 +13637,11 @@
     (defp AMD64Shift)
     (defp BinaryArithmetic)
     (defp FrameContext)
+
+(about #_"GraalOptions"
+    (def #_"boolean" GraalOptions'canOmitFrame true)
+    (def #_"boolean" GraalOptions'zapStackOnMethodEntry false)
+)
 
 (about #_"NumUtil"
     (def #_"int" NumUtil'K 1024)
@@ -14278,6 +14276,18 @@
     (def #_"WordSize" AMD64'wordSize :WordSize'64bits)
 
     ;;;
+     ; Return the {@link WordSize} that is used to store values of a given {@link JavaKind}.
+     ;;
+    (defn #_"WordSize" AMD64'getWordSize-1 [#_"JavaKind" kind]
+        (case!? kind
+           [:JavaKind'Boolean :JavaKind'Byte] :WordSize'8bits
+           [:JavaKind'Short :JavaKind'Char]   :WordSize'16bits
+            :JavaKind'Int                     :WordSize'32bits
+           [:JavaKind'Long :JavaKind'Object]  :WordSize'64bits
+        )
+    )
+
+    ;;;
      ; Return the largest kind that can be stored in a register.
      ;;
     (def #_"WordSize" AMD64'largestStorable :WordSize'64bits)
@@ -14378,6 +14388,252 @@
     )
 )
 
+(about #_"HotSpot"
+    (def #_"boolean" HotSpot'useFastLocking          (HotSpot'boolean-flag "JVMCIUseFastLocking"))
+    (def #_"boolean" HotSpot'foldStableValues        (HotSpot'boolean-flag "FoldStableValues"))
+    (def #_"boolean" HotSpot'useTLAB                 (HotSpot'boolean-flag "UseTLAB"))
+    (def #_"boolean" HotSpot'useBiasedLocking        (HotSpot'boolean-flag "UseBiasedLocking"))
+    (def #_"boolean" HotSpot'threadLocalHandshakes   (HotSpot'boolean-flag "ThreadLocalHandshakes"))
+    (def #_"boolean" HotSpot'useG1GC                 (HotSpot'boolean-flag "UseG1GC"))
+    (def #_"boolean" HotSpot'useDeferredInitBarriers (HotSpot'boolean-flag "ReduceInitialCardMarks"))
+
+    (def #_"int" HotSpot'allocatePrefetchStyle         (HotSpot'int-flag "AllocatePrefetchStyle"))
+    (def #_"int" HotSpot'allocatePrefetchInstr         (HotSpot'int-flag "AllocatePrefetchInstr"))
+    (def #_"int" HotSpot'allocatePrefetchLines         (HotSpot'int-flag "AllocatePrefetchLines"))
+    (def #_"int" HotSpot'allocateInstancePrefetchLines (HotSpot'int-flag "AllocateInstancePrefetchLines"))
+    (def #_"int" HotSpot'allocatePrefetchStepSize      (HotSpot'int-flag "AllocatePrefetchStepSize"))
+    (def #_"int" HotSpot'allocatePrefetchDistance      (HotSpot'int-flag "AllocatePrefetchDistance"))
+    (def #_"int" HotSpot'codeEntryAlignment            (HotSpot'int-flag "CodeEntryAlignment"))
+    (def #_"int" HotSpot'objectAlignment               (HotSpot'int-flag "ObjectAlignmentInBytes"))
+    (def #_"int" HotSpot'heapWordSize                  (HotSpot'int-constant "HeapWordSize"))
+
+    (def #_"boolean" HotSpot'useCompressedOops          (HotSpot'boolean-flag "UseCompressedOops"))
+    (def #_"boolean" HotSpot'useCompressedClassPointers (HotSpot'boolean-flag "UseCompressedClassPointers"))
+
+    (def #_"long" HotSpot'narrowOopBase   (HotSpot'long-value "CompilerToVM::Data::Universe_narrow_oop_base",   "address"))
+    (def #_"long" HotSpot'narrowKlassBase (HotSpot'long-value "CompilerToVM::Data::Universe_narrow_klass_base", "address"))
+
+    (def #_"int" HotSpot'narrowOopShift   (HotSpot'int-value "CompilerToVM::Data::Universe_narrow_oop_shift",   "int"))
+    (def #_"int" HotSpot'narrowKlassShift (HotSpot'int-value "CompilerToVM::Data::Universe_narrow_klass_shift", "int"))
+    (def #_"int" HotSpot'narrowKlassSize  (HotSpot'int-value "CompilerToVM::Data::sizeof_narrowKlass",          "int"))
+    (def #_"int" HotSpot'arrayOopDescSize (HotSpot'int-value "CompilerToVM::Data::sizeof_arrayOopDesc",         "int"))
+    (def #_"int" HotSpot'vmPageSize       (HotSpot'int-value "CompilerToVM::Data::vm_page_size",                "int"))
+
+    (§ def #_"CompressEncoding" HotSpot'oopEncoding   (CompressEncoding'new-2 HotSpot'narrowOopBase, HotSpot'narrowOopShift))
+    (§ def #_"CompressEncoding" HotSpot'klassEncoding (CompressEncoding'new-2 HotSpot'narrowKlassBase, HotSpot'narrowKlassShift))
+
+    (def #_"boolean" HotSpot'useStackBanging  (HotSpot'boolean-flag "UseStackBanging"))
+    (def #_"int"     HotSpot'stackShadowPages (HotSpot'int-flag "StackShadowPages"))
+    (def #_"int"     HotSpot'stackBias        (HotSpot'int-constant "STACK_BIAS"))
+
+    (def #_"int" HotSpot'runtimeCallStackSize (HotSpot'int-constant "frame::arg_reg_save_area_bytes"))
+
+    (def #_"int" HotSpot'markOffset (HotSpot'offset "oopDesc::_mark",            "markOop"))
+    (def #_"int" HotSpot'hubOffset  (HotSpot'offset "oopDesc::_metadata._klass", "Klass*"))
+
+    (def #_"int" HotSpot'prototypeMarkWordOffset   (HotSpot'offset "Klass::_prototype_header",      "markOop"))
+    (def #_"int" HotSpot'superCheckOffsetOffset    (HotSpot'offset "Klass::_super_check_offset",    "juint"))
+    (def #_"int" HotSpot'secondarySuperCacheOffset (HotSpot'offset "Klass::_secondary_super_cache", "Klass*"))
+    (def #_"int" HotSpot'secondarySupersOffset     (HotSpot'offset "Klass::_secondary_supers",      "Array<Klass*>*"))
+    (def #_"int" HotSpot'classMirrorOffset         (HotSpot'offset "Klass::_java_mirror",           "OopHandle"))
+
+    ;;;
+     ; The offset of the array length word in an array object's header.
+     ;;
+    (def #_"int" HotSpot'arrayLengthOffset (if HotSpot'useCompressedClassPointers (+ HotSpot'hubOffset HotSpot'narrowKlassSize) HotSpot'arrayOopDescSize))
+
+    (def #_"int" HotSpot'metaspaceArrayBaseOffset   (HotSpot'offset "Array<Klass*>::_data[0]",       "Klass*"))
+    (def #_"int" HotSpot'metaspaceArrayLengthOffset (HotSpot'offset "Array<Klass*>::_length",        "int"))
+    (def #_"int" HotSpot'arrayClassElementOffset    (HotSpot'offset "ObjArrayKlass::_element_klass", "Klass*"))
+
+    (def #_"int" HotSpot'threadTlabOffset       (HotSpot'offset "Thread::_tlab",          "ThreadLocalAllocBuffer"))
+    (def #_"int" HotSpot'javaThreadAnchorOffset (HotSpot'offset "JavaThread::_anchor",    "JavaFrameAnchor"))
+    (def #_"int" HotSpot'objectResultOffset     (HotSpot'offset "JavaThread::_vm_result", "oop"))
+
+    ;;;
+     ; This field is used to pass exception objects into and out of the runtime system during exception handling for compiled code.
+     ;;
+    (def #_"int" HotSpot'pendingExceptionOffset      (HotSpot'offset "ThreadShadow::_pending_exception",    "oop"))
+    (def #_"int" HotSpot'pendingDeoptimizationOffset (HotSpot'offset "JavaThread::_pending_deoptimization", "int"))
+
+    (def #_"int" HotSpot'threadLastJavaSpOffset (+ HotSpot'javaThreadAnchorOffset (HotSpot'offset "JavaFrameAnchor::_last_Java_sp", "intptr_t*")))
+    (def #_"int" HotSpot'threadLastJavaPcOffset (+ HotSpot'javaThreadAnchorOffset (HotSpot'offset "JavaFrameAnchor::_last_Java_pc", "address")))
+    (def #_"int" HotSpot'threadLastJavaFpOffset (+ HotSpot'javaThreadAnchorOffset (HotSpot'offset "JavaFrameAnchor::_last_Java_fp", "intptr_t*")))
+
+    ;;;
+     ; Mask for a biasable, locked or unlocked mark word.
+     ;
+     ; +----------------------------------+-+-+
+     ; |                                 1|1|1|
+     ; +----------------------------------+-+-+
+     ;;
+
+    ;;;
+     ; Pattern for a biasable, unlocked mark word.
+     ;
+     ; +----------------------------------+-+-+
+     ; |                                 1|0|1|
+     ; +----------------------------------+-+-+
+     ;;
+
+    (def #_"int" HotSpot'biasedLockMaskInPlace (HotSpot'int-constant "markOopDesc::biased_lock_mask_in_place"))
+    (def #_"int" HotSpot'biasedLockPattern     (HotSpot'int-constant "markOopDesc::biased_lock_pattern"))
+    (def #_"int" HotSpot'ageMaskInPlace        (HotSpot'int-constant "markOopDesc::age_mask_in_place"))
+    (def #_"int" HotSpot'epochMaskInPlace      (HotSpot'int-constant "markOopDesc::epoch_mask_in_place"))
+    (def #_"int" HotSpot'unlockedMask          (HotSpot'int-constant "markOopDesc::unlocked_value"))
+    (def #_"int" HotSpot'monitorMask           (HotSpot'int-constant "markOopDesc::monitor_value",         -1))
+
+    ;; this field has no type in vmStructs.cpp
+    (def #_"int" HotSpot'objectMonitorOwnerOffset      (HotSpot'offset "ObjectMonitor::_owner",      nil,             -1))
+    (def #_"int" HotSpot'objectMonitorRecursionsOffset (HotSpot'offset "ObjectMonitor::_recursions", "intptr_t",      -1))
+    (def #_"int" HotSpot'objectMonitorCxqOffset        (HotSpot'offset "ObjectMonitor::_cxq",        "ObjectWaiter*", -1))
+    (def #_"int" HotSpot'objectMonitorEntryListOffset  (HotSpot'offset "ObjectMonitor::_EntryList",  "ObjectWaiter*", -1))
+
+    ;;;
+     ; Bit pattern that represents a non-oop. Neither the high bits nor the low bits of this value
+     ; are allowed to look like (respectively) the high or low bits of a real oop.
+     ;;
+    (def #_"long" HotSpot'nonOopBits (HotSpot'long-value "CompilerToVM::Data::Universe_non_oop_bits", "void*"))
+
+    (def #_"int" HotSpot'logOfHeapRegionGrainBytes (HotSpot'int-value "HeapRegion::LogOfHRGrainBytes", "int"))
+
+    (def #_"long" HotSpot'cardTableAddress (HotSpot'long-value "CompilerToVM::Data::cardtable_start_address", "jbyte*"))
+    (def #_"int"  HotSpot'cardTableShift   (HotSpot'int-value  "CompilerToVM::Data::cardtable_shift",         "int"))
+
+    (def #_"long" HotSpot'safepointPollingAddress (HotSpot'long-value "os::_polling_page", "address"))
+
+    ;; G1 Collector Related Values.
+    (def #_"byte" HotSpot'dirtyCardValue   (HotSpot'byte-constant "CardTableModRefBS::dirty_card"))
+    (def #_"byte" HotSpot'g1YoungCardValue (HotSpot'byte-constant "G1SATBCardTableModRefBS::g1_young_gen"))
+
+    (def #_"int" HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'offset "JavaThread::_dirty_card_queue", "DirtyCardQueue"))
+    (def #_"int" HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'offset "JavaThread::_satb_mark_queue"))
+
+    (def #_"int" HotSpot'g1CardQueueIndexOffset   (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueIndexOffset")))
+    (def #_"int" HotSpot'g1CardQueueBufferOffset  (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueBufferOffset")))
+    (def #_"int" HotSpot'g1SATBQueueMarkingOffset (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueActiveOffset")))
+    (def #_"int" HotSpot'g1SATBQueueIndexOffset   (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueIndexOffset")))
+    (def #_"int" HotSpot'g1SATBQueueBufferOffset  (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueBufferOffset")))
+
+    (def #_"int" HotSpot'klassOffset (HotSpot'int-value "java_lang_Class::_klass_offset", "int"))
+
+    (def #_"int" HotSpot'lockDisplacedMarkOffset (HotSpot'offset "BasicLock::_displaced_header", "markOop"))
+
+    (def #_"int" HotSpot'threadPollingPageOffset (HotSpot'offset "Thread::_polling_page", "address"))
+
+    (def #_"int" HotSpot'threadTlabEndOffset (+ HotSpot'threadTlabOffset (HotSpot'offset "ThreadLocalAllocBuffer::_end", "HeapWord*")))
+    (def #_"int" HotSpot'threadTlabTopOffset (+ HotSpot'threadTlabOffset (HotSpot'offset "ThreadLocalAllocBuffer::_top", "HeapWord*")))
+
+    (def #_"long" HotSpot'handleDeoptStub  (HotSpot'long-value "CompilerToVM::Data::SharedRuntime_deopt_blob_unpack",        "address"))
+    (def #_"long" HotSpot'uncommonTrapStub (HotSpot'long-value "CompilerToVM::Data::SharedRuntime_deopt_blob_uncommon_trap", "address"))
+
+    (def #_"long" HotSpot'codeCacheLowBound  (HotSpot'long-value "CodeCache::_low_bound",  "address"))
+    (def #_"long" HotSpot'codeCacheHighBound (HotSpot'long-value "CodeCache::_high_bound", "address"))
+
+    (def #_"long" HotSpot'newInstanceAddress      (HotSpot'address "JVMCIRuntime::new_instance"))
+    (def #_"long" HotSpot'newArrayAddress         (HotSpot'address "JVMCIRuntime::new_array"))
+    (def #_"long" HotSpot'monitorenterAddress     (HotSpot'address "JVMCIRuntime::monitorenter"))
+    (def #_"long" HotSpot'monitorexitAddress      (HotSpot'address "JVMCIRuntime::monitorexit"))
+    (def #_"long" HotSpot'writeBarrierPreAddress  (HotSpot'address "JVMCIRuntime::write_barrier_pre"))
+    (def #_"long" HotSpot'writeBarrierPostAddress (HotSpot'address "JVMCIRuntime::write_barrier_post"))
+
+    (def #_"int" HotSpot'verifiedEntryMark             (HotSpot'int-constant "CodeInstaller::VERIFIED_ENTRY"))
+    (def #_"int" HotSpot'deoptHandlerEntryMark         (HotSpot'int-constant "CodeInstaller::DEOPT_HANDLER_ENTRY"))
+    (def #_"int" HotSpot'invokeinterfaceMark           (HotSpot'int-constant "CodeInstaller::INVOKEINTERFACE"))
+    (def #_"int" HotSpot'invokevirtualMark             (HotSpot'int-constant "CodeInstaller::INVOKEVIRTUAL"))
+    (def #_"int" HotSpot'invokestaticMark              (HotSpot'int-constant "CodeInstaller::INVOKESTATIC"))
+    (def #_"int" HotSpot'invokespecialMark             (HotSpot'int-constant "CodeInstaller::INVOKESPECIAL"))
+    (def #_"int" HotSpot'pollNearMark                  (HotSpot'int-constant "CodeInstaller::POLL_NEAR"))
+    (def #_"int" HotSpot'pollReturnNearMark            (HotSpot'int-constant "CodeInstaller::POLL_RETURN_NEAR"))
+    (def #_"int" HotSpot'pollFarMark                   (HotSpot'int-constant "CodeInstaller::POLL_FAR"))
+    (def #_"int" HotSpot'pollReturnFarMark             (HotSpot'int-constant "CodeInstaller::POLL_RETURN_FAR"))
+    (def #_"int" HotSpot'cardTableAddressMark          (HotSpot'int-constant "CodeInstaller::CARD_TABLE_ADDRESS"))
+    (def #_"int" HotSpot'logOfHeapRegionGrainBytesMark (HotSpot'int-constant "CodeInstaller::LOG_OF_HEAP_REGION_GRAIN_BYTES"))
+
+    (def #_"boolean" HotSpot'useCountLeadingZerosInstruction  (HotSpot'boolean-flag "UseCountLeadingZerosInstruction"))
+    (def #_"boolean" HotSpot'useCountTrailingZerosInstruction (HotSpot'boolean-flag "UseCountTrailingZerosInstruction"))
+
+    (def #_"int" HotSpot'codeInstallResultOk                  (HotSpot'int-constant "JVMCIEnv::ok"))
+    (def #_"int" HotSpot'codeInstallResultDependenciesFailed  (HotSpot'int-constant "JVMCIEnv::dependencies_failed"))
+    (def #_"int" HotSpot'codeInstallResultDependenciesInvalid (HotSpot'int-constant "JVMCIEnv::dependencies_invalid"))
+    (def #_"int" HotSpot'codeInstallResultCacheFull           (HotSpot'int-constant "JVMCIEnv::cache_full"))
+    (def #_"int" HotSpot'codeInstallResultCodeTooLarge        (HotSpot'int-constant "JVMCIEnv::code_too_large"))
+
+    (def #_"int" HotSpot'deoptReasonNone        (HotSpot'int-constant "Deoptimization::Reason_none"))
+    (def #_"int" HotSpot'deoptReasonNullCheck   (HotSpot'int-constant "Deoptimization::Reason_null_check"))
+    (def #_"int" HotSpot'deoptReasonRangeCheck  (HotSpot'int-constant "Deoptimization::Reason_range_check"))
+    (def #_"int" HotSpot'deoptReasonClassCheck  (HotSpot'int-constant "Deoptimization::Reason_class_check"))
+    (def #_"int" HotSpot'deoptReasonArrayCheck  (HotSpot'int-constant "Deoptimization::Reason_array_check"))
+    (def #_"int" HotSpot'deoptReasonUnresolved  (HotSpot'int-constant "Deoptimization::Reason_unresolved"))
+    (def #_"int" HotSpot'deoptReasonJsrMismatch (HotSpot'int-constant "Deoptimization::Reason_jsr_mismatch"))
+    (def #_"int" HotSpot'deoptReasonDiv0Check   (HotSpot'int-constant "Deoptimization::Reason_div0_check"))
+    (def #_"int" HotSpot'deoptReasonConstraint  (HotSpot'int-constant "Deoptimization::Reason_constraint"))
+
+    (def #_"int" HotSpot'deoptActionNone           (HotSpot'int-constant "Deoptimization::Action_none"))
+    (def #_"int" HotSpot'deoptActionReinterpret    (HotSpot'int-constant "Deoptimization::Action_reinterpret"))
+    (def #_"int" HotSpot'deoptActionMakeNotEntrant (HotSpot'int-constant "Deoptimization::Action_make_not_entrant"))
+
+    (def #_"int" HotSpot'deoptimizationActionShift (HotSpot'int-constant "Deoptimization::_action_shift"))
+    (def #_"int" HotSpot'deoptimizationReasonShift (HotSpot'int-constant "Deoptimization::_reason_shift"))
+
+    (when-not (and HotSpot'useG1GC HotSpot'useCompressedOops HotSpot'useCompressedClassPointers)
+        (throw! "use G1 with compressed oops")
+    )
+
+    ;;;
+     ; Special registers reserved by HotSpot for frequently used values.
+     ;;
+    (def #_"Register" HotSpot'threadRegister       AMD64'r15)
+    (def #_"Register" HotSpot'heapBaseRegister     AMD64'r12)
+    (def #_"Register" HotSpot'stackPointerRegister AMD64'rsp)
+
+    (§ def #_"ForeignCalls" HotSpot'foreignCalls (ForeignCalls'new-0))
+)
+
+(about #_"Unsafe"
+    (def #_"Unsafe" Unsafe'indeed (Unsafe'peep "theUnsafe"))
+
+    (def #_"int" Unsafe'ARRAY_BOOLEAN_BASE_OFFSET (Unsafe'peep "ARRAY_BOOLEAN_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_BYTE_BASE_OFFSET    (Unsafe'peep "ARRAY_BYTE_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_SHORT_BASE_OFFSET   (Unsafe'peep "ARRAY_SHORT_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_CHAR_BASE_OFFSET    (Unsafe'peep "ARRAY_CHAR_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_INT_BASE_OFFSET     (Unsafe'peep "ARRAY_INT_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_LONG_BASE_OFFSET    (Unsafe'peep "ARRAY_LONG_BASE_OFFSET"))
+    (def #_"int" Unsafe'ARRAY_OBJECT_BASE_OFFSET  (Unsafe'peep "ARRAY_OBJECT_BASE_OFFSET"))
+
+    (def #_"int" Unsafe'ARRAY_BOOLEAN_INDEX_SCALE (Unsafe'peep "ARRAY_BOOLEAN_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_BYTE_INDEX_SCALE    (Unsafe'peep "ARRAY_BYTE_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_SHORT_INDEX_SCALE   (Unsafe'peep "ARRAY_SHORT_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_CHAR_INDEX_SCALE    (Unsafe'peep "ARRAY_CHAR_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_INT_INDEX_SCALE     (Unsafe'peep "ARRAY_INT_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_LONG_INDEX_SCALE    (Unsafe'peep "ARRAY_LONG_INDEX_SCALE"))
+    (def #_"int" Unsafe'ARRAY_OBJECT_INDEX_SCALE  (Unsafe'peep "ARRAY_OBJECT_INDEX_SCALE"))
+
+    (defn #_"int" HotSpot'arrayBaseOffset-1 [#_"JavaKind" kind]
+        (case! kind
+            :JavaKind'Boolean Unsafe'ARRAY_BOOLEAN_BASE_OFFSET
+            :JavaKind'Byte    Unsafe'ARRAY_BYTE_BASE_OFFSET
+            :JavaKind'Short   Unsafe'ARRAY_SHORT_BASE_OFFSET
+            :JavaKind'Char    Unsafe'ARRAY_CHAR_BASE_OFFSET
+            :JavaKind'Int     Unsafe'ARRAY_INT_BASE_OFFSET
+            :JavaKind'Long    Unsafe'ARRAY_LONG_BASE_OFFSET
+            :JavaKind'Object  Unsafe'ARRAY_OBJECT_BASE_OFFSET
+        )
+    )
+
+    (defn #_"int" HotSpot'arrayIndexScale-1 [#_"JavaKind" kind]
+        (case! kind
+            :JavaKind'Boolean Unsafe'ARRAY_BOOLEAN_INDEX_SCALE
+            :JavaKind'Byte    Unsafe'ARRAY_BYTE_INDEX_SCALE
+            :JavaKind'Short   Unsafe'ARRAY_SHORT_INDEX_SCALE
+            :JavaKind'Char    Unsafe'ARRAY_CHAR_INDEX_SCALE
+            :JavaKind'Int     Unsafe'ARRAY_INT_INDEX_SCALE
+            :JavaKind'Long    Unsafe'ARRAY_LONG_INDEX_SCALE
+            :JavaKind'Object  Unsafe'ARRAY_OBJECT_INDEX_SCALE
+        )
+    )
+)
+
 ;;;
  ; A register configuration binds roles and attributes to physical registers.
  ;;
@@ -14435,6 +14691,28 @@
      ; {@link #getCallerSaveRegisters() caller saved}.
      ;;
     (def #_"boolean" RegisterConfig'areAllAllocatableRegistersCallerSaved true)
+)
+
+;;;
+ ; Constants for x86 prefix bytes.
+ ;;
+(about #_"Prefix"
+    (def #_"int" Prefix'REX     0x40)
+    (def #_"int" Prefix'REXB    0x41)
+    (def #_"int" Prefix'REXX    0x42)
+    (def #_"int" Prefix'REXXB   0x43)
+    (def #_"int" Prefix'REXR    0x44)
+    (def #_"int" Prefix'REXRB   0x45)
+    (def #_"int" Prefix'REXRX   0x46)
+    (def #_"int" Prefix'REXRXB  0x47)
+    (def #_"int" Prefix'REXW    0x48)
+    (def #_"int" Prefix'REXWB   0x49)
+    (def #_"int" Prefix'REXWX   0x4a)
+    (def #_"int" Prefix'REXWXB  0x4b)
+    (def #_"int" Prefix'REXWR   0x4c)
+    (def #_"int" Prefix'REXWRB  0x4d)
+    (def #_"int" Prefix'REXWRX  0x4e)
+    (def #_"int" Prefix'REXWRXB 0x4f)
 )
 
 ;;;
@@ -14497,42 +14775,6 @@
             ConditionFlag'NoParity     ConditionFlag'Parity
         )
     )
-)
-
-;;;
- ; Constants for X86 prefix bytes.
- ;;
-(about #_"Prefix"
-    (def #_"int" Prefix'REX     0x40)
-    (def #_"int" Prefix'REXB    0x41)
-    (def #_"int" Prefix'REXX    0x42)
-    (def #_"int" Prefix'REXXB   0x43)
-    (def #_"int" Prefix'REXR    0x44)
-    (def #_"int" Prefix'REXRB   0x45)
-    (def #_"int" Prefix'REXRX   0x46)
-    (def #_"int" Prefix'REXRXB  0x47)
-    (def #_"int" Prefix'REXW    0x48)
-    (def #_"int" Prefix'REXWB   0x49)
-    (def #_"int" Prefix'REXWX   0x4a)
-    (def #_"int" Prefix'REXWXB  0x4b)
-    (def #_"int" Prefix'REXWR   0x4c)
-    (def #_"int" Prefix'REXWRB  0x4d)
-    (def #_"int" Prefix'REXWRX  0x4e)
-    (def #_"int" Prefix'REXWRXB 0x4f)
-)
-
-(about #_"HotSpot"
-    ;;;
-     ; Special registers reserved by HotSpot for frequently used values.
-     ;;
-    (def #_"Register" HotSpot'threadRegister       AMD64'r15)
-    (def #_"Register" HotSpot'heapBaseRegister     AMD64'r12)
-    (def #_"Register" HotSpot'stackPointerRegister AMD64'rsp)
-)
-
-(about #_"GraalOptions"
-    (def #_"boolean" GraalOptions'canOmitFrame true)
-    (def #_"boolean" GraalOptions'zapStackOnMethodEntry false)
 )
 
 (about #_"Assembler"
@@ -17015,12 +17257,14 @@
         )
     )
 
+    (def- #_"HotSpotResolvedJavaMethod" n'method (CompilerToVM'asResolvedJavaMethod (Class''getDeclaredMethod (-/class (fn* [] nil)), "invoke")))
+
     (defn #_"HotSpotCompiledCode" Compiler'createCompiledCode-1 [#_"Assembler" asm]
         (let [
             #_"String" name (JavaMethod''getName n'method)
             #_"byte[]" code! (-/byte-array (:code asm))
             #_"int" codeSize (-/alength code!)
-            #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (:marks asm))
+            #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (:marks asm)) ;; assumed being sorted by .pcOffset
             #_"ResolvedJavaMethod[]" methods! (-/into-array jdk.vm.ci.meta.ResolvedJavaMethod [n'method])
             #_"byte[]" data! (-/byte-array 0)
             #_"int" alignment 16
@@ -17049,7 +17293,7 @@
             #_"HotSpotCompiledCode" compiledCode (Compiler'createCompiledCode-1 asm)
             #_"String" name (HotSpotCompiledCode''getName compiledCode)
             #_"HotSpotNmethod" installedCode (HotSpotNmethod'new n'method, name, false)
-            #_"int" result (CompilerToVM''installCode HotSpot'native, HotSpot'target, compiledCode, installedCode, nil)
+            #_"int" result (CompilerToVM'installCode compiledCode, installedCode)
         ]
             (when (= result HotSpot'codeInstallResultOk) => (throw! (str "error installing " name ": " (Compiler'getCodeInstallResultDescription result)))
                 installedCode
