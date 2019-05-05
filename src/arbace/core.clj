@@ -20,7 +20,7 @@
     [java.util Arrays Comparator]
     [java.util.regex Matcher Pattern]
     [jdk.vm.ci.code InstalledCode TargetDescription]
-    [jdk.vm.ci.code.site Mark]
+    [jdk.vm.ci.code.site Call Mark Site]
     [jdk.vm.ci.hotspot CompilerToVM HotSpotCompiledCode HotSpotCompiledNmethod HotSpotJVMCIRuntime HotSpotNmethod HotSpotResolvedJavaMethod HotSpotSpeculationLog]
     [jdk.vm.ci.meta JavaMethod]
     [sun.misc Unsafe]
@@ -341,8 +341,20 @@
 
 (about #_"jdk.vm.ci.code.site"
 
+(about #_"Call"
+    (defn jvmci-call? [x] (-/instance? Call x))
+
+    (defn #_"Call" Call'new [#_"InvokeTarget" target, #_"int" at, #_"int" size, #_"boolean" direct] (Call. target, at, size, direct, nil))
+)
+
 (about #_"Mark"
+    (defn jvmci-mark? [x] (-/instance? Mark x))
+
     (defn #_"Mark" Mark'new [#_"int" at, #_"Object" id] (Mark. at, id))
+)
+
+(about #_"Site"
+    (defn #_"int" Site''pcOffset [^Site this] (.pcOffset this))
 )
 )
 
@@ -518,7 +530,9 @@
             clojure-namespace? Namespace''-getMappings Namespace''-getMapping Namespace''-intern Namespace''-findInternedVar
             clojure-symbol?
             clojure-var? Var''-alterRoot Var''-hasRoot Var''-isBound Var''-get
-            Mark'new
+            jvmci-call? Call'new
+            jvmci-mark? Mark'new
+            Site''pcOffset
             CompilerToVM'asResolvedJavaMethod CompilerToVM'disassembleCodeBlob CompilerToVM'installCode
             HotSpotCompiledCode''getName
             HotSpotCompiledNmethod'new
@@ -14278,7 +14292,7 @@
     ;;;
      ; Return the {@link WordSize} that is used to store values of a given {@link JavaKind}.
      ;;
-    (defn #_"WordSize" AMD64'getWordSize-1 [#_"JavaKind" kind]
+    (defn #_"WordSize" AMD64'getWordSize-1 [#_"JavaKind" kind]
         (case!? kind
            [:JavaKind'Boolean :JavaKind'Byte] :WordSize'8bits
            [:JavaKind'Short :JavaKind'Char]   :WordSize'16bits
@@ -14609,7 +14623,7 @@
     (def #_"int" Unsafe'ARRAY_LONG_INDEX_SCALE    (Unsafe'peep "ARRAY_LONG_INDEX_SCALE"))
     (def #_"int" Unsafe'ARRAY_OBJECT_INDEX_SCALE  (Unsafe'peep "ARRAY_OBJECT_INDEX_SCALE"))
 
-    (defn #_"int" HotSpot'arrayBaseOffset-1 [#_"JavaKind" kind]
+    (defn #_"int" HotSpot'arrayBaseOffset-1 [#_"JavaKind" kind]
         (case! kind
             :JavaKind'Boolean Unsafe'ARRAY_BOOLEAN_BASE_OFFSET
             :JavaKind'Byte    Unsafe'ARRAY_BYTE_BASE_OFFSET
@@ -14621,7 +14635,7 @@
         )
     )
 
-    (defn #_"int" HotSpot'arrayIndexScale-1 [#_"JavaKind" kind]
+    (defn #_"int" HotSpot'arrayIndexScale-1 [#_"JavaKind" kind]
         (case! kind
             :JavaKind'Boolean Unsafe'ARRAY_BOOLEAN_INDEX_SCALE
             :JavaKind'Byte    Unsafe'ARRAY_BYTE_INDEX_SCALE
@@ -14807,6 +14821,7 @@
                     #_"FrameContext" :frameContext (FrameContext'new-1 omit-frame?)
                     #_"[byte]" :code (vector)
                     #_"[Mark]" :marks (vector)
+                    #_"[Call]" :calls (vector)
                 )
             )
         )
@@ -15185,6 +15200,28 @@
         ]
             (Assembler''emitByte-2 this, prefix)
         )
+    )
+
+    ;;;
+     ; Records an instruction mark within this method.
+     ;;
+    (defn #_"Assembler" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
+        (update this :marks conj (Mark'new (Assembler''position-1 this), id))
+    )
+
+    ;;;
+     ; Records a call site within this method.
+     ;;
+    (defn #_"Assembler" Assembler''recordCall-5 [#_"Assembler" this, #_"InvokeTarget" target, #_"int" at, #_"int" size, #_"boolean" direct?]
+        (update this :calls conj (Call'new target, at, size, direct?))
+    )
+
+    (defn #_"Assembler" Assembler''recordDirectCall-4 [#_"Assembler" this, #_"InvokeTarget" target, #_"int" before, #_"int" after]
+        (Assembler''recordCall-5 this, target, before, (- after before), true)
+    )
+
+    (defn #_"Assembler" Assembler''recordIndirectCall-4 [#_"Assembler" this, #_"InvokeTarget" target, #_"int" before, #_"int" after]
+        (Assembler''recordCall-5 this, target, before, (- after before), false)
     )
 )
 
@@ -17000,12 +17037,13 @@
         )
     )
 
-    (defn #_"Assembler" AMD64Call'directCall-4 [#_"Assembler" asm, #_"InvokeTarget" callTarget, #_"Register" scratch, #_"boolean" align?]
+    (defn #_"Assembler" AMD64Call'directCall-4 [#_"Assembler" asm, #_"InvokeTarget" target, #_"Register" scratch, #_"boolean" align?]
         (let [
             asm
                 (when align? => asm
                     (AMD64Call'emitAlignmentForDirectCall-1 asm)
                 )
+            #_"int" before (Assembler''position-1 asm)
             asm
                 (if (some? scratch)
                     (-> asm ;; offset might not fit a 32-bit immediate, generate an indirect call with a 64-bit immediate
@@ -17014,23 +17052,39 @@
                     )
                     (Assembler''call-1 asm)
                 )
+            #_"int" after (Assembler''position-1 asm)
         ]
-            (Assembler''ensureUniquePC-1 asm)
+            (-> asm
+                (Assembler''recordDirectCall-4 target, before, after)
+                (Assembler''ensureUniquePC-1)
+            )
         )
     )
 
-    (defn #_"Assembler" AMD64Call'directJmp-2 [#_"Assembler" asm, #_"InvokeTarget" target]
-        (-> asm
-            (Assembler''jmp-3 0, true)
-            (Assembler''ensureUniquePC-1)
+    (defn #_"Assembler" AMD64Call'directJmp-2 [#_"Assembler" asm, #_"InvokeTarget" target]
+        (let [
+            #_"int" before (Assembler''position-1 asm)
+            asm (Assembler''jmp-3 asm, 0, true)
+            #_"int" after (Assembler''position-1 asm)
+        ]
+            (-> asm
+                (Assembler''recordDirectCall-4 target, before, after)
+                (Assembler''ensureUniquePC-1)
+            )
         )
     )
 
     #_unused
-    (defn #_"Assembler" AMD64Call'directConditionalJmp-3 [#_"Assembler" asm, #_"InvokeTarget" target, #_"ConditionFlag" cond]
-        (-> asm
-            (Assembler''jcc-4 cond, 0, true)
-            (Assembler''ensureUniquePC-1)
+    (defn #_"Assembler" AMD64Call'directConditionalJmp-3 [#_"Assembler" asm, #_"InvokeTarget" target, #_"ConditionFlag" cond]
+        (let [
+            #_"int" before (Assembler''position-1 asm)
+            asm (Assembler''jcc-4 asm, cond, 0, true)
+            #_"int" after (Assembler''position-1 asm)
+        ]
+            (-> asm
+                (Assembler''recordDirectCall-4 target, before, after)
+                (Assembler''ensureUniquePC-1)
+            )
         )
     )
 )
@@ -17211,13 +17265,6 @@
 )
 
 (about #_"Assembler"
-    ;;;
-     ; Records an instruction mark within this method.
-     ;;
-    (defn #_"Assembler" Assembler''recordMark-2 [#_"Assembler" this, #_"Object" id]
-        (update this :marks conj (Mark'new (Assembler''position-1 this), id))
-    )
-
     (defn #_"this" Assembler''assemble-1 [#_"Assembler" this]
         (let [
             this (Assembler''align-2 this, HotSpot'codeEntryAlignment)
@@ -17257,6 +17304,49 @@
         )
     )
 
+    ;;;
+     ; HotSpot expects sites to be presented in ascending order of PC (see DebugInformationRecorder::add_new_pc_offset).
+     ;;
+    (defn- #_"[Site]" Compiler'getSortedSites-1 [#_"Assembler" asm]
+        (vec
+            (sort
+                (fn #_"int" [#_"Site" s1, #_"Site" s2]
+                    (let [
+                        #_"int" cmp (- (Site''pcOffset s1) (Site''pcOffset s2))
+                        cmp
+                            (when (zero? cmp) => cmp
+                                ;; Marks must come first since patching a call site may need to know the mark
+                                ;; denoting the call type (see uses of CodeInstaller::_next_call_type).
+                                (let [
+                                    #_"boolean" m1 (jvmci-mark? s1)
+                                    #_"boolean" m2 (jvmci-mark? s2)
+                                ]
+                                    (when-not (= m1 m2) => cmp
+                                        (if m1 -1 1)
+                                    )
+                                )
+                            )
+                        cmp
+                            (when (zero? cmp) => cmp
+                                ;; Calls must group together, so put them after marks.
+                                (let [
+                                    #_"boolean" c1 (jvmci-call? s1)
+                                    #_"boolean" c2 (jvmci-call? s2)
+                                ]
+                                    (when-not (= c1 c2) => cmp
+                                        (if c1 1 -1)
+                                    )
+                                )
+                            )
+                    ]
+                        cmp
+                    )
+                )
+                (concat (:marks asm) (:calls asm))
+            )
+        )
+    )
+
     (def- #_"HotSpotResolvedJavaMethod" n'method (CompilerToVM'asResolvedJavaMethod (Class''getDeclaredMethod (-/class (fn* [] nil)), "invoke")))
 
     (defn #_"HotSpotCompiledCode" Compiler'createCompiledCode-1 [#_"Assembler" asm]
@@ -17264,7 +17354,7 @@
             #_"String" name (JavaMethod''getName n'method)
             #_"byte[]" code! (-/byte-array (:code asm))
             #_"int" codeSize (-/alength code!)
-            #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (:marks asm)) ;; assumed being sorted by .pcOffset
+            #_"Site[]" sites! (-/into-array jdk.vm.ci.code.site.Site (Compiler'getSortedSites-1 asm))
             #_"ResolvedJavaMethod[]" methods! (-/into-array jdk.vm.ci.meta.ResolvedJavaMethod [n'method])
             #_"byte[]" data! (-/byte-array 0)
             #_"int" alignment 16
