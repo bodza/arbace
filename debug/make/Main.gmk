@@ -1,0 +1,390 @@
+#
+# Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+################################################################################
+# This is the main makefile containing most actual top level targets. It needs
+# to be called with a SPEC file defined.
+################################################################################
+
+# Declare default target
+default:
+
+ifeq ($(wildcard $(SPEC)),)
+  $(error Main.gmk needs SPEC set to a proper spec.gmk)
+endif
+
+# Now load the spec
+include $(SPEC)
+
+include $(TOPDIR)/make/MainSupport.gmk
+
+# Load the vital tools for all the makefiles.
+include $(TOPDIR)/make/common/MakeBase.gmk
+include $(TOPDIR)/make/common/Modules.gmk
+
+# Declare ALL_TARGETS as an immediate variable. This variable is a list of all
+# valid top level targets. It's used to declare them all as PHONY and to
+# generate the -only targets.
+ALL_TARGETS :=
+
+# Hook to include the corresponding custom file, if present.
+$(eval $(call IncludeCustomExtension, Main.gmk))
+
+# All modules for the current target platform.
+ALL_MODULES := $(call FindAllModules)
+
+# Build tools targets, compiling tools used during the build
+
+  buildtools-langtools:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f ToolsLangtools.gmk)
+
+  buildtools-jdk:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f CompileToolsJdk.gmk)
+
+  buildtools-hotspot:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f CompileToolsHotspot.gmk)
+
+ALL_TARGETS += buildtools-langtools buildtools-jdk buildtools-modules buildtools-hotspot
+
+# Gensrc targets, generating source before java compilation can be done
+
+  $(eval $(call DeclareRecipesForPhase, GENSRC, \
+      TARGET_SUFFIX := gensrc-src, \
+      FILE_PREFIX := Gensrc, \
+      MAKE_SUBDIR := gensrc, \
+      CHECK_MODULES := $(ALL_MODULES), \
+  ))
+
+  $(foreach m, $(GENSRC_MODULES), $(eval $m-gensrc: $m-gensrc-src))
+
+  LANGTOOLS_GENSRC_TARGETS := $(filter $(addsuffix -%, $(LANGTOOLS_MODULES)), $(GENSRC_TARGETS))
+  HOTSPOT_GENSRC_TARGETS := $(filter $(addsuffix -%, $(HOTSPOT_MODULES)), $(GENSRC_TARGETS))
+  JDK_GENSRC_TARGETS := $(filter-out $(LANGTOOLS_GENSRC_TARGETS) $(HOTSPOT_GENSRC_TARGETS), $(GENSRC_TARGETS))
+
+  GENSRC_MODULEINFO_MODULES := $(ALL_MODULES)
+  GENSRC_MODULEINFO_TARGETS := $(addsuffix -gensrc-moduleinfo, $(GENSRC_MODULEINFO_MODULES))
+
+  GENSRC_MODULES := $(GENSRC_MODULEINFO_MODULES)
+  GENSRC_TARGETS += $(sort $(GENSRC_MODULEINFO_TARGETS) $(addsuffix -gensrc, $(GENSRC_MODULES)))
+
+ALL_TARGETS += $(GENSRC_TARGETS)
+
+# Generate data targets
+
+$(eval $(call DeclareRecipesForPhase, GENDATA, \
+    TARGET_SUFFIX := gendata, \
+    FILE_PREFIX := Gendata, \
+    MAKE_SUBDIR := gendata, \
+    CHECK_MODULES := $(ALL_MODULES), \
+    USE_WRAPPER := true))
+
+ALL_TARGETS += $(GENDATA_TARGETS)
+
+# Copy files targets
+
+$(eval $(call DeclareRecipesForPhase, COPY, \
+    TARGET_SUFFIX := copy, \
+    FILE_PREFIX := Copy, \
+    MAKE_SUBDIR := copy, \
+    CHECK_MODULES := $(ALL_MODULES), \
+    USE_WRAPPER := true, \
+))
+
+ALL_COPY_MODULES += $(COPY_MODULES)
+ALL_COPY_TARGETS += $(COPY_TARGETS)
+
+IMPORT_COPY_MODULES := $(call FindImportedModules)
+IMPORT_COPY_TARGETS := $(addsuffix -copy, $(IMPORT_COPY_MODULES))
+ALL_COPY_MODULES += $(IMPORT_COPY_MODULES)
+ALL_COPY_TARGETS += $(IMPORT_COPY_TARGETS)
+
+define DeclareImportCopyRecipe
+  $1-copy:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f CopyImportModules.gmk MODULE=$1)
+endef
+
+$(foreach m, $(IMPORT_COPY_MODULES), $(eval $(call DeclareImportCopyRecipe,$m)))
+
+ALL_TARGETS += $(ALL_COPY_TARGETS)
+
+# Targets for compiling all java modules.
+
+JAVA_MODULES := $(ALL_MODULES)
+JAVA_TARGETS := $(addsuffix -java, $(JAVA_MODULES))
+
+define DeclareCompileJavaRecipe
+  $1-java:
+	+($(CD) $(TOPDIR)/make && $(MAKE) $(MAKE_ARGS) -f CompileJavaModules.gmk MODULE=$1)
+endef
+
+$(foreach m, $(JAVA_MODULES), $(eval $(call DeclareCompileJavaRecipe,$m)))
+
+ALL_TARGETS += $(JAVA_TARGETS)
+
+# Targets for compiling native libraries
+
+$(eval $(call DeclareRecipesForPhase, LIBS, \
+    TARGET_SUFFIX := libs, \
+    FILE_PREFIX := Lib, \
+    MAKE_SUBDIR := lib, \
+    CHECK_MODULES := $(ALL_MODULES), \
+    USE_WRAPPER := true))
+
+ALL_TARGETS += $(LIBS_TARGETS)
+
+# Targets for compiling native executables
+
+$(eval $(call DeclareRecipesForPhase, LAUNCHER, \
+    TARGET_SUFFIX := launchers, \
+    FILE_PREFIX := Launcher, \
+    MAKE_SUBDIR := launcher, \
+    CHECK_MODULES := $(ALL_MODULES), \
+    USE_WRAPPER := true))
+
+ALL_TARGETS += $(LAUNCHER_TARGETS)
+
+# Build hotspot target
+
+HOTSPOT_VARIANT_TARGETS := $(addprefix hotspot-, $(JVM_VARIANTS))
+HOTSPOT_VARIANT_GENSRC_TARGETS := $(addsuffix -gensrc, $(HOTSPOT_VARIANT_TARGETS))
+HOTSPOT_VARIANT_LIBS_TARGETS := $(addsuffix -libs, $(HOTSPOT_VARIANT_TARGETS))
+
+define DeclareHotspotGensrcRecipe
+  hotspot-$1-gensrc:
+	$$(call LogInfo, Building JVM variant '$1' with features '$(JVM_FEATURES_$1)')
+	+($(CD) $(TOPDIR)/make/hotspot && $(MAKE) $(MAKE_ARGS) -f gensrc/GenerateSources.gmk JVM_VARIANT=$1)
+endef
+
+$(foreach v, $(JVM_VARIANTS), $(eval $(call DeclareHotspotGensrcRecipe,$v)))
+
+define DeclareHotspotLibsRecipe
+  hotspot-$1-libs:
+	+($(CD) $(TOPDIR)/make/hotspot && $(MAKE) $(MAKE_ARGS) -f lib/CompileLibraries.gmk JVM_VARIANT=$1)
+endef
+
+$(foreach v, $(JVM_VARIANTS), $(eval $(call DeclareHotspotLibsRecipe,$v)))
+
+ALL_TARGETS += $(HOTSPOT_VARIANT_TARGETS) $(HOTSPOT_VARIANT_GENSRC_TARGETS) $(HOTSPOT_VARIANT_LIBS_TARGETS)
+
+# Images targets
+
+ALL_TARGETS += exploded-image-optimize
+
+################################################################################
+#
+# Dependency declarations between targets.
+#
+# These are declared in two groups. First all dependencies between targets that
+# have recipes above as these dependencies may be disabled. Then the aggregator
+# targets that do not have recipes of their own, which will never have their
+# dependencies disabled.
+#
+################################################################################
+# Targets with recipes above
+
+# If running an *-only target, parallel execution and dependencies between
+# recipe targets are disabled. This makes it possible to run a select set of
+# recipe targets in order. It's the responsibility of the user to make sure
+# all prerequisites are fulfilled.
+ifneq ($(findstring -only, $(MAKECMDGOALS)), )
+  .NOTPARALLEL:
+else
+  $(LANGTOOLS_GENSRC_TARGETS): buildtools-langtools
+
+  buildtools-modules: exploded-image-base
+
+  $(HOTSPOT_GENSRC_TARGETS): buildtools-hotspot
+
+  $(JDK_GENSRC_TARGETS): buildtools-jdk
+
+  $(GENSRC_MODULEINFO_TARGETS): buildtools-jdk
+
+  $(GENDATA_TARGETS): buildtools-jdk
+
+  # Declare dependencies between hotspot-<variant>* targets
+  $(foreach v, $(JVM_VARIANTS), $(eval hotspot-$v: hotspot-$v-gensrc hotspot-$v-libs) $(eval hotspot-$v-libs: hotspot-$v-gensrc java.base-copy))
+
+  # If not already set, set the JVM variant target so that the JVM will be built.
+  JVM_MAIN_LIB_TARGETS ?= hotspot-$(JVM_VARIANT_MAIN)-libs
+
+  # Building one JVM variant is enough to start building the other libs
+  $(LIBS_TARGETS): $(JVM_MAIN_LIB_TARGETS)
+
+  $(LAUNCHER_TARGETS): java.base-libs
+
+  # Declare dependency from <module>-java to <module>-gensrc
+  $(foreach m, $(GENSRC_MODULES), $(eval $m-java: $m-gensrc))
+
+  # Declare dependencies between java modules
+  $(foreach m, $(JAVA_MODULES), $(eval $m-java: $(addsuffix -java, $(filter $(JAVA_MODULES), $(call FindDepsForModule,$m)))))
+
+  # Declare dependencies from <module>-lib to <module>-java
+  # Skip modules that do not have java source.
+  $(foreach m, $(filter $(JAVA_MODULES), $(LIBS_MODULES)), $(eval $m-libs: $m-java))
+
+  # Declare dependencies from all other <module>-lib to java.base-lib
+  $(foreach t, $(filter-out java.base-libs, $(LIBS_TARGETS)), $(eval $t: java.base-libs))
+
+  # The annotation processing for jdk.internal.vm.ci and jdk.internal.vm.compiler
+  # needs classes from the current JDK.
+  jdk.internal.vm.ci-gensrc-src: $(addsuffix -java, $(call FindTransitiveDepsForModule, jdk.internal.vm.ci))
+  jdk.internal.vm.compiler-gensrc-src: $(addsuffix -java, $(call FindTransitiveDepsForModule, jdk.internal.vm.compiler))
+
+  # For jdk.internal.vm.compiler, the gensrc step is generating a module-info.java.extra
+  # file to be processed by the gensrc-moduleinfo target.
+  jdk.internal.vm.compiler-gensrc-moduleinfo: jdk.internal.vm.compiler-gensrc-src
+
+  # If not already set, set the JVM target so that the JVM will be built.
+  JVM_MAIN_TARGETS ?= hotspot
+
+  # The optimize target can run as soon as the modules dir has been completely populated
+  # (java, copy and gendata targets) and the basic libs and launchers have been built.
+  exploded-image-optimize: java copy gendata java.base-libs java.base-launchers buildtools-modules
+endif
+
+# Virtual targets without recipes
+
+# If not already set, set the JVM specific tools targets
+JVM_TOOLS_TARGETS ?= buildtools-hotspot
+buildtools: buildtools-langtools buildtools-jdk $(JVM_TOOLS_TARGETS)
+
+hotspot: $(HOTSPOT_VARIANT_TARGETS)
+
+# Create targets hotspot-libs and hotspot-gensrc.
+$(foreach v, $(JVM_VARIANTS), $(eval hotspot-libs: hotspot-$v-libs) $(eval hotspot-gensrc: hotspot-$v-gensrc))
+
+gensrc: $(GENSRC_TARGETS)
+
+gendata: $(GENDATA_TARGETS)
+
+copy: $(ALL_COPY_TARGETS)
+
+java: $(JAVA_TARGETS)
+
+libs: $(LIBS_TARGETS)
+
+launchers: $(LAUNCHER_TARGETS)
+
+# Declare dependencies from <module> to all the individual targets specific
+# to that module <module>-*, that are needed for the exploded image.
+$(foreach m, $(GENSRC_MODULES), $(eval $m: $m-gensrc))
+$(foreach m, $(JAVA_MODULES), $(eval $m: $m-java))
+$(foreach m, $(GENDATA_MODULES), $(eval $m: $m-gendata))
+$(foreach m, $(LIBS_MODULES), $(eval $m: $m-libs))
+$(foreach m, $(LAUNCHER_MODULES), $(eval $m: $m-launchers))
+$(foreach m, $(ALL_COPY_MODULES), $(eval $m: $m-copy))
+
+# Building java.base includes building all of hotspot.
+java.base: $(JVM_MAIN_TARGETS)
+
+# The "exploded image" is a locally runnable JDK in $(OUTPUTDIR)/jdk.
+exploded-image-base: $(ALL_MODULES)
+exploded-image: exploded-image-base exploded-image-optimize
+
+ALL_TARGETS += buildtools hotspot hotspot-libs hotspot-gensrc gensrc gendata copy java libs launchers $(ALL_MODULES) exploded-image-base exploded-image
+
+# Traditional targets typically run by users.
+# These can be considered aliases for the targets now named by a more "modern" naming scheme.
+default: $(DEFAULT_MAKE_TARGET)
+jdk: exploded-image
+
+ALL_TARGETS += default jdk
+
+# Clean targets are automatically run serially by the Makefile calling this file.
+
+CLEAN_DIRS += hotspot jdk bootcycle-build buildtools support make-support buildjdk
+CLEAN_DIR_TARGETS := $(addprefix clean-, $(CLEAN_DIRS))
+CLEAN_SUPPORT_DIR_TARGETS := $(addprefix clean-, $(CLEAN_SUPPORT_DIRS))
+CLEAN_PHASES := gensrc java native include
+CLEAN_PHASE_TARGETS := $(addprefix clean-, $(CLEAN_PHASES))
+CLEAN_MODULE_TARGETS := $(addprefix clean-, $(ALL_MODULES))
+# Construct targets of the form clean-$module-$phase
+CLEAN_MODULE_PHASE_TARGETS := $(addprefix clean-, $(foreach m, $(ALL_MODULES), $(addprefix $m-, $(CLEAN_PHASES))))
+
+# Remove everything, except the output from configure.
+clean: $(CLEAN_DIR_TARGETS)
+	($(CD) $(OUTPUTDIR) && $(RM) -r build*.log*)
+	$(ECHO) Cleaned all build artifacts.
+
+$(CLEAN_DIR_TARGETS):
+	$(call CleanDir,$(patsubst clean-%, %, $@))
+
+$(CLEAN_SUPPORT_DIR_TARGETS):
+	$(call CleanSupportDir,$(patsubst clean-%, %, $@))
+
+$(CLEAN_PHASE_TARGETS):
+	$(call Clean-$(patsubst clean-%,%, $@))
+
+$(CLEAN_MODULE_TARGETS):
+	$(call CleanModule,$(patsubst clean-%, %, $@))
+
+$(CLEAN_MODULE_PHASE_TARGETS):
+	$(call Clean-$(word 3, $(subst -,$(SPACE),$@)), $(word 2, $(subst -,$(SPACE),$@)))
+
+# When removing the support dir, we must also remove jdk. Building classes has
+# the side effect of generating native headers. The headers end up in support
+# while classes and touch files end up in jdk.
+clean-support: clean-jdk
+
+# Remove everything, including configure configuration. If the output
+# directory was created by configure and now becomes empty, remove it as well.
+dist-clean: clean
+	($(CD) $(OUTPUTDIR) && $(RM) -r *spec.gmk $(CONFIGURESUPPORT_OUTPUTDIR) Makefile compare.sh ide)
+	$(if $(filter $(CONF_NAME),$(notdir $(OUTPUTDIR))), \
+	  if test "x`$(LS) $(OUTPUTDIR)`" != x; then \
+	    $(ECHO) "Warning: Not removing non-empty configuration directory for '$(CONF_NAME)'" ; \
+	  else \
+	    ($(CD) $(TOPDIR) && $(ECHO) "Removing configuration directory for '$(CONF_NAME)'" && $(RM) -r $(OUTPUTDIR)) \
+	  fi \
+	)
+	$(ECHO) Cleaned everything, you will have to re-run configure.
+
+ALL_TARGETS += clean dist-clean $(CLEAN_DIR_TARGETS) $(CLEAN_SUPPORT_DIR_TARGETS) $(CLEAN_PHASE_TARGETS) $(CLEAN_MODULE_TARGETS) $(CLEAN_MODULE_PHASE_TARGETS)
+
+# Declare *-only targets for each normal target
+
+$(foreach t, $(ALL_TARGETS), $(eval $(t)-only: $(t)))
+
+ALL_TARGETS += $(addsuffix -only, $(filter-out dist-clean clean%, $(ALL_TARGETS)))
+
+# The following targets are intentionally not added to ALL_TARGETS since they are internal only, to support Init.gmk.
+
+print-targets:
+	  @$(ECHO) $(sort $(ALL_TARGETS))
+
+print-modules:
+	  @$(ECHO) $(sort $(ALL_MODULES))
+
+create-main-targets-include:
+	  $(call LogInfo, Generating main target list)
+	  @$(ECHO) ALL_MAIN_TARGETS := $(sort $(ALL_TARGETS)) > $(MAKESUPPORT_OUTPUTDIR)/main-targets.gmk
+
+# Hook to include the corresponding custom file, if present.
+
+$(eval $(call IncludeCustomExtension, Main-post.gmk))
+
+.PHONY: $(ALL_TARGETS)
+
+FRC: # Force target

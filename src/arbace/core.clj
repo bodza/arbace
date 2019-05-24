@@ -344,7 +344,9 @@
 (about #_"Call"
     (defn jvmci-call? [x] (-/instance? Call x))
 
-    (defn #_"Call" Call'new [#_"InvokeTarget" target, #_"int" at, #_"int" size, #_"boolean" direct] (Call. target, at, size, direct, nil))
+    (-/declare dead'bug)
+
+    (defn #_"Call" Call'new [#_"InvokeTarget" target, #_"int" at, #_"int" size, #_"boolean" direct] (Call. target, at, size, direct, dead'bug))
 )
 
 (about #_"Mark"
@@ -410,6 +412,21 @@
 
 (about #_"JavaMethod"
     (defn #_"String" JavaMethod''getName [^JavaMethod this] (.getName this))
+)
+)
+
+(about #_"debug"
+
+(let [
+    #_"ResolvedJavaMethod" method (CompilerToVM'asResolvedJavaMethod (Class''getDeclaredMethod (-/class (fn* [] nil)), "invoke"))
+    #_"int" bci -1
+    #_"array" values (-/make-array jdk.vm.ci.meta.JavaValue 0)
+    #_"array" slotKinds (-/make-array jdk.vm.ci.meta.JavaKind 0)
+    #_"DebugInfo" d'bug (jdk.vm.ci.code.DebugInfo. (jdk.vm.ci.code.BytecodeFrame. nil, method, bci, false, false, values, slotKinds, 0, 0, 0))
+    #_"array" locations (-/make-array jdk.vm.ci.code.Location 0)
+    _ (.setReferenceMap d'bug, (jdk.vm.ci.hotspot.HotSpotReferenceMap. locations, locations, (-/int-array 0), 0))
+]
+    (def #_"DebugInfo" dead'bug d'bug)
 )
 )
 
@@ -14517,17 +14534,17 @@
     (def #_"long" HotSpot'safepointPollingAddress (HotSpot'long-value "os::_polling_page", "address"))
 
     ;; G1 Collector Related Values.
-    (def #_"byte" HotSpot'dirtyCardValue   (HotSpot'byte-constant "CardTableModRefBS::dirty_card"))
-    (def #_"byte" HotSpot'g1YoungCardValue (HotSpot'byte-constant "G1SATBCardTableModRefBS::g1_young_gen"))
+    (§ def #_"byte" HotSpot'dirtyCardValue   (HotSpot'byte-constant "CardTableModRefBS::dirty_card"))
+    (§ def #_"byte" HotSpot'g1YoungCardValue (HotSpot'byte-constant "G1SATBCardTableModRefBS::g1_young_gen"))
 
-    (def #_"int" HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'offset "JavaThread::_dirty_card_queue", "DirtyCardQueue"))
-    (def #_"int" HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'offset "JavaThread::_satb_mark_queue"))
+    (§ def #_"int" HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'offset "JavaThread::_dirty_card_queue", "DirtyCardQueue"))
+    (§ def #_"int" HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'offset "JavaThread::_satb_mark_queue"))
 
-    (def #_"int" HotSpot'g1CardQueueIndexOffset   (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueIndexOffset")))
-    (def #_"int" HotSpot'g1CardQueueBufferOffset  (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueBufferOffset")))
-    (def #_"int" HotSpot'g1SATBQueueMarkingOffset (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueActiveOffset")))
-    (def #_"int" HotSpot'g1SATBQueueIndexOffset   (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueIndexOffset")))
-    (def #_"int" HotSpot'g1SATBQueueBufferOffset  (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueBufferOffset")))
+    (§ def #_"int" HotSpot'g1CardQueueIndexOffset   (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueIndexOffset")))
+    (§ def #_"int" HotSpot'g1CardQueueBufferOffset  (+ HotSpot'javaThreadDirtyCardQueueOffset (HotSpot'int-constant "dirtyCardQueueBufferOffset")))
+    (§ def #_"int" HotSpot'g1SATBQueueMarkingOffset (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueActiveOffset")))
+    (§ def #_"int" HotSpot'g1SATBQueueIndexOffset   (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueIndexOffset")))
+    (§ def #_"int" HotSpot'g1SATBQueueBufferOffset  (+ HotSpot'javaThreadSatbMarkQueueOffset  (HotSpot'int-constant "satbMarkQueueBufferOffset")))
 
     (def #_"int" HotSpot'klassOffset (HotSpot'int-value "java_lang_Class::_klass_offset", "int"))
 
