@@ -2,7 +2,6 @@ package java.lang;
 
 import jdk.internal.math.FloatingDecimal;
 import jdk.internal.math.DoubleConsts;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 /**
  * The {@code Double} class wraps a value of the primitive type
@@ -468,7 +467,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @param d a double value.
      * @return a {@code Double} instance representing {@code d}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Double valueOf(double d) {
         return new Double(d);
     }
@@ -543,7 +542,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@link #valueOf(double)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Double(double value) {
         this.value = value;
     }
@@ -564,7 +563,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code double} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Double} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Double(String s) throws NumberFormatException {
         value = parseDouble(s);
     }
@@ -664,7 +663,7 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @return the {@code double} value represented by this object
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public double doubleValue() {
         return value;
     }
@@ -781,7 +780,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @param value   a {@code double} precision floating-point number.
      * @return the bits that represent the floating-point number.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static long doubleToLongBits(double value) {
         if (!isNaN(value)) {
             return doubleToRawLongBits(value);
@@ -824,7 +823,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @param value   a {@code double} precision floating-point number.
      * @return the bits that represent the floating-point number.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native long doubleToRawLongBits(double value);
 
     /**
@@ -888,7 +887,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @return the {@code double} floating-point value with the same
      *          bit pattern.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native double longBitsToDouble(long bits);
 
     /**

@@ -1,7 +1,6 @@
 package java.lang;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Native;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,11 +11,6 @@ import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import jdk.internal.HotSpotIntrinsicCandidate;
-import jdk.internal.vm.annotation.Stable;
 
 /**
  * The {@code String} class represents character strings. All
@@ -79,7 +73,7 @@ import jdk.internal.vm.annotation.Stable;
  * the discretion of a Java compiler, as long as the compiler ultimately conforms
  * to <i>The Java&trade; Language Specification</i>. For example, the {@code javac} compiler
  * may implement the operator with {@code StringBuffer}, {@code StringBuilder},
- * or {@code java.lang.invoke.StringConcatFactory} depending on the JDK version. The
+ * or {@code java.lang.invoke.StringConcatFactory} depending on the JDK version. The
  * implementation of string conversion is typically through the method {@code toString},
  * defined by {@code Object} and inherited by all classes in Java.
  */
@@ -91,11 +85,11 @@ public final class String implements Comparable<String>, CharSequence {
      * constant folding if String instance is constant. Overwriting this
      * field after construction will cause problems.
      *
-     * Additionally, it is marked with {@link Stable} to trust the contents
+     * Additionally, it is marked with {@link Stable} to trust the contents
      * of the array. No other facility in JDK provides this functionality (yet).
-     * {@link Stable} is safe here, because value is never null.
+     * {@link Stable} is safe here, because value is never null.
      */
-    @Stable
+    // @Stable
     private final byte[] value;
 
     /**
@@ -177,7 +171,7 @@ public final class String implements Comparable<String>, CharSequence {
      * @param original
      *         A {@code String}
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public String(String original) {
         this.value = original.value;
         this.coder = original.coder;
@@ -304,7 +298,7 @@ public final class String implements Comparable<String>, CharSequence {
      *          If {@code offset} is negative, {@code count} is negative, or
      *          {@code offset} is greater than {@code ascii.length - count}
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public String(byte ascii[], int hibyte, int offset, int count) {
         checkBoundsOffCount(offset, count, ascii.length);
         if (count == 0) {
@@ -349,7 +343,7 @@ public final class String implements Comparable<String>, CharSequence {
      * @param hibyte
      *         The top 8 bits of each 16-bit Unicode code unit
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public String(byte ascii[], int hibyte) {
         this(ascii, hibyte, 0, ascii.length);
     }
@@ -806,7 +800,7 @@ public final class String implements Comparable<String>, CharSequence {
      *            <li>{@code dstBegin+(srcEnd-srcBegin)} is larger than {@code dst.length}
      *          </ul>
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public void getBytes(int srcBegin, int srcEnd, byte dst[], int dstBegin) {
         checkBoundsBeginEnd(srcBegin, srcEnd, length());
         Objects.requireNonNull(dst);
@@ -885,8 +879,7 @@ public final class String implements Comparable<String>, CharSequence {
      * String} object that represents the same sequence of characters as this
      * object.
      *
-     * For finer-grained String comparison, refer to
-     * {@link java.text.Collator}.
+     * For finer-grained String comparison, refer to {@link java.text.Collator}.
      *
      * @param anObject
      *         The object to compare this {@code String} against
@@ -914,8 +907,7 @@ public final class String implements Comparable<String>, CharSequence {
      * sequence of characters as the specified {@code StringBuffer}. This method
      * synchronizes on the {@code StringBuffer}.
      *
-     * For finer-grained String comparison, refer to
-     * {@link java.text.Collator}.
+     * For finer-grained String comparison, refer to {@link java.text.Collator}.
      *
      * @param sb
      *         The {@code StringBuffer} to compare this {@code String} against
@@ -958,8 +950,7 @@ public final class String implements Comparable<String>, CharSequence {
      * {@code CharSequence} is a {@code StringBuffer} then the method
      * synchronizes on it.
      *
-     * For finer-grained String comparison, refer to
-     * {@link java.text.Collator}.
+     * For finer-grained String comparison, refer to {@link java.text.Collator}.
      *
      * @param cs
      *         The sequence to compare this {@code String} against
@@ -1069,8 +1060,7 @@ public final class String implements Comparable<String>, CharSequence {
      * this.length()-anotherString.length()
      * </pre></blockquote>
      *
-     * For finer-grained String comparison, refer to
-     * {@link java.text.Collator}.
+     * For finer-grained String comparison, refer to {@link java.text.Collator}.
      *
      * @param anotherString   the {@code String} to be compared.
      * @return the value {@code 0} if the argument string is equal to
@@ -2109,8 +2099,7 @@ public final class String implements Comparable<String>, CharSequence {
               ((ch-'a')|('z'-ch)) < 0 &&
               ((ch-'A')|('Z'-ch)) < 0)) &&
             (ch < Character.MIN_HIGH_SURROGATE ||
-             ch > Character.MAX_LOW_SURROGATE))
-        {
+             ch > Character.MAX_LOW_SURROGATE)) {
             int off = 0;
             int next = 0;
             boolean limited = limit > 0;
@@ -2438,79 +2427,12 @@ public final class String implements Comparable<String>, CharSequence {
     }
 
     /**
-     * Returns a stream of lines extracted from this string,
-     * separated by line terminators.
-     *
-     * A <i>line terminator</i> is one of the following:
-     * a line feed character {@code "\n"} (U+000A),
-     * a carriage return character {@code "\r"} (U+000D),
-     * or a carriage return followed immediately by a line feed
-     * {@code "\r\n"} (U+000D U+000A).
-     *
-     * A <i>line</i> is either a sequence of zero or more characters
-     * followed by a line terminator, or it is a sequence of one or
-     * more characters followed by the end of the string. A
-     * line does not include the line terminator.
-     *
-     * The stream returned by this method contains the lines from
-     * this string in the order in which they occur.
-     *
-     * @apiNote This definition of <i>line</i> implies that an empty
-     *          string has zero lines and that there is no empty line
-     *          following a line terminator at the end of a string.
-     *
-     * @implNote This method provides better performance than
-     *           split("\R") by supplying elements lazily and
-     *           by faster search of new line terminators.
-     *
-     * @return the stream of lines extracted from this string
-     */
-    public Stream<String> lines() {
-        return isLatin1() ? StringLatin1.lines(value)
-                          : StringUTF16.lines(value);
-    }
-
-    /**
      * This object (which is already a string!) is itself returned.
      *
      * @return the string itself.
      */
     public String toString() {
         return this;
-    }
-
-    /**
-     * Returns a stream of {@code int} zero-extending the {@code char} values
-     * from this sequence.  Any char which maps to a <a
-     * href="{@docRoot}/java.base/java/lang/Character.html#unicode">surrogate code
-     * point</a> is passed through uninterpreted.
-     *
-     * @return an IntStream of char values from this sequence
-     */
-    @Override
-    public IntStream chars() {
-        return StreamSupport.intStream(
-            isLatin1() ? new StringLatin1.CharsSpliterator(value, Spliterator.IMMUTABLE)
-                       : new StringUTF16.CharsSpliterator(value, Spliterator.IMMUTABLE),
-            false);
-    }
-
-    /**
-     * Returns a stream of code point values from this sequence.  Any surrogate
-     * pairs encountered in the sequence are combined as if by {@linkplain
-     * Character#toCodePoint Character.toCodePoint} and the result is passed
-     * to the stream. Any other code units, including ordinary BMP characters,
-     * unpaired surrogates, and undefined code units, are zero-extended to
-     * {@code int} values which are then passed to the stream.
-     *
-     * @return an IntStream of Unicode code points from this sequence
-     */
-    @Override
-    public IntStream codePoints() {
-        return StreamSupport.intStream(
-            isLatin1() ? new StringLatin1.CharsSpliterator(value, Spliterator.IMMUTABLE)
-                       : new StringUTF16.CodePointsSpliterator(value, Spliterator.IMMUTABLE),
-            false);
     }
 
     /**
@@ -2844,8 +2766,10 @@ public final class String implements Comparable<String>, CharSequence {
         return COMPACT_STRINGS && coder == LATIN1;
     }
 
-    @Native static final byte LATIN1 = 0;
-    @Native static final byte UTF16  = 1;
+    // @Native
+    static final byte LATIN1 = 0;
+    // @Native
+    static final byte UTF16  = 1;
 
     /*
      * StringIndexOutOfBoundsException  if {@code index} is

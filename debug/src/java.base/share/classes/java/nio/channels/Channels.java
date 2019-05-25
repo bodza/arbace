@@ -31,8 +31,7 @@ public final class Channels {
      * Write all remaining bytes in buffer to the given channel.
      * If the channel is selectable then it must be configured blocking.
      */
-    private static void writeFullyImpl(WritableByteChannel ch, ByteBuffer bb) throws IOException
-    {
+    private static void writeFullyImpl(WritableByteChannel ch, ByteBuffer bb) throws IOException {
         while (bb.remaining() > 0) {
             int n = ch.write(bb);
             if (n <= 0)
@@ -46,8 +45,7 @@ public final class Channels {
      * @throws IllegalBlockingModeException
      *          If the channel is selectable and configured non-blocking.
      */
-    private static void writeFully(WritableByteChannel ch, ByteBuffer bb) throws IOException
-    {
+    private static void writeFully(WritableByteChannel ch, ByteBuffer bb) throws IOException {
         if (ch instanceof SelectableChannel) {
             SelectableChannel sc = (SelectableChannel) ch;
             synchronized (sc.blockingLock()) {
@@ -114,8 +112,7 @@ public final class Channels {
             }
 
             @Override
-            public synchronized void write(byte[] bs, int off, int len) throws IOException
-            {
+            public synchronized void write(byte[] bs, int off, int len) throws IOException {
                 if ((off < 0) || (off > bs.length) || (len < 0) || ((off + len) > bs.length) || ((off + len) < 0)) {
                     throw new IndexOutOfBoundsException();
                 } else if (len == 0) {
@@ -167,8 +164,7 @@ public final class Channels {
             }
 
             @Override
-            public synchronized int read(byte[] bs, int off, int len) throws IOException
-            {
+            public synchronized int read(byte[] bs, int off, int len) throws IOException {
                 if ((off < 0) || (off > bs.length) || (len < 0) || ((off + len) > bs.length) || ((off + len) < 0)) {
                     throw new IndexOutOfBoundsException();
                 } else if (len == 0) {
@@ -233,8 +229,7 @@ public final class Channels {
             }
 
             @Override
-            public synchronized void write(byte[] bs, int off, int len) throws IOException
-            {
+            public synchronized void write(byte[] bs, int off, int len) throws IOException {
                 if ((off < 0) || (off > bs.length) || (len < 0) || ((off + len) > bs.length) || ((off + len) < 0)) {
                     throw new IndexOutOfBoundsException();
                 } else if (len == 0) {
@@ -298,8 +293,7 @@ public final class Channels {
      *
      * @return A new reader
      */
-    public static Reader newReader(ReadableByteChannel ch, CharsetDecoder dec, int minBufferCap)
-    {
+    public static Reader newReader(ReadableByteChannel ch, CharsetDecoder dec, int minBufferCap) {
         Objects.requireNonNull(ch, "ch");
         return StreamDecoder.forDecoder(ch, dec.reset(), minBufferCap);
     }
@@ -332,8 +326,7 @@ public final class Channels {
      *          If no support for the named charset is available
      *          in this instance of the Java virtual machine
      */
-    public static Reader newReader(ReadableByteChannel ch, String csName)
-    {
+    public static Reader newReader(ReadableByteChannel ch, String csName) {
         Objects.requireNonNull(csName, "csName");
         return newReader(ch, Charset.forName(csName).newDecoder(), -1);
     }
@@ -395,8 +388,7 @@ public final class Channels {
      *
      * @return A new writer
      */
-    public static Writer newWriter(WritableByteChannel ch, CharsetEncoder enc, int minBufferCap)
-    {
+    public static Writer newWriter(WritableByteChannel ch, CharsetEncoder enc, int minBufferCap) {
         Objects.requireNonNull(ch, "ch");
         return StreamEncoder.forEncoder(ch, enc.reset(), minBufferCap);
     }
@@ -429,8 +421,7 @@ public final class Channels {
      *          If no support for the named charset is available
      *          in this instance of the Java virtual machine
      */
-    public static Writer newWriter(WritableByteChannel ch, String csName)
-    {
+    public static Writer newWriter(WritableByteChannel ch, String csName) {
         Objects.requireNonNull(csName, "csName");
         return newWriter(ch, Charset.forName(csName).newEncoder(), -1);
     }

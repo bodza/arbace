@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import sun.net.ConnectionResetException;
-import sun.net.ResourceManager;
 import sun.net.util.SocketExceptions;
 
 /**
@@ -94,14 +93,12 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
     protected synchronized void create(boolean stream) throws IOException {
         this.stream = stream;
         if (!stream) {
-            ResourceManager.beforeUdpCreate();
             // only create the fd after we know we will be able to create the socket
             fd = new FileDescriptor();
             try {
                 socketCreate(false);
                 SocketCleanable.register(fd);
             } catch (IOException ioe) {
-                ResourceManager.afterUdpClose();
                 fd = null;
                 throw ioe;
             }
@@ -122,8 +119,7 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
      * @param host the specified host
      * @param port the specified port
      */
-    protected void connect(String host, int port) throws UnknownHostException, IOException
-    {
+    protected void connect(String host, int port) throws UnknownHostException, IOException {
         boolean connected = false;
         try {
             InetAddress address = InetAddress.getByName(host);
@@ -381,8 +377,7 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
      * @param address the address
      * @param lport the port
      */
-    protected synchronized void bind(InetAddress address, int lport) throws IOException
-    {
+    protected synchronized void bind(InetAddress address, int lport) throws IOException {
         socketBind(address, lport);
         if (socket != null)
             socket.setBound();
@@ -499,9 +494,6 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
     protected void close() throws IOException {
         synchronized (fdLock) {
             if (fd != null) {
-                if (!stream) {
-                    ResourceManager.afterUdpClose();
-                }
                 if (fdUseCount == 0) {
                     if (closePending) {
                         return;

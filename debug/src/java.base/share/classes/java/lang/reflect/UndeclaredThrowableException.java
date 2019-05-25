@@ -52,8 +52,7 @@ public class UndeclaredThrowableException extends RuntimeException {
      *          that was thrown
      * @param s the detail message
      */
-    public UndeclaredThrowableException(Throwable undeclaredThrowable, String s)
-    {
+    public UndeclaredThrowableException(Throwable undeclaredThrowable, String s) {
         super(s, null); // Disallow initCause
         this.undeclaredThrowable = undeclaredThrowable;
     }

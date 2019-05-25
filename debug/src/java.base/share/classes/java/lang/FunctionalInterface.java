@@ -1,7 +1,5 @@
 package java.lang;
 
-import java.lang.annotation.*;
-
 /**
  * An informative annotation type used to indicate that an interface
  * type declaration is intended to be a <i>functional interface</i> as

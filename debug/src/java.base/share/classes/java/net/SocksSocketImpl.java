@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 
-import sun.net.www.ParseUtil;
-
 /**
  * SOCKS (V4 & V5) TCP socket implementation (RFC 1928).
  * This is a subclass of PlainSocketImpl.
@@ -33,8 +31,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
         useV4 = true;
     }
 
-    private synchronized void privilegedConnect(final String host, final int port, final int timeout) throws IOException
-    {
+    private synchronized void privilegedConnect(final String host, final int port, final int timeout) throws IOException {
         superConnectServer(host, port, timeout);
         cmdIn = getInputStream();
         cmdOut = getOutputStream();

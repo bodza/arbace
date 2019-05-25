@@ -5,7 +5,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import jdk.internal.vm.annotation.Stable;
 
 /**
  * Container class for immutable collections. Not part of the public API.
@@ -168,13 +167,13 @@ class ImmutableCollections {
     }
 
     static final class ListItr<E> implements ListIterator<E> {
-        @Stable
+        // @Stable
         private final List<E> list;
 
-        @Stable
+        // @Stable
         private final int size;
 
-        @Stable
+        // @Stable
         private final boolean isListIterator;
 
         private int cursor;
@@ -257,13 +256,13 @@ class ImmutableCollections {
     }
 
     static final class SubList<E> extends AbstractImmutableList<E> implements RandomAccess {
-        @Stable
+        // @Stable
         private final List<E> root;
 
-        @Stable
+        // @Stable
         private final int offset;
 
-        @Stable
+        // @Stable
         private final int size;
 
         private SubList(List<E> root, int offset, int size) {
@@ -318,10 +317,10 @@ class ImmutableCollections {
     }
 
     static final class List12<E> extends AbstractImmutableList<E> {
-        @Stable
+        // @Stable
         private final E e0;
 
-        @Stable
+        // @Stable
         private final E e1;
 
         List12(E e0) {
@@ -353,7 +352,7 @@ class ImmutableCollections {
     static final class ListN<E> extends AbstractImmutableList<E> {
         static final List<?> EMPTY_LIST = new ListN<>();
 
-        @Stable
+        // @Stable
         private final E[] elements;
 
         @SafeVarargs
@@ -416,9 +415,9 @@ class ImmutableCollections {
     }
 
     static final class Set12<E> extends AbstractImmutableSet<E> {
-        @Stable
+        // @Stable
         final E e0;
-        @Stable
+        // @Stable
         final E e1;
 
         Set12(E e0) {
@@ -485,9 +484,9 @@ class ImmutableCollections {
     static final class SetN<E> extends AbstractImmutableSet<E> {
         static final Set<?> EMPTY_SET = new SetN<>();
 
-        @Stable
+        // @Stable
         final E[] elements;
-        @Stable
+        // @Stable
         final int size;
 
         @SafeVarargs
@@ -622,9 +621,9 @@ class ImmutableCollections {
     }
 
     static final class Map1<K,V> extends AbstractImmutableMap<K,V> {
-        @Stable
+        // @Stable
         private final K k0;
-        @Stable
+        // @Stable
         private final V v0;
 
         Map1(K k0, V v0) {
@@ -665,10 +664,10 @@ class ImmutableCollections {
     static final class MapN<K,V> extends AbstractImmutableMap<K,V> {
         static final Map<?,?> EMPTY_MAP = new MapN<>();
 
-        @Stable
+        // @Stable
         final Object[] table; // pairs of key, value
 
-        @Stable
+        // @Stable
         final int size; // number of pairs
 
         MapN(Object... input) {

@@ -48,8 +48,7 @@ public final class Perf {
      *
      * @return A reference to the singleton Perf instance.
      */
-    public static Perf getPerf()
-    {
+    public static Perf getPerf() {
         return instance;
     }
 
@@ -103,8 +102,7 @@ public final class Perf {
      * @throws OutOfMemoryError The instrumentation buffer could not be mapped
      *                           into the virtual machine's address space.
      */
-    public ByteBuffer attach(int lvmid, String mode) throws IllegalArgumentException, IOException
-    {
+    public ByteBuffer attach(int lvmid, String mode) throws IllegalArgumentException, IOException {
         if (mode.compareTo("r") == 0) {
             return attachImpl(null, lvmid, PERF_MODE_RO);
         }
@@ -137,8 +135,7 @@ public final class Perf {
      * @throws OutOfMemoryError The instrumentation buffer could not be mapped
      *                           into the virtual machine's address space.
      */
-    public ByteBuffer attach(String user, int lvmid, String mode) throws IllegalArgumentException, IOException
-    {
+    public ByteBuffer attach(String user, int lvmid, String mode) throws IllegalArgumentException, IOException {
         if (mode.compareTo("r") == 0) {
             return attachImpl(user, lvmid, PERF_MODE_RO);
         }
@@ -171,8 +168,7 @@ public final class Perf {
      * @throws OutOfMemoryError The instrumentation buffer could not be mapped
      *                           into the virtual machine's address space.
      */
-    private ByteBuffer attachImpl(String user, int lvmid, int mode) throws IllegalArgumentException, IOException
-    {
+    private ByteBuffer attachImpl(String user, int lvmid, int mode) throws IllegalArgumentException, IOException {
         final ByteBuffer b = attach(user, lvmid, mode);
 
         if (lvmid == 0) {
@@ -311,8 +307,7 @@ public final class Perf {
      * see sun.misc.perf.Variability
      * see sun.misc.perf.Units
      */
-    public ByteBuffer createString(String name, int variability, int units, String value, int maxLength)
-    {
+    public ByteBuffer createString(String name, int variability, int units, String value, int maxLength) {
         byte[] v = getBytes(value);
         byte[] v1 = new byte[v.length+1];
         System.arraycopy(v, 0, v1, 0, v.length);
@@ -348,8 +343,7 @@ public final class Perf {
      * see sun.misc.perf.Variability
      * see sun.misc.perf.Units
      */
-    public ByteBuffer createString(String name, int variability, int units, String value)
-    {
+    public ByteBuffer createString(String name, int variability, int units, String value) {
         byte[] v = getBytes(value);
         byte[] v1 = new byte[v.length+1];
         System.arraycopy(v, 0, v1, 0, v.length);
@@ -389,8 +383,7 @@ public final class Perf {
     /**
      * convert string to an array of UTF-8 bytes
      */
-    private static byte[] getBytes(String s)
-    {
+    private static byte[] getBytes(String s) {
         byte[] bytes = null;
 
         try {

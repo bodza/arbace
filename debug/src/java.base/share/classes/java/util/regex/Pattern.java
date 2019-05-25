@@ -14,8 +14,6 @@ import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * A compiled representation of a regular expression.
@@ -1376,8 +1374,7 @@ public final class Pattern {
         return pbuf.toString();
     }
 
-    private static void normalizeSlice(String src, int off, int limit, StringBuilder dst)
-    {
+    private static void normalizeSlice(String src, int off, int limit, StringBuilder dst) {
         int len = src.length();
         int off0 = off;
         while (off < limit && ASCII.isAscii(src.charAt(off))) {
@@ -1435,8 +1432,7 @@ public final class Pattern {
         }
     }
 
-    private static void normalizeClazz(String src, int off, int limit, StringBuilder dst)
-    {
+    private static void normalizeClazz(String src, int off, int limit, StringBuilder dst) {
         dst.append(Normalizer.normalize(src.substring(off, limit), Form.NFC));
     }
 
@@ -1445,8 +1441,7 @@ public final class Pattern {
      * combining marks that follow it, produce the alternation that will
      * match all canonical equivalences of that sequence.
      */
-    private static void produceEquivalentAlternation(String src, Set<String> dst)
-    {
+    private static void produceEquivalentAlternation(String src, Set<String> dst) {
         int len = countChars(src, 0, 1);
         if (src.length() == len) {
             dst.add(src); // source has one character.
@@ -1534,7 +1529,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
     }
 
     private static int getClass(int c) {
-        return sun.text.Normalizer.getCombiningClass(c);
+        return /* oops! sun.text.Normalizer.getCombiningClass(c) */0;
     }
 
     /**
@@ -5314,8 +5309,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
         }
 
         boolean isWord(int ch) {
-            return useUWORD ? CharPredicates.WORD().is(ch)
-                            : (ch == '_' || Character.isLetterOrDigit(ch));
+            return useUWORD ? CharPredicates.WORD().is(ch) : (ch == '_' || Character.isLetterOrDigit(ch));
         }
 
         int check(Matcher matcher, int i, CharSequence seq) {
@@ -5353,8 +5347,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
      * Non spacing marks only count as word characters in bounds calculations
      * if they have a base character.
      */
-    private static boolean hasBaseCharacter(Matcher matcher, int i, CharSequence seq)
-    {
+    private static boolean hasBaseCharacter(Matcher matcher, int i, CharSequence seq) {
         int start = (!matcher.transparentBounds) ? matcher.from : 0;
         for (int x=i; x >= start; x--) {
             int ch = Character.codePointAt(seq, x);
@@ -5750,103 +5743,5 @@ NEXT:       while (i <= last) {
      */
     public Predicate<String> asMatchPredicate() {
         return s -> matcher(s).matches();
-    }
-
-    /**
-     * Creates a stream from the given input sequence around matches of this
-     * pattern.
-     *
-     * The stream returned by this method contains each substring of the
-     * input sequence that is terminated by another subsequence that matches
-     * this pattern or is terminated by the end of the input sequence.  The
-     * substrings in the stream are in the order in which they occur in the
-     * input. Trailing empty strings will be discarded and not encountered in
-     * the stream.
-     *
-     * If this pattern does not match any subsequence of the input then
-     * the resulting stream has just one element, namely the input sequence in
-     * string form.
-     *
-     * When there is a positive-width match at the beginning of the input
-     * sequence then an empty leading substring is included at the beginning
-     * of the stream. A zero-width match at the beginning however never produces
-     * such empty leading substring.
-     *
-     * If the input sequence is mutable, it must remain constant during the
-     * execution of the terminal stream operation.  Otherwise, the result of the
-     * terminal stream operation is undefined.
-     *
-     * @param input
-     *          The character sequence to be split
-     *
-     * @return The stream of strings computed by splitting the input
-     *          around matches of this pattern
-     */
-    public Stream<String> splitAsStream(final CharSequence input) {
-        class MatcherIterator implements Iterator<String> {
-            private Matcher matcher;
-            // The start position of the next sub-sequence of input
-            // when current == input.length there are no more elements
-            private int current;
-            // null if the next element, if any, needs to obtained
-            private String nextElement;
-            // > 0 if there are N next empty elements
-            private int emptyElementCount;
-
-            public String next() {
-                if (!hasNext())
-                    throw new NoSuchElementException();
-
-                if (emptyElementCount == 0) {
-                    String n = nextElement;
-                    nextElement = null;
-                    return n;
-                } else {
-                    emptyElementCount--;
-                    return "";
-                }
-            }
-
-            public boolean hasNext() {
-                if (matcher == null) {
-                    matcher = matcher(input);
-                    // If the input is an empty string then the result can only be a
-                    // stream of the input.  Induce that by setting the empty
-                    // element count to 1
-                    emptyElementCount = input.length() == 0 ? 1 : 0;
-                }
-                if (nextElement != null || emptyElementCount > 0)
-                    return true;
-
-                if (current == input.length())
-                    return false;
-
-                // Consume the next matching element
-                // Count sequence of matching empty elements
-                while (matcher.find()) {
-                    nextElement = input.subSequence(current, matcher.start()).toString();
-                    current = matcher.end();
-                    if (!nextElement.isEmpty()) {
-                        return true;
-                    } else if (current > 0) { // no empty leading substring for zero-width
-                                              // match at the beginning of the input
-                        emptyElementCount++;
-                    }
-                }
-
-                // Consume last matching element
-                nextElement = input.subSequence(current, input.length()).toString();
-                current = input.length();
-                if (!nextElement.isEmpty()) {
-                    return true;
-                } else {
-                    // Ignore a terminal sequence of matching empty elements
-                    emptyElementCount = 0;
-                    nextElement = null;
-                    return false;
-                }
-            }
-        }
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new MatcherIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 }

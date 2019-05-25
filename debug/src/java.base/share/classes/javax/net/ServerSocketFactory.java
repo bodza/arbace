@@ -35,8 +35,7 @@ public abstract class ServerSocketFactory {
      *
      * @return the <code>ServerSocketFactory</code>
      */
-    public static ServerSocketFactory getDefault()
-    {
+    public static ServerSocketFactory getDefault() {
         synchronized (ServerSocketFactory.class) {
             if (theFactory == null) {
                 //
@@ -129,28 +128,23 @@ public abstract class ServerSocketFactory {
 // who have to know how to tunnel etc.
 //
 class DefaultServerSocketFactory extends ServerSocketFactory {
-    DefaultServerSocketFactory()
-    {
+    DefaultServerSocketFactory() {
         /* NOTHING */
     }
 
-    public ServerSocket createServerSocket() throws IOException
-    {
+    public ServerSocket createServerSocket() throws IOException {
         return new ServerSocket();
     }
 
-    public ServerSocket createServerSocket(int port) throws IOException
-    {
+    public ServerSocket createServerSocket(int port) throws IOException {
         return new ServerSocket(port);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog) throws IOException
-    {
+    public ServerSocket createServerSocket(int port, int backlog) throws IOException {
         return new ServerSocket(port, backlog);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException
-    {
+    public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
         return new ServerSocket(port, backlog, ifAddress);
     }
 }

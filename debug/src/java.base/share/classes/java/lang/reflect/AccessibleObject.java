@@ -1,7 +1,6 @@
 package java.lang.reflect;
 
-import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandle;
 
 import jdk.internal.misc.VM;
 import jdk.internal.reflect.CallerSensitive;
@@ -38,7 +37,7 @@ import jdk.internal.reflect.ReflectionFactory;
  * object corresponds to a member in an exported or open package
  * (see {@link #setAccessible(boolean)}).
  */
-public class AccessibleObject implements AnnotatedElement {
+public class AccessibleObject {
     /**
      * Convenience method to set the {@code accessible} flag for an
      * array of reflected objects with a single security check (for efficiency).
@@ -238,7 +237,7 @@ public class AccessibleObject implements AnnotatedElement {
      * accessible to the caller. To test if this reflected object is accessible,
      * it should use {@link #canAccess(Object)}.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public boolean isAccessible() {
         return override;
     }
@@ -325,60 +324,6 @@ public class AccessibleObject implements AnnotatedElement {
     // very early in the bootstrapping process.
     static final ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
 
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        throw new AssertionError("All subclasses should override this method");
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
-        return AnnotatedElement.super.isAnnotationPresent(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        throw new AssertionError("All subclasses should override this method");
-    }
-
-    public Annotation[] getAnnotations() {
-        return getDeclaredAnnotations();
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {
-        // Only annotations on classes are inherited, for all other
-        // objects getDeclaredAnnotation is the same as
-        // getAnnotation.
-        return getAnnotation(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {
-        // Only annotations on classes are inherited, for all other
-        // objects getDeclaredAnnotationsByType is the same as
-        // getAnnotationsByType.
-        return getAnnotationsByType(annotationClass);
-    }
-
-    public Annotation[] getDeclaredAnnotations() {
-        throw new AssertionError("All subclasses should override this method");
-    }
-
     // Shared access checking logic.
 
     // For non-public members or members in package-private classes,
@@ -398,8 +343,7 @@ public class AccessibleObject implements AnnotatedElement {
     // In the 2-array case, the targetClass is always different from the memberClass.
     volatile Object securityCheckCache;
 
-    final void checkAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException
-    {
+    final void checkAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException {
         if (!verifyAccess(caller, memberClass, targetClass, modifiers)) {
             IllegalAccessException e = Reflection.newIllegalAccessException(caller, memberClass, targetClass, modifiers);
             if (printStackTraceWhenAccessFails()) {
@@ -409,8 +353,7 @@ public class AccessibleObject implements AnnotatedElement {
         }
     }
 
-    final boolean verifyAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers)
-    {
+    final boolean verifyAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers) {
         if (caller == memberClass) { // quick check
             return true; // ACCESS IS OK
         }
@@ -437,8 +380,7 @@ public class AccessibleObject implements AnnotatedElement {
     }
 
     // Keep all this slow stuff out of line:
-    private boolean slowVerifyAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers)
-    {
+    private boolean slowVerifyAccess(Class<?> caller, Class<?> memberClass, Class<?> targetClass, int modifiers) {
         if (!Reflection.verifyMemberAccess(caller, memberClass, targetClass, modifiers)) {
             // access denied
             return false;

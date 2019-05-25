@@ -25,8 +25,7 @@ public class StreamDecoder extends Reader {
 
     // Factories for java.io.InputStreamReader
 
-    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, String charsetName) throws UnsupportedEncodingException
-    {
+    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, String charsetName) throws UnsupportedEncodingException {
         String csn = charsetName;
         if (csn == null)
             csn = Charset.defaultCharset().name();
@@ -37,20 +36,17 @@ public class StreamDecoder extends Reader {
         throw new UnsupportedEncodingException (csn);
     }
 
-    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, Charset cs)
-    {
+    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, Charset cs) {
         return new StreamDecoder(in, lock, cs);
     }
 
-    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, CharsetDecoder dec)
-    {
+    public static StreamDecoder forInputStreamReader(InputStream in, Object lock, CharsetDecoder dec) {
         return new StreamDecoder(in, lock, dec);
     }
 
     // Factory for java.nio.channels.Channels.newReader
 
-    public static StreamDecoder forDecoder(ReadableByteChannel ch, CharsetDecoder dec, int minBufferCap)
-    {
+    public static StreamDecoder forDecoder(ReadableByteChannel ch, CharsetDecoder dec, int minBufferCap) {
         return new StreamDecoder(ch, dec, minBufferCap);
     }
 

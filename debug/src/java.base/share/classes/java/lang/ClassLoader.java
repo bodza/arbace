@@ -24,8 +24,6 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import jdk.internal.loader.BuiltinClassLoader;
 import jdk.internal.perf.PerfCounter;
@@ -435,8 +433,7 @@ public abstract class ClassLoader {
      * @throws ClassNotFoundException
      *          If the class could not be found
      */
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
-    {
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             // First, check if the class has already been loaded
             Class<?> c = findLoadedClass(name);
@@ -521,13 +518,12 @@ public abstract class ClassLoader {
         throw new ClassNotFoundException(name);
     }
 
-    private void preDefineClass(String name)
-    {
+    private void preDefineClass(String name) {
         if (!checkName(name)) {
             throw new NoClassDefFoundError("IllegalName: " + name);
         }
 
-        // Note:  Checking logic in java.lang.invoke.MemberName.checkForTypeAlias
+        // Note:  Checking logic in java.lang.invoke.MemberName.checkForTypeAlias
         // relies on the fact that spoofing is impossible if a class has a name
         // of the form "java.*"
         if ((name != null) && name.startsWith("java.") && this != getBuiltinPlatformClassLoader()) {
@@ -588,8 +584,7 @@ public abstract class ClassLoader {
      *          If either {@code off} or {@code len} is negative, or if
      *          {@code off+len} is greater than {@code b.length}.
      */
-    protected final Class<?> defineClass(String name, byte[] b, int off, int len) throws ClassFormatError
-    {
+    protected final Class<?> defineClass(String name, byte[] b, int off, int len) throws ClassFormatError {
         preDefineClass(name);
         Class<?> c = defineClass1(this, name, b, off, len/* oops! , null */, null);
         postDefineClass(c);
@@ -631,8 +626,7 @@ public abstract class ClassLoader {
      *          If {@code name} is not {@code null} and not equal to the
      *          <a href="#binary-name">binary name</a> of the class specified by {@code b}
      */
-    protected final Class<?> defineClass(String name, java.nio.ByteBuffer b) throws ClassFormatError
-    {
+    protected final Class<?> defineClass(String name, java.nio.ByteBuffer b) throws ClassFormatError {
         int len = b.remaining();
 
         // Use byte[] if not a direct ByteBuffer:
@@ -704,8 +698,7 @@ public abstract class ClassLoader {
      * @throws ClassNotFoundException
      *          If the class could not be found
      */
-    protected final Class<?> findSystemClass(String name) throws ClassNotFoundException
-    {
+    protected final Class<?> findSystemClass(String name) throws ClassNotFoundException {
         return getSystemClassLoader().loadClass(name);
     }
 
@@ -1046,8 +1039,7 @@ public abstract class ClassLoader {
      *          if a package of the given {@code name} is already
      *          defined by this class loader
      */
-    protected Package definePackage(String name)
-    {
+    protected Package definePackage(String name) {
         Objects.requireNonNull(name);
 
         // definePackage is not final and may be overridden by custom class loader
@@ -1083,22 +1075,6 @@ public abstract class ClassLoader {
 
     /**
      * Returns all of the {@code Package}s that have been defined by
-     * this class loader.  The returned array has no duplicated {@code Package}s
-     * of the same name.
-     *
-     * @apiNote This method returns an array rather than a {@code Set} or {@code Stream}
-     *          for consistency with the existing {@link #getPackages} method.
-     *
-     * @return The array of {@code Package} objects that have been defined by
-     *         this class loader; or an zero length array if no package has been
-     *         defined by this class loader.
-     */
-    public final Package[] getDefinedPackages() {
-        return packages().toArray(Package[]::new);
-    }
-
-    /**
-     * Returns all of the {@code Package}s that have been defined by
      * this class loader and its ancestors.  The returned array may contain
      * more than one {@code Package} object of the same package name, each
      * defined by a different class loader in the class loader hierarchy.
@@ -1115,19 +1091,19 @@ public abstract class ClassLoader {
      *          this class loader and its ancestors
      */
     protected Package[] getPackages() {
-        Stream<Package> pkgs = packages();
+        Stream<Package> pkgs = packages();
         ClassLoader ld = parent;
         while (ld != null) {
-            pkgs = Stream.concat(ld.packages(), pkgs);
+            pkgs = Stream.concat(ld.packages(), pkgs);
             ld = ld.parent;
         }
-        return Stream.concat(BootLoader.packages(), pkgs).toArray(Package[]::new);
+        return Stream.concat(BootLoader.packages(), pkgs).toArray(Package[]::new);
     }
 
     /**
      * Returns a stream of Packages defined in this class loader
      */
-    Stream<Package> packages() {
+    Stream<Package> packages() {
         return packages.values().stream().map(p -> _definePackage(p.packageName()));
     }
 

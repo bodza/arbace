@@ -83,8 +83,7 @@ abstract class SelectorImpl extends AbstractSelector {
      */
     protected abstract int doSelect(Consumer<SelectionKey> action, long timeout) throws IOException;
 
-    private int lockAndDoSelect(Consumer<SelectionKey> action, long timeout) throws IOException
-    {
+    private int lockAndDoSelect(Consumer<SelectionKey> action, long timeout) throws IOException {
         synchronized (this) {
             ensureOpen();
             if (inSelect)
@@ -118,8 +117,7 @@ abstract class SelectorImpl extends AbstractSelector {
     }
 
     @Override
-    public final int select(Consumer<SelectionKey> action, long timeout) throws IOException
-    {
+    public final int select(Consumer<SelectionKey> action, long timeout) throws IOException {
         Objects.requireNonNull(action);
         if (timeout < 0)
             throw new IllegalArgumentException("Negative timeout");
@@ -166,8 +164,7 @@ abstract class SelectorImpl extends AbstractSelector {
     }
 
     @Override
-    protected final SelectionKey register(AbstractSelectableChannel ch, int ops, Object attachment)
-    {
+    protected final SelectionKey register(AbstractSelectableChannel ch, int ops, Object attachment) {
         if (!(ch instanceof SelChImpl))
             throw new IllegalSelectorException();
         SelectionKeyImpl k = new SelectionKeyImpl((SelChImpl)ch, this);

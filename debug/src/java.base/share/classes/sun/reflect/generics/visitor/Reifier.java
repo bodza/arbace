@@ -73,7 +73,7 @@ public class Reifier implements TypeTreeVisitor<Type> {
 
         // extract iterator on list of simple class type sigs
         List<SimpleClassTypeSignature> scts = ct.getPath();
-        assert(!scts.isEmpty());
+        assert (!scts.isEmpty());
         Iterator<SimpleClassTypeSignature> iter = scts.iterator();
         SimpleClassTypeSignature sc = iter.next();
         StringBuilder n = new StringBuilder(sc.getName());
@@ -89,16 +89,16 @@ public class Reifier implements TypeTreeVisitor<Type> {
 
         // Now, either sc is the last element of the list, or
         // it has type arguments (or both)
-        assert(!(iter.hasNext()) || (sc.getTypeArguments().length > 0));
+        assert (!(iter.hasNext()) || (sc.getTypeArguments().length > 0));
         // Create the raw type
         Type c = getFactory().makeNamedType(n.toString());
         // if there are no type arguments
         if (sc.getTypeArguments().length == 0) {
             // we have surely reached the end of the path
-            assert(!iter.hasNext());
+            assert (!iter.hasNext());
             resultType = c; // the result is the raw type
         } else {
-            assert(sc.getTypeArguments().length > 0);
+            assert (sc.getTypeArguments().length > 0);
             // otherwise, we have type arguments, so we create a parameterized
             // type, whose declaration is the raw type c, and whose owner is
             // the declaring class of c (if any). This latter fact is indicated

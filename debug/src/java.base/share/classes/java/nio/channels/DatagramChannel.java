@@ -162,8 +162,7 @@ public abstract class DatagramChannel extends AbstractSelectableChannel implemen
      * @return The valid-operation set
      */
     public final int validOps() {
-        return (SelectionKey.OP_READ
-                | SelectionKey.OP_WRITE);
+        return (SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 
     // -- Socket-specific operations --

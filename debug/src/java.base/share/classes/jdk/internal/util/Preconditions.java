@@ -1,7 +1,5 @@
 package jdk.internal.util;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -198,7 +196,7 @@ public class Preconditions {
      * length is a non-negative value (such as that of an array length or from
      * the upper bound of a loop)
     */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static <X extends RuntimeException> int checkIndex(int index, int length, BiFunction<String, List<Integer>, X> oobef) {
         if (index < 0 || index >= length)
             throw outOfBoundsCheckIndex(oobef, index, length);

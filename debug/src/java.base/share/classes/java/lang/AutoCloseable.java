@@ -17,7 +17,7 @@ package java.lang;
  * in complete generality, or when it is known that the {@code AutoCloseable}
  * instance requires resource release, it is recommended to use {@code
  * try}-with-resources constructions. However, when using facilities such as
- * {@link java.util.stream.Stream} that support both I/O-based and
+ * {@link java.util.stream.Stream} that support both I/O-based and
  * non-I/O-based forms, {@code try}-with-resources blocks are in
  * general unnecessary when using non-I/O-based forms.
  */

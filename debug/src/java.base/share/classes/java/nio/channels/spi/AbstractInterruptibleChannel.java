@@ -148,8 +148,7 @@ public abstract class AbstractInterruptibleChannel implements Channel, Interrupt
      * @throws ClosedByInterruptException
      *          If the thread blocked in the I/O operation was interrupted
      */
-    protected final void end(boolean completed) throws AsynchronousCloseException
-    {
+    protected final void end(boolean completed) throws AsynchronousCloseException {
         Thread.blockedOn(null);
         Thread interrupted = this.interrupted;
         if (interrupted != null && interrupted == Thread.currentThread()) {

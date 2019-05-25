@@ -81,8 +81,7 @@ public class DoubleByte {
         Arrays.fill(B2C_UNMAPPABLE, UNMAPPABLE_DECODING);
     }
 
-    public static class Decoder extends CharsetDecoder implements DelegatableDecoder, ArrayDecoder
-    {
+    public static class Decoder extends CharsetDecoder implements DelegatableDecoder, ArrayDecoder {
         final char[][] b2c;
         final char[] b2cSB;
         final int b2Min;
@@ -490,8 +489,7 @@ public class DoubleByte {
         }
     }
 
-    public static class Encoder extends CharsetEncoder implements ArrayEncoder
-    {
+    public static class Encoder extends CharsetEncoder implements ArrayEncoder {
         protected final int MAX_SINGLEBYTE = 0xff;
         private final char[] c2b;
         private final char[] c2bIndex;
@@ -701,8 +699,7 @@ public class DoubleByte {
         }
 
         // init the c2b and c2bIndex tables from b2c.
-        public static void initC2B(String[] b2c, String b2cSB, String b2cNR, String c2bNR, int b2Min, int b2Max, char[] c2b, char[] c2bIndex)
-        {
+        public static void initC2B(String[] b2c, String b2cSB, String b2cNR, String c2bNR, int b2Min, int b2Max, char[] c2b, char[] c2bIndex) {
             Arrays.fill(c2b, (char)UNMAPPABLE_ENCODING);
             int off = 0x100;
 

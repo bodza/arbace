@@ -20,8 +20,7 @@ public class HKSCS {
         private char[][] b2cSupp;
         private DoubleByte.Decoder big5Dec;
 
-        protected Decoder(Charset cs, DoubleByte.Decoder big5Dec, char[][] b2cBmp, char[][] b2cSupp)
-        {
+        protected Decoder(Charset cs, DoubleByte.Decoder big5Dec, char[][] b2cBmp, char[][] b2cSupp) {
             // super(cs, 0.5f, 1.0f);
             // need to extends DoubleByte.Decoder so the
             // sun.io can use it. this implementation
@@ -189,8 +188,7 @@ public class HKSCS {
                 return decodeBufferLoop(src, dst);
         }
 
-        public static void initb2c(char[][]b2c, String[] b2cStr)
-        {
+        public static void initb2c(char[][]b2c, String[] b2cStr) {
             for (int i = 0; i < b2cStr.length; i++) {
                 if (b2cStr[i] == null)
                     b2c[i] = DoubleByte.B2C_UNMAPPABLE;
@@ -205,8 +203,7 @@ public class HKSCS {
         private char[][] c2bBmp;
         private char[][] c2bSupp;
 
-        protected Encoder(Charset cs, DoubleByte.Encoder big5Enc, char[][] c2bBmp, char[][] c2bSupp)
-        {
+        protected Encoder(Charset cs, DoubleByte.Encoder big5Enc, char[][] c2bBmp, char[][] c2bSupp) {
             super(cs, null, null, true);
             this.big5Enc = big5Enc;
             this.c2bBmp = c2bBmp;

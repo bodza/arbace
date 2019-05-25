@@ -111,8 +111,7 @@ public class ReferenceQueue<T> {
      * @throws InterruptedException
      *          If the timeout wait is interrupted
      */
-    public Reference<? extends T> remove(long timeout) throws IllegalArgumentException, InterruptedException
-    {
+    public Reference<? extends T> remove(long timeout) throws IllegalArgumentException, InterruptedException {
         if (timeout < 0) {
             throw new IllegalArgumentException("Negative timeout value");
         }

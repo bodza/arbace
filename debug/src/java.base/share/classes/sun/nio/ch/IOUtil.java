@@ -15,13 +15,11 @@ public class IOUtil {
 
     private IOUtil() { } // No instantiation
 
-    static int write(FileDescriptor fd, ByteBuffer src, long position, NativeDispatcher nd) throws IOException
-    {
+    static int write(FileDescriptor fd, ByteBuffer src, long position, NativeDispatcher nd) throws IOException {
         return write(fd, src, position, false, -1, nd);
     }
 
-    static int write(FileDescriptor fd, ByteBuffer src, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    static int write(FileDescriptor fd, ByteBuffer src, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         if (src instanceof DirectBuffer) {
             return writeFromNativeBuffer(fd, src, position, directIO, alignment, nd);
         }
@@ -55,8 +53,7 @@ public class IOUtil {
         }
     }
 
-    private static int writeFromNativeBuffer(FileDescriptor fd, ByteBuffer bb, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    private static int writeFromNativeBuffer(FileDescriptor fd, ByteBuffer bb, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         int pos = bb.position();
         int lim = bb.limit();
         assert (pos <= lim);
@@ -80,18 +77,15 @@ public class IOUtil {
         return written;
     }
 
-    static long write(FileDescriptor fd, ByteBuffer[] bufs, NativeDispatcher nd) throws IOException
-    {
+    static long write(FileDescriptor fd, ByteBuffer[] bufs, NativeDispatcher nd) throws IOException {
         return write(fd, bufs, 0, bufs.length, false, -1, nd);
     }
 
-    static long write(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, NativeDispatcher nd) throws IOException
-    {
+    static long write(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, NativeDispatcher nd) throws IOException {
         return write(fd, bufs, offset, length, false, -1, nd);
     }
 
-    static long write(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    static long write(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         IOVecWrapper vec = IOVecWrapper.get(length);
 
         boolean completed = false;
@@ -172,13 +166,11 @@ public class IOUtil {
         }
     }
 
-    static int read(FileDescriptor fd, ByteBuffer dst, long position, NativeDispatcher nd) throws IOException
-    {
+    static int read(FileDescriptor fd, ByteBuffer dst, long position, NativeDispatcher nd) throws IOException {
         return read(fd, dst, position, false, -1, nd);
     }
 
-    static int read(FileDescriptor fd, ByteBuffer dst, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    static int read(FileDescriptor fd, ByteBuffer dst, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         if (dst.isReadOnly())
             throw new IllegalArgumentException("Read-only buffer");
         if (dst instanceof DirectBuffer)
@@ -204,8 +196,7 @@ public class IOUtil {
         }
     }
 
-    private static int readIntoNativeBuffer(FileDescriptor fd, ByteBuffer bb, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    private static int readIntoNativeBuffer(FileDescriptor fd, ByteBuffer bb, long position, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         int pos = bb.position();
         int lim = bb.limit();
         assert (pos <= lim);
@@ -229,18 +220,15 @@ public class IOUtil {
         return n;
     }
 
-    static long read(FileDescriptor fd, ByteBuffer[] bufs, NativeDispatcher nd) throws IOException
-    {
+    static long read(FileDescriptor fd, ByteBuffer[] bufs, NativeDispatcher nd) throws IOException {
         return read(fd, bufs, 0, bufs.length, false, -1, nd);
     }
 
-    static long read(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, NativeDispatcher nd) throws IOException
-    {
+    static long read(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, NativeDispatcher nd) throws IOException {
         return read(fd, bufs, offset, length, false, -1, nd);
     }
 
-    static long read(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, boolean directIO, int alignment, NativeDispatcher nd) throws IOException
-    {
+    static long read(FileDescriptor fd, ByteBuffer[] bufs, int offset, int length, boolean directIO, int alignment, NativeDispatcher nd) throws IOException {
         IOVecWrapper vec = IOVecWrapper.get(length);
 
         boolean completed = false;

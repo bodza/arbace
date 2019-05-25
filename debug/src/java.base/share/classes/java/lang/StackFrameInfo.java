@@ -2,7 +2,6 @@ package java.lang;
 
 import static java.lang.StackWalker.Option.*;
 import java.lang.StackWalker.StackFrame;
-import java.lang.invoke.MethodType;
 
 class StackFrameInfo implements StackFrame {
     private final byte RETAIN_CLASS_REF = 0x01;
@@ -47,12 +46,6 @@ class StackFrameInfo implements StackFrame {
     }
 
     @Override
-    public MethodType getMethodType() {
-        ensureRetainClassRefEnabled();
-        return memberName.getMethodType();
-    }
-
-    @Override
     public String getDescriptor() {
         return memberName.getMethodDescriptor();
     }
@@ -64,20 +57,6 @@ class StackFrameInfo implements StackFrame {
             return -1;
 
         return bci;
-    }
-
-    @Override
-    public String getFileName() {
-        return toStackTraceElement().getFileName();
-    }
-
-    @Override
-    public int getLineNumber() {
-        // line number not available for native methods
-        if (isNativeMethod())
-            return -2;
-
-        return toStackTraceElement().getLineNumber();
     }
 
     @Override

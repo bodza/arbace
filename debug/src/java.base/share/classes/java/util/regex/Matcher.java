@@ -8,8 +8,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * An engine that performs match operations on a {@linkplain
@@ -248,9 +246,7 @@ public final class Matcher implements MatchResult {
         private final int groupCount;
         private final String text;
 
-        ImmutableMatchResult(int first, int last, int groupCount,
-                             int groups[], String text)
-        {
+        ImmutableMatchResult(int first, int last, int groupCount, int groups[], String text) {
             this.first = first;
             this.last = last;
             this.groupCount = groupCount;
@@ -1195,103 +1191,6 @@ public final class Matcher implements MatchResult {
             return sb.toString();
         }
         return text.toString();
-    }
-
-    /**
-     * Returns a stream of match results for each subsequence of the input
-     * sequence that matches the pattern.  The match results occur in the
-     * same order as the matching subsequences in the input sequence.
-     *
-     * Each match result is produced as if by {@link #toMatchResult()}.
-     *
-     * This method does not reset this matcher.  Matching starts on
-     * initiation of the terminal stream operation either at the beginning of
-     * this matcher's region, or, if the matcher has not since been reset, at
-     * the first character not matched by a previous match.
-     *
-     * If the matcher is to be used for further matching operations after
-     * the terminal stream operation completes then it should be first reset.
-     *
-     * This matcher's state should not be modified during execution of the
-     * returned stream's pipeline.  The returned stream's source
-     * {@code Spliterator} is <em>fail-fast</em> and will, on a best-effort
-     * basis, throw a {@link java.util.ConcurrentModificationException} if such
-     * modification is detected.
-     *
-     * @return a sequential stream of match results.
-     */
-    public Stream<MatchResult> results() {
-        class MatchResultIterator implements Iterator<MatchResult> {
-            // -ve for call to find, 0 for not found, 1 for found
-            int state = -1;
-            // State for concurrent modification checking
-            // -1 for uninitialized
-            int expectedCount = -1;
-            // The input sequence as a string, set once only after first find
-            // Avoids repeated conversion from CharSequence for each match
-            String textAsString;
-
-            @Override
-            public MatchResult next() {
-                if (expectedCount >= 0 && expectedCount != modCount)
-                    throw new ConcurrentModificationException();
-
-                if (!hasNext())
-                    throw new NoSuchElementException();
-
-                state = -1;
-                return toMatchResult(textAsString);
-            }
-
-            @Override
-            public boolean hasNext() {
-                if (state >= 0)
-                    return state == 1;
-
-                // Defer throwing ConcurrentModificationException to when next
-                // or forEachRemaining is called.  The is consistent with other
-                // fail-fast implementations.
-                if (expectedCount >= 0 && expectedCount != modCount)
-                    return true;
-
-                boolean found = find();
-                // Capture the input sequence as a string on first find
-                if (found && state < 0)
-                    textAsString = text.toString();
-                state = found ? 1 : 0;
-                expectedCount = modCount;
-                return found;
-            }
-
-            @Override
-            public void forEachRemaining(Consumer<? super MatchResult> action) {
-                if (expectedCount >= 0 && expectedCount != modCount)
-                    throw new ConcurrentModificationException();
-
-                int s = state;
-                if (s == 0)
-                    return;
-
-                // Set state to report no more elements on further operations
-                state = 0;
-                expectedCount = -1;
-
-                // Perform a first find if required
-                if (s < 0 && !find())
-                    return;
-
-                // Capture the input sequence as a string on first find
-                textAsString = text.toString();
-
-                do {
-                    int ec = modCount;
-                    action.accept(toMatchResult(textAsString));
-                    if (ec != modCount)
-                        throw new ConcurrentModificationException();
-                } while (find());
-            }
-        }
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new MatchResultIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**

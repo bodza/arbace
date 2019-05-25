@@ -9,9 +9,6 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This class consists exclusively of static methods that operate on or return
@@ -199,8 +196,7 @@ public class Collections {
     }
 
     private static <T>
-    int iteratorBinarySearch(List<? extends Comparable<? super T>> list, T key)
-    {
+    int iteratorBinarySearch(List<? extends Comparable<? super T>> list, T key) {
         int low = 0;
         int high = list.size()-1;
         ListIterator<? extends Comparable<? super T>> i = list.listIterator();
@@ -1041,13 +1037,13 @@ public class Collections {
         }
         @SuppressWarnings("unchecked")
         @Override
-        public Stream<E> stream() {
-            return (Stream<E>)c.stream();
+        public Stream<E> stream() {
+            return (Stream<E>)c.stream();
         }
         @SuppressWarnings("unchecked")
         @Override
-        public Stream<E> parallelStream() {
-            return (Stream<E>)c.parallelStream();
+        public Stream<E> parallelStream() {
+            return (Stream<E>)c.parallelStream();
         }
     }
 
@@ -1283,8 +1279,7 @@ public class Collections {
         }
     }
 
-    static class UnmodifiableRandomAccessList<E> extends UnmodifiableList<E> implements RandomAccess
-    {
+    static class UnmodifiableRandomAccessList<E> extends UnmodifiableList<E> implements RandomAccess {
         UnmodifiableRandomAccessList(List<? extends E> list) {
             super(list);
         }
@@ -1507,13 +1502,13 @@ public class Collections {
             }
 
             @Override
-            public Stream<Entry<K,V>> stream() {
-                return StreamSupport.stream(spliterator(), false);
+            public Stream<Entry<K,V>> stream() {
+                return StreamSupport.stream(spliterator(), false);
             }
 
             @Override
-            public Stream<Entry<K,V>> parallelStream() {
-                return StreamSupport.stream(spliterator(), true);
+            public Stream<Entry<K,V>> parallelStream() {
+                return StreamSupport.stream(spliterator(), true);
             }
 
             public Iterator<Map.Entry<K,V>> iterator() {
@@ -1774,10 +1769,13 @@ public class Collections {
             return unmodifiableNavigableMap(nm.subMap(fromKey, fromInclusive, toKey, toInclusive));
         }
 
-        public NavigableMap<K, V> headMap(K toKey, boolean inclusive)
-             { return unmodifiableNavigableMap(nm.headMap(toKey, inclusive)); }
-        public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive)
-           { return unmodifiableNavigableMap(nm.tailMap(fromKey, inclusive)); }
+        public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
+            return unmodifiableNavigableMap(nm.headMap(toKey, inclusive));
+        }
+
+        public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
+            return unmodifiableNavigableMap(nm.tailMap(fromKey, inclusive));
+        }
     }
 
     // Synch Wrappers
@@ -1790,7 +1788,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * collection when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * or {@link Stream}:
      * <pre>
      *  Collection c = Collections.synchronizedCollection(myCollection);
      *     ...
@@ -1910,11 +1908,11 @@ public class Collections {
             return c.spliterator(); // Must be manually synched by user!
         }
         @Override
-        public Stream<E> stream() {
+        public Stream<E> stream() {
             return c.stream(); // Must be manually synched by user!
         }
         @Override
-        public Stream<E> parallelStream() {
+        public Stream<E> parallelStream() {
             return c.parallelStream(); // Must be manually synched by user!
         }
 }
@@ -1927,7 +1925,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * collection when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * or {@link Stream}:
      * <pre>
      *  Set s = Collections.synchronizedSet(new HashSet());
      *      ...
@@ -1982,7 +1980,7 @@ public class Collections {
      * It is imperative that the user manually synchronize on the returned
      * sorted set when traversing it or any of its {@code subSet},
      * {@code headSet}, or {@code tailSet} views via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * {@link Spliterator} or {@link Stream}:
      * <pre>
      *  SortedSet s = Collections.synchronizedSortedSet(new TreeSet());
      *      ...
@@ -2016,8 +2014,7 @@ public class Collections {
         return new SynchronizedSortedSet<>(s);
     }
 
-    static class SynchronizedSortedSet<E> extends SynchronizedSet<E> implements SortedSet<E>
-    {
+    static class SynchronizedSortedSet<E> extends SynchronizedSet<E> implements SortedSet<E> {
         private final SortedSet<E> ss;
 
         SynchronizedSortedSet(SortedSet<E> s) {
@@ -2069,7 +2066,7 @@ public class Collections {
      * It is imperative that the user manually synchronize on the returned
      * navigable set when traversing it, or any of its {@code subSet},
      * {@code headSet}, or {@code tailSet} views, via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * {@link Spliterator} or {@link Stream}:
      * <pre>
      *  NavigableSet s = Collections.synchronizedNavigableSet(new TreeSet());
      *      ...
@@ -2104,8 +2101,7 @@ public class Collections {
         return new SynchronizedNavigableSet<>(s);
     }
 
-    static class SynchronizedNavigableSet<E> extends SynchronizedSortedSet<E> implements NavigableSet<E>
-    {
+    static class SynchronizedNavigableSet<E> extends SynchronizedSortedSet<E> implements NavigableSet<E> {
         private final NavigableSet<E> ns;
 
         SynchronizedNavigableSet(NavigableSet<E> s) {
@@ -2130,8 +2126,11 @@ public class Collections {
             }
         }
 
-        public Iterator<E> descendingIterator()
-                 { synchronized (mutex) { return descendingSet().iterator(); } }
+        public Iterator<E> descendingIterator() {
+            synchronized (mutex) {
+                return descendingSet().iterator();
+            }
+        }
 
         public NavigableSet<E> subSet(E fromElement, E toElement) {
             synchronized (mutex) {
@@ -2178,7 +2177,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * list when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * or {@link Stream}:
      * <pre>
      *  List list = Collections.synchronizedList(new ArrayList());
      *      ...
@@ -2303,7 +2302,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * map when traversing any of its collection views via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * {@link Spliterator} or {@link Stream}:
      * <pre>
      *  Map m = Collections.synchronizedMap(new HashMap());
      *      ...
@@ -2478,7 +2477,7 @@ public class Collections {
      * sorted map when traversing any of its collection views, or the
      * collections views of any of its {@code subMap}, {@code headMap} or
      * {@code tailMap} views, via {@link Iterator}, {@link Spliterator} or
-     * {@link Stream}:
+     * {@link Stream}:
      * <pre>
      *  SortedMap m = Collections.synchronizedSortedMap(new TreeMap());
      *      ...
@@ -2517,8 +2516,7 @@ public class Collections {
         return new SynchronizedSortedMap<>(m);
     }
 
-    static class SynchronizedSortedMap<K,V> extends SynchronizedMap<K,V> implements SortedMap<K,V>
-    {
+    static class SynchronizedSortedMap<K,V> extends SynchronizedMap<K,V> implements SortedMap<K,V> {
         private final SortedMap<K,V> sm;
 
         SynchronizedSortedMap(SortedMap<K,V> m) {
@@ -2571,7 +2569,7 @@ public class Collections {
      * navigable map when traversing any of its collection views, or the
      * collections views of any of its {@code subMap}, {@code headMap} or
      * {@code tailMap} views, via {@link Iterator}, {@link Spliterator} or
-     * {@link Stream}:
+     * {@link Stream}:
      * <pre>
      *  NavigableMap m = Collections.synchronizedNavigableMap(new TreeMap());
      *      ...
@@ -2614,8 +2612,7 @@ public class Collections {
     /**
      * A synchronized NavigableMap.
      */
-    static class SynchronizedNavigableMap<K,V> extends SynchronizedSortedMap<K,V> implements NavigableMap<K,V>
-    {
+    static class SynchronizedNavigableMap<K,V> extends SynchronizedSortedMap<K,V> implements NavigableMap<K,V> {
         private final NavigableMap<K,V> nm;
 
         SynchronizedNavigableMap(NavigableMap<K,V> m) {
@@ -2627,30 +2624,18 @@ public class Collections {
             nm = m;
         }
 
-        public Entry<K, V> lowerEntry(K key)
-                        { synchronized (mutex) { return nm.lowerEntry(key); } }
-        public K lowerKey(K key)
-                          { synchronized (mutex) { return nm.lowerKey(key); } }
-        public Entry<K, V> floorEntry(K key)
-                        { synchronized (mutex) { return nm.floorEntry(key); } }
-        public K floorKey(K key)
-                          { synchronized (mutex) { return nm.floorKey(key); } }
-        public Entry<K, V> ceilingEntry(K key)
-                      { synchronized (mutex) { return nm.ceilingEntry(key); } }
-        public K ceilingKey(K key)
-                        { synchronized (mutex) { return nm.ceilingKey(key); } }
-        public Entry<K, V> higherEntry(K key)
-                       { synchronized (mutex) { return nm.higherEntry(key); } }
-        public K higherKey(K key)
-                         { synchronized (mutex) { return nm.higherKey(key); } }
-        public Entry<K, V> firstEntry()
-                           { synchronized (mutex) { return nm.firstEntry(); } }
-        public Entry<K, V> lastEntry()
-                            { synchronized (mutex) { return nm.lastEntry(); } }
-        public Entry<K, V> pollFirstEntry()
-                       { synchronized (mutex) { return nm.pollFirstEntry(); } }
-        public Entry<K, V> pollLastEntry()
-                        { synchronized (mutex) { return nm.pollLastEntry(); } }
+        public Entry<K, V> lowerEntry(K key)   { synchronized (mutex) { return nm.lowerEntry(key); } }
+        public K lowerKey(K key)               { synchronized (mutex) { return nm.lowerKey(key); } }
+        public Entry<K, V> floorEntry(K key)   { synchronized (mutex) { return nm.floorEntry(key); } }
+        public K floorKey(K key)               { synchronized (mutex) { return nm.floorKey(key); } }
+        public Entry<K, V> ceilingEntry(K key) { synchronized (mutex) { return nm.ceilingEntry(key); } }
+        public K ceilingKey(K key)             { synchronized (mutex) { return nm.ceilingKey(key); } }
+        public Entry<K, V> higherEntry(K key)  { synchronized (mutex) { return nm.higherEntry(key); } }
+        public K higherKey(K key)              { synchronized (mutex) { return nm.higherKey(key); } }
+        public Entry<K, V> firstEntry()        { synchronized (mutex) { return nm.firstEntry(); } }
+        public Entry<K, V> lastEntry()         { synchronized (mutex) { return nm.lastEntry(); } }
+        public Entry<K, V> pollFirstEntry()    { synchronized (mutex) { return nm.pollFirstEntry(); } }
+        public Entry<K, V> pollLastEntry()     { synchronized (mutex) { return nm.pollLastEntry(); } }
 
         public NavigableMap<K, V> descendingMap() {
             synchronized (mutex) {
@@ -2887,9 +2872,9 @@ public class Collections {
         @Override
         public Spliterator<E> spliterator() {return c.spliterator();}
         @Override
-        public Stream<E> stream()           {return c.stream();}
+        public Stream<E> stream()           {return c.stream();}
         @Override
-        public Stream<E> parallelStream()   {return c.parallelStream();}
+        public Stream<E> parallelStream()   {return c.parallelStream();}
     }
 
     /**
@@ -2922,8 +2907,7 @@ public class Collections {
         return new CheckedQueue<>(queue, type);
     }
 
-    static class CheckedQueue<E> extends CheckedCollection<E> implements Queue<E>
-    {
+    static class CheckedQueue<E> extends CheckedCollection<E> implements Queue<E> {
         final Queue<E> queue;
 
         CheckedQueue(Queue<E> queue, Class<E> elementType) {
@@ -2970,8 +2954,7 @@ public class Collections {
         return new CheckedSet<>(s, type);
     }
 
-    static class CheckedSet<E> extends CheckedCollection<E> implements Set<E>
-    {
+    static class CheckedSet<E> extends CheckedCollection<E> implements Set<E> {
         CheckedSet(Set<E> s, Class<E> elementType) { super(s, elementType); }
 
         public boolean equals(Object o) { return o == this || c.equals(o); }
@@ -3009,8 +2992,7 @@ public class Collections {
         return new CheckedSortedSet<>(s, type);
     }
 
-    static class CheckedSortedSet<E> extends CheckedSet<E> implements SortedSet<E>
-    {
+    static class CheckedSortedSet<E> extends CheckedSet<E> implements SortedSet<E> {
         private final SortedSet<E> ss;
 
         CheckedSortedSet(SortedSet<E> s, Class<E> type) {
@@ -3066,8 +3048,7 @@ public class Collections {
         return new CheckedNavigableSet<>(s, type);
     }
 
-    static class CheckedNavigableSet<E> extends CheckedSortedSet<E> implements NavigableSet<E>
-    {
+    static class CheckedNavigableSet<E> extends CheckedSortedSet<E> implements NavigableSet<E> {
         private final NavigableSet<E> ns;
 
         CheckedNavigableSet(NavigableSet<E> s, Class<E> type) {
@@ -3075,16 +3056,20 @@ public class Collections {
             ns = s;
         }
 
-        public E lower(E e)                             { return ns.lower(e); }
-        public E floor(E e)                             { return ns.floor(e); }
-        public E ceiling(E e)                         { return ns.ceiling(e); }
-        public E higher(E e)                           { return ns.higher(e); }
-        public E pollFirst()                         { return ns.pollFirst(); }
-        public E pollLast()                            {return ns.pollLast(); }
-        public NavigableSet<E> descendingSet()
-                      { return checkedNavigableSet(ns.descendingSet(), type); }
-        public Iterator<E> descendingIterator()
-            {return checkedNavigableSet(ns.descendingSet(), type).iterator(); }
+        public E lower(E e)   { return ns.lower(e); }
+        public E floor(E e)   { return ns.floor(e); }
+        public E ceiling(E e) { return ns.ceiling(e); }
+        public E higher(E e)  { return ns.higher(e); }
+        public E pollFirst()  { return ns.pollFirst(); }
+        public E pollLast()   { return ns.pollLast(); }
+
+        public NavigableSet<E> descendingSet() {
+            return checkedNavigableSet(ns.descendingSet(), type);
+        }
+
+        public Iterator<E> descendingIterator() {
+            return checkedNavigableSet(ns.descendingSet(), type).iterator();
+        }
 
         public NavigableSet<E> subSet(E fromElement, E toElement) {
             return checkedNavigableSet(ns.subSet(fromElement, true, toElement, false), type);
@@ -3141,8 +3126,7 @@ public class Collections {
         return (list instanceof RandomAccess ? new CheckedRandomAccessList<>(list, type) : new CheckedList<>(list, type));
     }
 
-    static class CheckedList<E> extends CheckedCollection<E> implements List<E>
-    {
+    static class CheckedList<E> extends CheckedCollection<E> implements List<E> {
         final List<E> list;
 
         CheckedList(List<E> list, Class<E> type) {
@@ -3221,8 +3205,7 @@ public class Collections {
         }
     }
 
-    static class CheckedRandomAccessList<E> extends CheckedList<E> implements RandomAccess
-    {
+    static class CheckedRandomAccessList<E> extends CheckedList<E> implements RandomAccess {
         CheckedRandomAccessList(List<E> list, Class<E> type) {
             super(list, type);
         }
@@ -3271,8 +3254,7 @@ public class Collections {
         return new CheckedMap<>(m, keyType, valueType);
     }
 
-    private static class CheckedMap<K,V> implements Map<K,V>
-    {
+    private static class CheckedMap<K,V> implements Map<K,V> {
         private final Map<K, V> m;
         final Class<K> keyType;
         final Class<V> valueType;
@@ -3525,8 +3507,7 @@ public class Collections {
             public boolean remove(Object o) {
                 if (!(o instanceof Map.Entry))
                     return false;
-                return s.remove(new AbstractMap.SimpleImmutableEntry
-                                <>((Map.Entry<?,?>)o));
+                return s.remove(new AbstractMap.SimpleImmutableEntry<>((Map.Entry<?,?>)o));
             }
 
             public boolean removeAll(Collection<?> c) {
@@ -3644,8 +3625,7 @@ public class Collections {
         return new CheckedSortedMap<>(m, keyType, valueType);
     }
 
-    static class CheckedSortedMap<K,V> extends CheckedMap<K,V> implements SortedMap<K,V>
-    {
+    static class CheckedSortedMap<K,V> extends CheckedMap<K,V> implements SortedMap<K,V> {
         private final SortedMap<K, V> sm;
 
         CheckedSortedMap(SortedMap<K, V> m, Class<K> keyType, Class<V> valueType) {
@@ -3709,8 +3689,7 @@ public class Collections {
         return new CheckedNavigableMap<>(m, keyType, valueType);
     }
 
-    static class CheckedNavigableMap<K,V> extends CheckedSortedMap<K,V> implements NavigableMap<K,V>
-    {
+    static class CheckedNavigableMap<K,V> extends CheckedSortedMap<K,V> implements NavigableMap<K,V> {
         private final NavigableMap<K, V> nm;
 
         CheckedNavigableMap(NavigableMap<K, V> m, Class<K> keyType, Class<V> valueType) {
@@ -3881,8 +3860,7 @@ public class Collections {
         return (ListIterator<T>) EmptyListIterator.EMPTY_ITERATOR;
     }
 
-    private static class EmptyListIterator<E> extends EmptyIterator<E> implements ListIterator<E>
-    {
+    private static class EmptyListIterator<E> extends EmptyIterator<E> implements ListIterator<E> {
         static final EmptyListIterator<Object> EMPTY_ITERATOR = new EmptyListIterator<>();
 
         public boolean hasPrevious() { return false; }
@@ -3949,8 +3927,7 @@ public class Collections {
         return (Set<T>) EMPTY_SET;
     }
 
-    private static class EmptySet<E> extends AbstractSet<E>
-    {
+    private static class EmptySet<E> extends AbstractSet<E> {
         public Iterator<E> iterator() { return emptyIterator(); }
 
         public int size() {return 0;}
@@ -4179,8 +4156,7 @@ public class Collections {
         return (NavigableMap<K,V>) UnmodifiableNavigableMap.EMPTY_NAVIGABLE_MAP;
     }
 
-    private static class EmptyMap<K,V> extends AbstractMap<K,V>
-    {
+    private static class EmptyMap<K,V> extends AbstractMap<K,V> {
         public int size()                          {return 0;}
         public boolean isEmpty()                   {return true;}
         public void clear()                        {}
@@ -4343,8 +4319,7 @@ public class Collections {
         };
     }
 
-    private static class SingletonSet<E> extends AbstractSet<E>
-    {
+    private static class SingletonSet<E> extends AbstractSet<E> {
         private final E element;
 
         SingletonSet(E e) {element = e;}
@@ -4570,8 +4545,7 @@ public class Collections {
         return new CopiesList<>(n, o);
     }
 
-    private static class CopiesList<E> extends AbstractList<E> implements RandomAccess
-    {
+    private static class CopiesList<E> extends AbstractList<E> implements RandomAccess {
         final int n;
         final E element;
 
@@ -4638,13 +4612,13 @@ public class Collections {
 
         // Override default methods in Collection
         @Override
-        public Stream<E> stream() {
-            return IntStream.range(0, n).mapToObj(i -> element);
+        public Stream<E> stream() {
+            return IntStream.range(0, n).mapToObj(i -> element);
         }
 
         @Override
-        public Stream<E> parallelStream() {
-            return IntStream.range(0, n).parallel().mapToObj(i -> element);
+        public Stream<E> parallelStream() {
+            return IntStream.range(0, n).parallel().mapToObj(i -> element);
         }
 
         @Override
@@ -4721,8 +4695,7 @@ public class Collections {
         }
     }
 
-    private static class ReverseComparator2<T> implements Comparator<T>
-    {
+    private static class ReverseComparator2<T> implements Comparator<T> {
         /**
          * The comparator specified in the static factory.  This will never
          * be null, as the static factory returns a ReverseComparator
@@ -4991,8 +4964,7 @@ public class Collections {
         return new SetFromMap<>(map);
     }
 
-    private static class SetFromMap<E> extends AbstractSet<E> implements Set<E>
-    {
+    private static class SetFromMap<E> extends AbstractSet<E> implements Set<E> {
         private final Map<E, Boolean> m; // The backing map
         private transient Set<E> s; // Its keySet
 
@@ -5033,9 +5005,9 @@ public class Collections {
         @Override
         public Spliterator<E> spliterator() {return s.spliterator();}
         @Override
-        public Stream<E> stream()           {return s.stream();}
+        public Stream<E> stream()           {return s.stream();}
         @Override
-        public Stream<E> parallelStream()   {return s.parallelStream();}
+        public Stream<E> parallelStream()   {return s.parallelStream();}
     }
 
     /**
@@ -5093,8 +5065,8 @@ public class Collections {
         @Override
         public Spliterator<E> spliterator() {return q.spliterator();}
         @Override
-        public Stream<E> stream()           {return q.stream();}
+        public Stream<E> stream()           {return q.stream();}
         @Override
-        public Stream<E> parallelStream()   {return q.parallelStream();}
+        public Stream<E> parallelStream()   {return q.parallelStream();}
     }
 }

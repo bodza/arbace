@@ -21,8 +21,7 @@ class Inet6AddressImpl implements InetAddressImpl {
 
     private native boolean isReachable0(byte[] addr, int scope, int timeout, byte[] inf, int ttl, int if_scope) throws IOException;
 
-    public boolean isReachable(InetAddress addr, int timeout, NetworkInterface netif, int ttl) throws IOException
-    {
+    public boolean isReachable(InetAddress addr, int timeout, NetworkInterface netif, int ttl) throws IOException {
         byte[] ifaddr = null;
         int scope = -1;
         int netif_scope = -1;

@@ -63,13 +63,13 @@ public class SignatureParser {
 
     // returns current element of the input
     private char current() {
-        assert(index <= input.length());
+        assert (index <= input.length());
         return index < input.length() ? input.charAt(index) : EOI;
     }
 
     // advance the input
     private void advance() {
-        assert(index <= input.length());
+        assert (index <= input.length());
         if (index < input.length())
             index++;
     }
@@ -178,7 +178,7 @@ public class SignatureParser {
      */
     private ClassSignature parseClassSignature() {
         // parse a class signature based on the implicit input.
-        assert(index == 0);
+        assert (index == 0);
         return ClassSignature.make(parseZeroOrMoreFormalTypeParameters(),
                                    parseClassTypeSignature(), // Only rule for SuperclassSignature
                                    parseSuperInterfaces());
@@ -198,7 +198,7 @@ public class SignatureParser {
      */
     private FormalTypeParameter[] parseFormalTypeParameters() {
         List<FormalTypeParameter> ftps = new ArrayList<>(3);
-        assert(current() == '<'); // should not have been called at all
+        assert (current() == '<'); // should not have been called at all
         if (current() != '<') { throw error("expected '<'");}
         advance();
         ftps.add(parseFormalTypeParameter());
@@ -267,7 +267,7 @@ public class SignatureParser {
      *     "L" PackageSpecifier_opt SimpleClassTypeSignature ClassTypeSignatureSuffix* ";"
      */
     private ClassTypeSignature parseClassTypeSignature() {
-        assert(current() == 'L');
+        assert (current() == 'L');
         if (current() != 'L') { throw error("expected a class type");}
         advance();
         List<SimpleClassTypeSignature> scts = new ArrayList<>(5);
@@ -343,7 +343,7 @@ public class SignatureParser {
      */
     private TypeArgument[] parseTypeArguments() {
         List<TypeArgument> tas = new ArrayList<>(3);
-        assert(current() == '<');
+        assert (current() == '<');
         if (current() != '<') { throw error("expected '<'");}
         advance();
         tas.add(parseTypeArgument());
@@ -395,7 +395,7 @@ public class SignatureParser {
      *     "T" Identifier ";"
      */
     private TypeVariableSignature parseTypeVariableSignature() {
-        assert(current() == 'T');
+        assert (current() == 'T');
         if (current() != 'T') { throw error("expected a type variable usage");}
         advance();
         TypeVariableSignature ts = TypeVariableSignature.make(parseIdentifier());
@@ -465,7 +465,7 @@ public class SignatureParser {
             advance();
             return BooleanSignature.make();
         default: {
-            assert(false);
+            assert (false);
             throw error("expected primitive type");
         }
         }
@@ -522,7 +522,7 @@ public class SignatureParser {
         // Parse a method signature based on the implicit input.
         FieldTypeSignature[] ets;
 
-        assert(index == 0);
+        assert (index == 0);
         return MethodTypeSignature.make(parseZeroOrMoreFormalTypeParameters(),
                                         parseFormalParameters(),
                                         parseReturnType(),
@@ -593,7 +593,7 @@ public class SignatureParser {
      *     "^" TypeVariableSignature
      */
     private FieldTypeSignature parseThrowsSignature() {
-        assert(current() == '^');
+        assert (current() == '^');
         if (current() != '^') { throw error("expected throws signature");}
         advance();
         return parseFieldTypeSignature(false);

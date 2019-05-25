@@ -599,8 +599,8 @@ public class DatagramSocket implements java.io.Closeable {
      * is bound.
      *
      * @return the port number on the local host to which this socket is bound,
-                {@code -1} if the socket is closed, or
-                {@code 0} if it is not bound yet.
+     *          {@code -1} if the socket is closed, or
+     *          {@code 0} if it is not bound yet.
      */
     public int getLocalPort() {
         if (isClosed())
@@ -966,8 +966,7 @@ public class DatagramSocket implements java.io.Closeable {
      *              datagram socket factory.
      * @throws SocketException  if the factory is already defined.
      */
-    public static synchronized void setDatagramSocketImplFactory(DatagramSocketImplFactory fac) throws IOException
-    {
+    public static synchronized void setDatagramSocketImplFactory(DatagramSocketImplFactory fac) throws IOException {
         if (factory != null) {
             throw new SocketException("factory already defined");
         }
@@ -994,8 +993,7 @@ public class DatagramSocket implements java.io.Closeable {
      *
      * @throws NullPointerException if name is {@code null}
      */
-    public <T> DatagramSocket setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public <T> DatagramSocket setOption(SocketOption<T> name, T value) throws IOException {
         getImpl().setOption(name, value);
         return this;
     }

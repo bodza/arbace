@@ -1,20 +1,14 @@
 package java.lang.reflect;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.MethodAccessor;
 import jdk.internal.reflect.Reflection;
-import jdk.internal.vm.annotation.ForceInline;
-import sun.reflect.annotation.ExceptionProxy;
-import sun.reflect.annotation.TypeNotPresentExceptionProxy;
+import sun.reflect.annotation.ExceptionProxy;
+import sun.reflect.annotation.TypeNotPresentExceptionProxy;
 import sun.reflect.generics.repository.MethodRepository;
 import sun.reflect.generics.factory.CoreReflectionFactory;
 import sun.reflect.generics.factory.GenericsFactory;
 import sun.reflect.generics.scope.MethodScope;
-import sun.reflect.annotation.AnnotationType;
-import sun.reflect.annotation.AnnotationParser;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.AnnotationFormatError;
 import java.nio.ByteBuffer;
 import java.util.StringJoiner;
 
@@ -38,13 +32,10 @@ public final class Method extends Executable {
     private Class<?>[]          parameterTypes;
     private Class<?>[]          exceptionTypes;
     private int                 modifiers;
-    // Generics and annotations support
+    // Generics support
     private transient String              signature;
     // generic info repository; lazily initialized
     private transient MethodRepository genericInfo;
-    private byte[]              annotations;
-    private byte[]              parameterAnnotations;
-    private byte[]              annotationDefault;
     private volatile MethodAccessor methodAccessor;
     // For sharing of MethodAccessors. This branching structure is
     // currently only two levels deep (i.e., one root Method and
@@ -79,7 +70,7 @@ public final class Method extends Executable {
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
      */
-    Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault) {
+    Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault) {
         this.clazz = declaringClass;
         this.name = name;
         this.parameterTypes = parameterTypes;
@@ -88,9 +79,6 @@ public final class Method extends Executable {
         this.modifiers = modifiers;
         this.slot = slot;
         this.signature = signature;
-        this.annotations = annotations;
-        this.parameterAnnotations = parameterAnnotations;
-        this.annotationDefault = annotationDefault;
     }
 
     /**
@@ -109,7 +97,7 @@ public final class Method extends Executable {
         if (this.root != null)
             throw new IllegalArgumentException("Can not copy a non-root Method");
 
-        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, annotations, parameterAnnotations, annotationDefault);
+        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, null, null, null);
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.methodAccessor = methodAccessor;
@@ -123,7 +111,7 @@ public final class Method extends Executable {
         if (this.root == null)
             throw new IllegalArgumentException("Can only leafCopy a non-root Method");
 
-        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, annotations, parameterAnnotations, annotationDefault);
+        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, null, null, null);
         res.root = root;
         res.methodAccessor = methodAccessor;
         return res;
@@ -157,7 +145,7 @@ public final class Method extends Executable {
 
     @Override
     byte[] getAnnotationBytes() {
-        return annotations;
+        return annotations;
     }
 
     /**
@@ -474,10 +462,9 @@ public final class Method extends Executable {
      * provoked by this method fails.
      */
     @CallerSensitive
-    @ForceInline // to ensure Reflection.getCallerClass optimization
-    @HotSpotIntrinsicCandidate
-    public Object invoke(Object obj, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+    // @ForceInline // to ensure Reflection.getCallerClass optimization
+    // @HotSpotIntrinsicCandidate
+    public Object invoke(Object obj, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (!override) {
             Class<?> caller = Reflection.getCallerClass();
             checkAccess(caller, clazz, Modifier.isStatic(modifiers) ? null : obj.getClass(), modifiers);
@@ -584,53 +571,22 @@ public final class Method extends Executable {
      *     default class value.
      */
     public Object getDefaultValue() {
-        if  (annotationDefault == null)
+        if  (null == null)
             return null;
-        Class<?> memberType = AnnotationType.invocationHandlerReturnType(getReturnType());
-        Object result = AnnotationParser.parseMemberValue(memberType, ByteBuffer.wrap(annotationDefault), getDeclaringClass().getConstantPool(), getDeclaringClass());
+        Class<?> memberType = AnnotationType.invocationHandlerReturnType(getReturnType());
+        Object result = AnnotationParser.parseMemberValue(memberType, ByteBuffer.wrap(null), getDeclaringClass().getConstantPool(), getDeclaringClass());
         if (result instanceof ExceptionProxy) {
             if (result instanceof TypeNotPresentExceptionProxy) {
                 TypeNotPresentExceptionProxy proxy = (TypeNotPresentExceptionProxy)result;
                 throw new TypeNotPresentException(proxy.typeName(), proxy.getCause());
             }
-            throw new AnnotationFormatError("Invalid default: " + this);
+            throw new AnnotationFormatError("Invalid default: " + this);
         }
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException  {@inheritDoc}
-     */
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return super.getAnnotation(annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Annotation[] getDeclaredAnnotations() {
-        return super.getDeclaredAnnotations();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Annotation[][] getParameterAnnotations() {
-        return sharedGetParameterAnnotations(parameterTypes, parameterAnnotations);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AnnotatedType getAnnotatedReturnType() {
-        return getAnnotatedReturnType0(getGenericReturnType());
-    }
-
     @Override
     boolean handleParameterNumberMismatch(int resultLength, int numParameters) {
-        throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
+        throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
     }
 }

@@ -559,8 +559,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * arrays of {@code SimpleEntry} instances in method
      * {@code Map.entrySet().toArray}.
      */
-    public static class SimpleEntry<K,V> implements Entry<K,V>
-    {
+    public static class SimpleEntry<K,V> implements Entry<K,V> {
         private final K key;
         private V value;
 
@@ -681,8 +680,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * convenient in methods that return thread-safe snapshots of
      * key-value mappings.
      */
-    public static class SimpleImmutableEntry<K,V> implements Entry<K,V>
-    {
+    public static class SimpleImmutableEntry<K,V> implements Entry<K,V> {
         private final K key;
         private final V value;
 

@@ -225,8 +225,7 @@ public class CoderResult {
      *          If this object represents an unmappable-character error; the
      *          exceptions length value will be that of this object
      */
-    public void throwException() throws CharacterCodingException
-    {
+    public void throwException() throws CharacterCodingException {
         switch (type) {
         case CR_UNDERFLOW:   throw new BufferUnderflowException();
         case CR_OVERFLOW:    throw new BufferOverflowException();

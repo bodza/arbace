@@ -112,8 +112,7 @@ public abstract class AsynchronousServerSocketChannel implements AsynchronousCha
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousServerSocketChannel open(AsynchronousChannelGroup group) throws IOException
-    {
+    public static AsynchronousServerSocketChannel open(AsynchronousChannelGroup group) throws IOException {
         AsynchronousChannelProvider provider = (group == null) ? AsynchronousChannelProvider.provider() : group.provider();
         return provider.openAsynchronousServerSocketChannel(group);
     }
@@ -133,8 +132,7 @@ public abstract class AsynchronousServerSocketChannel implements AsynchronousCha
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousServerSocketChannel open() throws IOException
-    {
+    public static AsynchronousServerSocketChannel open() throws IOException {
         return open(null);
     }
 
@@ -158,8 +156,7 @@ public abstract class AsynchronousServerSocketChannel implements AsynchronousCha
      * @throws ClosedChannelException              {@inheritDoc}
      * @throws IOException                         {@inheritDoc}
      */
-    public final AsynchronousServerSocketChannel bind(SocketAddress local) throws IOException
-    {
+    public final AsynchronousServerSocketChannel bind(SocketAddress local) throws IOException {
         return bind(local, 0);
     }
 

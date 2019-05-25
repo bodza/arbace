@@ -3,7 +3,7 @@ package java.lang.reflect;
 /**
  * A common interface for all entities that declare type variables.
  */
-public interface GenericDeclaration extends AnnotatedElement {
+public interface GenericDeclaration {
     /**
      * Returns an array of {@code TypeVariable} objects that
      * represent the type variables declared by the generic

@@ -120,7 +120,7 @@ public class URLEncoder {
      *             method to specify the encoding.
      * @return the translated {@code String}.
      */
-    @Deprecated
+    // @Deprecated
     public static String encode(String s) {
         String str = null;
 

@@ -1,9 +1,7 @@
 package java.lang;
 
-import java.lang.annotation.Native;
 import java.math.*;
 import java.util.Objects;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 import static java.lang.String.COMPACT_STRINGS;
 import static java.lang.String.LATIN1;
@@ -30,13 +28,15 @@ public final class Long extends Number implements Comparable<Long> {
      * A constant holding the minimum value a {@code long} can
      * have, -2<sup>63</sup>.
      */
-    @Native public static final long MIN_VALUE = 0x8000000000000000L;
+    // @Native
+    public static final long MIN_VALUE = 0x8000000000000000L;
 
     /**
      * A constant holding the maximum value a {@code long} can
      * have, 2<sup>63</sup>-1.
      */
-    @Native public static final long MAX_VALUE = 0x7fffffffffffffffL;
+    // @Native
+    public static final long MAX_VALUE = 0x7fffffffffffffffL;
 
     /**
      * The {@code Class} instance representing the primitive type
@@ -566,8 +566,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @throws NumberFormatException  if the string does not contain a
      *             parsable {@code long}.
      */
-    public static long parseLong(String s, int radix) throws NumberFormatException
-    {
+    public static long parseLong(String s, int radix) throws NumberFormatException {
         if (s == null) {
             throw new NumberFormatException("null");
         }
@@ -1031,8 +1030,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @throws NumberFormatException  If the string cannot be parsed
      *             as a {@code long}.
      */
-    public static Long valueOf(String s) throws NumberFormatException
-    {
+    public static Long valueOf(String s) throws NumberFormatException {
         return Long.valueOf(parseLong(s, 10));
     }
 
@@ -1062,7 +1060,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param l a long value.
      * @return a {@code Long} instance representing {@code l}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Long valueOf(long l) {
         final int offset = 128;
         if (l >= -128 && l <= 127) { // will cache
@@ -1175,7 +1173,7 @@ public final class Long extends Number implements Comparable<Long> {
      * {@link #valueOf(long)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Long(long value) {
         this.value = value;
     }
@@ -1198,7 +1196,7 @@ public final class Long extends Number implements Comparable<Long> {
      * {@code long} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Long} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Long(String s) throws NumberFormatException {
         this.value = parseLong(s, 10);
     }
@@ -1231,7 +1229,7 @@ public final class Long extends Number implements Comparable<Long> {
      * Returns the value of this {@code Long} as a
      * {@code long} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public long longValue() {
         return value;
     }
@@ -1422,7 +1420,8 @@ public final class Long extends Number implements Comparable<Long> {
      * The number of bits used to represent a {@code long} value in two's
      * complement binary form.
      */
-    @Native public static final int SIZE = 64;
+    // @Native
+    public static final int SIZE = 64;
 
     /**
      * The number of bytes used to represent a {@code long} value in two's
@@ -1483,11 +1482,10 @@ public final class Long extends Number implements Comparable<Long> {
      *     of the specified {@code long} value, or 64 if the value
      *     is equal to zero.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int numberOfLeadingZeros(long i) {
         int x = (int)(i >>> 32);
-        return x == 0 ? 32 + Integer.numberOfLeadingZeros((int)i)
-                : Integer.numberOfLeadingZeros(x);
+        return x == 0 ? 32 + Integer.numberOfLeadingZeros((int)i) : Integer.numberOfLeadingZeros(x);
     }
 
     /**
@@ -1503,7 +1501,7 @@ public final class Long extends Number implements Comparable<Long> {
      *     specified {@code long} value, or 64 if the value is equal
      *     to zero.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int numberOfTrailingZeros(long i) {
         // HD, Figure 5-14
         int x, y;
@@ -1526,7 +1524,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @return the number of one-bits in the two's complement binary
      *     representation of the specified {@code long} value.
      */
-     @HotSpotIntrinsicCandidate
+     // @HotSpotIntrinsicCandidate
      public static int bitCount(long i) {
         // HD, Figure 5-2
         i = i - ((i >>> 1) & 0x5555555555555555L);
@@ -1623,7 +1621,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @return the value obtained by reversing the bytes in the specified
      *     {@code long} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static long reverseBytes(long i) {
         i = (i & 0x00ff00ff00ff00ffL) << 8 | (i >>> 8) & 0x00ff00ff00ff00ffL;
         return (i << 48) | ((i & 0xffff0000L) << 16) | ((i >>> 16) & 0xffff0000L) | (i >>> 48);

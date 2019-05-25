@@ -1,20 +1,17 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-
 /**
  * A {@code boolean} value that may be updated atomically. See the
- * {@link VarHandle} specification for descriptions of the properties
+ * {@link VarHandle} specification for descriptions of the properties
  * of atomic accesses. An {@code AtomicBoolean} is used in
  * applications such as atomically updated flags, and cannot be used
  * as a replacement for a {@link java.lang.Boolean}.
  */
 public class AtomicBoolean {
-    private static final VarHandle VALUE;
+    private static final VarHandle VALUE;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             VALUE = l.findVarHandle(AtomicBoolean.class, "value", int.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
@@ -40,7 +37,7 @@ public class AtomicBoolean {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      *
      * @return the current value
      */
@@ -51,7 +48,7 @@ public class AtomicBoolean {
     /**
      * Atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#compareAndSet}.
+     * with memory effects as specified by {@link VarHandle#compareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -65,7 +62,7 @@ public class AtomicBoolean {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @deprecated This method has plain memory effects but the method
      * name implies volatile memory effects (see methods such as
@@ -77,7 +74,7 @@ public class AtomicBoolean {
      * @param newValue the new value
      * @return {@code true} if successful
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public boolean weakCompareAndSet(boolean expectedValue, boolean newValue) {
         return VALUE.weakCompareAndSetPlain(this, (expectedValue ? 1 : 0), (newValue ? 1 : 0));
     }
@@ -85,7 +82,7 @@ public class AtomicBoolean {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -97,7 +94,7 @@ public class AtomicBoolean {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setVolatile}.
+     * with memory effects as specified by {@link VarHandle#setVolatile}.
      *
      * @param newValue the new value
      */
@@ -107,7 +104,7 @@ public class AtomicBoolean {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -117,7 +114,7 @@ public class AtomicBoolean {
 
     /**
      * Atomically sets the value to {@code newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * with memory effects as specified by {@link VarHandle#getAndSet}.
      *
      * @param newValue the new value
      * @return the previous value
@@ -159,7 +156,7 @@ public class AtomicBoolean {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getOpaque}.
+     * with memory effects as specified by {@link VarHandle#getOpaque}.
      *
      * @return the value
      */
@@ -169,7 +166,7 @@ public class AtomicBoolean {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setOpaque}.
+     * with memory effects as specified by {@link VarHandle#setOpaque}.
      *
      * @param newValue the new value
      */
@@ -179,7 +176,7 @@ public class AtomicBoolean {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getAcquire}.
+     * with memory effects as specified by {@link VarHandle#getAcquire}.
      *
      * @return the value
      */
@@ -189,7 +186,7 @@ public class AtomicBoolean {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -201,7 +198,7 @@ public class AtomicBoolean {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchange}.
+     * {@link VarHandle#compareAndExchange}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -216,7 +213,7 @@ public class AtomicBoolean {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeAcquire}.
+     * {@link VarHandle#compareAndExchangeAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -231,7 +228,7 @@ public class AtomicBoolean {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeRelease}.
+     * {@link VarHandle#compareAndExchangeRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -246,7 +243,7 @@ public class AtomicBoolean {
      * Possibly atomically sets the value to {@code newValue} if the current
      * value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSet}.
+     * {@link VarHandle#weakCompareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -260,7 +257,7 @@ public class AtomicBoolean {
      * Possibly atomically sets the value to {@code newValue} if the current
      * value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetAcquire}.
+     * {@link VarHandle#weakCompareAndSetAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -274,7 +271,7 @@ public class AtomicBoolean {
      * Possibly atomically sets the value to {@code newValue} if the current
      * value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetRelease}.
+     * {@link VarHandle#weakCompareAndSetRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value

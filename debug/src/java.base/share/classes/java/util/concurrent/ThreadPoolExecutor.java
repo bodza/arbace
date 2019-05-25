@@ -525,8 +525,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * state to a negative value, and clear it upon start (in
      * runWorker).
      */
-    private final class Worker extends AbstractQueuedSynchronizer implements Runnable
-    {
+    private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
         /** Thread this worker is running in.  Null if factory fails. */
         final Thread thread;
         /** Initial task to run.  Possibly null. */
@@ -1336,7 +1335,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * that shut down this executor, but in this version, finalize
      * does nothing.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     /* oops! protected */public void finalize() {}
 
     /**
@@ -1650,8 +1649,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         try {
             // Remove rare and surprising possibility of
             // isTerminated() && getPoolSize() > 0
-            return runStateAtLeast(ctl.get(), TIDYING) ? 0
-                : workers.size();
+            return runStateAtLeast(ctl.get(), TIDYING) ? 0 : workers.size();
         } finally {
             mainLock.unlock();
         }

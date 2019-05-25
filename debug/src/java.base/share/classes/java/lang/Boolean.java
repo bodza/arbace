@@ -1,7 +1,5 @@
 package java.lang;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * The Boolean class wraps a value of the primitive type
  * {@code boolean} in an object. An object of type
@@ -51,7 +49,7 @@ public final class Boolean implements Comparable<Boolean> {
      * Also consider using the final fields {@link #TRUE} and {@link #FALSE}
      * if possible.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Boolean(boolean value) {
         this.value = value;
     }
@@ -71,7 +69,7 @@ public final class Boolean implements Comparable<Boolean> {
      * {@code boolean} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Boolean} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Boolean(String s) {
         this(parseBoolean(s));
     }
@@ -101,7 +99,7 @@ public final class Boolean implements Comparable<Boolean> {
      *
      * @return the primitive {@code boolean} value of this object.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public boolean booleanValue() {
         return value;
     }
@@ -119,7 +117,7 @@ public final class Boolean implements Comparable<Boolean> {
      * @param b a boolean value.
      * @return a {@code Boolean} instance representing {@code b}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Boolean valueOf(boolean b) {
         return (b ? TRUE : FALSE);
     }

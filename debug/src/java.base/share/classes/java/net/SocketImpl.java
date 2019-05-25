@@ -303,8 +303,7 @@ public abstract class SocketImpl implements SocketOptions {
      *         An {@code int} expressing the relative importance of high
      *         bandwidth
      */
-    protected void setPerformancePreferences(int connectionTime, int latency, int bandwidth)
-    {
+    protected void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
         /* Not implemented yet */
     }
 

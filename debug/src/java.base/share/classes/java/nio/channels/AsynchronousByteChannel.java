@@ -72,9 +72,7 @@ public interface AsynchronousByteChannel extends AsynchronousChannel {
      *          If the channel is associated with a {@link AsynchronousChannelGroup
      *          group} that has terminated
      */
-    <A> void read(ByteBuffer dst,
-                  A attachment,
-                  CompletionHandler<Integer,? super A> handler);
+    <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer,? super A> handler);
 
     /**
      * Reads a sequence of bytes from this channel into the given buffer.
@@ -151,9 +149,7 @@ public interface AsynchronousByteChannel extends AsynchronousChannel {
      *          If the channel is associated with a {@link AsynchronousChannelGroup
      *          group} that has terminated
      */
-    <A> void write(ByteBuffer src,
-                   A attachment,
-                   CompletionHandler<Integer,? super A> handler);
+    <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer,? super A> handler);
 
     /**
      * Writes a sequence of bytes to this channel from the given buffer.

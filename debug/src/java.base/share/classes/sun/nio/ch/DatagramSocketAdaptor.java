@@ -49,8 +49,7 @@ public class DatagramSocketAdaptor extends DatagramSocket {
         }
     }
 
-    private void connectInternal(SocketAddress remote) throws SocketException
-    {
+    private void connectInternal(SocketAddress remote) throws SocketException {
         InetSocketAddress isa = Net.asInetSocketAddress(remote);
         int port = isa.getPort();
         if (port < 0 || port > 0xFFFF)
@@ -214,8 +213,7 @@ public class DatagramSocketAdaptor extends DatagramSocket {
         return timeout;
     }
 
-    private void setBooleanOption(SocketOption<Boolean> name, boolean value) throws SocketException
-    {
+    private void setBooleanOption(SocketOption<Boolean> name, boolean value) throws SocketException {
         try {
             dc.setOption(name, value);
         } catch (IOException x) {
@@ -223,8 +221,7 @@ public class DatagramSocketAdaptor extends DatagramSocket {
         }
     }
 
-    private void setIntOption(SocketOption<Integer> name, int value) throws SocketException
-    {
+    private void setIntOption(SocketOption<Integer> name, int value) throws SocketException {
         try {
             dc.setOption(name, value);
         } catch (IOException x) {
@@ -311,8 +308,7 @@ public class DatagramSocketAdaptor extends DatagramSocket {
      * DatagramSocket constructor so that no native resources are allocated in
      * super class.
      */
-    private static final DatagramSocketImpl dummyDatagramSocket = new DatagramSocketImpl()
-    {
+    private static final DatagramSocketImpl dummyDatagramSocket = new DatagramSocketImpl() {
         protected void create() throws SocketException {}
 
         protected void bind(int lport, InetAddress laddr) throws SocketException {}
@@ -325,10 +321,10 @@ public class DatagramSocketAdaptor extends DatagramSocket {
 
         protected void receive(DatagramPacket p) throws IOException {}
 
-        @Deprecated
+        // @Deprecated
         protected void setTTL(byte ttl) throws IOException {}
 
-        @Deprecated
+        // @Deprecated
         protected byte getTTL() throws IOException { return 0; }
 
         protected void setTimeToLive(int ttl) throws IOException {}

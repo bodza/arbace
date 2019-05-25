@@ -95,8 +95,7 @@ abstract class AsynchronousServerSocketChannelImpl extends AsynchronousServerSoc
 
     @Override
     @SuppressWarnings("unchecked")
-    public final <A> void accept(A attachment, CompletionHandler<AsynchronousSocketChannel,? super A> handler)
-    {
+    public final <A> void accept(A attachment, CompletionHandler<AsynchronousSocketChannel,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         implAccept(attachment, (CompletionHandler<AsynchronousSocketChannel,Object>)handler);
@@ -112,8 +111,7 @@ abstract class AsynchronousServerSocketChannelImpl extends AsynchronousServerSoc
     }
 
     @Override
-    public final AsynchronousServerSocketChannel bind(SocketAddress local, int backlog) throws IOException
-    {
+    public final AsynchronousServerSocketChannel bind(SocketAddress local, int backlog) throws IOException {
         InetSocketAddress isa = (local == null) ? new InetSocketAddress(0) : Net.checkAddress(local);
 
         try {
@@ -139,8 +137,7 @@ abstract class AsynchronousServerSocketChannelImpl extends AsynchronousServerSoc
     }
 
     @Override
-    public final <T> AsynchronousServerSocketChannel setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public final <T> AsynchronousServerSocketChannel setOption(SocketOption<T> name, T value) throws IOException {
         if (name == null)
             throw new NullPointerException();
         if (!supportedOptions().contains(name))
@@ -148,8 +145,7 @@ abstract class AsynchronousServerSocketChannelImpl extends AsynchronousServerSoc
 
         try {
             begin();
-            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind())
-            {
+            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind()) {
                 // SO_REUSEADDR emulated when using exclusive bind
                 isReuseAddress = (Boolean)value;
             } else {
@@ -171,8 +167,7 @@ abstract class AsynchronousServerSocketChannelImpl extends AsynchronousServerSoc
 
         try {
             begin();
-            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind())
-            {
+            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind()) {
                 // SO_REUSEADDR emulated when using exclusive bind
                 return (T)Boolean.valueOf(isReuseAddress);
             }

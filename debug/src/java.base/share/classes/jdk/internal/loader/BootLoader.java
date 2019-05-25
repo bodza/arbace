@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 /**
  * Find resources and packages in modules defined to the boot class loader or
@@ -61,7 +60,7 @@ public class BootLoader {
     /**
      * Returns a stream of the packages defined to the boot loader.
      */
-    public static Stream<Package> packages() {
+    public static Stream<Package> packages() {
         return Arrays.stream(getSystemPackageNames())
                      .map(name -> getDefinedPackage(name.replace('/', '.')));
     }

@@ -16,8 +16,7 @@ public class StreamEncoder extends Writer {
     }
 
     // Factories for java.io.OutputStreamWriter
-    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, String charsetName) throws UnsupportedEncodingException
-    {
+    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, String charsetName) throws UnsupportedEncodingException {
         String csn = charsetName;
         if (csn == null)
             csn = Charset.defaultCharset().name();
@@ -28,20 +27,17 @@ public class StreamEncoder extends Writer {
         throw new UnsupportedEncodingException (csn);
     }
 
-    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, Charset cs)
-    {
+    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, Charset cs) {
         return new StreamEncoder(out, lock, cs);
     }
 
-    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, CharsetEncoder enc)
-    {
+    public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, CharsetEncoder enc) {
         return new StreamEncoder(out, lock, enc);
     }
 
     // Factory for java.nio.channels.Channels.newWriter
 
-    public static StreamEncoder forEncoder(WritableByteChannel ch, CharsetEncoder enc, int minBufferCap)
-    {
+    public static StreamEncoder forEncoder(WritableByteChannel ch, CharsetEncoder enc, int minBufferCap) {
         return new StreamEncoder(ch, enc, minBufferCap);
     }
 
@@ -182,8 +178,7 @@ public class StreamEncoder extends Writer {
         bb.clear();
         }
 
-    private void flushLeftoverChar(CharBuffer cb, boolean endOfInput) throws IOException
-    {
+    private void flushLeftoverChar(CharBuffer cb, boolean endOfInput) throws IOException {
         if (!haveLeftoverChar && !endOfInput)
             return;
         if (lcb == null)
@@ -219,14 +214,12 @@ public class StreamEncoder extends Writer {
         haveLeftoverChar = false;
     }
 
-    void implWrite(char cbuf[], int off, int len) throws IOException
-    {
+    void implWrite(char cbuf[], int off, int len) throws IOException {
         CharBuffer cb = CharBuffer.wrap(cbuf, off, len);
         implWrite(cb);
     }
 
-    void implWrite(CharBuffer cb) throws IOException
-    {
+    void implWrite(CharBuffer cb) throws IOException {
         if (haveLeftoverChar) {
             flushLeftoverChar(cb, false);
         }

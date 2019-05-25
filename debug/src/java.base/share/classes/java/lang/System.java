@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -24,16 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.ResourceBundle;
 import java.util.function.Supplier;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.misc.VM;
-import sun.reflect.annotation.AnnotationType;
 import sun.nio.ch.Interruptible;
 
 /**
@@ -162,7 +157,7 @@ public final class System {
      * @return the difference, measured in milliseconds, between
      *          the current time and midnight, January 1, 1970 UTC.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native long currentTimeMillis();
 
     /**
@@ -205,7 +200,7 @@ public final class System {
      * @return the current value of the running Java Virtual Machine's
      *         high-resolution time source, in nanoseconds
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native long nanoTime();
 
     /**
@@ -300,7 +295,7 @@ public final class System {
      * @throws NullPointerException if either {@code src} or
      *             {@code dest} is {@code null}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length);
 
     /**
@@ -313,7 +308,7 @@ public final class System {
      * @param x object for which the hashCode is to be calculated
      * @return the hashCode
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native int identityHashCode(Object x);
 
     /**

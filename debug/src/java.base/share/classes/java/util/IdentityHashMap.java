@@ -775,8 +775,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
         }
     }
 
-    private class EntryIterator extends IdentityHashMapIterator<Map.Entry<K,V>>
-    {
+    private class EntryIterator extends IdentityHashMapIterator<Map.Entry<K,V>> {
         private Entry lastReturnedEntry;
 
         public Map.Entry<K,V> next() {

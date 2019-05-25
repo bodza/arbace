@@ -1,8 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-
 /**
  * A {@link ForkJoinTask} with a completion action performed when
  * triggered and there are no remaining pending actions.
@@ -721,10 +718,10 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
     protected void setRawResult(T t) { }
 
     // VarHandle mechanics
-    private static final VarHandle PENDING;
+    private static final VarHandle PENDING;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             PENDING = l.findVarHandle(CountedCompleter.class, "pending", int.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

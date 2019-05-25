@@ -85,8 +85,7 @@ public class Socket implements java.io.Closeable {
      *             the specified range of valid port values, which is between
      *             0 and 65535, inclusive.
      */
-    public Socket(String host, int port) throws UnknownHostException, IOException
-    {
+    public Socket(String host, int port) throws UnknownHostException, IOException {
         this(host != null ? new InetSocketAddress(host, port) : new InetSocketAddress(InetAddress.getByName(null), port), (SocketAddress) null, true);
     }
 
@@ -199,7 +198,7 @@ public class Socket implements java.io.Closeable {
      *             0 and 65535, inclusive.
      * @deprecated Use DatagramSocket instead for UDP transport.
      */
-    @Deprecated
+    // @Deprecated
     public Socket(String host, int port, boolean stream) throws IOException {
         this(host != null ? new InetSocketAddress(host, port) : new InetSocketAddress(InetAddress.getByName(null), port), (SocketAddress) null, stream);
     }
@@ -229,7 +228,7 @@ public class Socket implements java.io.Closeable {
      * @throws NullPointerException if {@code host} is null.
      * @deprecated Use DatagramSocket instead for UDP transport.
      */
-    @Deprecated
+    // @Deprecated
     public Socket(InetAddress host, int port, boolean stream) throws IOException {
         this(host != null ? new InetSocketAddress(host, port) : null,
              new InetSocketAddress(0), stream);
@@ -1123,8 +1122,7 @@ public class Socket implements java.io.Closeable {
      * @throws IOException if an I/O error occurs when shutting down this
      * socket.
      */
-    public void shutdownInput() throws IOException
-    {
+    public void shutdownInput() throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");
         if (!isConnected())
@@ -1147,8 +1145,7 @@ public class Socket implements java.io.Closeable {
      * @throws IOException if an I/O error occurs when shutting down this
      * socket.
      */
-    public void shutdownOutput() throws IOException
-    {
+    public void shutdownOutput() throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");
         if (!isConnected())
@@ -1251,8 +1248,7 @@ public class Socket implements java.io.Closeable {
      *               socket factory.
      * @throws SocketException  if the factory is already defined.
      */
-    public static synchronized void setSocketImplFactory(SocketImplFactory fac) throws IOException
-    {
+    public static synchronized void setSocketImplFactory(SocketImplFactory fac) throws IOException {
         if (factory != null) {
             throw new SocketException("factory already defined");
         }
@@ -1295,8 +1291,7 @@ public class Socket implements java.io.Closeable {
      *         An {@code int} expressing the relative importance of high
      *         bandwidth
      */
-    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth)
-    {
+    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
         /* Not implemented yet */
     }
 

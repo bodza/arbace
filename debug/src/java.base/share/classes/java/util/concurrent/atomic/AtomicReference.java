@@ -1,21 +1,19 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 
 /**
  * An object reference that may be updated atomically.  See the {@link
- * VarHandle} specification for descriptions of the properties of
+ * VarHandle} specification for descriptions of the properties of
  * atomic accesses.
  * @param <V> The type of object referred to by this reference
  */
 public class AtomicReference<V> {
-    private static final VarHandle VALUE;
+    private static final VarHandle VALUE;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             VALUE = l.findVarHandle(AtomicReference.class, "value", Object.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
@@ -41,7 +39,7 @@ public class AtomicReference<V> {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      *
      * @return the current value
      */
@@ -51,7 +49,7 @@ public class AtomicReference<V> {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setVolatile}.
+     * with memory effects as specified by {@link VarHandle#setVolatile}.
      *
      * @param newValue the new value
      */
@@ -61,7 +59,7 @@ public class AtomicReference<V> {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -72,7 +70,7 @@ public class AtomicReference<V> {
     /**
      * Atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#compareAndSet}.
+     * with memory effects as specified by {@link VarHandle#compareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -86,7 +84,7 @@ public class AtomicReference<V> {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @deprecated This method has plain memory effects but the method
      * name implies volatile memory effects (see methods such as
@@ -98,7 +96,7 @@ public class AtomicReference<V> {
      * @param newValue the new value
      * @return {@code true} if successful
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public final boolean weakCompareAndSet(V expectedValue, V newValue) {
         return VALUE.weakCompareAndSetPlain(this, expectedValue, newValue);
     }
@@ -106,7 +104,7 @@ public class AtomicReference<V> {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -118,7 +116,7 @@ public class AtomicReference<V> {
 
     /**
      * Atomically sets the value to {@code newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * with memory effects as specified by {@link VarHandle#getAndSet}.
      *
      * @param newValue the new value
      * @return the previous value
@@ -130,7 +128,7 @@ public class AtomicReference<V> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function, returning the previous value. The
      * function should be side-effect-free, since it may be re-applied
      * when attempted updates fail due to contention among threads.
@@ -151,7 +149,7 @@ public class AtomicReference<V> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function, returning the updated value. The
      * function should be side-effect-free, since it may be re-applied
      * when attempted updates fail due to contention among threads.
@@ -172,7 +170,7 @@ public class AtomicReference<V> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function to the current and given values,
      * returning the previous value. The function should be
      * side-effect-free, since it may be re-applied when attempted
@@ -197,7 +195,7 @@ public class AtomicReference<V> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function to the current and given values,
      * returning the updated value. The function should be
      * side-effect-free, since it may be re-applied when attempted
@@ -253,7 +251,7 @@ public class AtomicReference<V> {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getOpaque}.
+     * with memory effects as specified by {@link VarHandle#getOpaque}.
      *
      * @return the value
      */
@@ -263,7 +261,7 @@ public class AtomicReference<V> {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setOpaque}.
+     * with memory effects as specified by {@link VarHandle#setOpaque}.
      *
      * @param newValue the new value
      */
@@ -273,7 +271,7 @@ public class AtomicReference<V> {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getAcquire}.
+     * with memory effects as specified by {@link VarHandle#getAcquire}.
      *
      * @return the value
      */
@@ -283,7 +281,7 @@ public class AtomicReference<V> {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -295,7 +293,7 @@ public class AtomicReference<V> {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchange}.
+     * {@link VarHandle#compareAndExchange}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -310,7 +308,7 @@ public class AtomicReference<V> {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeAcquire}.
+     * {@link VarHandle#compareAndExchangeAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -325,7 +323,7 @@ public class AtomicReference<V> {
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeRelease}.
+     * {@link VarHandle#compareAndExchangeRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -340,7 +338,7 @@ public class AtomicReference<V> {
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSet}.
+     * {@link VarHandle#weakCompareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -354,7 +352,7 @@ public class AtomicReference<V> {
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetAcquire}.
+     * {@link VarHandle#weakCompareAndSetAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -368,7 +366,7 @@ public class AtomicReference<V> {
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetRelease}.
+     * {@link VarHandle#weakCompareAndSetRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value

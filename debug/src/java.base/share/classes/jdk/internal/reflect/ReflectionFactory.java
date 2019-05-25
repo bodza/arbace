@@ -1,7 +1,6 @@
 package jdk.internal.reflect;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
@@ -113,7 +112,7 @@ public class ReflectionFactory {
     public MethodAccessor newMethodAccessor(Method method) {
         checkInitted();
 
-        if (Reflection.isCallerSensitive(method)) {
+        if (Reflection.isCallerSensitive(method)) {
             Method altMethod = findMethodForReflection(method);
             if (altMethod != null) {
                 method = altMethod;
@@ -186,27 +185,24 @@ public class ReflectionFactory {
       * Creates a new java.lang.reflect.Field. Access checks as per
       * java.lang.reflect.AccessibleObject are not overridden.
       */
-    public Field newField(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature, byte[] annotations)
-    {
-        return langReflectAccess().newField(declaringClass, name, type, modifiers, slot, signature, annotations);
+    public Field newField(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature, byte[] annotations) {
+        return langReflectAccess().newField(declaringClass, name, type, modifiers, slot, signature, null);
     }
 
     /**
       * Creates a new java.lang.reflect.Method. Access checks as per
       * java.lang.reflect.AccessibleObject are not overridden.
       */
-    public Method newMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
-    {
-        return langReflectAccess().newMethod(declaringClass, name, parameterTypes, returnType, checkedExceptions, modifiers, slot, signature, annotations, parameterAnnotations, annotationDefault);
+    public Method newMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault) {
+        return langReflectAccess().newMethod(declaringClass, name, parameterTypes, returnType, checkedExceptions, modifiers, slot, signature, null, null, null);
     }
 
     /**
       * Creates a new java.lang.reflect.Constructor. Access checks as
       * per java.lang.reflect.AccessibleObject are not overridden.
       */
-    public Constructor<?> newConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations)
-    {
-        return langReflectAccess().newConstructor(declaringClass, parameterTypes, checkedExceptions, modifiers, slot, signature, annotations, parameterAnnotations);
+    public Constructor<?> newConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations) {
+        return langReflectAccess().newConstructor(declaringClass, parameterTypes, checkedExceptions, modifiers, slot, signature, null, null);
     }
 
     /** Gets the MethodAccessor object for a java.lang.reflect.Method */
@@ -231,8 +227,7 @@ public class ReflectionFactory {
       * Sets the ConstructorAccessor object for a
       * java.lang.reflect.Constructor
       */
-    public void setConstructorAccessor(Constructor<?> c, ConstructorAccessor accessor)
-    {
+    public void setConstructorAccessor(Constructor<?> c, ConstructorAccessor accessor) {
         langReflectAccess().setConstructorAccessor(c, accessor);
     }
 
@@ -268,12 +263,6 @@ public class ReflectionFactory {
       */
     public <T> Constructor<T> copyConstructor(Constructor<T> arg) {
         return langReflectAccess().copyConstructor(arg);
-    }
-
-    /** Gets the byte[] that encodes TypeAnnotations on an executable.
-     */
-    public byte[] getExecutableTypeAnnotationBytes(Executable ex) {
-        return langReflectAccess().getExecutableTypeAnnotationBytes(ex);
     }
 
     public Class<?>[] getExecutableSharedParameterTypes(Executable ex) {
@@ -335,8 +324,8 @@ public class ReflectionFactory {
                                           constructorToCall.getModifiers(),
                                           langReflectAccess().getConstructorSlot(constructorToCall),
                                           langReflectAccess().getConstructorSignature(constructorToCall),
-                                          langReflectAccess().getConstructorAnnotations(constructorToCall),
-                                          langReflectAccess().getConstructorParameterAnnotations(constructorToCall));
+                                          langReflectAccess().getConstructorAnnotations(constructorToCall),
+                                          langReflectAccess().getConstructorParameterAnnotations(constructorToCall));
         setConstructorAccessor(c, acc);
         c.setAccessible(true);
         return c;

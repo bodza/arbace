@@ -17,7 +17,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import jdk.internal.misc.VM;
 
@@ -84,8 +83,7 @@ public class BuiltinClassLoader extends ClassLoader {
      * Loads the class with the specified binary name.
      */
     @Override
-    protected Class<?> loadClass(String cn, boolean resolve) throws ClassNotFoundException
-    {
+    protected Class<?> loadClass(String cn, boolean resolve) throws ClassNotFoundException {
         Class<?> c = loadClassOrNull(cn, resolve);
         if (c == null)
             throw new ClassNotFoundException(cn);

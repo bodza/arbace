@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
@@ -1405,10 +1403,10 @@ public abstract class ForkJoinTask<V> implements Future<V> {
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATUS;
+    private static final VarHandle STATUS;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATUS = l.findVarHandle(ForkJoinTask.class, "status", int.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

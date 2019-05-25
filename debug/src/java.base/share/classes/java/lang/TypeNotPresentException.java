@@ -10,9 +10,6 @@ package java.lang;
  * Note that this exception may be used when undefined type variables
  * are accessed as well as when types (e.g., classes, interfaces or
  * annotation types) are loaded.
- * In particular, this exception can be thrown by the {@linkplain
- * java.lang.reflect.AnnotatedElement API used to read annotations
- * reflectively}.
  */
 public class TypeNotPresentException extends RuntimeException {
     private String typeName;

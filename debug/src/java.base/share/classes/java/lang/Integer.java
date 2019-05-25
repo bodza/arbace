@@ -1,8 +1,6 @@
 package java.lang;
 
-import java.lang.annotation.Native;
 import java.util.Objects;
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.misc.VM;
 
 import static java.lang.String.COMPACT_STRINGS;
@@ -30,13 +28,15 @@ public final class Integer extends Number implements Comparable<Integer> {
      * A constant holding the minimum value an {@code int} can
      * have, -2<sup>31</sup>.
      */
-    @Native public static final int   MIN_VALUE = 0x80000000;
+    // @Native
+    public static final int   MIN_VALUE = 0x80000000;
 
     /**
      * A constant holding the maximum value an {@code int} can
      * have, 2<sup>31</sup>-1.
      */
-    @Native public static final int   MAX_VALUE = 0x7fffffff;
+    // @Native
+    public static final int   MAX_VALUE = 0x7fffffff;
 
     /**
      * The {@code Class} instance representing the primitive type
@@ -386,7 +386,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @param i   an integer to be converted.
      * @return a string representation of the argument in base&nbsp;10.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static String toString(int i) {
         int size = stringSize(i);
         if (COMPACT_STRINGS) {
@@ -551,8 +551,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @throws NumberFormatException if the {@code String}
      *             does not contain a parsable {@code int}.
      */
-    public static int parseInt(String s, int radix) throws NumberFormatException
-    {
+    public static int parseInt(String s, int radix) throws NumberFormatException {
         /*
          * WARNING: This method may be invoked early during VM initialization
          * before IntegerCache is initialized. Care must be taken to not use
@@ -964,7 +963,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @param i an {@code int} value.
      * @return an {@code Integer} instance representing {@code i}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Integer valueOf(int i) {
         if (i >= IntegerCache.low && i <= IntegerCache.high)
             return IntegerCache.cache[i + (-IntegerCache.low)];
@@ -988,7 +987,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * {@link #valueOf(int)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Integer(int value) {
         this.value = value;
     }
@@ -1010,7 +1009,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * {@code int} primitive, or use {@link #valueOf(String)}
      * to convert a string to an {@code Integer} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Integer(String s) throws NumberFormatException {
         this.value = parseInt(s, 10);
     }
@@ -1035,7 +1034,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * Returns the value of this {@code Integer} as an
      * {@code int}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public int intValue() {
         return value;
     }
@@ -1316,7 +1315,8 @@ public final class Integer extends Number implements Comparable<Integer> {
      * The number of bits used to represent an {@code int} value in two's
      * complement binary form.
      */
-    @Native public static final int SIZE = 32;
+    // @Native
+    public static final int SIZE = 32;
 
     /**
      * The number of bytes used to represent an {@code int} value in two's
@@ -1377,7 +1377,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *     of the specified {@code int} value, or 32 if the value
      *     is equal to zero.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int numberOfLeadingZeros(int i) {
         // HD, Count leading 0's
         if (i <= 0)
@@ -1403,7 +1403,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *     specified {@code int} value, or 32 if the value is equal
      *     to zero.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int numberOfTrailingZeros(int i) {
         // HD, Figure 5-14
         int y;
@@ -1425,7 +1425,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the number of one-bits in the two's complement binary
      *     representation of the specified {@code int} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int bitCount(int i) {
         // HD, Figure 5-2
         i = i - ((i >>> 1) & 0x55555555);
@@ -1521,7 +1521,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the value obtained by reversing the bytes in the specified
      *     {@code int} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int reverseBytes(int i) {
         return (i << 24)            |
                ((i & 0xff00) << 8)  |

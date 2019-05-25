@@ -21,8 +21,7 @@ class MembershipRegistry {
      * Checks registry for membership of the group on the given
      * network interface.
      */
-    MembershipKey checkMembership(InetAddress group, NetworkInterface interf, InetAddress source)
-    {
+    MembershipKey checkMembership(InetAddress group, NetworkInterface interf, InetAddress source) {
         if (groups != null) {
             List<MembershipKeyImpl> keys = groups.get(group);
             if (keys != null) {

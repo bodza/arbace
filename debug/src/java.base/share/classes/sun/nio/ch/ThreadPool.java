@@ -19,8 +19,7 @@ public class ThreadPool {
     // the maximum pool size; for other thread pools it is the initial size)
     private final int poolSize;
 
-    private ThreadPool(ExecutorService executor, boolean isFixed, int poolSize)
-    {
+    private ThreadPool(ExecutorService executor, boolean isFixed, int poolSize) {
         this.executor = executor;
         this.isFixed = isFixed;
         this.poolSize = poolSize;

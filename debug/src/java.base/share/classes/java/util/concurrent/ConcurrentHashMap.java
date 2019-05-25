@@ -30,7 +30,6 @@ import java.util.function.ToIntBiFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongBiFunction;
 import java.util.function.ToLongFunction;
-import java.util.stream.Stream;
 import jdk.internal.misc.Unsafe;
 
 /**
@@ -109,7 +108,7 @@ import jdk.internal.misc.Unsafe;
  * does <em>not</em> allow {@code null} to be used as a key or value.
  *
  * ConcurrentHashMaps support a set of sequential and parallel bulk
- * operations that, unlike most {@link Stream} methods, are designed
+ * operations that, unlike most {@link Stream} methods, are designed
  * to be safely, and often sensibly, applied even with maps that are
  * being concurrently updated by other threads; for example, when
  * computing a snapshot summary of the values in a shared registry.
@@ -2095,8 +2094,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
                     if (U.compareAndSetInt(this, SIZECTL, sc, sc + 1))
                         transfer(tab, nt);
                 }
-                else if (U.compareAndSetInt(this, SIZECTL, sc,
-                                             (rs << RESIZE_STAMP_SHIFT) + 2))
+                else if (U.compareAndSetInt(this, SIZECTL, sc, (rs << RESIZE_STAMP_SHIFT) + 2))
                     transfer(tab, null);
                 s = sumCount();
             }
@@ -2297,7 +2295,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
      * A padded cell for distributing counts.  Adapted from LongAdder
      * and Striped64.  See their internal docs for explanation.
      */
-    @jdk.internal.vm.annotation.Contended static final class CounterCell {
+    // @Contended
+    static final class CounterCell {
         volatile long value;
         CounterCell(long x) { value = x; }
     }

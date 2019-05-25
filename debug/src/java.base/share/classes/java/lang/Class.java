@@ -1,11 +1,8 @@
 package java.lang;
 
-import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -30,7 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.loader.BootLoader;
 import jdk.internal.loader.BuiltinClassLoader;
 import jdk.internal.misc.Unsafe;
@@ -39,14 +35,12 @@ import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.ConstantPool;
 import jdk.internal.reflect.Reflection;
 import jdk.internal.reflect.ReflectionFactory;
-import jdk.internal.vm.annotation.ForceInline;
 import sun.reflect.generics.factory.CoreReflectionFactory;
 import sun.reflect.generics.factory.GenericsFactory;
 import sun.reflect.generics.repository.ClassRepository;
 import sun.reflect.generics.repository.MethodRepository;
 import sun.reflect.generics.repository.ConstructorRepository;
 import sun.reflect.generics.scope.ClassScope;
-import sun.reflect.annotation.*;
 import sun.reflect.misc.ReflectUtil;
 
 /**
@@ -113,10 +107,10 @@ import sun.reflect.misc.ReflectUtil;
  * Class<String>}.  Use {@code Class<?>} if the class being modeled is
  * unknown.
  */
-public final class Class<T> implements GenericDeclaration, Type, AnnotatedElement {
-    private static final int ANNOTATION= 0x00002000;
-    private static final int ENUM      = 0x00004000;
-    private static final int SYNTHETIC = 0x00001000;
+public final class Class<T> implements GenericDeclaration, Type {
+    private static final int ANNOTATION = 0x00002000;
+    private static final int ENUM       = 0x00004000;
+    private static final int SYNTHETIC  = 0x00001000;
 
     private static native void registerNatives();
     static {
@@ -323,8 +317,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *            the specified class loader
      */
     @CallerSensitive
-    public static Class<?> forName(String name, boolean initialize, ClassLoader loader) throws ClassNotFoundException
-    {
+    public static Class<?> forName(String name, boolean initialize, ClassLoader loader) throws ClassNotFoundException {
         Class<?> caller = null;
         return forName0(name, initialize, loader, caller);
     }
@@ -379,9 +372,8 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *          provoked by this method fails.
      */
     @CallerSensitive
-    @Deprecated(since="9")
-    public T newInstance() throws InstantiationException, IllegalAccessException
-    {
+    // @Deprecated(since="9")
+    public T newInstance() throws InstantiationException, IllegalAccessException {
         // NOTE: the following code may not be strictly correct under
         // the current Java memory model.
 
@@ -451,7 +443,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @param obj the object to check
      * @return true if {@code obj} is an instance of this class
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native boolean isInstance(Object obj);
 
     /**
@@ -477,7 +469,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @throws NullPointerException if the specified Class parameter is
      *            null.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native boolean isAssignableFrom(Class<?> cls);
 
     /**
@@ -487,7 +479,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @return {@code true} if this object represents an interface;
      *          {@code false} otherwise.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native boolean isInterface();
 
     /**
@@ -496,7 +488,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @return {@code true} if this object represents an array class;
      *          {@code false} otherwise.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native boolean isArray();
 
     /**
@@ -516,7 +508,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *
      * @return true if and only if this class represents a primitive type
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native boolean isPrimitive();
 
     /**
@@ -620,7 +612,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *          represented by this object.
      */
     @CallerSensitive
-    @ForceInline // to ensure Reflection.getCallerClass optimization
+    // @ForceInline // to ensure Reflection.getCallerClass optimization
     public ClassLoader getClassLoader() {
         return getClassLoader0();
     }
@@ -667,7 +659,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *
      * @return the direct superclass of the class represented by this object
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native Class<? super T> getSuperclass();
 
     /**
@@ -930,7 +922,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      *
      * @return the {@code int} representing the modifiers for this class
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native int getModifiers();
 
     /**
@@ -1030,7 +1022,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
 
                 // the immediately enclosing class
                 Class<?> enclosingClass = (Class<?>)enclosingInfo[0];
-                assert(enclosingClass != null);
+                assert (enclosingClass != null);
 
                 // the immediately enclosing method or constructor's
                 // name (can be null).
@@ -1039,7 +1031,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
                 // the immediately enclosing method or constructor's
                 // descriptor (null iff name is).
                 String descriptor = (String)enclosingInfo[2];
-                assert((name != null && descriptor != null) || name == descriptor);
+                assert ((name != null && descriptor != null) || name == descriptor);
             } catch (ClassCastException cce) {
                 throw new InternalError("Invalid type in enclosing method information", cce);
             }
@@ -1664,8 +1656,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @throws NoSuchMethodException if a matching method is not found.
      */
     @CallerSensitive
-    public Constructor<T> getConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException
-    {
+    public Constructor<T> getConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         return getReflectionFactory().copyConstructor(getConstructor0(parameterTypes, Member.PUBLIC));
     }
 
@@ -1862,8 +1853,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * @throws NoSuchMethodException if a matching method is not found.
      */
     @CallerSensitive
-    public Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException
-    {
+    public Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         return getReflectionFactory().copyConstructor(getConstructor0(parameterTypes, Member.DECLARED));
     }
 
@@ -1902,21 +1892,9 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
         private static final Unsafe unsafe = Unsafe.getUnsafe();
         // offset of Class.reflectionData instance field
         private static final long reflectionDataOffset = unsafe.objectFieldOffset(Class.class, "reflectionData");
-        // offset of Class.annotationType instance field
-        private static final long annotationTypeOffset = unsafe.objectFieldOffset(Class.class, "annotationType");
-        // offset of Class.annotationData instance field
-        private static final long annotationDataOffset = unsafe.objectFieldOffset(Class.class, "annotationData");
 
         static <T> boolean casReflectionData(Class<?> clazz, SoftReference<ReflectionData<T>> oldData, SoftReference<ReflectionData<T>> newData) {
             return unsafe.compareAndSetObject(clazz, reflectionDataOffset, oldData, newData);
-        }
-
-        static <T> boolean casAnnotationType(Class<?> clazz, AnnotationType oldType, AnnotationType newType) {
-            return unsafe.compareAndSetObject(clazz, annotationTypeOffset, oldType, newType);
-        }
-
-        static <T> boolean casAnnotationData(Class<?> clazz, AnnotationData oldData, AnnotationData newData) {
-            return unsafe.compareAndSetObject(clazz, annotationDataOffset, oldData, newData);
         }
     }
 
@@ -2011,14 +1989,6 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
             this.genericInfo = genericInfo;
         }
         return (genericInfo != ClassRepository.NONE) ? genericInfo : null;
-    }
-
-    // Annotations handling
-    /* oops! */public native byte[] getRawAnnotations();
-    // Since 1.8
-    /* oops! */public native byte[] getRawTypeAnnotations();
-    /* oops! */public static byte[] getExecutableTypeAnnotationBytes(Executable ex) {
-        return getReflectionFactory().getExecutableTypeAnnotationBytes(ex);
     }
 
     /* oops! */public native ConstantPool getConstantPool();
@@ -2237,8 +2207,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
     }
 
     // This method does not copy the returned Method object!
-    private static Method searchMethods(Method[] methods, String name, Class<?>[] parameterTypes)
-    {
+    private static Method searchMethods(Method[] methods, String name, Class<?>[] parameterTypes) {
         ReflectionFactory fact = getReflectionFactory();
         Method res = null;
         for (Method m : methods) {
@@ -2293,8 +2262,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
     // Returns a "root" Constructor object. This Constructor object must NOT
     // be propagated to the outside world, but must instead be copied
     // via ReflectionFactory.copyConstructor.
-    private Constructor<T> getConstructor0(Class<?>[] parameterTypes, int which) throws NoSuchMethodException
-    {
+    private Constructor<T> getConstructor0(Class<?>[] parameterTypes, int which) throws NoSuchMethodException {
         ReflectionFactory fact = getReflectionFactory();
         Constructor<T>[] constructors = privateGetDeclaredConstructors((which == Member.PUBLIC));
         for (Constructor<T> constructor : constructors) {
@@ -2472,7 +2440,7 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
      * null and is not assignable to the type T.
      */
     @SuppressWarnings("unchecked")
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public T cast(Object obj) {
         if (obj != null && !isInstance(obj))
             throw new ClassCastException(cannotCastMsg(obj));
@@ -2512,208 +2480,10 @@ public final class Class<T> implements GenericDeclaration, Type, AnnotatedElemen
             throw new ClassCastException(this.toString());
     }
 
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        return (A) annotationData().annotations.get(annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
-        return GenericDeclaration.super.isAnnotationPresent(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        AnnotationData annotationData = annotationData();
-        return AnnotationSupport.getAssociatedAnnotations(annotationData.declaredAnnotations, this, annotationClass);
-    }
-
-    public Annotation[] getAnnotations() {
-        return AnnotationParser.toArray(annotationData().annotations);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <A extends Annotation> A getDeclaredAnnotation(Class<A> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        return (A) annotationData().declaredAnnotations.get(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <A extends Annotation> A[] getDeclaredAnnotationsByType(Class<A> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        return AnnotationSupport.getDirectlyAndIndirectlyPresent(annotationData().declaredAnnotations, annotationClass);
-    }
-
-    public Annotation[] getDeclaredAnnotations() {
-        return AnnotationParser.toArray(annotationData().declaredAnnotations);
-    }
-
-    // annotation data that might get invalidated when JVM TI RedefineClasses() is called
-    private static class AnnotationData {
-        final Map<Class<? extends Annotation>, Annotation> annotations;
-        final Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-        // Value of classRedefinedCount when we created this AnnotationData instance
-        final int redefinedCount;
-
-        AnnotationData(Map<Class<? extends Annotation>, Annotation> annotations, Map<Class<? extends Annotation>, Annotation> declaredAnnotations, int redefinedCount) {
-            this.annotations = annotations;
-            this.declaredAnnotations = declaredAnnotations;
-            this.redefinedCount = redefinedCount;
-        }
-    }
-
-    // Annotations cache
-    @SuppressWarnings("UnusedDeclaration")
-    private transient volatile AnnotationData annotationData;
-
-    private AnnotationData annotationData() {
-        while (true) { // retry loop
-            AnnotationData annotationData = this.annotationData;
-            int classRedefinedCount = this.classRedefinedCount;
-            if (annotationData != null && annotationData.redefinedCount == classRedefinedCount) {
-                return annotationData;
-            }
-            // null or stale annotationData -> optimistically create new instance
-            AnnotationData newAnnotationData = createAnnotationData(classRedefinedCount);
-            // try to install it
-            if (Atomic.casAnnotationData(this, annotationData, newAnnotationData)) {
-                // successfully installed new AnnotationData
-                return newAnnotationData;
-            }
-        }
-    }
-
-    private AnnotationData createAnnotationData(int classRedefinedCount) {
-        Map<Class<? extends Annotation>, Annotation> declaredAnnotations = AnnotationParser.parseAnnotations(getRawAnnotations(), getConstantPool(), this);
-        Class<?> superClass = getSuperclass();
-        Map<Class<? extends Annotation>, Annotation> annotations = null;
-        if (superClass != null) {
-            Map<Class<? extends Annotation>, Annotation> superAnnotations = superClass.annotationData().annotations;
-            for (Map.Entry<Class<? extends Annotation>, Annotation> e : superAnnotations.entrySet()) {
-                Class<? extends Annotation> annotationClass = e.getKey();
-                if (AnnotationType.getInstance(annotationClass).isInherited()) {
-                    if (annotations == null) { // lazy construction
-                        annotations = new LinkedHashMap<>((Math.max(declaredAnnotations.size(), Math.min(12, declaredAnnotations.size() + superAnnotations.size())) * 4 + 2) / 3);
-                    }
-                    annotations.put(annotationClass, e.getValue());
-                }
-            }
-        }
-        if (annotations == null) {
-            // no inherited annotations -> share the Map with declaredAnnotations
-            annotations = declaredAnnotations;
-        } else {
-            // at least one inherited annotation -> declared may override inherited
-            annotations.putAll(declaredAnnotations);
-        }
-        return new AnnotationData(annotations, declaredAnnotations, classRedefinedCount);
-    }
-
-    // Annotation types cache their internal (AnnotationType) form
-
-    @SuppressWarnings("UnusedDeclaration")
-    private transient volatile AnnotationType annotationType;
-
-    /* oops! */public boolean casAnnotationType(AnnotationType oldType, AnnotationType newType) {
-        return Atomic.casAnnotationType(this, oldType, newType);
-    }
-
-    /* oops! */public AnnotationType getAnnotationType() {
-        return annotationType;
-    }
-
-    /* oops! */public Map<Class<? extends Annotation>, Annotation> getDeclaredAnnotationMap() {
-        return annotationData().declaredAnnotations;
-    }
-
     /* Backing store of user-defined values pertaining to this class.
      * Maintained by the ClassValue class.
      */
     transient ClassValue.ClassValueMap classValueMap;
-
-    /**
-     * Returns an {@code AnnotatedType} object that represents the use of a
-     * type to specify the superclass of the entity represented by this {@code
-     * Class} object. (The <em>use</em> of type Foo to specify the superclass
-     * in '...  extends Foo' is distinct from the <em>declaration</em> of type
-     * Foo.)
-     *
-     * If this {@code Class} object represents a type whose declaration
-     * does not explicitly indicate an annotated superclass, then the return
-     * value is an {@code AnnotatedType} object representing an element with no
-     * annotations.
-     *
-     * If this {@code Class} represents either the {@code Object} class, an
-     * interface type, an array type, a primitive type, or void, the return
-     * value is {@code null}.
-     *
-     * @return an object representing the superclass
-     */
-    public AnnotatedType getAnnotatedSuperclass() {
-        if (this == Object.class || isInterface() || isArray() || isPrimitive() || this == Void.TYPE) {
-            return null;
-        }
-
-        return TypeAnnotationParser.buildAnnotatedSuperclass(getRawTypeAnnotations(), getConstantPool(), this);
-    }
-
-    /**
-     * Returns an array of {@code AnnotatedType} objects that represent the use
-     * of types to specify superinterfaces of the entity represented by this
-     * {@code Class} object. (The <em>use</em> of type Foo to specify a
-     * superinterface in '... implements Foo' is distinct from the
-     * <em>declaration</em> of type Foo.)
-     *
-     * If this {@code Class} object represents a class, the return value is
-     * an array containing objects representing the uses of interface types to
-     * specify interfaces implemented by the class. The order of the objects in
-     * the array corresponds to the order of the interface types used in the
-     * 'implements' clause of the declaration of this {@code Class} object.
-     *
-     * If this {@code Class} object represents an interface, the return
-     * value is an array containing objects representing the uses of interface
-     * types to specify interfaces directly extended by the interface. The
-     * order of the objects in the array corresponds to the order of the
-     * interface types used in the 'extends' clause of the declaration of this
-     * {@code Class} object.
-     *
-     * If this {@code Class} object represents a class or interface whose
-     * declaration does not explicitly indicate any annotated superinterfaces,
-     * the return value is an array of length 0.
-     *
-     * If this {@code Class} object represents either the {@code Object}
-     * class, an array type, a primitive type, or void, the return value is an
-     * array of length 0.
-     *
-     * @return an array representing the superinterfaces
-     */
-    public AnnotatedType[] getAnnotatedInterfaces() {
-         return TypeAnnotationParser.buildAnnotatedInterfaces(getRawTypeAnnotations(), getConstantPool(), this);
-    }
 
     private native Class<?> getNestHost0();
 

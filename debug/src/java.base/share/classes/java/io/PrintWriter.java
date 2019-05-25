@@ -42,8 +42,7 @@ public class PrintWriter extends Writer {
      * @throws NullPointerException          is csn is null
      * @throws UnsupportedEncodingException  if the charset is not supported
      */
-    private static Charset toCharset(String csn) throws UnsupportedEncodingException
-    {
+    private static Charset toCharset(String csn) throws UnsupportedEncodingException {
         Objects.requireNonNull(csn, "charsetName");
         try {
             return Charset.forName(csn);

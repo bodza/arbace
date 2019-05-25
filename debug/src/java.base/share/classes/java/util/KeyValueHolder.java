@@ -1,7 +1,5 @@
 package java.util;
 
-import jdk.internal.vm.annotation.Stable;
-
 /**
  * An immutable container for a key and a value, suitable for use
  * in creating and populating {@code Map} instances.
@@ -22,9 +20,9 @@ import jdk.internal.vm.annotation.Stable;
  * @param <V> the value type
  */
 final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
-    @Stable
+    // @Stable
     final K key;
-    @Stable
+    // @Stable
     final V value;
 
     KeyValueHolder(K k, V v) {

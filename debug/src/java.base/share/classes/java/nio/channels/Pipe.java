@@ -21,8 +21,7 @@ public abstract class Pipe {
     /**
      * A channel representing the readable end of a {@link Pipe}.
      */
-    public abstract static class SourceChannel extends AbstractSelectableChannel implements ReadableByteChannel, ScatteringByteChannel
-    {
+    public abstract static class SourceChannel extends AbstractSelectableChannel implements ReadableByteChannel, ScatteringByteChannel {
         /**
          * Constructs a new instance of this class.
          *
@@ -50,8 +49,7 @@ public abstract class Pipe {
     /**
      * A channel representing the writable end of a {@link Pipe}.
      */
-    public abstract static class SinkChannel extends AbstractSelectableChannel implements WritableByteChannel, GatheringByteChannel
-    {
+    public abstract static class SinkChannel extends AbstractSelectableChannel implements WritableByteChannel, GatheringByteChannel {
         /**
          * Initializes a new instance of this class.
          *

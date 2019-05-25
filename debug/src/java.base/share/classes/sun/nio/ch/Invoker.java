@@ -78,10 +78,8 @@ class Invoker {
      * pool and we haven't exceeded the maximum number of handler frames on
      * the stack.
      */
-    static boolean mayInvokeDirect(GroupAndInvokeCount myGroupAndInvokeCount, AsynchronousChannelGroupImpl group)
-    {
-        if ((myGroupAndInvokeCount != null) && (myGroupAndInvokeCount.group() == group) && (myGroupAndInvokeCount.invokeCount() < maxHandlerInvokeCount))
-        {
+    static boolean mayInvokeDirect(GroupAndInvokeCount myGroupAndInvokeCount, AsynchronousChannelGroupImpl group) {
+        if ((myGroupAndInvokeCount != null) && (myGroupAndInvokeCount.group() == group) && (myGroupAndInvokeCount.invokeCount() < maxHandlerInvokeCount)) {
             return true;
         }
         return false;
@@ -91,8 +89,7 @@ class Invoker {
      * Invoke handler without checking the thread identity or number of handlers
      * on the thread stack.
      */
-    static <V,A> void invokeUnchecked(CompletionHandler<V,? super A> handler, A attachment, V value, Throwable exc)
-    {
+    static <V,A> void invokeUnchecked(CompletionHandler<V,? super A> handler, A attachment, V value, Throwable exc) {
         if (exc == null) {
             handler.completed(value, attachment);
         } else {
@@ -106,8 +103,7 @@ class Invoker {
     /**
      * Invoke handler assuming thread identity already checked
      */
-    static <V,A> void invokeDirect(GroupAndInvokeCount myGroupAndInvokeCount, CompletionHandler<V,? super A> handler, A attachment, V result, Throwable exc)
-    {
+    static <V,A> void invokeDirect(GroupAndInvokeCount myGroupAndInvokeCount, CompletionHandler<V,? super A> handler, A attachment, V result, Throwable exc) {
         myGroupAndInvokeCount.incrementInvokeCount();
         Invoker.invokeUnchecked(handler, attachment, result, exc);
     }
@@ -117,16 +113,14 @@ class Invoker {
      * thread pool then the handler is invoked directly, otherwise it is
      * invoked indirectly.
      */
-    static <V,A> void invoke(AsynchronousChannel channel, CompletionHandler<V,? super A> handler, A attachment, V result, Throwable exc)
-    {
+    static <V,A> void invoke(AsynchronousChannel channel, CompletionHandler<V,? super A> handler, A attachment, V result, Throwable exc) {
         boolean invokeDirect = false;
         boolean identityOkay = false;
         GroupAndInvokeCount thisGroupAndInvokeCount = myGroupAndInvokeCount.get();
         if (thisGroupAndInvokeCount != null) {
             if ((thisGroupAndInvokeCount.group() == ((Groupable)channel).group()))
                 identityOkay = true;
-            if (identityOkay && (thisGroupAndInvokeCount.invokeCount() < maxHandlerInvokeCount))
-            {
+            if (identityOkay && (thisGroupAndInvokeCount.invokeCount() < maxHandlerInvokeCount)) {
                 // group match
                 invokeDirect = true;
             }
@@ -151,8 +145,7 @@ class Invoker {
     /**
      * Invokes the handler indirectly via the channel group's thread pool.
      */
-    static <V,A> void invokeIndirectly(AsynchronousChannel channel, final CompletionHandler<V,? super A> handler, final A attachment, final V result, final Throwable exc)
-    {
+    static <V,A> void invokeIndirectly(AsynchronousChannel channel, final CompletionHandler<V,? super A> handler, final A attachment, final V result, final Throwable exc) {
         try {
             ((Groupable)channel).group().executeOnPooledThread(new Runnable() {
                 public void run() {
@@ -170,8 +163,7 @@ class Invoker {
     /**
      * Invokes the handler "indirectly" in the given Executor
      */
-    static <V,A> void invokeIndirectly(final CompletionHandler<V,? super A> handler, final A attachment, final V value, final Throwable exc, Executor executor)
-    {
+    static <V,A> void invokeIndirectly(final CompletionHandler<V,? super A> handler, final A attachment, final V value, final Throwable exc, Executor executor) {
          try {
             executor.execute(new Runnable() {
                 public void run() {
@@ -188,8 +180,7 @@ class Invoker {
      * channel. If the current thread is in the thread pool then the task is
      * invoked directly.
      */
-    static void invokeOnThreadInThreadPool(Groupable channel, Runnable task)
-    {
+    static void invokeOnThreadInThreadPool(Groupable channel, Runnable task) {
         boolean invokeDirect;
         GroupAndInvokeCount thisGroupAndInvokeCount = myGroupAndInvokeCount.get();
         AsynchronousChannelGroupImpl targetGroup = channel.group();

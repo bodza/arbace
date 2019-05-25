@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -471,12 +469,12 @@ public class FutureTask<V> implements RunnableFuture<V> {
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATE;
-    private static final VarHandle RUNNER;
-    private static final VarHandle WAITERS;
+    private static final VarHandle STATE;
+    private static final VarHandle RUNNER;
+    private static final VarHandle WAITERS;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATE = l.findVarHandle(FutureTask.class, "state", int.class);
             RUNNER = l.findVarHandle(FutureTask.class, "runner", Thread.class);
             WAITERS = l.findVarHandle(FutureTask.class, "waiters", WaitNode.class);

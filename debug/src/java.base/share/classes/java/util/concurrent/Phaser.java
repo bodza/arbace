@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -1076,10 +1074,10 @@ public class Phaser {
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATE;
+    private static final VarHandle STATE;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATE = l.findVarHandle(Phaser.class, "state", long.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

@@ -55,8 +55,7 @@ public class OutputStreamWriter extends Writer {
      * @throws UnsupportedEncodingException
      *             If the named encoding is not supported
      */
-    public OutputStreamWriter(OutputStream out, String charsetName) throws UnsupportedEncodingException
-    {
+    public OutputStreamWriter(OutputStream out, String charsetName) throws UnsupportedEncodingException {
         super(out);
         if (charsetName == null)
             throw new NullPointerException("charsetName");

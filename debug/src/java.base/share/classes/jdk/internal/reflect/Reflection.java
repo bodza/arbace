@@ -4,7 +4,6 @@ import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.loader.ClassLoaders;
 import jdk.internal.misc.VM;
 
@@ -39,7 +38,7 @@ public class Reflection {
       * and its implementation.
       */
     @CallerSensitive
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native Class<?> getCallerClass();
 
     /**
@@ -52,7 +51,7 @@ public class Reflection {
       * low 13 bits (i.e., a mask of 0x1FFF) are guaranteed to be
       * valid.
       */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native int getClassAccessFlags(Class<?> c);
 
     /**
@@ -68,8 +67,7 @@ public class Reflection {
      * @param modifiers the member's access modifiers
      * @throws IllegalAccessException if access to member is denied
      */
-    public static void ensureMemberAccess(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException
-    {
+    public static void ensureMemberAccess(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException {
         if (!verifyMemberAccess(currentClass, memberClass, targetClass, modifiers)) {
             throw newIllegalAccessException(currentClass, memberClass, targetClass, modifiers);
         }
@@ -87,8 +85,7 @@ public class Reflection {
      * @param modifiers the member's access modifiers
      * @return {@code true} if access to member is granted
      */
-    public static boolean verifyMemberAccess(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers)
-    {
+    public static boolean verifyMemberAccess(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) {
         if (currentClass == memberClass) {
             // Always succeeds
             return true;
@@ -146,8 +143,7 @@ public class Reflection {
 
         // Additional test for protected instance members
         // and protected constructors: JLS 6.6.2
-        if (targetClass != null && Modifier.isProtected(modifiers) && targetClass != currentClass)
-        {
+        if (targetClass != null && Modifier.isProtected(modifiers) && targetClass != currentClass) {
             if (!gotIsSameClassPackage) {
                 isSameClassPackage = isSameClassPackage(currentClass, memberClass);
                 gotIsSameClassPackage = true;
@@ -171,8 +167,7 @@ public class Reflection {
         return Objects.equals(c1.getPackageName(), c2.getPackageName());
     }
 
-    static boolean isSubclassOf(Class<?> queryClass, Class<?> ofClass)
-    {
+    static boolean isSubclassOf(Class<?> queryClass, Class<?> ofClass) {
         while (queryClass != null) {
             if (queryClass == ofClass) {
                 return true;
@@ -252,23 +247,10 @@ public class Reflection {
     }
 
     /**
-     * Tests if the given method is caller-sensitive and the declaring class
-     * is defined by either the bootstrap class loader or platform class loader.
-     */
-    public static boolean isCallerSensitive(Method m) {
-        final ClassLoader loader = m.getDeclaringClass().getClassLoader();
-        if (VM.isSystemDomainLoader(loader)) {
-            return m.isAnnotationPresent(CallerSensitive.class);
-        }
-        return false;
-    }
-
-    /**
      * Returns an IllegalAccessException with an exception message based on
      * the access that is denied.
      */
-    public static IllegalAccessException newIllegalAccessException(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException
-    {
+    public static IllegalAccessException newIllegalAccessException(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException {
         return new IllegalAccessException(currentClass + " cannot access " + "a member of " + memberClass + " with modifiers \"" + Modifier.toString(modifiers) + "\"");
     }
 

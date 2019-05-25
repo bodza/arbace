@@ -17,8 +17,7 @@ abstract class NativeDispatcher {
         return false;
     }
 
-    int pread(FileDescriptor fd, long address, int len, long position) throws IOException
-    {
+    int pread(FileDescriptor fd, long address, int len, long position) throws IOException {
         throw new IOException("Operation Unsupported");
     }
 
@@ -26,8 +25,7 @@ abstract class NativeDispatcher {
 
     abstract int write(FileDescriptor fd, long address, int len) throws IOException;
 
-    int pwrite(FileDescriptor fd, long address, int len, long position) throws IOException
-    {
+    int pwrite(FileDescriptor fd, long address, int len, long position) throws IOException {
         throw new IOException("Operation Unsupported");
     }
 

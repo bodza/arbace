@@ -1,7 +1,5 @@
 package java.lang;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * Class {@code Object} is the root of the class hierarchy.
  * Every class has {@code Object} as a superclass. All objects,
@@ -16,7 +14,7 @@ public class Object {
     /**
      * Constructs a new object.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public Object() {}
 
     /**
@@ -35,7 +33,7 @@ public class Object {
      * @return The {@code Class} object that represents the runtime
      *         class of this object.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public final native Class<?> getClass();
 
     /**
@@ -70,7 +68,7 @@ public class Object {
      *
      * @return a hash code value for this object.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public native int hashCode();
 
     /**
@@ -180,7 +178,7 @@ public class Object {
      *               throw this exception to indicate that an instance cannot
      *               be cloned.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     protected native Object clone() throws CloneNotSupportedException;
 
     /**
@@ -238,7 +236,7 @@ public class Object {
      * @throws IllegalMonitorStateException  if the current thread is not
      *               the owner of this object's monitor.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public final native void notify();
 
     /**
@@ -261,7 +259,7 @@ public class Object {
      * @throws IllegalMonitorStateException  if the current thread is not
      *               the owner of this object's monitor.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public final native void notifyAll();
 
     /**
@@ -496,6 +494,6 @@ public class Object {
      *
      * @throws Throwable the {@code Exception} raised by this method
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     /* oops! protected */public void finalize() throws Throwable { }
 }

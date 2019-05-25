@@ -1,7 +1,6 @@
 package java.lang;
 
 import jdk.internal.math.FloatingDecimal;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 /**
  * The {@code Float} class wraps a value of primitive type
@@ -381,7 +380,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @param f a float value.
      * @return a {@code Float} instance representing {@code f}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Float valueOf(float f) {
         return new Float(f);
     }
@@ -455,7 +454,7 @@ public final class Float extends Number implements Comparable<Float> {
      * {@link #valueOf(float)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Float(float value) {
         this.value = value;
     }
@@ -471,7 +470,7 @@ public final class Float extends Number implements Comparable<Float> {
      * static factory method {@link #valueOf(float)} method as follows:
      * {@code Float.valueOf((float)value)}.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Float(double value) {
         this.value = (float)value;
     }
@@ -492,7 +491,7 @@ public final class Float extends Number implements Comparable<Float> {
      * {@code float} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Float} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Float(String s) throws NumberFormatException {
         value = parseFloat(s);
     }
@@ -581,7 +580,7 @@ public final class Float extends Number implements Comparable<Float> {
      *
      * @return the {@code float} value represented by this object
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public float floatValue() {
         return value;
     }
@@ -696,7 +695,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @param value   a floating-point number.
      * @return the bits that represent the floating-point number.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int floatToIntBits(float value) {
         if (!isNaN(value)) {
             return floatToRawIntBits(value);
@@ -738,7 +737,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @param value   a floating-point number.
      * @return the bits that represent the floating-point number.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native int floatToRawIntBits(float value);
 
     /**
@@ -800,7 +799,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @return the {@code float} floating-point value with the same bit
      *          pattern.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native float intBitsToFloat(int bits);
 
     /**

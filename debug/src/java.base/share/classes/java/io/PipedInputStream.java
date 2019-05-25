@@ -205,7 +205,7 @@ public class PipedInputStream extends InputStream {
             }
             if (nextTransferAmount > bytesToTransfer)
                 nextTransferAmount = bytesToTransfer;
-            assert(nextTransferAmount > 0);
+            assert (nextTransferAmount > 0);
             System.arraycopy(b, off, buffer, in, nextTransferAmount);
             bytesToTransfer -= nextTransferAmount;
             off += nextTransferAmount;

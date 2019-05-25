@@ -21,7 +21,7 @@ package java.lang.reflect;
  * @param <D> the type of generic declaration that declared the
  * underlying type variable.
  */
-public interface TypeVariable<D extends GenericDeclaration> extends Type, AnnotatedElement {
+public interface TypeVariable<D extends GenericDeclaration> extends Type {
     /**
      * Returns an array of {@code Type} objects representing the
      * upper bound(s) of this type variable.  If no upper bound is
@@ -57,16 +57,4 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type, Annota
      * @return the name of this type variable, as it appears in the source code
      */
     String getName();
-
-    /**
-     * Returns an array of AnnotatedType objects that represent the use of
-     * types to denote the upper bounds of the type parameter represented by
-     * this TypeVariable. The order of the objects in the array corresponds to
-     * the order of the bounds in the declaration of the type parameter. Note that
-     * if no upper bound is explicitly declared, the upper bound is unannotated
-     * {@code Object}.
-     *
-     * @return an array of objects representing the upper bound(s) of the type variable
-     */
-     AnnotatedType[] getAnnotatedBounds();
 }

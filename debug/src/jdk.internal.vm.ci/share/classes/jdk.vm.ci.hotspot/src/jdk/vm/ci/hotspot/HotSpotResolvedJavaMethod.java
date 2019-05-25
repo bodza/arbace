@@ -10,13 +10,6 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
  */
 public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     /**
-     * Returns true if this method has a {@code CallerSensitive} annotation.
-     *
-     * @return true if CallerSensitive annotation present, false otherwise
-     */
-    boolean isCallerSensitive();
-
-    /**
      * Allocates a compile id for this method by asking the VM for one.
      *
      * @param entryBCI entry bci

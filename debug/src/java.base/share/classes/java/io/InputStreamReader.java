@@ -56,8 +56,7 @@ public class InputStreamReader extends Reader {
      * @throws UnsupportedEncodingException
      *             If the named charset is not supported
      */
-    public InputStreamReader(InputStream in, String charsetName) throws UnsupportedEncodingException
-    {
+    public InputStreamReader(InputStream in, String charsetName) throws UnsupportedEncodingException {
         super(in);
         if (charsetName == null)
             throw new NullPointerException("charsetName");

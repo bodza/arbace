@@ -26,8 +26,7 @@ class ClassDefiner {
      * than would otherwise be possible, decreasing run-time
      * footprint.
      */
-    static Class<?> defineClass(String name, byte[] bytes, int off, int len, final ClassLoader parentClassLoader)
-    {
+    static Class<?> defineClass(String name, byte[] bytes, int off, int len, final ClassLoader parentClassLoader) {
         return unsafe.defineClass(name, bytes, off, len, new DelegatingClassLoader(parentClassLoader));
     }
 }

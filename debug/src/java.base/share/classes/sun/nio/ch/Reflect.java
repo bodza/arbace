@@ -4,7 +4,6 @@ import java.io.*;
 import java.lang.reflect.*;
 
 class Reflect {
-
     private Reflect() { }
 
     private static class ReflectionError extends Error {
@@ -17,8 +16,7 @@ class Reflect {
         ao.setAccessible(true);
     }
 
-    static Constructor<?> lookupConstructor(String className, Class<?>[] paramTypes)
-    {
+    static Constructor<?> lookupConstructor(String className, Class<?>[] paramTypes) {
         try {
             Class<?> cl = Class.forName(className);
             Constructor<?> c = cl.getDeclaredConstructor(paramTypes);
@@ -37,8 +35,7 @@ class Reflect {
         }
     }
 
-    static Method lookupMethod(String className, String methodName, Class<?>... paramTypes)
-    {
+    static Method lookupMethod(String className, String methodName, Class<?>... paramTypes) {
         try {
             Class<?> cl = Class.forName(className);
             Method m = cl.getDeclaredMethod(methodName, paramTypes);
@@ -57,8 +54,7 @@ class Reflect {
         }
     }
 
-    static Object invokeIO(Method m, Object ob, Object[] args) throws IOException
-    {
+    static Object invokeIO(Method m, Object ob, Object[] args) throws IOException {
         try {
             return m.invoke(ob, args);
         } catch (IllegalAccessException x) {

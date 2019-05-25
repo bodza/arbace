@@ -1,8 +1,5 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-
 /**
  * An {@code AtomicStampedReference} maintains an object reference
  * along with an integer "stamp", that can be updated atomically.
@@ -148,10 +145,10 @@ public class AtomicStampedReference<V> {
     }
 
     // VarHandle mechanics
-    private static final VarHandle PAIR;
+    private static final VarHandle PAIR;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             PAIR = l.findVarHandle(AtomicStampedReference.class, "pair", Pair.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

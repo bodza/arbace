@@ -1,7 +1,5 @@
 package sun.reflect.generics.reflectiveObjects;
 
-import java.lang.annotation.*;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.GenericDeclaration;
@@ -12,9 +10,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import sun.reflect.annotation.AnnotationSupport;
-import sun.reflect.annotation.TypeAnnotationParser;
-import sun.reflect.annotation.AnnotationType;
 import sun.reflect.generics.factory.GenericsFactory;
 import sun.reflect.generics.tree.FieldTypeSignature;
 import sun.reflect.generics.visitor.Reifier;
@@ -134,71 +129,5 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
     @Override
     public int hashCode() {
         return genericDeclaration.hashCode() ^ name.hashCode();
-    }
-
-    // Implementations of AnnotatedElement methods.
-    @SuppressWarnings("unchecked")
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        // T is an Annotation type, the return value of get will be an annotation
-        return (T)mapAnnotations(getAnnotations()).get(annotationClass);
-    }
-
-    public <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        return getAnnotation(annotationClass);
-    }
-
-    @Override
-    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        return AnnotationSupport.getDirectlyAndIndirectlyPresent(mapAnnotations(getAnnotations()), annotationClass);
-    }
-
-    @Override
-    public <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        return getAnnotationsByType(annotationClass);
-    }
-
-    public Annotation[] getAnnotations() {
-        int myIndex = typeVarIndex();
-        if (myIndex < 0)
-            throw new AssertionError("Index must be non-negative.");
-        return TypeAnnotationParser.parseTypeVariableAnnotations(getGenericDeclaration(), myIndex);
-    }
-
-    public Annotation[] getDeclaredAnnotations() {
-        return getAnnotations();
-    }
-
-    public AnnotatedType[] getAnnotatedBounds() {
-        return TypeAnnotationParser.parseAnnotatedBounds(getBounds(), getGenericDeclaration(), typeVarIndex());
-    }
-
-    private static final Annotation[] EMPTY_ANNOTATION_ARRAY = new Annotation[0];
-
-    // Helpers for annotation methods
-    private int typeVarIndex() {
-        TypeVariable<?>[] tVars = getGenericDeclaration().getTypeParameters();
-        int i = -1;
-        for (TypeVariable<?> v : tVars) {
-            i++;
-            if (equals(v))
-                return i;
-        }
-        return -1;
-    }
-
-    private static Map<Class<? extends Annotation>, Annotation> mapAnnotations(Annotation[] annos) {
-        Map<Class<? extends Annotation>, Annotation> result = new LinkedHashMap<>();
-        for (Annotation a : annos) {
-            Class<? extends Annotation> klass = a.annotationType();
-            AnnotationType type = AnnotationType.getInstance(klass);
-            if (type.retention() == RetentionPolicy.RUNTIME)
-                if (result.put(klass, a) != null)
-                    throw new AnnotationFormatError("Duplicate annotation for class: " + klass + ": " + a);
-        }
-        return result;
     }
 }

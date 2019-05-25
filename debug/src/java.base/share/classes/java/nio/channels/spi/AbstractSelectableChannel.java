@@ -155,8 +155,7 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      *
      * @throws IllegalArgumentException {@inheritDoc}
      */
-    public final SelectionKey register(Selector sel, int ops, Object att) throws ClosedChannelException
-    {
+    public final SelectionKey register(Selector sel, int ops, Object att) throws ClosedChannelException {
         if ((ops & ~validOps()) != 0)
             throw new IllegalArgumentException();
         if (!isOpen())
@@ -249,8 +248,7 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * implConfigureBlocking} method, while holding the appropriate locks, in
      * order to change the mode.
      */
-    public final SelectableChannel configureBlocking(boolean block) throws IOException
-    {
+    public final SelectableChannel configureBlocking(boolean block) throws IOException {
         synchronized (regLock) {
             if (!isOpen())
                 throw new ClosedChannelException();

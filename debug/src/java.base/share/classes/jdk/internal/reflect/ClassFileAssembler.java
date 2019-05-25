@@ -99,27 +99,21 @@ class ClassFileAssembler implements ClassFileConstants {
         cpIdx++;
     }
 
-    public void emitConstantPoolFieldref
-        (short classIndex, short nameAndTypeIndex)
-    {
+    public void emitConstantPoolFieldref(short classIndex, short nameAndTypeIndex) {
         emitByte(CONSTANT_Fieldref);
         emitShort(classIndex);
         emitShort(nameAndTypeIndex);
         cpIdx++;
     }
 
-    public void emitConstantPoolMethodref
-        (short classIndex, short nameAndTypeIndex)
-    {
+    public void emitConstantPoolMethodref(short classIndex, short nameAndTypeIndex) {
         emitByte(CONSTANT_Methodref);
         emitShort(classIndex);
         emitShort(nameAndTypeIndex);
         cpIdx++;
     }
 
-    public void emitConstantPoolInterfaceMethodref
-        (short classIndex, short nameAndTypeIndex)
-    {
+    public void emitConstantPoolInterfaceMethodref(short classIndex, short nameAndTypeIndex) {
         emitByte(CONSTANT_InterfaceMethodref);
         emitShort(classIndex);
         emitShort(nameAndTypeIndex);
@@ -571,8 +565,7 @@ class ClassFileAssembler implements ClassFileConstants {
       * Long and double arguments and return types count as 2 arguments;
       * other values count as 1.
       */
-    public void opc_invokevirtual(short methodIndex, int numArgs, int numReturnValues)
-    {
+    public void opc_invokevirtual(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokevirtual);
         emitShort(methodIndex);
         setStack(getStack() - numArgs - 1 + numReturnValues);
@@ -582,8 +575,7 @@ class ClassFileAssembler implements ClassFileConstants {
       * Long and double arguments and return types count as 2 arguments;
       * other values count as 1.
       */
-    public void opc_invokespecial(short methodIndex, int numArgs, int numReturnValues)
-    {
+    public void opc_invokespecial(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokespecial);
         emitShort(methodIndex);
         setStack(getStack() - numArgs - 1 + numReturnValues);
@@ -593,8 +585,7 @@ class ClassFileAssembler implements ClassFileConstants {
       * Long and double arguments and return types count as 2 arguments;
       * other values count as 1.
       */
-    public void opc_invokestatic(short methodIndex, int numArgs, int numReturnValues)
-    {
+    public void opc_invokestatic(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokestatic);
         emitShort(methodIndex);
         setStack(getStack() - numArgs + numReturnValues);
@@ -604,8 +595,7 @@ class ClassFileAssembler implements ClassFileConstants {
       * Long and double arguments and return types count as 2 arguments;
       * other values count as 1.
       */
-    public void opc_invokeinterface(short methodIndex, int numArgs, byte count, int numReturnValues)
-    {
+    public void opc_invokeinterface(short methodIndex, int numArgs, byte count, int numReturnValues) {
         emitByte(opc_invokeinterface);
         emitShort(methodIndex);
         emitByte(count);

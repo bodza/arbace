@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Collection;
@@ -960,13 +958,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
     }
 
     // VarHandle mechanics
-    private static final VarHandle HEAD;
-    private static final VarHandle TAIL;
-    static final VarHandle ITEM;
-    static final VarHandle NEXT;
+    private static final VarHandle HEAD;
+    private static final VarHandle TAIL;
+    static final VarHandle ITEM;
+    static final VarHandle NEXT;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             HEAD = l.findVarHandle(ConcurrentLinkedQueue.class, "head", Node.class);
             TAIL = l.findVarHandle(ConcurrentLinkedQueue.class, "tail", Node.class);
             ITEM = l.findVarHandle(Node.class, "item", Object.class);

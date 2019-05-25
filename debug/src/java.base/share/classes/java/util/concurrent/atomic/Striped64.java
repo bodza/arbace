@@ -1,7 +1,5 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleBinaryOperator;
@@ -85,7 +83,8 @@ abstract class Striped64 extends Number {
      * JVM intrinsics note: It would be possible to use a release-only
      * form of CAS here, if it were provided.
      */
-    @jdk.internal.vm.annotation.Contended static final class Cell {
+    // @Contended
+    static final class Cell {
         volatile long value;
         Cell(long x) { value = x; }
         final boolean cas(long cmp, long val) {
@@ -105,10 +104,10 @@ abstract class Striped64 extends Number {
         }
 
         // VarHandle mechanics
-        private static final VarHandle VALUE;
+        private static final VarHandle VALUE;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 VALUE = l.findVarHandle(Cell.class, "value", long.class);
             } catch (ReflectiveOperationException e) {
                 throw new ExceptionInInitializerError(e);
@@ -339,15 +338,15 @@ abstract class Striped64 extends Number {
     }
 
     // VarHandle mechanics
-    private static final VarHandle BASE;
-    private static final VarHandle CELLSBUSY;
-    private static final VarHandle THREAD_PROBE;
+    private static final VarHandle BASE;
+    private static final VarHandle CELLSBUSY;
+    private static final VarHandle THREAD_PROBE;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             BASE = l.findVarHandle(Striped64.class, "base", long.class);
             CELLSBUSY = l.findVarHandle(Striped64.class, "cellsBusy", int.class);
-            l = MethodHandles.privateLookupIn(Thread.class, MethodHandles.lookup());
+            l = MethodHandles.privateLookupIn(Thread.class, MethodHandles.lookup());
             THREAD_PROBE = l.findVarHandle(Thread.class, "threadLocalRandomProbe", int.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

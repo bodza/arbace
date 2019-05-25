@@ -113,8 +113,7 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel impl
      * @throws ClosedChannelException              {@inheritDoc}
      * @throws IOException                         {@inheritDoc}
      */
-    public final ServerSocketChannel bind(SocketAddress local) throws IOException
-    {
+    public final ServerSocketChannel bind(SocketAddress local) throws IOException {
         return bind(local, 0);
     }
 

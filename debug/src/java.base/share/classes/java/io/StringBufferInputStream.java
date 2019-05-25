@@ -13,7 +13,7 @@ package java.io;
  *             of JDK&nbsp;1.1, the preferred way to create a stream from a
  *             string is via the <code>StringReader</code> class.
  */
-@Deprecated
+// @Deprecated
 public class StringBufferInputStream extends InputStream {
     /**
      * The string from which bytes are read.

@@ -1,7 +1,6 @@
 package java.util;
 
 import jdk.internal.util.Preconditions;
-import jdk.internal.vm.annotation.ForceInline;
 
 import java.util.function.Supplier;
 
@@ -271,8 +270,7 @@ public final class Objects {
      *        the {@code supplier.get()} value is {@code null}
      */
     public static <T> T requireNonNullElseGet(T obj, Supplier<? extends T> supplier) {
-        return (obj != null) ? obj
-                : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
+        return (obj != null) ? obj : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
     }
 
     /**
@@ -317,7 +315,7 @@ public final class Objects {
      * @return {@code index} if it is within bounds of the range
      * @throws IndexOutOfBoundsException if the {@code index} is out of bounds
      */
-    @ForceInline
+    // @ForceInline
     public static int checkIndex(int index, int length) {
         return Preconditions.checkIndex(index, length, null);
     }

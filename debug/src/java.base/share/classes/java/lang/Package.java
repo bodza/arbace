@@ -1,7 +1,5 @@
 package java.lang;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -13,10 +11,6 @@ import jdk.internal.reflect.Reflection;
 
 /**
  * Represents metadata about a run-time package associated with a class loader.
- * Metadata includes annotations, versioning, and sealing.
- *
- * Annotations for the run-time package are read from {@code package-info.class}
- * at the same code source as classes in the run-time package.
  *
  * A {@code Package} may be explicitly defined with
  * the {@link ClassLoader#definePackage(String)} method.
@@ -34,8 +28,6 @@ import jdk.internal.reflect.Reflection;
  *     module location} as the code source, if known.</li>
  * <li>The specification and implementation titles, versions, and vendors
  *     are unspecified.</li>
- * <li>Any annotations on the package are read from {@code package-info.class}
- *     as specified above.</li>
  * </ul>
  *
  * A {@code Package} automatically defined for classes in an unnamed module
@@ -47,8 +39,6 @@ import jdk.internal.reflect.Reflection;
  * <li>The package is not sealed.</li>
  * <li>The specification and implementation titles, versions, and vendors
  *     are unspecified.</li>
- * <li>Any annotations on the package are read from {@code package-info.class}
- *     as specified above.</li>
  * </ul>
  *
  * A {@code Package} can be obtained with the {@link ClassLoader#getDefinedPackage
@@ -63,7 +53,7 @@ import jdk.internal.reflect.Reflection;
  * <em>named modules</em>.  Instead those packages are automatically defined
  * and have no specification and implementation versioning information.
  */
-public class Package extends NamedPackage implements java.lang.reflect.AnnotatedElement {
+public class Package extends NamedPackage {
     /**
      * Return the name of this package.
      *
@@ -131,54 +121,6 @@ public class Package extends NamedPackage implements java.lang.reflect.Annotated
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-        return getPackageInfo().getAnnotation(annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
-        return AnnotatedElement.super.isAnnotationPresent(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public  <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationClass) {
-        return getPackageInfo().getAnnotationsByType(annotationClass);
-    }
-
-    public Annotation[] getAnnotations() {
-        return getPackageInfo().getAnnotations();
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <A extends Annotation> A getDeclaredAnnotation(Class<A> annotationClass) {
-        return getPackageInfo().getDeclaredAnnotation(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <A extends Annotation> A[] getDeclaredAnnotationsByType(Class<A> annotationClass) {
-        return getPackageInfo().getDeclaredAnnotationsByType(annotationClass);
-    }
-
-    public Annotation[] getDeclaredAnnotations() {
-        return getPackageInfo().getDeclaredAnnotations();
-    }
-
-    /**
      * Construct a package instance for an unnamed module
      * with the specified version information.
      *
@@ -188,8 +130,7 @@ public class Package extends NamedPackage implements java.lang.reflect.Annotated
      * @param name the name of the package
      * @param loader defining class loader
      */
-    Package(String name, ClassLoader loader)
-    {
+    Package(String name, ClassLoader loader) {
         super(Objects.requireNonNull(name));
     }
 

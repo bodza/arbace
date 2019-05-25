@@ -37,26 +37,22 @@ class MethodAccessorGenerator extends AccessorGenerator {
     }
 
     /** This routine is not thread-safe */
-    public MethodAccessor generateMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers)
-    {
+    public MethodAccessor generateMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers) {
         return (MethodAccessor) generate(declaringClass, name, parameterTypes, returnType, checkedExceptions, modifiers, false, false, null);
     }
 
     /** This routine is not thread-safe */
-    public ConstructorAccessor generateConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers)
-    {
+    public ConstructorAccessor generateConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers) {
         return (ConstructorAccessor) generate(declaringClass, "<init>", parameterTypes, Void.TYPE, checkedExceptions, modifiers, true, false, null);
     }
 
     /** This routine is not thread-safe */
-    public SerializationConstructorAccessorImpl generateSerializationConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, Class<?> targetConstructorClass)
-    {
+    public SerializationConstructorAccessorImpl generateSerializationConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, Class<?> targetConstructorClass) {
         return (SerializationConstructorAccessorImpl) generate(declaringClass, "<init>", parameterTypes, Void.TYPE, checkedExceptions, modifiers, true, true, targetConstructorClass);
     }
 
     /** This routine is not thread-safe */
-    private MagicAccessorImpl generate(final Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, boolean isConstructor, boolean forSerialization, Class<?> serializationTargetClass)
-    {
+    private MagicAccessorImpl generate(final Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, boolean isConstructor, boolean forSerialization, Class<?> serializationTargetClass) {
         ByteVector vec = ByteVectorFactory.create();
         asm = new ClassFileAssembler(vec);
         this.declaringClass = declaringClass;
@@ -312,7 +308,7 @@ class MethodAccessorGenerator extends AccessorGenerator {
         // it's important to get the generated code into the same namespace as the target class.
         // Since the generated code is privileged anyway, the protection domain probably doesn't
         // matter.
-        @SuppressWarnings("deprecation") // Class.newInstance
+        // @SuppressWarnings("deprecation") // Class.newInstance
         try {
             return (MagicAccessorImpl) ClassDefiner.defineClass(generatedName, bytes, 0, bytes.length, declaringClass.getClassLoader()).newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -649,8 +645,7 @@ class MethodAccessorGenerator extends AccessorGenerator {
         return sb.toString();
     }
 
-    private static synchronized String generateName(boolean isConstructor, boolean forSerialization)
-    {
+    private static synchronized String generateName(boolean isConstructor, boolean forSerialization) {
         if (isConstructor) {
             if (forSerialization) {
                 int num = ++serializationConstructorSymnum;

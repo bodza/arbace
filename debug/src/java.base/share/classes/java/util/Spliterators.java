@@ -424,7 +424,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfInt} using a given
-     * {@code IntStream.IntIterator} as the source of elements, and with a given
+     * {@code IntStream.IntIterator} as the source of elements, and with a given
      * initially reported size.
      *
      * The spliterator is not
@@ -452,7 +452,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfInt} using a given
-     * {@code IntStream.IntIterator} as the source of elements, with no initial
+     * {@code IntStream.IntIterator} as the source of elements, with no initial
      * size estimate.
      *
      * The spliterator is not
@@ -477,7 +477,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfLong} using a given
-     * {@code LongStream.LongIterator} as the source of elements, and with a
+     * {@code LongStream.LongIterator} as the source of elements, and with a
      * given initially reported size.
      *
      * The spliterator is not
@@ -505,7 +505,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfLong} using a given
-     * {@code LongStream.LongIterator} as the source of elements, with no
+     * {@code LongStream.LongIterator} as the source of elements, with no
      * initial size estimate.
      *
      * The spliterator is not
@@ -530,7 +530,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfDouble} using a given
-     * {@code DoubleStream.DoubleIterator} as the source of elements, and with a
+     * {@code DoubleStream.DoubleIterator} as the source of elements, and with a
      * given initially reported size.
      *
      * The spliterator is not
@@ -558,7 +558,7 @@ public final class Spliterators {
 
     /**
      * Creates a {@code Spliterator.OfDouble} using a given
-     * {@code DoubleStream.DoubleIterator} as the source of elements, with no
+     * {@code DoubleStream.DoubleIterator} as the source of elements, with no
      * initial size estimate.
      *
      * The spliterator is not
@@ -1723,7 +1723,7 @@ public final class Spliterators {
     }
 
     /**
-     * A Spliterator.OfInt using a given IntStream.IntIterator for element
+     * A Spliterator.OfInt using a given IntStream.IntIterator for element
      * operations. The spliterator implements {@code trySplit} to
      * permit limited parallelism.
      */

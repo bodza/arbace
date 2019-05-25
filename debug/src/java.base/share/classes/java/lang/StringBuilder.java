@@ -1,7 +1,5 @@
 package java.lang;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * A mutable sequence of characters.  This class provides an API compatible
  * with {@code StringBuffer}, but with no guarantee of synchronization.
@@ -57,7 +55,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
      * Constructs a string builder with no characters in it and an
      * initial capacity of 16 characters.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder() {
         super(16);
     }
@@ -70,7 +68,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
      * @throws NegativeArraySizeException  if the {@code capacity}
      *               argument is less than {@code 0}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder(int capacity) {
         super(capacity);
     }
@@ -82,7 +80,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
      *
      * @param str   the initial contents of the buffer.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder(String str) {
         super(str.length() + 16);
         append(str);
@@ -129,7 +127,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder append(String str) {
         super.append(str);
         return this;
@@ -196,14 +194,14 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder append(char c) {
         super.append(c);
         return this;
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuilder append(int i) {
         super.append(i);
         return this;
@@ -264,8 +262,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
      * @throws StringIndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public StringBuilder insert(int index, char[] str, int offset, int len)
-    {
+    public StringBuilder insert(int index, char[] str, int offset, int len) {
         super.insert(index, str, offset, len);
         return this;
     }
@@ -310,8 +307,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public StringBuilder insert(int dstOffset, CharSequence s, int start, int end)
-    {
+    public StringBuilder insert(int dstOffset, CharSequence s, int start, int end) {
         super.insert(dstOffset, s, start, end);
         return this;
     }
@@ -397,7 +393,7 @@ public final class StringBuilder extends AbstractStringBuilder implements Compar
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public String toString() {
         // Create a copy, don't share the array
         return isLatin1() ? StringLatin1.newString(value, 0, count)

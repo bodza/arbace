@@ -1,8 +1,5 @@
 package sun.nio.ch;
 
-import java.lang.invoke.ConstantBootstraps;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -13,7 +10,7 @@ import java.nio.channels.spi.AbstractSelectionKey;
  * An implementation of SelectionKey.
  */
 public final class SelectionKeyImpl extends AbstractSelectionKey {
-    private static final VarHandle INTERESTOPS = ConstantBootstraps.fieldVarHandle(MethodHandles.lookup(), "interestOps", VarHandle.class, SelectionKeyImpl.class, int.class);
+    private static final VarHandle INTERESTOPS = ConstantBootstraps.fieldVarHandle(MethodHandles.lookup(), "interestOps", VarHandle.class, SelectionKeyImpl.class, int.class);
 
     private final SelChImpl channel;
     private final SelectorImpl selector;

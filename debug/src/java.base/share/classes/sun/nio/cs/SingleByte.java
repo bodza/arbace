@@ -11,8 +11,7 @@ import java.util.Arrays;
 import static sun.nio.cs.CharsetMapping.*;
 
 public class SingleByte {
-    private static final CoderResult withResult(CoderResult cr, Buffer src, int sp, Buffer dst, int dp)
-    {
+    private static final CoderResult withResult(CoderResult cr, Buffer src, int sp, Buffer dst, int dp) {
         src.position(sp - src.arrayOffset());
         dst.position(dp - dst.arrayOffset());
         return cr;

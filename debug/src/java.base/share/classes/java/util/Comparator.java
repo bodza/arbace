@@ -190,8 +190,7 @@ public interface Comparator<T> {
      *         and then comparing on the key extracted by the keyExtractor function
      * @throws NullPointerException if either argument is null.
      */
-    default <U> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor, Comparator<? super U> keyComparator)
-    {
+    default <U> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor, Comparator<? super U> keyComparator) {
         return thenComparing(comparing(keyExtractor, keyComparator));
     }
 
@@ -209,8 +208,7 @@ public interface Comparator<T> {
      *         {@link Comparable} sort key.
      * @throws NullPointerException if the argument is null.
      */
-    default <U extends Comparable<? super U>> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor)
-    {
+    default <U extends Comparable<? super U>> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor) {
         return thenComparing(comparing(keyExtractor));
     }
 
@@ -357,8 +355,7 @@ public interface Comparator<T> {
      *         specified {@code Comparator}
      * @throws NullPointerException if either argument is null
      */
-    public static <T, U> Comparator<T> comparing(Function<? super T, ? extends U> keyExtractor, Comparator<? super U> keyComparator)
-    {
+    public static <T, U> Comparator<T> comparing(Function<? super T, ? extends U> keyExtractor, Comparator<? super U> keyComparator) {
         Objects.requireNonNull(keyExtractor);
         Objects.requireNonNull(keyComparator);
         return (Comparator<T>) (c1, c2) -> keyComparator.compare(keyExtractor.apply(c1), keyExtractor.apply(c2));
@@ -387,8 +384,7 @@ public interface Comparator<T> {
      * @return a comparator that compares by an extracted key
      * @throws NullPointerException if the argument is null
      */
-    public static <T, U extends Comparable<? super U>> Comparator<T> comparing(Function<? super T, ? extends U> keyExtractor)
-    {
+    public static <T, U extends Comparable<? super U>> Comparator<T> comparing(Function<? super T, ? extends U> keyExtractor) {
         Objects.requireNonNull(keyExtractor);
         return (Comparator<T>)
             (c1, c2) -> keyExtractor.apply(c1).compareTo(keyExtractor.apply(c2));

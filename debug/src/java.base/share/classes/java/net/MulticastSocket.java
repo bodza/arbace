@@ -150,7 +150,7 @@ public class MulticastSocket extends DatagramSocket {
      * @deprecated use the setTimeToLive method instead, which uses
      * <b>int</b> instead of <b>byte</b> as the type for ttl.
      */
-    @Deprecated
+    // @Deprecated
     public void setTTL(byte ttl) throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");
@@ -193,7 +193,7 @@ public class MulticastSocket extends DatagramSocket {
      * @deprecated use the getTimeToLive method instead, which returns
      * an <b>int</b> instead of a <b>byte</b>.
      */
-    @Deprecated
+    // @Deprecated
     public byte getTTL() throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");
@@ -496,7 +496,7 @@ public class MulticastSocket extends DatagramSocket {
      *  mcastSocket.setTimeToLive(ttl);
      *  ......
      */
-    @Deprecated
+    // @Deprecated
     public void send(DatagramPacket p, byte ttl) throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");

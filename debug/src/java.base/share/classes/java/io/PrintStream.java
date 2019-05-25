@@ -55,8 +55,7 @@ public class PrintStream extends FilterOutputStream implements Appendable, Close
      * @throws NullPointerException          is csn is null
      * @throws UnsupportedEncodingException  if the charset is not supported
      */
-    private static Charset toCharset(String csn) throws UnsupportedEncodingException
-    {
+    private static Charset toCharset(String csn) throws UnsupportedEncodingException {
         requireNonNull(csn, "charsetName");
         try {
             return Charset.forName(csn);
@@ -123,8 +122,7 @@ public class PrintStream extends FilterOutputStream implements Appendable, Close
      * @throws UnsupportedEncodingException
      *          If the named encoding is not supported
      */
-    public PrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException
-    {
+    public PrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
         this(requireNonNull(out, "Null output stream"), autoFlush, toCharset(encoding));
     }
 

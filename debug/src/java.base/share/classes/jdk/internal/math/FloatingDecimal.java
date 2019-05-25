@@ -394,8 +394,7 @@ public class FloatingDecimal {
             this.nDigits = this.digits.length - digitno;
         }
 
-        private void dtoa(int binExp, long fractBits, int nSignificantBits, boolean isCompatibleFormat)
-        {
+        private void dtoa(int binExp, long fractBits, int nSignificantBits, boolean isCompatibleFormat) {
             assert fractBits > 0; // fractBits here can't be zero or negative
             assert (fractBits & FRACT_HOB)!=0 ; // Hi-order bit should be set
             // Examine number. Determine if it is an easy case,
@@ -1006,8 +1005,7 @@ public class FloatingDecimal {
         char        digits[];
         int         nDigits;
 
-        ASCIIToBinaryBuffer(boolean negSign, int decExponent, char[] digits, int n)
-        {
+        ASCIIToBinaryBuffer(boolean negSign, int decExponent, char[] digits, int n) {
             this.isNegative = negSign;
             this.decExponent = decExponent;
             this.digits = digits;
@@ -2421,10 +2419,10 @@ public class FloatingDecimal {
                             significand = significand >> bitsDiscarded;
 
                             significand = ((((long) (Double.MIN_EXPONENT - 1) + // subnorm exp.
-                                    (long) DoubleConsts.EXP_BIAS) <<
-                                    (DoubleConsts.SIGNIFICAND_WIDTH - 1))
-                                    & DoubleConsts.EXP_BIT_MASK) |
-                                    (DoubleConsts.SIGNIF_BIT_MASK & significand);
+                                             (long) DoubleConsts.EXP_BIAS)
+                                        << (DoubleConsts.SIGNIFICAND_WIDTH - 1))
+                                    & DoubleConsts.EXP_BIT_MASK)
+                                | (DoubleConsts.SIGNIF_BIT_MASK & significand);
                         }
                     }
 

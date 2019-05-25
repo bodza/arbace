@@ -8,7 +8,7 @@ package java.util;
  * This interface has been deprecated. See the {@link Observable}
  * class for further information.
  */
-@Deprecated(since="9")
+// @Deprecated(since="9")
 public interface Observer {
     /**
      * This method is called whenever the observed object is changed. An

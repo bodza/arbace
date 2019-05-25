@@ -70,8 +70,7 @@ class ServerSocketChannelImpl extends ServerSocketChannel implements SelChImpl {
         this.fdVal = IOUtil.fdVal(fd);
     }
 
-    ServerSocketChannelImpl(SelectorProvider sp, FileDescriptor fd, boolean bound) throws IOException
-    {
+    ServerSocketChannelImpl(SelectorProvider sp, FileDescriptor fd, boolean bound) throws IOException {
         super(sp);
         this.fd =  fd;
         this.fdVal = IOUtil.fdVal(fd);
@@ -106,8 +105,7 @@ class ServerSocketChannelImpl extends ServerSocketChannel implements SelChImpl {
     }
 
     @Override
-    public <T> ServerSocketChannel setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public <T> ServerSocketChannel setOption(SocketOption<T> name, T value) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -133,8 +131,7 @@ class ServerSocketChannelImpl extends ServerSocketChannel implements SelChImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getOption(SocketOption<T> name) throws IOException
-    {
+    public <T> T getOption(SocketOption<T> name) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -208,8 +205,7 @@ class ServerSocketChannelImpl extends ServerSocketChannel implements SelChImpl {
      * @throws AsynchronousCloseException if the channel was closed due to this
      * thread being interrupted on a blocking I/O operation.
      */
-    private void end(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void end(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 thread = 0;
@@ -465,8 +461,7 @@ class ServerSocketChannelImpl extends ServerSocketChannel implements SelChImpl {
      *
      * @implNote Wrap native call to allow instrumentation.
      */
-    private int accept(FileDescriptor ssfd, FileDescriptor newfd, InetSocketAddress[] isaa) throws IOException
-    {
+    private int accept(FileDescriptor ssfd, FileDescriptor newfd, InetSocketAddress[] isaa) throws IOException {
         return accept0(ssfd, newfd, isaa);
     }
 

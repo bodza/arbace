@@ -412,9 +412,7 @@ class TimerThread extends Thread {
                                 queue.removeMin();
                                 task.state = TimerTask.EXECUTED;
                             } else { // Repeating task, reschedule
-                                queue.rescheduleMin(
-                                  task.period < 0 ? currentTime   - task.period
-                                                  : executionTime + task.period);
+                                queue.rescheduleMin(task.period < 0 ? currentTime - task.period : executionTime + task.period);
                             }
                         }
                     }

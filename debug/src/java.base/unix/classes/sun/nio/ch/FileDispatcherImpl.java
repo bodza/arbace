@@ -16,8 +16,7 @@ class FileDispatcherImpl extends FileDispatcher {
         return read0(fd, address, len);
     }
 
-    int pread(FileDescriptor fd, long address, int len, long position) throws IOException
-    {
+    int pread(FileDescriptor fd, long address, int len, long position) throws IOException {
         return pread0(fd, address, len, position);
     }
 
@@ -29,13 +28,11 @@ class FileDispatcherImpl extends FileDispatcher {
         return write0(fd, address, len);
     }
 
-    int pwrite(FileDescriptor fd, long address, int len, long position) throws IOException
-    {
+    int pwrite(FileDescriptor fd, long address, int len, long position) throws IOException {
         return pwrite0(fd, address, len, position);
     }
 
-    long writev(FileDescriptor fd, long address, int len) throws IOException
-    {
+    long writev(FileDescriptor fd, long address, int len) throws IOException {
         return writev0(fd, address, len);
     }
 
@@ -55,8 +52,7 @@ class FileDispatcherImpl extends FileDispatcher {
         return size0(fd);
     }
 
-    int lock(FileDescriptor fd, boolean blocking, long pos, long size, boolean shared) throws IOException
-    {
+    int lock(FileDescriptor fd, boolean blocking, long pos, long size, boolean shared) throws IOException {
         return lock0(fd, blocking, pos, size, shared);
     }
 

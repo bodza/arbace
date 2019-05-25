@@ -9,7 +9,6 @@ import jdk.internal.misc.Unsafe;
  * Proxies for objects that reside in native memory.
  */
 class NativeObject {
-
     protected static final Unsafe unsafe = Unsafe.getUnsafe();
 
     // Native allocation address;

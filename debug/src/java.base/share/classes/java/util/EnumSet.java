@@ -271,8 +271,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E> implemen
      * @throws NullPointerException if any parameters are null
      * @return an enum set initially containing the specified elements
      */
-    public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4, E e5)
-    {
+    public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4, E e5) {
         EnumSet<E> result = noneOf(e1.getDeclaringClass());
         result.add(e1);
         result.add(e2);

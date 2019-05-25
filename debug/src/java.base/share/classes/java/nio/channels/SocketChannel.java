@@ -148,8 +148,7 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * @throws IOException
      *          If some other I/O error occurs
      */
-    public static SocketChannel open(SocketAddress remote) throws IOException
-    {
+    public static SocketChannel open(SocketAddress remote) throws IOException {
         SocketChannel sc = open();
         try {
             sc.connect(remote);

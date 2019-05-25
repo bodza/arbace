@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 /**
  * This class consists exclusively of static methods for obtaining
@@ -354,7 +353,7 @@ public class Base64 {
             return new Encoder(isURL, newline, linemax, false);
         }
 
-        @HotSpotIntrinsicCandidate
+        // @HotSpotIntrinsicCandidate
         private void encodeBlock(byte[] src, int sp, int sl, byte[] dst, int dp, boolean isURL) {
             char[] base64 = isURL ? toBase64URL : toBase64;
             for (int sp0 = sp, dp0 = dp; sp0 < sl; ) {
@@ -882,8 +881,7 @@ public class Base64 {
             return read(sbBuf, 0, 1) == -1 ? -1 : sbBuf[0] & 0xff;
         }
 
-        private int eof(byte[] b, int off, int len, int oldOff) throws IOException
-        {
+        private int eof(byte[] b, int off, int len, int oldOff) throws IOException {
             eof = true;
             if (nextin != 18) {
                 if (nextin == 12)
@@ -903,8 +901,7 @@ public class Base64 {
             return off == oldOff ? -1 : off - oldOff;
         }
 
-        private int padding(byte[] b, int off, int len, int oldOff) throws IOException
-        {
+        private int padding(byte[] b, int off, int len, int oldOff) throws IOException {
             // =     shiftto==18 unnecessary padding
             // x=    shiftto==12 dangling x, invalid unit
             // xx=   shiftto==6 && missing last '='

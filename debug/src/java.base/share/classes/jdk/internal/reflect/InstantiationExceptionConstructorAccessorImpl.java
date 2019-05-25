@@ -14,8 +14,7 @@ class InstantiationExceptionConstructorAccessorImpl extends ConstructorAccessorI
         this.message = message;
     }
 
-    public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException
-    {
+    public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException {
         if (message == null) {
             throw new InstantiationException();
         }

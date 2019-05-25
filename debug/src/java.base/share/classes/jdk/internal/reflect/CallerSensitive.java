@@ -1,7 +1,6 @@
 package jdk.internal.reflect;
 
-import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.*;
 
 /**
  * A method annotated @CallerSensitive is sensitive to its calling class,

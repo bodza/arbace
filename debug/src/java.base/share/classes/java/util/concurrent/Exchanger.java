@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -263,7 +261,8 @@ public class Exchanger<V> {
      * Nodes hold partially exchanged data, plus other per-thread
      * bookkeeping. Padded via @Contended to reduce memory contention.
      */
-    @jdk.internal.vm.annotation.Contended static final class Node {
+    // @Contended
+    static final class Node {
         int index; // Arena index
         int bound; // Last recorded value of Exchanger.bound
         int collides; // Number of CAS failures at current bound
@@ -585,17 +584,17 @@ public class Exchanger<V> {
     }
 
     // VarHandle mechanics
-    private static final VarHandle BOUND;
-    private static final VarHandle SLOT;
-    private static final VarHandle MATCH;
-    private static final VarHandle AA;
+    private static final VarHandle BOUND;
+    private static final VarHandle SLOT;
+    private static final VarHandle MATCH;
+    private static final VarHandle AA;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             BOUND = l.findVarHandle(Exchanger.class, "bound", int.class);
             SLOT = l.findVarHandle(Exchanger.class, "slot", Node.class);
             MATCH = l.findVarHandle(Node.class, "match", Object.class);
-            AA = MethodHandles.arrayElementVarHandle(Node[].class);
+            AA = MethodHandles.arrayElementVarHandle(Node[].class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
         }

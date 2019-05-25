@@ -1,9 +1,6 @@
 package java.util.concurrent.locks;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.concurrent.TimeUnit;
-import jdk.internal.vm.annotation.ReservedStackAccess;
 
 /**
  * A capability-based lock with three modes for controlling read/write
@@ -401,7 +398,7 @@ public class StampedLock {
         // assert (s & ABITS) == 0L;
         long next;
         if (casState(s, next = s | WBIT)) {
-            VarHandle.storeStoreFence();
+            VarHandle.storeStoreFence();
             return next;
         }
         return 0L;
@@ -413,7 +410,7 @@ public class StampedLock {
      *
      * @return a write stamp that can be used to unlock or convert mode
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long writeLock() {
         long next;
         return ((next = tryWriteLock()) != 0L) ? next : acquireWrite(false, 0L);
@@ -425,7 +422,7 @@ public class StampedLock {
      * @return a write stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long tryWriteLock() {
         long s;
         return (((s = state) & ABITS) == 0L) ? tryWriteLock(s) : 0L;
@@ -470,7 +467,7 @@ public class StampedLock {
      * @throws InterruptedException if the current thread is interrupted
      * before acquiring the lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long writeLockInterruptibly() throws InterruptedException {
         long next;
         if (!Thread.interrupted() && (next = acquireWrite(true, 0L)) != INTERRUPTED)
@@ -484,7 +481,7 @@ public class StampedLock {
      *
      * @return a read stamp that can be used to unlock or convert mode
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long readLock() {
         long s, next;
         // bypass acquireRead on common uncontended case
@@ -497,7 +494,7 @@ public class StampedLock {
      * @return a read stamp that can be used to unlock or convert mode,
      * or zero if the lock is not available
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long tryReadLock() {
         long s, m, next;
         while ((m = (s = state) & ABITS) != WBIT) {
@@ -524,7 +521,7 @@ public class StampedLock {
      * @throws InterruptedException if the current thread is interrupted
      * before acquiring the lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long tryReadLock(long time, TimeUnit unit) throws InterruptedException {
         long s, m, next, deadline;
         long nanos = unit.toNanos(time);
@@ -557,7 +554,7 @@ public class StampedLock {
      * @throws InterruptedException if the current thread is interrupted
      * before acquiring the lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public long readLockInterruptibly() throws InterruptedException {
         long s, next;
         if (!Thread.interrupted()
@@ -592,7 +589,7 @@ public class StampedLock {
      * since issuance of the given stamp; else false
      */
     public boolean validate(long stamp) {
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         return (stamp & SBITS) == (state & SBITS);
     }
 
@@ -622,7 +619,7 @@ public class StampedLock {
      * @throws IllegalMonitorStateException if the stamp does
      * not match the current state of this lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public void unlockWrite(long stamp) {
         if (state != stamp || (stamp & WBIT) == 0L)
             throw new IllegalMonitorStateException();
@@ -637,7 +634,7 @@ public class StampedLock {
      * @throws IllegalMonitorStateException if the stamp does
      * not match the current state of this lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public void unlockRead(long stamp) {
         long s, m; WNode h;
         while (((s = state) & SBITS) == (stamp & SBITS) && (stamp & RBITS) > 0L && ((m = s & RBITS) > 0L)) {
@@ -662,7 +659,7 @@ public class StampedLock {
      * @throws IllegalMonitorStateException if the stamp does
      * not match the current state of this lock
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public void unlock(long stamp) {
         if ((stamp & WBIT) != 0L)
             unlockWrite(stamp);
@@ -698,7 +695,7 @@ public class StampedLock {
             }
             else if (m == RUNIT && a != 0L) {
                 if (casState(s, next = s - RUNIT + WBIT)) {
-                    VarHandle.storeStoreFence();
+                    VarHandle.storeStoreFence();
                     return next;
                 }
             }
@@ -762,7 +759,7 @@ public class StampedLock {
      */
     public long tryConvertToOptimisticRead(long stamp) {
         long a, m, s, next; WNode h;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         while (((s = state) & SBITS) == (stamp & SBITS)) {
             if ((a = stamp & ABITS) >= WBIT) {
                 // write stamp
@@ -795,7 +792,7 @@ public class StampedLock {
      *
      * @return {@code true} if the lock was held, else false
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public boolean tryUnlockWrite() {
         long s;
         if (((s = state) & WBIT) != 0L) {
@@ -812,7 +809,7 @@ public class StampedLock {
      *
      * @return {@code true} if the read lock was held, else false
      */
-    @ReservedStackAccess
+    // @ReservedStackAccess
     public boolean tryUnlockRead() {
         long s, m; WNode h;
         while ((m = (s = state) & ABITS) != 0L && m < WBIT) {
@@ -1517,15 +1514,15 @@ public class StampedLock {
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATE;
-    private static final VarHandle WHEAD;
-    private static final VarHandle WTAIL;
-    private static final VarHandle WNEXT;
-    private static final VarHandle WSTATUS;
-    private static final VarHandle WCOWAIT;
+    private static final VarHandle STATE;
+    private static final VarHandle WHEAD;
+    private static final VarHandle WTAIL;
+    private static final VarHandle WNEXT;
+    private static final VarHandle WSTATUS;
+    private static final VarHandle WCOWAIT;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATE = l.findVarHandle(StampedLock.class, "state", long.class);
             WHEAD = l.findVarHandle(StampedLock.class, "whead", WNode.class);
             WTAIL = l.findVarHandle(StampedLock.class, "wtail", WNode.class);

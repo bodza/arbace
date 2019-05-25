@@ -213,8 +213,7 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel imp
      * @return A key representing the registration of this channel with
      *          the given selector
      */
-    public final SelectionKey register(Selector sel, int ops) throws ClosedChannelException
-    {
+    public final SelectionKey register(Selector sel, int ops) throws ClosedChannelException {
         return register(sel, ops, null);
     }
 

@@ -14,8 +14,7 @@ class BootstrapConstructorAccessorImpl extends ConstructorAccessorImpl {
         this.constructor = c;
     }
 
-    public Object newInstance(Object[] args) throws IllegalArgumentException, InvocationTargetException
-    {
+    public Object newInstance(Object[] args) throws IllegalArgumentException, InvocationTargetException {
         try {
             return UnsafeFieldAccessorImpl.unsafe.allocateInstance(constructor.getDeclaringClass());
         } catch (InstantiationException e) {

@@ -44,8 +44,7 @@ class UnsafeDoubleFieldAccessorImpl extends UnsafeFieldAccessorImpl {
         return unsafe.getDouble(obj, fieldOffset);
     }
 
-    public void set(Object obj, Object value) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void set(Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
         ensureObj(obj);
         if (isFinal) {
             throwFinalFieldIllegalAccessException(value);
@@ -84,43 +83,35 @@ class UnsafeDoubleFieldAccessorImpl extends UnsafeFieldAccessorImpl {
         throwSetIllegalArgumentException(value);
     }
 
-    public void setBoolean(Object obj, boolean z) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setBoolean(Object obj, boolean z) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(z);
     }
 
-    public void setByte(Object obj, byte b) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setByte(Object obj, byte b) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, b);
     }
 
-    public void setChar(Object obj, char c) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setChar(Object obj, char c) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, c);
     }
 
-    public void setShort(Object obj, short s) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setShort(Object obj, short s) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, s);
     }
 
-    public void setInt(Object obj, int i) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setInt(Object obj, int i) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, i);
     }
 
-    public void setLong(Object obj, long l) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setLong(Object obj, long l) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, l);
     }
 
-    public void setFloat(Object obj, float f) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setFloat(Object obj, float f) throws IllegalArgumentException, IllegalAccessException {
         setDouble(obj, f);
     }
 
-    public void setDouble(Object obj, double d) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setDouble(Object obj, double d) throws IllegalArgumentException, IllegalAccessException {
         ensureObj(obj);
         if (isFinal) {
             throwFinalFieldIllegalAccessException(d);

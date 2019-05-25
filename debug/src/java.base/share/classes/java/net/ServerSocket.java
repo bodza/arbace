@@ -682,8 +682,7 @@ public class ServerSocket implements java.io.Closeable {
      *         An {@code int} expressing the relative importance of high
      *         bandwidth
      */
-    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth)
-    {
+    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
         /* Not implemented yet */
     }
 
@@ -706,8 +705,7 @@ public class ServerSocket implements java.io.Closeable {
      *
      * @throws NullPointerException if name is {@code null}
      */
-    public <T> ServerSocket setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public <T> ServerSocket setOption(SocketOption<T> name, T value) throws IOException {
         getImpl().setOption(name, value);
         return this;
     }

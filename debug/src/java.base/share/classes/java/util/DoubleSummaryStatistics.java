@@ -1,15 +1,13 @@
 package java.util;
 
 import java.util.function.DoubleConsumer;
-import java.util.stream.Collector;
-import java.util.stream.DoubleStream;
 
 /**
  * A state object for collecting statistics such as count, min, max, sum, and
  * average.
  *
  * This class is designed to work with (though does not require)
- * {@linkplain java.util.stream streams}. For example, you can compute
+ * {@linkplain java.util.stream streams}. For example, you can compute
  * summary statistics on a stream of doubles with:
  * <pre> {@code
  * DoubleSummaryStatistics stats = doubleStream.collect(DoubleSummaryStatistics::new,
@@ -18,21 +16,21 @@ import java.util.stream.DoubleStream;
  * }</pre>
  *
  * {@code DoubleSummaryStatistics} can be used as a
- * {@linkplain java.util.stream.Stream#collect(Collector) reduction}
- * target for a {@linkplain java.util.stream.Stream stream}. For example:
+ * {@linkplain java.util.stream.Stream#collect(Collector) reduction}
+ * target for a {@linkplain java.util.stream.Stream stream}. For example:
  *
  * <pre> {@code
  * DoubleSummaryStatistics stats = people.stream()
- *     .collect(Collectors.summarizingDouble(Person::getWeight));
+ *     .collect(Collectors.summarizingDouble(Person::getWeight));
  *}</pre>
  *
  * This computes, in a single pass, the count of people, as well as the minimum,
  * maximum, sum, and average of their weights.
  *
  * @implNote This implementation is not thread safe. However, it is safe to use
- * {@link java.util.stream.Collectors#summarizingDouble(java.util.function.ToDoubleFunction)
- * Collectors.summarizingDouble()} on a parallel stream, because the parallel
- * implementation of {@link java.util.stream.Stream#collect Stream.collect()}
+ * {@link java.util.stream.Collectors#summarizingDouble(java.util.function.ToDoubleFunction)
+ * Collectors.summarizingDouble()} on a parallel stream, because the parallel
+ * implementation of {@link java.util.stream.Stream#collect Stream.collect()}
  * provides the necessary partitioning, isolation, and merging of results for
  * safe and efficient parallel execution.
  */
@@ -88,7 +86,7 @@ public class DoubleSummaryStatistics implements DoubleConsumer {
                 throw new IllegalArgumentException("Minimum greater than maximum");
 
             // All NaN or non NaN
-            var ncount = DoubleStream.of(min, max, sum).filter(Double::isNaN).count();
+            var ncount = DoubleStream.of(min, max, sum).filter(Double::isNaN).count();
             if (ncount > 0 && ncount < 3)
                 throw new IllegalArgumentException("Some, not all, of the minimum, maximum, or sum is NaN");
 

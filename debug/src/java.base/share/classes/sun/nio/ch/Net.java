@@ -119,8 +119,7 @@ public class Net {
         return (InetSocketAddress)sa;
     }
 
-    static void translateToSocketException(Exception x) throws SocketException
-    {
+    static void translateToSocketException(Exception x) throws SocketException {
         if (x instanceof SocketException)
             throw (SocketException)x;
         Exception nx = x;
@@ -148,21 +147,18 @@ public class Net {
             throw new Error("Untranslated exception", nx);
     }
 
-    static void translateException(Exception x, boolean unknownHostForUnresolved) throws IOException
-    {
+    static void translateException(Exception x, boolean unknownHostForUnresolved) throws IOException {
         if (x instanceof IOException)
             throw (IOException)x;
         // Throw UnknownHostException from here since it cannot
         // be thrown as a SocketException
-        if (unknownHostForUnresolved && (x instanceof UnresolvedAddressException))
-        {
+        if (unknownHostForUnresolved && (x instanceof UnresolvedAddressException)) {
              throw new UnknownHostException();
         }
         translateToSocketException(x);
     }
 
-    static void translateException(Exception x) throws IOException
-    {
+    static void translateException(Exception x) throws IOException {
         translateException(x, false);
     }
 
@@ -254,8 +250,7 @@ public class Net {
 
     // -- Socket options
 
-    static void setSocketOption(FileDescriptor fd, ProtocolFamily family, SocketOption<?> name, Object value) throws IOException
-    {
+    static void setSocketOption(FileDescriptor fd, ProtocolFamily family, SocketOption<?> name, Object value) throws IOException {
         if (value == null)
             throw new IllegalArgumentException("Invalid option value");
 
@@ -266,8 +261,7 @@ public class Net {
             throw new AssertionError("Should not reach here");
 
         // special handling
-        if (name == StandardSocketOptions.SO_RCVBUF || name == StandardSocketOptions.SO_SNDBUF)
-        {
+        if (name == StandardSocketOptions.SO_RCVBUF || name == StandardSocketOptions.SO_SNDBUF) {
             int i = ((Integer)value).intValue();
             if (i < 0)
                 throw new IllegalArgumentException("Invalid send/receive buffer size");
@@ -308,8 +302,7 @@ public class Net {
         setIntOption0(fd, mayNeedConversion, key.level(), key.name(), arg, isIPv6);
     }
 
-    static Object getSocketOption(FileDescriptor fd, ProtocolFamily family, SocketOption<?> name) throws IOException
-    {
+    static Object getSocketOption(FileDescriptor fd, ProtocolFamily family, SocketOption<?> name) throws IOException {
         Class<?> type = name.type();
 
         // only simple values supported by this method
@@ -373,13 +366,11 @@ public class Net {
     // Due to oddities SO_REUSEADDR on windows reuse is ignored
     private static native int socket0(boolean preferIPv6, boolean stream, boolean reuse, boolean fastLoopback);
 
-    public static void bind(FileDescriptor fd, InetAddress addr, int port) throws IOException
-    {
+    public static void bind(FileDescriptor fd, InetAddress addr, int port) throws IOException {
         bind(UNSPEC, fd, addr, port);
     }
 
-    static void bind(ProtocolFamily family, FileDescriptor fd, InetAddress addr, int port) throws IOException
-    {
+    static void bind(ProtocolFamily family, FileDescriptor fd, InetAddress addr, int port) throws IOException {
         boolean preferIPv6 = isIPv6Available() && (family != StandardProtocolFamily.INET);
         bind0(fd, preferIPv6, exclusiveBind, addr, port);
     }
@@ -388,13 +379,11 @@ public class Net {
 
     static native void listen(FileDescriptor fd, int backlog) throws IOException;
 
-    static int connect(FileDescriptor fd, InetAddress remote, int remotePort) throws IOException
-    {
+    static int connect(FileDescriptor fd, InetAddress remote, int remotePort) throws IOException {
         return connect(UNSPEC, fd, remote, remotePort);
     }
 
-    static int connect(ProtocolFamily family, FileDescriptor fd, InetAddress remote, int remotePort) throws IOException
-    {
+    static int connect(ProtocolFamily family, FileDescriptor fd, InetAddress remote, int remotePort) throws IOException {
         boolean preferIPv6 = isIPv6Available() && (family != StandardProtocolFamily.INET);
         return connect0(preferIPv6, fd, remote, remotePort);
     }
@@ -411,8 +400,7 @@ public class Net {
 
     private static native InetAddress localInetAddress(FileDescriptor fd) throws IOException;
 
-    public static InetSocketAddress localAddress(FileDescriptor fd) throws IOException
-    {
+    public static InetSocketAddress localAddress(FileDescriptor fd) throws IOException {
         return new InetSocketAddress(localInetAddress(fd), localPort(fd));
     }
 
@@ -420,8 +408,7 @@ public class Net {
 
     private static native InetAddress remoteInetAddress(FileDescriptor fd) throws IOException;
 
-    static InetSocketAddress remoteAddress(FileDescriptor fd) throws IOException
-    {
+    static InetSocketAddress remoteAddress(FileDescriptor fd) throws IOException {
         return new InetSocketAddress(remoteInetAddress(fd), remotePort(fd));
     }
 
@@ -436,16 +423,14 @@ public class Net {
     /**
      * Join IPv4 multicast group
      */
-    static int join4(FileDescriptor fd, int group, int interf, int source) throws IOException
-    {
+    static int join4(FileDescriptor fd, int group, int interf, int source) throws IOException {
         return joinOrDrop4(true, fd, group, interf, source);
     }
 
     /**
      * Drop membership of IPv4 multicast group
      */
-    static void drop4(FileDescriptor fd, int group, int interf, int source) throws IOException
-    {
+    static void drop4(FileDescriptor fd, int group, int interf, int source) throws IOException {
         joinOrDrop4(false, fd, group, interf, source);
     }
 
@@ -454,16 +439,14 @@ public class Net {
     /**
      * Block IPv4 source
      */
-    static int block4(FileDescriptor fd, int group, int interf, int source) throws IOException
-    {
+    static int block4(FileDescriptor fd, int group, int interf, int source) throws IOException {
         return blockOrUnblock4(true, fd, group, interf, source);
     }
 
     /**
      * Unblock IPv6 source
      */
-    static void unblock4(FileDescriptor fd, int group, int interf, int source) throws IOException
-    {
+    static void unblock4(FileDescriptor fd, int group, int interf, int source) throws IOException {
         blockOrUnblock4(false, fd, group, interf, source);
     }
 
@@ -472,16 +455,14 @@ public class Net {
     /**
      * Join IPv6 multicast group
      */
-    static int join6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException
-    {
+    static int join6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException {
         return joinOrDrop6(true, fd, group, index, source);
     }
 
     /**
      * Drop membership of IPv6 multicast group
      */
-    static void drop6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException
-    {
+    static void drop6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException {
         joinOrDrop6(false, fd, group, index, source);
     }
 
@@ -490,16 +471,14 @@ public class Net {
     /**
      * Block IPv6 source
      */
-    static int block6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException
-    {
+    static int block6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException {
         return blockOrUnblock6(true, fd, group, index, source);
     }
 
     /**
      * Unblock IPv6 source
      */
-    static void unblock6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException
-    {
+    static void unblock6(FileDescriptor fd, byte[] group, int index, byte[] source) throws IOException {
         blockOrUnblock6(false, fd, group, index, source);
     }
 

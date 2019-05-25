@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
 import sun.net.util.IPAddressUtil;
-import sun.net.www.ParseUtil;
 
 /**
  * The abstract class {@code URLStreamHandler} is the common
@@ -448,7 +447,7 @@ public abstract class URLStreamHandler {
      * @deprecated Use setURL(URL, String, String, int, String, String, String,
      *             String);
      */
-    @Deprecated
+    // @Deprecated
     protected void setURL(URL u, String protocol, String host, int port, String file, String ref) {
         /*
          * Only old URL handlers call this, so assume that the host

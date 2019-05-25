@@ -1,17 +1,15 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntUnaryOperator;
 
 /**
  * An {@code int} array in which elements may be updated atomically.
- * See the {@link VarHandle} specification for descriptions of the
+ * See the {@link VarHandle} specification for descriptions of the
  * properties of atomic accesses.
  */
 public class AtomicIntegerArray {
-    private static final VarHandle AA = MethodHandles.arrayElementVarHandle(int[].class);
+    private static final VarHandle AA = MethodHandles.arrayElementVarHandle(int[].class);
     private final int[] array;
 
     /**
@@ -47,7 +45,7 @@ public class AtomicIntegerArray {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      *
      * @param i the index
      * @return the current value
@@ -58,7 +56,7 @@ public class AtomicIntegerArray {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setVolatile}.
+     * with memory effects as specified by {@link VarHandle#setVolatile}.
      *
      * @param i the index
      * @param newValue the new value
@@ -69,7 +67,7 @@ public class AtomicIntegerArray {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param i the index
      * @param newValue the new value
@@ -81,7 +79,7 @@ public class AtomicIntegerArray {
     /**
      * Atomically sets the element at index {@code i} to {@code
      * newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * with memory effects as specified by {@link VarHandle#getAndSet}.
      *
      * @param i the index
      * @param newValue the new value
@@ -94,7 +92,7 @@ public class AtomicIntegerArray {
     /**
      * Atomically sets the element at index {@code i} to {@code
      * newValue} if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#compareAndSet}.
+     * with memory effects as specified by {@link VarHandle#compareAndSet}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -109,7 +107,7 @@ public class AtomicIntegerArray {
     /**
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @deprecated This method has plain memory effects but the method
      * name implies volatile memory effects (see methods such as
@@ -122,7 +120,7 @@ public class AtomicIntegerArray {
      * @param newValue the new value
      * @return {@code true} if successful
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public final boolean weakCompareAndSet(int i, int expectedValue, int newValue) {
         return AA.weakCompareAndSetPlain(array, i, expectedValue, newValue);
     }
@@ -130,7 +128,7 @@ public class AtomicIntegerArray {
     /**
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -143,7 +141,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically increments the value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code getAndAdd(i, 1)}.
      *
@@ -156,7 +154,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically decrements the value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code getAndAdd(i, -1)}.
      *
@@ -169,7 +167,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically adds the given value to the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * @param i the index
      * @param delta the value to add
@@ -181,7 +179,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically increments the value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code addAndGet(i, 1)}.
      *
@@ -194,7 +192,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically decrements the value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code addAndGet(i, -1)}.
      *
@@ -207,7 +205,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically adds the given value to the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * @param i the index
      * @param delta the value to add
@@ -219,7 +217,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function, returning the
      * previous value. The function should be side-effect-free, since
      * it may be re-applied when attempted updates fail due to
@@ -242,7 +240,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function, returning the
      * updated value. The function should be side-effect-free, since it
      * may be re-applied when attempted updates fail due to contention
@@ -265,7 +263,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function to the current and
      * given values, returning the previous value. The function should
      * be side-effect-free, since it may be re-applied when attempted
@@ -292,7 +290,7 @@ public class AtomicIntegerArray {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function to the current and
      * given values, returning the updated value. The function should
      * be side-effect-free, since it may be re-applied when attempted
@@ -364,7 +362,7 @@ public class AtomicIntegerArray {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getOpaque}.
+     * with memory effects as specified by {@link VarHandle#getOpaque}.
      *
      * @param i the index
      * @return the value
@@ -375,7 +373,7 @@ public class AtomicIntegerArray {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setOpaque}.
+     * with memory effects as specified by {@link VarHandle#setOpaque}.
      *
      * @param i the index
      * @param newValue the new value
@@ -386,7 +384,7 @@ public class AtomicIntegerArray {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAcquire}.
+     * with memory effects as specified by {@link VarHandle#getAcquire}.
      *
      * @param i the index
      * @return the value
@@ -397,7 +395,7 @@ public class AtomicIntegerArray {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param i the index
      * @param newValue the new value
@@ -411,7 +409,7 @@ public class AtomicIntegerArray {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchange}.
+     * {@link VarHandle#compareAndExchange}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -428,7 +426,7 @@ public class AtomicIntegerArray {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeAcquire}.
+     * {@link VarHandle#compareAndExchangeAcquire}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -445,7 +443,7 @@ public class AtomicIntegerArray {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeRelease}.
+     * {@link VarHandle#compareAndExchangeRelease}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -461,7 +459,7 @@ public class AtomicIntegerArray {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSet}.
+     * {@link VarHandle#weakCompareAndSet}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -476,7 +474,7 @@ public class AtomicIntegerArray {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetAcquire}.
+     * {@link VarHandle#weakCompareAndSetAcquire}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -491,7 +489,7 @@ public class AtomicIntegerArray {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetRelease}.
+     * {@link VarHandle#weakCompareAndSetRelease}.
      *
      * @param i the index
      * @param expectedValue the expected value

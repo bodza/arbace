@@ -152,8 +152,7 @@ public abstract class AsynchronousChannelGroup {
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousChannelGroup withFixedThreadPool(int nThreads, ThreadFactory threadFactory) throws IOException
-    {
+    public static AsynchronousChannelGroup withFixedThreadPool(int nThreads, ThreadFactory threadFactory) throws IOException {
         return AsynchronousChannelProvider.provider().openAsynchronousChannelGroup(nThreads, threadFactory);
     }
 
@@ -194,8 +193,7 @@ public abstract class AsynchronousChannelGroup {
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousChannelGroup withCachedThreadPool(ExecutorService executor, int initialSize) throws IOException
-    {
+    public static AsynchronousChannelGroup withCachedThreadPool(ExecutorService executor, int initialSize) throws IOException {
         return AsynchronousChannelProvider.provider().openAsynchronousChannelGroup(executor, initialSize);
     }
 
@@ -232,8 +230,7 @@ public abstract class AsynchronousChannelGroup {
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousChannelGroup withThreadPool(ExecutorService executor) throws IOException
-    {
+    public static AsynchronousChannelGroup withThreadPool(ExecutorService executor) throws IOException {
         return AsynchronousChannelProvider.provider().openAsynchronousChannelGroup(executor, 0);
     }
 

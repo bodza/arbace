@@ -30,8 +30,7 @@ final class PendingFuture<V,A> implements Future<V> {
     PendingFuture(AsynchronousChannel channel,
                   CompletionHandler<V,? super A> handler,
                   A attachment,
-                  Object context)
-    {
+                  Object context) {
         this.channel = channel;
         this.handler = handler;
         this.attachment = attachment;
@@ -40,8 +39,7 @@ final class PendingFuture<V,A> implements Future<V> {
 
     PendingFuture(AsynchronousChannel channel,
                   CompletionHandler<V,? super A> handler,
-                  A attachment)
-    {
+                  A attachment) {
         this.channel = channel;
         this.handler = handler;
         this.attachment = attachment;
@@ -159,8 +157,7 @@ final class PendingFuture<V,A> implements Future<V> {
     }
 
     @Override
-    public V get(long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException
-    {
+    public V get(long timeout, TimeUnit unit) throws ExecutionException, InterruptedException, TimeoutException {
         if (!haveResult) {
             boolean needToWait = prepareForWait();
             if (needToWait)

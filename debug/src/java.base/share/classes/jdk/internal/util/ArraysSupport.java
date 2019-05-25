@@ -1,6 +1,5 @@
 package jdk.internal.util;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.misc.Unsafe;
 
 /**
@@ -82,7 +81,7 @@ public class ArraysSupport {
      * compliment of the number of remaining pairs of elements to be checked in
      * the tail of the two arrays.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int vectorizedMismatch(Object a, long aOffset, Object b, long bOffset, int length, int log2ArrayIndexScale) {
         // assert a.getClass().isArray();
         // assert b.getClass().isArray();

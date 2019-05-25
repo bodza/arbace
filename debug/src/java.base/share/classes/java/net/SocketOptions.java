@@ -1,7 +1,5 @@
 package java.net;
 
-import java.lang.annotation.Native;
-
 /**
  * Interface of methods to get/set socket options.  This interface is
  * implemented by: <b>SocketImpl</b> and  <b>DatagramSocketImpl</b>.
@@ -102,7 +100,8 @@ public interface SocketOptions {
      *
      * Valid for TCP only: SocketImpl.
      */
-    @Native public static final int TCP_NODELAY = 0x0001;
+    // @Native
+    public static final int TCP_NODELAY = 0x0001;
 
     /**
      * Fetch the local address binding of a socket (this option cannot
@@ -119,15 +118,16 @@ public interface SocketOptions {
      *
      * Valid for: SocketImpl, DatagramSocketImpl
      */
-    @Native public static final int SO_BINDADDR = 0x000F;
+    // @Native
+    public static final int SO_BINDADDR = 0x000F;
 
     /** Sets SO_REUSEADDR for a socket.  This is used only for MulticastSockets
      * in java, and it is set by default for MulticastSockets.
      *
      * Valid for: DatagramSocketImpl
      */
-
-    @Native public static final int SO_REUSEADDR = 0x04;
+    // @Native
+    public static final int SO_REUSEADDR = 0x04;
 
     /** Sets SO_REUSEPORT for a socket. This option enables and disables
      *  the ability to have multiple sockets listen to the same address
@@ -135,7 +135,8 @@ public interface SocketOptions {
      *
      * Valid for: SocketImpl, DatagramSocketImpl
      */
-    @Native public static final int SO_REUSEPORT = 0x0E;
+    // @Native
+    public static final int SO_REUSEPORT = 0x0E;
 
     /**
      * Sets SO_BROADCAST for a socket. This option enables and disables
@@ -144,7 +145,8 @@ public interface SocketOptions {
      * the concept of a broadcast message (e.g. Ethernet, token ring, etc.),
      * and it is set by default for DatagramSockets.
      */
-    @Native public static final int SO_BROADCAST = 0x0020;
+    // @Native
+    public static final int SO_BROADCAST = 0x0020;
 
     /** Set which outgoing interface on which to send multicast packets.
      * Useful on hosts with multiple network interfaces, where applications
@@ -152,8 +154,8 @@ public interface SocketOptions {
      *
      * Valid for Multicast: DatagramSocketImpl
      */
-
-    @Native public static final int IP_MULTICAST_IF = 0x10;
+    // @Native
+    public static final int IP_MULTICAST_IF = 0x10;
 
     /** Same as above. This option is introduced so that the behaviour
      *  with IP_MULTICAST_IF will be kept the same as before, while
@@ -162,19 +164,22 @@ public interface SocketOptions {
      *
      *  NOTE: make sure there is no conflict with this
      */
-    @Native public static final int IP_MULTICAST_IF2 = 0x1f;
+    // @Native
+    public static final int IP_MULTICAST_IF2 = 0x1f;
 
     /**
      * This option enables or disables local loopback of multicast datagrams.
      * This option is enabled by default for Multicast Sockets.
      */
-    @Native public static final int IP_MULTICAST_LOOP = 0x12;
+    // @Native
+    public static final int IP_MULTICAST_LOOP = 0x12;
 
     /**
      * This option sets the type-of-service or traffic class field
      * in the IP header for a TCP or UDP socket.
      */
-    @Native public static final int IP_TOS = 0x3;
+    // @Native
+    public static final int IP_TOS = 0x3;
 
     /**
      * Specify a linger-on-close timeout.  This option disables/enables
@@ -189,7 +194,8 @@ public interface SocketOptions {
      *
      * Valid only for TCP: SocketImpl
      */
-    @Native public static final int SO_LINGER = 0x0080;
+    // @Native
+    public static final int SO_LINGER = 0x0080;
 
     /** Set a timeout on blocking Socket operations:
      * <pre>
@@ -206,7 +212,8 @@ public interface SocketOptions {
      *
      * Valid for all sockets: SocketImpl, DatagramSocketImpl
      */
-    @Native public static final int SO_TIMEOUT = 0x1006;
+    // @Native
+    public static final int SO_TIMEOUT = 0x1006;
 
     /**
      * Set a hint the size of the underlying buffers used by the
@@ -218,7 +225,8 @@ public interface SocketOptions {
      *
      * Valid for all sockets: SocketImpl, DatagramSocketImpl
      */
-    @Native public static final int SO_SNDBUF = 0x1001;
+    // @Native
+    public static final int SO_SNDBUF = 0x1001;
 
     /**
      * Set a hint the size of the underlying buffers used by the
@@ -231,7 +239,8 @@ public interface SocketOptions {
      *
      * Valid for all sockets: SocketImpl, DatagramSocketImpl
      */
-    @Native public static final int SO_RCVBUF = 0x1002;
+    // @Native
+    public static final int SO_RCVBUF = 0x1002;
 
     /**
      * When the keepalive option is set for a TCP socket and no data
@@ -251,7 +260,8 @@ public interface SocketOptions {
      *
      * Valid only for TCP socket: SocketImpl
      */
-    @Native public static final int SO_KEEPALIVE = 0x0008;
+    // @Native
+    public static final int SO_KEEPALIVE = 0x0008;
 
     /**
      * When the OOBINLINE option is set, any TCP urgent data received on
@@ -259,5 +269,6 @@ public interface SocketOptions {
      * When the option is disabled (which is the default) urgent data
      * is silently discarded.
      */
-    @Native public static final int SO_OOBINLINE = 0x1003;
+    // @Native
+    public static final int SO_OOBINLINE = 0x1003;
 }

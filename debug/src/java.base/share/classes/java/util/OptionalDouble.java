@@ -3,7 +3,6 @@ package java.util;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import java.util.stream.DoubleStream;
 
 /**
  * A container object which may or may not contain a {@code double} value.
@@ -157,25 +156,25 @@ public final class OptionalDouble {
     }
 
     /**
-     * If a value is present, returns a sequential {@link DoubleStream}
+     * If a value is present, returns a sequential {@link DoubleStream}
      * containing only that value, otherwise returns an empty
-     * {@code DoubleStream}.
+     * {@code DoubleStream}.
      *
      * @apiNote
-     * This method can be used to transform a {@code Stream} of optional doubles
-     * to a {@code DoubleStream} of present doubles:
+     * This method can be used to transform a {@code Stream} of optional doubles
+     * to a {@code DoubleStream} of present doubles:
      * <pre>{@code
-     *     Stream<OptionalDouble> os = ..
-     *     DoubleStream s = os.flatMapToDouble(OptionalDouble::stream)
+     *     Stream<OptionalDouble> os = ..
+     *     DoubleStream s = os.flatMapToDouble(OptionalDouble::stream)
      * }</pre>
      *
-     * @return the optional value as a {@code DoubleStream}
+     * @return the optional value as a {@code DoubleStream}
      */
-    public DoubleStream stream() {
+    public DoubleStream stream() {
         if (isPresent) {
-            return DoubleStream.of(value);
+            return DoubleStream.of(value);
         } else {
-            return DoubleStream.empty();
+            return DoubleStream.empty();
         }
     }
 

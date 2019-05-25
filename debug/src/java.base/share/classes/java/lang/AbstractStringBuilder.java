@@ -3,8 +3,6 @@ package java.lang;
 import jdk.internal.math.FloatingDecimal;
 import java.util.Arrays;
 import java.util.Spliterator;
-import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 import static java.lang.String.COMPACT_STRINGS;
 import static java.lang.String.UTF16;
@@ -422,8 +420,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *             {@code dst.length}
      *             </ul>
      */
-    public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
-    {
+    public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
         checkRangeSIOOBE(srcBegin, srcEnd, count); // compatible to old version
         int n = srcEnd - srcBegin;
         checkRange(dstBegin, dstBegin + n, dst.length);
@@ -1005,8 +1002,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *             {@code (offset+len)} is greater than
      *             {@code str.length}.
      */
-    public AbstractStringBuilder insert(int index, char[] str, int offset, int len)
-    {
+    public AbstractStringBuilder insert(int index, char[] str, int offset, int len) {
         checkOffset(index, count);
         checkRangeSIOOBE(offset, offset + len, str.length);
         ensureCapacityInternal(count + len);
@@ -1196,8 +1192,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *              {@code start} is greater than {@code end} or
      *              {@code end} is greater than {@code s.length()}
      */
-    public AbstractStringBuilder insert(int dstOffset, CharSequence s, int start, int end)
-    {
+    public AbstractStringBuilder insert(int dstOffset, CharSequence s, int start, int end) {
         if (s == null) {
             s = "null";
         }
@@ -1492,48 +1487,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     @Override
     public abstract String toString();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IntStream chars() {
-        // Reuse String-based spliterator. This requires a supplier to
-        // capture the value and count when the terminal operation is executed
-        return StreamSupport.intStream(
-                () -> {
-                    // The combined set of field reads are not atomic and thread
-                    // safe but bounds checks will ensure no unsafe reads from
-                    // the byte array
-                    byte[] val = this.value;
-                    int count = this.count;
-                    byte coder = this.coder;
-                    return coder == LATIN1 ? new StringLatin1.CharsSpliterator(val, 0, count, 0) : new StringUTF16.CharsSpliterator(val, 0, count, 0);
-                },
-                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED,
-                false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IntStream codePoints() {
-        // Reuse String-based spliterator. This requires a supplier to
-        // capture the value and count when the terminal operation is executed
-        return StreamSupport.intStream(
-                () -> {
-                    // The combined set of field reads are not atomic and thread
-                    // safe but bounds checks will ensure no unsafe reads from
-                    // the byte array
-                    byte[] val = this.value;
-                    int count = this.count;
-                    byte coder = this.coder;
-                    return coder == LATIN1 ? new StringLatin1.CharsSpliterator(val, 0, count, 0) : new StringUTF16.CodePointsSpliterator(val, 0, count, 0);
-                },
-                Spliterator.ORDERED,
-                false);
-    }
 
     /**
      * Needed by {@code String} for the contentEquals method.

@@ -3,7 +3,6 @@ package java.util;
 import java.util.function.LongConsumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
-import java.util.stream.LongStream;
 
 /**
  * A container object which may or may not contain a {@code long} value.
@@ -157,24 +156,24 @@ public final class OptionalLong {
     }
 
     /**
-     * If a value is present, returns a sequential {@link LongStream} containing
-     * only that value, otherwise returns an empty {@code LongStream}.
+     * If a value is present, returns a sequential {@link LongStream} containing
+     * only that value, otherwise returns an empty {@code LongStream}.
      *
      * @apiNote
-     * This method can be used to transform a {@code Stream} of optional longs
-     * to an {@code LongStream} of present longs:
+     * This method can be used to transform a {@code Stream} of optional longs
+     * to an {@code LongStream} of present longs:
      * <pre>{@code
-     *     Stream<OptionalLong> os = ..
-     *     LongStream s = os.flatMapToLong(OptionalLong::stream)
+     *     Stream<OptionalLong> os = ..
+     *     LongStream s = os.flatMapToLong(OptionalLong::stream)
      * }</pre>
      *
-     * @return the optional value as an {@code LongStream}
+     * @return the optional value as an {@code LongStream}
      */
-    public LongStream stream() {
+    public LongStream stream() {
         if (isPresent) {
-            return LongStream.of(value);
+            return LongStream.of(value);
         } else {
-            return LongStream.empty();
+            return LongStream.empty();
         }
     }
 

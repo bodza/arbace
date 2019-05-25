@@ -1,7 +1,5 @@
 package java.util.concurrent.atomic;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -10,12 +8,12 @@ import java.util.function.UnaryOperator;
 
 /**
  * An array of object references in which elements may be updated
- * atomically.  See the {@link VarHandle} specification for
+ * atomically.  See the {@link VarHandle} specification for
  * descriptions of the properties of atomic accesses.
  * @param <E> The base class of elements held in this array
  */
 public class AtomicReferenceArray<E> {
-    private static final VarHandle AA = MethodHandles.arrayElementVarHandle(Object[].class);
+    private static final VarHandle AA = MethodHandles.arrayElementVarHandle(Object[].class);
     private final Object[] array; // must have exact type Object[]
 
     /**
@@ -51,7 +49,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      *
      * @param i the index
      * @return the current value
@@ -63,7 +61,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setVolatile}.
+     * with memory effects as specified by {@link VarHandle#setVolatile}.
      *
      * @param i the index
      * @param newValue the new value
@@ -74,7 +72,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param i the index
      * @param newValue the new value
@@ -86,7 +84,7 @@ public class AtomicReferenceArray<E> {
     /**
      * Atomically sets the element at index {@code i} to {@code
      * newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * with memory effects as specified by {@link VarHandle#getAndSet}.
      *
      * @param i the index
      * @param newValue the new value
@@ -100,7 +98,7 @@ public class AtomicReferenceArray<E> {
     /**
      * Atomically sets the element at index {@code i} to {@code newValue}
      * if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#compareAndSet}.
+     * with memory effects as specified by {@link VarHandle#compareAndSet}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -115,7 +113,7 @@ public class AtomicReferenceArray<E> {
     /**
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @deprecated This method has plain memory effects but the method
      * name implies volatile memory effects (see methods such as
@@ -128,7 +126,7 @@ public class AtomicReferenceArray<E> {
      * @param newValue the new value
      * @return {@code true} if successful
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public final boolean weakCompareAndSet(int i, E expectedValue, E newValue) {
         return AA.weakCompareAndSetPlain(array, i, expectedValue, newValue);
     }
@@ -136,7 +134,7 @@ public class AtomicReferenceArray<E> {
     /**
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -149,7 +147,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function, returning the
      * previous value. The function should be side-effect-free, since
      * it may be re-applied when attempted updates fail due to
@@ -172,7 +170,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function, returning the
      * updated value. The function should be side-effect-free, since it
      * may be re-applied when attempted updates fail due to contention
@@ -195,7 +193,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function to the current and
      * given values, returning the previous value. The function should
      * be side-effect-free, since it may be re-applied when attempted
@@ -222,7 +220,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the element at index {@code i} with
+     * VarHandle#compareAndSet}) the element at index {@code i} with
      * the results of applying the given function to the current and
      * given values, returning the updated value. The function should
      * be side-effect-free, since it may be re-applied when attempted
@@ -294,7 +292,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getOpaque}.
+     * with memory effects as specified by {@link VarHandle#getOpaque}.
      *
      * @param i the index
      * @return the value
@@ -305,7 +303,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setOpaque}.
+     * with memory effects as specified by {@link VarHandle#setOpaque}.
      *
      * @param i the index
      * @param newValue the new value
@@ -316,7 +314,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Returns the current value of the element at index {@code i},
-     * with memory effects as specified by {@link VarHandle#getAcquire}.
+     * with memory effects as specified by {@link VarHandle#getAcquire}.
      *
      * @param i the index
      * @return the value
@@ -327,7 +325,7 @@ public class AtomicReferenceArray<E> {
 
     /**
      * Sets the element at index {@code i} to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param i the index
      * @param newValue the new value
@@ -341,7 +339,7 @@ public class AtomicReferenceArray<E> {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchange}.
+     * {@link VarHandle#compareAndExchange}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -358,7 +356,7 @@ public class AtomicReferenceArray<E> {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeAcquire}.
+     * {@link VarHandle#compareAndExchangeAcquire}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -375,7 +373,7 @@ public class AtomicReferenceArray<E> {
      * if the element's current value, referred to as the <em>witness
      * value</em>, {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeRelease}.
+     * {@link VarHandle#compareAndExchangeRelease}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -391,7 +389,7 @@ public class AtomicReferenceArray<E> {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSet}.
+     * {@link VarHandle#weakCompareAndSet}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -406,7 +404,7 @@ public class AtomicReferenceArray<E> {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetAcquire}.
+     * {@link VarHandle#weakCompareAndSetAcquire}.
      *
      * @param i the index
      * @param expectedValue the expected value
@@ -421,7 +419,7 @@ public class AtomicReferenceArray<E> {
      * Possibly atomically sets the element at index {@code i} to
      * {@code newValue} if the element's current value {@code == expectedValue},
      * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetRelease}.
+     * {@link VarHandle#weakCompareAndSetRelease}.
      *
      * @param i the index
      * @param expectedValue the expected value

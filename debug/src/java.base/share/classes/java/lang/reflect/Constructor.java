@@ -3,15 +3,10 @@ package java.lang.reflect;
 import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.ConstructorAccessor;
 import jdk.internal.reflect.Reflection;
-import jdk.internal.vm.annotation.ForceInline;
-import sun.reflect.annotation.TypeAnnotation;
-import sun.reflect.annotation.TypeAnnotationParser;
 import sun.reflect.generics.repository.ConstructorRepository;
 import sun.reflect.generics.factory.CoreReflectionFactory;
 import sun.reflect.generics.factory.GenericsFactory;
 import sun.reflect.generics.scope.ConstructorScope;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.AnnotationFormatError;
 import java.util.StringJoiner;
 
 /**
@@ -31,12 +26,10 @@ public final class Constructor<T> extends Executable {
     private Class<?>[]          parameterTypes;
     private Class<?>[]          exceptionTypes;
     private int                 modifiers;
-    // Generics and annotations support
+    // Generics support
     private transient String    signature;
     // generic info repository; lazily initialized
     private transient ConstructorRepository genericInfo;
-    private byte[]              annotations;
-    private byte[]              parameterAnnotations;
 
     // Generics infrastructure
     // Accessor for factory
@@ -75,15 +68,13 @@ public final class Constructor<T> extends Executable {
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
      */
-    Constructor(Class<T> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations) {
+    Constructor(Class<T> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations) {
         this.clazz = declaringClass;
         this.parameterTypes = parameterTypes;
         this.exceptionTypes = checkedExceptions;
         this.modifiers = modifiers;
         this.slot = slot;
         this.signature = signature;
-        this.annotations = annotations;
-        this.parameterAnnotations = parameterAnnotations;
     }
 
     /**
@@ -102,7 +93,7 @@ public final class Constructor<T> extends Executable {
         if (this.root != null)
             throw new IllegalArgumentException("Can not copy a non-root Constructor");
 
-        Constructor<T> res = new Constructor<>(clazz, parameterTypes, exceptionTypes, modifiers, slot, signature, annotations, parameterAnnotations);
+        Constructor<T> res = new Constructor<>(clazz, parameterTypes, exceptionTypes, modifiers, slot, signature, null, null);
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.constructorAccessor = constructorAccessor;
@@ -145,7 +136,7 @@ public final class Constructor<T> extends Executable {
 
     @Override
     byte[] getAnnotationBytes() {
-        return annotations;
+        return annotations;
     }
 
     /**
@@ -400,9 +391,8 @@ public final class Constructor<T> extends Executable {
      *              by this method fails.
      */
     @CallerSensitive
-    @ForceInline // to ensure Reflection.getCallerClass optimization
-    public T newInstance(Object ... initargs) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+    // @ForceInline // to ensure Reflection.getCallerClass optimization
+    public T newInstance(Object ... initargs) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (!override) {
             Class<?> caller = Reflection.getCallerClass();
             checkAccess(caller, clazz, clazz, modifiers);
@@ -480,37 +470,6 @@ public final class Constructor<T> extends Executable {
         return signature;
     }
 
-    byte[] getRawAnnotations() {
-        return annotations;
-    }
-
-    byte[] getRawParameterAnnotations() {
-        return parameterAnnotations;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException  {@inheritDoc}
-     */
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return super.getAnnotation(annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Annotation[] getDeclaredAnnotations() {
-        return super.getDeclaredAnnotations();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Annotation[][] getParameterAnnotations() {
-        return sharedGetParameterAnnotations(parameterTypes, parameterAnnotations);
-    }
-
     @Override
     boolean handleParameterNumberMismatch(int resultLength, int numParameters) {
         Class<?> declaringClass = getDeclaringClass();
@@ -520,50 +479,8 @@ public final class Constructor<T> extends Executable {
             if (declaringClass.isMemberClass() && ((declaringClass.getModifiers() & Modifier.STATIC) == 0) && resultLength + 1 == numParameters) {
                 return true;
             } else {
-                throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
+                throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AnnotatedType getAnnotatedReturnType() {
-        return getAnnotatedReturnType0(getDeclaringClass());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AnnotatedType getAnnotatedReceiverType() {
-        Class<?> thisDeclClass = getDeclaringClass();
-        Class<?> enclosingClass = thisDeclClass.getEnclosingClass();
-
-        if (enclosingClass == null) {
-            // A Constructor for a top-level class
-            return null;
-        }
-
-        Class<?> outerDeclaringClass = thisDeclClass.getDeclaringClass();
-        if (outerDeclaringClass == null) {
-            // A constructor for a local or anonymous class
-            return null;
-        }
-
-        // Either static nested or inner class
-        if (Modifier.isStatic(thisDeclClass.getModifiers())) {
-            // static nested
-            return null;
-        }
-
-        // A Constructor for an inner class
-        return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes0(),
-                thisDeclClass.getConstantPool(),
-                this,
-                thisDeclClass,
-                enclosingClass,
-                TypeAnnotation.TypeAnnotationTarget.METHOD_RECEIVER);
     }
 }

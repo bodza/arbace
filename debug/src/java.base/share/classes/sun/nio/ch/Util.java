@@ -395,22 +395,19 @@ public class Util {
         }
     }
 
-    static void checkBufferPositionAligned(ByteBuffer bb, int pos, int alignment) throws IOException
-    {
+    static void checkBufferPositionAligned(ByteBuffer bb, int pos, int alignment) throws IOException {
         if (bb.alignmentOffset(pos, alignment) != 0) {
             throw new IOException("Current location of the bytebuffer (" + pos + ") is not a multiple of the block size (" + alignment + ")");
         }
     }
 
-    static void checkRemainingBufferSizeAligned(int rem, int alignment) throws IOException
-    {
+    static void checkRemainingBufferSizeAligned(int rem, int alignment) throws IOException {
         if (rem % alignment != 0) {
             throw new IOException("Number of remaining bytes (" + rem + ") is not a multiple of the block size (" + alignment + ")");
         }
     }
 
-    static void checkChannelPositionAligned(long position, int alignment) throws IOException
-    {
+    static void checkChannelPositionAligned(long position, int alignment) throws IOException {
         if (position % alignment != 0) {
            throw new IOException("Channel position (" + position + ") is not a multiple of the block size (" + alignment + ")");
         }

@@ -24,8 +24,7 @@ class MembershipKeyImpl extends MembershipKey {
     // set of source addresses that are blocked
     private HashSet<InetAddress> blockedSet;
 
-    private MembershipKeyImpl(MulticastChannel ch, InetAddress group, NetworkInterface interf, InetAddress source)
-    {
+    private MembershipKeyImpl(MulticastChannel ch, InetAddress group, NetworkInterface interf, InetAddress source) {
         this.ch = ch;
         this.group = group;
         this.interf = interf;
@@ -40,14 +39,7 @@ class MembershipKeyImpl extends MembershipKey {
         private final int interfAddress;
         private final int sourceAddress;
 
-        Type4(MulticastChannel ch,
-              InetAddress group,
-              NetworkInterface interf,
-              InetAddress source,
-              int groupAddress,
-              int interfAddress,
-              int sourceAddress)
-        {
+        Type4(MulticastChannel ch, InetAddress group, NetworkInterface interf, InetAddress source, int groupAddress, int interfAddress, int sourceAddress) {
             super(ch, group, interf, source);
             this.groupAddress = groupAddress;
             this.interfAddress = interfAddress;
@@ -75,14 +67,7 @@ class MembershipKeyImpl extends MembershipKey {
         private final int index;
         private final byte[] sourceAddress;
 
-        Type6(MulticastChannel ch,
-              InetAddress group,
-              NetworkInterface interf,
-              InetAddress source,
-              byte[] groupAddress,
-              int index,
-              byte[] sourceAddress)
-        {
+        Type6(MulticastChannel ch, InetAddress group, NetworkInterface interf, InetAddress source, byte[] groupAddress, int index, byte[] sourceAddress) {
             super(ch, group, interf, source);
             this.groupAddress = groupAddress;
             this.index = index;
@@ -136,8 +121,7 @@ class MembershipKeyImpl extends MembershipKey {
     }
 
     @Override
-    public MembershipKey block(InetAddress toBlock) throws IOException
-    {
+    public MembershipKey block(InetAddress toBlock) throws IOException {
         if (source != null)
             throw new IllegalStateException("key is source-specific");
 

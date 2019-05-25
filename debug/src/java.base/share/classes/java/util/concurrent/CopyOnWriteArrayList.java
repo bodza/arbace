@@ -1,6 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
@@ -259,7 +258,7 @@ public class CopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneable
             CopyOnWriteArrayList<E> clone = (CopyOnWriteArrayList<E>) super.clone();
             clone.resetLock();
             // Here we cannot visibility-piggyback on the volatile write in setArray().
-            VarHandle.releaseFence();
+            VarHandle.releaseFence();
             return clone;
         } catch (CloneNotSupportedException e) {
             // this shouldn't happen, since we are Cloneable

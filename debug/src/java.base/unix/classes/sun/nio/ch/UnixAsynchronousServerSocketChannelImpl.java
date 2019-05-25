@@ -32,8 +32,7 @@ class UnixAsynchronousServerSocketChannelImpl extends AsynchronousServerSocketCh
     private Object acceptAttachment;
     private PendingFuture<AsynchronousSocketChannel,Object> acceptFuture;
 
-    UnixAsynchronousServerSocketChannelImpl(Port port) throws IOException
-    {
+    UnixAsynchronousServerSocketChannelImpl(Port port) throws IOException {
         super(port);
 
         try {
@@ -162,8 +161,7 @@ class UnixAsynchronousServerSocketChannelImpl extends AsynchronousServerSocketCh
      * with an IOException or SecurityException then the channel/file descriptor
      * will be closed.
      */
-    private AsynchronousSocketChannel finishAccept(FileDescriptor newfd, final InetSocketAddress remote) throws IOException, SecurityException
-    {
+    private AsynchronousSocketChannel finishAccept(FileDescriptor newfd, final InetSocketAddress remote) throws IOException, SecurityException {
         AsynchronousSocketChannel ch = null;
         try {
             ch = new UnixAsynchronousSocketChannelImpl(port, newfd, remote);
@@ -176,8 +174,7 @@ class UnixAsynchronousServerSocketChannelImpl extends AsynchronousServerSocketCh
 
     @Override
     Future<AsynchronousSocketChannel> implAccept(Object att,
-        CompletionHandler<AsynchronousSocketChannel,Object> handler)
-    {
+        CompletionHandler<AsynchronousSocketChannel,Object> handler) {
         // complete immediately if channel is closed
         if (!isOpen()) {
             Throwable e = new ClosedChannelException();
@@ -264,8 +261,7 @@ class UnixAsynchronousServerSocketChannelImpl extends AsynchronousServerSocketCh
      *
      * @implNote Wrap native call to allow instrumentation.
      */
-    private int accept(FileDescriptor ssfd, FileDescriptor newfd, InetSocketAddress[] isaa) throws IOException
-    {
+    private int accept(FileDescriptor ssfd, FileDescriptor newfd, InetSocketAddress[] isaa) throws IOException {
         return accept0(ssfd, newfd, isaa);
     }
 

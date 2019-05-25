@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -123,7 +121,7 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
      * rely on (static) NIL (to box null results) being the only
      * AltResult with a null exception field, so we don't usually need
      * explicit comparisons.  Even though some of the generics casts
-     * are unchecked (see SuppressWarnings annotations), they are
+     * are unchecked (see SuppressWarnings annotations), they are
      * placed to be appropriate even if checked.
      *
      * Dependent actions are represented by Completion objects linked
@@ -2685,12 +2683,12 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     }
 
     // VarHandle mechanics
-    private static final VarHandle RESULT;
-    private static final VarHandle STACK;
-    private static final VarHandle NEXT;
+    private static final VarHandle RESULT;
+    private static final VarHandle STACK;
+    private static final VarHandle NEXT;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             RESULT = l.findVarHandle(CompletableFuture.class, "result", Object.class);
             STACK = l.findVarHandle(CompletableFuture.class, "stack", Completion.class);
             NEXT = l.findVarHandle(Completion.class, "next", Completion.class);

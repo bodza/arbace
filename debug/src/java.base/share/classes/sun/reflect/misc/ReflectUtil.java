@@ -25,8 +25,7 @@ public final class ReflectUtil {
      *           {@link Reflection#ensureMemberAccess(Class, Class, Class, int)}
      *           which should be used instead.
      */
-    public static void ensureMemberAccess(Class<?> currentClass, Class<?> memberClass, Object target, int modifiers) throws IllegalAccessException
-    {
+    public static void ensureMemberAccess(Class<?> currentClass, Class<?> memberClass, Object target, int modifiers) throws IllegalAccessException {
         Reflection.ensureMemberAccess(currentClass, memberClass, target == null ? null : target.getClass(), modifiers);
     }
 

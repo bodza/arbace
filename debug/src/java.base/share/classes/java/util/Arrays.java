@@ -1,6 +1,5 @@
 package java.util;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.util.ArraysSupport;
 
 import java.lang.reflect.Array;
@@ -15,11 +14,6 @@ import java.util.function.IntToLongFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.LongBinaryOperator;
 import java.util.function.UnaryOperator;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This class contains various methods for manipulating arrays (such as
@@ -2530,7 +2524,7 @@ public class Arrays {
      * @param a2 the other array to be tested for equality
      * @return {@code true} if the two arrays are equal
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static boolean equals(char[] a, char[] a2) {
         if (a==a2)
             return true;
@@ -2599,7 +2593,7 @@ public class Arrays {
      * @param a2 the other array to be tested for equality
      * @return {@code true} if the two arrays are equal
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static boolean equals(byte[] a, byte[] a2) {
         if (a==a2)
             return true;
@@ -3426,7 +3420,7 @@ public class Arrays {
      *     {@code original} is not of a runtime type that can be stored in
      *     an array of class {@code newType}
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
         @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class) ? (T[]) new Object[newLength] : (T[]) Array.newInstance(newType.getComponentType(), newLength);
@@ -3675,7 +3669,7 @@ public class Arrays {
      *     {@code original} is not of a runtime type that can be stored in
      *     an array of class {@code newType}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static <T,U> T[] copyOfRange(U[] original, int from, int to, Class<? extends T[]> newType) {
         int newLength = to - from;
         if (newLength < 0)
@@ -3983,8 +3977,7 @@ public class Arrays {
         return new ArrayList<>(a);
     }
 
-    private static class ArrayList<E> extends AbstractList<E> implements RandomAccess
-    {
+    private static class ArrayList<E> extends AbstractList<E> implements RandomAccess {
         private final E[] a;
 
         ArrayList(E[] array) {
@@ -4868,7 +4861,7 @@ public class Arrays {
      * Setting a subrange of an array, using a generator function to compute
      * each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .forEach(i -> array[i] = generator.apply(i));
      * }</pre>
      *
@@ -4896,7 +4889,7 @@ public class Arrays {
      * Setting a subrange of an array, in parallel, using a generator function
      * to compute each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .parallel()
      *          .forEach(i -> array[i] = generator.apply(i));
      * }</pre>
@@ -4909,7 +4902,7 @@ public class Arrays {
      */
     public static <T> void parallelSetAll(T[] array, IntFunction<? extends T> generator) {
         Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.apply(i); });
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.apply(i); });
     }
 
     /**
@@ -4923,7 +4916,7 @@ public class Arrays {
      * Setting a subrange of an array, using a generator function to compute
      * each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .forEach(i -> array[i] = generator.applyAsInt(i));
      * }</pre>
      *
@@ -4950,7 +4943,7 @@ public class Arrays {
      * Setting a subrange of an array, in parallel, using a generator function
      * to compute each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .parallel()
      *          .forEach(i -> array[i] = generator.applyAsInt(i));
      * }</pre>
@@ -4962,7 +4955,7 @@ public class Arrays {
      */
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
 
     /**
@@ -4976,7 +4969,7 @@ public class Arrays {
      * Setting a subrange of an array, using a generator function to compute
      * each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .forEach(i -> array[i] = generator.applyAsLong(i));
      * }</pre>
      *
@@ -5003,7 +4996,7 @@ public class Arrays {
      * Setting a subrange of an array, in parallel, using a generator function
      * to compute each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .parallel()
      *          .forEach(i -> array[i] = generator.applyAsLong(i));
      * }</pre>
@@ -5015,7 +5008,7 @@ public class Arrays {
      */
     public static void parallelSetAll(long[] array, IntToLongFunction generator) {
         Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsLong(i); });
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsLong(i); });
     }
 
     /**
@@ -5029,7 +5022,7 @@ public class Arrays {
      * Setting a subrange of an array, using a generator function to compute
      * each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .forEach(i -> array[i] = generator.applyAsDouble(i));
      * }</pre>
      *
@@ -5056,7 +5049,7 @@ public class Arrays {
      * Setting a subrange of an array, in parallel, using a generator function
      * to compute each element, can be written as follows:
      * <pre>{@code
-     * IntStream.range(startInclusive, endExclusive)
+     * IntStream.range(startInclusive, endExclusive)
      *          .parallel()
      *          .forEach(i -> array[i] = generator.applyAsDouble(i));
      * }</pre>
@@ -5068,7 +5061,7 @@ public class Arrays {
      */
     public static void parallelSetAll(double[] array, IntToDoubleFunction generator) {
         Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsDouble(i); });
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsDouble(i); });
     }
 
     /**
@@ -5215,117 +5208,117 @@ public class Arrays {
     }
 
     /**
-     * Returns a sequential {@link Stream} with the specified array as its
+     * Returns a sequential {@link Stream} with the specified array as its
      * source.
      *
      * @param <T> The type of the array elements
      * @param array The array, assumed to be unmodified during use
-     * @return a {@code Stream} for the array
+     * @return a {@code Stream} for the array
      */
-    public static <T> Stream<T> stream(T[] array) {
+    public static <T> Stream<T> stream(T[] array) {
         return stream(array, 0, array.length);
     }
 
     /**
-     * Returns a sequential {@link Stream} with the specified range of the
+     * Returns a sequential {@link Stream} with the specified range of the
      * specified array as its source.
      *
      * @param <T> the type of the array elements
      * @param array the array, assumed to be unmodified during use
      * @param startInclusive the first index to cover, inclusive
      * @param endExclusive index immediately past the last index to cover
-     * @return a {@code Stream} for the array range
+     * @return a {@code Stream} for the array range
      * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
      *         negative, {@code endExclusive} is less than
      *         {@code startInclusive}, or {@code endExclusive} is greater than
      *         the array size
      */
-    public static <T> Stream<T> stream(T[] array, int startInclusive, int endExclusive) {
-        return StreamSupport.stream(spliterator(array, startInclusive, endExclusive), false);
+    public static <T> Stream<T> stream(T[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.stream(spliterator(array, startInclusive, endExclusive), false);
     }
 
     /**
-     * Returns a sequential {@link IntStream} with the specified array as its
+     * Returns a sequential {@link IntStream} with the specified array as its
      * source.
      *
      * @param array the array, assumed to be unmodified during use
-     * @return an {@code IntStream} for the array
+     * @return an {@code IntStream} for the array
      */
-    public static IntStream stream(int[] array) {
+    public static IntStream stream(int[] array) {
         return stream(array, 0, array.length);
     }
 
     /**
-     * Returns a sequential {@link IntStream} with the specified range of the
+     * Returns a sequential {@link IntStream} with the specified range of the
      * specified array as its source.
      *
      * @param array the array, assumed to be unmodified during use
      * @param startInclusive the first index to cover, inclusive
      * @param endExclusive index immediately past the last index to cover
-     * @return an {@code IntStream} for the array range
+     * @return an {@code IntStream} for the array range
      * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
      *         negative, {@code endExclusive} is less than
      *         {@code startInclusive}, or {@code endExclusive} is greater than
      *         the array size
      */
-    public static IntStream stream(int[] array, int startInclusive, int endExclusive) {
-        return StreamSupport.intStream(spliterator(array, startInclusive, endExclusive), false);
+    public static IntStream stream(int[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.intStream(spliterator(array, startInclusive, endExclusive), false);
     }
 
     /**
-     * Returns a sequential {@link LongStream} with the specified array as its
+     * Returns a sequential {@link LongStream} with the specified array as its
      * source.
      *
      * @param array the array, assumed to be unmodified during use
-     * @return a {@code LongStream} for the array
+     * @return a {@code LongStream} for the array
      */
-    public static LongStream stream(long[] array) {
+    public static LongStream stream(long[] array) {
         return stream(array, 0, array.length);
     }
 
     /**
-     * Returns a sequential {@link LongStream} with the specified range of the
+     * Returns a sequential {@link LongStream} with the specified range of the
      * specified array as its source.
      *
      * @param array the array, assumed to be unmodified during use
      * @param startInclusive the first index to cover, inclusive
      * @param endExclusive index immediately past the last index to cover
-     * @return a {@code LongStream} for the array range
+     * @return a {@code LongStream} for the array range
      * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
      *         negative, {@code endExclusive} is less than
      *         {@code startInclusive}, or {@code endExclusive} is greater than
      *         the array size
      */
-    public static LongStream stream(long[] array, int startInclusive, int endExclusive) {
-        return StreamSupport.longStream(spliterator(array, startInclusive, endExclusive), false);
+    public static LongStream stream(long[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.longStream(spliterator(array, startInclusive, endExclusive), false);
     }
 
     /**
-     * Returns a sequential {@link DoubleStream} with the specified array as its
+     * Returns a sequential {@link DoubleStream} with the specified array as its
      * source.
      *
      * @param array the array, assumed to be unmodified during use
-     * @return a {@code DoubleStream} for the array
+     * @return a {@code DoubleStream} for the array
      */
-    public static DoubleStream stream(double[] array) {
+    public static DoubleStream stream(double[] array) {
         return stream(array, 0, array.length);
     }
 
     /**
-     * Returns a sequential {@link DoubleStream} with the specified range of the
+     * Returns a sequential {@link DoubleStream} with the specified range of the
      * specified array as its source.
      *
      * @param array the array, assumed to be unmodified during use
      * @param startInclusive the first index to cover, inclusive
      * @param endExclusive index immediately past the last index to cover
-     * @return a {@code DoubleStream} for the array range
+     * @return a {@code DoubleStream} for the array range
      * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
      *         negative, {@code endExclusive} is less than
      *         {@code startInclusive}, or {@code endExclusive} is greater than
      *         the array size
      */
-    public static DoubleStream stream(double[] array, int startInclusive, int endExclusive) {
-        return StreamSupport.doubleStream(spliterator(array, startInclusive, endExclusive), false);
+    public static DoubleStream stream(double[] array, int startInclusive, int endExclusive) {
+        return StreamSupport.doubleStream(spliterator(array, startInclusive, endExclusive), false);
     }
 
     // Comparison methods

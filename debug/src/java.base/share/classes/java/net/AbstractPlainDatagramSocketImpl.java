@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import sun.net.ResourceManager;
-
 /**
  * Abstract datagram and multicast socket implementation base class.
  * Note: This is not a public class, so that applets cannot call
@@ -75,13 +73,11 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
      * Creates a datagram socket
      */
     protected synchronized void create() throws SocketException {
-        ResourceManager.beforeUdpCreate();
         fd = new FileDescriptor();
         try {
             datagramSocketCreate();
             SocketCleanable.register(fd);
         } catch (SocketException ioe) {
-            ResourceManager.afterUdpClose();
             fd = null;
             throw ioe;
         }
@@ -159,13 +155,13 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
      * Set the TTL (time-to-live) option.
      * @param ttl TTL to be set.
      */
-    @Deprecated
+    // @Deprecated
     protected abstract void setTTL(byte ttl) throws IOException;
 
     /**
      * Get the TTL (time-to-live) option.
      */
-    @Deprecated
+    // @Deprecated
     protected abstract byte getTTL() throws IOException;
 
     /**
@@ -222,7 +218,6 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
         if (fd != null) {
             SocketCleanable.unregister(fd);
             datagramSocketClose();
-            ResourceManager.afterUdpClose();
             fd = null;
         }
     }

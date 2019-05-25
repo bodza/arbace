@@ -589,8 +589,7 @@ public final class URI implements Comparable<URI> {
      *         RFC&nbsp;2396, or if the authority component of the string is
      *         present but cannot be parsed as a server-based authority
      */
-    public URI(String scheme, String userInfo, String host, int port, String path, String query, String fragment) throws URISyntaxException
-    {
+    public URI(String scheme, String userInfo, String host, int port, String path, String query, String fragment) throws URISyntaxException {
         String s = toString(scheme, null, null, userInfo, host, port, path, query, fragment);
         checkPath(s, scheme, path);
         new Parser(s).parse(true);
@@ -654,8 +653,7 @@ public final class URI implements Comparable<URI> {
      *         RFC&nbsp;2396, or if the authority component of the string is
      *         present but cannot be parsed as a server-based authority
      */
-    public URI(String scheme, String authority, String path, String query, String fragment) throws URISyntaxException
-    {
+    public URI(String scheme, String authority, String path, String query, String fragment) throws URISyntaxException {
         String s = toString(scheme, null, authority, null, null, -1, path, query, fragment);
         checkPath(s, scheme, path);
         new Parser(s).parse(false);
@@ -683,8 +681,7 @@ public final class URI implements Comparable<URI> {
      *          If the URI string constructed from the given components
      *          violates RFC&nbsp;2396
      */
-    public URI(String scheme, String host, String path, String fragment) throws URISyntaxException
-    {
+    public URI(String scheme, String host, String path, String fragment) throws URISyntaxException {
         this(scheme, null, host, -1, path, null, fragment);
     }
 
@@ -723,8 +720,7 @@ public final class URI implements Comparable<URI> {
      *          If the URI string constructed from the given components
      *          violates RFC&nbsp;2396
      */
-    public URI(String scheme, String ssp, String fragment) throws URISyntaxException
-    {
+    public URI(String scheme, String ssp, String fragment) throws URISyntaxException {
         new Parser(toString(scheme, ssp, null, null, null, -1, null, null, fragment)).parse(false);
     }
 
@@ -829,8 +825,7 @@ public final class URI implements Comparable<URI> {
      *          but cannot be parsed as a server-based authority
      *          according to RFC&nbsp;2396
      */
-    public URI parseServerAuthority() throws URISyntaxException
-    {
+    public URI parseServerAuthority() throws URISyntaxException {
         // We could be clever and cache the error message and index from the
         // exception thrown during the original parse, but that would require
         // either more fields or a more-obscure representation.
@@ -1670,8 +1665,7 @@ public final class URI implements Comparable<URI> {
     private static int hash(int hash, String s) {
         if (s == null)
             return hash;
-        return s.indexOf('%') < 0 ? hash * 127 + s.hashCode()
-                                  : normalizedHash(hash, s);
+        return s.indexOf('%') < 0 ? hash * 127 + s.hashCode() : normalizedHash(hash, s);
     }
 
     private static int normalizedHash(int hash, String s) {
@@ -1739,16 +1733,14 @@ public final class URI implements Comparable<URI> {
 
     // If a scheme is given then the path, if given, must be absolute
     //
-    private static void checkPath(String s, String scheme, String path) throws URISyntaxException
-    {
+    private static void checkPath(String s, String scheme, String path) throws URISyntaxException {
         if (scheme != null) {
             if ((path != null) && ((path.length() > 0) && (path.charAt(0) != '/')))
                 throw new URISyntaxException(s, "Relative path in absolute URI");
         }
     }
 
-    private void appendAuthority(StringBuilder sb, String authority, String userInfo, String host, int port)
-    {
+    private void appendAuthority(StringBuilder sb, String authority, String userInfo, String host, int port) {
         if (host != null) {
             sb.append("//");
             if (userInfo != null) {
@@ -1789,8 +1781,7 @@ public final class URI implements Comparable<URI> {
         }
     }
 
-    private void appendSchemeSpecificPart(StringBuilder sb, String opaquePart, String authority, String userInfo, String host, int port, String path, String query)
-    {
+    private void appendSchemeSpecificPart(StringBuilder sb, String opaquePart, String authority, String userInfo, String host, int port, String path, String query) {
         if (opaquePart != null) {
             /* check if SSP begins with an IPv6 address
              * because we must not quote a literal IPv6 address
@@ -1830,8 +1821,7 @@ public final class URI implements Comparable<URI> {
         }
     }
 
-    private String toString(String scheme, String opaquePart, String authority, String userInfo, String host, int port, String path, String query, String fragment)
-    {
+    private String toString(String scheme, String opaquePart, String authority, String userInfo, String host, int port, String path, String query, String fragment) {
         StringBuilder sb = new StringBuilder();
         if (scheme != null) {
             sb.append(scheme);
@@ -1847,8 +1837,7 @@ public final class URI implements Comparable<URI> {
     // -- Normalization, resolution, and relativization --
 
     // RFC2396 5.2 (6)
-    private static String resolvePath(String base, String child, boolean absolute)
-    {
+    private static String resolvePath(String base, String child, boolean absolute) {
         int i = base.lastIndexOf('/');
         int cn = child.length();
         String path = "";
@@ -2633,8 +2622,7 @@ public final class URI implements Comparable<URI> {
             throw new URISyntaxException(input, reason, p);
         }
 
-        private void failExpecting(String expected, int p) throws URISyntaxException
-        {
+        private void failExpecting(String expected, int p) throws URISyntaxException {
             fail("Expected " + expected, p);
         }
 
@@ -2742,8 +2730,7 @@ public final class URI implements Comparable<URI> {
         // This method assumes that if escapes are allowed then visible
         // non-US-ASCII chars are also allowed.
         //
-        private int scanEscape(int start, int n, char first) throws URISyntaxException
-        {
+        private int scanEscape(int start, int n, char first) throws URISyntaxException {
             int p = start;
             char c = first;
             if (c == '%') {
@@ -2765,8 +2752,7 @@ public final class URI implements Comparable<URI> {
 
         // Scan chars that match the given mask pair
         //
-        private int scan(int start, int n, long lowMask, long highMask) throws URISyntaxException
-        {
+        private int scan(int start, int n, long lowMask, long highMask) throws URISyntaxException {
             int p = start;
             while (p < n) {
                 char c = input.charAt(p);
@@ -2788,8 +2774,7 @@ public final class URI implements Comparable<URI> {
 
         // Check that each of the chars in [start, end) matches the given mask
         //
-        private void checkChars(int start, int end, long lowMask, long highMask, String what) throws URISyntaxException
-        {
+        private void checkChars(int start, int end, long lowMask, long highMask, String what) throws URISyntaxException {
             int p = scan(start, end, lowMask, highMask);
             if (p < end)
                 fail("Illegal character in " + what, p);
@@ -2797,8 +2782,7 @@ public final class URI implements Comparable<URI> {
 
         // Check that the char at position p matches the given mask
         //
-        private void checkChar(int p, long lowMask, long highMask, String what) throws URISyntaxException
-        {
+        private void checkChar(int p, long lowMask, long highMask, String what) throws URISyntaxException {
             checkChars(p, p + 1, lowMask, highMask, what);
         }
 
@@ -2854,8 +2838,7 @@ public final class URI implements Comparable<URI> {
         // The primary consequence of this deviation is that "#f" parses as a
         // relative URI with an empty path.
         //
-        private int parseHierarchical(int start, int n) throws URISyntaxException
-        {
+        private int parseHierarchical(int start, int n) throws URISyntaxException {
             int p = start;
             if (at(p, n, '/') && at(p + 1, n, '/')) {
                 p += 2;
@@ -2890,8 +2873,7 @@ public final class URI implements Comparable<URI> {
         // input string to resolve this: If the complete authority did not
         // parse as a server then we try to parse it as a registry name.
         //
-        private int parseAuthority(int start, int n) throws URISyntaxException
-        {
+        private int parseAuthority(int start, int n) throws URISyntaxException {
             int p = start;
             int q = p;
             URISyntaxException ex = null;
@@ -2958,8 +2940,7 @@ public final class URI implements Comparable<URI> {
 
         // [<userinfo>@]<host>[:<port>]
         //
-        private int parseServer(int start, int n) throws URISyntaxException
-        {
+        private int parseServer(int start, int n) throws URISyntaxException {
             int p = start;
             int q;
 
@@ -3023,8 +3004,7 @@ public final class URI implements Comparable<URI> {
 
         // Scan a string of decimal digits whose value fits in a byte
         //
-        private int scanByte(int start, int n) throws URISyntaxException
-        {
+        private int scanByte(int start, int n) throws URISyntaxException {
             int p = start;
             int q = scan(p, n, L_DIGIT, H_DIGIT);
             if (q <= p)
@@ -3049,8 +3029,7 @@ public final class URI implements Comparable<URI> {
         // address.  It won't parse as a hostname anyway, so making that
         // assumption here allows more meaningful exceptions to be thrown.
         //
-        private int scanIPv4Address(int start, int n, boolean strict) throws URISyntaxException
-        {
+        private int scanIPv4Address(int start, int n, boolean strict) throws URISyntaxException {
             int p = start;
             int q;
             int m = scan(p, n, L_DIGIT | L_DOT, H_DIGIT | H_DOT);
@@ -3076,8 +3055,7 @@ public final class URI implements Comparable<URI> {
         // Take an IPv4 address: Throw an exception if the given interval
         // contains anything except an IPv4 address
         //
-        private int takeIPv4Address(int start, int n, String expected) throws URISyntaxException
-        {
+        private int takeIPv4Address(int start, int n, String expected) throws URISyntaxException {
             int p = scanIPv4Address(start, n, true);
             if (p <= start)
                 failExpecting(expected, start);
@@ -3118,8 +3096,7 @@ public final class URI implements Comparable<URI> {
         // domainlabel   = alphanum | alphanum *( alphanum | "-" ) alphanum
         // toplabel      = alpha | alpha *( alphanum | "-" ) alphanum
         //
-        private int parseHostname(int start, int n) throws URISyntaxException
-        {
+        private int parseHostname(int start, int n) throws URISyntaxException {
             int p = start;
             int q;
             int l = -1; // Start of last parsed label
@@ -3204,8 +3181,7 @@ public final class URI implements Comparable<URI> {
 
         private int ipv6byteCount = 0;
 
-        private int parseIPv6Reference(int start, int n) throws URISyntaxException
-        {
+        private int parseIPv6Reference(int start, int n) throws URISyntaxException {
             int p = start;
             int q;
             boolean compressedZeros = false;
@@ -3237,8 +3213,7 @@ public final class URI implements Comparable<URI> {
             return p;
         }
 
-        private int scanHexPost(int start, int n) throws URISyntaxException
-        {
+        private int scanHexPost(int start, int n) throws URISyntaxException {
             int p = start;
             int q;
 
@@ -3262,8 +3237,7 @@ public final class URI implements Comparable<URI> {
 
         // Scan a hex sequence; return -1 if one could not be scanned
         //
-        private int scanHexSeq(int start, int n) throws URISyntaxException
-        {
+        private int scanHexSeq(int start, int n) throws URISyntaxException {
             int p = start;
             int q;
 

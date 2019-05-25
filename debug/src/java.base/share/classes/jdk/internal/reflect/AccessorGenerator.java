@@ -371,9 +371,7 @@ class AccessorGenerator implements ClassFileConstants {
       * Returns class name in "internal" form (i.e., '/' separators
       * instead of '.')
       */
-    protected static String getClassName
-        (Class<?> c, boolean addPrefixAndSuffixForNonPrimitiveTypes)
-    {
+    protected static String getClassName(Class<?> c, boolean addPrefixAndSuffixForNonPrimitiveTypes) {
         if (c.isPrimitive()) {
             if (c == Boolean.TYPE) {
                 return "Z";
@@ -430,8 +428,7 @@ class AccessorGenerator implements ClassFileConstants {
     // length. The exception table may be null, but if non-null must
     // NOT contain the exception table's length. The checked exception
     // indices may be null.
-    protected void emitMethod(short nameIdx, int numArgs, ClassFileAssembler code, ClassFileAssembler exceptionTable, short[] checkedExceptionIndices)
-    {
+    protected void emitMethod(short nameIdx, int numArgs, ClassFileAssembler code, ClassFileAssembler exceptionTable, short[] checkedExceptionIndices) {
         int codeLen = code.getLength();
         int excLen  = 0;
         if (exceptionTable != null) {
@@ -597,11 +594,7 @@ class AccessorGenerator implements ClassFileConstants {
       * conversion exists; i.e., canWidenTo must have already been
       * called and returned true.
       */
-    protected static void emitWideningBytecodeForPrimitiveConversion
-        (ClassFileAssembler cb,
-         Class<?> fromType,
-         Class<?> toType)
-    {
+    protected static void emitWideningBytecodeForPrimitiveConversion(ClassFileAssembler cb, Class<?> fromType, Class<?> toType) {
         // Note that widening conversions for integral types (i.e., "b2s",
         // "s2i") are no-ops since values on the Java stack are
         // sign-extended.

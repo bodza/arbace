@@ -95,8 +95,7 @@ public final class UTF_8 extends Unicode {
             return (b3 & 0xc0) != 0x80;
         }
 
-        private static CoderResult lookupN(ByteBuffer src, int n)
-        {
+        private static CoderResult lookupN(ByteBuffer src, int n) {
             for (int i = 1; i < n; i++) {
                if (isNotContinuation(src.get()))
                    return CoderResult.malformedForLength(i);
@@ -127,30 +126,26 @@ public final class UTF_8 extends Unicode {
             }
         }
 
-        private static CoderResult malformed(ByteBuffer src, int sp, CharBuffer dst, int dp, int nb)
-        {
+        private static CoderResult malformed(ByteBuffer src, int sp, CharBuffer dst, int dp, int nb) {
             src.position(sp - src.arrayOffset());
             CoderResult cr = malformedN(src, nb);
             updatePositions(src, sp, dst, dp);
             return cr;
         }
 
-        private static CoderResult malformed(ByteBuffer src, int mark, int nb)
-        {
+        private static CoderResult malformed(ByteBuffer src, int mark, int nb) {
             src.position(mark);
             CoderResult cr = malformedN(src, nb);
             src.position(mark);
             return cr;
         }
 
-        private static CoderResult malformedForLength(ByteBuffer src, int sp, CharBuffer dst, int dp, int malformedNB)
-        {
+        private static CoderResult malformedForLength(ByteBuffer src, int sp, CharBuffer dst, int dp, int malformedNB) {
             updatePositions(src, sp, dst, dp);
             return CoderResult.malformedForLength(malformedNB);
         }
 
-        private static CoderResult malformedForLength(ByteBuffer src, int mark, int malformedNB)
-        {
+        private static CoderResult malformedForLength(ByteBuffer src, int mark, int malformedNB) {
             src.position(mark);
             return CoderResult.malformedForLength(malformedNB);
         }
@@ -165,8 +160,7 @@ public final class UTF_8 extends Unicode {
             return (nb == 0 || src.remaining() < nb) ? CoderResult.UNDERFLOW : CoderResult.OVERFLOW;
         }
 
-        private CoderResult decodeArrayLoop(ByteBuffer src, CharBuffer dst)
-        {
+        private CoderResult decodeArrayLoop(ByteBuffer src, CharBuffer dst) {
             // This method is optimized for ASCII input.
             byte[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
@@ -257,8 +251,7 @@ public final class UTF_8 extends Unicode {
             return xflow(src, sp, sl, dst, dp, 0);
         }
 
-        private CoderResult decodeBufferLoop(ByteBuffer src, CharBuffer dst)
-        {
+        private CoderResult decodeBufferLoop(ByteBuffer src, CharBuffer dst) {
             int mark = src.position();
             int limit = src.limit();
             while (mark < limit) {
@@ -332,16 +325,14 @@ public final class UTF_8 extends Unicode {
             return xflow(src, mark, 0);
         }
 
-        protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst)
-        {
+        protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst) {
             if (src.hasArray() && dst.hasArray())
                 return decodeArrayLoop(src, dst);
             else
                 return decodeBufferLoop(src, dst);
         }
 
-        private static ByteBuffer getByteBuffer(ByteBuffer bb, byte[] ba, int sp)
-        {
+        private static ByteBuffer getByteBuffer(ByteBuffer bb, byte[] ba, int sp) {
             if (bb == null)
                 bb = ByteBuffer.wrap(ba);
             bb.position(sp);
@@ -373,8 +364,7 @@ public final class UTF_8 extends Unicode {
         }
 
         private Surrogate.Parser sgp;
-        private CoderResult encodeArrayLoop(CharBuffer src, ByteBuffer dst)
-        {
+        private CoderResult encodeArrayLoop(CharBuffer src, ByteBuffer dst) {
             char[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
             int sl = src.arrayOffset() + src.limit();
@@ -430,8 +420,7 @@ public final class UTF_8 extends Unicode {
             return CoderResult.UNDERFLOW;
         }
 
-        private CoderResult encodeBufferLoop(CharBuffer src, ByteBuffer dst)
-        {
+        private CoderResult encodeBufferLoop(CharBuffer src, ByteBuffer dst) {
             int mark = src.position();
             while (src.hasRemaining()) {
                 char c = src.get();
@@ -476,8 +465,7 @@ public final class UTF_8 extends Unicode {
             return CoderResult.UNDERFLOW;
         }
 
-        protected final CoderResult encodeLoop(CharBuffer src, ByteBuffer dst)
-        {
+        protected final CoderResult encodeLoop(CharBuffer src, ByteBuffer dst) {
             if (src.hasArray() && dst.hasArray())
                 return encodeArrayLoop(src, dst);
             else

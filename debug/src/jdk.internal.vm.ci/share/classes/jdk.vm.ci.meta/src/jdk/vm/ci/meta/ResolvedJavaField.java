@@ -1,12 +1,11 @@
 package jdk.vm.ci.meta;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Modifier;
 
 /**
  * Represents a reference to a resolved Java field.
  */
-public interface ResolvedJavaField extends JavaField, AnnotatedElement {
+public interface ResolvedJavaField extends JavaField {
     /**
      * {@inheritDoc}
      *

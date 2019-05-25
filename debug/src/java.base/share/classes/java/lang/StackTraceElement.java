@@ -29,7 +29,6 @@ public final class StackTraceElement {
     private String classLoaderName;
     private String declaringClass;
     private String methodName;
-    private String fileName;
     private int    lineNumber;
     private byte   format = 0; // Default to show all
 
@@ -41,9 +40,6 @@ public final class StackTraceElement {
      *        the execution point represented by the stack trace element
      * @param methodName the name of the method containing the execution point
      *        represented by the stack trace element
-     * @param fileName the name of the file containing the execution point
-     *         represented by the stack trace element, or {@code null} if
-     *         this information is unavailable
      * @param lineNumber the line number of the source line containing the
      *         execution point represented by this stack trace element, or
      *         a negative number if this information is unavailable. A value
@@ -53,8 +49,8 @@ public final class StackTraceElement {
      * @throws NullPointerException if {@code declaringClass} or
      *         {@code methodName} is null
      */
-    public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber) {
-        this(null, declaringClass, methodName, fileName, lineNumber);
+    public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber) {
+        this(null, declaringClass, methodName, null, lineNumber);
     }
 
     /**
@@ -68,9 +64,6 @@ public final class StackTraceElement {
      *        the execution point represented by the stack trace element
      * @param methodName the name of the method containing the execution point
      *        represented by the stack trace element
-     * @param fileName the name of the file containing the execution point
-     *        represented by the stack trace element, or {@code null} if
-     *        this information is unavailable
      * @param lineNumber the line number of the source line containing the
      *        execution point represented by this stack trace element, or
      *        a negative number if this information is unavailable. A value
@@ -80,11 +73,10 @@ public final class StackTraceElement {
      * @throws NullPointerException if {@code declaringClass} is {@code null}
      *         or {@code methodName} is {@code null}
      */
-    public StackTraceElement(String classLoaderName, String declaringClass, String methodName, String fileName, int lineNumber) {
+    public StackTraceElement(String classLoaderName, String declaringClass, String methodName, String fileName, int lineNumber) {
         this.classLoaderName = classLoaderName;
         this.declaringClass  = Objects.requireNonNull(declaringClass, "Declaring class is null");
         this.methodName      = Objects.requireNonNull(methodName, "Method name is null");
-        this.fileName        = fileName;
         this.lineNumber      = lineNumber;
     }
 
@@ -93,37 +85,6 @@ public final class StackTraceElement {
      * for Throwable and StackFrameInfo
      */
     private StackTraceElement() {}
-
-    /**
-     * Returns the name of the source file containing the execution point
-     * represented by this stack trace element.  Generally, this corresponds
-     * to the {@code SourceFile} attribute of the relevant {@code class}
-     * file (as per <i>The Java Virtual Machine Specification</i>, Section
-     * 4.7.7).  In some systems, the name may refer to some source code unit
-     * other than a file, such as an entry in source repository.
-     *
-     * @return the name of the file containing the execution point
-     *         represented by this stack trace element, or {@code null} if
-     *         this information is unavailable.
-     */
-    public String getFileName() {
-        return fileName;
-    }
-
-    /**
-     * Returns the line number of the source line containing the execution
-     * point represented by this stack trace element.  Generally, this is
-     * derived from the {@code LineNumberTable} attribute of the relevant
-     * {@code class} file (as per <i>The Java Virtual Machine
-     * Specification</i>, Section 4.7.8).
-     *
-     * @return the line number of the source line containing the execution
-     *         point represented by this stack trace element, or a negative
-     *         number if this information is unavailable.
-     */
-    public int getLineNumber() {
-        return lineNumber;
-    }
 
     /**
      * Returns the name of the class loader of the class containing the
@@ -251,11 +212,7 @@ public final class StackTraceElement {
         }
         s = s.isEmpty() ? declaringClass : s + "/" + declaringClass;
 
-        return s + "." + methodName + "(" +
-             (isNativeMethod() ? "Native Method)" :
-              (fileName != null && lineNumber >= 0 ?
-               fileName + ":" + lineNumber + ")" :
-                (fileName != null ?  ""+fileName+")" : "Unknown Source)")));
+        return s + "." + methodName + "(" + (isNativeMethod() ? "Native Method)" : ")");
     }
 
     /**
@@ -267,8 +224,6 @@ public final class StackTraceElement {
      *     equals(a.getClassLoaderName(), b.getClassLoaderName()) &&
      *     equals(a.getClassName(), b.getClassName()) &&
      *     equals(a.getMethodName(), b.getMethodName())
-     *     equals(a.getFileName(), b.getFileName()) &&
-     *     a.getLineNumber() == b.getLineNumber()
      *
      * }</pre>
      * where {@code equals} has the semantics of {@link
@@ -280,26 +235,24 @@ public final class StackTraceElement {
      *         execution point as this instance.
      */
     public boolean equals(Object obj) {
-        if (obj==this)
+        if (obj == this)
             return true;
         if (!(obj instanceof StackTraceElement))
             return false;
         StackTraceElement e = (StackTraceElement)obj;
-        return Objects.equals(classLoaderName, e.classLoaderName) &&
-            e.declaringClass.equals(declaringClass) &&
-            e.lineNumber == lineNumber &&
-            Objects.equals(methodName, e.methodName) &&
-            Objects.equals(fileName, e.fileName);
+        return Objects.equals(classLoaderName, e.classLoaderName)
+            && e.declaringClass.equals(declaringClass)
+            && e.lineNumber == lineNumber
+            && Objects.equals(methodName, e.methodName);
     }
 
     /**
      * Returns a hash code value for this stack trace element.
      */
     public int hashCode() {
-        int result = 31*declaringClass.hashCode() + methodName.hashCode();
-        result = 31*result + Objects.hashCode(classLoaderName);
-        result = 31*result + Objects.hashCode(fileName);
-        result = 31*result + lineNumber;
+        int result = 31 * declaringClass.hashCode() + methodName.hashCode();
+        result = 31 * result + Objects.hashCode(classLoaderName);
+        result = 31 * result + lineNumber;
         return result;
     }
 

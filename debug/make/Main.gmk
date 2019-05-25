@@ -91,17 +91,6 @@ ALL_TARGETS += buildtools-langtools buildtools-jdk buildtools-modules buildtools
 
 ALL_TARGETS += $(GENSRC_TARGETS)
 
-# Generate data targets
-
-$(eval $(call DeclareRecipesForPhase, GENDATA, \
-    TARGET_SUFFIX := gendata, \
-    FILE_PREFIX := Gendata, \
-    MAKE_SUBDIR := gendata, \
-    CHECK_MODULES := $(ALL_MODULES), \
-    USE_WRAPPER := true))
-
-ALL_TARGETS += $(GENDATA_TARGETS)
-
 # Copy files targets
 
 $(eval $(call DeclareRecipesForPhase, COPY, \
@@ -221,8 +210,6 @@ else
 
   $(GENSRC_MODULEINFO_TARGETS): buildtools-jdk
 
-  $(GENDATA_TARGETS): buildtools-jdk
-
   # Declare dependencies between hotspot-<variant>* targets
   $(foreach v, $(JVM_VARIANTS), $(eval hotspot-$v: hotspot-$v-gensrc hotspot-$v-libs) $(eval hotspot-$v-libs: hotspot-$v-gensrc java.base-copy))
 
@@ -260,8 +247,8 @@ else
   JVM_MAIN_TARGETS ?= hotspot
 
   # The optimize target can run as soon as the modules dir has been completely populated
-  # (java, copy and gendata targets) and the basic libs and launchers have been built.
-  exploded-image-optimize: java copy gendata java.base-libs java.base-launchers buildtools-modules
+  # (java and copy targets) and the basic libs and launchers have been built.
+  exploded-image-optimize: java copy java.base-libs java.base-launchers buildtools-modules
 endif
 
 # Virtual targets without recipes
@@ -277,8 +264,6 @@ $(foreach v, $(JVM_VARIANTS), $(eval hotspot-libs: hotspot-$v-libs) $(eval hotsp
 
 gensrc: $(GENSRC_TARGETS)
 
-gendata: $(GENDATA_TARGETS)
-
 copy: $(ALL_COPY_TARGETS)
 
 java: $(JAVA_TARGETS)
@@ -291,7 +276,6 @@ launchers: $(LAUNCHER_TARGETS)
 # to that module <module>-*, that are needed for the exploded image.
 $(foreach m, $(GENSRC_MODULES), $(eval $m: $m-gensrc))
 $(foreach m, $(JAVA_MODULES), $(eval $m: $m-java))
-$(foreach m, $(GENDATA_MODULES), $(eval $m: $m-gendata))
 $(foreach m, $(LIBS_MODULES), $(eval $m: $m-libs))
 $(foreach m, $(LAUNCHER_MODULES), $(eval $m: $m-launchers))
 $(foreach m, $(ALL_COPY_MODULES), $(eval $m: $m-copy))
@@ -303,7 +287,7 @@ java.base: $(JVM_MAIN_TARGETS)
 exploded-image-base: $(ALL_MODULES)
 exploded-image: exploded-image-base exploded-image-optimize
 
-ALL_TARGETS += buildtools hotspot hotspot-libs hotspot-gensrc gensrc gendata copy java libs launchers $(ALL_MODULES) exploded-image-base exploded-image
+ALL_TARGETS += buildtools hotspot hotspot-libs hotspot-gensrc gensrc copy java libs launchers $(ALL_MODULES) exploded-image-base exploded-image
 
 # Traditional targets typically run by users.
 # These can be considered aliases for the targets now named by a more "modern" naming scheme.

@@ -147,14 +147,12 @@ class SocketAdaptor extends Socket {
         }
     }
 
-    private class SocketInputStream extends ChannelInputStream
-    {
+    private class SocketInputStream extends ChannelInputStream {
         private SocketInputStream() {
             super(sc);
         }
 
-        protected int read(ByteBuffer bb) throws IOException
-        {
+        protected int read(ByteBuffer bb) throws IOException {
             synchronized (sc.blockingLock()) {
                 if (!sc.isBlocking())
                     throw new IllegalBlockingModeException();
@@ -205,8 +203,7 @@ class SocketAdaptor extends Socket {
         return Channels.newOutputStream(sc);
     }
 
-    private void setBooleanOption(SocketOption<Boolean> name, boolean value) throws SocketException
-    {
+    private void setBooleanOption(SocketOption<Boolean> name, boolean value) throws SocketException {
         try {
             sc.setOption(name, value);
         } catch (IOException x) {
@@ -214,8 +211,7 @@ class SocketAdaptor extends Socket {
         }
     }
 
-    private void setIntOption(SocketOption<Integer> name, int value) throws SocketException
-    {
+    private void setIntOption(SocketOption<Integer> name, int value) throws SocketException {
         try {
             sc.setOption(name, value);
         } catch (IOException x) {

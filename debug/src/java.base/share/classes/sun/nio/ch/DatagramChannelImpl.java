@@ -30,8 +30,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import sun.net.ResourceManager;
-
 /**
  * An implementation of DatagramChannels.
  */
@@ -93,22 +91,18 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
 
     // -- End of fields protected by stateLock
 
-    public DatagramChannelImpl(SelectorProvider sp) throws IOException
-    {
+    public DatagramChannelImpl(SelectorProvider sp) throws IOException {
         super(sp);
-        ResourceManager.beforeUdpCreate();
         try {
             this.family = Net.isIPv6Available() ? StandardProtocolFamily.INET6 : StandardProtocolFamily.INET;
             this.fd = Net.socket(family, false);
             this.fdVal = IOUtil.fdVal(fd);
         } catch (IOException ioe) {
-            ResourceManager.afterUdpClose();
             throw ioe;
         }
     }
 
-    public DatagramChannelImpl(SelectorProvider sp, ProtocolFamily family) throws IOException
-    {
+    public DatagramChannelImpl(SelectorProvider sp, ProtocolFamily family) throws IOException {
         super(sp);
         Objects.requireNonNull(family, "'family' is null");
         if ((family != StandardProtocolFamily.INET) && (family != StandardProtocolFamily.INET6)) {
@@ -120,23 +114,17 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
             }
         }
 
-        ResourceManager.beforeUdpCreate();
         try {
             this.family = family;
             this.fd = Net.socket(family, false);
             this.fdVal = IOUtil.fdVal(fd);
         } catch (IOException ioe) {
-            ResourceManager.afterUdpClose();
             throw ioe;
         }
     }
 
-    public DatagramChannelImpl(SelectorProvider sp, FileDescriptor fd) throws IOException
-    {
+    public DatagramChannelImpl(SelectorProvider sp, FileDescriptor fd) throws IOException {
         super(sp);
-
-        // increment UDP count to match decrement when closing
-        ResourceManager.beforeUdpCreate();
 
         this.family = Net.isIPv6Available() ? StandardProtocolFamily.INET6 : StandardProtocolFamily.INET;
         this.fd = fd;
@@ -179,8 +167,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
     }
 
     @Override
-    public <T> DatagramChannel setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public <T> DatagramChannel setOption(SocketOption<T> name, T value) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -190,8 +177,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
 
             if (name == StandardSocketOptions.IP_TOS ||
                 name == StandardSocketOptions.IP_MULTICAST_TTL ||
-                name == StandardSocketOptions.IP_MULTICAST_LOOP)
-            {
+                name == StandardSocketOptions.IP_MULTICAST_LOOP) {
                 // options are protocol dependent
                 Net.setSocketOption(fd, family, name, value);
                 return this;
@@ -229,8 +215,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getOption(SocketOption<T> name) throws IOException
-    {
+    public <T> T getOption(SocketOption<T> name) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -240,8 +225,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
 
             if (name == StandardSocketOptions.IP_TOS ||
                 name == StandardSocketOptions.IP_MULTICAST_TTL ||
-                name == StandardSocketOptions.IP_MULTICAST_LOOP)
-            {
+                name == StandardSocketOptions.IP_MULTICAST_LOOP) {
                 return (T) Net.getSocketOption(fd, family, name);
             }
 
@@ -312,8 +296,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      * @throws NotYetConnectedException if mustBeConnected and not connected
      * @throws IOException if socket not bound and cannot be bound
      */
-    private SocketAddress beginRead(boolean blocking, boolean mustBeConnected) throws IOException
-    {
+    private SocketAddress beginRead(boolean blocking, boolean mustBeConnected) throws IOException {
         if (blocking) {
             // set hook for Thread.interrupt
             begin();
@@ -337,8 +320,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      *
      * @throws AsynchronousCloseException if the channel was closed asynchronously
      */
-    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 readerThread = 0;
@@ -385,8 +367,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
         }
     }
 
-    private int receive(FileDescriptor fd, ByteBuffer dst, boolean connected) throws IOException
-    {
+    private int receive(FileDescriptor fd, ByteBuffer dst, boolean connected) throws IOException {
         int pos = dst.position();
         int lim = dst.limit();
         assert (pos <= lim);
@@ -410,16 +391,14 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
         }
     }
 
-    private int receiveIntoNativeBuffer(FileDescriptor fd, ByteBuffer bb, int rem, int pos, boolean connected) throws IOException
-    {
+    private int receiveIntoNativeBuffer(FileDescriptor fd, ByteBuffer bb, int rem, int pos, boolean connected) throws IOException {
         int n = receive0(fd, ((DirectBuffer)bb).address() + pos, rem, connected);
         if (n > 0)
             bb.position(pos + n);
         return n;
     }
 
-    public int send(ByteBuffer src, SocketAddress target) throws IOException
-    {
+    public int send(ByteBuffer src, SocketAddress target) throws IOException {
         Objects.requireNonNull(src);
         InetSocketAddress isa = Net.checkAddress(target, family);
 
@@ -453,8 +432,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
         }
     }
 
-    private int send(FileDescriptor fd, ByteBuffer src, InetSocketAddress target) throws IOException
-    {
+    private int send(FileDescriptor fd, ByteBuffer src, InetSocketAddress target) throws IOException {
         if (src instanceof DirectBuffer)
             return sendFromNativeBuffer(fd, src, target);
 
@@ -482,8 +460,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
         }
     }
 
-    private int sendFromNativeBuffer(FileDescriptor fd, ByteBuffer bb, InetSocketAddress target) throws IOException
-    {
+    private int sendFromNativeBuffer(FileDescriptor fd, ByteBuffer bb, InetSocketAddress target) throws IOException {
         int pos = bb.position();
         int lim = bb.limit();
         assert (pos <= lim);
@@ -527,8 +504,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
     }
 
     @Override
-    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
-    {
+    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
         Objects.checkFromIndexSize(offset, length, dsts.length);
 
         readLock.lock();
@@ -559,8 +535,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      * @throws NotYetConnectedException if mustBeConnected and not connected
      * @throws IOException if socket not bound and cannot be bound
      */
-    private SocketAddress beginWrite(boolean blocking, boolean mustBeConnected) throws IOException
-    {
+    private SocketAddress beginWrite(boolean blocking, boolean mustBeConnected) throws IOException {
         if (blocking) {
             // set hook for Thread.interrupt
             begin();
@@ -584,8 +559,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      *
      * @throws AsynchronousCloseException if the channel was closed asynchronously
      */
-    private void endWrite(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void endWrite(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 writerThread = 0;
@@ -623,8 +597,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
     }
 
     @Override
-    public long write(ByteBuffer[] srcs, int offset, int length) throws IOException
-    {
+    public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
         Objects.checkFromIndexSize(offset, length, srcs.length);
 
         writeLock.lock();
@@ -806,8 +779,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      * Joins channel's socket to the given group/interface and
      * optional source address.
      */
-    private MembershipKey innerJoin(InetAddress group, NetworkInterface interf, InetAddress source) throws IOException
-    {
+    private MembershipKey innerJoin(InetAddress group, NetworkInterface interf, InetAddress source) throws IOException {
         if (!group.isMulticastAddress())
             throw new IllegalArgumentException("Group not a multicast address");
 
@@ -846,8 +818,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
             }
 
             MembershipKeyImpl key;
-            if ((family == StandardProtocolFamily.INET6) && ((group instanceof Inet6Address) || Net.canJoin6WithIPv4Group()))
-            {
+            if ((family == StandardProtocolFamily.INET6) && ((group instanceof Inet6Address) || Net.canJoin6WithIPv4Group())) {
                 int index = interf.getIndex();
                 if (index == -1)
                     throw new IOException("Network interface cannot be identified");
@@ -886,14 +857,12 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
     }
 
     @Override
-    public MembershipKey join(InetAddress group, NetworkInterface interf) throws IOException
-    {
+    public MembershipKey join(InetAddress group, NetworkInterface interf) throws IOException {
         return innerJoin(group, interf, null);
     }
 
     @Override
-    public MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source) throws IOException
-    {
+    public MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source) throws IOException {
         Objects.requireNonNull(source);
         return innerJoin(group, interf, source);
     }
@@ -928,8 +897,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
      * Block datagrams from given source if a memory to receive all
      * datagrams.
      */
-    void block(MembershipKeyImpl key, InetAddress source) throws IOException
-    {
+    void block(MembershipKeyImpl key, InetAddress source) throws IOException {
         assert key.channel() == this;
         assert key.sourceAddress() == null;
 
@@ -1072,12 +1040,7 @@ class DatagramChannelImpl extends DatagramChannel implements SelChImpl {
         synchronized (stateLock) {
             if (state == ST_KILLPENDING) {
                 state = ST_KILLED;
-                try {
-                    nd.close(fd);
-                } finally {
-                    // notify resource manager
-                    ResourceManager.afterUdpClose();
-                }
+                nd.close(fd);
             }
         }
     }

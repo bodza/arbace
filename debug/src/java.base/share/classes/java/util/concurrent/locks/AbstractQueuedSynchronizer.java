@@ -1,7 +1,5 @@
 package java.util.concurrent.locks;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -486,13 +484,13 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
         }
 
         // VarHandle mechanics
-        private static final VarHandle NEXT;
-        private static final VarHandle PREV;
-        private static final VarHandle THREAD;
-        private static final VarHandle WAITSTATUS;
+        private static final VarHandle NEXT;
+        private static final VarHandle PREV;
+        private static final VarHandle THREAD;
+        private static final VarHandle WAITSTATUS;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 NEXT = l.findVarHandle(Node.class, "next", Node.class);
                 PREV = l.findVarHandle(Node.class, "prev", Node.class);
                 THREAD = l.findVarHandle(Node.class, "thread", Thread.class);
@@ -2164,13 +2162,12 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATE;
-    private static final VarHandle HEAD;
-    private static final VarHandle TAIL;
-
+    private static final VarHandle STATE;
+    private static final VarHandle HEAD;
+    private static final VarHandle TAIL;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATE = l.findVarHandle(AbstractQueuedSynchronizer.class, "state", int.class);
             HEAD = l.findVarHandle(AbstractQueuedSynchronizer.class, "head", Node.class);
             TAIL = l.findVarHandle(AbstractQueuedSynchronizer.class, "tail", Node.class);

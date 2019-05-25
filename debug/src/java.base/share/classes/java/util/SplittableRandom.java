@@ -4,10 +4,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
-import java.util.stream.StreamSupport;
 
 /**
  * A generator of uniform pseudorandom values applicable for use in
@@ -198,7 +194,7 @@ public final class SplittableRandom {
      */
 
     /**
-     * The form of nextLong used by LongStream Spliterators.  If
+     * The form of nextLong used by LongStream Spliterators.  If
      * origin is greater than bound, acts as unbounded form of
      * nextLong, else as bounded form.
      *
@@ -254,7 +250,7 @@ public final class SplittableRandom {
     }
 
     /**
-     * The form of nextInt used by IntStream Spliterators.
+     * The form of nextInt used by IntStream Spliterators.
      * Exactly the same as long version, except for types.
      *
      * @param origin the least value, unless greater than bound
@@ -281,7 +277,7 @@ public final class SplittableRandom {
     }
 
     /**
-     * The form of nextDouble used by DoubleStream Spliterators.
+     * The form of nextDouble used by DoubleStream Spliterators.
      *
      * @param origin the least value, unless greater than bound
      * @param bound the upper bound (exclusive), must not equal origin
@@ -515,226 +511,6 @@ public final class SplittableRandom {
 
     // stream methods, coded in a way intended to better isolate for
     // maintenance purposes the small differences across forms.
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number
-     * of pseudorandom {@code int} values from this generator and/or
-     * one split from it.
-     *
-     * @param streamSize the number of values to generate
-     * @return a stream of pseudorandom {@code int} values
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero
-     */
-    public IntStream ints(long streamSize) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        return StreamSupport.intStream(new RandomIntsSpliterator(this, 0L, streamSize, Integer.MAX_VALUE, 0), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code int}
-     * values from this generator and/or one split from it.
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * ints(Long.MAX_VALUE)}.
-     *
-     * @return a stream of pseudorandom {@code int} values
-     */
-    public IntStream ints() {
-        return StreamSupport.intStream(new RandomIntsSpliterator(this, 0L, Long.MAX_VALUE, Integer.MAX_VALUE, 0), false);
-    }
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number
-     * of pseudorandom {@code int} values from this generator and/or one split
-     * from it; each value conforms to the given origin (inclusive) and bound
-     * (exclusive).
-     *
-     * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero, or {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public IntStream ints(long streamSize, int randomNumberOrigin, int randomNumberBound) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        if (randomNumberOrigin >= randomNumberBound)
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.intStream(new RandomIntsSpliterator(this, 0L, streamSize, randomNumberOrigin, randomNumberBound), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code
-     * int} values from this generator and/or one split from it; each value
-     * conforms to the given origin (inclusive) and bound (exclusive).
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * ints(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
-     *
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code int} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public IntStream ints(int randomNumberOrigin, int randomNumberBound) {
-        if (randomNumberOrigin >= randomNumberBound)
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.intStream(new RandomIntsSpliterator(this, 0L, Long.MAX_VALUE, randomNumberOrigin, randomNumberBound), false);
-    }
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number
-     * of pseudorandom {@code long} values from this generator and/or
-     * one split from it.
-     *
-     * @param streamSize the number of values to generate
-     * @return a stream of pseudorandom {@code long} values
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero
-     */
-    public LongStream longs(long streamSize) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        return StreamSupport.longStream(new RandomLongsSpliterator(this, 0L, streamSize, Long.MAX_VALUE, 0L), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code
-     * long} values from this generator and/or one split from it.
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * longs(Long.MAX_VALUE)}.
-     *
-     * @return a stream of pseudorandom {@code long} values
-     */
-    public LongStream longs() {
-        return StreamSupport.longStream(new RandomLongsSpliterator(this, 0L, Long.MAX_VALUE, Long.MAX_VALUE, 0L), false);
-    }
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code long} values from this generator and/or one split
-     * from it; each value conforms to the given origin (inclusive) and bound
-     * (exclusive).
-     *
-     * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero, or {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public LongStream longs(long streamSize, long randomNumberOrigin, long randomNumberBound) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        if (randomNumberOrigin >= randomNumberBound)
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.longStream(new RandomLongsSpliterator(this, 0L, streamSize, randomNumberOrigin, randomNumberBound), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code
-     * long} values from this generator and/or one split from it; each value
-     * conforms to the given origin (inclusive) and bound (exclusive).
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * longs(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
-     *
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code long} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public LongStream longs(long randomNumberOrigin, long randomNumberBound) {
-        if (randomNumberOrigin >= randomNumberBound)
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.longStream(new RandomLongsSpliterator(this, 0L, Long.MAX_VALUE, randomNumberOrigin, randomNumberBound), false);
-    }
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code double} values from this generator and/or one split
-     * from it; each value is between zero (inclusive) and one (exclusive).
-     *
-     * @param streamSize the number of values to generate
-     * @return a stream of {@code double} values
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero
-     */
-    public DoubleStream doubles(long streamSize) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        return StreamSupport.doubleStream(new RandomDoublesSpliterator(this, 0L, streamSize, Double.MAX_VALUE, 0.0), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values from this generator and/or one split from it; each value
-     * is between zero (inclusive) and one (exclusive).
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * doubles(Long.MAX_VALUE)}.
-     *
-     * @return a stream of pseudorandom {@code double} values
-     */
-    public DoubleStream doubles() {
-        return StreamSupport.doubleStream(new RandomDoublesSpliterator(this, 0L, Long.MAX_VALUE, Double.MAX_VALUE, 0.0), false);
-    }
-
-    /**
-     * Returns a stream producing the given {@code streamSize} number of
-     * pseudorandom {@code double} values from this generator and/or one split
-     * from it; each value conforms to the given origin (inclusive) and bound
-     * (exclusive).
-     *
-     * @param streamSize the number of values to generate
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code double} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code streamSize} is
-     *         less than zero, or {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public DoubleStream doubles(long streamSize, double randomNumberOrigin, double randomNumberBound) {
-        if (streamSize < 0L)
-            throw new IllegalArgumentException(BAD_SIZE);
-        if (!(randomNumberOrigin < randomNumberBound))
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.doubleStream(new RandomDoublesSpliterator(this, 0L, streamSize, randomNumberOrigin, randomNumberBound), false);
-    }
-
-    /**
-     * Returns an effectively unlimited stream of pseudorandom {@code
-     * double} values from this generator and/or one split from it; each value
-     * conforms to the given origin (inclusive) and bound (exclusive).
-     *
-     * @implNote This method is implemented to be equivalent to {@code
-     * doubles(Long.MAX_VALUE, randomNumberOrigin, randomNumberBound)}.
-     *
-     * @param randomNumberOrigin the origin (inclusive) of each random value
-     * @param randomNumberBound the bound (exclusive) of each random value
-     * @return a stream of pseudorandom {@code double} values,
-     *         each with the given origin (inclusive) and bound (exclusive)
-     * @throws IllegalArgumentException if {@code randomNumberOrigin}
-     *         is greater than or equal to {@code randomNumberBound}
-     */
-    public DoubleStream doubles(double randomNumberOrigin, double randomNumberBound) {
-        if (!(randomNumberOrigin < randomNumberBound))
-            throw new IllegalArgumentException(BAD_RANGE);
-        return StreamSupport.doubleStream(new RandomDoublesSpliterator(this, 0L, Long.MAX_VALUE, randomNumberOrigin, randomNumberBound), false);
-    }
 
     /**
      * Spliterator for int streams.  We multiplex the four int

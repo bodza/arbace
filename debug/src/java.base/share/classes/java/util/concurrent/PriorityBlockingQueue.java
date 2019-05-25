@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1009,10 +1007,10 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E> implements Blocki
     }
 
     // VarHandle mechanics
-    private static final VarHandle ALLOCATIONSPINLOCK;
+    private static final VarHandle ALLOCATIONSPINLOCK;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             ALLOCATIONSPINLOCK = l.findVarHandle(PriorityBlockingQueue.class, "allocationSpinLock", int.class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);

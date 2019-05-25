@@ -10,8 +10,7 @@ import java.nio.channels.spi.*;
  * so that code can be shared with SocketAdaptor.
  */
 public class ChannelInputStream extends InputStream {
-    public static int read(ReadableByteChannel ch, ByteBuffer bb, boolean block) throws IOException
-    {
+    public static int read(ReadableByteChannel ch, ByteBuffer bb, boolean block) throws IOException {
         if (ch instanceof SelectableChannel) {
             SelectableChannel sc = (SelectableChannel)ch;
             synchronized (sc.blockingLock()) {
@@ -48,8 +47,7 @@ public class ChannelInputStream extends InputStream {
         return -1;
     }
 
-    public synchronized int read(byte[] bs, int off, int len) throws IOException
-    {
+    public synchronized int read(byte[] bs, int off, int len) throws IOException {
         if ((off < 0) || (off > bs.length) || (len < 0) || ((off + len) > bs.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0)
@@ -63,8 +61,7 @@ public class ChannelInputStream extends InputStream {
         return read(bb);
     }
 
-    protected int read(ByteBuffer bb) throws IOException
-    {
+    protected int read(ByteBuffer bb) throws IOException {
         return ChannelInputStream.read(ch, bb, true);
     }
 

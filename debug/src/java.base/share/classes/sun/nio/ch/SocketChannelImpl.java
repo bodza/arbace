@@ -89,8 +89,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
         this.fdVal = IOUtil.fdVal(fd);
     }
 
-    SocketChannelImpl(SelectorProvider sp, FileDescriptor fd, boolean bound) throws IOException
-    {
+    SocketChannelImpl(SelectorProvider sp, FileDescriptor fd, boolean bound) throws IOException {
         super(sp);
         this.fd = fd;
         this.fdVal = IOUtil.fdVal(fd);
@@ -103,8 +102,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
 
     // Constructor for sockets obtained from server sockets
     //
-    SocketChannelImpl(SelectorProvider sp, FileDescriptor fd, InetSocketAddress isa) throws IOException
-    {
+    SocketChannelImpl(SelectorProvider sp, FileDescriptor fd, InetSocketAddress isa) throws IOException {
         super(sp);
         this.fd = fd;
         this.fdVal = IOUtil.fdVal(fd);
@@ -172,8 +170,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
     }
 
     @Override
-    public <T> SocketChannel setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public <T> SocketChannel setOption(SocketOption<T> name, T value) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -201,8 +198,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getOption(SocketOption<T> name) throws IOException
-    {
+    public <T> T getOption(SocketOption<T> name) throws IOException {
         Objects.requireNonNull(name);
         if (!supportedOptions().contains(name))
             throw new UnsupportedOperationException("'" + name + "' not supported");
@@ -279,8 +275,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
      * @throws AsynchronousCloseException if the channel was closed due to this
      * thread being interrupted on a blocking read operation.
      */
-    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 readerThread = 0;
@@ -328,8 +323,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
     }
 
     @Override
-    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
-    {
+    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
         Objects.checkFromIndexSize(offset, length, dsts.length);
 
         readLock.lock();
@@ -390,8 +384,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
      * @throws AsynchronousCloseException if the channel was closed due to this
      * thread being interrupted on a blocking write operation.
      */
-    private void endWrite(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void endWrite(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 writerThread = 0;
@@ -434,8 +427,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
     }
 
     @Override
-    public long write(ByteBuffer[] srcs, int offset, int length) throws IOException
-    {
+    public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
         Objects.checkFromIndexSize(offset, length, srcs.length);
 
         writeLock.lock();
@@ -570,8 +562,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
      * @throws ConnectionPendingException is a connection is pending
      * @throws IOException if the pre-connect hook fails
      */
-    private void beginConnect(boolean blocking, InetSocketAddress isa) throws IOException
-    {
+    private void beginConnect(boolean blocking, InetSocketAddress isa) throws IOException {
         if (blocking) {
             // set hook for Thread.interrupt
             begin();
@@ -602,8 +593,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
      * thread being interrupted on a blocking connect operation.
      * @throws IOException if completed and unable to obtain the local address
      */
-    private void endConnect(boolean blocking, boolean completed) throws IOException
-    {
+    private void endConnect(boolean blocking, boolean completed) throws IOException {
         endRead(blocking, completed);
 
         if (completed) {
@@ -683,8 +673,7 @@ class SocketChannelImpl extends SocketChannel implements SelChImpl {
      * thread being interrupted on a blocking connect operation.
      * @throws IOException if completed and unable to obtain the local address
      */
-    private void endFinishConnect(boolean blocking, boolean completed) throws IOException
-    {
+    private void endFinishConnect(boolean blocking, boolean completed) throws IOException {
         endRead(blocking, completed);
 
         if (completed) {

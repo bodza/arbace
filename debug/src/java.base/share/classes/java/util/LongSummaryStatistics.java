@@ -2,34 +2,33 @@ package java.util;
 
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
-import java.util.stream.Collector;
 
 /**
  * A state object for collecting statistics such as count, min, max, sum, and
  * average.
  *
  * This class is designed to work with (though does not require)
- * {@linkplain java.util.stream streams}. For example, you can compute
+ * {@linkplain java.util.stream streams}. For example, you can compute
  * summary statistics on a stream of longs with:
  * <pre> {@code
  * LongSummaryStatistics stats = longStream.collect(LongSummaryStatistics::new, LongSummaryStatistics::accept, LongSummaryStatistics::combine);
  * }</pre>
  *
  * {@code LongSummaryStatistics} can be used as a
- * {@linkplain java.util.stream.Stream#collect(Collector) reduction}
- * target for a {@linkplain java.util.stream.Stream stream}. For example:
+ * {@linkplain java.util.stream.Stream#collect(Collector) reduction}
+ * target for a {@linkplain java.util.stream.Stream stream}. For example:
  *
  * <pre> {@code
- * LongSummaryStatistics stats = people.stream().collect(Collectors.summarizingLong(Person::getAge));
+ * LongSummaryStatistics stats = people.stream().collect(Collectors.summarizingLong(Person::getAge));
  *}</pre>
  *
  * This computes, in a single pass, the count of people, as well as the minimum,
  * maximum, sum, and average of their ages.
  *
  * @implNote This implementation is not thread safe. However, it is safe to use
- * {@link java.util.stream.Collectors#summarizingLong(java.util.function.ToLongFunction)
- * Collectors.summarizingLong()} on a parallel stream, because the parallel
- * implementation of {@link java.util.stream.Stream#collect Stream.collect()}
+ * {@link java.util.stream.Collectors#summarizingLong(java.util.function.ToLongFunction)
+ * Collectors.summarizingLong()} on a parallel stream, because the parallel
+ * implementation of {@link java.util.stream.Stream#collect Stream.collect()}
  * provides the necessary partitioning, isolation, and merging of results for
  * safe and efficient parallel execution.
  *

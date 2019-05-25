@@ -5,8 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.LongBuffer;
 import java.util.function.IntConsumer;
-import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 /**
  * This class implements a vector of bits that grows as needed. Each
@@ -1055,7 +1053,7 @@ public class BitSet implements Cloneable {
      *
      * @return a stream of integers representing set indices
      */
-    public IntStream stream() {
+    public IntStream stream() {
         class BitSetSpliterator implements Spliterator.OfInt {
             private int index; // current bit index for a set bit
             private int fence; // -1 until used; then one past last bit index
@@ -1192,7 +1190,7 @@ public class BitSet implements Cloneable {
                 return null;
             }
         }
-        return StreamSupport.intStream(new BitSetSpliterator(0, -1, 0, true), false);
+        return StreamSupport.intStream(new BitSetSpliterator(0, -1, 0, true), false);
     }
 
     /**

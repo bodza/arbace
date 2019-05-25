@@ -57,8 +57,7 @@ final class EPollPort extends Port {
     private final Event NEED_TO_POLL = new Event(null, 0);
     private final Event EXECUTE_TASK_OR_SHUTDOWN = new Event(null, 0);
 
-    EPollPort(AsynchronousChannelProvider provider, ThreadPool pool) throws IOException
-    {
+    EPollPort(AsynchronousChannelProvider provider, ThreadPool pool) throws IOException {
         super(provider, pool);
 
         this.epfd = EPoll.create();

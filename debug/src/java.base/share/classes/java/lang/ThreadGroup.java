@@ -459,7 +459,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @deprecated This method is inherently unsafe.  See
      *     {@link Thread#stop} for details.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     public final void stop() {
         if (stopOrSuspend(false))
             Thread.currentThread().stop();
@@ -499,7 +499,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @deprecated This method is inherently deadlock-prone.  See
      *     {@link Thread#suspend} for details.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     @SuppressWarnings("deprecation")
     public final void suspend() {
         if (stopOrSuspend(true))
@@ -551,7 +551,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *       both of which have been deprecated, as they are inherently
      *       deadlock-prone.  See {@link Thread#suspend} for details.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     @SuppressWarnings("deprecation")
     public final void resume() {
         int ngroupsSnapshot;
@@ -655,8 +655,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (nthreads == 0) {
                 notifyAll();
             }
-            if (daemon && (nthreads == 0) && (nUnstartedThreads == 0) && (ngroups == 0))
-            {
+            if (daemon && (nthreads == 0) && (nUnstartedThreads == 0) && (ngroups == 0)) {
                 destroy();
             }
         }
@@ -752,8 +751,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (nthreads == 0) {
                 notifyAll();
             }
-            if (daemon && (nthreads == 0) && (nUnstartedThreads == 0) && (ngroups == 0))
-            {
+            if (daemon && (nthreads == 0) && (nUnstartedThreads == 0) && (ngroups == 0)) {
                 destroy();
             }
         }
@@ -840,7 +838,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *             which is deprecated.  Further, the behavior of this call
      *             was never specified.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     public boolean allowThreadSuspension(boolean b) {
         return true;
     }

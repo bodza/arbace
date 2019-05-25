@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -951,7 +949,7 @@ public class SubmissionPublisher<T> implements Publisher<T>, AutoCloseable {
      * assignment coding style. Also, all methods and fields have
      * default visibility to simplify usage by callers.
      */
-    @jdk.internal.vm.annotation.Contended
+    // @Contended
     static final class BufferedSubscription<T> implements Subscription, ForkJoinPool.ManagedBlocker {
         long timeout; // Long.MAX_VALUE if untimed wait
         int head; // next position to take
@@ -967,9 +965,9 @@ public class SubmissionPublisher<T> implements Publisher<T>, AutoCloseable {
         BufferedSubscription<T> next; // used only by publisher
         BufferedSubscription<T> nextRetry; // used only by publisher
 
-        @jdk.internal.vm.annotation.Contended("c") // segregate
+        // @Contended("c") // segregate
         volatile long demand; // # unfilled requests
-        @jdk.internal.vm.annotation.Contended("c")
+        // @Contended("c")
         volatile int waiting; // nonzero if producer blocked
 
         // ctl bit values
@@ -1082,7 +1080,7 @@ public class SubmissionPublisher<T> implements Publisher<T>, AutoCloseable {
                         newArray[t-- & newMask] = x;
                 }
                 array = newArray;
-                VarHandle.releaseFence(); // release array and slots
+                VarHandle.releaseFence(); // release array and slots
                 return true;
             }
         }
@@ -1392,16 +1390,15 @@ public class SubmissionPublisher<T> implements Publisher<T>, AutoCloseable {
         }
 
         // VarHandle mechanics
-        static final VarHandle CTL;
-        static final VarHandle DEMAND;
-        static final VarHandle QA;
-
+        static final VarHandle CTL;
+        static final VarHandle DEMAND;
+        static final VarHandle QA;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 CTL = l.findVarHandle(BufferedSubscription.class, "ctl", int.class);
                 DEMAND = l.findVarHandle(BufferedSubscription.class, "demand", long.class);
-                QA = MethodHandles.arrayElementVarHandle(Object[].class);
+                QA = MethodHandles.arrayElementVarHandle(Object[].class);
             } catch (ReflectiveOperationException e) {
                 throw new ExceptionInInitializerError(e);
             }

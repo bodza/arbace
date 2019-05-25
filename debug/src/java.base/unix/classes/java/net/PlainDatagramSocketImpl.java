@@ -66,10 +66,10 @@ class PlainDatagramSocketImpl extends AbstractPlainDatagramSocketImpl {
 
     protected native int getTimeToLive() throws IOException;
 
-    @Deprecated
+    // @Deprecated
     protected native void setTTL(byte ttl) throws IOException;
 
-    @Deprecated
+    // @Deprecated
     protected native byte getTTL() throws IOException;
 
     protected native void join(InetAddress inetaddr, NetworkInterface netIf) throws IOException;

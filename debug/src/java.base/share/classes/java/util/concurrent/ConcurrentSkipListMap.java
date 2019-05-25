@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -355,7 +353,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
      */
     final Node<K,V> baseHead() {
         Index<K,V> h;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         return ((h = head) == null) ? null : h.node;
     }
 
@@ -418,7 +416,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
      */
     private Node<K,V> findPredecessor(Object key, Comparator<? super K> cmp) {
         Index<K,V> q;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if ((q = head) == null || key == null)
             return null;
         else {
@@ -489,7 +487,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
      */
     private V doGet(Object key) {
         Index<K,V> q;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if (key == null)
             throw new NullPointerException();
         Comparator<? super K> cmp = comparator;
@@ -550,7 +548,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
         Comparator<? super K> cmp = comparator;
         for (;;) {
             Index<K,V> h; Node<K,V> b;
-            VarHandle.acquireFence();
+            VarHandle.acquireFence();
             int levels = 0; // number of levels descended
             if ((h = head) == null) { // try to initialize
                 Node<K,V> base = new Node<K,V>(null, null, null);
@@ -829,7 +827,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     final Node<K,V> findLast() {
         outer: for (;;) {
             Index<K,V> q; Node<K,V> b;
-            VarHandle.acquireFence();
+            VarHandle.acquireFence();
             if ((q = head) == null)
                 break;
             for (Index<K,V> r, d; ; ) {
@@ -890,7 +888,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     private Map.Entry<K,V> doRemoveLastEntry() {
         outer: for (;;) {
             Index<K,V> q; Node<K,V> b;
-            VarHandle.acquireFence();
+            VarHandle.acquireFence();
             if ((q = head) == null)
                 break;
             for (;;) {
@@ -1120,10 +1118,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
             }
         }
         if (count != 0L) {
-            VarHandle.releaseFence(); // emulate volatile stores
+            VarHandle.releaseFence(); // emulate volatile stores
             addCount(count);
             head = h;
-            VarHandle.fullFence();
+            VarHandle.fullFence();
         }
     }
 
@@ -1256,7 +1254,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
      */
     public void clear() {
         Index<K,V> h, r, d; Node<K,V> b;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         while ((h = head) != null) {
             if ((r = h.right) != null)        // remove indices
                 RIGHT.compareAndSet(h, r, null);
@@ -2698,7 +2696,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
             V nextValue;
 
             SubMapIter() {
-                VarHandle.acquireFence();
+                VarHandle.acquireFence();
                 Comparator<? super K> cmp = m.comparator;
                 for (;;) {
                     next = isDescending ? hiNode(cmp) : loNode(cmp);
@@ -3014,7 +3012,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     // factory method for KeySpliterator
     final KeySpliterator<K,V> keySpliterator() {
         Index<K,V> h; Node<K,V> n; long est;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if ((h = head) == null) {
             n = null;
             est = 0L;
@@ -3099,7 +3097,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     // Almost the same as keySpliterator()
     final ValueSpliterator<K,V> valueSpliterator() {
         Index<K,V> h; Node<K,V> n; long est;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if ((h = head) == null) {
             n = null;
             est = 0L;
@@ -3201,7 +3199,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     // Almost the same as keySpliterator()
     final EntrySpliterator<K,V> entrySpliterator() {
         Index<K,V> h; Node<K,V> n; long est;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if ((h = head) == null) {
             n = null;
             est = 0L;
@@ -3214,14 +3212,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> implements Conc
     }
 
     // VarHandle mechanics
-    private static final VarHandle HEAD;
-    private static final VarHandle ADDER;
-    private static final VarHandle NEXT;
-    private static final VarHandle VAL;
-    private static final VarHandle RIGHT;
+    private static final VarHandle HEAD;
+    private static final VarHandle ADDER;
+    private static final VarHandle NEXT;
+    private static final VarHandle VAL;
+    private static final VarHandle RIGHT;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             HEAD = l.findVarHandle(ConcurrentSkipListMap.class, "head", Index.class);
             ADDER = l.findVarHandle(ConcurrentSkipListMap.class, "adder", LongAdder.class);
             NEXT = l.findVarHandle(Node.class, "next", Node.class);

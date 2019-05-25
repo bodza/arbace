@@ -240,8 +240,7 @@ public final class URL {
      * @throws MalformedURLException  if an unknown protocol or the port
      *                  is a negative number other than -1
      */
-    public URL(String protocol, String host, int port, String file) throws MalformedURLException
-    {
+    public URL(String protocol, String host, int port, String file) throws MalformedURLException {
         this(protocol, host, port, file, null);
     }
 
@@ -406,8 +405,7 @@ public final class URL {
      *               or the parsed URL fails to comply with the specific syntax
      *               of the associated protocol.
      */
-    public URL(URL context, String spec, URLStreamHandler handler) throws MalformedURLException
-    {
+    public URL(URL context, String spec, URLStreamHandler handler) throws MalformedURLException {
         String original = spec;
         int i, limit, c;
         int start = 0;
@@ -1101,9 +1099,8 @@ public final class URL {
             }
 
             if (handler2 != null) {
-                // The handler from the factory must be given more
-                // importance. Discard the default handler that
-                // this thread created.
+                // The handler from the factory must be given more importance.
+                // Discard the default handler that this thread created.
                 handler = handler2;
             }
 

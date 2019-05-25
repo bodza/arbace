@@ -350,45 +350,4 @@ public enum TimeUnit {
             Thread.sleep(ms, ns);
         }
     }
-
-    /**
-     * Converts this {@code TimeUnit} to the equivalent {@code ChronoUnit}.
-     *
-     * @return the converted equivalent ChronoUnit
-     */
-    public ChronoUnit toChronoUnit() {
-        switch (this) {
-        case NANOSECONDS:  return ChronoUnit.NANOS;
-        case MICROSECONDS: return ChronoUnit.MICROS;
-        case MILLISECONDS: return ChronoUnit.MILLIS;
-        case SECONDS:      return ChronoUnit.SECONDS;
-        case MINUTES:      return ChronoUnit.MINUTES;
-        case HOURS:        return ChronoUnit.HOURS;
-        case DAYS:         return ChronoUnit.DAYS;
-        default: throw new AssertionError();
-        }
-    }
-
-    /**
-     * Converts a {@code ChronoUnit} to the equivalent {@code TimeUnit}.
-     *
-     * @param chronoUnit the ChronoUnit to convert
-     * @return the converted equivalent TimeUnit
-     * @throws IllegalArgumentException if {@code chronoUnit} has no
-     *         equivalent TimeUnit
-     * @throws NullPointerException if {@code chronoUnit} is null
-     */
-    public static TimeUnit of(ChronoUnit chronoUnit) {
-        switch (Objects.requireNonNull(chronoUnit, "chronoUnit")) {
-        case NANOS:   return TimeUnit.NANOSECONDS;
-        case MICROS:  return TimeUnit.MICROSECONDS;
-        case MILLIS:  return TimeUnit.MILLISECONDS;
-        case SECONDS: return TimeUnit.SECONDS;
-        case MINUTES: return TimeUnit.MINUTES;
-        case HOURS:   return TimeUnit.HOURS;
-        case DAYS:    return TimeUnit.DAYS;
-        default:
-            throw new IllegalArgumentException("No TimeUnit equivalent for " + chronoUnit);
-        }
-    }
 }

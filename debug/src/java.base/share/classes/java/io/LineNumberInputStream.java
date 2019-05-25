@@ -18,7 +18,7 @@ package java.io;
  *             character streams is via the new character-stream classes, which
  *             include a class for counting line numbers.
  */
-@Deprecated
+// @Deprecated
 public class LineNumberInputStream extends FilterInputStream {
     int pushBack = -1;
     int lineNumber;

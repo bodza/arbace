@@ -427,8 +427,7 @@ public abstract class Selector implements Closeable {
      * @throws IllegalArgumentException
      *          If the value of the timeout argument is negative
      */
-    public int select(Consumer<SelectionKey> action, long timeout) throws IOException
-    {
+    public int select(Consumer<SelectionKey> action, long timeout) throws IOException {
         if (timeout < 0)
             throw new IllegalArgumentException("Negative timeout");
         return doSelect(Objects.requireNonNull(action), timeout);
@@ -499,8 +498,7 @@ public abstract class Selector implements Closeable {
     /**
      * Default implementation of select(Consumer) and selectNow(Consumer).
      */
-    private int doSelect(Consumer<SelectionKey> action, long timeout) throws IOException
-    {
+    private int doSelect(Consumer<SelectionKey> action, long timeout) throws IOException {
         synchronized (this) {
             Set<SelectionKey> selectedKeys = selectedKeys();
             synchronized (selectedKeys) {

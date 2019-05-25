@@ -1,7 +1,5 @@
 package java.lang.ref;
 
-import jdk.internal.vm.annotation.ForceInline;
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.ref.Cleaner;
 
 /**
@@ -241,8 +239,7 @@ public abstract class Reference<T> {
     // processing thread) if either (1) the VM has any pending
     // references, or (2) the reference processing thread is
     // processing references. Otherwise, returns false immediately.
-    private static boolean waitForReferenceProcessing() throws InterruptedException
-    {
+    private static boolean waitForReferenceProcessing() throws InterruptedException {
         synchronized (processPendingLock) {
             if (processPendingActive || hasReferencePendingList()) {
                 // Wait for progress, not necessarily completion.
@@ -275,7 +272,7 @@ public abstract class Reference<T> {
      * @return The object to which this reference refers, or
      *           <code>null</code> if this reference object has been cleared
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public T get() {
         return this.referent;
     }
@@ -453,7 +450,7 @@ public abstract class Reference<T> {
      *
      * @param ref the reference. If {@code null}, this method has no effect.
      */
-    @ForceInline
+    // @ForceInline
     public static void reachabilityFence(Object ref) {
         // Does nothing. This method is annotated with @ForceInline to eliminate
         // most of the overhead that using @DontInline would cause with the

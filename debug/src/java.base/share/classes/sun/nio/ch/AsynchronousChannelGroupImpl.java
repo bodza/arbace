@@ -36,8 +36,7 @@ abstract class AsynchronousChannelGroupImpl extends AsynchronousChannelGroup imp
     private final Object shutdownNowLock = new Object();
     private volatile boolean terminateInitiated;
 
-    AsynchronousChannelGroupImpl(AsynchronousChannelProvider provider, ThreadPool pool)
-    {
+    AsynchronousChannelGroupImpl(AsynchronousChannelProvider provider, ThreadPool pool) {
         super(provider);
         this.pool = pool;
 
@@ -244,8 +243,7 @@ abstract class AsynchronousChannelGroupImpl extends AsynchronousChannelGroup imp
     }
 
     @Override
-    public final boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException
-    {
+    public final boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
         return pool.executor().awaitTermination(timeout, unit);
     }
 

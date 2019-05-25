@@ -1,10 +1,8 @@
 package java.lang.reflect;
 
-import java.lang.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import sun.reflect.annotation.AnnotationSupport;
 
 /**
  * Information about method parameters.
@@ -13,7 +11,7 @@ import sun.reflect.annotation.AnnotationSupport;
  * including its name and modifiers.  It also provides an alternate
  * means of obtaining attributes for the parameter.
  */
-public final class Parameter implements AnnotatedElement {
+public final class Parameter {
     private final String name;
     private final int modifiers;
     private final Executable executable;
@@ -193,19 +191,6 @@ public final class Parameter implements AnnotatedElement {
         return tmp;
     }
 
-    /**
-     * Returns an AnnotatedType object that represents the use of a type to
-     * specify the type of the formal parameter represented by this Parameter.
-     *
-     * @return an {@code AnnotatedType} object representing the use of a type
-     *         to specify the type of the formal parameter represented by this
-     *         Parameter
-     */
-    public AnnotatedType getAnnotatedType() {
-        // no caching for now
-        return executable.getAnnotatedParameterTypes()[index];
-    }
-
     private transient volatile Class<?> parameterClassCache;
 
     /**
@@ -244,68 +229,13 @@ public final class Parameter implements AnnotatedElement {
         return executable.isVarArgs() && index == executable.getParameterCount() - 1;
     }
 
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        return annotationClass.cast(declaredAnnotations().get(annotationClass));
-    }
+    private transient Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
 
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        return AnnotationSupport.getDirectlyAndIndirectlyPresent(declaredAnnotations(), annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Annotation[] getDeclaredAnnotations() {
-        return executable.getParameterAnnotations()[index];
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {
-        // Only annotations on classes are inherited, for all other
-        // objects getDeclaredAnnotation is the same as
-        // getAnnotation.
-        return getAnnotation(annotationClass);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {
-        // Only annotations on classes are inherited, for all other
-        // objects getDeclaredAnnotations is the same as
-        // getAnnotations.
-        return getAnnotationsByType(annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Annotation[] getAnnotations() {
-        return getDeclaredAnnotations();
-    }
-
-    private transient Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-    private synchronized Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
+    private synchronized Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
         if (null == declaredAnnotations) {
             declaredAnnotations = new HashMap<>();
-            for (Annotation a : getDeclaredAnnotations())
-                declaredAnnotations.put(a.annotationType(), a);
+            for (Annotation a : getDeclaredAnnotations())
+                declaredAnnotations.put(a.annotationType(), a);
         }
         return declaredAnnotations;
    }

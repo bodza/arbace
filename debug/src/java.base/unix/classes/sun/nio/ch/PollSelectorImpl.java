@@ -68,8 +68,7 @@ class PollSelectorImpl extends SelectorImpl {
     }
 
     @Override
-    protected int doSelect(Consumer<SelectionKey> action, long timeout) throws IOException
-    {
+    protected int doSelect(Consumer<SelectionKey> action, long timeout) throws IOException {
         assert Thread.holdsLock(this);
 
         int to = (int) Math.min(timeout, Integer.MAX_VALUE); // max poll timeout
@@ -136,8 +135,7 @@ class PollSelectorImpl extends SelectorImpl {
      * Process the polled events.
      * If the interrupt fd has been selected, drain it and clear the interrupt.
      */
-    private int processEvents(Consumer<SelectionKey> action) throws IOException
-    {
+    private int processEvents(Consumer<SelectionKey> action) throws IOException {
         assert Thread.holdsLock(this);
         assert pollArraySize > 0 && pollArraySize == pollKeys.size();
 

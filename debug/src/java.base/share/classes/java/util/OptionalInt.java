@@ -3,7 +3,6 @@ package java.util;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 /**
  * A container object which may or may not contain an {@code int} value.
@@ -157,24 +156,24 @@ public final class OptionalInt {
     }
 
     /**
-     * If a value is present, returns a sequential {@link IntStream} containing
-     * only that value, otherwise returns an empty {@code IntStream}.
+     * If a value is present, returns a sequential {@link IntStream} containing
+     * only that value, otherwise returns an empty {@code IntStream}.
      *
      * @apiNote
-     * This method can be used to transform a {@code Stream} of optional
-     * integers to an {@code IntStream} of present integers:
+     * This method can be used to transform a {@code Stream} of optional
+     * integers to an {@code IntStream} of present integers:
      * <pre>{@code
-     *     Stream<OptionalInt> os = ..
-     *     IntStream s = os.flatMapToInt(OptionalInt::stream)
+     *     Stream<OptionalInt> os = ..
+     *     IntStream s = os.flatMapToInt(OptionalInt::stream)
      * }</pre>
      *
-     * @return the optional value as an {@code IntStream}
+     * @return the optional value as an {@code IntStream}
      */
-    public IntStream stream() {
+    public IntStream stream() {
         if (isPresent) {
-            return IntStream.of(value);
+            return IntStream.of(value);
         } else {
-            return IntStream.empty();
+            return IntStream.empty();
         }
     }
 

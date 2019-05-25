@@ -3,9 +3,7 @@ package java.net;
 import java.util.NavigableSet;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.Scanner;
 import java.io.IOException;
-import java.lang.annotation.Native;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -139,19 +137,24 @@ import sun.net.util.IPAddressUtil;
  * </dl>
  */
 public class InetAddress {
-    @Native static final int PREFER_IPV4_VALUE = 0;
-    @Native static final int PREFER_IPV6_VALUE = 1;
-    @Native static final int PREFER_SYSTEM_VALUE = 2;
+    // @Native
+    static final int PREFER_IPV4_VALUE = 0;
+    // @Native
+    static final int PREFER_IPV6_VALUE = 1;
+    // @Native
+    static final int PREFER_SYSTEM_VALUE = 2;
 
     /**
      * Specify the address family: Internet Protocol, Version 4
      */
-    @Native static final int IPv4 = 1;
+    // @Native
+    static final int IPv4 = 1;
 
     /**
      * Specify the address family: Internet Protocol, Version 6
      */
-    @Native static final int IPv6 = 2;
+    // @Native
+    static final int IPv6 = 2;
 
     /* Specify address family preference */
     static transient final int preferIPv6Address;
@@ -739,13 +742,11 @@ public class InetAddress {
      * OS network libraries to resolve host address mappings.
      */
     private static final class PlatformNameService implements NameService {
-        public InetAddress[] lookupAllHostAddr(String host) throws UnknownHostException
-        {
+        public InetAddress[] lookupAllHostAddr(String host) throws UnknownHostException {
             return impl.lookupAllHostAddr(host);
         }
 
-        public String getHostByAddr(byte[] addr) throws UnknownHostException
-        {
+        public String getHostByAddr(byte[] addr) throws UnknownHostException {
             return impl.getHostByAddr(addr);
         }
     }
@@ -994,13 +995,11 @@ public class InetAddress {
         return zone;
     }
 
-    private static InetAddress[] getAllByName0(String host) throws UnknownHostException
-    {
+    private static InetAddress[] getAllByName0(String host) throws UnknownHostException {
         return getAllByName0(host, true);
     }
 
-    private static InetAddress[] getAllByName0(String host, boolean check) throws UnknownHostException
-    {
+    private static InetAddress[] getAllByName0(String host, boolean check) throws UnknownHostException {
         return getAllByName0 (host, null, check, true);
     }
 
@@ -1066,8 +1065,7 @@ public class InetAddress {
         return addrs.get().clone();
     }
 
-    static InetAddress[] getAddressesFromNameService(String host, InetAddress reqAddr) throws UnknownHostException
-    {
+    static InetAddress[] getAddressesFromNameService(String host, InetAddress reqAddr) throws UnknownHostException {
         InetAddress[] addresses = null;
         UnknownHostException ex = null;
 

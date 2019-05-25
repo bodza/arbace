@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1538,18 +1536,18 @@ public class ConcurrentLinkedDeque<E> extends AbstractCollection<E> implements D
     }
 
     // VarHandle mechanics
-    private static final VarHandle HEAD;
-    private static final VarHandle TAIL;
-    private static final VarHandle PREV;
-    private static final VarHandle NEXT;
-    private static final VarHandle ITEM;
+    private static final VarHandle HEAD;
+    private static final VarHandle TAIL;
+    private static final VarHandle PREV;
+    private static final VarHandle NEXT;
+    private static final VarHandle ITEM;
     static {
         PREV_TERMINATOR = new Node<Object>();
         PREV_TERMINATOR.next = PREV_TERMINATOR;
         NEXT_TERMINATOR = new Node<Object>();
         NEXT_TERMINATOR.prev = NEXT_TERMINATOR;
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             HEAD = l.findVarHandle(ConcurrentLinkedDeque.class, "head", Node.class);
             TAIL = l.findVarHandle(ConcurrentLinkedDeque.class, "tail", Node.class);
             PREV = l.findVarHandle(Node.class, "prev", Node.class);

@@ -98,7 +98,7 @@ endif
 # Use append so that the custom extension may add to these variables
 
 GENERATED_SRC_DIRS += \
-    $(SUPPORT_OUTPUTDIR)/gensrc \
+    # oops! $(SUPPORT_OUTPUTDIR)/gensrc \
     #
 
 TOP_SRC_DIRS += \

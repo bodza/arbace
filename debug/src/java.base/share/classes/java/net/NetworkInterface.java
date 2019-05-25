@@ -5,8 +5,6 @@ import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This class represents a Network Interface made up of a name,
@@ -75,13 +73,13 @@ public final class NetworkInterface {
     }
 
     /**
-     * Get a Stream of all or a subset of the InetAddresses bound to this
+     * Get a Stream of all or a subset of the InetAddresses bound to this
      * network interface.
      *
-     * @return a Stream object with all or a subset of the InetAddresses
+     * @return a Stream object with all or a subset of the InetAddresses
      * bound to this network interface
      */
-    public Stream<InetAddress> inetAddresses() {
+    public Stream<InetAddress> inetAddresses() {
         return streamFromArray(getCheckedInetAddresses());
     }
 
@@ -127,13 +125,13 @@ public final class NetworkInterface {
     }
 
     /**
-     * Get a Stream of all subinterfaces (also known as virtual
+     * Get a Stream of all subinterfaces (also known as virtual
      * interfaces) attached to this network interface.
      *
-     * @return a Stream object with all of the subinterfaces
+     * @return a Stream object with all of the subinterfaces
      * of this network interface
      */
-    public Stream<NetworkInterface> subInterfaces() {
+    public Stream<NetworkInterface> subInterfaces() {
         return streamFromArray(childs);
     }
 
@@ -277,8 +275,8 @@ public final class NetworkInterface {
     }
 
     /**
-     * Returns a {@code Stream} of all the interfaces on this machine.  The
-     * {@code Stream} contains at least one interface, possibly representing a
+     * Returns a {@code Stream} of all the interfaces on this machine.  The
+     * {@code Stream} contains at least one interface, possibly representing a
      * loopback interface that only supports communication between entities on
      * this machine.
      *
@@ -286,16 +284,16 @@ public final class NetworkInterface {
      * {@link #inetAddresses()}} to obtain a stream of all IP addresses for
      * this node, for example:
      * <pre> {@code
-     * Stream<InetAddress> addrs = NetworkInterface.networkInterfaces()
+     * Stream<InetAddress> addrs = NetworkInterface.networkInterfaces()
      *     .flatMap(NetworkInterface::inetAddresses);
      * }</pre>
      *
-     * @return a Stream of NetworkInterfaces found on this machine
+     * @return a Stream of NetworkInterfaces found on this machine
      * @throws SocketException  if an I/O error occurs,
      *             or if the platform does not have at least one configured
      *             network interface.
      */
-    public static Stream<NetworkInterface> networkInterfaces() throws SocketException {
+    public static Stream<NetworkInterface> networkInterfaces() throws SocketException {
         NetworkInterface[] netifs = getAll();
         if (netifs != null && netifs.length > 0) {
             return streamFromArray(netifs);
@@ -324,8 +322,8 @@ public final class NetworkInterface {
         };
     }
 
-    private static <T> Stream<T> streamFromArray(T[] a) {
-        return StreamSupport.stream(Spliterators.spliterator(a, Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.NONNULL), false);
+    private static <T> Stream<T> streamFromArray(T[] a) {
+        return StreamSupport.stream(Spliterators.spliterator(a, Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.NONNULL), false);
     }
 
     private static native NetworkInterface[] getAll() throws SocketException;

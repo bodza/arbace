@@ -53,8 +53,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
     private PendingFuture<Number,Object> writeFuture;
     private Future<?> writeTimer;
 
-    UnixAsynchronousSocketChannelImpl(Port port) throws IOException
-    {
+    UnixAsynchronousSocketChannelImpl(Port port) throws IOException {
         super(port);
 
         // set non-blocking
@@ -73,8 +72,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
     }
 
     // Constructor for sockets created by UnixAsynchronousServerSocketChannelImpl
-    UnixAsynchronousSocketChannelImpl(Port port, FileDescriptor fd, InetSocketAddress remote) throws IOException
-    {
+    UnixAsynchronousSocketChannelImpl(Port port, FileDescriptor fd, InetSocketAddress remote) throws IOException {
         super(port, fd, remote);
 
         this.fdVal = IOUtil.fdVal(fd);
@@ -116,8 +114,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
     }
 
     // invoke to finish read and/or write operations
-    private void finish(boolean mayInvokeDirect, boolean readable, boolean writable)
-    {
+    private void finish(boolean mayInvokeDirect, boolean readable, boolean writable) {
         boolean finishRead = false;
         boolean finishWrite = false;
         boolean finishConnect = false;
@@ -245,8 +242,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
 
     @Override
     @SuppressWarnings("unchecked")
-    <A> Future<Void> implConnect(SocketAddress remote, A attachment, CompletionHandler<Void,? super A> handler)
-    {
+    <A> Future<Void> implConnect(SocketAddress remote, A attachment, CompletionHandler<Void,? super A> handler) {
         if (!isOpen()) {
             Throwable e = new ClosedChannelException();
             if (handler == null) {
@@ -420,8 +416,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
      */
     @Override
     @SuppressWarnings("unchecked")
-    <V extends Number,A> Future<V> implRead(boolean isScatteringRead, ByteBuffer dst, ByteBuffer[] dsts, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler)
-    {
+    <V extends Number,A> Future<V> implRead(boolean isScatteringRead, ByteBuffer dst, ByteBuffer[] dsts, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler) {
         // A synchronous read is not attempted if disallowed by system property
         // or, we are using a fixed thread pool and the completion handler may
         // not be invoked directly (because the thread is not a pooled thread or
@@ -606,8 +601,7 @@ class UnixAsynchronousSocketChannelImpl extends AsynchronousSocketChannelImpl im
      */
     @Override
     @SuppressWarnings("unchecked")
-    <V extends Number,A> Future<V> implWrite(boolean isGatheringWrite, ByteBuffer src, ByteBuffer[] srcs, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler)
-    {
+    <V extends Number,A> Future<V> implWrite(boolean isGatheringWrite, ByteBuffer src, ByteBuffer[] srcs, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler) {
         Invoker.GroupAndInvokeCount myGroupAndInvokeCount = Invoker.getGroupAndInvokeCount();
         boolean invokeDirect = Invoker.mayInvokeDirect(myGroupAndInvokeCount, port);
         boolean attemptWrite = (handler == null) || invokeDirect || !port.isFixedThreadPool(); // okay to attempt write with user thread pool

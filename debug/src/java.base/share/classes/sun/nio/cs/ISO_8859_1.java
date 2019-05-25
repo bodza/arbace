@@ -8,8 +8,6 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 import java.util.Objects;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
     public static final ISO_8859_1 INSTANCE = new ISO_8859_1();
 
@@ -38,8 +36,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             super(cs, 1.0f, 1.0f);
         }
 
-        private CoderResult decodeArrayLoop(ByteBuffer src, CharBuffer dst)
-        {
+        private CoderResult decodeArrayLoop(ByteBuffer src, CharBuffer dst) {
             byte[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
             int sl = src.arrayOffset() + src.limit();
@@ -66,8 +63,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             }
         }
 
-        private CoderResult decodeBufferLoop(ByteBuffer src, CharBuffer dst)
-        {
+        private CoderResult decodeBufferLoop(ByteBuffer src, CharBuffer dst) {
             int mark = src.position();
             try {
                 while (src.hasRemaining()) {
@@ -83,8 +79,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             }
         }
 
-        protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst)
-        {
+        protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst) {
             if (src.hasArray() && dst.hasArray())
                 return decodeArrayLoop(src, dst);
             else
@@ -116,9 +111,8 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             return implEncodeISOArray(sa, sp, da, dp, len);
         }
 
-        @HotSpotIntrinsicCandidate
-        private static int implEncodeISOArray(char[] sa, int sp, byte[] da, int dp, int len)
-        {
+        // @HotSpotIntrinsicCandidate
+        private static int implEncodeISOArray(char[] sa, int sp, byte[] da, int dp, int len) {
             int i = 0;
             for ( ; i < len; i++) {
                 char c = sa[sp++];
@@ -152,8 +146,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             }
         }
 
-        private CoderResult encodeArrayLoop(CharBuffer src, ByteBuffer dst)
-        {
+        private CoderResult encodeArrayLoop(CharBuffer src, ByteBuffer dst) {
             char[] sa = src.array();
             int soff = src.arrayOffset();
             int sp = soff + src.position();
@@ -187,8 +180,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             }
         }
 
-        private CoderResult encodeBufferLoop(CharBuffer src, ByteBuffer dst)
-        {
+        private CoderResult encodeBufferLoop(CharBuffer src, ByteBuffer dst) {
             int mark = src.position();
             try {
                 while (src.hasRemaining()) {
@@ -210,8 +202,7 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             }
         }
 
-        protected CoderResult encodeLoop(CharBuffer src, ByteBuffer dst)
-        {
+        protected CoderResult encodeLoop(CharBuffer src, ByteBuffer dst) {
             if (src.hasArray() && dst.hasArray())
                 return encodeArrayLoop(src, dst);
             else

@@ -64,7 +64,7 @@ public class URLDecoder {
      *          to specify the encoding.
      * @return the newly decoded {@code String}
      */
-    @Deprecated
+    // @Deprecated
     public static String decode(String s) {
         String str = null;
 

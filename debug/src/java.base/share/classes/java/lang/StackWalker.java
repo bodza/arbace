@@ -2,13 +2,11 @@ package java.lang;
 
 import jdk.internal.reflect.CallerSensitive;
 
-import java.lang.invoke.MethodType;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * A stack walker.
@@ -52,7 +50,7 @@ import java.util.stream.Stream;
  * 2. To snapshot the top 10 stack frames of the current thread,
  * <pre>{@code
  *     List<StackFrame> stack = StackWalker.getInstance().walk(s ->
- *         s.limit(10).collect(Collectors.toList()));
+ *         s.limit(10).collect(Collectors.toList()));
  * }</pre>
  *
  * Unless otherwise noted, passing a {@code null} argument to a
@@ -99,23 +97,6 @@ public final class StackWalker {
         public Class<?> getDeclaringClass();
 
         /**
-         * Returns the {@link MethodType} representing the parameter types and
-         * the return type for the method represented by this stack frame.
-         *
-         * @implSpec
-         * The default implementation throws {@code UnsupportedOperationException}.
-         *
-         * @return the {@code MethodType} for this stack frame
-         *
-         * @throws UnsupportedOperationException if this {@code StackWalker}
-         *         is not configured with {@link Option#RETAIN_CLASS_REFERENCE
-         *         Option.RETAIN_CLASS_REFERENCE}.
-         */
-        public default MethodType getMethodType() {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
          * Returns the <i>descriptor</i> of the method represented by
          * this stack frame as defined by
          * <cite>The Java Virtual Machine Specification</cite>.
@@ -141,33 +122,6 @@ public final class StackWalker {
          *         or a negative number if the method is native.
          */
         public int getByteCodeIndex();
-
-        /**
-         * Returns the name of the source file containing the execution point
-         * represented by this stack frame.  Generally, this corresponds
-         * to the {@code SourceFile} attribute of the relevant {@code class}
-         * file as defined by <cite>The Java Virtual Machine Specification</cite>.
-         * In some systems, the name may refer to some source code unit
-         * other than a file, such as an entry in a source repository.
-         *
-         * @return the name of the file containing the execution point
-         *         represented by this stack frame, or {@code null} if
-         *         this information is unavailable.
-         */
-        public String getFileName();
-
-        /**
-         * Returns the line number of the source line containing the execution
-         * point represented by this stack frame.  Generally, this is
-         * derived from the {@code LineNumberTable} attribute of the relevant
-         * {@code class} file as defined by <cite>The Java Virtual Machine
-         * Specification</cite>.
-         *
-         * @return the line number of the source line containing the execution
-         *         point represented by this stack frame, or a negative number if
-         *         this information is unavailable.
-         */
-        public int getLineNumber();
 
         /**
          * Returns {@code true} if the method containing the execution point
@@ -358,7 +312,7 @@ public final class StackWalker {
      * which is the method calling this {@code walk} method.
      *
      * The {@code StackFrame} stream will be closed when
-     * this method returns.  When a closed {@code Stream<StackFrame>} object
+     * this method returns.  When a closed {@code Stream<StackFrame>} object
      * is reused, {@code IllegalStateException} will be thrown.
      *
      * @apiNote
@@ -369,11 +323,11 @@ public final class StackWalker {
      * List<StackFrame> frames = StackWalker.getInstance().walk(s ->
      *     s.dropWhile(f -> f.getClassName().startsWith("com.foo."))
      *      .limit(10)
-     *      .collect(Collectors.toList()));
+     *      .collect(Collectors.toList()));
      * }</pre></blockquote>
      *
-     * This method takes a {@code Function} accepting a {@code Stream<StackFrame>},
-     * rather than returning a {@code Stream<StackFrame>} and allowing the
+     * This method takes a {@code Function} accepting a {@code Stream<StackFrame>},
+     * rather than returning a {@code Stream<StackFrame>} and allowing the
      * caller to directly manipulate the stream. The Java virtual machine is
      * free to reorganize a thread's control stack, for example, via
      * deoptimization. By taking a {@code Function} parameter, this method
@@ -397,8 +351,8 @@ public final class StackWalker {
      *         {@linkplain StackFrame stack frame}.
      */
     @CallerSensitive
-    public <T> T walk(Function<? super Stream<StackFrame>, ? extends T> function) {
-        // Returning a Stream<StackFrame> would be unsafe, as the stream could
+    public <T> T walk(Function<? super Stream<StackFrame>, ? extends T> function) {
+        // Returning a Stream<StackFrame> would be unsafe, as the stream could
         // be used to access the stack frames in an uncontrolled manner.  For
         // example, a caller might pass a Spliterator of stack frames after one
         // or more frames had been traversed. There is no robust way to detect
@@ -438,7 +392,7 @@ public final class StackWalker {
      * that invoked {@code getCallerClass}.
      *
      * This method filters {@linkplain Option#SHOW_REFLECT_FRAMES reflection
-     * frames}, {@link java.lang.invoke.MethodHandle}, and
+     * frames}, {@link java.lang.invoke.MethodHandle}, and
      * {@linkplain Option#SHOW_HIDDEN_FRAMES hidden frames} regardless of the
      * {@link Option#SHOW_REFLECT_FRAMES SHOW_REFLECT_FRAMES}
      * and {@link Option#SHOW_HIDDEN_FRAMES SHOW_HIDDEN_FRAMES} options

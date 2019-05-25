@@ -99,8 +99,7 @@ public class ClassLoaders {
         }
 
         @Override
-        protected Class<?> loadClass(String cn, boolean resolve) throws ClassNotFoundException
-        {
+        protected Class<?> loadClass(String cn, boolean resolve) throws ClassNotFoundException {
             return super.loadClass(cn, resolve);
         }
 

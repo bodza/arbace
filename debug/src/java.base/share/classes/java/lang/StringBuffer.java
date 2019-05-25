@@ -1,7 +1,6 @@
 package java.lang;
 
 import java.util.Arrays;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 /**
  * A thread-safe, mutable sequence of characters.
@@ -84,7 +83,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * Constructs a string buffer with no characters in it and an
      * initial capacity of 16 characters.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuffer() {
         super(16);
     }
@@ -97,7 +96,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * @throws NegativeArraySizeException  if the {@code capacity}
      *             argument is less than {@code 0}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuffer(int capacity) {
         super(capacity);
     }
@@ -109,7 +108,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      *
      * @param str   the initial contents of the buffer.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public StringBuffer(String str) {
         super(str.length() + 16);
         append(str);
@@ -231,8 +230,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public synchronized void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
-    {
+    public synchronized void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin) {
         super.getChars(srcBegin, srcEnd, dst, dstBegin);
     }
 
@@ -253,7 +251,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public synchronized StringBuffer append(String str) {
         toStringCache = null;
         super.append(str);
@@ -327,8 +325,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public synchronized StringBuffer append(CharSequence s, int start, int end)
-    {
+    public synchronized StringBuffer append(CharSequence s, int start, int end) {
         toStringCache = null;
         super.append(s, start, end);
         return this;
@@ -359,7 +356,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public synchronized StringBuffer append(char c) {
         toStringCache = null;
         super.append(c);
@@ -367,7 +364,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public synchronized StringBuffer append(int i) {
         toStringCache = null;
         super.append(i);
@@ -460,8 +457,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * @throws StringIndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public synchronized StringBuffer insert(int index, char[] str, int offset, int len)
-    {
+    public synchronized StringBuffer insert(int index, char[] str, int offset, int len) {
         toStringCache = null;
         super.insert(index, str, offset, len);
         return this;
@@ -513,8 +509,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
-    public synchronized StringBuffer insert(int dstOffset, CharSequence s, int start, int end)
-    {
+    public synchronized StringBuffer insert(int dstOffset, CharSequence s, int start, int end) {
         toStringCache = null;
         super.insert(dstOffset, s, start, end);
         return this;
@@ -620,7 +615,7 @@ public final class StringBuffer extends AbstractStringBuilder implements Compara
     }
 
     @Override
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public synchronized String toString() {
         if (toStringCache == null) {
             return toStringCache = isLatin1() ? StringLatin1.newString(value, 0, count) : StringUTF16.newString(value, 0, count);

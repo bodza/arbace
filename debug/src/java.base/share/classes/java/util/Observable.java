@@ -40,7 +40,7 @@ package java.util;
  * For reactive streams style programming, see the
  * {@link java.util.concurrent.Flow} API.
  */
-@Deprecated(since="9")
+// @Deprecated(since="9")
 public class Observable {
     private boolean changed = false;
     private Vector<Observer> obs;

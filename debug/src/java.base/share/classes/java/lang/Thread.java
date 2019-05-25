@@ -13,7 +13,6 @@ import jdk.internal.misc.TerminatingThreadLocal;
 import sun.nio.ch.Interruptible;
 import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
-import jdk.internal.HotSpotIntrinsicCandidate;
 
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java
@@ -216,7 +215,7 @@ public class Thread implements Runnable {
      *
      * @return the currently executing thread.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static native Thread currentThread();
 
     /**
@@ -328,7 +327,7 @@ public class Thread implements Runnable {
      * Virtual Machine may issue the processor instructions to address such
      * code patterns in a more beneficial way.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static void onSpinWait() {}
 
     /**
@@ -719,7 +718,7 @@ public class Thread implements Runnable {
      *       <a href="{@docRoot}/java.base/java/lang/doc-files/threadPrimitiveDeprecation.html">Why
      *       are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     public final void stop() {
         // A zero status value corresponds to "NEW", it can't change to
         // not-NEW because we hold the lock.
@@ -815,7 +814,7 @@ public class Thread implements Runnable {
      * is reset or not based on the value of ClearInterrupted that is
      * passed.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     private native boolean isInterrupted(boolean ClearInterrupted);
 
     /**
@@ -844,7 +843,7 @@ public class Thread implements Runnable {
      *   <a href="{@docRoot}/java.base/java/lang/doc-files/threadPrimitiveDeprecation.html">Why
      *   are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     public final void suspend() {
         suspend0();
     }
@@ -861,7 +860,7 @@ public class Thread implements Runnable {
      *     <a href="{@docRoot}/java.base/java/lang/doc-files/threadPrimitiveDeprecation.html">Why
      *     are Thread.stop, Thread.suspend and Thread.resume Deprecated?</a>.
      */
-    @Deprecated(since="1.2")
+    // @Deprecated(since="1.2")
     public final void resume() {
         resume0();
     }
@@ -994,7 +993,7 @@ public class Thread implements Runnable {
      *             were never well-defined.
      *             This method is subject to removal in a future version of Java SE.
      */
-    @Deprecated(since="1.2", forRemoval=true)
+    // @Deprecated(since="1.2", forRemoval=true)
     public native int countStackFrames();
 
     /**
@@ -1516,8 +1515,7 @@ public class Thread implements Runnable {
      * Removes from the specified map any keys that have been enqueued
      * on the specified reference queue.
      */
-    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends WeakReference<Class<?>>, ?> map)
-    {
+    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends WeakReference<Class<?>>, ?> map) {
         Reference<? extends Class<?>> ref;
         while ((ref = queue.poll()) != null) {
             map.remove(ref);
@@ -1531,15 +1529,15 @@ public class Thread implements Runnable {
     // Hence, the fields are isolated with @Contended.
 
     /** The current seed for a ThreadLocalRandom */
-    @jdk.internal.vm.annotation.Contended("tlr")
+    // @Contended("tlr")
     long threadLocalRandomSeed;
 
     /** Probe hash value; nonzero if threadLocalRandomSeed initialized */
-    @jdk.internal.vm.annotation.Contended("tlr")
+    // @Contended("tlr")
     int threadLocalRandomProbe;
 
     /** Secondary seed isolated from public ThreadLocalRandom sequence */
-    @jdk.internal.vm.annotation.Contended("tlr")
+    // @Contended("tlr")
     int threadLocalRandomSecondarySeed;
 
     /* Some private helper methods */

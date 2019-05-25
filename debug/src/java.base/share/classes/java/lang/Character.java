@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * The {@code Character} class wraps a value of the primitive
  * type {@code char} in an object. An object of class
@@ -1078,7 +1076,7 @@ public final class Character implements Comparable<Character> {
          * The {@link #of(char)} and {@link #of(int)} methods return the
          * standard constants.
          */
-        @Deprecated(since="1.5")
+        // @Deprecated(since="1.5")
         public static final UnicodeBlock SURROGATES_AREA =
             new UnicodeBlock("SURROGATES_AREA");
 
@@ -7432,7 +7430,7 @@ public final class Character implements Comparable<Character> {
      * {@link #valueOf(char)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Character(char value) {
         this.value = value;
     }
@@ -7464,7 +7462,7 @@ public final class Character implements Comparable<Character> {
      * @param c a char value.
      * @return a {@code Character} instance representing {@code c}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Character valueOf(char c) {
         if (c <= 127) { // must cache
             return CharacterCache.cache[(int)c];
@@ -7477,7 +7475,7 @@ public final class Character implements Comparable<Character> {
      * @return the primitive {@code char} value represented by
      *          this object.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public char charValue() {
         return value;
     }
@@ -8679,7 +8677,7 @@ public final class Character implements Comparable<Character> {
      *          identifier; {@code false} otherwise.
      * @deprecated Replaced by isJavaIdentifierStart(char).
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public static boolean isJavaLetter(char ch) {
         return isJavaIdentifierStart(ch);
     }
@@ -8709,7 +8707,7 @@ public final class Character implements Comparable<Character> {
      *          Java identifier; {@code false} otherwise.
      * @deprecated Replaced by isJavaIdentifierPart(char).
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public static boolean isJavaLetterOrDigit(char ch) {
         return isJavaIdentifierPart(ch);
     }
@@ -9392,7 +9390,7 @@ public final class Character implements Comparable<Character> {
      *             space; {@code false} otherwise.
      * @deprecated Replaced by isWhitespace(char).
      */
-    @Deprecated(since="1.1")
+    // @Deprecated(since="1.1")
     public static boolean isSpace(char ch) {
         return (ch <= 0x0020) &&
             (((((1L << 0x0009) |
@@ -9771,7 +9769,7 @@ public final class Character implements Comparable<Character> {
      * @return the value obtained by reversing (or, equivalently, swapping)
      *     the bytes in the specified {@code char} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static char reverseBytes(char ch) {
         return (char) (((ch & 0xFF00) >> 8) | (ch << 8));
     }

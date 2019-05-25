@@ -13,8 +13,7 @@ class DelegatingConstructorAccessorImpl extends ConstructorAccessorImpl {
         setDelegate(delegate);
     }
 
-    public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException
-    {
+    public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException {
         return delegate.newInstance(args);
     }
 

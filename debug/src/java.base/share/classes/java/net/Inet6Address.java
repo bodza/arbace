@@ -155,8 +155,7 @@ public final class Inet6Address extends InetAddress {
             ipaddress = new byte[INADDRSZ];
         }
 
-        private Inet6AddressHolder(byte[] ipaddress, int scope_id, boolean scope_id_set, NetworkInterface ifname, boolean scope_ifname_set)
-        {
+        private Inet6AddressHolder(byte[] ipaddress, int scope_id, boolean scope_id_set, NetworkInterface ifname, boolean scope_ifname_set) {
             this.ipaddress = ipaddress;
             this.scope_id = scope_id;
             this.scope_id_set = scope_id_set;
@@ -209,8 +208,7 @@ public final class Inet6Address extends InetAddress {
             }
         }
 
-        void init(byte addr[], NetworkInterface nif) throws UnknownHostException
-        {
+        void init(byte addr[], NetworkInterface nif) throws UnknownHostException {
             setAddr(addr);
 
             if (nif != null) {
@@ -348,14 +346,12 @@ public final class Inet6Address extends InetAddress {
         } catch (UnknownHostException e) {} /* cant happen if ifname is null */
     }
 
-    Inet6Address(String hostName, byte addr[], NetworkInterface nif) throws UnknownHostException
-    {
+    Inet6Address(String hostName, byte addr[], NetworkInterface nif) throws UnknownHostException {
         holder6 = new Inet6AddressHolder();
         initif (hostName, addr, nif);
     }
 
-    Inet6Address(String hostName, byte addr[], String ifname) throws UnknownHostException
-    {
+    Inet6Address(String hostName, byte addr[], String ifname) throws UnknownHostException {
         holder6 = new Inet6AddressHolder();
         initstr (hostName, addr, ifname);
     }
@@ -378,8 +374,7 @@ public final class Inet6Address extends InetAddress {
      *          if IP address is of illegal length, or if the interface does not
      *          have a numeric scope_id assigned for the given address type.
      */
-    public static Inet6Address getByAddress(String host, byte[] addr, NetworkInterface nif) throws UnknownHostException
-    {
+    public static Inet6Address getByAddress(String host, byte[] addr, NetworkInterface nif) throws UnknownHostException {
         if (host != null && host.length() > 0 && host.charAt(0) == '[') {
             if (host.charAt(host.length()-1) == ']') {
                 host = host.substring(1, host.length() -1);
@@ -407,8 +402,7 @@ public final class Inet6Address extends InetAddress {
      * @return an Inet6Address object created from the raw IP address.
      * @throws UnknownHostException  if IP address is of illegal length.
      */
-    public static Inet6Address getByAddress(String host, byte[] addr, int scope_id) throws UnknownHostException
-    {
+    public static Inet6Address getByAddress(String host, byte[] addr, int scope_id) throws UnknownHostException {
         if (host != null && host.length() > 0 && host.charAt(0) == '[') {
             if (host.charAt(host.length()-1) == ']') {
                 host = host.substring(1, host.length() -1);
@@ -422,8 +416,7 @@ public final class Inet6Address extends InetAddress {
         throw new UnknownHostException("addr is of illegal length");
     }
 
-    private void initstr(String hostName, byte addr[], String ifname) throws UnknownHostException
-    {
+    private void initstr(String hostName, byte addr[], String ifname) throws UnknownHostException {
         try {
             NetworkInterface nif = NetworkInterface.getByName (ifname);
             if (nif == null) {
@@ -435,8 +428,7 @@ public final class Inet6Address extends InetAddress {
         }
     }
 
-    private void initif(String hostName, byte addr[], NetworkInterface nif) throws UnknownHostException
-    {
+    private void initif(String hostName, byte addr[], NetworkInterface nif) throws UnknownHostException {
         int family = -1;
         holder6.init(addr, nif);
 
@@ -729,8 +721,7 @@ public final class Inet6Address extends InetAddress {
     static String numericToTextFormat(byte[] src) {
         StringBuilder sb = new StringBuilder(39);
         for (int i = 0; i < (INADDRSZ / INT16SZ); i++) {
-            sb.append(Integer.toHexString(((src[i<<1]<<8) & 0xff00)
-                                          | (src[(i<<1)+1] & 0xff)));
+            sb.append(Integer.toHexString(((src[i<<1]<<8) & 0xff00) | (src[(i<<1)+1] & 0xff)));
             if (i < (INADDRSZ / INT16SZ) -1) {
                sb.append(":");
             }

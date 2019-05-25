@@ -972,8 +972,7 @@ class MutableBigInteger {
 
         // Perform the multiplication word by word
         long ylong = y & LONG_MASK;
-        int[] zval = (z.value.length < intLen+1 ? new int[intLen + 1]
-                                              : z.value);
+        int[] zval = (z.value.length < intLen+1 ? new int[intLen + 1] : z.value);
         long carry = 0;
         for (int i = intLen-1; i >= 0; i--) {
             long product = ylong * (value[i+offset] & LONG_MASK) + carry;
@@ -2046,10 +2045,10 @@ class MutableBigInteger {
     static int inverseMod32(int val) {
         // Newton's iteration!
         int t = val;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
         return t;
     }
 
@@ -2059,12 +2058,12 @@ class MutableBigInteger {
     static long inverseMod64(long val) {
         // Newton's iteration!
         long t = val;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        t *= 2 - val*t;
-        assert(t * val == 1);
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        t *= 2 - val * t;
+        assert (t * val == 1);
         return t;
     }
 

@@ -24,14 +24,12 @@ public class BsdAsynchronousChannelProvider extends AsynchronousChannelProvider 
     }
 
     @Override
-    public AsynchronousChannelGroup openAsynchronousChannelGroup(int nThreads, ThreadFactory factory) throws IOException
-    {
+    public AsynchronousChannelGroup openAsynchronousChannelGroup(int nThreads, ThreadFactory factory) throws IOException {
         return new KQueuePort(this, ThreadPool.create(nThreads, factory)).start();
     }
 
     @Override
-    public AsynchronousChannelGroup openAsynchronousChannelGroup(ExecutorService executor, int initialSize) throws IOException
-    {
+    public AsynchronousChannelGroup openAsynchronousChannelGroup(ExecutorService executor, int initialSize) throws IOException {
         return new KQueuePort(this, ThreadPool.wrap(executor, initialSize)).start();
     }
 
@@ -46,14 +44,12 @@ public class BsdAsynchronousChannelProvider extends AsynchronousChannelProvider 
     }
 
     @Override
-    public AsynchronousServerSocketChannel openAsynchronousServerSocketChannel(AsynchronousChannelGroup group) throws IOException
-    {
+    public AsynchronousServerSocketChannel openAsynchronousServerSocketChannel(AsynchronousChannelGroup group) throws IOException {
         return new UnixAsynchronousServerSocketChannelImpl(toPort(group));
     }
 
     @Override
-    public AsynchronousSocketChannel openAsynchronousSocketChannel(AsynchronousChannelGroup group) throws IOException
-    {
+    public AsynchronousSocketChannel openAsynchronousSocketChannel(AsynchronousChannelGroup group) throws IOException {
         return new UnixAsynchronousSocketChannelImpl(toPort(group));
     }
 }

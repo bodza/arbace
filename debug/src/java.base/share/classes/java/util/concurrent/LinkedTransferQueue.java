@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractQueue;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1637,15 +1635,15 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E> implements Transfer
     }
 
     // VarHandle mechanics
-    private static final VarHandle HEAD;
-    private static final VarHandle TAIL;
-    private static final VarHandle SWEEPVOTES;
-    static final VarHandle ITEM;
-    static final VarHandle NEXT;
-    static final VarHandle WAITER;
+    private static final VarHandle HEAD;
+    private static final VarHandle TAIL;
+    private static final VarHandle SWEEPVOTES;
+    static final VarHandle ITEM;
+    static final VarHandle NEXT;
+    static final VarHandle WAITER;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             HEAD = l.findVarHandle(LinkedTransferQueue.class, "head", Node.class);
             TAIL = l.findVarHandle(LinkedTransferQueue.class, "tail", Node.class);
             SWEEPVOTES = l.findVarHandle(LinkedTransferQueue.class, "sweepVotes", int.class);

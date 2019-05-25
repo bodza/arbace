@@ -1,7 +1,5 @@
 package java.lang;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * The {@code Byte} class wraps a value of primitive type {@code byte}
  * in an object.  An object of type {@code Byte} contains a single
@@ -66,7 +64,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @param b a byte value.
      * @return a {@code Byte} instance representing {@code b}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Byte valueOf(byte b) {
         final int offset = 128;
         return ByteCache.cache[(int)b + offset];
@@ -262,7 +260,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * {@link #valueOf(byte)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Byte(byte value) {
         this.value = value;
     }
@@ -285,7 +283,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * {@code byte} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Byte} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Byte(String s) throws NumberFormatException {
         this.value = parseByte(s, 10);
     }
@@ -294,7 +292,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * Returns the value of this {@code Byte} as a
      * {@code byte}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public byte byteValue() {
         return value;
     }

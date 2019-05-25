@@ -4,11 +4,6 @@ import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import jdk.internal.HotSpotIntrinsicCandidate;
-import jdk.internal.vm.annotation.ForceInline;
-import jdk.internal.vm.annotation.DontInline;
 
 import static java.lang.String.UTF16;
 import static java.lang.String.LATIN1;
@@ -24,7 +19,7 @@ final class StringUTF16 {
         return new byte[len << 1];
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     // intrinsic performs no bounds checks
     static void putChar(byte[] val, int index, int c) {
         index <<= 1;
@@ -32,7 +27,7 @@ final class StringUTF16 {
         val[index]   = (byte)(c >> LO_BYTE_SHIFT);
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     // intrinsic performs no bounds checks
     static char getChar(byte[] val, int index) {
         index <<= 1;
@@ -113,7 +108,7 @@ final class StringUTF16 {
         return dst;
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static byte[] toBytes(char[] value, int off, int len) {
         byte[] val = newBytesFor(len);
         for (int i = 0; i < len; i++) {
@@ -140,7 +135,7 @@ final class StringUTF16 {
     }
 
     // compressedCopy char[] -> byte[]
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int compress(char[] src, int srcOff, byte[] dst, int dstOff, int len) {
         for (int i = 0; i < len; i++) {
             char c = src[srcOff];
@@ -156,7 +151,7 @@ final class StringUTF16 {
     }
 
     // compressedCopy byte[] -> byte[]
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int compress(byte[] src, int srcOff, byte[] dst, int dstOff, int len) {
         // We need a range check here because 'getChar' has no checks
         checkBoundsOffCount(srcOff, len, src);
@@ -212,7 +207,7 @@ final class StringUTF16 {
         return result;
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static void getChars(byte[] value, int srcBegin, int srcEnd, char dst[], int dstBegin) {
         // We need a range check here because 'getChar' has no checks
         if (srcBegin < srcEnd) {
@@ -232,7 +227,7 @@ final class StringUTF16 {
         }
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static boolean equals(byte[] value, byte[] other) {
         if (value.length == other.length) {
             int len = value.length >> 1;
@@ -246,7 +241,7 @@ final class StringUTF16 {
         return false;
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int compareTo(byte[] value, byte[] other) {
         int len1 = length(value);
         int len2 = length(other);
@@ -275,7 +270,7 @@ final class StringUTF16 {
         return len1 - len2;
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int compareToLatin1(byte[] value, byte[] other) {
         return -StringLatin1.compareToUTF16(other, value);
     }
@@ -336,7 +331,7 @@ final class StringUTF16 {
         }
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int indexOf(byte[] value, byte[] str) {
         if (str.length == 0) {
             return 0;
@@ -347,7 +342,7 @@ final class StringUTF16 {
         return indexOfUnsafe(value, length(value), str, length(str), 0);
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int indexOf(byte[] value, int valueCount, byte[] str, int strCount, int fromIndex) {
         checkBoundsBeginEnd(fromIndex, valueCount, value);
         checkBoundsBeginEnd(0, strCount, str);
@@ -381,7 +376,7 @@ final class StringUTF16 {
     /**
      * Handles indexOf Latin1 substring in UTF16 string.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int indexOfLatin1(byte[] value, byte[] str) {
         if (str.length == 0) {
             return 0;
@@ -392,7 +387,7 @@ final class StringUTF16 {
         return indexOfLatin1Unsafe(value, length(value), str, str.length, 0);
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static int indexOfLatin1(byte[] src, int srcCount, byte[] tgt, int tgtCount, int fromIndex) {
         checkBoundsBeginEnd(fromIndex, srcCount, src);
         String.checkBoundsBeginEnd(0, tgtCount, tgt.length);
@@ -423,7 +418,7 @@ final class StringUTF16 {
         return -1;
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     private static int indexOfChar(byte[] value, int ch, int fromIndex, int max) {
         checkBoundsBeginEnd(fromIndex, max, value);
         return indexOfCharUnsafe(value, ch, fromIndex, max);
@@ -718,8 +713,7 @@ final class StringUTF16 {
         }
     }
 
-    private static String toUpperCaseEx(String str, byte[] value, byte[] result, int first, boolean localeDependent)
-    {
+    private static String toUpperCaseEx(String str, byte[] value, byte[] result, int first, boolean localeDependent) {
         int resultOffset = first;
         int length = value.length >> 1;
         int srcCount;
@@ -921,10 +915,6 @@ final class StringUTF16 {
         }
     }
 
-    static Stream<String> lines(byte[] value) {
-        return StreamSupport.stream(new LinesSpliterator(value), false);
-    }
-
     private static void putChars(byte[] val, int index, char[] str, int off, int end) {
         while (off < end) {
             putChar(val, index++, str[off++]);
@@ -960,8 +950,7 @@ final class StringUTF16 {
             this.array = array;
             this.index = origin;
             this.fence = fence;
-            this.cs = acs | Spliterator.ORDERED | Spliterator.SIZED
-                      | Spliterator.SUBSIZED;
+            this.cs = acs | Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
         }
 
         @Override

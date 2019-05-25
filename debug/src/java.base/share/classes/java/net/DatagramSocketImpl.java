@@ -133,7 +133,7 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @throws IOException if an I/O exception occurs while setting
      * the time-to-live option.
      */
-    @Deprecated
+    // @Deprecated
     protected abstract void setTTL(byte ttl) throws IOException;
 
     /**
@@ -144,7 +144,7 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @deprecated use getTimeToLive instead.
      * @return a byte representing the TTL value
      */
-    @Deprecated
+    // @Deprecated
     protected abstract byte getTTL() throws IOException;
 
     /**

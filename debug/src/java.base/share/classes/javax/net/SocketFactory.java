@@ -54,8 +54,7 @@ public abstract class SocketFactory {
      *
      * @return the default <code>SocketFactory</code>
      */
-    public static SocketFactory getDefault()
-    {
+    public static SocketFactory getDefault() {
         synchronized (SocketFactory.class) {
             if (theFactory == null) {
                 //
@@ -181,23 +180,19 @@ class DefaultSocketFactory extends SocketFactory {
         return new Socket();
     }
 
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException
-    {
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         return new Socket(host, port);
     }
 
-    public Socket createSocket(InetAddress address, int port) throws IOException
-    {
+    public Socket createSocket(InetAddress address, int port) throws IOException {
         return new Socket(address, port);
     }
 
-    public Socket createSocket(String host, int port, InetAddress clientAddress, int clientPort) throws IOException, UnknownHostException
-    {
+    public Socket createSocket(String host, int port, InetAddress clientAddress, int clientPort) throws IOException, UnknownHostException {
         return new Socket(host, port, clientAddress, clientPort);
     }
 
-    public Socket createSocket(InetAddress address, int port, InetAddress clientAddress, int clientPort) throws IOException
-    {
+    public Socket createSocket(InetAddress address, int port, InetAddress clientAddress, int clientPort) throws IOException {
         return new Socket(address, port, clientAddress, clientPort);
     }
 }

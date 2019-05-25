@@ -15,7 +15,6 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
-import jdk.internal.HotSpotIntrinsicCandidate;
 import sun.nio.cs.HistoricallyNamedCharset;
 import sun.nio.cs.ArrayDecoder;
 import sun.nio.cs.ArrayEncoder;
@@ -110,7 +109,7 @@ class StringCoding {
         }
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static boolean hasNegatives(byte[] ba, int off, int len) {
         for (int i = off; i < off + len; i++) {
             if (ba[i] < 0) {
@@ -183,8 +182,7 @@ class StringCoding {
         }
     }
 
-    static Result decode(String charsetName, byte[] ba, int off, int len) throws UnsupportedEncodingException
-    {
+    static Result decode(String charsetName, byte[] ba, int off, int len) throws UnsupportedEncodingException {
         StringDecoder sd = deref(decoder);
         String csn = (charsetName == null) ? "ISO-8859-1" : charsetName;
         if ((sd == null) || !(csn.equals(sd.requestedCharsetName()) || csn.equals(sd.charsetName()))) {
@@ -351,8 +349,7 @@ class StringCoding {
         }
     }
 
-    static byte[] encode(String charsetName, byte coder, byte[] val) throws UnsupportedEncodingException
-    {
+    static byte[] encode(String charsetName, byte coder, byte[] val) throws UnsupportedEncodingException {
         StringEncoder se = deref(encoder);
         String csn = (charsetName == null) ? "ISO-8859-1" : charsetName;
         if ((se == null) || !(csn.equals(se.requestedCharsetName()) || csn.equals(se.charsetName()))) {
@@ -517,7 +514,7 @@ class StringCoding {
        }
     }
 
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     private static int implEncodeISOArray(byte[] sa, int sp, byte[] da, int dp, int len) {
         int i = 0;
         for ( ; i < len; i++) {

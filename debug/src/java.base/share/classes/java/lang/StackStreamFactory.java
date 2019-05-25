@@ -5,7 +5,6 @@ import jdk.internal.reflect.ConstructorAccessor;
 import java.lang.StackWalker.Option;
 import java.lang.StackWalker.StackFrame;
 
-import java.lang.annotation.Native;
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.util.HashSet;
@@ -15,8 +14,6 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static java.lang.StackStreamFactory.WalkerState.*;
 
@@ -28,8 +25,8 @@ import static java.lang.StackStreamFactory.WalkerState.*;
  * fetching stack frames from VM in batches.
  *
  * AbstractStackWalker subclass is specialized for a specific kind of stack traversal
- * to avoid overhead of Stream/Lambda
- * 1. Support traversing Stream<StackFrame>
+ * to avoid overhead of Stream/Lambda
+ * 1. Support traversing Stream<StackFrame>
  * 2. StackWalker::getCallerClass
  */
 final class StackStreamFactory {
@@ -45,11 +42,16 @@ final class StackStreamFactory {
     private static final int MIN_BATCH_SIZE    = SMALL_BATCH;
 
     // These flags must match the values maintained in the VM
-    @Native private static final int DEFAULT_MODE              = 0x0;
-    @Native private static final int FILL_CLASS_REFS_ONLY      = 0x2;
-    @Native private static final int GET_CALLER_CLASS          = 0x4;
-    @Native private static final int SHOW_HIDDEN_FRAMES        = 0x20; // LambdaForms are hidden by the VM
-    @Native private static final int FILL_LIVE_STACK_FRAMES    = 0x100;
+    // @Native
+    private static final int DEFAULT_MODE              = 0x0;
+    // @Native
+    private static final int FILL_CLASS_REFS_ONLY      = 0x2;
+    // @Native
+    private static final int GET_CALLER_CLASS          = 0x4;
+    // @Native
+    private static final int SHOW_HIDDEN_FRAMES        = 0x20; // LambdaForms are hidden by the VM
+    // @Native
+    private static final int FILL_LIVE_STACK_FRAMES    = 0x100;
 
     /*
      * For Throwable to use StackWalker, set useNewThrowable to true.
@@ -57,9 +59,7 @@ final class StackStreamFactory {
      * VM built-in backtrace filled in Throwable with the StackWalker.
      */
 
-    static <T> StackFrameTraverser<T>
-        makeStackTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function)
-    {
+    static <T> StackFrameTraverser<T> makeStackTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function) {
         if (walker.hasLocalsOperandsOption())
             return new LiveStackInfoTraverser<>(walker, function);
         else
@@ -373,7 +373,7 @@ final class StackStreamFactory {
     }
 
     /*
-     * This StackFrameTraverser supports {@link Stream} traversal.
+     * This StackFrameTraverser supports {@link Stream} traversal.
      *
      * This class implements Spliterator::forEachRemaining and Spliterator::tryAdvance.
      */
@@ -436,12 +436,13 @@ final class StackStreamFactory {
             }
         }
 
-        final Function<? super Stream<StackFrame>, ? extends T> function; // callback
+        final Function<? super Stream<StackFrame>, ? extends T> function; // callback
 
-        StackFrameTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function) {
+        StackFrameTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function) {
             this(walker, function, DEFAULT_MODE);
         }
-        StackFrameTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function, int mode) {
+
+        StackFrameTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function, int mode) {
             super(walker, mode);
             this.function = function;
         }
@@ -463,7 +464,7 @@ final class StackStreamFactory {
         @Override
         protected T consumeFrames() {
             checkState(OPEN);
-            Stream<StackFrame> stream = StreamSupport.stream(this, false);
+            Stream<StackFrame> stream = StreamSupport.stream(this, false);
             if (function != null) {
                 return function.apply(stream);
             } else
@@ -693,7 +694,7 @@ final class StackStreamFactory {
             }
         }
 
-        LiveStackInfoTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function) {
+        LiveStackInfoTraverser(StackWalker walker, Function<? super Stream<StackFrame>, ? extends T> function) {
             super(walker, function, DEFAULT_MODE);
         }
 
@@ -887,13 +888,13 @@ final class StackStreamFactory {
     }
 
     private static boolean filterStackWalkImpl(Class<?> c) {
-        return stackWalkImplClasses.contains(c) || c.getName().startsWith("java.util.stream.");
+        return stackWalkImplClasses.contains(c) || c.getName().startsWith("java.util.stream.");
     }
 
     // MethodHandle frames are not hidden and CallerClassFinder has
     // to filter them out
     private static boolean isMethodHandleFrame(Class<?> c) {
-        return c.getName().startsWith("java.lang.invoke.");
+        return c.getName().startsWith("java.lang.invoke.");
     }
 
     private static boolean isReflectionFrame(Class<?> c) {
@@ -902,6 +903,6 @@ final class StackStreamFactory {
                c == Constructor.class ||
                MethodAccessor.class.isAssignableFrom(c) ||
                ConstructorAccessor.class.isAssignableFrom(c) ||
-               c.getName().startsWith("java.lang.invoke.LambdaForm");
+               c.getName().startsWith("java.lang.invoke.LambdaForm");
     }
 }

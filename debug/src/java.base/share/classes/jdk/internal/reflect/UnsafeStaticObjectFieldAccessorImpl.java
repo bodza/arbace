@@ -43,8 +43,7 @@ class UnsafeStaticObjectFieldAccessorImpl extends UnsafeStaticFieldAccessorImpl 
         throw newGetDoubleIllegalArgumentException();
     }
 
-    public void set(Object obj, Object value) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void set(Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
         if (isFinal) {
             throwFinalFieldIllegalAccessException(value);
         }
@@ -56,43 +55,35 @@ class UnsafeStaticObjectFieldAccessorImpl extends UnsafeStaticFieldAccessorImpl 
         unsafe.putObject(base, fieldOffset, value);
     }
 
-    public void setBoolean(Object obj, boolean z) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setBoolean(Object obj, boolean z) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(z);
     }
 
-    public void setByte(Object obj, byte b) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setByte(Object obj, byte b) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(b);
     }
 
-    public void setChar(Object obj, char c) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setChar(Object obj, char c) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(c);
     }
 
-    public void setShort(Object obj, short s) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setShort(Object obj, short s) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(s);
     }
 
-    public void setInt(Object obj, int i) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setInt(Object obj, int i) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(i);
     }
 
-    public void setLong(Object obj, long l) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setLong(Object obj, long l) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(l);
     }
 
-    public void setFloat(Object obj, float f) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setFloat(Object obj, float f) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(f);
     }
 
-    public void setDouble(Object obj, double d) throws IllegalArgumentException, IllegalAccessException
-    {
+    public void setDouble(Object obj, double d) throws IllegalArgumentException, IllegalAccessException {
         throwSetIllegalArgumentException(d);
     }
 }

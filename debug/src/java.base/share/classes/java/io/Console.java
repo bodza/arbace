@@ -179,8 +179,7 @@ public final class Console implements Flushable {
             return in.ready();
         }
 
-        public int read(char cbuf[], int offset, int length) throws IOException
-        {
+        public int read(char cbuf[], int offset, int length) throws IOException {
             int off = offset;
             int end = offset + length;
             if (offset < 0 || offset > cbuf.length || length < 0 || end < 0 || end > cbuf.length) {

@@ -4,7 +4,7 @@ import java.lang.reflect.*;
 
 /**
   * Provides reflective access to the constant pools of classes.
-  * Currently this is needed to provide reflective access to annotations
+  * Currently this is needed to provide reflective access to annotations
   * but may be used by other internal subsystems in the future.
   */
 public class ConstantPool {

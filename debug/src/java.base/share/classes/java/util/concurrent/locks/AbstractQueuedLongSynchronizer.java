@@ -1,7 +1,5 @@
 package java.util.concurrent.locks;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -1696,13 +1694,12 @@ public abstract class AbstractQueuedLongSynchronizer extends AbstractOwnableSync
     }
 
     // VarHandle mechanics
-    private static final VarHandle STATE;
-    private static final VarHandle HEAD;
-    private static final VarHandle TAIL;
-
+    private static final VarHandle STATE;
+    private static final VarHandle HEAD;
+    private static final VarHandle TAIL;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             STATE = l.findVarHandle(AbstractQueuedLongSynchronizer.class, "state", long.class);
             HEAD = l.findVarHandle(AbstractQueuedLongSynchronizer.class, "head", Node.class);
             TAIL = l.findVarHandle(AbstractQueuedLongSynchronizer.class, "tail", Node.class);

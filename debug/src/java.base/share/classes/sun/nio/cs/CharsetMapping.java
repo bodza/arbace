@@ -176,8 +176,7 @@ public class CharsetMapping {
     private static final int MAP_COMPOSITE       = 0x7; //           db,base,cc
     private static final int MAP_INDEXC2B        = 0x8; // index table of c->bb
 
-    private static final boolean readNBytes(InputStream in, byte[] bb, int N) throws IOException
-    {
+    private static final boolean readNBytes(InputStream in, byte[] bb, int N) throws IOException {
         int off = 0;
         while (N > 0) {
             int n = in.read(bb, off, N);

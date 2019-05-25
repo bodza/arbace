@@ -1,14 +1,9 @@
 package java.lang.reflect;
 
-import java.lang.annotation.*;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import sun.reflect.annotation.AnnotationParser;
-import sun.reflect.annotation.AnnotationSupport;
-import sun.reflect.annotation.TypeAnnotationParser;
-import sun.reflect.annotation.TypeAnnotation;
 import sun.reflect.generics.repository.ConstructorRepository;
 
 /**
@@ -43,10 +38,6 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
             return true;
         }
         return false;
-    }
-
-    Annotation[][] parseParameterAnnotations(byte[] parameterAnnotations) {
-        return AnnotationParser.parseParameterAnnotations(parameterAnnotations, getDeclaringClass().getConstantPool(), getDeclaringClass());
     }
 
     void printModifiersIfNonzero(StringBuilder sb, int mask, boolean isDefault) {
@@ -472,84 +463,12 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
         return Modifier.isSynthetic(getModifiers());
     }
 
-    /**
-     * Returns an array of arrays of {@code Annotation}s that
-     * represent the annotations on the formal parameters, in
-     * declaration order, of the {@code Executable} represented by
-     * this object.  Synthetic and mandated parameters (see
-     * explanation below), such as the outer "this" parameter to an
-     * inner class constructor will be represented in the returned
-     * array.  If the executable has no parameters (meaning no formal,
-     * no synthetic, and no mandated parameters), a zero-length array
-     * will be returned.  If the {@code Executable} has one or more
-     * parameters, a nested array of length zero is returned for each
-     * parameter with no annotations. The annotation objects contained
-     * in the returned arrays are serializable.  The caller of this
-     * method is free to modify the returned arrays; it will have no
-     * effect on the arrays returned to other callers.
-     *
-     * A compiler may add extra parameters that are implicitly
-     * declared in source ("mandated"), as well as parameters that
-     * are neither implicitly nor explicitly declared in source
-     * ("synthetic") to the parameter list for a method.  See {@link
-     * java.lang.reflect.Parameter} for more information.
-     *
-     * @return an array of arrays that represent the annotations on
-     *    the formal and implicit parameters, in declaration order, of
-     *    the executable represented by this object
-     */
-    public abstract Annotation[][] getParameterAnnotations();
-
-    Annotation[][] sharedGetParameterAnnotations(Class<?>[] parameterTypes, byte[] parameterAnnotations) {
-        int numParameters = parameterTypes.length;
-        if (parameterAnnotations == null)
-            return new Annotation[numParameters][0];
-
-        Annotation[][] result = parseParameterAnnotations(parameterAnnotations);
-
-        if (result.length != numParameters && handleParameterNumberMismatch(result.length, numParameters)) {
-            Annotation[][] tmp = new Annotation[result.length+1][];
-            // Shift annotations down one to account for an implicit leading parameter
-            System.arraycopy(result, 0, tmp, 1, result.length);
-            tmp[0] = new Annotation[0];
-            result = tmp;
-        }
-        return result;
-    }
-
     abstract boolean handleParameterNumberMismatch(int resultLength, int numParameters);
 
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException  {@inheritDoc}
-     */
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-        return annotationClass.cast(declaredAnnotations().get(annotationClass));
-    }
+    private transient volatile Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
 
-    /**
-     * {@inheritDoc}
-     * @throws NullPointerException {@inheritDoc}
-     */
-    @Override
-    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        Objects.requireNonNull(annotationClass);
-
-        return AnnotationSupport.getDirectlyAndIndirectlyPresent(declaredAnnotations(), annotationClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Annotation[] getDeclaredAnnotations() {
-        return AnnotationParser.toArray(declaredAnnotations());
-    }
-
-    private transient volatile Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-    private Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
-        Map<Class<? extends Annotation>, Annotation> declAnnos;
+    private Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
+        Map<Class<? extends Annotation>, Annotation> declAnnos;
         if ((declAnnos = declaredAnnotations) == null) {
             synchronized (this) {
                 if ((declAnnos = declaredAnnotations) == null) {
@@ -557,123 +476,12 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
                     if (root != null) {
                         declAnnos = root.declaredAnnotations();
                     } else {
-                        declAnnos = AnnotationParser.parseAnnotations(getAnnotationBytes(), getDeclaringClass().getConstantPool(), getDeclaringClass());
+                        declAnnos = AnnotationParser.parseAnnotations(getAnnotationBytes(), getDeclaringClass().getConstantPool(), getDeclaringClass());
                     }
                     declaredAnnotations = declAnnos;
                 }
             }
         }
         return declAnnos;
-    }
-
-    /**
-     * Returns an {@code AnnotatedType} object that represents the use of a type to
-     * specify the return type of the method/constructor represented by this
-     * Executable.
-     *
-     * If this {@code Executable} object represents a constructor, the {@code
-     * AnnotatedType} object represents the type of the constructed object.
-     *
-     * If this {@code Executable} object represents a method, the {@code
-     * AnnotatedType} object represents the use of a type to specify the return
-     * type of the method.
-     *
-     * @return an object representing the return type of the method
-     * or constructor represented by this {@code Executable}
-     */
-    public abstract AnnotatedType getAnnotatedReturnType();
-
-    /* Helper for subclasses of Executable.
-     *
-     * Returns an AnnotatedType object that represents the use of a type to
-     * specify the return type of the method/constructor represented by this
-     * Executable.
-     */
-    AnnotatedType getAnnotatedReturnType0(Type returnType) {
-        return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes0(),
-                getDeclaringClass().getConstantPool(),
-                this,
-                getDeclaringClass(),
-                returnType,
-                TypeAnnotation.TypeAnnotationTarget.METHOD_RETURN);
-    }
-
-    /**
-     * Returns an {@code AnnotatedType} object that represents the use of a
-     * type to specify the receiver type of the method/constructor represented
-     * by this {@code Executable} object.
-     *
-     * The receiver type of a method/constructor is available only if the
-     * method/constructor has a receiver parameter (JLS 8.4.1). If this {@code
-     * Executable} object <em>represents an instance method or represents a
-     * constructor of an inner member class</em>, and the
-     * method/constructor <em>either</em> has no receiver parameter or has a
-     * receiver parameter with no annotations on its type, then the return
-     * value is an {@code AnnotatedType} object representing an element with no
-     * annotations.
-     *
-     * If this {@code Executable} object represents a static method or
-     * represents a constructor of a top level, static member, local, or
-     * anonymous class, then the return value is null.
-     *
-     * @return an object representing the receiver type of the method or
-     * constructor represented by this {@code Executable} or {@code null} if
-     * this {@code Executable} can not have a receiver parameter
-     */
-    public AnnotatedType getAnnotatedReceiverType() {
-        if (Modifier.isStatic(this.getModifiers()))
-            return null;
-        return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes0(),
-                getDeclaringClass().getConstantPool(),
-                this,
-                getDeclaringClass(),
-                getDeclaringClass(),
-                TypeAnnotation.TypeAnnotationTarget.METHOD_RECEIVER);
-    }
-
-    /**
-     * Returns an array of {@code AnnotatedType} objects that represent the use
-     * of types to specify formal parameter types of the method/constructor
-     * represented by this Executable. The order of the objects in the array
-     * corresponds to the order of the formal parameter types in the
-     * declaration of the method/constructor.
-     *
-     * Returns an array of length 0 if the method/constructor declares no
-     * parameters.
-     *
-     * @return an array of objects representing the types of the
-     * formal parameters of the method or constructor represented by this
-     * {@code Executable}
-     */
-    public AnnotatedType[] getAnnotatedParameterTypes() {
-        return TypeAnnotationParser.buildAnnotatedTypes(getTypeAnnotationBytes0(),
-                getDeclaringClass().getConstantPool(),
-                this,
-                getDeclaringClass(),
-                getAllGenericParameterTypes(),
-                TypeAnnotation.TypeAnnotationTarget.METHOD_FORMAL_PARAMETER);
-    }
-
-    /**
-     * Returns an array of {@code AnnotatedType} objects that represent the use
-     * of types to specify the declared exceptions of the method/constructor
-     * represented by this Executable. The order of the objects in the array
-     * corresponds to the order of the exception types in the declaration of
-     * the method/constructor.
-     *
-     * Returns an array of length 0 if the method/constructor declares no
-     * exceptions.
-     *
-     * @return an array of objects representing the declared
-     * exceptions of the method or constructor represented by this {@code
-     * Executable}
-     */
-    public AnnotatedType[] getAnnotatedExceptionTypes() {
-        return TypeAnnotationParser.buildAnnotatedTypes(getTypeAnnotationBytes0(),
-                getDeclaringClass().getConstantPool(),
-                this,
-                getDeclaringClass(),
-                getGenericExceptionTypes(),
-                TypeAnnotation.TypeAnnotationTarget.THROWS);
     }
 }

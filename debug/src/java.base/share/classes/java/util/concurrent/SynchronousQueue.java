@@ -1,7 +1,5 @@
 package java.util.concurrent;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Collections;
@@ -241,11 +239,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E> implements BlockingQue
             }
 
             // VarHandle mechanics
-            private static final VarHandle SMATCH;
-            private static final VarHandle SNEXT;
+            private static final VarHandle SMATCH;
+            private static final VarHandle SNEXT;
             static {
                 try {
-                    MethodHandles.Lookup l = MethodHandles.lookup();
+                    MethodHandles.Lookup l = MethodHandles.lookup();
                     SMATCH = l.findVarHandle(SNode.class, "match", SNode.class);
                     SNEXT = l.findVarHandle(SNode.class, "next", SNode.class);
                 } catch (ReflectiveOperationException e) {
@@ -464,10 +462,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E> implements BlockingQue
         }
 
         // VarHandle mechanics
-        private static final VarHandle SHEAD;
+        private static final VarHandle SHEAD;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 SHEAD = l.findVarHandle(TransferStack.class, "head", SNode.class);
             } catch (ReflectiveOperationException e) {
                 throw new ExceptionInInitializerError(e);
@@ -527,11 +525,11 @@ public class SynchronousQueue<E> extends AbstractQueue<E> implements BlockingQue
             }
 
             // VarHandle mechanics
-            private static final VarHandle QITEM;
-            private static final VarHandle QNEXT;
+            private static final VarHandle QITEM;
+            private static final VarHandle QNEXT;
             static {
                 try {
-                    MethodHandles.Lookup l = MethodHandles.lookup();
+                    MethodHandles.Lookup l = MethodHandles.lookup();
                     QITEM = l.findVarHandle(QNode.class, "item", Object.class);
                     QNEXT = l.findVarHandle(QNode.class, "next", QNode.class);
                 } catch (ReflectiveOperationException e) {
@@ -764,12 +762,12 @@ public class SynchronousQueue<E> extends AbstractQueue<E> implements BlockingQue
         }
 
         // VarHandle mechanics
-        private static final VarHandle QHEAD;
-        private static final VarHandle QTAIL;
-        private static final VarHandle QCLEANME;
+        private static final VarHandle QHEAD;
+        private static final VarHandle QTAIL;
+        private static final VarHandle QCLEANME;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 QHEAD = l.findVarHandle(TransferQueue.class, "head", QNode.class);
                 QTAIL = l.findVarHandle(TransferQueue.class, "tail", QNode.class);
                 QCLEANME = l.findVarHandle(TransferQueue.class, "cleanMe", QNode.class);

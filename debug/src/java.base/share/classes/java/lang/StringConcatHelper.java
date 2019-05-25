@@ -2,7 +2,7 @@ package java.lang;
 
 /**
  * Helper for string concatenation. These methods are mostly looked up with private lookups
- * from {@link java.lang.invoke.StringConcatFactory}, and used in {@link java.lang.invoke.MethodHandle}
+ * from {@link java.lang.invoke.StringConcatFactory}, and used in {@link java.lang.invoke.MethodHandle}
  * combinators there.
  */
 final class StringConcatHelper {

@@ -4,7 +4,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * A container object which may or may not contain a non-{@code null} value.
@@ -293,24 +292,24 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns a sequential {@link Stream} containing
-     * only that value, otherwise returns an empty {@code Stream}.
+     * If a value is present, returns a sequential {@link Stream} containing
+     * only that value, otherwise returns an empty {@code Stream}.
      *
      * @apiNote
-     * This method can be used to transform a {@code Stream} of optional
-     * elements to a {@code Stream} of present value elements:
+     * This method can be used to transform a {@code Stream} of optional
+     * elements to a {@code Stream} of present value elements:
      * <pre>{@code
-     *     Stream<Optional<T>> os = ..
-     *     Stream<T> s = os.flatMap(Optional::stream)
+     *     Stream<Optional<T>> os = ..
+     *     Stream<T> s = os.flatMap(Optional::stream)
      * }</pre>
      *
-     * @return the optional value as a {@code Stream}
+     * @return the optional value as a {@code Stream}
      */
-    public Stream<T> stream() {
+    public Stream<T> stream() {
         if (!isPresent()) {
-            return Stream.empty();
+            return Stream.empty();
         } else {
-            return Stream.of(value);
+            return Stream.of(value);
         }
     }
 

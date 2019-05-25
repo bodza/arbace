@@ -111,8 +111,7 @@ class UTF_32Coder {
         protected Encoder(Charset cs, int byteOrder, boolean doBOM) {
             super(cs, 4.0f,
                   doBOM ? 8.0f : 4.0f,
-                  (byteOrder==BIG)?new byte[]{(byte)0, (byte)0, (byte)0xff, (byte)0xfd}
-                                  :new byte[]{(byte)0xfd, (byte)0xff, (byte)0, (byte)0});
+                  (byteOrder == BIG) ? new byte[] {(byte)0, (byte)0, (byte)0xff, (byte)0xfd} : new byte[] {(byte)0xfd, (byte)0xff, (byte)0, (byte)0});
             this.byteOrder = byteOrder;
             this.doBOM = doBOM;
             this.doneBOM = !doBOM;

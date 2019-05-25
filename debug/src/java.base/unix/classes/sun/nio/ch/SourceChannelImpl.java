@@ -196,8 +196,7 @@ class SourceChannelImpl extends Pipe.SourceChannel implements SelChImpl {
      * @throws AsynchronousCloseException if the channel was closed due to this
      * thread being interrupted on a blocking read operation.
      */
-    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException
-    {
+    private void endRead(boolean blocking, boolean completed) throws AsynchronousCloseException {
         if (blocking) {
             synchronized (stateLock) {
                 thread = 0;

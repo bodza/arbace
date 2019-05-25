@@ -13,8 +13,7 @@ public class IPAddressUtil {
      * @return a byte array representing the IPv4 numeric address
      */
     @SuppressWarnings("fallthrough")
-    public static byte[] textToNumericFormatV4(String src)
-    {
+    public static byte[] textToNumericFormatV4(String src) {
         byte[] res = new byte[INADDR4SZ];
 
         long tmpValue = 0;
@@ -95,8 +94,7 @@ public class IPAddressUtil {
      * @param src a String representing an IPv6 address in textual format
      * @return a byte array representing the IPv6 numeric address
      */
-    public static byte[] textToNumericFormatV6(String src)
-    {
+    public static byte[] textToNumericFormatV6(String src) {
         // Shortest valid string is "::", hence at least 2 chars
         if (src.length() < 2) {
             return null;

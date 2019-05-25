@@ -2,7 +2,6 @@ package java.util.concurrent.locks;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import jdk.internal.vm.annotation.ReservedStackAccess;
 
 /**
  * An implementation of {@link ReadWriteLock} supporting similar
@@ -328,7 +327,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
          * both read and write holds that are all released during a
          * condition wait and re-established in tryAcquire.
          */
-        @ReservedStackAccess
+        // @ReservedStackAccess
         protected final boolean tryRelease(int releases) {
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
@@ -340,7 +339,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
             return free;
         }
 
-        @ReservedStackAccess
+        // @ReservedStackAccess
         protected final boolean tryAcquire(int acquires) {
             /*
              * Walkthrough:
@@ -372,7 +371,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
             return true;
         }
 
-        @ReservedStackAccess
+        // @ReservedStackAccess
         protected final boolean tryReleaseShared(int unused) {
             Thread current = Thread.currentThread();
             if (firstReader == current) {
@@ -408,7 +407,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
             return new IllegalMonitorStateException("attempt to unlock read lock, not locked by current thread");
         }
 
-        @ReservedStackAccess
+        // @ReservedStackAccess
         protected final int tryAcquireShared(int unused) {
             /*
              * Walkthrough:
@@ -513,7 +512,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
          * This is identical in effect to tryAcquire except for lack
          * of calls to writerShouldBlock.
          */
-        @ReservedStackAccess
+        // @ReservedStackAccess
         final boolean tryWriteLock() {
             Thread current = Thread.currentThread();
             int c = getState();
@@ -535,7 +534,7 @@ public class ReentrantReadWriteLock implements ReadWriteLock {
          * This is identical in effect to tryAcquireShared except for
          * lack of calls to readerShouldBlock.
          */
-        @ReservedStackAccess
+        // @ReservedStackAccess
         final boolean tryReadLock() {
             Thread current = Thread.currentThread();
             for (;;) {

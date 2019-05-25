@@ -136,8 +136,7 @@ public abstract class AsynchronousSocketChannel implements AsynchronousByteChann
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousSocketChannel open(AsynchronousChannelGroup group) throws IOException
-    {
+    public static AsynchronousSocketChannel open(AsynchronousChannelGroup group) throws IOException {
         AsynchronousChannelProvider provider = (group == null) ? AsynchronousChannelProvider.provider() : group.provider();
         return provider.openAsynchronousSocketChannel(group);
     }
@@ -157,8 +156,7 @@ public abstract class AsynchronousSocketChannel implements AsynchronousByteChann
      * @throws IOException
      *          If an I/O error occurs
      */
-    public static AsynchronousSocketChannel open() throws IOException
-    {
+    public static AsynchronousSocketChannel open() throws IOException {
         return open(null);
     }
 
@@ -358,8 +356,7 @@ public abstract class AsynchronousSocketChannel implements AsynchronousByteChann
      *          If the channel group has terminated
      */
     @Override
-    public final <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer,? super A> handler)
-    {
+    public final <A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer,? super A> handler) {
         read(dst, 0L, TimeUnit.MILLISECONDS, attachment, handler);
     }
 
@@ -502,8 +499,7 @@ public abstract class AsynchronousSocketChannel implements AsynchronousByteChann
      *          If the channel group has terminated
      */
     @Override
-    public final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer,? super A> handler)
-    {
+    public final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer,? super A> handler) {
         write(src, 0L, TimeUnit.MILLISECONDS, attachment, handler);
     }
 

@@ -11,16 +11,13 @@ import java.util.ArrayList;
  */
 class Label {
     static class PatchInfo {
-        PatchInfo(ClassFileAssembler asm,
-                  short instrBCI,
-                  short patchBCI,
-                  int stackDepth)
-        {
+        PatchInfo(ClassFileAssembler asm, short instrBCI, short patchBCI, int stackDepth) {
             this.asm = asm;
             this.instrBCI   = instrBCI;
             this.patchBCI   = patchBCI;
             this.stackDepth = stackDepth;
         }
+
         // This won't work for more than one assembler anyway, so this is
         // unnecessary
         final ClassFileAssembler asm;
@@ -28,16 +25,13 @@ class Label {
         final short patchBCI;
         final int   stackDepth;
     }
+
     private final List<PatchInfo> patches = new ArrayList<>();
 
     public Label() {
     }
 
-    void add(ClassFileAssembler asm,
-             short instrBCI,
-             short patchBCI,
-             int stackDepth)
-    {
+    void add(ClassFileAssembler asm, short instrBCI, short patchBCI, int stackDepth) {
         patches.add(new PatchInfo(asm, instrBCI, patchBCI, stackDepth));
     }
 

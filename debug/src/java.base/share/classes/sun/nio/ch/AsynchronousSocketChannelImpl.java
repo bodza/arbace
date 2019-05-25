@@ -52,16 +52,14 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     // set true when exclusive binding is on and SO_REUSEADDR is emulated
     private boolean isReuseAddress;
 
-    AsynchronousSocketChannelImpl(AsynchronousChannelGroupImpl group) throws IOException
-    {
+    AsynchronousSocketChannelImpl(AsynchronousChannelGroupImpl group) throws IOException {
         super(group.provider());
         this.fd = Net.socket(true);
         this.state = ST_UNCONNECTED;
     }
 
     // Constructor for sockets obtained from AsynchronousServerSocketChannelImpl
-    AsynchronousSocketChannelImpl(AsynchronousChannelGroupImpl group, FileDescriptor fd, InetSocketAddress remote) throws IOException
-    {
+    AsynchronousSocketChannelImpl(AsynchronousChannelGroupImpl group, FileDescriptor fd, InetSocketAddress remote) throws IOException {
         super(group.provider());
         this.fd = fd;
         this.state = ST_CONNECTED;
@@ -163,8 +161,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final <A> void connect(SocketAddress remote, A attachment, CompletionHandler<Void,? super A> handler)
-    {
+    public final <A> void connect(SocketAddress remote, A attachment, CompletionHandler<Void,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         implConnect(remote, attachment, handler);
@@ -176,8 +173,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     abstract <V extends Number,A> Future<V> implRead(boolean isScatteringRead, ByteBuffer dst, ByteBuffer[] dsts, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler);
 
     @SuppressWarnings("unchecked")
-    private <V extends Number,A> Future<V> read(boolean isScatteringRead, ByteBuffer dst, ByteBuffer[] dsts, long timeout, TimeUnit unit, A att, CompletionHandler<V,? super A> handler)
-    {
+    private <V extends Number,A> Future<V> read(boolean isScatteringRead, ByteBuffer dst, ByteBuffer[] dsts, long timeout, TimeUnit unit, A att, CompletionHandler<V,? super A> handler) {
         if (!isOpen()) {
             Throwable e = new ClosedChannelException();
             if (handler == null)
@@ -233,8 +229,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,? super A> handler)
-    {
+    public final <A> void read(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         if (dst.isReadOnly())
@@ -243,8 +238,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final <A> void read(ByteBuffer[] dsts, int offset, int length, long timeout, TimeUnit unit, A attachment, CompletionHandler<Long,? super A> handler)
-    {
+    public final <A> void read(ByteBuffer[] dsts, int offset, int length, long timeout, TimeUnit unit, A attachment, CompletionHandler<Long,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         if ((offset < 0) || (length < 0) || (offset > dsts.length - length))
@@ -263,8 +257,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     abstract <V extends Number,A> Future<V> implWrite(boolean isGatheringWrite, ByteBuffer src, ByteBuffer[] srcs, long timeout, TimeUnit unit, A attachment, CompletionHandler<V,? super A> handler);
 
     @SuppressWarnings("unchecked")
-    private <V extends Number,A> Future<V> write(boolean isGatheringWrite, ByteBuffer src, ByteBuffer[] srcs, long timeout, TimeUnit unit, A att, CompletionHandler<V,? super A> handler)
-    {
+    private <V extends Number,A> Future<V> write(boolean isGatheringWrite, ByteBuffer src, ByteBuffer[] srcs, long timeout, TimeUnit unit, A att, CompletionHandler<V,? super A> handler) {
         boolean hasDataToWrite = isGatheringWrite || src.hasRemaining();
 
         boolean closed = false;
@@ -315,16 +308,14 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final <A> void write(ByteBuffer src, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,? super A> handler)
-    {
+    public final <A> void write(ByteBuffer src, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         write(false, src, null, timeout, unit, attachment, handler);
     }
 
     @Override
-    public final <A> void  write(ByteBuffer[] srcs, int offset, int length, long timeout, TimeUnit unit, A attachment, CompletionHandler<Long,? super A> handler)
-    {
+    public final <A> void  write(ByteBuffer[] srcs, int offset, int length, long timeout, TimeUnit unit, A attachment, CompletionHandler<Long,? super A> handler) {
         if (handler == null)
             throw new NullPointerException("'handler' is null");
         if ((offset < 0) || (length < 0) || (offset > srcs.length - length))
@@ -334,8 +325,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final AsynchronousSocketChannel bind(SocketAddress local) throws IOException
-    {
+    public final AsynchronousSocketChannel bind(SocketAddress local) throws IOException {
         try {
             begin();
             synchronized (stateLock) {
@@ -361,8 +351,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
     }
 
     @Override
-    public final <T> AsynchronousSocketChannel setOption(SocketOption<T> name, T value) throws IOException
-    {
+    public final <T> AsynchronousSocketChannel setOption(SocketOption<T> name, T value) throws IOException {
         if (name == null)
             throw new NullPointerException();
         if (!supportedOptions().contains(name))
@@ -372,8 +361,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
             begin();
             if (writeShutdown)
                 throw new IOException("Connection has been shutdown for writing");
-            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind())
-            {
+            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind()) {
                 // SO_REUSEADDR emulated when using exclusive bind
                 isReuseAddress = (Boolean)value;
             } else {
@@ -395,8 +383,7 @@ abstract class AsynchronousSocketChannelImpl extends AsynchronousSocketChannel i
 
         try {
             begin();
-            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind())
-            {
+            if (name == StandardSocketOptions.SO_REUSEADDR && Net.useExclusiveBind()) {
                 // SO_REUSEADDR emulated when using exclusive bind
                 return (T)Boolean.valueOf(isReuseAddress);
             }

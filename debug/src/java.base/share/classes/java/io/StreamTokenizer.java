@@ -177,7 +177,7 @@ public class StreamTokenizer {
      *
      * @param is        an input stream.
      */
-    @Deprecated
+    // @Deprecated
     public StreamTokenizer(InputStream is) {
         this();
         if (is == null) {

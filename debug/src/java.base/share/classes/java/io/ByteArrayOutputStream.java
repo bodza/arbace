@@ -231,8 +231,7 @@ public class ByteArrayOutputStream extends OutputStream {
      * @throws UnsupportedEncodingException
      *         If the named charset is not supported
      */
-    public synchronized String toString(String charsetName) throws UnsupportedEncodingException
-    {
+    public synchronized String toString(String charsetName) throws UnsupportedEncodingException {
         return new String(buf, 0, count, charsetName);
     }
 
@@ -275,7 +274,7 @@ public class ByteArrayOutputStream extends OutputStream {
      * @param hibyte    the high byte of each resulting Unicode character.
      * @return the current contents of the output stream, as a string.
      */
-    @Deprecated
+    // @Deprecated
     public synchronized String toString(int hibyte) {
         return new String(buf, hibyte, 0, count);
     }

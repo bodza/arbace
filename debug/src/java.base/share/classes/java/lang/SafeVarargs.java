@@ -1,7 +1,5 @@
 package java.lang;
 
-import java.lang.annotation.*;
-
 /**
  * A programmer assertion that the body of the annotated method or
  * constructor does not perform potentially unsafe operations on its

@@ -1,7 +1,5 @@
 package java.lang;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
-
 /**
  * The {@code Short} class wraps a value of primitive type {@code
  * short} in an object.  An object of type {@code Short} contains a
@@ -193,7 +191,7 @@ public final class Short extends Number implements Comparable<Short> {
      * @param s a short value.
      * @return a {@code Short} instance representing {@code s}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static Short valueOf(short s) {
         final int offset = 128;
         int sAsInt = s;
@@ -268,7 +266,7 @@ public final class Short extends Number implements Comparable<Short> {
      * {@link #valueOf(short)} is generally a better choice, as it is
      * likely to yield significantly better space and time performance.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Short(short value) {
         this.value = value;
     }
@@ -291,7 +289,7 @@ public final class Short extends Number implements Comparable<Short> {
      * {@code short} primitive, or use {@link #valueOf(String)}
      * to convert a string to a {@code Short} object.
      */
-    @Deprecated(since="9")
+    // @Deprecated(since="9")
     public Short(String s) throws NumberFormatException {
         this.value = parseShort(s, 10);
     }
@@ -308,7 +306,7 @@ public final class Short extends Number implements Comparable<Short> {
      * Returns the value of this {@code Short} as a
      * {@code short}.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public short shortValue() {
         return value;
     }
@@ -466,7 +464,7 @@ public final class Short extends Number implements Comparable<Short> {
      * @return the value obtained by reversing (or, equivalently, swapping)
      *     the bytes in the specified {@code short} value.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     public static short reverseBytes(short i) {
         return (short) (((i & 0xFF00) >> 8) | (i << 8));
     }

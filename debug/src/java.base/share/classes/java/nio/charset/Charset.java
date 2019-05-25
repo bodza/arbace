@@ -276,8 +276,7 @@ public abstract class Charset implements Comparable<Charset> {
             return (Charset)a[1];
         }
         Charset cs;
-        if ((cs = standardProvider.charsetForName(charsetName)) != null)
-        {
+        if ((cs = standardProvider.charsetForName(charsetName)) != null) {
             cache(charsetName, cs);
             return cs;
         }

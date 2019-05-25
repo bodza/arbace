@@ -1,8 +1,6 @@
 package java.util.concurrent;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -678,7 +676,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Queues supporting work-stealing as well as external task
      * submission. See above for descriptions and algorithms.
      */
-    @jdk.internal.vm.annotation.Contended
+    // @Contended
     static final class WorkQueue {
         volatile int source; // source queue id, or sentinel
         int id; // pool index, mode, tag
@@ -731,7 +729,7 @@ public class ForkJoinPool extends AbstractExecutorService {
          */
         final boolean isEmpty() {
             ForkJoinTask<?>[] a; int n, cap, b;
-            VarHandle.acquireFence(); // needed by external callers
+            VarHandle.acquireFence(); // needed by external callers
             return ((n = (b = base) - top) >= 0 || // possibly one task
                     (n == -1 && ((a = array) == null || (cap = a.length) == 0 || a[(cap - 1) & b] == null)));
         }
@@ -750,7 +748,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 QA.setRelease(a, (m = cap - 1) & s, task);
                 top = s + 1;
                 if (((d = s - (int)BASE.getAcquire(this)) & ~1) == 0 && p != null) { // size 0 or 1
-                    VarHandle.fullFence();
+                    VarHandle.fullFence();
                     p.signalWork();
                 }
                 else if (d == m)
@@ -806,7 +804,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                 break;
                         }
                         array = newA;
-                        VarHandle.releaseFence();
+                        VarHandle.releaseFence();
                     }
                 }
             } finally {
@@ -950,7 +948,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                 int jindex = j & m;
                                 QA.setRelease(a, jindex, f);
                             }
-                            VarHandle.releaseFence();
+                            VarHandle.releaseFence();
                             t.doExec();
                         }
                         break;
@@ -1045,12 +1043,12 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
 
         // VarHandle mechanics.
-        static final VarHandle PHASE;
-        static final VarHandle BASE;
-        static final VarHandle TOP;
+        static final VarHandle PHASE;
+        static final VarHandle BASE;
+        static final VarHandle TOP;
         static {
             try {
-                MethodHandles.Lookup l = MethodHandles.lookup();
+                MethodHandles.Lookup l = MethodHandles.lookup();
                 PHASE = l.findVarHandle(WorkQueue.class, "phase", int.class);
                 BASE = l.findVarHandle(WorkQueue.class, "base", int.class);
                 TOP = l.findVarHandle(WorkQueue.class, "top", int.class);
@@ -1186,7 +1184,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     final UncaughtExceptionHandler ueh; // per-worker UEH
     final Predicate<? super ForkJoinPool> saturate;
 
-    @jdk.internal.vm.annotation.Contended("fjpctl") // segregate
+    // @Contended("fjpctl") // segregate
     volatile long ctl; // main pool control
 
     // Creating, registering and deregistering workers
@@ -2392,7 +2390,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public int getRunningThreadCount() {
         WorkQueue[] ws; WorkQueue w;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         int rc = 0;
         if ((ws = workQueues) != null) {
             for (int i = 1; i < ws.length; i += 2) {
@@ -2488,7 +2486,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public long getQueuedTaskCount() {
         WorkQueue[] ws; WorkQueue w;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         int count = 0;
         if ((ws = workQueues) != null) {
             for (int i = 1; i < ws.length; i += 2) {
@@ -2508,7 +2506,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public int getQueuedSubmissionCount() {
         WorkQueue[] ws; WorkQueue w;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         int count = 0;
         if ((ws = workQueues) != null) {
             for (int i = 0; i < ws.length; i += 2) {
@@ -2527,7 +2525,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public boolean hasQueuedSubmissions() {
         WorkQueue[] ws; WorkQueue w;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         if ((ws = workQueues) != null) {
             for (int i = 0; i < ws.length; i += 2) {
                 if ((w = ws[i]) != null && !w.isEmpty())
@@ -2567,7 +2565,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     protected int drainTasksTo(Collection<? super ForkJoinTask<?>> c) {
         WorkQueue[] ws; WorkQueue w; ForkJoinTask<?> t;
-        VarHandle.acquireFence();
+        VarHandle.acquireFence();
         int count = 0;
         if ((ws = workQueues) != null) {
             for (int i = 0; i < ws.length; ++i) {
@@ -2942,16 +2940,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     // VarHandle mechanics
-    private static final VarHandle CTL;
-    private static final VarHandle MODE;
-    static final VarHandle QA;
-
+    private static final VarHandle CTL;
+    private static final VarHandle MODE;
+    static final VarHandle QA;
     static {
         try {
-            MethodHandles.Lookup l = MethodHandles.lookup();
+            MethodHandles.Lookup l = MethodHandles.lookup();
             CTL = l.findVarHandle(ForkJoinPool.class, "ctl", long.class);
             MODE = l.findVarHandle(ForkJoinPool.class, "mode", int.class);
-            QA = MethodHandles.arrayElementVarHandle(ForkJoinTask[].class);
+            QA = MethodHandles.arrayElementVarHandle(ForkJoinTask[].class);
         } catch (ReflectiveOperationException e) {
             throw new ExceptionInInitializerError(e);
         }

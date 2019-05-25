@@ -1,6 +1,5 @@
 package java.nio;
 
-import jdk.internal.HotSpotIntrinsicCandidate;
 import jdk.internal.misc.Unsafe;
 
 import java.util.Spliterator;
@@ -616,7 +615,7 @@ public abstract class Buffer {
      * IndexOutOfBoundsException} if it is not smaller than the limit
      * or is smaller than zero.
      */
-    @HotSpotIntrinsicCandidate
+    // @HotSpotIntrinsicCandidate
     final int checkIndex(int i) {
         if ((i < 0) || (i >= limit))
             throw new IndexOutOfBoundsException();
