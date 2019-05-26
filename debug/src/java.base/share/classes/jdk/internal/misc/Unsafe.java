@@ -101,8 +101,7 @@ public final class Unsafe {
      * from non-Java variables, programmers should not assume that these
      * two addressing modes are ever equivalent.  Also, programmers should
      * remember that offsets from the double-register addressing mode cannot
-     * be portably confused with longs used in the single-register addressing
-     * mode.
+     * be portably confused with longs used in the single-register addressing mode.
      *
      * @param o Java heap object in which the variable resides, if any, else
      *        null

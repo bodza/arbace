@@ -41,8 +41,7 @@ public interface GenericsFactory {
      * generic declaration {@code declaration} with actual type arguments
      * {@code typeArgs}.
      * If {@code owner} is {@code null}, the declaring class of
-     * {@code declaration} is used as the owner of this parameterized
-     * type.
+     * {@code declaration} is used as the owner of this parameterized type.
      *
      * This method throws a MalformedParameterizedTypeException
      * under the following circumstances:

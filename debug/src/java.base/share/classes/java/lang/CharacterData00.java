@@ -895,7 +895,6 @@ class CharacterData00 extends CharacterData {
      *
      * @param ch the <code>char</code> to search
      * @return the index location ch in the table or -1 if not found
-     * @since 1.4
      */
      int findInCharMap(int ch) {
         if (charMap == null || charMap.length == 0) {

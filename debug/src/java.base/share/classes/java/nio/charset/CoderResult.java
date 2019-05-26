@@ -2,7 +2,6 @@ package java.nio.charset;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 /**
@@ -156,8 +155,8 @@ public class CoderResult {
         static final Cache INSTANCE = new Cache();
         private Cache() {}
 
-        final Map<Integer, CoderResult> unmappable = new ConcurrentHashMap<>();
-        final Map<Integer, CoderResult> malformed  = new ConcurrentHashMap<>();
+        final Map<Integer, CoderResult> unmappable = new ConcurrentHashMap<>();
+        final Map<Integer, CoderResult> malformed  = new ConcurrentHashMap<>();
     }
 
     private static final CoderResult[] malformed4 = new CoderResult[] {

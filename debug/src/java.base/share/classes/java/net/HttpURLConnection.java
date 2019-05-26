@@ -283,8 +283,7 @@ public abstract class HttpURLConnection extends URLConnection {
      * be automatically followed by this {@code HttpURLConnection}
      * instance.
      *
-     * The default value comes from followRedirects, which defaults to
-     * true.
+     * The default value comes from followRedirects, which defaults to true.
      *
      * @param followRedirects a {@code boolean} indicating
      * whether or not to follow HTTP redirects.

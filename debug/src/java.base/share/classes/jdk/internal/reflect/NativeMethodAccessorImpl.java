@@ -4,9 +4,9 @@ import java.lang.reflect.*;
 import sun.reflect.misc.ReflectUtil;
 
 /**
-  * Used only for the first few invocations of a Method; afterward,
-  * switches to bytecode-based implementation
-  */
+ * Used only for the first few invocations of a Method; afterward,
+ * switches to bytecode-based implementation
+ */
 class NativeMethodAccessorImpl extends MethodAccessorImpl {
     private final Method method;
     private DelegatingMethodAccessorImpl parent;

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.Spliterator;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,9 +70,9 @@ import java.util.regex.PatternSyntaxException;
  *
  * @implNote The implementation of the string concatenation operator is left to
  * the discretion of a Java compiler, as long as the compiler ultimately conforms
- * to <i>The Java&trade; Language Specification</i>. For example, the {@code javac} compiler
- * may implement the operator with {@code StringBuffer}, {@code StringBuilder},
- * or {@code java.lang.invoke.StringConcatFactory} depending on the JDK version. The
+ * to <i>The Java&trade; Language Specification</i>. For example, the {@code javac}
+ * compiler may implement the operator with {@code StringBuffer}
+ * or {@code StringBuilder} depending on the JDK version. The
  * implementation of string conversion is typically through the method {@code toString},
  * defined by {@code Object} and inherited by all classes in Java.
  */
@@ -85,9 +84,9 @@ public final class String implements Comparable<String>, CharSequence {
      * constant folding if String instance is constant. Overwriting this
      * field after construction will cause problems.
      *
-     * Additionally, it is marked with {@link Stable} to trust the contents
+     * Additionally, it is marked with {@link Stable} to trust the contents
      * of the array. No other facility in JDK provides this functionality (yet).
-     * {@link Stable} is safe here, because value is never null.
+     * {@link Stable} is safe here, because value is never null.
      */
     // @Stable
     private final byte[] value;
@@ -675,8 +674,7 @@ public final class String implements Comparable<String>, CharSequence {
      * the text range.
      * @param endIndex the index after the last {@code char} of
      * the text range.
-     * @return the number of Unicode code points in the specified text
-     * range
+     * @return the number of Unicode code points in the specified text range
      * @throws IndexOutOfBoundsException if the
      * {@code beginIndex} is negative, or {@code endIndex}
      * is larger than the length of this {@code String}, or
@@ -2258,8 +2256,7 @@ public final class String implements Comparable<String>, CharSequence {
      * <b>Note:</b> This method is locale sensitive, and may produce unexpected
      * results if used for strings that are intended to be interpreted locale
      * independently.
-     * Examples are programming language identifiers, protocol keys, and HTML
-     * tags.
+     * Examples are programming language identifiers, protocol keys, and HTML tags.
      * For instance, {@code "TITLE".toLowerCase()} in a Turkish locale
      * returns {@code "t\u005Cu0131tle"}, where '\u005Cu0131' is the
      * LATIN SMALL LETTER DOTLESS I character.
@@ -2278,8 +2275,7 @@ public final class String implements Comparable<String>, CharSequence {
      * <b>Note:</b> This method is locale sensitive, and may produce unexpected
      * results if used for strings that are intended to be interpreted locale
      * independently.
-     * Examples are programming language identifiers, protocol keys, and HTML
-     * tags.
+     * Examples are programming language identifiers, protocol keys, and HTML tags.
      * For instance, {@code "title".toUpperCase()} in a Turkish locale
      * returns {@code "T\u005Cu0130TLE"}, where '\u005Cu0130' is the
      * LATIN CAPITAL LETTER I WITH DOT ABOVE character.

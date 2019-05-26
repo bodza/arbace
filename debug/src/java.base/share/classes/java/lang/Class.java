@@ -31,8 +31,6 @@ import jdk.internal.loader.BootLoader;
 import jdk.internal.loader.BuiltinClassLoader;
 import jdk.internal.misc.Unsafe;
 import jdk.internal.misc.VM;
-import jdk.internal.reflect.CallerSensitive;
-import jdk.internal.reflect.ConstantPool;
 import jdk.internal.reflect.Reflection;
 import jdk.internal.reflect.ReflectionFactory;
 import sun.reflect.generics.factory.CoreReflectionFactory;
@@ -259,7 +257,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *            by this method fails
      * @throws ClassNotFoundException if the class cannot be located
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static Class<?> forName(String className) throws ClassNotFoundException {
         Class<?> caller = Reflection.getCallerClass();
         return forName0(className, true, ClassLoader.getClassLoader(caller), caller);
@@ -316,7 +314,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @throws ClassNotFoundException if the class cannot be located by
      *            the specified class loader
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static Class<?> forName(String name, boolean initialize, ClassLoader loader) throws ClassNotFoundException {
         Class<?> caller = null;
         return forName0(name, initialize, loader, caller);
@@ -371,7 +369,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @throws ExceptionInInitializerError if the initialization
      *          provoked by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @Deprecated(since="9")
     public T newInstance() throws InstantiationException, IllegalAccessException {
         // NOTE: the following code may not be strictly correct under
@@ -385,11 +383,6 @@ public final class Class<T> implements GenericDeclaration, Type {
             try {
                 Class<?>[] empty = {};
                 final Constructor<T> c = getReflectionFactory().copyConstructor(getConstructor0(empty, Member.DECLARED));
-                // Disable accessibility checks on the constructor
-                // since we have to do the security check here anyway
-                // (the stack depth is wrong for the Constructor's
-                // security check to work)
-                c.setAccessible(true);
                 cachedConstructor = c;
             } catch (NoSuchMethodException e) {
                 throw (InstantiationException) new InstantiationException(getName()).initCause(e);
@@ -399,8 +392,6 @@ public final class Class<T> implements GenericDeclaration, Type {
         // Security check (same as in java.lang.reflect.Constructor)
         Class<?> caller = Reflection.getCallerClass();
         if (newInstanceCallerCache != caller) {
-            int modifiers = tmpConstructor.getModifiers();
-            Reflection.ensureMemberAccess(caller, this, this, modifiers);
             newInstanceCallerCache = caller;
         }
         // Run constructor
@@ -540,8 +531,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *
      * If this class object represents a reference type that is not an
      * array type then the binary name of the class is returned, as specified
-     * by
-     * <cite>The Java&trade; Language Specification</cite>.
+     * by <cite>The Java&trade; Language Specification</cite>.
      *
      * If this class object represents a primitive type or void, then the
      * name returned is a {@code String} equal to the Java language
@@ -611,7 +601,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the class loader that loaded the class or interface
      *          represented by this object.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public ClassLoader getClassLoader() {
         return getClassLoader0();
@@ -953,7 +943,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the immediately enclosing method of the underlying class, if
      *     that class is a local or anonymous class; otherwise {@code null}.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Method getEnclosingMethod() throws SecurityException {
         EnclosingMethodInfo enclosingInfo = getEnclosingMethodInfo();
 
@@ -1078,7 +1068,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the immediately enclosing constructor of the underlying class, if
      *     that class is a local or anonymous class; otherwise {@code null}.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Constructor<?> getEnclosingConstructor() throws SecurityException {
         EnclosingMethodInfo enclosingInfo = getEnclosingMethodInfo();
 
@@ -1127,7 +1117,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *
      * @return the declaring class for this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?> getDeclaringClass() throws SecurityException {
         final Class<?> candidate = getDeclaringClass0();
 
@@ -1142,7 +1132,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * method returns {@code null}.
      * @return the immediately enclosing class of the underlying class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?> getEnclosingClass() throws SecurityException {
         // There are five kinds of classes (or interfaces):
         // a) Top level classes
@@ -1357,7 +1347,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Class} objects representing the public
      *         members of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?>[] getClasses() {
         List<Class<?>> list = new ArrayList<>();
         Class<?> currentClass = Class.this;
@@ -1398,7 +1388,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Field} objects representing the
      *         public fields
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Field[] getFields() throws SecurityException {
         return copyFields(privateGetPublicFields());
     }
@@ -1472,7 +1462,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Method} objects representing the
      *         public methods of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Method[] getMethods() throws SecurityException {
         return copyMethods(privateGetPublicMethods());
     }
@@ -1497,7 +1487,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Constructor} objects representing the
      *         public constructors of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Constructor<?>[] getConstructors() throws SecurityException {
         return copyConstructors(privateGetDeclaredConstructors(true));
     }
@@ -1533,7 +1523,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *         not found.
      * @throws NullPointerException if {@code name} is {@code null}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Field getField(String name) throws NoSuchFieldException, SecurityException {
         Objects.requireNonNull(name);
         Field field = getField0(name);
@@ -1625,7 +1615,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *         or if the name is "&lt;init&gt;"or "&lt;clinit&gt;".
      * @throws NullPointerException if {@code name} is {@code null}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Method getMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         Objects.requireNonNull(name);
         Method method = getMethod0(name, parameterTypes);
@@ -1655,7 +1645,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *         matches the specified {@code parameterTypes}
      * @throws NoSuchMethodException if a matching method is not found.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Constructor<T> getConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         return getReflectionFactory().copyConstructor(getConstructor0(parameterTypes, Member.PUBLIC));
     }
@@ -1673,7 +1663,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Class} objects representing all the
      *         declared members of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?>[] getDeclaredClasses() throws SecurityException {
         return getDeclaredClasses0();
     }
@@ -1696,7 +1686,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Field} objects representing all the
      *          declared fields of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Field[] getDeclaredFields() throws SecurityException {
         return copyFields(privateGetDeclaredFields(false));
     }
@@ -1728,7 +1718,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return the array of {@code Method} objects representing all the
      *          declared methods of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Method[] getDeclaredMethods() throws SecurityException {
         return copyMethods(privateGetDeclaredMethods(false));
     }
@@ -1741,15 +1731,14 @@ public final class Class<T> implements GenericDeclaration, Type {
      * returned are not sorted and are not in any particular order.  If the
      * class has a default constructor, it is included in the returned array.
      * This method returns an array of length 0 if this {@code Class}
-     * object represents an interface, a primitive type, an array class, or
-     * void.
+     * object represents an interface, a primitive type, an array class, or void.
      *
      * See <em>The Java Language Specification</em>, section 8.2.
      *
      * @return the array of {@code Constructor} objects representing all the
      *          declared constructors of this class
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Constructor<?>[] getDeclaredConstructors() throws SecurityException {
         return copyConstructors(privateGetDeclaredConstructors(false));
     }
@@ -1770,7 +1759,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *          not found.
      * @throws NullPointerException if {@code name} is {@code null}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Field getDeclaredField(String name) throws NoSuchFieldException, SecurityException {
         Objects.requireNonNull(name);
         Field field = searchFields(privateGetDeclaredFields(false), name);
@@ -1804,7 +1793,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @throws NoSuchMethodException if a matching method is not found.
      * @throws NullPointerException if {@code name} is {@code null}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Method getDeclaredMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         Objects.requireNonNull(name);
         Method method = searchMethods(privateGetDeclaredMethods(false), name, parameterTypes);
@@ -1852,7 +1841,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *          specified parameter list
      * @throws NoSuchMethodException if a matching method is not found.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException {
         return getReflectionFactory().copyConstructor(getConstructor0(parameterTypes, Member.DECLARED));
     }
@@ -1990,8 +1979,6 @@ public final class Class<T> implements GenericDeclaration, Type {
         }
         return (genericInfo != ClassRepository.NONE) ? genericInfo : null;
     }
-
-    /* oops! */public native ConstantPool getConstantPool();
 
     // java.lang.reflect.Field handling
 
@@ -2393,7 +2380,6 @@ public final class Class<T> implements GenericDeclaration, Type {
                 return null;
             try {
                 final Method values = getMethod("values");
-                values.setAccessible(true);
                 @SuppressWarnings("unchecked")
                 T[] temporaryConstants = (T[])values.invoke(null);
                 enumConstants = constants = temporaryConstants;
@@ -2492,8 +2478,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * or interface represented by this {@code Class} object belongs.
      * Every class and interface is a member of exactly one nest.
      * A class or interface that is not recorded as belonging to a nest
-     * belongs to the nest consisting only of itself, and is the nest
-     * host.
+     * belongs to the nest consisting only of itself, and is the nest host.
      *
      * Each of the {@code Class} objects representing array types,
      * primitive types, and {@code void} returns {@code this} to indicate
@@ -2516,7 +2501,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *
      * @return the nest host of this class or interface
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?> getNestHost() {
         if (isPrimitive() || isArray()) {
             return this;
@@ -2591,7 +2576,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *         If there is any problem loading or validating a nest member or
      *         its nest host
      */
-    @CallerSensitive
+    // @CallerSensitive
     public Class<?>[] getNestMembers() {
         if (isPrimitive() || isArray()) {
             return new Class<?>[] { this };

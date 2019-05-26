@@ -355,7 +355,7 @@ class ImmutableCollections {
         // @Stable
         private final E[] elements;
 
-        @SafeVarargs
+        // @SafeVarargs
         ListN(E... input) {
             // copy and check manually to avoid TOCTOU
             @SuppressWarnings("unchecked")
@@ -489,7 +489,7 @@ class ImmutableCollections {
         // @Stable
         final int size;
 
-        @SafeVarargs
+        // @SafeVarargs
         @SuppressWarnings("unchecked")
         SetN(E... input) {
             size = input.length; // implicit nullcheck of input

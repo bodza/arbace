@@ -71,12 +71,6 @@ package java.util;
  * The {@link #element()} and {@link #peek()} methods return, but do
  * not remove, the head of the queue.
  *
- * The {@code Queue} interface does not define the <i>blocking queue
- * methods</i>, which are common in concurrent programming.  These methods,
- * which wait for elements to appear or for space to become available, are
- * defined in the {@link java.util.concurrent.BlockingQueue} interface, which
- * extends this interface.
- *
  * {@code Queue} implementations generally do not allow insertion
  * of {@code null} elements, although some implementations, such as
  * {@link LinkedList}, do not prohibit insertion of {@code null}.

@@ -1,6 +1,5 @@
 package jdk.internal.reflect;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
@@ -64,23 +63,6 @@ public class ReflectionFactory {
         return soleInstance;
     }
 
-    /**
-     * Returns an alternate reflective Method instance for the given method
-     * intended for reflection to invoke, if present.
-     *
-     * A trusted method can define an alternate implementation for a method `foo`
-     * by defining a method named "reflected$foo" that will be invoked
-     * reflectively.
-     */
-    private static Method findMethodForReflection(Method method) {
-        String altName = "reflected$" + method.getName();
-        try {
-           return method.getDeclaringClass().getDeclaredMethod(altName, method.getParameterTypes());
-        } catch (NoSuchMethodException ex) {
-            return null;
-        }
-    }
-
     // Routines used by java.lang.reflect
 
     /** Called only by java.lang.reflect.Modifier's static initializer */
@@ -111,13 +93,6 @@ public class ReflectionFactory {
 
     public MethodAccessor newMethodAccessor(Method method) {
         checkInitted();
-
-        if (Reflection.isCallerSensitive(method)) {
-            Method altMethod = findMethodForReflection(method);
-            if (altMethod != null) {
-                method = altMethod;
-            }
-        }
 
         // use the root Method that will not cache caller class
         Method root = langReflectAccess.getRoot(method);
@@ -182,27 +157,27 @@ public class ReflectionFactory {
     // Routines used by java.lang
 
     /**
-      * Creates a new java.lang.reflect.Field. Access checks as per
-      * java.lang.reflect.AccessibleObject are not overridden.
-      */
-    public Field newField(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature, byte[] annotations) {
-        return langReflectAccess().newField(declaringClass, name, type, modifiers, slot, signature, null);
+     * Creates a new java.lang.reflect.Field. Access checks as per
+     * java.lang.reflect.AccessibleObject are not overridden.
+     */
+    public Field newField(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature) {
+        return langReflectAccess().newField(declaringClass, name, type, modifiers, slot, signature);
     }
 
     /**
-      * Creates a new java.lang.reflect.Method. Access checks as per
-      * java.lang.reflect.AccessibleObject are not overridden.
-      */
-    public Method newMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault) {
-        return langReflectAccess().newMethod(declaringClass, name, parameterTypes, returnType, checkedExceptions, modifiers, slot, signature, null, null, null);
+     * Creates a new java.lang.reflect.Method. Access checks as per
+     * java.lang.reflect.AccessibleObject are not overridden.
+     */
+    public Method newMethod(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature) {
+        return langReflectAccess().newMethod(declaringClass, name, parameterTypes, returnType, checkedExceptions, modifiers, slot, signature);
     }
 
     /**
-      * Creates a new java.lang.reflect.Constructor. Access checks as
-      * per java.lang.reflect.AccessibleObject are not overridden.
-      */
-    public Constructor<?> newConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations) {
-        return langReflectAccess().newConstructor(declaringClass, parameterTypes, checkedExceptions, modifiers, slot, signature, null, null);
+     * Creates a new java.lang.reflect.Constructor. Access checks as
+     * per java.lang.reflect.AccessibleObject are not overridden.
+     */
+    public Constructor<?> newConstructor(Class<?> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature) {
+        return langReflectAccess().newConstructor(declaringClass, parameterTypes, checkedExceptions, modifiers, slot, signature);
     }
 
     /** Gets the MethodAccessor object for a java.lang.reflect.Method */
@@ -216,26 +191,26 @@ public class ReflectionFactory {
     }
 
     /**
-      * Gets the ConstructorAccessor object for a
-      * java.lang.reflect.Constructor
-      */
+     * Gets the ConstructorAccessor object for a
+     * java.lang.reflect.Constructor
+     */
     public ConstructorAccessor getConstructorAccessor(Constructor<?> c) {
         return langReflectAccess().getConstructorAccessor(c);
     }
 
     /**
-      * Sets the ConstructorAccessor object for a
-      * java.lang.reflect.Constructor
-      */
+     * Sets the ConstructorAccessor object for a
+     * java.lang.reflect.Constructor
+     */
     public void setConstructorAccessor(Constructor<?> c, ConstructorAccessor accessor) {
         langReflectAccess().setConstructorAccessor(c, accessor);
     }
 
     /**
-      * Makes a copy of the passed method. The returned method is a
-      * "child" of the passed one; see the comments in Method.java for
-      * details.
-      */
+     * Makes a copy of the passed method. The returned method is a
+     * "child" of the passed one; see the comments in Method.java for
+     * details.
+     */
     public Method copyMethod(Method arg) {
         return langReflectAccess().copyMethod(arg);
     }
@@ -248,19 +223,19 @@ public class ReflectionFactory {
     }
 
     /**
-      * Makes a copy of the passed field. The returned field is a
-      * "child" of the passed one; see the comments in Field.java for
-      * details.
-      */
+     * Makes a copy of the passed field. The returned field is a
+     * "child" of the passed one; see the comments in Field.java for
+     * details.
+     */
     public Field copyField(Field arg) {
         return langReflectAccess().copyField(arg);
     }
 
     /**
-      * Makes a copy of the passed constructor. The returned
-      * constructor is a "child" of the passed one; see the comments
-      * in Constructor.java for details.
-      */
+     * Makes a copy of the passed constructor. The returned
+     * constructor is a "child" of the passed one; see the comments
+     * in Constructor.java for details.
+     */
     public <T> Constructor<T> copyConstructor(Constructor<T> arg) {
         return langReflectAccess().copyConstructor(arg);
     }
@@ -323,11 +298,8 @@ public class ReflectionFactory {
                                           constructorToCall.getExceptionTypes(),
                                           constructorToCall.getModifiers(),
                                           langReflectAccess().getConstructorSlot(constructorToCall),
-                                          langReflectAccess().getConstructorSignature(constructorToCall),
-                                          langReflectAccess().getConstructorAnnotations(constructorToCall),
-                                          langReflectAccess().getConstructorParameterAnnotations(constructorToCall));
+                                          langReflectAccess().getConstructorSignature(constructorToCall));
         setConstructorAccessor(c, acc);
-        c.setAccessible(true);
         return c;
     }
 

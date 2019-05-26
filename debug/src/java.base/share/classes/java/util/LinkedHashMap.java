@@ -109,11 +109,6 @@ import java.io.IOException;
  * exception for its correctness:   <i>the fail-fast behavior of iterators
  * should be used only to detect bugs.</i>
  *
- * The spliterators returned by the spliterator method of the collections
- * returned by all of this class's collection view methods are
- * <em><a href="Spliterator.html#binding">late-binding</a></em>,
- * <em>fail-fast</em>, and additionally report {@link Spliterator#ORDERED}.
- *
  * This class is a member of the
  * <a href="{@docRoot}/java.base/java/util/package-summary.html#CollectionsFramework">
  * Java Collections Framework</a>.
@@ -464,9 +459,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
      * {@code removeAll}, {@code retainAll}, and {@code clear}
      * operations.  It does not support the {@code add} or {@code addAll}
      * operations.
-     * Its {@link Spliterator} typically provides faster sequential
-     * performance but much poorer parallel performance than that of
-     * {@code HashMap}.
      *
      * @return a set view of the keys contained in this map
      */
@@ -488,10 +480,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
         public final boolean contains(Object o) { return containsKey(o); }
         public final boolean remove(Object key) {
             return removeNode(hash(key), key, null, false, true) != null;
-        }
-
-        public final Spliterator<K> spliterator() {
-            return Spliterators.spliterator(this, Spliterator.SIZED | Spliterator.ORDERED | Spliterator.DISTINCT);
         }
 
         public final void forEach(Consumer<? super K> action) {
@@ -517,9 +505,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
      * {@code Collection.remove}, {@code removeAll},
      * {@code retainAll} and {@code clear} operations.  It does not
      * support the {@code add} or {@code addAll} operations.
-     * Its {@link Spliterator} typically provides faster sequential
-     * performance but much poorer parallel performance than that of
-     * {@code HashMap}.
      *
      * @return a view of the values contained in this map
      */
@@ -539,9 +524,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
             return new LinkedValueIterator();
         }
         public final boolean contains(Object o) { return containsValue(o); }
-        public final Spliterator<V> spliterator() {
-            return Spliterators.spliterator(this, Spliterator.SIZED | Spliterator.ORDERED);
-        }
 
         public final void forEach(Consumer<? super V> action) {
             if (action == null)
@@ -567,9 +549,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
      * {@code Set.remove}, {@code removeAll}, {@code retainAll} and
      * {@code clear} operations.  It does not support the
      * {@code add} or {@code addAll} operations.
-     * Its {@link Spliterator} typically provides faster sequential
-     * performance but much poorer parallel performance than that of
-     * {@code HashMap}.
      *
      * @return a set view of the mappings contained in this map
      */
@@ -602,10 +581,6 @@ public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
                 return removeNode(hash(key), key, value, true, true) != null;
             }
             return false;
-        }
-
-        public final Spliterator<Map.Entry<K,V>> spliterator() {
-            return Spliterators.spliterator(this, Spliterator.SIZED | Spliterator.ORDERED | Spliterator.DISTINCT);
         }
 
         public final void forEach(Consumer<? super Map.Entry<K,V>> action) {

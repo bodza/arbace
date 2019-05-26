@@ -907,10 +907,7 @@ public interface Map<K, V> {
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
-     * concurrency properties. In particular, all implementations of
-     * subinterface {@link java.util.concurrent.ConcurrentMap} must document
-     * whether the mapping function is applied once atomically only if the value
-     * is not present.
+     * concurrency properties.
      *
      * @param key key with which the specified value is to be associated
      * @param mappingFunction the mapping function to compute a value
@@ -983,10 +980,7 @@ public interface Map<K, V> {
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
-     * concurrency properties. In particular, all implementations of
-     * subinterface {@link java.util.concurrent.ConcurrentMap} must document
-     * whether the remapping function is applied once atomically only if the
-     * value is not present.
+     * concurrency properties.
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the remapping function to compute a value
@@ -1073,10 +1067,7 @@ public interface Map<K, V> {
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
-     * concurrency properties. In particular, all implementations of
-     * subinterface {@link java.util.concurrent.ConcurrentMap} must document
-     * whether the remapping function is applied once atomically only if the
-     * value is not present.
+     * concurrency properties.
      *
      * @param key key with which the specified value is to be associated
      * @param remappingFunction the remapping function to compute a value
@@ -1164,10 +1155,7 @@ public interface Map<K, V> {
      * The default implementation makes no guarantees about synchronization
      * or atomicity properties of this method. Any implementation providing
      * atomicity guarantees must override this method and document its
-     * concurrency properties. In particular, all implementations of
-     * subinterface {@link java.util.concurrent.ConcurrentMap} must document
-     * whether the remapping function is applied once atomically only if the
-     * value is not present.
+     * concurrency properties.
      *
      * @param key key with which the resulting value is to be associated
      * @param value the non-null value to be merged with the existing value
@@ -1492,7 +1480,7 @@ public interface Map<K, V> {
      * @throws NullPointerException if any entry, key, or value is {@code null}, or if
      *         the {@code entries} array is {@code null}
      */
-    @SafeVarargs
+    // @SafeVarargs
     @SuppressWarnings("varargs")
     static <K, V> Map<K, V> ofEntries(Entry<? extends K, ? extends V>... entries) {
         if (entries.length == 0) { // implicit null check of entries array

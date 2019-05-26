@@ -17,11 +17,6 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
     Executable() { }
 
     /**
-     * Accessor method to allow code sharing
-     */
-    abstract byte[] getAnnotationBytes();
-
-    /**
      * Does the Executable have generic information.
      */
     abstract boolean hasGenericInformation();
@@ -384,12 +379,6 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
     private transient volatile Parameter[] parameters;
 
     private native Parameter[] getParameters0();
-    native byte[] getTypeAnnotationBytes0();
-
-    // Needed by reflectaccess
-    byte[] getTypeAnnotationBytes() {
-        return getTypeAnnotationBytes0();
-    }
 
     /**
      * Returns an array of {@code Class} objects that represent the
@@ -461,27 +450,5 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
      */
     public boolean isSynthetic() {
         return Modifier.isSynthetic(getModifiers());
-    }
-
-    abstract boolean handleParameterNumberMismatch(int resultLength, int numParameters);
-
-    private transient volatile Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-    private Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
-        Map<Class<? extends Annotation>, Annotation> declAnnos;
-        if ((declAnnos = declaredAnnotations) == null) {
-            synchronized (this) {
-                if ((declAnnos = declaredAnnotations) == null) {
-                    Executable root = (Executable)getRoot();
-                    if (root != null) {
-                        declAnnos = root.declaredAnnotations();
-                    } else {
-                        declAnnos = AnnotationParser.parseAnnotations(getAnnotationBytes(), getDeclaringClass().getConstantPool(), getDeclaringClass());
-                    }
-                    declaredAnnotations = declAnnos;
-                }
-            }
-        }
-        return declAnnos;
     }
 }

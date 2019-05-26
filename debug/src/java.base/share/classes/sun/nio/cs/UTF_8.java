@@ -27,7 +27,6 @@ import java.nio.charset.CodingErrorAction;
  *     U+40000..U+FFFFF         F1..F3      80..BF      80..BF      80..BF
  *    U+100000..U10FFFF         F4          80..8F      80..BF      80..BF
  */
-
 public final class UTF_8 extends Unicode {
     public static final UTF_8 INSTANCE = new UTF_8();
 

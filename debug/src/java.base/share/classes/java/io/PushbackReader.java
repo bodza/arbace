@@ -198,8 +198,7 @@ public class PushbackReader extends FilterReader {
     }
 
     /**
-     * Tells whether this stream supports the mark() operation, which it does
-     * not.
+     * Tells whether this stream supports the mark() operation, which it does not.
      */
     public boolean markSupported() {
         return false;

@@ -1,7 +1,6 @@
 package java.lang.reflect;
 
 import java.util.StringJoiner;
-import jdk.internal.reflect.LangReflectAccess;
 import jdk.internal.reflect.ReflectionFactory;
 
 /**
@@ -14,8 +13,7 @@ import jdk.internal.reflect.ReflectionFactory;
  */
 public class Modifier {
     /*
-     * Bootstrapping protocol between java.lang and java.lang.reflect
-     *  packages
+     * Bootstrapping protocol between java.lang and java.lang.reflect packages
      */
     static {
         ReflectionFactory factory = ReflectionFactory.getReflectionFactory();

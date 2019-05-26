@@ -1,10 +1,10 @@
 package jdk.internal.reflect;
 
 /**
-  * Package-private implementation of the FieldAccessor interface
-  * which has access to all classes and all fields, regardless of
-  * language restrictions. See MagicAccessorImpl.
-  */
+ * Package-private implementation of the FieldAccessor interface
+ * which has access to all classes and all fields, regardless of
+ * language restrictions. See MagicAccessorImpl.
+ */
 abstract class FieldAccessorImpl extends MagicAccessorImpl implements FieldAccessor {
     /** Matches specification in {@link java.lang.reflect.Field} */
     public abstract Object get(Object obj) throws IllegalArgumentException;

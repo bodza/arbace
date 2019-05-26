@@ -64,11 +64,6 @@ public class ClassLoaders {
      * from the application class loader.
      */
     private static class PlatformClassLoader extends BuiltinClassLoader {
-        static {
-            if (!ClassLoader.registerAsParallelCapable())
-                throw new InternalError();
-        }
-
         PlatformClassLoader(BootClassLoader parent) {
             super("platform", parent);
         }
@@ -89,11 +84,6 @@ public class ClassLoaders {
      * customizations to be compatible with long standing behavior.
      */
     private static class AppClassLoader extends BuiltinClassLoader {
-        static {
-            if (!ClassLoader.registerAsParallelCapable())
-                throw new InternalError();
-        }
-
         AppClassLoader(PlatformClassLoader parent) {
             super("app", parent);
         }

@@ -86,10 +86,7 @@ import java.util.function.BiFunction;
  * Java Collections Framework</a>.  Unlike the new collection
  * implementations, {@code Hashtable} is synchronized.  If a
  * thread-safe implementation is not needed, it is recommended to use
- * {@link HashMap} in place of {@code Hashtable}.  If a thread-safe
- * highly-concurrent implementation is desired, then it is recommended
- * to use {@link java.util.concurrent.ConcurrentHashMap} in place of
- * {@code Hashtable}.
+ * {@link HashMap} in place of {@code Hashtable}.
  *
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values

@@ -118,8 +118,7 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
     /**
      * Removes the element at the specified position in this list (optional
      * operation).  Shifts any subsequent elements to the left (subtracts one
-     * from their indices).  Returns the element that was removed from the
-     * list.
+     * from their indices).  Returns the element that was removed from the list.
      *
      * This implementation first gets a list iterator pointing to the
      * indexed element (with {@code listIterator(index)}).  Then, it removes

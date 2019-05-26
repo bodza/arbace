@@ -48,9 +48,7 @@ public final class SocketExceptions {
         try {
             Class<?> clazz = e.getClass();
             Constructor<?> ctor = clazz.getConstructor(String.class);
-            IOException e1 = (IOException)(ctor.newInstance(msg));
-            e1.setStackTrace(e.getStackTrace());
-            return e1;
+            return (IOException)(ctor.newInstance(msg));
         } catch (Exception e0) {
             // Some eg AsynchronousCloseException have no detail msg
             return e;

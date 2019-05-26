@@ -671,27 +671,6 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
             postDelete(delete(lastRet));
             lastRet = -1;
         }
-
-        public void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            int r;
-            if ((r = remaining) <= 0)
-                return;
-            remaining = 0;
-            final Object[] es = elements;
-            if (es[cursor] == null || sub(tail, cursor, es.length) != r)
-                throw new ConcurrentModificationException();
-            for (int i = cursor, end = tail, to = (i <= end) ? end : es.length; ; i = 0, to = end) {
-                for ( ; i < to; i++)
-                    action.accept(elementAt(es, i));
-                if (to == end) {
-                    if (end != tail)
-                        throw new ConcurrentModificationException();
-                    lastRet = dec(end, es.length);
-                    break;
-                }
-            }
-        }
     }
 
     private class DescendingIterator extends DeqIterator {
@@ -710,121 +689,6 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
         void postDelete(boolean leftShifted) {
             if (!leftShifted)
                 cursor = inc(cursor, elements.length);
-        }
-
-        public final void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            int r;
-            if ((r = remaining) <= 0)
-                return;
-            remaining = 0;
-            final Object[] es = elements;
-            if (es[cursor] == null || sub(cursor, head, es.length) + 1 != r)
-                throw new ConcurrentModificationException();
-            for (int i = cursor, end = head, to = (i >= end) ? end : 0; ; i = es.length - 1, to = end) {
-                // hotspot generates faster code than for: i >= to !
-                for ( ; i > to - 1; i--)
-                    action.accept(elementAt(es, i));
-                if (to == end) {
-                    if (end != head)
-                        throw new ConcurrentModificationException();
-                    lastRet = end;
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
-     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
-     * deque.
-     *
-     * The {@code Spliterator} reports {@link Spliterator#SIZED},
-     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
-     * {@link Spliterator#NONNULL}.  Overriding implementations should document
-     * the reporting of additional characteristic values.
-     *
-     * @return a {@code Spliterator} over the elements in this deque
-     */
-    public Spliterator<E> spliterator() {
-        return new DeqSpliterator();
-    }
-
-    final class DeqSpliterator implements Spliterator<E> {
-        private int fence; // -1 until first use
-        private int cursor; // current index, modified on traverse/split
-
-        /** Constructs late-binding spliterator over all elements. */
-        DeqSpliterator() {
-            this.fence = -1;
-        }
-
-        /** Constructs spliterator over the given range. */
-        DeqSpliterator(int origin, int fence) {
-            // assert 0 <= origin && origin < elements.length;
-            // assert 0 <= fence && fence < elements.length;
-            this.cursor = origin;
-            this.fence = fence;
-        }
-
-        /** Ensures late-binding initialization; then returns fence. */
-        private int getFence() { // force initialization
-            int t;
-            if ((t = fence) < 0) {
-                t = fence = tail;
-                cursor = head;
-            }
-            return t;
-        }
-
-        public DeqSpliterator trySplit() {
-            final Object[] es = elements;
-            final int i, n;
-            return ((n = sub(getFence(), i = cursor, es.length) >> 1) <= 0) ? null : new DeqSpliterator(i, cursor = inc(i, n, es.length));
-        }
-
-        public void forEachRemaining(Consumer<? super E> action) {
-            if (action == null)
-                throw new NullPointerException();
-            final int end = getFence(), cursor = this.cursor;
-            final Object[] es = elements;
-            if (cursor != end) {
-                this.cursor = end;
-                // null check at both ends of range is sufficient
-                if (es[cursor] == null || es[dec(end, es.length)] == null)
-                    throw new ConcurrentModificationException();
-                for (int i = cursor, to = (i <= end) ? end : es.length; ; i = 0, to = end) {
-                    for ( ; i < to; i++)
-                        action.accept(elementAt(es, i));
-                    if (to == end)
-                        break;
-                }
-            }
-        }
-
-        public boolean tryAdvance(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            final Object[] es = elements;
-            if (fence < 0) { fence = tail; cursor = head; } // late-binding
-            final int i;
-            if ((i = cursor) == fence)
-                return false;
-            E e = nonNullElementAt(es, i);
-            cursor = inc(i, es.length);
-            action.accept(e);
-            return true;
-        }
-
-        public long estimateSize() {
-            return sub(getFence(), cursor, elements.length);
-        }
-
-        public int characteristics() {
-            return Spliterator.NONNULL
-                | Spliterator.ORDERED
-                | Spliterator.SIZED
-                | Spliterator.SUBSIZED;
         }
     }
 
@@ -1016,8 +880,7 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
      * maintained by this deque.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
      *
-     * This method acts as bridge between array-based and collection-based
-     * APIs.
+     * This method acts as bridge between array-based and collection-based APIs.
      *
      * @return an array containing all of the elements in this deque
      */

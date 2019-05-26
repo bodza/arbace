@@ -47,9 +47,9 @@ class SignatureIterator {
     }
 
     /**
-      * Should only be called when atEnd() is true. Does not change
-      * state of iterator.
-      */
+     * Should only be called when atEnd() is true. Does not change
+     * state of iterator.
+     */
     public String returnType() {
         if (!atEnd()) {
             throw new InternalError("Illegal use of SignatureIterator");

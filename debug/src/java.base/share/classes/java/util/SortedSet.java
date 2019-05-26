@@ -183,44 +183,4 @@ public interface SortedSet<E> extends Set<E> {
      * @throws NoSuchElementException if this set is empty
      */
     E last();
-
-    /**
-     * Creates a {@code Spliterator} over the elements in this sorted set.
-     *
-     * The {@code Spliterator} reports {@link Spliterator#DISTINCT},
-     * {@link Spliterator#SORTED} and {@link Spliterator#ORDERED}.
-     * Implementations should document the reporting of additional
-     * characteristic values.
-     *
-     * The spliterator's comparator (see
-     * {@link java.util.Spliterator#getComparator()}) must be {@code null} if
-     * the sorted set's comparator (see {@link #comparator()}) is {@code null}.
-     * Otherwise, the spliterator's comparator must be the same as or impose the
-     * same total ordering as the sorted set's comparator.
-     *
-     * @implSpec
-     * The default implementation creates a
-     * <em><a href="Spliterator.html#binding">late-binding</a></em> spliterator
-     * from the sorted set's {@code Iterator}.  The spliterator inherits the
-     * <em>fail-fast</em> properties of the set's iterator.  The
-     * spliterator's comparator is the same as the sorted set's comparator.
-     *
-     * The created {@code Spliterator} additionally reports
-     * {@link Spliterator#SIZED}.
-     *
-     * @implNote
-     * The created {@code Spliterator} additionally reports
-     * {@link Spliterator#SUBSIZED}.
-     *
-     * @return a {@code Spliterator} over the elements in this sorted set
-     */
-    @Override
-    default Spliterator<E> spliterator() {
-        return new Spliterators.IteratorSpliterator<E>(this, Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED) {
-            @Override
-            public Comparator<? super E> getComparator() {
-                return SortedSet.this.comparator();
-            }
-        };
-    }
 }

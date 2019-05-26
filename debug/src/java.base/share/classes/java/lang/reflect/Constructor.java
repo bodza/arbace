@@ -1,6 +1,5 @@
 package java.lang.reflect;
 
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.ConstructorAccessor;
 import jdk.internal.reflect.Reflection;
 import sun.reflect.generics.repository.ConstructorRepository;
@@ -68,7 +67,7 @@ public final class Constructor<T> extends Executable {
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
      */
-    Constructor(Class<T> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations) {
+    Constructor(Class<T> declaringClass, Class<?>[] parameterTypes, Class<?>[] checkedExceptions, int modifiers, int slot, String signature) {
         this.clazz = declaringClass;
         this.parameterTypes = parameterTypes;
         this.exceptionTypes = checkedExceptions;
@@ -93,50 +92,16 @@ public final class Constructor<T> extends Executable {
         if (this.root != null)
             throw new IllegalArgumentException("Can not copy a non-root Constructor");
 
-        Constructor<T> res = new Constructor<>(clazz, parameterTypes, exceptionTypes, modifiers, slot, signature, null, null);
+        Constructor<T> res = new Constructor<>(clazz, parameterTypes, exceptionTypes, modifiers, slot, signature);
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.constructorAccessor = constructorAccessor;
         return res;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * A {@code SecurityException} is also thrown if this object is a
-     * {@code Constructor} object for the class {@code Class} and {@code flag}
-     * is true.
-     *
-     * @param flag {@inheritDoc}
-     *
-     * @throws InaccessibleObjectException {@inheritDoc}
-     */
-    @Override
-    @CallerSensitive
-    public void setAccessible(boolean flag) {
-        if (flag) {
-            checkCanSetAccessible(Reflection.getCallerClass());
-        }
-        setAccessible0(flag);
-    }
-
-    @Override
-    void checkCanSetAccessible(Class<?> caller) {
-        checkCanSetAccessible(caller, clazz);
-        if (clazz == Class.class) {
-            // can we change this to InaccessibleObjectException?
-            throw new SecurityException("Cannot make a java.lang.Class constructor accessible");
-        }
-    }
-
     @Override
     boolean hasGenericInformation() {
         return (getSignature() != null);
-    }
-
-    @Override
-    byte[] getAnnotationBytes() {
-        return annotations;
     }
 
     /**
@@ -287,20 +252,6 @@ public final class Constructor<T> extends Executable {
         sb.append(getDeclaringClass().getTypeName());
     }
 
-    @Override
-    String toShortString() {
-        StringBuilder sb = new StringBuilder("constructor ");
-        sb.append(getDeclaringClass().getTypeName());
-        sb.append('(');
-        StringJoiner sj = new StringJoiner(",");
-        for (Class<?> parameterType : getParameterTypes()) {
-            sj.add(parameterType.getTypeName());
-        }
-        sb.append(sj);
-        sb.append(')');
-        return sb.toString();
-    }
-
     /**
      * Returns a string describing this {@code Constructor},
      * including type parameters.  The string is formatted as the
@@ -390,13 +341,9 @@ public final class Constructor<T> extends Executable {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public T newInstance(Object ... initargs) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, clazz, clazz, modifiers);
-        }
         if ((clazz.getModifiers() & Modifier.ENUM) != 0)
             throw new IllegalArgumentException("Cannot reflectively create enum objects");
         ConstructorAccessor ca = constructorAccessor; // read volatile
@@ -468,19 +415,5 @@ public final class Constructor<T> extends Executable {
 
     String getSignature() {
         return signature;
-    }
-
-    @Override
-    boolean handleParameterNumberMismatch(int resultLength, int numParameters) {
-        Class<?> declaringClass = getDeclaringClass();
-        if (declaringClass.isEnum() || declaringClass.isAnonymousClass() || declaringClass.isLocalClass())
-            return false; // Can't do reliable parameter counting
-        else {
-            if (declaringClass.isMemberClass() && ((declaringClass.getModifiers() & Modifier.STATIC) == 0) && resultLength + 1 == numParameters) {
-                return true;
-            } else {
-                throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
-            }
-        }
     }
 }

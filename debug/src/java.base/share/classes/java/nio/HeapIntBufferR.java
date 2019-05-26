@@ -1,26 +1,17 @@
 package java.nio;
 
 /**
-
  * A read-only HeapIntBuffer.  This class extends the corresponding
  * read/write class, overriding the mutation methods to throw a {@link
  * ReadOnlyBufferException} and overriding the view-buffer methods to return an
  * instance of this class rather than of the superclass.
-
  */
-
 class HeapIntBufferR extends HeapIntBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(int[].class);
 
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(int[].class);
-
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    */
 
     HeapIntBufferR(int cap, int lim) {
         super(cap, lim);

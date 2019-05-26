@@ -23,17 +23,6 @@ package java.util;
  * sj.add("George").add("Sally").add("Fred");
  * String desiredString = sj.toString();
  * }</pre>
- *
- * A {@code StringJoiner} may be employed to create formatted output from a
- * {@link java.util.stream.Stream} using
- * {@link java.util.stream.Collectors#joining(CharSequence)}. For example:
- *
- * <pre> {@code
- * List<Integer> numbers = Arrays.asList(1, 2, 3, 4);
- * String commaSeparatedNumbers = numbers.stream()
- *     .map(i -> i.toString())
- *     .collect(Collectors.joining(", "));
- * }</pre>
  */
 public final class StringJoiner {
     private final String prefix;

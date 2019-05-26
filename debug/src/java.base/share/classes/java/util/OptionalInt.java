@@ -156,28 +156,6 @@ public final class OptionalInt {
     }
 
     /**
-     * If a value is present, returns a sequential {@link IntStream} containing
-     * only that value, otherwise returns an empty {@code IntStream}.
-     *
-     * @apiNote
-     * This method can be used to transform a {@code Stream} of optional
-     * integers to an {@code IntStream} of present integers:
-     * <pre>{@code
-     *     Stream<OptionalInt> os = ..
-     *     IntStream s = os.flatMapToInt(OptionalInt::stream)
-     * }</pre>
-     *
-     * @return the optional value as an {@code IntStream}
-     */
-    public IntStream stream() {
-        if (isPresent) {
-            return IntStream.of(value);
-        } else {
-            return IntStream.empty();
-        }
-    }
-
-    /**
      * If a value is present, returns the value, otherwise returns
      * {@code other}.
      *

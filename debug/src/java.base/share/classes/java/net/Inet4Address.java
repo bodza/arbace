@@ -53,7 +53,6 @@ package java.net;
  * Please refer to <a href="http://www.ietf.org/rfc/rfc2365.txt">
  * <i>RFC&nbsp;2365: Administratively Scoped IP Multicast</i></a>
  */
-
 public final class Inet4Address extends InetAddress {
     static final int INADDRSZ = 4;
 

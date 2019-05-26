@@ -126,8 +126,7 @@ public interface Set<E> extends Collection<E> {
      * allocate a new array even if this set is backed by an array).
      * The caller is thus free to modify the returned array.
      *
-     * This method acts as bridge between array-based and collection-based
-     * APIs.
+     * This method acts as bridge between array-based and collection-based APIs.
      *
      * @return an array containing all the elements in this set
      */
@@ -361,33 +360,6 @@ public interface Set<E> extends Collection<E> {
     int hashCode();
 
     /**
-     * Creates a {@code Spliterator} over the elements in this set.
-     *
-     * The {@code Spliterator} reports {@link Spliterator#DISTINCT}.
-     * Implementations should document the reporting of additional
-     * characteristic values.
-     *
-     * @implSpec
-     * The default implementation creates a
-     * <em><a href="Spliterator.html#binding">late-binding</a></em> spliterator
-     * from the set's {@code Iterator}.  The spliterator inherits the
-     * <em>fail-fast</em> properties of the set's iterator.
-     *
-     * The created {@code Spliterator} additionally reports
-     * {@link Spliterator#SIZED}.
-     *
-     * @implNote
-     * The created {@code Spliterator} additionally reports
-     * {@link Spliterator#SUBSIZED}.
-     *
-     * @return a {@code Spliterator} over the elements in this set
-     */
-    @Override
-    default Spliterator<E> spliterator() {
-        return Spliterators.spliterator(this, Spliterator.DISTINCT);
-    }
-
-    /**
      * Returns an unmodifiable set containing zero elements.
      * See <a href="#unmodifiable">Unmodifiable Sets</a> for details.
      *
@@ -606,7 +578,7 @@ public interface Set<E> extends Collection<E> {
      * @throws IllegalArgumentException if there are any duplicate elements
      * @throws NullPointerException if an element is {@code null} or if the array is {@code null}
      */
-    @SafeVarargs
+    // @SafeVarargs
     @SuppressWarnings("varargs")
     static <E> Set<E> of(E... elements) {
         switch (elements.length) { // implicit null check of elements

@@ -13,8 +13,7 @@ import java.net.URLStreamHandlerFactory;
  * A URL stream handler provider identifies itself with a
  * provider-configuration file named java.net.spi.URLStreamHandlerProvider in
  * the resource directory META-INF/services. The file should contain a list of
- * fully-qualified concrete URL stream handler provider class names, one per
- * line.
+ * fully-qualified concrete URL stream handler provider class names, one per line.
  *
  * URL stream handler providers are located at runtime, as specified in the
  * {@linkplain java.net.URL#URL(String,String,int,String) URL constructor}.

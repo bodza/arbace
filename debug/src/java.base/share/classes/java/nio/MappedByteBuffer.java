@@ -7,10 +7,8 @@ import jdk.internal.misc.Unsafe;
 /**
  * A direct byte buffer whose content is a memory-mapped region of a file.
  *
- * Mapped byte buffers are created via the {@link
- * java.nio.channels.FileChannel#map FileChannel.map} method.  This class
- * extends the {@link ByteBuffer} class with operations that are specific to
- * memory-mapped file regions.
+ * This class extends the {@link ByteBuffer} class with operations that are
+ * specific to memory-mapped file regions.
  *
  * A mapped byte buffer and the file mapping that it represents remain
  * valid until the buffer itself is garbage-collected.
@@ -20,7 +18,7 @@ import jdk.internal.misc.Unsafe;
  * this program or another.  Whether or not such changes occur, and when they
  * occur, is operating-system dependent and therefore unspecified.
  *
- * <a id="inaccess"></a><p> All or part of a mapped byte buffer may become
+ * <a id="inaccess"></a>All or part of a mapped byte buffer may become
  * inaccessible at any time, for example if the mapped file is truncated.  An
  * attempt to access an inaccessible region of a mapped byte buffer will not
  * change the buffer's content and will cause an unspecified exception to be
@@ -33,17 +31,11 @@ import jdk.internal.misc.Unsafe;
  * byte buffers.
  */
 public abstract class MappedByteBuffer extends ByteBuffer {
-    // This is a little bit backwards: By rights MappedByteBuffer should be a
-    // subclass of DirectByteBuffer, but to keep the spec clear and simple, and
-    // for optimization purposes, it's easier to do it the other way around.
-    // This works because DirectByteBuffer is a package-private class.
-
     // For mapped buffers, a FileDescriptor that may be used for mapping
     // operations if valid; null if the buffer is not mapped.
     private final FileDescriptor fd;
 
     // This should only be invoked by the DirectByteBuffer constructors
-    //
     MappedByteBuffer(int mark, int pos, int lim, int cap, FileDescriptor fd) {
         super(mark, pos, lim, cap);
         this.fd = fd;
@@ -157,10 +149,6 @@ public abstract class MappedByteBuffer extends ByteBuffer {
      *
      * If the file does not reside on a local device then no such guarantee
      * is made.
-     *
-     * If this buffer was not mapped in read/write mode ({@link
-     * java.nio.channels.FileChannel.MapMode#READ_WRITE}) then invoking this
-     * method has no effect.
      *
      * @return  This buffer
      */

@@ -10,26 +10,15 @@ import java.util.function.LongConsumer;
  * subtypes are provided for {@link OfInt int}, {@link OfLong long}, and
  * {@link OfDouble double} values.
  *
- * The specialized subtype default implementations of {@link Iterator#next}
- * and {@link Iterator#forEachRemaining(java.util.function.Consumer)} box
+ * The specialized subtype default implementations of {@link Iterator#next} box
  * primitive values to instances of their corresponding wrapper class.  Such
  * boxing may offset any advantages gained when using the primitive
  * specializations.  To avoid boxing, the corresponding primitive-based methods
- * should be used.  For example, {@link PrimitiveIterator.OfInt#nextInt()} and
- * {@link PrimitiveIterator.OfInt#forEachRemaining(java.util.function.IntConsumer)}
- * should be used in preference to {@link PrimitiveIterator.OfInt#next()} and
- * {@link PrimitiveIterator.OfInt#forEachRemaining(java.util.function.Consumer)}.
+ * should be used.
  *
- * Iteration of primitive values using boxing-based methods
- * {@link Iterator#next next()} and
- * {@link Iterator#forEachRemaining(java.util.function.Consumer) forEachRemaining()},
+ * Iteration of primitive values using boxing-based method {@link Iterator#next next()}
  * does not affect the order in which the values, transformed to boxed values,
  * are encountered.
- *
- * @implNote
- * If the boolean system property {@code org.openjdk.java.util.stream.tripwire}
- * is set to {@code true} then diagnostic warnings are reported if boxing of
- * primitive values occur when operating on primitive subtype specializations.
  *
  * @param <T> the type of elements returned by this PrimitiveIterator.  The
  *        type must be a wrapper type for a primitive type, such as
@@ -40,18 +29,6 @@ import java.util.function.LongConsumer;
  *        {@code Integer}.
  */
 public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
-    /**
-     * Performs the given action for each remaining element, in the order
-     * elements occur when iterating, until all elements have been processed
-     * or the action throws an exception.  Errors or runtime exceptions
-     * thrown by the action are relayed to the caller.
-     *
-     * @param action The action to be performed for each element
-     * @throws NullPointerException if the specified action is null
-     */
-    @SuppressWarnings("overloads")
-    void forEachRemaining(T_CONS action);
-
     /**
      * An Iterator specialized for {@code int} values.
      */
@@ -65,29 +42,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         int nextInt();
 
         /**
-         * Performs the given action for each remaining element until all elements
-         * have been processed or the action throws an exception.  Actions are
-         * performed in the order of iteration, if that order is specified.
-         * Exceptions thrown by the action are relayed to the caller.
-         *
-         * @implSpec
-         *
-         * The default implementation behaves as if:
-         * <pre>{@code
-         *     while (hasNext())
-         *         action.accept(nextInt());
-         * }</pre>
-         *
-         * @param action The action to be performed for each element
-         * @throws NullPointerException if the specified action is null
-         */
-        default void forEachRemaining(IntConsumer action) {
-            Objects.requireNonNull(action);
-            while (hasNext())
-                action.accept(nextInt());
-        }
-
-        /**
          * {@inheritDoc}
          * @implSpec
          * The default implementation boxes the result of calling
@@ -96,27 +50,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         @Override
         default Integer next() {
             return nextInt();
-        }
-
-        /**
-         * {@inheritDoc}
-         * @implSpec
-         * If the action is an instance of {@code IntConsumer} then it is cast
-         * to {@code IntConsumer} and passed to {@link #forEachRemaining};
-         * otherwise the action is adapted to an instance of
-         * {@code IntConsumer}, by boxing the argument of {@code IntConsumer},
-         * and then passed to {@link #forEachRemaining}.
-         */
-        @Override
-        default void forEachRemaining(Consumer<? super Integer> action) {
-            if (action instanceof IntConsumer) {
-                forEachRemaining((IntConsumer) action);
-            }
-            else {
-                // The method reference action::accept is never null
-                Objects.requireNonNull(action);
-                forEachRemaining((IntConsumer) action::accept);
-            }
         }
     }
 
@@ -133,29 +66,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         long nextLong();
 
         /**
-         * Performs the given action for each remaining element until all elements
-         * have been processed or the action throws an exception.  Actions are
-         * performed in the order of iteration, if that order is specified.
-         * Exceptions thrown by the action are relayed to the caller.
-         *
-         * @implSpec
-         *
-         * The default implementation behaves as if:
-         * <pre>{@code
-         *     while (hasNext())
-         *         action.accept(nextLong());
-         * }</pre>
-         *
-         * @param action The action to be performed for each element
-         * @throws NullPointerException if the specified action is null
-         */
-        default void forEachRemaining(LongConsumer action) {
-            Objects.requireNonNull(action);
-            while (hasNext())
-                action.accept(nextLong());
-        }
-
-        /**
          * {@inheritDoc}
          * @implSpec
          * The default implementation boxes the result of calling
@@ -164,27 +74,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         @Override
         default Long next() {
             return nextLong();
-        }
-
-        /**
-         * {@inheritDoc}
-         * @implSpec
-         * If the action is an instance of {@code LongConsumer} then it is cast
-         * to {@code LongConsumer} and passed to {@link #forEachRemaining};
-         * otherwise the action is adapted to an instance of
-         * {@code LongConsumer}, by boxing the argument of {@code LongConsumer},
-         * and then passed to {@link #forEachRemaining}.
-         */
-        @Override
-        default void forEachRemaining(Consumer<? super Long> action) {
-            if (action instanceof LongConsumer) {
-                forEachRemaining((LongConsumer) action);
-            }
-            else {
-                // The method reference action::accept is never null
-                Objects.requireNonNull(action);
-                forEachRemaining((LongConsumer) action::accept);
-            }
         }
     }
 
@@ -201,29 +90,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         double nextDouble();
 
         /**
-         * Performs the given action for each remaining element until all elements
-         * have been processed or the action throws an exception.  Actions are
-         * performed in the order of iteration, if that order is specified.
-         * Exceptions thrown by the action are relayed to the caller.
-         *
-         * @implSpec
-         *
-         * The default implementation behaves as if:
-         * <pre>{@code
-         *     while (hasNext())
-         *         action.accept(nextDouble());
-         * }</pre>
-         *
-         * @param action The action to be performed for each element
-         * @throws NullPointerException if the specified action is null
-         */
-        default void forEachRemaining(DoubleConsumer action) {
-            Objects.requireNonNull(action);
-            while (hasNext())
-                action.accept(nextDouble());
-        }
-
-        /**
          * {@inheritDoc}
          * @implSpec
          * The default implementation boxes the result of calling
@@ -232,28 +98,6 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
         @Override
         default Double next() {
             return nextDouble();
-        }
-
-        /**
-         * {@inheritDoc}
-         * @implSpec
-         * If the action is an instance of {@code DoubleConsumer} then it is
-         * cast to {@code DoubleConsumer} and passed to
-         * {@link #forEachRemaining}; otherwise the action is adapted to
-         * an instance of {@code DoubleConsumer}, by boxing the argument of
-         * {@code DoubleConsumer}, and then passed to
-         * {@link #forEachRemaining}.
-         */
-        @Override
-        default void forEachRemaining(Consumer<? super Double> action) {
-            if (action instanceof DoubleConsumer) {
-                forEachRemaining((DoubleConsumer) action);
-            }
-            else {
-                // The method reference action::accept is never null
-                Objects.requireNonNull(action);
-                forEachRemaining((DoubleConsumer) action::accept);
-            }
         }
     }
 }

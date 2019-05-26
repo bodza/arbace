@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.Objects;
 
 import jdk.internal.loader.BootLoader;
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
 
 /**
@@ -43,9 +42,6 @@ import jdk.internal.reflect.Reflection;
  *
  * A {@code Package} can be obtained with the {@link ClassLoader#getDefinedPackage
  * ClassLoader.getDefinedPackage(String)} method.
- * Every {@code Package} defined by a class loader can be obtained
- * with the {@link Package#getPackages Package.getPackages()} and
- * {@link ClassLoader#getDefinedPackages} methods.
  *
  * @implNote
  * The <a href="ClassLoader.html#builtinLoaders">builtin class loaders</a>
@@ -63,24 +59,6 @@ public class Package extends NamedPackage {
      */
     public String getName() {
         return packageName();
-    }
-
-    /**
-     * Returns all of the {@code Package}s defined by the caller's class loader
-     * and its ancestors.  The returned array may contain more than one
-     * {@code Package} object of the same package name, each defined by
-     * a different class loader in the class loader hierarchy.
-     *
-     * Calling this method is equivalent to calling {@link ClassLoader#getPackages}
-     * on a {@code ClassLoader} instance which is the caller's class loader.
-     *
-     * @return The array of {@code Package} objects defined by this
-     *          class loader and its ancestors
-     */
-    @CallerSensitive
-    public static Package[] getPackages() {
-        ClassLoader cl = ClassLoader.getClassLoader(Reflection.getCallerClass());
-        return cl != null ? cl.getPackages() : BootLoader.packages().toArray(Package[]::new);
     }
 
     /**

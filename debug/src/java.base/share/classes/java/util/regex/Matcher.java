@@ -4,8 +4,6 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -1442,8 +1440,7 @@ public final class Matcher implements MatchResult {
      *
      * Invoking this method with an argument of {@code true} will set this
      * matcher to use <i>anchoring</i> bounds. If the boolean
-     * argument is {@code false}, then <i>non-anchoring</i> bounds will be
-     * used.
+     * argument is {@code false}, then <i>non-anchoring</i> bounds will be used.
      *
      * Using anchoring bounds, the boundaries of this
      * matcher's region match anchors such as ^ and $.

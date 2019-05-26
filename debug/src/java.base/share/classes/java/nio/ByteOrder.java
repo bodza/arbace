@@ -34,8 +34,7 @@ public final class ByteOrder {
      *
      * This method is defined so that performance-sensitive Java code can
      * allocate direct buffers with the same byte order as the hardware.
-     * Native code libraries are often more efficient when such buffers are
-     * used.
+     * Native code libraries are often more efficient when such buffers are used.
      *
      * @return The native byte order of the hardware upon which this Java
      *          virtual machine is running

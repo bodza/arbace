@@ -156,29 +156,6 @@ public final class OptionalDouble {
     }
 
     /**
-     * If a value is present, returns a sequential {@link DoubleStream}
-     * containing only that value, otherwise returns an empty
-     * {@code DoubleStream}.
-     *
-     * @apiNote
-     * This method can be used to transform a {@code Stream} of optional doubles
-     * to a {@code DoubleStream} of present doubles:
-     * <pre>{@code
-     *     Stream<OptionalDouble> os = ..
-     *     DoubleStream s = os.flatMapToDouble(OptionalDouble::stream)
-     * }</pre>
-     *
-     * @return the optional value as a {@code DoubleStream}
-     */
-    public DoubleStream stream() {
-        if (isPresent) {
-            return DoubleStream.of(value);
-        } else {
-            return DoubleStream.empty();
-        }
-    }
-
-    /**
      * If a value is present, returns the value, otherwise returns
      * {@code other}.
      *

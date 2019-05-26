@@ -78,7 +78,7 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
      *     for any reason
      * @return an array of Types representing the upper bound(s) of this
      *     type variable
-    */
+     */
     public Type[] getBounds() {
         Object[] value = bounds;
         if (value instanceof FieldTypeSignature[]) {

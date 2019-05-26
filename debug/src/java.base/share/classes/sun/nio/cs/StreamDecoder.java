@@ -2,7 +2,6 @@ package sun.nio.cs;
 
 import java.io.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.nio.charset.*;
 
 public class StreamDecoder extends Reader {
@@ -42,12 +41,6 @@ public class StreamDecoder extends Reader {
 
     public static StreamDecoder forInputStreamReader(InputStream in, Object lock, CharsetDecoder dec) {
         return new StreamDecoder(in, lock, dec);
-    }
-
-    // Factory for java.nio.channels.Channels.newReader
-
-    public static StreamDecoder forDecoder(ReadableByteChannel ch, CharsetDecoder dec, int minBufferCap) {
-        return new StreamDecoder(ch, dec, minBufferCap);
     }
 
     // -- Public methods corresponding to those in InputStreamReader --

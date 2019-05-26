@@ -155,9 +155,9 @@ class AccessorGenerator implements ClassFileConstants {
     }
 
     /**
-      * Constant pool entries required to be able to box/unbox primitive
-      * types. Note that we don't emit these if we don't need them.
-      */
+     * Constant pool entries required to be able to box/unbox primitive
+     * types. Note that we don't emit these if we don't need them.
+     */
     protected void emitBoxingContantPoolEntries() {
         //  *  [UTF-8] "valueOf"
         //  *  [UTF-8] "java/lang/Boolean"
@@ -368,9 +368,9 @@ class AccessorGenerator implements ClassFileConstants {
     }
 
     /**
-      * Returns class name in "internal" form (i.e., '/' separators
-      * instead of '.')
-      */
+     * Returns class name in "internal" form (i.e., '/' separators
+     * instead of '.')
+     */
     protected static String getClassName(Class<?> c, boolean addPrefixAndSuffixForNonPrimitiveTypes) {
         if (c.isPrimitive()) {
             if (c == Boolean.TYPE) {
@@ -516,9 +516,9 @@ class AccessorGenerator implements ClassFileConstants {
     }
 
     /**
-      * Returns true for widening or identity conversions for primitive
-      * types only
-      */
+     * Returns true for widening or identity conversions for primitive
+     * types only
+     */
     protected static boolean canWidenTo(Class<?> type, Class<?> otherType) {
         if (!type.isPrimitive()) {
             return false;
@@ -589,11 +589,11 @@ class AccessorGenerator implements ClassFileConstants {
     }
 
     /**
-      * Emits the widening bytecode for the given primitive conversion
-      * (or none if the identity conversion). Requires that a primitive
-      * conversion exists; i.e., canWidenTo must have already been
-      * called and returned true.
-      */
+     * Emits the widening bytecode for the given primitive conversion
+     * (or none if the identity conversion). Requires that a primitive
+     * conversion exists; i.e., canWidenTo must have already been
+     * called and returned true.
+     */
     protected static void emitWideningBytecodeForPrimitiveConversion(ClassFileAssembler cb, Class<?> fromType, Class<?> toType) {
         // Note that widening conversions for integral types (i.e., "b2s",
         // "s2i") are no-ops since values on the Java stack are

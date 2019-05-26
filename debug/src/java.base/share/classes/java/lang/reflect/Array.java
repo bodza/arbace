@@ -248,8 +248,7 @@ public final class Array {
     /**
      * Sets the value of the indexed component of the specified array
      * object to the specified new value.  The new value is first
-     * automatically unwrapped if the array has a primitive component
-     * type.
+     * automatically unwrapped if the array has a primitive component type.
      * @param array the array
      * @param index the index into the array
      * @param value the new value of the indexed component

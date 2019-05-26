@@ -1,11 +1,11 @@
 package jdk.internal.reflect;
 
 /**
-  * This interface provides the declarations for the accessor methods
-  * of java.lang.reflect.Field. Each Field object is configured with a
-  * (possibly dynamically-generated) class which implements this
-  * interface.
-  */
+ * This interface provides the declarations for the accessor methods
+ * of java.lang.reflect.Field. Each Field object is configured with a
+ * (possibly dynamically-generated) class which implements this
+ * interface.
+ */
 public interface FieldAccessor {
     /** Matches specification in {@link java.lang.reflect.Field} */
     public Object get(Object obj) throws IllegalArgumentException;

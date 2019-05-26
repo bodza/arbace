@@ -1,6 +1,5 @@
 package java.lang.reflect;
 
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.FieldAccessor;
 import jdk.internal.reflect.Reflection;
 import sun.reflect.generics.repository.FieldRepository;
@@ -69,7 +68,7 @@ public final class Field extends AccessibleObject implements Member {
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
      */
-    Field(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature, byte[] annotations) {
+    Field(Class<?> declaringClass, String name, Class<?> type, int modifiers, int slot, String signature) {
         this.clazz = declaringClass;
         this.name = name;
         this.type = type;
@@ -94,29 +93,13 @@ public final class Field extends AccessibleObject implements Member {
         if (this.root != null)
             throw new IllegalArgumentException("Can not copy a non-root Field");
 
-        Field res = new Field(clazz, name, type, modifiers, slot, signature, null);
+        Field res = new Field(clazz, name, type, modifiers, slot, signature);
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.fieldAccessor = fieldAccessor;
         res.overrideFieldAccessor = overrideFieldAccessor;
 
         return res;
-    }
-
-    /**
-     * @throws InaccessibleObjectException {@inheritDoc}
-     */
-    @Override
-    @CallerSensitive
-    public void setAccessible(boolean flag) {
-        if (flag)
-            checkCanSetAccessible(Reflection.getCallerClass());
-        setAccessible0(flag);
-    }
-
-    @Override
-    void checkCanSetAccessible(Class<?> caller) {
-        checkCanSetAccessible(caller, clazz);
     }
 
     /**
@@ -258,11 +241,6 @@ public final class Field extends AccessibleObject implements Member {
         return (((mod == 0) ? "" : (Modifier.toString(mod) + " ")) + getType().getTypeName() + " " + getDeclaringClass().getTypeName() + "." + getName());
     }
 
-    @Override
-    String toShortString() {
-        return "field " + getDeclaringClass().getTypeName() + "." + getName();
-    }
-
     /**
      * Returns a string describing this {@code Field}, including
      * its generic type.  The format is the access modifiers for the
@@ -333,21 +311,16 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public Object get(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).get(obj);
     }
 
     /**
      * Gets the value of a static or instance {@code boolean} field.
      *
-     * @param obj the object to extract the {@code boolean} value
-     * from
+     * @param obj the object to extract the {@code boolean} value from
      * @return the value of the {@code boolean} field
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -364,21 +337,16 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public boolean getBoolean(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getBoolean(obj);
     }
 
     /**
      * Gets the value of a static or instance {@code byte} field.
      *
-     * @param obj the object to extract the {@code byte} value
-     * from
+     * @param obj the object to extract the {@code byte} value from
      * @return the value of the {@code byte} field
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -395,13 +363,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public byte getByte(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getByte(obj);
     }
 
@@ -410,8 +374,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code char} or of another primitive type convertible to
      * type {@code char} via a widening conversion.
      *
-     * @param obj the object to extract the {@code char} value
-     * from
+     * @param obj the object to extract the {@code char} value from
      * @return the value of the field converted to type {@code char}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -428,13 +391,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public char getChar(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getChar(obj);
     }
 
@@ -443,8 +402,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code short} or of another primitive type convertible to
      * type {@code short} via a widening conversion.
      *
-     * @param obj the object to extract the {@code short} value
-     * from
+     * @param obj the object to extract the {@code short} value from
      * @return the value of the field converted to type {@code short}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -461,13 +419,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public short getShort(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getShort(obj);
     }
 
@@ -476,8 +430,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code int} or of another primitive type convertible to
      * type {@code int} via a widening conversion.
      *
-     * @param obj the object to extract the {@code int} value
-     * from
+     * @param obj the object to extract the {@code int} value from
      * @return the value of the field converted to type {@code int}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -494,13 +447,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public int getInt(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getInt(obj);
     }
 
@@ -509,8 +458,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code long} or of another primitive type convertible to
      * type {@code long} via a widening conversion.
      *
-     * @param obj the object to extract the {@code long} value
-     * from
+     * @param obj the object to extract the {@code long} value from
      * @return the value of the field converted to type {@code long}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -527,13 +475,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public long getLong(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getLong(obj);
     }
 
@@ -542,8 +486,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code float} or of another primitive type convertible to
      * type {@code float} via a widening conversion.
      *
-     * @param obj the object to extract the {@code float} value
-     * from
+     * @param obj the object to extract the {@code float} value from
      * @return the value of the field converted to type {@code float}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -560,13 +503,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public float getFloat(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getFloat(obj);
     }
 
@@ -575,8 +514,7 @@ public final class Field extends AccessibleObject implements Member {
      * {@code double} or of another primitive type convertible to
      * type {@code double} via a widening conversion.
      *
-     * @param obj the object to extract the {@code double} value
-     * from
+     * @param obj the object to extract the {@code double} value from
      * @return the value of the field converted to type {@code double}
      *
      * @throws IllegalAccessException    if this {@code Field} object
@@ -593,13 +531,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public double getDouble(Object obj) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         return getFieldAccessor(obj).getDouble(obj);
     }
 
@@ -623,17 +557,6 @@ public final class Field extends AccessibleObject implements Member {
      * If this {@code Field} object is enforcing Java language access control, and
      * the underlying field is inaccessible, the method throws an
      * {@code IllegalAccessException}.
-     *
-     * If the underlying field is final, the method throws an
-     * {@code IllegalAccessException} unless {@code setAccessible(true)}
-     * has succeeded for this {@code Field} object
-     * and the field is non-static. Setting a final field in this way
-     * is meaningful only during deserialization or reconstruction of
-     * instances of classes with blank final fields, before they are
-     * made available for access by other parts of a program. Use in
-     * any other context may have unpredictable effects, including cases
-     * in which other parts of a program continue to use the original
-     * value of this field.
      *
      * If the underlying field is of a primitive type, an unwrapping
      * conversion is attempted to convert the new value to a value of
@@ -669,13 +592,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void set(Object obj, Object value) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).set(obj, value);
     }
 
@@ -702,13 +621,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setBoolean(Object obj, boolean z) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setBoolean(obj, z);
     }
 
@@ -735,13 +650,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setByte(Object obj, byte b) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setByte(obj, b);
     }
 
@@ -768,13 +679,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setChar(Object obj, char c) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setChar(obj, c);
     }
 
@@ -801,13 +708,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setShort(Object obj, short s) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setShort(obj, s);
     }
 
@@ -834,13 +737,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setInt(Object obj, int i) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setInt(obj, i);
     }
 
@@ -867,13 +766,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setLong(Object obj, long l) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setLong(obj, l);
     }
 
@@ -900,13 +795,9 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setFloat(Object obj, float f) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setFloat(obj, f);
     }
 
@@ -933,19 +824,10 @@ public final class Field extends AccessibleObject implements Member {
      * @throws ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     public void setDouble(Object obj, double d) throws IllegalArgumentException, IllegalAccessException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, obj);
-        }
         getFieldAccessor(obj).setDouble(obj, d);
-    }
-
-    // check access to field
-    private void checkAccess(Class<?> caller, Object obj) throws IllegalAccessException {
-        checkAccess(caller, clazz, Modifier.isStatic(modifiers) ? null : obj.getClass(), modifiers);
     }
 
     // security check is done before calling this method
@@ -1002,26 +884,4 @@ public final class Field extends AccessibleObject implements Member {
     Field getRoot() {
         return root;
     }
-
-    private transient volatile Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-    private Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
-        Map<Class<? extends Annotation>, Annotation> declAnnos;
-        if ((declAnnos = declaredAnnotations) == null) {
-            synchronized (this) {
-                if ((declAnnos = declaredAnnotations) == null) {
-                    Field root = this.root;
-                    if (root != null) {
-                        declAnnos = root.declaredAnnotations();
-                    } else {
-                        declAnnos = AnnotationParser.parseAnnotations(annotations, getDeclaringClass().getConstantPool(), getDeclaringClass());
-                    }
-                    declaredAnnotations = declAnnos;
-                }
-            }
-        }
-        return declAnnos;
-    }
-
-    private native byte[] getTypeAnnotationBytes0();
 }

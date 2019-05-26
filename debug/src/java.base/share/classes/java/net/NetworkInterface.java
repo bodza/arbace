@@ -3,8 +3,6 @@ package java.net;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.Spliterators;
 
 /**
  * This class represents a Network Interface made up of a name,
@@ -58,7 +56,7 @@ public final class NetworkInterface {
      * @return the name of this network interface
      */
     public String getName() {
-            return name;
+        return name;
     }
 
     /**
@@ -70,17 +68,6 @@ public final class NetworkInterface {
      */
     public Enumeration<InetAddress> getInetAddresses() {
         return enumerationFromArray(getCheckedInetAddresses());
-    }
-
-    /**
-     * Get a Stream of all or a subset of the InetAddresses bound to this
-     * network interface.
-     *
-     * @return a Stream object with all or a subset of the InetAddresses
-     * bound to this network interface
-     */
-    public Stream<InetAddress> inetAddresses() {
-        return streamFromArray(getCheckedInetAddresses());
     }
 
     private InetAddress[] getCheckedInetAddresses() {
@@ -122,17 +109,6 @@ public final class NetworkInterface {
      */
     public Enumeration<NetworkInterface> getSubInterfaces() {
         return enumerationFromArray(childs);
-    }
-
-    /**
-     * Get a Stream of all subinterfaces (also known as virtual
-     * interfaces) attached to this network interface.
-     *
-     * @return a Stream object with all of the subinterfaces
-     * of this network interface
-     */
-    public Stream<NetworkInterface> subInterfaces() {
-        return streamFromArray(childs);
     }
 
     /**
@@ -211,8 +187,7 @@ public final class NetworkInterface {
 
     /**
      * Convenience method to search for a network interface that
-     * has the specified Internet Protocol (IP) address bound to
-     * it.
+     * has the specified Internet Protocol (IP) address bound to it.
      *
      * If the specified IP address is bound to multiple network
      * interfaces it is not defined which network interface is
@@ -274,34 +249,6 @@ public final class NetworkInterface {
         }
     }
 
-    /**
-     * Returns a {@code Stream} of all the interfaces on this machine.  The
-     * {@code Stream} contains at least one interface, possibly representing a
-     * loopback interface that only supports communication between entities on
-     * this machine.
-     *
-     * @apiNote this method can be used in combination with
-     * {@link #inetAddresses()}} to obtain a stream of all IP addresses for
-     * this node, for example:
-     * <pre> {@code
-     * Stream<InetAddress> addrs = NetworkInterface.networkInterfaces()
-     *     .flatMap(NetworkInterface::inetAddresses);
-     * }</pre>
-     *
-     * @return a Stream of NetworkInterfaces found on this machine
-     * @throws SocketException  if an I/O error occurs,
-     *             or if the platform does not have at least one configured
-     *             network interface.
-     */
-    public static Stream<NetworkInterface> networkInterfaces() throws SocketException {
-        NetworkInterface[] netifs = getAll();
-        if (netifs != null && netifs.length > 0) {
-            return streamFromArray(netifs);
-        }  else {
-            throw new SocketException("No network interfaces configured");
-        }
-    }
-
     private static <T> Enumeration<T> enumerationFromArray(T[] a) {
         return new Enumeration<>() {
             int i = 0;
@@ -320,10 +267,6 @@ public final class NetworkInterface {
                 return i < a.length;
             }
         };
-    }
-
-    private static <T> Stream<T> streamFromArray(T[] a) {
-        return StreamSupport.stream(Spliterators.spliterator(a, Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.NONNULL), false);
     }
 
     private static native NetworkInterface[] getAll() throws SocketException;

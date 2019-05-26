@@ -450,8 +450,7 @@ public final class Math {
      * <ul><li>If either argument is NaN, then the result is NaN.
      * <li>If the first argument is positive zero and the second argument
      * is positive, or the first argument is positive and finite and the
-     * second argument is positive infinity, then the result is positive
-     * zero.
+     * second argument is positive infinity, then the result is positive zero.
      * <li>If the first argument is negative zero and the second argument
      * is positive, or the first argument is negative and finite and the
      * second argument is positive infinity, then the result is negative zero.
@@ -1066,7 +1065,7 @@ public final class Math {
      * when the exact result is negative.
      * <ul>
      *   <li>If the signs of the arguments are the same, the results of
-     *       {@code floorDiv} and the {@code /} operator are the same.  <br>
+     *       {@code floorDiv} and the {@code /} operator are the same.<br>
      *       For example, {@code floorDiv(4, 3) == 1} and {@code (4 / 3) == 1}.</li>
      *   <li>If the signs of the arguments are different,  the quotient is negative and
      *       {@code floorDiv} returns the integer less than or equal to the quotient
@@ -1167,7 +1166,7 @@ public final class Math {
      * Examples:
      * <ul>
      *   <li>If the signs of the arguments are the same, the results
-     *       of {@code floorMod} and the {@code %} operator are the same.  <br>
+     *       of {@code floorMod} and the {@code %} operator are the same.<br>
      *       <ul>
      *       <li>{@code floorMod(4, 3) == 1}; &nbsp; and {@code (4 % 3) == 1}</li>
      *       </ul>
@@ -1775,8 +1774,7 @@ public final class Math {
      * Special cases:
      *
      * <ul>
-     * <li>If the argument is NaN or less than -1, then the result is
-     * NaN.
+     * <li>If the argument is NaN or less than -1, then the result is NaN.
      *
      * <li>If the argument is positive infinity, then the result is
      * positive infinity.
@@ -2241,8 +2239,7 @@ public final class Math {
          * being used exclusively, the rounding will occur on a
          * multiply.  If the double-extended-exponent value set is
          * being used, the products will (perhaps) be exact but the
-         * stores to d are guaranteed to round to the double value
-         * set.
+         * stores to d are guaranteed to round to the double value set.
          *
          * It is _not_ a valid implementation to first multiply d by
          * 2^MIN_EXPONENT and then by 2 ^ (scaleFactor %

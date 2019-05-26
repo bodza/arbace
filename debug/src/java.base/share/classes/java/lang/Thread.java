@@ -5,13 +5,8 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.LockSupport;
 
 import jdk.internal.misc.TerminatingThreadLocal;
-import sun.nio.ch.Interruptible;
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
 
 /**
@@ -174,28 +169,6 @@ public class Thread implements Runnable {
     private volatile int threadStatus;
 
     /**
-     * The argument supplied to the current call to
-     * java.util.concurrent.locks.LockSupport.park.
-     * Set by (private) java.util.concurrent.locks.LockSupport.setBlocker
-     * Accessed using java.util.concurrent.locks.LockSupport.getBlocker
-     */
-    volatile Object parkBlocker;
-
-    /* The object in which this thread is blocked in an interruptible I/O
-     * operation, if any.  The blocker's interrupt method should be invoked
-     * after setting this thread's interrupt status.
-     */
-    private volatile Interruptible blocker;
-    private final Object blockerLock = new Object();
-
-    /* oops! */public static void blockedOn(Interruptible b) {
-        Thread me = Thread.currentThread();
-        synchronized (me.blockerLock) {
-            me.blocker = b;
-        }
-    }
-
-    /**
      * The minimum priority that a thread can have.
      */
     public static final int MIN_PRIORITY = 1;
@@ -220,8 +193,7 @@ public class Thread implements Runnable {
 
     /**
      * A hint to the scheduler that the current thread is willing to yield
-     * its current use of a processor. The scheduler is free to ignore this
-     * hint.
+     * its current use of a processor. The scheduler is free to ignore this hint.
      *
      * Yield is a heuristic attempt to improve relative progression
      * between threads that would otherwise over-utilise a CPU. Its use
@@ -671,7 +643,6 @@ public class Thread implements Runnable {
         /* Speed the release of some of these resources */
         threadLocals = null;
         inheritableThreadLocals = null;
-        blocker = null;
         uncaughtExceptionHandler = null;
     }
 
@@ -741,36 +712,12 @@ public class Thread implements Runnable {
      * methods of this class, then its interrupt status will be cleared and it
      * will receive an {@link InterruptedException}.
      *
-     * If this thread is blocked in an I/O operation upon an {@link
-     * java.nio.channels.InterruptibleChannel InterruptibleChannel}
-     * then the channel will be closed, the thread's interrupt
-     * status will be set, and the thread will receive a {@link
-     * java.nio.channels.ClosedByInterruptException}.
-     *
-     * If this thread is blocked in a {@link java.nio.channels.Selector}
-     * then the thread's interrupt status will be set and it will return
-     * immediately from the selection operation, possibly with a non-zero
-     * value, just as if the selector's {@link
-     * java.nio.channels.Selector#wakeup wakeup} method were invoked.
-     *
      * If none of the previous conditions hold then this thread's interrupt
      * status will be set.
      *
      * Interrupting a thread that is not alive need not have any effect.
      */
     public void interrupt() {
-        if (this != Thread.currentThread()) {
-            // thread may be blocked in an I/O operation
-            synchronized (blockerLock) {
-                Interruptible b = blocker;
-                if (b != null) {
-                    interrupt0(); // set interrupt status
-                    b.interrupt(this);
-                    return;
-                }
-            }
-        }
-
         // set interrupt status
         interrupt0();
     }
@@ -1102,14 +1049,6 @@ public class Thread implements Runnable {
     }
 
     /**
-     * Prints a stack trace of the current thread to the standard error stream.
-     * This method is used only for debugging.
-     */
-    public static void dumpStack() {
-        new Exception("Stack trace").printStackTrace();
-    }
-
-    /**
      * Marks this thread as either a {@linkplain #isDaemon daemon} thread
      * or a user thread. The Java Virtual Machine exits when the only
      * threads running are all daemon threads.
@@ -1168,7 +1107,7 @@ public class Thread implements Runnable {
      *          indicating the system class loader (or, failing that, the
      *          bootstrap class loader)
      */
-    @CallerSensitive
+    // @CallerSensitive
     public ClassLoader getContextClassLoader() {
         return contextClassLoader;
     }
@@ -1205,82 +1144,6 @@ public class Thread implements Runnable {
      */
     public static native boolean holdsLock(Object obj);
 
-    private static final StackTraceElement[] EMPTY_STACK_TRACE = new StackTraceElement[0];
-
-    /**
-     * Returns an array of stack trace elements representing the stack dump
-     * of this thread.  This method will return a zero-length array if
-     * this thread has not started, has started but has not yet been
-     * scheduled to run by the system, or has terminated.
-     * If the returned array is of non-zero length then the first element of
-     * the array represents the top of the stack, which is the most recent
-     * method invocation in the sequence.  The last element of the array
-     * represents the bottom of the stack, which is the least recent method
-     * invocation in the sequence.
-     *
-     * Some virtual machines may, under some circumstances, omit one
-     * or more stack frames from the stack trace.  In the extreme case,
-     * a virtual machine that has no stack trace information concerning
-     * this thread is permitted to return a zero-length array from this
-     * method.
-     *
-     * @return an array of {@code StackTraceElement},
-     * each represents one stack frame.
-     */
-    public StackTraceElement[] getStackTrace() {
-        if (this != Thread.currentThread()) {
-            // optimization so we do not call into the vm for threads that
-            // have not yet started or have terminated
-            if (!isAlive()) {
-                return EMPTY_STACK_TRACE;
-            }
-            StackTraceElement[][] stackTraceArray = dumpThreads(new Thread[] {this});
-            StackTraceElement[] stackTrace = stackTraceArray[0];
-            // a thread that was alive during the previous isAlive call may have
-            // since terminated, therefore not having a stacktrace.
-            if (stackTrace == null) {
-                stackTrace = EMPTY_STACK_TRACE;
-            }
-            return stackTrace;
-        } else {
-            return (new Exception()).getStackTrace();
-        }
-    }
-
-    /**
-     * Returns a map of stack traces for all live threads.
-     * The map keys are threads and each map value is an array of
-     * {@code StackTraceElement} that represents the stack dump
-     * of the corresponding {@code Thread}.
-     * The returned stack traces are in the format specified for
-     * the {@link #getStackTrace getStackTrace} method.
-     *
-     * The threads may be executing while this method is called.
-     * The stack trace of each thread only represents a snapshot and
-     * each stack trace may be obtained at different time.  A zero-length
-     * array will be returned in the map value if the virtual machine has
-     * no stack trace information about a thread.
-     *
-     * @return a {@code Map} from {@code Thread} to an array of
-     * {@code StackTraceElement} that represents the stack trace of
-     * the corresponding thread.
-     */
-    public static Map<Thread, StackTraceElement[]> getAllStackTraces() {
-        // Get a snapshot of the list of all threads
-        Thread[] threads = getThreads();
-        StackTraceElement[][] traces = dumpThreads(threads);
-        Map<Thread, StackTraceElement[]> m = new HashMap<>(threads.length);
-        for (int i = 0; i < threads.length; i++) {
-            StackTraceElement[] stackTrace = traces[i];
-            if (stackTrace != null) {
-                m.put(threads[i], stackTrace);
-            }
-            // else terminated so we don't put it in the map
-        }
-        return m;
-    }
-
-    private static native StackTraceElement[][] dumpThreads(Thread[] threads);
     private static native Thread[] getThreads();
 
     /**
@@ -1349,7 +1212,6 @@ public class Thread implements Runnable {
          * <ul>
          *   <li>{@link Object#wait() Object.wait} with no timeout</li>
          *   <li>{@link #join() Thread.join} with no timeout</li>
-         *   <li>{@link LockSupport#park() LockSupport.park}</li>
          * </ul>
          *
          * A thread in the waiting state is waiting for another thread to
@@ -1371,8 +1233,6 @@ public class Thread implements Runnable {
          *   <li>{@link #sleep Thread.sleep}</li>
          *   <li>{@link Object#wait(long) Object.wait} with timeout</li>
          *   <li>{@link #join(long) Thread.join} with timeout</li>
-         *   <li>{@link LockSupport#parkNanos LockSupport.parkNanos}</li>
-         *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
          * </ul>
          */
         TIMED_WAITING,
@@ -1515,7 +1375,7 @@ public class Thread implements Runnable {
      * Removes from the specified map any keys that have been enqueued
      * on the specified reference queue.
      */
-    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends WeakReference<Class<?>>, ?> map) {
+    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends WeakReference<Class<?>>, ?> map) {
         Reference<? extends Class<?>> ref;
         while ((ref = queue.poll()) != null) {
             map.remove(ref);

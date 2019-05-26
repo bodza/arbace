@@ -214,8 +214,8 @@ public final class Optional<T> {
      * <pre>{@code
      *     Optional<Path> p =
      *         uris.stream().filter(uri -> !isProcessedYet(uri))
-     *                       .findFirst()
-     *                       .map(Paths::get);
+     *                      .findFirst()
+     *                      .map(Paths::get);
      * }</pre>
      *
      * Here, {@code findFirst} returns an {@code Optional<URI>}, and then
@@ -288,28 +288,6 @@ public final class Optional<T> {
             @SuppressWarnings("unchecked")
             Optional<T> r = (Optional<T>) supplier.get();
             return Objects.requireNonNull(r);
-        }
-    }
-
-    /**
-     * If a value is present, returns a sequential {@link Stream} containing
-     * only that value, otherwise returns an empty {@code Stream}.
-     *
-     * @apiNote
-     * This method can be used to transform a {@code Stream} of optional
-     * elements to a {@code Stream} of present value elements:
-     * <pre>{@code
-     *     Stream<Optional<T>> os = ..
-     *     Stream<T> s = os.flatMap(Optional::stream)
-     * }</pre>
-     *
-     * @return the optional value as a {@code Stream}
-     */
-    public Stream<T> stream() {
-        if (!isPresent()) {
-            return Stream.empty();
-        } else {
-            return Stream.of(value);
         }
     }
 

@@ -111,8 +111,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Constructs an empty vector so that its internal data array
-     * has size {@code 10} and its standard capacity increment is
-     * zero.
+     * has size {@code 10} and its standard capacity increment is zero.
      */
     public Vector() {
         this(10);
@@ -1169,27 +1168,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
             lastRet = -1;
         }
 
-        @Override
-        public void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            synchronized (Vector.this) {
-                final int size = elementCount;
-                int i = cursor;
-                if (i >= size) {
-                    return;
-                }
-                final Object[] es = elementData;
-                if (i >= es.length)
-                    throw new ConcurrentModificationException();
-                while (i < size && modCount == expectedModCount)
-                    action.accept(elementAt(es, i++));
-                // update once at end of iteration to reduce heap write traffic
-                cursor = i;
-                lastRet = i - 1;
-                checkForComodification();
-            }
-        }
-
         final void checkForComodification() {
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
@@ -1288,89 +1266,5 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
         if (modCount != expectedModCount)
             throw new ConcurrentModificationException();
         modCount++;
-    }
-
-    /**
-     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
-     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
-     * list.
-     *
-     * The {@code Spliterator} reports {@link Spliterator#SIZED},
-     * {@link Spliterator#SUBSIZED}, and {@link Spliterator#ORDERED}.
-     * Overriding implementations should document the reporting of additional
-     * characteristic values.
-     *
-     * @return a {@code Spliterator} over the elements in this list
-     */
-    @Override
-    public Spliterator<E> spliterator() {
-        return new VectorSpliterator(null, 0, -1, 0);
-    }
-
-    /** Similar to ArrayList Spliterator */
-    final class VectorSpliterator implements Spliterator<E> {
-        private Object[] array;
-        private int index; // current index, modified on advance/split
-        private int fence; // -1 until used; then one past last index
-        private int expectedModCount; // initialized when fence set
-
-        /** Creates new spliterator covering the given range. */
-        VectorSpliterator(Object[] array, int origin, int fence, int expectedModCount) {
-            this.array = array;
-            this.index = origin;
-            this.fence = fence;
-            this.expectedModCount = expectedModCount;
-        }
-
-        private int getFence() { // initialize on first use
-            int hi;
-            if ((hi = fence) < 0) {
-                synchronized (Vector.this) {
-                    array = elementData;
-                    expectedModCount = modCount;
-                    hi = fence = elementCount;
-                }
-            }
-            return hi;
-        }
-
-        public Spliterator<E> trySplit() {
-            int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
-            return (lo >= mid) ? null : new VectorSpliterator(array, lo, index = mid, expectedModCount);
-        }
-
-        @SuppressWarnings("unchecked")
-        public boolean tryAdvance(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            int i;
-            if (getFence() > (i = index)) {
-                index = i + 1;
-                action.accept((E)array[i]);
-                if (modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
-                return true;
-            }
-            return false;
-        }
-
-        @SuppressWarnings("unchecked")
-        public void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-            final int hi = getFence();
-            final Object[] a = array;
-            int i;
-            for (i = index, index = hi; i < hi; i++)
-                action.accept((E) a[i]);
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-
-        public long estimateSize() {
-            return getFence() - index;
-        }
-
-        public int characteristics() {
-            return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
-        }
     }
 }

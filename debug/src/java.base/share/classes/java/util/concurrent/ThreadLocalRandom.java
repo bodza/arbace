@@ -1,7 +1,6 @@
 package java.util.concurrent;
 
 import java.util.Random;
-import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.DoubleConsumer;
@@ -19,8 +18,7 @@ import jdk.internal.misc.VM;
  * than shared {@code Random} objects in concurrent programs will
  * typically encounter much less overhead and contention.  Use of
  * {@code ThreadLocalRandom} is particularly appropriate when multiple
- * tasks (for example, each a {@link ForkJoinTask}) use random numbers
- * in parallel in thread pools.
+ * tasks use random numbers in parallel in thread pools.
  *
  * Usages of this class should typically be of the form:
  * {@code ThreadLocalRandom.current().nextX(...)} (where
@@ -51,12 +49,6 @@ public class ThreadLocalRandom extends Random {
      * other package-private utilities that access Thread class
      * fields.
      *
-     * Even though this class subclasses java.util.Random, it uses the
-     * same basic algorithm as java.util.SplittableRandom.  (See its
-     * internal documentation for explanations, which are not repeated
-     * here.)  Because ThreadLocalRandoms are not splittable
-     * though, we use only a single 64bit gamma.
-     *
      * Because this class is in a different package than class Thread,
      * field access methods use Unsafe to bypass access control rules.
      * To conform to the requirements of the Random superclass
@@ -67,10 +59,6 @@ public class ThreadLocalRandom extends Random {
      * only a static singleton.  But we generate a serial form
      * containing "rnd" and "initialized" fields to ensure
      * compatibility across versions.
-     *
-     * Implementations of non-core methods are mostly the same as in
-     * SplittableRandom, that were in part derived from a previous
-     * version of this class.
      *
      * The nextLocalGaussian ThreadLocal supports the very rarely used
      * nextGaussian method by providing a holder for the second of a
@@ -160,7 +148,7 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * The form of nextLong used by LongStream Spliterators.  If
+     * The form of nextLong used by LongStream Spliterators.  If
      * origin is greater than bound, acts as unbounded form of
      * nextLong, else as bounded form.
      *
@@ -190,7 +178,7 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * The form of nextInt used by IntStream Spliterators.
+     * The form of nextInt used by IntStream Spliterators.
      * Exactly the same as long version, except for types.
      *
      * @param origin the least value, unless greater than bound
@@ -217,7 +205,7 @@ public class ThreadLocalRandom extends Random {
     }
 
     /**
-     * The form of nextDouble used by DoubleStream Spliterators.
+     * The form of nextDouble used by DoubleStream Spliterators.
      *
      * @param origin the least value, unless greater than bound
      * @param bound the upper bound (exclusive), must not equal origin
@@ -412,173 +400,6 @@ public class ThreadLocalRandom extends Random {
         double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s)/s);
         nextLocalGaussian.set(Double.valueOf(v2 * multiplier));
         return v1 * multiplier;
-    }
-
-    // stream methods, coded in a way intended to better isolate for
-    // maintenance purposes the small differences across forms.
-
-    /**
-     * Spliterator for int streams.  We multiplex the four int
-     * versions into one class by treating a bound less than origin as
-     * unbounded, and also by treating "infinite" as equivalent to
-     * Long.MAX_VALUE. For splits, it uses the standard divide-by-two
-     * approach. The long and double versions of this class are
-     * identical except for types.
-     */
-    private static final class RandomIntsSpliterator implements Spliterator.OfInt {
-        long index;
-        final long fence;
-        final int origin;
-        final int bound;
-        RandomIntsSpliterator(long index, long fence, int origin, int bound) {
-            this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomIntsSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomIntsSpliterator(i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(IntConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(ThreadLocalRandom.current().internalNextInt(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(IntConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                int o = origin, b = bound;
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                do {
-                    consumer.accept(rng.internalNextInt(o, b));
-                } while (++i < f);
-            }
-        }
-    }
-
-    /**
-     * Spliterator for long streams.
-     */
-    private static final class RandomLongsSpliterator implements Spliterator.OfLong {
-        long index;
-        final long fence;
-        final long origin;
-        final long bound;
-        RandomLongsSpliterator(long index, long fence, long origin, long bound) {
-            this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomLongsSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomLongsSpliterator(i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(LongConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(ThreadLocalRandom.current().internalNextLong(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(LongConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                long o = origin, b = bound;
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                do {
-                    consumer.accept(rng.internalNextLong(o, b));
-                } while (++i < f);
-            }
-        }
-    }
-
-    /**
-     * Spliterator for double streams.
-     */
-    private static final class RandomDoublesSpliterator implements Spliterator.OfDouble {
-        long index;
-        final long fence;
-        final double origin;
-        final double bound;
-        RandomDoublesSpliterator(long index, long fence, double origin, double bound) {
-            this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomDoublesSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomDoublesSpliterator(i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(DoubleConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(ThreadLocalRandom.current().internalNextDouble(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(DoubleConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                double o = origin, b = bound;
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                do {
-                    consumer.accept(rng.internalNextDouble(o, b));
-                } while (++i < f);
-            }
-        }
     }
 
     // Within-package utilities

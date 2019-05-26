@@ -12,10 +12,6 @@ package java.util.concurrent;
  *     return new Thread(r);
  *   }
  * }}</pre>
- *
- * The {@link Executors#defaultThreadFactory} method provides a more
- * useful simple implementation, that sets the created thread context
- * to known values before returning it.
  */
 public interface ThreadFactory {
     /**

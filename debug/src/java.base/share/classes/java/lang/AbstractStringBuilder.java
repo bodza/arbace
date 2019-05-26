@@ -2,7 +2,6 @@ package java.lang;
 
 import jdk.internal.math.FloatingDecimal;
 import java.util.Arrays;
-import java.util.Spliterator;
 
 import static java.lang.String.COMPACT_STRINGS;
 import static java.lang.String.UTF16;
@@ -349,8 +348,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * the text range.
      * @param endIndex the index after the last {@code char} of
      * the text range.
-     * @return the number of Unicode code points in the specified text
-     * range
+     * @return the number of Unicode code points in the specified text range
      * @throws IndexOutOfBoundsException if the
      * {@code beginIndex} is negative, or {@code endIndex}
      * is larger than the length of this sequence, or

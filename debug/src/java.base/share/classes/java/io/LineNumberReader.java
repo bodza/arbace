@@ -31,8 +31,7 @@ public class LineNumberReader extends BufferedReader {
     private boolean markedSkipLF;
 
     /**
-     * Create a new line-numbering reader, using the default input-buffer
-     * size.
+     * Create a new line-numbering reader, using the default input-buffer size.
      *
      * @param in
      *         A Reader object to provide the underlying stream

@@ -32,8 +32,7 @@ public class BufferedOutputStream extends FilterOutputStream {
 
     /**
      * Creates a new buffered output stream to write data to the
-     * specified underlying output stream with the specified buffer
-     * size.
+     * specified underlying output stream with the specified buffer size.
      *
      * @param out    the underlying output stream.
      * @param size   the buffer size.

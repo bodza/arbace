@@ -5,7 +5,7 @@ import java.util.function.LongUnaryOperator;
 
 /**
  * A {@code long} value that may be updated atomically.  See the
- * {@link VarHandle} specification for descriptions of the properties
+ * {@link VarHandle} specification for descriptions of the properties
  * of atomic accesses. An {@code AtomicLong} is used in applications
  * such as atomically incremented sequence numbers, and cannot be used
  * as a replacement for a {@link java.lang.Long}. However, this class
@@ -53,7 +53,7 @@ public class AtomicLong extends Number {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      *
      * @return the current value
      */
@@ -63,7 +63,7 @@ public class AtomicLong extends Number {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setVolatile}.
+     * with memory effects as specified by {@link VarHandle#setVolatile}.
      *
      * @param newValue the new value
      */
@@ -74,7 +74,7 @@ public class AtomicLong extends Number {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -84,7 +84,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically sets the value to {@code newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * with memory effects as specified by {@link VarHandle#getAndSet}.
      *
      * @param newValue the new value
      * @return the previous value
@@ -96,7 +96,7 @@ public class AtomicLong extends Number {
     /**
      * Atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#compareAndSet}.
+     * with memory effects as specified by {@link VarHandle#compareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -110,7 +110,7 @@ public class AtomicLong extends Number {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @deprecated This method has plain memory effects but the method
      * name implies volatile memory effects (see methods such as
@@ -130,7 +130,7 @@ public class AtomicLong extends Number {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetPlain}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -142,7 +142,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically increments the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code getAndAdd(1)}.
      *
@@ -154,7 +154,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically decrements the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code getAndAdd(-1)}.
      *
@@ -166,7 +166,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically adds the given value to the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * @param delta the value to add
      * @return the previous value
@@ -177,7 +177,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically increments the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code addAndGet(1)}.
      *
@@ -189,7 +189,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically decrements the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * Equivalent to {@code addAndGet(-1)}.
      *
@@ -201,7 +201,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically adds the given value to the current value,
-     * with memory effects as specified by {@link VarHandle#getAndAdd}.
+     * with memory effects as specified by {@link VarHandle#getAndAdd}.
      *
      * @param delta the value to add
      * @return the updated value
@@ -212,7 +212,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function, returning the previous value. The
      * function should be side-effect-free, since it may be re-applied
      * when attempted updates fail due to contention among threads.
@@ -233,7 +233,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function, returning the updated value. The
      * function should be side-effect-free, since it may be re-applied
      * when attempted updates fail due to contention among threads.
@@ -254,7 +254,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function to the current and given values,
      * returning the previous value. The function should be
      * side-effect-free, since it may be re-applied when attempted
@@ -279,7 +279,7 @@ public class AtomicLong extends Number {
 
     /**
      * Atomically updates (with memory effects as specified by {@link
-     * VarHandle#compareAndSet}) the current value with the results of
+     * VarHandle#compareAndSet}) the current value with the results of
      * applying the given function to the current and given values,
      * returning the updated value. The function should be
      * side-effect-free, since it may be re-applied when attempted
@@ -313,7 +313,7 @@ public class AtomicLong extends Number {
     /**
      * Returns the current value of this {@code AtomicLong} as an {@code int}
      * after a narrowing primitive conversion,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      */
     public int intValue() {
         return (int)get();
@@ -321,7 +321,7 @@ public class AtomicLong extends Number {
 
     /**
      * Returns the current value of this {@code AtomicLong} as a {@code long},
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      * Equivalent to {@link #get()}.
      */
     public long longValue() {
@@ -331,7 +331,7 @@ public class AtomicLong extends Number {
     /**
      * Returns the current value of this {@code AtomicLong} as a {@code float}
      * after a widening primitive conversion,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      */
     public float floatValue() {
         return (float)get();
@@ -340,7 +340,7 @@ public class AtomicLong extends Number {
     /**
      * Returns the current value of this {@code AtomicLong} as a {@code double}
      * after a widening primitive conversion,
-     * with memory effects as specified by {@link VarHandle#getVolatile}.
+     * with memory effects as specified by {@link VarHandle#getVolatile}.
      */
     public double doubleValue() {
         return (double)get();
@@ -371,7 +371,7 @@ public class AtomicLong extends Number {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getOpaque}.
+     * with memory effects as specified by {@link VarHandle#getOpaque}.
      *
      * @return the value
      */
@@ -381,7 +381,7 @@ public class AtomicLong extends Number {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setOpaque}.
+     * with memory effects as specified by {@link VarHandle#setOpaque}.
      *
      * @param newValue the new value
      */
@@ -391,7 +391,7 @@ public class AtomicLong extends Number {
 
     /**
      * Returns the current value,
-     * with memory effects as specified by {@link VarHandle#getAcquire}.
+     * with memory effects as specified by {@link VarHandle#getAcquire}.
      *
      * @return the value
      */
@@ -401,7 +401,7 @@ public class AtomicLong extends Number {
 
     /**
      * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * with memory effects as specified by {@link VarHandle#setRelease}.
      *
      * @param newValue the new value
      */
@@ -412,8 +412,7 @@ public class AtomicLong extends Number {
     /**
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#compareAndExchange}.
+     * with memory effects as specified by {@link VarHandle#compareAndExchange}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -427,8 +426,7 @@ public class AtomicLong extends Number {
     /**
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeAcquire}.
+     * with memory effects as specified by {@link VarHandle#compareAndExchangeAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -442,8 +440,7 @@ public class AtomicLong extends Number {
     /**
      * Atomically sets the value to {@code newValue} if the current value,
      * referred to as the <em>witness value</em>, {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#compareAndExchangeRelease}.
+     * with memory effects as specified by {@link VarHandle#compareAndExchangeRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -457,8 +454,7 @@ public class AtomicLong extends Number {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSet}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSet}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -471,8 +467,7 @@ public class AtomicLong extends Number {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetAcquire}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetAcquire}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value
@@ -485,8 +480,7 @@ public class AtomicLong extends Number {
     /**
      * Possibly atomically sets the value to {@code newValue}
      * if the current value {@code == expectedValue},
-     * with memory effects as specified by
-     * {@link VarHandle#weakCompareAndSetRelease}.
+     * with memory effects as specified by {@link VarHandle#weakCompareAndSetRelease}.
      *
      * @param expectedValue the expected value
      * @param newValue the new value

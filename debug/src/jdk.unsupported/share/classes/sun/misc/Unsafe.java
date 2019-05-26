@@ -2,9 +2,7 @@ package sun.misc;
 
 import jdk.internal.misc.VM;
 import jdk.internal.ref.Cleaner;
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
-import sun.nio.ch.DirectBuffer;
 
 import java.lang.reflect.Field;
 
@@ -60,7 +58,7 @@ public final class Unsafe {
      *          class is not in the system domain in which all permissions
      *          are granted.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static Unsafe getUnsafe() {
         Class<?> caller = Reflection.getCallerClass();
         if (!VM.isSystemDomainLoader(caller.getClassLoader()))
@@ -114,8 +112,7 @@ public final class Unsafe {
      * from non-Java variables, programmers should not assume that these
      * two addressing modes are ever equivalent.  Also, programmers should
      * remember that offsets from the double-register addressing mode cannot
-     * be portably confused with longs used in the single-register addressing
-     * mode.
+     * be portably confused with longs used in the single-register addressing mode.
      *
      * @param o Java heap object in which the variable resides, if any, else
      *        null
@@ -1135,28 +1132,5 @@ public final class Unsafe {
     // @ForceInline
     public void fullFence() {
         theInternalUnsafe.fullFence();
-    }
-
-    /**
-     * Invokes the given direct byte buffer's cleaner, if any.
-     *
-     * @param directBuffer a direct byte buffer
-     * @throws NullPointerException if {@code directBuffer} is null
-     * @throws IllegalArgumentException if {@code directBuffer} is non-direct,
-     * or is a {@link java.nio.Buffer#slice slice}, or is a
-     * {@link java.nio.Buffer#duplicate duplicate}
-     */
-    public void invokeCleaner(java.nio.ByteBuffer directBuffer) {
-        if (!directBuffer.isDirect())
-            throw new IllegalArgumentException("buffer is non-direct");
-
-        DirectBuffer db = (DirectBuffer)directBuffer;
-        if (db.attachment() != null)
-            throw new IllegalArgumentException("duplicate or slice");
-
-        Cleaner cleaner = db.cleaner();
-        if (cleaner != null) {
-            cleaner.clean();
-        }
     }
 }

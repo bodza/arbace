@@ -60,8 +60,7 @@ public class ThreadLocal<T> {
     private final int threadLocalHashCode = nextHashCode();
 
     /**
-     * The next hash code to be given out. Updated atomically. Starts at
-     * zero.
+     * The next hash code to be given out. Updated atomically. Starts at zero.
      */
     private static AtomicInteger nextHashCode = new AtomicInteger();
 

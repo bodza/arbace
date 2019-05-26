@@ -802,9 +802,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *     argument is an instance of {@link ThreadDeath}. If so, nothing
      *     special is done. Otherwise, a message containing the
      *     thread's name, as returned from the thread's {@link
-     *     Thread#getName getName} method, and a stack backtrace,
-     *     using the {@code Throwable}'s {@link
-     *     Throwable#printStackTrace printStackTrace} method, is
+     *     Thread#getName getName} method, and a stack backtrace is
      *     printed to the {@linkplain System#err standard error stream}.
      * </ul>
      *
@@ -824,7 +822,6 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
                 ueh.uncaughtException(t, e);
             } else if (!(e instanceof ThreadDeath)) {
                 System.err.print("Exception in thread \"" + t.getName() + "\" ");
-                e.printStackTrace(System.err);
             }
         }
     }

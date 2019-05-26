@@ -118,7 +118,7 @@ public abstract class SocketImpl implements SocketOptions {
      * @return a stream for reading from this socket.
      * @throws IOException  if an I/O error occurs when creating the
      *               input stream.
-    */
+     */
     protected abstract InputStream getInputStream() throws IOException;
 
     /**

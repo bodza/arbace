@@ -622,7 +622,6 @@ public final class Float extends Number implements Comparable<Float> {
     }
 
     /**
-
      * Compares this object against the specified object.  The result
      * is {@code true} if and only if the argument is not
      * {@code null} and is a {@code Float} object that
@@ -630,8 +629,7 @@ public final class Float extends Number implements Comparable<Float> {
      * {@code float} represented by this object. For this
      * purpose, two {@code float} values are considered to be the
      * same if and only if the method {@link #floatToIntBits(float)}
-     * returns the identical {@code int} value when applied to
-     * each.
+     * returns the identical {@code int} value when applied to each.
      *
      * Note that in most cases, for two instances of class
      * {@code Float}, {@code f1} and {@code f2}, the value

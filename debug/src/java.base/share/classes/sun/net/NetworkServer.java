@@ -51,7 +51,6 @@ public class NetworkServer implements Runnable, Cloneable {
                     new Thread(null, n, "NetworkServer", 0, false).start();
                 } catch (Exception e) {
                     System.out.print("Server failure\n");
-                    e.printStackTrace();
                     try {
                         serverSocket.close();
                     } catch (IOException e2) {}
@@ -68,7 +67,6 @@ public class NetworkServer implements Runnable, Cloneable {
                 // System.out.print("Service handler exits " + clientSocket + "\n");
             } catch (Exception e) {
                 // System.out.print("Service handler failure\n");
-                // e.printStackTrace();
             }
             try {
                 close();
@@ -87,12 +85,12 @@ public class NetworkServer implements Runnable, Cloneable {
     }
 
     /**
-      * Service one request.  It is invoked with the clientInput and
-      * clientOutput streams initialized.  This method handles one client
-      * connection. When it is done, it can simply exit. The default
-      * server just echoes it's input. It is invoked in it's own private
-      * thread.
-      */
+     * Service one request.  It is invoked with the clientInput and
+     * clientOutput streams initialized.  This method handles one client
+     * connection. When it is done, it can simply exit. The default
+     * server just echoes it's input. It is invoked in it's own private
+     * thread.
+     */
     public void serviceRequest() throws IOException {
         byte buf[] = new byte[300];
         int n;

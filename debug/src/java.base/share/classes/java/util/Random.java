@@ -185,7 +185,7 @@ public class Random {
     }
 
     /**
-     * The form of nextLong used by LongStream Spliterators.  If
+     * The form of nextLong used by LongStream Spliterators.  If
      * origin is greater than bound, acts as unbounded form of
      * nextLong, else as bounded form.
      *
@@ -215,7 +215,7 @@ public class Random {
     }
 
     /**
-     * The form of nextInt used by IntStream Spliterators.
+     * The form of nextInt used by IntStream Spliterators.
      * For the unbounded case: uses nextInt().
      * For the bounded case with representable range: uses nextInt(int bound)
      * For the bounded case with unrepresentable range: uses nextInt()
@@ -244,7 +244,7 @@ public class Random {
     }
 
     /**
-     * The form of nextDouble used by DoubleStream Spliterators.
+     * The form of nextDouble used by DoubleStream Spliterators.
      *
      * @param origin the least value, unless greater than bound
      * @param bound the upper bound (exclusive), must not equal origin
@@ -545,177 +545,6 @@ public class Random {
             nextNextGaussian = v2 * multiplier;
             haveNextNextGaussian = true;
             return v1 * multiplier;
-        }
-    }
-
-    // stream methods, coded in a way intended to better isolate for
-    // maintenance purposes the small differences across forms.
-
-    /**
-     * Spliterator for int streams.  We multiplex the four int
-     * versions into one class by treating a bound less than origin as
-     * unbounded, and also by treating "infinite" as equivalent to
-     * Long.MAX_VALUE. For splits, it uses the standard divide-by-two
-     * approach. The long and double versions of this class are
-     * identical except for types.
-     */
-    static final class RandomIntsSpliterator implements Spliterator.OfInt {
-        final Random rng;
-        long index;
-        final long fence;
-        final int origin;
-        final int bound;
-        RandomIntsSpliterator(Random rng, long index, long fence, int origin, int bound) {
-            this.rng = rng; this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomIntsSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomIntsSpliterator(rng, i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED |
-                    Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(IntConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(rng.internalNextInt(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(IntConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                Random r = rng;
-                int o = origin, b = bound;
-                do {
-                    consumer.accept(r.internalNextInt(o, b));
-                } while (++i < f);
-            }
-        }
-    }
-
-    /**
-     * Spliterator for long streams.
-     */
-    static final class RandomLongsSpliterator implements Spliterator.OfLong {
-        final Random rng;
-        long index;
-        final long fence;
-        final long origin;
-        final long bound;
-        RandomLongsSpliterator(Random rng, long index, long fence, long origin, long bound) {
-            this.rng = rng; this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomLongsSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomLongsSpliterator(rng, i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(LongConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(rng.internalNextLong(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(LongConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                Random r = rng;
-                long o = origin, b = bound;
-                do {
-                    consumer.accept(r.internalNextLong(o, b));
-                } while (++i < f);
-            }
-        }
-    }
-
-    /**
-     * Spliterator for double streams.
-     */
-    static final class RandomDoublesSpliterator implements Spliterator.OfDouble {
-        final Random rng;
-        long index;
-        final long fence;
-        final double origin;
-        final double bound;
-        RandomDoublesSpliterator(Random rng, long index, long fence, double origin, double bound) {
-            this.rng = rng; this.index = index; this.fence = fence;
-            this.origin = origin; this.bound = bound;
-        }
-
-        public RandomDoublesSpliterator trySplit() {
-            long i = index, m = (i + fence) >>> 1;
-            return (m <= i) ? null : new RandomDoublesSpliterator(rng, i, index = m, origin, bound);
-        }
-
-        public long estimateSize() {
-            return fence - index;
-        }
-
-        public int characteristics() {
-            return (Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-        }
-
-        public boolean tryAdvance(DoubleConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                consumer.accept(rng.internalNextDouble(origin, bound));
-                index = i + 1;
-                return true;
-            }
-            return false;
-        }
-
-        public void forEachRemaining(DoubleConsumer consumer) {
-            if (consumer == null)
-                throw new NullPointerException();
-            long i = index, f = fence;
-            if (i < f) {
-                index = f;
-                Random r = rng;
-                double o = origin, b = bound;
-                do {
-                    consumer.accept(r.internalNextDouble(o, b));
-                } while (++i < f);
-            }
         }
     }
 

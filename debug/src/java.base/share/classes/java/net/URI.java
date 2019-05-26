@@ -156,8 +156,7 @@ import java.lang.NullPointerException; // for javadoc
  * &nbsp;&nbsp;&nbsp;&nbsp;(1)
  * </blockquote>
  *
- * against the base URI {@code http://example.com/languages/java/} is the result
- * URI
+ * against the base URI {@code http://example.com/languages/java/} is the result URI
  *
  * <blockquote>
  * {@code http://example.com/languages/java/sample/a/index.html#28}
@@ -179,8 +178,7 @@ import java.lang.NullPointerException; // for javadoc
  * relative paths in the case of hierarchical URIs, is supported.  Resolving
  * the URI {@code file:///~calendar} against any other URI simply yields the
  * original URI, since it is absolute.  Resolving the relative URI (2) above
- * against the relative base URI (1) yields the normalized, but still relative,
- * URI
+ * against the relative base URI (1) yields the normalized, but still relative, URI
  *
  * <blockquote>
  * {@code demo/b/index.html}
@@ -1313,8 +1311,7 @@ public final class URI implements Comparable<URI> {
      * When testing the user-information, path, query, fragment, authority,
      * or scheme-specific parts of two URIs for equality, the raw forms rather
      * than the encoded forms of these components are compared and the
-     * hexadecimal digits of escaped octets are compared without regard to
-     * case.
+     * hexadecimal digits of escaped octets are compared without regard to case.
      *
      * This method satisfies the general contract of the {@link
      * java.lang.Object#equals(Object) Object.equals} method.

@@ -1,26 +1,17 @@
 package java.nio;
 
 /**
-
  * A read-only HeapShortBuffer.  This class extends the corresponding
  * read/write class, overriding the mutation methods to throw a {@link
  * ReadOnlyBufferException} and overriding the view-buffer methods to return an
  * instance of this class rather than of the superclass.
-
  */
-
 class HeapShortBufferR extends HeapShortBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(short[].class);
 
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(short[].class);
-
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    */
 
     HeapShortBufferR(int cap, int lim) {
         super(cap, lim);

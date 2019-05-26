@@ -1,11 +1,8 @@
 package java.nio;
 
 /**
-
  * A read/write HeapByteBuffer.
-
  */
-
 class HeapByteBuffer extends ByteBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
@@ -13,39 +10,18 @@ class HeapByteBuffer extends ByteBuffer {
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(byte[].class);
 
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    protected final byte[] hb;
-    protected final int offset;
-
-    */
-
     HeapByteBuffer(int cap, int lim) {
         super(-1, 0, lim, cap, new byte[cap], 0);
-        /*
-        hb = new byte[cap];
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     HeapByteBuffer(byte[] buf, int off, int len) {
         super(-1, off, off + len, buf.length, buf, 0);
-        /*
-        hb = buf;
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     protected HeapByteBuffer(byte[] buf, int mark, int pos, int lim, int cap, int off) {
         super(mark, pos, lim, cap, buf, off);
-        /*
-        hb = buf;
-        offset = off;
-        */
         this.address = ARRAY_BASE_OFFSET + off * ARRAY_INDEX_SCALE;
     }
 

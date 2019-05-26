@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Find resources and packages in modules defined to the boot class loader or
@@ -18,12 +17,12 @@ public class BootLoader {
     private BootLoader() { }
 
     // ClassLoaderValue map for the boot class loader
-    private static final ConcurrentHashMap<?, ?> CLASS_LOADER_VALUE_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<?, ?> CLASS_LOADER_VALUE_MAP = new ConcurrentHashMap<>();
 
     /**
      * Returns the ClassLoaderValue map for the boot class loader.
      */
-    public static ConcurrentHashMap<?, ?> getClassLoaderValueMap() {
+    public static ConcurrentHashMap<?, ?> getClassLoaderValueMap() {
         return CLASS_LOADER_VALUE_MAP;
     }
 
@@ -55,14 +54,6 @@ public class BootLoader {
             }
         }
         return pkg;
-    }
-
-    /**
-     * Returns a stream of the packages defined to the boot loader.
-     */
-    public static Stream<Package> packages() {
-        return Arrays.stream(getSystemPackageNames())
-                     .map(name -> getDefinedPackage(name.replace('/', '.')));
     }
 
     /**

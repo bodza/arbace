@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Predicate;
 
 /**
@@ -574,8 +572,7 @@ import java.util.function.Predicate;
  * defined in the Standard, both normative and informative.
  *
  * <b><a id="ubpc">Binary properties</a></b> are specified with the prefix {@code Is}, as in
- * {@code IsAlphabetic}. The supported binary properties by {@code Pattern}
- * are
+ * {@code IsAlphabetic}. The supported binary properties by {@code Pattern} are
  * <ul>
  *   <li>Alphabetic
  *   <li>Ideographic
@@ -908,8 +905,7 @@ public final class Pattern {
 
     /**
      * The root of object tree for a match operation.  The pattern is matched
-     * at the beginning.  This may include a find that uses BnM or a First
-     * node.
+     * at the beginning.  This may include a find that uses BnM or a First node.
      */
     transient Node matchRoot;
 
@@ -924,8 +920,7 @@ public final class Pattern {
     transient CharPredicate predicate;
 
     /**
-     * Map the "name" of the "named capturing group" to its group id
-     * node.
+     * Map the "name" of the "named capturing group" to its group id node.
      */
     transient volatile Map<String, Integer> namedGroups;
 
@@ -2609,22 +2604,23 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
 
     private CharPredicate bitsOrSingle(BitClass bits, int ch) {
         /* Bits can only handle codepoints in [u+0000-u+00ff] range.
-           Use "single" node instead of bits when dealing with unicode
-           case folding for codepoints listed below.
-           (1)Uppercase out of range: u+00ff, u+00b5
-              toUpperCase(u+00ff) -> u+0178
-              toUpperCase(u+00b5) -> u+039c
-           (2)LatinSmallLetterLongS u+17f
-              toUpperCase(u+017f) -> u+0053
-           (3)LatinSmallLetterDotlessI u+131
-              toUpperCase(u+0131) -> u+0049
-           (4)LatinCapitalLetterIWithDotAbove u+0130
-              toLowerCase(u+0130) -> u+0069
-           (5)KelvinSign u+212a
-              toLowerCase(u+212a) ==> u+006B
-           (6)AngstromSign u+212b
-              toLowerCase(u+212b) ==> u+00e5
-        */
+         * Use "single" node instead of bits when dealing with unicode
+         * case folding for codepoints listed below.
+         *
+         * (1) Uppercase out of range: u+00ff, u+00b5
+         *    toUpperCase(u+00ff) -> u+0178
+         *    toUpperCase(u+00b5) -> u+039c
+         * (2) LatinSmallLetterLongS u+17f
+         *    toUpperCase(u+017f) -> u+0053
+         * (3) LatinSmallLetterDotlessI u+131
+         *    toUpperCase(u+0131) -> u+0049
+         * (4) LatinCapitalLetterIWithDotAbove u+0130
+         *    toLowerCase(u+0130) -> u+0069
+         * (5) KelvinSign u+212a
+         *    toLowerCase(u+212a) ==> u+006B
+         * (6) AngstromSign u+212b
+         *    toLowerCase(u+212b) ==> u+00e5
+         */
         if (ch < 256 && !(has(CASE_INSENSITIVE) && has(UNICODE_CASE) &&
               (ch == 0xff || ch == 0xb5 ||
                ch == 0x49 || ch == 0x69 ||    // I and i

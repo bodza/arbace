@@ -1,7 +1,6 @@
 package java.net;
 
 import java.io.IOException;
-import java.nio.channels.DatagramChannel;
 import java.util.Set;
 import java.util.Collections;
 
@@ -462,9 +461,6 @@ public class DatagramSocket implements java.io.Closeable {
      * @throws PortUnreachableException may be thrown if the socket is connected
      *             to a currently unreachable destination. Note, there is no
      *             guarantee that the exception will be thrown.
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *             if this socket has an associated channel,
-     *             and the channel is in non-blocking mode.
      * @throws IllegalArgumentException if the socket is connected,
      *             and connected address and packet address differ.
      */
@@ -512,9 +508,6 @@ public class DatagramSocket implements java.io.Closeable {
      * @throws PortUnreachableException may be thrown if the socket is connected
      *             to a currently unreachable destination. Note, there is no guarantee that the
      *             exception will be thrown.
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *             if this socket has an associated channel,
-     *             and the channel is in non-blocking mode.
      */
     public synchronized void receive(DatagramPacket p) throws IOException {
         synchronized (p) {

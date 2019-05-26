@@ -173,8 +173,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
     }
 
     /**
-     * Returns {@code true} if this map contains a mapping for the specified
-     * key.
+     * Returns {@code true} if this map contains a mapping for the specified key.
      *
      * @param key the key whose presence in this map is to be tested
      * @return {@code true} if this map contains a mapping for the specified

@@ -208,7 +208,6 @@ import java.util.TreeMap;
  * between sequences of sixteen-bit UTF-16 code units (that is, sequences
  * of chars) and sequences of bytes.
  */
-
 public abstract class Charset implements Comparable<Charset> {
     /* -- Static methods -- */
 
@@ -407,8 +406,7 @@ public abstract class Charset implements Comparable<Charset> {
     private Set<String> aliasSet = null;
 
     /**
-     * Initializes a new charset with the given canonical name and alias
-     * set.
+     * Initializes a new charset with the given canonical name and alias set.
      *
      * @param canonicalName
      *         The canonical name of this charset
@@ -495,8 +493,7 @@ public abstract class Charset implements Comparable<Charset> {
      *
      * That <i>C</i> contains <i>D</i> does not imply that each character
      * representable in <i>C</i> by a particular byte sequence is represented
-     * in <i>D</i> by the same byte sequence, although sometimes this is the
-     * case.
+     * in <i>D</i> by the same byte sequence, although sometimes this is the case.
      *
      * Every charset contains itself.
      *
@@ -633,8 +630,7 @@ public abstract class Charset implements Comparable<Charset> {
     /**
      * Compares this charset to another.
      *
-     * Charsets are ordered by their canonical names, without regard to
-     * case.
+     * Charsets are ordered by their canonical names, without regard to case.
      *
      * @param that
      *         The charset to which this charset is to be compared

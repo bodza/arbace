@@ -5,72 +5,48 @@ import jdk.internal.util.ArraysSupport;
 /**
  * A short buffer.
  *
- * <p> This class defines four categories of operations upon
+ * This class defines four categories of operations upon
  * short buffers:
  *
  * <ul>
  *
- *   <li><p> Absolute and relative {@link #get() <i>get</i>} and
+ *   <li>Absolute and relative {@link #get() <i>get</i>} and
  *   {@link #put(short) <i>put</i>} methods that read and write
- *   single shorts; </p></li>
+ *   single shorts;</li>
  *
- *   <li><p> Relative {@link #get(short[]) <i>bulk get</i>}
+ *   <li>Relative {@link #get(short[]) <i>bulk get</i>}
  *   methods that transfer contiguous sequences of shorts from this buffer
- *   into an array; and</p></li>
+ *   into an array; and</li>
  *
- *   <li><p> Relative {@link #put(short[]) <i>bulk put</i>}
+ *   <li>Relative {@link #put(short[]) <i>bulk put</i>}
  *   methods that transfer contiguous sequences of shorts from a
  *   short array or some other short
- *   buffer into this buffer;&#32;and </p></li>
+ *   buffer into this buffer;&#32;and</li>
  *
-
- *
- *   <li><p> A method for {@link #compact compacting}
- *   a short buffer.  </p></li>
+ *   <li>A method for {@link #compact compacting}
+ *   a short buffer.</li>
  *
  * </ul>
  *
- * <p> Short buffers can be created either by {@link #allocate
+ * Short buffers can be created either by {@link #allocate
  * <i>allocation</i>}, which allocates space for the buffer's
- *
-
  *
  * content, by {@link #wrap(short[]) <i>wrapping</i>} an existing
  * short array  into a buffer, or by creating a
  * <a href="ByteBuffer.html#views"><i>view</i></a> of an existing byte buffer.
  *
-
- *
-
-*
-
- *
- * <p> Like a byte buffer, a short buffer is either <a
+ * Like a byte buffer, a short buffer is either <a
  * href="ByteBuffer.html#direct"><i>direct</i> or <i>non-direct</i></a>.  A
  * short buffer created via the {@code wrap} methods of this class will
  * be non-direct.  A short buffer created as a view of a byte buffer will
  * be direct if, and only if, the byte buffer itself is direct.  Whether or not
  * a short buffer is direct may be determined by invoking the {@link
- * #isDirect isDirect} method.  </p>
+ * #isDirect isDirect} method.
  *
-
-*
-
- *
-
- *
- * <p> Methods in this class that do not otherwise have a value to return are
+ * Methods in this class that do not otherwise have a value to return are
  * specified to return the buffer upon which they are invoked.  This allows
  * method invocations to be chained.
- *
-
- *
- *
- * @author Mark Reinhold
- * @author JSR-51 Expert Group
- * @since 1.4
  */
-
 public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuffer> {
     // These fields are declared here rather than in Heap-X-Buffer in order to
     // reduce the number of virtual method invocations needed to access these
@@ -103,13 +79,13 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Allocates a new short buffer.
      *
-     * <p> The new buffer's position will be zero, its limit will be its
+     * The new buffer's position will be zero, its limit will be its
      * capacity, its mark will be undefined, each of its elements will be
      * initialized to zero, and its byte order will be
-
+     *
      * the {@link ByteOrder#nativeOrder native order} of the underlying
      * hardware.
-
+     *
      * It will have a {@link #array backing array}, and its
      * {@link #arrayOffset array offset} will be zero.
      *
@@ -130,18 +106,18 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Wraps a short array into a buffer.
      *
-     * <p> The new buffer will be backed by the given short array;
+     * The new buffer will be backed by the given short array;
      * that is, modifications to the buffer will cause the array to be modified
      * and vice versa.  The new buffer's capacity will be
      * {@code array.length}, its position will be {@code offset}, its limit
      * will be {@code offset + length}, its mark will be undefined, and its
      * byte order will be
-
+     *
      * the {@link ByteOrder#nativeOrder native order} of the underlying
      * hardware.
-
+     *
      * Its {@link #array backing array} will be the given array, and
-     * its {@link #arrayOffset array offset} will be zero.  </p>
+     * its {@link #arrayOffset array offset} will be zero.
      *
      * @param  array
      *         The array that will back the new buffer
@@ -174,17 +150,17 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Wraps a short array into a buffer.
      *
-     * <p> The new buffer will be backed by the given short array;
+     * The new buffer will be backed by the given short array;
      * that is, modifications to the buffer will cause the array to be modified
      * and vice versa.  The new buffer's capacity and limit will be
      * {@code array.length}, its position will be zero, its mark will be
      * undefined, and its byte order will be
-
+     *
      * the {@link ByteOrder#nativeOrder native order} of the underlying
      * hardware.
-
+     *
      * Its {@link #array backing array} will be the given array, and its
-     * {@link #arrayOffset array offset} will be zero.  </p>
+     * {@link #arrayOffset array offset} will be zero.
      *
      * @param  array
      *         The array that will back this buffer
@@ -199,22 +175,21 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Creates a new short buffer whose content is a shared subsequence of
      * this buffer's content.
      *
-     * <p> The content of the new buffer will start at this buffer's current
+     * The content of the new buffer will start at this buffer's current
      * position.  Changes to this buffer's content will be visible in the new
      * buffer, and vice versa; the two buffers' position, limit, and mark
      * values will be independent.
      *
-     * <p> The new buffer's position will be zero, its capacity and its limit
+     * The new buffer's position will be zero, its capacity and its limit
      * will be the number of shorts remaining in this buffer, its mark will be
      * undefined, and its byte order will be
-
+     *
      * identical to that of this buffer.
-
+     *
      * The new buffer will be direct if, and only if, this buffer is direct, and
-     * it will be read-only if, and only if, this buffer is read-only.  </p>
+     * it will be read-only if, and only if, this buffer is read-only.
      *
      * @return  The new short buffer
-
      */
     @Override
     public abstract ShortBuffer slice();
@@ -222,17 +197,17 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Creates a new short buffer that shares this buffer's content.
      *
-     * <p> The content of the new buffer will be that of this buffer.  Changes
+     * The content of the new buffer will be that of this buffer.  Changes
      * to this buffer's content will be visible in the new buffer, and vice
      * versa; the two buffers' position, limit, and mark values will be
      * independent.
      *
-     * <p> The new buffer's capacity, limit, position,
-
+     * The new buffer's capacity, limit, position,
+     *
      * mark values, and byte order will be identical to those of this buffer.
-
+     *
      * The new buffer will be direct if, and only if, this buffer is direct, and
-     * it will be read-only if, and only if, this buffer is read-only.  </p>
+     * it will be read-only if, and only if, this buffer is read-only.
      *
      * @return  The new short buffer
      */
@@ -243,19 +218,18 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Creates a new, read-only short buffer that shares this buffer's
      * content.
      *
-     * <p> The content of the new buffer will be that of this buffer.  Changes
+     * The content of the new buffer will be that of this buffer.  Changes
      * to this buffer's content will be visible in the new buffer; the new
      * buffer itself, however, will be read-only and will not allow the shared
      * content to be modified.  The two buffers' position, limit, and mark
      * values will be independent.
      *
-     * <p> The new buffer's capacity, limit, position,
-
-     * mark values, and byte order will be identical to those of this buffer.
-
+     * The new buffer's capacity, limit, position,
      *
-     * <p> If this buffer is itself read-only then this method behaves in
-     * exactly the same way as the {@link #duplicate duplicate} method.  </p>
+     * mark values, and byte order will be identical to those of this buffer.
+     *
+     * If this buffer is itself read-only then this method behaves in
+     * exactly the same way as the {@link #duplicate duplicate} method.
      *
      * @return  The new, read-only short buffer
      */
@@ -277,8 +251,8 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> Writes the given short into this buffer at the current
-     * position, and then increments the position. </p>
+     * Writes the given short into this buffer at the current
+     * position, and then increments the position.
      *
      * @param  s
      *         The short to be written
@@ -311,8 +285,8 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Absolute <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> Writes the given short into this buffer at the given
-     * index. </p>
+     * Writes the given short into this buffer at the given
+     * index.
      *
      * @param  index
      *         The index at which the short will be written
@@ -336,19 +310,19 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative bulk <i>get</i> method.
      *
-     * <p> This method transfers shorts from this buffer into the given
+     * This method transfers shorts from this buffer into the given
      * destination array.  If there are fewer shorts remaining in the
      * buffer than are required to satisfy the request, that is, if
      * {@code length}&nbsp;{@code >}&nbsp;{@code remaining()}, then no
      * shorts are transferred and a {@link BufferUnderflowException} is
      * thrown.
      *
-     * <p> Otherwise, this method copies {@code length} shorts from this
+     * Otherwise, this method copies {@code length} shorts from this
      * buffer into the given array, starting at the current position of this
      * buffer and at the given offset in the array.  The position of this
      * buffer is then incremented by {@code length}.
      *
-     * <p> In other words, an invocation of this method of the form
+     * In other words, an invocation of this method of the form
      * <code>src.get(dst,&nbsp;off,&nbsp;len)</code> has exactly the same effect as
      * the loop
      *
@@ -396,7 +370,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative bulk <i>get</i> method.
      *
-     * <p> This method transfers shorts from this buffer into the given
+     * This method transfers shorts from this buffer into the given
      * destination array.  An invocation of this method of the form
      * {@code src.get(a)} behaves in exactly the same way as the invocation
      *
@@ -421,19 +395,19 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> This method transfers the shorts remaining in the given source
+     * This method transfers the shorts remaining in the given source
      * buffer into this buffer.  If there are more shorts remaining in the
      * source buffer than in this buffer, that is, if
      * {@code src.remaining()}&nbsp;{@code >}&nbsp;{@code remaining()},
      * then no shorts are transferred and a {@link
      * BufferOverflowException} is thrown.
      *
-     * <p> Otherwise, this method copies
+     * Otherwise, this method copies
      * <i>n</i>&nbsp;=&nbsp;{@code src.remaining()} shorts from the given
      * buffer into this buffer, starting at each buffer's current position.
      * The positions of both buffers are then incremented by <i>n</i>.
      *
-     * <p> In other words, an invocation of this method of the form
+     * In other words, an invocation of this method of the form
      * {@code dst.put(src)} has exactly the same effect as the loop
      *
      * <pre>
@@ -475,19 +449,19 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> This method transfers shorts into this buffer from the given
+     * This method transfers shorts into this buffer from the given
      * source array.  If there are more shorts to be copied from the array
      * than remain in this buffer, that is, if
      * {@code length}&nbsp;{@code >}&nbsp;{@code remaining()}, then no
      * shorts are transferred and a {@link BufferOverflowException} is
      * thrown.
      *
-     * <p> Otherwise, this method copies {@code length} shorts from the
+     * Otherwise, this method copies {@code length} shorts from the
      * given array into this buffer, starting at the given offset in the array
      * and at the current position of this buffer.  The position of this buffer
      * is then incremented by {@code length}.
      *
-     * <p> In other words, an invocation of this method of the form
+     * In other words, an invocation of this method of the form
      * <code>dst.put(src,&nbsp;off,&nbsp;len)</code> has exactly the same effect as
      * the loop
      *
@@ -536,7 +510,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Relative bulk <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> This method transfers the entire content of the given source
+     * This method transfers the entire content of the given source
      * short array into this buffer.  An invocation of this method of the
      * form {@code dst.put(a)} behaves in exactly the same way as the
      * invocation
@@ -565,9 +539,8 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Tells whether or not this buffer is backed by an accessible short
      * array.
      *
-     * <p> If this method returns {@code true} then the {@link #array() array}
+     * If this method returns {@code true} then the {@link #array() array}
      * and {@link #arrayOffset() arrayOffset} methods may safely be invoked.
-     * </p>
      *
      * @return  {@code true} if, and only if, this buffer
      *          is backed by an array and is not read-only
@@ -580,12 +553,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Returns the short array that backs this
      * buffer&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> Modifications to this buffer's content will cause the returned
+     * Modifications to this buffer's content will cause the returned
      * array's content to be modified, and vice versa.
      *
-     * <p> Invoke the {@link #hasArray hasArray} method before invoking this
+     * Invoke the {@link #hasArray hasArray} method before invoking this
      * method in order to ensure that this buffer has an accessible backing
-     * array.  </p>
+     * array.
      *
      * @return  The array that backs this buffer
      *
@@ -607,12 +580,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Returns the offset within this buffer's backing array of the first
      * element of the buffer&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> If this buffer is backed by an array then buffer position <i>p</i>
+     * If this buffer is backed by an array then buffer position <i>p</i>
      * corresponds to array index <i>p</i>&nbsp;+&nbsp;{@code arrayOffset()}.
      *
-     * <p> Invoke the {@link #hasArray hasArray} method before invoking this
+     * Invoke the {@link #hasArray hasArray} method before invoking this
      * method in order to ensure that this buffer has an accessible backing
-     * array.  </p>
+     * array.
      *
      * @return  The offset within this buffer's array
      *          of the first element of the buffer
@@ -727,7 +700,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Compacts this buffer&nbsp;&nbsp;<i>(optional operation)</i>.
      *
-     * <p> The shorts between the buffer's current position and its limit,
+     * The shorts between the buffer's current position and its limit,
      * if any, are copied to the beginning of the buffer.  That is, the
      * short at index <i>p</i>&nbsp;=&nbsp;{@code position()} is copied
      * to index zero, the short at index <i>p</i>&nbsp;+&nbsp;1 is copied
@@ -737,12 +710,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * The buffer's position is then set to <i>n+1</i> and its limit is set to
      * its capacity.  The mark, if defined, is discarded.
      *
-     * <p> The buffer's position is set to the number of shorts copied,
+     * The buffer's position is set to the number of shorts copied,
      * rather than to zero, so that an invocation of this method can be
      * followed immediately by an invocation of another relative <i>put</i>
-     * method. </p>
-     *
-
+     * method.
      *
      * @return  This buffer
      *
@@ -779,13 +750,13 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Returns the current hash code of this buffer.
      *
-     * <p> The hash code of a short buffer depends only upon its remaining
+     * The hash code of a short buffer depends only upon its remaining
      * elements; that is, upon the elements from {@code position()} up to, and
      * including, the element at {@code limit()}&nbsp;-&nbsp;{@code 1}.
      *
-     * <p> Because buffer hash codes are content-dependent, it is inadvisable
+     * Because buffer hash codes are content-dependent, it is inadvisable
      * to use buffers as keys in hash maps or similar data structures unless it
-     * is known that their contents will not change.  </p>
+     * is known that their contents will not change.
      *
      * @return  The current hash code of this buffer
      */
@@ -802,23 +773,18 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Tells whether or not this buffer is equal to another object.
      *
-     * <p> Two short buffers are equal if, and only if,
+     * Two short buffers are equal if, and only if,
      *
      * <ol>
+     *   <li>They have the same element type,</li>
      *
-     *   <li><p> They have the same element type,  </p></li>
+     *   <li>They have the same number of remaining elements, and</li>
      *
-     *   <li><p> They have the same number of remaining elements, and
-     *   </p></li>
-     *
-     *   <li><p> The two sequences of remaining elements, considered
-     *   independently of their starting positions, are pointwise equal.
-
-     *   </p></li>
-     *
+     *   <li>The two sequences of remaining elements, considered
+     *   independently of their starting positions, are pointwise equal.</li>
      * </ol>
      *
-     * <p> A short buffer is not equal to any other type of object.  </p>
+     * A short buffer is not equal to any other type of object.
      *
      * @param  ob  The object to which this buffer is to be compared
      *
@@ -841,15 +807,14 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Compares this buffer to another.
      *
-     * <p> Two short buffers are compared by comparing their sequences of
+     * Two short buffers are compared by comparing their sequences of
      * remaining elements lexicographically, without regard to the starting
      * position of each sequence within its corresponding buffer.
-
+     *
      * Pairs of {@code short} elements are compared as if by invoking
      * {@link Short#compare(short,short)}.
-
      *
-     * <p> A short buffer is not comparable to any other type of object.
+     * A short buffer is not comparable to any other type of object.
      *
      * @return  A negative integer, zero, or a positive integer as this buffer
      *          is less than, equal to, or greater than the given buffer
@@ -875,7 +840,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * 0 (inclusive) up to the smaller of the {@link #remaining() remaining}
      * elements in each buffer (exclusive).
      *
-     * <p> If the two buffers share a common prefix then the returned index is
+     * If the two buffers share a common prefix then the returned index is
      * the length of the common prefix and it follows that there is a mismatch
      * between the two buffers at that index within the respective buffers.
      * If one buffer is a proper prefix of the other then the returned index is
@@ -889,8 +854,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *
      * @return  The relative index of the first mismatch between this and the
      *          given buffer, otherwise -1 if no mismatch.
-     *
-     * @since 11
      */
     public int mismatch(ShortBuffer that) {
         int length = Math.min(this.remaining(), that.remaining());
@@ -907,12 +870,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Retrieves this buffer's byte order.
      *
-     * <p> The byte order of a short buffer created by allocation or by
+     * The byte order of a short buffer created by allocation or by
      * wrapping an existing {@code short} array is the {@link
      * ByteOrder#nativeOrder native order} of the underlying
      * hardware.  The byte order of a short buffer created as a <a
      * href="ByteBuffer.html#views">view</a> of a byte buffer is that of the
-     * byte buffer at the moment that the view is created.  </p>
+     * byte buffer at the moment that the view is created.
      *
      * @return  This buffer's byte order
      */

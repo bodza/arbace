@@ -195,7 +195,7 @@ public class Preconditions {
      * perform unsigned comparisons of the index and length when it is known the
      * length is a non-negative value (such as that of an array length or from
      * the upper bound of a loop)
-    */
+     */
     // @HotSpotIntrinsicCandidate
     public static <X extends RuntimeException> int checkIndex(int index, int length, BiFunction<String, List<Integer>, X> oobef) {
         if (index < 0 || index >= length)

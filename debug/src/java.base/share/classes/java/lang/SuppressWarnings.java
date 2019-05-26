@@ -1,7 +1,5 @@
 package java.lang;
 
-import static java.lang.annotation.ElementType.*;
-
 /**
  * Indicates that the named compiler warnings should be suppressed in the
  * annotated element (and in all program elements contained in the annotated

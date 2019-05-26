@@ -145,8 +145,7 @@ public interface List<E> extends Collection<E> {
      * allocate a new array even if this list is backed by an array).
      * The caller is thus free to modify the returned array.
      *
-     * This method acts as bridge between array-based and collection-based
-     * APIs.
+     * This method acts as bridge between array-based and collection-based APIs.
      *
      * @return an array containing all of the elements in this list in proper
      *         sequence
@@ -558,8 +557,7 @@ public interface List<E> extends Collection<E> {
     /**
      * Removes the element at the specified position in this list (optional
      * operation).  Shifts any subsequent elements to the left (subtracts one
-     * from their indices).  Returns the element that was removed from the
-     * list.
+     * from their indices).  Returns the element that was removed from the list.
      *
      * @param index the index of the element to be removed
      * @return the element previously at the specified position
@@ -674,47 +672,6 @@ public interface List<E> extends Collection<E> {
      *         ({@code fromIndex < 0 || toIndex > size || fromIndex > toIndex})
      */
     List<E> subList(int fromIndex, int toIndex);
-
-    /**
-     * Creates a {@link Spliterator} over the elements in this list.
-     *
-     * The {@code Spliterator} reports {@link Spliterator#SIZED} and
-     * {@link Spliterator#ORDERED}.  Implementations should document the
-     * reporting of additional characteristic values.
-     *
-     * @implSpec
-     * The default implementation creates a
-     * <em><a href="Spliterator.html#binding">late-binding</a></em>
-     * spliterator as follows:
-     * <ul>
-     * <li>If the list is an instance of {@link RandomAccess} then the default
-     *     implementation creates a spliterator that traverses elements by
-     *     invoking the method {@link List#get}.  If such invocation results or
-     *     would result in an {@code IndexOutOfBoundsException} then the
-     *     spliterator will <em>fail-fast</em> and throw a
-     *     {@code ConcurrentModificationException}.
-     *     If the list is also an instance of {@link AbstractList} then the
-     *     spliterator will use the list's {@link AbstractList#modCount modCount}
-     *     field to provide additional <em>fail-fast</em> behavior.
-     * <li>Otherwise, the default implementation creates a spliterator from the
-     *     list's {@code Iterator}.  The spliterator inherits the
-     *     <em>fail-fast</em> of the list's iterator.
-     * </ul>
-     *
-     * @implNote
-     * The created {@code Spliterator} additionally reports
-     * {@link Spliterator#SUBSIZED}.
-     *
-     * @return a {@code Spliterator} over the elements in this list
-     */
-    @Override
-    default Spliterator<E> spliterator() {
-        if (this instanceof RandomAccess) {
-            return new AbstractList.RandomAccessSpliterator<>(this);
-        } else {
-            return Spliterators.spliterator(this, Spliterator.ORDERED);
-        }
-    }
 
     /**
      * Returns an unmodifiable list containing zero elements.
@@ -936,7 +893,7 @@ public interface List<E> extends Collection<E> {
      * @return a {@code List} containing the specified elements
      * @throws NullPointerException if an element is {@code null} or if the array is {@code null}
      */
-    @SafeVarargs
+    // @SafeVarargs
     @SuppressWarnings("varargs")
     static <E> List<E> of(E... elements) {
         switch (elements.length) { // implicit null check of elements

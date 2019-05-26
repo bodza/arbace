@@ -42,15 +42,15 @@ public class ConstructorRepository extends GenericDeclRepository<MethodTypeSigna
         return new ConstructorRepository(rawSig, f);
     }
 
- /*
- * When queried for a particular piece of type information, the
- * general pattern is to consult the corresponding cached value.
- * If the corresponding field is non-null, it is returned.
- * If not, it is created lazily. This is done by selecting the appropriate
- * part of the tree and transforming it into a reflective object
- * using a visitor, which is created by feeding it the factory
- * with which the repository was created.
- */
+    /*
+     * When queried for a particular piece of type information, the
+     * general pattern is to consult the corresponding cached value.
+     * If the corresponding field is non-null, it is returned.
+     * If not, it is created lazily. This is done by selecting the appropriate
+     * part of the tree and transforming it into a reflective object
+     * using a visitor, which is created by feeding it the factory
+     * with which the repository was created.
+     */
 
     public Type[] getParameterTypes() {
         Type[] value = parameterTypes;

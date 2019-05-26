@@ -985,11 +985,6 @@ public class Collections {
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
-                @Override
-                public void forEachRemaining(Consumer<? super E> action) {
-                    // Use backing collection version
-                    i.forEachRemaining(action);
-                }
             };
         }
 
@@ -1026,24 +1021,10 @@ public class Collections {
         public void forEach(Consumer<? super E> action) {
             c.forEach(action);
         }
+
         @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
-        }
-        @SuppressWarnings("unchecked")
-        @Override
-        public Spliterator<E> spliterator() {
-            return (Spliterator<E>)c.spliterator();
-        }
-        @SuppressWarnings("unchecked")
-        @Override
-        public Stream<E> stream() {
-            return (Stream<E>)c.stream();
-        }
-        @SuppressWarnings("unchecked")
-        @Override
-        public Stream<E> parallelStream() {
-            return (Stream<E>)c.parallelStream();
         }
     }
 
@@ -1266,11 +1247,6 @@ public class Collections {
                 public void add(E e) {
                     throw new UnsupportedOperationException();
                 }
-
-                @Override
-                public void forEachRemaining(Consumer<? super E> action) {
-                    i.forEachRemaining(action);
-                }
             };
         }
 
@@ -1445,72 +1421,6 @@ public class Collections {
                 c.forEach(entryConsumer(action));
             }
 
-            static final class UnmodifiableEntrySetSpliterator<K, V> implements Spliterator<Entry<K,V>> {
-                final Spliterator<Map.Entry<K, V>> s;
-
-                UnmodifiableEntrySetSpliterator(Spliterator<Entry<K, V>> s) {
-                    this.s = s;
-                }
-
-                @Override
-                public boolean tryAdvance(Consumer<? super Entry<K, V>> action) {
-                    Objects.requireNonNull(action);
-                    return s.tryAdvance(entryConsumer(action));
-                }
-
-                @Override
-                public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
-                    Objects.requireNonNull(action);
-                    s.forEachRemaining(entryConsumer(action));
-                }
-
-                @Override
-                public Spliterator<Entry<K, V>> trySplit() {
-                    Spliterator<Entry<K, V>> split = s.trySplit();
-                    return split == null ? null : new UnmodifiableEntrySetSpliterator<>(split);
-                }
-
-                @Override
-                public long estimateSize() {
-                    return s.estimateSize();
-                }
-
-                @Override
-                public long getExactSizeIfKnown() {
-                    return s.getExactSizeIfKnown();
-                }
-
-                @Override
-                public int characteristics() {
-                    return s.characteristics();
-                }
-
-                @Override
-                public boolean hasCharacteristics(int characteristics) {
-                    return s.hasCharacteristics(characteristics);
-                }
-
-                @Override
-                public Comparator<? super Entry<K, V>> getComparator() {
-                    return s.getComparator();
-                }
-            }
-
-            @SuppressWarnings("unchecked")
-            public Spliterator<Entry<K,V>> spliterator() {
-                return new UnmodifiableEntrySetSpliterator<>((Spliterator<Map.Entry<K, V>>) c.spliterator());
-            }
-
-            @Override
-            public Stream<Entry<K,V>> stream() {
-                return StreamSupport.stream(spliterator(), false);
-            }
-
-            @Override
-            public Stream<Entry<K,V>> parallelStream() {
-                return StreamSupport.stream(spliterator(), true);
-            }
-
             public Iterator<Map.Entry<K,V>> iterator() {
                 return new Iterator<Map.Entry<K,V>>() {
                     private final Iterator<? extends Map.Entry<? extends K, ? extends V>> i = c.iterator();
@@ -1525,10 +1435,6 @@ public class Collections {
 
                     public void remove() {
                         throw new UnsupportedOperationException();
-                    }
-
-                    public void forEachRemaining(Consumer<? super Map.Entry<K, V>> action) {
-                        i.forEachRemaining(entryConsumer(action));
                     }
                 };
             }
@@ -1787,8 +1693,7 @@ public class Collections {
      * through the returned collection.
      *
      * It is imperative that the user manually synchronize on the returned
-     * collection when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * collection when traversing it via {@link Iterator}:
      * <pre>
      *  Collection c = Collections.synchronizedCollection(myCollection);
      *     ...
@@ -1894,28 +1799,18 @@ public class Collections {
         public String toString() {
             synchronized (mutex) {return c.toString();}
         }
+
         // Override default methods in Collection
         @Override
         public void forEach(Consumer<? super E> consumer) {
             synchronized (mutex) {c.forEach(consumer);}
         }
+
         @Override
         public boolean removeIf(Predicate<? super E> filter) {
             synchronized (mutex) {return c.removeIf(filter);}
         }
-        @Override
-        public Spliterator<E> spliterator() {
-            return c.spliterator(); // Must be manually synched by user!
-        }
-        @Override
-        public Stream<E> stream() {
-            return c.stream(); // Must be manually synched by user!
-        }
-        @Override
-        public Stream<E> parallelStream() {
-            return c.parallelStream(); // Must be manually synched by user!
-        }
-}
+    }
 
     /**
      * Returns a synchronized (thread-safe) set backed by the specified
@@ -1924,8 +1819,7 @@ public class Collections {
      * through the returned set.
      *
      * It is imperative that the user manually synchronize on the returned
-     * collection when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * collection when traversing it via {@link Iterator}:
      * <pre>
      *  Set s = Collections.synchronizedSet(new HashSet());
      *      ...
@@ -1979,8 +1873,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * sorted set when traversing it or any of its {@code subSet},
-     * {@code headSet}, or {@code tailSet} views via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * {@code headSet}, or {@code tailSet} views via {@link Iterator}:
      * <pre>
      *  SortedSet s = Collections.synchronizedSortedSet(new TreeSet());
      *      ...
@@ -2065,8 +1958,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * navigable set when traversing it, or any of its {@code subSet},
-     * {@code headSet}, or {@code tailSet} views, via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * {@code headSet}, or {@code tailSet} views, via {@link Iterator}:
      * <pre>
      *  NavigableSet s = Collections.synchronizedNavigableSet(new TreeSet());
      *      ...
@@ -2093,8 +1985,7 @@ public class Collections {
      * navigable set is serializable.
      *
      * @param <T> the class of the objects in the set
-     * @param s the navigable set to be "wrapped" in a synchronized navigable
-     * set
+     * @param s the navigable set to be "wrapped" in a synchronized navigable set
      * @return a synchronized view of the specified navigable set
      */
     public static <T> NavigableSet<T> synchronizedNavigableSet(NavigableSet<T> s) {
@@ -2176,8 +2067,7 @@ public class Collections {
      * through the returned list.
      *
      * It is imperative that the user manually synchronize on the returned
-     * list when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * list when traversing it via {@link Iterator}:
      * <pre>
      *  List list = Collections.synchronizedList(new ArrayList());
      *      ...
@@ -2301,8 +2191,7 @@ public class Collections {
      * through the returned map.
      *
      * It is imperative that the user manually synchronize on the returned
-     * map when traversing any of its collection views via {@link Iterator},
-     * {@link Spliterator} or {@link Stream}:
+     * map when traversing any of its collection views via {@link Iterator}:
      * <pre>
      *  Map m = Collections.synchronizedMap(new HashMap());
      *      ...
@@ -2465,7 +2354,7 @@ public class Collections {
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             synchronized (mutex) {return m.merge(key, value, remappingFunction);}
         }
-}
+    }
 
     /**
      * Returns a synchronized (thread-safe) sorted map backed by the specified
@@ -2476,8 +2365,7 @@ public class Collections {
      * It is imperative that the user manually synchronize on the returned
      * sorted map when traversing any of its collection views, or the
      * collections views of any of its {@code subMap}, {@code headMap} or
-     * {@code tailMap} views, via {@link Iterator}, {@link Spliterator} or
-     * {@link Stream}:
+     * {@code tailMap} views, via {@link Iterator}:
      * <pre>
      *  SortedMap m = Collections.synchronizedSortedMap(new TreeMap());
      *      ...
@@ -2568,8 +2456,7 @@ public class Collections {
      * It is imperative that the user manually synchronize on the returned
      * navigable map when traversing any of its collection views, or the
      * collections views of any of its {@code subMap}, {@code headMap} or
-     * {@code tailMap} views, via {@link Iterator}, {@link Spliterator} or
-     * {@link Stream}:
+     * {@code tailMap} views, via {@link Iterator}:
      * <pre>
      *  NavigableMap m = Collections.synchronizedNavigableMap(new TreeMap());
      *      ...
@@ -2817,9 +2704,6 @@ public class Collections {
                 public boolean hasNext() { return it.hasNext(); }
                 public E next()          { return it.next(); }
                 public void remove()     {        it.remove(); }
-                public void forEachRemaining(Consumer<? super E> action) {
-                    it.forEachRemaining(action);
-                }
             };
         }
 
@@ -2869,12 +2753,6 @@ public class Collections {
         public boolean removeIf(Predicate<? super E> filter) {
             return c.removeIf(filter);
         }
-        @Override
-        public Spliterator<E> spliterator() {return c.spliterator();}
-        @Override
-        public Stream<E> stream()           {return c.stream();}
-        @Override
-        public Stream<E> parallelStream()   {return c.parallelStream();}
     }
 
     /**
@@ -3173,11 +3051,6 @@ public class Collections {
                 public void add(E e) {
                     i.add(typeCheck(e));
                 }
-
-                @Override
-                public void forEachRemaining(Consumer<? super E> action) {
-                    i.forEachRemaining(action);
-                }
             };
         }
 
@@ -3438,10 +3311,6 @@ public class Collections {
 
                     public Map.Entry<K,V> next() {
                         return checkedEntry(i.next(), valueType);
-                    }
-
-                    public void forEachRemaining(Consumer<? super Entry<K, V>> action) {
-                        i.forEachRemaining(e -> action.accept(checkedEntry(e, valueType)));
                     }
                 };
             }
@@ -3824,10 +3693,6 @@ public class Collections {
         public boolean hasNext() { return false; }
         public E next() { throw new NoSuchElementException(); }
         public void remove() { throw new IllegalStateException(); }
-        @Override
-        public void forEachRemaining(Consumer<? super E> action) {
-            Objects.requireNonNull(action);
-        }
     }
 
     /**
@@ -3950,13 +3815,12 @@ public class Collections {
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
         }
+
         @Override
         public boolean removeIf(Predicate<? super E> filter) {
             Objects.requireNonNull(filter);
             return false;
         }
-        @Override
-        public Spliterator<E> spliterator() { return Spliterators.emptySpliterator(); }
 
         @Override
         public int hashCode() {
@@ -4084,9 +3948,6 @@ public class Collections {
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
         }
-
-        @Override
-        public Spliterator<E> spliterator() { return Spliterators.emptySpliterator(); }
     }
 
     /**
@@ -4263,59 +4124,6 @@ public class Collections {
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-            @Override
-            public void forEachRemaining(Consumer<? super E> action) {
-                Objects.requireNonNull(action);
-                if (hasNext) {
-                    hasNext = false;
-                    action.accept(e);
-                }
-            }
-        };
-    }
-
-    /**
-     * Creates a {@code Spliterator} with only the specified element
-     *
-     * @param <T> Type of elements
-     * @return A singleton {@code Spliterator}
-     */
-    static <T> Spliterator<T> singletonSpliterator(final T element) {
-        return new Spliterator<T>() {
-            long est = 1;
-
-            @Override
-            public Spliterator<T> trySplit() {
-                return null;
-            }
-
-            @Override
-            public boolean tryAdvance(Consumer<? super T> consumer) {
-                Objects.requireNonNull(consumer);
-                if (est > 0) {
-                    est--;
-                    consumer.accept(element);
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void forEachRemaining(Consumer<? super T> consumer) {
-                tryAdvance(consumer);
-            }
-
-            @Override
-            public long estimateSize() {
-                return est;
-            }
-
-            @Override
-            public int characteristics() {
-                int value = (element != null) ? Spliterator.NONNULL : 0;
-
-                return value | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE | Spliterator.DISTINCT | Spliterator.ORDERED;
-            }
         };
     }
 
@@ -4337,14 +4145,12 @@ public class Collections {
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
         }
-        @Override
-        public Spliterator<E> spliterator() {
-            return singletonSpliterator(element);
-        }
+
         @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
         }
+
         @Override
         public int hashCode() {
             return Objects.hashCode(element);
@@ -4387,21 +4193,21 @@ public class Collections {
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
         }
+
         @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
         }
+
         @Override
         public void replaceAll(UnaryOperator<E> operator) {
             throw new UnsupportedOperationException();
         }
+
         @Override
         public void sort(Comparator<? super E> c) {
         }
-        @Override
-        public Spliterator<E> spliterator() {
-            return singletonSpliterator(element);
-        }
+
         @Override
         public int hashCode() {
             return 31 + Objects.hashCode(element);
@@ -4608,22 +4414,6 @@ public class Collections {
             if (fromIndex > toIndex)
                 throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
             return new CopiesList<>(toIndex - fromIndex, element);
-        }
-
-        // Override default methods in Collection
-        @Override
-        public Stream<E> stream() {
-            return IntStream.range(0, n).mapToObj(i -> element);
-        }
-
-        @Override
-        public Stream<E> parallelStream() {
-            return IntStream.range(0, n).parallel().mapToObj(i -> element);
-        }
-
-        @Override
-        public Spliterator<E> spliterator() {
-            return stream().spliterator();
         }
     }
 
@@ -4923,7 +4713,7 @@ public class Collections {
      * @throws IllegalArgumentException if some property of a value in
      *         {@code elements} prevents it from being added to {@code c}
      */
-    @SafeVarargs
+    // @SafeVarargs
     public static <T> boolean addAll(Collection<? super T> c, T... elements) {
         boolean result = false;
         for (T element : elements)
@@ -5001,13 +4791,6 @@ public class Collections {
         public boolean removeIf(Predicate<? super E> filter) {
             return s.removeIf(filter);
         }
-
-        @Override
-        public Spliterator<E> spliterator() {return s.spliterator();}
-        @Override
-        public Stream<E> stream()           {return s.stream();}
-        @Override
-        public Stream<E> parallelStream()   {return s.parallelStream();}
     }
 
     /**
@@ -5062,11 +4845,5 @@ public class Collections {
         public boolean removeIf(Predicate<? super E> filter) {
             return q.removeIf(filter);
         }
-        @Override
-        public Spliterator<E> spliterator() {return q.spliterator();}
-        @Override
-        public Stream<E> stream()           {return q.stream();}
-        @Override
-        public Stream<E> parallelStream()   {return q.parallelStream();}
     }
 }

@@ -1,10 +1,10 @@
 package jdk.internal.reflect;
 
 /**
-  * It is necessary to use a "bootstrap" UTF-8 encoder for encoding
-  * constant pool entries because the character set converters rely on
-  * Class.newInstance().
-  */
+ * It is necessary to use a "bootstrap" UTF-8 encoder for encoding
+ * constant pool entries because the character set converters rely on
+ * Class.newInstance().
+ */
 class UTF8 {
     // This encoder is not quite correct.  It does not handle surrogate pairs.
     static byte[] encode(String str) {

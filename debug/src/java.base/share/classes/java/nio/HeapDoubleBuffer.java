@@ -1,11 +1,8 @@
 package java.nio;
 
 /**
-
  * A read/write HeapDoubleBuffer.
-
  */
-
 class HeapDoubleBuffer extends DoubleBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(double[].class);
@@ -13,39 +10,18 @@ class HeapDoubleBuffer extends DoubleBuffer {
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(double[].class);
 
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    protected final double[] hb;
-    protected final int offset;
-
-    */
-
     HeapDoubleBuffer(int cap, int lim) {
         super(-1, 0, lim, cap, new double[cap], 0);
-        /*
-        hb = new double[cap];
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     HeapDoubleBuffer(double[] buf, int off, int len) {
         super(-1, off, off + len, buf.length, buf, 0);
-        /*
-        hb = buf;
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     protected HeapDoubleBuffer(double[] buf, int mark, int pos, int lim, int cap, int off) {
         super(mark, pos, lim, cap, buf, off);
-        /*
-        hb = buf;
-        offset = off;
-        */
         this.address = ARRAY_BASE_OFFSET + off * ARRAY_INDEX_SCALE;
     }
 

@@ -4,7 +4,6 @@ package sun.nio.cs;
  * FastPath char[]/byte[] -> byte[] encoder, REPLACE on malformed input or
  * unmappable input.
  */
-
 public interface ArrayEncoder {
     //  is only used by j.u.zip.ZipCoder for utf8
     int encode(char[] src, int off, int len, byte[] dst);

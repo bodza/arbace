@@ -16,20 +16,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.nio.charset.CharacterCodingException;
-import java.nio.channels.Channel;
-import java.nio.channels.spi.SelectorProvider;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.concurrent.ConcurrentHashMap;
 
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
 import jdk.internal.misc.VM;
-import sun.nio.ch.Interruptible;
 
 /**
  * The {@code System} class contains several useful class fields
@@ -404,7 +399,7 @@ public final class System {
      *             native library image by the host system.
      * @throws NullPointerException if {@code libname} is {@code null}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static void loadLibrary(String libname) {
     }
 
@@ -454,12 +449,9 @@ public final class System {
      * Invoked by VM.  Phase 2 module system initialization.
      * Only classes in java.base can be loaded in this phase.
      *
-     * @param printToStderr print exceptions to stderr rather than stdout
-     * @param printStackTrace print stack trace when exception occurs
-     *
      * @return JNI_OK for success, JNI_ERR for failure
      */
-    private static int initPhase2(boolean printToStderr, boolean printStackTrace) {
+    private static int initPhase2() {
         // module system initialized
         VM.initLevel(2);
 

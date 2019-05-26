@@ -60,13 +60,13 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Keeps track of the current (one-based) constant pool index;
-      * incremented after emitting one of the following constant pool
-      * entries. Can fetch the current constant pool index for use in
-      * later entries.  Index points at the last valid constant pool
-      * entry; initially invalid. It is illegal to fetch the constant
-      * pool index before emitting at least one constant pool entry.
-      */
+     * Keeps track of the current (one-based) constant pool index;
+     * incremented after emitting one of the following constant pool
+     * entries. Can fetch the current constant pool index for use in
+     * later entries.  Index points at the last valid constant pool
+     * entry; initially invalid. It is illegal to fetch the constant
+     * pool index before emitting at least one constant pool entry.
+     */
     public short cpi() {
         if (cpIdx == 0) {
             throw new RuntimeException("Illegal use of ClassFileAssembler");
@@ -151,10 +151,10 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * It's necessary to be able to specify the number of arguments at
-      * the beginning of the method (which translates to the initial
-      * value of max locals)
-      */
+     * It's necessary to be able to specify the number of arguments at
+     * the beginning of the method (which translates to the initial
+     * value of max locals)
+     */
     public void setMaxLocals(int maxLocals) {
         this.maxLocals = maxLocals;
     }
@@ -416,9 +416,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Control flow with forward-reference BCI. Stack assumes
-      * straight-through control flow.
-      */
+     * Control flow with forward-reference BCI. Stack assumes
+     * straight-through control flow.
+     */
     public void opc_ifeq(Label l) {
         short instrBCI = getLength();
         emitByte(opc_ifeq);
@@ -433,9 +433,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Control flow with forward-reference BCI. Stack assumes straight
-      * control flow.
-      */
+     * Control flow with forward-reference BCI. Stack assumes straight
+     * control flow.
+     */
     public void opc_if_icmpeq(Label l) {
         short instrBCI = getLength();
         emitByte(opc_if_icmpeq);
@@ -449,9 +449,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Control flow with forward-reference BCI. Stack assumes straight
-      * control flow.
-      */
+     * Control flow with forward-reference BCI. Stack assumes straight
+     * control flow.
+     */
     public void opc_goto(Label l) {
         short instrBCI = getLength();
         emitByte(opc_goto);
@@ -466,9 +466,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Control flow with forward-reference BCI. Stack assumes straight
-      * control flow.
-      */
+     * Control flow with forward-reference BCI. Stack assumes straight
+     * control flow.
+     */
     public void opc_ifnull(Label l) {
         short instrBCI = getLength();
         emitByte(opc_ifnull);
@@ -484,9 +484,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Control flow with forward-reference BCI. Stack assumes straight
-      * control flow.
-      */
+     * Control flow with forward-reference BCI. Stack assumes straight
+     * control flow.
+     */
     public void opc_ifnonnull(Label l) {
         short instrBCI = getLength();
         emitByte(opc_ifnonnull);
@@ -562,9 +562,9 @@ class ClassFileAssembler implements ClassFileConstants {
     ////////////////////////
 
     /**
-      * Long and double arguments and return types count as 2 arguments;
-      * other values count as 1.
-      */
+     * Long and double arguments and return types count as 2 arguments;
+     * other values count as 1.
+     */
     public void opc_invokevirtual(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokevirtual);
         emitShort(methodIndex);
@@ -572,9 +572,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Long and double arguments and return types count as 2 arguments;
-      * other values count as 1.
-      */
+     * Long and double arguments and return types count as 2 arguments;
+     * other values count as 1.
+     */
     public void opc_invokespecial(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokespecial);
         emitShort(methodIndex);
@@ -582,9 +582,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Long and double arguments and return types count as 2 arguments;
-      * other values count as 1.
-      */
+     * Long and double arguments and return types count as 2 arguments;
+     * other values count as 1.
+     */
     public void opc_invokestatic(short methodIndex, int numArgs, int numReturnValues) {
         emitByte(opc_invokestatic);
         emitShort(methodIndex);
@@ -592,9 +592,9 @@ class ClassFileAssembler implements ClassFileConstants {
     }
 
     /**
-      * Long and double arguments and return types count as 2 arguments;
-      * other values count as 1.
-      */
+     * Long and double arguments and return types count as 2 arguments;
+     * other values count as 1.
+     */
     public void opc_invokeinterface(short methodIndex, int numArgs, byte count, int numReturnValues) {
         emitByte(opc_invokeinterface);
         emitShort(methodIndex);

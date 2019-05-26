@@ -401,8 +401,7 @@ public final class StrictMath {
      * <ul><li>If either argument is NaN, then the result is NaN.
      * <li>If the first argument is positive zero and the second argument
      * is positive, or the first argument is positive and finite and the
-     * second argument is positive infinity, then the result is positive
-     * zero.
+     * second argument is positive infinity, then the result is positive zero.
      * <li>If the first argument is negative zero and the second argument
      * is positive, or the first argument is negative and finite and the
      * second argument is positive infinity, then the result is negative zero.
@@ -824,7 +823,7 @@ public final class StrictMath {
      * this method is given by the expression below which computes a
      * {@code float} with the same exponent and significand as the
      * argument but with a guaranteed zero sign bit indicating a
-     * positive value: <br>
+     * positive value:<br>
      * {@code Float.intBitsToFloat(0x7fffffff & Float.floatToRawIntBits(a))}
      *
      * @param a   the argument whose absolute value is to be determined
@@ -848,7 +847,7 @@ public final class StrictMath {
      * this method is given by the expression below which computes a
      * {@code double} with the same exponent and significand as the
      * argument but with a guaranteed zero sign bit indicating a
-     * positive value: <br>
+     * positive value:<br>
      * {@code Double.longBitsToDouble((Double.doubleToRawLongBits(a)<<1)>>>1)}
      *
      * @param a   the argument whose absolute value is to be determined
@@ -882,7 +881,7 @@ public final class StrictMath {
      * @param a   an argument.
      * @param b   another argument.
      * @return the larger of {@code a} and {@code b}.
-        */
+     */
     public static long max(long a, long b) {
         return Math.max(a, b);
     }
@@ -1186,8 +1185,7 @@ public final class StrictMath {
      * Special cases:
      * <ul>
      *
-     * <li>If the argument is NaN or less than -1, then the result is
-     * NaN.
+     * <li>If the argument is NaN or less than -1, then the result is NaN.
      *
      * <li>If the argument is positive infinity, then the result is
      * positive infinity.

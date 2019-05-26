@@ -425,8 +425,7 @@ public final class Long extends Number implements Comparable<Long> {
      *
      * @implNote This method converts positive inputs into negative
      * values, to cover the Long.MIN_VALUE case. Converting otherwise
-     * (negative to positive) will expose -Long.MIN_VALUE that overflows
-     * long.
+     * (negative to positive) will expose -Long.MIN_VALUE that overflows long.
      *
      * @param i     value to convert
      * @param index next index, after the least significant digit

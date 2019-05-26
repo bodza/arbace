@@ -73,7 +73,6 @@ import static sun.nio.cs.CharsetMapping.*;
  *        return c2b[c2bIndex[ch >> 8] + (ch & 0xff)];
  *    }
  */
-
 public class DoubleByte {
     public static final char[] B2C_UNMAPPABLE;
     static {

@@ -3,7 +3,6 @@ package java.net;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 import java.util.Set;
 import java.util.Collections;
 
@@ -305,9 +304,6 @@ public class Socket implements java.io.Closeable {
      *
      * @param endpoint the {@code SocketAddress}
      * @throws IOException if an error occurs during the connection
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *          if this socket has an associated channel,
-     *          and the channel is in non-blocking mode
      * @throws IllegalArgumentException if endpoint is null or is a
      *          SocketAddress subclass not supported by this socket
      */
@@ -324,9 +320,6 @@ public class Socket implements java.io.Closeable {
      * @param timeout  the timeout value to be used in milliseconds.
      * @throws IOException if an error occurs during the connection
      * @throws SocketTimeoutException if timeout expires before connecting
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *          if this socket has an associated channel,
-     *          and the channel is in non-blocking mode
      * @throws IllegalArgumentException if endpoint is null or is a
      *          SocketAddress subclass not supported by this socket
      */
@@ -520,7 +513,6 @@ public class Socket implements java.io.Closeable {
      * then this method will continue to return the connected address
      * after the socket is closed.
      *
-
      * @return a {@code SocketAddress} representing the remote endpoint of this
      *         socket, or {@code null} if it is not connected yet.
      */
@@ -554,11 +546,6 @@ public class Socket implements java.io.Closeable {
 
     /**
      * Returns an input stream for this socket.
-     *
-     * If this socket has an associated channel then the resulting input
-     * stream delegates all of its operations to the channel.  If the channel
-     * is in non-blocking mode then the input stream's {@code read} operations
-     * will throw an {@link java.nio.channels.IllegalBlockingModeException}.
      *
      * Under abnormal conditions the underlying connection may be
      * broken by the remote host or the network software (for example
@@ -604,12 +591,6 @@ public class Socket implements java.io.Closeable {
 
     /**
      * Returns an output stream for this socket.
-     *
-     * If this socket has an associated channel then the resulting output
-     * stream delegates all of its operations to the channel.  If the channel
-     * is in non-blocking mode then the output stream's {@code write}
-     * operations will throw an {@link
-     * java.nio.channels.IllegalBlockingModeException}.
      *
      * Closing the returned {@link java.io.OutputStream OutputStream}
      * will close the associated socket.

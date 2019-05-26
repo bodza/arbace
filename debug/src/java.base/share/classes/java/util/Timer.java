@@ -36,18 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * This class does <i>not</i> offer real-time guarantees: it schedules
  * tasks using the {@code Object.wait(long)} method.
  *
- * Java 5.0 introduced the {@code java.util.concurrent} package and
- * one of the concurrency utilities therein is the {@link
- * java.util.concurrent.ScheduledThreadPoolExecutor
- * ScheduledThreadPoolExecutor} which is a thread pool for repeatedly
- * executing tasks at a given rate or delay.  It is effectively a more
- * versatile replacement for the {@code Timer}/{@code TimerTask}
- * combination, as it allows multiple service threads, accepts various
- * time units, and doesn't require subclassing {@code TimerTask} (just
- * implement {@code Runnable}).  Configuring {@code
- * ScheduledThreadPoolExecutor} with one thread makes it equivalent to
- * {@code Timer}.
- *
  * Implementation note: This class scales to large numbers of concurrently
  * scheduled tasks (thousands should present no problem).  Internally,
  * it uses a binary heap to represent its task queue, so the cost to schedule

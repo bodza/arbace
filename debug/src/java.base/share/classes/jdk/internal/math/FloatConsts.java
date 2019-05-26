@@ -20,8 +20,7 @@ public class FloatConsts {
      * The exponent the smallest positive {@code float} subnormal
      * value would have if it could be normalized.
      */
-    public static final int     MIN_SUB_EXPONENT = Float.MIN_EXPONENT -
-                                                   (SIGNIFICAND_WIDTH - 1);
+    public static final int     MIN_SUB_EXPONENT = Float.MIN_EXPONENT - (SIGNIFICAND_WIDTH - 1);
 
     /**
      * Bias used in representing a {@code float} exponent.

@@ -228,15 +228,4 @@ public final class Parameter {
     public boolean isVarArgs() {
         return executable.isVarArgs() && index == executable.getParameterCount() - 1;
     }
-
-    private transient Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
-
-    private synchronized Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
-        if (null == declaredAnnotations) {
-            declaredAnnotations = new HashMap<>();
-            for (Annotation a : getDeclaredAnnotations())
-                declaredAnnotations.put(a.annotationType(), a);
-        }
-        return declaredAnnotations;
-   }
 }

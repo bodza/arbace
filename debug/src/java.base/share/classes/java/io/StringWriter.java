@@ -12,8 +12,7 @@ public class StringWriter extends Writer {
     private StringBuffer buf;
 
     /**
-     * Create a new string writer using the default initial string-buffer
-     * size.
+     * Create a new string writer using the default initial string-buffer size.
      */
     public StringWriter() {
         buf = new StringBuffer();
@@ -21,8 +20,7 @@ public class StringWriter extends Writer {
     }
 
     /**
-     * Create a new string writer using the specified initial string-buffer
-     * size.
+     * Create a new string writer using the specified initial string-buffer size.
      *
      * @param initialSize
      *        The number of {@code char} values that will fit into this buffer

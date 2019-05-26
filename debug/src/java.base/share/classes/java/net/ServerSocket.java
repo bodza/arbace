@@ -4,7 +4,6 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.channels.ServerSocketChannel;
 import java.util.Set;
 import java.util.Collections;
 
@@ -343,10 +342,6 @@ public class ServerSocket implements java.io.Closeable {
      *               connection.
      * @throws SocketTimeoutException if a timeout was previously set with setSoTimeout and
      *             the timeout has been reached.
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *             if this socket has an associated channel, the channel is in
-     *             non-blocking mode, and there is no connection ready to be
-     *             accepted
      *
      * @return the new Socket
      */
@@ -367,9 +362,6 @@ public class ServerSocket implements java.io.Closeable {
      * return from implAccept the FooSocket will be connected to a client.
      *
      * @param s the Socket
-     * @throws java.nio.channels.IllegalBlockingModeException
-     *         if this socket has an associated channel,
-     *         and the channel is in non-blocking mode
      * @throws IOException if an I/O error occurs when waiting
      * for a connection.
      */

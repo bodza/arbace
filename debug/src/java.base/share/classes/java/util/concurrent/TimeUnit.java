@@ -287,7 +287,6 @@ public enum TimeUnit {
      * into the form required by the {@code Object.wait} method.
      *
      * For example, you could implement a blocking {@code poll} method
-     * (see {@link BlockingQueue#poll(long, TimeUnit) BlockingQueue.poll})
      * using:
      *
      * <pre> {@code

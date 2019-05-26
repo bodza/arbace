@@ -215,8 +215,7 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * See
-     * the general contract of the <code>read</code>
+     * See the general contract of the <code>read</code>
      * method of <code>InputStream</code>.
      *
      * @return the next byte of data, or <code>-1</code> if the end of the

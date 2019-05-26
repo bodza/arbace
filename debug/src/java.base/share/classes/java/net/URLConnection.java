@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -168,7 +167,7 @@ public abstract class URLConnection {
      */
     protected boolean useCaches;
 
-    private static final ConcurrentHashMap<String,Boolean> defaultCaching = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String,Boolean> defaultCaching = new ConcurrentHashMap<>();
 
     /**
      * Some protocols support skipping the fetching of the object unless
@@ -335,8 +334,7 @@ public abstract class URLConnection {
     }
 
     /**
-     * Returns the value of the {@code content-length} header field as a
-     * long.
+     * Returns the value of the {@code content-length} header field as a long.
      *
      * @return the content length of the resource that this connection's URL
      *          references, or {@code -1} if the content length is
@@ -864,7 +862,6 @@ public abstract class URLConnection {
         try {
             handler = lookupContentHandlerClassFor(contentType);
         } catch (Exception e) {
-            e.printStackTrace();
             handler = UnknownContentHandler.INSTANCE;
         }
 

@@ -5,8 +5,6 @@ package java.nio.charset;
  * <a href=Charset.html#names>legal charset name</a> is used as such.
  */
 public class IllegalCharsetNameException extends IllegalArgumentException {
-    private static final long serialVersionUID = 1457525358470002989L;
-
     private String charsetName;
 
     /**

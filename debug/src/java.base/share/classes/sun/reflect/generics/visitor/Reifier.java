@@ -45,8 +45,7 @@ public class Reifier implements TypeTreeVisitor<Type> {
 
     /**
      * Accessor for the result of the last visit by this visitor,
-     * @return The type computed by this visitor based on its last
-     * visit
+     * @return The type computed by this visitor based on its last visit
      */
     public Type getResult() { assert resultType != null;return resultType;}
 

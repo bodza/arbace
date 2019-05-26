@@ -3,7 +3,6 @@ package jdk.internal.loader;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -88,7 +87,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      * @return previously associated value or null if there was none
      */
     public V putIfAbsent(ClassLoader cl, V v) {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
+        ConcurrentHashMap<CLV, Object> map = map(cl);
         @SuppressWarnings("unchecked")
         CLV clv = (CLV) this;
         while (true) {
@@ -152,7 +151,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      *                               for the same association is attempted.
      */
     public V computeIfAbsent(ClassLoader cl, BiFunction<? super ClassLoader, ? super CLV, ? extends V> mappingFunction) throws IllegalStateException {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
+        ConcurrentHashMap<CLV, Object> map = map(cl);
         @SuppressWarnings("unchecked")
         CLV clv = (CLV) this;
         Memoizer<CLV, V> mv = null;
@@ -211,7 +210,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      * @param cl the associated ClassLoader of the values to be removed
      */
     public void removeAll(ClassLoader cl) {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
+        ConcurrentHashMap<CLV, Object> map = map(cl);
         for (Iterator<CLV> i = map.keySet().iterator(); i.hasNext(); ) {
             if (i.next().isEqualOrDescendantOf(this)) {
                 i.remove();
@@ -220,11 +219,11 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
     }
 
     /**
-     * @return a ConcurrentHashMap for given ClassLoader
+     * @return a ConcurrentHashMap for given ClassLoader
      */
     @SuppressWarnings("unchecked")
-    private static <CLV extends AbstractClassLoaderValue<CLV, ?>> ConcurrentHashMap<CLV, Object> map(ClassLoader cl) {
-        return (ConcurrentHashMap<CLV, Object>) (cl == null ? BootLoader.getClassLoaderValueMap() : cl.createOrGetClassLoaderValueMap());
+    private static <CLV extends AbstractClassLoaderValue<CLV, ?>> ConcurrentHashMap<CLV, Object> map(ClassLoader cl) {
+        return (ConcurrentHashMap<CLV, Object>) (cl == null ? BootLoader.getClassLoaderValueMap() : cl.createOrGetClassLoaderValueMap());
     }
 
     /**

@@ -4,9 +4,6 @@ import java.util.NavigableSet;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import sun.net.InetAddressCachePolicy;
@@ -597,11 +594,11 @@ public class InetAddress {
 
     // mapping from host name to Addresses - either NameServiceAddresses (while
     // still being looked-up by NameService(s)) or CachedAddresses when cached
-    private static final ConcurrentMap<String, Addresses> cache = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, Addresses> cache = new ConcurrentHashMap<>();
 
     // CachedAddresses that have to expire are kept ordered in this NavigableSet
     // which is scanned on each access
-    private static final NavigableSet<CachedAddresses> expirySet = new ConcurrentSkipListSet<>();
+    private static final NavigableSet<CachedAddresses> expirySet = new ConcurrentSkipListSet<>();
 
     // common interface
     private interface Addresses {
@@ -609,7 +606,7 @@ public class InetAddress {
     }
 
     // a holder for cached addresses with required metadata
-    private static final class CachedAddresses  implements Addresses, Comparable<CachedAddresses> {
+    private static final class CachedAddresses implements Addresses, Comparable<CachedAddresses> {
         private static final AtomicLong seq = new AtomicLong();
         final String host;
         final InetAddress[] inetAddresses;

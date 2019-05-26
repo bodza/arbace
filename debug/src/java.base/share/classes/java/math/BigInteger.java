@@ -500,8 +500,7 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     /*
      * Constructs a new BigInteger using a char array with radix=10.
      * Sign is precalculated outside and not allowed in the val. The {@code val}
-     * array is assumed to be unchanged for the duration of the constructor
-     * call.
+     * array is assumed to be unchanged for the duration of the constructor call.
      */
     BigInteger(char[] val, int sign, int len) {
         int cursor = 0, numDigits;
@@ -750,8 +749,7 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     /**
      * Find a random number of the specified bitLength that is probably prime.
      * This method is more appropriate for larger bitlengths since it uses
-     * a sieve to eliminate most composites before using a more expensive
-     * test.
+     * a sieve to eliminate most composites before using a more expensive test.
      */
     private static BigInteger largePrime(int bitLength, int certainty, Random rnd) {
         BigInteger p;
@@ -3925,9 +3923,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     /**
      * Returns the value radix^(2^exponent) from the cache.
      * If this value doesn't already exist in the cache, it is added.
-     *
-     * This could be changed to a more complicated caching method using
-     * {@code Future}.
      */
     private static BigInteger getRadixConversionCache(int radix, int exponent) {
         BigInteger[] cacheLine = powerCache[radix]; // volatile read
@@ -4352,8 +4347,7 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      * "long radix" that tears each number into "long digits", each of which
      * consists of the number of digits in the corresponding element in
      * digitsPerLong (longRadix[i] = i**digitPerLong[i]).  Both arrays have
-     * nonsense values in their 0 and 1 elements, as radixes 0 and 1 are not
-     * used.
+     * nonsense values in their 0 and 1 elements, as radixes 0 and 1 are not used.
      */
     private static int digitsPerLong[] = {0, 0,
         62, 39, 31, 27, 24, 22, 20, 19, 18, 18, 17, 17, 16, 16, 15, 15, 15, 14,
@@ -4436,12 +4430,12 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     }
 
     /**
-    * Returns the index of the int that contains the first nonzero int in the
-    * little-endian binary representation of the magnitude (int 0 is the
-    * least significant). If the magnitude is zero, return value is undefined.
-    *
-    * Note: never used for a BigInteger with a magnitude of zero.
-    */
+     * Returns the index of the int that contains the first nonzero int in the
+     * little-endian binary representation of the magnitude (int 0 is the
+     * least significant). If the magnitude is zero, return value is undefined.
+     *
+     * Note: never used for a BigInteger with a magnitude of zero.
+     */
     private int firstNonzeroIntNum() {
         int fn = firstNonzeroIntNumPlusTwo - 2;
         if (fn == -2) { // firstNonzeroIntNum not initialized yet

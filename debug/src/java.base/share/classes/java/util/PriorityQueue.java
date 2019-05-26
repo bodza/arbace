@@ -27,19 +27,16 @@ import java.util.function.Predicate;
  * grows automatically.  The details of the growth policy are not
  * specified.
  *
- * This class and its iterator implement all of the
- * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces.  The Iterator provided in method {@link
- * #iterator()} and the Spliterator provided in method {@link #spliterator()}
- * are <em>not</em> guaranteed to traverse the elements of
+ * This class and its iterator implement all of the <em>optional</em>
+ * methods of the {@link Collection} and {@link Iterator} interfaces.
+ * The Iterator provided in method {@link #iterator()}
+ * is <em>not</em> guaranteed to traverse the elements of
  * the priority queue in any particular order. If you need ordered
  * traversal, consider using {@code Arrays.sort(pq.toArray())}.
  *
  * <strong>Note that this implementation is not synchronized.</strong>
  * Multiple threads should not access a {@code PriorityQueue}
  * instance concurrently if any of the threads modifies the queue.
- * Instead, use the thread-safe {@link
- * java.util.concurrent.PriorityBlockingQueue} class.
  *
  * Implementation note: this implementation provides
  * O(log(n)) time for the enqueuing and dequeuing methods
@@ -380,8 +377,7 @@ public class PriorityQueue<E> extends AbstractQueue<E> {
      * maintained by this queue.  (In other words, this method must allocate
      * a new array).  The caller is thus free to modify the returned array.
      *
-     * This method acts as bridge between array-based and collection-based
-     * APIs.
+     * This method acts as bridge between array-based and collection-based APIs.
      *
      * @return an array containing all of the elements in this queue
      */
@@ -719,89 +715,6 @@ public class PriorityQueue<E> extends AbstractQueue<E> {
      */
     public Comparator<? super E> comparator() {
         return comparator;
-    }
-
-    /**
-     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
-     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
-     * queue. The spliterator does not traverse elements in any particular order
-     * (the {@link Spliterator#ORDERED ORDERED} characteristic is not reported).
-     *
-     * The {@code Spliterator} reports {@link Spliterator#SIZED},
-     * {@link Spliterator#SUBSIZED}, and {@link Spliterator#NONNULL}.
-     * Overriding implementations should document the reporting of additional
-     * characteristic values.
-     *
-     * @return a {@code Spliterator} over the elements in this queue
-     */
-    public final Spliterator<E> spliterator() {
-        return new PriorityQueueSpliterator(0, -1, 0);
-    }
-
-    final class PriorityQueueSpliterator implements Spliterator<E> {
-        private int index; // current index, modified on advance/split
-        private int fence; // -1 until first use
-        private int expectedModCount; // initialized when fence set
-
-        /** Creates new spliterator covering the given range. */
-        PriorityQueueSpliterator(int origin, int fence, int expectedModCount) {
-            this.index = origin;
-            this.fence = fence;
-            this.expectedModCount = expectedModCount;
-        }
-
-        private int getFence() { // initialize fence to size on first use
-            int hi;
-            if ((hi = fence) < 0) {
-                expectedModCount = modCount;
-                hi = fence = size;
-            }
-            return hi;
-        }
-
-        public PriorityQueueSpliterator trySplit() {
-            int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
-            return (lo >= mid) ? null : new PriorityQueueSpliterator(lo, index = mid, expectedModCount);
-        }
-
-        public void forEachRemaining(Consumer<? super E> action) {
-            if (action == null)
-                throw new NullPointerException();
-            if (fence < 0) { fence = size; expectedModCount = modCount; }
-            final Object[] es = queue;
-            int i, hi; E e;
-            for (i = index, index = hi = fence; i < hi; i++) {
-                if ((e = (E) es[i]) == null)
-                    break; // must be CME
-                action.accept(e);
-            }
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-        }
-
-        public boolean tryAdvance(Consumer<? super E> action) {
-            if (action == null)
-                throw new NullPointerException();
-            if (fence < 0) { fence = size; expectedModCount = modCount; }
-            int i;
-            if ((i = index) < fence) {
-                index = i + 1;
-                E e;
-                if ((e = (E) queue[i]) == null || modCount != expectedModCount)
-                    throw new ConcurrentModificationException();
-                action.accept(e);
-                return true;
-            }
-            return false;
-        }
-
-        public long estimateSize() {
-            return getFence() - index;
-        }
-
-        public int characteristics() {
-            return Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL;
-        }
     }
 
     /**

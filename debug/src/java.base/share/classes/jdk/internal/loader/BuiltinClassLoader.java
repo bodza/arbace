@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import jdk.internal.misc.VM;
@@ -24,8 +23,7 @@ import jdk.internal.misc.VM;
  * The platform or application class loader.
  *
  * This ClassLoader supports loading of classes and resources from a
- * class path of URLs that are specified to the ClassLoader at construction
- * time.
+ * class path of URLs that are specified to the ClassLoader at construction time.
  *
  * The delegation model used by this ClassLoader differs to the regular
  * delegation model. When requested to load a class then this ClassLoader first
@@ -39,11 +37,6 @@ import jdk.internal.misc.VM;
  * upgraded modules defined to the platform class loader.
  */
 public class BuiltinClassLoader extends ClassLoader {
-    static {
-        if (!ClassLoader.registerAsParallelCapable())
-            throw new InternalError("Unable to register as parallel capable");
-    }
-
     // parent ClassLoader
     private final BuiltinClassLoader parent;
 

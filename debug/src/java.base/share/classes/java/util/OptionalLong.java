@@ -156,28 +156,6 @@ public final class OptionalLong {
     }
 
     /**
-     * If a value is present, returns a sequential {@link LongStream} containing
-     * only that value, otherwise returns an empty {@code LongStream}.
-     *
-     * @apiNote
-     * This method can be used to transform a {@code Stream} of optional longs
-     * to an {@code LongStream} of present longs:
-     * <pre>{@code
-     *     Stream<OptionalLong> os = ..
-     *     LongStream s = os.flatMapToLong(OptionalLong::stream)
-     * }</pre>
-     *
-     * @return the optional value as an {@code LongStream}
-     */
-    public LongStream stream() {
-        if (isPresent) {
-            return LongStream.of(value);
-        } else {
-            return LongStream.empty();
-        }
-    }
-
-    /**
      * If a value is present, returns the value, otherwise returns
      * {@code other}.
      *

@@ -315,7 +315,7 @@ public final class Character implements Comparable<Character> {
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT = 1;
 
     /**
-    * Strong bidirectional character type "AL" in the Unicode specification.
+     * Strong bidirectional character type "AL" in the Unicode specification.
      */
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC = 2;
 
@@ -486,7 +486,7 @@ public final class Character implements Comparable<Character> {
      * <a href="http://www.unicode.org/glossary/#code_point">
      * Unicode code point</a>, constant {@code U+10FFFF}.
      */
-    public static final int MAX_CODE_POINT = 0X10FFFF;
+    public static final int MAX_CODE_POINT = 0x10ffff;
 
     /**
      * Instances of this class represent particular subsets of the Unicode
@@ -4122,53 +4122,53 @@ public final class Character implements Comparable<Character> {
         SIGNWRITING,
 
         /**
-          * Unicode script "Adlam".
-          */
+         * Unicode script "Adlam".
+         */
         ADLAM,
 
         /**
-          * Unicode script "Bhaiksuki".
-          */
+         * Unicode script "Bhaiksuki".
+         */
         BHAIKSUKI,
 
         /**
-          * Unicode script "Marchen".
-          */
+         * Unicode script "Marchen".
+         */
         MARCHEN,
 
         /**
-          * Unicode script "Newa".
-          */
+         * Unicode script "Newa".
+         */
         NEWA,
 
         /**
-          * Unicode script "Osage".
-          */
+         * Unicode script "Osage".
+         */
         OSAGE,
 
         /**
-          * Unicode script "Tangut".
-          */
+         * Unicode script "Tangut".
+         */
         TANGUT,
 
         /**
-          * Unicode script "Masaram Gondi".
-          */
+         * Unicode script "Masaram Gondi".
+         */
         MASARAM_GONDI,
 
         /**
-          * Unicode script "Nushu".
-          */
+         * Unicode script "Nushu".
+         */
         NUSHU,
 
         /**
-          * Unicode script "Soyombo".
-          */
+         * Unicode script "Soyombo".
+         */
         SOYOMBO,
 
         /**
-          * Unicode script "Zanabazar Square".
-          */
+         * Unicode script "Zanabazar Square".
+         */
         ZANABAZAR_SQUARE,
 
         /**
@@ -5336,7 +5336,7 @@ public final class Character implements Comparable<Character> {
             0x11650,  // 11650..11659; MODI
             0x1165A,  // 1165A..1165F; UNKNOWN
             0x11660,  // 11660..1166C; MONGOLIAN
-            0X1166D,  // 1166D..1167F; UNKNOWN
+            0x1166D,  // 1166D..1167F; UNKNOWN
             0x11680,  // 11680..116B7; TAKRI
             0x116B8,  // 116B8..116BF; UNKNOWN
             0x116C0,  // 116C0..116C9; TAKRI
@@ -5352,7 +5352,7 @@ public final class Character implements Comparable<Character> {
             0x118FF,  // 118FF       ; WARANG_CITI
             0x11900,  // 11900..119FF; UNKNOWN
             0x11A00,  // 11A00..11A47; ZANABAZAR_SQUARE
-            0X11A48,  // 11A48..11A4F; UNKNOWN
+            0x11A48,  // 11A48..11A4F; UNKNOWN
             0x11A50,  // 11A50..11A83; SOYOMBO
             0x11A84,  // 11A84..11A85; UNKNOWN
             0x11A86,  // 11A86..11A9C; SOYOMBO
@@ -7952,8 +7952,7 @@ public final class Character implements Comparable<Character> {
      * <a href="Character.html#supplementary">supplementary character</a>,
      * an unspecified {@code char} is returned.
      *
-     * If
-     * {@link #isSupplementaryCodePoint isSupplementaryCodePoint(x)}
+     * If {@link #isSupplementaryCodePoint isSupplementaryCodePoint(x)}
      * is {@code true}, then
      * {@link #isHighSurrogate isHighSurrogate}{@code (highSurrogate(x))} and
      * {@link #toCodePoint toCodePoint}{@code (highSurrogate(x), }{@link #lowSurrogate lowSurrogate}{@code (x)) == x}
@@ -7979,8 +7978,7 @@ public final class Character implements Comparable<Character> {
      * <a href="Character.html#supplementary">supplementary character</a>,
      * an unspecified {@code char} is returned.
      *
-     * If
-     * {@link #isSupplementaryCodePoint isSupplementaryCodePoint(x)}
+     * If {@link #isSupplementaryCodePoint isSupplementaryCodePoint(x)}
      * is {@code true}, then
      * {@link #isLowSurrogate isLowSurrogate}{@code (lowSurrogate(x))} and
      * {@link #toCodePoint toCodePoint}{@code (}{@link #highSurrogate highSurrogate}{@code (x), lowSurrogate(x)) == x}
@@ -8083,8 +8081,7 @@ public final class Character implements Comparable<Character> {
      * the text range.
      * @param endIndex the index after the last {@code char} of
      * the text range.
-     * @return the number of Unicode code points in the specified text
-     * range
+     * @return the number of Unicode code points in the specified text range
      * @throws NullPointerException if {@code seq} is null.
      * @throws IndexOutOfBoundsException if the
      * {@code beginIndex} is negative, or {@code endIndex}
@@ -9064,8 +9061,7 @@ public final class Character implements Comparable<Character> {
 
     /**
      * Converts the character (Unicode code point) argument to
-     * lowercase using case mapping information from the UnicodeData
-     * file.
+     * lowercase using case mapping information from the UnicodeData file.
      *
      * Note that
      * {@code Character.isLowerCase(Character.toLowerCase(codePoint))}
@@ -9118,8 +9114,7 @@ public final class Character implements Comparable<Character> {
 
     /**
      * Converts the character (Unicode code point) argument to
-     * uppercase using case mapping information from the UnicodeData
-     * file.
+     * uppercase using case mapping information from the UnicodeData file.
      *
      * Note that
      * {@code Character.isUpperCase(Character.toUpperCase(codePoint))}

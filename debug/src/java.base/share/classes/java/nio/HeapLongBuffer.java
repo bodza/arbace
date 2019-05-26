@@ -1,11 +1,8 @@
 package java.nio;
 
 /**
-
  * A read/write HeapLongBuffer.
-
  */
-
 class HeapLongBuffer extends LongBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(long[].class);
@@ -13,39 +10,18 @@ class HeapLongBuffer extends LongBuffer {
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(long[].class);
 
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    protected final long[] hb;
-    protected final int offset;
-
-    */
-
     HeapLongBuffer(int cap, int lim) {
         super(-1, 0, lim, cap, new long[cap], 0);
-        /*
-        hb = new long[cap];
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     HeapLongBuffer(long[] buf, int off, int len) {
         super(-1, off, off + len, buf.length, buf, 0);
-        /*
-        hb = buf;
-        offset = 0;
-        */
         this.address = ARRAY_BASE_OFFSET;
     }
 
     protected HeapLongBuffer(long[] buf, int mark, int pos, int lim, int cap, int off) {
         super(mark, pos, lim, cap, buf, off);
-        /*
-        hb = buf;
-        offset = off;
-        */
         this.address = ARRAY_BASE_OFFSET + off * ARRAY_INDEX_SCALE;
     }
 

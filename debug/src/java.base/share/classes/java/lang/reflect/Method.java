@@ -1,10 +1,7 @@
 package java.lang.reflect;
 
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.MethodAccessor;
 import jdk.internal.reflect.Reflection;
-import sun.reflect.annotation.ExceptionProxy;
-import sun.reflect.annotation.TypeNotPresentExceptionProxy;
 import sun.reflect.generics.repository.MethodRepository;
 import sun.reflect.generics.factory.CoreReflectionFactory;
 import sun.reflect.generics.factory.GenericsFactory;
@@ -70,7 +67,7 @@ public final class Method extends Executable {
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
      */
-    Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature, byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault) {
+    Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType, Class<?>[] checkedExceptions, int modifiers, int slot, String signature) {
         this.clazz = declaringClass;
         this.name = name;
         this.parameterTypes = parameterTypes;
@@ -97,7 +94,7 @@ public final class Method extends Executable {
         if (this.root != null)
             throw new IllegalArgumentException("Can not copy a non-root Method");
 
-        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, null, null, null);
+        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature);
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.methodAccessor = methodAccessor;
@@ -111,26 +108,10 @@ public final class Method extends Executable {
         if (this.root == null)
             throw new IllegalArgumentException("Can only leafCopy a non-root Method");
 
-        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature, null, null, null);
+        Method res = new Method(clazz, name, parameterTypes, returnType, exceptionTypes, modifiers, slot, signature);
         res.root = root;
         res.methodAccessor = methodAccessor;
         return res;
-    }
-
-    /**
-     * @throws InaccessibleObjectException {@inheritDoc}
-     */
-    @Override
-    @CallerSensitive
-    public void setAccessible(boolean flag) {
-        if (flag)
-            checkCanSetAccessible(Reflection.getCallerClass());
-        setAccessible0(flag);
-    }
-
-    @Override
-    void checkCanSetAccessible(Class<?> caller) {
-        checkCanSetAccessible(caller, clazz);
     }
 
     @Override
@@ -141,11 +122,6 @@ public final class Method extends Executable {
     @Override
     boolean hasGenericInformation() {
         return (getGenericSignature() != null);
-    }
-
-    @Override
-    byte[] getAnnotationBytes() {
-        return annotations;
     }
 
     /**
@@ -341,21 +317,6 @@ public final class Method extends Executable {
         sb.append(getName());
     }
 
-    @Override
-    String toShortString() {
-        StringBuilder sb = new StringBuilder("method ");
-        sb.append(getDeclaringClass().getTypeName()).append('.');
-        sb.append(getName());
-        sb.append('(');
-        StringJoiner sj = new StringJoiner(",");
-        for (Class<?> parameterType : getParameterTypes()) {
-            sj.add(parameterType.getTypeName());
-        }
-        sb.append(sj);
-        sb.append(')');
-        return sb.toString();
-    }
-
     /**
      * Returns a string describing this {@code Method}, including
      * type parameters.  The string is formatted as the method access
@@ -432,8 +393,7 @@ public final class Method extends Executable {
      * if the value has the type of an array of a primitive type, the
      * elements of the array are <i>not</i> wrapped in objects; in
      * other words, an array of primitive type is returned.  If the
-     * underlying method return type is void, the invocation returns
-     * null.
+     * underlying method return type is void, the invocation returns null.
      *
      * @param obj  the object the underlying method is invoked from
      * @param args the arguments used for the method call
@@ -461,14 +421,10 @@ public final class Method extends Executable {
      * @throws ExceptionInInitializerError if the initialization
      * provoked by this method fails.
      */
-    @CallerSensitive
+    // @CallerSensitive
     // @ForceInline // to ensure Reflection.getCallerClass optimization
     // @HotSpotIntrinsicCandidate
     public Object invoke(Object obj, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        if (!override) {
-            Class<?> caller = Reflection.getCallerClass();
-            checkAccess(caller, clazz, Modifier.isStatic(modifiers) ? null : obj.getClass(), modifiers);
-        }
         MethodAccessor ma = methodAccessor; // read volatile
         if (ma == null) {
             ma = acquireMethodAccessor();
@@ -508,8 +464,7 @@ public final class Method extends Executable {
      * method; returns {@code false} otherwise.
      *
      * A default method is a public non-abstract instance method, that
-     * is, a non-static method with a body, declared in an interface
-     * type.
+     * is, a non-static method with a body, declared in an interface type.
      *
      * @return true if and only if this method is a default
      * method as defined by the Java Language Specification.
@@ -571,22 +526,6 @@ public final class Method extends Executable {
      *     default class value.
      */
     public Object getDefaultValue() {
-        if  (null == null)
-            return null;
-        Class<?> memberType = AnnotationType.invocationHandlerReturnType(getReturnType());
-        Object result = AnnotationParser.parseMemberValue(memberType, ByteBuffer.wrap(null), getDeclaringClass().getConstantPool(), getDeclaringClass());
-        if (result instanceof ExceptionProxy) {
-            if (result instanceof TypeNotPresentExceptionProxy) {
-                TypeNotPresentExceptionProxy proxy = (TypeNotPresentExceptionProxy)result;
-                throw new TypeNotPresentException(proxy.typeName(), proxy.getCause());
-            }
-            throw new AnnotationFormatError("Invalid default: " + this);
-        }
-        return result;
-    }
-
-    @Override
-    boolean handleParameterNumberMismatch(int resultLength, int numParameters) {
-        throw new AnnotationFormatError("Parameter annotations don't match number of parameters");
+        return null;
     }
 }

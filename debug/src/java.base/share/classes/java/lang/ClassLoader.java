@@ -18,11 +18,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.Vector;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import jdk.internal.loader.BuiltinClassLoader;
@@ -32,7 +29,6 @@ import jdk.internal.loader.ClassLoaders;
 import jdk.internal.misc.Unsafe;
 import jdk.internal.misc.VM;
 import jdk.internal.ref.CleanerFactory;
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
 import sun.reflect.misc.ReflectUtil;
 
@@ -45,8 +41,7 @@ import sun.reflect.misc.ReflectUtil;
  * "class file" of that name from a file system.
  *
  * Every {@link java.lang.Class Class} object contains a {@link
- * Class#getClassLoader() reference} to the {@code ClassLoader} that defined
- * it.
+ * Class#getClassLoader() reference} to the {@code ClassLoader} that defined it.
  *
  * {@code Class} objects for array classes are not created by class
  * loaders, but are created automatically as required by the Java runtime.
@@ -76,20 +71,6 @@ import sun.reflect.misc.ReflectUtil;
  * resource, a {@code ClassLoader} instance will usually delegate the search
  * for the class or resource to its parent class loader before attempting to
  * find the class or resource itself.
- *
- * Class loaders that support concurrent loading of classes are known as
- * <em>{@linkplain #isRegisteredAsParallelCapable() parallel capable}</em> class
- * loaders and are required to register themselves at their class initialization
- * time by invoking the {@link
- * #registerAsParallelCapable ClassLoader.registerAsParallelCapable}
- * method. Note that the {@code ClassLoader} class is registered as parallel
- * capable by default. However, its subclasses still need to register themselves
- * if they are parallel capable.
- * In environments in which the delegation model is not strictly
- * hierarchical, class loaders need to be parallel capable, otherwise class
- * loading can lead to deadlocks because the loader lock is held for the
- * duration of the class loading process (see {@link #loadClass
- * loadClass} methods).
  *
  * <h3><a id="builtinLoaders">Run-time Built-in Class Loaders</a></h3>
  *
@@ -202,56 +183,6 @@ public abstract class ClassLoader {
     // class loader name
     private final String name;
 
-    /**
-     * Encapsulates the set of parallel capable loader types.
-     */
-    private static class ParallelLoaders {
-        private ParallelLoaders() {}
-
-        // the set of parallel capable loader types
-        private static final Set<Class<? extends ClassLoader>> loaderTypes = Collections.newSetFromMap(new WeakHashMap<>());
-        static {
-            synchronized (loaderTypes) { loaderTypes.add(ClassLoader.class); }
-        }
-
-        /**
-         * Registers the given class loader type as parallel capable.
-         * Returns {@code true} is successfully registered; {@code false} if
-         * loader's super class is not registered.
-         */
-        static boolean register(Class<? extends ClassLoader> c) {
-            synchronized (loaderTypes) {
-                if (loaderTypes.contains(c.getSuperclass())) {
-                    // register the class loader as parallel capable
-                    // if and only if all of its super classes are.
-                    // Note: given current classloading sequence, if
-                    // the immediate super class is parallel capable,
-                    // all the super classes higher up must be too.
-                    loaderTypes.add(c);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        /**
-         * Returns {@code true} if the given class loader type is
-         * registered as parallel capable.
-         */
-        static boolean isRegistered(Class<? extends ClassLoader> c) {
-            synchronized (loaderTypes) {
-                return loaderTypes.contains(c);
-            }
-        }
-    }
-
-    // Maps class name to the corresponding lock object when the current
-    // class loader is parallel capable.
-    // Note: VM also uses this field to decide if the current class loader
-    // is parallel capable and the appropriate lock object for class loading.
-    private final ConcurrentHashMap<String, Object> parallelLockMap;
-
     // The classes loaded by this class loader. The only purpose of this table
     // is to keep the classes from being GC'ed until the loader is GC'ed.
     private final Vector<Class<?>> classes = new Vector<>();
@@ -268,7 +199,7 @@ public abstract class ClassLoader {
     // Class::getPackage or ClassLoader::getDefinedPackage(s)
     // method is called to define it.
     // Otherwise, the value is a NamedPackage object.
-    private final ConcurrentHashMap<String, NamedPackage> packages = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, NamedPackage> packages = new ConcurrentHashMap<>();
 
     /*
      * Returns a named package for the given module.
@@ -302,12 +233,6 @@ public abstract class ClassLoader {
     private ClassLoader(Void unused, String name, ClassLoader parent) {
         this.name = name;
         this.parent = parent;
-        if (ParallelLoaders.isRegistered(this.getClass())) {
-            parallelLockMap = new ConcurrentHashMap<>();
-        } else {
-            // no finer-grained lock; lock on the classloader instance
-            parallelLockMap = null;
-        }
     }
 
     /**
@@ -363,12 +288,6 @@ public abstract class ClassLoader {
      * this class loader is not named.
      */
     public String getName() {
-        return name;
-    }
-
-    // package-private used by StackTraceElement to avoid
-    // calling the overrideable getName method
-    final String name() {
         return name;
     }
 
@@ -486,15 +405,7 @@ public abstract class ClassLoader {
      *         If registered as parallel capable and {@code className} is null
      */
     protected Object getClassLoadingLock(String className) {
-        Object lock = this;
-        if (parallelLockMap != null) {
-            Object newLock = new Object();
-            lock = parallelLockMap.putIfAbsent(className, newLock);
-            if (lock == null) {
-                lock = newLock;
-            }
-        }
-        return lock;
+        return this;
     }
 
     /**
@@ -521,13 +432,6 @@ public abstract class ClassLoader {
     private void preDefineClass(String name) {
         if (!checkName(name)) {
             throw new NoClassDefFoundError("IllegalName: " + name);
-        }
-
-        // Note:  Checking logic in java.lang.invoke.MemberName.checkForTypeAlias
-        // relies on the fact that spoofing is impossible if a class has a name
-        // of the form "java.*"
-        if ((name != null) && name.startsWith("java.") && this != getBuiltinPlatformClassLoader()) {
-            throw new SecurityException("Prohibited package name: " + name.substring(0, name.lastIndexOf('.')));
         }
     }
 
@@ -750,41 +654,6 @@ public abstract class ClassLoader {
         c.setSigners(signers);
     }
 
-    /**
-     * Registers the caller as
-     * {@linkplain #isRegisteredAsParallelCapable() parallel capable}.
-     * The registration succeeds if and only if all of the following
-     * conditions are met:
-     * <ol>
-     * <li>no instance of the caller has been created</li>
-     * <li>all of the super classes (except class Object) of the caller are
-     * registered as parallel capable</li>
-     * </ol>
-     *
-     * Note that once a class loader is registered as parallel capable, there
-     * is no way to change it back.
-     *
-     * @return {@code true} if the caller is successfully registered as
-     *          parallel capable and {@code false} if otherwise.
-     */
-    @CallerSensitive
-    protected static boolean registerAsParallelCapable() {
-        Class<? extends ClassLoader> callerClass = Reflection.getCallerClass().asSubclass(ClassLoader.class);
-        return ParallelLoaders.register(callerClass);
-    }
-
-    /**
-     * Returns {@code true} if this class loader is registered as
-     * {@linkplain #registerAsParallelCapable parallel capable}, otherwise
-     * {@code false}.
-     *
-     * @return {@code true} if this class loader is parallel capable,
-     *          otherwise {@code false}.
-     */
-    public final boolean isRegisteredAsParallelCapable() {
-        return ParallelLoaders.isRegistered(this.getClass());
-    }
-
     // -- Hierarchy --
 
     /**
@@ -795,7 +664,7 @@ public abstract class ClassLoader {
      *
      * @return The parent {@code ClassLoader}
      */
-    @CallerSensitive
+    // @CallerSensitive
     public final ClassLoader getParent() {
         return parent;
     }
@@ -810,7 +679,7 @@ public abstract class ClassLoader {
      *
      * @return The platform {@code ClassLoader}.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static ClassLoader getPlatformClassLoader() {
         return getBuiltinPlatformClassLoader();
     }
@@ -873,7 +742,7 @@ public abstract class ClassLoader {
      *          underlying cause of the error can be retrieved via the
      *          {@link Throwable#getCause()} method.
      */
-    @CallerSensitive
+    // @CallerSensitive
     public static ClassLoader getSystemClassLoader() {
         switch (VM.initLevel()) {
             case 0:
@@ -1073,50 +942,16 @@ public abstract class ClassLoader {
         return _definePackage(name);
     }
 
-    /**
-     * Returns all of the {@code Package}s that have been defined by
-     * this class loader and its ancestors.  The returned array may contain
-     * more than one {@code Package} object of the same package name, each
-     * defined by a different class loader in the class loader hierarchy.
-     *
-     * @apiNote The {@link #getPlatformClassLoader() platform class loader}
-     * may delegate to the application class loader. In other words,
-     * packages in modules defined to the application class loader may be
-     * visible to the platform class loader.  On the other hand,
-     * the application class loader is not its ancestor and hence
-     * when invoked on the platform class loader, this method will not
-     * return any packages defined to the application class loader.
-     *
-     * @return The array of {@code Package} objects that have been defined by
-     *          this class loader and its ancestors
-     */
-    protected Package[] getPackages() {
-        Stream<Package> pkgs = packages();
-        ClassLoader ld = parent;
-        while (ld != null) {
-            pkgs = Stream.concat(ld.packages(), pkgs);
-            ld = ld.parent;
-        }
-        return Stream.concat(BootLoader.packages(), pkgs).toArray(Package[]::new);
-    }
-
-    /**
-     * Returns a stream of Packages defined in this class loader
-     */
-    Stream<Package> packages() {
-        return packages.values().stream().map(p -> _definePackage(p.packageName()));
-    }
-
     // -- Misc --
 
     /**
-     * Returns the ConcurrentHashMap used as a storage for ClassLoaderValue(s)
+     * Returns the ConcurrentHashMap used as a storage for ClassLoaderValue(s)
      * associated with this ClassLoader, creating it if it doesn't already exist.
      */
-    /* oops! */public ConcurrentHashMap<?, ?> createOrGetClassLoaderValueMap() {
-        ConcurrentHashMap<?, ?> map = classLoaderValueMap;
+    /* oops! */public ConcurrentHashMap<?, ?> createOrGetClassLoaderValueMap() {
+        ConcurrentHashMap<?, ?> map = classLoaderValueMap;
         if (map == null) {
-            map = new ConcurrentHashMap<>();
+            map = new ConcurrentHashMap<>();
             boolean set = trySetObjectField("classLoaderValueMap", map);
             if (!set) {
                 // beaten by someone else
@@ -1127,7 +962,7 @@ public abstract class ClassLoader {
     }
 
     // the storage for ClassLoaderValue(s) associated with this ClassLoader
-    private volatile ConcurrentHashMap<?, ?> classLoaderValueMap;
+    private volatile ConcurrentHashMap<?, ?> classLoaderValueMap;
 
     /**
      * Attempts to atomically set a volatile field in this object. Returns

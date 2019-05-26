@@ -2,7 +2,6 @@ package java.lang;
 
 import java.io.*;
 
-import jdk.internal.reflect.CallerSensitive;
 import jdk.internal.reflect.Reflection;
 
 /**
@@ -106,16 +105,14 @@ public class Runtime {
      * virtual machine is terminated due to user logoff or system shutdown the
      * underlying operating system may only allow a fixed amount of time in
      * which to shut down and exit.  It is therefore inadvisable to attempt any
-     * user interaction or to perform a long-running computation in a shutdown
-     * hook.
+     * user interaction or to perform a long-running computation in a shutdown hook.
      *
      * Uncaught exceptions are handled in shutdown hooks just as in any
      * other thread, by invoking the
      * {@link ThreadGroup#uncaughtException uncaughtException} method of the
      * thread's {@link ThreadGroup} object. The default implementation of this
      * method prints the exception's stack trace to {@link System#err} and
-     * terminates the thread; it does not cause the virtual machine to exit or
-     * halt.
+     * terminates the thread; it does not cause the virtual machine to exit or halt.
      *
      * In rare circumstances the virtual machine may <i>abort</i>, that is,
      * stop running without shutting down cleanly.  This occurs when the

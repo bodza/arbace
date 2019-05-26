@@ -313,7 +313,6 @@ public class CharsetMapping {
             bb = null;
             return this;
         } catch (IOException x) {
-            x.printStackTrace();
             return null;
         }
     }

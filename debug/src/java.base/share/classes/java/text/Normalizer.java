@@ -104,8 +104,7 @@ public final class Normalizer {
 
     /**
      * Normalize a sequence of char values.
-     * The sequence will be normalized according to the specified normalization
-     * from.
+     * The sequence will be normalized according to the specified normalization from.
      * @param src        The sequence of char values to normalize.
      * @param form       The normalization form; one of
      *                   {@link java.text.Normalizer.Form#NFC},

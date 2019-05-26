@@ -3,10 +3,10 @@ package jdk.internal.reflect;
 import jdk.internal.misc.Unsafe;
 
 /**
-  * Utility class which assists in calling Unsafe.defineClass() by
-  * creating a new class loader which delegates to the one needed in
-  * order for proper resolution of the given bytecodes to occur.
-  */
+ * Utility class which assists in calling Unsafe.defineClass() by
+ * creating a new class loader which delegates to the one needed in
+ * order for proper resolution of the given bytecodes to occur.
+ */
 class ClassDefiner {
     static final Unsafe unsafe = Unsafe.getUnsafe();
 

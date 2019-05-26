@@ -926,8 +926,7 @@ public class FDBigInteger {
 
     /**
      * Multiplies a <code>FDBigInteger</code> by an int and adds another int. The
-     * result is computed in place. This method is intended only to be invoked
-     * from
+     * result is computed in place. This method is intended only to be invoked from
      * <code>
      * FDBigInteger(long lValue, char[] digits, int kDigits, int nDigits)
      * </code>.

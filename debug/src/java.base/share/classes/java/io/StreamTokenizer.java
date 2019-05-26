@@ -42,8 +42,7 @@ public class StreamTokenizer {
      * The next character to be considered by the nextToken method.  May also
      * be NEED_CHAR to indicate that a new character should be read, or SKIP_LF
      * to indicate that a new character should be read and, if it is a '\n'
-     * character, it should be discarded and a second new character should be
-     * read.
+     * character, it should be discarded and a second new character should be read.
      */
     private int peekc = NEED_CHAR;
 

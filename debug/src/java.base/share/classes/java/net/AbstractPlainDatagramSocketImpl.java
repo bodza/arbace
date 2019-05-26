@@ -230,78 +230,77 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
      * set a value - since we only support (setting) binary options
      * here, o must be a Boolean
      */
-     public void setOption(int optID, Object o) throws SocketException {
-         if (isClosed()) {
-             throw new SocketException("Socket Closed");
-         }
-         switch (optID) {
-            /* check type safety b4 going native.  These should never
-             * fail, since only java.Socket* has access to
-             * PlainSocketImpl.setOption().
-             */
-         case SO_TIMEOUT:
-             if (o == null || !(o instanceof Integer)) {
-                 throw new SocketException("bad argument for SO_TIMEOUT");
-             }
-             int tmp = ((Integer) o).intValue();
-             if (tmp < 0)
-                 throw new IllegalArgumentException("timeout < 0");
-             timeout = tmp;
-             return;
-         case IP_TOS:
-             if (o == null || !(o instanceof Integer)) {
-                 throw new SocketException("bad argument for IP_TOS");
-             }
-             trafficClass = ((Integer)o).intValue();
-             break;
-         case SO_REUSEADDR:
-             if (o == null || !(o instanceof Boolean)) {
-                 throw new SocketException("bad argument for SO_REUSEADDR");
-             }
-             break;
-         case SO_BROADCAST:
-             if (o == null || !(o instanceof Boolean)) {
-                 throw new SocketException("bad argument for SO_BROADCAST");
-             }
-             break;
-         case SO_BINDADDR:
-             throw new SocketException("Cannot re-bind Socket");
-         case SO_RCVBUF:
-         case SO_SNDBUF:
-             if (o == null || !(o instanceof Integer) || ((Integer)o).intValue() < 0) {
-                 throw new SocketException("bad argument for SO_SNDBUF or SO_RCVBUF");
-             }
-             break;
-         case IP_MULTICAST_IF:
-             if (o == null || !(o instanceof InetAddress))
-                 throw new SocketException("bad argument for IP_MULTICAST_IF");
-             break;
-         case IP_MULTICAST_IF2:
-             if (o == null || !(o instanceof NetworkInterface))
-                 throw new SocketException("bad argument for IP_MULTICAST_IF2");
-             break;
-         case IP_MULTICAST_LOOP:
-             if (o == null || !(o instanceof Boolean))
-                 throw new SocketException("bad argument for IP_MULTICAST_LOOP");
-             break;
-         case SO_REUSEPORT:
-             if (o == null || !(o instanceof Boolean)) {
-                 throw new SocketException("bad argument for SO_REUSEPORT");
-             }
-             if (!supportedOptions().contains(StandardSocketOptions.SO_REUSEPORT)) {
-                 throw new UnsupportedOperationException("unsupported option");
-             }
-             break;
-         default:
-             throw new SocketException("invalid option: " + optID);
-         }
-         socketSetOption(optID, o);
-     }
+    public void setOption(int optID, Object o) throws SocketException {
+        if (isClosed()) {
+            throw new SocketException("Socket Closed");
+        }
+        switch (optID) {
+           /* check type safety b4 going native.  These should never
+            * fail, since only java.Socket* has access to
+            * PlainSocketImpl.setOption().
+            */
+        case SO_TIMEOUT:
+            if (o == null || !(o instanceof Integer)) {
+                throw new SocketException("bad argument for SO_TIMEOUT");
+            }
+            int tmp = ((Integer) o).intValue();
+            if (tmp < 0)
+                throw new IllegalArgumentException("timeout < 0");
+            timeout = tmp;
+            return;
+        case IP_TOS:
+            if (o == null || !(o instanceof Integer)) {
+                throw new SocketException("bad argument for IP_TOS");
+            }
+            trafficClass = ((Integer)o).intValue();
+            break;
+        case SO_REUSEADDR:
+            if (o == null || !(o instanceof Boolean)) {
+                throw new SocketException("bad argument for SO_REUSEADDR");
+            }
+            break;
+        case SO_BROADCAST:
+            if (o == null || !(o instanceof Boolean)) {
+                throw new SocketException("bad argument for SO_BROADCAST");
+            }
+            break;
+        case SO_BINDADDR:
+            throw new SocketException("Cannot re-bind Socket");
+        case SO_RCVBUF:
+        case SO_SNDBUF:
+            if (o == null || !(o instanceof Integer) || ((Integer)o).intValue() < 0) {
+                throw new SocketException("bad argument for SO_SNDBUF or SO_RCVBUF");
+            }
+            break;
+        case IP_MULTICAST_IF:
+            if (o == null || !(o instanceof InetAddress))
+                throw new SocketException("bad argument for IP_MULTICAST_IF");
+            break;
+        case IP_MULTICAST_IF2:
+            if (o == null || !(o instanceof NetworkInterface))
+                throw new SocketException("bad argument for IP_MULTICAST_IF2");
+            break;
+        case IP_MULTICAST_LOOP:
+            if (o == null || !(o instanceof Boolean))
+                throw new SocketException("bad argument for IP_MULTICAST_LOOP");
+            break;
+        case SO_REUSEPORT:
+            if (o == null || !(o instanceof Boolean)) {
+                throw new SocketException("bad argument for SO_REUSEPORT");
+            }
+            if (!supportedOptions().contains(StandardSocketOptions.SO_REUSEPORT)) {
+                throw new UnsupportedOperationException("unsupported option");
+            }
+            break;
+        default:
+            throw new SocketException("invalid option: " + optID);
+        }
+        socketSetOption(optID, o);
+    }
 
-    /*
+    /**
      * get option's state - set or not
      */
-
     public Object getOption(int optID) throws SocketException {
         if (isClosed()) {
             throw new SocketException("Socket Closed");

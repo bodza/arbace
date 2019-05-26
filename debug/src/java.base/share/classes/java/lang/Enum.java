@@ -175,8 +175,7 @@ public abstract class Enum<E extends Enum<E>> implements Comparable<E> {
      * method on that enum may be used instead of this method to map
      * from a name to the corresponding enum constant.  All the
      * constants of an enum type can be obtained by calling the
-     * implicit {@code public static T[] values()} method of that
-     * type.
+     * implicit {@code public static T[] values()} method of that type.
      *
      * @param <T> The enum type whose constant is to be returned
      * @param enumType the {@code Class} object of the enum type from which

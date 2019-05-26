@@ -983,10 +983,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             }
             return a;
         }
-
-        public Spliterator<K> spliterator() {
-            return new KeySpliterator<>(IdentityHashMap.this, 0, -1, 0, 0);
-        }
     }
 
     /**
@@ -1074,10 +1070,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
                 a[ti] = null;
             }
             return a;
-        }
-
-        public Spliterator<V> spliterator() {
-            return new ValueSpliterator<>(IdentityHashMap.this, 0, -1, 0, 0);
         }
     }
 
@@ -1202,10 +1194,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             }
             return a;
         }
-
-        public Spliterator<Map.Entry<K,V>> spliterator() {
-            return new EntrySpliterator<>(IdentityHashMap.this, 0, -1, 0, 0);
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -1243,199 +1231,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             if (modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
             }
-        }
-    }
-
-    /**
-     * Similar form as array-based Spliterators, but skips blank elements,
-     * and guestimates size as decreasing by half per split.
-     */
-    static class IdentityHashMapSpliterator<K,V> {
-        final IdentityHashMap<K,V> map;
-        int index; // current index, modified on advance/split
-        int fence; // -1 until first use; then one past last index
-        int est; // size estimate
-        int expectedModCount; // initialized when fence set
-
-        IdentityHashMapSpliterator(IdentityHashMap<K,V> map, int origin, int fence, int est, int expectedModCount) {
-            this.map = map;
-            this.index = origin;
-            this.fence = fence;
-            this.est = est;
-            this.expectedModCount = expectedModCount;
-        }
-
-        final int getFence() { // initialize fence and size on first use
-            int hi;
-            if ((hi = fence) < 0) {
-                est = map.size;
-                expectedModCount = map.modCount;
-                hi = fence = map.table.length;
-            }
-            return hi;
-        }
-
-        public final long estimateSize() {
-            getFence(); // force init
-            return (long) est;
-        }
-    }
-
-    static final class KeySpliterator<K,V> extends IdentityHashMapSpliterator<K,V> implements Spliterator<K> {
-        KeySpliterator(IdentityHashMap<K,V> map, int origin, int fence, int est, int expectedModCount) {
-            super(map, origin, fence, est, expectedModCount);
-        }
-
-        public KeySpliterator<K,V> trySplit() {
-            int hi = getFence(), lo = index, mid = ((lo + hi) >>> 1) & ~1;
-            return (lo >= mid) ? null : new KeySpliterator<>(map, lo, index = mid, est >>>= 1, expectedModCount);
-        }
-
-        @SuppressWarnings("unchecked")
-        public void forEachRemaining(Consumer<? super K> action) {
-            if (action == null)
-                throw new NullPointerException();
-            int i, hi, mc; Object key;
-            IdentityHashMap<K,V> m; Object[] a;
-            if ((m = map) != null && (a = m.table) != null && (i = index) >= 0 && (index = hi = getFence()) <= a.length) {
-                for ( ; i < hi; i += 2) {
-                    if ((key = a[i]) != null)
-                        action.accept((K)unmaskNull(key));
-                }
-                if (m.modCount == expectedModCount)
-                    return;
-            }
-            throw new ConcurrentModificationException();
-        }
-
-        @SuppressWarnings("unchecked")
-        public boolean tryAdvance(Consumer<? super K> action) {
-            if (action == null)
-                throw new NullPointerException();
-            Object[] a = map.table;
-            int hi = getFence();
-            while (index < hi) {
-                Object key = a[index];
-                index += 2;
-                if (key != null) {
-                    action.accept((K)unmaskNull(key));
-                    if (map.modCount != expectedModCount)
-                        throw new ConcurrentModificationException();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int characteristics() {
-            return (fence < 0 || est == map.size ? SIZED : 0) | Spliterator.DISTINCT;
-        }
-    }
-
-    static final class ValueSpliterator<K,V> extends IdentityHashMapSpliterator<K,V> implements Spliterator<V> {
-        ValueSpliterator(IdentityHashMap<K,V> m, int origin, int fence, int est, int expectedModCount) {
-            super(m, origin, fence, est, expectedModCount);
-        }
-
-        public ValueSpliterator<K,V> trySplit() {
-            int hi = getFence(), lo = index, mid = ((lo + hi) >>> 1) & ~1;
-            return (lo >= mid) ? null : new ValueSpliterator<>(map, lo, index = mid, est >>>= 1, expectedModCount);
-        }
-
-        public void forEachRemaining(Consumer<? super V> action) {
-            if (action == null)
-                throw new NullPointerException();
-            int i, hi, mc;
-            IdentityHashMap<K,V> m; Object[] a;
-            if ((m = map) != null && (a = m.table) != null && (i = index) >= 0 && (index = hi = getFence()) <= a.length) {
-                for ( ; i < hi; i += 2) {
-                    if (a[i] != null) {
-                        @SuppressWarnings("unchecked") V v = (V)a[i+1];
-                        action.accept(v);
-                    }
-                }
-                if (m.modCount == expectedModCount)
-                    return;
-            }
-            throw new ConcurrentModificationException();
-        }
-
-        public boolean tryAdvance(Consumer<? super V> action) {
-            if (action == null)
-                throw new NullPointerException();
-            Object[] a = map.table;
-            int hi = getFence();
-            while (index < hi) {
-                Object key = a[index];
-                @SuppressWarnings("unchecked") V v = (V)a[index+1];
-                index += 2;
-                if (key != null) {
-                    action.accept(v);
-                    if (map.modCount != expectedModCount)
-                        throw new ConcurrentModificationException();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int characteristics() {
-            return (fence < 0 || est == map.size ? SIZED : 0);
-        }
-    }
-
-    static final class EntrySpliterator<K,V> extends IdentityHashMapSpliterator<K,V> implements Spliterator<Map.Entry<K,V>> {
-        EntrySpliterator(IdentityHashMap<K,V> m, int origin, int fence, int est, int expectedModCount) {
-            super(m, origin, fence, est, expectedModCount);
-        }
-
-        public EntrySpliterator<K,V> trySplit() {
-            int hi = getFence(), lo = index, mid = ((lo + hi) >>> 1) & ~1;
-            return (lo >= mid) ? null : new EntrySpliterator<>(map, lo, index = mid, est >>>= 1, expectedModCount);
-        }
-
-        public void forEachRemaining(Consumer<? super Map.Entry<K, V>> action) {
-            if (action == null)
-                throw new NullPointerException();
-            int i, hi, mc;
-            IdentityHashMap<K,V> m; Object[] a;
-            if ((m = map) != null && (a = m.table) != null && (i = index) >= 0 && (index = hi = getFence()) <= a.length) {
-                for ( ; i < hi; i += 2) {
-                    Object key = a[i];
-                    if (key != null) {
-                        @SuppressWarnings("unchecked") K k = (K)unmaskNull(key);
-                        @SuppressWarnings("unchecked") V v = (V)a[i+1];
-                        action.accept(new AbstractMap.SimpleImmutableEntry<>(k, v));
-                    }
-                }
-                if (m.modCount == expectedModCount)
-                    return;
-            }
-            throw new ConcurrentModificationException();
-        }
-
-        public boolean tryAdvance(Consumer<? super Map.Entry<K,V>> action) {
-            if (action == null)
-                throw new NullPointerException();
-            Object[] a = map.table;
-            int hi = getFence();
-            while (index < hi) {
-                Object key = a[index];
-                @SuppressWarnings("unchecked") V v = (V)a[index+1];
-                index += 2;
-                if (key != null) {
-                    @SuppressWarnings("unchecked") K k = (K)unmaskNull(key);
-                    action.accept(new AbstractMap.SimpleImmutableEntry<>(k, v));
-                    if (map.modCount != expectedModCount)
-                        throw new ConcurrentModificationException();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int characteristics() {
-            return (fence < 0 || est == map.size ? SIZED : 0) | Spliterator.DISTINCT;
         }
     }
 }

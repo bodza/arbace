@@ -5,10 +5,6 @@ package java.net;
  *
  * The {@link SocketOption#name name} of each socket option defined by this
  * class is its field name.
- *
- * In this release, the socket options defined here are used by {@link
- * java.nio.channels.NetworkChannel network} channels in the {@link
- * java.nio.channels channels} package.
  */
 public final class StandardSocketOptions {
     private StandardSocketOptions() { }
@@ -54,8 +50,7 @@ public final class StandardSocketOptions {
      * output buffer used by the networking implementation. It may need to be
      * increased for high-volume connections. The value of the socket option is
      * a <em>hint</em> to the implementation to size the buffer and the actual
-     * size may differ. The socket option can be queried to retrieve the actual
-     * size.
+     * size may differ. The socket option can be queried to retrieve the actual size.
      *
      * For datagram-oriented sockets, the size of the send buffer may limit
      * the size of the datagrams that may be sent by the socket. Whether
@@ -167,11 +162,6 @@ public final class StandardSocketOptions {
      * is disabled. In that case the {@code close} method does not wait until
      * unsent data is transmitted; if possible the operating system will transmit
      * any unsent data before the connection is closed.
-     *
-     * This socket option is intended for use with sockets that are configured
-     * in {@link java.nio.channels.SelectableChannel#isBlocking() blocking} mode
-     * only. The behavior of the {@code close} method when this option is
-     * enabled on a non-blocking socket is not defined.
      *
      * The initial value of this socket option is a negative value, meaning
      * that the option is disabled. The option may be enabled, or the linger

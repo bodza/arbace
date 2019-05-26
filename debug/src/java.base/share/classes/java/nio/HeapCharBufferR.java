@@ -1,26 +1,17 @@
 package java.nio;
 
 /**
-
  * A read-only HeapCharBuffer.  This class extends the corresponding
  * read/write class, overriding the mutation methods to throw a {@link
  * ReadOnlyBufferException} and overriding the view-buffer methods to return an
  * instance of this class rather than of the superclass.
-
  */
-
 class HeapCharBufferR extends HeapCharBuffer {
     // Cached array base offset
     private static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(char[].class);
 
     // Cached array base offset
     private static final long ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(char[].class);
-
-    // For speed these fields are actually declared in X-Buffer;
-    // these declarations are here as documentation
-    /*
-
-    */
 
     HeapCharBufferR(int cap, int lim) {
         super(cap, lim);

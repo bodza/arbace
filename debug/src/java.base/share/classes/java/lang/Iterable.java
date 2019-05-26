@@ -2,8 +2,6 @@ package java.lang;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 
 /**
@@ -47,29 +45,5 @@ public interface Iterable<T> {
         for (T t : this) {
             action.accept(t);
         }
-    }
-
-    /**
-     * Creates a {@link Spliterator} over the elements described by this
-     * {@code Iterable}.
-     *
-     * @implSpec
-     * The default implementation creates an
-     * <em><a href="../util/Spliterator.html#binding">early-binding</a></em>
-     * spliterator from the iterable's {@code Iterator}.  The spliterator
-     * inherits the <em>fail-fast</em> properties of the iterable's iterator.
-     *
-     * @implNote
-     * The default implementation should usually be overridden.  The
-     * spliterator returned by the default implementation has poor splitting
-     * capabilities, is unsized, and does not report any spliterator
-     * characteristics. Implementing classes can nearly always provide a
-     * better implementation.
-     *
-     * @return a {@code Spliterator} over the elements described by this
-     * {@code Iterable}.
-     */
-    default Spliterator<T> spliterator() {
-        return Spliterators.spliteratorUnknownSize(iterator(), 0);
     }
 }

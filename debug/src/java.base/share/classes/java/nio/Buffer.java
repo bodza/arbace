@@ -2,8 +2,6 @@ package java.nio;
 
 import jdk.internal.misc.Unsafe;
 
-import java.util.Spliterator;
-
 /**
  * A container for data of a specific primitive type.
  *
@@ -143,12 +141,6 @@ import java.util.Spliterator;
 public abstract class Buffer {
     // Cached unsafe-access object
     static final Unsafe UNSAFE = Unsafe.getUnsafe();
-
-    /**
-     * The characteristics of Spliterators that traverse and split elements
-     * maintained in Buffers.
-     */
-    static final int SPLITERATOR_CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
 
     // Invariants: mark <= position <= limit <= capacity
     private int mark = -1;

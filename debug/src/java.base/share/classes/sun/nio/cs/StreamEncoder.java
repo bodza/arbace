@@ -2,7 +2,6 @@ package sun.nio.cs;
 
 import java.io.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.nio.charset.*;
 
 public class StreamEncoder extends Writer {
@@ -33,12 +32,6 @@ public class StreamEncoder extends Writer {
 
     public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, CharsetEncoder enc) {
         return new StreamEncoder(out, lock, enc);
-    }
-
-    // Factory for java.nio.channels.Channels.newWriter
-
-    public static StreamEncoder forEncoder(WritableByteChannel ch, CharsetEncoder enc, int minBufferCap) {
-        return new StreamEncoder(ch, enc, minBufferCap);
     }
 
     // -- Public methods corresponding to those in OutputStreamWriter --

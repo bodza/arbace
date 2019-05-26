@@ -105,8 +105,6 @@ public class Cleaner extends PhantomReference<Object> {
         try {
             thunk.run();
         } catch (final Throwable x) {
-            if (System.err != null)
-                new Error("Cleaner terminated abnormally", x).printStackTrace();
             System.exit(1);
         }
     }

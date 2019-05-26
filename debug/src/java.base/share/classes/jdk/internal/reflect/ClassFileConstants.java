@@ -1,9 +1,9 @@
 package jdk.internal.reflect;
 
 /**
-  * Minimal set of class file constants for assembly of field and
-  * method accessors.
-  */
+ * Minimal set of class file constants for assembly of field and
+ * method accessors.
+ */
 interface ClassFileConstants {
     // Constants
     public static final byte opc_aconst_null   = (byte) 0x1;

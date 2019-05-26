@@ -2,8 +2,6 @@ package java.io;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Spliterator;
-import java.util.Spliterators;
 
 /**
  * Reads text from a character-input stream, buffering characters so as to

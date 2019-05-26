@@ -63,8 +63,7 @@ public class FilterInputStream extends InputStream {
      * the  result. It is important that it does
      * <i>not</i> do <code>in.read(b)</code> instead;
      * certain subclasses of  <code>FilterInputStream</code>
-     * depend on the implementation strategy actually
-     * used.
+     * depend on the implementation strategy actually used.
      *
      * @param b   the buffer into which the data is read.
      * @return the total number of bytes read into the buffer, or
@@ -138,8 +137,7 @@ public class FilterInputStream extends InputStream {
     /**
      * Closes this input stream and releases any system resources
      * associated with the stream.
-     * This
-     * method simply performs <code>in.close()</code>.
+     * This method simply performs <code>in.close()</code>.
      *
      * @throws IOException  if an I/O error occurs.
      */
