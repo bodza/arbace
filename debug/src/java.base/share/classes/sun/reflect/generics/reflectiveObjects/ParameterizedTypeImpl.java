@@ -123,7 +123,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
      * that share the same generic type declaration and have equal
      * type parameters."
      */
-    @Override
+    // @Override
     public boolean equals(Object o) {
         if (o instanceof ParameterizedType) {
             // Check that information is equivalent
@@ -143,7 +143,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
             return false;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return Arrays.hashCode(actualTypeArguments) ^ Objects.hashCode(ownerType) ^ Objects.hashCode(rawType);
     }
@@ -159,7 +159,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
             if (ownerType instanceof ParameterizedTypeImpl) {
                 // Find simple name of nested type by removing the
                 // shared prefix with owner.
-                sb.append(rawType.getName().replace(((ParameterizedTypeImpl)ownerType).rawType.getName() + "$", ""));
+                sb.append(rawType.getName().replace(String.str(((ParameterizedTypeImpl)ownerType).rawType.getName(), "$"), ""));
             } else
                sb.append(rawType.getSimpleName());
         } else

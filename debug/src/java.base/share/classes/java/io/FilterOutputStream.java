@@ -54,7 +54,7 @@ public class FilterOutputStream extends OutputStream {
      * @param b   the <code>byte</code>.
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public void write(int b) throws IOException {
         out.write(b);
     }
@@ -74,7 +74,7 @@ public class FilterOutputStream extends OutputStream {
      * @param b   the data to be written.
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public void write(byte b[]) throws IOException {
         write(b, 0, b.length);
     }
@@ -98,7 +98,7 @@ public class FilterOutputStream extends OutputStream {
      * @param len   the number of bytes to write.
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public void write(byte b[], int off, int len) throws IOException {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0)
             throw new IndexOutOfBoundsException();
@@ -117,7 +117,7 @@ public class FilterOutputStream extends OutputStream {
      *
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public void flush() throws IOException {
         out.flush();
     }
@@ -132,7 +132,7 @@ public class FilterOutputStream extends OutputStream {
      *
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public void close() throws IOException {
         if (closed) {
             return;

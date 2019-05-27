@@ -26,17 +26,17 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
         return method;
     }
 
-    @Override
+    // @Override
     public void invalidate() {
         compilerToVM().invalidateInstalledCode(this);
     }
 
-    @Override
+    // @Override
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         return compilerToVM().executeInstalledCode(args, this);
     }
 
-    @Override
+    // @Override
     public long getStart() {
         return isValid() ? super.getStart() : 0;
     }

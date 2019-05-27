@@ -92,7 +92,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     public Vector(int initialCapacity, int capacityIncrement) {
         super();
         if (initialCapacity < 0)
-            throw new IllegalArgumentException("Illegal Capacity: " + initialCapacity);
+            throw new IllegalArgumentException(String.str("Illegal Capacity: ", initialCapacity));
         this.elementData = new Object[initialCapacity];
         this.capacityIncrement = capacityIncrement;
     }
@@ -409,7 +409,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized int lastIndexOf(Object o, int index) {
         if (index >= elementCount)
-            throw new IndexOutOfBoundsException(index + " >= "+ elementCount);
+            throw new IndexOutOfBoundsException(String.str(index, " >= ", elementCount));
 
         if (o == null) {
             for (int i = index; i >= 0; i--)
@@ -436,7 +436,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized E elementAt(int index) {
         if (index >= elementCount) {
-            throw new ArrayIndexOutOfBoundsException(index + " >= " + elementCount);
+            throw new ArrayIndexOutOfBoundsException(String.str(index, " >= ", elementCount));
         }
 
         return elementData(index);
@@ -492,7 +492,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized void setElementAt(E obj, int index) {
         if (index >= elementCount) {
-            throw new ArrayIndexOutOfBoundsException(index + " >= " + elementCount);
+            throw new ArrayIndexOutOfBoundsException(String.str(index, " >= ", elementCount));
         }
         elementData[index] = obj;
     }
@@ -518,7 +518,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized void removeElementAt(int index) {
         if (index >= elementCount) {
-            throw new ArrayIndexOutOfBoundsException(index + " >= " + elementCount);
+            throw new ArrayIndexOutOfBoundsException(String.str(index, " >= ", elementCount));
         }
         else if (index < 0) {
             throw new ArrayIndexOutOfBoundsException(index);
@@ -557,7 +557,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized void insertElementAt(E obj, int index) {
         if (index > elementCount) {
-            throw new ArrayIndexOutOfBoundsException(index + " > " + elementCount);
+            throw new ArrayIndexOutOfBoundsException(String.str(index, " > ", elementCount));
         }
         modCount++;
         final int s = elementCount;
@@ -632,7 +632,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized Object clone() {
         try {
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Vector<E> v = (Vector<E>) super.clone();
             v.elementData = Arrays.copyOf(elementData, elementCount);
             v.modCount = 0;
@@ -676,7 +676,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Vector
      * @throws NullPointerException if the given array is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public synchronized <T> T[] toArray(T[] a) {
         if (a.length < elementCount)
             return (T[]) Arrays.copyOf(elementData, elementCount, a.getClass());
@@ -691,12 +691,12 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     // Positional Access Operations
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     E elementData(int index) {
         return (E) elementData[index];
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> E elementAt(Object[] es, int index) {
         return (E) es[index];
     }
@@ -911,7 +911,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * @throws NullPointerException {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean removeIf(Predicate<? super E> filter) {
         Objects.requireNonNull(filter);
         return bulkRemove(filter);
@@ -1106,7 +1106,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      */
     public synchronized ListIterator<E> listIterator(int index) {
         if (index < 0 || index > elementCount)
-            throw new IndexOutOfBoundsException("Index: "+index);
+            throw new IndexOutOfBoundsException(String.str("Index: ", index));
         return new ListItr(index);
     }
 
@@ -1230,7 +1230,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * @throws NullPointerException {@inheritDoc}
      */
-    @Override
+    // @Override
     public synchronized void forEach(Consumer<? super E> action) {
         Objects.requireNonNull(action);
         final int expectedModCount = modCount;
@@ -1245,7 +1245,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * @throws NullPointerException {@inheritDoc}
      */
-    @Override
+    // @Override
     public synchronized void replaceAll(UnaryOperator<E> operator) {
         Objects.requireNonNull(operator);
         final int expectedModCount = modCount;
@@ -1258,8 +1258,8 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
         modCount++;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public synchronized void sort(Comparator<? super E> c) {
         final int expectedModCount = modCount;
         Arrays.sort((E[]) elementData, 0, elementCount, c);

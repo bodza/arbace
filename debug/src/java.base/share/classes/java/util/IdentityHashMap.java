@@ -181,7 +181,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
      */
     public IdentityHashMap(int expectedMaxSize) {
         if (expectedMaxSize < 0)
-            throw new IllegalArgumentException("expectedMaxSize is negative: " + expectedMaxSize);
+            throw new IllegalArgumentException(String.str("expectedMaxSize is negative: ", expectedMaxSize));
         init(capacity(expectedMaxSize));
     }
 
@@ -277,7 +277,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
      * The {@link #containsKey containsKey} operation may be used to
      * distinguish these two cases.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public V get(Object key) {
         Object k = maskNull(key);
         Object[] tab = table;
@@ -378,7 +378,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
 
             for (Object item; (item = tab[i]) != null; i = nextKeyIndex(i, len)) {
                 if (item == k) {
-                    @SuppressWarnings("unchecked")
+                    // @SuppressWarnings("unchecked")
                         V oldValue = (V) tab[i + 1];
                     tab[i + 1] = value;
                     return oldValue;
@@ -477,7 +477,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             if (item == k) {
                 modCount++;
                 size--;
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                     V oldValue = (V) tab[i + 1];
                 tab[i + 1] = null;
                 tab[i] = null;
@@ -762,14 +762,14 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
     }
 
     private class KeyIterator extends IdentityHashMapIterator<K> {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public K next() {
             return (K) unmaskNull(traversalTable[nextIndex()]);
         }
     }
 
     private class ValueIterator extends IdentityHashMapIterator<V> {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public V next() {
             return (V) traversalTable[nextIndex() + 1];
         }
@@ -797,19 +797,19 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
                 this.index = index;
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public K getKey() {
                 checkIndexForEntryUse();
                 return (K) unmaskNull(traversalTable[index]);
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public V getValue() {
                 checkIndexForEntryUse();
                 return (V) traversalTable[index+1];
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public V setValue(V value) {
                 checkIndexForEntryUse();
                 V oldValue = (V) traversalTable[index+1];
@@ -834,15 +834,14 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
                 if (lastReturnedIndex < 0)
                     return super.hashCode();
 
-                return (System.identityHashCode(unmaskNull(traversalTable[index])) ^
-                       System.identityHashCode(traversalTable[index+1]));
+                return (System.identityHashCode(unmaskNull(traversalTable[index])) ^ System.identityHashCode(traversalTable[index+1]));
             }
 
             public String toString() {
                 if (index < 0)
                     return super.toString();
 
-                return (unmaskNull(traversalTable[index]) + "=" + traversalTable[index+1]);
+                return String.str(unmaskNull(traversalTable[index]), "=", traversalTable[index+1]);
             }
 
             private void checkIndexForEntryUse() {
@@ -955,7 +954,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
         public Object[] toArray() {
             return toArray(new Object[0]);
         }
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int expectedModCount = modCount;
             int size = size();
@@ -1044,7 +1043,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
         public Object[] toArray() {
             return toArray(new Object[0]);
         }
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int expectedModCount = modCount;
             int size = size();
@@ -1166,7 +1165,7 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             return toArray(new Object[0]);
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int expectedModCount = modCount;
             int size = size();
@@ -1196,8 +1195,8 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
         int expectedModCount = modCount;
@@ -1215,8 +1214,8 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);
         int expectedModCount = modCount;

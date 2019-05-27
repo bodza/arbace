@@ -12,7 +12,7 @@ public class IPAddressUtil {
      * @param src a String representing an IPv4 address in standard format
      * @return a byte array representing the IPv4 numeric address
      */
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     public static byte[] textToNumericFormatV4(String src) {
         byte[] res = new byte[INADDR4SZ];
 

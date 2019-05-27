@@ -37,10 +37,10 @@ public class GenericArrayTypeImpl implements GenericArrayType {
     }
 
     public String toString() {
-        return getGenericComponentType().getTypeName() + "[]";
+        return String.str(getGenericComponentType().getTypeName(), "[]");
     }
 
-    @Override
+    // @Override
     public boolean equals(Object o) {
         if (o instanceof GenericArrayType) {
             GenericArrayType that = (GenericArrayType) o;
@@ -50,7 +50,7 @@ public class GenericArrayTypeImpl implements GenericArrayType {
             return false;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return Objects.hashCode(genericComponentType);
     }

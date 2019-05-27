@@ -42,7 +42,7 @@ public final class Long extends Number implements Comparable<Long> {
      * The {@code Class} instance representing the primitive type
      * {@code long}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Long>     TYPE = (Class<Long>) Class.getPrimitiveClass("long");
 
     /**
@@ -571,10 +571,10 @@ public final class Long extends Number implements Comparable<Long> {
         }
 
         if (radix < Character.MIN_RADIX) {
-            throw new NumberFormatException("radix " + radix + " less than Character.MIN_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " less than Character.MIN_RADIX"));
         }
         if (radix > Character.MAX_RADIX) {
-            throw new NumberFormatException("radix " + radix + " greater than Character.MAX_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " greater than Character.MAX_RADIX"));
         }
 
         boolean negative = false;
@@ -649,10 +649,10 @@ public final class Long extends Number implements Comparable<Long> {
             throw new IndexOutOfBoundsException();
         }
         if (radix < Character.MIN_RADIX) {
-            throw new NumberFormatException("radix " + radix + " less than Character.MIN_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " less than Character.MIN_RADIX"));
         }
         if (radix > Character.MAX_RADIX) {
-            throw new NumberFormatException("radix " + radix + " greater than Character.MAX_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " greater than Character.MAX_RADIX"));
         }
 
         boolean negative = false;
@@ -771,7 +771,7 @@ public final class Long extends Number implements Comparable<Long> {
         if (len > 0) {
             char firstChar = s.charAt(0);
             if (firstChar == '-') {
-                throw new NumberFormatException("Illegal leading minus sign on unsigned string " + s + ".");
+                throw new NumberFormatException(String.str("Illegal leading minus sign on unsigned string ", s, "."));
             } else {
                 if (len <= 12 || // Long.MAX_VALUE in Character.MAX_RADIX is 13 digits
                     (radix == 10 && len <= 18)) { // Long.MAX_VALUE in base 10 is 19 digits
@@ -782,7 +782,7 @@ public final class Long extends Number implements Comparable<Long> {
                 long first = parseLong(s, 0, len - 1, radix);
                 int second = Character.digit(s.charAt(len - 1), radix);
                 if (second < 0) {
-                    throw new NumberFormatException("Bad digit at end of " + s);
+                    throw new NumberFormatException(String.str("Bad digit at end of ", s));
                 }
                 long result = first * radix + second;
 
@@ -837,7 +837,7 @@ public final class Long extends Number implements Comparable<Long> {
                      * signed long overflows to positive above 2^64 - 1. Hence
                      * result >= 0 implies overflow given C and D.
                      */
-                    throw new NumberFormatException("String value " + s + " exceeds range of unsigned long.");
+                    throw new NumberFormatException(String.str("String value ", s, " exceeds range of unsigned long."));
                 }
                 return result;
             }
@@ -883,7 +883,7 @@ public final class Long extends Number implements Comparable<Long> {
         if (len > 0) {
             char firstChar = s.charAt(start);
             if (firstChar == '-') {
-                throw new NumberFormatException("Illegal leading minus sign on unsigned string " + s.subSequence(start, start + len) + ".");
+                throw new NumberFormatException(String.str("Illegal leading minus sign on unsigned string ", s.subSequence(start, start + len), "."));
             } else {
                 if (len <= 12 || // Long.MAX_VALUE in Character.MAX_RADIX is 13 digits
                     (radix == 10 && len <= 18)) { // Long.MAX_VALUE in base 10 is 19 digits
@@ -894,7 +894,7 @@ public final class Long extends Number implements Comparable<Long> {
                 long first = parseLong(s, start, start + len - 1, radix);
                 int second = Character.digit(s.charAt(start + len - 1), radix);
                 if (second < 0) {
-                    throw new NumberFormatException("Bad digit at end of " + s.subSequence(start, start + len));
+                    throw new NumberFormatException(String.str("Bad digit at end of ", s.subSequence(start, start + len)));
                 }
                 long result = first * radix + second;
 
@@ -949,7 +949,7 @@ public final class Long extends Number implements Comparable<Long> {
                      * signed long overflows to positive above 2^64 - 1. Hence
                      * result >= 0 implies overflow given C and D.
                      */
-                    throw new NumberFormatException("String value " + s.subSequence(start, start + len) + " exceeds range of unsigned long.");
+                    throw new NumberFormatException(String.str("String value ", s.subSequence(start, start + len), " exceeds range of unsigned long."));
                 }
                 return result;
             }
@@ -1149,7 +1149,7 @@ public final class Long extends Number implements Comparable<Long> {
             // If number is Long.MIN_VALUE, we'll end up here. The next line
             // handles this case, and causes any genuine format error to be
             // rethrown.
-            String constant = negative ? ("-" + nm.substring(index)) : nm.substring(index);
+            String constant = negative ? String.str("-", nm.substring(index)) : nm.substring(index);
             result = Long.valueOf(constant, radix);
         }
         return result;
@@ -1275,7 +1275,7 @@ public final class Long extends Number implements Comparable<Long> {
      *
      * @return a hash code value for this object.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Long.hashCode(value);
     }

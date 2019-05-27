@@ -3,7 +3,6 @@ package java.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Hashtable;
 import sun.net.util.IPAddressUtil;
 
 /**
@@ -132,7 +131,7 @@ public abstract class URLStreamHandler {
                         String nhost = host;
                         host = nhost.substring(0,ind+1);
                         if (!IPAddressUtil.isIPv6LiteralAddress(host.substring(1, ind))) {
-                            throw new IllegalArgumentException("Invalid host: "+ host);
+                            throw new IllegalArgumentException(String.str("Invalid host: ", host));
                         }
 
                         port = -1;
@@ -144,11 +143,11 @@ public abstract class URLStreamHandler {
                                     port = Integer.parseInt(nhost, ind + 1, nhost.length(), 10);
                                 }
                             } else {
-                                throw new IllegalArgumentException("Invalid authority field: " + authority);
+                                throw new IllegalArgumentException(String.str("Invalid authority field: ", authority));
                             }
                         }
                     } else {
-                        throw new IllegalArgumentException("Invalid authority field: " + authority);
+                        throw new IllegalArgumentException(String.str("Invalid authority field: ", authority));
                     }
                 } else {
                     ind = host.indexOf(':');
@@ -165,7 +164,7 @@ public abstract class URLStreamHandler {
                 host = "";
             }
             if (port < -1)
-                throw new IllegalArgumentException("Invalid port number :" + port);
+                throw new IllegalArgumentException(String.str("Invalid port number :", port));
             start = i;
             // If the authority is defined then the path is defined by the
             // spec only; See RFC 2396 Section 5.2.4.
@@ -196,7 +195,7 @@ public abstract class URLStreamHandler {
             int ind = path.lastIndexOf('/');
             if (ind < 0)
                 ind = 0;
-            path = path.substring(0, ind) + "/";
+            path = String.str(path.substring(0, ind), "/");
         }
         if (path == null)
             path = "";
@@ -402,12 +401,7 @@ public abstract class URLStreamHandler {
      */
     protected String toExternalForm(URL u) {
         String s;
-        return u.getProtocol()
-            + ':'
-            + (((s = u.getAuthority()) != null && s.length() > 0) ? "//" + s : "")
-            + (((s = u.getPath()) != null) ? s : "")
-            + (((s = u.getQuery()) != null) ? '?' + s : "")
-            + (((s = u.getRef()) != null) ? '#' + s : "");
+        return String.str(u.getProtocol(), ':', (((s = u.getAuthority()) != null && s.length() > 0) ? String.str("//", s) : ""), (((s = u.getPath()) != null) ? s : ""), (((s = u.getQuery()) != null) ? String.str('?', s) : ""), (((s = u.getRef()) != null) ? String.str('#', s) : ""));
     }
 
     /**
@@ -456,7 +450,7 @@ public abstract class URLStreamHandler {
         String authority = null;
         String userInfo = null;
         if (host != null && host.length() != 0) {
-            authority = (port == -1) ? host : host + ":" + port;
+            authority = (port == -1) ? host : String.str(host, ":", port);
             int at = host.lastIndexOf('@');
             if (at != -1) {
                 userInfo = host.substring(0, at);

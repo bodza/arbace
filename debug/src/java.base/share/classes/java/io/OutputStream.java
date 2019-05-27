@@ -37,18 +37,18 @@ public abstract class OutputStream implements Closeable, Flushable {
                 }
             }
 
-            @Override
+            // @Override
             public void write(int b) throws IOException {
                 ensureOpen();
             }
 
-            @Override
+            // @Override
             public void write(byte b[], int off, int len) throws IOException {
                 Objects.checkFromIndexSize(off, len, b.length);
                 ensureOpen();
             }
 
-            @Override
+            // @Override
             public void close() {
                 closed = true;
             }

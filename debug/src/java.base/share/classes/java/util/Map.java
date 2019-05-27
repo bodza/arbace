@@ -1481,7 +1481,7 @@ public interface Map<K, V> {
      *         the {@code entries} array is {@code null}
      */
     // @SafeVarargs
-    @SuppressWarnings("varargs")
+    // @SuppressWarnings("varargs")
     static <K, V> Map<K, V> ofEntries(Entry<? extends K, ? extends V>... entries) {
         if (entries.length == 0) { // implicit null check of entries array
             return ImmutableCollections.emptyMap();
@@ -1551,7 +1551,7 @@ public interface Map<K, V> {
      * @return a {@code Map} containing the entries of the given {@code Map}
      * @throws NullPointerException if map is null, or if it contains any null keys or values
      */
-    @SuppressWarnings({"rawtypes","unchecked"})
+    // @SuppressWarnings({"rawtypes","unchecked"})
     static <K, V> Map<K, V> copyOf(Map<? extends K, ? extends V> map) {
         if (map instanceof ImmutableCollections.AbstractImmutableMap) {
             return (Map<K,V>)map;

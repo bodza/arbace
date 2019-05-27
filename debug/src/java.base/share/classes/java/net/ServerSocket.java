@@ -148,7 +148,7 @@ public class ServerSocket implements java.io.Closeable {
     public ServerSocket(int port, int backlog, InetAddress bindAddr) throws IOException {
         setImpl();
         if (port < 0 || port > 0xFFFF)
-            throw new IllegalArgumentException("Port value out of range: " + port);
+            throw new IllegalArgumentException(String.str("Port value out of range: ", port));
         if (backlog < 1)
           backlog = 50;
         try {
@@ -534,7 +534,7 @@ public class ServerSocket implements java.io.Closeable {
         if (!isBound())
             return "ServerSocket[unbound]";
         InetAddress in = impl.getInetAddress();
-        return "ServerSocket[addr=" + in + ",localport=" + impl.getLocalPort()  + "]";
+        return String.str("ServerSocket[addr=", in, ",localport=", impl.getLocalPort(), "]");
     }
 
     void setBound() {

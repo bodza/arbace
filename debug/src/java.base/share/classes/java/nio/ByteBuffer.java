@@ -156,7 +156,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
         this(mark, pos, lim, cap, null, 0);
     }
 
-    @Override
+    // @Override
     Object base() {
         return hb;
     }
@@ -273,7 +273,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *
      * @return  The new byte buffer
      */
-    @Override
+    // @Override
     public abstract ByteBuffer slice();
 
     /**
@@ -294,7 +294,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *
      * @return  The new byte buffer
      */
-    @Override
+    // @Override
     public abstract ByteBuffer duplicate();
 
     /**
@@ -442,7 +442,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *          parameters do not hold
      */
     public ByteBuffer get(byte[] dst, int offset, int length) {
-        checkBounds(offset, length, dst.length);
+        // oops! checkBounds(offset, length, dst.length);
         if (length > remaining())
             throw new BufferUnderflowException();
         int end = offset + length;
@@ -582,7 +582,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *          If this buffer is read-only
      */
     public ByteBuffer put(byte[] src, int offset, int length) {
-        checkBounds(offset, length, src.length);
+        // oops! checkBounds(offset, length, src.length);
         if (length > remaining())
             throw new BufferOverflowException();
         int end = offset + length;
@@ -693,7 +693,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer position(int newPosition) {
@@ -704,7 +704,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer limit(int newLimit) {
@@ -715,7 +715,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer mark() {
@@ -726,7 +726,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer reset() {
@@ -737,7 +737,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer clear() {
@@ -748,7 +748,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer flip() {
@@ -759,7 +759,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     ByteBuffer rewind() {
@@ -1026,11 +1026,11 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      */
     public final int alignmentOffset(int index, int unitSize) {
         if (index < 0)
-            throw new IllegalArgumentException("Index less than zero: " + index);
+            throw new IllegalArgumentException(String.str("Index less than zero: ", index));
         if (unitSize < 1 || (unitSize & (unitSize - 1)) != 0)
-            throw new IllegalArgumentException("Unit size not a power of two: " + unitSize);
+            throw new IllegalArgumentException(String.str("Unit size not a power of two: ", unitSize));
         if (unitSize > 8 && !isDirect())
-            throw new UnsupportedOperationException("Unit size unsupported for non-direct buffers: " + unitSize);
+            throw new UnsupportedOperationException(String.str("Unit size unsupported for non-direct buffers: ", unitSize));
 
         return (int) ((address + index) % unitSize);
     }

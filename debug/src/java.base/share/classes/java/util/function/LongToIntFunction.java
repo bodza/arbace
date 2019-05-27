@@ -8,7 +8,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsInt(long)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface LongToIntFunction {
     /**
      * Applies this function to the given argument.

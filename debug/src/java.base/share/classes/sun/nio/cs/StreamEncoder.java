@@ -23,7 +23,7 @@ public class StreamEncoder extends Writer {
             if (Charset.isSupported(csn))
                 return new StreamEncoder(out, lock, Charset.forName(csn));
         } catch (IllegalCharsetNameException x) { }
-        throw new UnsupportedEncodingException (csn);
+        throw new UnsupportedEncodingException(csn);
     }
 
     public static StreamEncoder forOutputStreamWriter(OutputStream out, Object lock, Charset cs) {
@@ -122,7 +122,6 @@ public class StreamEncoder extends Writer {
 
     // Exactly one of these is non-null
     private final OutputStream out;
-    private WritableByteChannel ch;
 
     // Leftover first char in a surrogate pair
     private boolean haveLeftoverChar = false;
@@ -136,21 +135,10 @@ public class StreamEncoder extends Writer {
     private StreamEncoder(OutputStream out, Object lock, CharsetEncoder enc) {
         super(lock);
         this.out = out;
-        this.ch = null;
         this.cs = enc.charset();
         this.encoder = enc;
 
-        if (ch == null) {
-            bb = ByteBuffer.allocate(DEFAULT_BYTE_BUFFER_SIZE);
-        }
-    }
-
-    private StreamEncoder(WritableByteChannel ch, CharsetEncoder enc, int mbc) {
-        this.out = null;
-        this.ch = ch;
-        this.cs = enc.charset();
-        this.encoder = enc;
-        this.bb = ByteBuffer.allocate(mbc < 0 ? DEFAULT_BYTE_BUFFER_SIZE : mbc);
+        bb = ByteBuffer.allocate(DEFAULT_BYTE_BUFFER_SIZE);
     }
 
     private void writeBytes() throws IOException {
@@ -160,16 +148,11 @@ public class StreamEncoder extends Writer {
         assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
-            if (rem > 0) {
-        if (ch != null) {
-            if (ch.write(bb) != rem)
-                assert false : rem;
-        } else {
+        if (rem > 0) {
             out.write(bb.array(), bb.arrayOffset() + pos, rem);
         }
-        }
         bb.clear();
-        }
+    }
 
     private void flushLeftoverChar(CharBuffer cb, boolean endOfInput) throws IOException {
         if (!haveLeftoverChar && !endOfInput)
@@ -264,10 +247,7 @@ public class StreamEncoder extends Writer {
 
             if (bb.position() > 0)
                 writeBytes();
-            if (ch != null)
-                ch.close();
-            else
-                out.close();
+            out.close();
         } catch (IOException x) {
             encoder.reset();
             throw x;

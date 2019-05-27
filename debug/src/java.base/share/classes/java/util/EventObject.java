@@ -41,6 +41,6 @@ public class EventObject {
      * @return a String representation of this EventObject
      */
     public String toString() {
-        return getClass().getName() + "[source=" + source + "]";
+        return String.str(getClass().getName(), "[source=", source, "]");
     }
 }

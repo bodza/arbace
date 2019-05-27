@@ -72,7 +72,7 @@ final class FileCleanable extends PhantomCleanable<FileDescriptor> {
     /**
      * Close the native handle or fd.
      */
-    @Override
+    // @Override
     protected void performCleanup() {
         try {
             cleanupClose0(fd, handle);

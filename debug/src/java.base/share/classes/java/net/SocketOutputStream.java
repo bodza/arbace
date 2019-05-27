@@ -53,7 +53,7 @@ class SocketOutputStream extends FileOutputStream {
             if (len == 0) {
                 return;
             }
-            throw new ArrayIndexOutOfBoundsException("len == " + len + " off == " + off + " buffer length == " + b.length);
+            throw new ArrayIndexOutOfBoundsException(String.str("len == ", len, " off == ", off, " buffer length == ", b.length));
         }
 
         FileDescriptor fd = impl.acquireFD();
@@ -121,7 +121,7 @@ class SocketOutputStream extends FileOutputStream {
     /**
      * Overrides finalize, the fd is closed by the Socket.
      */
-    @SuppressWarnings({"deprecation", "removal"})
+    // @SuppressWarnings({"deprecation", "removal"})
     /* oops! protected */public void finalize() {}
 
     /**

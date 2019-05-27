@@ -184,7 +184,7 @@ public class DoubleByte {
                 return decodeBufferLoop(src, dst);
         }
 
-        @Override
+        // @Override
         public int decode(byte[] src, int sp, int len, char[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -210,7 +210,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public boolean isASCIICompatible() {
             return isASCIICompatible;
         }
@@ -373,7 +373,7 @@ public class DoubleByte {
             }
         }
 
-        @Override
+        // @Override
         public int decode(byte[] src, int sp, int len, char[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -423,7 +423,7 @@ public class DoubleByte {
         }
 
         // always returns unmappableForLenth(2) for doublebyte_only
-        @Override
+        // @Override
         protected CoderResult crMalformedOrUnmappable(int b1, int b2) {
             return CoderResult.unmappableForLength(2);
         }
@@ -461,7 +461,7 @@ public class DoubleByte {
             return CoderResult.unmappableForLength(2);
         }
 
-        @Override
+        // @Override
         public int decode(byte[] src, int sp, int len, char[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -609,7 +609,7 @@ public class DoubleByte {
             repl = newReplacement;
         }
 
-        @Override
+        // @Override
         public int encode(char[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -636,7 +636,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromLatin1(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -661,7 +661,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromUTF16(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -688,7 +688,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public boolean isASCIICompatible() {
             return isASCIICompatible;
         }
@@ -912,7 +912,7 @@ public class DoubleByte {
             }
         }
 
-        @Override
+        // @Override
         public int encode(char[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -952,7 +952,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromLatin1(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;
@@ -988,7 +988,7 @@ public class DoubleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromUTF16(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + len;

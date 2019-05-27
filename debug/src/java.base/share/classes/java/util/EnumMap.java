@@ -84,7 +84,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
         return (value == null ? NULL : value);
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private V unmaskNull(Object value) {
         return (V)(value == NULL ? null : value);
     }
@@ -295,7 +295,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
             if (em.keyType != keyType) {
                 if (em.isEmpty())
                     return;
-                throw new ClassCastException(em.keyType + " != " + keyType);
+                throw new ClassCastException(String.str(em.keyType, " != ", keyType));
             }
 
             for (int i = 0; i < keyUniverse.length; i++) {
@@ -467,7 +467,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
         public Object[] toArray() {
             return fillEntryArray(new Object[size]);
         }
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int size = size();
             if (a.length < size)
@@ -598,7 +598,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
                 if (index < 0)
                     return super.toString();
 
-                return keyUniverse[index] + "=" + unmaskNull(vals[index]);
+                return String.str(keyUniverse[index], "=", unmaskNull(vals[index]));
             }
 
             private void checkIndexForEntryUse() {
@@ -691,7 +691,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
      *
      * @return a shallow copy of this enum map
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public EnumMap<K, V> clone() {
         EnumMap<K, V> result = null;
         try {
@@ -710,7 +710,7 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements 
     private void typeCheck(K key) {
         Class<?> keyClass = key.getClass();
         if (keyClass != keyType && keyClass.getSuperclass() != keyType)
-            throw new ClassCastException(keyClass + " != " + keyType);
+            throw new ClassCastException(String.str(keyClass, " != ", keyType));
     }
 
     /**

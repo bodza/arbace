@@ -298,7 +298,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
             return getEntryUsingComparator(key);
         if (key == null)
             throw new NullPointerException();
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
             Comparable<? super K> k = (Comparable<? super K>) key;
         Entry<K,V> p = root;
         while (p != null) {
@@ -320,7 +320,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
      * worthwhile here.)
      */
     final Entry<K,V> getEntryUsingComparator(Object key) {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
             K k = (K) key;
         Comparator<? super K> cpr = comparator;
         if (cpr != null) {
@@ -513,7 +513,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         else {
             if (key == null)
                 throw new NullPointerException();
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
                 Comparable<? super K> k = (Comparable<? super K>) key;
             do {
                 parent = t;
@@ -867,7 +867,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         return tailMap(fromKey, true);
     }
 
-    @Override
+    // @Override
     public boolean replace(K key, V oldValue, V newValue) {
         Entry<K,V> p = getEntry(key);
         if (p!=null && Objects.equals(oldValue, p.value)) {
@@ -877,7 +877,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         return false;
     }
 
-    @Override
+    // @Override
     public V replace(K key, V value) {
         Entry<K,V> p = getEntry(key);
         if (p!=null) {
@@ -888,7 +888,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         return null;
     }
 
-    @Override
+    // @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
         int expectedModCount = modCount;
@@ -901,7 +901,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         }
     }
 
-    @Override
+    // @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);
         int expectedModCount = modCount;
@@ -1180,7 +1180,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
     /**
      * Compares two keys using the correct comparison method for this TreeMap.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     final int compare(Object k1, Object k2) {
         return comparator == null ? ((Comparable<? super K>)k1).compareTo((K)k2) : comparator.compare((K)k1, (K)k2);
     }
@@ -1881,7 +1881,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
         }
 
         public String toString() {
-            return key + "=" + value;
+            return String.str(key, "=", value);
         }
     }
 
@@ -2223,7 +2223,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
      * @param redLevel the level at which nodes should be red.
      *        Must be equal to computeRedLevel for tree of this size.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private final Entry<K,V> buildFromSorted(int level, int lo, int hi, int redLevel, Iterator<?> it, V defaultVal) throws java.io.IOException, ClassNotFoundException {
         /*
          * Strategy: The root is the middlemost element. To get to it, we

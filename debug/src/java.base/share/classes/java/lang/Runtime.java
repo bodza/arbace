@@ -1,6 +1,7 @@
 package java.lang;
 
 import java.io.*;
+import java.lang.ref.Finalizer;
 
 import jdk.internal.reflect.Reflection;
 

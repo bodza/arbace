@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * This is an example of how Java code handles <code>SIGINT</code>:
  * <blockquote><pre>
- * SignalHandler handler = new SignalHandler () {
+ * SignalHandler handler = new SignalHandler() {
  *     public void handle(Signal sig) {
  *       ... // handle SIGINT
  *     }
@@ -88,7 +88,7 @@ public final class Signal {
 
     /**
      * Returns a string representation of this signal. For example, "SIGINT"
-     * for an object constructed using <code>new Signal ("INT")</code>.
+     * for an object constructed using <code>new Signal("INT")</code>.
      *
      * @return a string representation of the signal
      */
@@ -152,7 +152,7 @@ public final class Signal {
             this.signal = signal;
         }
 
-        @Override
+        // @Override
         public void handle(jdk.internal.misc.Signal ignore) {
             handler.handle(signal);
         }
@@ -182,7 +182,7 @@ public final class Signal {
             this.iHandler = iHandler;
         }
 
-        @Override
+        // @Override
         public void handle(Signal sig) {
             iHandler.handle(iSignal);
         }

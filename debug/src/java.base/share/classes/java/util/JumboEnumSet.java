@@ -89,15 +89,15 @@ class JumboEnumSet<E extends Enum<E>> extends EnumSet<E> {
             unseen = elements[0];
         }
 
-        @Override
+        // @Override
         public boolean hasNext() {
             while (unseen == 0 && unseenIndex < elements.length - 1)
                 unseen = elements[++unseenIndex];
             return unseen != 0;
         }
 
-        @Override
-        @SuppressWarnings("unchecked")
+        // @Override
+        // @SuppressWarnings("unchecked")
         public E next() {
             if (!hasNext())
                 throw new NoSuchElementException();
@@ -107,7 +107,7 @@ class JumboEnumSet<E extends Enum<E>> extends EnumSet<E> {
             return (E) universe[(lastReturnedIndex << 6) + Long.numberOfTrailingZeros(lastReturned)];
         }
 
-        @Override
+        // @Override
         public void remove() {
             if (lastReturned == 0)
                 throw new IllegalStateException();
@@ -244,7 +244,7 @@ class JumboEnumSet<E extends Enum<E>> extends EnumSet<E> {
             if (es.isEmpty())
                 return false;
             else
-                throw new ClassCastException(es.elementType + " != " + elementType);
+                throw new ClassCastException(String.str(es.elementType, " != ", elementType));
         }
 
         for (int i = 0; i < elements.length; i++)

@@ -332,7 +332,7 @@ public class Throwable {
      */
     public synchronized Throwable initCause(Throwable cause) {
         if (this.cause != this)
-            throw new IllegalStateException("Can't overwrite cause with " + Objects.toString(cause, "a null"), this);
+            throw new IllegalStateException(String.str("Can't overwrite cause with ", Objects.toString(cause, "a null")), this);
         if (cause == this)
             throw new IllegalArgumentException("Self-causation not permitted", this);
         this.cause = cause;
@@ -356,7 +356,7 @@ public class Throwable {
     public String toString() {
         String s = getClass().getName();
         String message = getLocalizedMessage();
-        return (message != null) ? (s + ": " + message) : s;
+        return (message != null) ? String.str(s, ": ", message) : s;
     }
 
     /**

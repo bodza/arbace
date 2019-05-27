@@ -85,7 +85,7 @@ public class Reflection {
 
     private static Map<Class<?>,String[]> registerFilter(Map<Class<?>,String[]> map, Class<?> containingClass, String ... names) {
         if (map.get(containingClass) != null) {
-            throw new IllegalArgumentException("Filter already registered: " + containingClass);
+            throw new IllegalArgumentException(String.str("Filter already registered: ", containingClass));
         }
         map = new HashMap<Class<?>,String[]>(map);
         map.put(containingClass, names);
@@ -147,7 +147,7 @@ public class Reflection {
      * the access that is denied.
      */
     public static IllegalAccessException newIllegalAccessException(Class<?> currentClass, Class<?> memberClass, Class<?> targetClass, int modifiers) throws IllegalAccessException {
-        return new IllegalAccessException(currentClass + " cannot access " + "a member of " + memberClass + " with modifiers \"" + Modifier.toString(modifiers) + "\"");
+        return new IllegalAccessException(String.str(currentClass, " cannot access a member of ", memberClass, " with modifiers \"", Modifier.toString(modifiers), "\""));
     }
 
     /**

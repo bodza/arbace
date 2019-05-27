@@ -6,7 +6,7 @@ package jdk.vm.ci.meta;
 public final class UnresolvedJavaType implements JavaType {
     private final String name;
 
-    @Override
+    // @Override
     public String getName() {
         return name;
     }
@@ -22,12 +22,12 @@ public final class UnresolvedJavaType implements JavaType {
         return new UnresolvedJavaType(name);
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return getName().hashCode();
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

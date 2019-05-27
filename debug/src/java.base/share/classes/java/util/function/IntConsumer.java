@@ -11,7 +11,7 @@ import java.util.Objects;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #accept(int)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface IntConsumer {
     /**
      * Performs this operation on the given argument.

@@ -102,7 +102,7 @@ public class BitSet implements Cloneable {
     public BitSet(int nbits) {
         // nbits can't be negative; size 0 is OK
         if (nbits < 0)
-            throw new NegativeArraySizeException("nbits < 0: " + nbits);
+            throw new NegativeArraySizeException(String.str("nbits < 0: ", nbits));
 
         initWords(nbits);
         sizeIsSticky = true;
@@ -298,11 +298,11 @@ public class BitSet implements Cloneable {
      */
     private static void checkRange(int fromIndex, int toIndex) {
         if (fromIndex < 0)
-            throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex < 0: ", fromIndex));
         if (toIndex < 0)
-            throw new IndexOutOfBoundsException("toIndex < 0: " + toIndex);
+            throw new IndexOutOfBoundsException(String.str("toIndex < 0: ", toIndex));
         if (fromIndex > toIndex)
-            throw new IndexOutOfBoundsException("fromIndex: " + fromIndex + " > toIndex: " + toIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex: ", fromIndex, " > toIndex: ", toIndex));
     }
 
     /**
@@ -314,7 +314,7 @@ public class BitSet implements Cloneable {
      */
     public void flip(int bitIndex) {
         if (bitIndex < 0)
-            throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
+            throw new IndexOutOfBoundsException(String.str("bitIndex < 0: ", bitIndex));
 
         int wordIndex = wordIndex(bitIndex);
         expandTo(wordIndex);
@@ -374,7 +374,7 @@ public class BitSet implements Cloneable {
      */
     public void set(int bitIndex) {
         if (bitIndex < 0)
-            throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
+            throw new IndexOutOfBoundsException(String.str("bitIndex < 0: ", bitIndex));
 
         int wordIndex = wordIndex(bitIndex);
         expandTo(wordIndex);
@@ -462,7 +462,7 @@ public class BitSet implements Cloneable {
      */
     public void clear(int bitIndex) {
         if (bitIndex < 0)
-            throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
+            throw new IndexOutOfBoundsException(String.str("bitIndex < 0: ", bitIndex));
 
         int wordIndex = wordIndex(bitIndex);
         if (wordIndex >= wordsInUse)
@@ -540,7 +540,7 @@ public class BitSet implements Cloneable {
      */
     public boolean get(int bitIndex) {
         if (bitIndex < 0)
-            throw new IndexOutOfBoundsException("bitIndex < 0: " + bitIndex);
+            throw new IndexOutOfBoundsException(String.str("bitIndex < 0: ", bitIndex));
 
         int wordIndex = wordIndex(bitIndex);
         return (wordIndex < wordsInUse) && ((words[wordIndex] & (1L << bitIndex)) != 0);
@@ -618,7 +618,7 @@ public class BitSet implements Cloneable {
      */
     public int nextSetBit(int fromIndex) {
         if (fromIndex < 0)
-            throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex < 0: ", fromIndex));
 
         int u = wordIndex(fromIndex);
         if (u >= wordsInUse)
@@ -647,7 +647,7 @@ public class BitSet implements Cloneable {
         // Neither spec nor implementation handle bitsets of maximal length.
         // See 4816253.
         if (fromIndex < 0)
-            throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex < 0: ", fromIndex));
 
         int u = wordIndex(fromIndex);
         if (u >= wordsInUse)
@@ -688,7 +688,7 @@ public class BitSet implements Cloneable {
         if (fromIndex < 0) {
             if (fromIndex == -1)
                 return -1;
-            throw new IndexOutOfBoundsException("fromIndex < -1: " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex < -1: ", fromIndex));
         }
 
         int u = wordIndex(fromIndex);
@@ -722,7 +722,7 @@ public class BitSet implements Cloneable {
         if (fromIndex < 0) {
             if (fromIndex == -1)
                 return -1;
-            throw new IndexOutOfBoundsException("fromIndex < -1: " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex < -1: ", fromIndex));
         }
 
         int u = wordIndex(fromIndex);

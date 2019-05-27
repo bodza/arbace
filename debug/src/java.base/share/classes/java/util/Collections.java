@@ -98,7 +98,7 @@ public class Collections {
      *         detects that the natural ordering of the list elements is
      *         found to violate the {@link Comparable} contract
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T extends Comparable<? super T>> void sort(List<T> list) {
         list.sort(null);
     }
@@ -131,7 +131,7 @@ public class Collections {
      * @throws IllegalArgumentException (optional) if the comparator is
      *         found to violate the {@link Comparator} contract
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    // @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> void sort(List<T> list, Comparator<? super T> c) {
         list.sort(c);
     }
@@ -270,7 +270,7 @@ public class Collections {
      *         or the search key is not mutually comparable with the
      *         elements of the list using this comparator.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> int binarySearch(List<? extends T> list, T key, Comparator<? super T> c) {
         if (c==null)
             return binarySearch((List<? extends Comparable<? super T>>) list, key);
@@ -329,7 +329,7 @@ public class Collections {
      * @throws UnsupportedOperationException if the specified list or
      *         its list-iterator does not support the {@code set} operation.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     public static void reverse(List<?> list) {
         int size = list.size();
         if (size < REVERSE_THRESHOLD || list instanceof RandomAccess) {
@@ -409,7 +409,7 @@ public class Collections {
      * @throws UnsupportedOperationException if the specified list or its
      *         list-iterator does not support the {@code set} operation.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     public static void shuffle(List<?> list, Random rnd) {
         int size = list.size();
         if (size < SHUFFLE_THRESHOLD || list instanceof RandomAccess) {
@@ -446,7 +446,7 @@ public class Collections {
      *         is out of range (i &lt; 0 || i &gt;= list.size()
      *         || j &lt; 0 || j &gt;= list.size()).
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     public static void swap(List<?> list, int i, int j) {
         // instead of using a raw type here, it's possible to capture
         // the wildcard but it will require a call to a supplementary
@@ -582,7 +582,7 @@ public class Collections {
      *         not <i>mutually comparable</i> using the specified comparator.
      * @throws NoSuchElementException if the collection is empty.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    // @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T min(Collection<? extends T> coll, Comparator<? super T> comp) {
         if (comp==null)
             return (T)min((Collection) coll);
@@ -653,7 +653,7 @@ public class Collections {
      *         not <i>mutually comparable</i> using the specified comparator.
      * @throws NoSuchElementException if the collection is empty.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    // @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T max(Collection<? extends T> coll, Comparator<? super T> comp) {
         if (comp==null)
             return (T)max((Collection) coll);
@@ -1017,12 +1017,12 @@ public class Collections {
         }
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             c.forEach(action);
         }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
         }
@@ -1132,7 +1132,7 @@ public class Collections {
             }
         }
 
-        @SuppressWarnings("rawtypes")
+        // @SuppressWarnings("rawtypes")
         private static final NavigableSet<?> EMPTY_NAVIGABLE_SET = new EmptyNavigableSet<>();
 
         /**
@@ -1214,11 +1214,11 @@ public class Collections {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             throw new UnsupportedOperationException();
         }
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
             throw new UnsupportedOperationException();
         }
@@ -1342,59 +1342,59 @@ public class Collections {
         public String toString()        {return m.toString();}
 
         // Override default methods in Map
-        @Override
-        @SuppressWarnings("unchecked")
+        // @Override
+        // @SuppressWarnings("unchecked")
         public V getOrDefault(Object k, V defaultValue) {
             // Safe cast as we don't change the value
             return ((Map<K, V>)m).getOrDefault(k, defaultValue);
         }
 
-        @Override
+        // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
             m.forEach(action);
         }
 
-        @Override
+        // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V putIfAbsent(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean remove(Object key, Object value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean replace(K key, V oldValue, V newValue) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V replace(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
@@ -1406,7 +1406,7 @@ public class Collections {
          * many possible attacks that must be thwarted.
          */
         static class UnmodifiableEntrySet<K,V> extends UnmodifiableSet<Map.Entry<K,V>> {
-            @SuppressWarnings({"unchecked", "rawtypes"})
+            // @SuppressWarnings({"unchecked", "rawtypes"})
             UnmodifiableEntrySet(Set<? extends Map.Entry<? extends K, ? extends V>> s) {
                 // Need to cast to raw in order to work around a limitation in the type system
                 super((Set)s);
@@ -1439,7 +1439,7 @@ public class Collections {
                 };
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public Object[] toArray() {
                 Object[] a = c.toArray();
                 for (int i = 0; i < a.length; i++)
@@ -1447,7 +1447,7 @@ public class Collections {
                 return a;
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public <T> T[] toArray(T[] a) {
                 // We don't pass a to c.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
@@ -1603,7 +1603,7 @@ public class Collections {
         private static class EmptyNavigableMap<K,V> extends UnmodifiableNavigableMap<K,V> {
             EmptyNavigableMap()                       { super(new TreeMap<>()); }
 
-            @Override
+            // @Override
             public NavigableSet<K> navigableKeySet() { return emptyNavigableSet(); }
         }
 
@@ -1624,37 +1624,37 @@ public class Collections {
         public K ceilingKey(K key)               { return nm.ceilingKey(key); }
         public K higherKey(K key)                 { return nm.higherKey(key); }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> lowerEntry(K key) {
             Entry<K,V> lower = (Entry<K, V>) nm.lowerEntry(key);
             return (null != lower) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(lower) : null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> floorEntry(K key) {
             Entry<K,V> floor = (Entry<K, V>) nm.floorEntry(key);
             return (null != floor) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(floor) : null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> ceilingEntry(K key) {
             Entry<K,V> ceiling = (Entry<K, V>) nm.ceilingEntry(key);
             return (null != ceiling) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(ceiling) : null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> higherEntry(K key) {
             Entry<K,V> higher = (Entry<K, V>) nm.higherEntry(key);
             return (null != higher) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(higher) : null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> firstEntry() {
             Entry<K,V> first = (Entry<K, V>) nm.firstEntry();
             return (null != first) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(first) : null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public Entry<K, V> lastEntry() {
             Entry<K,V> last = (Entry<K, V>) nm.lastEntry();
             return (null != last) ? new UnmodifiableEntrySet.UnmodifiableEntry<>(last) : null;
@@ -1801,12 +1801,12 @@ public class Collections {
         }
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> consumer) {
             synchronized (mutex) {c.forEach(consumer);}
         }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             synchronized (mutex) {return c.removeIf(filter);}
         }
@@ -2158,11 +2158,11 @@ public class Collections {
             }
         }
 
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             synchronized (mutex) {list.replaceAll(operator);}
         }
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
             synchronized (mutex) {list.sort(c);}
         }
@@ -2310,47 +2310,47 @@ public class Collections {
         }
 
         // Override default methods in Map
-        @Override
+        // @Override
         public V getOrDefault(Object k, V defaultValue) {
             synchronized (mutex) {return m.getOrDefault(k, defaultValue);}
         }
-        @Override
+        // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
             synchronized (mutex) {m.forEach(action);}
         }
-        @Override
+        // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
             synchronized (mutex) {m.replaceAll(function);}
         }
-        @Override
+        // @Override
         public V putIfAbsent(K key, V value) {
             synchronized (mutex) {return m.putIfAbsent(key, value);}
         }
-        @Override
+        // @Override
         public boolean remove(Object key, Object value) {
             synchronized (mutex) {return m.remove(key, value);}
         }
-        @Override
+        // @Override
         public boolean replace(K key, V oldValue, V newValue) {
             synchronized (mutex) {return m.replace(key, oldValue, newValue);}
         }
-        @Override
+        // @Override
         public V replace(K key, V value) {
             synchronized (mutex) {return m.replace(key, value);}
         }
-        @Override
+        // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             synchronized (mutex) {return m.computeIfAbsent(key, mappingFunction);}
         }
-        @Override
+        // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             synchronized (mutex) {return m.computeIfPresent(key, remappingFunction);}
         }
-        @Override
+        // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             synchronized (mutex) {return m.compute(key, remappingFunction);}
         }
-        @Override
+        // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             synchronized (mutex) {return m.merge(key, value, remappingFunction);}
         }
@@ -2649,7 +2649,7 @@ public class Collections {
         return new CheckedCollection<>(c, type);
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <T> T[] zeroLengthArray(Class<T> type) {
         return (T[]) Array.newInstance(type, 0);
     }
@@ -2658,7 +2658,7 @@ public class Collections {
         final Collection<E> c;
         final Class<E> type;
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         E typeCheck(Object o) {
             if (o != null && !type.isInstance(o))
                 throw new ClassCastException(badElementMsg(o));
@@ -2666,7 +2666,7 @@ public class Collections {
         }
 
         private String badElementMsg(Object o) {
-            return "Attempt to insert " + o.getClass() + " element into collection with element type " + type;
+            return String.str("Attempt to insert ", o.getClass(), " element into collection with element type ", type);
         }
 
         CheckedCollection(Collection<E> c, Class<E> type) {
@@ -2715,7 +2715,7 @@ public class Collections {
             return zeroLengthElementArray != null ? zeroLengthElementArray : (zeroLengthElementArray = zeroLengthArray(type));
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Collection<E> checkedCopyOf(Collection<? extends E> coll) {
             Object[] a;
             try {
@@ -2747,9 +2747,9 @@ public class Collections {
         }
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {c.forEach(action);}
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             return c.removeIf(filter);
         }
@@ -3066,13 +3066,13 @@ public class Collections {
          *         exception may be thrown after some elements of the list have
          *         already been replaced.
          */
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             Objects.requireNonNull(operator);
             list.replaceAll(e -> typeCheck(operator.apply(e)));
         }
 
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
             list.sort(c);
         }
@@ -3150,11 +3150,11 @@ public class Collections {
         }
 
         private String badKeyMsg(Object key) {
-            return "Attempt to insert " + key.getClass() + " key into map with key type " + keyType;
+            return String.str("Attempt to insert ", key.getClass(), " key into map with key type ", keyType);
         }
 
         private String badValueMsg(Object value) {
-            return "Attempt to insert " + value.getClass() + " value into map with value type " + valueType;
+            return String.str("Attempt to insert ", value.getClass(), " value into map with value type ", valueType);
         }
 
         CheckedMap(Map<K, V> m, Class<K> keyType, Class<V> valueType) {
@@ -3181,7 +3181,7 @@ public class Collections {
             return m.put(key, value);
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public void putAll(Map<? extends K, ? extends V> t) {
             // Satisfy the following goals:
             // - good diagnostics in case of type mismatch
@@ -3210,40 +3210,40 @@ public class Collections {
         }
 
         // Override default methods in Map
-        @Override
+        // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
             m.forEach(action);
         }
 
-        @Override
+        // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
             m.replaceAll(typeCheck(function));
         }
 
-        @Override
+        // @Override
         public V putIfAbsent(K key, V value) {
             typeCheck(key, value);
             return m.putIfAbsent(key, value);
         }
 
-        @Override
+        // @Override
         public boolean remove(Object key, Object value) {
             return m.remove(key, value);
         }
 
-        @Override
+        // @Override
         public boolean replace(K key, V oldValue, V newValue) {
             typeCheck(key, newValue);
             return m.replace(key, oldValue, newValue);
         }
 
-        @Override
+        // @Override
         public V replace(K key, V value) {
             typeCheck(key, value);
             return m.replace(key, value);
         }
 
-        @Override
+        // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             Objects.requireNonNull(mappingFunction);
             return m.computeIfAbsent(key, k -> {
@@ -3253,17 +3253,17 @@ public class Collections {
             });
         }
 
-        @Override
+        // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             return m.computeIfPresent(key, typeCheck(remappingFunction));
         }
 
-        @Override
+        // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             return m.compute(key, typeCheck(remappingFunction));
         }
 
-        @Override
+        // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             Objects.requireNonNull(remappingFunction);
             return m.merge(key, value, (v1, v2) -> {
@@ -3315,7 +3315,7 @@ public class Collections {
                 };
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public Object[] toArray() {
                 Object[] source = s.toArray();
 
@@ -3330,7 +3330,7 @@ public class Collections {
                 return dest;
             }
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             public <T> T[] toArray(T[] a) {
                 // We don't pass a to s.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
@@ -3441,7 +3441,7 @@ public class Collections {
                 }
 
                 private String badValueMsg(Object value) {
-                    return "Attempt to insert " + value.getClass() + " value into map with value type " + valueType;
+                    return String.str("Attempt to insert ", value.getClass(), " value into map with value type ", valueType);
                 }
 
                 public boolean equals(Object o) {
@@ -3634,17 +3634,17 @@ public class Collections {
             return checkedNavigableSet(nm.descendingKeySet(), keyType);
         }
 
-        @Override
+        // @Override
         public NavigableMap<K,V> subMap(K fromKey, K toKey) {
             return checkedNavigableMap(nm.subMap(fromKey, true, toKey, false), keyType, valueType);
         }
 
-        @Override
+        // @Override
         public NavigableMap<K,V> headMap(K toKey) {
             return checkedNavigableMap(nm.headMap(toKey, false), keyType, valueType);
         }
 
-        @Override
+        // @Override
         public NavigableMap<K,V> tailMap(K fromKey) {
             return checkedNavigableMap(nm.tailMap(fromKey, true), keyType, valueType);
         }
@@ -3682,7 +3682,7 @@ public class Collections {
      * @param <T> type of elements, if there were any, in the iterator
      * @return an empty iterator
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> Iterator<T> emptyIterator() {
         return (Iterator<T>) EmptyIterator.EMPTY_ITERATOR;
     }
@@ -3720,7 +3720,7 @@ public class Collections {
      * @param <T> type of elements, if there were any, in the iterator
      * @return an empty list iterator
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> ListIterator<T> emptyListIterator() {
         return (ListIterator<T>) EmptyListIterator.EMPTY_ITERATOR;
     }
@@ -3752,7 +3752,7 @@ public class Collections {
      * @param <T> the class of the objects in the enumeration
      * @return an empty enumeration
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> Enumeration<T> emptyEnumeration() {
         return (Enumeration<T>) EmptyEnumeration.EMPTY_ENUMERATION;
     }
@@ -3768,7 +3768,7 @@ public class Collections {
     /**
      * The empty set (immutable).  This set is serializable.
      */
-    @SuppressWarnings("rawtypes")
+    // @SuppressWarnings("rawtypes")
     public static final Set EMPTY_SET = new EmptySet<>();
 
     /**
@@ -3787,7 +3787,7 @@ public class Collections {
      * @param <T> the class of the objects in the set
      * @return the empty set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final <T> Set<T> emptySet() {
         return (Set<T>) EMPTY_SET;
     }
@@ -3811,18 +3811,18 @@ public class Collections {
         }
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
         }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             Objects.requireNonNull(filter);
             return false;
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return 0;
         }
@@ -3843,7 +3843,7 @@ public class Collections {
      * @param <E> type of elements, if there were any, in the set
      * @return the empty sorted set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <E> SortedSet<E> emptySortedSet() {
         return (SortedSet<E>) UnmodifiableNavigableSet.EMPTY_NAVIGABLE_SET;
     }
@@ -3863,7 +3863,7 @@ public class Collections {
      * @param <E> type of elements, if there were any, in the set
      * @return the empty navigable set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <E> NavigableSet<E> emptyNavigableSet() {
         return (NavigableSet<E>) UnmodifiableNavigableSet.EMPTY_NAVIGABLE_SET;
     }
@@ -3871,7 +3871,7 @@ public class Collections {
     /**
      * The empty list (immutable).  This list is serializable.
      */
-    @SuppressWarnings("rawtypes")
+    // @SuppressWarnings("rawtypes")
     public static final List EMPTY_LIST = new EmptyList<>();
 
     /**
@@ -3891,7 +3891,7 @@ public class Collections {
      * @param <T> type of elements, if there were any, in the list
      * @return an empty immutable list
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final <T> List<T> emptyList() {
         return (List<T>) EMPTY_LIST;
     }
@@ -3921,7 +3921,7 @@ public class Collections {
         }
 
         public E get(int index) {
-            throw new IndexOutOfBoundsException("Index: "+index);
+            throw new IndexOutOfBoundsException(String.str("Index: ", index));
         }
 
         public boolean equals(Object o) {
@@ -3930,21 +3930,21 @@ public class Collections {
 
         public int hashCode() { return 1; }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             Objects.requireNonNull(filter);
             return false;
         }
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             Objects.requireNonNull(operator);
         }
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
         }
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
         }
@@ -3953,7 +3953,7 @@ public class Collections {
     /**
      * The empty map (immutable).  This map is serializable.
      */
-    @SuppressWarnings("rawtypes")
+    // @SuppressWarnings("rawtypes")
     public static final Map EMPTY_MAP = new EmptyMap<>();
 
     /**
@@ -3972,7 +3972,7 @@ public class Collections {
      * @param <V> the class of the map values
      * @return an empty map
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final <K,V> Map<K,V> emptyMap() {
         return (Map<K,V>) EMPTY_MAP;
     }
@@ -3992,7 +3992,7 @@ public class Collections {
      * @param <V> the class of the map values
      * @return an empty sorted map
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final <K,V> SortedMap<K,V> emptySortedMap() {
         return (SortedMap<K,V>) UnmodifiableNavigableMap.EMPTY_NAVIGABLE_MAP;
     }
@@ -4012,7 +4012,7 @@ public class Collections {
      * @param <V> the class of the map values
      * @return an empty navigable map
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final <K,V> NavigableMap<K,V> emptyNavigableMap() {
         return (NavigableMap<K,V>) UnmodifiableNavigableMap.EMPTY_NAVIGABLE_MAP;
     }
@@ -4035,58 +4035,58 @@ public class Collections {
         public int hashCode()                      {return 0;}
 
         // Override default methods in Map
-        @Override
-        @SuppressWarnings("unchecked")
+        // @Override
+        // @SuppressWarnings("unchecked")
         public V getOrDefault(Object k, V defaultValue) {
             return defaultValue;
         }
 
-        @Override
+        // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
             Objects.requireNonNull(action);
         }
 
-        @Override
+        // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
             Objects.requireNonNull(function);
         }
 
-        @Override
+        // @Override
         public V putIfAbsent(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean remove(Object key, Object value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean replace(K key, V oldValue, V newValue) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V replace(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
@@ -4141,17 +4141,17 @@ public class Collections {
         public boolean contains(Object o) {return eq(o, element);}
 
         // Override default methods for Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
         }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return Objects.hashCode(element);
         }
@@ -4184,31 +4184,31 @@ public class Collections {
 
         public E get(int index) {
             if (index != 0)
-              throw new IndexOutOfBoundsException("Index: "+index+", Size: 1");
+              throw new IndexOutOfBoundsException(String.str("Index: ", index, ", Size: 1"));
             return element;
         }
 
         // Override default methods for Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
         }
 
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return 31 + Objects.hashCode(element);
         }
@@ -4267,62 +4267,62 @@ public class Collections {
         }
 
         // Override default methods in Map
-        @Override
+        // @Override
         public V getOrDefault(Object key, V defaultValue) {
             return eq(key, k) ? v : defaultValue;
         }
 
-        @Override
+        // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
             action.accept(k, v);
         }
 
-        @Override
+        // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V putIfAbsent(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean remove(Object key, Object value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public boolean replace(K key, V oldValue, V newValue) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V replace(K key, V value) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return Objects.hashCode(k) ^ Objects.hashCode(v);
         }
@@ -4347,7 +4347,7 @@ public class Collections {
      */
     public static <T> List<T> nCopies(int n, T o) {
         if (n < 0)
-            throw new IllegalArgumentException("List length = " + n);
+            throw new IllegalArgumentException(String.str("List length = ", n));
         return new CopiesList<>(n, o);
     }
 
@@ -4379,8 +4379,7 @@ public class Collections {
 
         public E get(int index) {
             if (index < 0 || index >= n)
-                throw new IndexOutOfBoundsException("Index: "+index+
-                                                    ", Size: "+n);
+                throw new IndexOutOfBoundsException(String.str("Index: ", index, ", Size: ", n));
             return element;
         }
 
@@ -4391,7 +4390,7 @@ public class Collections {
             return a;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             final int n = this.n;
             if (a.length < n) {
@@ -4408,11 +4407,11 @@ public class Collections {
 
         public List<E> subList(int fromIndex, int toIndex) {
             if (fromIndex < 0)
-                throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+                throw new IndexOutOfBoundsException(String.str("fromIndex = ", fromIndex));
             if (toIndex > n)
-                throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+                throw new IndexOutOfBoundsException(String.str("toIndex = ", toIndex));
             if (fromIndex > toIndex)
-                throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+                throw new IllegalArgumentException(String.str("fromIndex(", fromIndex, ") > toIndex(", toIndex, ")"));
             return new CopiesList<>(toIndex - fromIndex, element);
         }
     }
@@ -4436,7 +4435,7 @@ public class Collections {
      *         ordering</i> on a collection of objects that implement
      *         the {@code Comparable} interface.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> Comparator<T> reverseOrder() {
         return (Comparator<T>) ReverseComparator.REVERSE_ORDER;
     }
@@ -4448,7 +4447,7 @@ public class Collections {
             return c2.compareTo(c1);
         }
 
-        @Override
+        // @Override
         public Comparator<Comparable<Object>> reversed() {
             return Comparator.naturalOrder();
         }
@@ -4470,7 +4469,7 @@ public class Collections {
      * @return A comparator that imposes the reverse ordering of the
      *         specified comparator.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> Comparator<T> reverseOrder(Comparator<T> cmp) {
         if (cmp == null) {
             return (Comparator<T>) ReverseComparator.REVERSE_ORDER;
@@ -4510,7 +4509,7 @@ public class Collections {
             return cmp.hashCode() ^ Integer.MIN_VALUE;
         }
 
-        @Override
+        // @Override
         public Comparator<T> reversed() {
             return cmp;
         }
@@ -4783,11 +4782,11 @@ public class Collections {
         // addAll is the only inherited implementation
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             s.forEach(action);
         }
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             return s.removeIf(filter);
         }
@@ -4839,9 +4838,9 @@ public class Collections {
         // We use inherited addAll; forwarding addAll would be wrong
 
         // Override default methods in Collection
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {q.forEach(action);}
-        @Override
+        // @Override
         public boolean removeIf(Predicate<? super E> filter) {
             return q.removeIf(filter);
         }

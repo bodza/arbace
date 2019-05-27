@@ -48,11 +48,11 @@ class Shutdown {
      */
     /* oops! */public static void add(int slot, boolean registerShutdownInProgress, Runnable hook) {
         if (slot < 0 || slot >= MAX_SYSTEM_HOOKS) {
-            throw new IllegalArgumentException("Invalid slot: " + slot);
+            throw new IllegalArgumentException(String.str("Invalid slot: ", slot));
         }
         synchronized (lock) {
             if (hooks[slot] != null)
-                throw new InternalError("Shutdown hook at slot " + slot + " already registered");
+                throw new InternalError(String.str("Shutdown hook at slot ", slot, " already registered"));
 
             if (!registerShutdownInProgress) {
                 if (currentRunningHook >= 0)

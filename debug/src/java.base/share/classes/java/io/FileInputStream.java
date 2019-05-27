@@ -300,8 +300,8 @@ public class FileInputStream extends InputStream {
             this.fis = fis;
         }
 
-        @Override
-        @SuppressWarnings("deprecation")
+        // @Override
+        // @SuppressWarnings("deprecation")
         /* oops! protected */public final void finalize() {
             try {
                 if ((fis.fd != null) && (fis.fd != FileDescriptor.in)) {

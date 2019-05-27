@@ -120,7 +120,7 @@ public final class StringJoiner {
      *
      * @return the string representation of this {@code StringJoiner}
      */
-    @Override
+    // @Override
     public String toString() {
         final String[] elts = this.elts;
         if (elts == null && emptyValue != null) {

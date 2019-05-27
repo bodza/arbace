@@ -36,19 +36,26 @@ class ImmutableCollections {
 
     static abstract class AbstractImmutableCollection<E> extends AbstractCollection<E> {
         // all mutating methods throw UnsupportedOperationException
-        @Override public boolean add(E e) { throw uoe(); }
-        @Override public boolean addAll(Collection<? extends E> c) { throw uoe(); }
-        @Override public void    clear() { throw uoe(); }
-        @Override public boolean remove(Object o) { throw uoe(); }
-        @Override public boolean removeAll(Collection<?> c) { throw uoe(); }
-        @Override public boolean removeIf(Predicate<? super E> filter) { throw uoe(); }
-        @Override public boolean retainAll(Collection<?> c) { throw uoe(); }
+        // @Override
+        public boolean add(E e) { throw uoe(); }
+        // @Override
+        public boolean addAll(Collection<? extends E> c) { throw uoe(); }
+        // @Override
+        public void    clear() { throw uoe(); }
+        // @Override
+        public boolean remove(Object o) { throw uoe(); }
+        // @Override
+        public boolean removeAll(Collection<?> c) { throw uoe(); }
+        // @Override
+        public boolean removeIf(Predicate<? super E> filter) { throw uoe(); }
+        // @Override
+        public boolean retainAll(Collection<?> c) { throw uoe(); }
     }
 
     // ---------- List Implementations ----------
 
     // make a copy, short-circuiting based on implementation class
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> List<E> listCopy(Collection<? extends E> coll) {
         if (coll instanceof AbstractImmutableList && coll.getClass() != SubList.class) {
             return (List<E>)coll;
@@ -57,21 +64,27 @@ class ImmutableCollections {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> List<E> emptyList() {
         return (List<E>) ListN.EMPTY_LIST;
     }
 
     static abstract class AbstractImmutableList<E> extends AbstractImmutableCollection<E> implements List<E>, RandomAccess {
         // all mutating methods throw UnsupportedOperationException
-        @Override public void    add(int index, E element) { throw uoe(); }
-        @Override public boolean addAll(int index, Collection<? extends E> c) { throw uoe(); }
-        @Override public E       remove(int index) { throw uoe(); }
-        @Override public void    replaceAll(UnaryOperator<E> operator) { throw uoe(); }
-        @Override public E       set(int index, E element) { throw uoe(); }
-        @Override public void    sort(Comparator<? super E> c) { throw uoe(); }
+        // @Override
+        public void    add(int index, E element) { throw uoe(); }
+        // @Override
+        public boolean addAll(int index, Collection<? extends E> c) { throw uoe(); }
+        // @Override
+        public E       remove(int index) { throw uoe(); }
+        // @Override
+        public void    replaceAll(UnaryOperator<E> operator) { throw uoe(); }
+        // @Override
+        public E       set(int index, E element) { throw uoe(); }
+        // @Override
+        public void    sort(Comparator<? super E> c) { throw uoe(); }
 
-        @Override
+        // @Override
         public List<E> subList(int fromIndex, int toIndex) {
             int size = size();
             subListRangeCheck(fromIndex, toIndex, size);
@@ -80,24 +93,24 @@ class ImmutableCollections {
 
         static void subListRangeCheck(int fromIndex, int toIndex, int size) {
             if (fromIndex < 0)
-                throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+                throw new IndexOutOfBoundsException(String.str("fromIndex = ", fromIndex));
             if (toIndex > size)
-                throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+                throw new IndexOutOfBoundsException(String.str("toIndex = ", toIndex));
             if (fromIndex > toIndex)
-                throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+                throw new IllegalArgumentException(String.str("fromIndex(", fromIndex, ") > toIndex(", toIndex, ")"));
         }
 
-        @Override
+        // @Override
         public Iterator<E> iterator() {
             return new ListItr<E>(this, size());
         }
 
-        @Override
+        // @Override
         public ListIterator<E> listIterator() {
             return listIterator(0);
         }
 
-        @Override
+        // @Override
         public ListIterator<E> listIterator(final int index) {
             int size = size();
             if (index < 0 || index > size) {
@@ -106,7 +119,7 @@ class ImmutableCollections {
             return new ListItr<E>(this, size, index);
         }
 
-        @Override
+        // @Override
         public boolean equals(Object o) {
             if (o == this) {
                 return true;
@@ -125,7 +138,7 @@ class ImmutableCollections {
             return !oit.hasNext();
         }
 
-        @Override
+        // @Override
         public int indexOf(Object o) {
             Objects.requireNonNull(o);
             for (int i = 0, s = size(); i < s; i++) {
@@ -136,7 +149,7 @@ class ImmutableCollections {
             return -1;
         }
 
-        @Override
+        // @Override
         public int lastIndexOf(Object o) {
             Objects.requireNonNull(o);
             for (int i = size() - 1; i >= 0; i--) {
@@ -147,7 +160,7 @@ class ImmutableCollections {
             return -1;
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             int hash = 1;
             for (int i = 0, s = size(); i < s; i++) {
@@ -156,13 +169,13 @@ class ImmutableCollections {
             return hash;
         }
 
-        @Override
+        // @Override
         public boolean contains(Object o) {
             return indexOf(o) >= 0;
         }
 
         IndexOutOfBoundsException outOfBounds(int index) {
-            return new IndexOutOfBoundsException("Index: " + index + " Size: " + size());
+            return new IndexOutOfBoundsException(String.str("Index: ", index, " Size: ", size()));
         }
     }
 
@@ -333,12 +346,12 @@ class ImmutableCollections {
             this.e1 = Objects.requireNonNull(e1);
         }
 
-        @Override
+        // @Override
         public int size() {
             return e1 != null ? 2 : 1;
         }
 
-        @Override
+        // @Override
         public E get(int index) {
             if (index == 0) {
                 return e0;
@@ -358,7 +371,7 @@ class ImmutableCollections {
         // @SafeVarargs
         ListN(E... input) {
             // copy and check manually to avoid TOCTOU
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             E[] tmp = (E[])new Object[input.length]; // implicit nullcheck of input
             for (int i = 0; i < input.length; i++) {
                 tmp[i] = Objects.requireNonNull(input[i]);
@@ -366,17 +379,17 @@ class ImmutableCollections {
             elements = tmp;
         }
 
-        @Override
+        // @Override
         public boolean isEmpty() {
             return size() == 0;
         }
 
-        @Override
+        // @Override
         public int size() {
             return elements.length;
         }
 
-        @Override
+        // @Override
         public E get(int index) {
             return elements[index];
         }
@@ -385,7 +398,7 @@ class ImmutableCollections {
     // ---------- Set Implementations ----------
 
     static abstract class AbstractImmutableSet<E> extends AbstractImmutableCollection<E> implements Set<E> {
-        @Override
+        // @Override
         public boolean equals(Object o) {
             if (o == this) {
                 return true;
@@ -405,11 +418,11 @@ class ImmutableCollections {
             return true;
         }
 
-        @Override
+        // @Override
         public abstract int hashCode();
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> Set<E> emptySet() {
         return (Set<E>) SetN.EMPTY_SET;
     }
@@ -427,39 +440,39 @@ class ImmutableCollections {
 
         Set12(E e0, E e1) {
             if (e0.equals(Objects.requireNonNull(e1))) { // implicit nullcheck of e0
-                throw new IllegalArgumentException("duplicate element: " + e0);
+                throw new IllegalArgumentException(String.str("duplicate element: ", e0));
             }
 
             this.e0 = e0;
             this.e1 = e1;
         }
 
-        @Override
+        // @Override
         public int size() {
             return (e1 == null) ? 1 : 2;
         }
 
-        @Override
+        // @Override
         public boolean contains(Object o) {
             return o.equals(e0) || o.equals(e1); // implicit nullcheck of o
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return e0.hashCode() + (e1 == null ? 0 : e1.hashCode());
         }
 
-        @Override
+        // @Override
         public Iterator<E> iterator() {
             return new Iterator<>() {
                 private int idx = size();
 
-                @Override
+                // @Override
                 public boolean hasNext() {
                     return idx > 0;
                 }
 
-                @Override
+                // @Override
                 public E next() {
                     if (idx == 1) {
                         idx = 0;
@@ -490,7 +503,7 @@ class ImmutableCollections {
         final int size;
 
         // @SafeVarargs
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         SetN(E... input) {
             size = input.length; // implicit nullcheck of input
 
@@ -499,19 +512,19 @@ class ImmutableCollections {
                 E e = input[i];
                 int idx = probe(e); // implicit nullcheck of e
                 if (idx >= 0) {
-                    throw new IllegalArgumentException("duplicate element: " + e);
+                    throw new IllegalArgumentException(String.str("duplicate element: ", e));
                 } else {
                     elements[-(idx + 1)] = e;
                 }
             }
         }
 
-        @Override
+        // @Override
         public int size() {
             return size;
         }
 
-        @Override
+        // @Override
         public boolean contains(Object o) {
             Objects.requireNonNull(o);
             return size > 0 && probe(o) >= 0;
@@ -529,7 +542,7 @@ class ImmutableCollections {
                 }
             }
 
-            @Override
+            // @Override
             public boolean hasNext() {
                 return remaining > 0;
             }
@@ -548,7 +561,7 @@ class ImmutableCollections {
                 return this.idx = idx;
             }
 
-            @Override
+            // @Override
             public E next() {
                 if (hasNext()) {
                     E element;
@@ -562,12 +575,12 @@ class ImmutableCollections {
             }
         }
 
-        @Override
+        // @Override
         public Iterator<E> iterator() {
             return new SetNIterator();
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             int h = 0;
             for (E e : elements) {
@@ -599,25 +612,38 @@ class ImmutableCollections {
 
     // ---------- Map Implementations ----------
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <K,V> Map<K,V> emptyMap() {
         return (Map<K,V>) MapN.EMPTY_MAP;
     }
 
     abstract static class AbstractImmutableMap<K,V> extends AbstractMap<K,V> {
-        @Override public void clear() { throw uoe(); }
-        @Override public V compute(K key, BiFunction<? super K,? super V,? extends V> rf) { throw uoe(); }
-        @Override public V computeIfAbsent(K key, Function<? super K,? extends V> mf) { throw uoe(); }
-        @Override public V computeIfPresent(K key, BiFunction<? super K,? super V,? extends V> rf) { throw uoe(); }
-        @Override public V merge(K key, V value, BiFunction<? super V,? super V,? extends V> rf) { throw uoe(); }
-        @Override public V put(K key, V value) { throw uoe(); }
-        @Override public void putAll(Map<? extends K,? extends V> m) { throw uoe(); }
-        @Override public V putIfAbsent(K key, V value) { throw uoe(); }
-        @Override public V remove(Object key) { throw uoe(); }
-        @Override public boolean remove(Object key, Object value) { throw uoe(); }
-        @Override public V replace(K key, V value) { throw uoe(); }
-        @Override public boolean replace(K key, V oldValue, V newValue) { throw uoe(); }
-        @Override public void replaceAll(BiFunction<? super K,? super V,? extends V> f) { throw uoe(); }
+        // @Override
+        public void clear() { throw uoe(); }
+        // @Override
+        public V compute(K key, BiFunction<? super K,? super V,? extends V> rf) { throw uoe(); }
+        // @Override
+        public V computeIfAbsent(K key, Function<? super K,? extends V> mf) { throw uoe(); }
+        // @Override
+        public V computeIfPresent(K key, BiFunction<? super K,? super V,? extends V> rf) { throw uoe(); }
+        // @Override
+        public V merge(K key, V value, BiFunction<? super V,? super V,? extends V> rf) { throw uoe(); }
+        // @Override
+        public V put(K key, V value) { throw uoe(); }
+        // @Override
+        public void putAll(Map<? extends K,? extends V> m) { throw uoe(); }
+        // @Override
+        public V putIfAbsent(K key, V value) { throw uoe(); }
+        // @Override
+        public V remove(Object key) { throw uoe(); }
+        // @Override
+        public boolean remove(Object key, Object value) { throw uoe(); }
+        // @Override
+        public V replace(K key, V value) { throw uoe(); }
+        // @Override
+        public boolean replace(K key, V oldValue, V newValue) { throw uoe(); }
+        // @Override
+        public void replaceAll(BiFunction<? super K,? super V,? extends V> f) { throw uoe(); }
     }
 
     static final class Map1<K,V> extends AbstractImmutableMap<K,V> {
@@ -631,22 +657,22 @@ class ImmutableCollections {
             this.v0 = Objects.requireNonNull(v0);
         }
 
-        @Override
+        // @Override
         public Set<Map.Entry<K,V>> entrySet() {
             return Set.of(new KeyValueHolder<>(k0, v0));
         }
 
-        @Override
+        // @Override
         public boolean containsKey(Object o) {
             return o.equals(k0); // implicit nullcheck of o
         }
 
-        @Override
+        // @Override
         public boolean containsValue(Object o) {
             return o.equals(v0); // implicit nullcheck of o
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return k0.hashCode() ^ v0.hashCode();
         }
@@ -681,13 +707,13 @@ class ImmutableCollections {
             table = new Object[len];
 
             for (int i = 0; i < input.length; i += 2) {
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                     K k = Objects.requireNonNull((K)input[i]);
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                     V v = Objects.requireNonNull((V)input[i+1]);
                 int idx = probe(k);
                 if (idx >= 0) {
-                    throw new IllegalArgumentException("duplicate key: " + k);
+                    throw new IllegalArgumentException(String.str("duplicate key: ", k));
                 } else {
                     int dest = -(idx + 1);
                     table[dest] = k;
@@ -696,13 +722,13 @@ class ImmutableCollections {
             }
         }
 
-        @Override
+        // @Override
         public boolean containsKey(Object o) {
             Objects.requireNonNull(o);
             return size > 0 && probe(o) >= 0;
         }
 
-        @Override
+        // @Override
         public boolean containsValue(Object o) {
             Objects.requireNonNull(o);
             for (int i = 1; i < table.length; i += 2) {
@@ -714,7 +740,7 @@ class ImmutableCollections {
             return false;
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             int hash = 0;
             for (int i = 0; i < table.length; i += 2) {
@@ -726,8 +752,8 @@ class ImmutableCollections {
             return hash;
         }
 
-        @Override
-        @SuppressWarnings("unchecked")
+        // @Override
+        // @SuppressWarnings("unchecked")
         public V get(Object o) {
             if (size == 0) {
                 Objects.requireNonNull(o);
@@ -741,7 +767,7 @@ class ImmutableCollections {
             }
         }
 
-        @Override
+        // @Override
         public int size() {
             return size;
         }
@@ -758,7 +784,7 @@ class ImmutableCollections {
                 }
             }
 
-            @Override
+            // @Override
             public boolean hasNext() {
                 return remaining > 0;
             }
@@ -777,11 +803,11 @@ class ImmutableCollections {
                 return this.idx = idx;
             }
 
-            @Override
+            // @Override
             public Map.Entry<K,V> next() {
                 if (hasNext()) {
                     while (table[nextIndex()] == null) {}
-                    @SuppressWarnings("unchecked")
+                    // @SuppressWarnings("unchecked")
                     Map.Entry<K,V> e = new KeyValueHolder<>((K)table[idx], (V)table[idx+1]);
                     remaining--;
                     return e;
@@ -791,15 +817,15 @@ class ImmutableCollections {
             }
         }
 
-        @Override
+        // @Override
         public Set<Map.Entry<K,V>> entrySet() {
             return new AbstractSet<>() {
-                @Override
+                // @Override
                 public int size() {
                     return MapN.this.size;
                 }
 
-                @Override
+                // @Override
                 public Iterator<Map.Entry<K,V>> iterator() {
                     return new MapNIterator();
                 }
@@ -813,7 +839,7 @@ class ImmutableCollections {
         private int probe(Object pk) {
             int idx = Math.floorMod(pk.hashCode(), table.length >> 1) << 1;
             while (true) {
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 K ek = (K)table[idx];
                 if (ek == null) {
                     return -idx - 1;

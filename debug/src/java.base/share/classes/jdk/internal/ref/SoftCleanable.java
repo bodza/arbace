@@ -99,7 +99,7 @@ public abstract class SoftCleanable<T> extends SoftReference<T> implements Clean
      * Unregister this SoftCleanable reference and invoke {@link #performCleanup()},
      * ensuring at-most-once semantics.
      */
-    @Override
+    // @Override
     public final void clean() {
         if (remove()) {
             super.clear();
@@ -111,7 +111,7 @@ public abstract class SoftCleanable<T> extends SoftReference<T> implements Clean
      * Unregister this SoftCleanable and clear the reference.
      * Due to inherent concurrency, {@link #performCleanup()} may still be invoked.
      */
-    @Override
+    // @Override
     public void clear() {
         if (remove()) {
             super.clear();
@@ -133,7 +133,7 @@ public abstract class SoftCleanable<T> extends SoftReference<T> implements Clean
      *
      * @throws UnsupportedOperationException always
      */
-    @Override
+    // @Override
     public final boolean isEnqueued() {
         throw new UnsupportedOperationException("isEnqueued");
     }
@@ -145,7 +145,7 @@ public abstract class SoftCleanable<T> extends SoftReference<T> implements Clean
      *
      * @throws UnsupportedOperationException always
      */
-    @Override
+    // @Override
     public final boolean enqueue() {
         throw new UnsupportedOperationException("enqueue");
     }

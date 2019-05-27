@@ -13,7 +13,7 @@ import java.util.Objects;
  * @param <U> the type of the second argument to the function
  * @param <R> the type of the result of the function
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface BiFunction<T, U, R> {
     /**
      * Applies this function to the given arguments.

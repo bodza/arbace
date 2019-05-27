@@ -12,7 +12,7 @@ public interface ResolvedJavaField extends JavaField {
      * Only the {@linkplain Modifier#fieldModifiers() field flags} specified in the JVM
      * specification will be included in the returned mask.
      */
-    @Override
+    // @Override
     int getModifiers();
 
     int getOffset();

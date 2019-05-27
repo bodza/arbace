@@ -78,8 +78,7 @@ public class NetworkClient {
      * unescaped form.
      */
     private static boolean isASCIISuperset(String encoding) throws Exception {
-        String chkS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                        "abcdefghijklmnopqrstuvwxyz-_.!~*'();/?:@&=+$,";
+        String chkS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'();/?:@&=+$,";
 
         // Expected byte sequence for string above
         byte[] chkB = { 48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70,71,72,
@@ -100,7 +99,7 @@ public class NetworkClient {
         try {
             serverOutput = new PrintStream(new BufferedOutputStream(serverSocket.getOutputStream()), true, encoding);
         } catch (UnsupportedEncodingException e) {
-            throw new InternalError(encoding +"encoding not found", e);
+            throw new InternalError(String.str(encoding, "encoding not found"), e);
         }
         serverInput = new BufferedInputStream(serverSocket.getInputStream());
     }

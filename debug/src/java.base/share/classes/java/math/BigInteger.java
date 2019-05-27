@@ -785,7 +785,7 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      */
     public BigInteger nextProbablePrime() {
         if (this.signum < 0)
-            throw new ArithmeticException("start < 0: " + this);
+            throw new ArithmeticException(String.str("start < 0: ", this));
 
         // Handle trivial cases
         if ((this.signum == 0) || this.equals(ONE))
@@ -1145,8 +1145,8 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      * Initialize static constant array when class is loaded.
      */
     private static final int MAX_CONSTANT = 16;
-    private static BigInteger posConst[] = new BigInteger[MAX_CONSTANT+1];
-    private static BigInteger negConst[] = new BigInteger[MAX_CONSTANT+1];
+    private static BigInteger posConst[] = new BigInteger[MAX_CONSTANT + 1];
+    private static BigInteger negConst[] = new BigInteger[MAX_CONSTANT + 1];
 
     /**
      * The cache of powers of each radix.  This allows us to not have to
@@ -1154,12 +1154,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      * Schoenhage recursive base conversion significantly.
      */
     private static volatile BigInteger[][] powerCache;
-
-    /** The cache of logarithms of radices for base conversion. */
-    private static final double[] logCache;
-
-    /** The natural log of 2.  This is used in computing cache indices. */
-    private static final double LOG_TWO = Math.log(2.0);
 
     static {
         assert 0 < KARATSUBA_THRESHOLD
@@ -1183,11 +1177,9 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
          * on demand.
          */
         powerCache = new BigInteger[Character.MAX_RADIX+1][];
-        logCache = new double[Character.MAX_RADIX+1];
 
         for (int i=Character.MIN_RADIX; i <= Character.MAX_RADIX; i++) {
             powerCache[i] = new BigInteger[] { BigInteger.valueOf(i) };
-            logCache[i] = Math.log(i);
         }
     }
 
@@ -2017,19 +2009,19 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      */
     private static void implSquareToLenChecks(int[] x, int len, int[] z, int zlen) throws RuntimeException {
         if (len < 1) {
-            throw new IllegalArgumentException("invalid input length: " + len);
+            throw new IllegalArgumentException(String.str("invalid input length: ", len));
         }
         if (len > x.length) {
-            throw new IllegalArgumentException("input length out of bound: " + len + " > " + x.length);
+            throw new IllegalArgumentException(String.str("input length out of bound: ", len, " > ", x.length));
         }
         if (len * 2 > z.length) {
-            throw new IllegalArgumentException("input length out of bound: " + (len * 2) + " > " + z.length);
+            throw new IllegalArgumentException(String.str("input length out of bound: ", (len * 2), " > ", z.length));
         }
         if (zlen < 1) {
-            throw new IllegalArgumentException("invalid input length: " + zlen);
+            throw new IllegalArgumentException(String.str("invalid input length: ", zlen));
         }
         if (zlen > z.length) {
-            throw new IllegalArgumentException("input length out of bound: " + len + " > " + z.length);
+            throw new IllegalArgumentException(String.str("input length out of bound: ", len, " > ", z.length));
         }
     }
 
@@ -2416,50 +2408,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     }
 
     /**
-     * Returns the integer square root of this BigInteger.  The integer square
-     * root of the corresponding mathematical integer {@code n} is the largest
-     * mathematical integer {@code s} such that {@code s*s <= n}.  It is equal
-     * to the value of {@code floor(sqrt(n))}, where {@code sqrt(n)} denotes the
-     * real square root of {@code n} treated as a real.  Note that the integer
-     * square root will be less than the real square root if the latter is not
-     * representable as an integral value.
-     *
-     * @return the integer square root of {@code this}
-     * @throws ArithmeticException if {@code this} is negative.  (The square
-     *         root of a negative integer {@code val} is
-     *         {@code (i * sqrt(-val))} where <i>i</i> is the
-     *         <i>imaginary unit</i> and is equal to
-     *         {@code sqrt(-1)}.)
-     */
-    public BigInteger sqrt() {
-        if (this.signum < 0) {
-            throw new ArithmeticException("Negative BigInteger");
-        }
-
-        return new MutableBigInteger(this.mag).sqrt().toBigInteger();
-    }
-
-    /**
-     * Returns an array of two BigIntegers containing the integer square root
-     * {@code s} of {@code this} and its remainder {@code this - s*s},
-     * respectively.
-     *
-     * @return an array of two BigIntegers with the integer square root at
-     *         offset 0 and the remainder at offset 1
-     * @throws ArithmeticException if {@code this} is negative.  (The square
-     *         root of a negative integer {@code val} is
-     *         {@code (i * sqrt(-val))} where <i>i</i> is the
-     *         <i>imaginary unit</i> and is equal to
-     *         {@code sqrt(-1)}.)
-     */
-    public BigInteger[] sqrtAndRemainder() {
-        BigInteger s = sqrt();
-        BigInteger r = this.subtract(s.square());
-        assert r.compareTo(BigInteger.ZERO) >= 0;
-        return new BigInteger[] {s, r};
-    }
-
-    /**
      * Returns a BigInteger whose value is the greatest common divisor of
      * {@code abs(this)} and {@code abs(val)}.  Returns 0 if
      * {@code this == 0 && val == 0}.
@@ -2709,15 +2657,15 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     private static void implMontgomeryMultiplyChecks
         (int[] a, int[] b, int[] n, int len, int[] product) throws RuntimeException {
         if (len % 2 != 0) {
-            throw new IllegalArgumentException("input array length must be even: " + len);
+            throw new IllegalArgumentException(String.str("input array length must be even: ", len));
         }
 
         if (len < 1) {
-            throw new IllegalArgumentException("invalid input length: " + len);
+            throw new IllegalArgumentException(String.str("invalid input length: ", len));
         }
 
         if (len > a.length || len > b.length || len > n.length || (product != null && len > product.length)) {
-            throw new IllegalArgumentException("input array length out of bound: " + len);
+            throw new IllegalArgumentException(String.str("input array length out of bound: ", len));
         }
     }
 
@@ -3050,16 +2998,16 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      */
     private static void implMulAddCheck(int[] out, int[] in, int offset, int len, int k) {
         if (len > in.length) {
-            throw new IllegalArgumentException("input length is out of bound: " + len + " > " + in.length);
+            throw new IllegalArgumentException(String.str("input length is out of bound: ", len, " > ", in.length));
         }
         if (offset < 0) {
-            throw new IllegalArgumentException("input offset is invalid: " + offset);
+            throw new IllegalArgumentException(String.str("input offset is invalid: ", offset));
         }
         if (offset > (out.length - 1)) {
-            throw new IllegalArgumentException("input offset is out of bound: " + offset + " > " + (out.length - 1));
+            throw new IllegalArgumentException(String.str("input offset is out of bound: ", offset, " > ", (out.length - 1)));
         }
         if (len > (out.length - offset)) {
-            throw new IllegalArgumentException("input len is out of bound: " + len + " > " + (out.length - offset));
+            throw new IllegalArgumentException(String.str("input len is out of bound: ", len, " > ", (out.length - offset)));
         }
     }
 
@@ -3885,39 +3833,17 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
      * @param digits The minimum number of digits to pad to.
      */
     private static void toString(BigInteger u, StringBuilder sb, int radix, int digits) {
-        // If we're smaller than a certain threshold, use the smallToString
-        // method, padding with leading zeroes when necessary.
-        if (u.mag.length <= SCHOENHAGE_BASE_CONVERSION_THRESHOLD) {
-            String s = u.smallToString(radix);
+        String s = u.smallToString(radix);
 
-            // Pad with internal zeros if necessary.
-            // Don't pad if we're at the beginning of the string.
-            if ((s.length() < digits) && (sb.length() > 0)) {
-                for (int i=s.length(); i < digits; i++) {
-                    sb.append('0');
-                }
+        // Pad with internal zeros if necessary.
+        // Don't pad if we're at the beginning of the string.
+        if ((s.length() < digits) && (sb.length() > 0)) {
+            for (int i=s.length(); i < digits; i++) {
+                sb.append('0');
             }
-
-            sb.append(s);
-            return;
         }
 
-        int b, n;
-        b = u.bitLength();
-
-        // Calculate a value for n in the equation radix^(2^n) = u
-        // and subtract 1 from that value.  This is used to find the
-        // cache index that contains the best value to divide u.
-        n = (int) Math.round(Math.log(b * LOG_TWO / logCache[radix]) / LOG_TWO - 1.0);
-        BigInteger v = getRadixConversionCache(radix, n);
-        BigInteger[] results;
-        results = u.divideAndRemainder(v);
-
-        int expectedDigits = 1 << n;
-
-        // Now recursively build the two halves of each number.
-        toString(results[0], sb, radix, digits-expectedDigits);
-        toString(results[1], sb, radix, expectedDigits);
+        sb.append(s);
     }
 
     /**

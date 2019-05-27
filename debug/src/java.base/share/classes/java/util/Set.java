@@ -579,7 +579,7 @@ public interface Set<E> extends Collection<E> {
      * @throws NullPointerException if an element is {@code null} or if the array is {@code null}
      */
     // @SafeVarargs
-    @SuppressWarnings("varargs")
+    // @SuppressWarnings("varargs")
     static <E> Set<E> of(E... elements) {
         switch (elements.length) { // implicit null check of elements
             case 0:
@@ -609,7 +609,7 @@ public interface Set<E> extends Collection<E> {
      * @return a {@code Set} containing the elements of the given {@code Collection}
      * @throws NullPointerException if coll is null, or if it contains any nulls
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> Set<E> copyOf(Collection<? extends E> coll) {
         if (coll instanceof ImmutableCollections.AbstractImmutableSet) {
             return (Set<E>)coll;

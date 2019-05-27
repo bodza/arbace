@@ -114,7 +114,7 @@ public class Preconditions {
         // Use anonymous class to avoid bootstrap issues if this method is
         // used early in startup
         return new BiFunction<String, List<Integer>, X>() {
-            @Override
+            // @Override
             public X apply(String checkKind, List<Integer> args) {
                 return f.apply(outOfBoundsMessage(checkKind, args));
             }
@@ -125,9 +125,9 @@ public class Preconditions {
         if (checkKind == null && args == null) {
             return "Range check failed";
         } else if (checkKind == null) {
-            return "Range check failed: " + args;
+            return String.str("Range check failed: ", args);
         } else if (args == null) {
-            return "Range check failed: " + checkKind;
+            return String.str("Range check failed: ", checkKind);
         }
 
         int argSize = 0;
@@ -145,13 +145,13 @@ public class Preconditions {
         // Switch to default if fewer or more arguments than required are supplied
         switch ((args.size() != argSize) ? "" : checkKind) {
             case "checkIndex":
-                return "Index " + args.get(0) + " out of bounds for length " + args.get(1);
+                return String.str("Index ", args.get(0), " out of bounds for length ", args.get(1));
             case "checkFromToIndex":
-                return "Range [" + args.get(0) + ", " + args.get(1) + ") out of bounds for length " + args.get(2);
+                return String.str("Range [", args.get(0), ", ", args.get(1), ") out of bounds for length ", args.get(2));
             case "checkFromIndexSize":
-                return "Range [" + args.get(0) + ", " + args.get(0) + " + " + args.get(1) + ") out of bounds for length " + args.get(2);
+                return String.str("Range [", args.get(0), ", ", args.get(0), " + ", args.get(1), ") out of bounds for length ", args.get(2));
             default:
-                return "Range check failed: " + checkKind + " " + args;
+                return String.str("Range check failed: ", checkKind, " ", args);
         }
     }
 

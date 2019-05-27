@@ -157,7 +157,7 @@ public abstract class Enum<E extends Enum<E>> implements Comparable<E> {
      * @return the Class object corresponding to this enum constant's
      *     enum type
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public final Class<E> getDeclaringClass() {
         Class<?> clazz = getClass();
         Class<?> zuper = clazz.getSuperclass();
@@ -195,12 +195,12 @@ public abstract class Enum<E extends Enum<E>> implements Comparable<E> {
             return result;
         if (name == null)
             throw new NullPointerException("Name is null");
-        throw new IllegalArgumentException("No enum constant " + enumType.getCanonicalName() + "." + name);
+        throw new IllegalArgumentException(String.str("No enum constant ", enumType.getCanonicalName(), ".", name));
     }
 
     /**
      * enum classes cannot have finalize methods.
      */
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     /* oops! protected */public final void finalize() { }
 }

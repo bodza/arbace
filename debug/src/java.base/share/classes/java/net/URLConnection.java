@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.StringTokenizer;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
@@ -167,7 +168,7 @@ public abstract class URLConnection {
      */
     protected boolean useCaches;
 
-    private static final ConcurrentHashMap<String,Boolean> defaultCaching = new ConcurrentHashMap<>();
+    private static final Map<String,Boolean> defaultCaching = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Some protocols support skipping the fetching of the object unless
@@ -594,7 +595,7 @@ public abstract class URLConnection {
      * @return a string representation of this {@code URLConnection}.
      */
     public String toString() {
-        return this.getClass().getName() + ":" + url;
+        return String.str(this.getClass().getName(), ":", url);
     }
 
     /**
@@ -913,7 +914,7 @@ public abstract class URLConnection {
             String packagePrefix = packagePrefixIter.nextToken().trim();
 
             try {
-                String clsName = packagePrefix + "." + contentHandlerClassName;
+                String clsName = String.str(packagePrefix, ".", contentHandlerClassName);
                 Class<?> cls = null;
                 try {
                     cls = Class.forName(clsName);
@@ -924,7 +925,7 @@ public abstract class URLConnection {
                     }
                 }
                 if (cls != null) {
-                    @SuppressWarnings("deprecation")
+                    // @SuppressWarnings("deprecation")
                     Object tmp = cls.newInstance();
                     return (ContentHandler) tmp;
                 }
@@ -964,13 +965,7 @@ public abstract class URLConnection {
      * is always the last one on the returned package list.
      */
     private String getContentHandlerPkgPrefixes() {
-        String packagePrefixList = ""; // contentPathProp
-
-        if (packagePrefixList != "") {
-            packagePrefixList += "|";
-        }
-
-        return packagePrefixList + contentClassPrefix;
+        return contentClassPrefix;
     }
 
     /**

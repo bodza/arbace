@@ -99,7 +99,7 @@ public class URLDecoder {
      */
     public static String decode(String s, String enc) throws UnsupportedEncodingException {
         if (enc.length() == 0) {
-            throw new UnsupportedEncodingException ("URLDecoder: empty string enc parameter");
+            throw new UnsupportedEncodingException("URLDecoder: empty string enc parameter");
         }
 
         try {
@@ -185,7 +185,7 @@ public class URLDecoder {
 
                     sb.append(new String(bytes, 0, pos, charset));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("URLDecoder: Illegal hex characters in escape (%) pattern - " + e.getMessage());
+                    throw new IllegalArgumentException(String.str("URLDecoder: Illegal hex characters in escape (%) pattern - ", e.getMessage()));
                 }
                 needToChange = true;
                 break;

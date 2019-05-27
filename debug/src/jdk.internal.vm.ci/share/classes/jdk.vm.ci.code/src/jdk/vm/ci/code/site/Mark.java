@@ -24,7 +24,7 @@ public final class Mark extends Site {
         this.id = id;
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

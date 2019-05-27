@@ -55,7 +55,7 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
      *
      * @return a Set of SocketOptions
      */
-    @Override
+    // @Override
     protected Set<SocketOption<?>> supportedOptions() {
         Set<SocketOption<?>> options;
         if (isReusePortAvailable()) {
@@ -293,7 +293,7 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
             }
             break;
         default:
-            throw new SocketException("invalid option: " + optID);
+            throw new SocketException(String.str("invalid option: ", optID));
         }
         socketSetOption(optID, o);
     }
@@ -339,7 +339,7 @@ abstract class AbstractPlainDatagramSocketImpl extends DatagramSocketImpl {
                 break;
 
             default:
-                throw new SocketException("invalid option: " + optID);
+                throw new SocketException(String.str("invalid option: ", optID));
         }
 
         return result;

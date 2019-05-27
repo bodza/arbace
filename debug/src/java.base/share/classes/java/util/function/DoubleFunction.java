@@ -10,7 +10,7 @@ package java.util.function;
  *
  * @param <R> the type of the result of the function
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoubleFunction<R> {
     /**
      * Applies this function to the given argument.

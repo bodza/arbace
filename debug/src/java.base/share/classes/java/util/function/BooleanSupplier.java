@@ -10,7 +10,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #getAsBoolean()}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface BooleanSupplier {
     /**
      * Gets a result.

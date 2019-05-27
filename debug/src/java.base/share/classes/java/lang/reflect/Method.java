@@ -52,7 +52,7 @@ public final class Method extends Executable {
     }
 
     // Accessor for generic info repository
-    @Override
+    // @Override
     MethodRepository getGenericInfo() {
         // lazily initialize repository if necessary
         if (genericInfo == null) {
@@ -114,12 +114,12 @@ public final class Method extends Executable {
         return res;
     }
 
-    @Override
+    // @Override
     Method getRoot() {
         return root;
     }
 
-    @Override
+    // @Override
     boolean hasGenericInformation() {
         return (getGenericSignature() != null);
     }
@@ -128,7 +128,7 @@ public final class Method extends Executable {
      * Returns the {@code Class} object representing the class or interface
      * that declares the method represented by this object.
      */
-    @Override
+    // @Override
     public Class<?> getDeclaringClass() {
         return clazz;
     }
@@ -137,7 +137,7 @@ public final class Method extends Executable {
      * Returns the name of the method represented by this {@code Method}
      * object, as a {@code String}.
      */
-    @Override
+    // @Override
     public String getName() {
         return name;
     }
@@ -145,7 +145,7 @@ public final class Method extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public int getModifiers() {
         return modifiers;
     }
@@ -154,8 +154,8 @@ public final class Method extends Executable {
      * {@inheritDoc}
      * @throws GenericSignatureFormatError {@inheritDoc}
      */
-    @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @Override
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     public TypeVariable<Method>[] getTypeParameters() {
         if (getGenericSignature() != null)
             return (TypeVariable<Method>[])getGenericInfo().getTypeParameters();
@@ -202,12 +202,12 @@ public final class Method extends Executable {
       } else { return getReturnType();}
     }
 
-    @Override
+    // @Override
     Class<?>[] getSharedParameterTypes() {
         return parameterTypes;
     }
 
-    @Override
+    // @Override
     Class<?>[] getSharedExceptionTypes() {
         return exceptionTypes;
     }
@@ -215,7 +215,7 @@ public final class Method extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public Class<?>[] getParameterTypes() {
         return parameterTypes.clone();
     }
@@ -231,7 +231,7 @@ public final class Method extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      */
-    @Override
+    // @Override
     public Type[] getGenericParameterTypes() {
         return super.getGenericParameterTypes();
     }
@@ -239,7 +239,7 @@ public final class Method extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public Class<?>[] getExceptionTypes() {
         return exceptionTypes.clone();
     }
@@ -250,7 +250,7 @@ public final class Method extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      */
-    @Override
+    // @Override
     public Type[] getGenericExceptionTypes() {
         return super.getGenericExceptionTypes();
     }
@@ -310,7 +310,7 @@ public final class Method extends Executable {
         return sharedToString(Modifier.methodModifiers(), isDefault(), parameterTypes, exceptionTypes);
     }
 
-    @Override
+    // @Override
     void specificToStringHeader(StringBuilder sb) {
         sb.append(getReturnType().getTypeName()).append(' ');
         sb.append(getDeclaringClass().getTypeName()).append('.');
@@ -352,12 +352,12 @@ public final class Method extends Executable {
      * @return a string describing this {@code Method},
      * include type parameters
      */
-    @Override
+    // @Override
     public String toGenericString() {
         return sharedToGenericString(Modifier.methodModifiers(), isDefault());
     }
 
-    @Override
+    // @Override
     void specificToGenericStringHeader(StringBuilder sb) {
         Type genRetType = getGenericReturnType();
         sb.append(genRetType.getTypeName()).append(' ');
@@ -446,7 +446,7 @@ public final class Method extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean isVarArgs() {
         return super.isVarArgs();
     }
@@ -454,7 +454,7 @@ public final class Method extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean isSynthetic() {
         return super.isSynthetic();
     }

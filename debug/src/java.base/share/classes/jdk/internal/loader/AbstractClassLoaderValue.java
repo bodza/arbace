@@ -2,6 +2,7 @@ package jdk.internal.loader;
 
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -87,8 +88,8 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      * @return previously associated value or null if there was none
      */
     public V putIfAbsent(ClassLoader cl, V v) {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
-        @SuppressWarnings("unchecked")
+        Map<CLV, Object> map = map(cl);
+        // @SuppressWarnings("unchecked")
         CLV clv = (CLV) this;
         while (true) {
             try {
@@ -151,8 +152,8 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      *                               for the same association is attempted.
      */
     public V computeIfAbsent(ClassLoader cl, BiFunction<? super ClassLoader, ? super CLV, ? extends V> mappingFunction) throws IllegalStateException {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
-        @SuppressWarnings("unchecked")
+        Map<CLV, Object> map = map(cl);
+        // @SuppressWarnings("unchecked")
         CLV clv = (CLV) this;
         Memoizer<CLV, V> mv = null;
         while (true) {
@@ -210,7 +211,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      * @param cl the associated ClassLoader of the values to be removed
      */
     public void removeAll(ClassLoader cl) {
-        ConcurrentHashMap<CLV, Object> map = map(cl);
+        Map<CLV, Object> map = map(cl);
         for (Iterator<CLV> i = map.keySet().iterator(); i.hasNext(); ) {
             if (i.next().isEqualOrDescendantOf(this)) {
                 i.remove();
@@ -219,11 +220,11 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
     }
 
     /**
-     * @return a ConcurrentHashMap for given ClassLoader
+     * @return a Map for given ClassLoader
      */
-    @SuppressWarnings("unchecked")
-    private static <CLV extends AbstractClassLoaderValue<CLV, ?>> ConcurrentHashMap<CLV, Object> map(ClassLoader cl) {
-        return (ConcurrentHashMap<CLV, Object>) (cl == null ? BootLoader.getClassLoaderValueMap() : cl.createOrGetClassLoaderValueMap());
+    // @SuppressWarnings("unchecked")
+    private static <CLV extends AbstractClassLoaderValue<CLV, ?>> Map<CLV, Object> map(ClassLoader cl) {
+        return (Map<CLV, Object>) (cl == null ? BootLoader.getClassLoaderValueMap() : cl.createOrGetClassLoaderValueMap());
     }
 
     /**
@@ -231,7 +232,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
      * {@code memoizerOrValue} parameter is a {@code Memoizer} or
      * just return given parameter.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private V extractValue(Object memoizerOrValue) {
         if (memoizerOrValue instanceof Memoizer) {
             return ((Memoizer<?, V>) memoizerOrValue).get();
@@ -270,7 +271,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
             this.mappingFunction = mappingFunction;
         }
 
-        @Override
+        // @Override
         public V get() throws RecursiveInvocationException {
             V v = this.v;
             if (v != null)
@@ -353,7 +354,7 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
         /**
          * @return the key component of this sub-ClassLoaderValue.
          */
-        @Override
+        // @Override
         public K key() {
             return key;
         }
@@ -363,23 +364,23 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
          * either equal to it or if its {@link #parent() parent} is a
          * descendant of given {@code clv}.
          */
-        @Override
+        // @Override
         public boolean isEqualOrDescendantOf(AbstractClassLoaderValue<?, V> clv) {
             return equals(Objects.requireNonNull(clv)) || parent().isEqualOrDescendantOf(clv);
         }
 
-        @Override
+        // @Override
         public boolean equals(Object o) {
             if (this == o)
                 return true;
             if (!(o instanceof Sub))
                 return false;
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Sub<?> that = (Sub<?>) o;
             return this.parent().equals(that.parent()) && Objects.equals(this.key, that.key);
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return 31 * parent().hashCode() + Objects.hashCode(key);
         }

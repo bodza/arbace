@@ -27,7 +27,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * The {@code Class} instance representing the primitive type
      * {@code byte}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Byte>     TYPE = (Class<Byte>) Class.getPrimitiveClass("byte");
 
     /**
@@ -114,7 +114,7 @@ public final class Byte extends Number implements Comparable<Byte> {
     public static byte parseByte(String s, int radix) throws NumberFormatException {
         int i = Integer.parseInt(s, radix);
         if (i < MIN_VALUE || i > MAX_VALUE)
-            throw new NumberFormatException("Value out of range. Value:\"" + s + "\" Radix:" + radix);
+            throw new NumberFormatException(String.str("Value out of range. Value:\"", s, "\" Radix:", radix));
         return (byte)i;
     }
 
@@ -239,7 +239,7 @@ public final class Byte extends Number implements Comparable<Byte> {
     public static Byte decode(String nm) throws NumberFormatException {
         int i = Integer.decode(nm);
         if (i < MIN_VALUE || i > MAX_VALUE)
-            throw new NumberFormatException("Value " + i + " out of range from input " + nm);
+            throw new NumberFormatException(String.str("Value ", i, " out of range from input ", nm));
         return valueOf((byte)i);
     }
 
@@ -357,7 +357,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      *
      * @return a hash code value for this {@code Byte}
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Byte.hashCode(value);
     }

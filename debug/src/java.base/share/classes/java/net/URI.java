@@ -734,7 +734,7 @@ public final class URI implements Comparable<URI> {
 
     private static boolean validSchemeAndPath(String scheme, String path) {
         try {
-            URI u = new URI(scheme + ":" + path);
+            URI u = new URI(String.str(scheme, ":", path));
             return scheme.equals(u.scheme) && path.equals(u.path);
         } catch (URISyntaxException e) {
             return false;
@@ -2428,7 +2428,7 @@ public final class URI implements Comparable<URI> {
     private static void appendEncoded(StringBuilder sb, char c) {
         ByteBuffer bb = null;
         try {
-            bb = ThreadLocalCoders.encoderFor("UTF-8").encode(CharBuffer.wrap("" + c));
+            bb = ThreadLocalCoders.encoderFor("UTF-8").encode(CharBuffer.wrap(String.valueOf(c)));
         } catch (CharacterCodingException x) {
             assert false;
         }
@@ -2620,7 +2620,7 @@ public final class URI implements Comparable<URI> {
         }
 
         private void failExpecting(String expected, int p) throws URISyntaxException {
-            fail("Expected " + expected, p);
+            fail(String.str("Expected ", expected), p);
         }
 
         // -- Simple access to the input string --
@@ -2774,7 +2774,7 @@ public final class URI implements Comparable<URI> {
         private void checkChars(int start, int end, long lowMask, long highMask, String what) throws URISyntaxException {
             int p = scan(start, end, lowMask, highMask);
             if (p < end)
-                fail("Illegal character in " + what, p);
+                fail(String.str("Illegal character in ", what), p);
         }
 
         // Check that the char at position p matches the given mask

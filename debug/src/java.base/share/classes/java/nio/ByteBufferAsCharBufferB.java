@@ -25,7 +25,7 @@ class ByteBufferAsCharBufferB extends CharBuffer {
         assert address >= bb.address;
     }
 
-    @Override
+    // @Override
     Object base() {
         return bb.hb;
     }

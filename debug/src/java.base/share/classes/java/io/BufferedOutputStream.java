@@ -60,7 +60,7 @@ public class BufferedOutputStream extends FilterOutputStream {
      * @param b   the byte to be written.
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public synchronized void write(int b) throws IOException {
         if (count >= buf.length) {
             flushBuffer();
@@ -84,7 +84,7 @@ public class BufferedOutputStream extends FilterOutputStream {
      * @param len   the number of bytes to write.
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public synchronized void write(byte b[], int off, int len) throws IOException {
         if (len >= buf.length) {
             /* If the request length exceeds the size of the output buffer,
@@ -107,7 +107,7 @@ public class BufferedOutputStream extends FilterOutputStream {
      *
      * @throws IOException  if an I/O error occurs.
      */
-    @Override
+    // @Override
     public synchronized void flush() throws IOException {
         flushBuffer();
         out.flush();

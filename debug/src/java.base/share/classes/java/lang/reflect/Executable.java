@@ -75,7 +75,7 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
             }
             return sb.toString();
         } catch (Exception e) {
-            return "<" + e + ">";
+            return String.str("<", e, ">");
         }
     }
 
@@ -124,7 +124,7 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
             }
             return sb.toString();
         } catch (Exception e) {
-            return "<" + e + ">";
+            return String.str("<", e, ">");
         }
     }
 
@@ -310,7 +310,7 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
             // modifiers?  Probably not in the general case, since
             // we'd have no way of knowing about them, but there
             // may be specific cases.
-            out[i] = new Parameter("arg" + i, 0, this, i);
+            out[i] = new Parameter(String.str("arg", i), 0, this, i);
         return out;
     }
 
@@ -328,7 +328,7 @@ public abstract class Executable extends AccessibleObject implements Member, Gen
                 if (name.isEmpty() || name.indexOf('.') != -1 ||
                     name.indexOf(';') != -1 || name.indexOf('[') != -1 ||
                     name.indexOf('/') != -1) {
-                    throw new MalformedParametersException("Invalid parameter name \"" + name + "\"");
+                    throw new MalformedParametersException(String.str("Invalid parameter name \"", name, "\""));
                 }
             }
 

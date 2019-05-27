@@ -10,7 +10,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #getAsDouble()}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoubleSupplier {
     /**
      * Gets a result.

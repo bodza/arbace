@@ -10,7 +10,7 @@ package java.util.function;
  *
  * @param <T> the type of the operand and result of the operator
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface UnaryOperator<T> extends Function<T, T> {
     /**
      * Returns a unary operator that always returns its input argument.

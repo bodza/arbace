@@ -394,10 +394,10 @@ class AccessorGenerator implements ClassFileConstants {
             }
             throw new InternalError("Should have found primitive type");
         } else if (c.isArray()) {
-            return "[" + getClassName(c.getComponentType(), true);
+            return String.str("[", getClassName(c.getComponentType(), true));
         } else {
             if (addPrefixAndSuffixForNonPrimitiveTypes) {
-                return internalize("L" + c.getName() + ";");
+                return internalize(String.str("L", c.getName(), ";"));
             } else {
                 return internalize(c.getName());
             }
@@ -651,7 +651,7 @@ class AccessorGenerator implements ClassFileConstants {
         } else if (primType == Double.TYPE) {
             return doubleUnboxIdx;
         }
-        throw new InternalError("Illegal primitive type " + primType.getName());
+        throw new InternalError(String.str("Illegal primitive type ", primType.getName()));
     }
 
     protected static final Class<?>[] primitiveTypes = new Class<?>[] {

@@ -8,7 +8,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsDouble(int)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface IntToDoubleFunction {
     /**
      * Applies this function to the given argument.

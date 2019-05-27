@@ -132,7 +132,7 @@ public final class Character implements Comparable<Character> {
      * The {@code Class} instance representing the primitive type
      * {@code char}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Character> TYPE = (Class<Character>) Class.getPrimitiveClass("char");
 
     /*
@@ -3390,7 +3390,7 @@ public final class Character implements Comparable<Character> {
          */
         public static UnicodeBlock of(int codePoint) {
             if (!isValidCodePoint(codePoint)) {
-                throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+                throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
             }
 
             int top, bottom, current;
@@ -3448,7 +3448,7 @@ public final class Character implements Comparable<Character> {
         public static final UnicodeBlock forName(String blockName) {
             UnicodeBlock block = map.get(blockName.toUpperCase());
             if (block == null) {
-                throw new IllegalArgumentException("Not a valid block name: " + blockName);
+                throw new IllegalArgumentException(String.str("Not a valid block name: ", blockName));
             }
             return block;
         }
@@ -7372,7 +7372,7 @@ public final class Character implements Comparable<Character> {
          */
         public static UnicodeScript of(int codePoint) {
             if (!isValidCodePoint(codePoint))
-                throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+                throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
             int type = getType(codePoint);
             // leave SURROGATE and PRIVATE_USE for table lookup
             if (type == UNASSIGNED)
@@ -7486,7 +7486,7 @@ public final class Character implements Comparable<Character> {
      *
      * @return a hash code value for this {@code Character}
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Character.hashCode(value);
     }
@@ -8030,7 +8030,7 @@ public final class Character implements Comparable<Character> {
             toSurrogates(codePoint, dst, dstIndex);
             return 2;
         } else {
-            throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+            throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
         }
     }
 
@@ -8057,7 +8057,7 @@ public final class Character implements Comparable<Character> {
             toSurrogates(codePoint, result, 0);
             return result;
         } else {
-            throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+            throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
         }
     }
 
@@ -9797,7 +9797,7 @@ public final class Character implements Comparable<Character> {
      */
     public static String getName(int codePoint) {
         if (!isValidCodePoint(codePoint)) {
-            throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+            throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
         }
         String name = null/* oops! CharacterName.getInstance().getName(codePoint) */;
         if (name != null)
@@ -9806,7 +9806,7 @@ public final class Character implements Comparable<Character> {
             return null;
         UnicodeBlock block = UnicodeBlock.of(codePoint);
         if (block != null)
-            return block.toString().replace('_', ' ') + " " + Integer.toHexString(codePoint).toUpperCase();
+            return String.str(block.toString().replace('_', ' '), " ", Integer.toHexString(codePoint).toUpperCase());
         // should never come here
         return Integer.toHexString(codePoint).toUpperCase();
     }
@@ -9850,6 +9850,6 @@ public final class Character implements Comparable<Character> {
                     return cp;
             }
         } catch (Exception x) {}
-        throw new IllegalArgumentException("Unrecognized character name :" + name);
+        throw new IllegalArgumentException(String.str("Unrecognized character name :", name));
     }
 }

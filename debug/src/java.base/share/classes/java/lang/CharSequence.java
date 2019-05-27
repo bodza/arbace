@@ -105,7 +105,7 @@ public interface CharSequence {
      *          positive integer if the first {@code CharSequence} is
      *          lexicographically greater than the second.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static int compare(CharSequence cs1, CharSequence cs2) {
         if (Objects.requireNonNull(cs1) == Objects.requireNonNull(cs2)) {
             return 0;

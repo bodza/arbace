@@ -10,7 +10,7 @@ import java.util.Objects;
  *
  * @param <T> the type of the input to the predicate
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface Predicate<T> {
     /**
      * Evaluates this predicate on the given argument.
@@ -101,7 +101,7 @@ public interface Predicate<T> {
      *
      * @throws NullPointerException if target is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <T> Predicate<T> not(Predicate<? super T> target) {
         Objects.requireNonNull(target);
         return (Predicate<T>)target.negate();

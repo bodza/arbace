@@ -3,7 +3,7 @@ package java.lang.ref;
 import jdk.internal.misc.VM;
 
 /* Package-private; must be in same package as the Reference class */
-final class Finalizer extends FinalReference<Object> {
+/* oops! */public final class Finalizer extends FinalReference<Object> {
     private static ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
     /** Head of doubly linked list of Finalizers awaiting finalization. */

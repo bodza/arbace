@@ -22,7 +22,7 @@ package java.lang;
  * unless the programmer intends on modifying or enhancing the fundamental
  * behavior of the class.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface Runnable {
     /**
      * When an object implementing interface <code>Runnable</code> is used

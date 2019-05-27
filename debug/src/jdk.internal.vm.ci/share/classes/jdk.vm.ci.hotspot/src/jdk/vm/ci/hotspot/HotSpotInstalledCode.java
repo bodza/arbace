@@ -33,7 +33,7 @@ public abstract class HotSpotInstalledCode extends InstalledCode {
         return size;
     }
 
-    @Override
+    // @Override
     public long getStart() {
         return codeStart;
     }

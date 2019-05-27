@@ -49,19 +49,19 @@ public abstract class InputStream implements Closeable {
                 }
             }
 
-            @Override
+            // @Override
             public int available() throws IOException {
                 ensureOpen();
                 return 0;
             }
 
-            @Override
+            // @Override
             public int read() throws IOException {
                 ensureOpen();
                 return -1;
             }
 
-            @Override
+            // @Override
             public int read(byte[] b, int off, int len) throws IOException {
                 Objects.checkFromIndexSize(off, len, b.length);
                 if (len == 0) {
@@ -71,20 +71,20 @@ public abstract class InputStream implements Closeable {
                 return -1;
             }
 
-            @Override
+            // @Override
             public byte[] readAllBytes() throws IOException {
                 ensureOpen();
                 return new byte[0];
             }
 
-            @Override
+            // @Override
             public int readNBytes(byte[] b, int off, int len) throws IOException {
                 Objects.checkFromIndexSize(off, len, b.length);
                 ensureOpen();
                 return 0;
             }
 
-            @Override
+            // @Override
             public byte[] readNBytes(int len) throws IOException {
                 if (len < 0) {
                     throw new IllegalArgumentException("len < 0");
@@ -93,20 +93,20 @@ public abstract class InputStream implements Closeable {
                 return new byte[0];
             }
 
-            @Override
+            // @Override
             public long skip(long n) throws IOException {
                 ensureOpen();
                 return 0L;
             }
 
-            @Override
+            // @Override
             public long transferTo(OutputStream out) throws IOException {
                 Objects.requireNonNull(out);
                 ensureOpen();
                 return 0L;
             }
 
-            @Override
+            // @Override
             public void close() throws IOException {
                 closed = true;
             }

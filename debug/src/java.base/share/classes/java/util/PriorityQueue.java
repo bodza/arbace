@@ -51,7 +51,7 @@ import java.util.function.Predicate;
  *
  * @param <E> the type of elements held in this queue
  */
-@SuppressWarnings("unchecked")
+// @SuppressWarnings("unchecked")
 public class PriorityQueue<E> extends AbstractQueue<E> {
     private static final int DEFAULT_INITIAL_CAPACITY = 11;
 

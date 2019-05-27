@@ -30,6 +30,6 @@ public class UnmappableCharacterException extends CharacterCodingException {
      * @return the message
      */
     public String getMessage() {
-        return "Input length = " + inputLength;
+        return String.str("Input length = ", inputLength);
     }
 }

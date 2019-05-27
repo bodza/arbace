@@ -10,7 +10,7 @@ import java.util.Objects;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsLong(long)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface LongUnaryOperator {
     /**
      * Applies this operator to the given operand.

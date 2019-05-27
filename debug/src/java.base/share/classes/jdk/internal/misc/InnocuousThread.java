@@ -15,7 +15,7 @@ public final class InnocuousThread extends Thread {
 
     private static final AtomicInteger threadNumber = new AtomicInteger(1);
     private static String newName() {
-        return "InnocuousThread-" + threadNumber.getAndIncrement();
+        return String.str("InnocuousThread-", threadNumber.getAndIncrement());
     }
 
     /**
@@ -54,12 +54,12 @@ public final class InnocuousThread extends Thread {
         UNSAFE.putObjectRelease(this, CONTEXTCLASSLOADER, tccl);
     }
 
-    @Override
+    // @Override
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler x) {
         // silently fail
     }
 
-    @Override
+    // @Override
     public void setContextClassLoader(ClassLoader cl) {
         // Allow clearing of the TCCL to remove the reference to the system classloader.
         if (cl == null)
@@ -79,7 +79,7 @@ public final class InnocuousThread extends Thread {
     // ensure run method is run only once
     private volatile boolean hasRun;
 
-    @Override
+    // @Override
     public void run() {
         if (Thread.currentThread() == this && !hasRun) {
             hasRun = true;

@@ -133,9 +133,9 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      */
     public Hashtable(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
-            throw new IllegalArgumentException("Illegal Capacity: " + initialCapacity);
+            throw new IllegalArgumentException(String.str("Illegal Capacity: ", initialCapacity));
         if (loadFactor <= 0 || Float.isNaN(loadFactor))
-            throw new IllegalArgumentException("Illegal Load: " + loadFactor);
+            throw new IllegalArgumentException(String.str("Illegal Load: ", loadFactor));
 
         if (initialCapacity==0)
             initialCapacity = 1;
@@ -302,7 +302,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      *         {@code null} if this map contains no mapping for the key
      * @throws NullPointerException if the specified key is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public synchronized V get(Object key) {
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
@@ -330,7 +330,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      * number of keys in the hashtable exceeds this hashtable's capacity
      * and load factor.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     protected void rehash() {
         int oldCapacity = table.length;
         Entry<?,?>[] oldMap = table;
@@ -373,7 +373,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         }
 
         // Creates the new entry.
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>) tab[index];
         tab[index] = new Entry<>(hash, key, value, e);
         count++;
@@ -405,7 +405,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
         for ( ; entry != null; entry = entry.next) {
             if ((entry.hash == hash) && entry.key.equals(key)) {
@@ -432,7 +432,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -659,7 +659,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             int hash = key.hashCode();
             int index = (hash & 0x7FFFFFFF) % tab.length;
 
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Entry<K,V> e = (Entry<K,V>)tab[index];
             for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
                 if (e.hash==hash && e.equals(entry)) {
@@ -796,14 +796,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         return h;
     }
 
-    @Override
+    // @Override
     public synchronized V getOrDefault(Object key, V defaultValue) {
         V result = get(key);
         return (null == result) ? defaultValue : result;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public synchronized void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action); // explicit check required in case
                                             // table is empty.
@@ -822,8 +822,8 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public synchronized void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function); // explicit check required in case
                                               // table is empty.
@@ -842,7 +842,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         }
     }
 
-    @Override
+    // @Override
     public synchronized V putIfAbsent(K key, V value) {
         Objects.requireNonNull(value);
 
@@ -850,7 +850,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
         for ( ; entry != null; entry = entry.next) {
             if ((entry.hash == hash) && entry.key.equals(key)) {
@@ -866,14 +866,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         return null;
     }
 
-    @Override
+    // @Override
     public synchronized boolean remove(Object key, Object value) {
         Objects.requireNonNull(value);
 
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
             if ((e.hash == hash) && e.key.equals(key) && e.value.equals(value)) {
@@ -891,14 +891,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         return false;
     }
 
-    @Override
+    // @Override
     public synchronized boolean replace(K key, V oldValue, V newValue) {
         Objects.requireNonNull(oldValue);
         Objects.requireNonNull(newValue);
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for ( ; e != null; e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -913,13 +913,13 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         return false;
     }
 
-    @Override
+    // @Override
     public synchronized V replace(K key, V value) {
         Objects.requireNonNull(value);
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for ( ; e != null; e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -941,14 +941,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      * @throws ConcurrentModificationException if it is detected that the
      * mapping function modified this map
      */
-    @Override
+    // @Override
     public synchronized V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
 
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for ( ; e != null; e = e.next) {
             if (e.hash == hash && e.key.equals(key)) {
@@ -977,14 +977,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      * @throws ConcurrentModificationException if it is detected that the
      * remapping function modified this map
      */
-    @Override
+    // @Override
     public synchronized V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
             if (e.hash == hash && e.key.equals(key)) {
@@ -1020,14 +1020,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      * @throws ConcurrentModificationException if it is detected that the
      * remapping function modified this map
      */
-    @Override
+    // @Override
     public synchronized V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
             if (e.hash == hash && Objects.equals(e.key, key)) {
@@ -1071,14 +1071,14 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
      * @throws ConcurrentModificationException if it is detected that the
      * remapping function modified this map
      */
-    @Override
+    // @Override
     public synchronized V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
         int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
         for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
             if (e.hash == hash && e.key.equals(key)) {
@@ -1125,7 +1125,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             this.next = next;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         protected Object clone() {
             return new Entry<>(hash, key, value, (next==null ? null : (Entry<K,V>) next.clone()));
         }
@@ -1154,7 +1154,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
                 return false;
             Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 
-            return (key==null ? e.getKey()==null : key.equals(e.getKey())) && (value==null ? e.getValue()==null : value.equals(e.getValue()));
+            return (key == null ? e.getKey() == null : key.equals(e.getKey())) && (value == null ? e.getValue() == null : value.equals(e.getValue()));
         }
 
         public int hashCode() {
@@ -1162,7 +1162,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         }
 
         public String toString() {
-            return key.toString()+"="+value.toString();
+            return String.str(key.toString(), "=", value.toString());
         }
     }
 
@@ -1216,7 +1216,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             return e != null;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public T nextElement() {
             Entry<?,?> et = entry;
             int i = index;
@@ -1258,7 +1258,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
                 Entry<?,?>[] tab = Hashtable.this.table;
                 int index = (lastReturned.hash & 0x7FFFFFFF) % tab.length;
 
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 Entry<K,V> e = (Entry<K,V>)tab[index];
                 for (Entry<K,V> prev = null; e != null; prev = e, e = e.next) {
                     if (e == lastReturned) {

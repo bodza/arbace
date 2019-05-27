@@ -171,7 +171,7 @@ public abstract class Buffer {
         position(pos);
         if (mark >= 0) {
             if (mark > pos)
-                throw new IllegalArgumentException("mark > position: (" + mark + " > " + pos + ")");
+                throw new IllegalArgumentException(String.str("mark > position: (", mark, " > ", pos, ")"));
             this.mark = mark;
         }
     }
@@ -199,7 +199,7 @@ public abstract class Buffer {
      *          If the {@code capacity} is a negative integer
      */
     static IllegalArgumentException createCapacityException(int capacity) {
-        return new IllegalArgumentException("capacity < 0: (" + capacity + " < 0)");
+        return new IllegalArgumentException(String.str("capacity < 0: (", capacity, " < 0)"));
     }
 
     /**
@@ -255,9 +255,9 @@ public abstract class Buffer {
         String msg = null;
 
         if (newPosition > limit) {
-            msg = "newPosition > limit: (" + newPosition + " > " + limit + ")";
+            msg = String.str("newPosition > limit: (", newPosition, " > ", limit, ")");
         } else { // assume negative
-            msg = "newPosition < 0: (" + newPosition + " < 0)";
+            msg = String.str("newPosition < 0: (", newPosition, " < 0)");
         }
 
         return new IllegalArgumentException(msg);
@@ -310,9 +310,9 @@ public abstract class Buffer {
         String msg = null;
 
         if (newLimit > capacity) {
-            msg = "newLimit > capacity: (" + newLimit + " > " + capacity + ")";
+            msg = String.str("newLimit > capacity: (", newLimit, " > ", capacity, ")");
         } else { // assume negative
-            msg = "newLimit < 0: (" + newLimit + " < 0)";
+            msg = String.str("newLimit < 0: (", newLimit, " < 0)");
         }
 
         return new IllegalArgumentException(msg);

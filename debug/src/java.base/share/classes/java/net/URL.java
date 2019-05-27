@@ -295,15 +295,15 @@ public final class URL {
              * we will make it conform to RFC 2732
              */
             if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
-                host = "["+host+"]";
+                host = String.str("[", host, "]");
             }
             this.host = host;
 
             if (port < -1) {
-                throw new MalformedURLException("Invalid port number :" + port);
+                throw new MalformedURLException(String.str("Invalid port number :", port));
             }
             this.port = port;
-            authority = (port == -1) ? host : host + ":" + port;
+            authority = (port == -1) ? host : String.str(host, ":", port);
         }
 
         int index = file.indexOf('#');
@@ -313,7 +313,7 @@ public final class URL {
         if (q != -1) {
             this.query = file.substring(q + 1);
             this.path = file.substring(0, q);
-            this.file = path + "?" + query;
+            this.file = String.str(path, "?", query);
         } else {
             this.path = file;
             this.file = path;
@@ -322,7 +322,7 @@ public final class URL {
         // Note: we don't do validation of the URL here. Too risky to change
         // right now, but worth considering for future reference. -br
         if (handler == null && (handler = getURLStreamHandler(protocol)) == null) {
-            throw new MalformedURLException("unknown protocol: " + protocol);
+            throw new MalformedURLException(String.str("unknown protocol: ", protocol));
         }
         this.handler = handler;
     }
@@ -472,13 +472,13 @@ public final class URL {
             }
 
             if (protocol == null) {
-                throw new MalformedURLException("no protocol: "+original);
+                throw new MalformedURLException(String.str("no protocol: ", original));
             }
 
             // Get the protocol handler if not specified or the protocol
             // of the context could not be used
             if (handler == null && (handler = getURLStreamHandler(protocol)) == null) {
-                throw new MalformedURLException("unknown protocol: "+protocol);
+                throw new MalformedURLException(String.str("unknown protocol: ", protocol));
             }
 
             this.handler = handler;
@@ -528,7 +528,7 @@ public final class URL {
         if (protocol.equals("jrt") && !uri.isOpaque() && uri.getRawFragment() == null) {
             String query = uri.getRawQuery();
             String path = uri.getRawPath();
-            String file = (query == null) ? path : path + "?" + query;
+            String file = (query == null) ? path : String.str(path, "?", query);
 
             // URL represent undefined host as empty string while URI use null
             String host = uri.getHost();
@@ -578,7 +578,7 @@ public final class URL {
         synchronized (this) {
             this.protocol = protocol;
             this.host = host;
-            authority = port == -1 ? host : host + ":" + port;
+            authority = port == -1 ? host : String.str(host, ":", port);
             this.port = port;
             this.file = file;
             this.ref = ref;
@@ -614,7 +614,7 @@ public final class URL {
             this.protocol = protocol;
             this.host = host;
             this.port = port;
-            this.file = query == null ? path : path + "?" + query;
+            this.file = query == null ? path : String.str(path, "?", query);
             this.userInfo = userInfo;
             this.path = path;
             this.ref = ref;
@@ -822,7 +822,7 @@ public final class URL {
 
     /**
      * Returns a {@link java.net.URI} equivalent to this URL.
-     * This method functions in the same way as {@code new URI (this.toString())}.
+     * This method functions in the same way as {@code new URI(this.toString())}.
      *
      * Note, any URL instance that complies with RFC 2396 can be converted
      * to a URI. However, some URLs that are not strictly in compliance
@@ -834,7 +834,7 @@ public final class URL {
      * @return a URI instance equivalent to this URL.
      */
     public URI toURI() throws URISyntaxException {
-        return new URI (toString());
+        return new URI(toString());
     }
 
     /**
@@ -945,9 +945,9 @@ public final class URL {
         private static String PREFIX = "sun.net.www.protocol";
 
         public URLStreamHandler createURLStreamHandler(String protocol) {
-            String name = PREFIX + "." + protocol + ".Handler";
+            String name = String.str(PREFIX, ".", protocol, ".Handler");
             try {
-                @SuppressWarnings("deprecation")
+                // @SuppressWarnings("deprecation")
                 Object o = Class.forName(name).newInstance();
                 return (URLStreamHandler)o;
             } catch (ClassNotFoundException x) {
@@ -984,7 +984,7 @@ public final class URL {
         for (int i = 0; handler == null && i<packagePrefixes.length; i++) {
             String packagePrefix = packagePrefixes[i].trim();
             try {
-                String clsName = packagePrefix + "." + protocol + ".Handler";
+                String clsName = String.str(packagePrefix, ".", protocol, ".Handler");
                 Class<?> cls = null;
                 try {
                     cls = Class.forName(clsName);
@@ -995,7 +995,7 @@ public final class URL {
                     }
                 }
                 if (cls != null) {
-                    @SuppressWarnings("deprecation")
+                    // @SuppressWarnings("deprecation")
                     Object tmp = cls.newInstance();
                     handler = (URLStreamHandler)tmp;
                 }

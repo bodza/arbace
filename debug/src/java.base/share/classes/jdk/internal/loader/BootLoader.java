@@ -6,7 +6,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -17,12 +20,12 @@ public class BootLoader {
     private BootLoader() { }
 
     // ClassLoaderValue map for the boot class loader
-    private static final ConcurrentHashMap<?, ?> CLASS_LOADER_VALUE_MAP = new ConcurrentHashMap<>();
+    private static final Map<?, ?> CLASS_LOADER_VALUE_MAP = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Returns the ClassLoaderValue map for the boot class loader.
      */
-    public static ConcurrentHashMap<?, ?> getClassLoaderValueMap() {
+    public static Map<?, ?> getClassLoaderValueMap() {
         return CLASS_LOADER_VALUE_MAP;
     }
 

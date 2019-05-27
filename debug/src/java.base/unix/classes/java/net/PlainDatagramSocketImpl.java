@@ -24,7 +24,7 @@ class PlainDatagramSocketImpl extends AbstractPlainDatagramSocketImpl {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     protected <T> T getOption(SocketOption<T> name) throws IOException {
         if (isClosed()) {
             throw new SocketException("Socket closed");

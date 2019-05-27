@@ -383,7 +383,8 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         }
 
         for (Object o : a) {
-            @SuppressWarnings("unchecked") E e = (E) o;
+            // @SuppressWarnings("unchecked")
+            E e = (E) o;
             Node<E> newNode = new Node<>(pred, e, null);
             if (pred == null)
                 first = newNode;
@@ -509,7 +510,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      * this "outlining" performs best with both server and client VMs.
      */
     private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size: "+size;
+        return String.str("Index: ", index, ", Size: ", size);
     }
 
     private void checkElementIndex(int index) {
@@ -936,7 +937,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
         }
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private LinkedList<E> superClone() {
         try {
             return (LinkedList<E>) super.clone();
@@ -1025,7 +1026,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
      *         this list
      * @throws NullPointerException if the specified array is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         if (a.length < size)
             a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);

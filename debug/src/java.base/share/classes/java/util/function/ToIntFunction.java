@@ -9,7 +9,7 @@ package java.util.function;
  *
  * @param <T> the type of the input to the function
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface ToIntFunction<T> {
     /**
      * Applies this function to the given argument.

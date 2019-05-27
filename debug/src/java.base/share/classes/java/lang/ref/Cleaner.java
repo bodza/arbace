@@ -110,7 +110,7 @@ public final class Cleaner {
 
     static {
         CleanerImpl.setCleanerImplAccess(new Function<Cleaner, CleanerImpl>() {
-            @Override
+            // @Override
             public CleanerImpl apply(Cleaner cleaner) {
                 return cleaner.impl;
             }

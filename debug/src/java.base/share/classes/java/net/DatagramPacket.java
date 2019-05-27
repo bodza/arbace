@@ -223,7 +223,7 @@ public final class DatagramPacket {
      */
     public synchronized void setPort(int iport) {
         if (iport < 0 || iport > 0xFFFF) {
-            throw new IllegalArgumentException("Port out of range:"+ iport);
+            throw new IllegalArgumentException(String.str("Port out of range:", iport));
         }
         port = iport;
     }

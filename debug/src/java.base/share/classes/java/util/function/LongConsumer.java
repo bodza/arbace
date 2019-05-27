@@ -11,7 +11,7 @@ import java.util.Objects;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #accept(long)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface LongConsumer {
     /**
      * Performs this operation on the given argument.

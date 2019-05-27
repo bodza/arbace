@@ -670,7 +670,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
          * @return a String representation of this map entry
          */
         public String toString() {
-            return key + "=" + value;
+            return String.str(key, "=", value);
         }
     }
 
@@ -792,7 +792,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
          * @return a String representation of this map entry
          */
         public String toString() {
-            return key + "=" + value;
+            return String.str(key, "=", value);
         }
     }
 }

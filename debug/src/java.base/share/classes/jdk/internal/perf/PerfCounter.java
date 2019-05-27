@@ -91,9 +91,9 @@ public class PerfCounter {
         add(System.nanoTime() - startTime);
     }
 
-    @Override
+    // @Override
     public String toString() {
-        return name + " = " + get();
+        return String.str(name, " = ", get());
     }
 
     static class CoreCounters {

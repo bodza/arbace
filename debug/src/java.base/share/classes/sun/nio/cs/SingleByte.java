@@ -93,7 +93,7 @@ public class SingleByte {
             repl = newReplacement.charAt(0);
         }
 
-        @Override
+        // @Override
         public int decode(byte[] src, int sp, int len, char[] dst) {
             if (len > dst.length)
                 len = dst.length;
@@ -108,7 +108,7 @@ public class SingleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public boolean isASCIICompatible() {
             return isASCIICompatible;
         }
@@ -233,7 +233,7 @@ public class SingleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromLatin1(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + Math.min(len, dst.length);
@@ -249,7 +249,7 @@ public class SingleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public int encodeFromUTF16(byte[] src, int sp, int len, byte[] dst) {
             int dp = 0;
             int sl = sp + Math.min(len, dst.length);
@@ -272,7 +272,7 @@ public class SingleByte {
             return dp;
         }
 
-        @Override
+        // @Override
         public boolean isASCIICompatible() {
             return isASCIICompatible;
         }

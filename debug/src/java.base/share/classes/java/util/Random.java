@@ -112,8 +112,6 @@ public class Random {
      * {@code setSeed} is implemented by class {@code Random} by
      * atomically updating the seed to
      *  <pre>{@code (seed ^ 0x5DEECE66DL) & ((1L << 48) - 1)}</pre>
-     * and clearing the {@code haveNextNextGaussian} flag used by {@link
-     * #nextGaussian}.
      *
      * The implementation of {@code setSeed} by class {@code Random}
      * happens to use only 48 bits of the given seed. In general, however,
@@ -124,7 +122,6 @@ public class Random {
      */
     public synchronized void setSeed(long seed) {
         this.seed.set(initialScramble(seed));
-        haveNextNextGaussian = false;
     }
 
     /**
@@ -479,73 +476,6 @@ public class Random {
      */
     public double nextDouble() {
         return (((long)(next(26)) << 27) + next(27)) * DOUBLE_UNIT;
-    }
-
-    private double nextNextGaussian;
-    private boolean haveNextNextGaussian = false;
-
-    /**
-     * Returns the next pseudorandom, Gaussian ("normally") distributed
-     * {@code double} value with mean {@code 0.0} and standard
-     * deviation {@code 1.0} from this random number generator's sequence.
-     *
-     * The general contract of {@code nextGaussian} is that one
-     * {@code double} value, chosen from (approximately) the usual
-     * normal distribution with mean {@code 0.0} and standard deviation
-     * {@code 1.0}, is pseudorandomly generated and returned.
-     *
-     * The method {@code nextGaussian} is implemented by class
-     * {@code Random} as if by a threadsafe version of the following:
-     *  <pre> {@code
-     * private double nextNextGaussian;
-     * private boolean haveNextNextGaussian = false;
-     *
-     * public double nextGaussian() {
-     *   if (haveNextNextGaussian) {
-     *     haveNextNextGaussian = false;
-     *     return nextNextGaussian;
-     *   } else {
-     *     double v1, v2, s;
-     *     do {
-     *       v1 = 2 * nextDouble() - 1; // between -1.0 and 1.0
-     *       v2 = 2 * nextDouble() - 1; // between -1.0 and 1.0
-     *       s = v1 * v1 + v2 * v2;
-     *     } while (s >= 1 || s == 0);
-     *     double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s)/s);
-     *     nextNextGaussian = v2 * multiplier;
-     *     haveNextNextGaussian = true;
-     *     return v1 * multiplier;
-     *   }
-     * }}</pre>
-     * This uses the <i>polar method</i> of G. E. P. Box, M. E. Muller, and
-     * G. Marsaglia, as described by Donald E. Knuth in <i>The Art of
-     * Computer Programming</i>, Volume 2: <i>Seminumerical Algorithms</i>,
-     * section 3.4.1, subsection C, algorithm P. Note that it generates two
-     * independent values at the cost of only one call to {@code StrictMath.log}
-     * and one call to {@code StrictMath.sqrt}.
-     *
-     * @return the next pseudorandom, Gaussian ("normally") distributed
-     *         {@code double} value with mean {@code 0.0} and
-     *         standard deviation {@code 1.0} from this random number
-     *         generator's sequence
-     */
-    public synchronized double nextGaussian() {
-        // See Knuth, ACP, Section 3.4.1 Algorithm C.
-        if (haveNextNextGaussian) {
-            haveNextNextGaussian = false;
-            return nextNextGaussian;
-        } else {
-            double v1, v2, s;
-            do {
-                v1 = 2 * nextDouble() - 1; // between -1 and 1
-                v2 = 2 * nextDouble() - 1; // between -1 and 1
-                s = v1 * v1 + v2 * v2;
-            } while (s >= 1 || s == 0);
-            double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s)/s);
-            nextNextGaussian = v2 * multiplier;
-            haveNextNextGaussian = true;
-            return v1 * multiplier;
-        }
     }
 
     // Support for resetting seed while deserializing

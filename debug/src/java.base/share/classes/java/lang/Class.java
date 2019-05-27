@@ -140,7 +140,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @return a string representation of this class object.
      */
     public String toString() {
-        return (isInterface() ? "interface " : (isPrimitive() ? "" : "class ")) + getName();
+        return String.str((isInterface() ? "interface " : (isPrimitive() ? "" : "class ")), getName());
     }
 
     /**
@@ -629,7 +629,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *     the format specified in
      *     <cite>The Java&trade; Virtual Machine Specification</cite>
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public TypeVariable<Class<T>>[] getTypeParameters() {
         ClassRepository info = getGenericInfo();
         if (info != null)
@@ -1184,7 +1184,7 @@ public final class Class<T> implements GenericDeclaration, Type {
 
     private String getSimpleName0() {
         if (isArray()) {
-            return getComponentType().getSimpleName() + "[]";
+            return String.str(getComponentType().getSimpleName(), "[]");
         }
         String simpleName = getSimpleBinaryName();
         if (simpleName == null) { // top level class
@@ -1241,7 +1241,7 @@ public final class Class<T> implements GenericDeclaration, Type {
         if (isArray()) {
             String canonicalName = getComponentType().getCanonicalName();
             if (canonicalName != null)
-                return canonicalName + "[]";
+                return String.str(canonicalName, "[]");
             else
                 return ReflectionData.NULL_SENTINEL;
         }
@@ -1254,7 +1254,7 @@ public final class Class<T> implements GenericDeclaration, Type {
             String enclosingName = enclosingClass.getCanonicalName();
             if (enclosingName == null)
                 return ReflectionData.NULL_SENTINEL;
-            return enclosingName + "." + getSimpleName();
+            return String.str(enclosingName, ".", getSimpleName());
         }
     }
 
@@ -1864,7 +1864,7 @@ public final class Class<T> implements GenericDeclaration, Type {
             }
             String baseName = c.getPackageName();
             if (baseName != null && !baseName.isEmpty()) {
-                name = baseName.replace('.', '/') + "/" + name;
+                name = String.str(baseName.replace('.', '/'), "/", name);
             }
         } else {
             name = name.substring(1);
@@ -2063,7 +2063,7 @@ public final class Class<T> implements GenericDeclaration, Type {
         }
         // No cached value available; request value from VM
         if (isInterface()) {
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Constructor<T>[] temporaryRes = (Constructor<T>[]) new Constructor<?>[0];
             res = temporaryRes;
         } else {
@@ -2320,7 +2320,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * Helper method to get the method name from arguments.
      */
     private String methodToString(String name, Class<?>[] argTypes) {
-        StringJoiner sj = new StringJoiner(", ", getName() + "." + name + "(", ")");
+        StringJoiner sj = new StringJoiner(", ", String.str(getName(), ".", name, "("), ")");
         if (argTypes != null) {
             for (int i = 0; i < argTypes.length; i++) {
                 Class<?> c = argTypes[i];
@@ -2380,7 +2380,7 @@ public final class Class<T> implements GenericDeclaration, Type {
                 return null;
             try {
                 final Method values = getMethod("values");
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 T[] temporaryConstants = (T[])values.invoke(null);
                 enumConstants = constants = temporaryConstants;
             }
@@ -2404,7 +2404,7 @@ public final class Class<T> implements GenericDeclaration, Type {
         if (directory == null) {
             T[] universe = getEnumConstantsShared();
             if (universe == null)
-                throw new IllegalArgumentException(getName() + " is not an enum type");
+                throw new IllegalArgumentException(String.str(getName(), " is not an enum type"));
             directory = new HashMap<>((int)(universe.length / 0.75f) + 1);
             for (T constant : universe) {
                 directory.put(((Enum<?>)constant).name(), constant);
@@ -2425,7 +2425,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * @throws ClassCastException if the object is not
      * null and is not assignable to the type T.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     // @HotSpotIntrinsicCandidate
     public T cast(Object obj) {
         if (obj != null && !isInstance(obj))
@@ -2434,7 +2434,7 @@ public final class Class<T> implements GenericDeclaration, Type {
     }
 
     private String cannotCastMsg(Object obj) {
-        return "Cannot cast " + obj.getClass().getName() + " to " + getName();
+        return String.str("Cannot cast ", obj.getClass().getName(), " to ", getName());
     }
 
     /**
@@ -2458,7 +2458,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      *    represent a subclass of the specified class (here "subclass" includes
      *    the class itself).
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public <U> Class<? extends U> asSubclass(Class<U> clazz) {
         if (clazz.isAssignableFrom(this))
             return (Class<? extends U>) this;

@@ -8,7 +8,7 @@ class FinalReference<T> extends Reference<T> {
         super(referent, q);
     }
 
-    @Override
+    // @Override
     public boolean enqueue() {
         throw new InternalError("should never reach here");
     }

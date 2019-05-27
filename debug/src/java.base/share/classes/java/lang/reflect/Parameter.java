@@ -144,7 +144,7 @@ public final class Parameter {
         // The .equals("") is for compatibility with current JVM
         // behavior.  It may be removed at some point.
         if (name == null || name.equals(""))
-            return "arg" + index;
+            return String.str("arg", index);
         else
             return name;
     }

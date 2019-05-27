@@ -446,7 +446,7 @@ public interface List<E> extends Collection<E> {
      *         if the comparator is found to violate the {@link Comparator}
      *         contract
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    // @SuppressWarnings({"unchecked", "rawtypes"})
     default void sort(Comparator<? super E> c) {
         Object[] a = this.toArray();
         Arrays.sort(a, (Comparator) c);
@@ -894,7 +894,7 @@ public interface List<E> extends Collection<E> {
      * @throws NullPointerException if an element is {@code null} or if the array is {@code null}
      */
     // @SafeVarargs
-    @SuppressWarnings("varargs")
+    // @SuppressWarnings("varargs")
     static <E> List<E> of(E... elements) {
         switch (elements.length) { // implicit null check of elements
             case 0:

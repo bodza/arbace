@@ -89,7 +89,7 @@ public final class Float extends Number implements Comparable<Float> {
      * The {@code Class} instance representing the primitive type
      * {@code float}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Float> TYPE = (Class<Float>) Class.getPrimitiveClass("float");
 
     /**
@@ -605,7 +605,7 @@ public final class Float extends Number implements Comparable<Float> {
      *
      * @return a hash code value for this object.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Float.hashCode(value);
     }

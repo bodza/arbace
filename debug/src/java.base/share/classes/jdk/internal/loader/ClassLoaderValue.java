@@ -58,7 +58,7 @@ public final class ClassLoaderValue<V> extends AbstractClassLoaderValue<ClassLoa
     /**
      * @return the key component of this root-ClassLoaderValue (itself).
      */
-    @Override
+    // @Override
     public ClassLoaderValue<V> key() {
         return this;
     }
@@ -66,7 +66,7 @@ public final class ClassLoaderValue<V> extends AbstractClassLoaderValue<ClassLoa
     /**
      * root-ClassLoaderValue can only be equal to itself and has no predecessors.
      */
-    @Override
+    // @Override
     public boolean isEqualOrDescendantOf(AbstractClassLoaderValue<?, V> clv) {
         return equals(Objects.requireNonNull(clv));
     }

@@ -32,8 +32,6 @@ public final class Field extends AccessibleObject implements Member {
     private transient FieldRepository genericInfo;
     // Cached field accessor created without override
     private FieldAccessor fieldAccessor;
-    // Cached field accessor created with override
-    private FieldAccessor overrideFieldAccessor;
     // For sharing of FieldAccessors. This branching structure is
     // currently only two levels deep (i.e., one root Field and
     // potentially many Field objects pointing to it.)
@@ -97,7 +95,6 @@ public final class Field extends AccessibleObject implements Member {
         res.root = this;
         // Might as well eagerly propagate this if already present
         res.fieldAccessor = fieldAccessor;
-        res.overrideFieldAccessor = overrideFieldAccessor;
 
         return res;
     }
@@ -106,7 +103,7 @@ public final class Field extends AccessibleObject implements Member {
      * Returns the {@code Class} object representing the class or interface
      * that declares the field represented by this {@code Field} object.
      */
-    @Override
+    // @Override
     public Class<?> getDeclaringClass() {
         return clazz;
     }
@@ -238,7 +235,7 @@ public final class Field extends AccessibleObject implements Member {
      */
     public String toString() {
         int mod = getModifiers();
-        return (((mod == 0) ? "" : (Modifier.toString(mod) + " ")) + getType().getTypeName() + " " + getDeclaringClass().getTypeName() + "." + getName());
+        return String.str(((mod == 0) ? "" : String.str(Modifier.toString(mod), " ")), getType().getTypeName(), " ", getDeclaringClass().getTypeName(), ".", getName());
     }
 
     /**
@@ -261,7 +258,7 @@ public final class Field extends AccessibleObject implements Member {
     public String toGenericString() {
         int mod = getModifiers();
         Type fieldType = getGenericType();
-        return (((mod == 0) ? "" : (Modifier.toString(mod) + " ")) + fieldType.getTypeName() + " " + getDeclaringClass().getTypeName() + "." + getName());
+        return String.str(((mod == 0) ? "" : String.str(Modifier.toString(mod), " ")), fieldType.getTypeName(), " ", getDeclaringClass().getTypeName(), ".", getName());
     }
 
     /**
@@ -832,30 +829,26 @@ public final class Field extends AccessibleObject implements Member {
 
     // security check is done before calling this method
     private FieldAccessor getFieldAccessor(Object obj) throws IllegalAccessException {
-        boolean ov = override;
-        FieldAccessor a = (ov) ? overrideFieldAccessor : fieldAccessor;
-        return (a != null) ? a : acquireFieldAccessor(ov);
+        FieldAccessor a = fieldAccessor;
+        return (a != null) ? a : acquireFieldAccessor();
     }
 
     // NOTE that there is no synchronization used here. It is correct
     // (though not efficient) to generate more than one FieldAccessor
     // for a given Field. However, avoiding synchronization will
     // probably make the implementation more scalable.
-    private FieldAccessor acquireFieldAccessor(boolean overrideFinalCheck) {
+    private FieldAccessor acquireFieldAccessor() {
         // First check to see if one has been created yet, and take it
         // if so
         FieldAccessor tmp = null;
         if (root != null)
-            tmp = root.getFieldAccessor(overrideFinalCheck);
+            tmp = root.getFieldAccessor();
         if (tmp != null) {
-            if (overrideFinalCheck)
-                overrideFieldAccessor = tmp;
-            else
-                fieldAccessor = tmp;
+            fieldAccessor = tmp;
         } else {
             // Otherwise fabricate one and propagate it up to the root
-            tmp = reflectionFactory.newFieldAccessor(this, overrideFinalCheck);
-            setFieldAccessor(tmp, overrideFinalCheck);
+            tmp = reflectionFactory.newFieldAccessor(this, false);
+            setFieldAccessor(tmp);
         }
 
         return tmp;
@@ -863,24 +856,21 @@ public final class Field extends AccessibleObject implements Member {
 
     // Returns FieldAccessor for this Field object, not looking up
     // the chain to the root
-    private FieldAccessor getFieldAccessor(boolean overrideFinalCheck) {
-        return (overrideFinalCheck)? overrideFieldAccessor : fieldAccessor;
+    private FieldAccessor getFieldAccessor() {
+        return fieldAccessor;
     }
 
     // Sets the FieldAccessor for this Field object and
     // (recursively) its root
-    private void setFieldAccessor(FieldAccessor accessor, boolean overrideFinalCheck) {
-        if (overrideFinalCheck)
-            overrideFieldAccessor = accessor;
-        else
-            fieldAccessor = accessor;
+    private void setFieldAccessor(FieldAccessor accessor) {
+        fieldAccessor = accessor;
         // Propagate up
         if (root != null) {
-            root.setFieldAccessor(accessor, overrideFinalCheck);
+            root.setFieldAccessor(accessor);
         }
     }
 
-    @Override
+    // @Override
     Field getRoot() {
         return root;
     }

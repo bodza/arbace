@@ -13,11 +13,11 @@ public abstract class Site {
         this.pcOffset = pos;
     }
 
-    @Override
+    // @Override
     public final int hashCode() {
         throw new UnsupportedOperationException("hashCode");
     }
 
-    @Override
+    // @Override
     public abstract boolean equals(Object obj);
 }

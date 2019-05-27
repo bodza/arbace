@@ -35,7 +35,7 @@ import java.util.Objects;
  *
  * This is an example of how Java code handles <code>SIGINT</code>:
  * <blockquote><pre>
- * Signal.Handler handler = new Signal.Handler () {
+ * Signal.Handler handler = new Signal.Handler() {
  *     public void handle(Signal sig) {
  *       ... // handle SIGINT
  *     }
@@ -92,12 +92,12 @@ public final class Signal {
 
     /**
      * Returns a string representation of this signal. For example, "SIGINT"
-     * for an object constructed using <code>new Signal ("INT")</code>.
+     * for an object constructed using <code>new Signal("INT")</code>.
      *
      * @return a string representation of the signal
      */
     public String toString() {
-        return "SIG" + name;
+        return String.str("SIG", name);
     }
 
     /**
@@ -111,12 +111,12 @@ public final class Signal {
         // Signal names are the short names;
         // the "SIG" prefix is not used for compatibility with previous JDKs
         if (name.startsWith("SIG")) {
-            throw new IllegalArgumentException("Unknown signal: " + name);
+            throw new IllegalArgumentException(String.str("Unknown signal: ", name));
         }
         this.name = name;
         number = findSignal0(name);
         if (number < 0) {
-            throw new IllegalArgumentException("Unknown signal: " + name);
+            throw new IllegalArgumentException(String.str("Unknown signal: ", name));
         }
     }
 
@@ -134,7 +134,7 @@ public final class Signal {
         long newH = (handler instanceof NativeHandler) ? ((NativeHandler)handler).getHandler() : 2;
         long oldH = handle0(sig.number, newH);
         if (oldH == -1) {
-            throw new IllegalArgumentException("Signal already used by VM or OS: " + sig);
+            throw new IllegalArgumentException(String.str("Signal already used by VM or OS: ", sig));
         }
         signals.put(sig.number, sig);
         synchronized (handlers) {
@@ -163,7 +163,7 @@ public final class Signal {
     public static void raise(Signal sig) throws IllegalArgumentException {
         Objects.requireNonNull(sig, "sig");
         if (handlers.get(sig) == null) {
-            throw new IllegalArgumentException("Unhandled signal: " + sig);
+            throw new IllegalArgumentException(String.str("Unhandled signal: ", sig));
         }
         raise0(sig.number);
     }
@@ -173,7 +173,7 @@ public final class Signal {
         final Signal sig = signals.get(number);
         final Signal.Handler handler = handlers.get(sig);
 
-        Runnable runnable = new Runnable () {
+        Runnable runnable = new Runnable() {
             public void run() {
               // Don't bother to reset the priority. Signal handler will
               // run at maximum priority inherited from the VM signal
@@ -183,7 +183,7 @@ public final class Signal {
             }
         };
         if (handler != null) {
-            new Thread(null, runnable, sig + " handler", 0, false).start();
+            new Thread(null, runnable, String.str(sig, " handler"), 0, false).start();
         }
     }
 

@@ -133,7 +133,7 @@ public class ThreadLocal<T> {
         if (map != null) {
             ThreadLocalMap.Entry e = map.getEntry(this);
             if (e != null) {
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 T result = (T)e.value;
                 return result;
             }
@@ -266,7 +266,7 @@ public class ThreadLocal<T> {
             this.supplier = Objects.requireNonNull(supplier);
         }
 
-        @Override
+        // @Override
         protected T initialValue() {
             return supplier.get();
         }
@@ -370,7 +370,7 @@ public class ThreadLocal<T> {
 
             for (Entry e : parentTable) {
                 if (e != null) {
-                    @SuppressWarnings("unchecked")
+                    // @SuppressWarnings("unchecked")
                     ThreadLocal<Object> key = (ThreadLocal<Object>) e.get();
                     if (key != null) {
                         Object value = key.childValue(e.value);

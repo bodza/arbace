@@ -232,7 +232,7 @@ public final class OptionalInt {
      * @return {@code true} if the other object is "equal to" this object
      *         otherwise {@code false}
      */
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -253,7 +253,7 @@ public final class OptionalInt {
      * @return hash code value of the present value or {@code 0} if no value is
      *         present
      */
-    @Override
+    // @Override
     public int hashCode() {
         return isPresent ? Integer.hashCode(value) : 0;
     }
@@ -270,8 +270,8 @@ public final class OptionalInt {
      *
      * @return the string representation of this instance
      */
-    @Override
+    // @Override
     public String toString() {
-        return isPresent ? ("OptionalInt[" + value + "]") : "OptionalInt.empty";
+        return isPresent ? String.str("OptionalInt[", value, "]") : "OptionalInt.empty";
     }
 }

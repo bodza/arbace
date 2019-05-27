@@ -10,13 +10,13 @@ import java.util.IdentityHashMap;
  * initialized with a null value).
  */
 public class TerminatingThreadLocal<T> extends ThreadLocal<T> {
-    @Override
+    // @Override
     public void set(T value) {
         super.set(value);
         register(this);
     }
 
-    @Override
+    // @Override
     public void remove() {
         super.remove();
         unregister(this);
@@ -72,7 +72,7 @@ public class TerminatingThreadLocal<T> extends ThreadLocal<T> {
      */
     public static final ThreadLocal<Collection<TerminatingThreadLocal<?>>> REGISTRY =
         new ThreadLocal<>() {
-            @Override
+            // @Override
             protected Collection<TerminatingThreadLocal<?>> initialValue() {
                 return Collections.newSetFromMap(new IdentityHashMap<>(4));
             }

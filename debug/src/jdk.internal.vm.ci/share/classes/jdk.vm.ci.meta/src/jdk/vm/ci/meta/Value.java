@@ -13,7 +13,7 @@ public abstract class Value {
             super(ValueKind.Illegal);
         }
 
-        @Override
+        // @Override
         public boolean equals(Object other) {
             // Due to de-serialization this object may exist multiple times. So we compare classes
             // instead of the individual objects. (This anonymous class has always the same meaning)
@@ -47,12 +47,12 @@ public abstract class Value {
         return valueKind.getPlatformKind();
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return 41 + valueKind.hashCode();
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (obj instanceof Value) {
             Value that = (Value) obj;

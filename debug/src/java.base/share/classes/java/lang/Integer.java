@@ -42,7 +42,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * The {@code Class} instance representing the primitive type
      * {@code int}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 
     /**
@@ -563,11 +563,11 @@ public final class Integer extends Number implements Comparable<Integer> {
         }
 
         if (radix < Character.MIN_RADIX) {
-            throw new NumberFormatException("radix " + radix + " less than Character.MIN_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " less than Character.MIN_RADIX"));
         }
 
         if (radix > Character.MAX_RADIX) {
-            throw new NumberFormatException("radix " + radix + " greater than Character.MAX_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " greater than Character.MAX_RADIX"));
         }
 
         boolean negative = false;
@@ -642,10 +642,10 @@ public final class Integer extends Number implements Comparable<Integer> {
             throw new IndexOutOfBoundsException();
         }
         if (radix < Character.MIN_RADIX) {
-            throw new NumberFormatException("radix " + radix + " less than Character.MIN_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " less than Character.MIN_RADIX"));
         }
         if (radix > Character.MAX_RADIX) {
-            throw new NumberFormatException("radix " + radix + " greater than Character.MAX_RADIX");
+            throw new NumberFormatException(String.str("radix ", radix, " greater than Character.MAX_RADIX"));
         }
 
         boolean negative = false;
@@ -757,7 +757,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         if (len > 0) {
             char firstChar = s.charAt(0);
             if (firstChar == '-') {
-                throw new NumberFormatException("Illegal leading minus sign on unsigned string " + s + ".");
+                throw new NumberFormatException(String.str("Illegal leading minus sign on unsigned string ", s, "."));
             } else {
                 if (len <= 5 || // Integer.MAX_VALUE in Character.MAX_RADIX is 6 digits
                     (radix == 10 && len <= 9)) { // Integer.MAX_VALUE in base 10 is 10 digits
@@ -767,7 +767,7 @@ public final class Integer extends Number implements Comparable<Integer> {
                     if ((ell & 0xffff_ffff_0000_0000L) == 0) {
                         return (int) ell;
                     } else {
-                        throw new NumberFormatException("String value " + s + " exceeds range of unsigned int.");
+                        throw new NumberFormatException(String.str("String value ", s, " exceeds range of unsigned int."));
                     }
                 }
             }
@@ -813,7 +813,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         if (len > 0) {
             char firstChar = s.charAt(start);
             if (firstChar == '-') {
-                throw new NumberFormatException("Illegal leading minus sign on unsigned string " + s + ".");
+                throw new NumberFormatException(String.str("Illegal leading minus sign on unsigned string ", s, "."));
             } else {
                 if (len <= 5 || // Integer.MAX_VALUE in Character.MAX_RADIX is 6 digits
                         (radix == 10 && len <= 9)) { // Integer.MAX_VALUE in base 10 is 10 digits
@@ -823,7 +823,7 @@ public final class Integer extends Number implements Comparable<Integer> {
                     if ((ell & 0xffff_ffff_0000_0000L) == 0) {
                         return (int) ell;
                     } else {
-                        throw new NumberFormatException("String value " + s + " exceeds range of unsigned int.");
+                        throw new NumberFormatException(String.str("String value ", s, " exceeds range of unsigned int."));
                     }
                 }
             }
@@ -1084,7 +1084,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *          primitive {@code int} value represented by this
      *          {@code Integer} object.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Integer.hashCode(value);
     }
@@ -1199,7 +1199,7 @@ public final class Integer extends Number implements Comparable<Integer> {
             // If number is Integer.MIN_VALUE, we'll end up here. The next line
             // handles this case, and causes any genuine format error to be
             // rethrown.
-            String constant = negative ? ("-" + nm.substring(index)) : nm.substring(index);
+            String constant = negative ? String.str("-", nm.substring(index)) : nm.substring(index);
             result = Integer.valueOf(constant, radix);
         }
         return result;

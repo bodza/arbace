@@ -105,7 +105,7 @@ public class Base64 {
          int[] base64 = Decoder.fromBase64;
          for (byte b : lineSeparator) {
              if (base64[b & 0xff] != -1)
-                 throw new IllegalArgumentException("Illegal base64 line separator character 0x" + Integer.toString(b, 16));
+                 throw new IllegalArgumentException(String.str("Illegal base64 line separator character 0x", Integer.toString(b, 16)));
          }
          // round down to nearest multiple of 4
          lineLength &= ~0b11;
@@ -279,7 +279,7 @@ public class Base64 {
          *          the byte array to encode
          * @return A String containing the resulting Base64 encoded characters
          */
-        @SuppressWarnings("deprecation")
+        // @SuppressWarnings("deprecation")
         public String encodeToString(byte[] src) {
             byte[] encoded = encode(src);
             return new String(encoded, 0, 0, encoded.length);
@@ -691,7 +691,7 @@ public class Base64 {
                     if (isMIME)    // skip if for rfc2045
                         continue;
                     else
-                        throw new IllegalArgumentException("Illegal base64 character " + Integer.toString(src[sp - 1], 16));
+                        throw new IllegalArgumentException(String.str("Illegal base64 character ", Integer.toString(src[sp - 1], 16)));
                 }
                 bits |= (b << shiftto);
                 shiftto -= 6;
@@ -718,7 +718,7 @@ public class Base64 {
             while (sp < sl) {
                 if (isMIME && base64[src[sp++] & 0xff] < 0)
                     continue;
-                throw new IllegalArgumentException("Input byte array has incorrect ending byte at " + sp);
+                throw new IllegalArgumentException(String.str("Input byte array has incorrect ending byte at ", sp));
             }
             return dp;
         }
@@ -748,7 +748,7 @@ public class Base64 {
             this.buf = new byte[linemax <= 0 ? 8124 : linemax];
         }
 
-        @Override
+        // @Override
         public void write(int b) throws IOException {
             byte[] buf = new byte[1];
             buf[0] = (byte)(b & 0xff);
@@ -770,7 +770,7 @@ public class Base64 {
             out.write(buf, 0, 4);
         }
 
-        @Override
+        // @Override
         public void write(byte[] b, int off, int len) throws IOException {
             if (closed)
                 throw new IOException("Stream is closed");
@@ -826,7 +826,7 @@ public class Base64 {
             }
         }
 
-        @Override
+        // @Override
         public void close() throws IOException {
             if (!closed) {
                 closed = true;
@@ -876,7 +876,7 @@ public class Base64 {
 
         private byte[] sbBuf = new byte[1];
 
-        @Override
+        // @Override
         public int read() throws IOException {
             return read(sbBuf, 0, 1) == -1 ? -1 : sbBuf[0] & 0xff;
         }
@@ -907,7 +907,7 @@ public class Base64 {
             // xx=   shiftto==6 && missing last '='
             // xx=y  or last is not '='
             if (nextin == 18 || nextin == 12 || nextin == 6 && is.read() != '=') {
-                throw new IOException("Illegal base64 ending sequence:" + nextin);
+                throw new IOException(String.str("Illegal base64 ending sequence:", nextin));
             }
             b[off++] = (byte)(bits >> (16));
             if (nextin == 0) { // only one padding byte
@@ -922,7 +922,7 @@ public class Base64 {
             return off - oldOff;
         }
 
-        @Override
+        // @Override
         public int read(byte[] b, int off, int len) throws IOException {
             if (closed)
                 throw new IOException("Stream is closed");
@@ -950,7 +950,7 @@ public class Base64 {
                     }
                     if (v == -1) {
                         if (!isMIME)
-                            throw new IOException("Illegal base64 character " + Integer.toString(v, 16));
+                            throw new IOException(String.str("Illegal base64 character ", Integer.toString(v, 16)));
                         continue; // skip if for rfc2045
                     }
                     // neve be here
@@ -978,14 +978,14 @@ public class Base64 {
             return off - oldOff;
         }
 
-        @Override
+        // @Override
         public int available() throws IOException {
             if (closed)
                 throw new IOException("Stream is closed");
             return is.available(); // TBD:
         }
 
-        @Override
+        // @Override
         public void close() throws IOException {
             if (!closed) {
                 closed = true;

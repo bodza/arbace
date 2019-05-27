@@ -233,7 +233,7 @@ public final class OptionalDouble {
      * @return {@code true} if the other object is "equal to" this object
      *         otherwise {@code false}
      */
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -254,7 +254,7 @@ public final class OptionalDouble {
      * @return hash code value of the present value or {@code 0} if no value is
      *         present
      */
-    @Override
+    // @Override
     public int hashCode() {
         return isPresent ? Double.hashCode(value) : 0;
     }
@@ -271,8 +271,8 @@ public final class OptionalDouble {
      *
      * @return the string representation of this instance
      */
-    @Override
+    // @Override
     public String toString() {
-        return isPresent ? ("OptionalDouble[" + value + "]") : "OptionalDouble.empty";
+        return isPresent ? String.str("OptionalDouble[", value, "]") : "OptionalDouble.empty";
     }
 }

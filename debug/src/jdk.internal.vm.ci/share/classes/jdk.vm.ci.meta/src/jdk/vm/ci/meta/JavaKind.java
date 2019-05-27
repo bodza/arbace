@@ -163,7 +163,7 @@ public enum JavaKind {
             case Double:
                 return java.lang.Double.doubleToRawLongBits(java.lang.Double.MIN_VALUE);
             default:
-                throw new IllegalArgumentException("illegal call to minValue on " + this);
+                throw new IllegalArgumentException(String.str("illegal call to minValue on ", this));
         }
     }
 
@@ -191,7 +191,7 @@ public enum JavaKind {
             case Double:
                 return java.lang.Double.doubleToRawLongBits(java.lang.Double.MAX_VALUE);
             default:
-                throw new IllegalArgumentException("illegal call to maxValue on " + this);
+                throw new IllegalArgumentException(String.str("illegal call to maxValue on ", this));
         }
     }
 
@@ -231,7 +231,7 @@ public enum JavaKind {
             case Long:
                 return 64;
             default:
-                throw new IllegalArgumentException("illegal call to bits on " + this);
+                throw new IllegalArgumentException(String.str("illegal call to bits on ", this));
         }
     }
 }

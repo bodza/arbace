@@ -66,7 +66,7 @@ class RegularEnumSet<E extends Enum<E>> extends EnumSet<E> {
             return unseen != 0;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public E next() {
             if (unseen == 0)
                 throw new NoSuchElementException();
@@ -192,7 +192,7 @@ class RegularEnumSet<E extends Enum<E>> extends EnumSet<E> {
             if (es.isEmpty())
                 return false;
             else
-                throw new ClassCastException(es.elementType + " != " + elementType);
+                throw new ClassCastException(String.str(es.elementType, " != ", elementType));
         }
 
         long oldElements = elements;

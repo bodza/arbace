@@ -10,17 +10,17 @@ public abstract class ValueKind<K extends ValueKind<K>> {
 
         private final EnumKey<IllegalKind> key = new EnumKey<>(this);
 
-        @Override
+        // @Override
         public Key getKey() {
             return key;
         }
 
-        @Override
+        // @Override
         public int getSizeInBytes() {
             return 0;
         }
 
-        @Override
+        // @Override
         public int getVectorLength() {
             return 0;
         }
@@ -31,7 +31,7 @@ public abstract class ValueKind<K extends ValueKind<K>> {
             super(IllegalKind.ILLEGAL);
         }
 
-        @Override
+        // @Override
         public IllegalValueKind changeType(PlatformKind newPlatformKind) {
             return this;
         }

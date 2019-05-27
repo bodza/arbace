@@ -726,7 +726,7 @@ public class StreamTokenizer {
             ret = sval;
             break;
           case TT_NUMBER:
-            ret = "n=" + nval;
+            ret = String.str("n=", nval);
             break;
           case TT_NOTHING:
             ret = "NOTHING";
@@ -750,6 +750,6 @@ public class StreamTokenizer {
                 break;
             }
         }
-        return "Token[" + ret + "], line " + LINENO;
+        return String.str("Token[", ret, "], line ", LINENO);
     }
 }

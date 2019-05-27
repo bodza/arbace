@@ -2083,10 +2083,10 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public String[] split(String regex, int limit) {
         /* fastpath if the regex is a
-         (1)one-char String and this character is not one of the
-            RegEx's meta characters ".$|()[{^?*+\\", or
-         (2)two-char String and the first char is the backslash and
-            the second is not the ascii digit or ascii letter.
+         * (1) one-char String and this character is not one of the
+         *     RegEx's meta characters ".$|()[{^?*+\\", or
+         * (2) two-char String and the first char is the backslash and
+         *     the second is not the ascii digit or ascii letter.
          */
         char ch = 0;
         if (((regex.length() == 1 &&
@@ -2643,7 +2643,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public String repeat(int count) {
         if (count < 0) {
-            throw new IllegalArgumentException("count is negative: " + count);
+            throw new IllegalArgumentException(String.str("count is negative: ", count));
         }
         if (count == 1) {
             return this;
@@ -2658,7 +2658,7 @@ public final class String implements Comparable<String>, CharSequence {
             return new String(single, coder);
         }
         if (Integer.MAX_VALUE / count < len) {
-            throw new OutOfMemoryError("Repeating " + len + " bytes String " + count + " times will produce a String exceeding maximum size.");
+            throw new OutOfMemoryError(String.str("Repeating ", len, " bytes String ", count, " times will produce a String exceeding maximum size."));
         }
         final int limit = len * count;
         final byte[] multiple = new byte[limit];
@@ -2773,7 +2773,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     static void checkIndex(int index, int length) {
         if (index < 0 || index >= length) {
-            throw new StringIndexOutOfBoundsException("index " + index + ",length " + length);
+            throw new StringIndexOutOfBoundsException(String.str("index ", index, ",length ", length));
         }
     }
 
@@ -2783,7 +2783,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     static void checkOffset(int offset, int length) {
         if (offset < 0 || offset > length) {
-            throw new StringIndexOutOfBoundsException("offset " + offset + ",length " + length);
+            throw new StringIndexOutOfBoundsException(String.str("offset ", offset, ",length ", length));
         }
     }
 
@@ -2797,7 +2797,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     static void checkBoundsOffCount(int offset, int count, int length) {
         if (offset < 0 || count < 0 || offset > length - count) {
-            throw new StringIndexOutOfBoundsException("offset " + offset + ", count " + count + ", length " + length);
+            throw new StringIndexOutOfBoundsException(String.str("offset ", offset, ", count ", count, ", length ", length));
         }
     }
 
@@ -2811,7 +2811,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     static void checkBoundsBeginEnd(int begin, int end, int length) {
         if (begin < 0 || begin > end || end > length) {
-            throw new StringIndexOutOfBoundsException("begin " + begin + ", end " + end + ", length " + length);
+            throw new StringIndexOutOfBoundsException(String.str("begin ", begin, ", end ", end, ", length ", length));
         }
     }
 
@@ -2835,6 +2835,14 @@ public final class String implements Comparable<String>, CharSequence {
             return new String(StringUTF16.toBytesSupplementary(codePoint), UTF16);
         }
 
-        throw new IllegalArgumentException("Not a valid Unicode code point: " + codePoint);
+        throw new IllegalArgumentException(String.str("Not a valid Unicode code point: ", codePoint));
+    }
+
+    // oops!
+    public static final String str(Object... args) {
+        StringBuilder sb = new StringBuilder();
+        for (Object arg : args)
+            sb.append(arg);
+        return sb.toString();
     }
 }

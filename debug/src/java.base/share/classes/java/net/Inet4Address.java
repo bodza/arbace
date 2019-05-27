@@ -293,7 +293,7 @@ public final class Inet4Address extends InetAddress {
      *         textual representation format
      */
     static String numericToTextFormat(byte[] src) {
-        return (src[0] & 0xff) + "." + (src[1] & 0xff) + "." + (src[2] & 0xff) + "." + (src[3] & 0xff);
+        return String.str((src[0] & 0xff), ".", (src[1] & 0xff), ".", (src[2] & 0xff), ".", (src[3] & 0xff));
     }
 
     /**

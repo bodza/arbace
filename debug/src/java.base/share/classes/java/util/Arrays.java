@@ -62,7 +62,7 @@ public class Arrays {
      * based implementation.
      */
     static final class NaturalOrder implements Comparator<Object> {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public int compare(Object first, Object second) {
             return ((Comparable<Object>)first).compareTo(second);
         }
@@ -75,7 +75,7 @@ public class Arrays {
      */
     static void rangeCheck(int arrayLength, int fromIndex, int toIndex) {
         if (fromIndex > toIndex) {
-            throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+            throw new IllegalArgumentException(String.str("fromIndex(", fromIndex, ") > toIndex(", toIndex, ")"));
         }
         if (fromIndex < 0) {
             throw new ArrayIndexOutOfBoundsException(fromIndex);
@@ -527,7 +527,7 @@ public class Arrays {
      * off is the offset to generate corresponding low, high in src
      * To be removed in a future release.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    // @SuppressWarnings({"unchecked", "rawtypes"})
     private static void mergeSort(Object[] src, Object[] dest, int low, int high, int off) {
         int length = high - low;
 
@@ -693,7 +693,7 @@ public class Arrays {
      * off is the offset into src corresponding to low in dest
      * To be removed in a future release.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     private static void mergeSort(Object[] src, Object[] dest, int low, int high, int off, Comparator c) {
         int length = high - low;
 
@@ -1381,9 +1381,9 @@ public class Arrays {
 
         while (low <= high) {
             int mid = (low + high) >>> 1;
-            @SuppressWarnings("rawtypes")
+            // @SuppressWarnings("rawtypes")
             Comparable midVal = (Comparable)a[mid];
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             int cmp = midVal.compareTo(key);
 
             if (cmp < 0)
@@ -2584,7 +2584,7 @@ public class Arrays {
      * @throws NegativeArraySizeException if {@code newLength} is negative
      * @throws NullPointerException if {@code original} is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> T[] copyOf(T[] original, int newLength) {
         return (T[]) copyOf(original, newLength, original.getClass());
     }
@@ -2614,7 +2614,7 @@ public class Arrays {
      */
     // @HotSpotIntrinsicCandidate
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class) ? (T[]) new Object[newLength] : (T[]) Array.newInstance(newType.getComponentType(), newLength);
         System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
         return copy;
@@ -2824,7 +2824,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code from > to}
      * @throws NullPointerException if {@code original} is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T> T[] copyOfRange(T[] original, int from, int to) {
         return copyOfRange(original, from, to, (Class<? extends T[]>) original.getClass());
     }
@@ -2865,8 +2865,8 @@ public class Arrays {
     public static <T,U> T[] copyOfRange(U[] original, int from, int to, Class<? extends T[]> newType) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
-        @SuppressWarnings("unchecked")
+            throw new IllegalArgumentException(String.str(from, " > ", to));
+        // @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class) ? (T[]) new Object[newLength] : (T[]) Array.newInstance(newType.getComponentType(), newLength);
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -2900,7 +2900,7 @@ public class Arrays {
     public static byte[] copyOfRange(byte[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         byte[] copy = new byte[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -2934,7 +2934,7 @@ public class Arrays {
     public static short[] copyOfRange(short[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         short[] copy = new short[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -2968,7 +2968,7 @@ public class Arrays {
     public static int[] copyOfRange(int[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         int[] copy = new int[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3002,7 +3002,7 @@ public class Arrays {
     public static long[] copyOfRange(long[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         long[] copy = new long[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3036,7 +3036,7 @@ public class Arrays {
     public static char[] copyOfRange(char[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         char[] copy = new char[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3070,7 +3070,7 @@ public class Arrays {
     public static float[] copyOfRange(float[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         float[] copy = new float[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3104,7 +3104,7 @@ public class Arrays {
     public static double[] copyOfRange(double[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         double[] copy = new double[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3138,7 +3138,7 @@ public class Arrays {
     public static boolean[] copyOfRange(boolean[] original, int from, int to) {
         int newLength = to - from;
         if (newLength < 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         boolean[] copy = new boolean[newLength];
         System.arraycopy(original, from, copy, 0, Math.min(original.length - from, newLength));
         return copy;
@@ -3164,7 +3164,7 @@ public class Arrays {
      * @return a list view of the specified array
      */
     // @SafeVarargs
-    @SuppressWarnings("varargs")
+    // @SuppressWarnings("varargs")
     public static <T> List<T> asList(T... a) {
         return new ArrayList<>(a);
     }
@@ -3176,18 +3176,18 @@ public class Arrays {
             a = Objects.requireNonNull(array);
         }
 
-        @Override
+        // @Override
         public int size() {
             return a.length;
         }
 
-        @Override
+        // @Override
         public Object[] toArray() {
             return Arrays.copyOf(a, a.length, Object[].class);
         }
 
-        @Override
-        @SuppressWarnings("unchecked")
+        // @Override
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int size = size();
             if (a.length < size)
@@ -3198,19 +3198,19 @@ public class Arrays {
             return a;
         }
 
-        @Override
+        // @Override
         public E get(int index) {
             return a[index];
         }
 
-        @Override
+        // @Override
         public E set(int index, E element) {
             E oldValue = a[index];
             a[index] = element;
             return oldValue;
         }
 
-        @Override
+        // @Override
         public int indexOf(Object o) {
             E[] a = this.a;
             if (o == null) {
@@ -3225,12 +3225,12 @@ public class Arrays {
             return -1;
         }
 
-        @Override
+        // @Override
         public boolean contains(Object o) {
             return indexOf(o) >= 0;
         }
 
-        @Override
+        // @Override
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
             for (E e : a) {
@@ -3238,7 +3238,7 @@ public class Arrays {
             }
         }
 
-        @Override
+        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             Objects.requireNonNull(operator);
             E[] a = this.a;
@@ -3247,12 +3247,12 @@ public class Arrays {
             }
         }
 
-        @Override
+        // @Override
         public void sort(Comparator<? super E> c) {
             Arrays.sort(a, c);
         }
 
-        @Override
+        // @Override
         public Iterator<E> iterator() {
             return new ArrayItr<>(a);
         }
@@ -3266,12 +3266,12 @@ public class Arrays {
             this.a = a;
         }
 
-        @Override
+        // @Override
         public boolean hasNext() {
             return cursor < a.length;
         }
 
-        @Override
+        // @Override
         public E next() {
             int i = cursor;
             if (i >= a.length) {

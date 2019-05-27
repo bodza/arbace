@@ -2,7 +2,11 @@ package java.net;
 
 import java.util.NavigableSet;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -589,16 +593,16 @@ public class InetAddress {
      */
     public String toString() {
         String hostName = holder().getHostName();
-        return Objects.toString(hostName, "") + "/" + getHostAddress();
+        return String.str(Objects.toString(hostName, ""), "/", getHostAddress());
     }
 
     // mapping from host name to Addresses - either NameServiceAddresses (while
     // still being looked-up by NameService(s)) or CachedAddresses when cached
-    private static final ConcurrentMap<String, Addresses> cache = new ConcurrentHashMap<>();
+    private static final Map<String, Addresses> cache = Collections.synchronizedMap(new HashMap<>());
 
     // CachedAddresses that have to expire are kept ordered in this NavigableSet
     // which is scanned on each access
-    private static final NavigableSet<CachedAddresses> expirySet = new ConcurrentSkipListSet<>();
+    private static final NavigableSet<CachedAddresses> expirySet = Collections.synchronizedNavigableSet(new TreeSet<>());
 
     // common interface
     private interface Addresses {
@@ -619,7 +623,7 @@ public class InetAddress {
             this.expiryTime = expiryTime;
         }
 
-        @Override
+        // @Override
         public InetAddress[] get() throws UnknownHostException {
             if (inetAddresses == null) {
                 throw new UnknownHostException(host);
@@ -627,7 +631,7 @@ public class InetAddress {
             return inetAddresses;
         }
 
-        @Override
+        // @Override
         public int compareTo(CachedAddresses other) {
             // natural order is expiry time -
             // compare difference of expiry times rather than
@@ -652,7 +656,7 @@ public class InetAddress {
             this.reqAddr = reqAddr;
         }
 
-        @Override
+        // @Override
         public InetAddress[] get() throws UnknownHostException {
             Addresses addresses;
             // only one thread is doing lookup to name service
@@ -899,7 +903,7 @@ public class InetAddress {
                 ipv6Expected = true;
             } else {
                 // This was supposed to be a IPv6 address, but it's not!
-                throw new UnknownHostException(host + ": invalid IPv6 address");
+                throw new UnknownHostException(String.str(host, ": invalid IPv6 address"));
             }
         }
 
@@ -921,11 +925,11 @@ public class InetAddress {
                     }
                 }
                 if ((addr = IPAddressUtil.textToNumericFormatV6(host)) == null && host.contains(":")) {
-                    throw new UnknownHostException(host + ": invalid IPv6 address");
+                    throw new UnknownHostException(String.str(host, ": invalid IPv6 address"));
                 }
             } else if (ipv6Expected) {
                 // Means an IPv4 litteral between brackets!
-                throw new UnknownHostException("["+host+"]");
+                throw new UnknownHostException(String.str("[", host, "]"));
             }
             InetAddress[] ret = new InetAddress[1];
             if (addr != null) {
@@ -942,7 +946,7 @@ public class InetAddress {
             }
         } else if (ipv6Expected) {
             // We were expecting an IPv6 Litteral, but got something else
-            throw new UnknownHostException("["+host+"]");
+            throw new UnknownHostException(String.str("[", host, "]"));
         }
         return getAllByName0(host, reqAddr, true, true);
     }
@@ -1170,7 +1174,7 @@ public class InetAddress {
                     localAddr = getAllByName0(local, null, false, false)[0];
                 } catch (UnknownHostException uhe) {
                     // Rethrow with a more informative error message.
-                    UnknownHostException uhe2 = new UnknownHostException(local + ": " + uhe.getMessage());
+                    UnknownHostException uhe2 = new UnknownHostException(String.str(local, ": ", uhe.getMessage()));
                     uhe2.initCause(uhe);
                     throw uhe2;
                 }
@@ -1210,20 +1214,20 @@ public class InetAddress {
          */
         String prefix = ""; // "impl.prefix"
         try {
-            @SuppressWarnings("deprecation")
-            Object tmp = Class.forName("java.net." + prefix + implName).newInstance();
+            // @SuppressWarnings("deprecation")
+            Object tmp = Class.forName(String.str("java.net.", prefix, implName)).newInstance();
             impl = tmp;
         } catch (ClassNotFoundException e) {
-            System.err.println("Class not found: java.net." + prefix + implName + ":\ncheck impl.prefix property in your properties file.");
+            System.err.println(String.str("Class not found: java.net.", prefix, implName, ":\ncheck impl.prefix property in your properties file."));
         } catch (InstantiationException e) {
-            System.err.println("Could not instantiate: java.net." + prefix + implName + ":\ncheck impl.prefix property in your properties file.");
+            System.err.println(String.str("Could not instantiate: java.net.", prefix, implName, ":\ncheck impl.prefix property in your properties file."));
         } catch (IllegalAccessException e) {
-            System.err.println("Cannot access class: java.net." + prefix + implName + ":\ncheck impl.prefix property in your properties file.");
+            System.err.println(String.str("Cannot access class: java.net.", prefix, implName, ":\ncheck impl.prefix property in your properties file."));
         }
 
         if (impl == null) {
             try {
-                @SuppressWarnings("deprecation")
+                // @SuppressWarnings("deprecation")
                 Object tmp = Class.forName(implName).newInstance();
                 impl = tmp;
             } catch (Exception e) {

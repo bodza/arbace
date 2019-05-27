@@ -65,7 +65,7 @@ public class Package extends NamedPackage {
      * Return the hash code computed from the package name.
      * @return the hash code computed from the package name.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return packageName().hashCode();
     }
@@ -77,25 +77,9 @@ public class Package extends NamedPackage {
      * If the package version is defined it is appended.
      * @return the string representation of the package.
      */
-    @Override
+    // @Override
     public String toString() {
-        return "package " + packageName();
-    }
-
-    private Class<?> getPackageInfo() {
-        if (packageInfo == null) {
-            // find package-info.class defined by loader
-            String cn = packageName() + ".package-info";
-            Class<?> c = BootLoader.loadClass(cn);
-            if (c != null) {
-                packageInfo = c;
-            } else {
-                // store a proxy for the package info that has no annotations
-                class PackageInfoProxy {}
-                packageInfo = PackageInfoProxy.class;
-            }
-        }
-        return packageInfo;
+        return String.str("package ", packageName());
     }
 
     /**

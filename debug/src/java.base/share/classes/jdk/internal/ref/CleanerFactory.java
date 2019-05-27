@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadFactory;
 public final class CleanerFactory {
     /* The common Cleaner. */
     private final static Cleaner commonCleaner = Cleaner.create(new ThreadFactory() {
-        @Override
+        // @Override
         public Thread newThread(Runnable r) {
             Thread t = InnocuousThread.newSystemThread("Common-Cleaner", r);
             t.setPriority(Thread.MAX_PRIORITY - 2);

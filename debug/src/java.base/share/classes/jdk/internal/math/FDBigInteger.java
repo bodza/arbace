@@ -911,7 +911,7 @@ public class FDBigInteger {
         long carry = 0L;
         for ( ; i < smallLen; i++) {
             carry += (i < big.offset   ? 0L : (big.data[i - big.offset] & LONG_MASK))
-                   + ((i < small.offset ? 0L : (small.data[i - small.offset] & LONG_MASK)));
+                  + ((i < small.offset ? 0L : (small.data[i - small.offset] & LONG_MASK)));
             r[i] = (int) carry;
             carry >>= 32; // signed shift.
         }
@@ -1162,7 +1162,7 @@ public class FDBigInteger {
      *
      * @return The string representation.
      */
-    @Override
+    // @Override
     public String toString() {
         return toBigInteger().toString();
     }

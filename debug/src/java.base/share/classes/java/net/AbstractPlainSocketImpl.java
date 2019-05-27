@@ -72,7 +72,7 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
      *
      * @return a Set of SocketOptions
      */
-    @Override
+    // @Override
     protected Set<SocketOption<?>> supportedOptions() {
         Set<SocketOption<?>> options;
         if (isReusePortAvailable()) {
@@ -270,7 +270,7 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
             on = ((Boolean)val).booleanValue();
             break;
         default:
-            throw new SocketException("unrecognized TCP option: " + opt);
+            throw new SocketException(String.str("unrecognized TCP option: ", opt));
         }
         socketSetOption(opt, on, val);
     }
@@ -352,7 +352,7 @@ abstract class AbstractPlainSocketImpl extends SocketImpl {
                 /* socket may have been closed during poll/select */
                 synchronized (fdLock) {
                     if (closePending) {
-                        throw new SocketException ("Socket closed");
+                        throw new SocketException("Socket closed");
                     }
                 }
                 // If we have a ref. to the Socket, then sets the flags

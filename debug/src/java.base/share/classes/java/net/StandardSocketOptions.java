@@ -291,8 +291,11 @@ public final class StandardSocketOptions {
             this.name = name;
             this.type = type;
         }
-        @Override public String name() { return name; }
-        @Override public Class<T> type() { return type; }
-        @Override public String toString() { return name; }
+        // @Override
+        public String name() { return name; }
+        // @Override
+        public Class<T> type() { return type; }
+        // @Override
+        public String toString() { return name; }
     }
 }

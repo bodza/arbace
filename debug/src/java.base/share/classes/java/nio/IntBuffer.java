@@ -71,7 +71,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
         this(mark, pos, lim, cap, null, 0);
     }
 
-    @Override
+    // @Override
     Object base() {
         return hb;
     }
@@ -191,7 +191,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      *
      * @return  The new int buffer
      */
-    @Override
+    // @Override
     public abstract IntBuffer slice();
 
     /**
@@ -211,7 +211,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      *
      * @return  The new int buffer
      */
-    @Override
+    // @Override
     public abstract IntBuffer duplicate();
 
     /**
@@ -358,7 +358,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      *          parameters do not hold
      */
     public IntBuffer get(int[] dst, int offset, int length) {
-        checkBounds(offset, length, dst.length);
+        // oops! checkBounds(offset, length, dst.length);
         if (length > remaining())
             throw new BufferUnderflowException();
         int end = offset + length;
@@ -498,7 +498,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      *          If this buffer is read-only
      */
     public IntBuffer put(int[] src, int offset, int length) {
-        checkBounds(offset, length, src.length);
+        // oops! checkBounds(offset, length, src.length);
         if (length > remaining())
             throw new BufferOverflowException();
         int end = offset + length;
@@ -609,7 +609,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -622,7 +622,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -635,7 +635,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -648,7 +648,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -661,7 +661,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -674,7 +674,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -687,7 +687,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final

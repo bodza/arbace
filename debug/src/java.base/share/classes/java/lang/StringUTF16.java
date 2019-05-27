@@ -13,7 +13,7 @@ final class StringUTF16 {
             throw new NegativeArraySizeException();
         }
         if (len > MAX_LENGTH) {
-            throw new OutOfMemoryError("UTF16 String size is " + len + ", should be less than " + MAX_LENGTH);
+            throw new OutOfMemoryError(String.str("UTF16 String size is ", len, ", should be less than ", MAX_LENGTH));
         }
         return new byte[len << 1];
     }

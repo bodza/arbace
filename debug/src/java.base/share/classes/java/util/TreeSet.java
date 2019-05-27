@@ -411,7 +411,7 @@ public class TreeSet<E> extends AbstractSet<E> implements NavigableSet<E>, Clone
      *
      * @return a shallow copy of this set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public Object clone() {
         TreeSet<E> clone;
         try {

@@ -25,7 +25,7 @@ class ByteBufferAsLongBufferB extends LongBuffer {
         assert address >= bb.address;
     }
 
-    @Override
+    // @Override
     Object base() {
         return bb.hb;
     }

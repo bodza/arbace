@@ -273,7 +273,7 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @throws NullPointerException if name is {@code null}
      * @throws IOException if an I/O problem occurs while attempting to set the option
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     protected <T> T getOption(SocketOption<T> name) throws IOException {
         if (name == StandardSocketOptions.SO_SNDBUF) {
             return (T) getOption(SocketOptions.SO_SNDBUF);

@@ -21,7 +21,7 @@ public class VM {
     public static void initLevel(int value) {
         synchronized (lock) {
             if (value <= initLevel || value > SYSTEM_SHUTDOWN)
-                throw new InternalError("Bad level: " + value);
+                throw new InternalError(String.str("Bad level: ", value));
             initLevel = value;
             lock.notifyAll();
         }

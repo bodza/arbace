@@ -35,7 +35,7 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      *
      * @return the key
      */
-    @Override
+    // @Override
     public K getKey() {
         return key;
     }
@@ -45,7 +45,7 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      *
      * @return the value
      */
-    @Override
+    // @Override
     public V getValue() {
         return value;
     }
@@ -56,7 +56,7 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      * @param value ignored
      * @return never returns normally
      */
-    @Override
+    // @Override
     public V setValue(V value) {
         throw new UnsupportedOperationException("not supported");
     }
@@ -67,7 +67,7 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      * the two entries' keys and values are equal. Note that key and
      * value are non-null, so equals() can be called safely on them.
      */
-    @Override
+    // @Override
     public boolean equals(Object o) {
         if (!(o instanceof Map.Entry))
             return false;
@@ -80,7 +80,7 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      * is {@code key.hashCode() ^ value.hashCode()}. Note that key and
      * value are non-null, so hashCode() can be called safely on them.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return key.hashCode() ^ value.hashCode();
     }
@@ -93,8 +93,8 @@ final class KeyValueHolder<K,V> implements Map.Entry<K,V> {
      *
      * @return a String representation of this map entry
      */
-    @Override
+    // @Override
     public String toString() {
-        return key + "=" + value;
+        return String.str(key, "=", value);
     }
 }

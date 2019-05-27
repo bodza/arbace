@@ -11,7 +11,7 @@ package java.util.function;
  *
  * @param <T> the type of results supplied by this supplier
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface Supplier<T> {
     /**
      * Gets a result.

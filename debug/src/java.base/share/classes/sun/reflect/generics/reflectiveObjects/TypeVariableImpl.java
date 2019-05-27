@@ -53,7 +53,7 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
      */
     public static <T extends GenericDeclaration> TypeVariableImpl<T> make(T decl, String name, FieldTypeSignature[] bs, GenericsFactory f) {
         if (!((decl instanceof Class) || (decl instanceof Method) || (decl instanceof Constructor))) {
-            throw new AssertionError("Unexpected kind of GenericDeclaration" + decl.getClass().toString());
+            throw new AssertionError(String.str("Unexpected kind of GenericDeclaration", decl.getClass().toString()));
         }
         return new TypeVariableImpl<T>(decl, name, bs, f);
     }
@@ -113,7 +113,7 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
 
     public String toString() {return getName();}
 
-    @Override
+    // @Override
     public boolean equals(Object o) {
         if (o instanceof TypeVariable && o.getClass() == TypeVariableImpl.class) {
             TypeVariable<?> that = (TypeVariable<?>) o;
@@ -126,7 +126,7 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
             return false;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return genericDeclaration.hashCode() ^ name.hashCode();
     }

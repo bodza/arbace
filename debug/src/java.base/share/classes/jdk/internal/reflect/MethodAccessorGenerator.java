@@ -274,7 +274,7 @@ class MethodAccessorGenerator extends AccessorGenerator {
         }
 
         if (asm.cpi() != numCPEntries) {
-            throw new InternalError("Adjust this code (cpi = " + asm.cpi() + ", numCPEntries = " + numCPEntries + ")");
+            throw new InternalError(String.str("Adjust this code (cpi = ", asm.cpi(), ", numCPEntries = ", numCPEntries, ")"));
         }
 
         // Access flags
@@ -649,14 +649,14 @@ class MethodAccessorGenerator extends AccessorGenerator {
         if (isConstructor) {
             if (forSerialization) {
                 int num = ++serializationConstructorSymnum;
-                return "jdk/internal/reflect/GeneratedSerializationConstructorAccessor" + num;
+                return String.str("jdk/internal/reflect/GeneratedSerializationConstructorAccessor", num);
             } else {
                 int num = ++constructorSymnum;
-                return "jdk/internal/reflect/GeneratedConstructorAccessor" + num;
+                return String.str("jdk/internal/reflect/GeneratedConstructorAccessor", num);
             }
         } else {
             int num = ++methodSymnum;
-            return "jdk/internal/reflect/GeneratedMethodAccessor" + num;
+            return String.str("jdk/internal/reflect/GeneratedMethodAccessor", num);
         }
     }
 }

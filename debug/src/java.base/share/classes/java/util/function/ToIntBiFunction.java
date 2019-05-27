@@ -11,7 +11,7 @@ package java.util.function;
  * @param <T> the type of the first argument to the function
  * @param <U> the type of the second argument to the function
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface ToIntBiFunction<T, U> {
     /**
      * Applies this function to the given arguments.

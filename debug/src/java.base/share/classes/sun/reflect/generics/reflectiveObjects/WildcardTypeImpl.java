@@ -133,7 +133,7 @@ public class WildcardTypeImpl extends LazyReflectiveObjectGenerator implements W
         return sb.toString();
     }
 
-    @Override
+    // @Override
     public boolean equals(Object o) {
         if (o instanceof WildcardType) {
             WildcardType that = (WildcardType) o;
@@ -142,7 +142,7 @@ public class WildcardTypeImpl extends LazyReflectiveObjectGenerator implements W
             return false;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         Type [] lowerBounds = getLowerBounds();
         Type [] upperBounds = getUpperBounds();

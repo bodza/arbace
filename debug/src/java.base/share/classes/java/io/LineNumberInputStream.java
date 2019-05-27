@@ -56,7 +56,7 @@ public class LineNumberInputStream extends FilterInputStream {
      *             stream is reached.
      * @throws IOException  if an I/O error occurs.
      */
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     public int read() throws IOException {
         int c = pushBack;
 

@@ -23,7 +23,7 @@ public class TypeNotPresentException extends RuntimeException {
      *    load the named type, or {@code null} if unavailable or inapplicable
      */
     public TypeNotPresentException(String typeName, Throwable cause) {
-        super("Type " + typeName + " not present", cause);
+        super(String.str("Type ", typeName, " not present"), cause);
         this.typeName = typeName;
     }
 

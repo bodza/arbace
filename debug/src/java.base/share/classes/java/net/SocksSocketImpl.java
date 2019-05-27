@@ -107,7 +107,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
         byte[] data = new byte[8];
         int n = readSocksReply(in, data, deadlineMillis);
         if (n != 8)
-            throw new SocketException("Reply from SOCKS server has bad length: " + n);
+            throw new SocketException(String.str("Reply from SOCKS server has bad length: ", n));
         if (data[0] != 0 && data[0] != 4)
             throw new SocketException("Reply from SOCKS server has bad version");
         SocketException ex = null;
@@ -148,7 +148,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
      * @throws IllegalArgumentException if endpoint is null or a
      *          SocketAddress subclass not supported by this socket
      */
-    @Override
+    // @Override
     protected void connect(SocketAddress endpoint, int timeout) throws IOException {
         final long deadlineMillis;
 
@@ -350,7 +350,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
         byte[] data = new byte[8];
         int n = readSocksReply(in, data);
         if (n != 8)
-            throw new SocketException("Reply from SOCKS server has bad length: " + n);
+            throw new SocketException(String.str("Reply from SOCKS server has bad length: ", n));
         if (data[0] != 0 && data[0] != 4)
             throw new SocketException("Reply from SOCKS server has bad version");
         SocketException ex = null;
@@ -465,7 +465,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
             out.flush();
         } else {
             cmdsock.close();
-            throw new SocketException("unsupported address type : " + saddr);
+            throw new SocketException(String.str("unsupported address type : ", saddr));
         }
         data = new byte[4];
         i = readSocksReply(in, data);
@@ -675,7 +675,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
      *
      * @return the value of this socket's {@code address} field.
      */
-    @Override
+    // @Override
     protected InetAddress getInetAddress() {
         if (external_address != null)
             return external_address.getAddress();
@@ -688,7 +688,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
      *
      * @return the value of this socket's {@code port} field.
      */
-    @Override
+    // @Override
     protected int getPort() {
         if (external_address != null)
             return external_address.getPort();
@@ -696,7 +696,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
             return super.getPort();
     }
 
-    @Override
+    // @Override
     protected int getLocalPort() {
         if (socket != null)
             return super.getLocalPort();
@@ -706,7 +706,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
             return super.getLocalPort();
     }
 
-    @Override
+    // @Override
     protected void close() throws IOException {
         if (cmdsock != null)
             cmdsock.close();

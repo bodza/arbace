@@ -170,12 +170,12 @@ public class FloatingDecimal {
             this.isNegative = isNegative;
         }
 
-        @Override
+        // @Override
         public String toJavaFormatString() {
             return image;
         }
 
-        @Override
+        // @Override
         public void appendTo(Appendable buf) {
             if (buf instanceof StringBuilder) {
                 ((StringBuilder) buf).append(image);
@@ -186,32 +186,32 @@ public class FloatingDecimal {
             }
         }
 
-        @Override
+        // @Override
         public int getDecimalExponent() {
             throw new IllegalArgumentException("Exceptional value does not have an exponent");
         }
 
-        @Override
+        // @Override
         public int getDigits(char[] digits) {
             throw new IllegalArgumentException("Exceptional value does not have digits");
         }
 
-        @Override
+        // @Override
         public boolean isNegative() {
             return isNegative;
         }
 
-        @Override
+        // @Override
         public boolean isExceptional() {
             return true;
         }
 
-        @Override
+        // @Override
         public boolean digitsRoundedUp() {
             throw new IllegalArgumentException("Exceptional value is not rounded");
         }
 
-        @Override
+        // @Override
         public boolean decimalDigitsExact() {
             throw new IllegalArgumentException("Exceptional value is not exact");
         }
@@ -223,7 +223,7 @@ public class FloatingDecimal {
     private static final int NAN_LENGTH = NAN_REP.length();
 
     private static final BinaryToASCIIConverter B2AC_POSITIVE_INFINITY = new ExceptionalBinaryToASCIIBuffer(INFINITY_REP, false);
-    private static final BinaryToASCIIConverter B2AC_NEGATIVE_INFINITY = new ExceptionalBinaryToASCIIBuffer("-" + INFINITY_REP, true);
+    private static final BinaryToASCIIConverter B2AC_NEGATIVE_INFINITY = new ExceptionalBinaryToASCIIBuffer(String.str("-", INFINITY_REP), true);
     private static final BinaryToASCIIConverter B2AC_NOT_A_NUMBER = new ExceptionalBinaryToASCIIBuffer(NAN_REP, false);
     private static final BinaryToASCIIConverter B2AC_POSITIVE_ZERO = new BinaryToASCIIBuffer(false, new char[]{'0'});
     private static final BinaryToASCIIConverter B2AC_NEGATIVE_ZERO = new BinaryToASCIIBuffer(true, new char[]{'0'});
@@ -269,13 +269,13 @@ public class FloatingDecimal {
             this.nDigits = digits.length;
         }
 
-        @Override
+        // @Override
         public String toJavaFormatString() {
             int len = getChars(buffer);
             return new String(buffer, 0, len);
         }
 
-        @Override
+        // @Override
         public void appendTo(Appendable buf) {
             int len = getChars(buffer);
             if (buf instanceof StringBuilder) {
@@ -287,33 +287,33 @@ public class FloatingDecimal {
             }
         }
 
-        @Override
+        // @Override
         public int getDecimalExponent() {
             return decExponent;
         }
 
-        @Override
+        // @Override
         public int getDigits(char[] digits) {
             System.arraycopy(this.digits,firstDigitIndex,digits,0,this.nDigits);
             return this.nDigits;
         }
 
-        @Override
+        // @Override
         public boolean isNegative() {
             return isNegative;
         }
 
-        @Override
+        // @Override
         public boolean isExceptional() {
             return false;
         }
 
-        @Override
+        // @Override
         public boolean digitsRoundedUp() {
             return decimalDigitsRoundedUp;
         }
 
-        @Override
+        // @Override
         public boolean decimalDigitsExact() {
             return exactDecimalConversion;
         }
@@ -946,7 +946,7 @@ public class FloatingDecimal {
 
     private static final ThreadLocal<BinaryToASCIIBuffer> threadLocalBinaryToASCIIBuffer =
             new ThreadLocal<BinaryToASCIIBuffer>() {
-                @Override
+                // @Override
                 protected BinaryToASCIIBuffer initialValue() {
                     return new BinaryToASCIIBuffer();
                 }
@@ -979,12 +979,12 @@ public class FloatingDecimal {
             this.floatVal = floatVal;
         }
 
-        @Override
+        // @Override
         public double doubleValue() {
             return doubleVal;
         }
 
-        @Override
+        // @Override
         public float floatValue() {
             return floatVal;
         }
@@ -1020,7 +1020,7 @@ public class FloatingDecimal {
          * ROUNDING DIRECTION in case the result is really destined
          * for a single-precision float.
          */
-        @Override
+        // @Override
         public double doubleValue() {
             int kDigits = Math.min(nDigits, MAX_DECIMAL_DIGITS + 1);
             //
@@ -1365,7 +1365,7 @@ public class FloatingDecimal {
          * to a float has another rounding error, IN THE WRONG DIRECTION,
          * (because of the preference to a zero low-order bit).
          */
-        @Override
+        // @Override
         public float floatValue() {
             int kDigits = Math.min(nDigits, SINGLE_MAX_DECIMAL_DIGITS + 1);
             //
@@ -1786,7 +1786,7 @@ public class FloatingDecimal {
         return buf;
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     static ASCIIToBinaryConverter readJavaFormatString(String in) throws NumberFormatException {
         boolean isNegative = false;
         boolean signSeen   = false;
@@ -2010,7 +2010,7 @@ public class FloatingDecimal {
             }
             return new ASCIIToBinaryBuffer(isNegative, decExp, digits, nDigits);
         } catch (StringIndexOutOfBoundsException e) { }
-        throw new NumberFormatException("For input string: \"" + in + "\"");
+        throw new NumberFormatException(String.str("For input string: \"", in, "\""));
     }
 
     private static class HexFloatPattern {
@@ -2038,7 +2038,7 @@ public class FloatingDecimal {
             boolean validInput = m.matches();
             if (!validInput) {
                 // Input does not match pattern
-                throw new NumberFormatException("For input string: \"" + s + "\"");
+                throw new NumberFormatException(String.str("For input string: \"", s, "\""));
             } else { // validInput
                 //
                 // We must isolate the sign, significand, and exponent
@@ -2131,10 +2131,7 @@ public class FloatingDecimal {
                         rightDigits = group7.length();
 
                         // Turn "integer.fraction" into "integer"+"fraction"
-                        significandString =
-                                ((group6 == null) ? "" : group6) + // is the null
-                                        // check necessary?
-                                        group7;
+                        significandString = String.str(((group6 == null) ? "" : group6), group7);
                     }
 
                     significandString = stripLeadingZeros(significandString);
@@ -2466,7 +2463,7 @@ public class FloatingDecimal {
      * Returns <code>s</code> with any leading zeros removed.
      */
     static String stripLeadingZeros(String s) {
-//        return  s.replaceFirst("^0+", "");
+        // return s.replaceFirst("^0+", "");
         if (!s.isEmpty() && s.charAt(0)=='0') {
             for (int i = 1; i < s.length(); i++) {
                 if (s.charAt(i)!='0') {
@@ -2485,7 +2482,7 @@ public class FloatingDecimal {
     static int getHexDigit(String s, int position) {
         int value = Character.digit(s.charAt(position), 16);
         if (value <= -1 || value >= 16) {
-            throw new AssertionError("Unexpected failure of digit conversion of " + s.charAt(position));
+            throw new AssertionError(String.str("Unexpected failure of digit conversion of ", s.charAt(position)));
         }
         return value;
     }

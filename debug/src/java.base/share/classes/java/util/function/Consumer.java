@@ -12,7 +12,7 @@ import java.util.Objects;
  *
  * @param <T> the type of the input to the operation
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface Consumer<T> {
     /**
      * Performs this operation on the given argument.

@@ -213,15 +213,15 @@ public final class NetworkInterface {
         if (addr instanceof Inet4Address) {
             Inet4Address inet4Address = (Inet4Address) addr;
             if (inet4Address.holder.family != InetAddress.IPv4) {
-                throw new IllegalArgumentException("invalid family type: " + inet4Address.holder.family);
+                throw new IllegalArgumentException(String.str("invalid family type: ", inet4Address.holder.family));
             }
         } else if (addr instanceof Inet6Address) {
             Inet6Address inet6Address = (Inet6Address) addr;
             if (inet6Address.holder.family != InetAddress.IPv6) {
-                throw new IllegalArgumentException("invalid family type: " + inet6Address.holder.family);
+                throw new IllegalArgumentException(String.str("invalid family type: ", inet6Address.holder.family));
             }
         } else {
-            throw new IllegalArgumentException("invalid address type: " + addr);
+            throw new IllegalArgumentException(String.str("invalid address type: ", addr));
         }
         return getByInetAddress0(addr);
     }
@@ -253,7 +253,7 @@ public final class NetworkInterface {
         return new Enumeration<>() {
             int i = 0;
 
-            @Override
+            // @Override
             public T nextElement() {
                 if (i < a.length) {
                     return a[i++];
@@ -262,7 +262,7 @@ public final class NetworkInterface {
                 }
             }
 
-            @Override
+            // @Override
             public boolean hasMoreElements() {
                 return i < a.length;
             }
@@ -430,16 +430,15 @@ public final class NetworkInterface {
     }
 
     public int hashCode() {
-        return name == null ? 0 : name.hashCode();
+        return (name == null) ? 0 : name.hashCode();
     }
 
     public String toString() {
-        String result = "name:";
-        result += name == null ? "null" : name;
+        StringBuilder sb = new StringBuilder().append("name:").append((name == null) ? "null" : name);
         if (displayName != null) {
-            result += " (" + displayName + ")";
+            sb.append(" (").append(displayName).append(")");
         }
-        return result;
+        return sb.toString();
     }
 
     private static native void init();

@@ -87,7 +87,7 @@ public abstract class PreHashedMap<V> extends AbstractMap<String,V> {
      */
     protected abstract void init(Object[] ht);
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private V toV(Object x) {
         return (V)x;
     }
@@ -128,7 +128,7 @@ public abstract class PreHashedMap<V> extends AbstractMap<String,V> {
     }
 
     public Set<String> keySet() {
-        return new AbstractSet<> () {
+        return new AbstractSet<>() {
             public int size() {
                 return size;
             }
@@ -188,7 +188,7 @@ public abstract class PreHashedMap<V> extends AbstractMap<String,V> {
     }
 
     public Set<Map.Entry<String,V>> entrySet() {
-        return new AbstractSet<Map.Entry<String,V>> () {
+        return new AbstractSet<Map.Entry<String,V>>() {
             public int size() {
                 return size;
             }

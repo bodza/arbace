@@ -66,7 +66,7 @@ public final class Optional<T> {
      * @return an empty {@code Optional}
      */
     public static<T> Optional<T> empty() {
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         Optional<T> t = (Optional<T>) EMPTY;
         return t;
     }
@@ -262,7 +262,7 @@ public final class Optional<T> {
         if (!isPresent()) {
             return empty();
         } else {
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Optional<U> r = (Optional<U>) mapper.apply(value);
             return Objects.requireNonNull(r);
         }
@@ -285,7 +285,7 @@ public final class Optional<T> {
         if (isPresent()) {
             return this;
         } else {
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Optional<T> r = (Optional<T>) supplier.get();
             return Objects.requireNonNull(r);
         }
@@ -369,7 +369,7 @@ public final class Optional<T> {
      * @return {@code true} if the other object is "equal to" this object
      *         otherwise {@code false}
      */
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -390,7 +390,7 @@ public final class Optional<T> {
      * @return hash code value of the present value or {@code 0} if no value is
      *         present
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Objects.hashCode(value);
     }
@@ -407,8 +407,8 @@ public final class Optional<T> {
      *
      * @return the string representation of this instance
      */
-    @Override
+    // @Override
     public String toString() {
-        return value != null ? ("Optional[" + value + "]") : "Optional.empty";
+        return value != null ? String.str("Optional[", value, "]") : "Optional.empty";
     }
 }

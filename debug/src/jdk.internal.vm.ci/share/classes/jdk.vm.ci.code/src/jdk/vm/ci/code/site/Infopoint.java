@@ -16,7 +16,7 @@ public class Infopoint extends Site implements Comparable<Infopoint> {
         this.reason = reason;
     }
 
-    @Override
+    // @Override
     public int compareTo(Infopoint o) {
         if (pcOffset < o.pcOffset) {
             return -1;
@@ -26,7 +26,7 @@ public class Infopoint extends Site implements Comparable<Infopoint> {
         return this.reason.compareTo(o.reason);
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

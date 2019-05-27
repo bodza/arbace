@@ -132,7 +132,7 @@ public abstract class Reference<T> {
      *        dequeued: this (marking FinalReferences as inactive)
      *    unregistered: null
      */
-    @SuppressWarnings("rawtypes")
+    // @SuppressWarnings("rawtypes")
     volatile Reference next;
 
     /* Used by the garbage collector to accumulate Reference objects that need
@@ -326,7 +326,7 @@ public abstract class Reference<T> {
      * @returns never returns normally
      * @throws CloneNotSupportedException always
      */
-    @Override
+    // @Override
     protected Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }

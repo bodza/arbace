@@ -36,11 +36,11 @@ abstract class UnsafeFieldAccessorImpl extends FieldAccessorImpl {
     }
 
     private String getQualifiedFieldName() {
-      return field.getDeclaringClass().getName() + "." +field.getName();
+      return String.str(field.getDeclaringClass().getName(), ".", field.getName());
     }
 
     protected IllegalArgumentException newGetIllegalArgumentException(String type) {
-        return new IllegalArgumentException("Attempt to get "+field.getType().getName()+" field \"" + getQualifiedFieldName() + "\" with illegal data type conversion to "+type);
+        return new IllegalArgumentException(String.str("Attempt to get ", field.getType().getName(), " field \"", getQualifiedFieldName(), "\" with illegal data type conversion to ", type));
     }
 
     protected void throwFinalFieldIllegalAccessException(String attemptedType, String attemptedValue) throws IllegalAccessException {
@@ -116,21 +116,21 @@ abstract class UnsafeFieldAccessorImpl extends FieldAccessorImpl {
     }
 
     protected String getSetMessage(String attemptedType, String attemptedValue) {
-        String err = "Can not set";
+        StringBuilder sb = new StringBuilder().append("Can not set");
         if (Modifier.isStatic(field.getModifiers()))
-            err += " static";
+            sb.append(" static");
         if (isFinal)
-            err += " final";
-        err += " " + field.getType().getName() + " field " + getQualifiedFieldName() + " to ";
+            sb.append(" final");
+        sb.append(" ").append(field.getType().getName()).append(" field ").append(getQualifiedFieldName()).append(" to ");
         if (attemptedValue.length() > 0) {
-            err += "(" + attemptedType + ")" + attemptedValue;
+            sb.append("(").append(attemptedType).append(")").append(attemptedValue);
         } else {
             if (attemptedType.length() > 0)
-                err += attemptedType;
+                sb.append(attemptedType);
             else
-                err += "null value";
+                sb.append("null value");
         }
-        return err;
+        return sb.toString();
     }
 
     protected void throwSetIllegalArgumentException(String attemptedType, String attemptedValue) {

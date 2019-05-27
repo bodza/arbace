@@ -374,7 +374,7 @@ public class Thread implements Runnable {
      * @throws CloneNotSupportedException
      *          always
      */
-    @Override
+    // @Override
     protected Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }
@@ -387,7 +387,7 @@ public class Thread implements Runnable {
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
      */
     public Thread() {
-        this(null, null, "Thread-" + nextThreadNum(), 0);
+        this(null, null, String.str("Thread-", nextThreadNum()), 0);
     }
 
     /**
@@ -403,7 +403,7 @@ public class Thread implements Runnable {
      *         nothing.
      */
     public Thread(Runnable target) {
-        this(null, target, "Thread-" + nextThreadNum(), 0);
+        this(null, target, String.str("Thread-", nextThreadNum()), 0);
     }
 
     /**
@@ -421,7 +421,7 @@ public class Thread implements Runnable {
      *         is started. If {@code null}, this thread's run method is invoked.
      */
     public Thread(ThreadGroup group, Runnable target) {
-        this(group, target, "Thread-" + nextThreadNum(), 0);
+        this(group, target, String.str("Thread-", nextThreadNum()), 0);
     }
 
     /**
@@ -619,7 +619,7 @@ public class Thread implements Runnable {
      *
      * Subclasses of {@code Thread} should override this method.
      */
-    @Override
+    // @Override
     public void run() {
         if (target != null) {
             target.run();
@@ -1087,9 +1087,9 @@ public class Thread implements Runnable {
     public String toString() {
         ThreadGroup group = getThreadGroup();
         if (group != null) {
-            return "Thread[" + getName() + "," + getPriority() + "," + group.getName() + "]";
+            return String.str("Thread[", getName(), ",", getPriority(), ",", group.getName(), "]");
         } else {
-            return "Thread[" + getName() + "," + getPriority() + "," + "" + "]";
+            return String.str("Thread[", getName(), ",", getPriority(), ",", "", "]");
         }
     }
 
@@ -1276,7 +1276,7 @@ public class Thread implements Runnable {
      * the invocation to the {@linkplain #getDefaultUncaughtExceptionHandler
      * default uncaught exception handler}.
      */
-    @FunctionalInterface
+    // @FunctionalInterface
     public interface UncaughtExceptionHandler {
         /**
          * Method invoked when the given thread terminates due to the
@@ -1369,17 +1369,6 @@ public class Thread implements Runnable {
      */
     private void dispatchUncaughtException(Throwable e) {
         getUncaughtExceptionHandler().uncaughtException(this, e);
-    }
-
-    /**
-     * Removes from the specified map any keys that have been enqueued
-     * on the specified reference queue.
-     */
-    static void processQueue(ReferenceQueue<Class<?>> queue, ConcurrentMap<? extends WeakReference<Class<?>>, ?> map) {
-        Reference<? extends Class<?>> ref;
-        while ((ref = queue.poll()) != null) {
-            map.remove(ref);
-        }
     }
 
     // The following three initially uninitialized fields are exclusively

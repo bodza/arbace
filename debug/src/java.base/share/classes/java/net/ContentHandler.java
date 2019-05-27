@@ -73,7 +73,7 @@ public abstract class ContentHandler {
      *                 {@code null} if none of the requested  are supported.
      * @throws IOException  if an I/O error occurs while reading the object.
      */
-    @SuppressWarnings("rawtypes")
+    // @SuppressWarnings("rawtypes")
     public Object getContent(URLConnection urlc, Class[] classes) throws IOException {
         Object obj = getContent(urlc);
 

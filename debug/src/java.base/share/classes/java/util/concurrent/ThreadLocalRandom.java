@@ -59,12 +59,6 @@ public class ThreadLocalRandom extends Random {
      * only a static singleton.  But we generate a serial form
      * containing "rnd" and "initialized" fields to ensure
      * compatibility across versions.
-     *
-     * The nextLocalGaussian ThreadLocal supports the very rarely used
-     * nextGaussian method by providing a holder for the second of a
-     * pair of them. As is true for the base class version of this
-     * method, this time/space tradeoff is probably never worthwhile,
-     * but we provide identical statistical properties.
      */
 
     private static long mix64(long z) {
@@ -384,24 +378,6 @@ public class ThreadLocalRandom extends Random {
         return (mix32(nextSeed()) >>> 8) * FLOAT_UNIT;
     }
 
-    public double nextGaussian() {
-        // Use nextLocalGaussian instead of nextGaussian field
-        Double d = nextLocalGaussian.get();
-        if (d != null) {
-            nextLocalGaussian.set(null);
-            return d.doubleValue();
-        }
-        double v1, v2, s;
-        do {
-            v1 = 2 * nextDouble() - 1; // between -1 and 1
-            v2 = 2 * nextDouble() - 1; // between -1 and 1
-            s = v1 * v1 + v2 * v2;
-        } while (s >= 1 || s == 0);
-        double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s)/s);
-        nextLocalGaussian.set(Double.valueOf(v2 * multiplier));
-        return v1 * multiplier;
-    }
-
     // Within-package utilities
 
     /*
@@ -505,9 +481,6 @@ public class ThreadLocalRandom extends Random {
     private static final long SECONDARY = U.objectFieldOffset(Thread.class, "threadLocalRandomSecondarySeed");
     private static final long THREADLOCALS = U.objectFieldOffset(Thread.class, "threadLocals");
     private static final long INHERITABLETHREADLOCALS = U.objectFieldOffset(Thread.class, "inheritableThreadLocals");
-
-    /** Rarely-used holder for the second of a pair of Gaussians */
-    private static final ThreadLocal<Double> nextLocalGaussian = new ThreadLocal<>();
 
     /** Generates per-thread initialization/probe field */
     private static final AtomicInteger probeGenerator = new AtomicInteger();

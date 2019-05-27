@@ -37,7 +37,7 @@ public class CharArrayWriter extends Writer {
      */
     public CharArrayWriter(int initialSize) {
         if (initialSize < 0) {
-            throw new IllegalArgumentException("Negative initial size: " + initialSize);
+            throw new IllegalArgumentException(String.str("Negative initial size: ", initialSize));
         }
         buf = new char[initialSize];
     }

@@ -30,7 +30,7 @@ public class NumberFormatException extends IllegalArgumentException {
      * @param s   the input causing the error
      */
     static NumberFormatException forInputString(String s) {
-        return new NumberFormatException("For input string: \"" + s + "\"");
+        return new NumberFormatException(String.str("For input string: \"", s, "\""));
     }
 
     /**
@@ -43,6 +43,6 @@ public class NumberFormatException extends IllegalArgumentException {
      * @param errorIndex   the index of the first error in s
      */
     static NumberFormatException forCharSequence(CharSequence s, int beginIndex, int endIndex, int errorIndex) {
-        return new NumberFormatException("Error at index " + (errorIndex - beginIndex) + " in: \"" + s.subSequence(beginIndex, endIndex) + "\"");
+        return new NumberFormatException(String.str("Error at index ", (errorIndex - beginIndex), " in: \"", s.subSequence(beginIndex, endIndex), "\""));
     }
 }

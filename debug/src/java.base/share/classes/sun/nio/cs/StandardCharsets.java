@@ -416,15 +416,12 @@ public class StandardCharsets extends CharsetProvider {
             ht[28] = new Object[] { "914", "iso-8859-4" };
             ht[29] = new Object[] { "915", "iso-8859-5" };
             ht[35] = new Object[] { "latin10", "iso-8859-16" };
-            ht[55] = new Object[] { "ibm-1252", "windows-1252",
-                         new Object[] { "920", "iso-8859-9" } };
+            ht[55] = new Object[] { "ibm-1252", "windows-1252", new Object[] { "920", "iso-8859-9" } };
             ht[58] = new Object[] { "923", "iso-8859-15" };
-            ht[86] = new Object[] { "csisolatincyrillic", "iso-8859-5",
-                         new Object[] { "8859_1", "iso-8859-1" } };
+            ht[86] = new Object[] { "csisolatincyrillic", "iso-8859-5", new Object[] { "8859_1", "iso-8859-1" } };
             ht[87] = new Object[] { "8859_2", "iso-8859-2" };
             ht[89] = new Object[] { "8859_4", "iso-8859-4" };
-            ht[90] = new Object[] { "813", "iso-8859-7",
-                         new Object[] { "8859_5", "iso-8859-5" } };
+            ht[90] = new Object[] { "813", "iso-8859-7", new Object[] { "8859_5", "iso-8859-5" } };
             ht[92] = new Object[] { "8859_7", "iso-8859-7" };
             ht[94] = new Object[] { "8859_9", "iso-8859-9" };
             ht[95] = new Object[] { "iso_8859-1:1987", "iso-8859-1" };
@@ -441,17 +438,13 @@ public class StandardCharsets extends CharsetProvider {
             ht[173] = new Object[] { "cp923", "iso-8859-15" };
             ht[177] = new Object[] { "utf_32le_bom", "x-utf-32le-bom" };
             ht[192] = new Object[] { "utf_16be", "utf-16be" };
-            ht[199] = new Object[] { "cspc8codepage437", "ibm437",
-                         new Object[] { "ansi-1251", "windows-1251" } };
+            ht[199] = new Object[] { "cspc8codepage437", "ibm437", new Object[] { "ansi-1251", "windows-1251" } };
             ht[205] = new Object[] { "cp813", "iso-8859-7" };
-            ht[211] = new Object[] { "850", "ibm850",
-                         new Object[] { "cp819", "iso-8859-1" } };
+            ht[211] = new Object[] { "850", "ibm850", new Object[] { "cp819", "iso-8859-1" } };
             ht[213] = new Object[] { "852", "ibm852" };
             ht[216] = new Object[] { "855", "ibm855" };
-            ht[218] = new Object[] { "857", "ibm857",
-                         new Object[] { "iso-ir-6", "us-ascii" } };
-            ht[219] = new Object[] { "858", "ibm00858",
-                         new Object[] { "737", "x-ibm737" } };
+            ht[218] = new Object[] { "857", "ibm857", new Object[] { "iso-ir-6", "us-ascii" } };
+            ht[219] = new Object[] { "858", "ibm00858", new Object[] { "737", "x-ibm737" } };
             ht[225] = new Object[] { "csascii", "us-ascii" };
             ht[242] = new Object[] { "ibm1252", "windows-1252" };
             ht[244] = new Object[] { "862", "ibm862" };
@@ -465,8 +458,7 @@ public class StandardCharsets extends CharsetProvider {
             ht[283] = new Object[] { "iso8859_1", "iso-8859-1" };
             ht[284] = new Object[] { "iso8859_2", "iso-8859-2" };
             ht[285] = new Object[] { "csiso885915", "iso-8859-15" };
-            ht[286] = new Object[] { "csiso885916", "iso-8859-16",
-                         new Object[] { "iso8859_4", "iso-8859-4" } };
+            ht[286] = new Object[] { "csiso885916", "iso-8859-16", new Object[] { "iso8859_4", "iso-8859-4" } };
             ht[287] = new Object[] { "iso8859_5", "iso-8859-5" };
             ht[289] = new Object[] { "iso8859_7", "iso-8859-7" };
             ht[291] = new Object[] { "iso8859_9", "iso-8859-9" };
@@ -476,25 +468,18 @@ public class StandardCharsets extends CharsetProvider {
             ht[305] = new Object[] { "iso_8859-13", "iso-8859-13" };
             ht[307] = new Object[] { "iso_8859-15", "iso-8859-15" };
             ht[308] = new Object[] { "iso_8859-16", "iso-8859-16" };
-            ht[312] = new Object[] { "greek8", "iso-8859-7",
-                         new Object[] { "646", "us-ascii" } };
+            ht[312] = new Object[] { "greek8", "iso-8859-7", new Object[] { "646", "us-ascii" } };
             ht[321] = new Object[] { "ibm-912", "iso-8859-2" };
-            ht[323] = new Object[] { "ibm920", "iso-8859-9",
-                         new Object[] { "ibm-914", "iso-8859-4" } };
+            ht[323] = new Object[] { "ibm920", "iso-8859-9", new Object[] { "ibm-914", "iso-8859-4" } };
             ht[324] = new Object[] { "ibm-915", "iso-8859-5" };
             ht[325] = new Object[] { "l1", "iso-8859-1" };
-            ht[326] = new Object[] { "cp850", "ibm850",
-                         new Object[] { "ibm923", "iso-8859-15",
-                             new Object[] { "l2", "iso-8859-2" } } };
+            ht[326] = new Object[] { "cp850", "ibm850", new Object[] { "ibm923", "iso-8859-15", new Object[] { "l2", "iso-8859-2" } } };
             ht[327] = new Object[] { "cyrillic", "iso-8859-5" };
-            ht[328] = new Object[] { "cp852", "ibm852",
-                         new Object[] { "l4", "iso-8859-4" } };
+            ht[328] = new Object[] { "cp852", "ibm852", new Object[] { "l4", "iso-8859-4" } };
             ht[329] = new Object[] { "l5", "iso-8859-9" };
             ht[331] = new Object[] { "cp855", "ibm855" };
-            ht[333] = new Object[] { "cp857", "ibm857",
-                         new Object[] { "l9", "iso-8859-15" } };
-            ht[334] = new Object[] { "cp858", "ibm00858",
-                         new Object[] { "cp737", "x-ibm737" } };
+            ht[333] = new Object[] { "cp857", "ibm857", new Object[] { "l9", "iso-8859-15" } };
+            ht[334] = new Object[] { "cp858", "ibm00858", new Object[] { "cp737", "x-ibm737" } };
             ht[336] = new Object[] { "iso_8859_1", "iso-8859-1" };
             ht[339] = new Object[] { "koi8", "koi8-r" };
             ht[341] = new Object[] { "775", "ibm775" };
@@ -561,13 +546,10 @@ public class StandardCharsets extends CharsetProvider {
             ht[619] = new Object[] { "cp1252", "windows-1252" };
             ht[620] = new Object[] { "cp1253", "windows-1253" };
             ht[621] = new Object[] { "cp1254", "windows-1254" };
-            ht[624] = new Object[] { "csibm862", "ibm862",
-                         new Object[] { "cp1257", "windows-1257" } };
-            ht[628] = new Object[] { "csibm866", "ibm866",
-                         new Object[] { "cesu8", "cesu-8" } };
+            ht[624] = new Object[] { "csibm862", "ibm862", new Object[] { "cp1257", "windows-1257" } };
+            ht[628] = new Object[] { "csibm866", "ibm866", new Object[] { "cesu8", "cesu-8" } };
             ht[632] = new Object[] { "iso8859_13", "iso-8859-13" };
-            ht[634] = new Object[] { "iso8859_15", "iso-8859-15",
-                         new Object[] { "utf_32be", "utf-32be" } };
+            ht[634] = new Object[] { "iso8859_15", "iso-8859-15", new Object[] { "utf_32be", "utf-32be" } };
             ht[635] = new Object[] { "utf_32be_bom", "x-utf-32be-bom" };
             ht[636] = new Object[] { "ibm-775", "ibm775" };
             ht[654] = new Object[] { "cp00858", "ibm00858" };
@@ -595,14 +577,11 @@ public class StandardCharsets extends CharsetProvider {
             ht[818] = new Object[] { "cspc862latinhebrew", "ibm862" };
             ht[832] = new Object[] { "ibm367", "us-ascii" };
             ht[834] = new Object[] { "iso_8859-1", "iso-8859-1" };
-            ht[835] = new Object[] { "iso_8859-2", "iso-8859-2",
-                         new Object[] { "x-utf-16be", "utf-16be" } };
+            ht[835] = new Object[] { "iso_8859-2", "iso-8859-2", new Object[] { "x-utf-16be", "utf-16be" } };
             ht[836] = new Object[] { "sun_eu_greek", "iso-8859-7" };
-            ht[837] = new Object[] { "iso_8859-16:2001", "iso-8859-16",
-                         new Object[] { "iso_8859-4", "iso-8859-4" } };
+            ht[837] = new Object[] { "iso_8859-16:2001", "iso-8859-16", new Object[] { "iso_8859-4", "iso-8859-4" } };
             ht[838] = new Object[] { "iso_8859-5", "iso-8859-5" };
-            ht[840] = new Object[] { "cspcp852", "ibm852",
-                         new Object[] { "iso_8859-7", "iso-8859-7" } };
+            ht[840] = new Object[] { "cspcp852", "ibm852", new Object[] { "iso_8859-7", "iso-8859-7" } };
             ht[842] = new Object[] { "iso_8859-9", "iso-8859-9" };
             ht[843] = new Object[] { "cspcp855", "ibm855" };
             ht[846] = new Object[] { "windows-437", "ibm437" };
@@ -618,8 +597,7 @@ public class StandardCharsets extends CharsetProvider {
             ht[925] = new Object[] { "iso_646.irv:1991", "us-ascii" };
             ht[934] = new Object[] { "cp5350", "windows-1254" };
             ht[937] = new Object[] { "cp5353", "windows-1257" };
-            ht[944] = new Object[] { "latin-9", "iso-8859-15",
-                         new Object[] { "utf_32le", "utf-32le" } };
+            ht[944] = new Object[] { "latin-9", "iso-8859-15", new Object[] { "utf_32le", "utf-32le" } };
             ht[957] = new Object[] { "utf_16", "utf-16" };
             ht[993] = new Object[] { "cspc850multilingual", "ibm850" };
             ht[1009] = new Object[] { "utf-32le-bom", "x-utf-32le-bom" };
@@ -639,13 +617,11 @@ public class StandardCharsets extends CharsetProvider {
 
         protected void init(Object[] ht) {
             ht[0] = new Object[] { "ibm862", "IBM862" };
-            ht[4] = new Object[] { "ibm866", "IBM866",
-                         new Object[] { "utf-16le", "UTF_16LE" } };
+            ht[4] = new Object[] { "ibm866", "IBM866", new Object[] { "utf-16le", "UTF_16LE" } };
             ht[5] = new Object[] { "utf-32", "UTF_32" };
             ht[6] = new Object[] { "windows-1250", "MS1250" };
             ht[7] = new Object[] { "windows-1251", "MS1251" };
-            ht[8] = new Object[] { "windows-1252", "MS1252",
-                         new Object[] { "utf-32be", "UTF_32BE" } };
+            ht[8] = new Object[] { "windows-1252", "MS1252", new Object[] { "utf-32be", "UTF_32BE" } };
             ht[9] = new Object[] { "windows-1253", "MS1253" };
             ht[10] = new Object[] { "windows-1254", "MS1254" };
             ht[11] = new Object[] { "utf-16", "UTF_16" };
@@ -656,21 +632,16 @@ public class StandardCharsets extends CharsetProvider {
             ht[18] = new Object[] { "utf-8", "UTF_8" };
             ht[19] = new Object[] { "iso-8859-4", "ISO_8859_4" };
             ht[20] = new Object[] { "iso-8859-5", "ISO_8859_5" };
-            ht[22] = new Object[] { "x-ibm874", "IBM874",
-                         new Object[] { "iso-8859-7", "ISO_8859_7" } };
+            ht[22] = new Object[] { "x-ibm874", "IBM874", new Object[] { "iso-8859-7", "ISO_8859_7" } };
             ht[24] = new Object[] { "iso-8859-9", "ISO_8859_9" };
             ht[28] = new Object[] { "x-ibm737", "IBM737" };
             ht[31] = new Object[] { "ibm850", "IBM850" };
-            ht[33] = new Object[] { "ibm852", "IBM852",
-                         new Object[] { "ibm775", "IBM775" } };
+            ht[33] = new Object[] { "ibm852", "IBM852", new Object[] { "ibm775", "IBM775" } };
             ht[34] = new Object[] { "us-ascii", "US_ASCII" };
             ht[35] = new Object[] { "iso-8859-13", "ISO_8859_13" };
-            ht[36] = new Object[] { "ibm855", "IBM855",
-                         new Object[] { "ibm437", "IBM437" } };
+            ht[36] = new Object[] { "ibm855", "IBM855", new Object[] { "ibm437", "IBM437" } };
             ht[37] = new Object[] { "iso-8859-15", "ISO_8859_15" };
-            ht[38] = new Object[] { "ibm857", "IBM857",
-                         new Object[] { "iso-8859-16", "ISO_8859_16",
-                             new Object[] { "x-utf-32le-bom", "UTF_32LE_BOM" } } };
+            ht[38] = new Object[] { "ibm857", "IBM857", new Object[] { "iso-8859-16", "ISO_8859_16", new Object[] { "x-utf-32le-bom", "UTF_32LE_BOM" } } };
             ht[39] = new Object[] { "ibm00858", "IBM858" };
             ht[44] = new Object[] { "x-utf-16le-bom", "UTF_16LE_BOM" };
             ht[47] = new Object[] { "cesu-8", "CESU_8" };
@@ -693,13 +664,11 @@ public class StandardCharsets extends CharsetProvider {
 
         protected void init(Object[] ht) {
             ht[0] = new Object[] { "ibm862", null };
-            ht[4] = new Object[] { "ibm866", null,
-                         new Object[] { "utf-16le", null } };
+            ht[4] = new Object[] { "ibm866", null, new Object[] { "utf-16le", null } };
             ht[5] = new Object[] { "utf-32", null };
             ht[6] = new Object[] { "windows-1250", null };
             ht[7] = new Object[] { "windows-1251", null };
-            ht[8] = new Object[] { "windows-1252", null,
-                         new Object[] { "utf-32be", null } };
+            ht[8] = new Object[] { "windows-1252", null, new Object[] { "utf-32be", null } };
             ht[9] = new Object[] { "windows-1253", null };
             ht[10] = new Object[] { "windows-1254", null };
             ht[11] = new Object[] { "utf-16", null };
@@ -710,21 +679,16 @@ public class StandardCharsets extends CharsetProvider {
             ht[18] = new Object[] { "utf-8", null };
             ht[19] = new Object[] { "iso-8859-4", null };
             ht[20] = new Object[] { "iso-8859-5", null };
-            ht[22] = new Object[] { "x-ibm874", null,
-                         new Object[] { "iso-8859-7", null } };
+            ht[22] = new Object[] { "x-ibm874", null, new Object[] { "iso-8859-7", null } };
             ht[24] = new Object[] { "iso-8859-9", null };
             ht[28] = new Object[] { "x-ibm737", null };
             ht[31] = new Object[] { "ibm850", null };
-            ht[33] = new Object[] { "ibm852", null,
-                         new Object[] { "ibm775", null } };
+            ht[33] = new Object[] { "ibm852", null, new Object[] { "ibm775", null } };
             ht[34] = new Object[] { "us-ascii", null };
             ht[35] = new Object[] { "iso-8859-13", null };
-            ht[36] = new Object[] { "ibm855", null,
-                         new Object[] { "ibm437", null } };
+            ht[36] = new Object[] { "ibm855", null, new Object[] { "ibm437", null } };
             ht[37] = new Object[] { "iso-8859-15", null };
-            ht[38] = new Object[] { "ibm857", null,
-                         new Object[] { "iso-8859-16", null,
-                             new Object[] { "x-utf-32le-bom", null } } };
+            ht[38] = new Object[] { "ibm857", null, new Object[] { "iso-8859-16", null, new Object[] { "x-utf-32le-bom", null } } };
             ht[39] = new Object[] { "ibm00858", null };
             ht[44] = new Object[] { "x-utf-16le-bom", null };
             ht[47] = new Object[] { "cesu-8", null };
@@ -845,14 +809,10 @@ public class StandardCharsets extends CharsetProvider {
 
         // Instantiate the charset and cache it
         try {
-            @SuppressWarnings("deprecation")
-            Object o = Class.forName(packagePrefix + cln,
-                                     true,
-                                     this.getClass().getClassLoader()).newInstance();
+            // @SuppressWarnings("deprecation")
+            Object o = Class.forName(packagePrefix + cln, true, this.getClass().getClassLoader()).newInstance();
             return cache(csn, (Charset)o);
-        } catch (ClassNotFoundException |
-                 IllegalAccessException |
-                 InstantiationException x) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException x) {
             return null;
         }
     }

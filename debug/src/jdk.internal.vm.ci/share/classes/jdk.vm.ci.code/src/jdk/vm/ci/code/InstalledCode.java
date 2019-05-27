@@ -93,7 +93,7 @@ public class InstalledCode {
      * @param args the array of object arguments
      * @return the value returned by the executed code
      */
-    @SuppressWarnings("unused")
+    // @SuppressWarnings("unused")
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         throw new UnsupportedOperationException();
     }

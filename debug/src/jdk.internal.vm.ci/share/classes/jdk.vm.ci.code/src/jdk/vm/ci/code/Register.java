@@ -59,12 +59,12 @@ public final class Register implements Comparable<Register> {
             this.mayContainReference = mayContainReference;
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return 23 + name.hashCode();
         }
 
-        @Override
+        // @Override
         public boolean equals(Object obj) {
             if (obj instanceof RegisterCategory) {
                 RegisterCategory that = (RegisterCategory) obj;
@@ -128,7 +128,7 @@ public final class Register implements Comparable<Register> {
         return number >= 0;
     }
 
-    @Override
+    // @Override
     public int compareTo(Register o) {
         if (number < o.number) {
             return -1;
@@ -139,12 +139,12 @@ public final class Register implements Comparable<Register> {
         return 0;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return 17 + name.hashCode();
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (obj instanceof Register) {
             Register other = (Register) obj;

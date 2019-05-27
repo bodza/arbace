@@ -512,7 +512,7 @@ public class MulticastSocket extends DatagramSocket {
                         p.setAddress(connectedAddress);
                         p.setPort(connectedPort);
                     } else if ((!packetAddress.equals(connectedAddress)) || p.getPort() != connectedPort) {
-                        throw new SecurityException("connected address and packet address" + " differ");
+                        throw new SecurityException(String.str("connected address and packet address", " differ"));
                     }
                 }
                 byte dttl = getTTL();
@@ -536,7 +536,7 @@ public class MulticastSocket extends DatagramSocket {
     private static Set<SocketOption<?>> options;
     private static boolean optionsSet = false;
 
-    @Override
+    // @Override
     public Set<SocketOption<?>> supportedOptions() {
         synchronized (MulticastSocket.class) {
             if (optionsSet) {

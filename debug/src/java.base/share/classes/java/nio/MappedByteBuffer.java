@@ -172,7 +172,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer position(int newPosition) {
         super.position(newPosition);
         return this;
@@ -181,7 +181,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer limit(int newLimit) {
         super.limit(newLimit);
         return this;
@@ -190,7 +190,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer mark() {
         super.mark();
         return this;
@@ -199,7 +199,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer reset() {
         super.reset();
         return this;
@@ -208,7 +208,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer clear() {
         super.clear();
         return this;
@@ -217,7 +217,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer flip() {
         super.flip();
         return this;
@@ -226,7 +226,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public final MappedByteBuffer rewind() {
         super.rewind();
         return this;

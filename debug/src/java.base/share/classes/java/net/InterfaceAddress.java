@@ -100,6 +100,6 @@ public class InterfaceAddress {
      * @return a string representation of this Interface address.
      */
     public String toString() {
-        return address + "/" + maskLength + " [" + broadcast + "]";
+        return String.str(address, "/", maskLength, " [", broadcast, "]");
     }
 }

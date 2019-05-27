@@ -1275,7 +1275,7 @@ public final class Pattern {
     public static String quote(String s) {
         int slashEIndex = s.indexOf("\\E");
         if (slashEIndex == -1)
-            return "\\Q" + s + "\\E";
+            return String.str("\\Q", s, "\\E");
 
         int lenHint = s.length();
         lenHint = (lenHint < Integer.MAX_VALUE - 8 - lenHint) ? (lenHint << 1) : (Integer.MAX_VALUE - 8);
@@ -1299,7 +1299,7 @@ public final class Pattern {
      */
     private Pattern(String p, int f) {
         if ((f & ~ALL_FLAGS) != 0) {
-            throw new IllegalArgumentException("Unknown flag 0x" + Integer.toHexString(f));
+            throw new IllegalArgumentException(String.str("Unknown flag 0x", Integer.toHexString(f)));
         }
         pattern = p;
         flags = f;
@@ -1419,9 +1419,9 @@ public final class Pattern {
             }
             String nfc = Normalizer.normalize(seq, Normalizer.Form.NFC);
             if (!seq.equals(nfc) && !nfd.equals(nfc))
-                dst.append("(?:" + seq + "|" + nfd  + "|" + nfc + ")");
+                dst.append("(?:").append(seq).append("|").append(nfd).append("|").append(nfc).append(")");
             else if (!seq.equals(nfd))
-                dst.append("(?:" + seq + "|" + nfd + ")");
+                dst.append("(?:").append(seq).append("|").append(nfd).append(")");
             else
                 dst.append(seq);
         }
@@ -1977,7 +1977,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
         }
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     /**
      * Parsing of sequences between alternations.
      */
@@ -2071,7 +2071,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
             case '*':
             case '+':
                 next();
-                throw error("Dangling meta character '" + ((char)ch) + "'");
+                throw error(String.str("Dangling meta character '", ((char)ch), "'"));
             case 0:
                 if (cursor >= patternLength) {
                     break LOOP;
@@ -2103,7 +2103,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
         return head;
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     /**
      * Parse and add a new Single or Slice.
      */
@@ -2424,7 +2424,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
                 throw error("\\k is not followed by '<' for named capturing group");
             String name = groupname(read());
             if (!namedGroups().containsKey(name))
-                throw error("named capturing group <" + name + "> does not exist");
+                throw error(String.str("named capturing group <", name, "> does not exist"));
             if (create) {
                 hasGroupRef = true;
                 if (has(CASE_INSENSITIVE))
@@ -2714,7 +2714,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
             }
             return bitsOrSingle(bits, ch);
         }
-        throw error("Unexpected character '"+((char)ch)+"'");
+        throw error(String.str("Unexpected character '", ((char)ch), "'"));
     }
 
     /**
@@ -2769,7 +2769,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
                     break;
             }
             if (p == null)
-                throw error("Unknown Unicode property {name=<" + name + ">, value=<" + value + ">}");
+                throw error(String.str("Unknown Unicode property {name=<", name, ">, value=<", value, ">}"));
         } else {
             if (name.startsWith("In")) {
                 // \p{InBlockName}
@@ -2790,7 +2790,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
                     p = CharPredicates.forProperty(name);
             }
             if (p == null)
-                throw error("Unknown character property name {In/Is" + name + "}");
+                throw error(String.str("Unknown character property name {In/Is", name, "}"));
         }
         if (isComplement) {
             // it might be too expensive to detect if a complement of
@@ -2871,7 +2871,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
                     // named captured group
                     String name = groupname(ch);
                     if (namedGroups().containsKey(name))
-                        throw error("Named capturing group <" + name + "> is already defined");
+                        throw error(String.str("Named capturing group <", name, "> is already defined"));
                     capturingGroup = true;
                     head = createGroup(false);
                     tail = root;
@@ -3015,7 +3015,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
         return head;
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     /**
      * Parses inlined match flags and set them appropriately.
      */
@@ -3057,7 +3057,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
         }
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     /**
      * Parses the second part of inlined match flags and turns off
      * flags appropriately.
@@ -3289,7 +3289,7 @@ loop:   for (int x = 0, offset = 0; x<nCodePoints; x++, offset+=len) {
             try {
                 return Character.codePointOf(name);
             } catch (IllegalArgumentException x) {
-                throw error("Unknown character name [" + name + "]");
+                throw error(String.str("Unknown character name [", name, "]"));
             }
         }
         throw error("Illegal character name escape sequence");
@@ -5545,7 +5545,7 @@ NEXT:       while (i <= last) {
         }
     }
 
-    @FunctionalInterface
+    // @FunctionalInterface
     static interface CharPredicate {
         boolean is(int ch);
 

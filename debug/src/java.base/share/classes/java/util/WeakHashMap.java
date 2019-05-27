@@ -152,7 +152,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
      */
     int modCount;
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private Entry<K,V>[] newTable(int n) {
         return (Entry<K,V>[]) new Entry<?,?>[n];
     }
@@ -168,12 +168,12 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
      */
     public WeakHashMap(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
-            throw new IllegalArgumentException("Illegal Initial Capacity: " + initialCapacity);
+            throw new IllegalArgumentException(String.str("Illegal Initial Capacity: ", initialCapacity));
         if (initialCapacity > MAXIMUM_CAPACITY)
             initialCapacity = MAXIMUM_CAPACITY;
 
         if (loadFactor <= 0 || Float.isNaN(loadFactor))
-            throw new IllegalArgumentException("Illegal Load factor: " + loadFactor);
+            throw new IllegalArgumentException(String.str("Illegal Load factor: ", loadFactor));
         int capacity = 1;
         while (capacity < initialCapacity)
             capacity <<= 1;
@@ -276,7 +276,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
     private void expungeStaleEntries() {
         for (Object x; (x = queue.poll()) != null; ) {
             synchronized (queue) {
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                     Entry<K,V> e = (Entry<K,V>) x;
                 int i = indexFor(e.hash, table.length);
 
@@ -672,7 +672,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
             this.next  = next;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public K getKey() {
             return (K) WeakHashMap.unmaskNull(get());
         }
@@ -709,7 +709,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
         }
 
         public String toString() {
-            return getKey() + "=" + getValue();
+            return String.str(getKey(), "=", getValue());
         }
     }
 
@@ -954,8 +954,8 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
         int expectedModCount = modCount;
@@ -976,8 +976,8 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
+    // @SuppressWarnings("unchecked")
+    // @Override
     public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         Objects.requireNonNull(function);
         int expectedModCount = modCount;

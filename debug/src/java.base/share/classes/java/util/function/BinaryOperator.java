@@ -14,7 +14,7 @@ import java.util.Comparator;
  *
  * @param <T> the type of the operands and result of the operator
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface BinaryOperator<T> extends BiFunction<T,T,T> {
     /**
      * Returns a {@link BinaryOperator} which returns the lesser of two elements

@@ -85,7 +85,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return the length of the sequence of characters currently
      *          represented by this object
      */
-    @Override
+    // @Override
     public int length() {
         return count;
     }
@@ -263,7 +263,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @throws IndexOutOfBoundsException  if {@code index} is
      *             negative or greater than or equal to {@code length()}.
      */
-    @Override
+    // @Override
     public char charAt(int index) {
         checkIndex(index, count);
         if (isLatin1()) {
@@ -519,7 +519,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     // Documentation in subclasses because of synchro difference
-    @Override
+    // @Override
     public AbstractStringBuilder append(CharSequence s) {
         if (s == null) {
             return appendNull();
@@ -578,7 +578,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *             {@code start} is greater than {@code end} or
      *             {@code end} is greater than {@code s.length()}
      */
-    @Override
+    // @Override
     public AbstractStringBuilder append(CharSequence s, int start, int end) {
         if (s == null) {
             s = "null";
@@ -698,7 +698,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @param c   a {@code char}.
      * @return a reference to this object.
      */
-    @Override
+    // @Override
     public AbstractStringBuilder append(char c) {
         ensureCapacityInternal(count + 1);
         if (isLatin1() && StringLatin1.canEncode(c)) {
@@ -948,7 +948,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *          if {@code end} is greater than {@code length()},
      *          or if {@code start} is greater than {@code end}
      */
-    @Override
+    // @Override
     public CharSequence subSequence(int start, int end) {
         return substring(start, end);
     }
@@ -1483,7 +1483,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *
      * @return a string representation of this sequence of characters.
      */
-    @Override
+    // @Override
     public abstract String toString();
 
     /**
@@ -1605,14 +1605,14 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /* IndexOutOfBoundsException, if out of bounds */
     private static void checkRange(int start, int end, int len) {
         if (start < 0 || start > end || end > len) {
-            throw new IndexOutOfBoundsException("start " + start + ", end " + end + ", length " + len);
+            throw new IndexOutOfBoundsException(String.str("start ", start, ", end ", end, ", length ", len));
         }
     }
 
     /* StringIndexOutOfBoundsException, if out of bounds */
     private static void checkRangeSIOOBE(int start, int end, int len) {
         if (start < 0 || start > end || end > len) {
-            throw new StringIndexOutOfBoundsException("start " + start + ", end " + end + ", length " + len);
+            throw new StringIndexOutOfBoundsException(String.str("start ", start, ", end ", end, ", length ", len));
         }
     }
 }

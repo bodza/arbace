@@ -465,11 +465,11 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 
     static void subListRangeCheck(int fromIndex, int toIndex, int size) {
         if (fromIndex < 0)
-            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+            throw new IndexOutOfBoundsException(String.str("fromIndex = ", fromIndex));
         if (toIndex > size)
-            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+            throw new IndexOutOfBoundsException(String.str("toIndex = ", toIndex));
         if (fromIndex > toIndex)
-            throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+            throw new IllegalArgumentException(String.str("fromIndex(", fromIndex, ") > toIndex(", toIndex, ")"));
     }
 
     // Comparison and hashing
@@ -595,7 +595,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     }
 
     private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size: "+size();
+        return String.str("Index: ", index, ", Size: ", size());
     }
 
     private static class SubList<E> extends AbstractList<E> {
@@ -748,7 +748,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         }
 
         private String outOfBoundsMsg(int index) {
-            return "Index: "+index+", Size: "+size;
+            return String.str("Index: ", index, ", Size: ", size);
         }
 
         private void checkForComodification() {

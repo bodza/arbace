@@ -76,7 +76,7 @@ public final class StackSlot extends AllocatableValue {
         return this;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         final int prime = 37;
         int result = super.hashCode();
@@ -85,7 +85,7 @@ public final class StackSlot extends AllocatableValue {
         return result;
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (obj instanceof StackSlot) {
             StackSlot other = (StackSlot) obj;

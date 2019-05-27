@@ -16,7 +16,7 @@ public class FormattedFloatingDecimal {
 
     private static final ThreadLocal<Object> threadLocalCharBuffer =
             new ThreadLocal<Object>() {
-                @Override
+                // @Override
                 protected Object initialValue() {
                     return new char[20];
                 }

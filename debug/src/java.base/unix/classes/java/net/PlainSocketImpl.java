@@ -37,7 +37,7 @@ class PlainSocketImpl extends AbstractPlainSocketImpl {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     protected <T> T getOption(SocketOption<T> name) throws IOException {
         if (isClosedOrPending()) {
             throw new SocketException("Socket closed");

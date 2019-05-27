@@ -12,7 +12,7 @@ package java.util.function;
  *
  * @param <T> the type of the object argument to the operation
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface ObjLongConsumer<T> {
     /**
      * Performs this operation on the given arguments.

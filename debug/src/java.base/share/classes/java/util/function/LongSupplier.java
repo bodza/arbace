@@ -10,7 +10,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #getAsLong()}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface LongSupplier {
     /**
      * Gets a result.

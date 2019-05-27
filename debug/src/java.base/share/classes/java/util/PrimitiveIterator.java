@@ -47,7 +47,7 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
          * The default implementation boxes the result of calling
          * {@link #nextInt()}, and returns that boxed result.
          */
-        @Override
+        // @Override
         default Integer next() {
             return nextInt();
         }
@@ -71,7 +71,7 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
          * The default implementation boxes the result of calling
          * {@link #nextLong()}, and returns that boxed result.
          */
-        @Override
+        // @Override
         default Long next() {
             return nextLong();
         }
@@ -95,7 +95,7 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T> {
          * The default implementation boxes the result of calling
          * {@link #nextDouble()}, and returns that boxed result.
          */
-        @Override
+        // @Override
         default Double next() {
             return nextDouble();
         }

@@ -35,6 +35,6 @@ public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
      * @param index the illegal index.
      */
     public StringIndexOutOfBoundsException(int index) {
-        super("String index out of range: " + index);
+        super(String.str("String index out of range: ", index));
     }
 }

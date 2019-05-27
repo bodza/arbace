@@ -246,8 +246,8 @@ public class FileOutputStream extends OutputStream {
             this.fos = fos;
         }
 
-        @Override
-        @SuppressWarnings("deprecation")
+        // @Override
+        // @SuppressWarnings("deprecation")
         /* oops! protected */public final void finalize() {
             try {
                 if (fos.fd != null) {

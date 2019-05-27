@@ -12,9 +12,9 @@ class DefaultDatagramSocketImplFactory {
         String prefix = null; // "impl.prefix"
         try {
             if (prefix != null)
-                prefixImplClass = Class.forName("java.net." + prefix + "DatagramSocketImpl");
+                prefixImplClass = Class.forName(String.str("java.net.", prefix, "DatagramSocketImpl"));
         } catch (Exception e) {
-            System.err.println("Can't find class: java.net." + prefix + "DatagramSocketImpl: check impl.prefix property");
+            System.err.println(String.str("Can't find class: java.net.", prefix, "DatagramSocketImpl: check impl.prefix property"));
             // prefixImplClass = null;
         }
     }
@@ -28,7 +28,7 @@ class DefaultDatagramSocketImplFactory {
     static DatagramSocketImpl createDatagramSocketImpl(boolean isMulticast /*unused on unix*/) throws SocketException {
         if (prefixImplClass != null) {
             try {
-                @SuppressWarnings("deprecation")
+                // @SuppressWarnings("deprecation")
                 DatagramSocketImpl result = (DatagramSocketImpl)prefixImplClass.newInstance();
                 return result;
             } catch (Exception e) {

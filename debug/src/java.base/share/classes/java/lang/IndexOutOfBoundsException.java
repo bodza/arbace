@@ -34,6 +34,6 @@ public class IndexOutOfBoundsException extends RuntimeException {
      * @param index the illegal index.
      */
     public IndexOutOfBoundsException(int index) {
-        super("Index out of range: " + index);
+        super(String.str("Index out of range: ", index));
     }
 }

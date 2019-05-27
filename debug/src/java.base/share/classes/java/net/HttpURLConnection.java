@@ -95,13 +95,13 @@ public abstract class HttpURLConnection extends URLConnection {
      */
     public void setFixedLengthStreamingMode(int contentLength) {
         if (connected) {
-            throw new IllegalStateException ("Already connected");
+            throw new IllegalStateException("Already connected");
         }
         if (chunkLength != -1) {
-            throw new IllegalStateException ("Chunked encoding streaming mode set");
+            throw new IllegalStateException("Chunked encoding streaming mode set");
         }
         if (contentLength < 0) {
-            throw new IllegalArgumentException ("invalid content length");
+            throw new IllegalArgumentException("invalid content length");
         }
         fixedContentLength = contentLength;
     }
@@ -179,10 +179,10 @@ public abstract class HttpURLConnection extends URLConnection {
      */
     public void setChunkedStreamingMode(int chunklen) {
         if (connected) {
-            throw new IllegalStateException ("Can't set streaming mode: already connected");
+            throw new IllegalStateException("Can't set streaming mode: already connected");
         }
         if (fixedContentLength != -1 || fixedContentLengthLong != -1) {
-            throw new IllegalStateException ("Fixed length streaming mode set");
+            throw new IllegalStateException("Fixed length streaming mode set");
         }
         chunkLength = chunklen <= 0 ? DEFAULT_CHUNK_SIZE : chunklen;
     }
@@ -335,7 +335,7 @@ public abstract class HttpURLConnection extends URLConnection {
                 return;
             }
         }
-        throw new ProtocolException("Invalid HTTP method: " + method);
+        throw new ProtocolException(String.str("Invalid HTTP method: ", method));
     }
 
     /**

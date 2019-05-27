@@ -221,7 +221,7 @@ public class BufferedWriter extends Writer {
         }
     }
 
-    @SuppressWarnings("try")
+    // @SuppressWarnings("try")
     public void close() throws IOException {
         synchronized (lock) {
             if (out == null) {

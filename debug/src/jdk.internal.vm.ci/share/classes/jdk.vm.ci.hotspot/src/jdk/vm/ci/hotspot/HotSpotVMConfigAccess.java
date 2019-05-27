@@ -24,7 +24,7 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
-            throw new Error("expected VM symbol not found: " + name);
+            throw new Error(String.str("expected VM symbol not found: ", name));
         }
         return entry;
     }
@@ -53,7 +53,7 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
-            throw new Error("expected VM constant not found: " + name);
+            throw new Error(String.str("expected VM constant not found: ", name));
         }
         return type.cast(convertValue(name, type, c, null));
     }
@@ -85,7 +85,7 @@ public class HotSpotVMConfigAccess {
             return notPresent;
         }
         if (entry.address != 0) {
-            throw new Error("cannot get offset of static field " + name);
+            throw new Error(String.str("cannot get offset of static field ", name));
         }
         return type.cast(convertValue(name, type, entry.offset, cppType));
     }
@@ -129,7 +129,7 @@ public class HotSpotVMConfigAccess {
             return notPresent;
         }
         if (entry.address == 0) {
-            throw new Error(name + " is not a static field");
+            throw new Error(String.str(name, " is not a static field"));
         }
         return entry.address;
     }
@@ -160,7 +160,7 @@ public class HotSpotVMConfigAccess {
             return notPresent;
         }
         if (entry.value == null) {
-            throw new Error(name + " is not a static field");
+            throw new Error(String.str(name, " is not a static field"));
         }
         return type.cast(convertValue(name, type, entry.value, cppType));
     }
@@ -202,12 +202,12 @@ public class HotSpotVMConfigAccess {
             if (!required) {
                 return null;
             }
-            throw new Error("expected VM field not found: " + name);
+            throw new Error(String.str("expected VM field not found: ", name));
         }
 
         // Make sure the native type is still the type we expect.
         if (cppType != null && !cppType.equals(entry.type)) {
-            throw new Error("expected type " + cppType + " but VM field " + name + " is of type " + entry.type);
+            throw new Error(String.str("expected type ", cppType, " but VM field ", name, " is of type ", entry.type));
         }
         return entry;
     }
@@ -244,7 +244,7 @@ public class HotSpotVMConfigAccess {
                 if (notPresent != null) {
                     return notPresent;
                 }
-                throw new Error("expected VM flag not found: " + name);
+                throw new Error(String.str("expected VM flag not found: ", name));
             } else {
                 cppType = null;
             }
@@ -282,7 +282,7 @@ public class HotSpotVMConfigAccess {
             return value;
         }
 
-        throw new Error("cannot convert " + name + " of type " + value.getClass().getSimpleName() + (cppType == null ? "" : " [" + cppType + "]") + " to " + toType.getSimpleName());
+        throw new Error(String.str("cannot convert ", name, " of type ", value.getClass().getSimpleName(), (cppType == null ? "" : String.str(" [", cppType, "]")), " to ", toType.getSimpleName()));
     }
 
     private final HotSpotVMConfigStore store;

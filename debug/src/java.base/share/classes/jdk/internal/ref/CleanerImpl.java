@@ -101,7 +101,7 @@ public final class CleanerImpl implements Runnable {
      * If the thread is a ManagedLocalsThread, the threadlocals
      * are erased before each cleanup
      */
-    @Override
+    // @Override
     public void run() {
         Thread t = Thread.currentThread();
         InnocuousThread mlThread = (t instanceof InnocuousThread) ? (InnocuousThread) t : null;
@@ -149,7 +149,7 @@ public final class CleanerImpl implements Runnable {
             this.action = null;
         }
 
-        @Override
+        // @Override
         protected void performCleanup() {
             action.run();
         }
@@ -159,7 +159,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public Object get() {
             throw new UnsupportedOperationException("get");
         }
@@ -169,7 +169,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public void clear() {
             throw new UnsupportedOperationException("clear");
         }
@@ -200,7 +200,7 @@ public final class CleanerImpl implements Runnable {
             this.action = null;
         }
 
-        @Override
+        // @Override
         protected void performCleanup() {
             action.run();
         }
@@ -210,7 +210,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public Object get() {
             throw new UnsupportedOperationException("get");
         }
@@ -220,7 +220,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public void clear() {
             throw new UnsupportedOperationException("clear");
         }
@@ -251,7 +251,7 @@ public final class CleanerImpl implements Runnable {
             this.action = null;
         }
 
-        @Override
+        // @Override
         protected void performCleanup() {
             action.run();
         }
@@ -261,7 +261,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public Object get() {
             throw new UnsupportedOperationException("get");
         }
@@ -271,7 +271,7 @@ public final class CleanerImpl implements Runnable {
          *
          * @throws UnsupportedOperationException always
          */
-        @Override
+        // @Override
         public void clear() {
             throw new UnsupportedOperationException("clear");
         }
@@ -293,7 +293,7 @@ public final class CleanerImpl implements Runnable {
         public Thread newThread(Runnable r) {
             Thread t = InnocuousThread.newThread(r);
             t.setPriority(Thread.MAX_PRIORITY - 2);
-            t.setName("Cleaner-" + cleanerThreadNumber.getAndIncrement());
+            t.setName(String.str("Cleaner-", cleanerThreadNumber.getAndIncrement()));
             return t;
         }
     }
@@ -306,7 +306,7 @@ public final class CleanerImpl implements Runnable {
             super(cleaner, cleaner);
         }
 
-        @Override
+        // @Override
         protected void performCleanup() {
             // no action
         }

@@ -74,7 +74,7 @@ public class StringBufferInputStream extends InputStream {
      *             <code>-1</code> if there is no more data because the end of
      *             the stream has been reached.
      */
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     public synchronized int read(byte b[], int off, int len) {
         if (b == null) {
             throw new NullPointerException();

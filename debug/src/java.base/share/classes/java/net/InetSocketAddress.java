@@ -63,16 +63,16 @@ public class InetSocketAddress extends SocketAddress {
             return addr == null;
         }
 
-        @Override
+        // @Override
         public String toString() {
             if (isUnresolved()) {
-                return hostname + ":" + port;
+                return String.str(hostname, ":", port);
             } else {
-                return addr.toString() + ":" + port;
+                return String.str(addr.toString(), ":", port);
             }
         }
 
-        @Override
+        // @Override
         public final boolean equals(Object obj) {
             if (obj == null || !(obj instanceof InetSocketAddressHolder))
                 return false;
@@ -87,7 +87,7 @@ public class InetSocketAddress extends SocketAddress {
             return sameIP && (port == that.port);
         }
 
-        @Override
+        // @Override
         public final int hashCode() {
             if (addr != null)
                 return addr.hashCode() + port;
@@ -101,7 +101,7 @@ public class InetSocketAddress extends SocketAddress {
 
     private static int checkPort(int port) {
         if (port < 0 || port > 0xFFFF)
-            throw new IllegalArgumentException("port out of range:" + port);
+            throw new IllegalArgumentException(String.str("port out of range:", port));
         return port;
     }
 
@@ -257,7 +257,7 @@ public class InetSocketAddress extends SocketAddress {
      *
      * @return a string representation of this object.
      */
-    @Override
+    // @Override
     public String toString() {
         return holder.toString();
     }
@@ -281,7 +281,7 @@ public class InetSocketAddress extends SocketAddress {
      * @return {@code true} if the objects are the same;
      *          {@code false} otherwise.
      */
-    @Override
+    // @Override
     public final boolean equals(Object obj) {
         if (obj == null || !(obj instanceof InetSocketAddress))
             return false;
@@ -293,7 +293,7 @@ public class InetSocketAddress extends SocketAddress {
      *
      * @return a hash code value for this socket address.
      */
-    @Override
+    // @Override
     public final int hashCode() {
         return holder.hashCode();
     }

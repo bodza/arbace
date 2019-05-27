@@ -21,12 +21,12 @@ public final class RegisterValue extends AllocatableValue {
         return reg;
     }
 
-    @Override
+    // @Override
     public int hashCode() {
         return 29 * super.hashCode() + reg.hashCode();
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (obj instanceof RegisterValue) {
             RegisterValue other = (RegisterValue) obj;

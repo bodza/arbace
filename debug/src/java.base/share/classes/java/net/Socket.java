@@ -393,7 +393,7 @@ public class Socket implements java.io.Closeable {
             return;
         }
         if (!(addr instanceof Inet4Address || addr instanceof Inet6Address)) {
-            throw new IllegalArgumentException(op + ": invalid address type");
+            throw new IllegalArgumentException(String.str(op, ": invalid address type"));
         }
     }
 
@@ -700,7 +700,7 @@ public class Socket implements java.io.Closeable {
      */
     public void sendUrgentData(int data) throws IOException {
         if (!getImpl().supportsUrgentData ()) {
-            throw new SocketException ("Urgent data not supported");
+            throw new SocketException("Urgent data not supported");
         }
         getImpl().sendUrgentData (data);
     }
@@ -1145,7 +1145,7 @@ public class Socket implements java.io.Closeable {
     public String toString() {
         try {
             if (isConnected())
-                return "Socket[addr=" + getImpl().getInetAddress() + ",port=" + getImpl().getPort() + ",localport=" + getImpl().getLocalPort() + "]";
+                return String.str("Socket[addr=", getImpl().getInetAddress(), ",port=", getImpl().getPort(), ",localport=", getImpl().getLocalPort(), "]");
         } catch (SocketException e) {
         }
         return "Socket[unconnected]";
@@ -1315,7 +1315,7 @@ public class Socket implements java.io.Closeable {
      *
      * @throws NullPointerException if name is {@code null}
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public <T> T getOption(SocketOption<T> name) throws IOException {
         return getImpl().getOption(name);
     }

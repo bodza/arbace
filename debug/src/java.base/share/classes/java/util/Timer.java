@@ -65,7 +65,7 @@ public class Timer {
      * finalizer forgetting to call it.
      */
     private final Object threadReaper = new Object() {
-        @SuppressWarnings("deprecation")
+        // @SuppressWarnings("deprecation")
         /* oops! protected */public void finalize() throws Throwable {
             synchronized (queue) {
                 thread.newTasksMayBeScheduled = false;
@@ -87,7 +87,7 @@ public class Timer {
      * {@linkplain Thread#setDaemon run as a daemon}.
      */
     public Timer() {
-        this("Timer-" + serialNumber());
+        this(String.str("Timer-", serialNumber()));
     }
 
     /**
@@ -101,7 +101,7 @@ public class Timer {
      * @param isDaemon true if the associated thread should run as a daemon.
      */
     public Timer(boolean isDaemon) {
-        this("Timer-" + serialNumber(), isDaemon);
+        this(String.str("Timer-", serialNumber()), isDaemon);
     }
 
     /**

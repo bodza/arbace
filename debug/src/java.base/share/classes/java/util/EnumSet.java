@@ -73,7 +73,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E> implemen
     public static <E extends Enum<E>> EnumSet<E> noneOf(Class<E> elementType) {
         Enum<?>[] universe = getUniverse(elementType);
         if (universe == null)
-            throw new ClassCastException(elementType + " not an enum");
+            throw new ClassCastException(String.str(elementType, " not an enum"));
 
         if (universe.length <= 64)
             return new RegularEnumSet<>(elementType, universe);
@@ -320,7 +320,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E> implemen
      */
     public static <E extends Enum<E>> EnumSet<E> range(E from, E to) {
         if (from.compareTo(to) > 0)
-            throw new IllegalArgumentException(from + " > " + to);
+            throw new IllegalArgumentException(String.str(from, " > ", to));
         EnumSet<E> result = noneOf(from.getDeclaringClass());
         result.addRange(from, to);
         return result;
@@ -337,7 +337,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E> implemen
      *
      * @return a copy of this set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public EnumSet<E> clone() {
         try {
             return (EnumSet<E>) super.clone();
@@ -357,7 +357,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E> implemen
     final void typeCheck(E e) {
         Class<?> eClass = e.getClass();
         if (eClass != elementType && eClass.getSuperclass() != elementType)
-            throw new ClassCastException(eClass + " != " + elementType);
+            throw new ClassCastException(String.str(eClass, " != ", elementType));
     }
 
     /**

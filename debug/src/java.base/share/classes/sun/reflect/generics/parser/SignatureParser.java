@@ -95,7 +95,7 @@ public class SignatureParser {
     // Currently throws a GenericSignatureFormatError.
 
     private Error error(String errorMsg) {
-        return new GenericSignatureFormatError("Signature Parse error: " + errorMsg + "\n\tRemaining input: " + remainder());
+        return new GenericSignatureFormatError(String.str("Signature Parse error: ", errorMsg, "\n\tRemaining input: ", remainder()));
     }
 
     /**
@@ -275,7 +275,7 @@ public class SignatureParser {
 
         parseClassTypeSignatureSuffix(scts);
         if (current() != ';')
-            throw error("expected ';' got '" + current() + "'");
+            throw error(String.str("expected ';' got '", current(), "'"));
 
         advance();
         return ClassTypeSignature.make(scts);
@@ -303,7 +303,7 @@ public class SignatureParser {
         case '<':
             return SimpleClassTypeSignature.make(id, false, parseTypeArguments());
         default:
-            throw error("expected '<' or ';' but got " + current());
+            throw error(String.str("expected '<' or ';' but got ", current()));
         }
     }
 
@@ -322,7 +322,7 @@ public class SignatureParser {
         case '<':
             return SimpleClassTypeSignature.make(id, dollar, parseTypeArguments());
         default:
-            throw error("expected '<' or ';' or '.', got '" + c + "'.");
+            throw error(String.str("expected '<' or ';' or '.', got '", c, "'."));
         }
     }
 
@@ -400,7 +400,7 @@ public class SignatureParser {
         advance();
         TypeVariableSignature ts = TypeVariableSignature.make(parseIdentifier());
         if (current() != ';') {
-            throw error("; expected in signature of type variable named" + ts.getIdentifier());
+            throw error(String.str("; expected in signature of type variable named", ts.getIdentifier()));
         }
         advance();
         return ts;

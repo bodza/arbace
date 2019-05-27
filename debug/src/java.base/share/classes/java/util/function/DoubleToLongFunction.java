@@ -8,7 +8,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsLong(double)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoubleToLongFunction {
     /**
      * Applies this function to the given argument.

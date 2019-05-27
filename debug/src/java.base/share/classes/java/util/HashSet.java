@@ -207,7 +207,7 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable {
      *
      * @return a shallow copy of this set
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public Object clone() {
         try {
             HashSet<E> newSet = (HashSet<E>) super.clone();

@@ -65,11 +65,13 @@ public interface Enumeration<E> {
      */
     default Iterator<E> asIterator() {
         return new Iterator<>() {
-            @Override public boolean hasNext() {
+            // @Override
+            public boolean hasNext() {
                 return hasMoreElements();
             }
 
-            @Override public E next() {
+            // @Override
+            public E next() {
                 return nextElement();
             }
         };

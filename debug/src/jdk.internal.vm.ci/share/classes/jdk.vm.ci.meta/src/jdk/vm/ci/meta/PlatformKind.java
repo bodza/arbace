@@ -16,12 +16,12 @@ public interface PlatformKind {
             this.e = e;
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return e.ordinal();
         }
 
-        @Override
+        // @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;

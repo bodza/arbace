@@ -11,7 +11,7 @@ class ByteBufferAsDoubleBufferRL extends ByteBufferAsDoubleBufferL {
         super(bb, mark, pos, lim, cap, addr);
     }
 
-    @Override
+    // @Override
     Object base() {
         return bb.hb;
     }

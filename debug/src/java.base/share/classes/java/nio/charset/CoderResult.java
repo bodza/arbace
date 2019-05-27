@@ -2,6 +2,8 @@ package java.nio.charset;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -70,7 +72,7 @@ public class CoderResult {
      */
     public String toString() {
         String nm = names[type];
-        return isError() ? nm + "[" + length + "]" : nm;
+        return isError() ? String.str(nm, "[", length, "]") : nm;
     }
 
     /**
@@ -155,8 +157,8 @@ public class CoderResult {
         static final Cache INSTANCE = new Cache();
         private Cache() {}
 
-        final Map<Integer, CoderResult> unmappable = new ConcurrentHashMap<>();
-        final Map<Integer, CoderResult> malformed  = new ConcurrentHashMap<>();
+        final Map<Integer, CoderResult> unmappable = Collections.synchronizedMap(new HashMap<>());
+        final Map<Integer, CoderResult> malformed  = Collections.synchronizedMap(new HashMap<>());
     }
 
     private static final CoderResult[] malformed4 = new CoderResult[] {

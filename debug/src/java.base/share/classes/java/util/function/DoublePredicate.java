@@ -10,7 +10,7 @@ import java.util.Objects;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #test(double)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoublePredicate {
     /**
      * Evaluates this predicate on the given argument.

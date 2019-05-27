@@ -211,7 +211,7 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
      * Returns element at array index i.
      * This is a slight abuse of generics, accepted by javac.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static final <E> E elementAt(Object[] es, int i) {
         return (E) es[i];
     }
@@ -222,7 +222,8 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
      * but does catch ones that corrupt traversal.
      */
     static final <E> E nonNullElementAt(Object[] es, int i) {
-        @SuppressWarnings("unchecked") E e = (E) es[i];
+        // @SuppressWarnings("unchecked")
+        E e = (E) es[i];
         if (e == null)
             throw new ConcurrentModificationException();
         return e;
@@ -941,7 +942,7 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
      *         this deque
      * @throws NullPointerException if the specified array is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         final int size;
         if ((size = size()) > a.length)
@@ -966,7 +967,7 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
      */
     public ArrayDeque<E> clone() {
         try {
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             ArrayDeque<E> result = (ArrayDeque<E>) super.clone();
             result.elements = Arrays.copyOf(elements, elements.length);
             return result;

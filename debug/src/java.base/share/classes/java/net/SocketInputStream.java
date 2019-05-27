@@ -107,7 +107,7 @@ class SocketInputStream extends FileInputStream {
             if (length == 0) {
                 return 0;
             }
-            throw new ArrayIndexOutOfBoundsException("length == " + length + " off == " + off + " buffer length == " + b.length);
+            throw new ArrayIndexOutOfBoundsException(String.str("length == ", length, " off == ", off, " buffer length == ", b.length));
         }
 
         // acquire file descriptor and do the read
@@ -207,7 +207,7 @@ class SocketInputStream extends FileInputStream {
     /**
      * Overrides finalize, the fd is closed by the Socket.
      */
-    @SuppressWarnings({"deprecation", "removal"})
+    // @SuppressWarnings({"deprecation", "removal"})
     /* oops! protected */public void finalize() {}
 
     /**

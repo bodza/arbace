@@ -76,7 +76,7 @@ final class PublicMethods {
             return method.getName().equals(name) && Arrays.equals(reflectionFactory.getExecutableSharedParameterTypes(method), ptypes);
         }
 
-        @Override
+        // @Override
         public boolean equals(Object o) {
             if (this == o)
                 return true;
@@ -87,7 +87,7 @@ final class PublicMethods {
             return name == that.name && Arrays.equals(ptypes, that.ptypes);
         }
 
-        @Override
+        // @Override
         public int hashCode() {
             return System.identityHashCode(name) + // guaranteed interned String
                    31 * Arrays.hashCode(ptypes);

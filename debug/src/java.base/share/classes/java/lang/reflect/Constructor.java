@@ -38,7 +38,7 @@ public final class Constructor<T> extends Executable {
     }
 
     // Accessor for generic info repository
-    @Override
+    // @Override
     ConstructorRepository getGenericInfo() {
         // lazily initialize repository if necessary
         if (genericInfo == null) {
@@ -57,7 +57,7 @@ public final class Constructor<T> extends Executable {
     // occur in annotation code.
     private Constructor<T> root;
 
-    @Override
+    // @Override
     Constructor<T> getRoot() {
         return root;
     }
@@ -99,7 +99,7 @@ public final class Constructor<T> extends Executable {
         return res;
     }
 
-    @Override
+    // @Override
     boolean hasGenericInformation() {
         return (getSignature() != null);
     }
@@ -108,7 +108,7 @@ public final class Constructor<T> extends Executable {
      * Returns the {@code Class} object representing the class that
      * declares the constructor represented by this object.
      */
-    @Override
+    // @Override
     public Class<T> getDeclaringClass() {
         return clazz;
     }
@@ -117,7 +117,7 @@ public final class Constructor<T> extends Executable {
      * Returns the name of this constructor, as a string.  This is
      * the binary name of the constructor's declaring class.
      */
-    @Override
+    // @Override
     public String getName() {
         return getDeclaringClass().getName();
     }
@@ -125,7 +125,7 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public int getModifiers() {
         return modifiers;
     }
@@ -134,8 +134,8 @@ public final class Constructor<T> extends Executable {
      * {@inheritDoc}
      * @throws GenericSignatureFormatError {@inheritDoc}
      */
-    @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    // @Override
+    // @SuppressWarnings({"rawtypes", "unchecked"})
     public TypeVariable<Constructor<T>>[] getTypeParameters() {
       if (getSignature() != null) {
         return (TypeVariable<Constructor<T>>[])getGenericInfo().getTypeParameters();
@@ -143,12 +143,12 @@ public final class Constructor<T> extends Executable {
           return (TypeVariable<Constructor<T>>[])new TypeVariable[0];
     }
 
-    @Override
+    // @Override
     Class<?>[] getSharedParameterTypes() {
         return parameterTypes;
     }
 
-    @Override
+    // @Override
     Class<?>[] getSharedExceptionTypes() {
         return exceptionTypes;
     }
@@ -156,7 +156,7 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public Class<?>[] getParameterTypes() {
         return parameterTypes.clone();
     }
@@ -172,7 +172,7 @@ public final class Constructor<T> extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      */
-    @Override
+    // @Override
     public Type[] getGenericParameterTypes() {
         return super.getGenericParameterTypes();
     }
@@ -180,7 +180,7 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public Class<?>[] getExceptionTypes() {
         return exceptionTypes.clone();
     }
@@ -191,7 +191,7 @@ public final class Constructor<T> extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      */
-    @Override
+    // @Override
     public Type[] getGenericExceptionTypes() {
         return super.getGenericExceptionTypes();
     }
@@ -247,7 +247,7 @@ public final class Constructor<T> extends Executable {
         return sharedToString(Modifier.constructorModifiers(), false, parameterTypes, exceptionTypes);
     }
 
-    @Override
+    // @Override
     void specificToStringHeader(StringBuilder sb) {
         sb.append(getDeclaringClass().getTypeName());
     }
@@ -283,12 +283,12 @@ public final class Constructor<T> extends Executable {
      * @return a string describing this {@code Constructor},
      * include type parameters
      */
-    @Override
+    // @Override
     public String toGenericString() {
         return sharedToGenericString(Modifier.constructorModifiers(), false);
     }
 
-    @Override
+    // @Override
     void specificToGenericStringHeader(StringBuilder sb) {
         specificToStringHeader(sb);
     }
@@ -350,7 +350,7 @@ public final class Constructor<T> extends Executable {
         if (ca == null) {
             ca = acquireConstructorAccessor();
         }
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         T inst = (T) ca.newInstance(initargs);
         return inst;
     }
@@ -358,7 +358,7 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean isVarArgs() {
         return super.isVarArgs();
     }
@@ -366,7 +366,7 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean isSynthetic() {
         return super.isSynthetic();
     }

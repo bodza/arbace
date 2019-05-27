@@ -1,36 +1,18 @@
 package java.lang;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Vector;
-import java.util.WeakHashMap;
-import java.util.function.Supplier;
 
-import jdk.internal.loader.BuiltinClassLoader;
 import jdk.internal.perf.PerfCounter;
-import jdk.internal.loader.BootLoader;
 import jdk.internal.loader.ClassLoaders;
 import jdk.internal.misc.Unsafe;
 import jdk.internal.misc.VM;
-import jdk.internal.ref.CleanerFactory;
-import jdk.internal.reflect.Reflection;
-import sun.reflect.misc.ReflectUtil;
 
 /**
  * A class loader is an object that is responsible for loading classes. The
@@ -199,7 +181,7 @@ public abstract class ClassLoader {
     // Class::getPackage or ClassLoader::getDefinedPackage(s)
     // method is called to define it.
     // Otherwise, the value is a NamedPackage object.
-    private final ConcurrentHashMap<String, NamedPackage> packages = new ConcurrentHashMap<>();
+    private final Map<String, NamedPackage> packages = Collections.synchronizedMap(new HashMap<>());
 
     /*
      * Returns a named package for the given module.
@@ -431,7 +413,7 @@ public abstract class ClassLoader {
 
     private void preDefineClass(String name) {
         if (!checkName(name)) {
-            throw new NoClassDefFoundError("IllegalName: " + name);
+            throw new NoClassDefFoundError(String.str("IllegalName: ", name));
         }
     }
 
@@ -773,7 +755,7 @@ public abstract class ClassLoader {
      */
     static synchronized ClassLoader initSystemClassLoader() {
         if (VM.initLevel() != 3) {
-            throw new InternalError("system class loader cannot be set at initLevel " + VM.initLevel());
+            throw new InternalError(String.str("system class loader cannot be set at initLevel ", VM.initLevel()));
         }
 
         // detect recursive initialization
@@ -945,13 +927,13 @@ public abstract class ClassLoader {
     // -- Misc --
 
     /**
-     * Returns the ConcurrentHashMap used as a storage for ClassLoaderValue(s)
+     * Returns the Map used as a storage for ClassLoaderValue(s)
      * associated with this ClassLoader, creating it if it doesn't already exist.
      */
-    /* oops! */public ConcurrentHashMap<?, ?> createOrGetClassLoaderValueMap() {
-        ConcurrentHashMap<?, ?> map = classLoaderValueMap;
+    /* oops! */public Map<?, ?> createOrGetClassLoaderValueMap() {
+        Map<?, ?> map = classLoaderValueMap;
         if (map == null) {
-            map = new ConcurrentHashMap<>();
+            map = Collections.synchronizedMap(new HashMap<>());
             boolean set = trySetObjectField("classLoaderValueMap", map);
             if (!set) {
                 // beaten by someone else
@@ -962,7 +944,7 @@ public abstract class ClassLoader {
     }
 
     // the storage for ClassLoaderValue(s) associated with this ClassLoader
-    private volatile ConcurrentHashMap<?, ?> classLoaderValueMap;
+    private volatile Map<?, ?> classLoaderValueMap;
 
     /**
      * Attempts to atomically set a volatile field in this object. Returns

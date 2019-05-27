@@ -203,7 +203,7 @@ public class Object {
      * @return a string representation of the object.
      */
     public String toString() {
-        return getClass().getName() + "@" + Integer.toHexString(hashCode());
+        return String.str(getClass().getName(), "@", Integer.toHexString(hashCode()));
     }
 
     /**

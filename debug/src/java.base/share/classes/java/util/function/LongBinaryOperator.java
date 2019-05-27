@@ -8,7 +8,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsLong(long, long)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface LongBinaryOperator {
     /**
      * Applies this operator to the given operands.

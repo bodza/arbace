@@ -222,9 +222,9 @@ public final class Inet6Address extends InetAddress {
         String getHostAddress() {
             String s = numericToTextFormat(ipaddress);
             if (scope_ifname != null) { /* must check this first */
-                s = s + "%" + scope_ifname.getName();
+                s = String.str(s, "%", scope_ifname.getName());
             } else if (scope_id_set) {
-                s = s + "%" + scope_id;
+                s = String.str(s, "%", scope_id);
             }
             return s;
         }
@@ -420,11 +420,11 @@ public final class Inet6Address extends InetAddress {
         try {
             NetworkInterface nif = NetworkInterface.getByName (ifname);
             if (nif == null) {
-                throw new UnknownHostException ("no such interface " + ifname);
+                throw new UnknownHostException(String.str("no such interface ", ifname));
             }
             initif (hostName, addr, nif);
         } catch (SocketException e) {
-            throw new UnknownHostException ("SocketException thrown" + ifname);
+            throw new UnknownHostException(String.str("SocketException thrown", ifname));
         }
     }
 
@@ -470,7 +470,7 @@ public final class Inet6Address extends InetAddress {
             /* found a matching address - return its scope_id */
             return ia6_addr.getScopeId();
         }
-        throw new UnknownHostException ("no scope_id found");
+        throw new UnknownHostException("no scope_id found");
     }
 
     private int deriveNumericScope(String ifname) throws UnknownHostException {
@@ -478,7 +478,7 @@ public final class Inet6Address extends InetAddress {
         try {
             en = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            throw new UnknownHostException ("could not enumerate local network interfaces");
+            throw new UnknownHostException("could not enumerate local network interfaces");
         }
         while (en.hasMoreElements()) {
             NetworkInterface ifc = en.nextElement();
@@ -486,7 +486,7 @@ public final class Inet6Address extends InetAddress {
                 return deriveNumericScope(holder6.ipaddress, ifc);
             }
         }
-        throw new UnknownHostException ("No matching address found for interface : " +ifname);
+        throw new UnknownHostException(String.str("No matching address found for interface : ", ifname));
     }
 
     /**
@@ -497,7 +497,7 @@ public final class Inet6Address extends InetAddress {
      * @return a {@code boolean} indicating if the InetAddress is an IP
      *         multicast address
      */
-    @Override
+    // @Override
     public boolean isMulticastAddress() {
         return holder6.isMulticastAddress();
     }
@@ -508,7 +508,7 @@ public final class Inet6Address extends InetAddress {
      * @return a {@code boolean} indicating if the Inetaddress is
      *         a wildcard address.
      */
-    @Override
+    // @Override
     public boolean isAnyLocalAddress() {
         return holder6.isAnyLocalAddress();
     }
@@ -519,7 +519,7 @@ public final class Inet6Address extends InetAddress {
      * @return a {@code boolean} indicating if the InetAddress is a loopback
      *         address; or false otherwise.
      */
-    @Override
+    // @Override
     public boolean isLoopbackAddress() {
         return holder6.isLoopbackAddress();
     }
@@ -530,7 +530,7 @@ public final class Inet6Address extends InetAddress {
      * @return a {@code boolean} indicating if the InetAddress is a link local
      *         address; or false if address is not a link local unicast address.
      */
-    @Override
+    // @Override
     public boolean isLinkLocalAddress() {
         return holder6.isLinkLocalAddress();
     }
@@ -546,7 +546,7 @@ public final class Inet6Address extends InetAddress {
      * @return a {@code boolean} indicating if the InetAddress is a site local
      *         address; or false if address is not a site local unicast address.
      */
-    @Override
+    // @Override
     public boolean isSiteLocalAddress() {
         return holder6.isSiteLocalAddress();
     }
@@ -563,7 +563,7 @@ public final class Inet6Address extends InetAddress {
      *         address of global scope, false if it is not of global scope or
      *         it is not a multicast address
      */
-    @Override
+    // @Override
     public boolean isMCGlobal() {
         return holder6.isMCGlobal();
     }
@@ -575,7 +575,7 @@ public final class Inet6Address extends InetAddress {
      *         address of node-local scope, false if it is not of node-local
      *         scope or it is not a multicast address
      */
-    @Override
+    // @Override
     public boolean isMCNodeLocal() {
         return holder6.isMCNodeLocal();
     }
@@ -587,7 +587,7 @@ public final class Inet6Address extends InetAddress {
      *         address of link-local scope, false if it is not of link-local
      *         scope or it is not a multicast address
      */
-    @Override
+    // @Override
     public boolean isMCLinkLocal() {
         return holder6.isMCLinkLocal();
     }
@@ -599,7 +599,7 @@ public final class Inet6Address extends InetAddress {
      *         address of site-local scope, false if it is not  of site-local
      *         scope or it is not a multicast address
      */
-    @Override
+    // @Override
     public boolean isMCSiteLocal() {
         return holder6.isMCSiteLocal();
     }
@@ -611,7 +611,7 @@ public final class Inet6Address extends InetAddress {
      *         address of organization-local scope, false if it is not of
      *         organization-local scope or it is not a multicast address
      */
-    @Override
+    // @Override
     public boolean isMCOrgLocal() {
         return holder6.isMCOrgLocal();
     }
@@ -623,7 +623,7 @@ public final class Inet6Address extends InetAddress {
      *
      * @return the raw IP address of this object.
      */
-    @Override
+    // @Override
     public byte[] getAddress() {
         return holder6.ipaddress.clone();
     }
@@ -657,7 +657,7 @@ public final class Inet6Address extends InetAddress {
      *
      * @return the raw IP address in a string format.
      */
-    @Override
+    // @Override
     public String getHostAddress() {
         return holder6.getHostAddress();
     }
@@ -667,7 +667,7 @@ public final class Inet6Address extends InetAddress {
      *
      * @return a hash code value for this IP address.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return holder6.hashCode();
     }
@@ -686,7 +686,7 @@ public final class Inet6Address extends InetAddress {
      *
      * @return {@code true} if the objects are the same; {@code false} otherwise.
      */
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof Inet6Address))
             return false;

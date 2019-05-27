@@ -10,7 +10,7 @@ import java.util.Objects;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsDouble(double)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoubleUnaryOperator {
     /**
      * Applies this operator to the given operand.

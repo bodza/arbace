@@ -500,7 +500,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *     {@link Thread#suspend} for details.
      */
     // @Deprecated(since="1.2")
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     public final void suspend() {
         if (stopOrSuspend(true))
             Thread.currentThread().suspend();
@@ -513,7 +513,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * if (and only if) the current thread is found to be in this thread
      * group or one of its subgroups.
      */
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     private boolean stopOrSuspend(boolean suspend) {
         boolean suicide = false;
         Thread us = Thread.currentThread();
@@ -552,7 +552,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *       deadlock-prone.  See {@link Thread#suspend} for details.
      */
     // @Deprecated(since="1.2")
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     public final void resume() {
         int ngroupsSnapshot;
         ThreadGroup[] groupsSnapshot;
@@ -821,7 +821,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (ueh != null) {
                 ueh.uncaughtException(t, e);
             } else if (!(e instanceof ThreadDeath)) {
-                System.err.print("Exception in thread \"" + t.getName() + "\" ");
+                System.err.print(String.str("Exception in thread \"", t.getName(), "\" "));
             }
         }
     }
@@ -846,6 +846,6 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @return a string representation of this thread group.
      */
     public String toString() {
-        return getClass().getName() + "[name=" + getName() + ",maxpri=" + maxPriority + "]";
+        return String.str(getClass().getName(), "[name=", getName(), ",maxpri=", maxPriority, "]");
     }
 }

@@ -92,7 +92,7 @@ public final class Double extends Number implements Comparable<Double> {
      * The {@code Class} instance representing the primitive type
      * {@code double}.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Double>   TYPE = (Class<Double>) Class.getPrimitiveClass("double");
 
     /**
@@ -689,7 +689,7 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @return a {@code hash code} value for this object.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Double.hashCode(value);
     }

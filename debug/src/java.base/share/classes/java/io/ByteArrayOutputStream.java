@@ -43,7 +43,7 @@ public class ByteArrayOutputStream extends OutputStream {
      */
     public ByteArrayOutputStream(int size) {
         if (size < 0) {
-            throw new IllegalArgumentException("Negative initial size: " + size);
+            throw new IllegalArgumentException(String.str("Negative initial size: ", size));
         }
         buf = new byte[size];
     }

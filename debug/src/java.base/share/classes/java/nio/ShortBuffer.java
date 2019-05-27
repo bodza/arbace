@@ -71,7 +71,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
         this(mark, pos, lim, cap, null, 0);
     }
 
-    @Override
+    // @Override
     Object base() {
         return hb;
     }
@@ -191,7 +191,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *
      * @return  The new short buffer
      */
-    @Override
+    // @Override
     public abstract ShortBuffer slice();
 
     /**
@@ -211,7 +211,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *
      * @return  The new short buffer
      */
-    @Override
+    // @Override
     public abstract ShortBuffer duplicate();
 
     /**
@@ -358,7 +358,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *          parameters do not hold
      */
     public ShortBuffer get(short[] dst, int offset, int length) {
-        checkBounds(offset, length, dst.length);
+        // oops! checkBounds(offset, length, dst.length);
         if (length > remaining())
             throw new BufferUnderflowException();
         int end = offset + length;
@@ -498,7 +498,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *          If this buffer is read-only
      */
     public ShortBuffer put(short[] src, int offset, int length) {
-        checkBounds(offset, length, src.length);
+        // oops! checkBounds(offset, length, src.length);
         if (length > remaining())
             throw new BufferOverflowException();
         int end = offset + length;
@@ -609,7 +609,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -622,7 +622,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -635,7 +635,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -648,7 +648,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -661,7 +661,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -674,7 +674,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -687,7 +687,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final

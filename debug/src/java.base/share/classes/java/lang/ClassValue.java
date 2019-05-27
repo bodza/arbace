@@ -177,7 +177,7 @@ public abstract class ClassValue<T> {
     }
 
     // Hack to suppress warnings on the (T) cast, which is a no-op.
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     Entry<T> castEntry(Entry<?> e) { return (Entry<T>) e; }
 
     /** Called when the fast path of get fails, and cache reprobe also fails.
@@ -301,7 +301,7 @@ public abstract class ClassValue<T> {
             this.value = this; // for a promise, value is not of type T, but Entry!
         }
         /** Fetch the value.  This entry must not be a promise. */
-        @SuppressWarnings("unchecked")  // if !isPromise, type is T
+        // @SuppressWarnings("unchecked")  // if !isPromise, type is T
         T value() { assertNotPromise(); return (T) value; }
         boolean isPromise() { return value == this; }
         Version<T> version() { return get(); }
@@ -321,7 +321,7 @@ public abstract class ClassValue<T> {
         }
         Entry<T> refreshVersion(Version<T> v2) {
             assertNotPromise();
-            @SuppressWarnings("unchecked")  // if !isPromise, type is T
+            // @SuppressWarnings("unchecked")  // if !isPromise, type is T
             Entry<T> e2 = new Entry<>(v2, (T) value);
             clear();
             // value = null -- caller must drop
@@ -396,7 +396,7 @@ public abstract class ClassValue<T> {
         /** Initiate a query.  Store a promise (placeholder) if there is no value yet. */
         synchronized
         <T> Entry<T> startEntry(ClassValue<T> classValue) {
-            @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
+            // @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
             Entry<T> e = (Entry<T>) get(classValue.identity);
             Version<T> v = classValue.version();
             if (e == null) {
@@ -432,7 +432,7 @@ public abstract class ClassValue<T> {
         /** Finish a query.  Overwrite a matching placeholder.  Drop stale incoming values. */
         synchronized
         <T> Entry<T> finishEntry(ClassValue<T> classValue, Entry<T> e) {
-            @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
+            // @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
             Entry<T> e0 = (Entry<T>) get(classValue.identity);
             if (e == e0) {
                 // We can get here during exception processing, unwinding from computeValue.
@@ -477,7 +477,7 @@ public abstract class ClassValue<T> {
         /** Change the value for an entry. */
         synchronized
         <T> void changeEntry(ClassValue<T> classValue, T value) {
-            @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
+            // @SuppressWarnings("unchecked")  // one map has entries for all value types <T>
             Entry<T> e0 = (Entry<T>) get(classValue.identity);
             Version<T> version = classValue.version();
             if (e0 != null) {

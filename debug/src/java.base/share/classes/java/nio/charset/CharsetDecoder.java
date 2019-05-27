@@ -134,15 +134,11 @@ public abstract class CharsetDecoder {
     private CharsetDecoder(Charset cs, float averageCharsPerByte, float maxCharsPerByte, String replacement) {
         this.charset = cs;
         if (averageCharsPerByte <= 0.0f)
-            throw new IllegalArgumentException("Non-positive "
-                                               + "averageCharsPerByte");
+            throw new IllegalArgumentException("Non-positive averageCharsPerByte");
         if (maxCharsPerByte <= 0.0f)
-            throw new IllegalArgumentException("Non-positive "
-                                               + "maxCharsPerByte");
+            throw new IllegalArgumentException("Non-positive maxCharsPerByte");
         if (averageCharsPerByte > maxCharsPerByte)
-            throw new IllegalArgumentException("averageCharsPerByte"
-                                               + " exceeds "
-                                               + "maxCharsPerByte");
+            throw new IllegalArgumentException("averageCharsPerByte exceeds maxCharsPerByte");
         this.replacement = replacement;
         this.averageCharsPerByte = averageCharsPerByte;
         this.maxCharsPerByte = maxCharsPerByte;
@@ -762,7 +758,6 @@ public abstract class CharsetDecoder {
     }
 
     private void throwIllegalStateException(int from, int to) {
-        throw new IllegalStateException("Current state = " + stateNames[from]
-                                        + ", new state = " + stateNames[to]);
+        throw new IllegalStateException(String.str("Current state = ", stateNames[from], ", new state = ", stateNames[to]));
     }
 }

@@ -59,7 +59,7 @@ public class BuiltinClassLoader extends ClassLoader {
     /**
      * Finds the class with the specified binary name.
      */
-    @Override
+    // @Override
     protected Class<?> findClass(String cn) throws ClassNotFoundException {
         // no class loading until VM is fully initialized
         if (!VM.isModuleSystemInited())
@@ -75,7 +75,7 @@ public class BuiltinClassLoader extends ClassLoader {
     /**
      * Loads the class with the specified binary name.
      */
-    @Override
+    // @Override
     protected Class<?> loadClass(String cn, boolean resolve) throws ClassNotFoundException {
         Class<?> c = loadClassOrNull(cn, resolve);
         if (c == null)
@@ -132,13 +132,8 @@ public class BuiltinClassLoader extends ClassLoader {
         }
 
         // defines the class to the runtime
-        ByteBuffer bb = res.getByteBuffer();
-        if (bb != null) {
-            return defineClass(cn, bb);
-        } else {
-            byte[] b = res.getBytes();
-            return defineClass(cn, b, 0, b.length);
-        }
+        byte[] b = res.getBytes();
+        return defineClass(cn, b, 0, b.length);
     }
 
     // -- packages
@@ -157,7 +152,7 @@ public class BuiltinClassLoader extends ClassLoader {
                 // defined by another thread so need to re-verify
                 pkg = getDefinedPackage(pn);
                 if (pkg == null)
-                    throw new InternalError("Cannot find package: " + pn);
+                    throw new InternalError(String.str("Cannot find package: ", pn));
             }
         }
         return pkg;

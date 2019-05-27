@@ -67,7 +67,7 @@ import java.util.Comparators;
  *
  * @param <T> the type of objects that may be compared by this comparator
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface Comparator<T> {
     /**
      * Compares its two arguments for order.  Returns a negative integer,
@@ -286,7 +286,7 @@ public interface Comparator<T> {
      * @return a comparator that imposes the <i>natural ordering</i> on {@code
      *         Comparable} objects.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static <T extends Comparable<? super T>> Comparator<T> naturalOrder() {
         return (Comparator<T>) Comparators.NaturalOrderComparator.INSTANCE;
     }

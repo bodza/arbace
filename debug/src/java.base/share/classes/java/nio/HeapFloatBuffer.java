@@ -65,7 +65,7 @@ class HeapFloatBuffer extends FloatBuffer {
     }
 
     public FloatBuffer get(float[] dst, int offset, int length) {
-        checkBounds(offset, length, dst.length);
+        // oops! checkBounds(offset, length, dst.length);
         if (length > remaining())
             throw new BufferUnderflowException();
         System.arraycopy(hb, ix(position()), dst, offset, length);
@@ -92,7 +92,7 @@ class HeapFloatBuffer extends FloatBuffer {
     }
 
     public FloatBuffer put(float[] src, int offset, int length) {
-        checkBounds(offset, length, src.length);
+        // oops! checkBounds(offset, length, src.length);
         if (length > remaining())
             throw new BufferOverflowException();
         System.arraycopy(src, offset, hb, ix(position()), length);

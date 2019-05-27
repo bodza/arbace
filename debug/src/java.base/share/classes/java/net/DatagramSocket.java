@@ -85,7 +85,7 @@ public class DatagramSocket implements java.io.Closeable {
      */
     private synchronized void connectInternal(InetAddress address, int port) throws SocketException {
         if (port < 0 || port > 0xFFFF) {
-            throw new IllegalArgumentException("connect: " + port);
+            throw new IllegalArgumentException(String.str("connect: ", port));
         }
         if (address == null) {
             throw new IllegalArgumentException("connect: null address");
@@ -278,7 +278,7 @@ public class DatagramSocket implements java.io.Closeable {
             return;
         }
         if (!(addr instanceof Inet4Address || addr instanceof Inet6Address)) {
-            throw new IllegalArgumentException(op + ": invalid address type");
+            throw new IllegalArgumentException(String.str(op, ": invalid address type"));
         }
     }
 
@@ -478,7 +478,7 @@ public class DatagramSocket implements java.io.Closeable {
                     p.setAddress(connectedAddress);
                     p.setPort(connectedPort);
                 } else if ((!packetAddress.equals(connectedAddress)) || p.getPort() != connectedPort) {
-                    throw new IllegalArgumentException("connected address " + "and packet address" + " differ");
+                    throw new IllegalArgumentException(String.str("connected address ", "and packet address", " differ"));
                 }
             }
             // Check whether the socket is bound

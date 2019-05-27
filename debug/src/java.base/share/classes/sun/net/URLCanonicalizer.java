@@ -31,16 +31,16 @@ public class URLCanonicalizer {
     public String canonicalize(String simpleURL) {
         String resultURL = simpleURL;
         if (simpleURL.startsWith("ftp.")) {
-            resultURL = "ftp://" + simpleURL;
+            resultURL = String.str("ftp://", simpleURL);
         } else if (simpleURL.startsWith("gopher.")) {
-            resultURL = "gopher://" + simpleURL;
+            resultURL = String.str("gopher://", simpleURL);
         } else if (simpleURL.startsWith("/")) {
-            resultURL = "file:" + simpleURL;
+            resultURL = String.str("file:", simpleURL);
         } else if (!hasProtocolName(simpleURL)) {
             if (isSimpleHostName(simpleURL)) {
-                simpleURL = "www." + simpleURL + ".com";
+                simpleURL = String.str("www.", simpleURL, ".com");
             }
-            resultURL = "http://" + simpleURL;
+            resultURL = String.str("http://", simpleURL);
         }
 
         return resultURL;

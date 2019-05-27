@@ -28,7 +28,7 @@ public final class Boolean implements Comparable<Boolean> {
     /**
      * The Class object representing the primitive type boolean.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveClass("boolean");
 
     /**
@@ -169,7 +169,7 @@ public final class Boolean implements Comparable<Boolean> {
      * {@code true}; returns the integer {@code 1237} if this
      * object represents {@code false}.
      */
-    @Override
+    // @Override
     public int hashCode() {
         return Boolean.hashCode(value);
     }

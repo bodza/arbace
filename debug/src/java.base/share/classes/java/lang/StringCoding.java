@@ -370,7 +370,7 @@ class StringCoding {
                 }
             } catch (IllegalCharsetNameException x) {}
             if (se == null) {
-                throw new UnsupportedEncodingException (csn);
+                throw new UnsupportedEncodingException(csn);
             }
             set(encoder, se);
         }
@@ -607,7 +607,7 @@ class StringCoding {
     }
 
     private static void throwMalformed(int off, int nb) {
-        String msg = "malformed input off : " + off + ", length : " + nb;
+        String msg = String.str("malformed input off : ", off, ", length : ", nb);
         throw new IllegalArgumentException(msg, new MalformedInputException(nb));
     }
 
@@ -618,7 +618,7 @@ class StringCoding {
     }
 
     private static void throwUnmappable(int off, int nb) {
-        String msg = "malformed input off : " + off + ", length : " + nb;
+        String msg = String.str("malformed input off : ", off, ", length : ", nb);
         throw new IllegalArgumentException(msg, new UnmappableCharacterException(nb));
     }
 

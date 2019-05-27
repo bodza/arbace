@@ -258,7 +258,7 @@ public abstract class SocketImpl implements SocketOptions {
      * @return a string representation of this socket.
      */
     public String toString() {
-        return "Socket[addr=" + getInetAddress() + ",port=" + getPort() + ",localport=" + getLocalPort()  + "]";
+        return String.str("Socket[addr=", getInetAddress(), ",port=", getPort(), ",localport=", getLocalPort(), "]");
     }
 
     void reset() throws IOException {
@@ -356,7 +356,7 @@ public abstract class SocketImpl implements SocketOptions {
      *
      * @throws IOException if an I/O error occurs, or if the socket is closed.
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     protected <T> T getOption(SocketOption<T> name) throws IOException {
         if (name == StandardSocketOptions.SO_KEEPALIVE && (getSocket() != null)) {
             return (T)getOption(SocketOptions.SO_KEEPALIVE);

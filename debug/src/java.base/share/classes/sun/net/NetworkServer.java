@@ -44,7 +44,7 @@ public class NetworkServer implements Runnable, Cloneable {
             while (true) {
                 try {
                     Socket ns = serverSocket.accept();
-//                  System.out.print("New connection " + ns + "\n");
+                    // System.out.print("New connection " + ns + "\n");
                     NetworkServer n = (NetworkServer)clone();
                     n.serverSocket = null;
                     n.clientSocket = ns;
@@ -54,11 +54,11 @@ public class NetworkServer implements Runnable, Cloneable {
                     try {
                         serverSocket.close();
                     } catch (IOException e2) {}
-                    System.out.print("cs=" + serverSocket + "\n");
+                    System.out.print(String.str("cs=", serverSocket, "\n"));
                     break;
                 }
             }
-//          close();
+            // close();
         } else {
             try {
                 clientOutput = new PrintStream(new BufferedOutputStream(clientSocket.getOutputStream()), false, "ISO8859_1");
@@ -94,7 +94,7 @@ public class NetworkServer implements Runnable, Cloneable {
     public void serviceRequest() throws IOException {
         byte buf[] = new byte[300];
         int n;
-        clientOutput.print("Echo server " + getClass().getName() + "\n");
+        clientOutput.print(String.str("Echo server ", getClass().getName(), "\n"));
         clientOutput.flush();
         while ((n = clientInput.read(buf, 0, buf.length)) >= 0) {
             clientOutput.write(buf, 0, n);
@@ -103,9 +103,9 @@ public class NetworkServer implements Runnable, Cloneable {
 
     public static void main(String argv[]) {
         try {
-            new NetworkServer ().startServer(8888);
+            new NetworkServer().startServer(8888);
         } catch (IOException e) {
-            System.out.print("Server failed: " + e + "\n");
+            System.out.print(String.str("Server failed: ", e, "\n"));
         }
     }
 

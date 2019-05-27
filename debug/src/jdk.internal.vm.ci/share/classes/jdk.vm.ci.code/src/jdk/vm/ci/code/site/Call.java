@@ -32,7 +32,7 @@ public final class Call extends Infopoint {
         this.direct = direct;
     }
 
-    @Override
+    // @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

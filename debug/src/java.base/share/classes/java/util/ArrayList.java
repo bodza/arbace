@@ -115,7 +115,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         } else if (initialCapacity == 0) {
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
-            throw new IllegalArgumentException("Illegal Capacity: " + initialCapacity);
+            throw new IllegalArgumentException(String.str("Illegal Capacity: ", initialCapacity));
         }
     }
 
@@ -373,7 +373,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
      *         this list
      * @throws NullPointerException if the specified array is null
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         if (a.length < size)
             // Make a new array of a's runtime type, but my contents:
@@ -386,12 +386,12 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     // Positional Access Operations
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     E elementData(int index) {
         return (E) elementData[index];
     }
 
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     static <E> E elementAt(Object[] es, int index) {
         return (E) es[index];
     }
@@ -482,7 +482,8 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         Objects.checkIndex(index, size);
         final Object[] es = elementData;
 
-        @SuppressWarnings("unchecked") E oldValue = (E) es[index];
+        // @SuppressWarnings("unchecked")
+        E oldValue = (E) es[index];
         fastRemove(es, index);
 
         return oldValue;
@@ -732,14 +733,14 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
      * this "outlining" performs best with both server and client VMs.
      */
     private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size: "+size;
+        return String.str("Index: ", index, ", Size: ", size);
     }
 
     /**
      * A version used in checking (fromIndex > toIndex) condition
      */
     private static String outOfBoundsMsg(int fromIndex, int toIndex) {
-        return "From Index: " + fromIndex + " > To Index: " + toIndex;
+        return String.str("From Index: ", fromIndex, " > To Index: ", toIndex);
     }
 
     /**
@@ -861,7 +862,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             return cursor != size;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public E next() {
             checkForComodification();
             int i = cursor;
@@ -916,7 +917,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             return cursor - 1;
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public E previous() {
             checkForComodification();
             int i = cursor - 1;
@@ -1108,7 +1109,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             return Arrays.copyOfRange(root.elementData, offset, offset + size);
         }
 
-        @SuppressWarnings("unchecked")
+        // @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             checkForComodification();
             if (a.length < size)
@@ -1172,7 +1173,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
                     return cursor != SubList.this.size;
                 }
 
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 public E next() {
                     checkForComodification();
                     int i = cursor;
@@ -1189,7 +1190,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
                     return cursor != 0;
                 }
 
-                @SuppressWarnings("unchecked")
+                // @SuppressWarnings("unchecked")
                 public E previous() {
                     checkForComodification();
                     int i = cursor - 1;
@@ -1269,7 +1270,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
 
         private String outOfBoundsMsg(int index) {
-            return "Index: "+index+", Size: "+this.size;
+            return String.str("Index: ", index, ", Size: ", this.size);
         }
 
         private void checkForComodification() {
@@ -1290,7 +1291,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     /**
      * @throws NullPointerException {@inheritDoc}
      */
-    @Override
+    // @Override
     public void forEach(Consumer<? super E> action) {
         Objects.requireNonNull(action);
         final int expectedModCount = modCount;
@@ -1319,7 +1320,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     /**
      * @throws NullPointerException {@inheritDoc}
      */
-    @Override
+    // @Override
     public boolean removeIf(Predicate<? super E> filter) {
         return removeIf(filter, 0, size);
     }
@@ -1361,7 +1362,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
     }
 
-    @Override
+    // @Override
     public void replaceAll(UnaryOperator<E> operator) {
         replaceAllRange(operator, 0, size);
         modCount++;
@@ -1377,8 +1378,8 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             throw new ConcurrentModificationException();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
+    // @Override
+    // @SuppressWarnings("unchecked")
     public void sort(Comparator<? super E> c) {
         final int expectedModCount = modCount;
         Arrays.sort((E[]) elementData, 0, size, c);

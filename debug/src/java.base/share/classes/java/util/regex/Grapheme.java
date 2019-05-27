@@ -95,7 +95,7 @@ final class Grapheme {
                cp == 0xAA7B || cp == 0xAA7D;
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     private static int getType(int cp) {
         int type = Character.getType(cp);
         switch (type) {

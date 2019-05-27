@@ -8,7 +8,7 @@ package java.util.function;
  * This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #applyAsDouble(double, double)}.
  */
-@FunctionalInterface
+// @FunctionalInterface
 public interface DoubleBinaryOperator {
     /**
      * Applies this operator to the given operands.

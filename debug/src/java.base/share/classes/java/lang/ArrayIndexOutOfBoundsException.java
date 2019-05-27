@@ -33,6 +33,6 @@ public class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException {
      * @param index the illegal index.
      */
     public ArrayIndexOutOfBoundsException(int index) {
-        super("Array index out of range: " + index);
+        super(String.str("Array index out of range: ", index));
     }
 }

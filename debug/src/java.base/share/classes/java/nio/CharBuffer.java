@@ -91,7 +91,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
         this(mark, pos, lim, cap, null, 0);
     }
 
-    @Override
+    // @Override
     Object base() {
         return hb;
     }
@@ -299,7 +299,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *
      * @return  The new char buffer
      */
-    @Override
+    // @Override
     public abstract CharBuffer slice();
 
     /**
@@ -319,7 +319,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *
      * @return  The new char buffer
      */
-    @Override
+    // @Override
     public abstract CharBuffer duplicate();
 
     /**
@@ -477,7 +477,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *          parameters do not hold
      */
     public CharBuffer get(char[] dst, int offset, int length) {
-        checkBounds(offset, length, dst.length);
+        // oops! checkBounds(offset, length, dst.length);
         if (length > remaining())
             throw new BufferUnderflowException();
         int end = offset + length;
@@ -617,7 +617,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *          If this buffer is read-only
      */
     public CharBuffer put(char[] src, int offset, int length) {
-        checkBounds(offset, length, src.length);
+        // oops! checkBounds(offset, length, src.length);
         if (length > remaining())
             throw new BufferOverflowException();
         int end = offset + length;
@@ -706,7 +706,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *          If this buffer is read-only
      */
     public CharBuffer put(String src, int start, int end) {
-        checkBounds(start, end - start, src.length());
+        // oops! checkBounds(start, end - start, src.length());
         if (isReadOnly())
             throw new ReadOnlyBufferException();
         if (end - start > remaining())
@@ -817,7 +817,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -830,7 +830,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -843,7 +843,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -856,7 +856,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -869,7 +869,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -882,7 +882,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final
@@ -895,7 +895,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * {@inheritDoc}
      */
-    @Override
+    // @Override
     public
 
     final

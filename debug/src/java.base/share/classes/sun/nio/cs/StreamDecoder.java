@@ -32,7 +32,7 @@ public class StreamDecoder extends Reader {
             if (Charset.isSupported(csn))
                 return new StreamDecoder(in, lock, Charset.forName(csn));
         } catch (IllegalCharsetNameException x) { }
-        throw new UnsupportedEncodingException (csn);
+        throw new UnsupportedEncodingException(csn);
     }
 
     public static StreamDecoder forInputStreamReader(InputStream in, Object lock, Charset cs) {
@@ -59,7 +59,7 @@ public class StreamDecoder extends Reader {
         return read0();
     }
 
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     private int read0() throws IOException {
         synchronized (lock) {
             // Return the leftover char, if there is one
@@ -152,7 +152,6 @@ public class StreamDecoder extends Reader {
 
     // Exactly one of these is non-null
     private InputStream in;
-    private ReadableByteChannel ch;
 
     StreamDecoder(InputStream in, Object lock, Charset cs) {
         this(in, lock, cs.newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE));
@@ -163,46 +162,27 @@ public class StreamDecoder extends Reader {
         this.cs = dec.charset();
         this.decoder = dec;
 
-        if (ch == null) {
-            this.in = in;
-            this.ch = null;
-            bb = ByteBuffer.allocate(DEFAULT_BYTE_BUFFER_SIZE);
-        }
+        this.in = in;
+        bb = ByteBuffer.allocate(DEFAULT_BYTE_BUFFER_SIZE);
         bb.flip(); // So that bb is initially empty
-    }
-
-    StreamDecoder(ReadableByteChannel ch, CharsetDecoder dec, int mbc) {
-        this.in = null;
-        this.ch = ch;
-        this.decoder = dec;
-        this.cs = dec.charset();
-        this.bb = ByteBuffer.allocate(mbc < 0 ? DEFAULT_BYTE_BUFFER_SIZE : (mbc < MIN_BYTE_BUFFER_SIZE ? MIN_BYTE_BUFFER_SIZE : mbc));
-        bb.flip();
     }
 
     private int readBytes() throws IOException {
         bb.compact();
         try {
-            if (ch != null) {
-                // Read from the channel
-                int n = ch.read(bb);
-                if (n < 0)
-                    return n;
-            } else {
-                // Read from the input stream, and then update the buffer
-                int lim = bb.limit();
-                int pos = bb.position();
-                assert (pos <= lim);
-                int rem = (pos <= lim ? lim - pos : 0);
-                assert rem > 0;
-                int n = in.read(bb.array(), bb.arrayOffset() + pos, rem);
-                if (n < 0)
-                    return n;
-                if (n == 0)
-                    throw new IOException("Underlying input stream returned zero bytes");
-                assert (n <= rem) : "n = " + n + ", rem = " + rem;
-                bb.position(pos + n);
-            }
+            // Read from the input stream, and then update the buffer
+            int lim = bb.limit();
+            int pos = bb.position();
+            assert (pos <= lim);
+            int rem = (pos <= lim ? lim - pos : 0);
+            assert rem > 0;
+            int n = in.read(bb.array(), bb.arrayOffset() + pos, rem);
+            if (n < 0)
+                return n;
+            if (n == 0)
+                throw new IOException("Underlying input stream returned zero bytes");
+            assert (n <= rem) : String.str("n = ", n, ", rem = ", rem);
+            bb.position(pos + n);
         } finally {
             // Flip even when an IOException is thrown,
             // otherwise the stream will stutter
@@ -282,9 +262,6 @@ public class StreamDecoder extends Reader {
     }
 
     void implClose() throws IOException {
-        if (ch != null)
-            ch.close();
-        else
-            in.close();
+        in.close();
     }
 }

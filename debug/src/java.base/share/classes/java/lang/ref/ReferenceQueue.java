@@ -59,7 +59,7 @@ public class ReferenceQueue<T> {
             // Update r.queue *before* removing from list, to avoid
             // race with concurrent enqueued checks and fast-path
             // poll().  Volatiles ensure ordering.
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Reference<? extends T> rn = r.next;
             // Handle self-looped next as end of list designator.
             head = (rn == r) ? null : rn;
@@ -158,7 +158,7 @@ public class ReferenceQueue<T> {
     void forEach(Consumer<? super Reference<? extends T>> action) {
         for (Reference<? extends T> r = head; r != null; ) {
             action.accept(r);
-            @SuppressWarnings("unchecked")
+            // @SuppressWarnings("unchecked")
             Reference<? extends T> rn = r.next;
             if (rn == r) {
                 if (r.queue == ENQUEUED) {

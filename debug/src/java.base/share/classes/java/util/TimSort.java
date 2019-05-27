@@ -123,7 +123,7 @@ class TimSort<T> {
         int len = a.length;
         int tlen = (len < 2 * INITIAL_TMP_STORAGE_LENGTH) ? len >>> 1 : INITIAL_TMP_STORAGE_LENGTH;
         if (work == null || workLen < tlen || workBase + tlen > work.length) {
-            @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
+            // @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
             T[] newArray = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), tlen);
             tmp = newArray;
             tmpBase = 0;
@@ -241,7 +241,7 @@ class TimSort<T> {
      *        not already known to be sorted ({@code lo <= start <= hi})
      * @param c comparator to used for the sort
      */
-    @SuppressWarnings("fallthrough")
+    // @SuppressWarnings("fallthrough")
     private static <T> void binarySort(T[] a, int lo, int hi, int start, Comparator<? super T> c) {
         assert lo <= start && start <= hi;
         if (start == lo)
@@ -890,7 +890,7 @@ class TimSort<T> {
             else
                 newSize = Math.min(newSize, a.length >>> 1);
 
-            @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
+            // @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
             T[] newArray = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), newSize);
             tmp = newArray;
             tmpLen = newSize;

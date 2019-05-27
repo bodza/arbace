@@ -252,50 +252,50 @@ public final class Matcher implements MatchResult {
             this.text = text;
         }
 
-        @Override
+        // @Override
         public int start() {
             checkMatch();
             return first;
         }
 
-        @Override
+        // @Override
         public int start(int group) {
             checkMatch();
             if (group < 0 || group > groupCount)
-                throw new IndexOutOfBoundsException("No group " + group);
+                throw new IndexOutOfBoundsException(String.str("No group ", group));
             return groups[group * 2];
         }
 
-        @Override
+        // @Override
         public int end() {
             checkMatch();
             return last;
         }
 
-        @Override
+        // @Override
         public int end(int group) {
             checkMatch();
             if (group < 0 || group > groupCount)
-                throw new IndexOutOfBoundsException("No group " + group);
+                throw new IndexOutOfBoundsException(String.str("No group ", group));
             return groups[group * 2 + 1];
         }
 
-        @Override
+        // @Override
         public int groupCount() {
             return groupCount;
         }
 
-        @Override
+        // @Override
         public String group() {
             checkMatch();
             return group(0);
         }
 
-        @Override
+        // @Override
         public String group(int group) {
             checkMatch();
             if (group < 0 || group > groupCount)
-                throw new IndexOutOfBoundsException("No group " + group);
+                throw new IndexOutOfBoundsException(String.str("No group ", group));
             if ((groups[group * 2] == -1) || (groups[group * 2 + 1] == -1))
                 return null;
             return text.subSequence(groups[group * 2], groups[group * 2 + 1]).toString();
@@ -431,7 +431,7 @@ public final class Matcher implements MatchResult {
         if (first < 0)
             throw new IllegalStateException("No match available");
         if (group < 0 || group > groupCount())
-            throw new IndexOutOfBoundsException("No group " + group);
+            throw new IndexOutOfBoundsException(String.str("No group ", group));
         return groups[group * 2];
     }
 
@@ -502,7 +502,7 @@ public final class Matcher implements MatchResult {
         if (first < 0)
             throw new IllegalStateException("No match available");
         if (group < 0 || group > groupCount())
-            throw new IndexOutOfBoundsException("No group " + group);
+            throw new IndexOutOfBoundsException(String.str("No group ", group));
         return groups[group * 2 + 1];
     }
 
@@ -592,7 +592,7 @@ public final class Matcher implements MatchResult {
         if (first < 0)
             throw new IllegalStateException("No match found");
         if (group < 0 || group > groupCount())
-            throw new IndexOutOfBoundsException("No group " + group);
+            throw new IndexOutOfBoundsException(String.str("No group ", group));
         if ((groups[group * 2] == -1) || (groups[group * 2 + 1] == -1))
             return null;
         return getSubSequence(groups[group * 2], groups[group * 2 + 1]).toString();
@@ -985,9 +985,9 @@ public final class Matcher implements MatchResult {
                         throw new IllegalArgumentException("named capturing group is missing trailing '}'");
                     String gname = gsb.toString();
                     if (ASCII.isDigit(gname.charAt(0)))
-                        throw new IllegalArgumentException("capturing group name {" + gname + "} starts with digit character");
+                        throw new IllegalArgumentException(String.str("capturing group name {", gname, "} starts with digit character"));
                     if (!parentPattern.namedGroups().containsKey(gname))
-                        throw new IllegalArgumentException("No group with name {" + gname + "}");
+                        throw new IllegalArgumentException(String.str("No group with name {", gname, "}"));
                     refNum = parentPattern.namedGroups().get(gname);
                     cursor++;
                 } else {
@@ -1610,7 +1610,7 @@ public final class Matcher implements MatchResult {
         if (first < 0)
             throw new IllegalStateException("No match found");
         if (!parentPattern.namedGroups().containsKey(name))
-            throw new IllegalArgumentException("No group with name <" + name + ">");
+            throw new IllegalArgumentException(String.str("No group with name <", name, ">"));
         return parentPattern.namedGroups().get(name);
     }
 }
