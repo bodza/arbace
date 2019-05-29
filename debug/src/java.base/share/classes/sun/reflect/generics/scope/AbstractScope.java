@@ -24,14 +24,14 @@ public abstract class AbstractScope<D extends GenericDeclaration> implements Sco
      * @param decl - A generic declaration whose scope the newly
      * constructed instance will represent
      */
-    protected AbstractScope(D decl) { recvr = decl;}
+    protected AbstractScope(D decl) { recvr = decl; }
 
     /**
      * Accessor for the receiver - the object whose scope this {@code Scope}
      * object represents.
      * @return The object whose scope this {@code Scope} object represents
      */
-    protected D getRecvr() {return recvr;}
+    protected D getRecvr() { return recvr; }
 
     /** This method must be implemented by any concrete subclass.
      * It must return the enclosing scope of this scope. If this scope
@@ -63,7 +63,7 @@ public abstract class AbstractScope<D extends GenericDeclaration> implements Sco
     public TypeVariable<?> lookup(String name) {
         TypeVariable<?>[] tas = getRecvr().getTypeParameters();
         for (TypeVariable<?> tv : tas) {
-            if (tv.getName().equals(name)) {return tv;}
+            if (tv.getName().equals(name)) { return tv; }
         }
         return getEnclosingScope().lookup(name);
     }

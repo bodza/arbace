@@ -39,12 +39,12 @@ public class US_ASCII extends Charset implements HistoricallyNamedCharset {
             byte[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
             int sl = src.arrayOffset() + src.limit();
-            assert (sp <= sl);
+            // assert (sp <= sl);
             sp = (sp <= sl ? sp : sl);
             char[] da = dst.array();
             int dp = dst.arrayOffset() + dst.position();
             int dl = dst.arrayOffset() + dst.limit();
-            assert (dp <= dl);
+            // assert (dp <= dl);
             dp = (dp <= dl ? dp : dl);
 
             try {
@@ -112,12 +112,12 @@ public class US_ASCII extends Charset implements HistoricallyNamedCharset {
             char[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
             int sl = src.arrayOffset() + src.limit();
-            assert (sp <= sl);
+            // assert (sp <= sl);
             sp = (sp <= sl ? sp : sl);
             byte[] da = dst.array();
             int dp = dst.arrayOffset() + dst.position();
             int dl = dst.arrayOffset() + dst.limit();
-            assert (dp <= dl);
+            // assert (dp <= dl);
             dp = (dp <= dl ? dp : dl);
 
             try {

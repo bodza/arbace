@@ -29,21 +29,11 @@ class HeapIntBufferR extends HeapIntBuffer {
     }
 
     public IntBuffer slice() {
-        return new HeapIntBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapIntBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public IntBuffer duplicate() {
-        return new HeapIntBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapIntBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public IntBuffer asReadOnlyBuffer() {

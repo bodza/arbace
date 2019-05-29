@@ -198,28 +198,6 @@ public abstract class AbstractClassLoaderValue<CLV extends AbstractClassLoaderVa
     }
 
     /**
-     * Removes all values associated with given ClassLoader {@code cl} and
-     * {@link #isEqualOrDescendantOf(AbstractClassLoaderValue) this or descendants}
-     * of this ClassLoaderValue.
-     * This is not an atomic operation. Other threads may see some associations
-     * be already removed and others still present while this method is executing.
-     *
-     * The sole intention of this method is to cleanup after a unit test that
-     * tests ClassLoaderValue directly. It is not intended for use in
-     * actual algorithms.
-     *
-     * @param cl the associated ClassLoader of the values to be removed
-     */
-    public void removeAll(ClassLoader cl) {
-        Map<CLV, Object> map = map(cl);
-        for (Iterator<CLV> i = map.keySet().iterator(); i.hasNext(); ) {
-            if (i.next().isEqualOrDescendantOf(this)) {
-                i.remove();
-            }
-        }
-    }
-
-    /**
      * @return a Map for given ClassLoader
      */
     // @SuppressWarnings("unchecked")

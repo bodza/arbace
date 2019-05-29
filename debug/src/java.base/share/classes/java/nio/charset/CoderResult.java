@@ -5,6 +5,7 @@ import java.nio.BufferUnderflowException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A description of the result state of a coder.
@@ -182,7 +183,9 @@ public class CoderResult {
             throw new IllegalArgumentException("Non-positive length");
         if (length <= 4)
             return malformed4[length - 1];
-        return Cache.INSTANCE.malformed.computeIfAbsent(length, n -> new CoderResult(CR_MALFORMED, n));
+        return Cache.INSTANCE.malformed.computeIfAbsent(length, new Function<>() {
+            public CoderResult apply(Integer n) { return new CoderResult(CR_MALFORMED, n); }
+        });
     }
 
     private static final CoderResult[] unmappable4 = new CoderResult[] {
@@ -206,7 +209,9 @@ public class CoderResult {
             throw new IllegalArgumentException("Non-positive length");
         if (length <= 4)
             return unmappable4[length - 1];
-        return Cache.INSTANCE.unmappable.computeIfAbsent(length, n -> new CoderResult(CR_UNMAPPABLE, n));
+        return Cache.INSTANCE.unmappable.computeIfAbsent(length, new Function<>() {
+            public CoderResult apply(Integer n) { return new CoderResult(CR_UNMAPPABLE, n); }
+        });
     }
 
     /**
@@ -233,7 +238,7 @@ public class CoderResult {
         case CR_MALFORMED:   throw new MalformedInputException(length);
         case CR_UNMAPPABLE:  throw new UnmappableCharacterException(length);
         default:
-            assert false;
+            // assert false;
         }
     }
 }

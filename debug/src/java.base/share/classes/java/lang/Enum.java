@@ -104,7 +104,7 @@ public abstract class Enum<E extends Enum<E>> implements Comparable<E> {
      *          enum constant.
      */
     public final boolean equals(Object other) {
-        return this==other;
+        return this == other;
     }
 
     /**

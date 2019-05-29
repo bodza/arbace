@@ -19,19 +19,14 @@ class ByteBufferAsFloatBufferRL extends ByteBufferAsFloatBufferL {
     public FloatBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsFloatBufferRL(bb, -1, 0, rem, rem, addr);
     }
 
     public FloatBuffer duplicate() {
-        return new ByteBufferAsFloatBufferRL(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsFloatBufferRL(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public FloatBuffer asReadOnlyBuffer() {

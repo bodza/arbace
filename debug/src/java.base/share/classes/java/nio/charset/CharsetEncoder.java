@@ -512,7 +512,8 @@ public abstract class CharsetEncoder {
             else if (cr.isUnmappable())
                 action = unmappableCharacterAction;
             else
-                assert false : cr.toString();
+                //assert false : cr.toString()
+                ;
 
             if (action == CodingErrorAction.REPORT)
                 return cr;
@@ -530,7 +531,7 @@ public abstract class CharsetEncoder {
                 continue;
             }
 
-            assert false;
+            // assert false;
         }
     }
 

@@ -28,5 +28,5 @@ public class Wildcard implements TypeArgument {
             return lowerBounds;
     }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitWildcard(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitWildcard(this); }
 }

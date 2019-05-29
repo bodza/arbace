@@ -284,7 +284,9 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
     }
 
     private void copyElements(Collection<? extends E> c) {
-        c.forEach(this::addLast);
+        c.forEach(new Consumer<E>() {
+            public void accept(E e) { ArrayDeque.this.addLast(e); }
+        });
     }
 
     /**
@@ -710,47 +712,6 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
         }
     }
 
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean removeIf(Predicate<? super E> filter) {
-        Objects.requireNonNull(filter);
-        return bulkRemove(filter);
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean removeAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        return bulkRemove(e -> c.contains(e));
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    public boolean retainAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        return bulkRemove(e -> !c.contains(e));
-    }
-
-    /** Implementation of bulk remove methods. */
-    private boolean bulkRemove(Predicate<? super E> filter) {
-        final Object[] es = elements;
-        // Optimize for initial run of survivors
-        for (int i = head, end = tail, to = (i <= end) ? end : es.length; ; i = 0, to = end) {
-            for ( ; i < to; i++)
-                if (filter.test(elementAt(es, i)))
-                    return bulkRemoveModified(filter, i);
-            if (to == end) {
-                if (end != tail)
-                    throw new ConcurrentModificationException();
-                break;
-            }
-        }
-        return false;
-    }
-
     // A tiny bit set implementation
 
     private static long[] nBits(int n) {
@@ -763,51 +724,6 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
 
     private static boolean isClear(long[] bits, int i) {
         return (bits[i >> 6] & (1L << i)) == 0;
-    }
-
-    /**
-     * Helper for bulkRemove, in case of at least one deletion.
-     * Tolerate predicates that reentrantly access the collection for
-     * read (but writers still get CME), so traverse once to find
-     * elements to delete, a second pass to physically expunge.
-     *
-     * @param beg valid index of first element to be deleted
-     */
-    private boolean bulkRemoveModified(Predicate<? super E> filter, final int beg) {
-        final Object[] es = elements;
-        final int capacity = es.length;
-        final int end = tail;
-        final long[] deathRow = nBits(sub(end, beg, capacity));
-        deathRow[0] = 1L; // set bit 0
-        for (int i = beg + 1, to = (i <= end) ? end : es.length, k = beg; ; i = 0, to = end, k -= capacity) {
-            for ( ; i < to; i++)
-                if (filter.test(elementAt(es, i)))
-                    setBit(deathRow, i - k);
-            if (to == end)
-                break;
-        }
-        // a two-finger traversal, with hare i reading, tortoise w writing
-        int w = beg;
-        for (int i = beg + 1, to = (i <= end) ? end : es.length, k = beg; ; w = 0) { // w rejoins i on second leg
-            // In this loop, i and w are on the same leg, with i > w
-            for ( ; i < to; i++)
-                if (isClear(deathRow, i - k))
-                    es[w++] = es[i];
-            if (to == end)
-                break;
-            // In this loop, w is on the first leg, i on the second
-            for (i = 0, to = end, k -= capacity; i < to && w < capacity; i++)
-                if (isClear(deathRow, i - k))
-                    es[w++] = es[i];
-            if (i >= to) {
-                if (w == capacity) w = 0; // "corner" case
-                break;
-            }
-        }
-        if (end != tail)
-            throw new ConcurrentModificationException();
-        circularClear(es, tail = w, end);
-        return true;
     }
 
     /**

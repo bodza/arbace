@@ -138,7 +138,7 @@ class MutableBigInteger {
      * sure this MutableBigInteger can be fit into long.
      */
     private long toLong() {
-        assert (intLen <= 2) : "this MutableBigInteger exceeds the range of long";
+        // assert (intLen <= 2) : "this MutableBigInteger exceeds the range of long";
         if (intLen == 0)
             return 0;
         long d = value[offset] & LONG_MASK;
@@ -278,12 +278,12 @@ class MutableBigInteger {
         if (intLen == 0)
             return -1;
         int j, b;
-        for (j=intLen-1; (j > 0) && (value[j+offset] == 0); j--)
+        for (j = intLen - 1; (j > 0) && (value[j + offset] == 0); j--)
             ;
-        b = value[j+offset];
+        b = value[j + offset];
         if (b == 0)
             return -1;
-        return ((intLen-1-j)<<5) + Integer.numberOfTrailingZeros(b);
+        return ((intLen - 1 - j) << 5) + Integer.numberOfTrailingZeros(b);
     }
 
     /**
@@ -526,7 +526,7 @@ class MutableBigInteger {
             // Must use space on left
             for (int i = 0; i < intLen; i++)
                 value[i] = value[offset+i];
-            for (int i=intLen; i < newLen; i++)
+            for (int i = intLen; i < newLen; i++)
                 value[i] = 0;
             offset = 0;
         }
@@ -547,7 +547,7 @@ class MutableBigInteger {
     private int divadd(int[] a, int[] result, int offset) {
         long carry = 0;
 
-        for (int j=a.length-1; j >= 0; j--) {
+        for (int j = a.length - 1; j >= 0; j--) {
             long sum = (a[j] & LONG_MASK) + (result[j+offset] & LONG_MASK) + carry;
             result[j+offset] = (int)sum;
             carry = sum >>> 32;
@@ -565,7 +565,7 @@ class MutableBigInteger {
         long carry = 0;
         offset += len;
 
-        for (int j=len-1; j >= 0; j--) {
+        for (int j = len - 1; j >= 0; j--) {
             long product = (a[j] & LONG_MASK) * xLong + carry;
             long difference = q[offset] - product;
             q[offset--] = (int)difference;
@@ -582,7 +582,7 @@ class MutableBigInteger {
         long xLong = x & LONG_MASK;
         long carry = 0;
         offset += len;
-        for (int j=len-1; j >= 0; j--) {
+        for (int j = len - 1; j >= 0; j--) {
             long product = (a[j] & LONG_MASK) * xLong + carry;
             long difference = q[offset--] - product;
             carry = (product >>> 32) + (((difference & LONG_MASK) > (((~(int)product) & LONG_MASK))) ? 1:0);
@@ -598,7 +598,7 @@ class MutableBigInteger {
     private final void primitiveRightShift(int n) {
         int[] val = value;
         int n2 = 32 - n;
-        for (int i=offset+intLen-1, c=val[i]; i > offset; i--) {
+        for (int i = offset + intLen - 1, c = val[i]; i > offset; i--) {
             int b = c;
             c = val[i-1];
             val[i] = (c << n2) | (b >>> n);
@@ -614,7 +614,7 @@ class MutableBigInteger {
     private final void primitiveLeftShift(int n) {
         int[] val = value;
         int n2 = 32 - n;
-        for (int i=offset, c=val[i], m=i+intLen-1; i < m; i++) {
+        for (int i = offset, c = val[i], m = i + intLen - 1; i < m; i++) {
             int b = c;
             c = val[i+1];
             val[i] = (b << n) | (c >>> n2);
@@ -805,7 +805,7 @@ class MutableBigInteger {
         System.arraycopy(addend.value, addend.offset, result, rstart+1-y, len);
 
         // zero the gap
-        for (int i=rstart+1-y+len; i < rstart+1; i++)
+        for (int i = rstart + 1 - y + len; i < rstart + 1; i++)
             result[i] = 0;
 
         value = result;
@@ -932,7 +932,7 @@ class MutableBigInteger {
 
         // The first iteration is hoisted out of the loop to avoid extra add
         long carry = 0;
-        for (int j=yLen-1, k=yLen+xLen-1; j >= 0; j--, k--) {
+        for (int j = yLen - 1, k = yLen + xLen - 1; j >= 0; j--, k--) {
                 long product = (y.value[j+y.offset] & LONG_MASK) *
                                (value[xLen-1+offset] & LONG_MASK) + carry;
                 z.value[k] = (int)product;
@@ -943,7 +943,7 @@ class MutableBigInteger {
         // Perform the multiplication word by word
         for (int i = xLen-2; i >= 0; i--) {
             carry = 0;
-            for (int j=yLen-1, k=yLen+i; j >= 0; j--, k--) {
+            for (int j = yLen - 1, k = yLen + i; j >= 0; j--, k--) {
                 long product = (y.value[j+y.offset] & LONG_MASK) * (value[i+offset] & LONG_MASK) + (z.value[k] & LONG_MASK) + carry;
                 z.value[k] = (int)product;
                 carry = product >>> 32;
@@ -1058,7 +1058,7 @@ class MutableBigInteger {
      * provided MutableBigInteger objects and the remainder object is returned.
      */
     MutableBigInteger divide(MutableBigInteger b, MutableBigInteger quotient) {
-        return divide(b,quotient,true);
+        return divide(b, quotient, true);
     }
 
     MutableBigInteger divide(MutableBigInteger b, MutableBigInteger quotient, boolean needRemainder) {
@@ -1070,7 +1070,7 @@ class MutableBigInteger {
     }
 
     MutableBigInteger divideKnuth(MutableBigInteger b, MutableBigInteger quotient) {
-        return divideKnuth(b,quotient,true);
+        return divideKnuth(b, quotient, true);
     }
 
     /**
@@ -1189,7 +1189,7 @@ class MutableBigInteger {
             // do schoolbook division on blocks, dividing 2-block numbers by 1-block numbers
             MutableBigInteger qi = new MutableBigInteger();
             MutableBigInteger ri;
-            for (int i=t-2; i > 0; i--) {
+            for (int i = t - 2; i > 0; i--) {
                 // step 8a: compute (qi,ri) such that z=b*qi+ri
                 ri = z.divide2n1n(bShifted, qi);
 
@@ -1368,7 +1368,7 @@ class MutableBigInteger {
 
     private static void copyAndShift(int[] src, int srcFrom, int srcLen, int[] dst, int dstFrom, int shift) {
         int n2 = 32 - shift;
-        int c=src[srcFrom];
+        int c = src[srcFrom];
         for (int i = 0; i < srcLen-1; i++) {
             int b = c;
             c = src[++srcFrom];
@@ -1392,13 +1392,13 @@ class MutableBigInteger {
         MutableBigInteger rem; // Remainder starts as dividend with space for a leading zero
         if (shift > 0) {
             divisor = new int[dlen];
-            copyAndShift(div.value,div.offset,dlen,divisor,0,shift);
+            copyAndShift(div.value, div.offset, dlen, divisor, 0, shift);
             if (Integer.numberOfLeadingZeros(value[offset]) >= shift) {
                 int[] remarr = new int[intLen + 1];
                 rem = new MutableBigInteger(remarr);
                 rem.intLen = intLen;
                 rem.offset = 1;
-                copyAndShift(value,offset,intLen,remarr,1,shift);
+                copyAndShift(value, offset, intLen, remarr, 1, shift);
             } else {
                 int[] remarr = new int[intLen + 2];
                 rem = new MutableBigInteger(remarr);
@@ -1407,7 +1407,7 @@ class MutableBigInteger {
                 int rFrom = offset;
                 int c = 0;
                 int n2 = 32 - shift;
-                for (int i = 1; i < intLen+1; i++,rFrom++) {
+                for (int i = 1; i < intLen+1; i++, rFrom++) {
                     int b = c;
                     c = value[rFrom];
                     remarr[i] = (b << shift) | (c >>> n2);
@@ -1671,7 +1671,7 @@ class MutableBigInteger {
             // D5 Test remainder
             if (borrow + 0x80000000 > nh2) {
                 // D6 Add back
-                divaddLong(dh,dl, rem.value, j + 1 + rem.offset);
+                divaddLong(dh, dl, rem.value, j + 1 + rem.offset);
                 qhat--;
             }
 
@@ -1975,7 +1975,7 @@ class MutableBigInteger {
         t *= 2 - val * t;
         t *= 2 - val * t;
         t *= 2 - val * t;
-        assert (t * val == 1);
+        // assert (t * val == 1);
         return t;
     }
 

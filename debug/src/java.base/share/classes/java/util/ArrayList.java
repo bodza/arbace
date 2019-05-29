@@ -743,43 +743,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return String.str("From Index: ", fromIndex, " > To Index: ", toIndex);
     }
 
-    /**
-     * Removes from this list all of its elements that are contained in the
-     * specified collection.
-     *
-     * @param c collection containing elements to be removed from this list
-     * @return {@code true} if this list changed as a result of the call
-     * @throws ClassCastException if the class of an element of this list
-     *         is incompatible with the specified collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this list contains a null element and the
-     *         specified collection does not permit null elements
-     * (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    public boolean removeAll(Collection<?> c) {
-        return batchRemove(c, false, 0, size);
-    }
-
-    /**
-     * Retains only the elements in this list that are contained in the
-     * specified collection.  In other words, removes from this list all
-     * of its elements that are not contained in the specified collection.
-     *
-     * @param c collection containing elements to be retained in this list
-     * @return {@code true} if this list changed as a result of the call
-     * @throws ClassCastException if the class of an element of this list
-     *         is incompatible with the specified collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this list contains a null element and the
-     *         specified collection does not permit null elements
-     * (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    public boolean retainAll(Collection<?> c) {
-        return batchRemove(c, true, 0, size);
-    }
-
     boolean batchRemove(Collection<?> c, boolean complement, final int from, final int end) {
         Objects.requireNonNull(c);
         final Object[] es = elementData;
@@ -1066,7 +1029,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         public boolean addAll(int index, Collection<? extends E> c) {
             rangeCheckForAdd(index);
             int cSize = c.size();
-            if (cSize==0)
+            if (cSize == 0)
                 return false;
             checkForComodification();
             root.addAll(offset + index, c);
@@ -1078,27 +1041,10 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             root.replaceAllRange(operator, offset, offset + size);
         }
 
-        public boolean removeAll(Collection<?> c) {
-            return batchRemove(c, false);
-        }
-
-        public boolean retainAll(Collection<?> c) {
-            return batchRemove(c, true);
-        }
-
         private boolean batchRemove(Collection<?> c, boolean complement) {
             checkForComodification();
             int oldSize = root.size;
             boolean modified = root.batchRemove(c, complement, offset, offset + size);
-            if (modified)
-                updateSizeAndModCount(root.size - oldSize);
-            return modified;
-        }
-
-        public boolean removeIf(Predicate<? super E> filter) {
-            checkForComodification();
-            int oldSize = root.size;
-            boolean modified = root.removeIf(filter, offset, offset + size);
             if (modified)
                 updateSizeAndModCount(root.size - oldSize);
             return modified;
@@ -1315,51 +1261,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     private static boolean isClear(long[] bits, int i) {
         return (bits[i >> 6] & (1L << i)) == 0;
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    // @Override
-    public boolean removeIf(Predicate<? super E> filter) {
-        return removeIf(filter, 0, size);
-    }
-
-    /**
-     * Removes all elements satisfying the given predicate, from index
-     * i (inclusive) to index end (exclusive).
-     */
-    boolean removeIf(Predicate<? super E> filter, int i, final int end) {
-        Objects.requireNonNull(filter);
-        int expectedModCount = modCount;
-        final Object[] es = elementData;
-        // Optimize for initial run of survivors
-        for ( ; i < end && !filter.test(elementAt(es, i)); i++)
-            ;
-        // Tolerate predicates that reentrantly access the collection for
-        // read (but writers still get CME), so traverse once to find
-        // elements to delete, a second pass to physically expunge.
-        if (i < end) {
-            final int beg = i;
-            final long[] deathRow = nBits(end - beg);
-            deathRow[0] = 1L; // set bit 0
-            for (i = beg + 1; i < end; i++)
-                if (filter.test(elementAt(es, i)))
-                    setBit(deathRow, i - beg);
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            modCount++;
-            int w = beg;
-            for (i = beg; i < end; i++)
-                if (isClear(deathRow, i - beg))
-                    es[w++] = es[i];
-            shiftTailOverGap(es, w, end);
-            return true;
-        } else {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            return false;
-        }
     }
 
     // @Override

@@ -198,7 +198,7 @@ public class ArraysSupport {
                 return i;
             // Align to tail
             i = length - ~i;
-//            assert i >= 0 && i <= 7;
+            // assert i >= 0 && i <= 7;
         }
         // Tail < 8 bytes
         for ( ; i < length; i++) {

@@ -705,7 +705,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *               parsable integer.
      */
     public static int parseInt(String s) throws NumberFormatException {
-        return parseInt(s,10);
+        return parseInt(s, 10);
     }
 
     /**
@@ -877,7 +877,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *            does not contain a parsable {@code int}.
      */
     public static Integer valueOf(String s, int radix) throws NumberFormatException {
-        return Integer.valueOf(parseInt(s,radix));
+        return Integer.valueOf(parseInt(s, radix));
     }
 
     /**
@@ -943,7 +943,7 @@ public final class Integer extends Number implements Comparable<Integer> {
                 cache[k] = new Integer(j++);
 
             // range [-128, 127] must be interned (JLS7 5.1.7)
-            assert IntegerCache.high >= 127;
+            // assert IntegerCache.high >= 127;
         }
 
         private IntegerCache() {}

@@ -39,7 +39,9 @@ public interface IntPredicate {
      */
     default IntPredicate and(IntPredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) && other.test(value);
+        return new IntPredicate() {
+            public boolean test(int value) { return test(value) && other.test(value); }
+        };
     }
 
     /**
@@ -50,7 +52,9 @@ public interface IntPredicate {
      * predicate
      */
     default IntPredicate negate() {
-        return (value) -> !test(value);
+        return new IntPredicate() {
+            public boolean test(int value) { return !test(value); }
+        };
     }
 
     /**
@@ -71,6 +75,8 @@ public interface IntPredicate {
      */
     default IntPredicate or(IntPredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) || other.test(value);
+        return new IntPredicate() {
+            public boolean test(int value) { return test(value) || other.test(value); }
+        };
     }
 }

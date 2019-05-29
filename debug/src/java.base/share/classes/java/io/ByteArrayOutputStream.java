@@ -130,7 +130,7 @@ public class ByteArrayOutputStream extends OutputStream {
      * to this {@code ByteArrayOutputStream}.
      *
      * @apiNote
-     * This method is equivalent to {@link #write(byte[],int,int)
+     * This method is equivalent to {@link #write(byte[], int, int)
      * write(b, 0, b.length)}.
      *
      * @param b     the data.

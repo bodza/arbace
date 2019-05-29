@@ -26,30 +26,15 @@ class HeapIntBuffer extends IntBuffer {
     }
 
     public IntBuffer slice() {
-        return new HeapIntBuffer(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapIntBuffer(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public IntBuffer duplicate() {
-        return new HeapIntBuffer(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapIntBuffer(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public IntBuffer asReadOnlyBuffer() {
-        return new HeapIntBufferR(hb,
-                                     this.markValue(),
-                                     this.position(),
-                                     this.limit(),
-                                     this.capacity(),
-                                     offset);
+        return new HeapIntBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     protected int ix(int i) {
@@ -108,8 +93,7 @@ class HeapIntBuffer extends IntBuffer {
             int n = sb.remaining();
             if (n > remaining())
                 throw new BufferOverflowException();
-            System.arraycopy(sb.hb, sb.ix(sb.position()),
-                             hb, ix(position()), n);
+            System.arraycopy(sb.hb, sb.ix(sb.position()), hb, ix(position()), n);
             sb.position(sb.position() + n);
             position(position() + n);
         } else if (src.isDirect()) {

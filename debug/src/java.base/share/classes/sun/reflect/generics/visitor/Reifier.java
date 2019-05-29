@@ -17,7 +17,7 @@ public class Reifier implements TypeTreeVisitor<Type> {
         factory = f;
     }
 
-    private GenericsFactory getFactory() { return factory;}
+    private GenericsFactory getFactory() { return factory; }
 
     /**
      * Factory method. The resulting visitor will convert an AST
@@ -47,7 +47,7 @@ public class Reifier implements TypeTreeVisitor<Type> {
      * Accessor for the result of the last visit by this visitor,
      * @return The type computed by this visitor based on its last visit
      */
-    public Type getResult() { assert resultType != null;return resultType;}
+    public Type getResult() { /* assert resultType != null; */ return resultType; }
 
     public void visitFormalTypeParameter(FormalTypeParameter ftp) {
         resultType = getFactory().makeTypeVariable(ftp.getName(), ftp.getBounds());
@@ -72,7 +72,7 @@ public class Reifier implements TypeTreeVisitor<Type> {
 
         // extract iterator on list of simple class type sigs
         List<SimpleClassTypeSignature> scts = ct.getPath();
-        assert (!scts.isEmpty());
+        // assert (!scts.isEmpty());
         Iterator<SimpleClassTypeSignature> iter = scts.iterator();
         SimpleClassTypeSignature sc = iter.next();
         StringBuilder n = new StringBuilder(sc.getName());
@@ -88,16 +88,16 @@ public class Reifier implements TypeTreeVisitor<Type> {
 
         // Now, either sc is the last element of the list, or
         // it has type arguments (or both)
-        assert (!(iter.hasNext()) || (sc.getTypeArguments().length > 0));
+        // assert (!(iter.hasNext()) || (sc.getTypeArguments().length > 0));
         // Create the raw type
         Type c = getFactory().makeNamedType(n.toString());
         // if there are no type arguments
         if (sc.getTypeArguments().length == 0) {
             // we have surely reached the end of the path
-            assert (!iter.hasNext());
+            // assert (!iter.hasNext());
             resultType = c; // the result is the raw type
         } else {
-            assert (sc.getTypeArguments().length > 0);
+            // assert (sc.getTypeArguments().length > 0);
             // otherwise, we have type arguments, so we create a parameterized
             // type, whose declaration is the raw type c, and whose owner is
             // the declaring class of c (if any). This latter fact is indicated

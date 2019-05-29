@@ -26,30 +26,15 @@ class HeapCharBuffer extends CharBuffer {
     }
 
     public CharBuffer slice() {
-        return new HeapCharBuffer(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapCharBuffer(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public CharBuffer duplicate() {
-        return new HeapCharBuffer(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapCharBuffer(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public CharBuffer asReadOnlyBuffer() {
-        return new HeapCharBufferR(hb,
-                                     this.markValue(),
-                                     this.position(),
-                                     this.limit(),
-                                     this.capacity(),
-                                     offset);
+        return new HeapCharBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     protected int ix(int i) {
@@ -112,8 +97,7 @@ class HeapCharBuffer extends CharBuffer {
             int n = sb.remaining();
             if (n > remaining())
                 throw new BufferOverflowException();
-            System.arraycopy(sb.hb, sb.ix(sb.position()),
-                             hb, ix(position()), n);
+            System.arraycopy(sb.hb, sb.ix(sb.position()), hb, ix(position()), n);
             sb.position(sb.position() + n);
             position(position() + n);
         } else if (src.isDirect()) {
@@ -152,12 +136,7 @@ class HeapCharBuffer extends CharBuffer {
             || (start > end))
             throw new IndexOutOfBoundsException();
         int pos = position();
-        return new HeapCharBuffer(hb,
-                                      -1,
-                                      pos + start,
-                                      pos + end,
-                                      capacity(),
-                                      offset);
+        return new HeapCharBuffer(hb, -1, pos + start, pos + end, capacity(), offset);
     }
 
     public ByteOrder order() {

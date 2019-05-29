@@ -1012,7 +1012,7 @@ public final class Class<T> implements GenericDeclaration, Type {
 
                 // the immediately enclosing class
                 Class<?> enclosingClass = (Class<?>)enclosingInfo[0];
-                assert (enclosingClass != null);
+                // assert (enclosingClass != null);
 
                 // the immediately enclosing method or constructor's
                 // name (can be null).
@@ -1021,7 +1021,7 @@ public final class Class<T> implements GenericDeclaration, Type {
                 // the immediately enclosing method or constructor's
                 // descriptor (null iff name is).
                 String descriptor = (String)enclosingInfo[2];
-                assert ((name != null && descriptor != null) || name == descriptor);
+                // assert ((name != null && descriptor != null) || name == descriptor);
             } catch (ClassCastException cce) {
                 throw new InternalError("Invalid type in enclosing method information", cce);
             }
@@ -1113,7 +1113,7 @@ public final class Class<T> implements GenericDeclaration, Type {
      * representing the class in which it was declared.  This method returns
      * null if this class or interface is not a member of any other class.  If
      * this {@code Class} object represents an array class, a primitive
-     * type, or void,then this method returns null.
+     * type, or void, then this method returns null.
      *
      * @return the declaring class for this class
      */

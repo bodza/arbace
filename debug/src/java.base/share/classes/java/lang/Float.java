@@ -241,7 +241,7 @@ public final class Float extends Number implements Comparable<Float> {
             // Adjust exponent to create subnormal double, then
             // replace subnormal double exponent with subnormal float
             // exponent
-            String s = Double.toHexString(Math.scalb((double)f, /* -1022+126 */ Double.MIN_EXPONENT- Float.MIN_EXPONENT));
+            String s = Double.toHexString(Math.scalb((double)f, /* -1022+126 */ Double.MIN_EXPONENT - Float.MIN_EXPONENT));
             return s.replaceFirst("p-1022$", "p-126");
         }
         else // double string will be the same as float string

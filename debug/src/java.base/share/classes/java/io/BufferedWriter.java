@@ -165,7 +165,7 @@ public class BufferedWriter extends Writer {
      *
      * @implSpec
      * While the specification of this method in the
-     * {@linkplain java.io.Writer#write(java.lang.String,int,int) superclass}
+     * {@linkplain java.io.Writer#write(String, int, int) superclass}
      * recommends that an {@link IndexOutOfBoundsException} be thrown
      * if {@code len} is negative or {@code off + len} is negative,
      * the implementation in this class does not throw such an exception in

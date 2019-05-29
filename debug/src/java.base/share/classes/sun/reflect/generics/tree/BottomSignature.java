@@ -7,7 +7,7 @@ public class BottomSignature implements FieldTypeSignature {
 
     private BottomSignature() {}
 
-    public static BottomSignature make() {return singleton;}
+    public static BottomSignature make() { return singleton; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitBottomSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitBottomSignature(this); }
 }

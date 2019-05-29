@@ -46,7 +46,7 @@ import java.util.NoSuchElementException;
  * In the JDK build, subclasses of this class are typically created via the
  * {@code Hasher} program in the {@code make/tools/Hasher} directory.
  */
-public abstract class PreHashedMap<V> extends AbstractMap<String,V> {
+public abstract class PreHashedMap<V> extends AbstractMap<String, V> {
     private final int rows;
     private final int size;
     private final int shift;
@@ -187,22 +187,22 @@ public abstract class PreHashedMap<V> extends AbstractMap<String,V> {
         };
     }
 
-    public Set<Map.Entry<String,V>> entrySet() {
-        return new AbstractSet<Map.Entry<String,V>>() {
+    public Set<Map.Entry<String, V>> entrySet() {
+        return new AbstractSet<Map.Entry<String, V>>() {
             public int size() {
                 return size;
             }
 
-            public Iterator<Map.Entry<String,V>> iterator() {
-                return new Iterator<Map.Entry<String,V>>() {
+            public Iterator<Map.Entry<String, V>> iterator() {
+                return new Iterator<Map.Entry<String, V>>() {
                     final Iterator<String> i = keySet().iterator();
 
                     public boolean hasNext() {
                         return i.hasNext();
                     }
 
-                    public Map.Entry<String,V> next() {
-                        return new Map.Entry<String,V>() {
+                    public Map.Entry<String, V> next() {
+                        return new Map.Entry<String, V>() {
                             String k = i.next();
                             public String getKey() { return k; }
                             public V getValue() { return get(k); }

@@ -59,7 +59,7 @@ public class Surrogate {
      * Use of {@link Character#highSurrogate} is generally preferred.
      */
     public static char high(int uc) {
-        assert Character.isSupplementaryCodePoint(uc);
+        // assert Character.isSupplementaryCodePoint(uc);
         return Character.highSurrogate(uc);
     }
 
@@ -68,7 +68,7 @@ public class Surrogate {
      * Use of {@link Character#lowSurrogate} is generally preferred.
      */
     public static char low(int uc) {
-        assert Character.isSupplementaryCodePoint(uc);
+        // assert Character.isSupplementaryCodePoint(uc);
         return Character.lowSurrogate(uc);
     }
 
@@ -77,7 +77,7 @@ public class Surrogate {
      * Use of {@link Character#toCodePoint} is generally preferred.
      */
     public static int toUCS4(char c, char d) {
-        assert Character.isHighSurrogate(c) && Character.isLowSurrogate(d);
+        // assert Character.isHighSurrogate(c) && Character.isLowSurrogate(d);
         return Character.toCodePoint(c, d);
     }
 
@@ -96,7 +96,7 @@ public class Surrogate {
          * Returns the UCS-4 character previously parsed.
          */
         public int character() {
-            assert (error == null);
+            // assert (error == null);
             return character;
         }
 
@@ -105,7 +105,7 @@ public class Surrogate {
          * originally represented by a surrogate pair.
          */
         public boolean isPair() {
-            assert (error == null);
+            // assert (error == null);
             return isPair;
         }
 
@@ -114,7 +114,7 @@ public class Surrogate {
          * parse.
          */
         public int increment() {
-            assert (error == null);
+            // assert (error == null);
             return isPair ? 2 : 1;
         }
 
@@ -123,7 +123,7 @@ public class Surrogate {
          * describing that error.
          */
         public CoderResult error() {
-            assert (error != null);
+            // assert (error != null);
             return error;
         }
 
@@ -132,7 +132,7 @@ public class Surrogate {
          * input length, for the previously-parsed character.
          */
         public CoderResult unmappableResult() {
-            assert (error == null);
+            // assert (error == null);
             return CoderResult.unmappableForLength(isPair ? 2 : 1);
         }
 
@@ -191,7 +191,7 @@ public class Surrogate {
          *          object
          */
         public int parse(char c, char[] ia, int ip, int il) {
-            assert (ia[ip] == c);
+            // assert (ia[ip] == c);
             if (Character.isHighSurrogate(c)) {
                 if (il - ip < 2) {
                     error = CoderResult.UNDERFLOW;
@@ -233,7 +233,7 @@ public class Surrogate {
          * object describing that error.
          */
         public CoderResult error() {
-            assert error != null;
+            // assert error != null;
             return error;
         }
 

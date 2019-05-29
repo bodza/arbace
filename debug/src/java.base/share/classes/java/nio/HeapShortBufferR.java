@@ -29,21 +29,11 @@ class HeapShortBufferR extends HeapShortBuffer {
     }
 
     public ShortBuffer slice() {
-        return new HeapShortBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapShortBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public ShortBuffer duplicate() {
-        return new HeapShortBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapShortBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public ShortBuffer asReadOnlyBuffer() {

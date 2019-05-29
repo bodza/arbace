@@ -471,7 +471,8 @@ public abstract class CharsetDecoder {
             else if (cr.isUnmappable())
                 action = unmappableCharacterAction;
             else
-                assert false : cr.toString();
+                // assert false : cr.toString()
+                ;
 
             if (action == CodingErrorAction.REPORT)
                 return cr;
@@ -482,14 +483,13 @@ public abstract class CharsetDecoder {
                 out.put(replacement);
             }
 
-            if ((action == CodingErrorAction.IGNORE)
-                || (action == CodingErrorAction.REPLACE)) {
+            if ((action == CodingErrorAction.IGNORE) || (action == CodingErrorAction.REPLACE)) {
                 // Skip erroneous input either way
                 in.position(in.position() + cr.length());
                 continue;
             }
 
-            assert false;
+            // assert false;
         }
     }
 

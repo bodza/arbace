@@ -292,8 +292,7 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         range, and {@code fromKey} or {@code toKey} lies
      *         outside the bounds of the range
      */
-    NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
-                             K toKey,   boolean toInclusive);
+    NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive);
 
     /**
      * Returns a view of the portion of this map whose keys are less than (or

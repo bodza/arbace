@@ -18,13 +18,12 @@ public class Reflection {
      * These Maps are updated very rarely. Rather than synchronize on
      * each access, we use copy-on-write
      */
-    private static volatile Map<Class<?>,String[]> fieldFilterMap;
-    private static volatile Map<Class<?>,String[]> methodFilterMap;
+    private static volatile Map<Class<?>, String[]> fieldFilterMap;
+    private static volatile Map<Class<?>, String[]> methodFilterMap;
 
     static {
-        Map<Class<?>,String[]> map = new HashMap<Class<?>,String[]>();
-        map.put(Reflection.class,
-            new String[] {"fieldFilterMap", "methodFilterMap"});
+        Map<Class<?>, String[]> map = new HashMap<Class<?>,String[]>();
+        map.put(Reflection.class, new String[] {"fieldFilterMap", "methodFilterMap"});
         map.put(System.class, new String[] {"security"});
         map.put(Class.class, new String[] {"classLoader"});
         fieldFilterMap = map;
@@ -83,11 +82,11 @@ public class Reflection {
         methodFilterMap = registerFilter(methodFilterMap, containingClass, methodNames);
     }
 
-    private static Map<Class<?>,String[]> registerFilter(Map<Class<?>,String[]> map, Class<?> containingClass, String ... names) {
+    private static Map<Class<?>, String[]> registerFilter(Map<Class<?>, String[]> map, Class<?> containingClass, String ... names) {
         if (map.get(containingClass) != null) {
             throw new IllegalArgumentException(String.str("Filter already registered: ", containingClass));
         }
-        map = new HashMap<Class<?>,String[]>(map);
+        map = new HashMap<Class<?>, String[]>(map);
         map.put(containingClass, names);
         return map;
     }

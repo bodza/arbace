@@ -101,7 +101,7 @@ class CESU_8 extends Unicode {
                     return CoderResult.malformedForLength(2);
                 return CoderResult.malformedForLength(3);
             default:
-                assert false;
+                // assert false;
                 return null;
             }
         }

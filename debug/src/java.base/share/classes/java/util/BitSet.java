@@ -1019,7 +1019,7 @@ public class BitSet implements Cloneable {
      */
     public String toString() {
         int numBits = (wordsInUse > 128) ? cardinality() : wordsInUse * BITS_PER_WORD;
-        StringBuilder b = new StringBuilder(6*numBits + 2);
+        StringBuilder b = new StringBuilder(6 * numBits + 2);
         b.append('{');
 
         int i = nextSetBit(0);

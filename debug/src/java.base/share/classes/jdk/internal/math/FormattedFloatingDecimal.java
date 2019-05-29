@@ -7,7 +7,7 @@ public class FormattedFloatingDecimal {
 
     public static FormattedFloatingDecimal valueOf(double d, int precision, Form form) {
         FloatingDecimal.BinaryToASCIIConverter fdConverter = FloatingDecimal.getBinaryToASCIIConverter(d, form == Form.COMPATIBLE);
-        return new FormattedFloatingDecimal(precision,form, fdConverter);
+        return new FormattedFloatingDecimal(precision, form, fdConverter);
     }
 
     private int decExponentRounded;
@@ -69,7 +69,7 @@ public class FormattedFloatingDecimal {
                 this.decExponentRounded = exp;
                 break;
             default:
-                assert false;
+                // assert false;
         }
     }
 
@@ -219,14 +219,14 @@ public class FormattedFloatingDecimal {
             }
             // decExponent has 1, 2, or 3, digits
             if (e <= 9) {
-                exponent = create(isNegExp,1);
+                exponent = create(isNegExp, 1);
                 exponent[expStartIntex] = (char) (e + '0');
             } else if (e <= 99) {
-                exponent = create(isNegExp,2);
+                exponent = create(isNegExp, 2);
                 exponent[expStartIntex] = (char) (e / 10 + '0');
                 exponent[expStartIntex+1] = (char) (e % 10 + '0');
             } else {
-                exponent = create(isNegExp,3);
+                exponent = create(isNegExp, 3);
                 exponent[expStartIntex] = (char) (e / 100 + '0');
                 e %= 100;
                 exponent[expStartIntex+1] = (char) (e / 10 + '0');
@@ -254,7 +254,7 @@ public class FormattedFloatingDecimal {
         if (exp > 0) {
             // print digits.digits.
             if (nDigits < exp) {
-                mantissa = create(isNegative,exp);
+                mantissa = create(isNegative, exp);
                 System.arraycopy(digits, 0, mantissa, startIndex, nDigits);
                 Arrays.fill(mantissa, startIndex + nDigits, startIndex + exp, '0');
                 // Do not append ".0" for formatted floats since the user

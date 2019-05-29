@@ -261,7 +261,7 @@ public class TreeSet<E> extends AbstractSet<E> implements NavigableSet<E>, Clone
             TreeMap<E,Object> map = (TreeMap<E, Object>) m;
             Comparator<?> cc = set.comparator();
             Comparator<? super E> mc = map.comparator();
-            if (cc==mc || (cc != null && cc.equals(mc))) {
+            if (cc == mc || (cc != null && cc.equals(mc))) {
                 map.addAllForTreeSet(set, PRESENT);
                 return true;
             }

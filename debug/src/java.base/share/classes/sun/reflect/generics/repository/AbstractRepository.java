@@ -18,13 +18,13 @@ public abstract class AbstractRepository<T extends Tree> {
     private final T tree; // the AST for the generic type info
 
     // accessors
-    private GenericsFactory getFactory() { return factory;}
+    private GenericsFactory getFactory() { return factory; }
 
     /**
      * Accessor for {@code tree}.
      * @return the cached AST this repository holds
      */
-    protected T getTree() { return tree;}
+    protected T getTree() { return tree; }
 
     /**
      * Returns a {@code Reifier} used to convert parts of the
@@ -32,7 +32,7 @@ public abstract class AbstractRepository<T extends Tree> {
      * @return a {@code Reifier} used to convert parts of the
      * AST into reflective objects
      */
-    protected Reifier getReifier() {return Reifier.make(getFactory());}
+    protected Reifier getReifier() { return Reifier.make(getFactory()); }
 
     /**
      * Constructor. Should only be used by subclasses. Concrete subclasses

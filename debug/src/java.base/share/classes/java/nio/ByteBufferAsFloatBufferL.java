@@ -6,15 +6,13 @@ class ByteBufferAsFloatBufferL extends FloatBuffer {
     protected final ByteBuffer bb;
 
     ByteBufferAsFloatBufferL(ByteBuffer bb) {
-        super(-1, 0,
-              bb.remaining() >> 2,
-              bb.remaining() >> 2);
+        super(-1, 0, bb.remaining() >> 2, bb.remaining() >> 2);
         this.bb = bb;
         // enforce limit == capacity
         int cap = this.capacity();
         this.limit(cap);
         int pos = this.position();
-        assert (pos <= cap);
+        // assert (pos <= cap);
         address = bb.address;
     }
 
@@ -22,7 +20,7 @@ class ByteBufferAsFloatBufferL extends FloatBuffer {
         super(mark, pos, lim, cap);
         this.bb = bb;
         address = addr;
-        assert address >= bb.address;
+        // assert address >= bb.address;
     }
 
     // @Override
@@ -33,28 +31,18 @@ class ByteBufferAsFloatBufferL extends FloatBuffer {
     public FloatBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsFloatBufferL(bb, -1, 0, rem, rem, addr);
     }
 
     public FloatBuffer duplicate() {
-        return new ByteBufferAsFloatBufferL(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsFloatBufferL(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public FloatBuffer asReadOnlyBuffer() {
-        return new ByteBufferAsFloatBufferRL(bb,
-                                                 this.markValue(),
-                                                 this.position(),
-                                                 this.limit(),
-                                                 this.capacity(),
-                                                 address);
+        return new ByteBufferAsFloatBufferRL(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     private int ix(int i) {
@@ -95,7 +83,7 @@ class ByteBufferAsFloatBufferL extends FloatBuffer {
     public FloatBuffer compact() {
         int pos = position();
         int lim = limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
         ByteBuffer db = bb.duplicate();

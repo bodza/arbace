@@ -799,9 +799,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
         IntBuffer that = (IntBuffer)ob;
         if (this.remaining() != that.remaining())
             return false;
-        return BufferMismatch.mismatch(this, this.position(),
-                                       that, that.position(),
-                                       this.remaining()) < 0;
+        return BufferMismatch.mismatch(this, this.position(), that, that.position(), this.remaining()) < 0;
     }
 
     /**
@@ -820,9 +818,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      *          is less than, equal to, or greater than the given buffer
      */
     public int compareTo(IntBuffer that) {
-        int i = BufferMismatch.mismatch(this, this.position(),
-                                        that, that.position(),
-                                        Math.min(this.remaining(), that.remaining()));
+        int i = BufferMismatch.mismatch(this, this.position(), that, that.position(), Math.min(this.remaining(), that.remaining()));
         if (i >= 0) {
             return compare(this.get(this.position() + i), that.get(that.position() + i));
         }
@@ -857,9 +853,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      */
     public int mismatch(IntBuffer that) {
         int length = Math.min(this.remaining(), that.remaining());
-        int r = BufferMismatch.mismatch(this, this.position(),
-                                        that, that.position(),
-                                        length);
+        int r = BufferMismatch.mismatch(this, this.position(), that, that.position(), length);
         return (r == -1 && this.remaining() != that.remaining()) ? length : r;
     }
 

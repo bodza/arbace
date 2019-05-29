@@ -20,7 +20,7 @@ class Inet4AddressImpl implements InetAddressImpl {
 
     public synchronized InetAddress loopbackAddress() {
         if (loopbackAddress == null) {
-            byte[] loopback = {0x7f,0x00,0x00,0x01};
+            byte[] loopback = {0x7f, 0x00, 0x00, 0x01};
             loopbackAddress = new Inet4Address("localhost", loopback);
         }
         return loopbackAddress;

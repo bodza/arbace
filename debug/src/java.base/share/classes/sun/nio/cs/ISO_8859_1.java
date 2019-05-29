@@ -40,12 +40,12 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             byte[] sa = src.array();
             int sp = src.arrayOffset() + src.position();
             int sl = src.arrayOffset() + src.limit();
-            assert (sp <= sl);
+            // assert (sp <= sl);
             sp = (sp <= sl ? sp : sl);
             char[] da = dst.array();
             int dp = dst.arrayOffset() + dst.position();
             int dl = dst.arrayOffset() + dst.limit();
-            assert (dp <= dl);
+            // assert (dp <= dl);
             dp = (dp <= dl ? dp : dl);
 
             try {
@@ -151,13 +151,13 @@ public class ISO_8859_1 extends Charset implements HistoricallyNamedCharset {
             int soff = src.arrayOffset();
             int sp = soff + src.position();
             int sl = soff + src.limit();
-            assert (sp <= sl);
+            // assert (sp <= sl);
             sp = (sp <= sl ? sp : sl);
             byte[] da = dst.array();
             int doff = dst.arrayOffset();
             int dp = doff + dst.position();
             int dl = doff + dst.limit();
-            assert (dp <= dl);
+            // assert (dp <= dl);
             dp = (dp <= dl ? dp : dl);
             int dlen = dl - dp;
             int slen = sl - sp;

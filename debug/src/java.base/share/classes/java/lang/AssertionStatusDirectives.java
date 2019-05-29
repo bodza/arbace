@@ -11,7 +11,7 @@ class AssertionStatusDirectives {
     /**
      * The classes for which assertions are to be enabled or disabled.
      * The strings in this array are fully qualified class names (for
-     * example,"com.xyz.foo.Bar").
+     * example, "com.xyz.foo.Bar").
      */
     String[] classes;
 

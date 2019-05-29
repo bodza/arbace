@@ -19,19 +19,14 @@ class ByteBufferAsDoubleBufferRB extends ByteBufferAsDoubleBufferB {
     public DoubleBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsDoubleBufferRB(bb, -1, 0, rem, rem, addr);
     }
 
     public DoubleBuffer duplicate() {
-        return new ByteBufferAsDoubleBufferRB(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsDoubleBufferRB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public DoubleBuffer asReadOnlyBuffer() {

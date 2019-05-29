@@ -6,15 +6,13 @@ class ByteBufferAsDoubleBufferB extends DoubleBuffer {
     protected final ByteBuffer bb;
 
     ByteBufferAsDoubleBufferB(ByteBuffer bb) {
-        super(-1, 0,
-              bb.remaining() >> 3,
-              bb.remaining() >> 3);
+        super(-1, 0, bb.remaining() >> 3, bb.remaining() >> 3);
         this.bb = bb;
         // enforce limit == capacity
         int cap = this.capacity();
         this.limit(cap);
         int pos = this.position();
-        assert (pos <= cap);
+        // assert (pos <= cap);
         address = bb.address;
     }
 
@@ -22,7 +20,7 @@ class ByteBufferAsDoubleBufferB extends DoubleBuffer {
         super(mark, pos, lim, cap);
         this.bb = bb;
         address = addr;
-        assert address >= bb.address;
+        // assert address >= bb.address;
     }
 
     // @Override
@@ -33,28 +31,18 @@ class ByteBufferAsDoubleBufferB extends DoubleBuffer {
     public DoubleBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsDoubleBufferB(bb, -1, 0, rem, rem, addr);
     }
 
     public DoubleBuffer duplicate() {
-        return new ByteBufferAsDoubleBufferB(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsDoubleBufferB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public DoubleBuffer asReadOnlyBuffer() {
-        return new ByteBufferAsDoubleBufferRB(bb,
-                                                 this.markValue(),
-                                                 this.position(),
-                                                 this.limit(),
-                                                 this.capacity(),
-                                                 address);
+        return new ByteBufferAsDoubleBufferRB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     private int ix(int i) {
@@ -67,35 +55,31 @@ class ByteBufferAsDoubleBufferB extends DoubleBuffer {
     }
 
     public double get() {
-        long x = UNSAFE.getLongUnaligned(bb.hb, byteOffset(nextGetIndex()),
-            true);
+        long x = UNSAFE.getLongUnaligned(bb.hb, byteOffset(nextGetIndex()), true);
         return Double.longBitsToDouble(x);
     }
 
     public double get(int i) {
-        long x = UNSAFE.getLongUnaligned(bb.hb, byteOffset(checkIndex(i)),
-            true);
+        long x = UNSAFE.getLongUnaligned(bb.hb, byteOffset(checkIndex(i)), true);
         return Double.longBitsToDouble(x);
     }
 
     public DoubleBuffer put(double x) {
         long y = Double.doubleToRawLongBits(x);
-        UNSAFE.putLongUnaligned(bb.hb, byteOffset(nextPutIndex()), y,
-            true);
+        UNSAFE.putLongUnaligned(bb.hb, byteOffset(nextPutIndex()), y, true);
         return this;
     }
 
     public DoubleBuffer put(int i, double x) {
         long y = Double.doubleToRawLongBits(x);
-        UNSAFE.putLongUnaligned(bb.hb, byteOffset(checkIndex(i)), y,
-            true);
+        UNSAFE.putLongUnaligned(bb.hb, byteOffset(checkIndex(i)), y, true);
         return this;
     }
 
     public DoubleBuffer compact() {
         int pos = position();
         int lim = limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
         ByteBuffer db = bb.duplicate();

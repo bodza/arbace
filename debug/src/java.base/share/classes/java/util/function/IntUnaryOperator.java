@@ -33,7 +33,9 @@ public interface IntUnaryOperator {
      */
     default IntUnaryOperator compose(IntUnaryOperator before) {
         Objects.requireNonNull(before);
-        return (int v) -> applyAsInt(before.applyAsInt(v));
+        return new IntUnaryOperator() {
+            public int applyAsInt(int v) { return applyAsInt(before.applyAsInt(v)); }
+        };
     }
 
     /**
@@ -49,7 +51,9 @@ public interface IntUnaryOperator {
      */
     default IntUnaryOperator andThen(IntUnaryOperator after) {
         Objects.requireNonNull(after);
-        return (int t) -> after.applyAsInt(applyAsInt(t));
+        return new IntUnaryOperator() {
+            public int applyAsInt(int t) { return after.applyAsInt(applyAsInt(t)); }
+        };
     }
 
     /**
@@ -58,6 +62,8 @@ public interface IntUnaryOperator {
      * @return a unary operator that always returns its input argument
      */
     static IntUnaryOperator identity() {
-        return t -> t;
+        return new IntUnaryOperator() {
+            public int applyAsInt(int t) { return t; }
+        };
     }
 }

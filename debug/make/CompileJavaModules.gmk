@@ -66,91 +66,11 @@ endif
 
 ################################################################################
 
-java.compiler_ADD_JAVAC_FLAGS += -Xdoclint:all/protected '-Xdoclint/package:java.*,javax.*'
-
-################################################################################
-
-jdk.compiler_ADD_JAVAC_FLAGS += -Xdoclint:all/protected \
-    '-Xdoclint/package:-com.sun.tools.*,-jdk.internal.*,sun.tools.serialver.resources.*' \
-    -XDstringConcat=inline
-jdk.compiler_CLEAN_FILES += $(wildcard \
-    $(patsubst %, $(TOPDIR)/src/jdk.compiler/share/classes/%/*.properties, \
-        sun/tools/serialver/resources))
-
-################################################################################
-
 jdk.dev_CLEAN_FILES += $(wildcard \
     $(patsubst %, $(TOPDIR)/src/jdk.dev/share/classes/%/*.properties, \
         com/sun/tools/script/shell))
 
 jdk.dev_COPY += .js oqlhelp.html .txt
-
-################################################################################
-
-# -parameters provides method's parameters information in class file,
-# JVMCI compilers make use of that information for various sanity checks.
-# Don't use Indy strings concatenation to have good JVMCI startup performance.
-# The exports are needed since JVMCI is dynamically exported (see
-# jdk.vm.ci.services.internal.ReflectionAccessJDK::openJVMCITo).
-
-jdk.internal.vm.ci_ADD_JAVAC_FLAGS += -parameters -Xlint:-exports -XDstringConcat=inline
-
-################################################################################
-
-jdk.internal.vm.compiler_ADD_JAVAC_FLAGS += -parameters -XDstringConcat=inline \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.aarch64=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.amd64=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.code=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.code.site=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.code.stack=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.common=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.hotspot=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.hotspot.aarch64=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.hotspot.amd64=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.hotspot.sparc=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.meta=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.runtime=jdk.internal.vm.compiler \
-    --add-exports jdk.internal.vm.ci/jdk.vm.ci.sparc=jdk.internal.vm.compiler \
-    #
-
-jdk.internal.vm.compiler_EXCLUDES += \
-    jdk.internal.vm.compiler.collections.test \
-    org.graalvm.compiler.processor \
-    org.graalvm.compiler.core.match.processor \
-    org.graalvm.compiler.nodeinfo.processor \
-    org.graalvm.compiler.options.processor \
-    org.graalvm.compiler.serviceprovider.processor \
-    org.graalvm.compiler.replacements.processor \
-    org.graalvm.compiler.replacements.jdk9.test \
-    org.graalvm.compiler.api.directives.test \
-    org.graalvm.compiler.api.test \
-    org.graalvm.compiler.asm.aarch64.test \
-    org.graalvm.compiler.asm.amd64.test \
-    org.graalvm.compiler.asm.sparc.test \
-    org.graalvm.compiler.asm.test \
-    org.graalvm.compiler.core.amd64.test \
-    org.graalvm.compiler.core.sparc.test \
-    org.graalvm.compiler.core.test \
-    org.graalvm.compiler.debug.test \
-    org.graalvm.compiler.graph.test \
-    org.graalvm.compiler.hotspot.amd64.test \
-    org.graalvm.compiler.hotspot.lir.test \
-    org.graalvm.compiler.hotspot.sparc.test \
-    org.graalvm.compiler.hotspot.test \
-    org.graalvm.compiler.jtt \
-    org.graalvm.compiler.lir.jtt \
-    org.graalvm.compiler.lir.test \
-    org.graalvm.compiler.loop.test \
-    org.graalvm.compiler.microbenchmarks \
-    org.graalvm.compiler.nodes.test \
-    org.graalvm.compiler.options.test \
-    org.graalvm.compiler.phases.common.test \
-    org.graalvm.compiler.replacements.test \
-    org.graalvm.compiler.test \
-    org.graalvm.compiler.virtual.bench \
-    org.graalvm.micro.benchmarks \
-    org.graalvm.util.test \
-    #
 
 ################################################################################
 
@@ -197,22 +117,6 @@ MODULESOURCEPATH := $(call GetModuleSrcPath)
 # Add imported modules to the modulepath
 MODULEPATH := $(call PathList, $(IMPORT_MODULES_CLASSES))
 
-ifeq ($(MODULE), jdk.internal.vm.ci)
-  ## WORKAROUND jdk.internal.vm.ci source structure issue
-  JVMCI_MODULESOURCEPATH := $(MODULESOURCEPATH) \
-      $(subst /$(MODULE)/,/*/, $(filter-out %processor/src, \
-          $(wildcard $(TOPDIR)/src/$(MODULE)/share/classes/*/src)))
-  MODULESOURCEPATH := $(call PathList, $(JVMCI_MODULESOURCEPATH))
-endif
-
-ifeq ($(MODULE), jdk.internal.vm.compiler)
-  ## WORKAROUND jdk.internal.vm.compiler source structure issue
-  VM_COMPILER_MODULESOURCEPATH := $(MODULESOURCEPATH) \
-      $(subst /$(MODULE)/,/*/, $(filter-out %processor/src %test/src %jtt/src %bench/src %microbenchmarks/src, \
-          $(wildcard $(TOPDIR)/src/$(MODULE)/share/classes/*/src)))
-  MODULESOURCEPATH := $(call PathList, $(VM_COMPILER_MODULESOURCEPATH))
-endif
-
 $(eval $(call SetupJavaCompilation, $(MODULE), \
     SETUP := $(if $($(MODULE)_SETUP), $($(MODULE)_SETUP), GENERATE_JDKBYTECODE), \
     MODULE := $(MODULE), \
@@ -235,9 +139,9 @@ TARGETS += $($(MODULE)) $($(MODULE)_COPY_EXTRA)
 # use the macro to find the correct target file to depend on.
 # Only the javac compilation actually depends on other modules so limit
 # dependency declaration to that by using the *_COMPILE_TARGET variable.
-$($(MODULE)_COMPILE_TARGET): $(foreach d, $(call FindDepsForModule, $(MODULE)), \
-    $(call SetupJavaCompilationApiTarget, $d, \
-        $(if $($d_BIN), $($d_BIN), $(JDK_OUTPUTDIR)/modules/$d)))
+# oops! $($(MODULE)_COMPILE_TARGET): $(foreach d, $(call FindDepsForModule, $(MODULE)), \
+    # oops! $(call SetupJavaCompilationApiTarget, $d, \
+        # oops! $(if $($d_BIN), $($d_BIN), $(JDK_OUTPUTDIR)/modules/$d)))
 
 ################################################################################
 # If this is an imported module, copy the pre built classes and resources into

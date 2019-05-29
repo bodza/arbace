@@ -183,7 +183,7 @@ public final class Long extends Number implements Comparable<Long> {
                  */
                 long quot = (i >>> 1) / 5;
                 long rem = i - quot * 10;
-                return toString(quot) + rem;
+                return String.str(toString(quot), rem);
 
             case 16:
                 return toHexString(i);
@@ -600,7 +600,7 @@ public final class Long extends Number implements Comparable<Long> {
             long result = 0;
             while (i < len) {
                 // Accumulating negatively avoids surprises near MAX_VALUE
-                int digit = Character.digit(s.charAt(i++),radix);
+                int digit = Character.digit(s.charAt(i++), radix);
                 if (digit < 0 || result < multmin) {
                     throw NumberFormatException.forInputString(s);
                 }

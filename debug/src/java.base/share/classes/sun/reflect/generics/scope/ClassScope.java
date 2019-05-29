@@ -51,5 +51,5 @@ public class ClassScope extends AbstractScope<Class<?>> implements Scope {
      * @param c - a Class whose scope we want to obtain
      * @return The type-variable scope for the class c
      */
-    public static ClassScope make(Class<?> c) { return new ClassScope(c);}
+    public static ClassScope make(Class<?> c) { return new ClassScope(c); }
 }

@@ -701,15 +701,15 @@ public class StandardCharsets extends CharsetProvider {
 
     // Maps canonical names to class names
     // @Stable
-    private Map<String,String> classMap;
+    private Map<String, String> classMap;
 
     // Maps alias names to canonical names
     // @Stable
-    private Map<String,String> aliasMap;
+    private Map<String, String> aliasMap;
 
     // Maps canonical names to cached instances
     // @Stable
-    private Map<String,Charset> cache;
+    private Map<String, Charset> cache;
 
     private static final String packagePrefix = "sun.nio.cs.";
 
@@ -721,24 +721,24 @@ public class StandardCharsets extends CharsetProvider {
         return (acn != null) ? acn : csn;
     }
 
-    private Map<String,String> aliasMap() {
-        Map<String,String> map = aliasMap;
+    private Map<String, String> aliasMap() {
+        Map<String, String> map = aliasMap;
         if (map == null) {
             aliasMap = map = new Aliases();
         }
         return map;
     }
 
-    private Map<String,String> classMap() {
-        Map<String,String> map = classMap;
+    private Map<String, String> classMap() {
+        Map<String, String> map = classMap;
         if (map == null) {
             classMap = map = new Classes();
         }
         return map;
     }
 
-    private Map<String,Charset> cache() {
-        Map<String,Charset> map = cache;
+    private Map<String, Charset> cache() {
+        Map<String, Charset> map = cache;
         if (map == null) {
             map = new Cache();
             map.put("utf-8", UTF_8.INSTANCE);
@@ -810,7 +810,7 @@ public class StandardCharsets extends CharsetProvider {
         // Instantiate the charset and cache it
         try {
             // @SuppressWarnings("deprecation")
-            Object o = Class.forName(packagePrefix + cln, true, this.getClass().getClassLoader()).newInstance();
+            Object o = Class.forName(String.str(packagePrefix, cln), true, this.getClass().getClassLoader()).newInstance();
             return cache(csn, (Charset)o);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException x) {
             return null;

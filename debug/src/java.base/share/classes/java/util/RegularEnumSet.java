@@ -201,51 +201,6 @@ class RegularEnumSet<E extends Enum<E>> extends EnumSet<E> {
     }
 
     /**
-     * Removes from this set all of its elements that are contained in
-     * the specified collection.
-     *
-     * @param c elements to be removed from this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws NullPointerException if the specified collection is null
-     */
-    public boolean removeAll(Collection<?> c) {
-        if (!(c instanceof RegularEnumSet))
-            return super.removeAll(c);
-
-        RegularEnumSet<?> es = (RegularEnumSet<?>)c;
-        if (es.elementType != elementType)
-            return false;
-
-        long oldElements = elements;
-        elements &= ~es.elements;
-        return elements != oldElements;
-    }
-
-    /**
-     * Retains only the elements in this set that are contained in the
-     * specified collection.
-     *
-     * @param c elements to be retained in this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws NullPointerException if the specified collection is null
-     */
-    public boolean retainAll(Collection<?> c) {
-        if (!(c instanceof RegularEnumSet))
-            return super.retainAll(c);
-
-        RegularEnumSet<?> es = (RegularEnumSet<?>)c;
-        if (es.elementType != elementType) {
-            boolean changed = (elements != 0);
-            elements = 0;
-            return changed;
-        }
-
-        long oldElements = elements;
-        elements &= es.elements;
-        return elements != oldElements;
-    }
-
-    /**
      * Removes all of the elements from this set.
      */
     public void clear() {

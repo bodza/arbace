@@ -19,6 +19,8 @@ public interface UnaryOperator<T> extends Function<T, T> {
      * @return a unary operator that always returns its input argument
      */
     static <T> UnaryOperator<T> identity() {
-        return t -> t;
+        return new UnaryOperator<>() {
+            public T apply(T t) { return t; }
+        };
     }
 }

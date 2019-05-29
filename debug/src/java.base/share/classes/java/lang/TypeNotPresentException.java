@@ -32,5 +32,5 @@ public class TypeNotPresentException extends RuntimeException {
      *
      * @return the fully qualified name of the unavailable type
      */
-    public String typeName() { return typeName;}
+    public String typeName() { return typeName; }
 }

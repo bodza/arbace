@@ -111,7 +111,7 @@ public class TypeVariableImpl<D extends GenericDeclaration> extends LazyReflecti
      */
     public String getName() { return name; }
 
-    public String toString() {return getName();}
+    public String toString() { return getName(); }
 
     // @Override
     public boolean equals(Object o) {

@@ -168,7 +168,7 @@ public abstract class URLConnection {
      */
     protected boolean useCaches;
 
-    private static final Map<String,Boolean> defaultCaching = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Boolean> defaultCaching = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Some protocols support skipping the fetching of the object unless
@@ -421,7 +421,7 @@ public abstract class URLConnection {
      *
      * @return a Map of header fields
      */
-    public Map<String,List<String>> getHeaderFields() {
+    public Map<String, List<String>> getHeaderFields() {
         return Collections.emptyMap();
     }
 
@@ -866,7 +866,7 @@ public abstract class URLConnection {
             handler = UnknownContentHandler.INSTANCE;
         }
 
-        assert handler != null;
+        // assert handler != null;
 
         ContentHandler h = handlers.putIfAbsent(contentType, handler);
         return Objects.requireNonNullElse(h, handler);

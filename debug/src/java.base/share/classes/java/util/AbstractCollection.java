@@ -68,9 +68,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean contains(Object o) {
         Iterator<E> it = iterator();
-        if (o==null) {
+        if (o == null) {
             while (it.hasNext())
-                if (it.next()==null)
+                if (it.next() == null)
                     return true;
         } else {
             while (it.hasNext())
@@ -250,9 +250,9 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      */
     public boolean remove(Object o) {
         Iterator<E> it = iterator();
-        if (o==null) {
+        if (o == null) {
             while (it.hasNext()) {
-                if (it.next()==null) {
+                if (it.next() == null) {
                     it.remove();
                     return true;
                 }
@@ -311,70 +311,6 @@ public abstract class AbstractCollection<E> implements Collection<E> {
         for (E e : c)
             if (add(e))
                 modified = true;
-        return modified;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @implSpec
-     * This implementation iterates over this collection, checking each
-     * element returned by the iterator in turn to see if it's contained
-     * in the specified collection.  If it's so contained, it's removed from
-     * this collection with the iterator's {@code remove} method.
-     *
-     * Note that this implementation will throw an
-     * {@code UnsupportedOperationException} if the iterator returned by the
-     * {@code iterator} method does not implement the {@code remove} method
-     * and this collection contains one or more elements in common with the
-     * specified collection.
-     *
-     * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws ClassCastException            {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
-     */
-    public boolean removeAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        boolean modified = false;
-        Iterator<?> it = iterator();
-        while (it.hasNext()) {
-            if (c.contains(it.next())) {
-                it.remove();
-                modified = true;
-            }
-        }
-        return modified;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @implSpec
-     * This implementation iterates over this collection, checking each
-     * element returned by the iterator in turn to see if it's contained
-     * in the specified collection.  If it's not so contained, it's removed
-     * from this collection with the iterator's {@code remove} method.
-     *
-     * Note that this implementation will throw an
-     * {@code UnsupportedOperationException} if the iterator returned by the
-     * {@code iterator} method does not implement the {@code remove} method
-     * and this collection contains one or more elements not present in the
-     * specified collection.
-     *
-     * @throws UnsupportedOperationException {@inheritDoc}
-     * @throws ClassCastException            {@inheritDoc}
-     * @throws NullPointerException          {@inheritDoc}
-     */
-    public boolean retainAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        boolean modified = false;
-        Iterator<E> it = iterator();
-        while (it.hasNext()) {
-            if (!c.contains(it.next())) {
-                it.remove();
-                modified = true;
-            }
-        }
         return modified;
     }
 

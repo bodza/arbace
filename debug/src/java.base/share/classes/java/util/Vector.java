@@ -864,59 +864,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
         }
     }
 
-    /**
-     * Removes from this Vector all of its elements that are contained in the
-     * specified Collection.
-     *
-     * @param c a collection of elements to be removed from the Vector
-     * @return true if this Vector changed as a result of the call
-     * @throws ClassCastException if the types of one or more elements
-     *         in this vector are incompatible with the specified
-     *         collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this vector contains one or more null
-     *         elements and the specified collection does not support null
-     *         elements
-     * (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    public boolean removeAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        return bulkRemove(e -> c.contains(e));
-    }
-
-    /**
-     * Retains only the elements in this Vector that are contained in the
-     * specified Collection.  In other words, removes from this Vector all
-     * of its elements that are not contained in the specified Collection.
-     *
-     * @param c a collection of elements to be retained in this Vector
-     *          (all other elements are removed)
-     * @return true if this Vector changed as a result of the call
-     * @throws ClassCastException if the types of one or more elements
-     *         in this vector are incompatible with the specified
-     *         collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this vector contains one or more null
-     *         elements and the specified collection does not support null
-     *         elements
-     *         (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    public boolean retainAll(Collection<?> c) {
-        Objects.requireNonNull(c);
-        return bulkRemove(e -> !c.contains(e));
-    }
-
-    /**
-     * @throws NullPointerException {@inheritDoc}
-     */
-    // @Override
-    public boolean removeIf(Predicate<? super E> filter) {
-        Objects.requireNonNull(filter);
-        return bulkRemove(filter);
-    }
-
     // A tiny bit set implementation
 
     private static long[] nBits(int n) {
@@ -929,41 +876,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     private static boolean isClear(long[] bits, int i) {
         return (bits[i >> 6] & (1L << i)) == 0;
-    }
-
-    private synchronized boolean bulkRemove(Predicate<? super E> filter) {
-        int expectedModCount = modCount;
-        final Object[] es = elementData;
-        final int end = elementCount;
-        int i;
-        // Optimize for initial run of survivors
-        for (i = 0; i < end && !filter.test(elementAt(es, i)); i++)
-            ;
-        // Tolerate predicates that reentrantly access the collection for
-        // read (but writers still get CME), so traverse once to find
-        // elements to delete, a second pass to physically expunge.
-        if (i < end) {
-            final int beg = i;
-            final long[] deathRow = nBits(end - beg);
-            deathRow[0] = 1L; // set bit 0
-            for (i = beg + 1; i < end; i++)
-                if (filter.test(elementAt(es, i)))
-                    setBit(deathRow, i - beg);
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            modCount++;
-            int w = beg;
-            for (i = beg; i < end; i++)
-                if (isClear(deathRow, i - beg))
-                    es[w++] = es[i];
-            for (i = elementCount = w; i < end; i++)
-                es[i] = null;
-            return true;
-        } else {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            return false;
-        }
     }
 
     /**

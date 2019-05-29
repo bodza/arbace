@@ -602,7 +602,7 @@ class StringCoding {
                 return 2;
             return 3;
         }
-        assert false;
+        // assert false;
         return -1;
     }
 

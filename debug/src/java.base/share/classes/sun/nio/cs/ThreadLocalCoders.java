@@ -68,7 +68,7 @@ public class ThreadLocalCoders {
                     return Charset.forName((String)name).newDecoder();
                 if (name instanceof Charset)
                     return ((Charset)name).newDecoder();
-                assert false;
+                // assert false;
                 return null;
             }
         };
@@ -93,7 +93,7 @@ public class ThreadLocalCoders {
                     return Charset.forName((String)name).newEncoder();
                 if (name instanceof Charset)
                     return ((Charset)name).newEncoder();
-                assert false;
+                // assert false;
                 return null;
             }
         };

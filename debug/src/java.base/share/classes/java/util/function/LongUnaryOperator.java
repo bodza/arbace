@@ -33,7 +33,9 @@ public interface LongUnaryOperator {
      */
     default LongUnaryOperator compose(LongUnaryOperator before) {
         Objects.requireNonNull(before);
-        return (long v) -> applyAsLong(before.applyAsLong(v));
+        return new LongUnaryOperator() {
+            public long applyAsLong(long v) { return applyAsLong(before.applyAsLong(v)); }
+        };
     }
 
     /**
@@ -49,7 +51,9 @@ public interface LongUnaryOperator {
      */
     default LongUnaryOperator andThen(LongUnaryOperator after) {
         Objects.requireNonNull(after);
-        return (long t) -> after.applyAsLong(applyAsLong(t));
+        return new LongUnaryOperator() {
+            public long applyAsLong(long t) { return after.applyAsLong(applyAsLong(t)); }
+        };
     }
 
     /**
@@ -58,6 +62,8 @@ public interface LongUnaryOperator {
      * @return a unary operator that always returns its input argument
      */
     static LongUnaryOperator identity() {
-        return t -> t;
+        return new LongUnaryOperator() {
+            public long applyAsLong(long t) { return t; }
+        };
     }
 }

@@ -8,7 +8,7 @@ public class DoubleSignature implements BaseType {
 
     private DoubleSignature() {}
 
-    public static DoubleSignature make() {return singleton;}
+    public static DoubleSignature make() { return singleton; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitDoubleSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitDoubleSignature(this); }
 }

@@ -39,6 +39,8 @@ public interface BiFunction<T, U, R> {
      */
     default <V> BiFunction<T, U, V> andThen(Function<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
-        return (T t, U u) -> after.apply(apply(t, u));
+        return new BiFunction<>() {
+            public V apply(T t, U u) { return after.apply(BiFunction.this.apply(t, u)); }
+        };
     }
 }

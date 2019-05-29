@@ -42,7 +42,7 @@ public final class Field extends AccessibleObject implements Member {
 
     // Generics infrastructure
 
-    private String getGenericSignature() {return signature;}
+    private String getGenericSignature() { return signature; }
 
     // Accessor for factory
     private GenericsFactory getFactory() {

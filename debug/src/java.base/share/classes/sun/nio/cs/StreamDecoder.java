@@ -81,7 +81,7 @@ public class StreamDecoder extends Reader {
             case 1:
                 return cb[0];
             default:
-                assert false : n;
+                // assert false : n;
                 return -1;
             }
         }
@@ -173,15 +173,15 @@ public class StreamDecoder extends Reader {
             // Read from the input stream, and then update the buffer
             int lim = bb.limit();
             int pos = bb.position();
-            assert (pos <= lim);
+            // assert (pos <= lim);
             int rem = (pos <= lim ? lim - pos : 0);
-            assert rem > 0;
+            // assert rem > 0;
             int n = in.read(bb.array(), bb.arrayOffset() + pos, rem);
             if (n < 0)
                 return n;
             if (n == 0)
                 throw new IOException("Underlying input stream returned zero bytes");
-            assert (n <= rem) : String.str("n = ", n, ", rem = ", rem);
+            // assert (n <= rem) : String.str("n = ", n, ", rem = ", rem);
             bb.position(pos + n);
         } finally {
             // Flip even when an IOException is thrown,
@@ -190,7 +190,7 @@ public class StreamDecoder extends Reader {
         }
 
         int rem = bb.remaining();
-        assert (rem != 0) : rem;
+        // assert (rem != 0) : rem;
         return rem;
     }
 
@@ -199,7 +199,7 @@ public class StreamDecoder extends Reader {
         // the invoker attempt to read at least two characters.  Saving the
         // extra character, if any, at a higher level is easier than trying
         // to deal with it here.
-        assert (end - off > 1);
+        // assert (end - off > 1);
 
         CharBuffer cb = CharBuffer.wrap(cbuf, off, end - off);
         if (cb.position() != 0)
@@ -226,7 +226,7 @@ public class StreamDecoder extends Reader {
                 continue;
             }
             if (cr.isOverflow()) {
-                assert cb.position() > 0;
+                // assert cb.position() > 0;
                 break;
             }
             cr.throwException();
@@ -240,7 +240,7 @@ public class StreamDecoder extends Reader {
         if (cb.position() == 0) {
             if (eof)
                 return -1;
-            assert false;
+            // assert false;
         }
         return cb.position();
     }

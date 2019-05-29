@@ -8,7 +8,7 @@ public class CharSignature implements BaseType {
 
     private CharSignature() {}
 
-    public static CharSignature make() {return singleton;}
+    public static CharSignature make() { return singleton; }
 
     public void accept(TypeTreeVisitor<?> v) {
         v.visitCharSignature(this);

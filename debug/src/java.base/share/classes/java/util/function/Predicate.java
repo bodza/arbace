@@ -39,7 +39,9 @@ public interface Predicate<T> {
      */
     default Predicate<T> and(Predicate<? super T> other) {
         Objects.requireNonNull(other);
-        return (t) -> test(t) && other.test(t);
+        return new Predicate<>() {
+            public boolean test(T t) { return test(t) && other.test(t); }
+        };
     }
 
     /**
@@ -50,7 +52,9 @@ public interface Predicate<T> {
      * predicate
      */
     default Predicate<T> negate() {
-        return (t) -> !test(t);
+        return new Predicate<>() {
+            public boolean test(T t) { return !test(t); }
+        };
     }
 
     /**
@@ -71,7 +75,9 @@ public interface Predicate<T> {
      */
     default Predicate<T> or(Predicate<? super T> other) {
         Objects.requireNonNull(other);
-        return (t) -> test(t) || other.test(t);
+        return new Predicate<>() {
+            public boolean test(T t) { return test(t) || other.test(t); }
+        };
     }
 
     /**
@@ -85,7 +91,16 @@ public interface Predicate<T> {
      * to {@link Objects#equals(Object, Object)}
      */
     static <T> Predicate<T> isEqual(Object targetRef) {
-        return (null == targetRef) ? Objects::isNull : object -> targetRef.equals(object);
+        return (null == targetRef)
+            ?
+            new Predicate<>() {
+                public boolean test(T object) { return Objects.isNull(object); }
+            }
+            :
+            new Predicate<>() {
+                public boolean test(T object) { return targetRef.equals(object); }
+            }
+        ;
     }
 
     /**

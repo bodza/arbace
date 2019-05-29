@@ -44,12 +44,6 @@ class ImmutableCollections {
         public void    clear() { throw uoe(); }
         // @Override
         public boolean remove(Object o) { throw uoe(); }
-        // @Override
-        public boolean removeAll(Collection<?> c) { throw uoe(); }
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) { throw uoe(); }
-        // @Override
-        public boolean retainAll(Collection<?> c) { throw uoe(); }
     }
 
     // ---------- List Implementations ----------

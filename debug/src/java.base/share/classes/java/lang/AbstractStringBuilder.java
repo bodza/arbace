@@ -623,7 +623,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * by the value of {@code len}.
      *
      * The overall effect is exactly as if the arguments were converted
-     * to a string by the method {@link String#valueOf(char[],int,int)},
+     * to a string by the method {@link String#valueOf(char[], int, int)},
      * and the characters of that string were then
      * {@link #append(String) appended} to this character sequence.
      *
@@ -775,7 +775,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return a reference to this object.
      */
     public AbstractStringBuilder append(float f) {
-        FloatingDecimal.appendTo(f,this);
+        FloatingDecimal.appendTo(f, this);
         return this;
     }
 
@@ -792,7 +792,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return a reference to this object.
      */
     public AbstractStringBuilder append(double d) {
-        FloatingDecimal.appendTo(d,this);
+        FloatingDecimal.appendTo(d, this);
         return this;
     }
 

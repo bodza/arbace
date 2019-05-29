@@ -95,7 +95,7 @@ class UTF_32Coder {
         private int byteOrder;
 
         protected void put(int cp, ByteBuffer dst) {
-            if (byteOrder==BIG) {
+            if (byteOrder == BIG) {
                 dst.put((byte)(cp >> 24));
                 dst.put((byte)(cp >> 16));
                 dst.put((byte)(cp >> 8));

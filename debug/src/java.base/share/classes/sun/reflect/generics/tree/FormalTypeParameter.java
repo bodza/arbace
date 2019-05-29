@@ -20,11 +20,11 @@ public class FormalTypeParameter implements TypeTree {
      * @return a formal type parameter with the requested name and bounds
      */
     public static FormalTypeParameter make(String n, FieldTypeSignature[] bs) {
-        return new FormalTypeParameter(n,bs);
+        return new FormalTypeParameter(n, bs);
     }
 
-    public FieldTypeSignature[] getBounds() {return bounds;}
-    public String getName() {return name;}
+    public FieldTypeSignature[] getBounds() { return bounds; }
+    public String getName() { return name; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitFormalTypeParameter(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitFormalTypeParameter(this); }
 }

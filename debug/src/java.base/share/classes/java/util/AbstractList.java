@@ -152,9 +152,9 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     public int indexOf(Object o) {
         ListIterator<E> it = listIterator();
-        if (o==null) {
+        if (o == null) {
             while (it.hasNext())
-                if (it.next()==null)
+                if (it.next() == null)
                     return it.previousIndex();
         } else {
             while (it.hasNext())
@@ -178,9 +178,9 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     public int lastIndexOf(Object o) {
         ListIterator<E> it = listIterator(size());
-        if (o==null) {
+        if (o == null) {
             while (it.hasPrevious())
-                if (it.previous()==null)
+                if (it.previous() == null)
                     return it.nextIndex();
         } else {
             while (it.hasPrevious())
@@ -526,7 +526,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     public int hashCode() {
         int hashCode = 1;
         for (E e : this)
-            hashCode = 31*hashCode + (e==null ? 0 : e.hashCode());
+            hashCode = 31*hashCode + (e == null ? 0 : e.hashCode());
         return hashCode;
     }
 
@@ -555,7 +555,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
      */
     protected void removeRange(int fromIndex, int toIndex) {
         ListIterator<E> it = listIterator(fromIndex);
-        for (int i = 0, n=toIndex-fromIndex; i < n; i++) {
+        for (int i = 0, n = toIndex - fromIndex; i < n; i++) {
             it.next();
             it.remove();
         }
@@ -672,7 +672,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         public boolean addAll(int index, Collection<? extends E> c) {
             rangeCheckForAdd(index);
             int cSize = c.size();
-            if (cSize==0)
+            if (cSize == 0)
                 return false;
             checkForComodification();
             root.addAll(offset + index, c);

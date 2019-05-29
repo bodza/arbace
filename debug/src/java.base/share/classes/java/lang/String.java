@@ -1178,15 +1178,13 @@ public final class String implements Comparable<String>, CharSequence {
         } else {
             if (coder() == LATIN1) {
                 while (len-- > 0) {
-                    if (StringLatin1.getChar(tv, toffset++) !=
-                        StringUTF16.getChar(ov, ooffset++)) {
+                    if (StringLatin1.getChar(tv, toffset++) != StringUTF16.getChar(ov, ooffset++)) {
                         return false;
                     }
                 }
             } else {
                 while (len-- > 0) {
-                    if (StringUTF16.getChar(tv, toffset++) !=
-                        StringLatin1.getChar(ov, ooffset++)) {
+                    if (StringUTF16.getChar(tv, toffset++) != StringLatin1.getChar(ov, ooffset++)) {
                         return false;
                     }
                 }

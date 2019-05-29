@@ -44,7 +44,6 @@ $(eval $(call IncludeCustomExtension, common/Modules.gmk))
 BOOT_MODULES += \
     java.base \
     jdk.internal.vm.ci \
-    jdk.unsupported \
     #
 
 # Modules that directly or indirectly requiring upgradeable modules

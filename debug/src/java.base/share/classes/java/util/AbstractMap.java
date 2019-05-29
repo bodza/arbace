@@ -78,10 +78,10 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      */
     public boolean containsValue(Object value) {
         Iterator<Entry<K,V>> i = entrySet().iterator();
-        if (value==null) {
+        if (value == null) {
             while (i.hasNext()) {
                 Entry<K,V> e = i.next();
-                if (e.getValue()==null)
+                if (e.getValue() == null)
                     return true;
             }
         } else {
@@ -110,10 +110,10 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      */
     public boolean containsKey(Object key) {
         Iterator<Map.Entry<K,V>> i = entrySet().iterator();
-        if (key==null) {
+        if (key == null) {
             while (i.hasNext()) {
                 Entry<K,V> e = i.next();
-                if (e.getKey()==null)
+                if (e.getKey() == null)
                     return true;
             }
         } else {
@@ -142,10 +142,10 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      */
     public V get(Object key) {
         Iterator<Entry<K,V>> i = entrySet().iterator();
-        if (key==null) {
+        if (key == null) {
             while (i.hasNext()) {
                 Entry<K,V> e = i.next();
-                if (e.getKey()==null)
+                if (e.getKey() == null)
                     return e.getValue();
             }
         } else {
@@ -201,14 +201,14 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     public V remove(Object key) {
         Iterator<Entry<K,V>> i = entrySet().iterator();
         Entry<K,V> correctEntry = null;
-        if (key==null) {
-            while (correctEntry==null && i.hasNext()) {
+        if (key == null) {
+            while (correctEntry == null && i.hasNext()) {
                 Entry<K,V> e = i.next();
-                if (e.getKey()==null)
+                if (e.getKey() == null)
                     correctEntry = e;
             }
         } else {
-            while (correctEntry==null && i.hasNext()) {
+            while (correctEntry == null && i.hasNext()) {
                 Entry<K,V> e = i.next();
                 if (key.equals(e.getKey()))
                     correctEntry = e;
@@ -216,7 +216,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
         }
 
         V oldValue = null;
-        if (correctEntry !=null) {
+        if (correctEntry != null) {
             oldValue = correctEntry.getValue();
             i.remove();
         }

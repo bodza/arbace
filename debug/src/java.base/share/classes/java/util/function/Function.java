@@ -36,7 +36,9 @@ public interface Function<T, R> {
      */
     default <V> Function<V, R> compose(Function<? super V, ? extends T> before) {
         Objects.requireNonNull(before);
-        return (V v) -> apply(before.apply(v));
+        return new Function<>() {
+            public R apply(V v) { return Function.this.apply(before.apply(v)); }
+        };
     }
 
     /**
@@ -54,7 +56,9 @@ public interface Function<T, R> {
      */
     default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
-        return (T t) -> after.apply(apply(t));
+        return new Function<>() {
+            public V apply(T t) { return after.apply(Function.this.apply(t)); }
+        };
     }
 
     /**
@@ -64,6 +68,8 @@ public interface Function<T, R> {
      * @return a function that always returns its input argument
      */
     static <T> Function<T, T> identity() {
-        return t -> t;
+        return new Function<>() {
+            public T apply(T t) { return t; }
+        };
     }
 }

@@ -231,7 +231,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
      */
     public V get(Object key) {
         Entry<K,V> p = getEntry(key);
-        return (p==null ? null : p.value);
+        return (p == null ? null : p.value);
     }
 
     public Comparator<? super K> comparator() {
@@ -266,7 +266,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
      */
     public void putAll(Map<? extends K, ? extends V> map) {
         int mapSize = map.size();
-        if (size==0 && mapSize!=0 && map instanceof SortedMap) {
+        if (size == 0 && mapSize != 0 && map instanceof SortedMap) {
             Comparator<?> c = ((SortedMap<?,?>)map).comparator();
             if (c == comparator || (c != null && c.equals(comparator))) {
                 ++modCount;
@@ -1212,7 +1212,7 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
      * @throws NoSuchElementException if the Entry is null
      */
     static <K> K key(Entry<K,?> e) {
-        if (e==null)
+        if (e == null)
             throw new NoSuchElementException();
         return e.key;
     }
@@ -1871,12 +1871,12 @@ public class TreeMap<K,V> extends AbstractMap<K,V> implements NavigableMap<K,V>,
                 return false;
             Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 
-            return valEquals(key,e.getKey()) && valEquals(value,e.getValue());
+            return valEquals(key, e.getKey()) && valEquals(value, e.getValue());
         }
 
         public int hashCode() {
-            int keyHash = (key==null ? 0 : key.hashCode());
-            int valueHash = (value==null ? 0 : value.hashCode());
+            int keyHash = (key == null ? 0 : key.hashCode());
+            int valueHash = (value == null ? 0 : value.hashCode());
             return keyHash ^ valueHash;
         }
 

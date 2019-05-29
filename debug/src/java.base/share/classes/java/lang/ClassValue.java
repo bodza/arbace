@@ -294,7 +294,7 @@ public abstract class ClassValue<T> {
             super(version);
             this.value = value; // for a regular entry, value is of type T
         }
-        private void assertNotPromise() { assert(!isPromise()); }
+        private void assertNotPromise() { /* assert(!isPromise()); */ }
         /** For creating a promise. */
         Entry(Version<T> version) {
             super(version);
@@ -560,7 +560,7 @@ public abstract class ClassValue<T> {
         /// Below this line all functions are private, and assume synchronized access.
 
         private void sizeCache(int length) {
-            assert ((length & (length-1)) == 0); // must be power of 2
+            // assert ((length & (length-1)) == 0); // must be power of 2
             cacheLoad = 0;
             cacheLoadLimit = (int) ((double) length * CACHE_LOAD_LIMIT / 100);
             cacheArray = new Entry<?>[length];

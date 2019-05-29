@@ -145,7 +145,7 @@ public class StreamEncoder extends Writer {
         bb.flip();
         int lim = bb.limit();
         int pos = bb.position();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
         if (rem > 0) {
@@ -181,7 +181,7 @@ public class StreamEncoder extends Writer {
                 break;
             }
             if (cr.isOverflow()) {
-                assert bb.position() > 0;
+                // assert bb.position() > 0;
                 writeBytes();
                 continue;
             }
@@ -203,7 +203,7 @@ public class StreamEncoder extends Writer {
         while (cb.hasRemaining()) {
             CoderResult cr = encoder.encode(cb, bb, false);
             if (cr.isUnderflow()) {
-                assert (cb.remaining() <= 1) : cb.remaining();
+                // assert (cb.remaining() <= 1) : cb.remaining();
                 if (cb.remaining() == 1) {
                     haveLeftoverChar = true;
                     leftoverChar = cb.get();
@@ -211,7 +211,7 @@ public class StreamEncoder extends Writer {
                 break;
             }
             if (cr.isOverflow()) {
-                assert bb.position() > 0;
+                // assert bb.position() > 0;
                 writeBytes();
                 continue;
             }
@@ -238,7 +238,7 @@ public class StreamEncoder extends Writer {
                 if (cr.isUnderflow())
                     break;
                 if (cr.isOverflow()) {
-                    assert bb.position() > 0;
+                    // assert bb.position() > 0;
                     writeBytes();
                     continue;
                 }

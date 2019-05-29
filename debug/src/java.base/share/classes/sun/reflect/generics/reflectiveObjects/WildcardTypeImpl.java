@@ -122,7 +122,7 @@ public class WildcardTypeImpl extends LazyReflectiveObjectGenerator implements W
                 return "?";
         }
 
-        assert bounds.length > 0;
+        // assert bounds.length > 0;
 
         StringJoiner sj = new StringJoiner(" & ");
         for (Type bound : bounds) {

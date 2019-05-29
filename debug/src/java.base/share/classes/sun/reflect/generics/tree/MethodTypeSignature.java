@@ -22,9 +22,9 @@ public class MethodTypeSignature implements Signature {
     public FormalTypeParameter[] getFormalTypeParameters() {
         return formalTypeParams;
     }
-    public TypeSignature[] getParameterTypes() {return parameterTypes;}
-    public ReturnType getReturnType() {return returnType;}
-    public FieldTypeSignature[] getExceptionTypes() {return exceptionTypes;}
+    public TypeSignature[] getParameterTypes() { return parameterTypes; }
+    public ReturnType getReturnType() { return returnType; }
+    public FieldTypeSignature[] getExceptionTypes() { return exceptionTypes; }
 
-    public void accept(Visitor<?> v) {v.visitMethodTypeSignature(this);}
+    public void accept(Visitor<?> v) { v.visitMethodTypeSignature(this); }
 }

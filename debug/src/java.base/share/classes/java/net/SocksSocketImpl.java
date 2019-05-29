@@ -100,7 +100,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
         try {
             out.write(userName.getBytes("ISO-8859-1"));
         } catch (java.io.UnsupportedEncodingException uee) {
-            assert false;
+            // assert false;
         }
         out.write(0);
         out.flush();
@@ -221,7 +221,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
             try {
                 out.write(epoint.getHostName().getBytes("ISO-8859-1"));
             } catch (java.io.UnsupportedEncodingException uee) {
-                assert false;
+                // assert false;
             }
             out.write((epoint.getPort() >> 8) & 0xff);
             out.write((epoint.getPort() >> 0) & 0xff);
@@ -343,7 +343,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
         try {
             out.write(userName.getBytes("ISO-8859-1"));
         } catch (java.io.UnsupportedEncodingException uee) {
-            assert false;
+            // assert false;
         }
         out.write(0);
         out.flush();
@@ -445,7 +445,7 @@ class SocksSocketImpl extends PlainSocketImpl implements SocksConsts {
             try {
                 out.write(saddr.getHostName().getBytes("ISO-8859-1"));
             } catch (java.io.UnsupportedEncodingException uee) {
-                assert false;
+                // assert false;
             }
             out.write((lport >> 8) & 0xff);
             out.write((lport >> 0) & 0xff);

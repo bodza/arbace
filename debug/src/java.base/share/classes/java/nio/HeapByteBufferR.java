@@ -29,33 +29,18 @@ class HeapByteBufferR extends HeapByteBuffer {
     }
 
     public ByteBuffer slice() {
-        return new HeapByteBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapByteBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     ByteBuffer slice(int pos, int lim) {
-        assert (pos >= 0);
-        assert (pos <= lim);
+        // assert (pos >= 0);
+        // assert (pos <= lim);
         int rem = lim - pos;
-        return new HeapByteBufferR(hb,
-                                        -1,
-                                        0,
-                                        rem,
-                                        rem,
-                                        pos + offset);
+        return new HeapByteBufferR(hb, -1, 0, rem, rem, pos + offset);
     }
 
     public ByteBuffer duplicate() {
-        return new HeapByteBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapByteBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public ByteBuffer asReadOnlyBuffer() {
@@ -108,18 +93,8 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 1;
         long addr = address + position();
         return (bigEndian
-                ? (CharBuffer)(new ByteBufferAsCharBufferRB(this,
-                                                               -1,
-                                                               0,
-                                                               size,
-                                                               size,
-                                                               addr))
-                : (CharBuffer)(new ByteBufferAsCharBufferRL(this,
-                                                               -1,
-                                                               0,
-                                                               size,
-                                                               size,
-                                                               addr)));
+                ? (CharBuffer)(new ByteBufferAsCharBufferRB(this, -1, 0, size, size, addr))
+                : (CharBuffer)(new ByteBufferAsCharBufferRL(this, -1, 0, size, size, addr)));
     }
 
     // short
@@ -136,18 +111,8 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 1;
         long addr = address + position();
         return (bigEndian
-                ? (ShortBuffer)(new ByteBufferAsShortBufferRB(this,
-                                                                 -1,
-                                                                 0,
-                                                                 size,
-                                                                 size,
-                                                                 addr))
-                : (ShortBuffer)(new ByteBufferAsShortBufferRL(this,
-                                                                 -1,
-                                                                 0,
-                                                                 size,
-                                                                 size,
-                                                                 addr)));
+                ? (ShortBuffer)(new ByteBufferAsShortBufferRB(this, -1, 0, size, size, addr))
+                : (ShortBuffer)(new ByteBufferAsShortBufferRL(this, -1, 0, size, size, addr)));
     }
 
     // int
@@ -164,18 +129,8 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 2;
         long addr = address + position();
         return (bigEndian
-                ? (IntBuffer)(new ByteBufferAsIntBufferRB(this,
-                                                             -1,
-                                                             0,
-                                                             size,
-                                                             size,
-                                                             addr))
-                : (IntBuffer)(new ByteBufferAsIntBufferRL(this,
-                                                             -1,
-                                                             0,
-                                                             size,
-                                                             size,
-                                                             addr)));
+                ? (IntBuffer)(new ByteBufferAsIntBufferRB(this, -1, 0, size, size, addr))
+                : (IntBuffer)(new ByteBufferAsIntBufferRL(this, -1, 0, size, size, addr)));
     }
 
     // long
@@ -192,18 +147,8 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 3;
         long addr = address + position();
         return (bigEndian
-                ? (LongBuffer)(new ByteBufferAsLongBufferRB(this,
-                                                               -1,
-                                                               0,
-                                                               size,
-                                                               size,
-                                                               addr))
-                : (LongBuffer)(new ByteBufferAsLongBufferRL(this,
-                                                               -1,
-                                                               0,
-                                                               size,
-                                                               size,
-                                                               addr)));
+                ? (LongBuffer)(new ByteBufferAsLongBufferRB(this, -1, 0, size, size, addr))
+                : (LongBuffer)(new ByteBufferAsLongBufferRL(this, -1, 0, size, size, addr)));
     }
 
     // float
@@ -220,18 +165,8 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 2;
         long addr = address + position();
         return (bigEndian
-                ? (FloatBuffer)(new ByteBufferAsFloatBufferRB(this,
-                                                                 -1,
-                                                                 0,
-                                                                 size,
-                                                                 size,
-                                                                 addr))
-                : (FloatBuffer)(new ByteBufferAsFloatBufferRL(this,
-                                                                 -1,
-                                                                 0,
-                                                                 size,
-                                                                 size,
-                                                                 addr)));
+                ? (FloatBuffer)(new ByteBufferAsFloatBufferRB(this, -1, 0, size, size, addr))
+                : (FloatBuffer)(new ByteBufferAsFloatBufferRL(this, -1, 0, size, size, addr)));
     }
 
     // double
@@ -248,17 +183,7 @@ class HeapByteBufferR extends HeapByteBuffer {
         int size = this.remaining() >> 3;
         long addr = address + position();
         return (bigEndian
-                ? (DoubleBuffer)(new ByteBufferAsDoubleBufferRB(this,
-                                                                   -1,
-                                                                   0,
-                                                                   size,
-                                                                   size,
-                                                                   addr))
-                : (DoubleBuffer)(new ByteBufferAsDoubleBufferRL(this,
-                                                                   -1,
-                                                                   0,
-                                                                   size,
-                                                                   size,
-                                                                   addr)));
+                ? (DoubleBuffer)(new ByteBufferAsDoubleBufferRB(this, -1, 0, size, size, addr))
+                : (DoubleBuffer)(new ByteBufferAsDoubleBufferRL(this, -1, 0, size, size, addr)));
     }
 }

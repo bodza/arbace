@@ -360,7 +360,7 @@ public class HKSCS {
                 int bb = encodeChar(c);
                 if (bb == UNMAPPABLE_ENCODING) {
                     if (!Character.isHighSurrogate(c) || sp == sl ||
-                        !Character.isLowSurrogate(StringUTF16.getChar(src,sp)) ||
+                        !Character.isLowSurrogate(StringUTF16.getChar(src, sp)) ||
                         (bb = encodeSupp(Character.toCodePoint(c, StringUTF16.getChar(src, sp++)))) == UNMAPPABLE_ENCODING) {
                         dst[dp++] = repl[0];
                         if (repl.length > 1)

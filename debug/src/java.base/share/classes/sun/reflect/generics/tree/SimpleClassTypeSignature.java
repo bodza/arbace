@@ -23,9 +23,9 @@ public class SimpleClassTypeSignature implements FieldTypeSignature {
      * pass to Class.forName; in other words, is this a transition to
      * a nested class.
      */
-    public boolean getDollar() {return dollar;}
-    public String getName() {return name;}
-    public TypeArgument[] getTypeArguments() {return typeArgs;}
+    public boolean getDollar() { return dollar; }
+    public String getName() { return name; }
+    public TypeArgument[] getTypeArguments() { return typeArgs; }
 
     public void accept(TypeTreeVisitor<?> v) {
         v.visitSimpleClassTypeSignature(this);

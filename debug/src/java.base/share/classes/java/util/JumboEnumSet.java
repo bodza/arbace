@@ -253,51 +253,6 @@ class JumboEnumSet<E extends Enum<E>> extends EnumSet<E> {
     }
 
     /**
-     * Removes from this set all of its elements that are contained in
-     * the specified collection.
-     *
-     * @param c elements to be removed from this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws NullPointerException if the specified collection is null
-     */
-    public boolean removeAll(Collection<?> c) {
-        if (!(c instanceof JumboEnumSet))
-            return super.removeAll(c);
-
-        JumboEnumSet<?> es = (JumboEnumSet<?>)c;
-        if (es.elementType != elementType)
-            return false;
-
-        for (int i = 0; i < elements.length; i++)
-            elements[i] &= ~es.elements[i];
-        return recalculateSize();
-    }
-
-    /**
-     * Retains only the elements in this set that are contained in the
-     * specified collection.
-     *
-     * @param c elements to be retained in this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws NullPointerException if the specified collection is null
-     */
-    public boolean retainAll(Collection<?> c) {
-        if (!(c instanceof JumboEnumSet))
-            return super.retainAll(c);
-
-        JumboEnumSet<?> es = (JumboEnumSet<?>)c;
-        if (es.elementType != elementType) {
-            boolean changed = (size != 0);
-            clear();
-            return changed;
-        }
-
-        for (int i = 0; i < elements.length; i++)
-            elements[i] &= es.elements[i];
-        return recalculateSize();
-    }
-
-    /**
      * Removes all of the elements from this set.
      */
     public void clear() {

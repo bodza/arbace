@@ -6,15 +6,13 @@ class ByteBufferAsShortBufferB extends ShortBuffer {
     protected final ByteBuffer bb;
 
     ByteBufferAsShortBufferB(ByteBuffer bb) {
-        super(-1, 0,
-              bb.remaining() >> 1,
-              bb.remaining() >> 1);
+        super(-1, 0, bb.remaining() >> 1, bb.remaining() >> 1);
         this.bb = bb;
         // enforce limit == capacity
         int cap = this.capacity();
         this.limit(cap);
         int pos = this.position();
-        assert (pos <= cap);
+        // assert (pos <= cap);
         address = bb.address;
     }
 
@@ -22,7 +20,7 @@ class ByteBufferAsShortBufferB extends ShortBuffer {
         super(mark, pos, lim, cap);
         this.bb = bb;
         address = addr;
-        assert address >= bb.address;
+        // assert address >= bb.address;
     }
 
     // @Override
@@ -33,28 +31,18 @@ class ByteBufferAsShortBufferB extends ShortBuffer {
     public ShortBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsShortBufferB(bb, -1, 0, rem, rem, addr);
     }
 
     public ShortBuffer duplicate() {
-        return new ByteBufferAsShortBufferB(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsShortBufferB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public ShortBuffer asReadOnlyBuffer() {
-        return new ByteBufferAsShortBufferRB(bb,
-                                                 this.markValue(),
-                                                 this.position(),
-                                                 this.limit(),
-                                                 this.capacity(),
-                                                 address);
+        return new ByteBufferAsShortBufferRB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     private int ix(int i) {
@@ -95,7 +83,7 @@ class ByteBufferAsShortBufferB extends ShortBuffer {
     public ShortBuffer compact() {
         int pos = position();
         int lim = limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
         ByteBuffer db = bb.duplicate();

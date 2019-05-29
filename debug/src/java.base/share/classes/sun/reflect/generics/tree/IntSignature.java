@@ -8,7 +8,7 @@ public class IntSignature implements BaseType {
 
     private IntSignature() {}
 
-    public static IntSignature make() {return singleton;}
+    public static IntSignature make() { return singleton; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitIntSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitIntSignature(this); }
 }

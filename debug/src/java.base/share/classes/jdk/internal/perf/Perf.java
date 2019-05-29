@@ -205,7 +205,7 @@ public final class Perf {
             } catch (Throwable th) {
                 // avoid crashing the reference handler thread,
                 // but provide for some diagnosability
-                assert false : th.toString();
+                // assert false : th.toString();
             }
         }
     }

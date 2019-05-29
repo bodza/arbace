@@ -183,7 +183,7 @@ public class PipedInputStream extends InputStream {
      * @param len the maximum number of bytes received
      * @throws IOException If the pipe is <a href="#BROKEN"> broken</a>,
      *           {@link #connect(java.io.PipedOutputStream) unconnected},
-     *           closed,or if an I/O error occurs.
+     *           closed, or if an I/O error occurs.
      */
     synchronized void receive(byte b[], int off, int len)  throws IOException {
         checkStateForReceive();
@@ -205,7 +205,7 @@ public class PipedInputStream extends InputStream {
             }
             if (nextTransferAmount > bytesToTransfer)
                 nextTransferAmount = bytesToTransfer;
-            assert (nextTransferAmount > 0);
+            // assert (nextTransferAmount > 0);
             System.arraycopy(b, off, buffer, in, nextTransferAmount);
             bytesToTransfer -= nextTransferAmount;
             off += nextTransferAmount;

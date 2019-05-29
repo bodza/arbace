@@ -292,7 +292,7 @@ public class Throwable {
      *          cause is nonexistent or unknown.
      */
     public synchronized Throwable getCause() {
-        return (cause==this ? null : cause);
+        return (cause == this) ? null : cause;
     }
 
     /**

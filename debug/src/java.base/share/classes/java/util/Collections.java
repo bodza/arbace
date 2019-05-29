@@ -272,7 +272,7 @@ public class Collections {
      */
     // @SuppressWarnings("unchecked")
     public static <T> int binarySearch(List<? extends T> list, T key, Comparator<? super T> c) {
-        if (c==null)
+        if (c == null)
             return binarySearch((List<? extends Comparable<? super T>>) list, key);
 
         if (list instanceof RandomAccess || list.size()<BINARYSEARCH_THRESHOLD)
@@ -333,7 +333,7 @@ public class Collections {
     public static void reverse(List<?> list) {
         int size = list.size();
         if (size < REVERSE_THRESHOLD || list instanceof RandomAccess) {
-            for (int i = 0, mid=size>>1, j=size-1; i < mid; i++, j--)
+            for (int i = 0, mid = size >> 1, j = size - 1; i < mid; i++, j--)
                 swap(list, i, j);
         } else {
             // instead of using a raw type here, it's possible to capture
@@ -341,7 +341,7 @@ public class Collections {
             // private method
             ListIterator fwd = list.listIterator();
             ListIterator rev = list.listIterator(size);
-            for (int i = 0, mid=list.size()>>1; i < mid; i++) {
+            for (int i = 0, mid = list.size() >> 1; i < mid; i++) {
                 Object tmp = fwd.next();
                 fwd.set(rev.previous());
                 rev.set(tmp);
@@ -413,13 +413,13 @@ public class Collections {
     public static void shuffle(List<?> list, Random rnd) {
         int size = list.size();
         if (size < SHUFFLE_THRESHOLD || list instanceof RandomAccess) {
-            for (int i=size; i>1; i--)
+            for (int i = size; i > 1; i--)
                 swap(list, i-1, rnd.nextInt(i));
         } else {
             Object arr[] = list.toArray();
 
             // Shuffle array
-            for (int i=size; i>1; i--)
+            for (int i = size; i > 1; i--)
                 swap(arr, i-1, rnd.nextInt(i));
 
             // Dump array back into list
@@ -518,8 +518,8 @@ public class Collections {
             for (int i = 0; i < srcSize; i++)
                 dest.set(i, src.get(i));
         } else {
-            ListIterator<? super T> di=dest.listIterator();
-            ListIterator<? extends T> si=src.listIterator();
+            ListIterator<? super T> di = dest.listIterator();
+            ListIterator<? extends T> si = src.listIterator();
             for (int i = 0; i < srcSize; i++) {
                 di.next();
                 di.set(si.next());
@@ -584,7 +584,7 @@ public class Collections {
      */
     // @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T min(Collection<? extends T> coll, Comparator<? super T> comp) {
-        if (comp==null)
+        if (comp == null)
             return (T)min((Collection) coll);
 
         Iterator<? extends T> i = coll.iterator();
@@ -655,7 +655,7 @@ public class Collections {
      */
     // @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T max(Collection<? extends T> coll, Comparator<? super T> comp) {
-        if (comp==null)
+        if (comp == null)
             return (T)max((Collection) coll);
 
         Iterator<? extends T> i = coll.iterator();
@@ -790,7 +790,7 @@ public class Collections {
         boolean result = false;
         int size = list.size();
         if (size < REPLACEALL_THRESHOLD || list instanceof RandomAccess) {
-            if (oldVal==null) {
+            if (oldVal == null) {
                 for (int i = 0; i < size; i++) {
                     if (list.get(i)==null) {
                         list.set(i, newVal);
@@ -806,8 +806,8 @@ public class Collections {
                 }
             }
         } else {
-            ListIterator<T> itr=list.listIterator();
-            if (oldVal==null) {
+            ListIterator<T> itr = list.listIterator();
+            if (oldVal == null) {
                 for (int i = 0; i < size; i++) {
                     if (itr.next()==null) {
                         itr.set(newVal);
@@ -853,7 +853,7 @@ public class Collections {
         if (sourceSize < INDEXOFSUBLIST_THRESHOLD || (source instanceof RandomAccess&&target instanceof RandomAccess)) {
         nextCand:
             for (int candidate = 0; candidate <= maxCandidate; candidate++) {
-                for (int i = 0, j=candidate; i < targetSize; i++, j++)
+                for (int i = 0, j = candidate; i < targetSize; i++, j++)
                     if (!eq(target.get(i), source.get(j)))
                         continue nextCand; // Element mismatch, try next cand
                 return candidate; // All elements of candidate matched target
@@ -904,7 +904,7 @@ public class Collections {
         if (sourceSize < INDEXOFSUBLIST_THRESHOLD || source instanceof RandomAccess) { // Index access version
         nextCand:
             for (int candidate = maxCandidate; candidate >= 0; candidate--) {
-                for (int i = 0, j=candidate; i < targetSize; i++, j++)
+                for (int i = 0, j = candidate; i < targetSize; i++, j++)
                     if (!eq(target.get(i), source.get(j)))
                         continue nextCand; // Element mismatch, try next cand
                 return candidate; // All elements of candidate matched target
@@ -963,25 +963,25 @@ public class Collections {
         final Collection<? extends E> c;
 
         UnmodifiableCollection(Collection<? extends E> c) {
-            if (c==null)
+            if (c == null)
                 throw new NullPointerException();
             this.c = c;
         }
 
-        public int size()                          {return c.size();}
-        public boolean isEmpty()                   {return c.isEmpty();}
-        public boolean contains(Object o)          {return c.contains(o);}
-        public Object[] toArray()                  {return c.toArray();}
-        public <T> T[] toArray(T[] a)              {return c.toArray(a);}
-        public <T> T[] toArray(IntFunction<T[]> f) {return c.toArray(f);}
-        public String toString()                   {return c.toString();}
+        public int size()                          { return c.size(); }
+        public boolean isEmpty()                   { return c.isEmpty(); }
+        public boolean contains(Object o)          { return c.contains(o); }
+        public Object[] toArray()                  { return c.toArray(); }
+        public <T> T[] toArray(T[] a)              { return c.toArray(a); }
+        public <T> T[] toArray(IntFunction<T[]> f) { return c.toArray(f); }
+        public String toString()                   { return c.toString(); }
 
         public Iterator<E> iterator() {
             return new Iterator<E>() {
                 private final Iterator<? extends E> i = c.iterator();
 
-                public boolean hasNext() {return i.hasNext();}
-                public E next()          {return i.next();}
+                public boolean hasNext() { return i.hasNext(); }
+                public E next()          { return i.next(); }
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
@@ -1004,14 +1004,6 @@ public class Collections {
             throw new UnsupportedOperationException();
         }
 
-        public boolean removeAll(Collection<?> coll) {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean retainAll(Collection<?> coll) {
-            throw new UnsupportedOperationException();
-        }
-
         public void clear() {
             throw new UnsupportedOperationException();
         }
@@ -1020,11 +1012,6 @@ public class Collections {
         // @Override
         public void forEach(Consumer<? super E> action) {
             c.forEach(action);
-        }
-
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            throw new UnsupportedOperationException();
         }
     }
 
@@ -1046,9 +1033,9 @@ public class Collections {
     }
 
     static class UnmodifiableSet<E> extends UnmodifiableCollection<E> implements Set<E> {
-        UnmodifiableSet(Set<? extends E> s)     {super(s);}
-        public boolean equals(Object o) {return o == this || c.equals(o);}
-        public int hashCode()           {return c.hashCode();}
+        UnmodifiableSet(Set<? extends E> s)     { super(s); }
+        public boolean equals(Object o) { return o == this || c.equals(o); }
+        public int hashCode()           { return c.hashCode(); }
     }
 
     /**
@@ -1074,12 +1061,12 @@ public class Collections {
     static class UnmodifiableSortedSet<E> extends UnmodifiableSet<E> implements SortedSet<E> {
         private final SortedSet<E> ss;
 
-        UnmodifiableSortedSet(SortedSet<E> s) {super(s); ss = s;}
+        UnmodifiableSortedSet(SortedSet<E> s) { super(s); ss = s; }
 
-        public Comparator<? super E> comparator() {return ss.comparator();}
+        public Comparator<? super E> comparator() { return ss.comparator(); }
 
         public SortedSet<E> subSet(E fromElement, E toElement) {
-            return new UnmodifiableSortedSet<>(ss.subSet(fromElement,toElement));
+            return new UnmodifiableSortedSet<>(ss.subSet(fromElement, toElement));
         }
 
         public SortedSet<E> headSet(E toElement) {
@@ -1090,8 +1077,8 @@ public class Collections {
             return new UnmodifiableSortedSet<>(ss.tailSet(fromElement));
         }
 
-        public E first()                   {return ss.first();}
-        public E last()                    {return ss.last();}
+        public E first()                   { return ss.first(); }
+        public E last()                    { return ss.last(); }
     }
 
     /**
@@ -1140,7 +1127,7 @@ public class Collections {
          */
         private final NavigableSet<E> ns;
 
-        UnmodifiableNavigableSet(NavigableSet<E> s)         {super(s); ns = s;}
+        UnmodifiableNavigableSet(NavigableSet<E> s)         { super(s); ns = s; }
 
         public E lower(E e)                             { return ns.lower(e); }
         public E floor(E e)                             { return ns.floor(e); }
@@ -1193,10 +1180,10 @@ public class Collections {
             this.list = list;
         }
 
-        public boolean equals(Object o) {return o == this || list.equals(o);}
-        public int hashCode()           {return list.hashCode();}
+        public boolean equals(Object o) { return o == this || list.equals(o); }
+        public int hashCode()           { return list.hashCode(); }
 
-        public E get(int index) {return list.get(index);}
+        public E get(int index) { return list.get(index); }
         public E set(int index, E element) {
             throw new UnsupportedOperationException();
         }
@@ -1208,8 +1195,8 @@ public class Collections {
         public E remove(int index) {
             throw new UnsupportedOperationException();
         }
-        public int indexOf(Object o)            {return list.indexOf(o);}
-        public int lastIndexOf(Object o)        {return list.lastIndexOf(o);}
+        public int indexOf(Object o)            { return list.indexOf(o); }
+        public int lastIndexOf(Object o)        { return list.lastIndexOf(o); }
         public boolean addAll(int index, Collection<? extends E> c) {
             throw new UnsupportedOperationException();
         }
@@ -1223,18 +1210,18 @@ public class Collections {
             throw new UnsupportedOperationException();
         }
 
-        public ListIterator<E> listIterator()   {return listIterator(0);}
+        public ListIterator<E> listIterator()   { return listIterator(0); }
 
         public ListIterator<E> listIterator(final int index) {
             return new ListIterator<E>() {
                 private final ListIterator<? extends E> i = list.listIterator(index);
 
-                public boolean hasNext()     {return i.hasNext();}
-                public E next()              {return i.next();}
-                public boolean hasPrevious() {return i.hasPrevious();}
-                public E previous()          {return i.previous();}
-                public int nextIndex()       {return i.nextIndex();}
-                public int previousIndex()   {return i.previousIndex();}
+                public boolean hasNext()     { return i.hasNext(); }
+                public E next()              { return i.next(); }
+                public boolean hasPrevious() { return i.hasPrevious(); }
+                public E previous()          { return i.previous(); }
+                public int nextIndex()       { return i.nextIndex(); }
+                public int previousIndex()   { return i.previousIndex(); }
 
                 public void remove() {
                     throw new UnsupportedOperationException();
@@ -1288,16 +1275,16 @@ public class Collections {
         private final Map<? extends K, ? extends V> m;
 
         UnmodifiableMap(Map<? extends K, ? extends V> m) {
-            if (m==null)
+            if (m == null)
                 throw new NullPointerException();
             this.m = m;
         }
 
-        public int size()                        {return m.size();}
-        public boolean isEmpty()                 {return m.isEmpty();}
-        public boolean containsKey(Object key)   {return m.containsKey(key);}
-        public boolean containsValue(Object val) {return m.containsValue(val);}
-        public V get(Object key)                 {return m.get(key);}
+        public int size()                        { return m.size(); }
+        public boolean isEmpty()                 { return m.isEmpty(); }
+        public boolean containsKey(Object key)   { return m.containsKey(key); }
+        public boolean containsValue(Object val) { return m.containsValue(val); }
+        public V get(Object key)                 { return m.get(key); }
 
         public V put(K key, V value) {
             throw new UnsupportedOperationException();
@@ -1320,26 +1307,26 @@ public class Collections {
         private transient Collection<V> values;
 
         public Set<K> keySet() {
-            if (keySet==null)
+            if (keySet == null)
                 keySet = unmodifiableSet(m.keySet());
             return keySet;
         }
 
         public Set<Map.Entry<K,V>> entrySet() {
-            if (entrySet==null)
+            if (entrySet == null)
                 entrySet = new UnmodifiableEntrySet<>(m.entrySet());
             return entrySet;
         }
 
         public Collection<V> values() {
-            if (values==null)
+            if (values == null)
                 values = unmodifiableCollection(m.values());
             return values;
         }
 
-        public boolean equals(Object o) {return o == this || m.equals(o);}
-        public int hashCode()           {return m.hashCode();}
-        public String toString()        {return m.toString();}
+        public boolean equals(Object o) { return o == this || m.equals(o); }
+        public int hashCode()           { return m.hashCode(); }
+        public String toString()        { return m.toString(); }
 
         // Override default methods in Map
         // @Override
@@ -1413,7 +1400,9 @@ public class Collections {
             }
 
             static <K, V> Consumer<Map.Entry<? extends K, ? extends V>> entryConsumer(Consumer<? super Entry<K, V>> action) {
-                return e -> action.accept(new UnmodifiableEntry<>(e));
+                return new Consumer<>() {
+                    public void accept(Map.Entry<? extends K, ? extends V> e) { action.accept(new UnmodifiableEntry<>(e)); }
+                };
             }
 
             public void forEach(Consumer<? super Entry<K, V>> action) {
@@ -1452,7 +1441,7 @@ public class Collections {
                 // We don't pass a to c.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
                 // could get his hands on raw (unwrapped) Entries from c.
-                Object[] arr = c.toArray(a.length==0 ? a : Arrays.copyOf(a, 0));
+                Object[] arr = c.toArray(a.length == 0 ? a : Arrays.copyOf(a, 0));
 
                 for (int i = 0; i < arr.length; i++)
                     arr[i] = new UnmodifiableEntry<>((Map.Entry<? extends K, ? extends V>)arr[i]);
@@ -1514,14 +1503,14 @@ public class Collections {
                 private Map.Entry<? extends K, ? extends V> e;
 
                 UnmodifiableEntry(Map.Entry<? extends K, ? extends V> e)
-                        {this.e = Objects.requireNonNull(e);}
+                        { this.e = Objects.requireNonNull(e); }
 
-                public K getKey()        {return e.getKey();}
-                public V getValue()      {return e.getValue();}
+                public K getKey()        { return e.getKey(); }
+                public V getValue()      { return e.getValue(); }
                 public V setValue(V value) {
                     throw new UnsupportedOperationException();
                 }
-                public int hashCode()    {return e.hashCode();}
+                public int hashCode()    { return e.hashCode(); }
                 public boolean equals(Object o) {
                     if (this == o)
                         return true;
@@ -1530,7 +1519,7 @@ public class Collections {
                     Map.Entry<?,?> t = (Map.Entry<?,?>)o;
                     return eq(e.getKey(), t.getKey()) && eq(e.getValue(), t.getValue());
                 }
-                public String toString() {return e.toString();}
+                public String toString() { return e.toString(); }
             }
         }
     }
@@ -1617,7 +1606,7 @@ public class Collections {
          */
         private final NavigableMap<K, ? extends V> nm;
 
-        UnmodifiableNavigableMap(NavigableMap<K, ? extends V> m) {super(m); nm = m;}
+        UnmodifiableNavigableMap(NavigableMap<K, ? extends V> m) { super(m); nm = m; }
 
         public K lowerKey(K key)                   { return nm.lowerKey(key); }
         public K floorKey(K key)                   { return nm.floorKey(key); }
@@ -1741,27 +1730,27 @@ public class Collections {
         }
 
         public int size() {
-            synchronized (mutex) {return c.size();}
+            synchronized (mutex) { return c.size(); }
         }
 
         public boolean isEmpty() {
-            synchronized (mutex) {return c.isEmpty();}
+            synchronized (mutex) { return c.isEmpty(); }
         }
 
         public boolean contains(Object o) {
-            synchronized (mutex) {return c.contains(o);}
+            synchronized (mutex) { return c.contains(o); }
         }
 
         public Object[] toArray() {
-            synchronized (mutex) {return c.toArray();}
+            synchronized (mutex) { return c.toArray(); }
         }
 
         public <T> T[] toArray(T[] a) {
-            synchronized (mutex) {return c.toArray(a);}
+            synchronized (mutex) { return c.toArray(a); }
         }
 
         public <T> T[] toArray(IntFunction<T[]> f) {
-            synchronized (mutex) {return c.toArray(f);}
+            synchronized (mutex) { return c.toArray(f); }
         }
 
         public Iterator<E> iterator() {
@@ -1769,46 +1758,33 @@ public class Collections {
         }
 
         public boolean add(E e) {
-            synchronized (mutex) {return c.add(e);}
+            synchronized (mutex) { return c.add(e); }
         }
 
         public boolean remove(Object o) {
-            synchronized (mutex) {return c.remove(o);}
+            synchronized (mutex) { return c.remove(o); }
         }
 
         public boolean containsAll(Collection<?> coll) {
-            synchronized (mutex) {return c.containsAll(coll);}
+            synchronized (mutex) { return c.containsAll(coll); }
         }
 
         public boolean addAll(Collection<? extends E> coll) {
-            synchronized (mutex) {return c.addAll(coll);}
-        }
-
-        public boolean removeAll(Collection<?> coll) {
-            synchronized (mutex) {return c.removeAll(coll);}
-        }
-
-        public boolean retainAll(Collection<?> coll) {
-            synchronized (mutex) {return c.retainAll(coll);}
+            synchronized (mutex) { return c.addAll(coll); }
         }
 
         public void clear() {
-            synchronized (mutex) {c.clear();}
+            synchronized (mutex) { c.clear(); }
         }
 
         public String toString() {
-            synchronized (mutex) {return c.toString();}
+            synchronized (mutex) { return c.toString(); }
         }
 
         // Override default methods in Collection
         // @Override
         public void forEach(Consumer<? super E> consumer) {
-            synchronized (mutex) {c.forEach(consumer);}
-        }
-
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            synchronized (mutex) {return c.removeIf(filter);}
+            synchronized (mutex) { c.forEach(consumer); }
         }
     }
 
@@ -1857,11 +1833,11 @@ public class Collections {
         public boolean equals(Object o) {
             if (this == o)
                 return true;
-            synchronized (mutex) {return c.equals(o);}
+            synchronized (mutex) { return c.equals(o); }
         }
 
         public int hashCode() {
-            synchronized (mutex) {return c.hashCode();}
+            synchronized (mutex) { return c.hashCode(); }
         }
     }
 
@@ -1920,7 +1896,7 @@ public class Collections {
         }
 
         public Comparator<? super E> comparator() {
-            synchronized (mutex) {return ss.comparator();}
+            synchronized (mutex) { return ss.comparator(); }
         }
 
         public SortedSet<E> subSet(E fromElement, E toElement) {
@@ -1937,16 +1913,16 @@ public class Collections {
 
         public SortedSet<E> tailSet(E fromElement) {
             synchronized (mutex) {
-               return new SynchronizedSortedSet<>(ss.tailSet(fromElement),mutex);
+               return new SynchronizedSortedSet<>(ss.tailSet(fromElement), mutex);
             }
         }
 
         public E first() {
-            synchronized (mutex) {return ss.first();}
+            synchronized (mutex) { return ss.first(); }
         }
 
         public E last() {
-            synchronized (mutex) {return ss.last();}
+            synchronized (mutex) { return ss.last(); }
         }
     }
 
@@ -2004,12 +1980,12 @@ public class Collections {
             super(s, mutex);
             ns = s;
         }
-        public E lower(E e)      { synchronized (mutex) {return ns.lower(e);} }
-        public E floor(E e)      { synchronized (mutex) {return ns.floor(e);} }
-        public E ceiling(E e)  { synchronized (mutex) {return ns.ceiling(e);} }
-        public E higher(E e)    { synchronized (mutex) {return ns.higher(e);} }
-        public E pollFirst()  { synchronized (mutex) {return ns.pollFirst();} }
-        public E pollLast()    { synchronized (mutex) {return ns.pollLast();} }
+        public E lower(E e)      { synchronized (mutex) { return ns.lower(e); } }
+        public E floor(E e)      { synchronized (mutex) { return ns.floor(e); } }
+        public E ceiling(E e)  { synchronized (mutex) { return ns.ceiling(e); } }
+        public E higher(E e)    { synchronized (mutex) { return ns.higher(e); } }
+        public E pollFirst()  { synchronized (mutex) { return ns.pollFirst(); } }
+        public E pollLast()    { synchronized (mutex) { return ns.pollLast(); } }
 
         public NavigableSet<E> descendingSet() {
             synchronized (mutex) {
@@ -2109,39 +2085,39 @@ public class Collections {
         public boolean equals(Object o) {
             if (this == o)
                 return true;
-            synchronized (mutex) {return list.equals(o);}
+            synchronized (mutex) { return list.equals(o); }
         }
 
         public int hashCode() {
-            synchronized (mutex) {return list.hashCode();}
+            synchronized (mutex) { return list.hashCode(); }
         }
 
         public E get(int index) {
-            synchronized (mutex) {return list.get(index);}
+            synchronized (mutex) { return list.get(index); }
         }
 
         public E set(int index, E element) {
-            synchronized (mutex) {return list.set(index, element);}
+            synchronized (mutex) { return list.set(index, element); }
         }
 
         public void add(int index, E element) {
-            synchronized (mutex) {list.add(index, element);}
+            synchronized (mutex) { list.add(index, element); }
         }
 
         public E remove(int index) {
-            synchronized (mutex) {return list.remove(index);}
+            synchronized (mutex) { return list.remove(index); }
         }
 
         public int indexOf(Object o) {
-            synchronized (mutex) {return list.indexOf(o);}
+            synchronized (mutex) { return list.indexOf(o); }
         }
 
         public int lastIndexOf(Object o) {
-            synchronized (mutex) {return list.lastIndexOf(o);}
+            synchronized (mutex) { return list.lastIndexOf(o); }
         }
 
         public boolean addAll(int index, Collection<? extends E> c) {
-            synchronized (mutex) {return list.addAll(index, c);}
+            synchronized (mutex) { return list.addAll(index, c); }
         }
 
         public ListIterator<E> listIterator() {
@@ -2160,11 +2136,11 @@ public class Collections {
 
         // @Override
         public void replaceAll(UnaryOperator<E> operator) {
-            synchronized (mutex) {list.replaceAll(operator);}
+            synchronized (mutex) { list.replaceAll(operator); }
         }
         // @Override
         public void sort(Comparator<? super E> c) {
-            synchronized (mutex) {list.sort(c);}
+            synchronized (mutex) { list.sort(c); }
         }
     }
 
@@ -2232,39 +2208,39 @@ public class Collections {
         }
 
         public int size() {
-            synchronized (mutex) {return m.size();}
+            synchronized (mutex) { return m.size(); }
         }
 
         public boolean isEmpty() {
-            synchronized (mutex) {return m.isEmpty();}
+            synchronized (mutex) { return m.isEmpty(); }
         }
 
         public boolean containsKey(Object key) {
-            synchronized (mutex) {return m.containsKey(key);}
+            synchronized (mutex) { return m.containsKey(key); }
         }
 
         public boolean containsValue(Object value) {
-            synchronized (mutex) {return m.containsValue(value);}
+            synchronized (mutex) { return m.containsValue(value); }
         }
 
         public V get(Object key) {
-            synchronized (mutex) {return m.get(key);}
+            synchronized (mutex) { return m.get(key); }
         }
 
         public V put(K key, V value) {
-            synchronized (mutex) {return m.put(key, value);}
+            synchronized (mutex) { return m.put(key, value); }
         }
 
         public V remove(Object key) {
-            synchronized (mutex) {return m.remove(key);}
+            synchronized (mutex) { return m.remove(key); }
         }
 
         public void putAll(Map<? extends K, ? extends V> map) {
-            synchronized (mutex) {m.putAll(map);}
+            synchronized (mutex) { m.putAll(map); }
         }
 
         public void clear() {
-            synchronized (mutex) {m.clear();}
+            synchronized (mutex) { m.clear(); }
         }
 
         private transient Set<K> keySet;
@@ -2273,7 +2249,7 @@ public class Collections {
 
         public Set<K> keySet() {
             synchronized (mutex) {
-                if (keySet==null)
+                if (keySet == null)
                     keySet = new SynchronizedSet<>(m.keySet(), mutex);
                 return keySet;
             }
@@ -2281,7 +2257,7 @@ public class Collections {
 
         public Set<Map.Entry<K,V>> entrySet() {
             synchronized (mutex) {
-                if (entrySet==null)
+                if (entrySet == null)
                     entrySet = new SynchronizedSet<>(m.entrySet(), mutex);
                 return entrySet;
             }
@@ -2289,7 +2265,7 @@ public class Collections {
 
         public Collection<V> values() {
             synchronized (mutex) {
-                if (values==null)
+                if (values == null)
                     values = new SynchronizedCollection<>(m.values(), mutex);
                 return values;
             }
@@ -2298,61 +2274,61 @@ public class Collections {
         public boolean equals(Object o) {
             if (this == o)
                 return true;
-            synchronized (mutex) {return m.equals(o);}
+            synchronized (mutex) { return m.equals(o); }
         }
 
         public int hashCode() {
-            synchronized (mutex) {return m.hashCode();}
+            synchronized (mutex) { return m.hashCode(); }
         }
 
         public String toString() {
-            synchronized (mutex) {return m.toString();}
+            synchronized (mutex) { return m.toString(); }
         }
 
         // Override default methods in Map
         // @Override
         public V getOrDefault(Object k, V defaultValue) {
-            synchronized (mutex) {return m.getOrDefault(k, defaultValue);}
+            synchronized (mutex) { return m.getOrDefault(k, defaultValue); }
         }
         // @Override
         public void forEach(BiConsumer<? super K, ? super V> action) {
-            synchronized (mutex) {m.forEach(action);}
+            synchronized (mutex) { m.forEach(action); }
         }
         // @Override
         public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
-            synchronized (mutex) {m.replaceAll(function);}
+            synchronized (mutex) { m.replaceAll(function); }
         }
         // @Override
         public V putIfAbsent(K key, V value) {
-            synchronized (mutex) {return m.putIfAbsent(key, value);}
+            synchronized (mutex) { return m.putIfAbsent(key, value); }
         }
         // @Override
         public boolean remove(Object key, Object value) {
-            synchronized (mutex) {return m.remove(key, value);}
+            synchronized (mutex) { return m.remove(key, value); }
         }
         // @Override
         public boolean replace(K key, V oldValue, V newValue) {
-            synchronized (mutex) {return m.replace(key, oldValue, newValue);}
+            synchronized (mutex) { return m.replace(key, oldValue, newValue); }
         }
         // @Override
         public V replace(K key, V value) {
-            synchronized (mutex) {return m.replace(key, value);}
+            synchronized (mutex) { return m.replace(key, value); }
         }
         // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-            synchronized (mutex) {return m.computeIfAbsent(key, mappingFunction);}
+            synchronized (mutex) { return m.computeIfAbsent(key, mappingFunction); }
         }
         // @Override
         public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            synchronized (mutex) {return m.computeIfPresent(key, remappingFunction);}
+            synchronized (mutex) { return m.computeIfPresent(key, remappingFunction); }
         }
         // @Override
         public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-            synchronized (mutex) {return m.compute(key, remappingFunction);}
+            synchronized (mutex) { return m.compute(key, remappingFunction); }
         }
         // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-            synchronized (mutex) {return m.merge(key, value, remappingFunction);}
+            synchronized (mutex) { return m.merge(key, value, remappingFunction); }
         }
     }
 
@@ -2417,7 +2393,7 @@ public class Collections {
         }
 
         public Comparator<? super K> comparator() {
-            synchronized (mutex) {return sm.comparator();}
+            synchronized (mutex) { return sm.comparator(); }
         }
 
         public SortedMap<K,V> subMap(K fromKey, K toKey) {
@@ -2434,16 +2410,16 @@ public class Collections {
 
         public SortedMap<K,V> tailMap(K fromKey) {
             synchronized (mutex) {
-               return new SynchronizedSortedMap<>(sm.tailMap(fromKey),mutex);
+               return new SynchronizedSortedMap<>(sm.tailMap(fromKey), mutex);
             }
         }
 
         public K firstKey() {
-            synchronized (mutex) {return sm.firstKey();}
+            synchronized (mutex) { return sm.firstKey(); }
         }
 
         public K lastKey() {
-            synchronized (mutex) {return sm.lastKey();}
+            synchronized (mutex) { return sm.lastKey(); }
         }
     }
 
@@ -2526,8 +2502,7 @@ public class Collections {
 
         public NavigableMap<K, V> descendingMap() {
             synchronized (mutex) {
-                return
-                    new SynchronizedNavigableMap<>(nm.descendingMap(), mutex);
+                return new SynchronizedNavigableMap<>(nm.descendingMap(), mutex);
             }
         }
 
@@ -2561,7 +2536,7 @@ public class Collections {
 
         public SortedMap<K,V> tailMap(K fromKey) {
             synchronized (mutex) {
-        return new SynchronizedNavigableMap<>(nm.tailMap(fromKey, true),mutex);
+        return new SynchronizedNavigableMap<>(nm.tailMap(fromKey, true), mutex);
             }
         }
 
@@ -2688,14 +2663,6 @@ public class Collections {
             return c.containsAll(coll);
         }
 
-        public boolean removeAll(Collection<?> coll) {
-            return c.removeAll(coll);
-        }
-
-        public boolean retainAll(Collection<?> coll) {
-            return c.retainAll(coll);
-        }
-
         public Iterator<E> iterator() {
             // JDK-6363904 - unwrapped iterator could be typecast to
             // ListIterator with unsafe set()
@@ -2748,11 +2715,7 @@ public class Collections {
 
         // Override default methods in Collection
         // @Override
-        public void forEach(Consumer<? super E> action) {c.forEach(action);}
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            return c.removeIf(filter);
-        }
+        public void forEach(Consumer<? super E> action) { c.forEach(action); }
     }
 
     /**
@@ -2793,13 +2756,13 @@ public class Collections {
             this.queue = queue;
         }
 
-        public E element()              {return queue.element();}
-        public boolean equals(Object o) {return o == this || c.equals(o);}
-        public int hashCode()           {return c.hashCode();}
-        public E peek()                 {return queue.peek();}
-        public E poll()                 {return queue.poll();}
-        public E remove()               {return queue.remove();}
-        public boolean offer(E e)       {return queue.offer(typeCheck(e));}
+        public E element()              { return queue.element(); }
+        public boolean equals(Object o) { return o == this || c.equals(o); }
+        public int hashCode()           { return c.hashCode(); }
+        public E peek()                 { return queue.peek(); }
+        public E poll()                 { return queue.poll(); }
+        public E remove()               { return queue.remove(); }
+        public boolean offer(E e)       { return queue.offer(typeCheck(e)); }
     }
 
     /**
@@ -2883,7 +2846,7 @@ public class Collections {
         public E last()                    { return ss.last(); }
 
         public SortedSet<E> subSet(E fromElement, E toElement) {
-            return checkedSortedSet(ss.subSet(fromElement,toElement), type);
+            return checkedSortedSet(ss.subSet(fromElement, toElement), type);
         }
 
         public SortedSet<E> headSet(E toElement) {
@@ -3069,7 +3032,9 @@ public class Collections {
         // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             Objects.requireNonNull(operator);
-            list.replaceAll(e -> typeCheck(operator.apply(e)));
+            list.replaceAll(new UnaryOperator<>() {
+                public E apply(E e) { return typeCheck(operator.apply(e)); }
+            });
         }
 
         // @Override
@@ -3142,10 +3107,12 @@ public class Collections {
 
         private BiFunction<? super K, ? super V, ? extends V> typeCheck(BiFunction<? super K, ? super V, ? extends V> func) {
             Objects.requireNonNull(func);
-            return (k, v) -> {
-                V newValue = func.apply(k, v);
-                typeCheck(k, newValue);
-                return newValue;
+            return new BiFunction<>() {
+                public V apply(K k, V v) {
+                    V newValue = func.apply(k, v);
+                    typeCheck(k, newValue);
+                    return newValue;
+                }
             };
         }
 
@@ -3204,7 +3171,7 @@ public class Collections {
         private transient Set<Map.Entry<K,V>> entrySet;
 
         public Set<Map.Entry<K,V>> entrySet() {
-            if (entrySet==null)
+            if (entrySet == null)
                 entrySet = new CheckedEntrySet<>(m.entrySet(), valueType);
             return entrySet;
         }
@@ -3246,10 +3213,12 @@ public class Collections {
         // @Override
         public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
             Objects.requireNonNull(mappingFunction);
-            return m.computeIfAbsent(key, k -> {
-                V value = mappingFunction.apply(k);
-                typeCheck(k, value);
-                return value;
+            return m.computeIfAbsent(key, new Function<>() {
+                public V apply(K k) {
+                    V value = mappingFunction.apply(k);
+                    typeCheck(k, value);
+                    return value;
+                }
             });
         }
 
@@ -3266,10 +3235,12 @@ public class Collections {
         // @Override
         public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
             Objects.requireNonNull(remappingFunction);
-            return m.merge(key, value, (v1, v2) -> {
-                V newValue = remappingFunction.apply(v1, v2);
-                typeCheck(null, newValue);
-                return newValue;
+            return m.merge(key, value, new BiFunction<>() {
+                public V apply(V v1, V v2) {
+                    V newValue = remappingFunction.apply(v1, v2);
+                    typeCheck(null, newValue);
+                    return newValue;
+                }
             });
         }
 
@@ -3335,7 +3306,7 @@ public class Collections {
                 // We don't pass a to s.toArray, to avoid window of
                 // vulnerability wherein an unscrupulous multithreaded client
                 // could get his hands on raw (unwrapped) Entries from s.
-                T[] arr = s.toArray(a.length==0 ? a : Arrays.copyOf(a, 0));
+                T[] arr = s.toArray(a.length == 0 ? a : Arrays.copyOf(a, 0));
 
                 for (int i = 0; i < arr.length; i++)
                     arr[i] = (T) checkedEntry((Map.Entry<K,V>)arr[i], valueType);
@@ -3377,14 +3348,6 @@ public class Collections {
                 if (!(o instanceof Map.Entry))
                     return false;
                 return s.remove(new AbstractMap.SimpleImmutableEntry<>((Map.Entry<?,?>)o));
-            }
-
-            public boolean removeAll(Collection<?> c) {
-                return batchRemove(c, false);
-            }
-
-            public boolean retainAll(Collection<?> c) {
-                return batchRemove(c, true);
             }
 
             private boolean batchRemove(Collection<?> c, boolean complement) {
@@ -3795,11 +3758,11 @@ public class Collections {
     private static class EmptySet<E> extends AbstractSet<E> {
         public Iterator<E> iterator() { return emptyIterator(); }
 
-        public int size() {return 0;}
-        public boolean isEmpty() {return true;}
+        public int size() { return 0; }
+        public boolean isEmpty() { return true; }
         public void clear() {}
 
-        public boolean contains(Object obj) {return false;}
+        public boolean contains(Object obj) { return false; }
         public boolean containsAll(Collection<?> c) { return c.isEmpty(); }
 
         public Object[] toArray() { return new Object[0]; }
@@ -3814,12 +3777,6 @@ public class Collections {
         // @Override
         public void forEach(Consumer<? super E> action) {
             Objects.requireNonNull(action);
-        }
-
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            Objects.requireNonNull(filter);
-            return false;
         }
 
         // @Override
@@ -3905,11 +3862,11 @@ public class Collections {
             return emptyListIterator();
         }
 
-        public int size() {return 0;}
-        public boolean isEmpty() {return true;}
+        public int size() { return 0; }
+        public boolean isEmpty() { return true; }
         public void clear() {}
 
-        public boolean contains(Object obj) {return false;}
+        public boolean contains(Object obj) { return false; }
         public boolean containsAll(Collection<?> c) { return c.isEmpty(); }
 
         public Object[] toArray() { return new Object[0]; }
@@ -3931,14 +3888,10 @@ public class Collections {
         public int hashCode() { return 1; }
 
         // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            Objects.requireNonNull(filter);
-            return false;
-        }
-        // @Override
         public void replaceAll(UnaryOperator<E> operator) {
             Objects.requireNonNull(operator);
         }
+
         // @Override
         public void sort(Comparator<? super E> c) {
         }
@@ -4018,21 +3971,21 @@ public class Collections {
     }
 
     private static class EmptyMap<K,V> extends AbstractMap<K,V> {
-        public int size()                          {return 0;}
-        public boolean isEmpty()                   {return true;}
+        public int size()                          { return 0; }
+        public boolean isEmpty()                   { return true; }
         public void clear()                        {}
-        public boolean containsKey(Object key)     {return false;}
-        public boolean containsValue(Object value) {return false;}
-        public V get(Object key)                   {return null;}
-        public Set<K> keySet()                     {return emptySet();}
-        public Collection<V> values()              {return emptySet();}
-        public Set<Map.Entry<K,V>> entrySet()      {return emptySet();}
+        public boolean containsKey(Object key)     { return false; }
+        public boolean containsValue(Object value) { return false; }
+        public V get(Object key)                   { return null; }
+        public Set<K> keySet()                     { return emptySet(); }
+        public Collection<V> values()              { return emptySet(); }
+        public Set<Map.Entry<K,V>> entrySet()      { return emptySet(); }
 
         public boolean equals(Object o) {
             return (o instanceof Map) && ((Map<?,?>)o).isEmpty();
         }
 
-        public int hashCode()                      {return 0;}
+        public int hashCode()                      { return 0; }
 
         // Override default methods in Map
         // @Override
@@ -4130,25 +4083,20 @@ public class Collections {
     private static class SingletonSet<E> extends AbstractSet<E> {
         private final E element;
 
-        SingletonSet(E e) {element = e;}
+        SingletonSet(E e) { element = e; }
 
         public Iterator<E> iterator() {
             return singletonIterator(element);
         }
 
-        public int size() {return 1;}
+        public int size() { return 1; }
 
-        public boolean contains(Object o) {return eq(o, element);}
+        public boolean contains(Object o) { return eq(o, element); }
 
         // Override default methods for Collection
         // @Override
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
-        }
-
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            throw new UnsupportedOperationException();
         }
 
         // @Override
@@ -4172,15 +4120,15 @@ public class Collections {
     private static class SingletonList<E> extends AbstractList<E> implements RandomAccess {
         private final E element;
 
-        SingletonList(E obj)                {element = obj;}
+        SingletonList(E obj)                { element = obj; }
 
         public Iterator<E> iterator() {
             return singletonIterator(element);
         }
 
-        public int size()                   {return 1;}
+        public int size()                   { return 1; }
 
-        public boolean contains(Object obj) {return eq(obj, element);}
+        public boolean contains(Object obj) { return eq(obj, element); }
 
         public E get(int index) {
             if (index != 0)
@@ -4192,11 +4140,6 @@ public class Collections {
         // @Override
         public void forEach(Consumer<? super E> action) {
             action.accept(element);
-        }
-
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            throw new UnsupportedOperationException();
         }
 
         // @Override
@@ -4238,30 +4181,30 @@ public class Collections {
             v = value;
         }
 
-        public int size()                                           {return 1;}
-        public boolean isEmpty()                                {return false;}
-        public boolean containsKey(Object key)             {return eq(key, k);}
-        public boolean containsValue(Object value)       {return eq(value, v);}
-        public V get(Object key)              {return (eq(key, k) ? v : null);}
+        public int size()                                           { return 1; }
+        public boolean isEmpty()                                { return false; }
+        public boolean containsKey(Object key)             { return eq(key, k); }
+        public boolean containsValue(Object value)       { return eq(value, v); }
+        public V get(Object key)              { return (eq(key, k) ? v : null); }
 
         private transient Set<K> keySet;
         private transient Set<Map.Entry<K,V>> entrySet;
         private transient Collection<V> values;
 
         public Set<K> keySet() {
-            if (keySet==null)
+            if (keySet == null)
                 keySet = singleton(k);
             return keySet;
         }
 
         public Set<Map.Entry<K,V>> entrySet() {
-            if (entrySet==null)
+            if (entrySet == null)
                 entrySet = Collections.<Map.Entry<K,V>>singleton(new SimpleImmutableEntry<>(k, v));
             return entrySet;
         }
 
         public Collection<V> values() {
-            if (values==null)
+            if (values == null)
                 values = singleton(v);
             return values;
         }
@@ -4356,7 +4299,7 @@ public class Collections {
         final E element;
 
         CopiesList(int n, E e) {
-            assert n >= 0;
+            // assert n >= 0;
             this.n = n;
             element = e;
         }
@@ -4493,7 +4436,7 @@ public class Collections {
         final Comparator<T> cmp;
 
         ReverseComparator2(Comparator<T> cmp) {
-            assert cmp != null;
+            // assert cmp != null;
             this.cmp = cmp;
         }
 
@@ -4776,19 +4719,13 @@ public class Collections {
         public String toString()          { return s.toString(); }
         public int hashCode()             { return s.hashCode(); }
         public boolean equals(Object o)   { return o == this || s.equals(o); }
-        public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
-        public boolean removeAll(Collection<?> c)   {return s.removeAll(c);}
-        public boolean retainAll(Collection<?> c)   {return s.retainAll(c);}
+        public boolean containsAll(Collection<?> c) { return s.containsAll(c); }
         // addAll is the only inherited implementation
 
         // Override default methods in Collection
         // @Override
         public void forEach(Consumer<? super E> action) {
             s.forEach(action);
-        }
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            return s.removeIf(filter);
         }
     }
 
@@ -4833,16 +4770,10 @@ public class Collections {
         public <T> T[] toArray(IntFunction<T[]> f)  { return q.toArray(f); }
         public String toString()                    { return q.toString(); }
         public boolean containsAll(Collection<?> c) { return q.containsAll(c); }
-        public boolean removeAll(Collection<?> c)   { return q.removeAll(c); }
-        public boolean retainAll(Collection<?> c)   { return q.retainAll(c); }
         // We use inherited addAll; forwarding addAll would be wrong
 
         // Override default methods in Collection
         // @Override
-        public void forEach(Consumer<? super E> action) {q.forEach(action);}
-        // @Override
-        public boolean removeIf(Predicate<? super E> filter) {
-            return q.removeIf(filter);
-        }
+        public void forEach(Consumer<? super E> action) { q.forEach(action); }
     }
 }

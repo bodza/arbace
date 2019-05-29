@@ -279,49 +279,6 @@ public interface Set<E> extends Collection<E> {
     boolean addAll(Collection<? extends E> c);
 
     /**
-     * Retains only the elements in this set that are contained in the
-     * specified collection (optional operation).  In other words, removes
-     * from this set all of its elements that are not contained in the
-     * specified collection.  If the specified collection is also a set, this
-     * operation effectively modifies this set so that its value is the
-     * <i>intersection</i> of the two sets.
-     *
-     * @param c collection containing elements to be retained in this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws UnsupportedOperationException if the {@code retainAll} operation
-     *         is not supported by this set
-     * @throws ClassCastException if the class of an element of this set
-     *         is incompatible with the specified collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this set contains a null element and the
-     *         specified collection does not permit null elements
-     *         (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    boolean retainAll(Collection<?> c);
-
-    /**
-     * Removes from this set all of its elements that are contained in the
-     * specified collection (optional operation).  If the specified
-     * collection is also a set, this operation effectively modifies this
-     * set so that its value is the <i>asymmetric set difference</i> of
-     * the two sets.
-     *
-     * @param c collection containing elements to be removed from this set
-     * @return {@code true} if this set changed as a result of the call
-     * @throws UnsupportedOperationException if the {@code removeAll} operation
-     *         is not supported by this set
-     * @throws ClassCastException if the class of an element of this set
-     *         is incompatible with the specified collection
-     * (<a href="Collection.html#optional-restrictions">optional</a>)
-     * @throws NullPointerException if this set contains a null element and the
-     *         specified collection does not permit null elements
-     *         (<a href="Collection.html#optional-restrictions">optional</a>),
-     *         or if the specified collection is null
-     */
-    boolean removeAll(Collection<?> c);
-
-    /**
      * Removes all of the elements from this set (optional operation).
      * The set will be empty after this call returns.
      *

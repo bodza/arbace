@@ -374,7 +374,7 @@ class CharacterData01 extends CharacterData {
             case 0x16B5C: retval = 100; break;     // PAHAWH HMONG NUMBER HUNDREDS
             case 0x16B5D: retval = 10000; break;   // PAHAWH HMONG NUMBER TEN THOUSANDS
             case 0x16B5E: retval = 1000000; break; // PAHAWH HMONG NUMBER MILLIONS
-            case 0x16B5F: retval = 100000000; break;// PAHAWH HMONG NUMBER HUNDRED MILLIONS
+            case 0x16B5F: retval = 100000000; break; // PAHAWH HMONG NUMBER HUNDRED MILLIONS
             case 0x1D36C: retval = 40; break;      // COUNTING ROD TENS DIGIT FOUR
             case 0x1D36D: retval = 50; break;      // COUNTING ROD TENS DIGIT FIVE
             case 0x1D36E: retval = 60; break;      // COUNTING ROD TENS DIGIT SIX
@@ -846,7 +846,7 @@ class CharacterData01 extends CharacterData {
 
     static {
         char[] data = A_DATA.toCharArray();
-        assert (data.length == (448 * 2));
+        // assert (data.length == (448 * 2));
         int i = 0, j = 0;
         while (i < (448 * 2)) {
             A[j++] = (data[i++] << 16) | data[i++];

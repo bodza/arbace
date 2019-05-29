@@ -1,7 +1,7 @@
 package sun.nio.cs;
 
 /*
- * FastPath byte[]->char[] decoder, REPLACE on malformed or
+ * FastPath byte[] -> char[] decoder, REPLACE on malformed or
  * unmappable input.
  */
 public interface ArrayDecoder {

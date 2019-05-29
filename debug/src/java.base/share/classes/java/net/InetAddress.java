@@ -689,10 +689,8 @@ public class InetAddress {
                     if (cachePolicy == InetAddressCachePolicy.NEVER) {
                         cache.remove(host, this);
                     } else {
-                        CachedAddresses cachedAddresses = new CachedAddresses(
-                            host,
-                            inetAddresses,
-                            cachePolicy == InetAddressCachePolicy.FOREVER ? 0L : System.nanoTime() + 1000_000_000L * cachePolicy // cachePolicy is in [s] - we need [ns]
+                        CachedAddresses cachedAddresses = new CachedAddresses(host, inetAddresses,
+                            (cachePolicy == InetAddressCachePolicy.FOREVER) ? 0L : System.nanoTime() + 1000_000_000L * cachePolicy // cachePolicy is in [s] - we need [ns]
                         );
                         if (cache.replace(host, this, cachedAddresses) && cachePolicy != InetAddressCachePolicy.FOREVER) {
                             // schedule expiry
@@ -898,8 +896,8 @@ public class InetAddress {
         boolean ipv6Expected = false;
         if (host.charAt(0) == '[') {
             // This is supposed to be an IPv6 literal
-            if (host.length() > 2 && host.charAt(host.length()-1) == ']') {
-                host = host.substring(1, host.length() -1);
+            if (host.length() > 2 && host.charAt(host.length() - 1) == ']') {
+                host = host.substring(1, host.length() - 1);
                 ipv6Expected = true;
             } else {
                 // This was supposed to be a IPv6 address, but it's not!
@@ -918,10 +916,10 @@ public class InetAddress {
                 // This is supposed to be an IPv6 literal
                 // Check if a numeric or string zone id is present
                 int pos;
-                if ((pos=host.indexOf ('%')) != -1) {
-                    numericZone = checkNumericZone (host);
+                if ((pos = host.indexOf ('%')) != -1) {
+                    numericZone = checkNumericZone(host);
                     if (numericZone == -1) { /* remainder of string must be an ifname */
-                        ifname = host.substring (pos+1);
+                        ifname = host.substring(pos + 1);
                     }
                 }
                 if ((addr = IPAddressUtil.textToNumericFormatV6(host)) == null && host.contains(":")) {
@@ -979,7 +977,7 @@ public class InetAddress {
         if (percent == -1) {
             return -1;
         }
-        for (int i=percent+1; i < slen; i++) {
+        for (int i = percent + 1; i < slen; i++) {
             char c = s.charAt(i);
             if (c == ']') {
                 if (i == percent+1) {

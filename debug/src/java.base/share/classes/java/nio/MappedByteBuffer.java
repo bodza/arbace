@@ -123,7 +123,7 @@ public abstract class MappedByteBuffer extends ByteBuffer {
         long a = mappingAddress(offset);
         byte x = 0;
         try {
-            for (int i=0; i<count; i++) {
+            for (int i = 0; i < count; i++) {
                 // TODO consider changing to getByteOpaque thus avoiding
                 // dead code elimination and the need to calculate a checksum
                 x ^= unsafe.getByte(a);

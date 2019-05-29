@@ -273,10 +273,9 @@ public final class Double extends Number implements Comparable<Double> {
                 // representation.  If all the digits are zero,
                 // replace with a single 0; otherwise, remove all
                 // trailing zeros.
-                String signif = Long.toHexString(signifBits).substring(3,16);
-                answer.append(signif.equals("0000000000000") ? // 13 zeros
-                              "0":
-                              signif.replaceFirst("0{1,12}$", ""));
+                String signif = Long.toHexString(signifBits).substring(3, 16);
+                // 13 zeros
+                answer.append(signif.equals("0000000000000") ? "0" : signif.replaceFirst("0{1,12}$", ""));
 
                 answer.append('p');
                 // If the value is subnormal, use the E_min exponent

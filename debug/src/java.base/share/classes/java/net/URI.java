@@ -727,7 +727,7 @@ public final class URI implements Comparable<URI> {
      * path. Provides a fast-path for some internal cases.
      */
     /* oops! */public URI(String scheme, String path) {
-        assert validSchemeAndPath(scheme, path);
+        // assert validSchemeAndPath(scheme, path);
         this.scheme = scheme;
         this.path = path;
     }
@@ -1044,8 +1044,7 @@ public final class URI implements Comparable<URI> {
             }
         } else {
             StringBuilder sb = new StringBuilder();
-            appendSchemeSpecificPart(sb, null, getAuthority(), getUserInfo(),
-                                 host, port, getPath(), getQuery());
+            appendSchemeSpecificPart(sb, null, getAuthority(), getUserInfo(), host, port, getPath(), getQuery());
             part = sb.toString();
         }
         return schemeSpecificPart = part;
@@ -1785,14 +1784,14 @@ public final class URI implements Comparable<URI> {
              */
             if (opaquePart.startsWith("//[")) {
                 int end =  opaquePart.indexOf(']');
-                if (end != -1 && opaquePart.indexOf(':')!=-1) {
+                if (end != -1 && opaquePart.indexOf(':') != -1) {
                     String doquote, dontquote;
                     if (end == opaquePart.length()) {
                         dontquote = opaquePart;
                         doquote = "";
                     } else {
-                        dontquote = opaquePart.substring(0,end+1);
-                        doquote = opaquePart.substring(end+1);
+                        dontquote = opaquePart.substring(0, end + 1);
+                        doquote = opaquePart.substring(end + 1);
                     }
                     sb.append (dontquote);
                     sb.append(quote(doquote, L_URIC, H_URIC));
@@ -1824,9 +1823,7 @@ public final class URI implements Comparable<URI> {
             sb.append(scheme);
             sb.append(':');
         }
-        appendSchemeSpecificPart(sb, opaquePart,
-                                 authority, userInfo, host, port,
-                                 path, query);
+        appendSchemeSpecificPart(sb, opaquePart, authority, userInfo, host, port, path, query);
         appendFragment(sb, fragment);
         return sb.toString();
     }
@@ -2430,7 +2427,7 @@ public final class URI implements Comparable<URI> {
         try {
             bb = ThreadLocalCoders.encoderFor("UTF-8").encode(CharBuffer.wrap(String.valueOf(c)));
         } catch (CharacterCodingException x) {
-            assert false;
+            // assert false;
         }
         while (bb.hasRemaining()) {
             int b = bb.get() & 0xff;
@@ -2495,7 +2492,7 @@ public final class URI implements Comparable<URI> {
         try {
             bb = ThreadLocalCoders.encoderFor("UTF-8").encode(CharBuffer.wrap(ns));
         } catch (CharacterCodingException x) {
-            assert false;
+            // assert false;
         }
 
         StringBuilder sb = new StringBuilder();
@@ -2516,7 +2513,7 @@ public final class URI implements Comparable<URI> {
             return c - 'a' + 10;
         if ((c >= 'A') && (c <= 'F'))
             return c - 'A' + 10;
-        assert false;
+        // assert false;
         return -1;
     }
 
@@ -2557,7 +2554,7 @@ public final class URI implements Comparable<URI> {
         boolean betweenBrackets = false;
 
         for (int i = 0; i < n; ) {
-            assert c == s.charAt(i); // Loop invariant
+            // assert c == s.charAt(i); // Loop invariant
             if (c == '[') {
                 betweenBrackets = true;
             } else if (betweenBrackets && c == ']') {
@@ -2573,7 +2570,7 @@ public final class URI implements Comparable<URI> {
             bb.clear();
             int ui = i;
             for (;;) {
-                assert (n - i >= 2);
+                // assert (n - i >= 2);
                 bb.put(decode(s.charAt(++i), s.charAt(++i)));
                 if (++i >= n)
                     break;
@@ -2585,9 +2582,9 @@ public final class URI implements Comparable<URI> {
             cb.clear();
             dec.reset();
             CoderResult cr = dec.decode(bb, cb, true);
-            assert cr.isUnderflow();
+            // assert cr.isUnderflow();
             cr = dec.flush(cb);
-            assert cr.isUnderflow();
+            // assert cr.isUnderflow();
             sb.append(cb.flip().toString());
         }
 
@@ -2962,8 +2959,7 @@ public final class URI implements Comparable<URI> {
                         if (r+1 == q) {
                             fail ("scope id expected");
                         }
-                        checkChars (r+1, q, L_SCOPE_ID, H_SCOPE_ID,
-                                                "scope id");
+                        checkChars (r+1, q, L_SCOPE_ID, H_SCOPE_ID, "scope id");
                     } else {
                         parseIPv6Reference(p, q);
                     }

@@ -33,8 +33,7 @@ public interface GenericsFactory {
      * @throws NullPointerException if any of the actual parameters
      * or any of the elements of {@code bounds} are {@code null}.
      */
-    TypeVariable<?> makeTypeVariable(String name,
-                                     FieldTypeSignature[] bounds);
+    TypeVariable<?> makeTypeVariable(String name, FieldTypeSignature[] bounds);
     /**
      * Returns an instance of the {@code ParameterizedType} interface
      * that corresponds to a generic type instantiation of the
@@ -63,9 +62,7 @@ public interface GenericsFactory {
      * {@code typeArgs}
      * or any of the elements of {@code typeArgs} are {@code null}
      */
-    ParameterizedType makeParameterizedType(Type declaration,
-                                            Type[] typeArgs,
-                                            Type owner);
+    ParameterizedType makeParameterizedType(Type declaration, Type[] typeArgs, Type owner);
 
     /**
      * Returns the type variable with name {@code name}, if such
@@ -91,8 +88,7 @@ public interface GenericsFactory {
      * or any of the elements of {@code ubs} or {@code lbs} are
      * {@code null}
      */
-    WildcardType makeWildcard(FieldTypeSignature[] ubs,
-                              FieldTypeSignature[] lbs);
+    WildcardType makeWildcard(FieldTypeSignature[] ubs, FieldTypeSignature[] lbs);
 
     Type makeNamedType(String name);
 

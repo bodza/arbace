@@ -525,19 +525,12 @@ class MethodAccessorGenerator extends AccessorGenerator {
             cb.opc_invokespecial(targetMethodRef, count, 0);
         } else {
             if (isStatic()) {
-                cb.opc_invokestatic(targetMethodRef,
-                                    count,
-                                    typeSizeInStackSlots(returnType));
+                cb.opc_invokestatic(targetMethodRef, count, typeSizeInStackSlots(returnType));
             } else {
                 if (isInterface()) {
-                    cb.opc_invokeinterface(targetMethodRef,
-                                           count,
-                                           count,
-                                           typeSizeInStackSlots(returnType));
+                    cb.opc_invokeinterface(targetMethodRef, count, count, typeSizeInStackSlots(returnType));
                 } else {
-                    cb.opc_invokevirtual(targetMethodRef,
-                                         count,
-                                         typeSizeInStackSlots(returnType));
+                    cb.opc_invokevirtual(targetMethodRef, count, typeSizeInStackSlots(returnType));
                 }
             }
         }

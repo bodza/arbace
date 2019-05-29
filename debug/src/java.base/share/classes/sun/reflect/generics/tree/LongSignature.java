@@ -8,7 +8,7 @@ public class LongSignature implements BaseType {
 
     private LongSignature() {}
 
-    public static LongSignature make() {return singleton;}
+    public static LongSignature make() { return singleton; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitLongSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitLongSignature(this); }
 }

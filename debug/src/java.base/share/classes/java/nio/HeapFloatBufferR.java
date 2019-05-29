@@ -29,21 +29,11 @@ class HeapFloatBufferR extends HeapFloatBuffer {
     }
 
     public FloatBuffer slice() {
-        return new HeapFloatBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapFloatBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public FloatBuffer duplicate() {
-        return new HeapFloatBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapFloatBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public FloatBuffer asReadOnlyBuffer() {

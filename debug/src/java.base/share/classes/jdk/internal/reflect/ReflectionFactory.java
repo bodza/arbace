@@ -259,7 +259,7 @@ public class ReflectionFactory {
      */
     private boolean superHasAccessibleConstructor(Class<?> cl) {
         Class<?> superCl = cl.getSuperclass();
-        assert superCl != null;
+        // assert superCl != null;
         if (packageEquals(cl, superCl)) {
             // accessible if any non-private constructor is found
             for (Constructor<?> ctor : superCl.getDeclaredConstructors()) {
@@ -363,7 +363,7 @@ public class ReflectionFactory {
      * @returns true if the two classes are in the same classloader and package
      */
     private static boolean packageEquals(Class<?> cl1, Class<?> cl2) {
-        assert !cl1.isArray() && !cl2.isArray();
+        // assert !cl1.isArray() && !cl2.isArray();
 
         if (cl1 == cl2) {
             return true;

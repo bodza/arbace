@@ -1775,7 +1775,7 @@ class CharacterData00 extends CharacterData {
             { {'\uFB17'}, {'\u0544', '\u053D', } },
         };
         char[] data = A_DATA.toCharArray();
-        assert (data.length == (938 * 2));
+        // assert (data.length == (938 * 2));
         int i = 0, j = 0;
         while (i < (938 * 2)) {
             A[j++] = (data[i++] << 16) | data[i++];

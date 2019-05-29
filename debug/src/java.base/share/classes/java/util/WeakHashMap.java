@@ -630,7 +630,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
      *         specified value
      */
     public boolean containsValue(Object value) {
-        if (value==null)
+        if (value == null)
             return containsNullValue();
 
         Entry<K,V>[] tab = getTable();
@@ -648,7 +648,7 @@ public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {
         Entry<K,V>[] tab = getTable();
         for (int i = tab.length; i-- > 0; )
             for (Entry<K,V> e = tab[i]; e != null; e = e.next)
-                if (e.value==null)
+                if (e.value == null)
                     return true;
         return false;
     }

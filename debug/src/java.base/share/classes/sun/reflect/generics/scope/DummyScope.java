@@ -32,5 +32,5 @@ public class DummyScope implements Scope {
      * @param name - the name of the type variable being looked up
      * @return null
      */
-    public TypeVariable<?> lookup(String name) {return null;}
+    public TypeVariable<?> lookup(String name) { return null; }
 }

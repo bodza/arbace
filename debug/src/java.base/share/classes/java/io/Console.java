@@ -155,7 +155,7 @@ public final class Console implements Flushable {
     }
 
     private char[] grow() {
-        assert Thread.holdsLock(readLock);
+        // assert Thread.holdsLock(readLock);
         char[] t = new char[rcb.length * 2];
         System.arraycopy(rcb, 0, t, 0, rcb.length);
         rcb = t;

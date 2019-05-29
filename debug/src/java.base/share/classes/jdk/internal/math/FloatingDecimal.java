@@ -182,7 +182,7 @@ public class FloatingDecimal {
             } else if (buf instanceof StringBuffer) {
                 ((StringBuffer) buf).append(image);
             } else {
-                assert false;
+                // assert false;
             }
         }
 
@@ -283,7 +283,7 @@ public class FloatingDecimal {
             } else if (buf instanceof StringBuffer) {
                 ((StringBuffer) buf).append(buffer, 0, len);
             } else {
-                assert false;
+                // assert false;
             }
         }
 
@@ -294,7 +294,7 @@ public class FloatingDecimal {
 
         // @Override
         public int getDigits(char[] digits) {
-            System.arraycopy(this.digits,firstDigitIndex,digits,0,this.nDigits);
+            System.arraycopy(this.digits, firstDigitIndex, digits, 0, this.nDigits);
             return this.nDigits;
         }
 
@@ -353,7 +353,7 @@ public class FloatingDecimal {
             int  digitno = digits.length -1;
             int  c;
             if (lvalue <= Integer.MAX_VALUE) {
-                assert lvalue > 0L : lvalue; // lvalue <= 0
+                // assert lvalue > 0L : lvalue; // lvalue <= 0
                 // even easier subcase!
                 // can do int arithmetic rather than long!
                 int  ivalue = (int)lvalue;
@@ -395,8 +395,8 @@ public class FloatingDecimal {
         }
 
         private void dtoa(int binExp, long fractBits, int nSignificantBits, boolean isCompatibleFormat) {
-            assert fractBits > 0; // fractBits here can't be zero or negative
-            assert (fractBits & FRACT_HOB)!=0 ; // Hi-order bit should be set
+            // assert fractBits > 0; // fractBits here can't be zero or negative
+            // assert (fractBits & FRACT_HOB)!=0 ; // Hi-order bit should be set
             // Examine number. Determine if it is an easy case,
             // which we can do pretty trivially using float/long conversion,
             // or whether we must do real work.
@@ -484,7 +484,7 @@ public class FloatingDecimal {
             //
             // We keep track of powers of 2 and powers of 5.
             //
-            int decExp = estimateDecExp(fractBits,binExp);
+            int decExp = estimateDecExp(fractBits, binExp);
             int B2, B5; // powers of 2 and powers of 5, respectively, in B
             int S2, S5; // powers of 2 and powers of 5, respectively, in S
             int M2, M5; // powers of 2 and powers of 5, respectively, in M
@@ -582,7 +582,7 @@ public class FloatingDecimal {
                     m *= 10;
                     low  = (b <  m);
                     high = (b+m > tens);
-                    assert q < 10 : q; // excessively large digit
+                    // assert q < 10 : q; // excessively large digit
                     if ((q == 0) && ! high) {
                         // oops. Usually ignore leading zero.
                         decExp--;
@@ -602,7 +602,7 @@ public class FloatingDecimal {
                         q = b / s;
                         b = 10 * (b % s);
                         m *= 10;
-                        assert q < 10 : q; // excessively large digit
+                        // assert q < 10 : q; // excessively large digit
                         if (m > 0L) {
                             low  = (b <  m);
                             high = (b+m > tens);
@@ -636,7 +636,7 @@ public class FloatingDecimal {
                     m *= 10L;
                     low  = (b <  m);
                     high = (b+m > tens);
-                    assert q < 10 : q; // excessively large digit
+                    // assert q < 10 : q; // excessively large digit
                     if ((q == 0) && ! high) {
                         // oops. Usually ignore leading zero.
                         decExp--;
@@ -656,7 +656,7 @@ public class FloatingDecimal {
                         q = (int) (b / s);
                         b = 10 * (b % s);
                         m *= 10;
-                        assert q < 10 : q; // excessively large digit
+                        // assert q < 10 : q; // excessively large digit
                         if (m > 0L) {
                             low  = (b <  m);
                             high = (b+m > tens);
@@ -695,9 +695,9 @@ public class FloatingDecimal {
                 ndigit = 0;
                 q = Bval.quoRemIteration(Sval);
                 low  = (Bval.cmp(Mval) < 0);
-                high = tenSval.addAndCmp(Bval,Mval)<=0;
+                high = tenSval.addAndCmp(Bval, Mval)<=0;
 
-                assert q < 10 : q; // excessively large digit
+                // assert q < 10 : q; // excessively large digit
                 if ((q == 0) && ! high) {
                     // oops. Usually ignore leading zero.
                     decExp--;
@@ -715,10 +715,10 @@ public class FloatingDecimal {
                 }
                 while ( ! low && ! high) {
                     q = Bval.quoRemIteration(Sval);
-                    assert q < 10 : q; // excessively large digit
+                    // assert q < 10 : q; // excessively large digit
                     Mval = Mval.multBy10(); // Mval = Mval.mult(10);
                     low  = (Bval.cmp(Mval) < 0);
-                    high = tenSval.addAndCmp(Bval,Mval)<=0;
+                    high = tenSval.addAndCmp(Bval, Mval)<=0;
                     digits[ndigit++] = (char)('0' + q);
                 }
                 if (high && low) {
@@ -874,7 +874,7 @@ public class FloatingDecimal {
         };
 
         private int getChars(char[] result) {
-            assert nDigits <= 19 : nDigits; // generous bound on size of nDigits
+            // assert nDigits <= 19 : nDigits; // generous bound on size of nDigits
             int i = 0;
             if (isNegative) {
                 result[0] = '-';
@@ -887,7 +887,7 @@ public class FloatingDecimal {
                 i += charLength;
                 if (charLength < decExponent) {
                     charLength = decExponent - charLength;
-                    Arrays.fill(result,i,i+charLength,'0');
+                    Arrays.fill(result, i, i+charLength, '0');
                     i += charLength;
                     result[i++] = '.';
                     result[i++] = '0';
@@ -1230,7 +1230,7 @@ public class FloatingDecimal {
                 if (binexp > 0) {
                     bigBbits |= FRACT_HOB;
                 } else { // Normalize denormalized numbers.
-                    assert bigBbits != 0L : bigBbits; // doubleToBigInt(0.0)
+                    // assert bigBbits != 0L : bigBbits; // doubleToBigInt(0.0)
                     int leadingZeros = Long.numberOfLeadingZeros(bigBbits);
                     int shift = leadingZeros - (63 - EXP_SHIFT);
                     bigBbits <<= shift;
@@ -1533,7 +1533,7 @@ public class FloatingDecimal {
                 if (binexp > 0) {
                     bigBbits |= SINGLE_FRACT_HOB;
                 } else { // Normalize denormalized numbers.
-                    assert bigBbits != 0 : bigBbits; // floatToBigInt(0.0)
+                    // assert bigBbits != 0 : bigBbits; // floatToBigInt(0.0)
                     int leadingZeros = Integer.numberOfLeadingZeros(bigBbits);
                     int shift = leadingZeros - (31 - SINGLE_EXP_SHIFT);
                     bigBbits <<= shift;
@@ -1833,11 +1833,11 @@ public class FloatingDecimal {
             }  // look for and process decimal floating-point string
 
             char[] digits = new char[len];
-            int    nDigits= 0;
+            int nDigits = 0;
             boolean decSeen = false;
             int decPt = 0;
             int nLeadZero = 0;
-            int nTrailZero= 0;
+            int nTrailZero = 0;
 
         skipLeadingZerosLoop:
             while (i < len) {
@@ -2345,8 +2345,8 @@ public class FloatingDecimal {
                     } else {
                         // exponent == -127 ==> threshShift = 53 - 2 + (-149) - (-127) = 53 - 24
                         int threshShift = (int) ((DoubleConsts.SIGNIFICAND_WIDTH - 2 + FloatConsts.MIN_SUB_EXPONENT) - exponent);
-                        assert threshShift >= DoubleConsts.SIGNIFICAND_WIDTH - FloatConsts.SIGNIFICAND_WIDTH;
-                        assert threshShift < DoubleConsts.SIGNIFICAND_WIDTH;
+                        // assert threshShift >= DoubleConsts.SIGNIFICAND_WIDTH - FloatConsts.SIGNIFICAND_WIDTH;
+                        // assert threshShift < DoubleConsts.SIGNIFICAND_WIDTH;
                         boolean floatSticky = (significand & ((1L << threshShift) - 1)) != 0 || round || sticky;
                         int iValue = (int) (significand >>> threshShift);
                         if ((iValue & 3) != 1 || floatSticky) {
@@ -2400,7 +2400,7 @@ public class FloatingDecimal {
                             // -1023 +1074 + 1 = 52
 
                             int bitsDiscarded = 53 - ((int) exponent - DoubleConsts.MIN_SUB_EXPONENT + 1);
-                            assert bitsDiscarded >= 1 && bitsDiscarded <= 53;
+                            // assert bitsDiscarded >= 1 && bitsDiscarded <= 53;
 
                             // What to do here:
                             // First, isolate the new round bit

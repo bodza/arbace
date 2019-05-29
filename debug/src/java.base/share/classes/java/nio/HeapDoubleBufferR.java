@@ -29,21 +29,11 @@ class HeapDoubleBufferR extends HeapDoubleBuffer {
     }
 
     public DoubleBuffer slice() {
-        return new HeapDoubleBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapDoubleBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public DoubleBuffer duplicate() {
-        return new HeapDoubleBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapDoubleBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public DoubleBuffer asReadOnlyBuffer() {

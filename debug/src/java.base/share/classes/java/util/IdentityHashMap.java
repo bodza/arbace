@@ -923,22 +923,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
             IdentityHashMap.this.remove(o);
             return size != oldSize;
         }
-        /*
-         * Must revert from AbstractSet's impl to AbstractCollection's, as
-         * the former contains an optimization that results in incorrect
-         * behavior when c is a smaller "normal" (non-identity-based) Set.
-         */
-        public boolean removeAll(Collection<?> c) {
-            Objects.requireNonNull(c);
-            boolean modified = false;
-            for (Iterator<K> i = iterator(); i.hasNext(); ) {
-                if (c.contains(i.next())) {
-                    i.remove();
-                    modified = true;
-                }
-            }
-            return modified;
-        }
 
         public void clear() {
             IdentityHashMap.this.clear();
@@ -1143,22 +1127,6 @@ public class IdentityHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, 
 
         public void clear() {
             IdentityHashMap.this.clear();
-        }
-        /*
-         * Must revert from AbstractSet's impl to AbstractCollection's, as
-         * the former contains an optimization that results in incorrect
-         * behavior when c is a smaller "normal" (non-identity-based) Set.
-         */
-        public boolean removeAll(Collection<?> c) {
-            Objects.requireNonNull(c);
-            boolean modified = false;
-            for (Iterator<Map.Entry<K,V>> i = iterator(); i.hasNext(); ) {
-                if (c.contains(i.next())) {
-                    i.remove();
-                    modified = true;
-                }
-            }
-            return modified;
         }
 
         public Object[] toArray() {

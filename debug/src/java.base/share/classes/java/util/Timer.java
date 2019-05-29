@@ -490,7 +490,7 @@ class TaskQueue {
      * 1 <= i <= size.
      */
     void quickRemove(int i) {
-        assert i <= size;
+        // assert i <= size;
 
         queue[i] = queue[size];
         queue[size--] = null; // Drop extra ref to prevent memory leak
@@ -509,7 +509,7 @@ class TaskQueue {
      * Returns true if the priority queue contains no elements.
      */
     boolean isEmpty() {
-        return size==0;
+        return size == 0;
     }
 
     /**

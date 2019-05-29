@@ -129,7 +129,7 @@ public abstract class URLStreamHandler {
                 if (host.length()>0 && (host.charAt(0) == '[')) {
                     if ((ind = host.indexOf(']')) > 2) {
                         String nhost = host;
-                        host = nhost.substring(0,ind+1);
+                        host = nhost.substring(0, ind + 1);
                         if (!IPAddressUtil.isIPv6LiteralAddress(host.substring(1, ind))) {
                             throw new IllegalArgumentException(String.str("Invalid host: ", host));
                         }
@@ -186,10 +186,10 @@ public abstract class URLStreamHandler {
                 String seperator = "";
                 if (ind == -1 && authority != null)
                     seperator = "/";
-                path = path.substring(0, ind + 1) + seperator + spec.substring(start, limit);
+                path = String.str(path.substring(0, ind + 1), seperator, spec.substring(start, limit));
             } else {
                 String seperator = (authority != null) ? "/" : "";
-                path = seperator + spec.substring(start, limit);
+                path = String.str(seperator, spec.substring(start, limit));
             }
         } else if (queryOnly && path != null) {
             int ind = path.lastIndexOf('/');
@@ -203,7 +203,7 @@ public abstract class URLStreamHandler {
         if (isRelPath) {
             // Remove embedded /./
             while ((i = path.indexOf("/./")) >= 0) {
-                path = path.substring(0, i) + path.substring(i + 2);
+                path = String.str(path.substring(0, i), path.substring(i + 2));
             }
             // Remove embedded /../ if possible
             i = 0;
@@ -215,7 +215,7 @@ public abstract class URLStreamHandler {
                  * but "/../../a" should stay unchanged
                  */
                 if (i > 0 && (limit = path.lastIndexOf('/', i - 1)) >= 0 && (path.indexOf("/../", limit) != 0)) {
-                    path = path.substring(0, limit) + path.substring(i + 3);
+                    path = String.str(path.substring(0, limit), path.substring(i + 3));
                     i = 0;
                 } else {
                     i = i + 3;

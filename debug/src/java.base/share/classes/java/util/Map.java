@@ -452,8 +452,9 @@ public interface Map<K, V> {
          * @return a comparator that compares {@link Map.Entry} in natural order on key.
          */
         public static <K extends Comparable<? super K>, V> Comparator<Map.Entry<K, V>> comparingByKey() {
-            return (Comparator<Map.Entry<K, V>>)
-                (c1, c2) -> c1.getKey().compareTo(c2.getKey());
+            return new Comparator<Map.Entry<K, V>>() {
+                public int compare(Map.Entry<K, V> c1, Map.Entry<K, V> c2) { return c1.getKey().compareTo(c2.getKey()); }
+            };
         }
 
         /**
@@ -467,8 +468,9 @@ public interface Map<K, V> {
          * @return a comparator that compares {@link Map.Entry} in natural order on value.
          */
         public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K, V>> comparingByValue() {
-            return (Comparator<Map.Entry<K, V>>)
-                (c1, c2) -> c1.getValue().compareTo(c2.getValue());
+            return new Comparator<Map.Entry<K, V>>() {
+                public int compare(Map.Entry<K, V> c1, Map.Entry<K, V> c2) { return c1.getValue().compareTo(c2.getValue()); }
+            };
         }
 
         /**
@@ -485,8 +487,9 @@ public interface Map<K, V> {
          */
         public static <K, V> Comparator<Map.Entry<K, V>> comparingByKey(Comparator<? super K> cmp) {
             Objects.requireNonNull(cmp);
-            return (Comparator<Map.Entry<K, V>>)
-                (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
+            return new Comparator<Map.Entry<K, V>>() {
+                public int compare(Map.Entry<K, V> c1, Map.Entry<K, V> c2) { return cmp.compare(c1.getKey(), c2.getKey()); }
+            };
         }
 
         /**
@@ -503,8 +506,9 @@ public interface Map<K, V> {
          */
         public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp) {
             Objects.requireNonNull(cmp);
-            return (Comparator<Map.Entry<K, V>>)
-                (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
+            return new Comparator<Map.Entry<K, V>>() {
+                public int compare(Map.Entry<K, V> c1, Map.Entry<K, V> c2) { return cmp.compare(c1.getValue(), c2.getValue()); }
+            };
         }
     }
 
@@ -1116,9 +1120,9 @@ public interface Map<K, V> {
      * For example, to either create or append a {@code String msg} to a
      * value mapping:
      *
-     * <pre> {@code
-     * map.merge(key, msg, String::concat)
-     * }</pre>
+     * <pre>
+     * {@code map.merge(key, msg, String::concat)}
+     * </pre>
      *
      * If the remapping function returns {@code null}, the mapping is removed.
      * If the remapping function itself throws an (unchecked) exception, the

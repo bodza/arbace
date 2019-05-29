@@ -21,6 +21,7 @@ class AccessorGenerator implements ClassFileConstants {
     // Instance variables for shared functionality between
     // FieldAccessorGenerator and MethodAccessorGenerator
     protected ClassFileAssembler asm;
+
     protected int   modifiers;
     protected short thisClass;
     protected short superClass;

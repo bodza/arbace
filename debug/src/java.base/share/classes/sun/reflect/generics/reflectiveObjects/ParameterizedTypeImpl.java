@@ -137,8 +137,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
             return
                 Objects.equals(ownerType, thatOwner) &&
                 Objects.equals(rawType, thatRawType) &&
-                Arrays.equals(actualTypeArguments, // avoid clone
-                              that.getActualTypeArguments());
+                Arrays.equals(actualTypeArguments, that.getActualTypeArguments()); // avoid clone
         } else
             return false;
     }

@@ -6,15 +6,13 @@ class ByteBufferAsLongBufferL extends LongBuffer {
     protected final ByteBuffer bb;
 
     ByteBufferAsLongBufferL(ByteBuffer bb) {
-        super(-1, 0,
-              bb.remaining() >> 3,
-              bb.remaining() >> 3);
+        super(-1, 0, bb.remaining() >> 3, bb.remaining() >> 3);
         this.bb = bb;
         // enforce limit == capacity
         int cap = this.capacity();
         this.limit(cap);
         int pos = this.position();
-        assert (pos <= cap);
+        // assert (pos <= cap);
         address = bb.address;
     }
 
@@ -22,7 +20,7 @@ class ByteBufferAsLongBufferL extends LongBuffer {
         super(mark, pos, lim, cap);
         this.bb = bb;
         address = addr;
-        assert address >= bb.address;
+        // assert address >= bb.address;
     }
 
     // @Override
@@ -33,28 +31,18 @@ class ByteBufferAsLongBufferL extends LongBuffer {
     public LongBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsLongBufferL(bb, -1, 0, rem, rem, addr);
     }
 
     public LongBuffer duplicate() {
-        return new ByteBufferAsLongBufferL(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsLongBufferL(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public LongBuffer asReadOnlyBuffer() {
-        return new ByteBufferAsLongBufferRL(bb,
-                                                 this.markValue(),
-                                                 this.position(),
-                                                 this.limit(),
-                                                 this.capacity(),
-                                                 address);
+        return new ByteBufferAsLongBufferRL(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     private int ix(int i) {
@@ -95,7 +83,7 @@ class ByteBufferAsLongBufferL extends LongBuffer {
     public LongBuffer compact() {
         int pos = position();
         int lim = limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
 
         ByteBuffer db = bb.duplicate();

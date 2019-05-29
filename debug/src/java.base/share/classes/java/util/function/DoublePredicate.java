@@ -39,7 +39,9 @@ public interface DoublePredicate {
      */
     default DoublePredicate and(DoublePredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) && other.test(value);
+        return new DoublePredicate() {
+            public boolean test(double value) { return test(value) && other.test(value); }
+        };
     }
 
     /**
@@ -50,7 +52,9 @@ public interface DoublePredicate {
      * predicate
      */
     default DoublePredicate negate() {
-        return (value) -> !test(value);
+        return new DoublePredicate() {
+            public boolean test(double value) { return !test(value); }
+        };
     }
 
     /**
@@ -71,6 +75,8 @@ public interface DoublePredicate {
      */
     default DoublePredicate or(DoublePredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) || other.test(value);
+        return new DoublePredicate() {
+            public boolean test(double value) { return test(value) || other.test(value); }
+        };
     }
 }

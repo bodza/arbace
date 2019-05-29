@@ -17,7 +17,7 @@ public class ClassTypeSignature implements FieldTypeSignature {
         return new ClassTypeSignature(p);
     }
 
-    public List<SimpleClassTypeSignature> getPath() {return path;}
+    public List<SimpleClassTypeSignature> getPath() { return path; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitClassTypeSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitClassTypeSignature(this); }
 }

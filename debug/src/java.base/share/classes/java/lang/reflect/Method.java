@@ -43,7 +43,7 @@ public final class Method extends Executable {
     private Method              root;
 
     // Generics infrastructure
-    private String getGenericSignature() {return signature;}
+    private String getGenericSignature() { return signature; }
 
     // Accessor for factory
     private GenericsFactory getFactory() {
@@ -199,7 +199,7 @@ public final class Method extends Executable {
     public Type getGenericReturnType() {
       if (getGenericSignature() != null) {
         return getGenericInfo().getReturnType();
-      } else { return getReturnType();}
+      } else { return getReturnType(); }
     }
 
     // @Override

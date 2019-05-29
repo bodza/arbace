@@ -368,7 +368,7 @@ class CharacterData02 extends CharacterData {
 
     static {
         char[] data = A_DATA.toCharArray();
-        assert (data.length == (8 * 2));
+        // assert (data.length == (8 * 2));
         int i = 0, j = 0;
         while (i < (8 * 2)) {
             A[j++] = (data[i++] << 16) | data[i++];

@@ -29,21 +29,11 @@ class HeapLongBufferR extends HeapLongBuffer {
     }
 
     public LongBuffer slice() {
-        return new HeapLongBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapLongBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public LongBuffer duplicate() {
-        return new HeapLongBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapLongBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public LongBuffer asReadOnlyBuffer() {

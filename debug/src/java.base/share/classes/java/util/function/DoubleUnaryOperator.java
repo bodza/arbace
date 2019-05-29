@@ -33,7 +33,9 @@ public interface DoubleUnaryOperator {
      */
     default DoubleUnaryOperator compose(DoubleUnaryOperator before) {
         Objects.requireNonNull(before);
-        return (double v) -> applyAsDouble(before.applyAsDouble(v));
+        return new DoubleUnaryOperator() {
+            public double applyAsDouble(double v) { return applyAsDouble(before.applyAsDouble(v)); }
+        };
     }
 
     /**
@@ -49,7 +51,9 @@ public interface DoubleUnaryOperator {
      */
     default DoubleUnaryOperator andThen(DoubleUnaryOperator after) {
         Objects.requireNonNull(after);
-        return (double t) -> after.applyAsDouble(applyAsDouble(t));
+        return new DoubleUnaryOperator() {
+            public double applyAsDouble(double t) { return after.applyAsDouble(applyAsDouble(t)); }
+        };
     }
 
     /**
@@ -58,6 +62,8 @@ public interface DoubleUnaryOperator {
      * @return a unary operator that always returns its input argument
      */
     static DoubleUnaryOperator identity() {
-        return t -> t;
+        return new DoubleUnaryOperator() {
+            public double applyAsDouble(double t) { return t; }
+        };
     }
 }

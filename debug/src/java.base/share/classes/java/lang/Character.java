@@ -9724,7 +9724,7 @@ public final class Character implements Comparable<Character> {
      *          that indicates that a 1:M {@code char} mapping exists.
      */
     static int toUpperCaseEx(int codePoint) {
-        assert isValidCodePoint(codePoint);
+        // assert isValidCodePoint(codePoint);
         return CharacterData.of(codePoint).toUpperCaseEx(codePoint);
     }
 
@@ -9740,7 +9740,7 @@ public final class Character implements Comparable<Character> {
      */
     static char[] toUpperCaseCharArray(int codePoint) {
         // As of Unicode 6.0, 1:M uppercasings only happen in the BMP.
-        assert isBmpCodePoint(codePoint);
+        // assert isBmpCodePoint(codePoint);
         return CharacterData.of(codePoint).toUpperCaseCharArray(codePoint);
     }
 

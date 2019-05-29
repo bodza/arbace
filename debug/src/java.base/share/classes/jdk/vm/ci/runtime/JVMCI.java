@@ -1,5 +1,7 @@
 package jdk.vm.ci.runtime;
 
+import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
+
 public class JVMCI {
     private static final HotSpotJVMCIRuntime runtime;
 

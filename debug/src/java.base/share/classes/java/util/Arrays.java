@@ -533,9 +533,9 @@ public class Arrays {
 
         // Insertion sort on smallest arrays
         if (length < INSERTIONSORT_THRESHOLD) {
-            for (int i=low; i < high; i++)
-                for (int j=i; j>low && ((Comparable) dest[j-1]).compareTo(dest[j])>0; j--)
-                    swap(dest, j, j-1);
+            for (int i = low; i < high; i++)
+                for (int j = i; j > low && ((Comparable) dest[j - 1]).compareTo(dest[j]) > 0; j--)
+                    swap(dest, j, j - 1);
             return;
         }
 
@@ -699,9 +699,9 @@ public class Arrays {
 
         // Insertion sort on smallest arrays
         if (length < INSERTIONSORT_THRESHOLD) {
-            for (int i=low; i < high; i++)
-                for (int j=i; j>low && c.compare(dest[j-1], dest[j])>0; j--)
-                    swap(dest, j, j-1);
+            for (int i = low; i < high; i++)
+                for (int j = i; j > low && c.compare(dest[j - 1], dest[j]) > 0; j--)
+                    swap(dest, j, j - 1);
             return;
         }
 
@@ -1513,9 +1513,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(long[] a, long[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1581,9 +1581,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(int[] a, int[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1649,9 +1649,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(short[] a, short a2[]) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1718,9 +1718,9 @@ public class Arrays {
      */
     // @HotSpotIntrinsicCandidate
     public static boolean equals(char[] a, char[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1787,9 +1787,9 @@ public class Arrays {
      */
     // @HotSpotIntrinsicCandidate
     public static boolean equals(byte[] a, byte[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1855,9 +1855,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(boolean[] a, boolean[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -1928,9 +1928,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(double[] a, double[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -2006,9 +2006,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(float[] a, float[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -2082,9 +2082,9 @@ public class Arrays {
      * @return {@code true} if the two arrays are equal
      */
     public static boolean equals(Object[] a, Object[] a2) {
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -2172,9 +2172,9 @@ public class Arrays {
      */
     public static <T> boolean equals(T[] a, T[] a2, Comparator<? super T> cmp) {
         Objects.requireNonNull(cmp);
-        if (a==a2)
+        if (a == a2)
             return true;
-        if (a==null || a2==null)
+        if (a == null || a2 == null)
             return false;
 
         int length = a.length;
@@ -2484,7 +2484,7 @@ public class Arrays {
      * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
      *         {@code toIndex > a.length}
      */
-    public static void fill(double[] a, int fromIndex, int toIndex,double val) {
+    public static void fill(double[] a, int fromIndex, int toIndex, double val) {
         rangeCheck(a.length, fromIndex, toIndex);
         for (int i = fromIndex; i < toIndex; i++)
             a[i] = val;
@@ -3649,7 +3649,7 @@ public class Arrays {
     }
 
     static boolean deepEquals0(Object e1, Object e2) {
-        assert e1 != null;
+        // assert e1 != null;
         boolean eq;
         if (e1 instanceof Object[] && e2 instanceof Object[])
             eq = deepEquals ((Object[]) e1, (Object[]) e2);

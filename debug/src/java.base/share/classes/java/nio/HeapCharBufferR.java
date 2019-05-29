@@ -29,21 +29,11 @@ class HeapCharBufferR extends HeapCharBuffer {
     }
 
     public CharBuffer slice() {
-        return new HeapCharBufferR(hb,
-                                        -1,
-                                        0,
-                                        this.remaining(),
-                                        this.remaining(),
-                                        this.position() + offset);
+        return new HeapCharBufferR(hb, -1, 0, this.remaining(), this.remaining(), this.position() + offset);
     }
 
     public CharBuffer duplicate() {
-        return new HeapCharBufferR(hb,
-                                        this.markValue(),
-                                        this.position(),
-                                        this.limit(),
-                                        this.capacity(),
-                                        offset);
+        return new HeapCharBufferR(hb, this.markValue(), this.position(), this.limit(), this.capacity(), offset);
     }
 
     public CharBuffer asReadOnlyBuffer() {
@@ -90,12 +80,7 @@ class HeapCharBufferR extends HeapCharBuffer {
             || (start > end))
             throw new IndexOutOfBoundsException();
         int pos = position();
-        return new HeapCharBufferR(hb,
-                                      -1,
-                                      pos + start,
-                                      pos + end,
-                                      capacity(),
-                                      offset);
+        return new HeapCharBufferR(hb, -1, pos + start, pos + end, capacity(), offset);
     }
 
     public ByteOrder order() {

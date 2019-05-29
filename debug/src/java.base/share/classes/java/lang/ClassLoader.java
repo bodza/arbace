@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Vector;
+import java.util.function.BiFunction;
 
 import jdk.internal.perf.PerfCounter;
 import jdk.internal.loader.ClassLoaders;
@@ -836,7 +837,9 @@ public abstract class ClassLoader {
         if (pkg instanceof Package)
             return (Package)pkg;
 
-        return (Package)packages.compute(name, (n, p) -> toPackage(n, p));
+        return (Package)packages.compute(name, new BiFunction<>() {
+            public Package apply(String n, NamedPackage p) { return toPackage(n, p); }
+        });
     }
 
     /*

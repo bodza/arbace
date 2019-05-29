@@ -193,8 +193,8 @@ public class FDBigInteger {
      * @return <code>value * 5<sup>p5</sup> * 2<sup>p2</sup></code>
      */
     public static FDBigInteger valueOfMulPow52(long value, int p5, int p2) {
-        assert p5 >= 0 : p5;
-        assert p2 >= 0 : p2;
+        // assert p5 >= 0 : p5;
+        // assert p2 >= 0 : p2;
         int v0 = (int) value;
         int v1 = (int) (value >>> 32);
         int wordcount = p2 >> 5;
@@ -342,7 +342,7 @@ public class FDBigInteger {
                 } else {
                     result = new int[nWords];
                 }
-                leftShift(data,idx,result,bitcount,anticount,prev);
+                leftShift(data, idx, result, bitcount, anticount, prev);
                 return new FDBigInteger(result, offset + wordcount);
             }
         } else {
@@ -359,7 +359,7 @@ public class FDBigInteger {
                     }
                     int v = prev >>> anticount;
                     data[idx] = v;
-                    if (v==0) {
+                    if (v == 0) {
                         nWords--;
                     }
                     offset++;
@@ -375,7 +375,7 @@ public class FDBigInteger {
                         }
                         result[nWords++] = hi;
                     }
-                    leftShift(src,idx,result,bitcount,anticount,prev);
+                    leftShift(src, idx, result, bitcount, anticount, prev);
                 }
             }
             offset += wordcount;
@@ -409,7 +409,7 @@ public class FDBigInteger {
      * @return <code>q = (int)(this / S)</code>.
      */
     public int quoRemIteration(FDBigInteger S) throws IllegalArgumentException {
-        assert !this.isImmutable : "cannot modify immutable value";
+        // assert !this.isImmutable : "cannot modify immutable value";
         // ensure that this and S have the same number of
         // digits. If S is properly normalized and q < 10 then
         // this must be so.
@@ -455,7 +455,7 @@ public class FDBigInteger {
                 // it would be impossible for a carry-out to be interpreted
                 // as -1 -- it would have to be a single-bit carry-out, or +1.
                 //
-                assert sum == 0 || sum == 1 : sum; // carry out of division correction
+                // assert sum == 0 || sum == 1 : sum; // carry out of division correction
                 q -= 1;
             }
         }
@@ -463,7 +463,7 @@ public class FDBigInteger {
         // it cannot overflow, right, as the high-order word has
         // at least 4 high-order zeros!
         int p = multAndCarryBy10(this.data, this.nWords, this.data);
-        assert p == 0 : p; // Carry out of *10
+        // assert p == 0 : p; // Carry out of *10
         trimLeadingZeros();
         return (int) q;
     }
@@ -566,7 +566,7 @@ public class FDBigInteger {
      * @return This <code>FDBigInteger</code> less the subtrahend.
      */
     public FDBigInteger leftInplaceSub(FDBigInteger subtrahend) {
-        assert this.size() >= subtrahend.size() : "result should be positive";
+        // assert this.size() >= subtrahend.size() : "result should be positive";
         FDBigInteger minuend;
         if (this.isImmutable) {
             minuend = new FDBigInteger(this.data.clone(), this.offset);
@@ -605,7 +605,7 @@ public class FDBigInteger {
             mData[mIndex] = (int) diff;
             borrow = diff >> 32; // signed shift
         }
-        assert borrow == 0L : borrow; // borrow out of subtract,
+        // assert borrow == 0L : borrow; // borrow out of subtract,
         // result should be positive
         minuend.trimLeadingZeros();
         return minuend;
@@ -621,7 +621,7 @@ public class FDBigInteger {
      * @return This <code>FDBigInteger</code> less the subtrahend.
      */
     public FDBigInteger rightInplaceSub(FDBigInteger subtrahend) {
-        assert this.size() >= subtrahend.size() : "result should be positive";
+        // assert this.size() >= subtrahend.size() : "result should be positive";
         FDBigInteger minuend = this;
         if (subtrahend.isImmutable) {
             subtrahend = new FDBigInteger(subtrahend.data.clone(), subtrahend.offset);
@@ -662,7 +662,7 @@ public class FDBigInteger {
             sData[sIndex] = (int) diff;
             borrow = diff >> 32; // signed shift
         }
-        assert borrow == 0L : borrow; // borrow out of subtract,
+        // assert borrow == 0L : borrow; // borrow out of subtract,
         // result should be positive
         subtrahend.nWords = sIndex;
         subtrahend.trimLeadingZeros();
@@ -1079,7 +1079,7 @@ public class FDBigInteger {
      * @return <code>5<sup>p</sup></code>.
      */
     private static FDBigInteger big5pow(int p) {
-        assert p >= 0 : p; // negative power of 5
+        // assert p >= 0 : p; // negative power of 5
         if (p < MAX_FIVE_POW) {
             return POW_5_CACHE[p];
         }
@@ -1124,15 +1124,15 @@ public class FDBigInteger {
         if (nWords ==0) {
             return "0";
         }
-        StringBuilder sb = new StringBuilder((nWords +offset) * 8);
-        for (int i= nWords -1; i>=0; i--) {
+        StringBuilder sb = new StringBuilder((nWords + offset) * 8);
+        for (int i = nWords - 1; i >= 0; i--) {
             String subStr = Integer.toHexString(data[i]);
             for (int j = subStr.length(); j < 8; j++) {
                 sb.append('0');
             }
             sb.append(subStr);
         }
-        for (int i=offset; i>0; i--) {
+        for (int i = offset; i > 0; i--) {
             sb.append("00000000");
         }
         return sb.toString();

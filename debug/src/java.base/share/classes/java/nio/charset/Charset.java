@@ -334,7 +334,7 @@ public abstract class Charset implements Comparable<Charset> {
     // Fold charsets from the given iterator into the given map, ignoring
     // charsets whose names already have entries in the map.
     //
-    private static void put(Iterator<Charset> i, Map<String,Charset> m) {
+    private static void put(Iterator<Charset> i, Map<String, Charset> m) {
         while (i.hasNext()) {
             Charset cs = i.next();
             if (!m.containsKey(cs.name()))
@@ -368,8 +368,8 @@ public abstract class Charset implements Comparable<Charset> {
      * @return An immutable, case-insensitive map from canonical charset names
      *         to charset objects
      */
-    public static SortedMap<String,Charset> availableCharsets() {
-        TreeMap<String,Charset> m = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    public static SortedMap<String, Charset> availableCharsets() {
+        TreeMap<String, Charset> m = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         put(standardProvider.charsets(), m);
         return Collections.unmodifiableSortedMap(m);
     }

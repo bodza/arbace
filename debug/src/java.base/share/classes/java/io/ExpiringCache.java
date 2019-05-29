@@ -7,7 +7,7 @@ import java.util.Set;
 
 class ExpiringCache {
     private long millisUntilExpiration;
-    private Map<String,Entry> map;
+    private Map<String, Entry> map;
     // Clear out old entries every few queries
     private int queryCount;
     private int queryOverflow = 300;
@@ -36,7 +36,7 @@ class ExpiringCache {
     ExpiringCache(long millisUntilExpiration) {
         this.millisUntilExpiration = millisUntilExpiration;
         map = new LinkedHashMap<>() {
-            protected boolean removeEldestEntry(Map.Entry<String,Entry> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, Entry> eldest) {
               return size() > MAX_ENTRIES;
             }
           };

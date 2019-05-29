@@ -410,7 +410,7 @@ public final class URL {
         int i, limit, c;
         int start = 0;
         String newProtocol = null;
-        boolean aRef=false;
+        boolean aRef = false;
         boolean isRelative = false;
 
         try {
@@ -430,7 +430,7 @@ public final class URL {
                  * This means protocols cannot start w/ '#', but we must parse
                  * ref URL's like: "hello:there" w/ a ':' in them.
                  */
-                aRef=true;
+                aRef = true;
             }
             for (i = start; !aRef && (i < limit) && ((c = spec.charAt(i)) != '/'); i++) {
                 if (c == ':') {
@@ -588,7 +588,7 @@ public final class URL {
             hostAddress = null;
             int q = file.lastIndexOf('?');
             if (q != -1) {
-                query = file.substring(q+1);
+                query = file.substring(q + 1);
                 path = file.substring(0, q);
             } else
                 path = file;
@@ -1045,7 +1045,7 @@ public final class URL {
     /**
      * A table of protocol handlers.
      */
-    static Hashtable<String,URLStreamHandler> handlers = new Hashtable<>();
+    static Hashtable<String, URLStreamHandler> handlers = new Hashtable<>();
     private static final Object streamHandlerLock = new Object();
 
     /**

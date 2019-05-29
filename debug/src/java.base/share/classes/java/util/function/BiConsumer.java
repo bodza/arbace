@@ -39,9 +39,8 @@ public interface BiConsumer<T, U> {
     default BiConsumer<T, U> andThen(BiConsumer<? super T, ? super U> after) {
         Objects.requireNonNull(after);
 
-        return (l, r) -> {
-            accept(l, r);
-            after.accept(l, r);
+        return new BiConsumer<>() {
+            public void accept(T l, U r) { accept(l, r); after.accept(l, r); }
         };
     }
 }

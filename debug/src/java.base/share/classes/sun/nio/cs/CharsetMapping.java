@@ -260,7 +260,7 @@ public class CharsetMapping {
         int mLen = map.length/3;
         b2cComp = new Entry[mLen];
         c2bComp = new Entry[mLen];
-        for (int i = 0, j= 0; i < mLen; i++) {
+        for (int i = 0, j = 0; i < mLen; i++) {
             Entry m = new Entry();
             m.bs = map[j++];
             m.cp = map[j++];

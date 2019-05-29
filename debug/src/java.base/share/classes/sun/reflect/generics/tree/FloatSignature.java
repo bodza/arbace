@@ -8,7 +8,7 @@ public class FloatSignature implements BaseType {
 
     private FloatSignature() {}
 
-    public static FloatSignature make() {return singleton;}
+    public static FloatSignature make() { return singleton; }
 
-    public void accept(TypeTreeVisitor<?> v) {v.visitFloatSignature(this);}
+    public void accept(TypeTreeVisitor<?> v) { v.visitFloatSignature(this); }
 }

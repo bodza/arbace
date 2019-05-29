@@ -167,7 +167,7 @@ public class URLDecoder {
                         bytes = new byte[(numChars-i)/3];
                     int pos = 0;
 
-                    while (((i+2) < numChars) && (c=='%')) {
+                    while (((i+2) < numChars) && (c == '%')) {
                         int v = Integer.parseInt(s, i + 1, i + 3, 16);
                         if (v < 0)
                             throw new IllegalArgumentException("URLDecoder: Illegal hex characters in escape (%) pattern - negative value");
@@ -180,7 +180,7 @@ public class URLDecoder {
                     // A trailing, incomplete byte encoding such as
                     // "%x" will cause an exception to be thrown
 
-                    if ((i < numChars) && (c=='%'))
+                    if ((i < numChars) && (c == '%'))
                         throw new IllegalArgumentException("URLDecoder: Incomplete trailing escape (%) pattern");
 
                     sb.append(new String(bytes, 0, pos, charset));

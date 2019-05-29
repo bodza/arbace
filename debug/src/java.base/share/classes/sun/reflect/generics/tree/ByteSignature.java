@@ -8,7 +8,7 @@ public class ByteSignature implements BaseType {
 
     private ByteSignature() {}
 
-    public static ByteSignature make() {return singleton;}
+    public static ByteSignature make() { return singleton; }
 
     public void accept(TypeTreeVisitor<?> v) {
         v.visitByteSignature(this);

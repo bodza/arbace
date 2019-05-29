@@ -39,7 +39,9 @@ public interface LongPredicate {
      */
     default LongPredicate and(LongPredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) && other.test(value);
+        return new LongPredicate() {
+            public boolean test(long value) { return test(value) && other.test(value); }
+        };
     }
 
     /**
@@ -50,7 +52,9 @@ public interface LongPredicate {
      * predicate
      */
     default LongPredicate negate() {
-        return (value) -> !test(value);
+        return new LongPredicate() {
+            public boolean test(long value) { return !test(value); }
+        };
     }
 
     /**
@@ -71,6 +75,8 @@ public interface LongPredicate {
      */
     default LongPredicate or(LongPredicate other) {
         Objects.requireNonNull(other);
-        return (value) -> test(value) || other.test(value);
+        return new LongPredicate() {
+            public boolean test(long value) { return test(value) || other.test(value); }
+        };
     }
 }

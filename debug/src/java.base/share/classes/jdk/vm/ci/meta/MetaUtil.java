@@ -23,7 +23,7 @@ public class MetaUtil {
                 while ((enclosingClass = enclosingClass.getEnclosingClass()) != null) {
                     prefix = String.str(enclosingClass.getSimpleName(), ".", prefix);
                 }
-                return prefix + simpleName;
+                return String.str(prefix, simpleName);
             }
             return simpleName;
         }

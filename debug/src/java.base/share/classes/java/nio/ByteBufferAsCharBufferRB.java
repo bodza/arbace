@@ -19,19 +19,14 @@ class ByteBufferAsCharBufferRB extends ByteBufferAsCharBufferB {
     public CharBuffer slice() {
         int pos = this.position();
         int lim = this.limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         int rem = (pos <= lim ? lim - pos : 0);
         long addr = byteOffset(pos);
         return new ByteBufferAsCharBufferRB(bb, -1, 0, rem, rem, addr);
     }
 
     public CharBuffer duplicate() {
-        return new ByteBufferAsCharBufferRB(bb,
-                                                    this.markValue(),
-                                                    this.position(),
-                                                    this.limit(),
-                                                    this.capacity(),
-                                                    address);
+        return new ByteBufferAsCharBufferRB(bb, this.markValue(), this.position(), this.limit(), this.capacity(), address);
     }
 
     public CharBuffer asReadOnlyBuffer() {
@@ -80,18 +75,13 @@ class ByteBufferAsCharBufferRB extends ByteBufferAsCharBufferB {
     public CharBuffer subSequence(int start, int end) {
         int pos = position();
         int lim = limit();
-        assert (pos <= lim);
+        // assert (pos <= lim);
         pos = (pos <= lim ? pos : lim);
         int len = lim - pos;
 
         if ((start < 0) || (end > len) || (start > end))
             throw new IndexOutOfBoundsException();
-        return new ByteBufferAsCharBufferRB(bb,
-                                                  -1,
-                                                  pos + start,
-                                                  pos + end,
-                                                  capacity(),
-                                                  address);
+        return new ByteBufferAsCharBufferRB(bb, -1, pos + start, pos + end, capacity(), address);
     }
 
     public ByteOrder order() {
