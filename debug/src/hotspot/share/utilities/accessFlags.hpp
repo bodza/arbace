@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_ACCESSFLAGS_HPP
 #define SHARE_VM_UTILITIES_ACCESSFLAGS_HPP
 
@@ -94,9 +70,7 @@ enum {
 
                                                     // flags accepted by set_field_flags()
   JVM_ACC_FIELD_FLAGS                = JVM_RECOGNIZED_FIELD_MODIFIERS | JVM_ACC_FIELD_INTERNAL_FLAGS
-
 };
-
 
 class AccessFlags {
   friend class VMStructs;
@@ -173,7 +147,7 @@ class AccessFlags {
   // Initialization
   void add_promoted_flags(jint flags)   { _flags |= (flags & JVM_ACC_PROMOTED_FLAGS); }
   void set_field_flags(jint flags)      {
-    assert((flags & JVM_ACC_FIELD_FLAGS) == flags, "only recognized flags");
+    assert((flags & JVM_ACC_FIELD_FLAGS) == flags, "only recognized flags");
     _flags = (flags & JVM_ACC_FIELD_FLAGS);
   }
   void set_flags(jint flags)            { _flags = (flags & JVM_ACC_WRITTEN_FLAGS); }
@@ -269,11 +243,7 @@ class AccessFlags {
   inline friend AccessFlags accessFlags_from(jint flags);
 
   // Printing/debugging
-#if INCLUDE_JVMTI
-  void print_on(outputStream* st) const;
-#else
-  void print_on(outputStream* st) const PRODUCT_RETURN;
-#endif
+  void print_on(outputStream* st) const {};
 };
 
 inline AccessFlags accessFlags_from(jint flags) {
@@ -282,4 +252,4 @@ inline AccessFlags accessFlags_from(jint flags) {
   return af;
 }
 
-#endif // SHARE_VM_UTILITIES_ACCESSFLAGS_HPP
+#endif

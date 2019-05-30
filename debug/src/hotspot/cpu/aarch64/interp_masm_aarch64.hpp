@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, 2015, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_AARCH64_VM_INTERP_MASM_AARCH64_64_HPP
 #define CPU_AARCH64_VM_INTERP_MASM_AARCH64_64_HPP
 
@@ -60,12 +35,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
  public:
   InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) {}
 
-  void load_earlyret_value(TosState state);
-
   void jump_to_entry(address entry);
-
-  virtual void check_and_handle_popframe(Register java_thread);
-  virtual void check_and_handle_earlyret(Register java_thread);
 
   // Interpreter-specific registers
   void save_bcp() {
@@ -182,7 +152,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void prepare_to_jump_from_interpreted();
   void jump_from_interpreted(Register method, Register temp);
 
-
   // Returning from interpreted functions
   //
   // Removes the current activation (incl. unlocking of monitors)
@@ -202,14 +171,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
   // FIXME: Give us a valid frame at a null check.
   virtual void null_check(Register reg, int offset = -1) {
-// #ifdef ASSERT
-//     save_bcp();
-//     set_last_Java_frame(esp, rfp, (address) pc());
-// #endif
     MacroAssembler::null_check(reg, offset);
-// #ifdef ASSERT
-//     reset_last_Java_frame(true);
-// #endif
   }
 
   // Object locking
@@ -262,7 +224,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void profile_virtual_call(Register receiver, Register mdp,
                             Register scratch2,
                             bool receiver_can_be_null = false);
-  void profile_called_method(Register method, Register mdp, Register reg2) NOT_JVMCI_RETURN;
+  void profile_called_method(Register method, Register mdp, Register reg2) ;
   void profile_ret(Register return_bci, Register mdp);
   void profile_null_seen(Register mdp);
   void profile_typecheck(Register mdp, Register klass, Register scratch);
@@ -295,4 +257,4 @@ class InterpreterMacroAssembler: public MacroAssembler {
   }
 };
 
-#endif // CPU_AARCH64_VM_INTERP_MASM_AARCH64_64_HPP
+#endif

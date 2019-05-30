@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1HeapTransition.hpp"
@@ -72,7 +48,7 @@ public:
       _usage._humongous_used += r->used();
       _usage._humongous_region_count++;
     } else {
-      assert(r->used() == 0, "Expected used to be 0 but it was " SIZE_FORMAT, r->used());
+      assert(r->used() == 0, "Expected used to be 0 but it was " SIZE_FORMAT, r->used());
     }
     return false;
   }
@@ -89,13 +65,10 @@ void G1HeapTransition::print() {
     DetailedUsageClosure blk;
     _g1_heap->heap_region_iterate(&blk);
     usage = blk._usage;
-    assert(usage._eden_region_count == 0, "Expected no eden regions, but got " SIZE_FORMAT, usage._eden_region_count);
-    assert(usage._survivor_region_count == after._survivor_length, "Expected survivors to be " SIZE_FORMAT " but was " SIZE_FORMAT,
-        after._survivor_length, usage._survivor_region_count);
-    assert(usage._old_region_count == after._old_length, "Expected old to be " SIZE_FORMAT " but was " SIZE_FORMAT,
-        after._old_length, usage._old_region_count);
-    assert(usage._humongous_region_count == after._humongous_length, "Expected humongous to be " SIZE_FORMAT " but was " SIZE_FORMAT,
-        after._humongous_length, usage._humongous_region_count);
+    assert(usage._eden_region_count == 0, "Expected no eden regions, but got " SIZE_FORMAT, usage._eden_region_count);
+    assert(usage._survivor_region_count == after._survivor_length, "Expected survivors to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._survivor_length, usage._survivor_region_count);
+    assert(usage._old_region_count == after._old_length, "Expected old to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._old_length, usage._old_region_count);
+    assert(usage._humongous_region_count == after._humongous_length, "Expected humongous to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._humongous_length, usage._humongous_region_count);
   }
 
   log_info(gc, heap)("Eden regions: " SIZE_FORMAT "->" SIZE_FORMAT "("  SIZE_FORMAT ")",

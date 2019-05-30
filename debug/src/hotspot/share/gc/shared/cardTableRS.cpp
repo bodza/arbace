@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/cardTableRS.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
@@ -62,7 +38,6 @@ bool CLDRemSet::mod_union_is_clear() {
   return !closure.found();
 }
 
-
 class ClearCLDModUnionClosure : public CLDClosure {
  public:
   void do_cld(ClassLoaderData* cld) {
@@ -76,7 +51,6 @@ void CLDRemSet::clear_mod_union() {
   ClearCLDModUnionClosure closure;
   ClassLoaderDataGraph::cld_do(&closure);
 }
-
 
 jbyte CardTableRS::find_unused_youngergenP_card_value() {
   for (jbyte v = youngergenP1_card;
@@ -133,9 +107,7 @@ inline bool ClearNoncleanCardWrapper::clear_card_parallel(jbyte* entry) {
   while (true) {
     // In the parallel case, we may have to do this several times.
     jbyte entry_val = *entry;
-    assert(entry_val != CardTableRS::clean_card_val(),
-           "We shouldn't be looking at clean cards, and this should "
-           "be the only place they get cleaned.");
+    assert(entry_val != CardTableRS::clean_card_val(), "We shouldn't be looking at clean cards, and this should be the only place they get cleaned.");
     if (CardTableRS::card_is_dirty_wrt_gen_iter(entry_val)
         || _ct->is_prev_youngergen_card_val(entry_val)) {
       jbyte res =
@@ -143,9 +115,7 @@ inline bool ClearNoncleanCardWrapper::clear_card_parallel(jbyte* entry) {
       if (res == entry_val) {
         break;
       } else {
-        assert(res == CardTableRS::cur_youngergen_and_prev_nonclean_card,
-               "The CAS above should only fail if another thread did "
-               "a GC write barrier.");
+        assert(res == CardTableRS::cur_youngergen_and_prev_nonclean_card, "The CAS above should only fail if another thread did a GC write barrier.");
       }
     } else if (entry_val ==
                CardTableRS::cur_youngergen_and_prev_nonclean_card) {
@@ -154,8 +124,7 @@ inline bool ClearNoncleanCardWrapper::clear_card_parallel(jbyte* entry) {
       *entry = _ct->cur_youngergen_card_val();
       break;
     } else {
-      assert(entry_val == _ct->cur_youngergen_card_val(),
-             "Should be the only possibility.");
+      assert(entry_val == _ct->cur_youngergen_card_val(), "Should be the only possibility.");
       // In this case, the card was clean before, and become
       // cur_youngergen only because of processing of a promoted object.
       // We don't have to look at the card.
@@ -165,14 +134,10 @@ inline bool ClearNoncleanCardWrapper::clear_card_parallel(jbyte* entry) {
   return true;
 }
 
-
 inline bool ClearNoncleanCardWrapper::clear_card_serial(jbyte* entry) {
   jbyte entry_val = *entry;
-  assert(entry_val != CardTableRS::clean_card_val(),
-         "We shouldn't be looking at clean cards, and this should "
-         "be the only place they get cleaned.");
-  assert(entry_val != CardTableRS::cur_youngergen_and_prev_nonclean_card,
-         "This should be possible in the sequential case.");
+  assert(entry_val != CardTableRS::clean_card_val(), "We shouldn't be looking at clean cards, and this should be the only place they get cleaned.");
+  assert(entry_val != CardTableRS::cur_youngergen_and_prev_nonclean_card, "This should be possible in the sequential case.");
   *entry = CardTableRS::clean_card_val();
   return true;
 }
@@ -191,8 +156,8 @@ bool ClearNoncleanCardWrapper::is_word_aligned(jbyte* entry) {
 // card may cause scanning, and summarization marking, of objects
 // that extend onto subsequent cards.
 void ClearNoncleanCardWrapper::do_MemRegion(MemRegion mr) {
-  assert(mr.word_size() > 0, "Error");
-  assert(_ct->is_aligned(mr.start()), "mr.start() should be card aligned");
+  assert(mr.word_size() > 0, "Error");
+  assert(_ct->is_aligned(mr.start()), "mr.start() should be card aligned");
   // mr.end() may not necessarily be card aligned.
   jbyte* cur_entry = _ct->byte_for(mr.last());
   const jbyte* limit = _ct->byte_for(mr.start());
@@ -270,9 +235,7 @@ void CardTableRS::write_ref_field_gc_par(void* field, oop new_val) {
       // Otherwise, retry, to see the new value.
       continue;
     } else {
-      assert(entry_val == cur_youngergen_and_prev_nonclean_card
-             || entry_val == cur_youngergen_card_val(),
-             "should be only possibilities.");
+      assert(entry_val == cur_youngergen_and_prev_nonclean_card || entry_val == cur_youngergen_card_val(), "should be only possibilities.");
       return;
     }
   } while (true);
@@ -287,22 +250,8 @@ void CardTableRS::younger_refs_in_space_iterate(Space* sp,
   non_clean_card_iterate_possibly_parallel(sp, urasm, cl, this, n_threads);
 }
 
-#ifdef ASSERT
-void CardTableRS::verify_used_region_at_save_marks(Space* sp) const {
-  MemRegion ur    = sp->used_region();
-  MemRegion urasm = sp->used_region_at_save_marks();
-
-  assert(ur.contains(urasm),
-         "Did you forget to call save_marks()? "
-         "[" PTR_FORMAT ", " PTR_FORMAT ") is not contained in "
-         "[" PTR_FORMAT ", " PTR_FORMAT ")",
-         p2i(urasm.start()), p2i(urasm.end()), p2i(ur.start()), p2i(ur.end()));
-}
-#endif
-
 void CardTableRS::clear_into_younger(Generation* old_gen) {
-  assert(GenCollectedHeap::heap()->is_old_gen(old_gen),
-         "Should only be called for the old generation");
+  assert(GenCollectedHeap::heap()->is_old_gen(old_gen), "Should only be called for the old generation");
   // The card tables for the youngest gen need never be cleared.
   // There's a bit of subtlety in the clear() and invalidate()
   // methods that we exploit here and in invalidate_or_clear()
@@ -313,8 +262,7 @@ void CardTableRS::clear_into_younger(Generation* old_gen) {
 }
 
 void CardTableRS::invalidate_or_clear(Generation* old_gen) {
-  assert(GenCollectedHeap::heap()->is_old_gen(old_gen),
-         "Should only be called for the old generation");
+  assert(GenCollectedHeap::heap()->is_old_gen(old_gen), "Should only be called for the old generation");
   // Invalidate the cards for the currently occupied part of
   // the old generation and clear the cards for the
   // unoccupied part of the generation (if any, making use
@@ -329,7 +277,6 @@ void CardTableRS::invalidate_or_clear(Generation* old_gen) {
   invalidate(used_mr);
 }
 
-
 class VerifyCleanCardClosure: public BasicOopIterateClosure {
 private:
   HeapWord* _boundary;
@@ -338,10 +285,7 @@ private:
 protected:
   template <class T> void do_oop_work(T* p) {
     HeapWord* jp = (HeapWord*)p;
-    assert(jp >= _begin && jp < _end,
-           "Error: jp " PTR_FORMAT " should be within "
-           "[_begin, _end) = [" PTR_FORMAT "," PTR_FORMAT ")",
-           p2i(jp), p2i(_begin), p2i(_end));
+    assert(jp >= _begin && jp < _end, "Error: jp " PTR_FORMAT " should be within [_begin, _end) = [" PTR_FORMAT "," PTR_FORMAT ")", p2i(jp), p2i(_begin), p2i(_end));
     oop obj = RawAccess<>::oop_load(p);
     guarantee(obj == NULL || (HeapWord*)obj >= _boundary,
               "pointer " PTR_FORMAT " at " PTR_FORMAT " on "
@@ -352,12 +296,8 @@ protected:
 public:
   VerifyCleanCardClosure(HeapWord* b, HeapWord* begin, HeapWord* end) :
     _boundary(b), _begin(begin), _end(end) {
-    assert(b <= begin,
-           "Error: boundary " PTR_FORMAT " should be at or below begin " PTR_FORMAT,
-           p2i(b), p2i(begin));
-    assert(begin <= end,
-           "Error: begin " PTR_FORMAT " should be strictly below end " PTR_FORMAT,
-           p2i(begin), p2i(end));
+    assert(b <= begin, "Error: boundary " PTR_FORMAT " should be at or below begin " PTR_FORMAT, p2i(b), p2i(begin));
+    assert(begin <= end, "Error: begin " PTR_FORMAT " should be strictly below end " PTR_FORMAT, p2i(begin), p2i(end));
   }
 
   virtual void do_oop(oop* p)       { VerifyCleanCardClosure::do_oop_work(p); }

@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, 2015, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_AARCH64_VM_MACROASSEMBLER_AARCH64_HPP
 #define CPU_AARCH64_VM_MACROASSEMBLER_AARCH64_HPP
 
@@ -91,12 +66,6 @@ class MacroAssembler: public Assembler {
              > (1UL << log2_intptr(Universe::narrow_klass_range()))));
   }
 
- // These routines should emit JVMTI PopFrame and ForceEarlyReturn handling code.
- // The implementation is only non-empty for the InterpreterMacroAssembler,
- // as only the interpreter handles PopFrame and ForceEarlyReturn requests.
- virtual void check_and_handle_popframe(Register java_thread);
- virtual void check_and_handle_earlyret(Register java_thread);
-
   void safepoint_poll(Label& slow_path);
   void safepoint_poll_acquire(Label& slow_path);
 
@@ -116,7 +85,6 @@ class MacroAssembler: public Assembler {
                            Label& done, Label* slow_case = NULL,
                            BiasedLockingCounters* counters = NULL);
   void biased_locking_exit (Register obj_reg, Register temp_reg, Label& done);
-
 
   // Helper functions for statistics gathering.
   // Unconditional atomic increment.
@@ -208,7 +176,7 @@ class MacroAssembler: public Assembler {
     }
   }
   inline void mov(Register Rd, Register Rn) {
-    assert(Rd != r31_sp && Rn != r31_sp, "should be");
+    assert(Rd != r31_sp && Rn != r31_sp, "should be");
     if (Rd == Rn) {
     } else if (Rd == sp || Rn == sp) {
       add(Rd, Rn, 0U);
@@ -420,17 +388,16 @@ class MacroAssembler: public Assembler {
     umaddl(Rd, Rn, Rm, zr);
   }
 
-#define WRAP(INSN)                                                            \
-  void INSN(Register Rd, Register Rn, Register Rm, Register Ra) {             \
-    if ((VM_Version::features() & VM_Version::CPU_A53MAC) && Ra != zr)        \
-      nop();                                                                  \
-    Assembler::INSN(Rd, Rn, Rm, Ra);                                          \
+#define WRAP(INSN) \
+  void INSN(Register Rd, Register Rn, Register Rm, Register Ra) { \
+    if ((VM_Version::features() & VM_Version::CPU_A53MAC) && Ra != zr) \
+      nop(); \
+    Assembler::INSN(Rd, Rn, Rm, Ra); \
   }
 
   WRAP(madd) WRAP(msub) WRAP(maddw) WRAP(msubw)
   WRAP(smaddl) WRAP(smsubl) WRAP(umaddl) WRAP(umsubl)
 #undef WRAP
-
 
   // macro assembly operations needed for aarch64
 
@@ -504,7 +471,7 @@ public:
   // Generalized Test Bit And Branch, including a "far" variety which
   // spans more than 32KiB.
   void tbr(Condition cond, Register Rt, int bitpos, Label &dest, bool far = false) {
-    assert(cond == EQ || cond == NE, "must be");
+    assert(cond == EQ || cond == NE, "must be");
 
     if (far)
       cond = ~cond;
@@ -597,9 +564,6 @@ public:
   static address pd_call_destination(address branch) {
     return target_addr_for_insn(branch);
   }
-#ifndef PRODUCT
-  static void pd_print_patched_instruction(address branch);
-#endif
 
   static int patch_oop(address insn_addr, address o);
   static int patch_narrow_klass(address insn_addr, narrowKlass n);
@@ -660,7 +624,6 @@ public:
   void increment(Register reg, int value = 1);
   void increment(Address dst, int value = 1);
 
-
   // Alignment
   void align(int modulus);
 
@@ -680,13 +643,11 @@ public:
   // The pointer will be loaded into the thread register.
   void get_thread(Register thread);
 
-
   // Support for VM calls
   //
   // It is imperative that all calls into the VM are handled via the call_VM macros.
   // They make sure that the stack linkage is setup correctly. call_VM's correspond
   // to ENTRY/ENTRY_X entry points while call_VM_leaf's correspond to LEAF entry points.
-
 
   void call_VM(Register oop_result,
                address entry_point,
@@ -842,8 +803,6 @@ public:
   // if heap base register is used - reinit it with the correct value
   void reinit_heapbase();
 
-  DEBUG_ONLY(void verify_heapbase(const char* msg);)
-
   void push_CPU_state(bool save_vectors = false);
   void pop_CPU_state(bool restore_vectors = false) ;
 
@@ -920,7 +879,6 @@ public:
 
   Address argument_address(RegisterOrConstant arg_slot, int extra_slot_offset = 0);
 
-
   // Debugging
 
   // only if +VerifyOops
@@ -954,7 +912,7 @@ public:
   // Stack overflow checking
   void bang_stack_with_offset(int offset) {
     // stack grows down, caller passes positive offset
-    assert(offset > 0, "must bang with negative offset");
+    assert(offset > 0, "must bang with negative offset");
     sub(rscratch2, sp, offset);
     str(zr, Address(rscratch2));
   }
@@ -1088,45 +1046,45 @@ public:
                              add_sub_imm_insn insn1,
                              add_sub_reg_insn insn2);
 
-#define WRAP(INSN)                                                      \
-  void INSN(Register Rd, Register Rn, unsigned imm) {                   \
+#define WRAP(INSN) \
+  void INSN(Register Rd, Register Rn, unsigned imm) { \
     wrap_add_sub_imm_insn(Rd, Rn, imm, &Assembler::INSN, &Assembler::INSN); \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm,                      \
-             enum shift_kind kind, unsigned shift = 0) {                \
-    Assembler::INSN(Rd, Rn, Rm, kind, shift);                           \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm) {                    \
-    Assembler::INSN(Rd, Rn, Rm);                                        \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm,                      \
-           ext::operation option, int amount = 0) {                     \
-    Assembler::INSN(Rd, Rn, Rm, option, amount);                        \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm, \
+             enum shift_kind kind, unsigned shift = 0) { \
+    Assembler::INSN(Rd, Rn, Rm, kind, shift); \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm) { \
+    Assembler::INSN(Rd, Rn, Rm); \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm, \
+           ext::operation option, int amount = 0) { \
+    Assembler::INSN(Rd, Rn, Rm, option, amount); \
   }
 
   WRAP(add) WRAP(addw) WRAP(sub) WRAP(subw)
 
 #undef WRAP
-#define WRAP(INSN)                                                      \
-  void INSN(Register Rd, Register Rn, unsigned imm) {                   \
+#define WRAP(INSN) \
+  void INSN(Register Rd, Register Rn, unsigned imm) { \
     wrap_adds_subs_imm_insn(Rd, Rn, imm, &Assembler::INSN, &Assembler::INSN); \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm,                      \
-             enum shift_kind kind, unsigned shift = 0) {                \
-    Assembler::INSN(Rd, Rn, Rm, kind, shift);                           \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm) {                    \
-    Assembler::INSN(Rd, Rn, Rm);                                        \
-  }                                                                     \
-                                                                        \
-  void INSN(Register Rd, Register Rn, Register Rm,                      \
-           ext::operation option, int amount = 0) {                     \
-    Assembler::INSN(Rd, Rn, Rm, option, amount);                        \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm, \
+             enum shift_kind kind, unsigned shift = 0) { \
+    Assembler::INSN(Rd, Rn, Rm, kind, shift); \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm) { \
+    Assembler::INSN(Rd, Rn, Rm); \
+  } \
+ \
+  void INSN(Register Rd, Register Rn, Register Rm, \
+           ext::operation option, int amount = 0) { \
+    Assembler::INSN(Rd, Rn, Rm, option, amount); \
   }
 
   WRAP(adds) WRAP(addsw) WRAP(subs) WRAP(subsw)
@@ -1138,8 +1096,7 @@ public:
 
   void adrp(Register reg1, const Address &dest, unsigned long &byte_offset);
 
-  void tableswitch(Register index, jint lowbound, jint highbound,
-                   Label &jumptable, Label &jumptable_end, int stride = 1) {
+  void tableswitch(Register index, jint lowbound, jint highbound, Label &jumptable, Label &jumptable_end, int stride = 1) {
     adr(rscratch1, jumptable);
     subsw(rscratch2, index, lowbound);
     subsw(zr, rscratch2, highbound - lowbound);
@@ -1344,8 +1301,7 @@ public:
   void unspill(FloatRegister Vx, SIMD_RegVariant T, int offset) {
     ldr(Vx, T, spill_address(1 << (int)T, offset));
   }
-  void spill_copy128(int src_offset, int dst_offset,
-                     Register tmp1=rscratch1, Register tmp2=rscratch2) {
+  void spill_copy128(int src_offset, int dst_offset, Register tmp1=rscratch1, Register tmp2=rscratch2) {
     if (src_offset < 512 && (src_offset & 7) == 0 &&
         dst_offset < 512 && (dst_offset & 7) == 0) {
       ldp(tmp1, tmp2, Address(sp, src_offset));
@@ -1358,10 +1314,6 @@ public:
     }
   }
 };
-
-#ifdef ASSERT
-inline bool AbstractAssembler::pd_check_instruction_mark() { return false; }
-#endif
 
 /**
  * class SkipIfEqual:
@@ -1388,4 +1340,4 @@ struct tableswitch {
   Label _branches;
 };
 
-#endif // CPU_AARCH64_VM_MACROASSEMBLER_AARCH64_HPP
+#endif

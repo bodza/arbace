@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_TYPEARRAYKLASS_HPP
 #define SHARE_VM_OOPS_TYPEARRAYKLASS_HPP
 
@@ -50,15 +26,12 @@ class TypeArrayKlass : public ArrayKlass {
   jint max_length()                     { return _max_length; }
   void set_max_length(jint m)           { _max_length = m;    }
 
-  // testers
-  DEBUG_ONLY(bool is_typeArray_klass_slow() const  { return true; })
-
   // klass allocation
   static TypeArrayKlass* create_klass(BasicType type, const char* name_str,
                                TRAPS);
   static inline Klass* create_klass(BasicType type, int scale, TRAPS) {
     TypeArrayKlass* tak = create_klass(type, external_name(type), CHECK_NULL);
-    assert(scale == (1 << tak->log2_element_size()), "scale must check out");
+    assert(scale == (1 << tak->log2_element_size()), "scale must check out");
     return tak;
   }
 
@@ -78,13 +51,6 @@ class TypeArrayKlass : public ArrayKlass {
 
   // GC specific object visitors
   //
-#if INCLUDE_PARALLELGC
-  // Parallel Scavenge
-  void oop_ps_push_contents(  oop obj, PSPromotionManager* pm);
-  // Parallel Compact
-  void oop_pc_follow_contents(oop obj, ParCompactionManager* cm);
-  void oop_pc_update_pointers(oop obj, ParCompactionManager* cm);
-#endif
 
   // Oop iterators. Since there are no oops in TypeArrayKlasses,
   // these functions only return the size of the object.
@@ -119,7 +85,7 @@ class TypeArrayKlass : public ArrayKlass {
   }
 
   static const TypeArrayKlass* cast(const Klass* k) {
-    assert(k->is_typeArray_klass(), "cast to TypeArrayKlass");
+    assert(k->is_typeArray_klass(), "cast to TypeArrayKlass");
     return static_cast<const TypeArrayKlass*>(k);
   }
 
@@ -134,11 +100,6 @@ class TypeArrayKlass : public ArrayKlass {
   void initialize(TRAPS);
 
  public:
-  // Printing
-#ifndef PRODUCT
-  void oop_print_on(oop obj, outputStream* st);
-#endif
-
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
 
@@ -149,4 +110,4 @@ class TypeArrayKlass : public ArrayKlass {
   PackageEntry* package() const;
 };
 
-#endif // SHARE_VM_OOPS_TYPEARRAYKLASS_HPP
+#endif

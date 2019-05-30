@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_COMPILEDMETHOD_HPP
 #define SHARE_VM_CODE_COMPILEDMETHOD_HPP
 
@@ -51,10 +27,14 @@ class ExceptionCache : public CHeapObj<mtCode> {
   ExceptionCache* _next;
 
   inline address pc_at(int index);
-  void set_pc_at(int index, address a)      { assert(index >= 0 && index < cache_size,""); _pc[index] = a; }
+  void set_pc_at(int index, address a)      {
+    assert(index >= 0 && index < cache_size,"");
+    _pc[index] = a; }
 
   inline address handler_at(int index);
-  void set_handler_at(int index, address a) { assert(index >= 0 && index < cache_size,""); _handler[index] = a; }
+  void set_handler_at(int index, address a) {
+    assert(index >= 0 && index < cache_size,"");
+    _handler[index] = a; }
 
   inline int count();
   // increment_count is only called under lock, but there may be concurrent readers.
@@ -88,7 +68,7 @@ class PcDescCache {
   typedef PcDesc* PcDescPtr;
   volatile PcDescPtr _pc_descs[cache_size]; // last cache_size pc_descs found
  public:
-  PcDescCache() { debug_only(_pc_descs[0] = NULL); }
+  PcDescCache() {}
   void    reset_to(PcDesc* initial_pc_desc);
   PcDesc* find_pc_desc(int pc_offset, bool approximate);
   void    add_pc_desc(PcDesc* pc_desc);
@@ -129,7 +109,6 @@ public:
     return find_pc_desc_internal(pc, approximate, search);
   }
 };
-
 
 class CompiledMethod : public CodeBlob {
   friend class VMStructs;
@@ -398,9 +377,7 @@ public:
 
 protected:
   virtual bool do_unloading_oops(address low_boundary, BoolObjectClosure* is_alive) = 0;
-#if INCLUDE_JVMCI
   virtual bool do_unloading_jvmci() = 0;
-#endif
 
 private:
   // GC support to help figure out if an nmethod has been
@@ -422,4 +399,4 @@ protected:
   };
 };
 
-#endif //SHARE_VM_CODE_COMPILEDMETHOD_HPP
+#endif

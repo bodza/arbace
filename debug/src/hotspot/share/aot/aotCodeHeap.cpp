@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "precompiled.hpp"
 
 #include "aot/aotCodeHeap.hpp"
@@ -79,7 +56,7 @@ Klass* AOTCodeHeap::get_klass_from_got(const char* klass_name, int klass_len, co
 
 Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method, Thread* thread) {
   ResourceMark rm(thread);
-  assert(method != NULL, "incorrect call parameter");
+  assert(method != NULL, "incorrect call parameter");
   methodHandle caller(thread, (Method*)method);
 
   // Use class loader of aot method.
@@ -88,7 +65,7 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
 
   // Ignore wrapping L and ;
   if (name[0] == 'L') {
-    assert(len > 2, "small name %s", name);
+    assert(len > 2, "small name %s", name);
     name++;
     len -= 2;
   }
@@ -98,7 +75,7 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
     return NULL;
   }
   Klass* k = SystemDictionary::find_instance_or_array_klass(sym, loader, protection_domain, thread);
-  assert(!thread->has_pending_exception(), "should not throw");
+  assert(!thread->has_pending_exception(), "should not throw");
 
   if (k != NULL) {
     log_info(aot, class, resolve)("%s %s (lookup)", caller->method_holder()->external_name(), k->external_name());
@@ -152,11 +129,7 @@ void AOTLib::verify_config() {
   }
 
   // Debug VM has different layout of runtime and metadata structures
-#ifdef ASSERT
-  verify_flag(_config->_debug_VM, true, "Debug VM version");
-#else
   verify_flag(!(_config->_debug_VM), true, "Product VM version");
-#endif
   // Check configuration size
   verify_flag(_config->_config_size, AOTConfiguration::CONFIG_SIZE, "AOT configuration size");
 
@@ -233,7 +206,7 @@ AOTLib::AOTLib(void* handle, const char* name, int dso_id) : _valid(true), _dl_h
 
 AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
     CodeHeap("CodeHeap 'AOT'", CodeBlobType::AOT), _lib(lib), _classes(NULL), _code_to_aot(NULL) {
-  assert(_lib->is_valid(), "invalid library");
+  assert(_lib->is_valid(), "invalid library");
 
   _lib_symbols_initialized = false;
   _aot_id = 0;
@@ -318,29 +291,20 @@ void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data
   jlong* state_adr = &_method_state[code_id];
   address metadata_table = method_data->_metadata_table;
   int metadata_size = method_data->_metadata_size;
-  assert(code_id < _method_count, "sanity");
+  assert(code_id < _method_count, "sanity");
   _aot_id++;
 
-#ifdef ASSERT
-  if (_aot_id > CIStop || _aot_id < CIStart) {
-    // Skip compilation
-    return;
-  }
-#endif
   // Check one more time.
   if (_code_to_aot[code_id]._state == invalid) {
     return;
   }
   AOTCompiledMethod *aot = new AOTCompiledMethod(code, mh(), meta, metadata_table, metadata_size, state_adr, this, name, code_id, _aot_id);
-  assert(_code_to_aot[code_id]._aot == NULL, "should be not initialized");
+  assert(_code_to_aot[code_id]._aot == NULL, "should be not initialized");
   _code_to_aot[code_id]._aot = aot; // Should set this first
   if (Atomic::cmpxchg(in_use, &_code_to_aot[code_id]._state, not_set) != not_set) {
     _code_to_aot[code_id]._aot = NULL; // Clean
   } else { // success
     // Publish method
-#ifdef TIERED
-    mh->set_aot_code(aot);
-#endif
     Method::set_code(mh, aot);
     if (PrintAOT || (PrintCompilation && PrintAOT)) {
       aot->print_on(tty, NULL);
@@ -381,7 +345,7 @@ void AOTCodeHeap::register_stubs() {
     address metadata_table = (address)_metadata_got + stub_offsets[i]._metadata_got_offset;
     int metadata_size = stub_offsets[i]._metadata_got_size;
     int code_id = stub_offsets[i]._code_id;
-    assert(code_id < _method_count, "sanity");
+    assert(code_id < _method_count, "sanity");
     jlong* state_adr = &_method_state[code_id];
     int len = build_u2_from((address)stub_name);
     stub_name += 2;
@@ -394,7 +358,7 @@ void AOTCodeHeap::register_stubs() {
     full_name[len+4] = 0;
     guarantee(_code_to_aot[code_id]._state != invalid, "stub %s can't be invalidated", full_name);
     AOTCompiledMethod* aot = new AOTCompiledMethod(entry, NULL, meta, metadata_table, metadata_size, state_adr, this, full_name, code_id, i);
-    assert(_code_to_aot[code_id]._aot  == NULL, "should be not initialized");
+    assert(_code_to_aot[code_id]._aot  == NULL, "should be not initialized");
     _code_to_aot[code_id]._aot  = aot;
     if (Atomic::cmpxchg(in_use, &_code_to_aot[code_id]._state, not_set) != not_set) {
       fatal("stab '%s' code state is %d", full_name, _code_to_aot[code_id]._state);
@@ -408,11 +372,11 @@ void AOTCodeHeap::register_stubs() {
 }
 
 #define SET_AOT_GLOBAL_SYMBOL_VALUE(AOTSYMNAME, AOTSYMTYPE, VMSYMVAL) \
-  {                                                                   \
-    AOTSYMTYPE * adr = (AOTSYMTYPE *) os::dll_lookup(_lib->dl_handle(), AOTSYMNAME);  \
-    /* Check for a lookup error */                                    \
-    guarantee(adr != NULL, "AOT Symbol not found %s", AOTSYMNAME);    \
-    *adr = (AOTSYMTYPE) VMSYMVAL;                                     \
+  { \
+    AOTSYMTYPE * adr = (AOTSYMTYPE *) os::dll_lookup(_lib->dl_handle(), AOTSYMNAME); \
+    /* Check for a lookup error */ \
+    guarantee(adr != NULL, "AOT Symbol not found %s", AOTSYMNAME); \
+    *adr = (AOTSYMTYPE) VMSYMVAL; \
   }
 
 void AOTCodeHeap::link_graal_runtime_symbols()  {
@@ -426,10 +390,8 @@ void AOTCodeHeap::link_graal_runtime_symbols()  {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_new_multi_array", address, JVMCIRuntime::new_multi_array);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_dynamic_new_array", address, JVMCIRuntime::dynamic_new_array);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_validate_object", address, JVMCIRuntime::validate_object);
-#if INCLUDE_G1GC
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_write_barrier_pre", address, JVMCIRuntime::write_barrier_pre);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_write_barrier_post", address, JVMCIRuntime::write_barrier_post);
-#endif
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_identity_hash_code", address, JVMCIRuntime::identity_hash_code);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_dynamic_new_instance", address, JVMCIRuntime::dynamic_new_instance);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_thread_is_interrupted", address, JVMCIRuntime::thread_is_interrupted);
@@ -515,7 +477,6 @@ void AOTCodeHeap::link_stub_routines_symbols() {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_update_bytes_crc32", address, StubRoutines::_updateBytesCRC32);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_crc_table_adr", address, StubRoutines::_crc_table_adr);
 
-
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_sha1_implCompress", address, StubRoutines::_sha1_implCompress);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_sha1_implCompressMB", address, StubRoutines::_sha1_implCompressMB);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_sha256_implCompress", address, StubRoutines::_sha256_implCompress);
@@ -537,7 +498,6 @@ void AOTCodeHeap::link_stub_routines_symbols() {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_vectorizedMismatch", address, StubRoutines::_vectorizedMismatch);
 
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_stub_routines_throw_delayed_StackOverflowError_entry", address, StubRoutines::_throw_delayed_StackOverflowError_entry);
-
 }
 
 void AOTCodeHeap::link_os_symbols() {
@@ -561,9 +521,7 @@ void AOTCodeHeap::link_global_lib_symbols() {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_polling_page", address, os::get_polling_page());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_narrow_klass_base_address", address, Universe::narrow_klass_base());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_narrow_oop_base_address", address, Universe::narrow_oop_base());
-#if INCLUDE_G1GC
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_log_of_heap_region_grain_bytes", int, HeapRegion::LogOfHRGrainBytes);
-#endif
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_inline_contiguous_allocation_supported", bool, heap->supports_inline_contig_alloc());
     link_shared_runtime_symbols();
     link_stub_routines_symbols();
@@ -574,19 +532,6 @@ void AOTCodeHeap::link_global_lib_symbols() {
     link_primitive_array_klasses();
   }
 }
-
-#ifndef PRODUCT
-int AOTCodeHeap::klasses_seen = 0;
-int AOTCodeHeap::aot_klasses_found = 0;
-int AOTCodeHeap::aot_klasses_fp_miss = 0;
-int AOTCodeHeap::aot_klasses_cl_miss = 0;
-int AOTCodeHeap::aot_methods_found = 0;
-
-void AOTCodeHeap::print_statistics() {
-  tty->print_cr("Classes seen: %d  AOT classes found: %d  AOT methods found: %d", klasses_seen, aot_klasses_found, aot_methods_found);
-  tty->print_cr("AOT fingerprint mismatches: %d  AOT class loader mismatches: %d", aot_klasses_fp_miss, aot_klasses_cl_miss);
-}
-#endif
 
 Method* AOTCodeHeap::find_method(Klass* klass, Thread* thread, const char* method_name) {
   int method_name_len = build_u2_from((address)method_name);
@@ -633,7 +578,6 @@ Method* AOTCodeHeap::find_method(Klass* klass, Thread* thread, const char* metho
     tty->cr();
     fatal("Failed to find method '%s'", meta_name);
   }
-  NOT_PRODUCT( aot_methods_found++; )
   return m;
 }
 
@@ -680,7 +624,7 @@ void AOTCodeHeap::sweep_dependent_methods(int* indexes, int methods_cnt) {
     if (Atomic::cmpxchg(invalid, &_code_to_aot[code_id]._state, not_set) != not_set) {
       if (_code_to_aot[code_id]._state == in_use) {
         AOTCompiledMethod* aot = _code_to_aot[code_id]._aot;
-        assert(aot != NULL, "aot should be set");
+        assert(aot != NULL, "aot should be set");
         if (!aot->is_runtime_stub()) { // Something is wrong - should not invalidate stubs.
           aot->mark_for_deoptimization(false);
           marked++;
@@ -717,11 +661,8 @@ void AOTCodeHeap::sweep_method(AOTCompiledMethod *aot) {
   vmassert(aot->method()->code() != aot && aot->method()->aot_code() == NULL, "method still active");
 }
 
-
 bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
   ResourceMark rm;
-
-  NOT_PRODUCT( klasses_seen++; )
 
   AOTKlassData* klass_data = find_klass(ik);
   if (klass_data == NULL) {
@@ -729,7 +670,6 @@ bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
   }
 
   if (!ik->has_passed_fingerprint_check()) {
-    NOT_PRODUCT( aot_klasses_fp_miss++; )
     log_trace(aot, class, fingerprint)("class  %s%s  has bad fingerprint in  %s tid=" INTPTR_FORMAT,
                                        ik->internal_name(), ik->is_shared() ? " (shared)" : "",
                                        _lib->name(), p2i(thread));
@@ -745,12 +685,11 @@ bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
     return false;
   }
 
-  assert(klass_data->_class_id < _class_count, "invalid class id");
+  assert(klass_data->_class_id < _class_count, "invalid class id");
   AOTClass* aot_class = &_classes[klass_data->_class_id];
   if (aot_class->_classloader != NULL && aot_class->_classloader != ik->class_loader_data()) {
     log_trace(aot, class, load)("class  %s  in  %s already loaded for classloader %p vs %p tid=" INTPTR_FORMAT,
                                 ik->internal_name(), _lib->name(), aot_class->_classloader, ik->class_loader_data(), p2i(thread));
-    NOT_PRODUCT( aot_klasses_cl_miss++; )
     return false;
   }
 
@@ -759,8 +698,6 @@ bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
     sweep_dependent_methods(klass_data);
     return false;
   }
-
-  NOT_PRODUCT( aot_klasses_found++; )
 
   log_trace(aot, class, load)("found  %s  in  %s for classloader %p tid=" INTPTR_FORMAT, ik->internal_name(), _lib->name(), ik->class_loader_data(), p2i(thread));
 
@@ -826,7 +763,7 @@ void* AOTCodeHeap::first() const {
 void* AOTCodeHeap::next(void* p) const {
   AOTCompiledMethod *aot = (AOTCompiledMethod *)p;
   int next_index = aot->method_index() + 1;
-  assert(next_index <= _method_count, "");
+  assert(next_index <= _method_count, "");
   if (next_index == _method_count) {
     return NULL;
   }
@@ -849,12 +786,12 @@ void* AOTCodeHeap::find_start(void* p) const {
   int code_offset = (int)seg_idx * _lib->config()->_codeSegmentSize;
   int aot_index = *(int*)(_code_space + code_offset);
   AOTCompiledMethod* aot = _code_to_aot[aot_index]._aot;
-  assert(aot != NULL, "should find registered aot method");
+  assert(aot != NULL, "should find registered aot method");
   return aot;
 }
 
 AOTCompiledMethod* AOTCodeHeap::find_aot(address p) const {
-  assert(contains(p), "should be here");
+  assert(contains(p), "should be here");
   return (AOTCompiledMethod *)find_start(p);
 }
 
@@ -901,30 +838,6 @@ void AOTCodeHeap::cleanup_inline_caches() {
     }
     AOTCompiledMethod* aot = _code_to_aot[index]._aot;
     aot->cleanup_inline_caches();
-  }
-}
-
-#ifdef ASSERT
-int AOTCodeHeap::verify_icholder_relocations() {
-  int count = 0;
-  for (int index = 0; index < _method_count; index++) {
-    if (_code_to_aot[index]._state != in_use) {
-      continue; // Skip uninitialized entries.
-    }
-    AOTCompiledMethod* aot = _code_to_aot[index]._aot;
-    count += aot->verify_icholder_relocations();
-  }
-  return count;
-}
-#endif
-
-void AOTCodeHeap::flush_evol_dependents_on(InstanceKlass* dependee) {
-  for (int index = 0; index < _method_count; index++) {
-    if (_code_to_aot[index]._state != in_use) {
-      continue; // Skip uninitialized entries.
-    }
-    AOTCompiledMethod* aot = _code_to_aot[index]._aot;
-    aot->flush_evol_dependents_on(dependee);
   }
 }
 
@@ -1022,7 +935,6 @@ bool AOTCodeHeap::reconcile_dynamic_klass(AOTCompiledMethod *caller, InstanceKla
 
   // TODO: support anonymous supers
   if (!dyno->supers_have_passed_fingerprint_checks() || dyno->get_stored_fingerprint() != dyno_data->_fingerprint) {
-      NOT_PRODUCT( aot_klasses_fp_miss++; )
       log_trace(aot, class, fingerprint)("class  %s%s  has bad fingerprint in  %s tid=" INTPTR_FORMAT,
           dyno->internal_name(), dyno->is_shared() ? " (shared)" : "",
           _lib->name(), p2i(thread));

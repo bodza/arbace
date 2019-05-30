@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_FILEMAP_HPP
 #define SHARE_VM_MEMORY_FILEMAP_HPP
 
@@ -260,14 +236,13 @@ public:
   size_t core_spaces_size()              { return _header->_core_spaces_size; }
 
   static FileMapInfo* current_info() {
-    CDS_ONLY(return _current_info;)
-    NOT_CDS(return NULL;)
+    return NULL;
   }
 
   static void assert_mark(bool check);
 
   // File manipulation.
-  bool  initialize() NOT_CDS_RETURN_(false);
+  bool  initialize() { return false; };
   bool  open_for_read();
   void  open_for_write();
   void  write_header();
@@ -278,8 +253,8 @@ public:
   void  write_bytes(const void* buffer, int count);
   void  write_bytes_aligned(const void* buffer, int count);
   char* map_region(int i, char** top_ret);
-  void  map_heap_regions() NOT_CDS_JAVA_HEAP_RETURN;
-  void  fixup_mapped_heap_regions() NOT_CDS_JAVA_HEAP_RETURN;
+  void  map_heap_regions() {};
+  void  fixup_mapped_heap_regions() {};
   void  unmap_region(int i);
   bool  verify_region_checksum(int i);
   void  close();
@@ -294,8 +269,8 @@ public:
   static void fail_stop(const char *msg, ...) ATTRIBUTE_PRINTF(1, 2);
   static void fail_continue(const char *msg, ...) ATTRIBUTE_PRINTF(1, 2);
 
-  bool is_in_shared_region(const void* p, int idx) NOT_CDS_RETURN_(false);
-  void print_shared_spaces() NOT_CDS_RETURN;
+  bool is_in_shared_region(const void* p, int idx) { return false; };
+  void print_shared_spaces() {};
 
   // Stop CDS sharing and unmap CDS regions.
   static void stop_sharing_and_unmap(const char* msg);
@@ -309,14 +284,14 @@ public:
     if (index < 0) {
       return NULL;
     }
-    assert(index < _shared_path_table_size, "sanity");
+    assert(index < _shared_path_table_size, "sanity");
     char* p = (char*)_shared_path_table->data();
     p += _shared_path_entry_size * index;
     return (SharedClassPathEntry*)p;
   }
 
   static const char* shared_path_name(int index) {
-    assert(index >= 0, "Sanity");
+    assert(index >= 0, "Sanity");
     return shared_path(index)->name();
   }
 
@@ -326,9 +301,9 @@ public:
 
  private:
   bool  map_heap_data(MemRegion **heap_mem, int first, int max, int* num,
-                      bool is_open = false) NOT_CDS_JAVA_HEAP_RETURN_(false);
-  bool  verify_mapped_heap_regions(int first, int num) NOT_CDS_JAVA_HEAP_RETURN_(false);
-  void  dealloc_archive_heap_regions(MemRegion* regions, int num, bool is_open) NOT_CDS_JAVA_HEAP_RETURN;
+                      bool is_open = false) { return false; };
+  bool  verify_mapped_heap_regions(int first, int num) { return false; };
+  void  dealloc_archive_heap_regions(MemRegion* regions, int num, bool is_open) {};
 };
 
-#endif // SHARE_VM_MEMORY_FILEMAP_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_ITERATOR_HPP
 #define SHARE_VM_MEMORY_ITERATOR_HPP
 
@@ -94,14 +70,6 @@ class OopIterateClosure : public OopClosure {
   virtual bool do_metadata() = 0;
   virtual void do_klass(Klass* k) = 0;
   virtual void do_cld(ClassLoaderData* cld) = 0;
-
-#ifdef ASSERT
-  // Default verification of each visited oop field.
-  template <typename T> void verify(T* p);
-
-  // Can be used by subclasses to turn off the default verification of oop fields.
-  virtual bool should_verify_oops() { return true; }
-#endif
 };
 
 // An OopIterateClosure that can be used when there's no need to visit the Metadata.
@@ -123,7 +91,6 @@ class CLDClosure : public Closure {
  public:
   virtual void do_cld(ClassLoaderData* cld) = 0;
 };
-
 
 class CLDToOopClosure : public CLDClosure {
   OopClosure*       _oop_closure;
@@ -156,7 +123,6 @@ class ObjectClosure : public Closure {
   // Called for each object.
   virtual void do_object(oop obj) = 0;
 };
-
 
 class BoolObjectClosure : public Closure {
  public:
@@ -227,7 +193,6 @@ class CompactibleSpaceClosure : public StackObj {
   virtual void do_space(CompactibleSpace* s) = 0;
 };
 
-
 // CodeBlobClosure is used for iterating through code blobs
 // in the code cache or on thread stacks
 
@@ -279,7 +244,6 @@ class VoidClosure : public StackObj {
   // in mysterious ways, for unknown reasons.
   virtual void do_void();
 };
-
 
 // YieldClosure is intended for use by iteration loops
 // to incrementalize their work, allowing interleaving
@@ -361,4 +325,4 @@ class OopIteratorClosureDispatch {
   template <typename OopClosureType> static void oop_oop_iterate_backwards(OopClosureType* cl, oop obj, Klass* klass);
 };
 
-#endif // SHARE_VM_MEMORY_ITERATOR_HPP
+#endif

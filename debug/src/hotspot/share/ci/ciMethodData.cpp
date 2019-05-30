@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciMetadata.hpp"
 #include "ci/ciMethodData.hpp"
@@ -38,7 +14,7 @@
 // ciMethodData::ciMethodData
 //
 ciMethodData::ciMethodData(MethodData* md) : ciMetadata(md) {
-  assert(md != NULL, "no null method data");
+  assert(md != NULL, "no null method data");
   Copy::zero_to_words((HeapWord*) &_orig, sizeof(_orig) / sizeof(HeapWord));
   _data = NULL;
   _data_size = 0;
@@ -88,8 +64,8 @@ void ciMethodData::load_extra_data() {
   DataLayout* end_src = mdo->args_data_limit();
   DataLayout* dp_dst  = extra_data_base();
   for (;; dp_src = MethodData::next_extra(dp_src), dp_dst = MethodData::next_extra(dp_dst)) {
-    assert(dp_src < end_src, "moved past end of extra data");
-    assert(((intptr_t)dp_dst) - ((intptr_t)extra_data_base()) == ((intptr_t)dp_src) - ((intptr_t)mdo->extra_data_base()), "source and destination don't match");
+    assert(dp_src < end_src, "moved past end of extra data");
+    assert(((intptr_t)dp_dst) - ((intptr_t)extra_data_base()) == ((intptr_t)dp_src) - ((intptr_t)mdo->extra_data_base()), "source and destination don't match");
 
     // New traps in the MDO may have been added since we copied the
     // data (concurrent deoptimizations before we acquired
@@ -176,11 +152,6 @@ void ciMethodData::load_data() {
   _arg_local = mdo->arg_local();
   _arg_stack = mdo->arg_stack();
   _arg_returned  = mdo->arg_returned();
-#ifndef PRODUCT
-  if (ReplayCompiles) {
-    ciReplay::initialize(this);
-  }
-#endif
 }
 
 void ciReceiverTypeData::translate_receiver_data_from(const ProfileData* data) {
@@ -192,7 +163,6 @@ void ciReceiverTypeData::translate_receiver_data_from(const ProfileData* data) {
     }
   }
 }
-
 
 void ciTypeStackSlotEntries::translate_type_data_from(const TypeStackSlotEntries* entries) {
   for (int i = 0; i < number_of_entries(); i++) {
@@ -410,7 +380,7 @@ void ciMethodData::set_argument_type(int bci, int i, ciKlass* k) {
       if (data->is_CallTypeData()) {
         data->as_CallTypeData()->set_argument_type(i, k->get_Klass());
       } else {
-        assert(data->is_VirtualCallTypeData(), "no arguments!");
+        assert(data->is_VirtualCallTypeData(), "no arguments!");
         data->as_VirtualCallTypeData()->set_argument_type(i, k->get_Klass());
       }
     }
@@ -434,7 +404,7 @@ void ciMethodData::set_return_type(int bci, ciKlass* k) {
       if (data->is_CallTypeData()) {
         data->as_CallTypeData()->set_return_type(k->get_Klass());
       } else {
-        assert(data->is_VirtualCallTypeData(), "no arguments!");
+        assert(data->is_VirtualCallTypeData(), "no arguments!");
         data->as_VirtualCallTypeData()->set_return_type(k->get_Klass());
       }
     }
@@ -473,7 +443,7 @@ void ciMethodData::set_arg_modified(int arg, uint val) {
   ArgInfoData *aid = arg_info();
   if (aid == NULL)
     return;
-  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
+  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
   aid->set_arg_modified(arg, val);
 }
 
@@ -493,7 +463,7 @@ uint ciMethodData::arg_modified(int arg) const {
   ArgInfoData *aid = arg_info();
   if (aid == NULL)
     return 0;
-  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
+  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
   return aid->arg_modified(arg);
 }
 
@@ -520,7 +490,6 @@ ciArgInfoData *ciMethodData::arg_info() const {
   }
   return NULL;
 }
-
 
 // Implementation of the print method.
 void ciMethodData::print_impl(outputStream* st) {
@@ -650,145 +619,3 @@ void ciMethodData::dump_replay_data(outputStream* out) {
   }
   out->cr();
 }
-
-#ifndef PRODUCT
-void ciMethodData::print() {
-  print_data_on(tty);
-}
-
-void ciMethodData::print_data_on(outputStream* st) {
-  ResourceMark rm;
-  ciParametersTypeData* parameters = parameters_type_data();
-  if (parameters != NULL) {
-    parameters->print_data_on(st);
-  }
-  ciProfileData* data;
-  for (data = first_data(); is_valid(data); data = next_data(data)) {
-    st->print("%d", dp_to_di(data->dp()));
-    st->fill_to(6);
-    data->print_data_on(st);
-  }
-  st->print_cr("--- Extra data:");
-  DataLayout* dp  = extra_data_base();
-  DataLayout* end = args_data_limit();
-  for (;; dp = MethodData::next_extra(dp)) {
-    assert(dp < end, "moved past end of extra data");
-    switch (dp->tag()) {
-    case DataLayout::no_tag:
-      continue;
-    case DataLayout::bit_data_tag:
-      data = new BitData(dp);
-      break;
-    case DataLayout::arg_info_data_tag:
-      data = new ciArgInfoData(dp);
-      dp = end; // ArgInfoData is at the end of extra data section.
-      break;
-    case DataLayout::speculative_trap_data_tag:
-      data = new ciSpeculativeTrapData(dp);
-      break;
-    default:
-      fatal("unexpected tag %d", dp->tag());
-    }
-    st->print("%d", dp_to_di(data->dp()));
-    st->fill_to(6);
-    data->print_data_on(st);
-    if (dp >= end) return;
-  }
-}
-
-void ciTypeEntries::print_ciklass(outputStream* st, intptr_t k) {
-  if (TypeEntries::is_type_none(k)) {
-    st->print("none");
-  } else if (TypeEntries::is_type_unknown(k)) {
-    st->print("unknown");
-  } else {
-    valid_ciklass(k)->print_name_on(st);
-  }
-  if (TypeEntries::was_null_seen(k)) {
-    st->print(" (null seen)");
-  }
-}
-
-void ciTypeStackSlotEntries::print_data_on(outputStream* st) const {
-  for (int i = 0; i < number_of_entries(); i++) {
-    _pd->tab(st);
-    st->print("%d: stack (%u) ", i, stack_slot(i));
-    print_ciklass(st, type(i));
-    st->cr();
-  }
-}
-
-void ciReturnTypeEntry::print_data_on(outputStream* st) const {
-  _pd->tab(st);
-  st->print("ret ");
-  print_ciklass(st, type());
-  st->cr();
-}
-
-void ciCallTypeData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ciCallTypeData", extra);
-  if (has_arguments()) {
-    tab(st, true);
-    st->print_cr("argument types");
-    args()->print_data_on(st);
-  }
-  if (has_return()) {
-    tab(st, true);
-    st->print_cr("return type");
-    ret()->print_data_on(st);
-  }
-}
-
-void ciReceiverTypeData::print_receiver_data_on(outputStream* st) const {
-  uint row;
-  int entries = 0;
-  for (row = 0; row < row_limit(); row++) {
-    if (receiver(row) != NULL)  entries++;
-  }
-  st->print_cr("count(%u) entries(%u)", count(), entries);
-  for (row = 0; row < row_limit(); row++) {
-    if (receiver(row) != NULL) {
-      tab(st);
-      receiver(row)->print_name_on(st);
-      st->print_cr("(%u)", receiver_count(row));
-    }
-  }
-}
-
-void ciReceiverTypeData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ciReceiverTypeData", extra);
-  print_receiver_data_on(st);
-}
-
-void ciVirtualCallData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ciVirtualCallData", extra);
-  rtd_super()->print_receiver_data_on(st);
-}
-
-void ciVirtualCallTypeData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ciVirtualCallTypeData", extra);
-  rtd_super()->print_receiver_data_on(st);
-  if (has_arguments()) {
-    tab(st, true);
-    st->print("argument types");
-    args()->print_data_on(st);
-  }
-  if (has_return()) {
-    tab(st, true);
-    st->print("return type");
-    ret()->print_data_on(st);
-  }
-}
-
-void ciParametersTypeData::print_data_on(outputStream* st, const char* extra) const {
-  st->print_cr("ciParametersTypeData");
-  parameters()->print_data_on(st);
-}
-
-void ciSpeculativeTrapData::print_data_on(outputStream* st, const char* extra) const {
-  st->print_cr("ciSpeculativeTrapData");
-  tab(st);
-  method()->print_short_name(st);
-  st->cr();
-}
-#endif

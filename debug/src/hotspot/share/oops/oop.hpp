@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_OOP_HPP
 #define SHARE_VM_OOPS_OOP_HPP
 
@@ -252,9 +228,6 @@ class oopDesc {
   // asserts and guarantees
   static bool is_oop(oop obj, bool ignore_mark_word = false);
   static bool is_oop_or_null(oop obj, bool ignore_mark_word = false);
-#ifndef PRODUCT
-  inline bool is_unlocked_oop() const;
-#endif
 
   // garbage collection
   inline bool is_gc_marked() const;
@@ -282,14 +255,6 @@ class oopDesc {
   void follow_body(int begin, int end);
 
   // Garbage Collection support
-
-#if INCLUDE_PARALLELGC
-  // Parallel Compact
-  inline void pc_follow_contents(ParCompactionManager* cm);
-  inline void pc_update_contents(ParCompactionManager* cm);
-  // Parallel Scavenge
-  inline void ps_push_contents(PSPromotionManager* pm);
-#endif
 
   template <typename OopClosureType>
   inline void oop_iterate(OopClosureType* cl);
@@ -328,7 +293,7 @@ class oopDesc {
   static int mark_offset_in_bytes()      { return offset_of(oopDesc, _mark); }
   static int klass_offset_in_bytes()     { return offset_of(oopDesc, _metadata._klass); }
   static int klass_gap_offset_in_bytes() {
-    assert(has_klass_gap(), "only applicable to compressed klass pointers");
+    assert(has_klass_gap(), "only applicable to compressed klass pointers");
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
 
@@ -340,4 +305,4 @@ class oopDesc {
   static oop   oop_or_null(address addr);
 };
 
-#endif // SHARE_VM_OOPS_OOP_HPP
+#endif

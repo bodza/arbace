@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2009, 2010, 2011 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_ZERO_VM_GLOBALS_ZERO_HPP
 #define CPU_ZERO_VM_GLOBALS_ZERO_HPP
 
@@ -39,7 +14,7 @@ define_pd_global(bool,  ImplicitNullChecks,   true);
 define_pd_global(bool,  TrapBasedNullChecks,  false);
 define_pd_global(bool,  UncommonNullCast,     true);
 
-define_pd_global(uintx, CodeCacheSegmentSize, 64 TIERED_ONLY(+64)); // Tiered compilation has large code-entry alignment.
+define_pd_global(uintx, CodeCacheSegmentSize, 64); // Tiered compilation has large code-entry alignment.
 define_pd_global(intx,  CodeEntryAlignment,   32);
 define_pd_global(intx,  OptoLoopAlignment,    16);
 define_pd_global(intx,  InlineFrequencyCount, 100);
@@ -53,7 +28,7 @@ define_pd_global(intx,  InitArrayShortSize,   0);
 
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
-#define DEFAULT_STACK_SHADOW_PAGES (5 LP64_ONLY(+1) DEBUG_ONLY(+3))
+#define DEFAULT_STACK_SHADOW_PAGES (5 +1)
 #define DEFAULT_STACK_RESERVED_PAGES (0)
 
 #define MIN_STACK_YELLOW_PAGES DEFAULT_STACK_YELLOW_PAGES
@@ -90,13 +65,13 @@ define_pd_global(bool, ThreadLocalHandshakes, false);
                    notproduct, \
                    range, \
                    constraint, \
-                   writeable)  \
-                                                                            \
-  product(bool, UseFastEmptyMethods, true,                                  \
-          "Use fast method entry code for empty methods")                   \
-                                                                            \
-  product(bool, UseFastAccessorMethods, true,                               \
-          "Use fast method entry code for accessor methods")                \
-                                                                            \
+                   writeable) \
+ \
+  product(bool, UseFastEmptyMethods, true, \
+          "Use fast method entry code for empty methods") \
+ \
+  product(bool, UseFastAccessorMethods, true, \
+          "Use fast method entry code for accessor methods") \
+ \
 
-#endif // CPU_ZERO_VM_GLOBALS_ZERO_HPP
+#endif

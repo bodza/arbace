@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -105,27 +81,13 @@ class PhaseTraceTime: public TraceTime {
 
 // Implementation of Compilation
 
-
-#ifndef PRODUCT
-
-void Compilation::maybe_print_current_instruction() {
-  if (_current_instruction != NULL && _last_instruction_printed != _current_instruction) {
-    _last_instruction_printed = _current_instruction;
-    _current_instruction->print_line();
-  }
-}
-#endif // PRODUCT
-
-
 DebugInformationRecorder* Compilation::debug_info_recorder() const {
   return _env->debug_info();
 }
 
-
 Dependencies* Compilation::dependency_recorder() const {
   return _env->dependencies();
 }
-
 
 void Compilation::initialize() {
   // Use an oop recorder bound to the CI environment.
@@ -136,7 +98,6 @@ void Compilation::initialize() {
   debug_info_recorder()->set_oopmaps(new OopMapSet());
   _env->set_dependencies(new Dependencies(_env));
 }
-
 
 void Compilation::build_hir() {
   CHECK_BAILOUT();
@@ -159,17 +120,6 @@ void Compilation::build_hir() {
     return;
   }
 
-#ifndef PRODUCT
-  if (PrintCFGToFile) {
-    CFGPrinter::print_cfg(_hir, "After Generation of HIR", true, false);
-  }
-#endif
-
-#ifndef PRODUCT
-  if (PrintCFG || PrintCFG0) { tty->print_cr("CFG after parsing"); _hir->print(true); }
-  if (PrintIR  || PrintIR0 ) { tty->print_cr("IR after parsing"); _hir->print(false); }
-#endif
-
   _hir->verify();
 
   if (UseC1Optimizations) {
@@ -184,11 +134,6 @@ void Compilation::build_hir() {
 
   _hir->split_critical_edges();
 
-#ifndef PRODUCT
-  if (PrintCFG || PrintCFG1) { tty->print_cr("CFG after optimizations"); _hir->print(true); }
-  if (PrintIR  || PrintIR1 ) { tty->print_cr("IR after optimizations"); _hir->print(false); }
-#endif
-
   _hir->verify();
 
   // compute block ordering for code generation
@@ -200,17 +145,10 @@ void Compilation::build_hir() {
     PhaseTraceTime timeit(_t_gvn);
     int instructions = Instruction::number_of_instructions();
     GlobalValueNumbering gvn(_hir);
-    assert(instructions == Instruction::number_of_instructions(),
-           "shouldn't have created an instructions");
+    assert(instructions == Instruction::number_of_instructions(), "shouldn't have created an instructions");
   }
 
   _hir->verify();
-
-#ifndef PRODUCT
-  if (PrintCFGToFile) {
-    CFGPrinter::print_cfg(_hir, "Before RangeCheckElimination", true, false);
-  }
-#endif
 
   if (RangeCheckElimination) {
     if (_hir->osr_entry() == NULL) {
@@ -218,12 +156,6 @@ void Compilation::build_hir() {
       RangeCheckElimination::eliminate(_hir);
     }
   }
-
-#ifndef PRODUCT
-  if (PrintCFGToFile) {
-    CFGPrinter::print_cfg(_hir, "After RangeCheckElimination", true, false);
-  }
-#endif
 
   if (UseC1Optimizations) {
     // loop invariant code motion reorders instructions and range
@@ -241,14 +173,8 @@ void Compilation::build_hir() {
   // compute use counts after global value numbering
   _hir->compute_use_counts();
 
-#ifndef PRODUCT
-  if (PrintCFG || PrintCFG2) { tty->print_cr("CFG before code generation"); _hir->code()->print(true); }
-  if (PrintIR  || PrintIR2 ) { tty->print_cr("IR before code generation"); _hir->code()->print(false, true); }
-#endif
-
   _hir->verify();
 }
-
 
 void Compilation::emit_lir() {
   CHECK_BAILOUT();
@@ -280,7 +206,6 @@ void Compilation::emit_lir() {
     bailout("Bailing out because of -XX:+BailoutAfterLIR");
   }
 }
-
 
 void Compilation::emit_code_epilog(LIR_Assembler* assembler) {
   CHECK_BAILOUT();
@@ -319,7 +244,6 @@ void Compilation::emit_code_epilog(LIR_Assembler* assembler) {
   masm()->flush();
 }
 
-
 bool Compilation::setup_code_buffer(CodeBuffer* code, int call_stub_estimate) {
   // Preinitialize the consts section to some large size:
   int locs_buffer_size = 20 * (relocInfo::length_limit + sizeof(relocInfo));
@@ -335,7 +259,6 @@ bool Compilation::setup_code_buffer(CodeBuffer* code, int call_stub_estimate) {
   code->initialize_stubs_size(stub_size);
   return true;
 }
-
 
 int Compilation::emit_code_body() {
   // emit code
@@ -357,18 +280,11 @@ int Compilation::emit_code_body() {
 
   generate_exception_handler_table();
 
-#ifndef PRODUCT
-  if (PrintExceptionHandlers && Verbose) {
-    exception_handler_table()->print();
-  }
-#endif /* PRODUCT */
-
   return frame_map()->framesize();
 }
 
-
 int Compilation::compile_java_method() {
-  assert(!method()->is_native(), "should not reach here");
+  assert(!method()->is_native(), "should not reach here");
 
   if (BailoutOnExceptionHandlers) {
     if (method()->has_exception_handlers()) {
@@ -390,7 +306,6 @@ int Compilation::compile_java_method() {
     BAILOUT_("Bailing out because of -XX:+BailoutAfterHIR", no_frame_size);
   }
 
-
   {
     PhaseTraceTime timeit(_t_emit_lir);
 
@@ -407,8 +322,8 @@ int Compilation::compile_java_method() {
 
 void Compilation::install_code(int frame_size) {
   // frame_size is in 32-bit words so adjust it intptr_t words
-  assert(frame_size == frame_map()->framesize(), "must match");
-  assert(in_bytes(frame_map()->framesize_in_bytes()) % sizeof(intptr_t) == 0, "must be at least pointer aligned");
+  assert(frame_size == frame_map()->framesize(), "must match");
+  assert(in_bytes(frame_map()->framesize_in_bytes()) % sizeof(intptr_t) == 0, "must be at least pointer aligned");
   _env->register_method(
     method(),
     osr_bci(),
@@ -425,7 +340,6 @@ void Compilation::install_code(int frame_size) {
   );
 }
 
-
 void Compilation::compile_method() {
   {
     PhaseTraceTime timeit(_t_setup);
@@ -441,20 +355,9 @@ void Compilation::compile_method() {
     return;
   }
 
-  if (_env->jvmti_can_hotswap_or_post_breakpoint()) {
-    // We can assert evol_method because method->can_be_compiled is true.
-    dependency_recorder()->assert_evol_method(method());
-  }
-
   if (directive()->BreakAtCompileOption) {
     BREAKPOINT;
   }
-
-#ifndef PRODUCT
-  if (PrintCFGToFile) {
-    CFGPrinter::print_compilation(this);
-  }
-#endif
 
   // compile method
   int frame_size = compile_java_method();
@@ -474,7 +377,6 @@ void Compilation::compile_method() {
 
   totalInstructionNodes += Instruction::number_of_instructions();
 }
-
 
 void Compilation::generate_exception_handler_table() {
   // Generate an ExceptionHandlerTable from the exception handler
@@ -503,8 +405,8 @@ void Compilation::generate_exception_handler_table() {
     int prev_scope = 0;
     for (int i = 0; i < handlers->length(); i++) {
       XHandler* handler = handlers->handler_at(i);
-      assert(handler->entry_pco() != -1, "must have been generated");
-      assert(handler->scope_count() >= prev_scope, "handlers should be sorted by scope");
+      assert(handler->entry_pco() != -1, "must have been generated");
+      assert(handler->scope_count() >= prev_scope, "handlers should be sorted by scope");
 
       if (handler->scope_count() == prev_scope) {
         int e = bcis->find_from_end(handler->handler_bci());
@@ -530,14 +432,13 @@ void Compilation::generate_exception_handler_table() {
 
       // stop processing once we hit a catch any
       if (handler->is_catch_all()) {
-        assert(i == handlers->length() - 1, "catch all must be last handler");
+        assert(i == handlers->length() - 1, "catch all must be last handler");
       }
       prev_scope = handler->scope_count();
     }
     exception_handler_table()->add_subtable(info->pco(), bcis, scope_depths, pcos);
   }
 }
-
 
 Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method,
                          int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive)
@@ -566,21 +467,12 @@ Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* metho
 , _has_access_indexed(false)
 , _current_instruction(NULL)
 , _interpreter_frame_size(0)
-#ifndef PRODUCT
-, _last_instruction_printed(NULL)
-, _cfg_printer_output(NULL)
-#endif // PRODUCT
 {
   PhaseTraceTime timeit(_t_compile);
   _arena = Thread::current()->resource_area();
   _env->set_compiler_data(this);
   _exception_info_list = new ExceptionInfoList();
   _implicit_exception_table.set_size(0);
-#ifndef PRODUCT
-  if (PrintCFGToFile) {
-    _cfg_printer_output = new CFGPrinterOutput(this);
-  }
-#endif
   compile_method();
   if (bailed_out()) {
     _env->record_method_not_compilable(bailout_msg(), !TieredCompilation);
@@ -602,23 +494,16 @@ Compilation::~Compilation() {
 }
 
 void Compilation::add_exception_handlers_for_pco(int pco, XHandlers* exception_handlers) {
-#ifndef PRODUCT
-  if (PrintExceptionHandlers && Verbose) {
-    tty->print_cr("  added exception scope for pco %d", pco);
-  }
-#endif
   // Note: we do not have program counters for these exception handlers yet
   exception_info_list()->push(new ExceptionInfo(pco, exception_handlers));
 }
-
 
 void Compilation::notice_inlined_method(ciMethod* method) {
   _env->notice_inlined_method(method);
 }
 
-
 void Compilation::bailout(const char* msg) {
-  assert(msg != NULL, "bailout message must exist");
+  assert(msg != NULL, "bailout message must exist");
   if (!bailed_out()) {
     // keep first bailout message
     if (PrintCompilation || PrintBailouts) tty->print_cr("compilation bailout: %s", msg);
@@ -629,7 +514,7 @@ void Compilation::bailout(const char* msg) {
 ciKlass* Compilation::cha_exact_type(ciType* type) {
   if (type != NULL && type->is_loaded() && type->is_instance_klass()) {
     ciInstanceKlass* ik = type->as_instance_klass();
-    assert(ik->exact_klass() == NULL, "no cha for final klass");
+    assert(ik->exact_klass() == NULL, "no cha for final klass");
     if (DeoptC1 && UseCHA && !(ik->has_subklass() || ik->is_interface())) {
       dependency_recorder()->assert_leaf_type(ik);
       return ik;
@@ -665,7 +550,6 @@ void Compilation::print_timers() {
     tty->print_cr("       Emit LIR:            %7.3f s",    timers[_t_emit_lir].seconds());
     tty->print_cr("         LIR Gen:             %7.3f s",   timers[_t_lirGeneration].seconds());
     tty->print_cr("         Linear Scan:         %7.3f s",   timers[_t_linearScan].seconds());
-    NOT_PRODUCT(LinearScan::print_timers(timers[_t_linearScan].seconds()));
 
     double other = timers[_t_emit_lir].seconds() -
       (timers[_t_lirGeneration].seconds() +
@@ -687,36 +571,4 @@ void Compilation::print_timers() {
   if (other > 0) {
     tty->print_cr("       Other:               %7.3f s", other);
   }
-
-  NOT_PRODUCT(LinearScan::print_statistics());
 }
-
-
-#ifndef PRODUCT
-void Compilation::compile_only_this_method() {
-  ResourceMark rm;
-  fileStream stream(fopen("c1_compile_only", "wt"));
-  stream.print_cr("# c1 compile only directives");
-  compile_only_this_scope(&stream, hir()->top_scope());
-}
-
-
-void Compilation::compile_only_this_scope(outputStream* st, IRScope* scope) {
-  st->print("CompileOnly=");
-  scope->method()->holder()->name()->print_symbol_on(st);
-  st->print(".");
-  scope->method()->name()->print_symbol_on(st);
-  st->cr();
-}
-
-
-void Compilation::exclude_this_method() {
-  fileStream stream(fopen(".hotspot_compiler", "at"));
-  stream.print("exclude ");
-  method()->holder()->name()->print_symbol_on(&stream);
-  stream.print(" ");
-  method()->name()->print_symbol_on(&stream);
-  stream.cr();
-  stream.cr();
-}
-#endif

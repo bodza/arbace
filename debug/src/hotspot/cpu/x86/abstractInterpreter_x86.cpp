@@ -1,32 +1,7 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciMethod.hpp"
 #include "interpreter/interpreter.hpp"
 #include "runtime/frame.inline.hpp"
-
 
 // asm based interpreter deoptimization helpers
 int AbstractInterpreter::size_activation(int max_stack,
@@ -74,22 +49,12 @@ void AbstractInterpreter::layout_activation(Method* method,
   int extra_locals = (method->max_locals() - method->size_of_parameters()) *
     Interpreter::stackElementWords;
 
-#ifdef ASSERT
-  assert(caller->sp() == interpreter_frame->sender_sp(), "Frame not properly walkable");
-#endif
-
   interpreter_frame->interpreter_frame_set_method(method);
   // NOTE the difference in using sender_sp and
   // interpreter_frame_sender_sp interpreter_frame_sender_sp is
   // the original sp of the caller (the unextended_sp) and
   // sender_sp is fp+8/16 (32bit/64bit) XXX
   intptr_t* locals = interpreter_frame->sender_sp() + max_locals - 1;
-
-#ifdef ASSERT
-  if (caller->is_interpreted_frame()) {
-    assert(locals < caller->fp() + frame::interpreter_frame_initial_sp_offset, "bad placement");
-  }
-#endif
 
   interpreter_frame->interpreter_frame_set_locals(locals);
   BasicObjectLock* montop = interpreter_frame->interpreter_frame_monitor_begin();
@@ -117,27 +82,6 @@ void AbstractInterpreter::layout_activation(Method* method,
     method->method_holder()->java_mirror();
 }
 
-#ifndef _LP64
-int AbstractInterpreter::BasicType_as_index(BasicType type) {
-  int i = 0;
-  switch (type) {
-    case T_BOOLEAN: i = 0; break;
-    case T_CHAR   : i = 1; break;
-    case T_BYTE   : i = 2; break;
-    case T_SHORT  : i = 3; break;
-    case T_INT    : // fall through
-    case T_LONG   : // fall through
-    case T_VOID   : i = 4; break;
-    case T_FLOAT  : i = 5; break;  // have to treat float and double separately for SSE
-    case T_DOUBLE : i = 6; break;
-    case T_OBJECT : // fall through
-    case T_ARRAY  : i = 7; break;
-    default       : ShouldNotReachHere();
-  }
-  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers, "index out of bounds");
-  return i;
-}
-#else
 int AbstractInterpreter::BasicType_as_index(BasicType type) {
   int i = 0;
   switch (type) {
@@ -154,11 +98,9 @@ int AbstractInterpreter::BasicType_as_index(BasicType type) {
     case T_ARRAY  : i = 9; break;
     default       : ShouldNotReachHere();
   }
-  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers,
-         "index out of bounds");
+  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers, "index out of bounds");
   return i;
 }
-#endif // _LP64
 
 // How much stack a method activation needs in words.
 int AbstractInterpreter::size_top_interpreter_activation(Method* method) {
@@ -170,11 +112,7 @@ int AbstractInterpreter::size_top_interpreter_activation(Method* method) {
   const int overhead_size =
     -(frame::interpreter_frame_initial_sp_offset) + entry_size;
 
-#ifndef _LP64
-  const int stub_code = 4;  // see generate_call_stub
-#else
   const int stub_code = frame::entry_frame_after_call_words;
-#endif
 
   const int method_stack = (method->max_locals() + method->max_stack()) *
                            Interpreter::stackElementWords;

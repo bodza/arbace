@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_CPCACHEOOP_HPP
 #define SHARE_VM_OOPS_CPCACHEOOP_HPP
 
@@ -141,32 +117,31 @@ class ConstantPoolCacheEntry {
   volatile intx        _f2;       // entry specific int/metadata field
   volatile intx     _flags;    // flags
 
-
   void set_bytecode_1(Bytecodes::Code code);
   void set_bytecode_2(Bytecodes::Code code);
   void set_f1(Metadata* f1) {
     Metadata* existing_f1 = _f1; // read once
-    assert(existing_f1 == NULL || existing_f1 == f1, "illegal field change");
+    assert(existing_f1 == NULL || existing_f1 == f1, "illegal field change");
     _f1 = f1;
   }
   void release_set_f1(Metadata* f1);
   void set_f2(intx f2) {
     intx existing_f2 = _f2; // read once
-    assert(existing_f2 == 0 || existing_f2 == f2, "illegal field change");
+    assert(existing_f2 == 0 || existing_f2 == f2, "illegal field change");
     _f2 = f2;
   }
   void set_f2_as_vfinal_method(Method* f2) {
-    assert(is_vfinal(), "flags must be set");
+    assert(is_vfinal(), "flags must be set");
     set_f2((intx)f2);
   }
   int make_flags(TosState state, int option_bits, int field_index_or_method_params);
   void set_flags(intx flags)                     { _flags = flags; }
   void set_field_flags(TosState field_type, int option_bits, int field_index) {
-    assert((field_index & field_index_mask) == field_index, "field_index in range");
+    assert((field_index & field_index_mask) == field_index, "field_index in range");
     set_flags(make_flags(field_type, option_bits | (1 << is_field_entry_shift), field_index));
   }
   void set_method_flags(TosState return_type, int option_bits, int method_params) {
-    assert((method_params & parameter_size_mask) == method_params, "method_params in range");
+    assert((method_params & parameter_size_mask) == method_params, "method_params in range");
     set_flags(make_flags(return_type, option_bits, method_params));
   }
 
@@ -205,11 +180,10 @@ class ConstantPoolCacheEntry {
     bytecode_2_mask            = right_n_bits(BitsPerByte)  // == (u1)0xFF
   };
 
-
   // Initialization
   void initialize_entry(int original_index);     // initialize primary entry
   void initialize_resolved_reference_index(int ref_index) {
-    assert(_f2 == 0, "set once");  // note: ref_index might be zero also
+    assert(_f2 == 0, "set once");  // note: ref_index might be zero also
     _f2 = ref_index;
   }
 
@@ -344,12 +318,20 @@ class ConstantPoolCacheEntry {
   // of _f1 must be ordered with the loads performed by
   // cache->main_entry_index().
   bool      is_f1_null() const;  // classifies a CPC entry as unbound
-  int       f2_as_index() const                  { assert(!is_vfinal(), ""); return (int) _f2; }
-  Method*   f2_as_vfinal_method() const          { assert(is_vfinal(), ""); return (Method*)_f2; }
+  int       f2_as_index() const                  {
+    assert(!is_vfinal(), "");
+    return (int) _f2; }
+  Method*   f2_as_vfinal_method() const          {
+    assert(is_vfinal(), "");
+    return (Method*)_f2; }
   Method*   f2_as_interface_method() const;
   intx flags_ord() const;
-  int  field_index() const                       { assert(is_field_entry(),  ""); return (_flags & field_index_mask); }
-  int  parameter_size() const                    { assert(is_method_entry(), ""); return (_flags & parameter_size_mask); }
+  int  field_index() const                       {
+    assert(is_field_entry(),  "");
+    return (_flags & field_index_mask); }
+  int  parameter_size() const                    {
+    assert(is_method_entry(), "");
+    return (_flags & parameter_size_mask); }
   bool is_volatile() const                       { return (_flags & (1 << is_volatile_shift))       != 0; }
   bool is_final() const                          { return (_flags & (1 << is_final_shift))          != 0; }
   bool is_forced_virtual() const                 { return (_flags & (1 << is_forced_virtual_shift)) != 0; }
@@ -361,7 +343,8 @@ class ConstantPoolCacheEntry {
   bool is_field_entry() const                    { return (_flags & (1 << is_field_entry_shift))    != 0; }
   bool is_long() const                           { return flag_state() == ltos; }
   bool is_double() const                         { return flag_state() == dtos; }
-  TosState flag_state() const                    { assert((uint)number_of_states <= (uint)tos_state_mask+1, "");
+  TosState flag_state() const                    {
+    assert((uint)number_of_states <= (uint)tos_state_mask+1, "");
                                                    return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
   void set_indy_resolution_failed();
 
@@ -375,32 +358,18 @@ class ConstantPoolCacheEntry {
   static ByteSize f2_offset()                    { return byte_offset_of(ConstantPoolCacheEntry, _f2); }
   static ByteSize flags_offset()                 { return byte_offset_of(ConstantPoolCacheEntry, _flags); }
 
-#if INCLUDE_JVMTI
-  // RedefineClasses() API support:
-  // If this ConstantPoolCacheEntry refers to old_method then update it
-  // to refer to new_method.
-  // trace_name_printed is set to true if the current call has
-  // printed the klass name so that other routines in the adjust_*
-  // group don't print the klass name.
-  void adjust_method_entry(Method* old_method, Method* new_method,
-         bool* trace_name_printed);
-  bool check_no_old_or_obsolete_entries();
-  Method* get_interesting_method_entry(Klass* k);
-#endif // INCLUDE_JVMTI
-
   // Debugging & Printing
   void print (outputStream* st, int index) const;
   void verify(outputStream* st) const;
 
   static void verify_tos_state_shift() {
     // When shifting flags as a 32-bit int, make sure we don't need an extra mask for tos_state:
-    assert((((u4)-1 >> tos_state_shift) & ~tos_state_mask) == 0, "no need for tos_state mask");
+    assert((((u4)-1 >> tos_state_shift) & ~tos_state_mask) == 0, "no need for tos_state mask");
   }
 
   void verify_just_initialized(bool f2_used);
   void reinitialize(bool f2_used);
 };
-
 
 // A constant pool cache is a runtime data structure set aside to a constant pool. The cache
 // holds interpreter runtime information for all field access and invoke bytecodes. The cache
@@ -422,13 +391,6 @@ class ConstantPoolCache: public MetaspaceObj {
   // object index to original constant pool index
   OopHandle            _resolved_references;
   Array<u2>*           _reference_map;
-  // The narrowOop pointer to the archived resolved_references. Set at CDS dump
-  // time when caching java heap object is supported.
-  CDS_JAVA_HEAP_ONLY(narrowOop _archived_references;)
-
-  // Sizing
-  debug_only(friend class ClassVerifier;)
-
   // Constructor
   ConstantPoolCache(int length,
                     const intStack& inverse_index_map,
@@ -450,8 +412,8 @@ class ConstantPoolCache: public MetaspaceObj {
   void metaspace_pointers_do(MetaspaceClosure* it);
   MetaspaceObj::Type type() const         { return ConstantPoolCacheType; }
 
-  oop  archived_references() NOT_CDS_JAVA_HEAP_RETURN_(NULL);
-  void set_archived_references(oop o) NOT_CDS_JAVA_HEAP_RETURN;
+  oop  archived_references() { return NULL; };
+  void set_archived_references(oop o) {};
 
   inline oop resolved_references();
   void set_resolved_references(OopHandle s) { _resolved_references = s; }
@@ -488,7 +450,7 @@ class ConstantPoolCache: public MetaspaceObj {
   // Fetches the entry at the given index.
   // In either case the index must not be encoded or byte-swapped in any way.
   ConstantPoolCacheEntry* entry_at(int i) const {
-    assert(0 <= i && i < length(), "index out of bounds");
+    assert(0 <= i && i < length(), "index out of bounds");
     return base() + i;
   }
 
@@ -499,20 +461,7 @@ class ConstantPoolCache: public MetaspaceObj {
     return (base_offset() + ConstantPoolCacheEntry::size_in_bytes() * index);
   }
 
-#if INCLUDE_JVMTI
-  // RedefineClasses() API support:
-  // If any entry of this ConstantPoolCache points to any of
-  // old_methods, replace it with the corresponding new_method.
-  // trace_name_printed is set to true if the current call has
-  // printed the klass name so that other routines in the adjust_*
-  // group don't print the klass name.
-  void adjust_method_entries(InstanceKlass* holder, bool* trace_name_printed);
-  bool check_no_old_or_obsolete_entries();
-  void dump_cache();
-#endif // INCLUDE_JVMTI
-
   // RedefineClasses support
-  DEBUG_ONLY(bool on_stack() { return false; })
   void deallocate_contents(ClassLoaderData* data);
   bool is_klass() const { return false; }
 
@@ -526,4 +475,4 @@ class ConstantPoolCache: public MetaspaceObj {
   void verify_on(outputStream* st);
 };
 
-#endif // SHARE_VM_OOPS_CPCACHEOOP_HPP
+#endif

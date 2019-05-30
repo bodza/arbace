@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_INSTANCEREFKLASS_HPP
 #define SHARE_VM_OOPS_INSTANCEREFKLASS_HPP
 
@@ -46,7 +22,6 @@ class ClassFileParser;
 // are linked to the static pending_list in class java/lang/ref/Reference,
 // and the pending list lock object in the same class is notified.
 
-
 class InstanceRefKlass: public InstanceKlass {
   friend class InstanceKlass;
  public:
@@ -56,22 +31,15 @@ class InstanceRefKlass: public InstanceKlass {
   InstanceRefKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_reference, ID) {}
 
  public:
-  InstanceRefKlass() { assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+  InstanceRefKlass() {
+    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
 
   // GC specific object visitors
   //
-#if INCLUDE_PARALLELGC
-  // Parallel Scavenge
-  void oop_ps_push_contents(  oop obj, PSPromotionManager* pm);
-  // Parallel Compact
-  void oop_pc_follow_contents(oop obj, ParCompactionManager* cm);
-  void oop_pc_update_pointers(oop obj, ParCompactionManager* cm);
-#endif
 
   // Oop fields (and metadata) iterators
   //
   // The InstanceRefKlass iterators also support reference processing.
-
 
   // Forward iteration
   // Iterate over all oop fields and metadata.
@@ -136,7 +104,7 @@ class InstanceRefKlass: public InstanceKlass {
   static void oop_oop_iterate_fields_except_referent(oop obj, OopClosureType* closure, Contains& contains);
 
   template <typename T>
-  static void trace_reference_gc(const char *s, oop obj) NOT_DEBUG_RETURN;
+  static void trace_reference_gc(const char *s, oop obj) {};
 
  public:
   // Update non-static oop maps so 'referent', 'nextPending' and
@@ -148,4 +116,4 @@ class InstanceRefKlass: public InstanceKlass {
   void oop_verify_on(oop obj, outputStream* st);
 };
 
-#endif // SHARE_VM_OOPS_INSTANCEREFKLASS_HPP
+#endif

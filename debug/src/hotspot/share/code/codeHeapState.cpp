@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2018 SAP SE. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/codeHeapState.hpp"
 #include "compiler/compileBroker.hpp"
@@ -87,33 +62,33 @@
 // network file) the required bandwidth by at least a factor of ten.
 // That clearly makes up for the increased code complexity.
 #if defined(USE_STRINGSTREAM)
-#define STRINGSTREAM_DECL(_anyst, _outst)                 \
-    /* _anyst  name of the stream as used in the code */  \
-    /* _outst  stream where final output will go to   */  \
-    ResourceMark rm;                                      \
-    bufferedStream   _sstobj = bufferedStream(4*K);       \
-    bufferedStream*  _sstbuf = &_sstobj;                  \
-    outputStream*    _outbuf = _outst;                    \
+#define STRINGSTREAM_DECL(_anyst, _outst) \
+    /* _anyst  name of the stream as used in the code */ \
+    /* _outst  stream where final output will go to   */ \
+    ResourceMark rm; \
+    bufferedStream   _sstobj = bufferedStream(4*K); \
+    bufferedStream*  _sstbuf = &_sstobj; \
+    outputStream*    _outbuf = _outst; \
     bufferedStream*  _anyst  = &_sstobj; /* any stream. Use this to just print - no buffer flush.  */
 
-#define STRINGSTREAM_FLUSH(termString)                    \
-    _sstbuf->print("%s", termString);                     \
-    _outbuf->print("%s", _sstbuf->as_string());           \
+#define STRINGSTREAM_FLUSH(termString) \
+    _sstbuf->print("%s", termString); \
+    _outbuf->print("%s", _sstbuf->as_string()); \
     _sstbuf->reset();
 
-#define STRINGSTREAM_FLUSH_LOCKED(termString)             \
-    { ttyLocker ttyl;/* keep this output block together */\
-      STRINGSTREAM_FLUSH(termString)                      \
+#define STRINGSTREAM_FLUSH_LOCKED(termString) \
+    { ttyLocker ttyl;/* keep this output block together */ \
+      STRINGSTREAM_FLUSH(termString) \
     }
 #else
-#define STRINGSTREAM_DECL(_anyst, _outst)                 \
-    outputStream*  _outbuf = _outst;                      \
+#define STRINGSTREAM_DECL(_anyst, _outst) \
+    outputStream*  _outbuf = _outst; \
     outputStream*  _anyst  = _outst;   /* any stream. Use this to just print - no buffer flush.  */
 
-#define STRINGSTREAM_FLUSH(termString)                    \
+#define STRINGSTREAM_FLUSH(termString) \
     _outbuf->print("%s", termString);
 
-#define STRINGSTREAM_FLUSH_LOCKED(termString)             \
+#define STRINGSTREAM_FLUSH_LOCKED(termString) \
     _outbuf->print("%s", termString);
 #endif
 
@@ -482,7 +457,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
   }
   get_HeapStatGlobals(out, heapName);
 
-
   // Since we are (and must be) analyzing the CodeHeap contents under the CodeCache_lock,
   // all heap information is "constant" and can be safely extracted/calculated before we
   // enter the while() loop. Actually, the loop will only be iterated once.
@@ -551,7 +525,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
   ast->print_cr("   Each granule takes " SIZE_FORMAT " bytes of C heap, that is " SIZE_FORMAT "K in total for statistics data.", sizeof(StatElement), (sizeof(StatElement)*granules)/(size_t)K);
   ast->print_cr("   The number of granules is limited to %dk, requiring a granules size of at least %d bytes for a 1GB heap.", (unsigned int)(max_granules/K), (unsigned int)(G/max_granules));
   STRINGSTREAM_FLUSH("\n")
-
 
   while (!done) {
     //---<  reset counters with every aggregation  >---
@@ -762,7 +735,7 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
                       // That's necessary to keep the entry for the largest block at index 0.
                       // This move might cause the current minimum to be moved to another place
                       if (i == currMin_ix) {
-                        assert(TopSizeArray[i].len == currMin, "sort error");
+                        assert(TopSizeArray[i].len == currMin, "sort error");
                         currMin_ix = used_topSizeBlocks;
                       }
                       memcpy((void*)&TopSizeArray[used_topSizeBlocks], (void*)&TopSizeArray[i], sizeof(TopSizeBlk));
@@ -1099,7 +1072,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
     }
   }
 
-
   done        = false;
   while (!done && (nBlocks_free > 0)) {
 
@@ -1194,7 +1166,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
   STRINGSTREAM_FLUSH("\n")
 }
 
-
 void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
   if (!initialization_complete) {
     return;
@@ -1264,7 +1235,6 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
           ast->print("(+" PTR32_FORMAT ")", (unsigned int)((char*)TopSizeArray[i].start-low_bound));
           ast->fill_to(33);
         }
-
 
         //---<  print size, name, and signature (for nMethods)  >---
         if ((nm != NULL) && (nm->method() != NULL)) {
@@ -1339,18 +1309,18 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       for (unsigned int i = 0; i < nSizeDistElements; i++) {
         if (SizeDistributionArray[i].rangeStart<<log2_seg_size < K) {
           ast->print("[" SIZE_FORMAT_W(5) " .." SIZE_FORMAT_W(5) " ): "
-                    ,(size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
-                    ,(size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
                     );
         } else if (SizeDistributionArray[i].rangeStart<<log2_seg_size < M) {
           ast->print("[" SIZE_FORMAT_W(5) "K.." SIZE_FORMAT_W(5) "K): "
-                    ,(SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
-                    ,(SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
                     );
         } else {
           ast->print("[" SIZE_FORMAT_W(5) "M.." SIZE_FORMAT_W(5) "M): "
-                    ,(SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
-                    ,(SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
                     );
         }
         ast->print(" %8d | %8d |",
@@ -1378,18 +1348,18 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       for (unsigned int i = 0; i < nSizeDistElements; i++) {
         if (SizeDistributionArray[i].rangeStart<<log2_seg_size < K) {
           ast->print("[" SIZE_FORMAT_W(5) " .." SIZE_FORMAT_W(5) " ): "
-                    ,(size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
-                    ,(size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
                     );
         } else if (SizeDistributionArray[i].rangeStart<<log2_seg_size < M) {
           ast->print("[" SIZE_FORMAT_W(5) "K.." SIZE_FORMAT_W(5) "K): "
-                    ,(SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
-                    ,(SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
                     );
         } else {
           ast->print("[" SIZE_FORMAT_W(5) "M.." SIZE_FORMAT_W(5) "M): "
-                    ,(SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
-                    ,(SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
                     );
         }
         ast->print(" %8d | %8d |",
@@ -1407,7 +1377,6 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
     }
   }
 }
-
 
 void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
   if (!initialization_complete) {
@@ -1451,7 +1420,6 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
     ast->print_cr(INTPTR_FORMAT ": Len[%4d] = " HEX32_FORMAT, p2i(FreeArray[ix].start), ix, FreeArray[ix].len);
     STRINGSTREAM_FLUSH_LOCKED("\n\n")
   }
-
 
   //-----------------------------------------
   //--  Find and Print Top Ten Free Blocks --
@@ -1513,7 +1481,6 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
     }
     STRINGSTREAM_FLUSH_LOCKED("\n\n")
   }
-
 
   //--------------------------------------------------------
   //--  Find and Print Top Ten Free-Occupied-Free Triples --
@@ -1579,7 +1546,6 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
     STRINGSTREAM_FLUSH_LOCKED("\n\n")
   }
 }
-
 
 void CodeHeapState::print_count(outputStream* out, CodeHeap* heap) {
   if (!initialization_complete) {
@@ -1765,7 +1731,6 @@ void CodeHeapState::print_count(outputStream* out, CodeHeap* heap) {
     }
   }
 }
-
 
 void CodeHeapState::print_space(outputStream* out, CodeHeap* heap) {
   if (!initialization_complete) {
@@ -2072,7 +2037,6 @@ void CodeHeapState::print_age(outputStream* out, CodeHeap* heap) {
   }
 }
 
-
 void CodeHeapState::print_names(outputStream* out, CodeHeap* heap) {
   if (!initialization_complete) {
     return;
@@ -2216,11 +2180,10 @@ void CodeHeapState::print_names(outputStream* out, CodeHeap* heap) {
         STRINGSTREAM_FLUSH_LOCKED("\n")
       }
     }
-    } // nBlobs > 0
+    }
   }
   STRINGSTREAM_FLUSH_LOCKED("\n\n")
 }
-
 
 void CodeHeapState::printBox(outputStream* ast, const char border, const char* text1, const char* text2) {
   unsigned int lineLen = 1 + 2 + 2 + 1;
@@ -2339,7 +2302,7 @@ void CodeHeapState::print_line_delim(outputStream* out, outputStream* ast, char*
       ast->print("|");
     }
     ast->cr();
-    assert(out == ast, "must use the same stream!");
+    assert(out == ast, "must use the same stream!");
 
     ast->print(INTPTR_FORMAT, p2i(low_bound + ix*granule_size));
     ast->fill_to(19);
@@ -2348,7 +2311,7 @@ void CodeHeapState::print_line_delim(outputStream* out, outputStream* ast, char*
 }
 
 void CodeHeapState::print_line_delim(outputStream* out, bufferedStream* ast, char* low_bound, unsigned int ix, unsigned int gpl) {
-  assert(out != ast, "must not use the same stream!");
+  assert(out != ast, "must not use the same stream!");
   if (ix % gpl == 0) {
     if (ix > 0) {
       ast->print("|");

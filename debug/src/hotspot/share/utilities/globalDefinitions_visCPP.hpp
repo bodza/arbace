@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_GLOBALDEFINITIONS_VISCPP_HPP
 #define SHARE_VM_UTILITIES_GLOBALDEFINITIONS_VISCPP_HPP
 
@@ -61,17 +37,11 @@
 // pointer when it extracts the argument, then we may have a problem.
 //
 // Solution: For 64-bit architectures, redefine NULL as 64-bit constant 0.
-#ifdef _LP64
 #undef NULL
 // 64-bit Windows uses a P64 data model (not LP64, although we define _LP64)
 // Since longs are 32-bit we cannot use 0L here.  Use the Visual C++ specific
 // 64-bit integer-suffix (LL) instead.
 #define NULL 0LL
-#else
-#ifndef NULL
-#define NULL 0
-#endif
-#endif
 
 // NULL vs NULL_WORD:
 // On Linux NULL is defined as a special type '__null'. Assigning __null to
@@ -79,11 +49,7 @@
 // pointer is stored as integer value.
 #define NULL_WORD NULL
 
-#ifdef _WIN64
-typedef int64_t ssize_t;
-#else
 typedef int32_t ssize_t;
-#endif
 
 // Additional Java basic types
 
@@ -130,7 +96,6 @@ inline int g_isfinite(jdouble f)                 { return _finite(f); }
 #pragma warning( disable : 4355 )
 #endif
 
-
 #pragma warning( disable : 4100 ) // unreferenced formal parameter
 #pragma warning( disable : 4127 ) // conditional expression is constant
 #pragma warning( disable : 4514 ) // unreferenced inline function has been removed
@@ -143,7 +108,7 @@ inline int g_isfinite(jdouble f)                 { return _finite(f); }
 #ifdef CHECK_UNHANDLED_OOPS
 #pragma warning( disable : 4521 ) // class has multiple copy ctors of a single type
 #pragma warning( disable : 4522 ) // class has multiple assignment operators of a single type
-#endif // CHECK_UNHANDLED_OOPS
+#endif
 #if _MSC_VER >= 1400
 #pragma warning( disable : 4996 ) // unsafe string functions. Same as define _CRT_SECURE_NO_WARNINGS/_CRT_SECURE_NO_DEPRICATE
 #endif
@@ -172,4 +137,4 @@ inline int g_isfinite(jdouble f)                 { return _finite(f); }
 // Alignment
 #define ATTRIBUTE_ALIGNED(x) __declspec(align(x))
 
-#endif // SHARE_VM_UTILITIES_GLOBALDEFINITIONS_VISCPP_HPP
+#endif

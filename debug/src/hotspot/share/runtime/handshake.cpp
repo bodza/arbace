@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -54,12 +30,6 @@ public:
   void cancel_handshake(JavaThread* thread) { _done.signal(); };
 
   bool thread_has_completed() { return _done.trywait(); }
-
-#ifdef ASSERT
-  void check_state() {
-    assert(!_done.trywait(), "Must be zero");
-  }
-#endif
 };
 
 Semaphore HandshakeThreadsOperation::_done(0);
@@ -119,7 +89,6 @@ class VM_HandshakeOneThread: public VM_Handshake {
     VM_Handshake(op), _target(target), _thread_alive(false) {}
 
   void doit() {
-    DEBUG_ONLY(_op->check_state();)
     TraceTime timer("Performing single-target operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
 
     {
@@ -164,7 +133,6 @@ class VM_HandshakeOneThread: public VM_Handshake {
         // then we hang here, which is good for debugging.
       }
     } while (!poll_for_completed_thread());
-    DEBUG_ONLY(_op->check_state();)
   }
 
   VMOp_Type type() const { return VMOp_HandshakeOneThread; }
@@ -177,7 +145,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
   VM_HandshakeAllThreads(HandshakeThreadsOperation* op) : VM_Handshake(op) {}
 
   void doit() {
-    DEBUG_ONLY(_op->check_state();)
     TraceTime timer("Performing operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
 
     int number_of_threads_issued = 0;
@@ -225,8 +192,7 @@ class VM_HandshakeAllThreads: public VM_Handshake {
       }
 
     } while (number_of_threads_issued > number_of_threads_completed);
-    assert(number_of_threads_issued == number_of_threads_completed, "Must be the same");
-    DEBUG_ONLY(_op->check_state();)
+    assert(number_of_threads_issued == number_of_threads_completed, "Must be the same");
   }
 
   VMOp_Type type() const { return VMOp_HandshakeAllThreads; }
@@ -306,7 +272,7 @@ void HandshakeState::clear_handshake(JavaThread* target) {
 }
 
 void HandshakeState::process_self_inner(JavaThread* thread) {
-  assert(Thread::current() == thread, "should call from thread");
+  assert(Thread::current() == thread, "should call from thread");
 
   if (thread->is_terminated()) {
     // If thread is not on threads list but armed, cancel.
@@ -329,8 +295,8 @@ void HandshakeState::process_self_inner(JavaThread* thread) {
 }
 
 void HandshakeState::cancel_inner(JavaThread* thread) {
-  assert(Thread::current() == thread, "should call from thread");
-  assert(thread->thread_state() == _thread_in_vm, "must be in vm state");
+  assert(Thread::current() == thread, "should call from thread");
+  assert(thread->thread_state() == _thread_in_vm, "must be in vm state");
   HandshakeOperation* op = _operation;
   clear_handshake(thread);
   if (op != NULL) {
@@ -354,7 +320,7 @@ bool HandshakeState::claim_handshake_for_vmthread() {
 }
 
 void HandshakeState::process_by_vmthread(JavaThread* target) {
-  assert(Thread::current()->is_VM_thread(), "should call from vm thread");
+  assert(Thread::current()->is_VM_thread(), "should call from vm thread");
 
   if (!has_operation()) {
     // JT has already cleared its handshake

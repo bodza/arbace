@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_REGISTER_X86_HPP
 #define CPU_X86_VM_REGISTER_X86_HPP
 
@@ -33,7 +9,6 @@ typedef VMRegImpl* VMReg;
 // Use Register as shortcut
 class RegisterImpl;
 typedef RegisterImpl* Register;
-
 
 // The implementation of integer registers for the ia32 architecture
 inline Register as_Register(int encoding) {
@@ -51,7 +26,7 @@ class RegisterImpl: public AbstractRegisterImpl {
     number_of_registers      = 16,
     number_of_byte_registers = 16,
     max_slots_per_register   = 1
-#endif // AMD64
+#endif
   };
 
   // derived registers, offsets, and addresses
@@ -63,7 +38,9 @@ class RegisterImpl: public AbstractRegisterImpl {
   inline VMReg as_VMReg();
 
   // accessors
-  int   encoding() const                         { assert(is_valid(), "invalid register"); return (intptr_t)this; }
+  int   encoding() const                         {
+    assert(is_valid(), "invalid register");
+    return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
   const char* name() const;
@@ -72,7 +49,6 @@ class RegisterImpl: public AbstractRegisterImpl {
 // The integer registers of the ia32/amd64 architecture
 
 CONSTANT_REGISTER_DECLARATION(Register, noreg, (-1));
-
 
 CONSTANT_REGISTER_DECLARATION(Register, rax,    (0));
 CONSTANT_REGISTER_DECLARATION(Register, rcx,    (1));
@@ -91,7 +67,7 @@ CONSTANT_REGISTER_DECLARATION(Register, r12,   (12));
 CONSTANT_REGISTER_DECLARATION(Register, r13,   (13));
 CONSTANT_REGISTER_DECLARATION(Register, r14,   (14));
 CONSTANT_REGISTER_DECLARATION(Register, r15,   (15));
-#endif // AMD64
+#endif
 
 // Use FloatRegister as shortcut
 class FloatRegisterImpl;
@@ -118,10 +94,11 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
   FloatRegister successor() const                          { return as_FloatRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          { assert(is_valid(), "invalid register"); return (intptr_t)this; }
+  int   encoding() const                          {
+    assert(is_valid(), "invalid register");
+    return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
-
 };
 
 CONSTANT_REGISTER_DECLARATION(FloatRegister, fnoreg, (-1));
@@ -152,7 +129,7 @@ class XMMRegisterImpl: public AbstractRegisterImpl {
 #else
     number_of_registers = 32,
     max_slots_per_register = 16   // 512-bit
-#endif // AMD64
+#endif
   };
 
   // construction
@@ -164,12 +141,13 @@ class XMMRegisterImpl: public AbstractRegisterImpl {
   XMMRegister successor() const                          { return as_XMMRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          { assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this ); return (intptr_t)this; }
+  int   encoding() const                          {
+    assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this );
+    return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
   const char* sub_word_name(int offset) const;
 };
-
 
 // The XMM registers, for P3 and up chips
 CONSTANT_REGISTER_DECLARATION(XMMRegister, xnoreg , (-1));
@@ -206,7 +184,7 @@ CONSTANT_REGISTER_DECLARATION(XMMRegister, xmm28,    (28));
 CONSTANT_REGISTER_DECLARATION(XMMRegister, xmm29,    (29));
 CONSTANT_REGISTER_DECLARATION(XMMRegister, xmm30,    (30));
 CONSTANT_REGISTER_DECLARATION(XMMRegister, xmm31,    (31));
-#endif // AMD64
+#endif
 
 // Only used by the 32bit stubGenerator. These can't be described by vmreg and hence
 // can't be described in oopMaps and therefore can't be used by the compilers (at least
@@ -248,7 +226,9 @@ public:
   KRegister successor() const                          { return as_KRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          { assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this); return (intptr_t)this; }
+  int   encoding() const                          {
+    assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this);
+    return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
 };
@@ -277,7 +257,7 @@ class ConcreteRegisterImpl : public AbstractRegisterImpl {
     number_of_registers = RegisterImpl::number_of_registers +
 #ifdef AMD64
       RegisterImpl::number_of_registers +  // "H" half of a 64bit register
-#endif // AMD64
+#endif
       2 * FloatRegisterImpl::number_of_registers +
       XMMRegisterImpl::max_slots_per_register * XMMRegisterImpl::number_of_registers +
       KRegisterImpl::number_of_registers + // mask registers
@@ -288,7 +268,6 @@ class ConcreteRegisterImpl : public AbstractRegisterImpl {
   static const int max_fpr;
   static const int max_xmm;
   static const int max_kpr;
-
 };
 
-#endif // CPU_X86_VM_REGISTER_X86_HPP
+#endif

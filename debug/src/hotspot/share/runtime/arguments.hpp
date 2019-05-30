@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_ARGUMENTS_HPP
 #define SHARE_VM_RUNTIME_ARGUMENTS_HPP
 
@@ -125,7 +101,6 @@ class SystemProperty : public PathString {
   SystemProperty(const char* key, const char* value, bool writeable, bool internal = false);
 };
 
-
 // For use by -agentlib, -agentpath and -Xrun
 class AgentLibrary : public CHeapObj<mtArguments> {
   friend class AgentLibraryList;
@@ -196,7 +171,7 @@ class AgentLibraryList {
         break;
       }
     }
-    assert(curr != NULL, "always should be found");
+    assert(curr != NULL, "always should be found");
 
     if (curr != NULL) {
       // it was found, by-pass this library
@@ -236,7 +211,6 @@ typedef struct {
 
 class Arguments : AllStatic {
   friend class VMStructs;
-  friend class JvmtiExport;
   friend class CodeCacheExtensions;
   friend class ArgumentsTest;
  public:
@@ -467,10 +441,6 @@ class Arguments : AllStatic {
   // the version number when the flag became obsolete.
   static bool is_obsolete_flag(const char* flag_name, JDK_Version* version);
 
-#ifndef PRODUCT
-  static const char* removed_develop_logging_flag_name(const char* name);
-#endif // PRODUCT
-
   // Returns 1 if the flag is deprecated (and not yet obsolete or expired).
   //     In this case the 'version' buffer is filled in with the version number when
   //     the flag became deprecated.
@@ -613,7 +583,7 @@ class Arguments : AllStatic {
   static void add_patch_mod_prefix(const char *module_name, const char *path, bool* patch_mod_javabase);
   static void set_sysclasspath(const char *value, bool has_jimage) {
     // During start up, set by os::set_boot_path()
-    assert(get_sysclasspath() == NULL, "System boot class path previously set");
+    assert(get_sysclasspath() == NULL, "System boot class path previously set");
     _system_boot_class_path->set_value(value);
     _has_jimage = has_jimage;
   }
@@ -633,7 +603,6 @@ class Arguments : AllStatic {
   static char* get_appclasspath() { return _java_class_path->value(); }
   static void  fix_appclasspath();
 
-
   // Operation modi
   static Mode mode()                        { return _mode; }
   static bool is_interpreter_only() { return mode() == _int; }
@@ -645,23 +614,23 @@ class Arguments : AllStatic {
   // Utility: copies src into buf, replacing "%%" with "%" and "%p" with pid.
   static bool copy_expand_pid(const char* src, size_t srclen, char* buf, size_t buflen);
 
-  static void check_unsupported_dumping_properties() NOT_CDS_RETURN;
+  static void check_unsupported_dumping_properties() {};
 
-  static bool check_unsupported_cds_runtime_properties() NOT_CDS_RETURN0;
+  static bool check_unsupported_cds_runtime_properties() { return 0; };
 
   static bool atojulong(const char *s, julong* result);
 };
 
 // Disable options not supported in this release, with a warning if they
 // were explicitly requested on the command-line
-#define UNSUPPORTED_OPTION(opt)                          \
-do {                                                     \
-  if (opt) {                                             \
-    if (FLAG_IS_CMDLINE(opt)) {                          \
+#define UNSUPPORTED_OPTION(opt) \
+do { \
+  if (opt) { \
+    if (FLAG_IS_CMDLINE(opt)) { \
       warning("-XX:+" #opt " not supported in this VM"); \
-    }                                                    \
-    FLAG_SET_DEFAULT(opt, false);                        \
-  }                                                      \
+    } \
+    FLAG_SET_DEFAULT(opt, false); \
+  } \
 } while(0)
 
-#endif // SHARE_VM_RUNTIME_ARGUMENTS_HPP
+#endif

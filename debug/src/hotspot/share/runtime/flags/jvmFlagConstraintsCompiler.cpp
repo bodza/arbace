@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/relocInfo.hpp"
 #include "compiler/compilerDefinitions.hpp"
@@ -63,15 +39,11 @@ JVMFlag::Error AliasLevelConstraintFunc(intx value, bool verbose) {
  */
 JVMFlag::Error CICompilerCountConstraintFunc(intx value, bool verbose) {
   int min_number_of_compiler_threads = 0;
-#if !defined(COMPILER1) && !defined(COMPILER2) && !INCLUDE_JVMCI
-  // case 1
-#else
   if (!TieredCompilation || (TieredStopAtLevel < CompLevel_full_optimization)) {
     min_number_of_compiler_threads = 1; // case 2 or case 3
   } else {
     min_number_of_compiler_threads = 2;   // case 4 (tiered)
   }
-#endif
 
   // The default CICompilerCount's value is CI_COMPILER_COUNT.
   // With a client VM, -XX:+TieredCompilation causes TieredCompilation
@@ -210,17 +182,6 @@ JVMFlag::Error CodeCacheSegmentSizeConstraintFunc(uintx value, bool verbose) {
     return JVMFlag::VIOLATES_CONSTRAINT;
   }
 
-#ifdef COMPILER2
-  if (CodeCacheSegmentSize < (uintx)OptoLoopAlignment) {
-    JVMFlag::printError(verbose,
-                        "CodeCacheSegmentSize  (" UINTX_FORMAT ") must be "
-                        "larger than or equal to OptoLoopAlignment (" INTX_FORMAT ") "
-                        "to align inner loops\n",
-                        CodeCacheSegmentSize, OptoLoopAlignment);
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  }
-#endif
-
   return JVMFlag::SUCCESS;
 }
 
@@ -333,63 +294,6 @@ JVMFlag::Error InitArrayShortSizeConstraintFunc(intx value, bool verbose) {
     return JVMFlag::SUCCESS;
   }
 }
-
-#ifdef COMPILER2
-JVMFlag::Error InteriorEntryAlignmentConstraintFunc(intx value, bool verbose) {
-  if (InteriorEntryAlignment > CodeEntryAlignment) {
-    JVMFlag::printError(verbose,
-                       "InteriorEntryAlignment (" INTX_FORMAT ") must be "
-                       "less than or equal to CodeEntryAlignment (" INTX_FORMAT ")\n",
-                       InteriorEntryAlignment, CodeEntryAlignment);
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  }
-
-#ifdef SPARC
-  if (InteriorEntryAlignment % relocInfo::addr_unit() != 0) {
-    JVMFlag::printError(verbose,
-                        "InteriorEntryAlignment (" INTX_FORMAT ") must be "
-                        "multiple of NOP size\n");
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  }
-#endif
-
-  if (!is_power_of_2(value)) {
-     JVMFlag::printError(verbose,
-                         "InteriorEntryAlignment (" INTX_FORMAT ") must be "
-                         "a power of two\n", InteriorEntryAlignment);
-     return JVMFlag::VIOLATES_CONSTRAINT;
-   }
-
-  int minimum_alignment = 16;
-#if defined(SPARC) || (defined(X86) && !defined(AMD64))
-  minimum_alignment = 4;
-#elif defined(S390)
-  minimum_alignment = 2;
-#endif
-
-  if (InteriorEntryAlignment < minimum_alignment) {
-    JVMFlag::printError(verbose,
-                        "InteriorEntryAlignment (" INTX_FORMAT ") must be "
-                        "greater than or equal to %d\n",
-                        InteriorEntryAlignment, minimum_alignment);
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  }
-
-  return JVMFlag::SUCCESS;
-}
-
-JVMFlag::Error NodeLimitFudgeFactorConstraintFunc(intx value, bool verbose) {
-  if (value < MaxNodeLimit * 2 / 100 || value > MaxNodeLimit * 40 / 100) {
-    JVMFlag::printError(verbose,
-                        "NodeLimitFudgeFactor must be between 2%% and 40%% "
-                        "of MaxNodeLimit (" INTX_FORMAT ")\n",
-                        MaxNodeLimit);
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  }
-
-  return JVMFlag::SUCCESS;
-}
-#endif // COMPILER2
 
 JVMFlag::Error RTMTotalCountIncrRateConstraintFunc(int value, bool verbose) {
 #if INCLUDE_RTM_OPT

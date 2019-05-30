@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_C1_MACROASSEMBLER_X86_HPP
 #define CPU_X86_VM_C1_MACROASSEMBLER_X86_HPP
 
@@ -103,20 +79,22 @@
   // Seems to always be in wordSize
   void push_addr (Address a)  { _rsp_offset++; pushptr(a); }
   void push_reg  (Register r) { _rsp_offset++; push(r); }
-  void pop_reg   (Register r) { _rsp_offset--; pop(r); assert(_rsp_offset >= 0, "stack offset underflow"); }
+  void pop_reg   (Register r) { _rsp_offset--; pop(r);
+  assert(_rsp_offset >= 0, "stack offset underflow");
+  }
 
   void dec_stack (int nof_words) {
     _rsp_offset -= nof_words;
-    assert(_rsp_offset >= 0, "stack offset underflow");
+    assert(_rsp_offset >= 0, "stack offset underflow");
     addptr(rsp, wordSize * nof_words);
   }
 
   void dec_stack_after_call (int nof_words) {
     _rsp_offset -= nof_words;
-    assert(_rsp_offset >= 0, "stack offset underflow");
+    assert(_rsp_offset >= 0, "stack offset underflow");
   }
 
-  void invalidate_registers(bool inv_rax, bool inv_rbx, bool inv_rcx, bool inv_rdx, bool inv_rsi, bool inv_rdi) PRODUCT_RETURN;
+  void invalidate_registers(bool inv_rax, bool inv_rbx, bool inv_rcx, bool inv_rdx, bool inv_rsi, bool inv_rdi) {};
 
   // This platform only uses signal-based null checks. The Label is not needed.
   void null_check(Register r, Label *Lnull = NULL) { MacroAssembler::null_check(r); }
@@ -127,4 +105,4 @@
   void restore_live_registers_except_rax(bool restore_fpu_registers);
   void restore_live_registers(bool restore_fpu_registers);
 
-#endif // CPU_X86_VM_C1_MACROASSEMBLER_X86_HPP
+#endif

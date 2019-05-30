@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "classfile/compactHashtable.inline.hpp"
@@ -40,8 +16,8 @@
 //
 CompactHashtableWriter::CompactHashtableWriter(int num_buckets,
                                                CompactHashtableStats* stats) {
-  assert(DumpSharedSpaces, "dump-time only");
-  assert(num_buckets > 0, "no buckets");
+  assert(DumpSharedSpaces, "dump-time only");
+  assert(num_buckets > 0, "no buckets");
   _num_buckets = num_buckets;
   _num_entries = 0;
   _buckets = NEW_C_HEAP_ARRAY(GrowableArray<Entry>*, _num_buckets, mtSymbol);
@@ -132,9 +108,8 @@ void CompactHashtableWriter::dump_table(NumberSeq* summary) {
 
   // Mark the end of the buckets
   _compact_buckets->at_put(_num_buckets, BUCKET_INFO(offset, TABLEEND_BUCKET_TYPE));
-  assert(offset == (u4)_compact_entries->length(), "sanity");
+  assert(offset == (u4)_compact_entries->length(), "sanity");
 }
-
 
 // Write the compact table
 void CompactHashtableWriter::dump(SimpleCompactHashtable *cht, const char* table_name) {
@@ -176,7 +151,7 @@ void CompactSymbolTableWriter::add(unsigned int hash, Symbol *symbol) {
   // When the symbols are stored into the archive, we already check that
   // they won't be more than MAX_SHARED_DELTA from the base address, or
   // else the dumping would have been aborted.
-  assert(deltax <= MAX_SHARED_DELTA, "must not be");
+  assert(deltax <= MAX_SHARED_DELTA, "must not be");
   u4 delta = u4(deltax);
 
   CompactHashtableWriter::add(hash, delta);
@@ -208,7 +183,7 @@ void SimpleCompactHashtable::serialize(SerializeClosure* soc) {
 }
 
 bool SimpleCompactHashtable::exists(u4 value) {
-  assert(!DumpSharedSpaces, "run-time only");
+  assert(!DumpSharedSpaces, "run-time only");
 
   if (_entry_count == 0) {
     return false;
@@ -286,7 +261,7 @@ public:
 };
 
 template <class T, class N> void CompactHashtable<T, N>::oops_do(OopClosure* cl) {
-  assert(_type == _string_table || _bucket_count == 0, "sanity");
+  assert(_type == _string_table || _bucket_count == 0, "sanity");
   CompactHashtable_OopIterator iterator(cl);
   iterate(iterator);
 }
@@ -485,7 +460,7 @@ void HashtableTextDump::get_utf8(char* utf8_buffer, int utf8_length) {
         {
           jchar value = unescape(from, end, 2);
           from += 2;
-          assert(value <= 0xff, "sanity");
+          assert(value <= 0xff, "sanity");
           *to++ = (char)(value & 0xff);
         }
         break;

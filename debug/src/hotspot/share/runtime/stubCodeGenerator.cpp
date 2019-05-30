@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -30,7 +6,6 @@
 #include "oops/oop.inline.hpp"
 #include "prims/forte.hpp"
 #include "runtime/stubCodeGenerator.hpp"
-
 
 // Implementation of StubCodeDesc
 
@@ -50,9 +25,8 @@ const char* StubCodeDesc::name_for(address pc) {
   return p == NULL ? NULL : p->name();
 }
 
-
 void StubCodeDesc::freeze() {
-  assert(!_frozen, "repeated freeze operation");
+  assert(!_frozen, "repeated freeze operation");
   _frozen = true;
 }
 
@@ -71,7 +45,7 @@ StubCodeGenerator::StubCodeGenerator(CodeBuffer* code, bool print_code) {
 }
 
 StubCodeGenerator::~StubCodeGenerator() {
-  if (PRODUCT_ONLY(_print_code) NOT_PRODUCT(true)) {
+  if (_print_code) {
     CodeBuffer* cbuf = _masm->code();
     CodeBlob*   blob = CodeCache::find_blob_unsafe(cbuf->insts()->start());
     if (blob != NULL) {
@@ -88,21 +62,12 @@ void StubCodeGenerator::stub_epilog(StubCodeDesc* cdesc) {
   if (_print_code) {
     CodeStrings cs;
     ptrdiff_t offset = 0;
-#ifndef PRODUCT
-    // Find the code strings in the outer CodeBuffer.
-    CodeBuffer *outer_cbuf = _masm->code_section()->outer();
-    cs = outer_cbuf->strings();
-    // The offset from the start of the outer CodeBuffer to the start
-    // of this stub.
-    offset = cdesc->begin() - outer_cbuf->insts()->start();
-#endif
     cdesc->print();
     tty->cr();
     Disassembler::decode(cdesc->begin(), cdesc->end(), NULL, cs, offset);
     tty->cr();
   }
 }
-
 
 // Implementation of CodeMark
 
@@ -117,11 +82,7 @@ StubCodeMark::StubCodeMark(StubCodeGenerator* cgen, const char* group, const cha
 StubCodeMark::~StubCodeMark() {
   _cgen->assembler()->flush();
   _cdesc->set_end(_cgen->assembler()->pc());
-  assert(StubCodeDesc::_list == _cdesc, "expected order on list");
+  assert(StubCodeDesc::_list == _cdesc, "expected order on list");
   _cgen->stub_epilog(_cdesc);
   Forte::register_stub(_cdesc->name(), _cdesc->begin(), _cdesc->end());
-
-  if (JvmtiExport::should_post_dynamic_code_generated()) {
-    JvmtiExport::post_dynamic_code_generated(_cdesc->name(), _cdesc->begin(), _cdesc->end());
-  }
 }

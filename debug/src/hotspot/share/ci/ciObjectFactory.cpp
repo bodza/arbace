@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciCallSite.hpp"
 #include "ci/ciInstance.hpp"
@@ -71,7 +47,6 @@ ciSymbol*                 ciObjectFactory::_shared_ci_symbols[vmSymbols::SID_LIM
 int                       ciObjectFactory::_shared_ident_limit = 0;
 volatile bool             ciObjectFactory::_initialized = false;
 
-
 // ------------------------------------------------------------------
 // ciObjectFactory::ciObjectFactory
 ciObjectFactory::ciObjectFactory(Arena* arena,
@@ -117,7 +92,6 @@ void ciObjectFactory::initialize() {
   env->_factory->init_shared_objects();
 
   _initialized = true;
-
 }
 
 void ciObjectFactory::init_shared_objects() {
@@ -129,19 +103,11 @@ void ciObjectFactory::init_shared_objects() {
     int i;
     for (i = vmSymbols::FIRST_SID; i < vmSymbols::SID_LIMIT; i++) {
       Symbol* vmsym = vmSymbols::symbol_at((vmSymbols::SID) i);
-      assert(vmSymbols::find_sid(vmsym) == i, "1-1 mapping");
+      assert(vmSymbols::find_sid(vmsym) == i, "1-1 mapping");
       ciSymbol* sym = new (_arena) ciSymbol(vmsym, (vmSymbols::SID) i);
       init_ident_of(sym);
       _shared_ci_symbols[i] = sym;
     }
-#ifdef ASSERT
-    for (i = vmSymbols::FIRST_SID; i < vmSymbols::SID_LIMIT; i++) {
-      Symbol* vmsym = vmSymbols::symbol_at((vmSymbols::SID) i);
-      ciSymbol* sym = vm_symbol_at((vmSymbols::SID) i);
-      assert(sym->get_symbol() == vmsym, "oop must match");
-    }
-    assert(ciSymbol::void_class_signature()->get_symbol() == vmSymbols::void_class_signature(), "spot check");
-#endif
   }
 
   _ci_metadata = new (_arena) GrowableArray<ciMetadata*>(_arena, 64, 0, NULL);
@@ -157,7 +123,7 @@ void ciObjectFactory::init_shared_objects() {
   ciEnv::_null_object_instance = new (_arena) ciNullObject();
   init_ident_of(ciEnv::_null_object_instance);
 
-#define WK_KLASS_DEFN(name, ignore_s, opt)                              \
+#define WK_KLASS_DEFN(name, ignore_s, opt) \
   if (SystemDictionary::name() != NULL) \
     ciEnv::_##name = get_metadata(SystemDictionary::name())->as_instance_klass();
 
@@ -168,7 +134,7 @@ void ciObjectFactory::init_shared_objects() {
     len = _ci_metadata->length();
     for (int i2 = 0; i2 < len; i2++) {
       ciMetadata* obj = _ci_metadata->at(i2);
-      assert (obj->is_metadata(), "what else would it be?");
+      assert(obj->is_metadata(), "what else would it be?");
       if (obj->is_loaded() && obj->is_instance_klass()) {
         obj->as_instance_klass()->compute_nonstatic_fields();
       }
@@ -181,7 +147,7 @@ void ciObjectFactory::init_shared_objects() {
   init_ident_of(ciEnv::_unloaded_ciinstance_klass);
   ciEnv::_unloaded_ciobjarrayklass = new (_arena) ciObjArrayKlass(ciEnv::_unloaded_cisymbol, ciEnv::_unloaded_ciinstance_klass, 1);
   init_ident_of(ciEnv::_unloaded_ciobjarrayklass);
-  assert(ciEnv::_unloaded_ciobjarrayklass->is_obj_array_klass(), "just checking");
+  assert(ciEnv::_unloaded_ciobjarrayklass->is_obj_array_klass(), "just checking");
 
   get_metadata(Universe::boolArrayKlassObj());
   get_metadata(Universe::charArrayKlassObj());
@@ -192,9 +158,7 @@ void ciObjectFactory::init_shared_objects() {
   get_metadata(Universe::intArrayKlassObj());
   get_metadata(Universe::longArrayKlassObj());
 
-
-
-  assert(_non_perm_count == 0, "no shared non-perm objects");
+  assert(_non_perm_count == 0, "no shared non-perm objects");
 
   // The shared_ident_limit is the first ident number that will
   // be used for non-shared objects.  That is, numbers less than
@@ -205,7 +169,6 @@ void ciObjectFactory::init_shared_objects() {
   _shared_ci_metadata = _ci_metadata;
 }
 
-
 ciSymbol* ciObjectFactory::get_symbol(Symbol* key) {
   vmSymbols::SID sid = vmSymbols::find_sid(key);
   if (sid != vmSymbols::NO_SID) {
@@ -213,7 +176,7 @@ ciSymbol* ciObjectFactory::get_symbol(Symbol* key) {
     return vm_symbol_at(sid);
   }
 
-  assert(vmSymbols::find_sid(key) == vmSymbols::NO_SID, "");
+  assert(vmSymbols::find_sid(key) == vmSymbols::NO_SID, "");
   ciSymbol* s = new (arena()) ciSymbol(key, vmSymbols::NO_SID);
   _symbols->push(s);
   return s;
@@ -238,7 +201,7 @@ void ciObjectFactory::remove_symbols() {
 ciObject* ciObjectFactory::get(oop key) {
   ASSERT_IN_VM;
 
-  assert(Universe::heap()->is_in_reserved(key), "must be");
+  assert(Universe::heap()->is_in_reserved(key), "must be");
 
   NonPermObject* &bucket = find_non_perm(key);
   if (bucket != NULL) {
@@ -249,9 +212,9 @@ ciObject* ciObjectFactory::get(oop key) {
   // into the cache.
   Handle keyHandle(Thread::current(), key);
   ciObject* new_object = create_new_object(keyHandle());
-  assert(oopDesc::equals(keyHandle(), new_object->get_oop()), "must be properly recorded");
+  assert(oopDesc::equals(keyHandle(), new_object->get_oop()), "must be properly recorded");
   init_ident_of(new_object);
-  assert(Universe::heap()->is_in_reserved(new_object->get_oop()), "must be");
+  assert(Universe::heap()->is_in_reserved(new_object->get_oop()), "must be");
 
   // Not a perm-space object.
   insert_non_perm(bucket, keyHandle(), new_object);
@@ -274,42 +237,23 @@ int ciObjectFactory::metadata_compare(Metadata* const& key, ciMetadata* const& e
 ciMetadata* ciObjectFactory::get_metadata(Metadata* key) {
   ASSERT_IN_VM;
 
-#ifdef ASSERT
-  if (CIObjectFactoryVerify) {
-    Metadata* last = NULL;
-    for (int j = 0; j< _ci_metadata->length(); j++) {
-      Metadata* o = _ci_metadata->at(j)->constant_encoding();
-      assert(last < o, "out of order");
-      last = o;
-    }
-  }
-#endif // ASSERT
   int len = _ci_metadata->length();
   bool found = false;
   int index = _ci_metadata->find_sorted<Metadata*, ciObjectFactory::metadata_compare>(key, found);
-#ifdef ASSERT
-  if (CIObjectFactoryVerify) {
-    for (int i=0; i<_ci_metadata->length(); i++) {
-      if (_ci_metadata->at(i)->constant_encoding() == key) {
-        assert(index == i, " bad lookup");
-      }
-    }
-  }
-#endif
 
   if (!found) {
     // The ciMetadata does not yet exist. Create it and insert it
     // into the cache.
     ciMetadata* new_object = create_new_metadata(key);
     init_ident_of(new_object);
-    assert(new_object->is_metadata(), "must be");
+    assert(new_object->is_metadata(), "must be");
 
     if (len != _ci_metadata->length()) {
       // creating the new object has recursively entered new objects
       // into the table.  We need to recompute our index.
       index = _ci_metadata->find_sorted<Metadata*, ciObjectFactory::metadata_compare>(key, found);
     }
-    assert(!found, "no double insert");
+    assert(!found, "no double insert");
     _ci_metadata->insert_before(index, new_object);
     return new_object;
   }
@@ -477,7 +421,7 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass,
       return ciEnv::_unloaded_ciobjarrayklass;
     }
     int dimension = fd.dimension();
-    assert(element_type != T_ARRAY, "unsuccessful decomposition");
+    assert(element_type != T_ARRAY, "unsuccessful decomposition");
     ciKlass* element_klass = NULL;
     if (element_type == T_OBJECT) {
       ciEnv *env = CURRENT_THREAD_ENV;
@@ -485,7 +429,7 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass,
       element_klass =
         env->get_klass_by_name(accessing_klass, ci_name, false)->as_instance_klass();
     } else {
-      assert(dimension > 1, "one dimensional type arrays are always loaded.");
+      assert(dimension > 1, "one dimensional type arrays are always loaded.");
 
       // The type array itself takes care of one of the dimensions.
       dimension--;
@@ -509,7 +453,6 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass,
   return new_klass;
 }
 
-
 //------------------------------------------------------------------
 // ciObjectFactory::get_unloaded_instance
 //
@@ -532,12 +475,11 @@ ciInstance* ciObjectFactory::get_unloaded_instance(ciInstanceKlass* instance_kla
   _unloaded_instances->append(new_instance);
 
   // make sure it looks the way we want:
-  assert(!new_instance->is_loaded(), "");
-  assert(new_instance->klass() == instance_klass, "");
+  assert(!new_instance->is_loaded(), "");
+  assert(new_instance->klass() == instance_klass, "");
 
   return new_instance;
 }
-
 
 //------------------------------------------------------------------
 // ciObjectFactory::get_unloaded_klass_mirror
@@ -546,7 +488,7 @@ ciInstance* ciObjectFactory::get_unloaded_instance(ciInstanceKlass* instance_kla
 //
 // Currently, this ignores the parameters and returns a unique unloaded instance.
 ciInstance* ciObjectFactory::get_unloaded_klass_mirror(ciKlass*  type) {
-  assert(ciEnv::_Class_klass != NULL, "");
+  assert(ciEnv::_Class_klass != NULL, "");
   return get_unloaded_instance(ciEnv::_Class_klass->as_instance_klass());
 }
 
@@ -625,7 +567,7 @@ static ciObjectFactory::NonPermObject* emptyBucket = NULL;
 // If there is no entry in the cache corresponding to this oop, return
 // the null tail of the bucket into which the oop should be inserted.
 ciObjectFactory::NonPermObject* &ciObjectFactory::find_non_perm(oop key) {
-  assert(Universe::heap()->is_in_reserved(key), "must be");
+  assert(Universe::heap()->is_in_reserved(key), "must be");
   ciMetadata* klass = get_metadata(key->klass());
   NonPermObject* *bp = &_non_perm_bucket[(unsigned) klass->hash() % NON_PERM_BUCKETS];
   for (NonPermObject* p; (p = (*bp)) != NULL; bp = &p->next()) {
@@ -634,30 +576,26 @@ ciObjectFactory::NonPermObject* &ciObjectFactory::find_non_perm(oop key) {
   return (*bp);
 }
 
-
-
 // ------------------------------------------------------------------
 // Code for for NonPermObject
 //
 inline ciObjectFactory::NonPermObject::NonPermObject(ciObjectFactory::NonPermObject* &bucket, oop key, ciObject* object) {
-  assert(ciObjectFactory::is_initialized(), "");
+  assert(ciObjectFactory::is_initialized(), "");
   _object = object;
   _next = bucket;
   bucket = this;
 }
-
-
 
 // ------------------------------------------------------------------
 // ciObjectFactory::insert_non_perm
 //
 // Insert a ciObject into the non-perm table.
 void ciObjectFactory::insert_non_perm(ciObjectFactory::NonPermObject* &where, oop key, ciObject* obj) {
-  assert(Universe::heap()->is_in_reserved_or_null(key), "must be");
-  assert(&where != &emptyBucket, "must not try to fill empty bucket");
+  assert(Universe::heap()->is_in_reserved_or_null(key), "must be");
+  assert(&where != &emptyBucket, "must not try to fill empty bucket");
   NonPermObject* p = new (arena()) NonPermObject(where, key, obj);
-  assert(where == p && is_equal(p, key) && p->object() == obj, "entry must match");
-  assert(find_non_perm(key) == p, "must find the same spot");
+  assert(where == p && is_equal(p, key) && p->object() == obj, "entry must match");
+  assert(find_non_perm(key) == p, "must find the same spot");
   ++_non_perm_count;
 }
 
@@ -665,7 +603,7 @@ void ciObjectFactory::insert_non_perm(ciObjectFactory::NonPermObject* &where, oo
 // ciObjectFactory::vm_symbol_at
 // Get the ciSymbol corresponding to some index in vmSymbols.
 ciSymbol* ciObjectFactory::vm_symbol_at(int index) {
-  assert(index >= vmSymbols::FIRST_SID && index < vmSymbols::SID_LIMIT, "oob");
+  assert(index >= vmSymbols::FIRST_SID && index < vmSymbols::SID_LIMIT, "oob");
   return _shared_ci_symbols[index];
 }
 

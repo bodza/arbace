@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciEnv.hpp"
 #include "ci/ciInstance.hpp"
@@ -32,13 +8,6 @@
 #include "runtime/jniHandles.inline.hpp"
 #include "utilities/copy.hpp"
 
-#ifdef ASSERT
-template <class T> int ValueRecorder<T>::_find_index_calls = 0;
-template <class T> int ValueRecorder<T>::_hit_indexes      = 0;
-template <class T> int ValueRecorder<T>::_missed_indexes   = 0;
-#endif //ASSERT
-
-
 template <class T> ValueRecorder<T>::ValueRecorder(Arena* arena) {
   _handles  = NULL;
   _indexes  = NULL;
@@ -47,7 +16,7 @@ template <class T> ValueRecorder<T>::ValueRecorder(Arena* arena) {
 }
 
 template <class T> template <class X>  ValueRecorder<T>::IndexCache<X>::IndexCache() {
-  assert(first_index > 0, "initial zero state of cache must be invalid index");
+  assert(first_index > 0, "initial zero state of cache must be invalid index");
   Copy::zero_to_bytes(&_cache[0], sizeof(_cache));
 }
 
@@ -58,7 +27,7 @@ template <class T> int ValueRecorder<T>::size() {
 }
 
 template <class T> void ValueRecorder<T>::copy_values_to(nmethod* nm) {
-  assert(_complete, "must be frozen");
+  assert(_complete, "must be frozen");
   maybe_initialize();  // get non-null handles, even if we have no oops
   nm->copy_values(_handles);
 }
@@ -75,23 +44,21 @@ template <class T> void ValueRecorder<T>::maybe_initialize() {
   }
 }
 
-
 template <class T> T ValueRecorder<T>::at(int index) {
   // there is always a NULL virtually present as first object
   if (index == null_index)  return NULL;
   return _handles->at(index - first_index);
 }
 
-
 template <class T> int ValueRecorder<T>::add_handle(T h, bool make_findable) {
-  assert(!_complete, "cannot allocate more elements after size query");
+  assert(!_complete, "cannot allocate more elements after size query");
   maybe_initialize();
   // indexing uses 1 as an origin--0 means null
   int index = _handles->length() + first_index;
   _handles->append(h);
 
   // Support correct operation of find_index().
-  assert(!(make_findable && !is_real(h)), "nulls are not findable");
+  assert(!(make_findable && !is_real(h)), "nulls are not findable");
   if (make_findable) {
     // This index may be returned from find_index().
     if (_indexes != NULL) {
@@ -118,13 +85,11 @@ template <class T> int ValueRecorder<T>::add_handle(T h, bool make_findable) {
   return index;
 }
 
-
 template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
-  debug_only(_find_index_calls++);
-  assert(!_complete, "cannot allocate more elements after size query");
+  assert(!_complete, "cannot allocate more elements after size query");
   maybe_initialize();
   if (h == NULL)  return null_index;
-  assert(is_real(h), "must be valid");
+  assert(is_real(h), "must be valid");
   int* cloc = (_indexes == NULL)? NULL: _indexes->cache_location(h);
   if (cloc != NULL) {
     int cindex = _indexes->cache_location_index(cloc);
@@ -132,7 +97,6 @@ template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
       return -1;   // We know this handle is completely new.
     }
     if (cindex >= first_index && _handles->at(cindex - first_index) == h) {
-      debug_only(_hit_indexes++);
       return cindex;
     }
     if (!_indexes->cache_location_collision(cloc)) {
@@ -149,7 +113,6 @@ template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
       if (cloc != NULL) {
         _indexes->set_cache_location_index(cloc, findex);
       }
-      debug_only(_missed_indexes++);
       return findex;
     }
   }

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_CPCACHEOOP_INLINE_HPP
 #define SHARE_VM_OOPS_CPCACHEOOP_INLINE_HPP
 
@@ -49,19 +25,21 @@ inline bool ConstantPoolCacheEntry::is_resolved(Bytecodes::Code code) const {
 }
 
 inline Method* ConstantPoolCacheEntry::f2_as_interface_method() const {
-  assert(bytecode_1() == Bytecodes::_invokeinterface, "");
+  assert(bytecode_1() == Bytecodes::_invokeinterface, "");
   return (Method*)_f2;
 }
 
 inline Metadata* ConstantPoolCacheEntry::f1_ord() const { return (Metadata *)OrderAccess::load_acquire(&_f1); }
 
 inline Method* ConstantPoolCacheEntry::f1_as_method() const {
-  Metadata* f1 = f1_ord(); assert(f1 == NULL || f1->is_method(), "");
+  Metadata* f1 = f1_ord();
+  assert(f1 == NULL || f1->is_method(), "");
   return (Method*)f1;
 }
 
 inline Klass* ConstantPoolCacheEntry::f1_as_klass() const {
-  Metadata* f1 = f1_ord(); assert(f1 == NULL || f1->is_klass(), "");
+  Metadata* f1 = f1_ord();
+  assert(f1 == NULL || f1->is_klass(), "");
   return (Klass*)f1;
 }
 
@@ -89,14 +67,13 @@ inline ConstantPoolCache::ConstantPoolCache(int length,
                                             const intStack& invokedynamic_references_map) :
                                                   _length(length),
                                                   _constant_pool(NULL) {
-  CDS_JAVA_HEAP_ONLY(_archived_references = 0;)
   initialize(inverse_index_map, invokedynamic_inverse_index_map,
              invokedynamic_references_map);
   for (int i = 0; i < length; i++) {
-    assert(entry_at(i)->is_f1_null(), "Failed to clear?");
+    assert(entry_at(i)->is_f1_null(), "Failed to clear?");
   }
 }
 
 inline oop ConstantPoolCache::resolved_references() { return _resolved_references.resolve(); }
 
-#endif // SHARE_VM_OOPS_CPCACHEOOP_INLINE_HPP
+#endif

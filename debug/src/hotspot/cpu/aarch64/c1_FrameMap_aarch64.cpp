@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2010, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_LIR.hpp"
@@ -43,7 +18,7 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
     Register reg = r_1->as_Register();
     if (r_2->is_Register() && (type == T_LONG || type == T_DOUBLE)) {
       Register reg2 = r_2->as_Register();
-      assert(reg2 == reg, "must be same register");
+      assert(reg2 == reg, "must be same register");
       opr = as_long_opr(reg);
     } else if (type == T_OBJECT || type == T_ARRAY) {
       opr = as_oop_opr(reg);
@@ -53,7 +28,7 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
       opr = as_opr(reg);
     }
   } else if (r_1->is_FloatRegister()) {
-    assert(type == T_DOUBLE || type == T_FLOAT, "wrong type");
+    assert(type == T_DOUBLE || type == T_FLOAT, "wrong type");
     int num = r_1->as_FloatRegister()->encoding();
     if (type == T_FLOAT) {
       opr = LIR_OprFact::single_fpu(num);
@@ -160,7 +135,7 @@ LIR_Opr FrameMap::_caller_save_fpu_regs[] = { 0, };
 //--------------------------------------------------------
 
 void FrameMap::initialize() {
-  assert(!_init_done, "once");
+  assert(!_init_done, "once");
 
   int i=0;
   map_register(i, r0); r0_opr = LIR_OprFact::single_cpu(i); i++;
@@ -285,18 +260,15 @@ void FrameMap::initialize() {
   }
 }
 
-
 Address FrameMap::make_new_address(ByteSize sp_offset) const {
   // for rbp, based address use this:
   // return Address(rbp, in_bytes(sp_offset) - (framesize() - 2) * 4);
   return Address(sp, in_bytes(sp_offset));
 }
 
-
 // ----------------mapping-----------------------
 // all mapping is based on rfp addressing, except for simple leaf methods where we access
 // the locals sp based (and no frame is built)
-
 
 // Frame for simple leaf methods (quick entries)
 //
@@ -318,7 +290,6 @@ Address FrameMap::make_new_address(ByteSize sp_offset) const {
 //   |  args    |
 //   | .........|
 
-
 // For OopMaps, map a local variable or spill index to an VMRegImpl name.
 // This is the offset from sp() in the frame of the slot for the index,
 // skewed by VMRegImpl::stack0 to indicate a stack location (vs.a register.)
@@ -332,7 +303,6 @@ Address FrameMap::make_new_address(ByteSize sp_offset) const {
 //      |           |                               and return addr)
 //  arguments   non-argument locals
 
-
 VMReg FrameMap::fpu_regname (int n) {
   // Return the OptoReg name for the fpu stack slot "n"
   // A spilled fpu stack slot comprises to two single-word OptoReg's.
@@ -343,12 +313,10 @@ LIR_Opr FrameMap::stack_pointer() {
   return FrameMap::sp_opr;
 }
 
-
 // JSR 292
 LIR_Opr FrameMap::method_handle_invoke_SP_save_opr() {
   return LIR_OprFact::illegalOpr;  // Not needed on aarch64
 }
-
 
 bool FrameMap::validate_frame() {
   return true;

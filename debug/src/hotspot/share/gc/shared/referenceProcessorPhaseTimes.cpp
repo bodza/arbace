@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/referenceProcessorPhaseTimes.hpp"
@@ -31,16 +7,14 @@
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 
-#define ASSERT_REF_TYPE(ref_type) assert((ref_type) >= REF_SOFT && (ref_type) <= REF_PHANTOM, \
-                                         "Invariant (%d)", (int)ref_type)
+#define ASSERT_REF_TYPE(ref_type) \
+    assert((ref_type) >= REF_SOFT && (ref_type) <= REF_PHANTOM, "Invariant (%d)", (int)ref_type)
 
-#define ASSERT_PHASE(phase) assert((phase) >= ReferenceProcessor::RefPhase1 && \
-                                   (phase) < ReferenceProcessor::RefPhaseMax,  \
-                                   "Invariant (%d)", (int)phase);
+#define ASSERT_PHASE(phase) \
+    assert((phase) >= ReferenceProcessor::RefPhase1 && (phase) < ReferenceProcessor::RefPhaseMax,  "Invariant (%d)", (int)phase);
 
-#define ASSERT_SUB_PHASE(phase) assert((phase) >= ReferenceProcessor::SoftRefSubPhase1 && \
-                                       (phase) < ReferenceProcessor::RefSubPhaseMax, \
-                                       "Invariant (%d)", (int)phase);
+#define ASSERT_SUB_PHASE(phase) \
+    assert((phase) >= ReferenceProcessor::SoftRefSubPhase1 && (phase) < ReferenceProcessor::RefSubPhaseMax, "Invariant (%d)", (int)phase);
 
 static const char* SubPhasesParWorkTitle[ReferenceProcessor::RefSubPhaseMax] = {
        "SoftRef (ms):",
@@ -91,7 +65,7 @@ static const char* ref_type_2_string(ReferenceType ref_type) {
 
 RefProcWorkerTimeTracker::RefProcWorkerTimeTracker(WorkerDataArray<double>* worker_time, uint worker_id) :
   _worker_time(worker_time), _start_time(os::elapsedTime()), _worker_id(worker_id) {
-  assert(worker_time != NULL, "Invariant");
+  assert(worker_time != NULL, "Invariant");
 }
 
 RefProcWorkerTimeTracker::~RefProcWorkerTimeTracker() {
@@ -112,7 +86,7 @@ RefProcPhaseTimeBaseTracker::RefProcPhaseTimeBaseTracker(const char* title,
                                                          ReferenceProcessor::RefProcPhases phase_number,
                                                          ReferenceProcessorPhaseTimes* phase_times) :
   _phase_times(phase_times), _start_ticks(), _end_ticks(), _phase_number(phase_number) {
-  assert(_phase_times != NULL, "Invariant");
+  assert(_phase_times != NULL, "Invariant");
 
   _start_ticks.stamp();
   if (_phase_times->gc_timer() != NULL) {
@@ -287,7 +261,6 @@ void ReferenceProcessorPhaseTimes::print_all_references(uint base_indent, bool p
   print_reference(REF_WEAK, next_indent);
   print_reference(REF_FINAL, next_indent);
   print_reference(REF_PHANTOM, next_indent);
-
 }
 
 void ReferenceProcessorPhaseTimes::print_reference(ReferenceType ref_type, uint base_indent) const {

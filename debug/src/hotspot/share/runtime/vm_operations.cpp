@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -50,10 +26,9 @@ const char* VM_Operation::_names[VM_Operation::VMOp_Terminating] = \
 
 void VM_Operation::set_calling_thread(Thread* thread, ThreadPriority priority) {
   _calling_thread = thread;
-  assert(MinPriority <= priority && priority <= MaxPriority, "sanity check");
+  assert(MinPriority <= priority && priority <= MaxPriority, "sanity check");
   _priority = priority;
 }
-
 
 void VM_Operation::evaluate() {
   ResourceMark rm;
@@ -96,7 +71,7 @@ void VM_Operation::print_on_error(outputStream* st) const {
 }
 
 void VM_ThreadStop::doit() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at a safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at a safepoint");
   ThreadsListHandle tlh;
   JavaThread* target = java_lang_Thread::thread(target_thread());
   // Note that this now allows multiple ThreadDeath exceptions to be
@@ -137,64 +112,14 @@ VM_DeoptimizeFrame::VM_DeoptimizeFrame(JavaThread* thread, intptr_t* id, int rea
   _reason = reason;
 }
 
-
 void VM_DeoptimizeFrame::doit() {
-  assert(_reason > Deoptimization::Reason_none && _reason < Deoptimization::Reason_LIMIT, "invalid deopt reason");
+  assert(_reason > Deoptimization::Reason_none && _reason < Deoptimization::Reason_LIMIT, "invalid deopt reason");
   Deoptimization::deoptimize_frame_internal(_thread, _id, (Deoptimization::DeoptReason)_reason);
 }
 
-
-#ifndef PRODUCT
-
-void VM_DeoptimizeAll::doit() {
-  DeoptimizationMarker dm;
-  JavaThreadIteratorWithHandle jtiwh;
-  // deoptimize all java threads in the system
-  if (DeoptimizeALot) {
-    for (; JavaThread *thread = jtiwh.next(); ) {
-      if (thread->has_last_Java_frame()) {
-        thread->deoptimize();
-      }
-    }
-  } else if (DeoptimizeRandom) {
-
-    // Deoptimize some selected threads and frames
-    int tnum = os::random() & 0x3;
-    int fnum =  os::random() & 0x3;
-    int tcount = 0;
-    for (; JavaThread *thread = jtiwh.next(); ) {
-      if (thread->has_last_Java_frame()) {
-        if (tcount++ == tnum)  {
-        tcount = 0;
-          int fcount = 0;
-          // Deoptimize some selected frames.
-          // Biased llocking wants a updated register map
-          for(StackFrameStream fst(thread, UseBiasedLocking); !fst.is_done(); fst.next()) {
-            if (fst.current()->can_be_deoptimized()) {
-              if (fcount++ == fnum) {
-                fcount = 0;
-                Deoptimization::deoptimize(thread, *fst.current(), fst.register_map());
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-
-void VM_ZombieAll::doit() {
-  JavaThread *thread = (JavaThread *)calling_thread();
-  assert(thread->is_Java_thread(), "must be a Java thread");
-  thread->make_zombies();
-}
-
-#endif // !PRODUCT
-
 void VM_UnlinkSymbols::doit() {
   JavaThread *thread = (JavaThread *)calling_thread();
-  assert(thread->is_Java_thread(), "must be a Java thread");
+  assert(thread->is_Java_thread(), "must be a Java thread");
   SymbolTable::unlink();
 }
 
@@ -395,7 +320,7 @@ int VM_Exit::set_vm_exited() {
 
   Thread * thr_cur = Thread::current();
 
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
 
   int num_active = 0;
 
@@ -414,7 +339,7 @@ int VM_Exit::set_vm_exited() {
 int VM_Exit::wait_for_threads_in_native_to_block() {
   // VM exits at safepoint. This function must be called at the final safepoint
   // to wait for threads in _thread_in_native state to be quiescent.
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
 
   Thread * thr_cur = Thread::current();
   Monitor timer(Mutex::leaf, "VM_Exit timer", true,
@@ -492,7 +417,6 @@ void VM_Exit::doit() {
   }
 }
 
-
 void VM_Exit::wait_if_vm_exited() {
   if (_vm_exited &&
       Thread::current_or_null() != _shutdown_thread) {
@@ -506,9 +430,3 @@ void VM_Exit::wait_if_vm_exited() {
 void VM_PrintCompileQueue::doit() {
   CompileBroker::print_compile_queues(_out);
 }
-
-#if INCLUDE_SERVICES
-void VM_PrintClassHierarchy::doit() {
-  KlassHierarchy::print_class_hierarchy(_out, _print_interfaces, _print_subclasses, _classname);
-}
-#endif

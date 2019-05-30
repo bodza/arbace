@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_STACK_INLINE_HPP
 #define SHARE_VM_UTILITIES_STACK_INLINE_HPP
 
@@ -36,13 +12,13 @@ template <MEMFLAGS F> StackBase<F>::StackBase(size_t segment_size, size_t max_ca
   _max_cache_size(max_cache_size),
   _max_size(adjust_max_size(max_size, segment_size))
 {
-  assert(_max_size % _seg_size == 0, "not a multiple");
+  assert(_max_size % _seg_size == 0, "not a multiple");
 }
 
 template <MEMFLAGS F> size_t StackBase<F>::adjust_max_size(size_t max_size, size_t seg_size)
 {
-  assert(seg_size > 0, "cannot be 0");
-  assert(max_size >= seg_size || max_size == 0, "max_size too small");
+  assert(seg_size > 0, "cannot be 0");
+  assert(max_size >= seg_size || max_size == 0, "max_size too small");
   const size_t limit = max_uintx - (seg_size - 1);
   if (max_size == 0 || max_size > limit) {
     max_size = limit;
@@ -60,7 +36,7 @@ Stack<E, F>::Stack(size_t segment_size, size_t max_cache_size, size_t max_size):
 template <class E, MEMFLAGS F>
 void Stack<E, F>::push(E item)
 {
-  assert(!is_full(), "pushing onto a full stack");
+  assert(!is_full(), "pushing onto a full stack");
   if (this->_cur_seg_size == this->_seg_size) {
     push_segment();
   }
@@ -71,7 +47,7 @@ void Stack<E, F>::push(E item)
 template <class E, MEMFLAGS F>
 E Stack<E, F>::pop()
 {
-  assert(!is_empty(), "popping from an empty stack");
+  assert(!is_empty(), "popping from an empty stack");
   if (this->_cur_seg_size == 1) {
     E tmp = _cur_seg[--this->_cur_seg_size];
     pop_segment();
@@ -93,7 +69,7 @@ size_t Stack<E, F>::adjust_segment_size(size_t seg_size)
 {
   const size_t elem_sz = sizeof(E);
   const size_t ptr_sz = sizeof(E*);
-  assert(elem_sz % ptr_sz == 0 || ptr_sz % elem_sz == 0, "bad element size");
+  assert(elem_sz % ptr_sz == 0 || ptr_sz % elem_sz == 0, "bad element size");
   if (elem_sz < ptr_sz) {
     return align_up(seg_size * elem_sz, ptr_sz) / elem_sz;
   }
@@ -151,7 +127,7 @@ void Stack<E, F>::free(E* addr, size_t bytes)
 template <class E, MEMFLAGS F>
 NOINLINE void Stack<E, F>::push_segment()
 {
-  assert(this->_cur_seg_size == this->_seg_size, "current segment is not full");
+  assert(this->_cur_seg_size == this->_seg_size, "current segment is not full");
   E* next;
   if (this->_cache_size > 0) {
     // Use a cached segment.
@@ -160,34 +136,29 @@ NOINLINE void Stack<E, F>::push_segment()
     --this->_cache_size;
   } else {
     next = alloc(segment_bytes());
-    DEBUG_ONLY(zap_segment(next, true);)
   }
   const bool at_empty_transition = is_empty();
   this->_cur_seg = set_link(next, _cur_seg);
   this->_cur_seg_size = 0;
   this->_full_seg_size += at_empty_transition ? 0 : this->_seg_size;
-  DEBUG_ONLY(verify(at_empty_transition);)
 }
 
 template <class E, MEMFLAGS F>
 void Stack<E, F>::pop_segment()
 {
-  assert(this->_cur_seg_size == 0, "current segment is not empty");
+  assert(this->_cur_seg_size == 0, "current segment is not empty");
   E* const prev = get_link(_cur_seg);
   if (this->_cache_size < this->_max_cache_size) {
     // Add the current segment to the cache.
-    DEBUG_ONLY(zap_segment(_cur_seg, false);)
     _cache = set_link(_cur_seg, _cache);
     ++this->_cache_size;
   } else {
-    DEBUG_ONLY(zap_segment(_cur_seg, true);)
     free(_cur_seg, segment_bytes());
   }
   const bool at_empty_transition = prev == NULL;
   this->_cur_seg = prev;
   this->_cur_seg_size = this->_seg_size;
   this->_full_seg_size -= at_empty_transition ? 0 : this->_seg_size;
-  DEBUG_ONLY(verify(at_empty_transition);)
 }
 
 template <class E, MEMFLAGS F>
@@ -213,32 +184,6 @@ void Stack<E, F>::reset(bool reset_cache)
   }
 }
 
-#ifdef ASSERT
-template <class E, MEMFLAGS F>
-void Stack<E, F>::verify(bool at_empty_transition) const
-{
-  assert(size() <= this->max_size(), "stack exceeded bounds");
-  assert(this->cache_size() <= this->max_cache_size(), "cache exceeded bounds");
-  assert(this->_cur_seg_size <= this->segment_size(), "segment index exceeded bounds");
-
-  assert(this->_full_seg_size % this->_seg_size == 0, "not a multiple");
-  assert(at_empty_transition || is_empty() == (size() == 0), "mismatch");
-  assert((_cache == NULL) == (this->cache_size() == 0), "mismatch");
-
-  if (is_empty()) {
-    assert(this->_cur_seg_size == this->segment_size(), "sanity");
-  }
-}
-
-template <class E, MEMFLAGS F>
-void Stack<E, F>::zap_segment(E* seg, bool zap_link_field) const
-{
-  if (!ZapStackSegments) return;
-  const size_t zap_bytes = segment_bytes() - (zap_link_field ? 0 : sizeof(E*));
-  Copy::fill_to_bytes(seg, zap_bytes, badStackSegVal);
-}
-#endif
-
 template <class E, MEMFLAGS F>
 E* ResourceStack<E, F>::alloc(size_t bytes)
 {
@@ -262,7 +207,7 @@ void StackIterator<E, F>::sync()
 template <class E, MEMFLAGS F>
 E* StackIterator<E, F>::next_addr()
 {
-  assert(!is_empty(), "no items left");
+  assert(!is_empty(), "no items left");
   if (_cur_seg_size == 1) {
     E* addr = _cur_seg;
     _cur_seg = _stack.get_link(_cur_seg);
@@ -273,4 +218,4 @@ E* StackIterator<E, F>::next_addr()
   return _cur_seg + --_cur_seg_size;
 }
 
-#endif // SHARE_VM_UTILITIES_STACK_INLINE_HPP
+#endif

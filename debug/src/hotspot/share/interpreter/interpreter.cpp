@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -39,7 +15,6 @@
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/forte.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "prims/methodHandles.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -47,7 +22,6 @@
 #include "runtime/timer.hpp"
 
 # define __ _masm->
-
 
 //------------------------------------------------------------------------------------------------------------------------
 // Implementation of InterpreterCodelet
@@ -57,10 +31,8 @@ void InterpreterCodelet::initialize(const char* description, Bytecodes::Code byt
   _bytecode          = bytecode;
 }
 
-
 void InterpreterCodelet::verify() {
 }
-
 
 void InterpreterCodelet::print_on(outputStream* st) const {
   ttyLocker ttyl;
@@ -77,7 +49,7 @@ void InterpreterCodelet::print_on(outputStream* st) const {
 
   if (PrintInterpreter) {
     st->cr();
-    Disassembler::decode(code_begin(), code_end(), st, DEBUG_ONLY(_strings) NOT_DEBUG(CodeStrings()));
+    Disassembler::decode(code_begin(), code_end(), st, CodeStrings());
   }
 }
 
@@ -87,7 +59,7 @@ CodeletMark::CodeletMark(InterpreterMacroAssembler*& masm,
   _clet((InterpreterCodelet*)AbstractInterpreter::code()->request(codelet_size())),
   _cb(_clet->code_begin(), _clet->code_size()) {
   // Request all space (add some slack for Codelet data).
-  assert(_clet != NULL, "we checked not enough space already");
+  assert(_clet != NULL, "we checked not enough space already");
 
   // Initialize Codelet attributes.
   _clet->initialize(description, bytecode);
@@ -111,12 +83,8 @@ CodeletMark::~CodeletMark() {
   *_masm = NULL;
 }
 
-
 void interpreter_init() {
   Interpreter::initialize();
-#ifndef PRODUCT
-  if (TraceBytecodes) BytecodeTracer::set_closure(BytecodeTracer::std_closure());
-#endif // PRODUCT
   // need to hit every safepoint in order to call zapping routine
   // register the interpreter
   Forte::register_stub(
@@ -124,11 +92,4 @@ void interpreter_init() {
     AbstractInterpreter::code()->code_start(),
     AbstractInterpreter::code()->code_end()
   );
-
-  // notify JVMTI profiler
-  if (JvmtiExport::should_post_dynamic_code_generated()) {
-    JvmtiExport::post_dynamic_code_generated("Interpreter",
-                                             AbstractInterpreter::code()->code_start(),
-                                             AbstractInterpreter::code()->code_end());
-  }
 }

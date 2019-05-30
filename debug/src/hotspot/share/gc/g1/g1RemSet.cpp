@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1BarrierSet.hpp"
@@ -73,7 +49,7 @@ private:
       _chunk_length(chunk_length),
       _cur_dirty_regions(0) {
 
-      assert(chunk_length > 0, "must be");
+      assert(chunk_length > 0, "must be");
     }
 
     static size_t chunk_size() { return M; }
@@ -177,8 +153,8 @@ public:
   }
 
   void initialize(uint max_regions) {
-    assert(_iter_states == NULL, "Must not be initialized twice");
-    assert(_iter_claims == NULL, "Must not be initialized twice");
+    assert(_iter_states == NULL, "Must not be initialized twice");
+    assert(_iter_claims == NULL, "Must not be initialized twice");
     _max_regions = max_regions;
     _iter_states = NEW_C_HEAP_ARRAY(G1RemsetIterState, max_regions, mtGC);
     _iter_claims = NEW_C_HEAP_ARRAY(size_t, max_regions, mtGC);
@@ -203,7 +179,7 @@ public:
   // Attempt to claim the remembered set of the region for iteration. Returns true
   // if this call caused the transition from Unclaimed to Claimed.
   inline bool claim_iter(uint region) {
-    assert(region < _max_regions, "Tried to access invalid region %u", region);
+    assert(region < _max_regions, "Tried to access invalid region %u", region);
     if (_iter_states[region] != Unclaimed) {
       return false;
     }
@@ -223,13 +199,13 @@ public:
 
   // Returns true if the region's iteration is complete.
   inline bool iter_is_complete(uint region) const {
-    assert(region < _max_regions, "Tried to access invalid region %u", region);
+    assert(region < _max_regions, "Tried to access invalid region %u", region);
     return _iter_states[region] == Complete;
   }
 
   // The current position within the remembered set of the given region.
   inline size_t iter_claimed(uint region) const {
-    assert(region < _max_regions, "Tried to access invalid region %u", region);
+    assert(region < _max_regions, "Tried to access invalid region %u", region);
     return _iter_claims[region];
   }
 
@@ -272,10 +248,6 @@ public:
                         "units of work for " SIZE_FORMAT " regions.",
                         cl.name(), num_workers, num_chunks, _cur_dirty_region);
     workers->run_task(&cl, num_workers);
-
-#ifndef PRODUCT
-    G1CollectedHeap::heap()->verifier()->verify_card_table_cleanup();
-#endif
   }
 };
 
@@ -373,8 +345,7 @@ void G1ScanRSForRegionClosure::scan_rem_set_roots(HeapRegion* r) {
     HeapWord* const card_start = _g1h->bot()->address_for_index(card_index);
     uint const region_idx_for_card = _g1h->addr_to_region(card_start);
 
-    assert(_g1h->region_at(region_idx_for_card)->is_in_reserved(card_start),
-           "Card start " PTR_FORMAT " to scan outside of region %u", p2i(card_start), _g1h->region_at(region_idx_for_card)->hrm_index());
+    assert(_g1h->region_at(region_idx_for_card)->is_in_reserved(card_start), "Card start " PTR_FORMAT " to scan outside of region %u", p2i(card_start), _g1h->region_at(region_idx_for_card)->hrm_index());
     HeapWord* const top = _scan_state->scan_top(region_idx_for_card);
     if (card_start >= top) {
       continue;
@@ -399,9 +370,7 @@ void G1ScanRSForRegionClosure::scan_strong_code_roots(HeapRegion* r) {
 }
 
 bool G1ScanRSForRegionClosure::do_heap_region(HeapRegion* r) {
-  assert(r->in_collection_set(),
-         "Should only be called on elements of the collection set but region %u is not.",
-         r->hrm_index());
+  assert(r->in_collection_set(), "Should only be called on elements of the collection set but region %u is not.", r->hrm_index());
   uint const region_idx = r->hrm_index();
 
   // Do an early out if we know we are complete.
@@ -457,7 +426,7 @@ public:
     // contain references that point into the collection set
     // is during RSet updating within an evacuation pause.
     // In this case worker_i should be the id of a GC worker thread.
-    assert(SafepointSynchronize::is_at_safepoint(), "not during an evacuation pause");
+    assert(SafepointSynchronize::is_at_safepoint(), "not during an evacuation pause");
 
     bool card_scanned = _g1rs->refine_card_during_gc(card_ptr, _update_rs_cl);
 
@@ -525,20 +494,11 @@ void G1RemSet::cleanup_after_oops_into_collection_set_do() {
 }
 
 inline void check_card_ptr(jbyte* card_ptr, G1CardTable* ct) {
-#ifdef ASSERT
-  G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  assert(g1h->is_in_exact(ct->addr_for(card_ptr)),
-         "Card at " PTR_FORMAT " index " SIZE_FORMAT " representing heap at " PTR_FORMAT " (%u) must be in committed heap",
-         p2i(card_ptr),
-         ct->index_for(ct->addr_for(card_ptr)),
-         p2i(ct->addr_for(card_ptr)),
-         g1h->addr_to_region(ct->addr_for(card_ptr)));
-#endif
 }
 
 void G1RemSet::refine_card_concurrently(jbyte* card_ptr,
                                         uint worker_i) {
-  assert(!_g1h->is_gc_active(), "Only call concurrently");
+  assert(!_g1h->is_gc_active(), "Only call concurrently");
 
   check_card_ptr(card_ptr, _ct);
 
@@ -585,7 +545,7 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr,
   //
 
   if (_hot_card_cache->use_cache()) {
-    assert(!SafepointSynchronize::is_at_safepoint(), "sanity");
+    assert(!SafepointSynchronize::is_at_safepoint(), "sanity");
 
     const jbyte* orig_card_ptr = card_ptr;
     card_ptr = _hot_card_cache->insert(card_ptr);
@@ -603,7 +563,7 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr,
       if (!r->is_old_or_humongous()) {
         return;
       }
-    } // Else we still have the original card.
+    }
   }
 
   // Trim the region designated by the card to what's been allocated
@@ -642,7 +602,7 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr,
   // a card beyond the heap.
   HeapWord* end = start + G1CardTable::card_size_in_words;
   MemRegion dirty_region(start, MIN2(scan_limit, end));
-  assert(!dirty_region.is_empty(), "sanity");
+  assert(!dirty_region.is_empty(), "sanity");
 
   G1ConcurrentRefineOopClosure conc_refine_cl(_g1h, worker_i);
 
@@ -672,7 +632,7 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr,
 
 bool G1RemSet::refine_card_during_gc(jbyte* card_ptr,
                                      G1ScanObjsDuringUpdateRSClosure* update_rs_cl) {
-  assert(_g1h->is_gc_active(), "Only call during GC");
+  assert(_g1h->is_gc_active(), "Only call during GC");
 
   check_card_ptr(card_ptr, _ct);
 
@@ -702,12 +662,12 @@ bool G1RemSet::refine_card_during_gc(jbyte* card_ptr,
   // a card beyond the heap.
   HeapWord* card_end = card_start + G1CardTable::card_size_in_words;
   MemRegion dirty_region(card_start, MIN2(scan_limit, card_end));
-  assert(!dirty_region.is_empty(), "sanity");
+  assert(!dirty_region.is_empty(), "sanity");
 
   HeapRegion* const card_region = _g1h->region_at(card_region_idx);
   update_rs_cl->set_region(card_region);
   bool card_processed = card_region->oops_on_card_seq_iterate_careful<true>(dirty_region, update_rs_cl);
-  assert(card_processed, "must be");
+  assert(card_processed, "must be");
   return true;
 }
 
@@ -800,9 +760,7 @@ class G1RebuildRemSetTask: public AbstractGangTask {
           _mr(mr),
           _current(first_oop_into_mr) {
 
-        assert(_current <= _mr.start(),
-               "First oop " PTR_FORMAT " should extend into mr [" PTR_FORMAT ", " PTR_FORMAT ")",
-               p2i(first_oop_into_mr), p2i(mr.start()), p2i(mr.end()));
+        assert(_current <= _mr.start(), "First oop " PTR_FORMAT " should extend into mr [" PTR_FORMAT ", " PTR_FORMAT ")", p2i(first_oop_into_mr), p2i(mr.start()), p2i(mr.end()));
 
         // Step to the next live object within the MemRegion if needed.
         if (is_live(_current)) {
@@ -817,9 +775,7 @@ class G1RebuildRemSetTask: public AbstractGangTask {
           // The object at _current can only be dead if below TAMS, so we can use the bitmap.
           // immediately.
           _current = _bitmap->get_next_marked_addr(_current, bitmap_limit());
-          assert(_current == _mr.end() || is_live(_current),
-                 "Current " PTR_FORMAT " should be live (%s) or beyond the end of the MemRegion (" PTR_FORMAT ")",
-                 p2i(_current), BOOL_TO_STR(is_live(_current)), p2i(_mr.end()));
+          assert(_current == _mr.end() || is_live(_current), "Current " PTR_FORMAT " should be live (%s) or beyond the end of the MemRegion (" PTR_FORMAT ")", p2i(_current), BOOL_TO_STR(is_live(_current)), p2i(_mr.end()));
         }
       }
 
@@ -830,9 +786,7 @@ class G1RebuildRemSetTask: public AbstractGangTask {
 
       oop next() const {
         oop result = oop(_current);
-        assert(is_live(_current),
-               "Object " PTR_FORMAT " must be live TAMS " PTR_FORMAT " below %d mr " PTR_FORMAT " " PTR_FORMAT " outside %d",
-               p2i(_current), p2i(_tams), _tams > _current, p2i(_mr.start()), p2i(_mr.end()), _mr.contains(result));
+        assert(is_live(_current), "Object " PTR_FORMAT " must be live TAMS " PTR_FORMAT " below %d mr " PTR_FORMAT " " PTR_FORMAT " outside %d", p2i(_current), p2i(_tams), _tams > _current, p2i(_mr.start()), p2i(_mr.end()), _mr.contains(result));
         return result;
       }
 
@@ -861,8 +815,7 @@ class G1RebuildRemSetTask: public AbstractGangTask {
           // two areas will be zero sized. I.e. TAMS is either
           // the same as bottom or top(_at_rebuild_start). There is no way TAMS has a different
           // value: this would mean that TAMS points somewhere into the object.
-          assert(hr->top() == top_at_mark_start || hr->top() == top_at_rebuild_start,
-                 "More than one object in the humongous region?");
+          assert(hr->top() == top_at_mark_start || hr->top() == top_at_rebuild_start, "More than one object in the humongous region?");
           humongous_obj->oop_iterate(&_update_cl, mr);
           return top_at_mark_start != hr->bottom() ? mr.intersection(MemRegion((HeapWord*)humongous_obj, humongous_obj->size())).byte_size() : 0;
         } else {
@@ -894,11 +847,7 @@ public:
       }
 
       uint const region_idx = hr->hrm_index();
-      DEBUG_ONLY(HeapWord* const top_at_rebuild_start_check = _cm->top_at_rebuild_start(region_idx);)
-      assert(top_at_rebuild_start_check == NULL ||
-             top_at_rebuild_start_check > hr->bottom(),
-             "A TARS (" PTR_FORMAT ") == bottom() (" PTR_FORMAT ") indicates the old region %u is empty (%s)",
-             p2i(top_at_rebuild_start_check), p2i(hr->bottom()),  region_idx, hr->get_type_str());
+      assert(top_at_rebuild_start_check == NULL || top_at_rebuild_start_check > hr->bottom(), "A TARS (" PTR_FORMAT ") == bottom() (" PTR_FORMAT ") indicates the old region %u is empty (%s)", p2i(top_at_rebuild_start_check), p2i(hr->bottom()),  region_idx, hr->get_type_str());
 
       size_t total_marked_bytes = 0;
       size_t const chunk_size_in_words = G1RebuildRemSetChunkSize / HeapWordSize;
@@ -955,13 +904,7 @@ public:
       // In the final iteration of the loop the region might have been eagerly reclaimed.
       // Simply filter out those regions. We can not just use region type because there
       // might have already been new allocations into these regions.
-      DEBUG_ONLY(HeapWord* const top_at_rebuild_start = _cm->top_at_rebuild_start(region_idx);)
-      assert(top_at_rebuild_start == NULL ||
-             total_marked_bytes == hr->marked_bytes(),
-             "Marked bytes " SIZE_FORMAT " for region %u (%s) in [bottom, TAMS) do not match calculated marked bytes " SIZE_FORMAT " "
-             "(" PTR_FORMAT " " PTR_FORMAT " " PTR_FORMAT ")",
-             total_marked_bytes, hr->hrm_index(), hr->get_type_str(), hr->marked_bytes(),
-             p2i(hr->bottom()), p2i(top_at_mark_start), p2i(top_at_rebuild_start));
+      assert(top_at_rebuild_start == NULL || total_marked_bytes == hr->marked_bytes(), "Marked bytes " SIZE_FORMAT " for region %u (%s) in [bottom, TAMS) do not match calculated marked bytes " SIZE_FORMAT " " "(" PTR_FORMAT " " PTR_FORMAT " " PTR_FORMAT ")", total_marked_bytes, hr->hrm_index(), hr->get_type_str(), hr->marked_bytes(), p2i(hr->bottom()), p2i(top_at_mark_start), p2i(top_at_rebuild_start));
        // Abort state may have changed after the yield check.
       return _cm->has_aborted();
     }

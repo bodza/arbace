@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_BARRIERSET_HPP
 #define SHARE_VM_GC_SHARED_BARRIERSET_HPP
 
@@ -109,12 +85,12 @@ protected:
 
   template <class BarrierSetC1T>
   static BarrierSetC1* make_barrier_set_c1() {
-    return COMPILER1_PRESENT(new BarrierSetC1T()) NOT_COMPILER1(NULL);
+    return new BarrierSetC1T();
   }
 
   template <class BarrierSetC2T>
   static BarrierSetC2* make_barrier_set_c2() {
-    return COMPILER2_PRESENT(new BarrierSetC2T()) NOT_COMPILER2(NULL);
+    return NULL;
   }
 
 public:
@@ -138,17 +114,17 @@ public:
   static void set_barrier_set(BarrierSet* barrier_set);
 
   BarrierSetAssembler* barrier_set_assembler() {
-    assert(_barrier_set_assembler != NULL, "should be set");
+    assert(_barrier_set_assembler != NULL, "should be set");
     return _barrier_set_assembler;
   }
 
   BarrierSetC1* barrier_set_c1() {
-    assert(_barrier_set_c1 != NULL, "should be set");
+    assert(_barrier_set_c1 != NULL, "should be set");
     return _barrier_set_c1;
   }
 
   BarrierSetC2* barrier_set_c2() {
-    assert(_barrier_set_c2 != NULL, "should be set");
+    assert(_barrier_set_c2 != NULL, "should be set");
     return _barrier_set_c2;
   }
 
@@ -305,8 +281,8 @@ public:
 
 template<typename T>
 inline T* barrier_set_cast(BarrierSet* bs) {
-  assert(bs->is_a(BarrierSet::GetName<T>::value), "wrong type of barrier set");
+  assert(bs->is_a(BarrierSet::GetName<T>::value), "wrong type of barrier set");
   return static_cast<T*>(bs);
 }
 
-#endif // SHARE_VM_GC_SHARED_BARRIERSET_HPP
+#endif

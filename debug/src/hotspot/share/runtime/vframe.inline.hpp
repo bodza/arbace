@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_VFRAME_INLINE_HPP
 #define SHARE_VM_RUNTIME_VFRAME_INLINE_HPP
 
@@ -71,7 +47,6 @@ inline bool vframeStreamCommon::fill_in_compiled_inlined_sender() {
   return true;
 }
 
-
 inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _mode = compiled_mode;
 
@@ -86,19 +61,6 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
     // that could lead to crashes in product mode.
     // Therefore, do not use the decode offset if invalid, but fill the frame
     // as it were a native compiled frame (no Java-level assumptions).
-#ifdef ASSERT
-    if (WizardMode) {
-      ttyLocker ttyl;
-      tty->print_cr("Error in fill_from_frame: pc_desc for "
-                    INTPTR_FORMAT " not found or invalid at %d",
-                    p2i(_frame.pc()), decode_offset);
-      nm()->print();
-      nm()->method()->print_codes();
-      nm()->print_code();
-      nm()->print_pcs();
-    }
-    found_bad_method_frame();
-#endif
     // Provide a cheap fallback in product mode.  (See comment above.)
     fill_from_compiled_native_frame();
     return;
@@ -110,7 +72,7 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _method               = buffer.read_method();
   _bci                  = buffer.read_bci();
 
-  assert(_method->is_method(), "checking type of decoded method");
+  assert(_method->is_method(), "checking type of decoded method");
 }
 
 // The native frames are handled specially. We do not rely on ScopeDesc info
@@ -153,7 +115,6 @@ inline bool vframeStreamCommon::fill_from_frame() {
         // asserting. If however the thread is safepoint safe this
         // is the sign of a compiler bug  and we'll let
         // fill_from_compiled_frame handle it.
-
 
         JavaThreadState state = _thread->thread_state();
 
@@ -200,7 +161,6 @@ inline bool vframeStreamCommon::fill_from_frame() {
   return false;
 }
 
-
 inline void vframeStreamCommon::fill_from_interpreter_frame() {
   Method* method = _frame.interpreter_frame_method();
   address   bcp    = _frame.interpreter_frame_bcp();
@@ -213,7 +173,6 @@ inline void vframeStreamCommon::fill_from_interpreter_frame() {
   // In this scenario, pretend that the interpreter is at the point
   // of entering the method.
   if (bci < 0) {
-    DEBUG_ONLY(found_bad_method_frame();)
     bci = 0;
   }
   _mode   = interpreted_mode;
@@ -221,4 +180,4 @@ inline void vframeStreamCommon::fill_from_interpreter_frame() {
   _bci    = bci;
 }
 
-#endif // SHARE_VM_RUNTIME_VFRAME_INLINE_HPP
+#endif

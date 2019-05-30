@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, 2018, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "memory/resourceArea.hpp"
@@ -32,12 +7,10 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "utilities/ostream.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
-#endif
 
 void NativeCall::verify() {
-  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
+  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
 }
 
 void NativeInstruction::wrote(int offset) {
@@ -50,7 +23,7 @@ void NativeLoadGot::report_and_fail() const {
 }
 
 void NativeLoadGot::verify() const {
-  assert(is_adrp_at((address)this), "must be adrp");
+  assert(is_adrp_at((address)this), "must be adrp");
 }
 
 address NativeLoadGot::got_address() const {
@@ -129,7 +102,7 @@ void NativePltCall::set_stub_to_clean() {
 }
 
 void NativePltCall::verify() const {
-  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
+  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
 }
 
 address NativeGotJump::got_address() const {
@@ -148,7 +121,7 @@ bool NativeGotJump::is_GotJump() const {
 }
 
 void NativeGotJump::verify() const {
-  assert(is_adrp_at((address)this), "must be adrp");
+  assert(is_adrp_at((address)this), "must be adrp");
 }
 
 address NativeCall::destination() const {
@@ -157,7 +130,7 @@ address NativeCall::destination() const {
 
   // Do we use a trampoline stub for this call?
   CodeBlob* cb = CodeCache::find_blob_unsafe(addr);   // Else we get assertion if nmethod is zombie.
-  assert(cb && cb->is_nmethod(), "sanity");
+  assert(cb && cb->is_nmethod(), "sanity");
   nmethod *nm = (nmethod *)cb;
   if (nm->stub_contains(destination) && is_NativeCallTrampolineStub_at(destination)) {
     // Yes we do, so get the destination from the trampoline stub.
@@ -177,20 +150,18 @@ address NativeCall::destination() const {
 // Add parameter assert_lock to switch off assertion
 // during code generation, where no patching lock is needed.
 void NativeCall::set_destination_mt_safe(address dest, bool assert_lock) {
-  assert(!assert_lock ||
-         (Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint()),
-         "concurrent code patching");
+  assert(!assert_lock || (Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint()), "concurrent code patching");
 
   ResourceMark rm;
   int code_size = NativeInstruction::instruction_size;
   address addr_call = addr_at(0);
   bool reachable = Assembler::reachable_from_branch_at(addr_call, dest);
-  assert(NativeCall::is_call_at(addr_call), "unexpected code at call site");
+  assert(NativeCall::is_call_at(addr_call), "unexpected code at call site");
 
   // Patch the constant in the call's trampoline stub.
   address trampoline_stub_addr = get_trampoline();
   if (trampoline_stub_addr != NULL) {
-    assert (! is_NativeCallTrampolineStub_at(dest), "chained trampolines");
+    assert(! is_NativeCallTrampolineStub_at(dest), "chained trampolines");
     nativeCallTrampolineStub_at(trampoline_stub_addr)->set_destination(dest);
   }
 
@@ -198,7 +169,7 @@ void NativeCall::set_destination_mt_safe(address dest, bool assert_lock) {
   if (reachable) {
     set_destination(dest);
   } else {
-    assert (trampoline_stub_addr != NULL, "we need a trampoline");
+    assert(trampoline_stub_addr != NULL, "we need a trampoline");
     set_destination(trampoline_stub_addr);
   }
 
@@ -209,7 +180,7 @@ address NativeCall::get_trampoline() {
   address call_addr = addr_at(0);
 
   CodeBlob *code = CodeCache::find_blob(call_addr);
-  assert(code != NULL, "Could not find the containing code blob");
+  assert(code != NULL, "Could not find the containing code blob");
 
   address bl_destination
     = MacroAssembler::pd_call_destination(call_addr);
@@ -232,7 +203,6 @@ void NativeCall::insert(address code_pos, address entry) { Unimplemented(); }
 void NativeMovConstReg::verify() {
   // make sure code pattern is actually mov reg64, imm64 instructions
 }
-
 
 intptr_t NativeMovConstReg::data() const {
   // das(uint64_t(instruction_address()),2);
@@ -307,19 +277,14 @@ void NativeMovRegMem::set_offset(int x) {
 }
 
 void NativeMovRegMem::verify() {
-#ifdef ASSERT
-  address dest = MacroAssembler::target_addr_for_insn(instruction_address());
-#endif
 }
 
 //--------------------------------------------------------------------------------
 
 void NativeJump::verify() { ; }
 
-
 void NativeJump::check_verified_entry_alignment(address entry, address verified_entry) {
 }
-
 
 address NativeJump::jump_destination() const          {
   address dest = MacroAssembler::target_addr_for_insn(instruction_address());
@@ -455,17 +420,7 @@ void NativeIllegalInstruction::insert(address code_pos) {
 
 void NativeJump::patch_verified_entry(address entry, address verified_entry, address dest) {
 
-  assert(dest == SharedRuntime::get_handle_wrong_method_stub(), "expected fixed destination of patch");
-
-#ifdef ASSERT
-  // This may be the temporary nmethod generated while we're AOT
-  // compiling.  Such an nmethod doesn't begin with a NOP but with an ADRP.
-  if (! (CalculateClassFingerprint && UseAOT && is_adrp_at(verified_entry))) {
-    assert(nativeInstruction_at(verified_entry)->is_jump_or_nop()
-           || nativeInstruction_at(verified_entry)->is_sigill_zombie_not_entrant(),
-           "Aarch64 cannot replace non-jump with jump");
-  }
-#endif
+  assert(dest == SharedRuntime::get_handle_wrong_method_stub(), "expected fixed destination of patch");
 
   // Patch this nmethod atomically.
   if (Assembler::reachable_from_branch_at(verified_entry, dest)) {

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_COMPRESSEDSTREAM_HPP
 #define SHARE_VM_CODE_COMPRESSEDSTREAM_HPP
 
@@ -61,7 +37,6 @@ class CompressedStream : public ResourceObj {
   void set_position(int position)      { _position = position; }
 };
 
-
 class CompressedReadStream : public CompressedStream {
  private:
   inline u_char read()                 { return _buffer[_position++]; }
@@ -86,7 +61,7 @@ class CompressedReadStream : public CompressedStream {
   jint read_int_mb(jint b0) {
     int     pos = position() - 1;
     u_char* buf = buffer() + pos;
-    assert(buf[0] == b0 && b0 >= L, "correctly called");
+    assert(buf[0] == b0 && b0 >= L, "correctly called");
     jint    sum = b0;
     // must collect more bytes:  b[1]...b[4]
     int lg_H_i = lg_H;
@@ -118,7 +93,6 @@ class CompressedReadStream : public CompressedStream {
   jdouble  read_double();              // jdouble_cast(2*reverse_int(read_int))
   jlong    read_long();                // jlong_from(2*read_signed_int())
 };
-
 
 class CompressedWriteStream : public CompressedStream {
  private:
@@ -157,4 +131,4 @@ class CompressedWriteStream : public CompressedStream {
   void write_long(jlong value);        // write_signed_int(<low,high>)
 };
 
-#endif // SHARE_VM_CODE_COMPRESSEDSTREAM_HPP
+#endif

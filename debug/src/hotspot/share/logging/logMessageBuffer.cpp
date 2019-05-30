@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "logging/logMessageBuffer.hpp"
 #include "memory/allocation.inline.hpp"
@@ -60,7 +37,7 @@ void LogMessageBuffer::reset() {
 }
 
 void LogMessageBuffer::initialize_buffers() {
-  assert(!_allocated, "buffer already initialized/allocated");
+  assert(!_allocated, "buffer already initialized/allocated");
   _allocated = true;
   _message_buffer = NEW_C_HEAP_ARRAY(char, InitialMessageBufferCapacity, mtLogging);
   _lines = NEW_C_HEAP_ARRAY(LogLine, InitialLineCapacity, mtLogging);
@@ -113,7 +90,7 @@ void LogMessageBuffer::vwrite(LogLevelType level, const char* fmt, va_list args)
     written += (size_t)os::vsnprintf(current_buffer_position, remaining_buffer_length, fmt, copy) + 1;
     va_end(copy);
     if (written > _message_buffer_capacity - _message_buffer_size) {
-      assert(attempts == 0, "Second attempt should always have a sufficiently large buffer (resized to fit).");
+      assert(attempts == 0, "Second attempt should always have a sufficiently large buffer (resized to fit).");
       grow(_message_buffer, _message_buffer_capacity, _message_buffer_size + written);
       continue;
     }

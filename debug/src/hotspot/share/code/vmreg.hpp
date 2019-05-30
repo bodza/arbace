@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_VMREG_HPP
 #define SHARE_VM_CODE_VMREG_HPP
 
@@ -29,9 +5,6 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ostream.hpp"
-#ifdef COMPILER2
-#include "opto/adlcVMDeps.hpp"
-#endif
 
 //------------------------------VMReg------------------------------------------
 // The VM uses 'unwarped' stack slots; the compiler uses 'warped' stack slots.
@@ -54,17 +27,16 @@ private:
     BAD_REG = -1
   };
 
-
-
   static VMReg stack0;
   // Names for registers
   static const char *regName[];
   static const int register_count;
 
-
 public:
 
-  static VMReg  as_VMReg(int val, bool bad_ok = false) { assert(val > BAD_REG || bad_ok, "invalid"); return (VMReg) (intptr_t) val; }
+  static VMReg  as_VMReg(int val, bool bad_ok = false) {
+    assert(val > BAD_REG || bad_ok, "invalid");
+    return (VMReg) (intptr_t) val; }
 
   const char*  name() {
     if (is_reg()) {
@@ -91,23 +63,21 @@ public:
   static const int stack_slot_size;
   static const int slots_per_word;
 
-
   // This really ought to check that the register is "real" in the sense that
   // we don't try and get the VMReg number of a physical register that doesn't
   // have an expressible part. That would be pd specific code
   VMReg next() {
-    assert((is_reg() && value() < stack0->value() - 1) || is_stack(), "must be");
+    assert((is_reg() && value() < stack0->value() - 1) || is_stack(), "must be");
     return (VMReg)(intptr_t)(value() + 1);
   }
   VMReg next(int i) {
-    assert((is_reg() && value() < stack0->value() - i) || is_stack(), "must be");
+    assert((is_reg() && value() < stack0->value() - i) || is_stack(), "must be");
     return (VMReg)(intptr_t)(value() + i);
   }
   VMReg prev() {
-    assert((is_stack() && value() > stack0->value()) || (is_reg() && value() != 0), "must be");
+    assert((is_stack() && value() > stack0->value()) || (is_reg() && value() != 0), "must be");
     return (VMReg)(intptr_t)(value() - 1);
   }
-
 
   intptr_t value() const         {return (intptr_t) this; }
 
@@ -120,10 +90,10 @@ public:
   // and the result must be also.
 
   VMReg bias(int offset) {
-    assert(is_stack(), "must be");
+    assert(is_stack(), "must be");
     // VMReg res = VMRegImpl::as_VMReg(value() + offset);
     VMReg res = stack2reg(reg2stack() + offset);
-    assert(res->is_stack(), "must be");
+    assert(res->is_stack(), "must be");
     return res;
   }
 
@@ -133,14 +103,13 @@ public:
   }
 
   uintptr_t reg2stack() {
-    assert( is_stack(), "Not a stack-based register" );
+    assert( is_stack(), "Not a stack-based register" );
     return value() - stack0->value();
   }
 
   static void set_regName();
 
 #include CPU_HEADER(vmreg)
-
 };
 
 //---------------------------VMRegPair-------------------------------------------
@@ -163,11 +132,7 @@ public:
   void set2    (         VMReg v  ) { _second=v->next();  _first=v; }
   void set_pair( VMReg second, VMReg first    ) { _second= second;    _first= first; }
   void set_ptr ( VMReg ptr ) {
-#ifdef _LP64
     _second = ptr->next();
-#else
-    _second = VMRegImpl::Bad();
-#endif
     _first = ptr;
   }
   // Return true if single register, even if the pair is really just adjacent stack slots
@@ -197,4 +162,4 @@ public:
   VMRegPair() { _second = VMRegImpl::Bad(); _first = VMRegImpl::Bad(); }
 };
 
-#endif // SHARE_VM_CODE_VMREG_HPP
+#endif

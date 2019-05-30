@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "runtime/deoptimization.hpp"
 #include "runtime/frame.inline.hpp"
@@ -41,7 +17,6 @@ address StubRoutines::x86::_ghash_byte_swap_mask_addr = NULL;
 address StubRoutines::x86::_upper_word_mask_addr = NULL;
 address StubRoutines::x86::_shuffle_byte_flip_mask_addr = NULL;
 address StubRoutines::x86::_k256_adr = NULL;
-#ifdef _LP64
 address StubRoutines::x86::_k256_W_adr = NULL;
 address StubRoutines::x86::_k512_W_addr = NULL;
 address StubRoutines::x86::_pshuffle_byte_flip_mask_addr_sha512 = NULL;
@@ -53,8 +28,6 @@ address StubRoutines::x86::_right_shift_mask = NULL;
 address StubRoutines::x86::_left_shift_mask = NULL;
 address StubRoutines::x86::_and_mask = NULL;
 address StubRoutines::x86::_url_charset = NULL;
-
-#endif
 address StubRoutines::x86::_pshuffle_byte_flip_mask_addr = NULL;
 
 //tables common for sin and cos
@@ -299,7 +272,6 @@ ATTRIBUTE_ALIGNED(64) juint StubRoutines::x86::_k256[] =
     0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
 };
 
-#ifdef _LP64
 // used in MacroAssembler::sha256_AVX2
 // dynamically built from _k256
 ATTRIBUTE_ALIGNED(64) juint StubRoutines::x86::_k256_W[2*sizeof(StubRoutines::x86::_k256)];
@@ -348,4 +320,3 @@ ATTRIBUTE_ALIGNED(64) julong StubRoutines::x86::_k512_W[] =
     0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL,
     0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL,
 };
-#endif

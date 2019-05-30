@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "aot/aotLoader.hpp"
@@ -32,12 +8,10 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
-#include "jfr/jfrEvents.hpp"
-#include "jfr/support/jfrThreadId.hpp"
-#if INCLUDE_JVMCI
+// #include "jfr/jfrEvents.hpp"
+// #include "jfr/support/jfrThreadId.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#endif
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/oopFactory.hpp"
@@ -51,7 +25,6 @@
 #include "oops/objArrayOop.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/compilationPolicy.hpp"
@@ -74,20 +47,8 @@
 #include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/vmError.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Compiler.hpp"
 #include "c1/c1_Runtime1.hpp"
-#endif
-#ifdef COMPILER2
-#include "code/compiledIC.hpp"
-#include "compiler/methodLiveness.hpp"
-#include "opto/compile.hpp"
-#include "opto/indexSet.hpp"
-#include "opto/runtime.hpp"
-#endif
-#if INCLUDE_JFR
-#include "jfr/jfr.hpp"
-#endif
 
 GrowableArray<Method*>* collected_profiled_methods;
 
@@ -107,8 +68,7 @@ void collect_profiled_methods(Method* m) {
 }
 
 void print_method_profiling_data() {
-  if (ProfileInterpreter COMPILER1_PRESENT(|| C1UpdateMethodData) &&
-     (PrintMethodData || CompilerOracle::should_print_methods())) {
+  if (ProfileInterpreter || C1UpdateMethodData && (PrintMethodData || CompilerOracle::should_print_methods())) {
     ResourceMark rm;
     HandleMark hm;
     collected_profiled_methods = new GrowableArray<Method*>(1024);
@@ -139,235 +99,6 @@ void print_method_profiling_data() {
   }
 }
 
-
-#ifndef PRODUCT
-
-// Statistics printing (method invocation histogram)
-
-GrowableArray<Method*>* collected_invoked_methods;
-
-void collect_invoked_methods(Method* m) {
-  if (m->invocation_count() + m->compiled_invocation_count() >= 1 ) {
-    collected_invoked_methods->push(m);
-  }
-}
-
-
-
-
-void print_method_invocation_histogram() {
-  ResourceMark rm;
-  HandleMark hm;
-  collected_invoked_methods = new GrowableArray<Method*>(1024);
-  SystemDictionary::methods_do(collect_invoked_methods);
-  collected_invoked_methods->sort(&compare_methods);
-  //
-  tty->cr();
-  tty->print_cr("Histogram Over Method Invocation Counters (cutoff = " INTX_FORMAT "):", MethodHistogramCutoff);
-  tty->cr();
-  tty->print_cr("____Count_(I+C)____Method________________________Module_________________");
-  unsigned total = 0, int_total = 0, comp_total = 0, static_total = 0, final_total = 0,
-      synch_total = 0, nativ_total = 0, acces_total = 0;
-  for (int index = 0; index < collected_invoked_methods->length(); index++) {
-    Method* m = collected_invoked_methods->at(index);
-    int c = m->invocation_count() + m->compiled_invocation_count();
-    if (c >= MethodHistogramCutoff) m->print_invocation_count();
-    int_total  += m->invocation_count();
-    comp_total += m->compiled_invocation_count();
-    if (m->is_final())        final_total  += c;
-    if (m->is_static())       static_total += c;
-    if (m->is_synchronized()) synch_total  += c;
-    if (m->is_native())       nativ_total  += c;
-    if (m->is_accessor())     acces_total  += c;
-  }
-  tty->cr();
-  total = int_total + comp_total;
-  tty->print_cr("Invocations summary:");
-  tty->print_cr("\t%9d (%4.1f%%) interpreted",  int_total,    100.0 * int_total    / total);
-  tty->print_cr("\t%9d (%4.1f%%) compiled",     comp_total,   100.0 * comp_total   / total);
-  tty->print_cr("\t%9d (100%%)  total",         total);
-  tty->print_cr("\t%9d (%4.1f%%) synchronized", synch_total,  100.0 * synch_total  / total);
-  tty->print_cr("\t%9d (%4.1f%%) final",        final_total,  100.0 * final_total  / total);
-  tty->print_cr("\t%9d (%4.1f%%) static",       static_total, 100.0 * static_total / total);
-  tty->print_cr("\t%9d (%4.1f%%) native",       nativ_total,  100.0 * nativ_total  / total);
-  tty->print_cr("\t%9d (%4.1f%%) accessor",     acces_total,  100.0 * acces_total  / total);
-  tty->cr();
-  SharedRuntime::print_call_statistics(comp_total);
-}
-
-void print_bytecode_count() {
-  if (CountBytecodes || TraceBytecodes || StopInterpreterAt) {
-    tty->print_cr("[BytecodeCounter::counter_value = %d]", BytecodeCounter::counter_value());
-  }
-}
-
-AllocStats alloc_stats;
-
-
-
-// General statistics printing (profiling ...)
-void print_statistics() {
-#ifdef ASSERT
-
-  if (CountRuntimeCalls) {
-    extern Histogram *RuntimeHistogram;
-    RuntimeHistogram->print();
-  }
-
-  if (CountJNICalls) {
-    extern Histogram *JNIHistogram;
-    JNIHistogram->print();
-  }
-
-  if (CountJVMCalls) {
-    extern Histogram *JVMHistogram;
-    JVMHistogram->print();
-  }
-
-#endif
-
-  if (MemProfiling) {
-    MemProfiler::disengage();
-  }
-
-  if (CITime) {
-    CompileBroker::print_times();
-  }
-
-#ifdef COMPILER1
-  if ((PrintC1Statistics || LogVMOutput || LogCompilation) && UseCompiler) {
-    FlagSetting fs(DisplayVMOutput, DisplayVMOutput && PrintC1Statistics);
-    Runtime1::print_statistics();
-    Deoptimization::print_statistics();
-    SharedRuntime::print_statistics();
-  }
-#endif /* COMPILER1 */
-
-#ifdef COMPILER2
-  if ((PrintOptoStatistics || LogVMOutput || LogCompilation) && UseCompiler) {
-    FlagSetting fs(DisplayVMOutput, DisplayVMOutput && PrintOptoStatistics);
-    Compile::print_statistics();
-#ifndef COMPILER1
-    Deoptimization::print_statistics();
-    SharedRuntime::print_statistics();
-#endif //COMPILER1
-    os::print_statistics();
-  }
-
-  if (PrintLockStatistics || PrintPreciseBiasedLockingStatistics || PrintPreciseRTMLockingStatistics) {
-    OptoRuntime::print_named_counters();
-  }
-
-  if (TimeLivenessAnalysis) {
-    MethodLiveness::print_times();
-  }
-#ifdef ASSERT
-  if (CollectIndexSetStatistics) {
-    IndexSet::print_statistics();
-  }
-#endif // ASSERT
-#else // COMPILER2
-#if INCLUDE_JVMCI
-#ifndef COMPILER1
-  if ((TraceDeoptimization || LogVMOutput || LogCompilation) && UseCompiler) {
-    FlagSetting fs(DisplayVMOutput, DisplayVMOutput && TraceDeoptimization);
-    Deoptimization::print_statistics();
-    SharedRuntime::print_statistics();
-  }
-#endif // COMPILER1
-#endif // INCLUDE_JVMCI
-#endif // COMPILER2
-
-  if (PrintAOTStatistics) {
-    AOTLoader::print_statistics();
-  }
-
-  if (PrintNMethodStatistics) {
-    nmethod::print_statistics();
-  }
-  if (CountCompiledCalls) {
-    print_method_invocation_histogram();
-  }
-
-  print_method_profiling_data();
-
-  if (TimeCompilationPolicy) {
-    CompilationPolicy::policy()->print_time();
-  }
-  if (TimeOopMap) {
-    GenerateOopMap::print_time();
-  }
-  if (ProfilerCheckIntervals) {
-    PeriodicTask::print_intervals();
-  }
-  if (PrintSymbolTableSizeHistogram) {
-    SymbolTable::print_histogram();
-  }
-  if (CountBytecodes || TraceBytecodes || StopInterpreterAt) {
-    BytecodeCounter::print();
-  }
-  if (PrintBytecodePairHistogram) {
-    BytecodePairHistogram::print();
-  }
-
-  if (PrintCodeCache) {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::print();
-  }
-
-  // CodeHeap State Analytics.
-  // Does also call NMethodSweeper::print(tty)
-  LogTarget(Trace, codecache) lt;
-  if (lt.is_enabled()) {
-    CompileBroker::print_heapinfo(NULL, "all", "4096"); // details
-  } else if (PrintMethodFlushingStatistics) {
-    NMethodSweeper::print(tty);
-  }
-
-  if (PrintCodeCache2) {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::print_internals();
-  }
-
-  if (PrintVtableStats) {
-    klassVtable::print_statistics();
-    klassItable::print_statistics();
-  }
-  if (VerifyOops) {
-    tty->print_cr("+VerifyOops count: %d", StubRoutines::verify_oop_count());
-  }
-
-  print_bytecode_count();
-  if (PrintMallocStatistics) {
-    tty->print("allocation stats: ");
-    alloc_stats.print();
-    tty->cr();
-  }
-
-  if (PrintSystemDictionaryAtExit) {
-    ResourceMark rm;
-    SystemDictionary::print();
-    ClassLoaderDataGraph::print();
-  }
-
-  if (LogTouchedMethods && PrintTouchedMethodsAtExit) {
-    Method::print_touched_methods(tty);
-  }
-
-  if (PrintBiasedLockingStatistics) {
-    BiasedLocking::print_counters();
-  }
-
-  // Native memory tracking data
-  if (PrintNMTStatistics) {
-    MemTracker::final_report(tty);
-  }
-
-  ThreadsSMRSupport::log_statistics();
-}
-
-#else // PRODUCT MODE STATISTICS
-
 void print_statistics() {
 
   if (PrintMethodData) {
@@ -392,11 +123,6 @@ void print_statistics() {
     NMethodSweeper::print(tty);
   }
 
-#ifdef COMPILER2
-  if (PrintPreciseBiasedLockingStatistics || PrintPreciseRTMLockingStatistics) {
-    OptoRuntime::print_named_counters();
-  }
-#endif
   if (PrintBiasedLockingStatistics) {
     BiasedLocking::print_counters();
   }
@@ -412,8 +138,6 @@ void print_statistics() {
 
   ThreadsSMRSupport::log_statistics();
 }
-
-#endif
 
 // Note: before_exit() can be executed only once, if more than one threads
 //       are trying to shutdown the VM at the same time, only one thread
@@ -438,7 +162,7 @@ void before_exit(JavaThread* thread) {
       while (_before_exit_status == BEFORE_EXIT_RUNNING) {
         BeforeExit_lock->wait();
       }
-      assert(_before_exit_status == BEFORE_EXIT_DONE, "invalid state");
+      assert(_before_exit_status == BEFORE_EXIT_DONE, "invalid state");
       return;
     case BEFORE_EXIT_DONE:
       // need block to avoid SS compiler bug
@@ -448,7 +172,6 @@ void before_exit(JavaThread* thread) {
     }
   }
 
-#if INCLUDE_JVMCI
   // We are not using CATCH here because we want the exit to continue normally.
   Thread* THREAD = thread;
   JVMCIRuntime::shutdown(THREAD);
@@ -458,7 +181,6 @@ void before_exit(JavaThread* thread) {
     CLEAR_PENDING_EXCEPTION;
     java_lang_Throwable::java_printStackTrace(exception, THREAD);
   }
-#endif
 
   // Hang forever on exit if we're reporting an error.
   if (ShowMessageBoxOnError && VMError::is_error_reported()) {
@@ -470,8 +192,6 @@ void before_exit(JavaThread* thread) {
     event.set_thread(JFR_THREAD_ID(thread));
     event.commit();
   }
-
-  JFR_ONLY(Jfr::on_vm_shutdown();)
 
   // Stop the WatcherThread. We do this before disenrolling various
   // PeriodicTasks to reduce the likelihood of races.
@@ -502,13 +222,6 @@ void before_exit(JavaThread* thread) {
     BytecodeHistogram::print();
   }
 
-  if (JvmtiExport::should_post_thread_life()) {
-    JvmtiExport::post_thread_end(thread);
-  }
-
-  // Always call even when there are not JVMTI environments yet, since environments
-  // may be attached late and JVMTI must track phases of VM execution
-  JvmtiExport::post_vm_death();
   Threads::shutdown_vm_agents();
 
   // Terminate the signal thread
@@ -672,13 +385,13 @@ const char* JDK_Version::_runtime_version;
 
 void JDK_Version::initialize() {
   jdk_version_info info;
-  assert(!_current.is_valid(), "Don't initialize twice");
+  assert(!_current.is_valid(), "Don't initialize twice");
 
   void *lib_handle = os::native_java_library();
   jdk_version_info_fn_t func = CAST_TO_FN_PTR(jdk_version_info_fn_t,
      os::dll_lookup(lib_handle, "JDK_GetVersionInfo0"));
 
-  assert(func != NULL, "Support for JDK 1.5 or older has been removed after JEP-223");
+  assert(func != NULL, "Support for JDK 1.5 or older has been removed after JEP-223");
 
   (*func)(&info, sizeof(info));
 
@@ -711,14 +424,14 @@ static int64_t encode_jdk_version(const JDK_Version& v) {
 }
 
 int JDK_Version::compare(const JDK_Version& other) const {
-  assert(is_valid() && other.is_valid(), "Invalid version (uninitialized?)");
+  assert(is_valid() && other.is_valid(), "Invalid version (uninitialized?)");
   uint64_t e = encode_jdk_version(*this);
   uint64_t o = encode_jdk_version(other);
   return (e > o) ? 1 : ((e == o) ? 0 : -1);
 }
 
 void JDK_Version::to_string(char* buffer, size_t buflen) const {
-  assert(buffer && buflen > 0, "call with useful buffer");
+  assert(buffer && buflen > 0, "call with useful buffer");
   size_t index = 0;
 
   if (!is_valid()) {

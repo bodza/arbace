@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_BINARYTREEDICTIONARY_HPP
 #define SHARE_VM_MEMORY_BINARYTREEDICTIONARY_HPP
 
@@ -190,12 +166,6 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   TreeList<Chunk_t, FreeList_t>* root() const { return _root; }
   void set_root(TreeList<Chunk_t, FreeList_t>* v) { _root = v; }
 
-  // This field is added and can be set to point to the
-  // the Mutex used to synchronize access to the
-  // dictionary so that assertion checking can be done.
-  // For example it is set to point to _parDictionaryAllocLock.
-  NOT_PRODUCT(Mutex* _lock;)
-
   // Remove a chunk of size "size" or larger from the tree and
   // return it.  If the chunk
   // is the last chunk of that size, remove the node for that size
@@ -262,8 +232,7 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   Chunk_t* get_chunk(size_t size) {
     verify_par_locked();
     Chunk_t* res = get_chunk_from_tree(size);
-    assert(res == NULL || res->is_free(),
-           "Should be returning a free chunk");
+    assert(res == NULL || res->is_free(), "Should be returning a free chunk");
     return res;
   }
 
@@ -275,11 +244,11 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   void remove_chunk(Chunk_t* chunk) {
     verify_par_locked();
     remove_chunk_from_tree((TreeChunk<Chunk_t, FreeList_t>*)chunk);
-    assert(chunk->is_free(), "Should still be a free chunk");
+    assert(chunk->is_free(), "Should still be a free chunk");
   }
 
   size_t     max_chunk_size() const;
-  inline size_t total_chunk_size(debug_only(const Mutex* lock)) const;
+  inline size_t total_chunk_size() const;
 
   size_t     min_size() const {
     return TreeChunk<Chunk_t, FreeList_t>::min_size();
@@ -298,21 +267,20 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
 
   // For debugging.  Returns the sum of the _returned_bytes for
   // all lists in the tree.
-  size_t     sum_dict_returned_bytes()     PRODUCT_RETURN0;
+  size_t     sum_dict_returned_bytes()     { return 0; };
   // Sets the _returned_bytes for all the lists in the tree to zero.
-  void       initialize_dict_returned_bytes()      PRODUCT_RETURN;
+  void       initialize_dict_returned_bytes()      {};
   // For debugging.  Return the total number of chunks in the dictionary.
-  size_t     total_count()       PRODUCT_RETURN0;
+  size_t     total_count()       { return 0; };
 
   void       report_statistics(outputStream* st) const;
 
   void       verify() const;
 
-  Mutex*     par_lock()                const PRODUCT_RETURN0;
-  void       set_par_lock(Mutex* lock)       PRODUCT_RETURN;
-  void       verify_par_locked()       const PRODUCT_RETURN;
+  Mutex*     par_lock()                const { return 0; };
+  void       set_par_lock(Mutex* lock)       {};
+  void       verify_par_locked()       const {};
 };
-
 
 // Closures for walking the binary tree.
 //   do_list() walks the free list in a node applying the closure
@@ -392,4 +360,4 @@ class DescendTreeSearchClosure : public TreeSearchClosure<Chunk_t, FreeList_t> {
   }
 };
 
-#endif // SHARE_VM_MEMORY_BINARYTREEDICTIONARY_HPP
+#endif

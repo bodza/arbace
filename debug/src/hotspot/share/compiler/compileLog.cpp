@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "ci/ciMethod.hpp"
@@ -65,7 +41,6 @@ CompileLog::~CompileLog() {
   FREE_C_HEAP_ARRAY(char, _file);
 }
 
-
 // see_tag, pop_tag:  Override the default do-nothing methods on xmlStream.
 // These methods provide a hook for managing the extra context markup.
 void CompileLog::see_tag(const char* tag, bool push) {
@@ -79,7 +54,6 @@ void CompileLog::pop_tag(const char* tag) {
   _context.reset();  // toss any context info.
   xmlStream::pop_tag(tag);
 }
-
 
 // ------------------------------------------------------------------
 // CompileLog::identify
@@ -99,7 +73,7 @@ int CompileLog::identify(ciBaseObject* obj) {
   while (id >= _identities_limit) {
     _identities[_identities_limit++] = 0;
   }
-  assert(id < _identities_limit, "oob");
+  assert(id < _identities_limit, "oob");
   // Mark this id as processed.
   // (Be sure to do this before any recursive calls to identify.)
   _identities[id] = 1;  // mark

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -51,8 +27,8 @@ public:
   virtual void do_oop(narrowOop* p) { do_oop_work(p); }
   virtual void do_oop(      oop* p) { do_oop_work(p); }
   template <class T> void do_oop_work(T* p) {
-    assert(_g1h->heap_region_containing(p)->is_in_reserved(p), "paranoia");
-    assert(!_g1h->heap_region_containing(p)->is_survivor(), "Unexpected evac failure in survivor region");
+    assert(_g1h->heap_region_containing(p)->is_in_reserved(p), "paranoia");
+    assert(!_g1h->heap_region_containing(p)->is_survivor(), "Unexpected evac failure in survivor region");
 
     T const o = RawAccess<>::oop_load(p);
     if (CompressedOops::is_null(o)) {
@@ -103,7 +79,7 @@ public:
   // dead too) already.
   void do_object(oop obj) {
     HeapWord* obj_addr = (HeapWord*) obj;
-    assert(_hr->is_in(obj_addr), "sanity");
+    assert(_hr->is_in(obj_addr), "sanity");
 
     if (obj->is_forwarded() && obj->forwardee() == obj) {
       // The object failed to move.
@@ -173,14 +149,6 @@ public:
       // BOT for the second object to make the BOT complete.
       if (end_first_obj != end) {
         _hr->cross_threshold(end_first_obj, end);
-#ifdef ASSERT
-        size_t size_second_obj = ((oop)end_first_obj)->size();
-        HeapWord* end_of_second_obj = end_first_obj + size_second_obj;
-        assert(end == end_of_second_obj,
-               "More than two objects were used to fill the area from " PTR_FORMAT " to " PTR_FORMAT ", "
-               "second objects size " SIZE_FORMAT " ends at " PTR_FORMAT,
-               p2i(start), p2i(end), size_second_obj, p2i(end_of_second_obj));
-#endif
       }
     }
     _cm->clear_range_in_prev_bitmap(mr);
@@ -223,8 +191,8 @@ public:
   }
 
   bool do_heap_region(HeapRegion *hr) {
-    assert(!hr->is_pinned(), "Unexpected pinned region at index %u", hr->hrm_index());
-    assert(hr->in_collection_set(), "bad CS");
+    assert(!hr->is_pinned(), "Unexpected pinned region at index %u", hr->hrm_index());
+    assert(hr->in_collection_set(), "bad CS");
 
     if (_hrclaimer->claim_region(hr->hrm_index())) {
       if (hr->evacuation_failed()) {

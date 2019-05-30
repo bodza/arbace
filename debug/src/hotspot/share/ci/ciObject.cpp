@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciObject.hpp"
 #include "ci/ciUtilities.inline.hpp"
@@ -83,7 +59,7 @@ ciObject::ciObject(Handle h) {
 // klass/method, if that makes sense.
 ciObject::ciObject(ciKlass* klass) {
   ASSERT_IN_VM;
-  assert(klass != NULL, "must supply klass");
+  assert(klass != NULL, "must supply klass");
   _handle = NULL;
   _klass = klass;
 }
@@ -116,7 +92,7 @@ ciKlass* ciObject::klass() {
       // When both _klass and _handle are NULL, we are dealing
       // with the distinguished instance of ciNullObject.
       // No one should ask it for its klass.
-      assert(is_null_object(), "must be null object");
+      assert(is_null_object(), "must be null object");
       ShouldNotReachHere();
       return NULL;
     }
@@ -164,8 +140,8 @@ int ciObject::hash() {
 // This method should be changed to return an generified address
 // to discourage use of the JNI handle.
 jobject ciObject::constant_encoding() {
-  assert(is_null_object() || handle() != NULL, "cannot embed null pointer");
-  assert(can_be_constant(), "oop must be NULL or perm");
+  assert(is_null_object() || handle() != NULL, "cannot embed null pointer");
+  assert(can_be_constant(), "oop must be NULL or perm");
   return handle();
 }
 
@@ -193,7 +169,7 @@ bool ciObject::should_be_constant() {
     }
   if (klass()->is_subclass_of(env->MethodHandle_klass()) ||
       klass()->is_subclass_of(env->CallSite_klass())) {
-    assert(ScavengeRootsInCode >= 1, "must be");
+    assert(ScavengeRootsInCode >= 1, "must be");
     // We want to treat these aggressively.
     return true;
   }
@@ -206,7 +182,7 @@ bool ciObject::should_be_constant() {
 void ciObject::init_flags_from(oop x) {
   int flags = 0;
   if (x != NULL) {
-    assert(Universe::heap()->is_in_reserved(x), "must be");
+    assert(Universe::heap()->is_in_reserved(x), "must be");
     if (Universe::heap()->is_scavengable(x))
       flags |= SCAVENGABLE_FLAG;
   }

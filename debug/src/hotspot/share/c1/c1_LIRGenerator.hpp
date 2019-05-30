@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_LIRGENERATOR_HPP
 #define SHARE_VM_C1_C1_LIRGENERATOR_HPP
 
@@ -30,14 +6,13 @@
 #include "c1/c1_LIR.hpp"
 #include "ci/ciMethodData.hpp"
 #include "gc/shared/barrierSet.hpp"
-#include "jfr/support/jfrIntrinsics.hpp"
+// #include "jfr/support/jfrIntrinsics.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/sizes.hpp"
 
 class BarrierSetC1;
 
 // The classes responsible for code emission and register allocation
-
 
 class LIRGenerator;
 class LIREmitter;
@@ -100,7 +75,6 @@ class ResolveNode: public CompilationResourceObj {
   void set_start_node()             { _start_node = true; }
 };
 
-
 // This is shared state to be used by the PhiResolver so the operand
 // arrays don't have to be reallocated for reach resolution.
 class PhiResolverState: public CompilationResourceObj {
@@ -116,7 +90,6 @@ class PhiResolverState: public CompilationResourceObj {
 
   void reset(int max_vregs);
 };
-
 
 // class used to move value of phi operand to phi function
 class PhiResolver: public CompilationResourceObj {
@@ -152,7 +125,6 @@ class PhiResolver: public CompilationResourceObj {
   void move(LIR_Opr src, LIR_Opr dest);
 };
 
-
 // only the classes below belong in the same file
 class LIRGenerator: public InstructionVisitor, public BlockClosure {
  // LIRGenerator should never get instatiated on the heap.
@@ -175,15 +147,9 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
     return this;
   }
 
-  void print_if_not_loaded(const NewInstance* new_instance) PRODUCT_RETURN;
+  void print_if_not_loaded(const NewInstance* new_instance) {};
 
  public:
-#ifdef ASSERT
-  LIR_List* lir(const char * file, int line) const {
-    _lir->set_file_and_line(file, line);
-    return _lir;
-  }
-#endif
   LIR_List* lir() const {
     return _lir;
   }
@@ -219,16 +185,18 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   LIR_Opr load_immediate(int x, BasicType type);
 
   void  set_result(Value x, LIR_Opr opr)           {
-    assert(opr->is_valid(), "must set to valid value");
-    assert(x->operand()->is_illegal(), "operand should never change");
-    assert(!opr->is_register() || opr->is_virtual(), "should never set result to a physical register");
+    assert(opr->is_valid(), "must set to valid value");
+    assert(x->operand()->is_illegal(), "operand should never change");
+    assert(!opr->is_register() || opr->is_virtual(), "should never set result to a physical register");
     x->set_operand(opr);
-    assert(opr == x->operand(), "must be");
+    assert(opr == x->operand(), "must be");
     if (opr->is_virtual()) {
       _instruction_for_operand.at_put_grow(opr->vreg_number(), x, NULL);
     }
   }
-  void  set_no_result(Value x)                     { assert(!x->has_uses(), "can't have use"); x->clear_operand(); }
+  void  set_no_result(Value x)                     {
+    assert(!x->has_uses(), "can't have use");
+    x->clear_operand(); }
 
   friend class LIRItem;
 
@@ -435,11 +403,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
 
   // returns a register suitable for doing pointer math
   LIR_Opr new_pointer_register() {
-#ifdef _LP64
     return new_register(T_LONG);
-#else
-    return new_register(T_INT);
-#endif
   }
 
   static LIR_Condition lir_cond(If::Condition cond) {
@@ -460,16 +424,11 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
 
 #ifdef __SOFTFP__
   void do_soft_float_compare(If *x);
-#endif // __SOFTFP__
+#endif
 
   SwitchRangeArray* create_lookup_ranges(TableSwitch* x);
   SwitchRangeArray* create_lookup_ranges(LookupSwitch* x);
   void do_SwitchRanges(SwitchRangeArray* x, LIR_Opr value, BlockBegin* default_sux);
-
-#ifdef JFR_HAVE_INTRINSICS
-  void do_ClassIDIntrinsic(Intrinsic* x);
-  void do_getEventWriter(Intrinsic* x);
-#endif
 
   void do_RuntimeCall(address routine, Intrinsic* x);
 
@@ -499,7 +458,6 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
     , callee_saved     = 1    // must be in a callee saved register
     , byte_reg         = 2    // must be in a byte register
     , num_vreg_flags
-
   };
 
   LIRGenerator(Compilation* compilation, ciMethod* method)
@@ -591,15 +549,11 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   virtual void do_RuntimeCall    (RuntimeCall*     x);
   virtual void do_MemBar         (MemBar*          x);
   virtual void do_RangeCheckPredicate(RangeCheckPredicate* x);
-#ifdef ASSERT
-  virtual void do_Assert         (Assert*          x);
-#endif
 
 #ifdef C1_LIRGENERATOR_MD_HPP
 #include C1_LIRGENERATOR_MD_HPP
 #endif
 };
-
 
 class LIRItem: public CompilationResourceObj {
  private:
@@ -638,8 +592,7 @@ class LIRItem: public CompilationResourceObj {
   Value value() const          { return _value;          }
   ValueType* type() const      { return value()->type(); }
   LIR_Opr result()             {
-    assert(!_destroys_register || (!_result->is_register() || _result->is_virtual()),
-           "shouldn't use set_destroys_register with physical regsiters");
+    assert(!_destroys_register || (!_result->is_register() || _result->is_virtual()), "shouldn't use set_destroys_register with physical regsiters");
     if (_destroys_register && _result->is_register()) {
       if (_new_result->is_illegal()) {
         _new_result = _gen->new_register(type());
@@ -681,4 +634,4 @@ class LIRItem: public CompilationResourceObj {
   jint      get_address_constant() const;
 };
 
-#endif // SHARE_VM_C1_C1_LIRGENERATOR_HPP
+#endif

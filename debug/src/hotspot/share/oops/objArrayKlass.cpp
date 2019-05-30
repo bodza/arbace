@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
@@ -46,8 +22,7 @@
 #include "utilities/macros.hpp"
 
 ObjArrayKlass* ObjArrayKlass::allocate(ClassLoaderData* loader_data, int n, Klass* k, Symbol* name, TRAPS) {
-  assert(ObjArrayKlass::header_size() <= InstanceKlass::header_size(),
-      "array klasses must be same size as InstanceKlass");
+  assert(ObjArrayKlass::header_size() <= InstanceKlass::header_size(), "array klasses must be same size as InstanceKlass");
 
   int size = ArrayKlass::static_size(ObjArrayKlass::header_size());
 
@@ -88,7 +63,7 @@ Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data,
           }
           // Now retry from the beginning
           ek = element_klass->array_klass(n, CHECK_0);
-        }  // re-lock
+        }
         return ek;
       }
     } else {
@@ -133,7 +108,7 @@ Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data,
   loader_data->add_class(oak);
 
   ModuleEntry* module = oak->module();
-  assert(module != NULL, "No module entry for array");
+  assert(module != NULL, "No module entry for array");
 
   // Call complete_create_array_klass after all instance variables has been initialized.
   ArrayKlass::complete_create_array_klass(oak, super_klass, module, CHECK_0);
@@ -155,17 +130,17 @@ ObjArrayKlass::ObjArrayKlass(int n, Klass* element_klass, Symbol* name) : ArrayK
   } else {
     bk = element_klass;
   }
-  assert(bk != NULL && (bk->is_instance_klass() || bk->is_typeArray_klass()), "invalid bottom klass");
+  assert(bk != NULL && (bk->is_instance_klass() || bk->is_typeArray_klass()), "invalid bottom klass");
   this->set_bottom_klass(bk);
   this->set_class_loader_data(bk->class_loader_data());
 
   this->set_layout_helper(array_layout_helper(T_OBJECT));
-  assert(this->is_array_klass(), "sanity");
-  assert(this->is_objArray_klass(), "sanity");
+  assert(this->is_array_klass(), "sanity");
+  assert(this->is_objArray_klass(), "sanity");
 }
 
 int ObjArrayKlass::oop_size(oop obj) const {
-  assert(obj->is_objArray(), "must be object array");
+  assert(obj->is_objArray(), "must be object array");
   return objArrayOop(obj)->object_size();
 }
 
@@ -177,7 +152,6 @@ objArrayOop ObjArrayKlass::allocate(int length, TRAPS) {
                                                            /* do_zero */ true, THREAD);
     } else {
       report_java_out_of_memory("Requested array size exceeds VM limit");
-      JvmtiExport::post_array_size_exhausted();
       THROW_OOP_0(Universe::out_of_memory_error_array_size());
     }
   } else {
@@ -222,7 +196,7 @@ void ObjArrayKlass::do_copy(arrayOop s, size_t src_offset,
                             arrayOop d, size_t dst_offset, int length, TRAPS) {
   if (oopDesc::equals(s, d)) {
     // since source and destination are equal we do not need conversion checks.
-    assert(length > 0, "sanity check");
+    assert(length > 0, "sanity check");
     ArrayAccess<>::oop_arraycopy(s, src_offset, d, dst_offset, length);
   } else {
     // We have to make sure all elements conform to the destination array
@@ -255,7 +229,7 @@ void ObjArrayKlass::do_copy(arrayOop s, size_t src_offset,
 
 void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d,
                                int dst_pos, int length, TRAPS) {
-  assert(s->is_objArray(), "must be obj array");
+  assert(s->is_objArray(), "must be obj array");
 
   if (!d->is_objArray()) {
     ResourceMark rm(THREAD);
@@ -311,26 +285,21 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d,
   if (UseCompressedOops) {
     size_t src_offset = (size_t) objArrayOopDesc::obj_at_offset<narrowOop>(src_pos);
     size_t dst_offset = (size_t) objArrayOopDesc::obj_at_offset<narrowOop>(dst_pos);
-    assert(arrayOopDesc::obj_offset_to_raw<narrowOop>(s, src_offset, NULL) ==
-           objArrayOop(s)->obj_at_addr<narrowOop>(src_pos), "sanity");
-    assert(arrayOopDesc::obj_offset_to_raw<narrowOop>(d, dst_offset, NULL) ==
-           objArrayOop(d)->obj_at_addr<narrowOop>(dst_pos), "sanity");
+    assert(arrayOopDesc::obj_offset_to_raw<narrowOop>(s, src_offset, NULL) == objArrayOop(s)->obj_at_addr<narrowOop>(src_pos), "sanity");
+    assert(arrayOopDesc::obj_offset_to_raw<narrowOop>(d, dst_offset, NULL) == objArrayOop(d)->obj_at_addr<narrowOop>(dst_pos), "sanity");
     do_copy(s, src_offset, d, dst_offset, length, CHECK);
   } else {
     size_t src_offset = (size_t) objArrayOopDesc::obj_at_offset<oop>(src_pos);
     size_t dst_offset = (size_t) objArrayOopDesc::obj_at_offset<oop>(dst_pos);
-    assert(arrayOopDesc::obj_offset_to_raw<oop>(s, src_offset, NULL) ==
-           objArrayOop(s)->obj_at_addr<oop>(src_pos), "sanity");
-    assert(arrayOopDesc::obj_offset_to_raw<oop>(d, dst_offset, NULL) ==
-           objArrayOop(d)->obj_at_addr<oop>(dst_pos), "sanity");
+    assert(arrayOopDesc::obj_offset_to_raw<oop>(s, src_offset, NULL) == objArrayOop(s)->obj_at_addr<oop>(src_pos), "sanity");
+    assert(arrayOopDesc::obj_offset_to_raw<oop>(d, dst_offset, NULL) == objArrayOop(d)->obj_at_addr<oop>(dst_pos), "sanity");
     do_copy(s, src_offset, d, dst_offset, length, CHECK);
   }
 }
 
-
 Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
 
-  assert(dimension() <= n, "check order of chain");
+  assert(dimension() <= n, "check order of chain");
   int dim = dimension();
   if (dim == n) return this;
 
@@ -355,7 +324,7 @@ Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
         ak->set_lower_dimension(this);
         // use 'release' to pair with lock-free load
         release_set_higher_dimension(ak);
-        assert(ak->is_objArray_klass(), "incorrect initialization of ObjArrayKlass");
+        assert(ak->is_objArray_klass(), "incorrect initialization of ObjArrayKlass");
       }
     }
   } else {
@@ -383,7 +352,7 @@ bool ObjArrayKlass::can_be_primary_super_slow() const {
 
 GrowableArray<Klass*>* ObjArrayKlass::compute_secondary_supers(int num_extra_slots,
                                                                Array<Klass*>* transitive_interfaces) {
-  assert(transitive_interfaces == NULL, "sanity");
+  assert(transitive_interfaces == NULL, "sanity");
   // interfaces = { cloneable_klass, serializable_klass, elemSuper[], ... };
   Array<Klass*>* elem_supers = element_klass()->secondary_supers();
   int num_elem_supers = elem_supers == NULL ? 0 : elem_supers->length();
@@ -399,7 +368,7 @@ GrowableArray<Klass*>* ObjArrayKlass::compute_secondary_supers(int num_extra_slo
     for (int i = 0; i < num_elem_supers; i++) {
       Klass* elem_super = (Klass*) elem_supers->at(i);
       Klass* array_super = elem_super->array_klass_or_null();
-      assert(array_super != NULL, "must already have been created");
+      assert(array_super != NULL, "must already have been created");
       secondaries->push(array_super);
     }
     return secondaries;
@@ -429,7 +398,7 @@ void ObjArrayKlass::metaspace_pointers_do(MetaspaceClosure* it) {
 jint ObjArrayKlass::compute_modifier_flags(TRAPS) const {
   // The modifier for an objectArray is the same as its element
   if (element_klass() == NULL) {
-    assert(Universe::is_bootstrapping(), "partial objArray only at startup");
+    assert(Universe::is_bootstrapping(), "partial objArray only at startup");
     return JVM_ACC_ABSTRACT | JVM_ACC_FINAL | JVM_ACC_PUBLIC;
   }
   // Return the flags of the bottom element type.
@@ -440,56 +409,30 @@ jint ObjArrayKlass::compute_modifier_flags(TRAPS) const {
 }
 
 ModuleEntry* ObjArrayKlass::module() const {
-  assert(bottom_klass() != NULL, "ObjArrayKlass returned unexpected NULL bottom_klass");
+  assert(bottom_klass() != NULL, "ObjArrayKlass returned unexpected NULL bottom_klass");
   // The array is defined in the module of its bottom class
   return bottom_klass()->module();
 }
 
 PackageEntry* ObjArrayKlass::package() const {
-  assert(bottom_klass() != NULL, "ObjArrayKlass returned unexpected NULL bottom_klass");
+  assert(bottom_klass() != NULL, "ObjArrayKlass returned unexpected NULL bottom_klass");
   return bottom_klass()->package();
 }
 
 // Printing
 
 void ObjArrayKlass::print_on(outputStream* st) const {
-#ifndef PRODUCT
-  Klass::print_on(st);
-  st->print(" - instance klass: ");
-  element_klass()->print_value_on(st);
-  st->cr();
-#endif //PRODUCT
 }
 
 void ObjArrayKlass::print_value_on(outputStream* st) const {
-  assert(is_klass(), "must be klass");
+  assert(is_klass(), "must be klass");
 
   element_klass()->print_value_on(st);
   st->print("[]");
 }
 
-#ifndef PRODUCT
-
-void ObjArrayKlass::oop_print_on(oop obj, outputStream* st) {
-  ArrayKlass::oop_print_on(obj, st);
-  assert(obj->is_objArray(), "must be objArray");
-  objArrayOop oa = objArrayOop(obj);
-  int print_len = MIN2((intx) oa->length(), MaxElementPrintSize);
-  for(int index = 0; index < print_len; index++) {
-    st->print(" - %3d : ", index);
-    oa->obj_at(index)->print_value_on(st);
-    st->cr();
-  }
-  int remaining = oa->length() - print_len;
-  if (remaining > 0) {
-    st->print_cr(" - <%d more elements, increase MaxElementPrintSize to print>", remaining);
-  }
-}
-
-#endif //PRODUCT
-
 void ObjArrayKlass::oop_print_value_on(oop obj, outputStream* st) {
-  assert(obj->is_objArray(), "must be objArray");
+  assert(obj->is_objArray(), "must be objArray");
   st->print("a ");
   element_klass()->print_value_on(st);
   int len = objArrayOop(obj)->length();
@@ -500,7 +443,6 @@ void ObjArrayKlass::oop_print_value_on(oop obj, outputStream* st) {
 const char* ObjArrayKlass::internal_name() const {
   return external_name();
 }
-
 
 // Verification
 

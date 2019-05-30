@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_OBJARRAYKLASS_HPP
 #define SHARE_VM_OOPS_OBJARRAYKLASS_HPP
 
@@ -71,7 +47,6 @@ class ObjArrayKlass : public ArrayKlass {
   GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots,
                                                   Array<Klass*>* transitive_interfaces);
   bool compute_is_subtype_of(Klass* k);
-  DEBUG_ONLY(bool is_objArray_klass_slow()  const  { return true; })
   int oop_size(oop obj) const;
 
   // Allocation
@@ -109,7 +84,7 @@ class ObjArrayKlass : public ArrayKlass {
   }
 
   static const ObjArrayKlass* cast(const Klass* k) {
-    assert(k->is_objArray_klass(), "cast to ObjArrayKlass");
+    assert(k->is_objArray_klass(), "cast to ObjArrayKlass");
     return static_cast<const ObjArrayKlass*>(k);
   }
 
@@ -122,13 +97,6 @@ class ObjArrayKlass : public ArrayKlass {
 
   // GC specific object visitors
   //
-#if INCLUDE_PARALLELGC
-  // Parallel Scavenge
-  void oop_ps_push_contents(  oop obj, PSPromotionManager* pm);
-  // Parallel Compact
-  void oop_pc_follow_contents(oop obj, ParCompactionManager* cm);
-  void oop_pc_update_pointers(oop obj, ParCompactionManager* cm);
-#endif
 
   // Oop fields (and metadata) iterators
   //
@@ -173,9 +141,6 @@ class ObjArrayKlass : public ArrayKlass {
   void print_value_on(outputStream* st) const;
 
   void oop_print_value_on(oop obj, outputStream* st);
-#ifndef PRODUCT
-  void oop_print_on      (oop obj, outputStream* st);
-#endif //PRODUCT
 
   const char* internal_name() const;
 
@@ -185,4 +150,4 @@ class ObjArrayKlass : public ArrayKlass {
   void oop_verify_on(oop obj, outputStream* st);
 };
 
-#endif // SHARE_VM_OOPS_OBJARRAYKLASS_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_SERVICES_MANAGEMENT_HPP
 #define SHARE_VM_SERVICES_MANAGEMENT_HPP
 
@@ -60,17 +36,17 @@ public:
   static void init();
   static void initialize(TRAPS);
 
-  static jlong ticks_to_ms(jlong ticks) NOT_MANAGEMENT_RETURN_(0L);
-  static jlong timestamp() NOT_MANAGEMENT_RETURN_(0L);
+  static jlong ticks_to_ms(jlong ticks) { return 0L; };
+  static jlong timestamp() { return 0L; };
 
-  static void  oops_do(OopClosure* f) NOT_MANAGEMENT_RETURN;
+  static void  oops_do(OopClosure* f) {};
   static void* get_jmm_interface(int version);
   static void  get_optional_support(jmmOptionalSupport* support);
 
   static void get_loaded_classes(JavaThread* cur_thread, GrowableArray<Klass*>* klass_array);
 
   static void  record_vm_startup_time(jlong begin, jlong duration)
-      NOT_MANAGEMENT_RETURN;
+      {};
   static void  record_vm_init_completed() {
     // Initialize the timestamp to get the current time
     _vm_init_done_time->set_value(os::javaTimeMillis());
@@ -89,23 +65,20 @@ public:
   // methods to return a Klass*.
   static InstanceKlass* java_lang_management_ThreadInfo_klass(TRAPS);
   static InstanceKlass* java_lang_management_MemoryUsage_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
+      { return NULL; };
   static InstanceKlass* java_lang_management_MemoryPoolMXBean_klass(TRAPS);
   static InstanceKlass* java_lang_management_MemoryManagerMXBean_klass(TRAPS);
   static InstanceKlass* java_lang_management_GarbageCollectorMXBean_klass(TRAPS);
   static InstanceKlass* sun_management_ManagementFactoryHelper_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
+      { return NULL; };
   static InstanceKlass* sun_management_Sensor_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
+      { return NULL; };
   static InstanceKlass* com_sun_management_internal_GarbageCollectorExtImpl_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
+      { return NULL; };
   static InstanceKlass* com_sun_management_GcInfo_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
+      { return NULL; };
   static InstanceKlass* com_sun_management_internal_DiagnosticCommandImpl_klass(TRAPS)
-      NOT_MANAGEMENT_RETURN_(NULL);
-
-  static instanceOop create_thread_info_instance(ThreadSnapshot* snapshot, TRAPS);
-  static instanceOop create_thread_info_instance(ThreadSnapshot* snapshot, objArrayHandle monitors_array, typeArrayHandle depths_array, objArrayHandle synchronizers_array, TRAPS);
+      { return NULL; };
 };
 
 class TraceVmCreationTime : public StackObj {
@@ -131,7 +104,6 @@ public:
    */
   void end()
   { Management::record_vm_startup_time(_begin_time, _timer.milliseconds()); }
-
 };
 
-#endif // SHARE_VM_SERVICES_MANAGEMENT_HPP
+#endif

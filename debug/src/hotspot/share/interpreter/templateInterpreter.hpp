@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_TEMPLATEINTERPRETER_HPP
 #define SHARE_VM_INTERPRETER_TEMPLATEINTERPRETER_HPP
 
@@ -57,7 +33,6 @@ class EntryPoint {
   // Comparison
   bool operator == (const EntryPoint& y);             // for debugging only
 };
-
 
 //------------------------------------------------------------------------------------------------------------------------
 // A little wrapper class to group tosca-specific dispatch tables into a unit.
@@ -111,15 +86,8 @@ class TemplateInterpreter: public AbstractInterpreter {
   static address    _throw_StackOverflowError_entry;
 
   static address    _remove_activation_entry;                   // continuation address if an exception is not handled by current frame
-#ifdef HOTSWAP
-  static address    _remove_activation_preserving_args_entry;   // continuation address when current frame is being popped
-#endif // HOTSWAP
 
-#ifndef PRODUCT
-  static EntryPoint _trace_code;
-#endif // !PRODUCT
   static EntryPoint _return_entry[number_of_return_entries];    // entry points to return to from a call
-  static EntryPoint _earlyret_entry;                            // entry point to return early from a call
   static EntryPoint _deopt_entry[number_of_deopt_entries];      // entry points to return to from a deoptimization
   static address    _deopt_reexecute_return_entry;
   static EntryPoint _safept_entry;
@@ -133,7 +101,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   static DispatchTable _safept_table;                           // the safepoint dispatch table (used to set the active table for safepoints)
   static address       _wentry_point[DispatchTable::length];    // wide instructions only (vtos tosca always)
 
-
  public:
   // Initialization/debugging
   static void       initialize();
@@ -142,13 +109,7 @@ class TemplateInterpreter: public AbstractInterpreter {
   // Debugging/printing
   static InterpreterCodelet* codelet_containing(address pc);
 
-
  public:
-
-  static address    remove_activation_early_entry(TosState state) { return _earlyret_entry.entry(state); }
-#ifdef HOTSWAP
-  static address    remove_activation_preserving_args_entry()   { return _remove_activation_preserving_args_entry; }
-#endif // HOTSWAP
 
   static address    remove_activation_entry()                   { return _remove_activation_entry; }
   static address    throw_exception_entry()                     { return _throw_exception_entry; }
@@ -157,9 +118,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   static address    throw_StackOverflowError_entry()            { return _throw_StackOverflowError_entry; }
 
   // Code generation
-#ifndef PRODUCT
-  static address    trace_code    (TosState state)              { return _trace_code.entry(state); }
-#endif // !PRODUCT
   static address*   dispatch_table(TosState state)              { return _active_table.table_for(state); }
   static address*   dispatch_table()                            { return _active_table.table_for(); }
   static int        distance_from_dispatch_table(TosState state){ return _active_table.distance_from(state); }
@@ -198,6 +156,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   static int InterpreterCodeSize;
 };
 
-#endif // !CC_INTERP
+#endif
 
-#endif // SHARE_VM_INTERPRETER_TEMPLATEINTERPRETER_HPP
+#endif

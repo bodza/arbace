@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef OS_BSD_VM_OS_BSD_INLINE_HPP
 #define OS_BSD_VM_OS_BSD_INLINE_HPP
 
@@ -48,7 +24,7 @@ inline bool os::uses_stack_guard_pages() {
 }
 
 inline bool os::must_commit_stack_guard_pages() {
-  assert(uses_stack_guard_pages(), "sanity check");
+  assert(uses_stack_guard_pages(), "sanity check");
 #if !defined(__FreeBSD__) || __FreeBSD__ < 5
   // Since FreeBSD 4 uses malloc() for allocating the thread stack
   // there is no need to do anything extra to allocate the guard pages
@@ -60,12 +36,10 @@ inline bool os::must_commit_stack_guard_pages() {
 #endif
 }
 
-
 // On Bsd, reservations are made on a page by page basis, nothing to do.
 inline void os::pd_split_reserved_memory(char *base, size_t size,
                                       size_t split, bool realloc) {
 }
-
 
 // Bang the shadow pages if they need to be touched to be mapped.
 inline void os::map_stack_shadow_pages(address sp) {
@@ -79,7 +53,7 @@ inline const int os::default_file_open_flags() { return 0;}
 
 inline DIR* os::opendir(const char* dirname)
 {
-  assert(dirname != NULL, "just checking");
+  assert(dirname != NULL, "just checking");
   return ::opendir(dirname);
 }
 
@@ -104,7 +78,7 @@ inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
 {
   dirent* p;
   int status;
-  assert(dirp != NULL, "just checking");
+  assert(dirp != NULL, "just checking");
 
   // NOTE: Bsd readdir_r (on RH 6.2 and 7.2 at least) is NOT like the POSIX
   // version. Here is the doc for this function:
@@ -118,7 +92,7 @@ inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
 }
 
 inline int os::closedir(DIR *dirp) {
-  assert(dirp != NULL, "argument is NULL");
+  assert(dirp != NULL, "argument is NULL");
   return ::closedir(dirp);
 }
 
@@ -193,4 +167,4 @@ inline void os::exit(int num) {
   ::exit(num);
 }
 
-#endif // OS_BSD_VM_OS_BSD_INLINE_HPP
+#endif

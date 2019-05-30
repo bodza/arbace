@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_RESOLUTIONERRORS_HPP
 #define SHARE_VM_CLASSFILE_RESOLUTIONERRORS_HPP
 
@@ -64,11 +40,9 @@ public:
   void add_entry(int index, unsigned int hash,
                  const constantPoolHandle& pool, int which, Symbol* error, Symbol* message);
 
-
   // find error given the constant pool and constant pool index
   ResolutionErrorEntry* find_entry(int index, unsigned int hash,
                                    const constantPoolHandle& pool, int cp_index);
-
 
   unsigned int compute_hash(const constantPoolHandle& pool, int cp_index) {
     return (unsigned int) pool->identity_hash() + cp_index;
@@ -84,11 +58,10 @@ public:
   // constant pool index.  It assumes it is being called with a cpCache index
   // (that is less than 0).
   static int encode_cpcache_index(int index) {
-    assert(index < 0, "Unexpected non-negative cpCache index");
+    assert(index < 0, "Unexpected non-negative cpCache index");
     return index + CPCACHE_INDEX_MANGLE_VALUE;
   }
 };
-
 
 class ResolutionErrorEntry : public HashtableEntry<ConstantPool*, mtClass> {
  private:
@@ -117,4 +90,4 @@ class ResolutionErrorEntry : public HashtableEntry<ConstantPool*, mtClass> {
   }
 };
 
-#endif // SHARE_VM_CLASSFILE_RESOLUTIONERRORS_HPP
+#endif

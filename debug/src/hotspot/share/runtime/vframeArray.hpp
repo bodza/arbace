@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_VFRAMEARRAY_HPP
 #define SHARE_VM_RUNTIME_VFRAMEARRAY_HPP
 
@@ -36,7 +12,6 @@
 // during deoptimization. Essentially it is an array of vframes where each vframe
 // data is stored off stack. This structure will never exist across a safepoint so
 // there is no need to gc any oops that are stored in the structure.
-
 
 class LocalsClosure;
 class ExpressionStackClosure;
@@ -59,9 +34,6 @@ class vframeArrayElement {
     MonitorChunk* _monitors;                                     // active monitors for this vframe
     StackValueCollection* _locals;
     StackValueCollection* _expressions;
-#ifdef ASSERT
-    bool _removed_monitors;
-#endif
 
   public:
 
@@ -86,7 +58,6 @@ class vframeArrayElement {
 
   // Formerly part of deoptimizedVFrame
 
-
   // Returns the on stack word size for this frame
   // callee_parameters is the number of callee locals residing inside this frame
   int on_stack_size(int callee_parameters,
@@ -102,16 +73,6 @@ class vframeArrayElement {
                        bool is_top_frame,
                        bool is_bottom_frame,
                        int exec_mode);
-
-#ifdef ASSERT
-  void set_removed_monitors() {
-    _removed_monitors = true;
-  }
-#endif
-
-#ifndef PRODUCT
-  void print(outputStream* st);
-#endif /* PRODUCT */
 };
 
 // this can be a ResourceObj if we don't save the last one...
@@ -122,7 +83,6 @@ class vframeArray: public CHeapObj<mtCompiler> {
   friend class VMStructs;
 
  private:
-
 
   // Here is what a vframeArray looks like in memory
 
@@ -162,7 +122,6 @@ class vframeArray: public CHeapObj<mtCompiler> {
 
  public:
 
-
   // Tells whether index is within bounds.
   bool is_within_bounds(int index) const        { return 0 <= index && index < frames(); }
 
@@ -173,8 +132,9 @@ class vframeArray: public CHeapObj<mtCompiler> {
                                RegisterMap* reg_map, frame sender, frame caller, frame self,
                                bool realloc_failures);
 
-
-  vframeArrayElement* element(int index)        { assert(is_within_bounds(index), "Bad index"); return &_elements[index]; }
+  vframeArrayElement* element(int index)        {
+    assert(is_within_bounds(index), "Bad index");
+    return &_elements[index]; }
 
   // Allocates a new vframe in the array and fills the array with vframe information in chunk
   void fill_in(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, const RegisterMap *reg_map, bool realloc_failures);
@@ -213,19 +173,11 @@ class vframeArray: public CHeapObj<mtCompiler> {
   // This should be called when the array is not used anymore.
   void deallocate_monitor_chunks();
 
-
-
   // Accessor for register map
   address register_location(int i) const;
 
-  void print_on_2(outputStream* st) PRODUCT_RETURN;
-  void print_value_on(outputStream* st) const PRODUCT_RETURN;
-
-#ifndef PRODUCT
-  // Comparing
-  bool structural_compare(JavaThread* thread, GrowableArray<compiledVFrame*>* chunk);
-#endif
-
+  void print_on_2(outputStream* st) {};
+  void print_value_on(outputStream* st) const {};
 };
 
-#endif // SHARE_VM_RUNTIME_VFRAMEARRAY_HPP
+#endif

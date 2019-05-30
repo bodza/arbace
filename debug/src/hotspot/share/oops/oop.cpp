@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -45,7 +21,6 @@ void oopDesc::print_on(outputStream* st) const {
 
 void oopDesc::print_address_on(outputStream* st) const {
   st->print("{" INTPTR_FORMAT "}", p2i(this));
-
 }
 
 void oopDesc::print()         { print_on(tty);         }
@@ -81,13 +56,11 @@ void oopDesc::print_value_on(outputStream* st) const {
   }
 }
 
-
 void oopDesc::verify_on(outputStream* st) {
   if (this != NULL) {
     klass()->oop_verify_on(this, st);
   }
 }
-
 
 void oopDesc::verify() {
   verify_on(tty);
@@ -140,14 +113,6 @@ bool oopDesc::is_oop(oop obj, bool ignore_mark_word) {
 bool oopDesc::is_oop_or_null(oop obj, bool ignore_mark_word) {
   return obj == NULL ? true : is_oop(obj, ignore_mark_word);
 }
-
-#ifndef PRODUCT
-// used only for asserts
-bool oopDesc::is_unlocked_oop() const {
-  if (!Universe::heap()->is_in_reserved(this)) return false;
-  return mark()->is_unlocked();
-}
-#endif // PRODUCT
 
 VerifyOopClosure VerifyOopClosure::verify_oop;
 

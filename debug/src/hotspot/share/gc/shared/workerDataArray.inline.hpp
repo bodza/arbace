@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_WORKERDATAARRAY_INLINE_HPP
 #define SHARE_VM_GC_SHARED_WORKERDATAARRAY_INLINE_HPP
 
@@ -33,7 +9,7 @@ template <typename T>
 WorkerDataArray<T>::WorkerDataArray(uint length, const char* title) :
  _title(title),
  _length(0) {
-  assert(length > 0, "Must have some workers to store data for");
+  assert(length > 0, "Must have some workers to store data for");
   _length = length;
   _data = NEW_C_HEAP_ARRAY(T, _length, mtGC);
   for (uint i = 0; i < MaxThreadWorkItems; i++) {
@@ -44,14 +20,14 @@ WorkerDataArray<T>::WorkerDataArray(uint length, const char* title) :
 
 template <typename T>
 void WorkerDataArray<T>::set(uint worker_i, T value) {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
-  assert(_data[worker_i] == uninitialized(), "Overwriting data for worker %d in %s", worker_i, _title);
+  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
+  assert(_data[worker_i] == uninitialized(), "Overwriting data for worker %d in %s", worker_i, _title);
   _data[worker_i] = value;
 }
 
 template <typename T>
 T WorkerDataArray<T>::get(uint worker_i) const {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
+  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
   return _data[worker_i];
 }
 
@@ -62,28 +38,28 @@ WorkerDataArray<T>::~WorkerDataArray() {
 
 template <typename T>
 void WorkerDataArray<T>::link_thread_work_items(WorkerDataArray<size_t>* thread_work_items, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
+  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
   _thread_work_items[index] = thread_work_items;
 }
 
 template <typename T>
 void WorkerDataArray<T>::set_thread_work_item(uint worker_i, size_t value, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
-  assert(_thread_work_items[index] != NULL, "No sub count");
+  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
+  assert(_thread_work_items[index] != NULL, "No sub count");
   _thread_work_items[index]->set(worker_i, value);
 }
 
 template <typename T>
 void WorkerDataArray<T>::add_thread_work_item(uint worker_i, size_t value, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
-  assert(_thread_work_items[index] != NULL, "No sub count");
+  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
+  assert(_thread_work_items[index] != NULL, "No sub count");
   _thread_work_items[index]->add(worker_i, value);
 }
 
 template <typename T>
 void WorkerDataArray<T>::add(uint worker_i, T value) {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
-  assert(_data[worker_i] != uninitialized(), "No data to add to for worker %d", worker_i);
+  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
+  assert(_data[worker_i] != uninitialized(), "No data to add to for worker %d", worker_i);
   _data[worker_i] += value;
 }
 
@@ -141,7 +117,7 @@ void WorkerDataArray<T>::print_summary_on(outputStream* out, bool print_sum) con
       }
     }
     T diff = max - min;
-    assert(contributing_threads != 0, "Must be since we found a used value for the start index");
+    assert(contributing_threads != 0, "Must be since we found a used value for the start index");
     double avg = sum / (double) contributing_threads;
     WDAPrinter::summary(out, min, avg, max, diff, sum, print_sum);
     out->print_cr(", Workers: %d", contributing_threads);
@@ -166,4 +142,4 @@ void WorkerDataArray<T>::reset() {
   }
 }
 
-#endif // SHARE_VM_GC_SHARED_WORKERDATAARRAY_INLINE_HPP
+#endif

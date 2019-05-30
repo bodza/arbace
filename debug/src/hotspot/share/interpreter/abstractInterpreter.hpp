@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_ABSTRACTINTERPRETER_HPP
 #define SHARE_VM_INTERPRETER_ABSTRACTINTERPRETER_HPP
 
@@ -129,27 +105,28 @@ class AbstractInterpreter: AllStatic {
   static void       initialize();
   static StubQueue* code()                                      { return _code; }
 
-
   // Method activation
   static MethodKind method_kind(const methodHandle& m);
-  static address    entry_for_kind(MethodKind k)                { assert(0 <= k && k < number_of_method_entries, "illegal kind"); return _entry_table[k]; }
+  static address    entry_for_kind(MethodKind k)                {
+    assert(0 <= k && k < number_of_method_entries, "illegal kind");
+    return _entry_table[k]; }
   static address    entry_for_method(const methodHandle& m)     { return entry_for_kind(method_kind(m)); }
 
   static address entry_for_cds_method(const methodHandle& m) {
     MethodKind k = method_kind(m);
-    assert(0 <= k && k < number_of_method_entries, "illegal kind");
+    assert(0 <= k && k < number_of_method_entries, "illegal kind");
     return _cds_entry_table[k];
   }
 
   // used by class data sharing
-  static void       update_cds_entry_table(MethodKind kind) NOT_CDS_RETURN;
+  static void       update_cds_entry_table(MethodKind kind) {};
 
-  static address    get_trampoline_code_buffer(AbstractInterpreter::MethodKind kind) NOT_CDS_RETURN_(0);
+  static address    get_trampoline_code_buffer(AbstractInterpreter::MethodKind kind) { return 0; };
 
   // used for bootstrapping method handles:
   static void       set_entry_for_kind(MethodKind k, address e);
 
-  static void       print_method_kind(MethodKind kind)          PRODUCT_RETURN;
+  static void       print_method_kind(MethodKind kind)          {};
 
   // These should never be compiled since the interpreter will prefer
   // the compiled version to the intrinsic version.
@@ -249,13 +226,13 @@ class AbstractInterpreter: AllStatic {
   }
 
   static int local_index_at(int i) {
-    assert(i <= 0, "local direction already negated");
+    assert(i <= 0, "local direction already negated");
     return stackElementWords * i;
   }
 
 #if !defined(ZERO) && (defined(IA32) || defined(AMD64))
   static Address::ScaleFactor stackElementScale() {
-    return NOT_LP64(Address::times_4) LP64_ONLY(Address::times_8);
+    return Address::times_8;
   }
 #endif
 
@@ -333,4 +310,4 @@ class AbstractInterpreterGenerator: public StackObj {
   AbstractInterpreterGenerator(StubQueue* _code);
 };
 
-#endif // SHARE_VM_INTERPRETER_ABSTRACTINTERPRETER_HPP
+#endif

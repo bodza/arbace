@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1AllocRegion.inline.hpp"
 #include "gc/g1/g1EvacStats.inline.hpp"
@@ -36,25 +12,23 @@ G1CollectedHeap* G1AllocRegion::_g1h = NULL;
 HeapRegion* G1AllocRegion::_dummy_region = NULL;
 
 void G1AllocRegion::setup(G1CollectedHeap* g1h, HeapRegion* dummy_region) {
-  assert(_dummy_region == NULL, "should be set once");
-  assert(dummy_region != NULL, "pre-condition");
-  assert(dummy_region->free() == 0, "pre-condition");
+  assert(_dummy_region == NULL, "should be set once");
+  assert(dummy_region != NULL, "pre-condition");
+  assert(dummy_region->free() == 0, "pre-condition");
 
   // Make sure that any allocation attempt on this region will fail
   // and will not trigger any asserts.
-  assert(dummy_region->allocate_no_bot_updates(1) == NULL, "should fail");
-  assert(dummy_region->allocate(1) == NULL, "should fail");
-  DEBUG_ONLY(size_t assert_tmp);
-  assert(dummy_region->par_allocate_no_bot_updates(1, 1, &assert_tmp) == NULL, "should fail");
-  assert(dummy_region->par_allocate(1, 1, &assert_tmp) == NULL, "should fail");
+  assert(dummy_region->allocate_no_bot_updates(1) == NULL, "should fail");
+  assert(dummy_region->allocate(1) == NULL, "should fail");
+  assert(dummy_region->par_allocate_no_bot_updates(1, 1, &assert_tmp) == NULL, "should fail");
+  assert(dummy_region->par_allocate(1, 1, &assert_tmp) == NULL, "should fail");
 
   _g1h = g1h;
   _dummy_region = dummy_region;
 }
 
 size_t G1AllocRegion::fill_up_remaining_space(HeapRegion* alloc_region) {
-  assert(alloc_region != NULL && alloc_region != _dummy_region,
-         "pre-condition");
+  assert(alloc_region != NULL && alloc_region != _dummy_region, "pre-condition");
   size_t result = 0;
 
   // Other threads might still be trying to allocate using a CAS out
@@ -90,8 +64,7 @@ size_t G1AllocRegion::fill_up_remaining_space(HeapRegion* alloc_region) {
   }
   result += alloc_region->free();
 
-  assert(alloc_region->free() / HeapWordSize < min_word_size_to_fill,
-         "post-condition");
+  assert(alloc_region->free() / HeapWordSize < min_word_size_to_fill, "post-condition");
   return result;
 }
 
@@ -100,8 +73,7 @@ size_t G1AllocRegion::retire_internal(HeapRegion* alloc_region, bool fill_up) {
   // and potentially free it if it is, given that it's guaranteed that
   // it will never be empty.
   size_t waste = 0;
-  assert_alloc_region(!alloc_region->is_empty(),
-      "the alloc region should never be empty");
+  assert_alloc_region(!alloc_region->is_empty(), "the alloc region should never be empty");
 
   if (fill_up) {
     waste = fill_up_remaining_space(alloc_region);
@@ -204,57 +176,11 @@ HeapRegion* G1AllocRegion::release() {
   return (alloc_region == _dummy_region) ? NULL : alloc_region;
 }
 
-#ifndef PRODUCT
-void G1AllocRegion::trace(const char* str, size_t min_word_size, size_t desired_word_size, size_t actual_word_size, HeapWord* result) {
-  // All the calls to trace that set either just the size or the size
-  // and the result are considered part of detailed tracing and are
-  // skipped during other tracing.
-
-  Log(gc, alloc, region) log;
-
-  if (!log.is_debug()) {
-    return;
-  }
-
-  bool detailed_info = log.is_trace();
-
-  if ((actual_word_size == 0 && result == NULL) || detailed_info) {
-    ResourceMark rm;
-    LogStream ls_trace(log.trace());
-    LogStream ls_debug(log.debug());
-    outputStream* out = detailed_info ? &ls_trace : &ls_debug;
-
-    out->print("%s: %u ", _name, _count);
-
-    if (_alloc_region == NULL) {
-      out->print("NULL");
-    } else if (_alloc_region == _dummy_region) {
-      out->print("DUMMY");
-    } else {
-      out->print(HR_FORMAT, HR_FORMAT_PARAMS(_alloc_region));
-    }
-
-    out->print(" : %s", str);
-
-    if (detailed_info) {
-      if (result != NULL) {
-        out->print(" min " SIZE_FORMAT " desired " SIZE_FORMAT " actual " SIZE_FORMAT " " PTR_FORMAT,
-                     min_word_size, desired_word_size, actual_word_size, p2i(result));
-      } else if (min_word_size != 0) {
-        out->print(" min " SIZE_FORMAT " desired " SIZE_FORMAT, min_word_size, desired_word_size);
-      }
-    }
-    out->cr();
-  }
-}
-#endif // PRODUCT
-
 G1AllocRegion::G1AllocRegion(const char* name,
                              bool bot_updates)
   : _name(name), _bot_updates(bot_updates),
     _alloc_region(NULL), _count(0),
     _used_bytes_before(0) { }
-
 
 HeapRegion* MutatorAllocRegion::allocate_new_region(size_t word_size,
                                                     bool force) {
@@ -267,7 +193,7 @@ void MutatorAllocRegion::retire_region(HeapRegion* alloc_region,
 }
 
 void MutatorAllocRegion::init() {
-  assert(_retained_alloc_region == NULL, "Pre-condition");
+  assert(_retained_alloc_region == NULL, "Pre-condition");
   G1AllocRegion::init();
   _wasted_bytes = 0;
 }
@@ -344,7 +270,7 @@ HeapRegion* MutatorAllocRegion::release() {
 
 HeapRegion* G1GCAllocRegion::allocate_new_region(size_t word_size,
                                                  bool force) {
-  assert(!force, "not supported for GC alloc regions");
+  assert(!force, "not supported for GC alloc regions");
   return _g1h->new_gc_alloc_region(word_size, _purpose);
 }
 

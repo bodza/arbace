@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1BIASEDARRAY_HPP
 #define SHARE_VM_GC_G1_G1BIASEDARRAY_HPP
 
@@ -53,9 +29,9 @@ protected:
   // Initialize the members of this class. The biased start address of this array
   // is the bias (in elements) multiplied by the element size.
   void initialize_base(address base, size_t length, size_t bias, size_t elem_size, uint shift_by) {
-    assert(base != NULL, "just checking");
-    assert(length > 0, "just checking");
-    assert(shift_by < sizeof(uintptr_t) * 8, "Shifting by %u, larger than word size?", shift_by);
+    assert(base != NULL, "just checking");
+    assert(length > 0, "just checking");
+    assert(shift_by < sizeof(uintptr_t) * 8, "Shifting by %u, larger than word size?", shift_by);
     _base = base;
     _length = length;
     _biased_base = base - (bias * elem_size);
@@ -66,15 +42,10 @@ protected:
   // Allocate and initialize this array to cover the heap addresses in the range
   // of [bottom, end).
   void initialize(HeapWord* bottom, HeapWord* end, size_t target_elem_size_in_bytes, size_t mapping_granularity_in_bytes) {
-    assert(mapping_granularity_in_bytes > 0, "just checking");
-    assert(is_power_of_2(mapping_granularity_in_bytes),
-           "mapping granularity must be power of 2, is " SIZE_FORMAT, mapping_granularity_in_bytes);
-    assert((uintptr_t)bottom % mapping_granularity_in_bytes == 0,
-           "bottom mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is  " PTR_FORMAT,
-           mapping_granularity_in_bytes, p2i(bottom));
-    assert((uintptr_t)end % mapping_granularity_in_bytes == 0,
-           "end mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is " PTR_FORMAT,
-           mapping_granularity_in_bytes, p2i(end));
+    assert(mapping_granularity_in_bytes > 0, "just checking");
+    assert(is_power_of_2(mapping_granularity_in_bytes), "mapping granularity must be power of 2, is " SIZE_FORMAT, mapping_granularity_in_bytes);
+    assert((uintptr_t)bottom % mapping_granularity_in_bytes == 0, "bottom mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is  " PTR_FORMAT, mapping_granularity_in_bytes, p2i(bottom));
+    assert((uintptr_t)end % mapping_granularity_in_bytes == 0, "end mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is " PTR_FORMAT, mapping_granularity_in_bytes, p2i(end));
     size_t num_target_elems = pointer_delta(end, bottom, mapping_granularity_in_bytes);
     idx_t bias = (uintptr_t)bottom / mapping_granularity_in_bytes;
     address base = create_new_base_array(num_target_elems, target_elem_size_in_bytes);
@@ -84,9 +55,9 @@ protected:
   size_t bias() const { return _bias; }
   uint shift_by() const { return _shift_by; }
 
-  void verify_index(idx_t index) const PRODUCT_RETURN;
-  void verify_biased_index(idx_t biased_index) const PRODUCT_RETURN;
-  void verify_biased_index_inclusive_end(idx_t biased_index) const PRODUCT_RETURN;
+  void verify_index(idx_t index) const {};
+  void verify_biased_index(idx_t biased_index) const {};
+  void verify_biased_index_inclusive_end(idx_t biased_index) const {};
 
 public:
    // Return the length of the array in elements.
@@ -194,4 +165,4 @@ public:
   }
 };
 
-#endif // SHARE_VM_GC_G1_G1BIASEDARRAY_HPP
+#endif

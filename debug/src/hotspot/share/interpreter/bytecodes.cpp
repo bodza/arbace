@@ -1,43 +1,9 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/method.hpp"
 #include "utilities/align.hpp"
 #include "utilities/bytes.hpp"
-
-
-#if defined(WIN32) && (defined(_MSC_VER) && (_MSC_VER < 1600))
-// Windows AMD64 Compiler Hangs compiling this file
-// unless optimization is off
-#ifdef _M_AMD64
-#pragma optimize ("", off)
-#endif
-#endif
-
 
 bool            Bytecodes::_is_initialized = false;
 const char*     Bytecodes::_name          [Bytecodes::number_of_codes];
@@ -47,14 +13,8 @@ u_char          Bytecodes::_lengths       [Bytecodes::number_of_codes];
 Bytecodes::Code Bytecodes::_java_code     [Bytecodes::number_of_codes];
 unsigned short  Bytecodes::_flags         [(1<<BitsPerByte)*2];
 
-#ifdef ASSERT
-bool Bytecodes::check_method(const Method* method, address bcp) {
-  return method->contains(bcp);
-}
-#endif
-
 bool Bytecodes::check_must_rewrite(Bytecodes::Code code) {
-  assert(can_rewrite(code), "post-check only");
+  assert(can_rewrite(code), "post-check only");
 
   // Some codes are conditionally rewriting.  Look closely at them.
   switch (code) {
@@ -82,9 +42,9 @@ Bytecodes::Code Bytecodes::code_at(Method* method, int bci) {
 }
 
 Bytecodes::Code Bytecodes::non_breakpoint_code_at(const Method* method, address bcp) {
-  assert(method != NULL, "must have the method for breakpoint conversion");
-  assert(method->contains(bcp), "must be valid bcp in method");
-  return method->orig_bytecode_at(method->bci_from(bcp));
+  assert(method != NULL, "must have the method for breakpoint conversion");
+  assert(method->contains(bcp), "must be valid bcp in method");
+  return 0;
 }
 
 int Bytecodes::special_length_at(Bytecodes::Code code, address bcp, address end) {
@@ -147,15 +107,12 @@ int Bytecodes::raw_special_length_at(address bcp, address end) {
   }
 }
 
-
-
 void Bytecodes::def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap) {
   def(code, name, format, wide_format, result_type, depth, can_trap, code);
 }
 
-
 void Bytecodes::def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap, Code java_code) {
-  assert(wide_format == NULL || format != NULL, "short form must exist if there's a wide form");
+  assert(wide_format == NULL || format != NULL, "short form must exist if there's a wide form");
   int len  = (format      != NULL ? (int) strlen(format)      : 0);
   int wlen = (wide_format != NULL ? (int) strlen(wide_format) : 0);
   _name          [code] = name;
@@ -168,12 +125,11 @@ void Bytecodes::def(Code code, const char* name, const char* format, const char*
   if (java_code != code)  bc_flags |= _bc_can_rewrite;
   _flags[(u1)code+0*(1<<BitsPerByte)] = compute_flags(format,      bc_flags);
   _flags[(u1)code+1*(1<<BitsPerByte)] = compute_flags(wide_format, bc_flags);
-  assert(is_defined(code)      == (format != NULL),      "");
-  assert(wide_is_defined(code) == (wide_format != NULL), "");
-  assert(length_for(code)      == len, "");
-  assert(wide_length_for(code) == wlen, "");
+  assert(is_defined(code)      == (format != NULL),      "");
+  assert(wide_is_defined(code) == (wide_format != NULL), "");
+  assert(length_for(code)      == len, "");
+  assert(wide_length_for(code) == wlen, "");
 }
-
 
 // Format strings interpretation:
 //
@@ -219,7 +175,7 @@ int Bytecodes::compute_flags(const char* format, int more_flags) {
     char fc = *fp++;
     switch (fc) {
     case '\0':  // end of string
-      assert(flags == (jchar)flags, "change _format_flags");
+      assert(flags == (jchar)flags, "change _format_flags");
       return flags;
 
     case '_': continue;         // ignore these
@@ -267,7 +223,7 @@ int Bytecodes::compute_flags(const char* format, int more_flags) {
 
 void Bytecodes::initialize() {
   if (_is_initialized) return;
-  assert(number_of_codes <= 256, "too many bytecodes");
+  assert(number_of_codes <= 256, "too many bytecodes");
 
   // initialize bytecode tables - didn't use static array initializers
   // (such as {}) so we can do additional consistency checks and init-
@@ -540,22 +496,10 @@ void Bytecodes::initialize() {
   // compare can_trap information for each bytecode with the
   // can_trap information for the corresponding base bytecode
   // (if a rewritten bytecode can trap, so must the base bytecode)
-  #ifdef ASSERT
-    { for (int i = 0; i < number_of_codes; i++) {
-        if (is_defined(i)) {
-          Code code = cast(i);
-          Code java = java_code(code);
-          if (can_trap(code) && !can_trap(java))
-            fatal("%s can trap => %s can trap, too", name(code), name(java));
-        }
-      }
-    }
-  #endif
 
   // initialization successful
   _is_initialized = true;
 }
-
 
 void bytecodes_init() {
   Bytecodes::initialize();

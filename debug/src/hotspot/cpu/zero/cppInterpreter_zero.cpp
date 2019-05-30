@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2009, 2010, 2011 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
@@ -35,8 +10,6 @@
 #include "oops/methodData.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
-#include "prims/jvmtiThreadState.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/deoptimization.hpp"
@@ -55,16 +28,16 @@
 
 #ifdef CC_INTERP
 
-#define fixup_after_potential_safepoint()       \
+#define fixup_after_potential_safepoint() \
   method = istate->method()
 
-#define CALL_VM_NOCHECK_NOFIX(func)             \
-  thread->set_last_Java_frame();                \
-  func;                                         \
+#define CALL_VM_NOCHECK_NOFIX(func) \
+  thread->set_last_Java_frame(); \
+  func; \
   thread->reset_last_Java_frame();
 
-#define CALL_VM_NOCHECK(func)                   \
-  CALL_VM_NOCHECK_NOFIX(func)                   \
+#define CALL_VM_NOCHECK(func) \
+  CALL_VM_NOCHECK_NOFIX(func) \
   fixup_after_potential_safepoint()
 
 int CppInterpreter::normal_entry(Method* method, intptr_t UNUSED, TRAPS) {
@@ -104,7 +77,6 @@ intptr_t narrow(BasicType type, intptr_t result) {
   }
 }
 
-
 void CppInterpreter::main_loop(int recurse, TRAPS) {
   JavaThread *thread = (JavaThread *) THREAD;
   ZeroStack *stack = thread->zero_stack();
@@ -129,10 +101,7 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
     thread->set_last_Java_frame();
 
     // Call the interpreter
-    if (JvmtiExport::can_post_interpreter_events())
-      BytecodeInterpreter::runWithChecks(istate);
-    else
-      BytecodeInterpreter::run(istate);
+    BytecodeInterpreter::run(istate);
     fixup_after_potential_safepoint();
 
     // Clear the frame anchor
@@ -185,12 +154,12 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
     else if (istate->msg() == BytecodeInterpreter::return_from_method) {
       // Copy the result into the caller's frame
       result_slots = type2size[method->result_type()];
-      assert(result_slots >= 0 && result_slots <= 2, "what?");
+      assert(result_slots >= 0 && result_slots <= 2, "what?");
       result = istate->stack() + result_slots;
       break;
     }
     else if (istate->msg() == BytecodeInterpreter::throwing_exception) {
-      assert(HAS_PENDING_EXCEPTION, "should do");
+      assert(HAS_PENDING_EXCEPTION, "should do");
       break;
     }
     else if (istate->msg() == BytecodeInterpreter::do_osr) {
@@ -237,7 +206,7 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
 
 int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
   // Make sure method is native and not abstract
-  assert(method->is_native() && !method->is_abstract(), "should be");
+  assert(method->is_native() && !method->is_abstract(), "should be");
 
   JavaThread *thread = (JavaThread *) THREAD;
   ZeroStack *stack = thread->zero_stack();
@@ -296,7 +265,7 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
         goto unlock_unwind_and_return;
 
       handlerAddr = method->signature_handler();
-      assert(handlerAddr != NULL, "eh?");
+      assert(handlerAddr != NULL, "eh?");
     }
     if (handlerAddr == (address) InterpreterRuntime::slow_signature_handler) {
       CALL_VM_NOCHECK(handlerAddr =
@@ -311,7 +280,7 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
   // Get the native function entry point
   address function;
   function = method->native_function();
-  assert(function != NULL, "should be set if signature handler is");
+  assert(function != NULL, "should be set if signature handler is");
 
   // Build the argument list
   stack->overflow_check(handler->argument_count() * 2, THREAD);
@@ -532,13 +501,7 @@ int CppInterpreter::accessor_entry(Method* method, intptr_t UNUSED, TRAPS) {
   //  4:  ireturn/areturn/freturn/lreturn/dreturn
   // NB this is not raw bytecode: index is in machine order
   u1 *code = method->code_base();
-  assert(code[0] == Bytecodes::_aload_0 &&
-         code[1] == Bytecodes::_getfield &&
-         (code[4] == Bytecodes::_ireturn ||
-          code[4] == Bytecodes::_freturn ||
-          code[4] == Bytecodes::_lreturn ||
-          code[4] == Bytecodes::_dreturn ||
-          code[4] == Bytecodes::_areturn), "should do");
+  assert(code[0] == Bytecodes::_aload_0 && code[1] == Bytecodes::_getfield && (code[4] == Bytecodes::_ireturn || code[4] == Bytecodes::_freturn || code[4] == Bytecodes::_lreturn || code[4] == Bytecodes::_dreturn || code[4] == Bytecodes::_areturn), "should do");
   u2 index = Bytes::get_native_u2(&code[2]);
 
   // Get the entry from the constant pool cache, and drop into
@@ -692,8 +655,7 @@ BasicType CppInterpreter::result_type_of_handle(oop method_handle) {
   return java_lang_Class::as_BasicType(return_type, (Klass* *) NULL);
 }
 
-intptr_t* CppInterpreter::calculate_unwind_sp(ZeroStack* stack,
-                                              oop method_handle) {
+intptr_t* CppInterpreter::calculate_unwind_sp(ZeroStack* stack, oop method_handle) {
   oop method_type = java_lang_invoke_MethodHandle::type(method_handle);
   int argument_slots = java_lang_invoke_MethodType::ptype_slot_count(method_type);
 
@@ -739,14 +701,14 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
+  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(INTERPRETER_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
+  assert(fp - stack->sp() == frame_type_off, "should be");
 
   interpreterState istate =
     (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
-  assert(fp - stack->sp() == istate_off, "should be");
+  assert(fp - stack->sp() == istate_off, "should be");
 
   istate->set_locals(locals);
   istate->set_method(method);
@@ -786,20 +748,20 @@ InterpreterFrame *InterpreterFrame::build(int size, TRAPS) {
   ZeroStack *stack = ((JavaThread *) THREAD)->zero_stack();
 
   int size_in_words = size >> LogBytesPerWord;
-  assert(size_in_words * wordSize == size, "unaligned");
-  assert(size_in_words >= header_words, "too small");
+  assert(size_in_words * wordSize == size, "unaligned");
+  assert(size_in_words >= header_words, "too small");
   stack->overflow_check(size_in_words, CHECK_NULL);
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
+  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(INTERPRETER_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
+  assert(fp - stack->sp() == frame_type_off, "should be");
 
   interpreterState istate =
     (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
-  assert(fp - stack->sp() == istate_off, "should be");
+  assert(fp - stack->sp() == istate_off, "should be");
   istate->set_self_link(NULL); // mark invalid
 
   stack->alloc((size_in_words - header_words) * wordSize);
@@ -821,4 +783,4 @@ address CppInterpreter::deopt_entry(TosState state, int length) {
 bool CppInterpreter::contains(address pc) {
   return false; // make frame::print_value_on work
 }
-#endif // CC_INTERP
+#endif

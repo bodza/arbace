@@ -1,45 +1,9 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
 #include "gc/g1/heapRegionSet.inline.hpp"
 
 uint FreeRegionList::_unrealistically_long_length = 0;
-
-#ifndef PRODUCT
-void HeapRegionSetBase::verify_region(HeapRegion* hr) {
-  assert(hr->containing_set() == this, "Inconsistent containing set for %u", hr->hrm_index());
-  assert(!hr->is_young(), "Adding young region %u", hr->hrm_index()); // currently we don't use these sets for young regions
-  assert(hr->is_humongous() == regions_humongous(), "Wrong humongous state for region %u and set %s", hr->hrm_index(), name());
-  assert(hr->is_free() == regions_free(), "Wrong free state for region %u and set %s", hr->hrm_index(), name());
-  assert(!hr->is_free() || hr->is_empty(), "Free region %u is not empty for set %s", hr->hrm_index(), name());
-  assert(!hr->is_empty() || hr->is_free() || hr->is_archive(),
-         "Empty region %u is not free or archive for set %s", hr->hrm_index(), name());
-}
-#endif
 
 void HeapRegionSetBase::verify() {
   // It's important that we also observe the MT safety protocol even
@@ -123,18 +87,6 @@ void FreeRegionList::add_ordered(FreeRegionList* from_list) {
     return;
   }
 
-  #ifdef ASSERT
-  FreeRegionListIterator iter(from_list);
-  while (iter.more_available()) {
-    HeapRegion* hr = iter.get_next();
-    // In set_containing_set() we check that we either set the value
-    // from NULL to non-NULL or vice versa to catch bugs. So, we have
-    // to NULL it first before setting it to the value.
-    hr->set_containing_set(NULL);
-    hr->set_containing_set(this);
-  }
-  #endif // ASSERT
-
   if (is_empty()) {
     assert_free_region_list(length() == 0 && _tail == NULL, "invariant");
     _head = from_list->_head;
@@ -187,7 +139,6 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
   assert_free_region_list(!is_empty(), "pre-condition");
 
   verify_optional();
-  DEBUG_ONLY(uint old_length = length();)
 
   HeapRegion* curr = first;
   uint count = 0;
@@ -196,10 +147,7 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
     HeapRegion* next = curr->next();
     HeapRegion* prev = curr->prev();
 
-    assert(count < num_regions,
-           "[%s] should not come across more regions "
-           "pending for removal than num_regions: %u",
-           name(), num_regions);
+    assert(count < num_regions, "[%s] should not come across more regions pending for removal than num_regions: %u", name(), num_regions);
 
     if (prev == NULL) {
       assert_free_region_list(_head == curr, "invariant");
@@ -227,13 +175,8 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
     curr = next;
   }
 
-  assert(count == num_regions,
-         "[%s] count: %u should be == num_regions: %u",
-         name(), count, num_regions);
-  assert(length() + num_regions == old_length,
-         "[%s] new length should be consistent "
-         "new length: %u old length: %u num_regions: %u",
-         name(), length(), old_length, num_regions);
+  assert(count == num_regions, "[%s] count: %u should be == num_regions: %u", name(), count, num_regions);
+  assert(length() + num_regions == old_length, "[%s] new length should be consistent new length: %u old length: %u num_regions: %u", name(), length(), old_length, num_regions);
 
   verify_optional();
 }

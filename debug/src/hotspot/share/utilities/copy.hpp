@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_COPY_HPP
 #define SHARE_VM_UTILITIES_COPY_HPP
 
@@ -158,7 +134,7 @@ class Copy : AllStatic {
 
   // overloaded for UseCompressedOops
   static void conjoint_oops_atomic(const narrowOop* from, narrowOop* to, size_t count) {
-    assert(sizeof(narrowOop) == sizeof(jint), "this cast is wrong");
+    assert(sizeof(narrowOop) == sizeof(jint), "this cast is wrong");
     assert_params_ok(from, to, BytesPerInt);
     pd_conjoint_jints_atomic((const jint*)from, (jint*)to, count);
   }
@@ -207,7 +183,7 @@ class Copy : AllStatic {
     assert_byte_count_ok(byte_count, HeapWordSize);
 
     size_t count = align_up(byte_count, HeapWordSize) >> LogHeapWordSize;
-    assert(to <= from || from + count <= to, "do not overwrite source data");
+    assert(to <= from || from + count <= to, "do not overwrite source data");
 
     while (count-- > 0) {
       *to++ = *from++;
@@ -221,7 +197,7 @@ class Copy : AllStatic {
     assert_byte_count_ok(byte_count, HeapWordSize);
 
     size_t count = align_up(byte_count, HeapWordSize) >> LogHeapWordSize;
-    assert(from <= to || to + count <= from, "do not overwrite source data");
+    assert(from <= to || to + count <= from, "do not overwrite source data");
 
     from += count - 1;
     to   += count - 1;
@@ -316,34 +292,33 @@ class Copy : AllStatic {
   // These methods raise a fatal if they detect a problem.
 
   static void assert_disjoint(const HeapWord* from, HeapWord* to, size_t count) {
-    assert(params_disjoint(from, to, count), "source and dest overlap");
+    assert(params_disjoint(from, to, count), "source and dest overlap");
   }
 
   static void assert_params_ok(const void* from, void* to, intptr_t alignment) {
-    assert(is_aligned(from, alignment), "must be aligned: " INTPTR_FORMAT, p2i(from));
-    assert(is_aligned(to, alignment),   "must be aligned: " INTPTR_FORMAT, p2i(to));
+    assert(is_aligned(from, alignment), "must be aligned: " INTPTR_FORMAT, p2i(from));
+    assert(is_aligned(to, alignment),   "must be aligned: " INTPTR_FORMAT, p2i(to));
   }
 
   static void assert_params_ok(HeapWord* to, intptr_t alignment) {
-    assert(is_aligned(to, alignment), "must be aligned: " INTPTR_FORMAT, p2i(to));
+    assert(is_aligned(to, alignment), "must be aligned: " INTPTR_FORMAT, p2i(to));
   }
 
   static void assert_params_aligned(const HeapWord* from, HeapWord* to) {
-    assert(is_aligned(from, BytesPerLong), "must be aligned: " INTPTR_FORMAT, p2i(from));
-    assert(is_aligned(to, BytesPerLong),   "must be aligned: " INTPTR_FORMAT, p2i(to));
+    assert(is_aligned(from, BytesPerLong), "must be aligned: " INTPTR_FORMAT, p2i(from));
+    assert(is_aligned(to, BytesPerLong),   "must be aligned: " INTPTR_FORMAT, p2i(to));
   }
 
   static void assert_params_aligned(HeapWord* to) {
-    assert(is_aligned(to, BytesPerLong), "must be aligned: " INTPTR_FORMAT, p2i(to));
+    assert(is_aligned(to, BytesPerLong), "must be aligned: " INTPTR_FORMAT, p2i(to));
   }
 
   static void assert_byte_count_ok(size_t byte_count, size_t unit_size) {
-    assert(is_aligned(byte_count, unit_size), "byte count must be aligned");
+    assert(is_aligned(byte_count, unit_size), "byte count must be aligned");
   }
 
   // Platform dependent implementations of the above methods.
 #include CPU_HEADER(copy)
-
 };
 
-#endif // SHARE_VM_UTILITIES_COPY_HPP
+#endif

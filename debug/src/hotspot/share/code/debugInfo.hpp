@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_DEBUGINFO_HPP
 #define SHARE_VM_CODE_DEBUGINFO_HPP
 
@@ -56,12 +32,12 @@ class ScopeValue: public ResourceObj {
   virtual bool equals(ScopeValue* other) const { return false; }
 
   ConstantOopReadValue* as_ConstantOopReadValue() {
-    assert(is_constant_oop(), "must be");
+    assert(is_constant_oop(), "must be");
     return (ConstantOopReadValue*) this;
   }
 
   ObjectValue* as_ObjectValue() {
-    assert(is_object(), "must be");
+    assert(is_object(), "must be");
     return (ObjectValue*)this;
   }
 
@@ -69,7 +45,6 @@ class ScopeValue: public ResourceObj {
   virtual void write_on(DebugInfoWriteStream* stream) = 0;
   static ScopeValue* read_from(DebugInfoReadStream* stream);
 };
-
 
 // A Location value describes a value in a given location; i.e. the corresponding
 // logical entity (e.g., a method temporary) lives in this location.
@@ -90,7 +65,6 @@ class LocationValue: public ScopeValue {
   void print_on(outputStream* st) const;
 };
 
-
 // An ObjectValue describes an object eliminated by escape analysis.
 
 class ObjectValue: public ScopeValue {
@@ -108,7 +82,7 @@ class ObjectValue: public ScopeValue {
      , _field_values()
      , _value()
      , _visited(false) {
-    assert(klass->is_constant_oop(), "should be constant java mirror oop");
+    assert(klass->is_constant_oop(), "should be constant java mirror oop");
   }
 
   ObjectValue(int id)
@@ -139,7 +113,6 @@ class ObjectValue: public ScopeValue {
   void print_on(outputStream* st) const;
   void print_fields_on(outputStream* st) const;
 };
-
 
 // A ConstantIntValue describes a constant int; i.e., the corresponding logical entity
 // is either a source constant or its computation has been constant-folded.
@@ -277,7 +250,7 @@ class DebugInfoReadStream : public CompressedReadStream {
   Method* read_method() {
     Method* o = (Method*)(code()->metadata_at(read_int()));
     // is_metadata() is a faster check than is_metaspace_object()
-    assert(o == NULL || o->is_metadata(), "meta data only");
+    assert(o == NULL || o->is_metadata(), "meta data only");
     return o;
   }
   ScopeValue* read_object_value();
@@ -301,4 +274,4 @@ class DebugInfoWriteStream : public CompressedWriteStream {
   void write_metadata(Metadata* m);
 };
 
-#endif // SHARE_VM_CODE_DEBUGINFO_HPP
+#endif

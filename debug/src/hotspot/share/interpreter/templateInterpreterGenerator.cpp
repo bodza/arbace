@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
@@ -64,25 +40,6 @@ void TemplateInterpreterGenerator::generate_all() {
     _illegal_bytecode_sequence = generate_error_exit("illegal bytecode sequence - method not verified");
   }
 
-#ifndef PRODUCT
-  if (TraceBytecodes) {
-    CodeletMark cm(_masm, "bytecode tracing support");
-    Interpreter::_trace_code =
-      EntryPoint(
-                 generate_trace_code(btos),
-                 generate_trace_code(ztos),
-                 generate_trace_code(ctos),
-                 generate_trace_code(stos),
-                 generate_trace_code(atos),
-                 generate_trace_code(itos),
-                 generate_trace_code(ltos),
-                 generate_trace_code(ftos),
-                 generate_trace_code(dtos),
-                 generate_trace_code(vtos)
-                 );
-  }
-#endif // !PRODUCT
-
   { CodeletMark cm(_masm, "return entry points");
     const int index_size = sizeof(u2);
     Interpreter::_return_entry[0] = EntryPoint();
@@ -114,27 +71,11 @@ void TemplateInterpreterGenerator::generate_all() {
 
     for (int i = 0; i < Interpreter::number_of_return_addrs; i++) {
       TosState state = states[i];
-      assert(state != ilgl, "states array is wrong above");
+      assert(state != ilgl, "states array is wrong above");
       Interpreter::_invoke_return_entry[i] = generate_return_entry_for(state, invoke_length, sizeof(u2));
       Interpreter::_invokeinterface_return_entry[i] = generate_return_entry_for(state, invokeinterface_length, sizeof(u2));
       Interpreter::_invokedynamic_return_entry[i] = generate_return_entry_for(state, invokedynamic_length, sizeof(u4));
     }
-  }
-
-  { CodeletMark cm(_masm, "earlyret entry points");
-    Interpreter::_earlyret_entry =
-      EntryPoint(
-                 generate_earlyret_entry_for(btos),
-                 generate_earlyret_entry_for(ztos),
-                 generate_earlyret_entry_for(ctos),
-                 generate_earlyret_entry_for(stos),
-                 generate_earlyret_entry_for(atos),
-                 generate_earlyret_entry_for(itos),
-                 generate_earlyret_entry_for(ltos),
-                 generate_earlyret_entry_for(ftos),
-                 generate_earlyret_entry_for(dtos),
-                 generate_earlyret_entry_for(vtos)
-                 );
   }
 
   { CodeletMark cm(_masm, "result handlers for native calls");
@@ -149,7 +90,6 @@ void TemplateInterpreterGenerator::generate_all() {
       }
     }
   }
-
 
   { CodeletMark cm(_masm, "safepoint entry points");
     Interpreter::_safept_entry =
@@ -181,9 +121,7 @@ void TemplateInterpreterGenerator::generate_all() {
     Interpreter::_throw_StackOverflowError_entry             = generate_StackOverflowError_handler();
   }
 
-
-
-#define method_entry(kind)                                              \
+#define method_entry(kind) \
   { CodeletMark cm(_masm, "method entry point (kind = " #kind ")"); \
     Interpreter::_entry_table[Interpreter::kind] = generate_method_entry(Interpreter::kind); \
     Interpreter::update_cds_entry_table(Interpreter::kind); \
@@ -259,7 +197,6 @@ void TemplateInterpreterGenerator::generate_all() {
     vmassert(return_continuation != NULL, "return entry not generated yet");
     Interpreter::_deopt_reexecute_return_entry = generate_deopt_entry_for(vtos, 0, return_continuation);
   }
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -269,7 +206,6 @@ address TemplateInterpreterGenerator::generate_error_exit(const char* msg) {
   __ stop(msg);
   return entry;
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------
 
@@ -284,14 +220,12 @@ void TemplateInterpreterGenerator::set_entry_points_for_all_bytes() {
   }
 }
 
-
 void TemplateInterpreterGenerator::set_safepoints_for_all_bytes() {
   for (int i = 0; i < DispatchTable::length; i++) {
     Bytecodes::Code code = (Bytecodes::Code)i;
     if (Bytecodes::is_defined(code)) Interpreter::_safept_table.set_entry(code, Interpreter::_safept_entry);
   }
 }
-
 
 void TemplateInterpreterGenerator::set_unimplemented(int i) {
   address e = _unimplemented_bytecode;
@@ -300,12 +234,11 @@ void TemplateInterpreterGenerator::set_unimplemented(int i) {
   Interpreter::_wentry_point[i] = _unimplemented_bytecode;
 }
 
-
 void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
   CodeletMark cm(_masm, Bytecodes::name(code), code);
   // initialize entry points
-  assert(_unimplemented_bytecode    != NULL, "should have been generated before");
-  assert(_illegal_bytecode_sequence != NULL, "should have been generated before");
+  assert(_unimplemented_bytecode    != NULL, "should have been generated before");
+  assert(_illegal_bytecode_sequence != NULL, "should have been generated before");
   address bep = _illegal_bytecode_sequence;
   address zep = _illegal_bytecode_sequence;
   address cep = _illegal_bytecode_sequence;
@@ -320,12 +253,12 @@ void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
   // code for short & wide version of bytecode
   if (Bytecodes::is_defined(code)) {
     Template* t = TemplateTable::template_for(code);
-    assert(t->is_valid(), "just checking");
+    assert(t->is_valid(), "just checking");
     set_short_entry_points(t, bep, cep, sep, aep, iep, lep, fep, dep, vep);
   }
   if (Bytecodes::wide_is_defined(code)) {
     Template* t = TemplateTable::template_for_wide(code);
-    assert(t->is_valid(), "just checking");
+    assert(t->is_valid(), "just checking");
     set_wide_entry_point(t, wep);
   }
   // set entry points
@@ -334,16 +267,14 @@ void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
   Interpreter::_wentry_point[code] = wep;
 }
 
-
 void TemplateInterpreterGenerator::set_wide_entry_point(Template* t, address& wep) {
-  assert(t->is_valid(), "template must exist");
-  assert(t->tos_in() == vtos, "only vtos tos_in supported for wide instructions");
+  assert(t->is_valid(), "template must exist");
+  assert(t->tos_in() == vtos, "only vtos tos_in supported for wide instructions");
   wep = __ pc(); generate_and_dispatch(t);
 }
 
-
 void TemplateInterpreterGenerator::set_short_entry_points(Template* t, address& bep, address& cep, address& sep, address& aep, address& iep, address& lep, address& fep, address& dep, address& vep) {
-  assert(t->is_valid(), "template must exist");
+  assert(t->is_valid(), "template must exist");
   switch (t->tos_in()) {
     case btos:
     case ztos:
@@ -361,25 +292,16 @@ void TemplateInterpreterGenerator::set_short_entry_points(Template* t, address& 
   }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------
 
 void TemplateInterpreterGenerator::generate_and_dispatch(Template* t, TosState tos_out) {
   if (PrintBytecodeHistogram)                                    histogram_bytecode(t);
-#ifndef PRODUCT
-  // debugging code
-  if (CountBytecodes || TraceBytecodes || StopInterpreterAt > 0) count_bytecode();
-  if (PrintBytecodePairHistogram)                                histogram_bytecode_pair(t);
-  if (TraceBytecodes)                                            trace_bytecode(t);
-  if (StopInterpreterAt > 0)                                     stop_interpreter_at();
-  __ verify_FPU(1, t->tos_in());
-#endif // !PRODUCT
   int step = 0;
   if (!t->does_dispatch()) {
     step = t->is_wide() ? Bytecodes::wide_length_for(t->bytecode()) : Bytecodes::length_for(t->bytecode());
     if (tos_out == ilgl) tos_out = t->tos_out();
     // compute bytecode size
-    assert(step > 0, "just checkin'");
+    assert(step > 0, "just checkin'");
     // setup stuff for dispatching next bytecode
     if (ProfileInterpreter && VerifyDataPointer
         && MethodData::bytecode_has_profile(t->bytecode())) {
@@ -391,10 +313,6 @@ void TemplateInterpreterGenerator::generate_and_dispatch(Template* t, TosState t
   t->generate(_masm);
   // advance
   if (t->does_dispatch()) {
-#ifdef ASSERT
-    // make sure execution doesn't go beyond this point if code is broken
-    __ should_not_reach_here();
-#endif // ASSERT
   } else {
     // dispatch to next bytecode
     __ dispatch_epilog(tos_out, step);
@@ -459,7 +377,7 @@ address TemplateInterpreterGenerator::generate_method_entry(
   case Interpreter::java_lang_Double_doubleToRawLongBits:
     native = true;
     break;
-#endif // !IA32
+#endif
   default:
     fatal("unexpected method kind: %d", kind);
     break;
@@ -484,4 +402,4 @@ address TemplateInterpreterGenerator::generate_method_entry(
 
   return entry_point;
 }
-#endif // !CC_INTERP
+#endif

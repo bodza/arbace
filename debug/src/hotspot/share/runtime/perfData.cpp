@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "classfile/vmSymbols.hpp"
@@ -86,7 +62,7 @@ PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v)
   const char* prefix = PerfDataManager::ns_to_string(ns);
 
   _name = NEW_C_HEAP_ARRAY(char, strlen(name) + strlen(prefix) + 2, mtInternal);
-  assert(_name != NULL && strlen(name) != 0, "invalid name");
+  assert(_name != NULL && strlen(name) != 0, "invalid name");
 
   if (ns == NULL_NS) {
      // No prefix is added to counters with the NULL_NS namespace.
@@ -151,12 +127,11 @@ void PerfData::create_entry(BasicType dtype, size_t dsize, size_t vlen) {
   // data is in the last dsize*dlen bytes of the entry
   void* valuep = (void*) (psmp + data_start);
 
-  assert(is_on_c_heap() || PerfMemory::contains(cname), "just checking");
-  assert(is_on_c_heap() || PerfMemory::contains((char*)valuep), "just checking");
+  assert(is_on_c_heap() || PerfMemory::contains(cname), "just checking");
+  assert(is_on_c_heap() || PerfMemory::contains((char*)valuep), "just checking");
 
   // copy the name, including null terminator, into PerfData memory
   strcpy(cname, name());
-
 
   // set the header values in PerfData memory
   PerfDataEntry* pdep = (PerfDataEntry*)psmp;
@@ -262,7 +237,6 @@ PerfStringConstant::PerfStringConstant(CounterNS ns, const char* namep,
   }
 }
 
-
 void PerfDataManager::destroy() {
 
   if (_all == NULL)
@@ -302,7 +276,7 @@ void PerfDataManager::add_item(PerfData* p, bool sampled) {
     _has_PerfData = true;
   }
 
-  assert(!_all->contains(p->name()), "duplicate name added");
+  assert(!_all->contains(p->name()), "duplicate name added");
 
   // add to the list of all perf data items
   _all->append(p);
@@ -361,8 +335,8 @@ PerfDataList* PerfDataManager::constants() {
 }
 
 char* PerfDataManager::counter_name(const char* ns, const char* name) {
-   assert(ns != NULL, "ns string required");
-   assert(name != NULL, "name string required");
+   assert(ns != NULL, "ns string required");
+   assert(name != NULL, "name string required");
 
    size_t len = strlen(ns) + strlen(name) + 2;
    char* result = NEW_RESOURCE_ARRAY(char, len);
@@ -427,7 +401,7 @@ PerfStringVariable* PerfDataManager::create_string_variable(CounterNS ns,
 
   if (max_length == 0 && s != NULL) max_length = (int)strlen(s);
 
-  assert(max_length != 0, "PerfStringVariable with length 0");
+  assert(max_length != 0, "PerfStringVariable with length 0");
 
   PerfStringVariable* p = new PerfStringVariable(ns, name, max_length, s);
 
@@ -579,7 +553,6 @@ PerfDataList::PerfDataList(PerfDataList* p) {
 PerfDataList::~PerfDataList() {
 
   delete _set;
-
 }
 
 bool PerfDataList::by_name(void* name, PerfData* pd) {
@@ -608,7 +581,7 @@ PerfDataList* PerfDataList::clone() {
 
   PerfDataList* copy = new PerfDataList(this);
 
-  assert(copy != NULL, "just checking");
+  assert(copy != NULL, "just checking");
 
   return copy;
 }

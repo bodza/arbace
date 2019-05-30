@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "compiler/compileTask.hpp"
 #include "compiler/compileLog.hpp"
@@ -33,9 +9,6 @@
 #include "runtime/handles.inline.hpp"
 
 CompileTask*  CompileTask::_task_free_list = NULL;
-#ifdef ASSERT
-int CompileTask::_num_allocated_tasks = 0;
-#endif
 
 /**
  * Allocate a CompileTask, from the free list if possible.
@@ -50,12 +23,11 @@ CompileTask* CompileTask::allocate() {
     task->set_next(NULL);
   } else {
     task = new CompileTask();
-    DEBUG_ONLY(_num_allocated_tasks++;)
-    assert (WhiteBoxAPI || JVMCI_ONLY(UseJVMCICompiler ||) _num_allocated_tasks < 10000, "Leaking compilation tasks?");
+    assert(WhiteBoxAPI || UseJVMCICompiler || _num_allocated_tasks < 10000, "Leaking compilation tasks?");
     task->set_next(NULL);
     task->set_is_free(true);
   }
-  assert(task->is_free(), "Task must be free.");
+  assert(task->is_free(), "Task must be free.");
   task->set_is_free(false);
   return task;
 }
@@ -68,7 +40,7 @@ void CompileTask::free(CompileTask* task) {
  MutexLocker locker(CompileTaskAlloc_lock);
  if (!task->is_free()) {
    task->set_code(NULL);
-   assert(!task->lock()->is_locked(), "Should not be locked when freed");
+   assert(!task->lock()->is_locked(), "Should not be locked when freed");
    JNIHandles::destroy_global(task->_method_holder);
    JNIHandles::destroy_global(task->_hot_method_holder);
 
@@ -78,7 +50,6 @@ void CompileTask::free(CompileTask* task) {
  }
 }
 
-
 void CompileTask::initialize(int compile_id,
                              const methodHandle& method,
                              int osr_bci,
@@ -87,7 +58,7 @@ void CompileTask::initialize(int compile_id,
                              int hot_count,
                              CompileTask::CompileReason compile_reason,
                              bool is_blocking) {
-  assert(!_lock->is_locked(), "bad locking");
+  assert(!_lock->is_locked(), "bad locking");
 
   Thread* thread = Thread::current();
   _compile_id = compile_id;
@@ -95,8 +66,8 @@ void CompileTask::initialize(int compile_id,
   _method_holder = JNIHandles::make_global(Handle(thread, method->method_holder()->klass_holder()));
   _osr_bci = osr_bci;
   _is_blocking = is_blocking;
-  JVMCI_ONLY(_has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();)
-  JVMCI_ONLY(_jvmci_compiler_thread = NULL;)
+  _has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();
+  _jvmci_compiler_thread = NULL;
   _comp_level = comp_level;
   _num_inlined_bytecodes = 0;
 
@@ -291,7 +262,7 @@ void CompileTask::log_task(xmlStream* log) {
   log->print(" compile_id='%d'", _compile_id);
   if (_osr_bci != CompileBroker::standard_entry_bci) {
     log->print(" compile_kind='osr'");  // same as nmethod::compile_kind
-  } // else compile_kind='c2c'
+  }
   if (!method.is_null())  log->method(method);
   if (_osr_bci != CompileBroker::standard_entry_bci) {
     log->print(" osr_bci='%d'", _osr_bci);
@@ -314,7 +285,7 @@ void CompileTask::log_task_queued() {
 
   xtty->begin_elem("task_queued");
   log_task(xtty);
-  assert(_compile_reason > CompileTask::Reason_None && _compile_reason < CompileTask::Reason_Count, "Valid values");
+  assert(_compile_reason > CompileTask::Reason_None && _compile_reason < CompileTask::Reason_Count, "Valid values");
   xtty->print(" comment='%s'", reason_name(_compile_reason));
 
   if (_hot_method != NULL) {
@@ -330,7 +301,6 @@ void CompileTask::log_task_queued() {
   xtty->end_elem();
 }
 
-
 // ------------------------------------------------------------------
 // CompileTask::log_task_start
 void CompileTask::log_task_start(CompileLog* log)   {
@@ -338,7 +308,6 @@ void CompileTask::log_task_start(CompileLog* log)   {
   log_task(log);
   log->end_head();
 }
-
 
 // ------------------------------------------------------------------
 // CompileTask::log_task_done
@@ -455,4 +424,3 @@ void CompileTask::print_inlining_ul(ciMethod* method, int inline_level, int bci,
     print_inlining_inner(&ls, method, inline_level, bci, msg);
   }
 }
-

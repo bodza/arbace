@@ -1,32 +1,8 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "jfr/jfrEvents.hpp"
-#include "jfr/support/jfrThreadId.hpp"
+// #include "jfr/jfrEvents.hpp"
+// #include "jfr/support/jfrThreadId.hpp"
 #include "logging/log.hpp"
 #include "logging/logConfiguration.hpp"
 #include "memory/resourceArea.hpp"
@@ -65,18 +41,16 @@ VMOperationQueue::VMOperationQueue() {
   _drain_list = NULL;
 }
 
-
 bool VMOperationQueue::queue_empty(int prio) {
   // It is empty if there is exactly one element
   bool empty = (_queue[prio] == _queue[prio]->next());
-  assert( (_queue_length[prio] == 0 && empty) ||
-          (_queue_length[prio] > 0  && !empty), "sanity check");
+  assert( (_queue_length[prio] == 0 && empty) || (_queue_length[prio] > 0  && !empty), "sanity check");
   return _queue_length[prio] == 0;
 }
 
 // Inserts an element to the right of the q element
 void VMOperationQueue::insert(VM_Operation* q, VM_Operation* n) {
-  assert(q->next()->prev() == q && q->prev()->next() == q, "sanity check");
+  assert(q->next()->prev() == q && q->prev()->next() == q, "sanity check");
   n->set_prev(q);
   n->set_next(q->next());
   q->next()->set_prev(n);
@@ -93,43 +67,35 @@ void VMOperationQueue::queue_add_back(int prio, VM_Operation *op) {
   insert(_queue[prio]->prev(), op);
 }
 
-
 void VMOperationQueue::unlink(VM_Operation* q) {
-  assert(q->next()->prev() == q && q->prev()->next() == q, "sanity check");
+  assert(q->next()->prev() == q && q->prev()->next() == q, "sanity check");
   q->prev()->set_next(q->next());
   q->next()->set_prev(q->prev());
 }
 
 VM_Operation* VMOperationQueue::queue_remove_front(int prio) {
   if (queue_empty(prio)) return NULL;
-  assert(_queue_length[prio] >= 0, "sanity check");
+  assert(_queue_length[prio] >= 0, "sanity check");
   _queue_length[prio]--;
   VM_Operation* r = _queue[prio]->next();
-  assert(r != _queue[prio], "cannot remove base element");
+  assert(r != _queue[prio], "cannot remove base element");
   unlink(r);
   return r;
 }
 
 VM_Operation* VMOperationQueue::queue_drain(int prio) {
   if (queue_empty(prio)) return NULL;
-  DEBUG_ONLY(int length = _queue_length[prio];);
-  assert(length >= 0, "sanity check");
+  assert(length >= 0, "sanity check");
   _queue_length[prio] = 0;
   VM_Operation* r = _queue[prio]->next();
-  assert(r != _queue[prio], "cannot remove base element");
+  assert(r != _queue[prio], "cannot remove base element");
   // remove links to base element from head and tail
   r->set_prev(NULL);
   _queue[prio]->prev()->set_next(NULL);
   // restore queue to empty state
   _queue[prio]->set_next(_queue[prio]);
   _queue[prio]->set_prev(_queue[prio]);
-  assert(queue_empty(prio), "drain corrupted queue");
-#ifdef ASSERT
-  int len = 0;
-  VM_Operation* cur;
-  for(cur = r; cur != NULL; cur=cur->next()) len++;
-  assert(len == length, "drain lost some ops");
-#endif
+  assert(queue_empty(prio), "drain corrupted queue");
   return r;
 }
 
@@ -172,8 +138,7 @@ bool VMOperationQueue::add(VM_Operation *op) {
 VM_Operation* VMOperationQueue::remove_next() {
   // Assuming VMOperation queue is two-level priority queue. If there are
   // more than two priorities, we need a different scheduling algorithm.
-  assert(SafepointPriority == 0 && MediumPriority == 1 && nof_priorities == 2,
-         "current algorithm does not work");
+  assert(SafepointPriority == 0 && MediumPriority == 1 && nof_priorities == 2, "current algorithm does not work");
 
   // simple counter based scheduling to prevent starvation of lower priority
   // queue. -- see 4390175
@@ -197,7 +162,6 @@ void VMOperationQueue::oops_do(OopClosure* f) {
   drain_list_oops_do(f);
 }
 
-
 //------------------------------------------------------------------------------------------------------------------
 // Implementation of VMThread stuff
 
@@ -210,9 +174,8 @@ VMOperationQueue* VMThread::_vm_queue           = NULL;
 PerfCounter*      VMThread::_perf_accumulated_vm_operation_time = NULL;
 const char*       VMThread::_no_op_reason       = NULL;
 
-
 void VMThread::create() {
-  assert(vm_thread() == NULL, "we can only allocate one VMThread");
+  assert(vm_thread() == NULL, "we can only allocate one VMThread");
   _vm_thread = new VMThread();
 
   // Create VM operation queue
@@ -240,7 +203,7 @@ void VMThread::destroy() {
 }
 
 void VMThread::run() {
-  assert(this == vm_thread(), "check");
+  assert(this == vm_thread(), "check");
 
   this->initialize_named_thread();
 
@@ -274,7 +237,7 @@ void VMThread::run() {
     xtty->begin_elem("destroy_vm");
     xtty->stamp();
     xtty->end_elem();
-    assert(should_terminate(), "termination flag must be set");
+    assert(should_terminate(), "termination flag must be set");
   }
 
   // 4526887 let VM thread exit at Safepoint
@@ -312,9 +275,7 @@ void VMThread::run() {
   // We are now racing with the VM termination being carried out in
   // another thread, so we don't "delete this". Numerous threads don't
   // get deleted when the VM terminates
-
 }
-
 
 // Notify the VMThread that the last non-daemon JavaThread has terminated,
 // and wait until operation is performed.
@@ -341,9 +302,9 @@ void VMThread::wait_for_vm_thread_exit() {
 }
 
 static void post_vm_operation_event(EventExecuteVMOperation* event, VM_Operation* op) {
-  assert(event != NULL, "invariant");
-  assert(event->should_commit(), "invariant");
-  assert(op != NULL, "invariant");
+  assert(event != NULL, "invariant");
+  assert(event->should_commit(), "invariant");
+  assert(op != NULL, "invariant");
   const bool is_concurrent = op->evaluate_concurrently();
   const bool evaluate_at_safepoint = op->evaluate_at_safepoint();
   event->set_operation(op->type());
@@ -412,7 +373,7 @@ bool VMThread::no_op_safepoint_needed(bool check_time) {
 }
 
 void VMThread::loop() {
-  assert(_cur_vm_operation == NULL, "no current one should be executing");
+  assert(_cur_vm_operation == NULL, "no current one should be executing");
 
   while(true) {
     VM_Operation* safepoint_ops = NULL;
@@ -424,7 +385,7 @@ void VMThread::loop() {
                              Mutex::_no_safepoint_check_flag);
 
       // Look for new operation
-      assert(_cur_vm_operation == NULL, "no current one should be executing");
+      assert(_cur_vm_operation == NULL, "no current one should be executing");
       _cur_vm_operation = _vm_queue->remove_next();
 
       // Stall time tracking code
@@ -456,9 +417,6 @@ void VMThread::loop() {
           // the clean-up processing that needs to be done regularly at a
           // safepoint
           SafepointSynchronize::begin();
-          #ifdef ASSERT
-            if (GCALotAtAllSafepoints) InterfaceSupport::check_gc_alot();
-          #endif
           SafepointSynchronize::end();
         }
         _cur_vm_operation = _vm_queue->remove_next();
@@ -472,7 +430,7 @@ void VMThread::loop() {
       }
 
       if (should_terminate()) break;
-    } // Release mu_queue_lock
+    }
 
     //
     // Execute VM operation
@@ -480,7 +438,7 @@ void VMThread::loop() {
     { HandleMark hm(VMThread::vm_thread());
 
       EventMark em("Executing VM operation: %s", vm_operation()->name());
-      assert(_cur_vm_operation != NULL, "we should have found an operation to execute");
+      assert(_cur_vm_operation != NULL, "we should have found an operation to execute");
 
       // Give the VM thread an extra quantum.  Jobs tend to be bursty and this
       // helps the VM thread to finish up the job.
@@ -591,20 +549,8 @@ class SkipGCALot : public StackObj {
    Thread* _t;
 
   public:
-#ifdef ASSERT
-    SkipGCALot(Thread* t) : _t(t) {
-      _saved = _t->skip_gcalot();
-      _t->set_skip_gcalot(true);
-    }
-
-    ~SkipGCALot() {
-      assert(_t->skip_gcalot(), "Save-restore protocol invariant");
-      _t->set_skip_gcalot(_saved);
-    }
-#else
     SkipGCALot(Thread* t) { }
     ~SkipGCALot() { }
-#endif
 };
 
 void VMThread::execute(VM_Operation* op) {
@@ -630,7 +576,7 @@ void VMThread::execute(VM_Operation* op) {
     // It does not make sense to execute the epilogue, if the VM operation object is getting
     // deallocated by the VM thread.
     bool execute_epilog = !op->is_cheap_allocated();
-    assert(!concurrent || op->is_cheap_allocated(), "concurrent => cheap_allocated");
+    assert(!concurrent || op->is_cheap_allocated(), "concurrent => cheap_allocated");
 
     // Get ticket number for non-concurrent VM operations
     int ticket = 0;
@@ -650,7 +596,7 @@ void VMThread::execute(VM_Operation* op) {
       VMOperationQueue_lock->unlock();
       // VM_Operation got skipped
       if (!ok) {
-        assert(concurrent, "can only skip concurrent tasks");
+        assert(concurrent, "can only skip concurrent tasks");
         if (op->is_cheap_allocated()) delete op;
         return;
       }
@@ -670,7 +616,7 @@ void VMThread::execute(VM_Operation* op) {
     }
   } else {
     // invoked by VM thread; usually nested VM operation
-    assert(t->is_VM_thread(), "must be a VM thread");
+    assert(t->is_VM_thread(), "must be a VM thread");
     VM_Operation* prev_vm_operation = vm_operation();
     if (prev_vm_operation != NULL) {
       // Check the VM operation allows nested VM operation. This normally not the case, e.g., the compiler
@@ -703,38 +649,12 @@ void VMThread::execute(VM_Operation* op) {
   }
 }
 
-
 void VMThread::oops_do(OopClosure* f, CodeBlobClosure* cf) {
   Thread::oops_do(f, cf);
   _vm_queue->oops_do(f);
 }
 
 //------------------------------------------------------------------------------------------------------------------
-#ifndef PRODUCT
-
-void VMOperationQueue::verify_queue(int prio) {
-  // Check that list is correctly linked
-  int length = _queue_length[prio];
-  VM_Operation *cur = _queue[prio];
-  int i;
-
-  // Check forward links
-  for(i = 0; i < length; i++) {
-    cur = cur->next();
-    assert(cur != _queue[prio], "list to short (forward)");
-  }
-  assert(cur->next() == _queue[prio], "list to long (forward)");
-
-  // Check backwards links
-  cur = _queue[prio];
-  for(i = 0; i < length; i++) {
-    cur = cur->prev();
-    assert(cur != _queue[prio], "list to short (backwards)");
-  }
-  assert(cur->prev() == _queue[prio], "list to long (backwards)");
-}
-
-#endif
 
 void VMThread::verify() {
   oops_do(&VerifyOopClosure::verify_oop, NULL);

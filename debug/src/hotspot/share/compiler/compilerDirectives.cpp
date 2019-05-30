@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciMethod.hpp"
 #include "ci/ciUtilities.inline.hpp"
@@ -54,7 +30,7 @@ CompilerDirectives::~CompilerDirectives() {
 }
 
 void CompilerDirectives::print(outputStream* st) {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   if (_match != NULL) {
     st->cr();
     st->print("Directive:");
@@ -73,7 +49,7 @@ void CompilerDirectives::print(outputStream* st) {
     }
     st->cr();
   } else {
-    assert(0, "There should always be a match");
+    assert(0, "There should always be a match");
   }
 
   if (_c1_store != NULL) {
@@ -140,7 +116,7 @@ bool CompilerDirectives::match(const methodHandle& method) {
 bool CompilerDirectives::add_match(char* str, const char*& error_msg) {
   BasicMatcher* bm = BasicMatcher::parse_method_pattern(str, error_msg);
   if (bm == NULL) {
-    assert(error_msg != NULL, "Must have error message");
+    assert(error_msg != NULL, "Must have error message");
     return false;
   } else {
     bm->set_next(_match);
@@ -150,29 +126,29 @@ bool CompilerDirectives::add_match(char* str, const char*& error_msg) {
 }
 
 void CompilerDirectives::inc_refcount() {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   _ref_count++;
 }
 
 void CompilerDirectives::dec_refcount() {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   _ref_count--;
 }
 
 int CompilerDirectives::refcount() {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   return _ref_count;
 }
 
 DirectiveSet* CompilerDirectives::get_for(AbstractCompiler *comp) {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   if (comp == NULL) { // Xint
     return _c1_store;
   } else  if (comp->is_c2()) {
     return _c2_store;
   } else {
     // use c1_store as default
-    assert(comp->is_c1() || comp->is_jvmci(), "");
+    assert(comp->is_c1() || comp->is_jvmci(), "");
     return _c1_store;
   }
 }
@@ -223,7 +199,7 @@ DirectiveSet::~DirectiveSet() {
   // When constructed, DirectiveSet canonicalizes the DisableIntrinsic flag
   // into a new string. Therefore, that string is deallocated when
   // the DirectiveSet is destroyed.
-  assert(this->DisableIntrinsicOption != NULL, "");
+  assert(this->DisableIntrinsicOption != NULL, "");
   FREE_C_HEAP_ARRAY(char, (void *)this->DisableIntrinsicOption);
 }
 
@@ -289,7 +265,6 @@ DirectiveSet* DirectiveSet::compilecommand_compatibility_init(const methodHandle
       set->DisableIntrinsicOption = canonicalize_disableintrinsic(option_value);
     }
 
-
     if (!changed) {
       // We didn't actually update anything, discard.
       delete set;
@@ -304,7 +279,7 @@ DirectiveSet* DirectiveSet::compilecommand_compatibility_init(const methodHandle
 }
 
 CompilerDirectives* DirectiveSet::directive() {
-  assert(_directive != NULL, "Must have been initialized");
+  assert(_directive != NULL, "Must have been initialized");
   return _directive;
 }
 
@@ -352,7 +327,7 @@ bool DirectiveSet::parse_and_add_inline(char* str, const char*& error_msg) {
     append_inline(m);
     return true;
   } else {
-    assert(error_msg != NULL, "Error message must be set");
+    assert(error_msg != NULL, "Error message must be set");
     return false;
   }
 }
@@ -387,7 +362,7 @@ void DirectiveSet::print_inline(outputStream* st) {
 
 bool DirectiveSet::is_intrinsic_disabled(const methodHandle& method) {
   vmIntrinsics::ID id = method->intrinsic_id();
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
+  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   ResourceMark rm;
 
@@ -427,11 +402,11 @@ DirectiveSet* DirectiveSet::clone(DirectiveSet const* src) {
     compilerdirectives_c1_flags(copy_members_definition)
 
   // Create a local copy of the DisableIntrinsicOption.
-  assert(src->DisableIntrinsicOption != NULL, "");
+  assert(src->DisableIntrinsicOption != NULL, "");
   size_t len = strlen(src->DisableIntrinsicOption) + 1;
   char* s = NEW_C_HEAP_ARRAY(char, len, mtCompiler);
   strncpy(s, src->DisableIntrinsicOption, len);
-  assert(s[len-1] == '\0', "");
+  assert(s[len-1] == '\0', "");
   set->DisableIntrinsicOption = s;
   return set;
 }
@@ -442,22 +417,15 @@ void DirectivesStack::init() {
   char str[] = "*.*";
   const char* error_msg = NULL;
   _default_directives->add_match(str, error_msg);
-#ifdef COMPILER1
   _default_directives->_c1_store->EnableOption = true;
-#endif
-#ifdef COMPILER2
-  if (is_server_compilation_mode_vm()) {
-    _default_directives->_c2_store->EnableOption = true;
-  }
-#endif
-  assert(error_msg == NULL, "Must succeed.");
+  assert(error_msg == NULL, "Must succeed.");
   push(_default_directives);
 }
 
 DirectiveSet* DirectivesStack::getDefaultDirective(AbstractCompiler* comp) {
   MutexLockerEx locker(DirectivesStack_lock, Mutex::_no_safepoint_check_flag);
 
-  assert(_bottom != NULL, "Must never be empty");
+  assert(_bottom != NULL, "Must never be empty");
   _bottom->inc_refcount();
   return _bottom->get_for(comp);
 }
@@ -467,7 +435,7 @@ void DirectivesStack::push(CompilerDirectives* directive) {
 
   directive->inc_refcount();
   if (_top == NULL) {
-    assert(_bottom == NULL, "There can only be one default directive");
+    assert(_bottom == NULL, "There can only be one default directive");
     _bottom = directive; // default directive, can never be removed.
   }
 
@@ -478,14 +446,14 @@ void DirectivesStack::push(CompilerDirectives* directive) {
 
 void DirectivesStack::pop(int count) {
   MutexLockerEx locker(DirectivesStack_lock, Mutex::_no_safepoint_check_flag);
-  assert(count > -1, "No negative values");
+  assert(count > -1, "No negative values");
   for (int i = 0; i < count; i++) {
     pop_inner();
   }
 }
 
 void DirectivesStack::pop_inner() {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
 
   if (_top->next() == NULL) {
     return; // Do nothing - don't allow an empty stack
@@ -524,20 +492,19 @@ void DirectivesStack::print(outputStream* st) {
 }
 
 void DirectivesStack::release(DirectiveSet* set) {
-  assert(set != NULL, "Never NULL");
+  assert(set != NULL, "Never NULL");
   MutexLockerEx locker(DirectivesStack_lock, Mutex::_no_safepoint_check_flag);
   if (set->is_exclusive_copy()) {
     // Old CompilecCmmands forced us to create an exclusive copy
     delete set;
   } else {
-    assert(set->directive() != NULL, "Never NULL");
+    assert(set->directive() != NULL, "Never NULL");
     release(set->directive());
   }
 }
 
-
 void DirectivesStack::release(CompilerDirectives* dir) {
-  assert(DirectivesStack_lock->owned_by_self(), "");
+  assert(DirectivesStack_lock->owned_by_self(), "");
   dir->dec_refcount();
   if (dir->refcount() == 0) {
     delete dir;
@@ -545,19 +512,19 @@ void DirectivesStack::release(CompilerDirectives* dir) {
 }
 
 DirectiveSet* DirectivesStack::getMatchingDirective(const methodHandle& method, AbstractCompiler *comp) {
-  assert(_depth > 0, "Must never be empty");
+  assert(_depth > 0, "Must never be empty");
 
   DirectiveSet* match = NULL;
   {
     MutexLockerEx locker(DirectivesStack_lock, Mutex::_no_safepoint_check_flag);
 
     CompilerDirectives* dir = _top;
-    assert(dir != NULL, "Must be initialized");
+    assert(dir != NULL, "Must be initialized");
 
     while (dir != NULL) {
       if (dir->is_default_directive() || dir->match(method)) {
         match = dir->get_for(comp);
-        assert(match != NULL, "Consistency");
+        assert(match != NULL, "Consistency");
         if (match->EnableOption) {
           // The directiveSet for this compile is also enabled -> success
           dir->inc_refcount();

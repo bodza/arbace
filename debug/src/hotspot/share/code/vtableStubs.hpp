@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_VTABLESTUBS_HPP
 #define SHARE_VM_CODE_VTABLESTUBS_HPP
 
@@ -112,7 +88,6 @@ class VtableStubs : AllStatic {
   static void        vtable_stub_do(void f(VtableStub*));            // iterates over all vtable stubs
 };
 
-
 class VtableStub {
  private:
   friend class VtableStubs;
@@ -153,10 +128,10 @@ class VtableStub {
   void set_exception_points(address npe_addr, address ame_addr) {
     _npe_offset = npe_addr - code_begin();
     _ame_offset = ame_addr - code_begin();
-    assert(is_abstract_method_error(ame_addr),   "offset must be correct");
-    assert(is_null_pointer_exception(npe_addr),  "offset must be correct");
-    assert(!is_abstract_method_error(npe_addr),  "offset must be correct");
-    assert(!is_null_pointer_exception(ame_addr), "offset must be correct");
+    assert(is_abstract_method_error(ame_addr),   "offset must be correct");
+    assert(is_null_pointer_exception(npe_addr),  "offset must be correct");
+    assert(!is_abstract_method_error(npe_addr),  "offset must be correct");
+    assert(!is_null_pointer_exception(ame_addr), "offset must be correct");
   }
 
   // platform-dependent routines
@@ -178,7 +153,6 @@ class VtableStub {
 
   void print_on(outputStream* st) const;
   void print() const                             { print_on(tty); }
-
 };
 
-#endif // SHARE_VM_CODE_VTABLESTUBS_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.hpp"
 #include "gc/g1/g1Analytics.hpp"
@@ -49,19 +25,19 @@
 STATIC_ASSERT(ConcurrentGCPhaseManager::UNCONSTRAINED_PHASE <
               ConcurrentGCPhaseManager::IDLE_PHASE);
 
-#define EXPAND_CONCURRENT_PHASES(expander)                                 \
-  expander(ANY, = ConcurrentGCPhaseManager::UNCONSTRAINED_PHASE, NULL)     \
-  expander(IDLE, = ConcurrentGCPhaseManager::IDLE_PHASE, NULL)             \
-  expander(CONCURRENT_CYCLE,, "Concurrent Cycle")                          \
-  expander(CLEAR_CLAIMED_MARKS,, "Concurrent Clear Claimed Marks")         \
-  expander(SCAN_ROOT_REGIONS,, "Concurrent Scan Root Regions")             \
-  expander(CONCURRENT_MARK,, "Concurrent Mark")                            \
-  expander(MARK_FROM_ROOTS,, "Concurrent Mark From Roots")                 \
-  expander(PRECLEAN,, "Concurrent Preclean")                               \
-  expander(BEFORE_REMARK,, NULL)                                           \
-  expander(REMARK,, NULL)                                                  \
+#define EXPAND_CONCURRENT_PHASES(expander) \
+  expander(ANY, = ConcurrentGCPhaseManager::UNCONSTRAINED_PHASE, NULL) \
+  expander(IDLE, = ConcurrentGCPhaseManager::IDLE_PHASE, NULL) \
+  expander(CONCURRENT_CYCLE,, "Concurrent Cycle") \
+  expander(CLEAR_CLAIMED_MARKS,, "Concurrent Clear Claimed Marks") \
+  expander(SCAN_ROOT_REGIONS,, "Concurrent Scan Root Regions") \
+  expander(CONCURRENT_MARK,, "Concurrent Mark") \
+  expander(MARK_FROM_ROOTS,, "Concurrent Mark From Roots") \
+  expander(PRECLEAN,, "Concurrent Preclean") \
+  expander(BEFORE_REMARK,, NULL) \
+  expander(REMARK,, NULL) \
   expander(REBUILD_REMEMBERED_SETS,, "Concurrent Rebuild Remembered Sets") \
-  expander(CLEANUP_FOR_NEXT_MARK,, "Concurrent Cleanup for Next Mark")     \
+  expander(CLEANUP_FOR_NEXT_MARK,, "Concurrent Cleanup for Next Mark") \
   /* */
 
 class G1ConcurrentPhase : public AllStatic {
@@ -183,10 +159,10 @@ static const char* lookup_concurrent_phase_title(int phase) {
   // Verify dense enum assumption.
   STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT == ARRAY_SIZE(titles));
 
-  assert(0 <= phase, "precondition");
-  assert((uint)phase < ARRAY_SIZE(titles), "precondition");
+  assert(0 <= phase, "precondition");
+  assert((uint)phase < ARRAY_SIZE(titles), "precondition");
   const char* title = titles[phase];
-  assert(title != NULL, "precondition");
+  assert(title != NULL, "precondition");
   return title;
 }
 
@@ -235,7 +211,7 @@ bool G1ConcurrentMarkThread::request_concurrent_phase(const char* phase_name) {
 
   while (!ConcurrentGCPhaseManager::wait_for_phase(phase,
                                                    phase_manager_stack())) {
-    assert(phase != G1ConcurrentPhase::ANY, "Wait for ANY phase must succeed");
+    assert(phase != G1ConcurrentPhase::ANY, "Wait for ANY phase must succeed");
     if ((phase != G1ConcurrentPhase::IDLE) && !during_cycle()) {
       // If idle and the goal is !idle, start a collection.
       G1CollectedHeap::heap()->collect(GCCause::_wb_conc_mark);
@@ -383,7 +359,7 @@ void G1ConcurrentMarkThread::run_service() {
         G1ConcPhase p(G1ConcurrentPhase::CLEANUP_FOR_NEXT_MARK, this);
         _cm->cleanup_for_next_mark();
       } else {
-        assert(!G1VerifyBitmaps || _cm->next_mark_bitmap_is_clear(), "Next mark bitmap must be clear");
+        assert(!G1VerifyBitmaps || _cm->next_mark_bitmap_is_clear(), "Next mark bitmap must be clear");
       }
     }
 
@@ -408,11 +384,10 @@ void G1ConcurrentMarkThread::stop_service() {
   CGC_lock->notify_all();
 }
 
-
 void G1ConcurrentMarkThread::sleep_before_next_cycle() {
   // We join here because we don't want to do the "shouldConcurrentMark()"
   // below while the world is otherwise stopped.
-  assert(!in_progress(), "should have been cleared");
+  assert(!in_progress(), "should have been cleared");
 
   MutexLockerEx x(CGC_lock, Mutex::_no_safepoint_check_flag);
   while (!started() && !should_terminate()) {

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_SWEEPER_HPP
 #define SHARE_VM_RUNTIME_SWEEPER_HPP
 
@@ -93,7 +69,7 @@ class NMethodSweeper : public AllStatic {
   static MethodStateChange process_compiled_method(CompiledMethod *nm);
   static void              release_compiled_method(CompiledMethod* nm);
 
-  static void init_sweeper_log() NOT_DEBUG_RETURN;
+  static void init_sweeper_log() {};
   static bool wait_for_stack_scanning();
   static void sweep_code_cache();
   static void handle_safepoint_request();
@@ -106,14 +82,6 @@ class NMethodSweeper : public AllStatic {
   static const Tickspan peak_sweep_time()          { return _peak_sweep_time; }
   static const Tickspan peak_sweep_fraction_time() { return _peak_sweep_fraction_time; }
   static void log_sweep(const char* msg, const char* format = NULL, ...) ATTRIBUTE_PRINTF(2, 3);
-
-
-#ifdef ASSERT
-  // Keep track of sweeper activity in the ring buffer
-  static void record_sweep(CompiledMethod* nm, int line);
-  static void report_events(int id, address entry);
-  static void report_events();
-#endif
 
   static void mark_active_nmethods();      // Invoked at the end of each safepoint
   static CodeBlobClosure* prepare_mark_active_nmethods();
@@ -129,4 +97,4 @@ class NMethodSweeper : public AllStatic {
   static void print() { print(tty); }
 };
 
-#endif // SHARE_VM_RUNTIME_SWEEPER_HPP
+#endif

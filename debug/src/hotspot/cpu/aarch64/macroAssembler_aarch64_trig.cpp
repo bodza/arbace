@@ -1,27 +1,3 @@
-/* Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2018, Cavium. All rights reserved. (By BELLSOFT)
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
@@ -199,8 +175,7 @@
 //     2. Return n in r2, y[0] == y0 == v4, y[1] == y1 == v5
 // NOTE: general purpose register names match local variable names in C code
 // NOTE: fpu registers are actively reused. See comments in code about their usage
-void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw,
-    address two_over_pi, address pio2) {
+void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_over_pi, address pio2) {
   const long PIO2_1t = 0x3DD0B4611A626331UL;
   const long PIO2_2  = 0x3DD0B4611A600000UL;
   const long PIO2_2t = 0x3BA3198A2E037073UL;
@@ -1187,8 +1162,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
 //         = flag to use low argument low part or not, dsin_coef = coefficients
 //         table address
 //     3. Return sin(x) value in v0
-void MacroAssembler::generate_kernel_sin(FloatRegister x, bool iyIsOne,
-    address dsin_coef) {
+void MacroAssembler::generate_kernel_sin(FloatRegister x, bool iyIsOne, address dsin_coef) {
   FloatRegister y = v5, z = v6, v = v7, r = v16, S1 = v17, S2 = v18,
       S3 = v19, S4 = v20, S5 = v21, S6 = v22, half = v23;
   lea(rscratch2, ExternalAddress(dsin_coef));
@@ -1414,8 +1388,7 @@ void MacroAssembler::generate_kernel_cos(FloatRegister x, address dcos_coef) {
 //         dcos_coef = address of dcos_coef table
 //     3. Return result in v0
 // NOTE: general purpose register names match local variable names in C code
-void MacroAssembler::generate_dsin_dcos(bool isCos, address npio2_hw,
-    address two_over_pi, address pio2, address dsin_coef, address dcos_coef) {
+void MacroAssembler::generate_dsin_dcos(bool isCos, address npio2_hw, address two_over_pi, address pio2, address dsin_coef, address dcos_coef) {
   const int POSITIVE_INFINITY_OR_NAN_PREFIX = 0x7FF0;
 
   Label DONE, ARG_REDUCTION, TINY_X, RETURN_SIN, EARLY_CASE;

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
@@ -33,7 +9,6 @@
 #include "runtime/os.hpp"
 #include "runtime/stubCodeGenerator.hpp"
 #include "vm_version_x86.hpp"
-
 
 int VM_Version::_cpu;
 int VM_Version::_model;
@@ -52,7 +27,6 @@ extern "C" {
   typedef void (*get_cpu_info_stub_t)(void*);
 }
 static get_cpu_info_stub_t get_cpu_info_stub = NULL;
-
 
 class VM_Version_StubGenerator: public StubCodeGenerator {
  public:
@@ -84,11 +58,7 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
     // LP64: rcx and rdx are first and second argument registers on windows
 
     __ push(rbp);
-#ifdef _LP64
     __ mov(rbp, c_rarg0); // cpuid_info address
-#else
-    __ movptr(rbp, Address(rsp, 8)); // cpuid_info address
-#endif
     __ push(rbx);
     __ push(rsi);
     __ pushf();          // preserve rbx, and flags
@@ -385,28 +355,14 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
       VM_Version::set_evex_cpuFeatures(); // Enable temporary to pass asserts
       UseAVX = 3;
       UseSSE = 2;
-#ifdef _WINDOWS
-      // xmm5-xmm15 are not preserved by caller on windows
-      // https://msdn.microsoft.com/en-us/library/9z1stfyw.aspx
-      __ subptr(rsp, 64);
-      __ evmovdqul(Address(rsp, 0), xmm7, Assembler::AVX_512bit);
-#ifdef _LP64
-      __ subptr(rsp, 64);
-      __ evmovdqul(Address(rsp, 0), xmm8, Assembler::AVX_512bit);
-      __ subptr(rsp, 64);
-      __ evmovdqul(Address(rsp, 0), xmm31, Assembler::AVX_512bit);
-#endif // _LP64
-#endif // _WINDOWS
 
       // load value into all 64 bytes of zmm7 register
       __ movl(rcx, VM_Version::ymm_test_value());
       __ movdl(xmm0, rcx);
       __ vpbroadcastd(xmm0, xmm0, Assembler::AVX_512bit);
       __ evmovdqul(xmm7, xmm0, Assembler::AVX_512bit);
-#ifdef _LP64
       __ evmovdqul(xmm8, xmm0, Assembler::AVX_512bit);
       __ evmovdqul(xmm31, xmm0, Assembler::AVX_512bit);
-#endif
       VM_Version::clean_cpuFeatures();
       __ jmp(save_restore_except);
     }
@@ -416,16 +372,6 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
     VM_Version::set_avx_cpuFeatures(); // Enable temporary to pass asserts
     UseAVX = 1;
     UseSSE = 2;
-#ifdef _WINDOWS
-    __ subptr(rsp, 32);
-    __ vmovdqu(Address(rsp, 0), xmm7);
-#ifdef _LP64
-    __ subptr(rsp, 32);
-    __ vmovdqu(Address(rsp, 0), xmm8);
-    __ subptr(rsp, 32);
-    __ vmovdqu(Address(rsp, 0), xmm15);
-#endif // _LP64
-#endif // _WINDOWS
 
     // load value into all 32 bytes of ymm7 register
     __ movl(rcx, VM_Version::ymm_test_value());
@@ -434,10 +380,8 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
     __ pshufd(xmm0, xmm0, 0x00);
     __ vinsertf128_high(xmm0, xmm0);
     __ vmovdqu(xmm7, xmm0);
-#ifdef _LP64
     __ vmovdqu(xmm8, xmm0);
     __ vmovdqu(xmm15, xmm0);
-#endif
     VM_Version::clean_cpuFeatures();
 
     __ bind(save_restore_except);
@@ -472,21 +416,9 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
       __ lea(rsi, Address(rbp, in_bytes(VM_Version::zmm_save_offset())));
       __ evmovdqul(Address(rsi, 0), xmm0, Assembler::AVX_512bit);
       __ evmovdqul(Address(rsi, 64), xmm7, Assembler::AVX_512bit);
-#ifdef _LP64
       __ evmovdqul(Address(rsi, 128), xmm8, Assembler::AVX_512bit);
       __ evmovdqul(Address(rsi, 192), xmm31, Assembler::AVX_512bit);
-#endif
 
-#ifdef _WINDOWS
-#ifdef _LP64
-      __ evmovdqul(xmm31, Address(rsp, 0), Assembler::AVX_512bit);
-      __ addptr(rsp, 64);
-      __ evmovdqul(xmm8, Address(rsp, 0), Assembler::AVX_512bit);
-      __ addptr(rsp, 64);
-#endif // _LP64
-      __ evmovdqul(xmm7, Address(rsp, 0), Assembler::AVX_512bit);
-      __ addptr(rsp, 64);
-#endif // _WINDOWS
       generate_vzeroupper(wrapup);
       VM_Version::clean_cpuFeatures();
       UseAVX = saved_useavx;
@@ -502,21 +434,9 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
     __ lea(rsi, Address(rbp, in_bytes(VM_Version::ymm_save_offset())));
     __ vmovdqu(Address(rsi, 0), xmm0);
     __ vmovdqu(Address(rsi, 32), xmm7);
-#ifdef _LP64
     __ vmovdqu(Address(rsi, 64), xmm8);
     __ vmovdqu(Address(rsi, 96), xmm15);
-#endif
 
-#ifdef _WINDOWS
-#ifdef _LP64
-    __ vmovdqu(xmm15, Address(rsp, 0));
-    __ addptr(rsp, 32);
-    __ vmovdqu(xmm8, Address(rsp, 0));
-    __ addptr(rsp, 32);
-#endif // _LP64
-    __ vmovdqu(xmm7, Address(rsp, 0));
-    __ addptr(rsp, 32);
-#endif // _WINDOWS
     generate_vzeroupper(wrapup);
     VM_Version::clean_cpuFeatures();
     UseAVX = saved_useavx;
@@ -581,17 +501,15 @@ void VM_Version::get_processor_features() {
   // xchg and xadd instructions
   _supports_atomic_getset4 = true;
   _supports_atomic_getadd4 = true;
-  LP64_ONLY(_supports_atomic_getset8 = true);
-  LP64_ONLY(_supports_atomic_getadd8 = true);
+  _supports_atomic_getset8 = true;
+  _supports_atomic_getadd8 = true;
 
-#ifdef _LP64
   // OS should support SSE for x64 and hardware should support at least SSE2.
   if (!VM_Version::supports_sse2()) {
     vm_exit_during_initialization("Unknown x64 processor: SSE2 not supported");
   }
   // in 64 bit the use of SSE2 is the minimum
   if (UseSSE < 2) UseSSE = 2;
-#endif
 
 #ifdef AMD64
   // flush_icache_stub have to be generated first.
@@ -874,7 +792,7 @@ void VM_Version::get_processor_features() {
     FLAG_SET_DEFAULT(UseFMA, false);
   }
 
-  if (supports_sha() LP64_ONLY(|| supports_avx2() && supports_bmi2())) {
+  if (supports_sha() || supports_avx2() && supports_bmi2()) {
     if (FLAG_IS_DEFAULT(UseSHA)) {
       UseSHA = true;
     }
@@ -976,15 +894,6 @@ void VM_Version::get_processor_features() {
   }
 #endif
 
-#ifdef COMPILER2
-  if (UseFPUForSpilling) {
-    if (UseSSE < 2) {
-      // Only supported with SSE2+
-      FLAG_SET_DEFAULT(UseFPUForSpilling, false);
-    }
-  }
-#endif
-#if COMPILER2_OR_JVMCI
   if (MaxVectorSize > 0) {
     if (!is_power_of_2(MaxVectorSize)) {
       warning("MaxVectorSize must be a power of 2");
@@ -1021,73 +930,7 @@ void VM_Version::get_processor_features() {
         FLAG_SET_DEFAULT(MaxVectorSize, 64);
       }
     }
-#if defined(COMPILER2) && defined(ASSERT)
-    if (supports_avx() && PrintMiscellaneous && Verbose && TraceNewVectors) {
-      tty->print_cr("State of YMM registers after signal handle:");
-      int nreg = 2 LP64_ONLY(+2);
-      const char* ymm_name[4] = {"0", "7", "8", "15"};
-      for (int i = 0; i < nreg; i++) {
-        tty->print("YMM%s:", ymm_name[i]);
-        for (int j = 7; j >=0; j--) {
-          tty->print(" %x", _cpuid_info.ymm_save[i*8 + j]);
-        }
-        tty->cr();
-      }
-    }
-#endif // COMPILER2 && ASSERT
   }
-#endif // COMPILER2_OR_JVMCI
-
-#ifdef COMPILER2
-#ifdef _LP64
-  if (FLAG_IS_DEFAULT(UseMultiplyToLenIntrinsic)) {
-    UseMultiplyToLenIntrinsic = true;
-  }
-  if (FLAG_IS_DEFAULT(UseSquareToLenIntrinsic)) {
-    UseSquareToLenIntrinsic = true;
-  }
-  if (FLAG_IS_DEFAULT(UseMulAddIntrinsic)) {
-    UseMulAddIntrinsic = true;
-  }
-  if (FLAG_IS_DEFAULT(UseMontgomeryMultiplyIntrinsic)) {
-    UseMontgomeryMultiplyIntrinsic = true;
-  }
-  if (FLAG_IS_DEFAULT(UseMontgomerySquareIntrinsic)) {
-    UseMontgomerySquareIntrinsic = true;
-  }
-#else
-  if (UseMultiplyToLenIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseMultiplyToLenIntrinsic)) {
-      warning("multiplyToLen intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseMultiplyToLenIntrinsic, false);
-  }
-  if (UseMontgomeryMultiplyIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseMontgomeryMultiplyIntrinsic)) {
-      warning("montgomeryMultiply intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseMontgomeryMultiplyIntrinsic, false);
-  }
-  if (UseMontgomerySquareIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseMontgomerySquareIntrinsic)) {
-      warning("montgomerySquare intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseMontgomerySquareIntrinsic, false);
-  }
-  if (UseSquareToLenIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseSquareToLenIntrinsic)) {
-      warning("squareToLen intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseSquareToLenIntrinsic, false);
-  }
-  if (UseMulAddIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseMulAddIntrinsic)) {
-      warning("mulAdd intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseMulAddIntrinsic, false);
-  }
-#endif
-#endif // COMPILER2
 
   // On new cpus instructions which update whole XMM register should be used
   // to prevent partial register stall due to dependencies on high half.
@@ -1096,7 +939,6 @@ void VM_Version::get_processor_features() {
   // UseXmmLoadAndClearUpper == false --> movlpd(xmm, mem)
   // UseXmmRegToRegMoveAll == true  --> movaps(xmm, xmm), movapd(xmm, xmm).
   // UseXmmRegToRegMoveAll == false --> movss(xmm, xmm),  movsd(xmm, xmm).
-
 
   if (is_zx()) { // ZX cpus specific settings
     if (FLAG_IS_DEFAULT(UseStoreImmI16)) {
@@ -1119,19 +961,6 @@ void VM_Version::get_processor_features() {
       }
     }
     if (((cpu_family() == 6) || (cpu_family() == 7)) && supports_sse3()) { // new ZX cpus
-#ifdef COMPILER2
-      if (FLAG_IS_DEFAULT(MaxLoopPad)) {
-        // For new ZX cpus do the next optimization:
-        // don't align the beginning of a loop if there are enough instructions
-        // left (NumberOfLoopInstrToAlign defined in c2_globals.hpp)
-        // in current fetch line (OptoLoopAlignment) or the padding
-        // is big (> MaxLoopPad).
-        // Set MaxLoopPad to 11 for new ZX cpus to reduce number of
-        // generated NOP instructions. 11 is the largest size of one
-        // address NOP instruction '0F 1F' (see Assembler::nop(i)).
-        MaxLoopPad = 11;
-      }
-#endif // COMPILER2
       if (FLAG_IS_DEFAULT(UseXMMForArrayCopy)) {
         UseXMMForArrayCopy = true; // use SSE2 movq on new ZX cpus
       }
@@ -1224,13 +1053,6 @@ void VM_Version::get_processor_features() {
       }
     }
 
-#ifdef COMPILER2
-    if (cpu_family() < 0x17 && MaxVectorSize > 16) {
-      // Limit vectors size to 16 bytes on AMD cpus < 17h.
-      FLAG_SET_DEFAULT(MaxVectorSize, 16);
-    }
-#endif // COMPILER2
-
     // Some defaults for AMD family 17h
     if ( cpu_family() == 0x17 ) {
       // On family 17h processors use XMM and UnalignedLoadStores for Array Copy
@@ -1240,11 +1062,6 @@ void VM_Version::get_processor_features() {
       if (supports_sse2() && FLAG_IS_DEFAULT(UseUnalignedLoadStores)) {
         FLAG_SET_DEFAULT(UseUnalignedLoadStores, true);
       }
-#ifdef COMPILER2
-      if (supports_sse4_2() && FLAG_IS_DEFAULT(UseFPUForSpilling)) {
-        FLAG_SET_DEFAULT(UseFPUForSpilling, true);
-      }
-#endif
     }
   }
 
@@ -1269,19 +1086,6 @@ void VM_Version::get_processor_features() {
       }
     }
     if( cpu_family() == 6 && supports_sse3() ) { // New Intel cpus
-#ifdef COMPILER2
-      if( FLAG_IS_DEFAULT(MaxLoopPad) ) {
-        // For new Intel cpus do the next optimization:
-        // don't align the beginning of a loop if there are enough instructions
-        // left (NumberOfLoopInstrToAlign defined in c2_globals.hpp)
-        // in current fetch line (OptoLoopAlignment) or the padding
-        // is big (> MaxLoopPad).
-        // Set MaxLoopPad to 11 for new Intel cpus to reduce number of
-        // generated NOP instructions. 11 is the largest size of one
-        // address NOP instruction '0F 1F' (see Assembler::nop(i)).
-        MaxLoopPad = 11;
-      }
-#endif // COMPILER2
       if (FLAG_IS_DEFAULT(UseXMMForArrayCopy)) {
         UseXMMForArrayCopy = true; // use SSE2 movq on new Intel cpus
       }
@@ -1302,11 +1106,6 @@ void VM_Version::get_processor_features() {
       }
     }
     if (is_atom_family() || is_knights_family()) {
-#ifdef COMPILER2
-      if (FLAG_IS_DEFAULT(OptoScheduling)) {
-        OptoScheduling = true;
-      }
-#endif
       if (supports_sse4_2()) { // Silvermont
         if (FLAG_IS_DEFAULT(UseUnalignedLoadStores)) {
           UseUnalignedLoadStores = true; // use movdqu on newest Intel cpus
@@ -1321,7 +1120,6 @@ void VM_Version::get_processor_features() {
     }
   }
 
-#ifdef _LP64
   if (UseSSE42Intrinsics) {
     if (FLAG_IS_DEFAULT(UseVectorizedMismatchIntrinsic)) {
       UseVectorizedMismatchIntrinsic = true;
@@ -1331,14 +1129,6 @@ void VM_Version::get_processor_features() {
       warning("vectorizedMismatch intrinsics are not available on this CPU");
     FLAG_SET_DEFAULT(UseVectorizedMismatchIntrinsic, false);
   }
-#else
-  if (UseVectorizedMismatchIntrinsic) {
-    if (!FLAG_IS_DEFAULT(UseVectorizedMismatchIntrinsic)) {
-      warning("vectorizedMismatch intrinsic is not available in 32-bit VM");
-    }
-    FLAG_SET_DEFAULT(UseVectorizedMismatchIntrinsic, false);
-  }
-#endif // _LP64
 
   // Use count leading zeros count instruction if available.
   if (supports_lzcnt()) {
@@ -1416,13 +1206,6 @@ void VM_Version::get_processor_features() {
     FLAG_SET_DEFAULT(UseXMMForObjInit, false);
   }
 
-#ifdef COMPILER2
-  if (FLAG_IS_DEFAULT(AlignVector)) {
-    // Modern processors allow misaligned memory operations for vectors.
-    AlignVector = !UseUnalignedLoadStores;
-  }
-#endif // COMPILER2
-
   if (FLAG_IS_DEFAULT(AllocatePrefetchInstr)) {
     if (AllocatePrefetchInstr == 3 && !supports_3dnow_prefetch()) {
       FLAG_SET_DEFAULT(AllocatePrefetchInstr, 0);
@@ -1439,7 +1222,7 @@ void VM_Version::get_processor_features() {
   }
 
   if ((AllocatePrefetchDistance == 0) && (AllocatePrefetchStyle != 0)) {
-    assert(!FLAG_IS_DEFAULT(AllocatePrefetchDistance), "default value should not be 0");
+    assert(!FLAG_IS_DEFAULT(AllocatePrefetchDistance), "default value should not be 0");
     if (!FLAG_IS_DEFAULT(AllocatePrefetchStyle)) {
       warning("AllocatePrefetchDistance is set to 0 which disable prefetching. Ignoring AllocatePrefetchStyle flag.");
     }
@@ -1456,22 +1239,11 @@ void VM_Version::get_processor_features() {
         supports_sse4_2() && supports_ht()) { // Nehalem based cpus
       FLAG_SET_DEFAULT(AllocatePrefetchLines, 4);
     }
-#ifdef COMPILER2
-    if (FLAG_IS_DEFAULT(UseFPUForSpilling) && supports_sse4_2()) {
-      FLAG_SET_DEFAULT(UseFPUForSpilling, true);
-    }
-#endif
   }
 
   if (is_zx() && ((cpu_family() == 6) || (cpu_family() == 7)) && supports_sse4_2()) {
-#ifdef COMPILER2
-    if (FLAG_IS_DEFAULT(UseFPUForSpilling)) {
-      FLAG_SET_DEFAULT(UseFPUForSpilling, true);
-    }
-#endif
   }
 
-#ifdef _LP64
   // Prefetch settings
 
   // Prefetch interval for gc copy/scan == 9 dcache lines.  Derived from
@@ -1493,7 +1265,6 @@ void VM_Version::get_processor_features() {
   if (FLAG_IS_DEFAULT(PrefetchFieldsAhead)) {
     FLAG_SET_DEFAULT(PrefetchFieldsAhead, 1);
   }
-#endif
 
   if (FLAG_IS_DEFAULT(ContendedPaddingWidth) &&
      (cache_line_size > ContendedPaddingWidth))
@@ -1503,66 +1274,6 @@ void VM_Version::get_processor_features() {
   if (FLAG_IS_DEFAULT(UseUnalignedAccesses)) {
     FLAG_SET_DEFAULT(UseUnalignedAccesses, true);
   }
-
-#ifndef PRODUCT
-  if (log_is_enabled(Info, os, cpu)) {
-    LogStream ls(Log(os, cpu)::info());
-    outputStream* log = &ls;
-    log->print_cr("Logical CPUs per core: %u",
-                  logical_processors_per_package());
-    log->print_cr("L1 data cache line size: %u", L1_data_cache_line_size());
-    log->print("UseSSE=%d", (int) UseSSE);
-    if (UseAVX > 0) {
-      log->print("  UseAVX=%d", (int) UseAVX);
-    }
-    if (UseAES) {
-      log->print("  UseAES=1");
-    }
-#ifdef COMPILER2
-    if (MaxVectorSize > 0) {
-      log->print("  MaxVectorSize=%d", (int) MaxVectorSize);
-    }
-#endif
-    log->cr();
-    log->print("Allocation");
-    if (AllocatePrefetchStyle <= 0 || (UseSSE == 0 && !supports_3dnow_prefetch())) {
-      log->print_cr(": no prefetching");
-    } else {
-      log->print(" prefetching: ");
-      if (UseSSE == 0 && supports_3dnow_prefetch()) {
-        log->print("PREFETCHW");
-      } else if (UseSSE >= 1) {
-        if (AllocatePrefetchInstr == 0) {
-          log->print("PREFETCHNTA");
-        } else if (AllocatePrefetchInstr == 1) {
-          log->print("PREFETCHT0");
-        } else if (AllocatePrefetchInstr == 2) {
-          log->print("PREFETCHT2");
-        } else if (AllocatePrefetchInstr == 3) {
-          log->print("PREFETCHW");
-        }
-      }
-      if (AllocatePrefetchLines > 1) {
-        log->print_cr(" at distance %d, %d lines of %d bytes", (int) AllocatePrefetchDistance, (int) AllocatePrefetchLines, (int) AllocatePrefetchStepSize);
-      } else {
-        log->print_cr(" at distance %d, one line of %d bytes", (int) AllocatePrefetchDistance, (int) AllocatePrefetchStepSize);
-      }
-    }
-
-    if (PrefetchCopyIntervalInBytes > 0) {
-      log->print_cr("PrefetchCopyIntervalInBytes %d", (int) PrefetchCopyIntervalInBytes);
-    }
-    if (PrefetchScanIntervalInBytes > 0) {
-      log->print_cr("PrefetchScanIntervalInBytes %d", (int) PrefetchScanIntervalInBytes);
-    }
-    if (PrefetchFieldsAhead > 0) {
-      log->print_cr("PrefetchFieldsAhead %d", (int) PrefetchFieldsAhead);
-    }
-    if (ContendedPaddingWidth > 0) {
-      log->print_cr("ContendedPaddingWidth %d", (int) ContendedPaddingWidth);
-    }
-  }
-#endif // !PRODUCT
 }
 
 bool VM_Version::use_biased_locking() {

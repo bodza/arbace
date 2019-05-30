@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "logging/logDecorations.hpp"
@@ -110,7 +87,7 @@ void LogTagSet::write(LogLevelType level, const char* fmt, ...) {
 const size_t vwrite_buffer_size = 512;
 
 void LogTagSet::vwrite(LogLevelType level, const char* fmt, va_list args) {
-  assert(level >= LogLevel::First && level <= LogLevel::Last, "Log level:%d is incorrect", level);
+  assert(level >= LogLevel::First && level <= LogLevel::Last, "Log level:%d is incorrect", level);
   char buf[vwrite_buffer_size];
   va_list saved_args;           // For re-format on buf overflow.
   va_copy(saved_args, args);
@@ -123,13 +100,13 @@ void LogTagSet::vwrite(LogLevelType level, const char* fmt, va_list args) {
     // Buffer too small. Just call printf to find out the length for realloc below.
     ret = os::vsnprintf(buf, sizeof(buf), fmt, args);
   }
-  assert(ret >= 0, "Log message buffer issue");
+  assert(ret >= 0, "Log message buffer issue");
   if ((size_t)ret >= sizeof(buf)) {
     size_t newbuf_len = prefix_len + ret + 1;
     char* newbuf = NEW_C_HEAP_ARRAY(char, newbuf_len, mtLogging);
     prefix_len = _write_prefix(newbuf, newbuf_len);
     ret = os::vsnprintf(newbuf + prefix_len, newbuf_len - prefix_len, fmt, saved_args);
-    assert(ret >= 0, "Log message buffer issue");
+    assert(ret >= 0, "Log message buffer issue");
     log(level, newbuf);
     FREE_C_HEAP_ARRAY(char, newbuf);
   } else {
@@ -163,7 +140,7 @@ void LogTagSet::list_all_tagsets(outputStream* out) {
     ts->label(buf, sizeof(buf), "+");
     tagset_labels[idx++] = os::strdup_check_oom(buf, mtLogging);
   }
-  assert(idx == _ntagsets, "_ntagsets and list of tagsets not in sync");
+  assert(idx == _ntagsets, "_ntagsets and list of tagsets not in sync");
 
   // Sort them lexicographically
   qsort(tagset_labels, _ntagsets, sizeof(*tagset_labels), qsort_strcmp);
@@ -177,4 +154,3 @@ void LogTagSet::list_all_tagsets(outputStream* out) {
   out->cr();
   FREE_C_HEAP_ARRAY(char*, tagset_labels);
 }
-

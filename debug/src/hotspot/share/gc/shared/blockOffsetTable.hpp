@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_BLOCKOFFSETTABLE_HPP
 #define SHARE_VM_GC_SHARED_BLOCKOFFSETTABLE_HPP
 
@@ -66,11 +42,11 @@ public:
     return power_to_cards_back(i) * N_words;
   }
   static size_t entry_to_cards_back(u_char entry) {
-    assert(entry >= N_words, "Precondition");
+    assert(entry >= N_words, "Precondition");
     return power_to_cards_back(entry - N_words);
   }
   static size_t entry_to_words_back(u_char entry) {
-    assert(entry >= N_words, "Precondition");
+    assert(entry >= N_words, "Precondition");
     return power_to_words_back(entry - N_words);
   }
 };
@@ -92,7 +68,7 @@ public:
   // The contents of the initial table are undefined.
   BlockOffsetTable(HeapWord* bottom, HeapWord* end):
     _bottom(bottom), _end(end) {
-    assert(_bottom <= _end, "arguments out of order");
+    assert(_bottom <= _end, "arguments out of order");
   }
 
   // Note that the committed size of the covered space may have changed,
@@ -100,7 +76,7 @@ public:
   virtual void resize(size_t new_word_size) = 0;
 
   virtual void set_bottom(HeapWord* new_bottom) {
-    assert(new_bottom <= _end, "new_bottom > _end");
+    assert(new_bottom <= _end, "new_bottom > _end");
     _bottom = new_bottom;
     resize(pointer_delta(_end, _bottom));
   }
@@ -154,13 +130,7 @@ class BlockOffsetSharedArray: public CHeapObj<mtGC> {
   void fill_range(size_t start, size_t num_cards, u_char offset) {
     void* start_ptr = &_offset_array[start];
     // If collector is concurrent, special handling may be needed.
-    G1GC_ONLY(assert(!UseG1GC, "Shouldn't be here when using G1");)
-#if INCLUDE_CMSGC
-    if (UseConcMarkSweepGC) {
-      memset_with_concurrent_readers(start_ptr, offset, num_cards);
-      return;
-    }
-#endif // INCLUDE_CMSGC
+    assert(!UseG1GC, "Shouldn't be here when using G1");
     memset(start_ptr, offset, num_cards);
   }
 
@@ -168,7 +138,7 @@ class BlockOffsetSharedArray: public CHeapObj<mtGC> {
   // Bounds checking accessors:
   // For performance these have to devolve to array accesses in product builds.
   u_char offset_array(size_t index) const {
-    assert(index < _vs.committed_size(), "index out of range");
+    assert(index < _vs.committed_size(), "index out of range");
     return _offset_array[index];
   }
   // An assertion-checking helper method for the set_offset_array() methods below.
@@ -176,26 +146,24 @@ class BlockOffsetSharedArray: public CHeapObj<mtGC> {
 
   void set_offset_array(size_t index, u_char offset, bool reducing = false) {
     check_reducing_assertion(reducing);
-    assert(index < _vs.committed_size(), "index out of range");
-    assert(!reducing || _offset_array[index] >= offset, "Not reducing");
+    assert(index < _vs.committed_size(), "index out of range");
+    assert(!reducing || _offset_array[index] >= offset, "Not reducing");
     _offset_array[index] = offset;
   }
 
   void set_offset_array(size_t index, HeapWord* high, HeapWord* low, bool reducing = false) {
     check_reducing_assertion(reducing);
-    assert(index < _vs.committed_size(), "index out of range");
-    assert(high >= low, "addresses out of order");
-    assert(pointer_delta(high, low) <= BOTConstants::N_words, "offset too large");
-    assert(!reducing || _offset_array[index] >=  (u_char)pointer_delta(high, low),
-           "Not reducing");
+    assert(index < _vs.committed_size(), "index out of range");
+    assert(high >= low, "addresses out of order");
+    assert(pointer_delta(high, low) <= BOTConstants::N_words, "offset too large");
+    assert(!reducing || _offset_array[index] >=  (u_char)pointer_delta(high, low), "Not reducing");
     _offset_array[index] = (u_char)pointer_delta(high, low);
   }
 
   void set_offset_array(HeapWord* left, HeapWord* right, u_char offset, bool reducing = false) {
     check_reducing_assertion(reducing);
-    assert(index_for(right - 1) < _vs.committed_size(),
-           "right address out of range");
-    assert(left  < right, "Heap addresses out of order");
+    assert(index_for(right - 1) < _vs.committed_size(), "right address out of range");
+    assert(left  < right, "Heap addresses out of order");
     size_t num_cards = pointer_delta(right, left) >> BOTConstants::LogN_words;
 
     fill_range(index_for(left), num_cards, offset);
@@ -203,19 +171,18 @@ class BlockOffsetSharedArray: public CHeapObj<mtGC> {
 
   void set_offset_array(size_t left, size_t right, u_char offset, bool reducing = false) {
     check_reducing_assertion(reducing);
-    assert(right < _vs.committed_size(), "right address out of range");
-    assert(left  <= right, "indexes out of order");
+    assert(right < _vs.committed_size(), "right address out of range");
+    assert(left  <= right, "indexes out of order");
     size_t num_cards = right - left + 1;
 
     fill_range(left, num_cards, offset);
   }
 
   void check_offset_array(size_t index, HeapWord* high, HeapWord* low) const {
-    assert(index < _vs.committed_size(), "index out of range");
-    assert(high >= low, "addresses out of order");
-    assert(pointer_delta(high, low) <= BOTConstants::N_words, "offset too large");
-    assert(_offset_array[index] == pointer_delta(high, low),
-           "Wrong offset");
+    assert(index < _vs.committed_size(), "index out of range");
+    assert(high >= low, "addresses out of order");
+    assert(pointer_delta(high, low) <= BOTConstants::N_words, "offset too large");
+    assert(_offset_array[index] == pointer_delta(high, low), "Wrong offset");
   }
 
   bool is_card_boundary(HeapWord* p) const;
@@ -335,10 +302,8 @@ class BlockOffsetArray: public BlockOffsetTable {
     HeapWord* new_end = _bottom + new_word_size;
     if (_end < new_end && !init_to_zero()) {
       // verify that the old and new boundaries are also card boundaries
-      assert(_array->is_card_boundary(_end),
-             "_end not a card boundary");
-      assert(_array->is_card_boundary(new_end),
-             "new _end would not be a card boundary");
+      assert(_array->is_card_boundary(_end), "_end not a card boundary");
+      assert(_array->is_card_boundary(new_end), "new _end would not be a card boundary");
       // set all the newly added cards
       _array->set_offset_array(_end, new_end, BOTConstants::N_words);
     }
@@ -373,7 +338,7 @@ class BlockOffsetArray: public BlockOffsetTable {
   // Corresponding setter
   void set_init_to_zero(bool val) {
     _init_to_zero = val;
-    assert(_array != NULL, "_array should be non-NULL");
+    assert(_array != NULL, "_array should be non-NULL");
     _array->set_init_to_zero(val);
   }
 
@@ -406,15 +371,13 @@ class BlockOffsetArrayNonContigSpace: public BlockOffsetArray {
 
   // Accessor
   HeapWord* unallocated_block() const {
-    assert(BlockOffsetArrayUseUnallocatedBlock,
-           "_unallocated_block is not being maintained");
+    assert(BlockOffsetArrayUseUnallocatedBlock, "_unallocated_block is not being maintained");
     return _unallocated_block;
   }
 
   void set_unallocated_block(HeapWord* block) {
-    assert(BlockOffsetArrayUseUnallocatedBlock,
-           "_unallocated_block is not being maintained");
-    assert(block >= _bottom && block <= _end, "out of range");
+    assert(BlockOffsetArrayUseUnallocatedBlock, "_unallocated_block is not being maintained");
+    assert(block >= _bottom && block <= _end, "out of range");
     _unallocated_block = block;
   }
 
@@ -477,14 +440,14 @@ class BlockOffsetArrayNonContigSpace: public BlockOffsetArray {
   // is a single block of storage. NOTE: can't const this because of
   // call to non-const do_block_internal() below.
   void verify_single_block(HeapWord* blk_start, HeapWord* blk_end)
-    PRODUCT_RETURN;
-  void verify_single_block(HeapWord* blk, size_t size) PRODUCT_RETURN;
+    {};
+  void verify_single_block(HeapWord* blk, size_t size) {};
 
   // Verify that the given block is before _unallocated_block
   void verify_not_unallocated(HeapWord* blk_start, HeapWord* blk_end)
-    const PRODUCT_RETURN;
+    const {};
   void verify_not_unallocated(HeapWord* blk, size_t size)
-    const PRODUCT_RETURN;
+    const {};
 
   // Debugging support
   virtual size_t last_active_index() const;
@@ -543,4 +506,4 @@ class BlockOffsetArrayContigSpace: public BlockOffsetArray {
   virtual size_t last_active_index() const;
 };
 
-#endif // SHARE_VM_GC_SHARED_BLOCKOFFSETTABLE_HPP
+#endif

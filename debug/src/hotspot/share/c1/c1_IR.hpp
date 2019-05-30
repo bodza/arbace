@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_IR_HPP
 #define SHARE_VM_C1_C1_IR_HPP
 
@@ -43,10 +19,6 @@ class XHandler: public CompilationResourceObj {
   int                 _phi_operand;  // For resolving of phi functions at begin of entry_block
   int                 _scope_count;  // for filling ExceptionRangeEntry::scope_count
 
-#ifdef ASSERT
-  int                 _lir_op_id;    // op_id of the LIR-operation throwing to this handler
-#endif
-
  public:
   // creation
   XHandler(ciExceptionHandler* desc)
@@ -56,9 +28,6 @@ class XHandler: public CompilationResourceObj {
     , _entry_pco(-1)
     , _phi_operand(-1)
     , _scope_count(-1)
-#ifdef ASSERT
-    , _lir_op_id(-1)
-#endif
   { }
 
   XHandler(XHandler* other)
@@ -68,9 +37,6 @@ class XHandler: public CompilationResourceObj {
     , _entry_pco(other->_entry_pco)
     , _phi_operand(other->_phi_operand)
     , _scope_count(other->_scope_count)
-#ifdef ASSERT
-    , _lir_op_id(other->_lir_op_id)
-#endif
   { }
 
   // accessors for data of ciExceptionHandler
@@ -86,20 +52,22 @@ class XHandler: public CompilationResourceObj {
   BlockBegin* entry_block() const                { return _entry_block; }
   LIR_List*   entry_code() const                 { return _entry_code; }
   int         entry_pco() const                  { return _entry_pco; }
-  int         phi_operand() const                { assert(_phi_operand != -1, "not set"); return _phi_operand; }
-  int         scope_count() const                { assert(_scope_count != -1, "not set"); return _scope_count; }
-  DEBUG_ONLY(int lir_op_id() const               { return _lir_op_id; });
+  int         phi_operand() const                {
+    assert(_phi_operand != -1, "not set");
+    return _phi_operand; }
+  int         scope_count() const                {
+    assert(_scope_count != -1, "not set");
+    return _scope_count; }
 
   void set_entry_block(BlockBegin* entry_block) {
-    assert(entry_block->is_set(BlockBegin::exception_entry_flag), "must be an exception handler entry");
-    assert(entry_block->bci() == handler_bci(), "bci's must correspond");
+    assert(entry_block->is_set(BlockBegin::exception_entry_flag), "must be an exception handler entry");
+    assert(entry_block->bci() == handler_bci(), "bci's must correspond");
     _entry_block = entry_block;
   }
   void set_entry_code(LIR_List* entry_code)      { _entry_code = entry_code; }
   void set_entry_pco(int entry_pco)              { _entry_pco = entry_pco; }
   void set_phi_operand(int phi_operand)          { _phi_operand = phi_operand; }
   void set_scope_count(int scope_count)          { _scope_count = scope_count; }
-  DEBUG_ONLY(void set_lir_op_id(int lir_op_id)   { _lir_op_id = lir_op_id; });
 
   bool equals(XHandler* other) const;
 };
@@ -127,7 +95,6 @@ class XHandlers: public CompilationResourceObj {
   bool      could_catch(ciInstanceKlass* klass, bool type_is_exact) const;
   bool      equals(XHandlers* others) const;
 };
-
 
 class IRScope;
 typedef GrowableArray<IRScope*> IRScopeList;
@@ -189,7 +156,6 @@ class IRScope: public CompilationResourceObj {
   bool          wrote_volatile    () const       { return _wrote_volatile; }
 };
 
-
 //
 // IRScopeDebugInfo records the debug information for a particular IRScope
 // in a particular CodeEmitInfo.  This allows the information to be computed
@@ -221,7 +187,6 @@ class IRScopeDebugInfo: public CompilationResourceObj {
     , _monitors(monitors)
     , _caller(caller) {}
 
-
   IRScope*                      scope()       { return _scope;       }
   int                           bci()         { return _bci;         }
   GrowableArray<ScopeValue*>*   locals()      { return _locals;      }
@@ -247,7 +212,6 @@ class IRScopeDebugInfo: public CompilationResourceObj {
     recorder->describe_scope(pc_offset, methodHandle(), scope()->method(), bci(), reexecute, rethrow_exception, is_method_handle_invoke, return_oop, locvals, expvals, monvals);
   }
 };
-
 
 class CodeEmitInfo: public CompilationResourceObj {
   friend class LinearScan;
@@ -288,7 +252,6 @@ class CodeEmitInfo: public CompilationResourceObj {
   int interpreter_frame_size() const;
 };
 
-
 class IR: public CompilationResourceObj {
  private:
   Compilation*     _compilation;                 // the current compilation
@@ -323,7 +286,9 @@ class IR: public CompilationResourceObj {
 
   // The linear-scan order and the code emission order are equal, but
   // this may change in future
-  BlockList* linear_scan_order() {  assert(_code != NULL, "not computed"); return _code; }
+  BlockList* linear_scan_order() {
+    assert(_code != NULL, "not computed");
+    return _code; }
 
   // iteration
   void iterate_preorder   (BlockClosure* closure);
@@ -331,11 +296,10 @@ class IR: public CompilationResourceObj {
   void iterate_linear_scan_order(BlockClosure* closure);
 
   // debugging
-  static void print(BlockBegin* start, bool cfg_only, bool live_only = false) PRODUCT_RETURN;
-  void print(bool cfg_only, bool live_only = false)                           PRODUCT_RETURN;
-  void verify()                                                               PRODUCT_RETURN;
+  static void print(BlockBegin* start, bool cfg_only, bool live_only = false) {};
+  void print(bool cfg_only, bool live_only = false)                           {};
+  void verify()                                                               {};
 };
-
 
 // Globally do instruction substitution and remove substituted
 // instructions from the instruction list.
@@ -356,4 +320,4 @@ class SubstitutionResolver: public BlockClosure, ValueVisitor {
   virtual void block_do(BlockBegin* block);
 };
 
-#endif // SHARE_VM_C1_C1_IR_HPP
+#endif

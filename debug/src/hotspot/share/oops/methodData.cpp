@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compilerOracle.hpp"
@@ -32,7 +8,6 @@
 #include "memory/metaspaceClosure.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/methodData.inline.hpp"
-#include "prims/jvmtiRedefineClasses.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/deoptimization.hpp"
@@ -76,7 +51,6 @@ void DataLayout::clean_weak_klass_links(bool always_clean) {
   data_in()->clean_weak_klass_links(always_clean);
 }
 
-
 // ==================================================================
 // ProfileData
 //
@@ -93,7 +67,7 @@ char* ProfileData::print_data_on_helper(const MethodData* md) const {
   DataLayout* end = md->args_data_limit();
   stringStream ss;
   for (;; dp = MethodData::next_extra(dp)) {
-    assert(dp < end, "moved past end of extra data");
+    assert(dp < end, "moved past end of extra data");
     switch(dp->tag()) {
     case DataLayout::speculative_trap_data_tag:
       if (dp->bci() == bci()) {
@@ -151,7 +125,6 @@ void ProfileData::tab(outputStream* st, bool first) const {
 // A BitData corresponds to a one-bit flag.  This is used to indicate
 // whether a checkcast bytecode has seen a null value.
 
-
 void BitData::print_data_on(outputStream* st, const char* extra) const {
   print_shared(st, "BitData", extra);
   st->cr();
@@ -176,7 +149,7 @@ void CounterData::print_data_on(outputStream* st, const char* extra) const {
 // the corresponding target bci.
 
 void JumpData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
-  assert(stream->bci() == bci(), "wrong pos");
+  assert(stream->bci() == bci(), "wrong pos");
   int target;
   Bytecodes::Code c = stream->code();
   if (c == Bytecodes::_goto_w || c == Bytecodes::_jsr_w) {
@@ -206,8 +179,8 @@ int TypeStackSlotEntries::compute_cell_count(Symbol* signature, bool include_rec
 }
 
 int TypeEntriesAtCall::compute_cell_count(BytecodeStream* stream) {
-  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
-  assert(TypeStackSlotEntries::per_arg_count() > ReturnTypeEntry::static_cell_count(), "code to test for arguments/results broken");
+  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
+  assert(TypeStackSlotEntries::per_arg_count() > ReturnTypeEntry::static_cell_count(), "code to test for arguments/results broken");
   const methodHandle m = stream->method();
   int bci = stream->bci();
   Bytecode_invoke inv(m, bci);
@@ -274,43 +247,30 @@ void TypeStackSlotEntries::post_initialize(Symbol* signature, bool has_receiver,
 }
 
 void CallTypeData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
-  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
+  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
   Bytecode_invoke inv(stream->method(), stream->bci());
 
   SignatureStream ss(inv.signature());
   if (has_arguments()) {
-#ifdef ASSERT
-    ResourceMark rm;
-    int count = MIN2(ss.reference_parameter_count(), (int)TypeProfileArgsLimit);
-    assert(count > 0, "room for args type but none found?");
-    check_number_of_arguments(count);
-#endif
     _args.post_initialize(inv.signature(), inv.has_receiver(), false);
   }
 
   if (has_return()) {
-    assert(inv.result_type() == T_OBJECT || inv.result_type() == T_ARRAY, "room for a ret type but doesn't return obj?");
+    assert(inv.result_type() == T_OBJECT || inv.result_type() == T_ARRAY, "room for a ret type but doesn't return obj?");
     _ret.post_initialize();
   }
 }
 
 void VirtualCallTypeData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
-  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
+  assert(Bytecodes::is_invoke(stream->code()), "should be invoke");
   Bytecode_invoke inv(stream->method(), stream->bci());
 
   if (has_arguments()) {
-#ifdef ASSERT
-    ResourceMark rm;
-    SignatureStream ss(inv.signature());
-    int count = MIN2(ss.reference_parameter_count(), (int)TypeProfileArgsLimit);
-    assert(count > 0, "room for args type but none found?");
-    check_number_of_arguments(count);
-#endif
     _args.post_initialize(inv.signature(), inv.has_receiver(), false);
   }
 
   if (has_return()) {
-    assert(inv.result_type() == T_OBJECT || inv.result_type() == T_ARRAY, "room for a ret type but doesn't return obj?");
+    assert(inv.result_type() == T_OBJECT || inv.result_type() == T_ARRAY, "room for a ret type but doesn't return obj?");
     _ret.post_initialize();
   }
 }
@@ -414,7 +374,6 @@ void ReceiverTypeData::clean_weak_klass_links(bool always_clean) {
   }
 }
 
-#if INCLUDE_JVMCI
 void VirtualCallData::clean_weak_klass_links(bool always_clean) {
   ReceiverTypeData::clean_weak_klass_links(always_clean);
   for (uint row = 0; row < method_row_limit(); row++) {
@@ -434,7 +393,6 @@ void VirtualCallData::clean_weak_method_links() {
     }
   }
 }
-#endif // INCLUDE_JVMCI
 
 void ReceiverTypeData::print_receiver_data_on(outputStream* st) const {
   uint row;
@@ -442,11 +400,7 @@ void ReceiverTypeData::print_receiver_data_on(outputStream* st) const {
   for (row = 0; row < row_limit(); row++) {
     if (receiver(row) != NULL)  entries++;
   }
-#if INCLUDE_JVMCI
   st->print_cr("count(%u) nonprofiled_count(%u) entries(%u)", count(), nonprofiled_count(), entries);
-#else
-  st->print_cr("count(%u) entries(%u)", count(), entries);
-#endif
   int total = count();
   for (row = 0; row < row_limit(); row++) {
     if (receiver(row) != NULL) {
@@ -466,7 +420,6 @@ void ReceiverTypeData::print_data_on(outputStream* st, const char* extra) const 
   print_receiver_data_on(st);
 }
 
-#if INCLUDE_JVMCI
 void VirtualCallData::print_method_data_on(outputStream* st) const {
   uint row;
   int entries = 0;
@@ -489,7 +442,6 @@ void VirtualCallData::print_method_data_on(outputStream* st) const {
     }
   }
 }
-#endif // INCLUDE_JVMCI
 
 void VirtualCallData::print_data_on(outputStream* st, const char* extra) const {
   print_shared(st, "VirtualCallData", extra);
@@ -566,7 +518,7 @@ void RetData::print_data_on(outputStream* st, const char* extra) const {
 // for the taken case.
 
 void BranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
-  assert(stream->bci() == bci(), "wrong pos");
+  assert(stream->bci() == bci(), "wrong pos");
   int target = stream->dest();
   int my_di = mdo->dp_to_di(dp());
   int target_di = mdo->bci_to_di(target);
@@ -604,7 +556,7 @@ int MultiBranchData::compute_cell_count(BytecodeStream* stream) {
 
 void MultiBranchData::post_initialize(BytecodeStream* stream,
                                       MethodData* mdo) {
-  assert(stream->bci() == bci(), "wrong pos");
+  assert(stream->bci() == bci(), "wrong pos");
   int target;
   int my_di;
   int target_di;
@@ -612,7 +564,7 @@ void MultiBranchData::post_initialize(BytecodeStream* stream,
   if (stream->code() == Bytecodes::_tableswitch) {
     Bytecode_tableswitch sw(stream->method()(), stream->bcp());
     int len = sw.length();
-    assert(array_len() == per_case_cell_count * (len + 1), "wrong len");
+    assert(array_len() == per_case_cell_count * (len + 1), "wrong len");
     for (int count = 0; count < len; count++) {
       target = sw.dest_offset_at(count) + bci();
       my_di = mdo->dp_to_di(dp());
@@ -629,7 +581,7 @@ void MultiBranchData::post_initialize(BytecodeStream* stream,
   } else {
     Bytecode_lookupswitch sw(stream->method()(), stream->bcp());
     int npairs = sw.number_of_pairs();
-    assert(array_len() == per_case_cell_count * (npairs + 1), "wrong len");
+    assert(array_len() == per_case_cell_count * (npairs + 1), "wrong len");
     for (int count = 0; count < npairs; count++) {
       LookupswitchPair pair = sw.pair_at(count);
       target = pair.offset() + bci();
@@ -793,7 +745,7 @@ int MethodData::compute_data_size(BytecodeStream* stream) {
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
     case Bytecodes::_invokedynamic:
-      assert(MethodData::profile_arguments() || MethodData::profile_return(), "should be collecting args profile");
+      assert(MethodData::profile_arguments() || MethodData::profile_return(), "should be collecting args profile");
       if (profile_arguments_for_invoke(stream->method(), stream->bci()) ||
           profile_return_for_invoke(stream->method(), stream->bci())) {
         cell_count = CallTypeData::compute_cell_count(stream);
@@ -803,7 +755,7 @@ int MethodData::compute_data_size(BytecodeStream* stream) {
       break;
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokeinterface: {
-      assert(MethodData::profile_arguments() || MethodData::profile_return(), "should be collecting args profile");
+      assert(MethodData::profile_arguments() || MethodData::profile_return(), "should be collecting args profile");
       if (profile_arguments_for_invoke(stream->method(), stream->bci()) ||
           profile_return_for_invoke(stream->method(), stream->bci())) {
         cell_count = VirtualCallTypeData::compute_cell_count(stream);
@@ -818,7 +770,7 @@ int MethodData::compute_data_size(BytecodeStream* stream) {
   }
   // Note:  cell_count might be zero, meaning that there is just
   //        a DataLayout header, with no extra cells.
-  assert(cell_count >= 0, "sanity");
+  assert(cell_count >= 0, "sanity");
   return DataLayout::compute_size_in_bytes(cell_count);
 }
 
@@ -835,11 +787,6 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
   case Bytecodes::_ifnull:
   case Bytecodes::_ifnonnull:
   case Bytecodes::_invokestatic:
-#ifdef COMPILER2
-    if (is_server_compilation_mode_vm()) {
-      return UseTypeSpeculation;
-    }
-#endif
   default:
     return false;
   }
@@ -847,7 +794,6 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
 }
 
 int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
-#if INCLUDE_JVMCI
   if (ProfileTraps) {
     // Assume that up to 30% of the possibly trapping BCIs with no MDP will need to allocate one.
     int extra_data_count = MIN2(empty_bc_count, MAX2(4, (empty_bc_count * 30) / 100));
@@ -866,33 +812,6 @@ int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool
   } else {
     return 0;
   }
-#else // INCLUDE_JVMCI
-  if (ProfileTraps) {
-    // Assume that up to 3% of BCIs with no MDP will need to allocate one.
-    int extra_data_count = (uint)(empty_bc_count * 3) / 128 + 1;
-    // If the method is large, let the extra BCIs grow numerous (to ~1%).
-    int one_percent_of_data
-      = (uint)data_size / (DataLayout::header_size_in_bytes()*128);
-    if (extra_data_count < one_percent_of_data)
-      extra_data_count = one_percent_of_data;
-    if (extra_data_count > empty_bc_count)
-      extra_data_count = empty_bc_count;  // no need for more
-
-    // Make sure we have a minimum number of extra data slots to
-    // allocate SpeculativeTrapData entries. We would want to have one
-    // entry per compilation that inlines this method and for which
-    // some type speculation assumption fails. So the room we need for
-    // the SpeculativeTrapData entries doesn't directly depend on the
-    // size of the method. Because it's hard to estimate, we reserve
-    // space for an arbitrary number of entries.
-    int spec_data_count = (needs_speculative_traps ? SpecTrapLimitExtraEntries : 0) *
-      (SpeculativeTrapData::static_cell_count() + DataLayout::header_size_in_cells());
-
-    return MAX2(extra_data_count, spec_data_count);
-  } else {
-    return 0;
-  }
-#endif // INCLUDE_JVMCI
 }
 
 // Compute the size of the MethodData* necessary to store
@@ -906,7 +825,7 @@ int MethodData::compute_allocation_size_in_bytes(const methodHandle& method) {
   while ((c = stream.next()) >= 0) {
     int size_in_bytes = compute_data_size(&stream);
     data_size += size_in_bytes;
-    if (size_in_bytes == 0 JVMCI_ONLY(&& Bytecodes::can_trap(c)))  empty_bc_count += 1;
+    if (size_in_bytes == 0 && Bytecodes::can_trap(c))  empty_bc_count += 1;
     needs_speculative_traps = needs_speculative_traps || is_speculative_trap_bytecode(c);
   }
   int object_size = in_bytes(data_offset()) + data_size;
@@ -1045,20 +964,14 @@ int MethodData::initialize_data(BytecodeStream* stream,
   default:
     break;
   }
-  assert(tag == DataLayout::multi_branch_data_tag ||
-         ((MethodData::profile_arguments() || MethodData::profile_return()) &&
-          (tag == DataLayout::call_type_data_tag ||
-           tag == DataLayout::counter_data_tag ||
-           tag == DataLayout::virtual_call_type_data_tag ||
-           tag == DataLayout::virtual_call_data_tag)) ||
-         cell_count == bytecode_cell_count(c), "cell counts must agree");
+  assert(tag == DataLayout::multi_branch_data_tag || ((MethodData::profile_arguments() || MethodData::profile_return()) && (tag == DataLayout::call_type_data_tag || tag == DataLayout::counter_data_tag || tag == DataLayout::virtual_call_type_data_tag || tag == DataLayout::virtual_call_data_tag)) || cell_count == bytecode_cell_count(c), "cell counts must agree");
   if (cell_count >= 0) {
-    assert(tag != DataLayout::no_tag, "bad tag");
-    assert(bytecode_has_profile(c), "agree w/ BHP");
+    assert(tag != DataLayout::no_tag, "bad tag");
+    assert(bytecode_has_profile(c), "agree w/ BHP");
     data_layout->initialize(tag, stream->bci(), cell_count);
     return DataLayout::compute_size_in_bytes(cell_count);
   } else {
-    assert(!bytecode_has_profile(c), "agree w/ !BHP");
+    assert(!bytecode_has_profile(c), "agree w/ !BHP");
     return 0;
   }
 }
@@ -1157,7 +1070,7 @@ void MethodData::initialize() {
   while ((c = stream.next()) >= 0) {
     int size_in_bytes = initialize_data(&stream, data_size);
     data_size += size_in_bytes;
-    if (size_in_bytes == 0 JVMCI_ONLY(&& Bytecodes::can_trap(c)))  empty_bc_count += 1;
+    if (size_in_bytes == 0 && Bytecodes::can_trap(c))  empty_bc_count += 1;
     needs_speculative_traps = needs_speculative_traps || is_speculative_trap_bytecode(c);
   }
   _data_size = data_size;
@@ -1204,7 +1117,7 @@ void MethodData::initialize() {
 
   post_initialize(&stream);
 
-  assert(object_size == compute_allocation_size_in_bytes(methodHandle(_method)), "MethodData: computed size != initialized size");
+  assert(object_size == compute_allocation_size_in_bytes(methodHandle(_method)), "MethodData: computed size != initialized size");
   set_size(object_size);
 }
 
@@ -1225,9 +1138,7 @@ void MethodData::init() {
   _num_blocks = 0;
   _would_profile = unknown;
 
-#if INCLUDE_JVMCI
   _jvmci_ir_size = 0;
-#endif
 
 #if INCLUDE_RTM_OPT
   _rtm_state = NoRTM; // No RTM lock eliding by default
@@ -1249,7 +1160,7 @@ void MethodData::init() {
   _nof_overflow_recompiles = 0;
   _nof_overflow_traps = 0;
   clear_escape_info();
-  assert(sizeof(_trap_hist) % sizeof(HeapWord) == 0, "align");
+  assert(sizeof(_trap_hist) % sizeof(HeapWord) == 0, "align");
   Copy::zero_to_words((HeapWord*) &_trap_hist,
                       sizeof(_trap_hist) / sizeof(HeapWord));
 }
@@ -1331,7 +1242,7 @@ ProfileData* MethodData::bci_to_extra_data_helper(int bci, Method* m, DataLayout
   DataLayout* end = args_data_limit();
 
   for (;; dp = next_extra(dp)) {
-    assert(dp < end, "moved past end of extra data");
+    assert(dp < end, "moved past end of extra data");
     // No need for "OrderAccess::load_acquire" ops,
     // since the data structure is monotonic.
     switch(dp->tag()) {
@@ -1353,7 +1264,7 @@ ProfileData* MethodData::bci_to_extra_data_helper(int bci, Method* m, DataLayout
         // entry in that case.
         if (dp->bci() == bci) {
           if (data->method() == NULL) {
-            assert(concurrent, "impossible because no concurrent allocation");
+            assert(concurrent, "impossible because no concurrent allocation");
             return NULL;
           } else if (data->method() == m) {
             return data;
@@ -1368,13 +1279,10 @@ ProfileData* MethodData::bci_to_extra_data_helper(int bci, Method* m, DataLayout
   return NULL;
 }
 
-
 // Translate a bci to its corresponding extra data, or NULL.
 ProfileData* MethodData::bci_to_extra_data(int bci, Method* m, bool create_if_missing) {
   // This code assumes an entry for a SpeculativeTrapData is 2 cells
-  assert(2*DataLayout::compute_size_in_bytes(BitData::static_cell_count()) ==
-         DataLayout::compute_size_in_bytes(SpeculativeTrapData::static_cell_count()),
-         "code needs to be adjusted");
+  assert(2*DataLayout::compute_size_in_bytes(BitData::static_cell_count()) == DataLayout::compute_size_in_bytes(SpeculativeTrapData::static_cell_count()), "code needs to be adjusted");
 
   // Do not create one of these if method has been redefined.
   if (m != NULL && m->is_old()) {
@@ -1401,8 +1309,8 @@ ProfileData* MethodData::bci_to_extra_data(int bci, Method* m, bool create_if_mi
       return result;
     }
 
-    assert(dp->tag() == DataLayout::no_tag || (dp->tag() == DataLayout::speculative_trap_data_tag && m != NULL), "should be free");
-    assert(next_extra(dp)->tag() == DataLayout::no_tag || next_extra(dp)->tag() == DataLayout::arg_info_data_tag, "should be free or arg info");
+    assert(dp->tag() == DataLayout::no_tag || (dp->tag() == DataLayout::speculative_trap_data_tag && m != NULL), "should be free");
+    assert(next_extra(dp)->tag() == DataLayout::no_tag || next_extra(dp)->tag() == DataLayout::arg_info_data_tag, "should be free or arg info");
     u1 tag = m == NULL ? DataLayout::bit_data_tag : DataLayout::speculative_trap_data_tag;
     // SpeculativeTrapData is 2 slots. Make sure we have room.
     if (m != NULL && next_extra(dp)->tag() != DataLayout::no_tag) {
@@ -1412,8 +1320,8 @@ ProfileData* MethodData::bci_to_extra_data(int bci, Method* m, bool create_if_mi
     temp.initialize(tag, bci, 0);
 
     dp->set_header(temp.header());
-    assert(dp->tag() == tag, "sane");
-    assert(dp->bci() == bci, "no concurrent allocation");
+    assert(dp->tag() == tag, "sane");
+    assert(dp->bci() == bci, "no concurrent allocation");
     if (tag == DataLayout::bit_data_tag) {
       return new BitData(dp);
     } else {
@@ -1438,7 +1346,7 @@ ArgInfoData *MethodData::arg_info() {
 // Printing
 
 void MethodData::print_on(outputStream* st) const {
-  assert(is_methodData(), "should be method data");
+  assert(is_methodData(), "should be method data");
   st->print("method data for ");
   method()->print_value_on(st);
   st->cr();
@@ -1446,7 +1354,7 @@ void MethodData::print_on(outputStream* st) const {
 }
 
 void MethodData::print_value_on(outputStream* st) const {
-  assert(is_methodData(), "should be method data");
+  assert(is_methodData(), "should be method data");
   st->print("method data for ");
   method()->print_value_on(st);
 }
@@ -1466,7 +1374,7 @@ void MethodData::print_data_on(outputStream* st) const {
   DataLayout* dp    = extra_data_base();
   DataLayout* end   = args_data_limit();
   for (;; dp = next_extra(dp)) {
-    assert(dp < end, "moved past end of extra data");
+    assert(dp < end, "moved past end of extra data");
     // No need for "OrderAccess::load_acquire" ops,
     // since the data structure is monotonic.
     switch(dp->tag()) {
@@ -1491,16 +1399,6 @@ void MethodData::print_data_on(outputStream* st) const {
     if (dp >= end) return;
   }
 }
-
-#if INCLUDE_SERVICES
-// Size Statistics
-void MethodData::collect_statistics(KlassSizeStats *sz) const {
-  int n = sz->count(this);
-  sz->_method_data_bytes += n;
-  sz->_method_all_bytes += n;
-  sz->_rw_bytes += n;
-}
-#endif // INCLUDE_SERVICES
 
 // Verification
 
@@ -1565,7 +1463,7 @@ bool MethodData::profile_arguments_for_invoke(const methodHandle& m, int bci) {
     return true;
   }
 
-  assert(profile_arguments_jsr292_only(), "inconsistent");
+  assert(profile_arguments_jsr292_only(), "inconsistent");
   return profile_jsr292(m, bci);
 }
 
@@ -1594,7 +1492,7 @@ bool MethodData::profile_return_for_invoke(const methodHandle& m, int bci) {
     return true;
   }
 
-  assert(profile_return_jsr292_only(), "inconsistent");
+  assert(profile_return_jsr292_only(), "inconsistent");
   return profile_jsr292(m, bci);
 }
 
@@ -1623,7 +1521,7 @@ bool MethodData::profile_parameters_for_method(const methodHandle& m) {
     return true;
   }
 
-  assert(profile_parameters_jsr292_only(), "inconsistent");
+  assert(profile_parameters_jsr292_only(), "inconsistent");
   return m->is_compiled_lambda_form();
 }
 
@@ -1675,7 +1573,6 @@ public:
   bool is_live(Method* m) { return !m->is_old(); }
 };
 
-
 // Remove SpeculativeTrapData entries that reference an unloaded or
 // redefined method
 void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
@@ -1688,7 +1585,7 @@ void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
     case DataLayout::speculative_trap_data_tag: {
       SpeculativeTrapData* data = new SpeculativeTrapData(dp);
       Method* m = data->method();
-      assert(m != NULL, "should have a method");
+      assert(m != NULL, "should have a method");
       if (!cl->is_live(m)) {
         // "shift" accumulates the number of cells for dead
         // SpeculativeTrapData entries that have been seen so
@@ -1723,28 +1620,6 @@ void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
 // Verify there's no unloaded or redefined method referenced by a
 // SpeculativeTrapData entry
 void MethodData::verify_extra_data_clean(CleanExtraDataClosure* cl) {
-#ifdef ASSERT
-  DataLayout* dp  = extra_data_base();
-  DataLayout* end = args_data_limit();
-
-  for (; dp < end; dp = next_extra(dp)) {
-    switch(dp->tag()) {
-    case DataLayout::speculative_trap_data_tag: {
-      SpeculativeTrapData* data = new SpeculativeTrapData(dp);
-      Method* m = data->method();
-      assert(m != NULL && cl->is_live(m), "Method should exist");
-      break;
-    }
-    case DataLayout::bit_data_tag:
-      continue;
-    case DataLayout::no_tag:
-    case DataLayout::arg_info_data_tag:
-      return;
-    default:
-      fatal("unexpected tag %d", dp->tag());
-    }
-  }
-#endif
 }
 
 void MethodData::clean_method_data(bool always_clean) {
@@ -1778,17 +1653,3 @@ void MethodData::clean_weak_method_links() {
   clean_extra_data(&cl);
   verify_extra_data_clean(&cl);
 }
-
-#ifdef ASSERT
-void MethodData::verify_clean_weak_method_links() {
-  ResourceMark rm;
-  for (ProfileData* data = first_data();
-       is_valid(data);
-       data = next_data(data)) {
-    data->verify_clean_weak_method_links();
-  }
-
-  CleanExtraDataMethodClosure cl;
-  verify_extra_data_clean(&cl);
-}
-#endif // ASSERT

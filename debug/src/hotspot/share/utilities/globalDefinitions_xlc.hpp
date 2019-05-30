@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2012, 2017 SAP SE. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_GLOBALDEFINITIONS_XLC_HPP
 #define SHARE_VM_UTILITIES_GLOBALDEFINITIONS_XLC_HPP
 
@@ -66,7 +41,7 @@
   // XLC V10 provides the prototype for __dcbtst (void *);
   #define USE_XLC_PREFETCH_WRITE_BUILTIN
   #endif
-#endif // USE_XLC_BUILTINS
+#endif
 
 // NULL vs NULL_WORD:
 // On Linux NULL is defined as a special type '__null'. Assigning __null to
@@ -79,23 +54,6 @@
 #else
   #define NULL_WORD  NULL
 #endif
-
-// AIX also needs a 64 bit NULL to work as a null address pointer.
-// Most system includes on AIX would define it as an int 0 if not already defined with one
-// exception: /usr/include/dirent.h will unconditionally redefine NULL to int 0 again.
-// In this case you need to copy the following defines to a position after #include <dirent.h>
-// (see jmv_aix.h).
-#ifdef AIX
-  #include <dirent.h>
-  #ifdef _LP64
-    #undef NULL
-    #define NULL 0L
-  #else
-    #ifndef NULL
-      #define NULL 0
-    #endif
-  #endif
-#endif // AIX
 
 // Compiler-specific primitive types
 // All defs of int (uint16_6 etc) are defined in AIX' /usr/include/stdint.h
@@ -120,22 +78,16 @@ inline int g_isnan(double f) { return isnan(f); }
 inline int g_isfinite(jfloat  f)                 { return finite(f); }
 inline int g_isfinite(jdouble f)                 { return finite(f); }
 
-
 // Wide characters
 
 inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
-
 
 // Portability macros
 #define PRAGMA_INTERFACE             #pragma interface
 #define PRAGMA_IMPLEMENTATION        #pragma implementation
 
 // Formatting.
-#ifdef _LP64
 #define FORMAT64_MODIFIER "l"
-#else // !_LP64
-#define FORMAT64_MODIFIER "ll"
-#endif // _LP64
 
 // Cannot use xlc's offsetof as implementation of hotspot's
 // offset_of(), because xlc warns about applying offsetof() to non-POD
@@ -166,4 +118,4 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 #define NOINLINE     __attribute__((__noinline__))
 #define ALWAYSINLINE inline __attribute__((__always_inline__))
 
-#endif // SHARE_VM_UTILITIES_GLOBALDEFINITIONS_XLC_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 
 #include "aot/aotLoader.hpp"
@@ -47,7 +23,7 @@
 #include "utilities/macros.hpp"
 
 void G1RootProcessor::worker_has_discovered_all_strong_classes() {
-  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
+  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
 
   uint new_value = (uint)Atomic::add(1, &_n_workers_discovered_strong_classes);
   if (new_value == n_workers()) {
@@ -58,7 +34,7 @@ void G1RootProcessor::worker_has_discovered_all_strong_classes() {
 }
 
 void G1RootProcessor::wait_until_all_strong_classes_discovered() {
-  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
+  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
 
   if ((uint)_n_workers_discovered_strong_classes != n_workers()) {
     MonitorLockerEx ml(&_lock, Mutex::_no_safepoint_check_flag);
@@ -115,12 +91,12 @@ void G1RootProcessor::evacuate_roots(G1ParScanThreadState* pss, uint worker_i) {
 
     // Now take the complement of the strong CLDs.
     G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::WeakCLDRoots, worker_i);
-    assert(closures->second_pass_weak_clds() != NULL, "Should be non-null if we are tracing metadata.");
+    assert(closures->second_pass_weak_clds() != NULL, "Should be non-null if we are tracing metadata.");
     ClassLoaderDataGraph::roots_cld_do(NULL, closures->second_pass_weak_clds());
   } else {
     phase_times->record_time_secs(G1GCPhaseTimes::WaitForStrongCLD, worker_i, 0.0);
     phase_times->record_time_secs(G1GCPhaseTimes::WeakCLDRoots, worker_i, 0.0);
-    assert(closures->second_pass_weak_clds() == NULL, "Should be null if not tracing metadata.");
+    assert(closures->second_pass_weak_clds() == NULL, "Should be null if not tracing metadata.");
   }
 
   // During conc marking we have to filter the per-thread SATB buffers
@@ -213,7 +189,7 @@ void G1RootProcessor::process_all_roots(OopClosure* oops,
 void G1RootProcessor::process_all_roots_no_string_table(OopClosure* oops,
                                                         CLDClosure* clds,
                                                         CodeBlobClosure* blobs) {
-  assert(!ClassUnloading, "Should only be used when class unloading is disabled");
+  assert(!ClassUnloading, "Should only be used when class unloading is disabled");
   process_all_roots(oops, clds, blobs, false);
 }
 
@@ -273,22 +249,6 @@ void G1RootProcessor::process_vm_roots(G1RootClosures* closures,
   }
 
   {
-    G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::JVMTIRoots, worker_i);
-    if (!_process_strong_tasks.is_task_claimed(G1RP_PS_jvmti_oops_do)) {
-      JvmtiExport::oops_do(strong_roots);
-    }
-  }
-
-#if INCLUDE_AOT
-  if (UseAOT) {
-    G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::AOTCodeRoots, worker_i);
-    if (!_process_strong_tasks.is_task_claimed(G1RP_PS_aot_oops_do)) {
-        AOTLoader::oops_do(strong_roots);
-    }
-  }
-#endif
-
-  {
     G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::SystemDictionaryRoots, worker_i);
     if (!_process_strong_tasks.is_task_claimed(G1RP_PS_SystemDictionary_oops_do)) {
       SystemDictionary::oops_do(strong_roots);
@@ -299,7 +259,7 @@ void G1RootProcessor::process_vm_roots(G1RootClosures* closures,
 void G1RootProcessor::process_string_table_roots(G1RootClosures* closures,
                                                  G1GCPhaseTimes* phase_times,
                                                  uint worker_i) {
-  assert(closures->weak_oops() != NULL, "Should only be called when all roots are processed");
+  assert(closures->weak_oops() != NULL, "Should only be called when all roots are processed");
   G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::StringTableRoots, worker_i);
   // All threads execute the following. A specific chunk of buckets
   // from the StringTable are the individual tasks.

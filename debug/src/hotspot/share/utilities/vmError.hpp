@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_VMERROR_HPP
 #define SHARE_VM_UTILITIES_VMERROR_HPP
 
@@ -104,11 +80,8 @@ class VMError : public AllStatic {
   static void print_stack_trace(outputStream* st, JavaThread* jt,
                                 char* buf, int buflen, bool verbose = false);
 
-  // public for use by the internal non-product debugger.
-  NOT_PRODUCT(public:)
   static void print_native_stack(outputStream* st, frame fr, Thread* t,
                                  char* buf, int buf_size);
-  NOT_PRODUCT(private:)
 
   static bool should_report_bug(unsigned int id) {
     return (id != OOM_MALLOC_ERROR) && (id != OOM_MMAP_ERROR);
@@ -190,12 +163,8 @@ public:
   // Support for avoiding multiple asserts
   static bool is_error_reported();
 
-  // Test vmassert(), fatal(), guarantee(), etc.
-  NOT_PRODUCT(static void test_error_handler();)
-  NOT_PRODUCT(static void controlled_crash(int how);)
-
   // returns an address which is guaranteed to generate a SIGSEGV on read,
   // for test purposes, which is not NULL and contains bits in every word
   static void* get_segfault_address();
 };
-#endif // SHARE_VM_UTILITIES_VMERROR_HPP
+#endif

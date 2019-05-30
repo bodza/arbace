@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/compactHashtable.inline.hpp"
@@ -256,7 +232,7 @@ class StringTableGet : public StackObj {
   StringTableGet(Thread* thread) : _thread(thread) {}
   void operator()(WeakHandle<vm_string_table_data>* val) {
     oop result = val->resolve();
-    assert(result != NULL, "Result should be reachable");
+    assert(result != NULL, "Result should be reachable");
     _return = Handle(_thread, result);
   }
   oop get_res_oop() {
@@ -343,7 +319,7 @@ class StringTableCreateEntry : public StackObj {
   }
   void operator()(bool inserted, WeakHandle<vm_string_table_data>* val) {
     oop result = val->resolve();
-    assert(result != NULL, "Result should be reachable");
+    assert(result != NULL, "Result should be reachable");
     _return = Handle(_thread, result);
   }
   oop get_return() const {
@@ -367,9 +343,8 @@ oop StringTable::do_intern(Handle string_or_null_h, jchar* name,
   // compiler optimizations done on e.g. interned string literals.
   Universe::heap()->deduplicate_string(string_h());
 
-  assert(java_lang_String::equals(string_h(), name, len),
-         "string must be properly initialized");
-  assert(len == java_lang_String::length(string_h()), "Must be same length");
+  assert(java_lang_String::equals(string_h(), name, len), "string must be properly initialized");
+  assert(len == java_lang_String::length(string_h()), "Must be same length");
   StringTableLookupOop lookup(THREAD, hash, string_h);
   StringTableCreateEntry stc(THREAD, string_h);
 
@@ -402,7 +377,7 @@ class StringTableIsAliveCounter : public BoolObjectClosure {
 void StringTable::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f,
                                     int* processed, int* removed) {
   DoNothingClosure dnc;
-  assert(is_alive != NULL, "No closure");
+  assert(is_alive != NULL, "No closure");
   StringTableIsAliveCounter stiac(is_alive);
   OopClosure* tmp = f != NULL ? f : &dnc;
 
@@ -422,7 +397,7 @@ void StringTable::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f,
 }
 
 void StringTable::oops_do(OopClosure* f) {
-  assert(f != NULL, "No closure");
+  assert(f != NULL, "No closure");
   StringTable::the_table()->_weak_handles->oops_do(f);
 }
 
@@ -431,7 +406,7 @@ void StringTable::possibly_parallel_unlink(
    int* processed, int* removed)
 {
   DoNothingClosure dnc;
-  assert(cl != NULL, "No closure");
+  assert(cl != NULL, "No closure");
   StringTableIsAliveCounter stiac(cl);
 
   _par_state_string->weak_oops_do(&stiac, &dnc);
@@ -447,7 +422,7 @@ void StringTable::possibly_parallel_oops_do(
    OopStorage::ParState<false /* concurrent */, false /* const */>*
    _par_state_string, OopClosure* f)
 {
-  assert(f != NULL, "No closure");
+  assert(f != NULL, "No closure");
   _par_state_string->oops_do(f);
 }
 
@@ -648,7 +623,7 @@ class VerifyStrings : StackObj {
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     oop s = val->peek();
     if (s != NULL) {
-      assert(java_lang_String::length(s) >= 0, "Length on string must work.");
+      assert(java_lang_String::length(s) >= 0, "Length on string must work.");
     }
     return true;
   };
@@ -677,7 +652,7 @@ class VerifyCompStrings : StackObj {
     int len = _oops->length();
     for (int i = 0; i < len; i++) {
       bool eq = java_lang_String::equals(s, _oops->at(i));
-      assert(!eq, "Duplicate strings");
+      assert(!eq, "Duplicate strings");
       if (eq) {
         _errors++;
       }
@@ -777,95 +752,3 @@ int StringtableDCmd::num_arguments() {
     return 0;
   }
 }
-
-// Sharing
-#if INCLUDE_CDS_JAVA_HEAP
-oop StringTable::lookup_shared(jchar* name, int len, unsigned int hash) {
-  assert(hash == java_lang_String::hash_code(name, len),
-         "hash must be computed using java_lang_String::hash_code");
-  return _shared_table.lookup((const char*)name, hash, len);
-}
-
-oop StringTable::create_archived_string(oop s, Thread* THREAD) {
-  assert(DumpSharedSpaces, "this function is only used with -Xshare:dump");
-
-  oop new_s = NULL;
-  typeArrayOop v = java_lang_String::value_no_keepalive(s);
-  typeArrayOop new_v =
-    (typeArrayOop)MetaspaceShared::archive_heap_object(v, THREAD);
-  if (new_v == NULL) {
-    return NULL;
-  }
-  new_s = MetaspaceShared::archive_heap_object(s, THREAD);
-  if (new_s == NULL) {
-    return NULL;
-  }
-
-  // adjust the pointer to the 'value' field in the new String oop
-  java_lang_String::set_value_raw(new_s, new_v);
-  return new_s;
-}
-
-struct CopyToArchive : StackObj {
-  CompactStringTableWriter* _writer;
-  CopyToArchive(CompactStringTableWriter* writer) : _writer(writer) {}
-  bool operator()(WeakHandle<vm_string_table_data>* val) {
-    oop s = val->peek();
-    if (s == NULL) {
-      return true;
-    }
-    unsigned int hash = java_lang_String::hash_code(s);
-    if (hash == 0) {
-      return true;
-    }
-
-    java_lang_String::set_hash(s, hash);
-    oop new_s = StringTable::create_archived_string(s, Thread::current());
-    if (new_s == NULL) {
-      return true;
-    }
-
-    val->replace(new_s);
-    // add to the compact table
-    _writer->add(hash, new_s);
-    return true;
-  }
-};
-
-void StringTable::copy_shared_string_table(CompactStringTableWriter* writer) {
-  assert(MetaspaceShared::is_heap_object_archiving_allowed(), "must be");
-
-  CopyToArchive copy(writer);
-  StringTable::the_table()->_local_table->do_scan(Thread::current(), copy);
-}
-
-void StringTable::write_to_archive() {
-  assert(MetaspaceShared::is_heap_object_archiving_allowed(), "must be");
-
-  _shared_table.reset();
-  int num_buckets = the_table()->_items / SharedSymbolTableBucketSize;
-  // calculation of num_buckets can result in zero buckets, we need at least one
-  CompactStringTableWriter writer(num_buckets > 1 ? num_buckets : 1,
-                                  &MetaspaceShared::stats()->string);
-
-  // Copy the interned strings into the "string space" within the java heap
-  copy_shared_string_table(&writer);
-  writer.dump(&_shared_table);
-}
-
-void StringTable::serialize(SerializeClosure* soc) {
-  _shared_table.set_type(CompactHashtable<oop, char>::_string_table);
-  _shared_table.serialize(soc);
-
-  if (soc->writing()) {
-    // Sanity. Make sure we don't use the shared table at dump time
-    _shared_table.reset();
-  } else if (!_shared_string_mapped) {
-    _shared_table.reset();
-  }
-}
-
-void StringTable::shared_oops_do(OopClosure* f) {
-  _shared_table.oops_do(f);
-}
-#endif //INCLUDE_CDS_JAVA_HEAP

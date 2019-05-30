@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_REGISTERMAP_HPP
 #define SHARE_VM_RUNTIME_REGISTERMAP_HPP
 
@@ -76,21 +52,16 @@ class RegisterMap : public StackObj {
   bool        _update_map;              // Tells if the register map need to be
                                         // updated when traversing the stack
 
-#ifdef ASSERT
-  void check_location_valid();
-#else
   void check_location_valid() {}
-#endif
 
  public:
-  debug_only(intptr_t* _update_for_id;) // Assert that RegisterMap is not updated twice for same frame
   RegisterMap(JavaThread *thread, bool update_map = true);
   RegisterMap(const RegisterMap* map);
 
   address location(VMReg reg) const {
     int index = reg->value() / location_valid_type_size;
-    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
-    assert(0 <= index && index < location_valid_size, "range check");
+    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
+    assert(0 <= index && index < location_valid_size, "range check");
     if (_location_valid[index] & ((LocationValidType)1 << (reg->value() % location_valid_type_size))) {
       return (address) _location[reg->value()];
     } else {
@@ -100,9 +71,9 @@ class RegisterMap : public StackObj {
 
   void set_location(VMReg reg, address loc) {
     int index = reg->value() / location_valid_type_size;
-    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
-    assert(0 <= index && index < location_valid_size, "range check");
-    assert(_update_map, "updating map that does not need updating");
+    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
+    assert(0 <= index && index < location_valid_size, "range check");
+    assert(_update_map, "updating map that does not need updating");
     _location[reg->value()] = (intptr_t*) loc;
     _location_valid[index] |= ((LocationValidType)1 << (reg->value() % location_valid_type_size));
     check_location_valid();
@@ -122,7 +93,6 @@ class RegisterMap : public StackObj {
 
   // the following contains the definition of pd_xxx methods
 #include CPU_HEADER(registerMap)
-
 };
 
-#endif // SHARE_VM_RUNTIME_REGISTERMAP_HPP
+#endif

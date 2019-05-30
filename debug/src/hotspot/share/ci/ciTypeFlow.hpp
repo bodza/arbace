@@ -1,36 +1,5 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CITYPEFLOW_HPP
 #define SHARE_VM_CI_CITYPEFLOW_HPP
-
-#ifdef COMPILER2
-#include "ci/ciEnv.hpp"
-#include "ci/ciKlass.hpp"
-#include "ci/ciMethodBlocks.hpp"
-#endif
-
 
 class ciTypeFlow : public ResourceObj {
 private:
@@ -85,9 +54,6 @@ public:
     int return_address() const { return _return_address; }
 
     void print_on(outputStream* st) const {
-#ifndef PRODUCT
-      st->print("%d->%d", entry_address(), return_address());
-#endif
     }
   };
 
@@ -134,7 +100,7 @@ public:
     // What is the cardinality of this set?
     int size() const { return _set->length(); }
 
-    void print_on(outputStream* st) const PRODUCT_RETURN;
+    void print_on(outputStream* st) const {};
   };
 
   class LocalSet {
@@ -147,7 +113,7 @@ public:
     void add(LocalSet* ls)      { _bits |= ls->_bits; }
     bool test(uint32_t i) const { return i < (uint32_t)max ? (_bits>>i)&1U : true; }
     void clear()                { _bits = 0; }
-    void print_on(outputStream* st, int limit) const  PRODUCT_RETURN;
+    void print_on(outputStream* st, int limit) const  {};
   };
 
   // Used as a combined index for locals and temps
@@ -219,12 +185,12 @@ public:
 
     // Cell creation
     Cell      local(int lnum) const {
-      assert(lnum < outer()->max_locals(), "index check");
+      assert(lnum < outer()->max_locals(), "index check");
       return (Cell)(lnum);
     }
 
     Cell      stack(int snum) const {
-      assert(snum < stack_size(), "index check");
+      assert(snum < stack_size(), "index check");
       return (Cell)(outer()->max_locals() + snum);
     }
 
@@ -236,12 +202,12 @@ public:
 
     // Accessors for the type of some Cell c
     ciType*   type_at(Cell c) const {
-      assert(start_cell() <= c && c < limit_cell(), "out of bounds");
+      assert(start_cell() <= c && c < limit_cell(), "out of bounds");
       return _types[c];
     }
 
     void      set_type_at(Cell c, ciType* type) {
-      assert(start_cell() <= c && c < limit_cell(), "out of bounds");
+      assert(start_cell() <= c && c < limit_cell(), "out of bounds");
       _types[c] = type;
     }
 
@@ -254,7 +220,6 @@ public:
       set_type_at_tos(type);
     }
     void      pop() {
-      debug_only(set_type_at_tos(bottom_type()));
       _stack_size--;
     }
     ciType*   pop_value() {
@@ -290,27 +255,27 @@ public:
       push(ciType::make(T_INT));
     }
     void      pop_int() {
-      assert(is_int(type_at_tos()), "must be integer");
+      assert(is_int(type_at_tos()), "must be integer");
       pop();
     }
     void      check_int(Cell c) {
-      assert(is_int(type_at(c)), "must be integer");
+      assert(is_int(type_at(c)), "must be integer");
     }
     void      push_double() {
       push(ciType::make(T_DOUBLE));
       push(double2_type());
     }
     void      pop_double() {
-      assert(type_at_tos() == double2_type(), "must be 2nd half");
+      assert(type_at_tos() == double2_type(), "must be 2nd half");
       pop();
-      assert(is_double(type_at_tos()), "must be double");
+      assert(is_double(type_at_tos()), "must be double");
       pop();
     }
     void      push_float() {
       push(ciType::make(T_FLOAT));
     }
     void      pop_float() {
-      assert(is_float(type_at_tos()), "must be float");
+      assert(is_float(type_at_tos()), "must be float");
       pop();
     }
     void      push_long() {
@@ -318,21 +283,20 @@ public:
       push(long2_type());
     }
     void      pop_long() {
-      assert(type_at_tos() == long2_type(), "must be 2nd half");
+      assert(type_at_tos() == long2_type(), "must be 2nd half");
       pop();
-      assert(is_long(type_at_tos()), "must be long");
+      assert(is_long(type_at_tos()), "must be long");
       pop();
     }
     void      push_object(ciKlass* klass) {
       push(klass);
     }
     void      pop_object() {
-      assert(is_reference(type_at_tos()), "must be reference type");
+      assert(is_reference(type_at_tos()), "must be reference type");
       pop();
     }
     void      pop_array() {
-      assert(type_at_tos() == null_type() ||
-             type_at_tos()->is_array_klass(), "must be array type");
+      assert(type_at_tos() == null_type() || type_at_tos()->is_array_klass(), "must be array type");
       pop();
     }
     // pop_objArray and pop_typeArray narrow the tos to ciObjArrayKlass
@@ -341,13 +305,13 @@ public:
     ciObjArrayKlass* pop_objArray() {
       ciType* array = pop_value();
       if (array == null_type())  return NULL;
-      assert(array->is_obj_array_klass(), "must be object array type");
+      assert(array->is_obj_array_klass(), "must be object array type");
       return array->as_obj_array_klass();
     }
     ciTypeArrayKlass* pop_typeArray() {
       ciType* array = pop_value();
       if (array == null_type())  return NULL;
-      assert(array->is_type_array_klass(), "must be prim array type");
+      assert(array->is_type_array_klass(), "must be prim array type");
       return array->as_type_array_klass();
     }
     void      push_null() {
@@ -383,13 +347,12 @@ public:
 
     void load_local_object(int index) {
       ciType* type = type_at(local(index));
-      assert(is_reference(type), "must be reference type");
+      assert(is_reference(type), "must be reference type");
       push(type);
     }
     void store_local_object(int index) {
       ciType* type = pop_value();
-      assert(is_reference(type) || type->is_return_address(),
-             "must be reference type or return address");
+      assert(is_reference(type) || type->is_return_address(), "must be reference type or return address");
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
       store_to_local(index);
@@ -398,16 +361,16 @@ public:
     void load_local_double(int index) {
       ciType* type = type_at(local(index));
       ciType* type2 = type_at(local(index+1));
-      assert(is_double(type), "must be double type");
-      assert(type2 == double2_type(), "must be 2nd half");
+      assert(is_double(type), "must be double type");
+      assert(type2 == double2_type(), "must be 2nd half");
       push(type);
       push(double2_type());
     }
     void store_local_double(int index) {
       ciType* type2 = pop_value();
       ciType* type = pop_value();
-      assert(is_double(type), "must be double");
-      assert(type2 == double2_type(), "must be 2nd half");
+      assert(is_double(type), "must be double");
+      assert(type2 == double2_type(), "must be 2nd half");
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
       set_type_at(local(index+1), type2);
@@ -417,12 +380,12 @@ public:
 
     void load_local_float(int index) {
       ciType* type = type_at(local(index));
-      assert(is_float(type), "must be float type");
+      assert(is_float(type), "must be float type");
       push(type);
     }
     void store_local_float(int index) {
       ciType* type = pop_value();
-      assert(is_float(type), "must be float type");
+      assert(is_float(type), "must be float type");
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
       store_to_local(index);
@@ -430,12 +393,12 @@ public:
 
     void load_local_int(int index) {
       ciType* type = type_at(local(index));
-      assert(is_int(type), "must be int type");
+      assert(is_int(type), "must be int type");
       push(type);
     }
     void store_local_int(int index) {
       ciType* type = pop_value();
-      assert(is_int(type), "must be int type");
+      assert(is_int(type), "must be int type");
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
       store_to_local(index);
@@ -444,16 +407,16 @@ public:
     void load_local_long(int index) {
       ciType* type = type_at(local(index));
       ciType* type2 = type_at(local(index+1));
-      assert(is_long(type), "must be long type");
-      assert(type2 == long2_type(), "must be 2nd half");
+      assert(is_long(type), "must be long type");
+      assert(type2 == long2_type(), "must be 2nd half");
       push(type);
       push(long2_type());
     }
     void store_local_long(int index) {
       ciType* type2 = pop_value();
       ciType* type = pop_value();
-      assert(is_long(type), "must be long");
-      assert(type2 == long2_type(), "must be 2nd half");
+      assert(is_long(type), "must be long");
+      assert(type2 == long2_type(), "must be 2nd half");
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
       set_type_at(local(index+1), type2);
@@ -486,8 +449,8 @@ public:
     // What is the index associated with the trap?
     int  trap_index() { return _trap_index; }
 
-    void print_cell_on(outputStream* st, Cell c) const PRODUCT_RETURN;
-    void print_on(outputStream* st) const              PRODUCT_RETURN;
+    void print_cell_on(outputStream* st, Cell c) const {};
+    void print_on(outputStream* st) const              {};
   };
 
   // Parameter for "find_block" calls:
@@ -566,11 +529,15 @@ public:
     void set_trap(int trap_bci, int trap_index) {
       _trap_bci = trap_bci;
       _trap_index = trap_index;
-      assert(has_trap(), "");
+      assert(has_trap(), "");
     }
     bool has_trap()   const  { return _trap_bci != -1; }
-    int  trap_bci()   const  { assert(has_trap(), ""); return _trap_bci; }
-    int  trap_index() const  { assert(has_trap(), ""); return _trap_index; }
+    int  trap_bci()   const  {
+        assert(has_trap(), "");
+        return _trap_bci; }
+    int  trap_index() const  {
+        assert(has_trap(), "");
+        return _trap_index; }
 
     // accessors
     ciTypeFlow* outer() const { return state()->outer(); }
@@ -591,7 +558,7 @@ public:
 
     // Data flow on locals
     bool is_invariant_local(uint v) const {
-      assert(is_loop_head(), "only loop heads");
+      assert(is_loop_head(), "only loop heads");
       // Find outermost loop with same loop head
       Loop* lp = loop();
       while (lp->parent() != NULL) {
@@ -608,13 +575,13 @@ public:
                                       StateVector* state,
                                       JsrSet* jsrs);
     GrowableArray<Block*>* successors() {
-      assert(_successors != NULL, "must be filled in");
+      assert(_successors != NULL, "must be filled in");
       return _successors;
     }
 
     // Predecessors of this block (including exception edges)
     GrowableArray<Block*>* predecessors() {
-      assert(_predecessors != NULL, "must be filled in");
+      assert(_predecessors != NULL, "must be filled in");
       return _predecessors;
     }
 
@@ -671,20 +638,30 @@ public:
     bool   is_on_work_list() const  { return _on_work_list; }
 
     bool   has_pre_order() const  { return _pre_order >= 0; }
-    void   set_pre_order(int po)  { assert(!has_pre_order(), ""); _pre_order = po; }
-    int    pre_order() const      { assert(has_pre_order(), ""); return _pre_order; }
+    void   set_pre_order(int po)  {
+        assert(!has_pre_order(), "");
+        _pre_order = po; }
+    int    pre_order() const      {
+        assert(has_pre_order(), "");
+        return _pre_order; }
     void   set_next_pre_order()   { set_pre_order(outer()->inc_next_pre_order()); }
     bool   is_start() const       { return _pre_order == outer()->start_block_num(); }
 
     // Reverse post order
     void   df_init();
     bool   has_post_order() const { return _post_order >= 0; }
-    void   set_post_order(int po) { assert(!has_post_order() && po >= 0, ""); _post_order = po; }
+    void   set_post_order(int po) {
+        assert(!has_post_order() && po >= 0, "");
+        _post_order = po; }
     void   reset_post_order(int o){ _post_order = o; }
-    int    post_order() const     { assert(has_post_order(), ""); return _post_order; }
+    int    post_order() const     {
+        assert(has_post_order(), "");
+        return _post_order; }
 
     bool   has_rpo() const        { return has_post_order() && outer()->have_block_count(); }
-    int    rpo() const            { assert(has_rpo(), ""); return outer()->block_count() - post_order() - 1; }
+    int    rpo() const            {
+        assert(has_rpo(), "");
+        return outer()->block_count() - post_order() - 1; }
     void   set_rpo_next(Block* b) { _rpo_next = b; }
     Block* rpo_next()             { return _rpo_next; }
 
@@ -707,8 +684,8 @@ public:
       return true;
     }
 
-    void   print_value_on(outputStream* st) const PRODUCT_RETURN;
-    void   print_on(outputStream* st) const       PRODUCT_RETURN;
+    void   print_value_on(outputStream* st) const {};
+    void   print_on(outputStream* st) const       {};
   };
 
   // Loop
@@ -762,7 +739,7 @@ public:
 
     bool is_root() const { return _tail->pre_order() == max_jint; }
 
-    void print(outputStream* st = tty, int indent = 0) const PRODUCT_RETURN;
+    void print(outputStream* st = tty, int indent = 0) const {};
   };
 
   // Postorder iteration over the loop tree.
@@ -849,13 +826,16 @@ public:
 
   // Return the block of a given pre-order number.
   int have_block_count() const      { return _block_map != NULL; }
-  int block_count() const           { assert(have_block_count(), "");
+  int block_count() const           {
+    assert(have_block_count(), "");
                                       return _next_pre_order; }
-  Block* pre_order_at(int po) const { assert(0 <= po && po < block_count(), "out of bounds");
+  Block* pre_order_at(int po) const {
+    assert(0 <= po && po < block_count(), "out of bounds");
                                       return _block_map[po]; }
   Block* start_block() const        { return pre_order_at(start_block_num()); }
   int start_block_num() const       { return 0; }
-  Block* rpo_at(int rpo) const      { assert(0 <= rpo && rpo < block_count(), "out of bounds");
+  Block* rpo_at(int rpo) const      {
+    assert(0 <= rpo && rpo < block_count(), "out of bounds");
                                       return _block_map[rpo]; }
   int next_pre_order()              { return _next_pre_order; }
   int inc_next_pre_order()          { return _next_pre_order++; }
@@ -945,9 +925,9 @@ public:
   // Determine if bci is dominated by dom_bci
   bool is_dominated_by(int bci, int dom_bci);
 
-  void print_on(outputStream* st) const PRODUCT_RETURN;
+  void print_on(outputStream* st) const {};
 
-  void rpo_print_on(outputStream* st) const PRODUCT_RETURN;
+  void rpo_print_on(outputStream* st) const {};
 };
 
-#endif // SHARE_VM_CI_CITYPEFLOW_HPP
+#endif

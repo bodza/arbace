@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/codeCache.hpp"
 #include "interpreter/interpreter.hpp"
@@ -32,7 +8,6 @@
 #include "runtime/rframe.hpp"
 #include "runtime/vframe.hpp"
 #include "runtime/vframe_hp.hpp"
-
 
 static RFrame*const  noCaller    = (RFrame*) 0x1;               // no caller (i.e., initial frame)
 static RFrame*const  noCallerYet = (RFrame*) 0x0;               // caller not yet computed
@@ -45,7 +20,7 @@ RFrame::RFrame(frame fr, JavaThread* thread, RFrame*const callee) :
 }
 
 void RFrame::set_distance(int d) {
-  assert(is_compiled() || d >= 0, "should be positive");
+  assert(is_compiled() || d >= 0, "should be positive");
   _distance = d;
 }
 
@@ -54,7 +29,7 @@ InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, RFrame*const 
   RegisterMap map(thread, false);
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = _vf->method();
-  assert(   _vf->is_interpreted_frame(), "must be interpreted");
+  assert(   _vf->is_interpreted_frame(), "must be interpreted");
   init();
 }
 
@@ -64,7 +39,7 @@ InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, Method* m)
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = m;
 
-  assert(   _vf->is_interpreted_frame(),  "must be interpreted");
+  assert(   _vf->is_interpreted_frame(),  "must be interpreted");
   init();
 }
 
@@ -92,7 +67,7 @@ RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame*const  callee) {
     // is invisible until it happens.
     rf = new CompiledRFrame(fr, thread, callee);
   } else {
-    assert(false, "Unhandled frame type");
+    assert(false, "Unhandled frame type");
   }
   if (rf != NULL) {
     rf->set_distance(dist);
@@ -139,15 +114,12 @@ int CompiledRFrame::cost() const {
 void CompiledRFrame::init() {
   RegisterMap map(thread(), false);
   vframe* vf = vframe::new_vframe(&_fr, &map, thread());
-  assert(vf->is_compiled_frame(), "must be compiled");
+  assert(vf->is_compiled_frame(), "must be compiled");
   _nm = compiledVFrame::cast(vf)->code()->as_nmethod();
   vf = vf->top();
   _vf = javaVFrame::cast(vf);
   _method = CodeCache::find_nmethod(_fr.pc())->method();
-  assert(_method, "should have found a method");
-#ifndef PRODUCT
-  _invocations = _method->compiled_invocation_count();
-#endif
+  assert(_method, "should have found a method");
 }
 
 void InterpretedRFrame::init() {
@@ -155,16 +127,6 @@ void InterpretedRFrame::init() {
 }
 
 void RFrame::print(const char* kind) {
-#ifndef PRODUCT
-#if COMPILER2_OR_JVMCI
-  int cnt = top_method()->interpreter_invocation_count();
-#else
-  int cnt = top_method()->invocation_count();
-#endif
-  tty->print("%3d %s ", _num, is_interpreted() ? "I" : "C");
-  top_method()->print_short_name(tty);
-  tty->print_cr(": inv=%5d(%d) cst=%4d", _invocations, cnt, cost());
-#endif
 }
 
 void CompiledRFrame::print() {

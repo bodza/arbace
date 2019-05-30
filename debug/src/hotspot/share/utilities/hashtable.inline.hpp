@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_HASHTABLE_INLINE_HPP
 #define SHARE_VM_UTILITIES_HASHTABLE_INLINE_HPP
 
@@ -45,7 +21,6 @@ template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, i
   }
 }
 
-
 template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, int entry_size,
                                       HashtableBucket<F>* buckets,
                                       int number_of_entries) {
@@ -53,7 +28,6 @@ template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, i
   initialize(table_size, entry_size, number_of_entries);
   _buckets = buckets;
 }
-
 
 template <MEMFLAGS F> inline void BasicHashtable<F>::initialize(int table_size, int entry_size,
                                        int number_of_entries) {
@@ -66,12 +40,10 @@ template <MEMFLAGS F> inline void BasicHashtable<F>::initialize(int table_size, 
   _number_of_entries = number_of_entries;
 }
 
-
 // The following method is MT-safe and may be used with caution.
 template <MEMFLAGS F> inline BasicHashtableEntry<F>* BasicHashtable<F>::bucket(int i) const {
   return _buckets[i].get_entry();
 }
-
 
 template <MEMFLAGS F> inline void HashtableBucket<F>::set_entry(BasicHashtableEntry<F>* l) {
   // Warning: Preserve store ordering.  The PackageEntryTable, ModuleEntryTable and
@@ -81,7 +53,6 @@ template <MEMFLAGS F> inline void HashtableBucket<F>::set_entry(BasicHashtableEn
   OrderAccess::release_store(&_entry, l);
 }
 
-
 template <MEMFLAGS F> inline BasicHashtableEntry<F>* HashtableBucket<F>::get_entry() const {
   // Warning: Preserve load ordering.  The PackageEntryTable, ModuleEntryTable and
   //          SystemDictionary are read without locks.  The new entry must be
@@ -90,11 +61,9 @@ template <MEMFLAGS F> inline BasicHashtableEntry<F>* HashtableBucket<F>::get_ent
   return OrderAccess::load_acquire(&_entry);
 }
 
-
 template <MEMFLAGS F> inline void BasicHashtable<F>::set_entry(int index, BasicHashtableEntry<F>* entry) {
   _buckets[index].set_entry(entry);
 }
-
 
 template <MEMFLAGS F> inline void BasicHashtable<F>::add_entry(int index, BasicHashtableEntry<F>* entry) {
   entry->set_next(bucket(index));
@@ -108,4 +77,4 @@ template <MEMFLAGS F> inline void BasicHashtable<F>::free_entry(BasicHashtableEn
   --_number_of_entries;
 }
 
-#endif // SHARE_VM_UTILITIES_HASHTABLE_INLINE_HPP
+#endif

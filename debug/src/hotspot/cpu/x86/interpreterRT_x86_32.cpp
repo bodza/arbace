@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/interp_masm.hpp"
 #include "interpreter/interpreter.hpp"
@@ -35,24 +11,17 @@
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/signature.hpp"
 
-
 #define __ _masm->
-
 
 // Implementation of SignatureHandlerGenerator
 InterpreterRuntime::SignatureHandlerGenerator::SignatureHandlerGenerator(const methodHandle& method, CodeBuffer* buffer) :
     NativeSignatureIterator(method) {
   _masm = new MacroAssembler(buffer);
 #ifdef AMD64
-#ifdef _WIN64
-  _num_args = (method->is_static() ? 1 : 0);
-  _stack_offset = (Argument::n_int_register_parameters_c+1)* wordSize; // don't overwrite return address
-#else
   _num_int_args = (method->is_static() ? 1 : 0);
   _num_fp_args = 0;
   _stack_offset = wordSize; // don't overwrite return address
-#endif // _WIN64
-#endif // AMD64
+#endif
 }
 
 void InterpreterRuntime::SignatureHandlerGenerator::pass_int() {
@@ -77,7 +46,6 @@ void InterpreterRuntime::SignatureHandlerGenerator::move(int from_offset, int to
   __ movl(Address(to(), to_offset * wordSize), temp());
 }
 
-
 void InterpreterRuntime::SignatureHandlerGenerator::box(int from_offset, int to_offset) {
   __ lea(temp(), Address(from(), Interpreter::local_offset_in_bytes(from_offset)));
   __ cmpptr(Address(from(), Interpreter::local_offset_in_bytes(from_offset)), (int32_t)NULL_WORD); // do not use temp() to avoid AGI
@@ -87,7 +55,6 @@ void InterpreterRuntime::SignatureHandlerGenerator::box(int from_offset, int to_
   __ bind(L);
   __ movptr(Address(to(), to_offset * wordSize), temp());
 }
-
 
 void InterpreterRuntime::SignatureHandlerGenerator::generate( uint64_t fingerprint) {
   // generate code to handle arguments
@@ -100,11 +67,9 @@ void InterpreterRuntime::SignatureHandlerGenerator::generate( uint64_t fingerpri
   __ flush();
 }
 
-
 Register InterpreterRuntime::SignatureHandlerGenerator::from()       { return rdi; }
 Register InterpreterRuntime::SignatureHandlerGenerator::to()         { return rsp; }
 Register InterpreterRuntime::SignatureHandlerGenerator::temp()       { return rcx; }
-
 
 // Implementation of SignatureHandlerLibrary
 
@@ -149,7 +114,7 @@ class SlowSignatureHandler: public NativeSignatureIterator {
 
 IRT_ENTRY(address, InterpreterRuntime::slow_signature_handler(JavaThread* thread, Method* method, intptr_t* from, intptr_t* to))
   methodHandle m(thread, (Method*)method);
-  assert(m->is_native(), "sanity check");
+  assert(m->is_native(), "sanity check");
   // handle arguments
   SlowSignatureHandler(m, (address)from, to + 1).iterate((uint64_t)CONST64(-1));
   // return result handler

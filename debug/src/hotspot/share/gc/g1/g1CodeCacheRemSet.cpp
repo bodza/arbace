@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/codeCache.hpp"
 #include "code/nmethod.hpp"
@@ -55,7 +31,7 @@ G1CodeRootSetTable::Entry* G1CodeRootSetTable::new_entry(nmethod* nm) {
 
 void G1CodeRootSetTable::remove_entry(Entry* e, Entry* previous) {
   int index = hash_to_index(e->hash());
-  assert((e == bucket(index)) == (previous == NULL), "if e is the first entry then previous should be null");
+  assert((e == bucket(index)) == (previous == NULL), "if e is the first entry then previous should be null");
 
   if (previous == NULL) {
     set_entry(index, e->next());
@@ -75,7 +51,7 @@ G1CodeRootSetTable::~G1CodeRootSetTable() {
       FREE_C_HEAP_ARRAY(char, to_remove);
     }
   }
-  assert(number_of_entries() == 0, "should have removed all entries");
+  assert(number_of_entries() == 0, "should have removed all entries");
   free_buckets();
   for (BasicHashtableEntry<mtGC>* e = new_entry_free_list(); e != NULL; e = new_entry_free_list()) {
     FREE_C_HEAP_ARRAY(char, e);
@@ -215,7 +191,7 @@ void G1CodeRootSet::add(nmethod* method) {
     }
     ++_length;
   }
-  assert(_length == (size_t)_table->number_of_entries(), "sizes should match");
+  assert(_length == (size_t)_table->number_of_entries(), "sizes should match");
 }
 
 bool G1CodeRootSet::remove(nmethod* method) {
@@ -229,8 +205,7 @@ bool G1CodeRootSet::remove(nmethod* method) {
       clear();
     }
   }
-  assert((_length == 0 && _table == NULL) ||
-         (_length == (size_t)_table->number_of_entries()), "sizes should match");
+  assert((_length == 0 && _table == NULL) || (_length == (size_t)_table->number_of_entries()), "sizes should match");
   return removed;
 }
 
@@ -298,7 +273,7 @@ void G1CodeRootSet::clean(HeapRegion* owner) {
   CleanCallback should_clean(owner);
   if (_table != NULL) {
     int removed = _table->remove_if(should_clean);
-    assert((size_t)removed <= _length, "impossible");
+    assert((size_t)removed <= _length, "impossible");
     _length -= removed;
   }
   if (_length == 0) {

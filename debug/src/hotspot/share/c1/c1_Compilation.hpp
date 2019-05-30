@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_COMPILATION_HPP
 #define SHARE_VM_C1_C1_COMPILATION_HPP
 
@@ -112,17 +88,12 @@ class Compilation: public StackObj {
   void        set_allocator(LinearScan* allocator) { _allocator = allocator; }
 
   Instruction*       _current_instruction;       // the instruction currently being processed
-#ifndef PRODUCT
-  Instruction*       _last_instruction_printed;  // the last instruction printed during traversal
-  CFGPrinterOutput*  _cfg_printer_output;
-#endif // PRODUCT
 
  public:
   // creation
   Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method,
               int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive);
   ~Compilation();
-
 
   static Compilation* current() {
     return (Compilation*) ciEnv::current()->compiler_data();
@@ -186,14 +157,6 @@ class Compilation: public StackObj {
     return previous;
   }
 
-#ifndef PRODUCT
-  void maybe_print_current_instruction();
-  CFGPrinterOutput* cfg_printer_output() {
-    guarantee(_cfg_printer_output != NULL, "CFG printer output not initialized");
-    return _cfg_printer_output;
-  }
-#endif // PRODUCT
-
   // error handling
   void bailout(const char* msg);
   bool bailed_out() const                        { return _bailout_msg != NULL; }
@@ -210,16 +173,6 @@ class Compilation: public StackObj {
 
   // timers
   static void print_timers();
-
-#ifndef PRODUCT
-  // debugging support.
-  // produces a file named c1compileonly in the current directory with
-  // directives to compile only the current method and it's inlines.
-  // The file can be passed to the command line option -XX:Flags=<filename>
-  void compile_only_this_method();
-  void compile_only_this_scope(outputStream* st, IRScope* scope);
-  void exclude_this_method();
-#endif // PRODUCT
 
   bool is_profiling() {
     return env()->comp_level() == CompLevel_full_profile ||
@@ -286,7 +239,6 @@ class Compilation: public StackObj {
   }
 };
 
-
 // Macro definitions for unified bailout-support
 // The methods bailout() and bailed_out() are present in all classes
 // that might bailout, but forward all calls to Compilation
@@ -295,7 +247,6 @@ class Compilation: public StackObj {
 
 #define CHECK_BAILOUT()            { if (bailed_out()) return;          }
 #define CHECK_BAILOUT_(res)        { if (bailed_out()) return res;      }
-
 
 class InstructionMark: public StackObj {
  private:
@@ -312,7 +263,6 @@ class InstructionMark: public StackObj {
   }
 };
 
-
 //----------------------------------------------------------------------
 // Base class for objects allocated by the compiler in the compilation arena
 class CompilationResourceObj ALLOCATION_SUPER_CLASS_SPEC {
@@ -323,7 +273,6 @@ class CompilationResourceObj ALLOCATION_SUPER_CLASS_SPEC {
   }
   void  operator delete(void* p) {} // nothing to do
 };
-
 
 //----------------------------------------------------------------------
 // Class for aggregating exception handler information.
@@ -347,4 +296,4 @@ class ExceptionInfo: public CompilationResourceObj {
   XHandlers* exception_handlers()                { return _exception_handlers; }
 };
 
-#endif // SHARE_VM_C1_C1_COMPILATION_HPP
+#endif

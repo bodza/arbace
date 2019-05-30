@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_NMETHOD_HPP
 #define SHARE_VM_CODE_NMETHOD_HPP
 
@@ -62,7 +38,6 @@ class nmethod : public CompiledMethod {
   int       _entry_bci;        // != InvocationEntryBci if this nmethod is an on-stack replacement method
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
-#if INCLUDE_JVMCI
   // A weak reference to an InstalledCode object associated with
   // this nmethod.
   jweak     _jvmci_installed_code;
@@ -79,7 +54,6 @@ class nmethod : public CompiledMethod {
   // HotSpotNMethod causes nmethod unloading.
   // This field is ignored once _jvmci_installed_code is NULL.
   bool _jvmci_installed_code_triggers_unloading;
-#endif
 
   // To support simple linked-list chaining of nmethods:
   nmethod*  _osr_link;         // from InstanceKlass::osr_nmethods_head
@@ -125,10 +99,6 @@ class nmethod : public CompiledMethod {
 
   // Protected by Patching_lock
   volatile signed char _state;               // {not_installed, in_use, not_entrant, zombie, unloaded}
-
-#ifdef ASSERT
-  bool _oops_are_stale;  // indicates that it's no longer safe to access oops section
-#endif
 
   jbyte _scavenge_root_state;
 
@@ -203,11 +173,9 @@ class nmethod : public CompiledMethod {
           ExceptionHandlerTable* handler_table,
           ImplicitExceptionTable* nul_chk_table,
           AbstractCompiler* compiler,
-          int comp_level
-#if INCLUDE_JVMCI
-          , jweak installed_code,
+          int comp_level,
+          jweak installed_code,
           jweak speculation_log
-#endif
           );
 
   // helper methods
@@ -247,11 +215,9 @@ class nmethod : public CompiledMethod {
                               ExceptionHandlerTable* handler_table,
                               ImplicitExceptionTable* nul_chk_table,
                               AbstractCompiler* compiler,
-                              int comp_level
-#if INCLUDE_JVMCI
-                              , jweak installed_code = NULL,
+                              int comp_level,
+                              jweak installed_code = NULL,
                               jweak speculation_log = NULL
-#endif
   );
 
   static nmethod* new_native_nmethod(const methodHandle& method,
@@ -296,8 +262,12 @@ class nmethod : public CompiledMethod {
   int metadata_size     () const                  { return (address)  metadata_end     () - (address)  metadata_begin     (); }
   int dependencies_size () const                  { return            dependencies_end () -            dependencies_begin (); }
 
-  int     oops_count() const { assert(oops_size() % oopSize == 0, "");  return (oops_size() / oopSize) + 1; }
-  int metadata_count() const { assert(metadata_size() % wordSize == 0, ""); return (metadata_size() / wordSize) + 1; }
+  int     oops_count() const {
+    assert(oops_size() % oopSize == 0, "");
+    return (oops_size() / oopSize) + 1; }
+  int metadata_count() const {
+    assert(metadata_size() % wordSize == 0, "");
+    return (metadata_size() / wordSize) + 1; }
 
   int total_size        () const;
 
@@ -335,7 +305,7 @@ class nmethod : public CompiledMethod {
   // if this thread changed the state of the nmethod or false if
   // another thread performed the transition.
   bool  make_not_entrant() {
-    assert(!method()->is_method_handle_intrinsic(), "Cannot make MH intrinsic not entrant");
+    assert(!method()->is_method_handle_intrinsic(), "Cannot make MH intrinsic not entrant");
     return make_not_entrant_or_zombie(not_entrant);
   }
   bool  make_not_used()    { return make_not_entrant(); }
@@ -355,7 +325,7 @@ class nmethod : public CompiledMethod {
   void flush_dependencies(bool delete_immediately);
   bool has_flushed_dependencies()                 { return _has_flushed_dependencies; }
   void set_has_flushed_dependencies()             {
-    assert(!has_flushed_dependencies(), "should only happen once");
+    assert(!has_flushed_dependencies(), "should only happen once");
     _has_flushed_dependencies = 1;
   }
 
@@ -366,8 +336,8 @@ class nmethod : public CompiledMethod {
   oop   oop_at(int index) const                   { return index == 0 ? (oop) NULL: *oop_addr_at(index); }
   oop*  oop_addr_at(int index) const {  // for GC
     // relocation indexes are biased by 1 (because 0 is reserved)
-    assert(index > 0 && index <= oops_count(), "must be a valid non-zero index");
-    assert(!_oops_are_stale, "oops are stale");
+    assert(index > 0 && index <= oops_count(), "must be a valid non-zero index");
+    assert(!_oops_are_stale, "oops are stale");
     return &oops_begin()[index - 1];
   }
 
@@ -376,7 +346,7 @@ class nmethod : public CompiledMethod {
   Metadata*     metadata_at(int index) const      { return index == 0 ? NULL: *metadata_addr_at(index); }
   Metadata**  metadata_addr_at(int index) const {  // for GC
     // relocation indexes are biased by 1 (because 0 is reserved)
-    assert(index > 0 && index <= metadata_count(), "must be a valid non-zero index");
+    assert(index > 0 && index <= metadata_count(), "must be a valid non-zero index");
     return &metadata_begin()[index - 1];
   }
 
@@ -399,12 +369,6 @@ public:
   void  set_on_scavenge_root_list()                    { _scavenge_root_state = sl_on_list; }
   void  clear_on_scavenge_root_list()                  { _scavenge_root_state = 0; }
   // assertion-checking and pruning logic uses the bits of _scavenge_root_state
-#ifndef PRODUCT
-  void  set_scavenge_root_marked()                     { _scavenge_root_state |= sl_marked; }
-  void  clear_scavenge_root_marked()                   { _scavenge_root_state &= ~sl_marked; }
-  bool  scavenge_root_not_marked()                     { return (_scavenge_root_state &~ sl_on_list) == 0; }
-  // N.B. there is no positive marked query, and we only use the not_marked query for asserts.
-#endif //PRODUCT
   nmethod* scavenge_root_link() const                  { return _scavenge_root_link; }
   void     set_scavenge_root_link(nmethod *n)          { _scavenge_root_link = n; }
 
@@ -418,8 +382,12 @@ public:
   address continuation_for_implicit_exception(address pc);
 
   // On-stack replacement support
-  int   osr_entry_bci() const                     { assert(is_osr_method(), "wrong kind of nmethod"); return _entry_bci; }
-  address  osr_entry() const                      { assert(is_osr_method(), "wrong kind of nmethod"); return _osr_entry_point; }
+  int   osr_entry_bci() const                     {
+    assert(is_osr_method(), "wrong kind of nmethod");
+    return _entry_bci; }
+  address  osr_entry() const                      {
+    assert(is_osr_method(), "wrong kind of nmethod");
+    return _osr_entry_point; }
   void  invalidate_osr_method();
   nmethod* osr_link() const                       { return _osr_link; }
   void     set_osr_link(nmethod *n)               { _osr_link = n; }
@@ -447,7 +415,6 @@ public:
   // Evolution support. We make old (discarded) compiled methods point to new Method*s.
   void set_method(Method* method) { _method = method; }
 
-#if INCLUDE_JVMCI
   // Gets the InstalledCode object associated with this nmethod
   // which may be NULL if this nmethod was not compiled by JVMCI
   // or the weak reference has been cleared.
@@ -481,15 +448,12 @@ public:
   void clear_speculation_log();
 
  public:
-#endif
 
  protected:
   virtual bool do_unloading_oops(address low_boundary, BoolObjectClosure* is_alive);
-#if INCLUDE_JVMCI
   // See comment for _jvmci_installed_code_triggers_unloading field.
   // Returns whether this nmethod was unloaded.
   virtual bool do_unloading_jvmci();
-#endif
 
  private:
   bool do_unloading_scopes(BoolObjectClosure* is_alive);
@@ -501,7 +465,7 @@ public:
   void oops_do(OopClosure* f) { oops_do(f, false); }
   void oops_do(OopClosure* f, bool allow_zombie);
   bool detect_scavenge_root_oops();
-  void verify_scavenge_root_oops() PRODUCT_RETURN;
+  void verify_scavenge_root_oops() {};
 
   bool test_set_oops_do_mark();
   static void oops_do_marking_prologue();
@@ -523,7 +487,7 @@ public:
   address get_original_pc(const frame* fr) { return *orig_pc_addr(fr); }
   void    set_original_pc(const frame* fr, address pc) { *orig_pc_addr(fr) = pc; }
 
-  // jvmti support:
+  // jvmti support
   void post_compiled_method_load_event();
   jmethodID get_and_cache_jmethod_id();
 
@@ -534,16 +498,16 @@ public:
 
   // printing support
   void print()                          const;
-  void print_relocations()                        PRODUCT_RETURN;
-  void print_pcs()                                PRODUCT_RETURN;
-  void print_scopes()                             PRODUCT_RETURN;
-  void print_dependencies()                       PRODUCT_RETURN;
-  void print_value_on(outputStream* st) const     PRODUCT_RETURN;
-  void print_calls(outputStream* st)              PRODUCT_RETURN;
-  void print_handler_table()                      PRODUCT_RETURN;
-  void print_nul_chk_table()                      PRODUCT_RETURN;
-  void print_recorded_oops()                      PRODUCT_RETURN;
-  void print_recorded_metadata()                  PRODUCT_RETURN;
+  void print_relocations()                        {};
+  void print_pcs()                                {};
+  void print_scopes()                             {};
+  void print_dependencies()                       {};
+  void print_value_on(outputStream* st) const     {};
+  void print_calls(outputStream* st)              {};
+  void print_handler_table()                      {};
+  void print_nul_chk_table()                      {};
+  void print_recorded_oops()                      {};
+  void print_recorded_metadata()                  {};
 
   void maybe_print_nmethod(DirectiveSet* directive);
   void print_nmethod(bool print_code);
@@ -566,7 +530,7 @@ public:
 
   // Prints a comment for one native instruction (reloc info, pc desc)
   void print_code_comment_on(outputStream* st, int column, address begin, address end);
-  static void print_statistics() PRODUCT_RETURN;
+  static void print_statistics() {};
 
   // Compiler task identification.  Note that all OSR methods
   // are numbered in an independent sequence if CICountOSR is true,
@@ -666,4 +630,4 @@ class nmethodLocker : public StackObj {
   }
 };
 
-#endif // SHARE_VM_CODE_NMETHOD_HPP
+#endif

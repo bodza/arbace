@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2018, SAP SE. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "memory/resourceArea.hpp"
@@ -72,11 +47,9 @@ static const char* get_string_from_cp_with_checks(const InstanceKlass* k, int cp
   const char* s = NULL;
   const ConstantPool* const cp = k->constants();
 
-  assert(cp != NULL, "No cp?");
-  assert(cp->is_within_bounds(cpi), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX"
-         " (cpi %d out of bounds for [0..%d)).", k->external_name(), cpi, cp->length());
-  assert(cp->tag_at(cpi).is_utf8(), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX"
-         " (no UTF8 at cpi %d (%u)).", k->external_name(), cpi, cp->tag_at(cpi).value());
+  assert(cp != NULL, "No cp?");
+  assert(cp->is_within_bounds(cpi), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX" " (cpi %d out of bounds for [0..%d)).", k->external_name(), cpi, cp->length());
+  assert(cp->tag_at(cpi).is_utf8(), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX" " (no UTF8 at cpi %d (%u)).", k->external_name(), cpi, cp->tag_at(cpi).value());
 
   // Be nice in release: lets not crash, just return NULL.
   if (cp != NULL && cp->is_within_bounds(cpi) && cp->tag_at(cpi).is_utf8()) {
@@ -150,7 +123,7 @@ bool ReflectionAccessorImplKlassHelper::is_generated_accessor(const Klass* k) {
   return false;
 }
 void ReflectionAccessorImplKlassHelper::print_invocation_target(outputStream* out, Klass* k) {
-  assert(ReflectionAccessorImplKlassHelper::is_generated_accessor(k), "Invariant");
+  assert(ReflectionAccessorImplKlassHelper::is_generated_accessor(k), "Invariant");
   InstanceKlass* ik = InstanceKlass::cast(k);
   ResourceMark rm;
   const char* target_class_name = ReflectionAccessorImplKlassHelper::get_target_class_name(ik);

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "asm/register.hpp"
@@ -46,7 +22,7 @@ REGISTER_DEFINITION(Register, r12);
 REGISTER_DEFINITION(Register, r13);
 REGISTER_DEFINITION(Register, r14);
 REGISTER_DEFINITION(Register, r15);
-#endif // AMD64
+#endif
 
 REGISTER_DEFINITION(FloatRegister, fnoreg);
 
@@ -96,7 +72,6 @@ REGISTER_DEFINITION(XMMRegister, c_farg2);
 REGISTER_DEFINITION(XMMRegister, c_farg3);
 
 // Non windows OS's have a few more argument registers
-#ifndef _WIN64
 REGISTER_DEFINITION(Register, c_rarg4);
 REGISTER_DEFINITION(Register, c_rarg5);
 
@@ -104,7 +79,6 @@ REGISTER_DEFINITION(XMMRegister, c_farg4);
 REGISTER_DEFINITION(XMMRegister, c_farg5);
 REGISTER_DEFINITION(XMMRegister, c_farg6);
 REGISTER_DEFINITION(XMMRegister, c_farg7);
-#endif /* _WIN64 */
 
 REGISTER_DEFINITION(Register, j_rarg0);
 REGISTER_DEFINITION(Register, j_rarg1);
@@ -127,7 +101,7 @@ REGISTER_DEFINITION(Register, rscratch2);
 
 REGISTER_DEFINITION(Register, r12_heapbase);
 REGISTER_DEFINITION(Register, r15_thread);
-#endif // AMD64
+#endif
 
 REGISTER_DEFINITION(MMXRegister, mnoreg );
 REGISTER_DEFINITION(MMXRegister, mmx0 );

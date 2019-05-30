@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2000, 2010, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_AARCH64_VM_REGISTER_AARCH64_HPP
 #define CPU_AARCH64_VM_REGISTER_AARCH64_HPP
 
@@ -56,7 +31,9 @@ class RegisterImpl: public AbstractRegisterImpl {
   VMReg as_VMReg();
 
   // accessors
-  int   encoding() const                         { assert(is_valid(), "invalid register"); return (intptr_t)this; }
+  int   encoding() const                         {
+    assert(is_valid(), "invalid register");
+    return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
   const char* name() const;
@@ -70,7 +47,6 @@ class RegisterImpl: public AbstractRegisterImpl {
 // The integer registers of the aarch64 architecture
 
 CONSTANT_REGISTER_DECLARATION(Register, noreg, (-1));
-
 
 CONSTANT_REGISTER_DECLARATION(Register, r0,    (0));
 CONSTANT_REGISTER_DECLARATION(Register, r1,    (1));
@@ -103,7 +79,6 @@ CONSTANT_REGISTER_DECLARATION(Register, r27,  (27));
 CONSTANT_REGISTER_DECLARATION(Register, r28,  (28));
 CONSTANT_REGISTER_DECLARATION(Register, r29,  (29));
 CONSTANT_REGISTER_DECLARATION(Register, r30,  (30));
-
 
 // r31 is not a general purpose register, but represents either the
 // stack pointer or the zero/discard register depending on the
@@ -139,11 +114,12 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
   FloatRegister successor() const                          { return as_FloatRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          { assert(is_valid(), "invalid register"); return (intptr_t)this; }
+  int   encoding() const                          {
+    assert(is_valid(), "invalid register");
+    return (intptr_t)this; }
   int   encoding_nocheck() const                         { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
-
 };
 
 // The float registers of the AARCH64 architecture
@@ -258,4 +234,4 @@ public:
   uint32_t bits() const { return _bitset; }
 };
 
-#endif // CPU_AARCH64_VM_REGISTER_AARCH64_HPP
+#endif

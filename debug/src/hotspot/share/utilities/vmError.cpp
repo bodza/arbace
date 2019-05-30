@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "code/codeCache.hpp"
@@ -29,7 +5,7 @@
 #include "compiler/disassembler.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "logging/logConfiguration.hpp"
-#include "jfr/jfrEvents.hpp"
+// #include "jfr/jfrEvents.hpp"
 #include "memory/resourceArea.hpp"
 #include "prims/whitebox.hpp"
 #include "runtime/arguments.hpp"
@@ -51,13 +27,6 @@
 #include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_JFR
-#include "jfr/jfr.hpp"
-#endif
-
-#ifndef PRODUCT
-#include <signal.h>
-#endif // PRODUCT
 
 bool VMError::_error_reported = false;
 
@@ -68,11 +37,7 @@ bool VMError::is_error_reported() { return _error_reported; }
 // for test purposes, which is not NULL and contains bits in every word
 void* VMError::get_segfault_address() {
   return (void*)
-#ifdef _LP64
     0xABC0000000000ABCULL;
-#else
-    0x00000ABC;
-#endif
 }
 
 // List of environment variables that should be reported in error log file.
@@ -217,7 +182,7 @@ void VMError::print_stack_trace(outputStream* st, JavaThread* jt,
       st->cr();
     }
   }
-#endif // ZERO
+#endif
 }
 
 void VMError::print_native_stack(outputStream* st, frame fr, Thread* t, char* buf, int buf_size) {
@@ -330,12 +295,8 @@ static void report_vm_version(outputStream* st, char* buf, int buflen) {
                  Abstract_VM_Version::vm_release(),
                  Abstract_VM_Version::vm_info_string(),
                  TieredCompilation ? ", tiered" : "",
-#if INCLUDE_JVMCI
                  EnableJVMCI ? ", jvmci" : "",
                  UseJVMCICompiler ? ", jvmci compiler" : "",
-#else
-                 "", "",
-#endif
                  UseCompressedOops ? ", compressed oops" : "",
                  GCConfig::hs_err_name(),
                  Abstract_VM_Version::vm_platform_string()
@@ -424,58 +385,6 @@ void VMError::report(outputStream* st, bool _verbose) {
                    "Runtime Environment to continue.");
     }
 
-#ifndef PRODUCT
-  // Error handler self tests
-
-  // test secondary error handling. Test it twice, to test that resetting
-  // error handler after a secondary crash works.
-  STEP("test secondary crash 1")
-    if (_verbose && TestCrashInErrorHandler != 0) {
-      st->print_cr("Will crash now (TestCrashInErrorHandler=" UINTX_FORMAT ")...",
-        TestCrashInErrorHandler);
-      controlled_crash(TestCrashInErrorHandler);
-    }
-
-  STEP("test secondary crash 2")
-    if (_verbose && TestCrashInErrorHandler != 0) {
-      st->print_cr("Will crash now (TestCrashInErrorHandler=" UINTX_FORMAT ")...",
-        TestCrashInErrorHandler);
-      controlled_crash(TestCrashInErrorHandler);
-    }
-
-  // TestUnresponsiveErrorHandler: We want to test both step timeouts and global timeout.
-  // Step to global timeout ratio is 4:1, so in order to be absolutely sure we hit the
-  // global timeout, let's execute the timeout step five times.
-  // See corresponding test in test/runtime/ErrorHandling/TimeoutInErrorHandlingTest.java
-  #define TIMEOUT_TEST_STEP STEP("test unresponsive error reporting step") \
-    if (_verbose && TestUnresponsiveErrorHandler) { os::infinite_sleep(); }
-  TIMEOUT_TEST_STEP
-  TIMEOUT_TEST_STEP
-  TIMEOUT_TEST_STEP
-  TIMEOUT_TEST_STEP
-  TIMEOUT_TEST_STEP
-
-  STEP("test safefetch in error handler")
-    // test whether it is safe to use SafeFetch32 in Crash Handler. Test twice
-    // to test that resetting the signal handler works correctly.
-    if (_verbose && TestSafeFetchInErrorHandler) {
-      st->print_cr("Will test SafeFetch...");
-      if (CanUseSafeFetch32()) {
-        int* const invalid_pointer = (int*) get_segfault_address();
-        const int x = 0x76543210;
-        int i1 = SafeFetch32(invalid_pointer, x);
-        int i2 = SafeFetch32(invalid_pointer, x);
-        if (i1 == x && i2 == x) {
-          st->print_cr("SafeFetch OK."); // Correctly deflected and returned default pattern
-        } else {
-          st->print_cr("??");
-        }
-      } else {
-        st->print_cr("not possible; skipped.");
-      }
-    }
-#endif // PRODUCT
-
   STEP("printing type of error")
 
      switch(static_cast<unsigned int>(_id)) {
@@ -527,14 +436,10 @@ void VMError::report(outputStream* st, bool _verbose) {
          st->print("Out of Memory Error");
        }
        if (_filename != NULL && _lineno > 0) {
-#ifdef PRODUCT
          // In product mode chop off pathname?
          char separator = os::file_separator()[0];
          const char *p = strrchr(_filename, separator);
          const char *file = p ? p+1 : _filename;
-#else
-         const char *file = _filename;
-#endif
          st->print(" (%s:%d)", file, _lineno);
        } else {
          st->print(" (0x%x)", _id);
@@ -617,7 +522,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        os::print_summary_info(st, buf, sizeof(buf));
      }
 
-
   STEP("printing date and time")
 
      if (_verbose) {
@@ -657,7 +561,6 @@ void VMError::report(outputStream* st, bool _verbose) {
            st->cr();
         }
      }
-
 
   STEP("printing stack bounds")
 
@@ -820,13 +723,11 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->cr();
      }
 
-#ifndef _WIN32
   STEP("printing user info")
 
      if (ExtensiveErrorReports && _verbose) {
        os::Posix::print_user_info(st);
      }
-#endif
 
   STEP("printing all threads")
 
@@ -1363,8 +1264,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
       e.commit();
     }
 
-    JFR_ONLY(Jfr::on_vm_shutdown(true);)
-
   } else {
     // If UseOsErrorReporting we call this for each level of the call stack
     // while searching for the exception handler.  Only the first level needs
@@ -1539,10 +1438,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
       out.print_raw   ("#   Executing ");
 #if defined(LINUX) || defined(_ALLBSD_SOURCE)
       out.print_raw   ("/bin/sh -c ");
-#elif defined(SOLARIS)
-      out.print_raw   ("/usr/bin/sh -c ");
-#elif defined(_WINDOWS)
-      out.print_raw   ("cmd /C ");
 #endif
       out.print_raw   ("\"");
       out.print_raw   (cmd);
@@ -1602,8 +1497,6 @@ void VM_ReportJavaOutOfMemory::doit() {
     tty->print("#   Executing ");
 #if defined(LINUX)
     tty->print  ("/bin/sh -c ");
-#elif defined(SOLARIS)
-    tty->print  ("/usr/bin/sh -c ");
 #endif
     tty->print_cr("\"%s\"...", cmd);
 
@@ -1673,122 +1566,4 @@ bool VMError::check_timeout() {
   }
 
   return false;
-
 }
-
-#ifndef PRODUCT
-#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x5140
-#pragma error_messages(off, SEC_NULL_PTR_DEREF)
-#endif
-typedef void (*voidfun_t)();
-// Crash with an authentic sigfpe
-static void crash_with_sigfpe() {
-  // generate a native synchronous SIGFPE where possible;
-  // if that did not cause a signal (e.g. on ppc), just
-  // raise the signal.
-  volatile int x = 0;
-  volatile int y = 1/x;
-#ifndef _WIN32
-  // OSX implements raise(sig) incorrectly so we need to
-  // explicitly target the current thread
-  pthread_kill(pthread_self(), SIGFPE);
-#endif
-} // end: crash_with_sigfpe
-
-// crash with sigsegv at non-null address.
-static void crash_with_segfault() {
-
-  char* const crash_addr = (char*) VMError::get_segfault_address();
-  *crash_addr = 'X';
-
-} // end: crash_with_segfault
-
-void VMError::test_error_handler() {
-  controlled_crash(ErrorHandlerTest);
-}
-
-// crash in a controlled way:
-// how can be one of:
-// 1,2 - asserts
-// 3,4 - guarantee
-// 5-7 - fatal
-// 8 - vm_exit_out_of_memory
-// 9 - ShouldNotCallThis
-// 10 - ShouldNotReachHere
-// 11 - Unimplemented
-// 12,13 - (not guaranteed) crashes
-// 14 - SIGSEGV
-// 15 - SIGFPE
-void VMError::controlled_crash(int how) {
-  if (how == 0) return;
-
-  // If asserts are disabled, use the corresponding guarantee instead.
-  NOT_DEBUG(if (how <= 2) how += 2);
-
-  const char* const str = "hello";
-  const size_t      num = (size_t)os::vm_page_size();
-
-  const char* const eol = os::line_separator();
-  const char* const msg = "this message should be truncated during formatting";
-  char * const dataPtr = NULL;  // bad data pointer
-  const void (*funcPtr)(void) = (const void(*)()) 0xF;  // bad function pointer
-
-  // Keep this in sync with test/hotspot/jtreg/runtime/ErrorHandling/ErrorHandler.java
-  // which tests cases 1 thru 13.
-  // Case 14 is tested by test/hotspot/jtreg/runtime/ErrorHandling/SafeFetchInErrorHandlingTest.java.
-  // Case 15 is tested by test/hotspot/jtreg/runtime/ErrorHandling/SecondaryErrorTest.java.
-  // Case 16 is tested by test/hotspot/jtreg/runtime/ErrorHandling/ThreadsListHandleInErrorHandlingTest.java.
-  // Case 17 is tested by test/hotspot/jtreg/runtime/ErrorHandling/NestedThreadsListHandleInErrorHandlingTest.java.
-
-  // We grab Threads_lock to keep ThreadsSMRSupport::print_info_on()
-  // from racing with Threads::add() or Threads::remove() as we
-  // generate the hs_err_pid file. This makes our ErrorHandling tests
-  // more stable.
-  MutexLockerEx ml(Threads_lock->owned_by_self() ? NULL : Threads_lock, Mutex::_no_safepoint_check_flag);
-
-  switch (how) {
-    case  1: vmassert(str == NULL, "expected null"); break;
-    case  2: vmassert(num == 1023 && *str == 'X',
-                      "num=" SIZE_FORMAT " str=\"%s\"", num, str); break;
-    case  3: guarantee(str == NULL, "expected null"); break;
-    case  4: guarantee(num == 1023 && *str == 'X',
-                       "num=" SIZE_FORMAT " str=\"%s\"", num, str); break;
-    case  5: fatal("expected null"); break;
-    case  6: fatal("num=" SIZE_FORMAT " str=\"%s\"", num, str); break;
-    case  7: fatal("%s%s#    %s%s#    %s%s#    %s%s#    %s%s#    "
-                   "%s%s#    %s%s#    %s%s#    %s%s#    %s%s#    "
-                   "%s%s#    %s%s#    %s%s#    %s%s#    %s",
-                   msg, eol, msg, eol, msg, eol, msg, eol, msg, eol,
-                   msg, eol, msg, eol, msg, eol, msg, eol, msg, eol,
-                   msg, eol, msg, eol, msg, eol, msg, eol, msg); break;
-    case  8: vm_exit_out_of_memory(num, OOM_MALLOC_ERROR, "ChunkPool::allocate"); break;
-    case  9: ShouldNotCallThis(); break;
-    case 10: ShouldNotReachHere(); break;
-    case 11: Unimplemented(); break;
-    // There's no guarantee the bad data pointer will crash us
-    // so "break" out to the ShouldNotReachHere().
-    case 12: *dataPtr = '\0'; break;
-    // There's no guarantee the bad function pointer will crash us
-    // so "break" out to the ShouldNotReachHere().
-    case 13: (*funcPtr)(); break;
-    case 14: crash_with_segfault(); break;
-    case 15: crash_with_sigfpe(); break;
-    case 16: {
-      ThreadsListHandle tlh;
-      fatal("Force crash with an active ThreadsListHandle.");
-    }
-    case 17: {
-      ThreadsListHandle tlh;
-      {
-        ThreadsListHandle tlh2;
-        fatal("Force crash with a nested ThreadsListHandle.");
-      }
-    }
-
-    default: tty->print_cr("ERROR: %d: unexpected test_num value.", how);
-  }
-  tty->print_cr("VMError::controlled_crash: survived intentional crash. Did you suppress the assert?");
-  ShouldNotReachHere();
-}
-#endif // !PRODUCT
-

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/workgroup.hpp"
@@ -46,7 +22,6 @@ void  AbstractWorkGang::initialize_workers() {
 
   add_workers(true);
 }
-
 
 AbstractGangWorker* AbstractWorkGang::install_worker(uint worker_id) {
   AbstractGangWorker* new_worker = allocate_worker(worker_id);
@@ -82,10 +57,10 @@ void AbstractWorkGang::add_workers(uint active_workers, bool initializing) {
 AbstractGangWorker* AbstractWorkGang::worker(uint i) const {
   // Array index bounds checking.
   AbstractGangWorker* result = NULL;
-  assert(_workers != NULL, "No workers for indexing");
-  assert(i < total_workers(), "Worker index out of bounds");
+  assert(_workers != NULL, "No workers for indexing");
+  assert(i < total_workers(), "Worker index out of bounds");
   result = _workers[i];
-  assert(result != NULL, "Indexing to null worker");
+  assert(result != NULL, "Indexing to null worker");
   return result;
 }
 
@@ -98,7 +73,7 @@ void AbstractWorkGang::print_worker_threads_on(outputStream* st) const {
 }
 
 void AbstractWorkGang::threads_do(ThreadClosure* tc) const {
-  assert(tc != NULL, "Null ThreadClosure");
+  assert(tc != NULL, "Null ThreadClosure");
   uint workers = created_workers();
   for (uint i = 0; i < workers; i++) {
     tc->do_thread(worker(i));
@@ -147,10 +122,9 @@ public:
     _end_semaphore->wait();
 
     // No workers are allowed to read the state variables after the coordinator has been signaled.
-    assert(_not_finished == 0, "%d not finished workers?", _not_finished);
+    assert(_not_finished == 0, "%d not finished workers?", _not_finished);
     _task    = NULL;
     _started = 0;
-
   }
 
   WorkData worker_wait_for_task() {
@@ -297,13 +271,12 @@ void AbstractGangWorker::run() {
 
 void AbstractGangWorker::initialize() {
   this->initialize_named_thread();
-  assert(_gang != NULL, "No gang to run in");
+  assert(_gang != NULL, "No gang to run in");
   os::set_priority(this, NearMaxPriority);
   log_develop_trace(gc, workgang)("Running gang worker for gang %s id %u", gang()->name(), id());
   // The VM thread should not execute here because MutexLocker's are used
   // as (opposed to MutexLockerEx's).
-  assert(!Thread::current()->is_VM_thread(), "VM thread should not be part"
-         " of a work gang");
+  assert(!Thread::current()->is_VM_thread(), "VM thread should not be part" " of a work gang");
 }
 
 bool AbstractGangWorker::is_GC_task_thread() const {
@@ -422,25 +395,16 @@ void SubTasksDone::clear() {
     _tasks[i] = 0;
   }
   _threads_completed = 0;
-#ifdef ASSERT
-  _claimed = 0;
-#endif
 }
 
 bool SubTasksDone::is_task_claimed(uint t) {
-  assert(t < _n_tasks, "bad task id.");
+  assert(t < _n_tasks, "bad task id.");
   uint old = _tasks[t];
   if (old == 0) {
     old = Atomic::cmpxchg(1u, &_tasks[t], 0u);
   }
-  assert(_tasks[t] == 1, "What else?");
+  assert(_tasks[t] == 1, "What else?");
   bool res = old != 0;
-#ifdef ASSERT
-  if (!res) {
-    assert(_claimed < _n_tasks, "Too many tasks claimed; missing clear?");
-    Atomic::inc(&_claimed);
-  }
-#endif
   return res;
 }
 
@@ -457,7 +421,6 @@ void SubTasksDone::all_tasks_completed(uint n_threads) {
     clear();
   }
 }
-
 
 SubTasksDone::~SubTasksDone() {
   if (_tasks != NULL) FREE_C_HEAP_ARRAY(jint, _tasks);

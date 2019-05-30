@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "interpreter/interpreter.hpp"
@@ -43,8 +19,8 @@
 #define __ _masm->
 
 // Global Register Names
-static const Register rbcp     = LP64_ONLY(r13) NOT_LP64(rsi);
-static const Register rlocals  = LP64_ONLY(r14) NOT_LP64(rdi);
+static const Register rbcp     = r13;
+static const Register rlocals  = r14;
 
 // Platform-dependent initialization
 void TemplateTable::pd_initialize() {
@@ -59,12 +35,6 @@ static inline Address iaddress(int n) {
 static inline Address laddress(int n) {
   return iaddress(n + 1);
 }
-
-#ifndef _LP64
-static inline Address haddress(int n) {
-  return iaddress(n + 0);
-}
-#endif
 
 static inline Address faddress(int n) {
   return iaddress(n);
@@ -86,12 +56,6 @@ static inline Address laddress(Register r) {
   return Address(rlocals, r, Address::times_ptr, Interpreter::local_offset_in_bytes(1));
 }
 
-#ifndef _LP64
-static inline Address haddress(Register r)       {
-  return Address(rlocals, r, Interpreter::stackElementScale(), Interpreter::local_offset_in_bytes(0));
-}
-#endif
-
 static inline Address faddress(Register r) {
   return iaddress(r);
 }
@@ -103,7 +67,6 @@ static inline Address daddress(Register r) {
 static inline Address aaddress(Register r) {
   return iaddress(r);
 }
-
 
 // expression stack
 // (Note: Must not use symmetric equivalents at_rsp_m1/2 since they store
@@ -141,37 +104,25 @@ static Assembler::Condition j_not(TemplateTable::Condition cc) {
   return Assembler::zero;
 }
 
-
-
 // Miscelaneous helper routines
 // Store an oop (or NULL) at the address described by obj.
 // If val == noreg this means store a NULL
 
-
-static void do_oop_store(InterpreterMacroAssembler* _masm,
-                         Address dst,
-                         Register val,
-                         DecoratorSet decorators = 0) {
-  assert(val == noreg || val == rax, "parameter is just for looks");
+static void do_oop_store(InterpreterMacroAssembler* _masm, Address dst, Register val, DecoratorSet decorators = 0) {
+  assert(val == noreg || val == rax, "parameter is just for looks");
   __ store_heap_oop(dst, val, rdx, rbx, decorators);
 }
 
-static void do_oop_load(InterpreterMacroAssembler* _masm,
-                        Address src,
-                        Register dst,
-                        DecoratorSet decorators = 0) {
+static void do_oop_load(InterpreterMacroAssembler* _masm, Address src, Register dst, DecoratorSet decorators = 0) {
   __ load_heap_oop(dst, src, rdx, rbx, decorators);
 }
 
 Address TemplateTable::at_bcp(int offset) {
-  assert(_desc->uses_bcp(), "inconsistent uses_bcp information");
+  assert(_desc->uses_bcp(), "inconsistent uses_bcp information");
   return Address(rbcp, offset);
 }
 
-
-void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg,
-                                   Register temp_reg, bool load_bc_into_bc_reg/*=true*/,
-                                   int byte_no) {
+void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg, Register temp_reg, bool load_bc_into_bc_reg/*=true*/, int byte_no) {
   if (!RewriteBytecodes)  return;
   Label L_patch_done;
 
@@ -191,8 +142,8 @@ void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg,
       // This is required so that every execution of this instruction
       // calls out to InterpreterRuntime::resolve_get_put to do
       // additional, required work.
-      assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
-      assert(load_bc_into_bc_reg, "we use bc_reg as temp");
+      assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
+      assert(load_bc_into_bc_reg, "we use bc_reg as temp");
       __ get_cache_and_index_and_bytecode_at_bcp(temp_reg, bc_reg, temp_reg, byte_no, 1);
       __ movl(bc_reg, bc);
       __ cmpl(temp_reg, (int) 0);
@@ -200,47 +151,18 @@ void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg,
     }
     break;
   default:
-    assert(byte_no == -1, "sanity");
+    assert(byte_no == -1, "sanity");
     // the pair bytecodes have already done the load.
     if (load_bc_into_bc_reg) {
       __ movl(bc_reg, bc);
     }
   }
 
-  if (JvmtiExport::can_post_breakpoint()) {
-    Label L_fast_patch;
-    // if a breakpoint is present we can't rewrite the stream directly
-    __ movzbl(temp_reg, at_bcp(0));
-    __ cmpl(temp_reg, Bytecodes::_breakpoint);
-    __ jcc(Assembler::notEqual, L_fast_patch);
-    __ get_method(temp_reg);
-    // Let breakpoint table handling rewrite to quicker bytecode
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::set_original_bytecode_at), temp_reg, rbcp, bc_reg);
-#ifndef ASSERT
-    __ jmpb(L_patch_done);
-#else
-    __ jmp(L_patch_done);
-#endif
-    __ bind(L_fast_patch);
-  }
-
-#ifdef ASSERT
-  Label L_okay;
-  __ load_unsigned_byte(temp_reg, at_bcp(0));
-  __ cmpl(temp_reg, (int) Bytecodes::java_code(bc));
-  __ jcc(Assembler::equal, L_okay);
-  __ cmpl(temp_reg, bc_reg);
-  __ jcc(Assembler::equal, L_okay);
-  __ stop("patching the wrong bytecode");
-  __ bind(L_okay);
-#endif
-
   // patch bytecode
   __ movb(at_bcp(0), bc_reg);
   __ bind(L_patch_done);
 }
 // Individual instructions
-
 
 void TemplateTable::nop() {
   transition(vtos, vtos);
@@ -273,13 +195,7 @@ void TemplateTable::lconst(int value) {
   } else {
     __ movl(rax, value);
   }
-#ifndef _LP64
-  assert(value >= 0, "check this code");
-  __ xorptr(rdx, rdx);
-#endif
 }
-
-
 
 void TemplateTable::fconst(int value) {
   transition(vtos, ftos);
@@ -300,15 +216,7 @@ void TemplateTable::fconst(int value) {
       break;
     }
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-           if (value == 0) { __ fldz();
-    } else if (value == 1) { __ fld1();
-    } else if (value == 2) { __ fld1(); __ fld1(); __ faddp(); // should do a better solution here
-    } else                 { ShouldNotReachHere();
-    }
-#endif // _LP64
   }
 }
 
@@ -328,14 +236,7 @@ void TemplateTable::dconst(int value) {
       break;
     }
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-           if (value == 0) { __ fldz();
-    } else if (value == 1) { __ fld1();
-    } else                 { ShouldNotReachHere();
-    }
-#endif
   }
 }
 
@@ -353,7 +254,7 @@ void TemplateTable::sipush() {
 
 void TemplateTable::ldc(bool wide) {
   transition(vtos, vtos);
-  Register rarg = NOT_LP64(rcx) LP64_ONLY(c_rarg1);
+  Register rarg = c_rarg1;
   Label call_ldc, notFloat, notClass, notInt, Done;
 
   if (wide) {
@@ -421,7 +322,7 @@ void TemplateTable::fast_aldc(bool wide) {
 
   Register result = rax;
   Register tmp = rdx;
-  Register rarg = NOT_LP64(rcx) LP64_ONLY(c_rarg1);
+  Register rarg = c_rarg1;
   int index_size = wide ? sizeof(u2) : sizeof(u1);
 
   Label resolved;
@@ -483,7 +384,6 @@ void TemplateTable::ldc2_w() {
 
   // ltos
   __ movptr(rax, Address(rcx, rbx, Address::times_ptr, base_offset + 0 * wordSize));
-  NOT_LP64(__ movptr(rdx, Address(rcx, rbx, Address::times_ptr, base_offset + 1 * wordSize)));
   __ push(ltos);
   __ jmp(Done);
 
@@ -497,17 +397,10 @@ void TemplateTable::condy_helper(Label& Done) {
   const Register obj = rax;
   const Register off = rbx;
   const Register flags = rcx;
-  const Register rarg = NOT_LP64(rcx) LP64_ONLY(c_rarg1);
+  const Register rarg = c_rarg1;
   __ movl(rarg, (int)bytecode());
   call_VM(obj, CAST_FROM_FN_PTR(address, InterpreterRuntime::resolve_ldc), rarg);
-#ifndef _LP64
-  // borrow rdi from locals
-  __ get_thread(rdi);
-  __ get_vm_result_2(flags, rdi);
-  __ restore_locals();
-#else
   __ get_vm_result_2(flags, r15_thread);
-#endif
   // VMr = obj = base address to find primitive value to push
   // VMr2 = flags = (tos, off) using format of CPCE::_flags
   __ movl(off, flags);
@@ -582,7 +475,6 @@ void TemplateTable::condy_helper(Label& Done) {
       __ jcc(Assembler::notEqual, notLong);
       // ltos
       // Loading high word first because movptr clobbers rax
-      NOT_LP64(__ movptr(rdx, field.plus_disp(4)));
       __ movptr(rax, field);
       __ push(ltos);
       __ jmp(Done);
@@ -623,8 +515,8 @@ void TemplateTable::iload_internal(RewriteControl rc) {
   transition(vtos, itos);
   if (RewriteFrequentPairs && rc == may_rewrite) {
     Label rewrite, done;
-    const Register bc = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
-    LP64_ONLY(assert(rbx != bc, "register damaged"));
+    const Register bc = c_rarg3;
+    assert(rbx != bc, "register damaged");
 
     // get next byte
     __ load_unsigned_byte(rbx,
@@ -680,7 +572,6 @@ void TemplateTable::lload() {
   transition(vtos, ltos);
   locals_index(rbx);
   __ movptr(rax, laddress(rbx));
-  NOT_LP64(__ movl(rdx, haddress(rbx)));
 }
 
 void TemplateTable::fload() {
@@ -718,7 +609,6 @@ void TemplateTable::wide_lload() {
   transition(vtos, ltos);
   locals_index_wide(rbx);
   __ movptr(rax, laddress(rbx));
-  NOT_LP64(__ movl(rdx, haddress(rbx)));
 }
 
 void TemplateTable::wide_fload() {
@@ -755,13 +645,13 @@ void TemplateTable::index_check_without_pop(Register array, Register index) {
   __ cmpl(index, Address(array, arrayOopDesc::length_offset_in_bytes()));
   if (index != rbx) {
     // ??? convention: move aberrant index into rbx for exception message
-    assert(rbx != array, "different registers");
+    assert(rbx != array, "different registers");
     __ movl(rbx, index);
   }
   Label skip;
   __ jccb(Assembler::below, skip);
   // Pass array to create more detailed exceptions.
-  __ mov(NOT_LP64(rax) LP64_ONLY(c_rarg1), array);
+  __ mov(c_rarg1, array);
   __ jump(ExternalAddress(Interpreter::_throw_ArrayIndexOutOfBoundsException_entry));
   __ bind(skip);
 }
@@ -782,15 +672,12 @@ void TemplateTable::laload() {
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
-  NOT_LP64(__ mov(rbx, rax));
   // rbx,: index
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, noreg /* ltos */,
                     Address(rdx, rbx, Address::times_8,
                             arrayOopDesc::base_offset_in_bytes(T_LONG)),
                     noreg, noreg);
 }
-
-
 
 void TemplateTable::faload() {
   transition(itos, ftos);
@@ -864,7 +751,6 @@ void TemplateTable::fast_icaload() {
                     noreg, noreg);
 }
 
-
 void TemplateTable::saload() {
   transition(itos, itos);
   // rax: index
@@ -883,7 +769,6 @@ void TemplateTable::iload(int n) {
 void TemplateTable::lload(int n) {
   transition(vtos, ltos);
   __ movptr(rax, laddress(n));
-  NOT_LP64(__ movptr(rdx, haddress(n)));
 }
 
 void TemplateTable::fload(int n) {
@@ -935,8 +820,8 @@ void TemplateTable::aload_0_internal(RewriteControl rc) {
   if (RewriteFrequentPairs && rc == may_rewrite) {
     Label rewrite, done;
 
-    const Register bc = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
-    LP64_ONLY(assert(rbx != bc, "register damaged"));
+    const Register bc = c_rarg3;
+    assert(rbx != bc, "register damaged");
 
     // get next byte
     __ load_unsigned_byte(rbx, at_bcp(Bytecodes::length_for(Bytecodes::_aload_0)));
@@ -946,25 +831,25 @@ void TemplateTable::aload_0_internal(RewriteControl rc) {
     __ jcc(Assembler::equal, done);
 
     // if _igetfield then rewrite to _fast_iaccess_0
-    assert(Bytecodes::java_code(Bytecodes::_fast_iaccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
+    assert(Bytecodes::java_code(Bytecodes::_fast_iaccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
     __ cmpl(rbx, Bytecodes::_fast_igetfield);
     __ movl(bc, Bytecodes::_fast_iaccess_0);
     __ jccb(Assembler::equal, rewrite);
 
     // if _agetfield then rewrite to _fast_aaccess_0
-    assert(Bytecodes::java_code(Bytecodes::_fast_aaccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
+    assert(Bytecodes::java_code(Bytecodes::_fast_aaccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
     __ cmpl(rbx, Bytecodes::_fast_agetfield);
     __ movl(bc, Bytecodes::_fast_aaccess_0);
     __ jccb(Assembler::equal, rewrite);
 
     // if _fgetfield then rewrite to _fast_faccess_0
-    assert(Bytecodes::java_code(Bytecodes::_fast_faccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
+    assert(Bytecodes::java_code(Bytecodes::_fast_faccess_0) == Bytecodes::_aload_0, "fix bytecode definition");
     __ cmpl(rbx, Bytecodes::_fast_fgetfield);
     __ movl(bc, Bytecodes::_fast_faccess_0);
     __ jccb(Assembler::equal, rewrite);
 
     // else rewrite to _fast_aload0
-    assert(Bytecodes::java_code(Bytecodes::_fast_aload_0) == Bytecodes::_aload_0, "fix bytecode definition");
+    assert(Bytecodes::java_code(Bytecodes::_fast_aload_0) == Bytecodes::_aload_0, "fix bytecode definition");
     __ movl(bc, Bytecodes::_fast_aload_0);
 
     // rewrite
@@ -985,12 +870,10 @@ void TemplateTable::istore() {
   __ movl(iaddress(rbx), rax);
 }
 
-
 void TemplateTable::lstore() {
   transition(ltos, vtos);
   locals_index(rbx);
   __ movptr(laddress(rbx), rax);
-  NOT_LP64(__ movptr(haddress(rbx), rdx));
 }
 
 void TemplateTable::fstore() {
@@ -1021,33 +904,23 @@ void TemplateTable::wide_istore() {
 
 void TemplateTable::wide_lstore() {
   transition(vtos, vtos);
-  NOT_LP64(__ pop_l(rax, rdx));
-  LP64_ONLY(__ pop_l());
+  __ pop_l();
   locals_index_wide(rbx);
   __ movptr(laddress(rbx), rax);
-  NOT_LP64(__ movl(haddress(rbx), rdx));
 }
 
 void TemplateTable::wide_fstore() {
-#ifdef _LP64
   transition(vtos, vtos);
   __ pop_f(xmm0);
   locals_index_wide(rbx);
   __ movflt(faddress(rbx), xmm0);
-#else
-  wide_istore();
-#endif
 }
 
 void TemplateTable::wide_dstore() {
-#ifdef _LP64
   transition(vtos, vtos);
   __ pop_d(xmm0);
   locals_index_wide(rbx);
   __ movdbl(daddress(rbx), xmm0);
-#else
-  wide_lstore();
-#endif
 }
 
 void TemplateTable::wide_astore() {
@@ -1083,7 +956,6 @@ void TemplateTable::lastore() {
                              arrayOopDesc::base_offset_in_bytes(T_LONG)),
                      noreg /* ltos */, noreg, noreg);
 }
-
 
 void TemplateTable::fastore() {
   transition(ftos, vtos);
@@ -1200,7 +1072,6 @@ void TemplateTable::castore() {
                      rax, noreg, noreg);
 }
 
-
 void TemplateTable::sastore() {
   castore();
 }
@@ -1213,7 +1084,6 @@ void TemplateTable::istore(int n) {
 void TemplateTable::lstore(int n) {
   transition(ltos, vtos);
   __ movptr(laddress(n), rax);
-  NOT_LP64(__ movptr(haddress(n), rdx));
 }
 
 void TemplateTable::fstore(int n) {
@@ -1225,7 +1095,6 @@ void TemplateTable::dstore(int n) {
   transition(dtos, vtos);
   __ store_double(daddress(n));
 }
-
 
 void TemplateTable::astore(int n) {
   transition(vtos, vtos);
@@ -1242,7 +1111,6 @@ void TemplateTable::pop2() {
   transition(vtos, vtos);
   __ addptr(rsp, 2 * Interpreter::stackElementSize);
 }
-
 
 void TemplateTable::dup() {
   transition(vtos, vtos);
@@ -1286,7 +1154,6 @@ void TemplateTable::dup2() {
   __ push_ptr(rax);     // push b
   // stack: ..., a, b, a, b
 }
-
 
 void TemplateTable::dup2_x1() {
   transition(vtos, vtos);
@@ -1352,7 +1219,6 @@ void TemplateTable::iop2(Operation op) {
 
 void TemplateTable::lop2(Operation op) {
   transition(ltos, ltos);
-#ifdef _LP64
   switch (op) {
   case add  :                    __ pop_l(rdx); __ addptr(rax, rdx); break;
   case sub  : __ mov(rdx, rax);  __ pop_l(rax); __ subptr(rax, rdx); break;
@@ -1361,18 +1227,6 @@ void TemplateTable::lop2(Operation op) {
   case _xor :                    __ pop_l(rdx); __ xorptr(rax, rdx); break;
   default   : ShouldNotReachHere();
   }
-#else
-  __ pop_l(rbx, rcx);
-  switch (op) {
-    case add  : __ addl(rax, rbx); __ adcl(rdx, rcx); break;
-    case sub  : __ subl(rbx, rax); __ sbbl(rcx, rdx);
-                __ mov (rax, rbx); __ mov (rdx, rcx); break;
-    case _and : __ andl(rax, rbx); __ andl(rdx, rcx); break;
-    case _or  : __ orl (rax, rbx); __ orl (rdx, rcx); break;
-    case _xor : __ xorl(rax, rbx); __ xorl(rdx, rcx); break;
-    default   : ShouldNotReachHere();
-  }
-#endif
 }
 
 void TemplateTable::idiv() {
@@ -1400,21 +1254,12 @@ void TemplateTable::irem() {
 
 void TemplateTable::lmul() {
   transition(ltos, ltos);
-#ifdef _LP64
   __ pop_l(rdx);
   __ imulq(rax, rdx);
-#else
-  __ pop_l(rbx, rcx);
-  __ push(rcx); __ push(rbx);
-  __ push(rdx); __ push(rax);
-  __ lmul(2 * wordSize, 0);
-  __ addptr(rsp, 4 * wordSize);  // take off temporaries
-#endif
 }
 
 void TemplateTable::ldiv() {
   transition(ltos, ltos);
-#ifdef _LP64
   __ mov(rcx, rax);
   __ pop_l(rax);
   // generate explicit div0 check
@@ -1426,22 +1271,10 @@ void TemplateTable::ldiv() {
   //       needed), which may speed up this implementation for the common case.
   //       (see also JVM spec., p.243 & p.271)
   __ corrected_idivq(rcx); // kills rbx
-#else
-  __ pop_l(rbx, rcx);
-  __ push(rcx); __ push(rbx);
-  __ push(rdx); __ push(rax);
-  // check if y = 0
-  __ orl(rax, rdx);
-  __ jump_cc(Assembler::zero,
-             ExternalAddress(Interpreter::_throw_ArithmeticException_entry));
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::ldiv));
-  __ addptr(rsp, 4 * wordSize);  // take off temporaries
-#endif
 }
 
 void TemplateTable::lrem() {
   transition(ltos, ltos);
-#ifdef _LP64
   __ mov(rcx, rax);
   __ pop_l(rax);
   __ testq(rcx, rcx);
@@ -1453,56 +1286,27 @@ void TemplateTable::lrem() {
   //       (see also JVM spec., p.243 & p.271)
   __ corrected_idivq(rcx); // kills rbx
   __ mov(rax, rdx);
-#else
-  __ pop_l(rbx, rcx);
-  __ push(rcx); __ push(rbx);
-  __ push(rdx); __ push(rax);
-  // check if y = 0
-  __ orl(rax, rdx);
-  __ jump_cc(Assembler::zero,
-             ExternalAddress(Interpreter::_throw_ArithmeticException_entry));
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::lrem));
-  __ addptr(rsp, 4 * wordSize);
-#endif
 }
 
 void TemplateTable::lshl() {
   transition(itos, ltos);
   __ movl(rcx, rax);                             // get shift count
-  #ifdef _LP64
   __ pop_l(rax);                                 // get shift value
   __ shlq(rax);
-#else
-  __ pop_l(rax, rdx);                            // get shift value
-  __ lshl(rdx, rax);
-#endif
 }
 
 void TemplateTable::lshr() {
-#ifdef _LP64
   transition(itos, ltos);
   __ movl(rcx, rax);                             // get shift count
   __ pop_l(rax);                                 // get shift value
   __ sarq(rax);
-#else
-  transition(itos, ltos);
-  __ mov(rcx, rax);                              // get shift count
-  __ pop_l(rax, rdx);                            // get shift value
-  __ lshr(rdx, rax, true);
-#endif
 }
 
 void TemplateTable::lushr() {
   transition(itos, ltos);
-#ifdef _LP64
   __ movl(rcx, rax);                             // get shift count
   __ pop_l(rax);                                 // get shift value
   __ shrq(rax);
-#else
-  __ mov(rcx, rax);                              // get shift count
-  __ pop_l(rax, rdx);                            // get shift value
-  __ lshr(rdx, rax);
-#endif
 }
 
 void TemplateTable::fop2(Operation op) {
@@ -1540,40 +1344,16 @@ void TemplateTable::fop2(Operation op) {
       // what is considered the standard (e.g., -0.0f % -3.14f is 0.0f (and not -0.0f).
       // The fprem instruction used on x86_32 is functionally equivalent to
       // SharedRuntime::frem in that it returns a NaN.
-#ifdef _LP64
       __ movflt(xmm1, xmm0);
       __ pop_f(xmm0);
       __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::frem), 2);
-#else
-      __ push_f(xmm0);
-      __ pop_f();
-      __ fld_s(at_rsp());
-      __ fremr(rax);
-      __ f2ieee();
-      __ pop(rax);  // pop second operand off the stack
-      __ push_f();
-      __ pop_f(xmm0);
-#endif
       break;
     default:
       ShouldNotReachHere();
       break;
     }
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-    switch (op) {
-    case add: __ fadd_s (at_rsp());                break;
-    case sub: __ fsubr_s(at_rsp());                break;
-    case mul: __ fmul_s (at_rsp());                break;
-    case div: __ fdivr_s(at_rsp());                break;
-    case rem: __ fld_s  (at_rsp()); __ fremr(rax); break;
-    default : ShouldNotReachHere();
-    }
-    __ f2ieee();
-    __ pop(rax);  // pop second operand off the stack
-#endif // _LP64
   }
 }
 
@@ -1603,79 +1383,16 @@ void TemplateTable::dop2(Operation op) {
       // Similar to fop2(), the modulo operation is performed using the
       // SharedRuntime::drem method (on x86_64 platforms) or using the
       // FPU (on x86_32 platforms) for the same reasons as mentioned in fop2().
-#ifdef _LP64
       __ movdbl(xmm1, xmm0);
       __ pop_d(xmm0);
       __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::drem), 2);
-#else
-      __ push_d(xmm0);
-      __ pop_d();
-      __ fld_d(at_rsp());
-      __ fremr(rax);
-      __ d2ieee();
-      __ pop(rax);
-      __ pop(rdx);
-      __ push_d();
-      __ pop_d(xmm0);
-#endif
       break;
     default:
       ShouldNotReachHere();
       break;
     }
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-    switch (op) {
-    case add: __ fadd_d (at_rsp());                break;
-    case sub: __ fsubr_d(at_rsp());                break;
-    case mul: {
-      Label L_strict;
-      Label L_join;
-      const Address access_flags      (rcx, Method::access_flags_offset());
-      __ get_method(rcx);
-      __ movl(rcx, access_flags);
-      __ testl(rcx, JVM_ACC_STRICT);
-      __ jccb(Assembler::notZero, L_strict);
-      __ fmul_d (at_rsp());
-      __ jmpb(L_join);
-      __ bind(L_strict);
-      __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias1()));
-      __ fmulp();
-      __ fmul_d (at_rsp());
-      __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias2()));
-      __ fmulp();
-      __ bind(L_join);
-      break;
-    }
-    case div: {
-      Label L_strict;
-      Label L_join;
-      const Address access_flags      (rcx, Method::access_flags_offset());
-      __ get_method(rcx);
-      __ movl(rcx, access_flags);
-      __ testl(rcx, JVM_ACC_STRICT);
-      __ jccb(Assembler::notZero, L_strict);
-      __ fdivr_d(at_rsp());
-      __ jmp(L_join);
-      __ bind(L_strict);
-      __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias1()));
-      __ fmul_d (at_rsp());
-      __ fdivrp();
-      __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias2()));
-      __ fmulp();
-      __ bind(L_join);
-      break;
-    }
-    case rem: __ fld_d  (at_rsp()); __ fremr(rax); break;
-    default : ShouldNotReachHere();
-    }
-    __ d2ieee();
-    // Pop double precision number from rsp.
-    __ pop(rax);
-    __ pop(rdx);
-#endif
   }
 }
 
@@ -1686,8 +1403,7 @@ void TemplateTable::ineg() {
 
 void TemplateTable::lneg() {
   transition(ltos, ltos);
-  LP64_ONLY(__ negq(rax));
-  NOT_LP64(__ lneg(rdx, rax));
+  __ negq(rax);
 }
 
 // Note: 'double' and 'long long' have 32-bits alignment on x86.
@@ -1711,8 +1427,7 @@ void TemplateTable::fneg() {
     static jlong *float_signflip  = double_quadword(&float_signflip_pool[1],  CONST64(0x8000000080000000),  CONST64(0x8000000080000000));
     __ xorps(xmm0, ExternalAddress((address) float_signflip));
   } else {
-    LP64_ONLY(ShouldNotReachHere());
-    NOT_LP64(__ fchs());
+    ShouldNotReachHere();
   }
 }
 
@@ -1723,11 +1438,7 @@ void TemplateTable::dneg() {
       double_quadword(&double_signflip_pool[1], CONST64(0x8000000000000000), CONST64(0x8000000000000000));
     __ xorpd(xmm0, ExternalAddress((address) double_signflip));
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-    __ fchs();
-#endif
   }
 }
 
@@ -1750,51 +1461,7 @@ void TemplateTable::wide_iinc() {
 }
 
 void TemplateTable::convert() {
-#ifdef _LP64
   // Checking
-#ifdef ASSERT
-  {
-    TosState tos_in  = ilgl;
-    TosState tos_out = ilgl;
-    switch (bytecode()) {
-    case Bytecodes::_i2l: // fall through
-    case Bytecodes::_i2f: // fall through
-    case Bytecodes::_i2d: // fall through
-    case Bytecodes::_i2b: // fall through
-    case Bytecodes::_i2c: // fall through
-    case Bytecodes::_i2s: tos_in = itos; break;
-    case Bytecodes::_l2i: // fall through
-    case Bytecodes::_l2f: // fall through
-    case Bytecodes::_l2d: tos_in = ltos; break;
-    case Bytecodes::_f2i: // fall through
-    case Bytecodes::_f2l: // fall through
-    case Bytecodes::_f2d: tos_in = ftos; break;
-    case Bytecodes::_d2i: // fall through
-    case Bytecodes::_d2l: // fall through
-    case Bytecodes::_d2f: tos_in = dtos; break;
-    default             : ShouldNotReachHere();
-    }
-    switch (bytecode()) {
-    case Bytecodes::_l2i: // fall through
-    case Bytecodes::_f2i: // fall through
-    case Bytecodes::_d2i: // fall through
-    case Bytecodes::_i2b: // fall through
-    case Bytecodes::_i2c: // fall through
-    case Bytecodes::_i2s: tos_out = itos; break;
-    case Bytecodes::_i2l: // fall through
-    case Bytecodes::_f2l: // fall through
-    case Bytecodes::_d2l: tos_out = ltos; break;
-    case Bytecodes::_i2f: // fall through
-    case Bytecodes::_l2f: // fall through
-    case Bytecodes::_d2f: tos_out = ftos; break;
-    case Bytecodes::_i2d: // fall through
-    case Bytecodes::_l2d: // fall through
-    case Bytecodes::_f2d: tos_out = dtos; break;
-    default             : ShouldNotReachHere();
-    }
-    transition(tos_in, tos_out);
-  }
-#endif // ASSERT
 
   static const int64_t is_nan = 0x8000000000000000L;
 
@@ -1878,203 +1545,10 @@ void TemplateTable::convert() {
   default:
     ShouldNotReachHere();
   }
-#else
-  // Checking
-#ifdef ASSERT
-  { TosState tos_in  = ilgl;
-    TosState tos_out = ilgl;
-    switch (bytecode()) {
-      case Bytecodes::_i2l: // fall through
-      case Bytecodes::_i2f: // fall through
-      case Bytecodes::_i2d: // fall through
-      case Bytecodes::_i2b: // fall through
-      case Bytecodes::_i2c: // fall through
-      case Bytecodes::_i2s: tos_in = itos; break;
-      case Bytecodes::_l2i: // fall through
-      case Bytecodes::_l2f: // fall through
-      case Bytecodes::_l2d: tos_in = ltos; break;
-      case Bytecodes::_f2i: // fall through
-      case Bytecodes::_f2l: // fall through
-      case Bytecodes::_f2d: tos_in = ftos; break;
-      case Bytecodes::_d2i: // fall through
-      case Bytecodes::_d2l: // fall through
-      case Bytecodes::_d2f: tos_in = dtos; break;
-      default             : ShouldNotReachHere();
-    }
-    switch (bytecode()) {
-      case Bytecodes::_l2i: // fall through
-      case Bytecodes::_f2i: // fall through
-      case Bytecodes::_d2i: // fall through
-      case Bytecodes::_i2b: // fall through
-      case Bytecodes::_i2c: // fall through
-      case Bytecodes::_i2s: tos_out = itos; break;
-      case Bytecodes::_i2l: // fall through
-      case Bytecodes::_f2l: // fall through
-      case Bytecodes::_d2l: tos_out = ltos; break;
-      case Bytecodes::_i2f: // fall through
-      case Bytecodes::_l2f: // fall through
-      case Bytecodes::_d2f: tos_out = ftos; break;
-      case Bytecodes::_i2d: // fall through
-      case Bytecodes::_l2d: // fall through
-      case Bytecodes::_f2d: tos_out = dtos; break;
-      default             : ShouldNotReachHere();
-    }
-    transition(tos_in, tos_out);
-  }
-#endif // ASSERT
-
-  // Conversion
-  // (Note: use push(rcx)/pop(rcx) for 1/2-word stack-ptr manipulation)
-  switch (bytecode()) {
-    case Bytecodes::_i2l:
-      __ extend_sign(rdx, rax);
-      break;
-    case Bytecodes::_i2f:
-      if (UseSSE >= 1) {
-        __ cvtsi2ssl(xmm0, rax);
-      } else {
-        __ push(rax);          // store int on tos
-        __ fild_s(at_rsp());   // load int to ST0
-        __ f2ieee();           // truncate to float size
-        __ pop(rcx);           // adjust rsp
-      }
-      break;
-    case Bytecodes::_i2d:
-      if (UseSSE >= 2) {
-        __ cvtsi2sdl(xmm0, rax);
-      } else {
-      __ push(rax);          // add one slot for d2ieee()
-      __ push(rax);          // store int on tos
-      __ fild_s(at_rsp());   // load int to ST0
-      __ d2ieee();           // truncate to double size
-      __ pop(rcx);           // adjust rsp
-      __ pop(rcx);
-      }
-      break;
-    case Bytecodes::_i2b:
-      __ shll(rax, 24);      // truncate upper 24 bits
-      __ sarl(rax, 24);      // and sign-extend byte
-      LP64_ONLY(__ movsbl(rax, rax));
-      break;
-    case Bytecodes::_i2c:
-      __ andl(rax, 0xFFFF);  // truncate upper 16 bits
-      LP64_ONLY(__ movzwl(rax, rax));
-      break;
-    case Bytecodes::_i2s:
-      __ shll(rax, 16);      // truncate upper 16 bits
-      __ sarl(rax, 16);      // and sign-extend short
-      LP64_ONLY(__ movswl(rax, rax));
-      break;
-    case Bytecodes::_l2i:
-      /* nothing to do */
-      break;
-    case Bytecodes::_l2f:
-      // On 64-bit platforms, the cvtsi2ssq instruction is used to convert
-      // 64-bit long values to floats. On 32-bit platforms it is not possible
-      // to use that instruction with 64-bit operands, therefore the FPU is
-      // used to perform the conversion.
-      __ push(rdx);          // store long on tos
-      __ push(rax);
-      __ fild_d(at_rsp());   // load long to ST0
-      __ f2ieee();           // truncate to float size
-      __ pop(rcx);           // adjust rsp
-      __ pop(rcx);
-      if (UseSSE >= 1) {
-        __ push_f();
-        __ pop_f(xmm0);
-      }
-      break;
-    case Bytecodes::_l2d:
-      // On 32-bit platforms the FPU is used for conversion because on
-      // 32-bit platforms it is not not possible to use the cvtsi2sdq
-      // instruction with 64-bit operands.
-      __ push(rdx);          // store long on tos
-      __ push(rax);
-      __ fild_d(at_rsp());   // load long to ST0
-      __ d2ieee();           // truncate to double size
-      __ pop(rcx);           // adjust rsp
-      __ pop(rcx);
-      if (UseSSE >= 2) {
-        __ push_d();
-        __ pop_d(xmm0);
-      }
-      break;
-    case Bytecodes::_f2i:
-      // SharedRuntime::f2i does not differentiate between sNaNs and qNaNs
-      // as it returns 0 for any NaN.
-      if (UseSSE >= 1) {
-        __ push_f(xmm0);
-      } else {
-        __ push(rcx);          // reserve space for argument
-        __ fstp_s(at_rsp());   // pass float argument on stack
-      }
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::f2i), 1);
-      break;
-    case Bytecodes::_f2l:
-      // SharedRuntime::f2l does not differentiate between sNaNs and qNaNs
-      // as it returns 0 for any NaN.
-      if (UseSSE >= 1) {
-       __ push_f(xmm0);
-      } else {
-        __ push(rcx);          // reserve space for argument
-        __ fstp_s(at_rsp());   // pass float argument on stack
-      }
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::f2l), 1);
-      break;
-    case Bytecodes::_f2d:
-      if (UseSSE < 1) {
-        /* nothing to do */
-      } else if (UseSSE == 1) {
-        __ push_f(xmm0);
-        __ pop_f();
-      } else { // UseSSE >= 2
-        __ cvtss2sd(xmm0, xmm0);
-      }
-      break;
-    case Bytecodes::_d2i:
-      if (UseSSE >= 2) {
-        __ push_d(xmm0);
-      } else {
-        __ push(rcx);          // reserve space for argument
-        __ push(rcx);
-        __ fstp_d(at_rsp());   // pass double argument on stack
-      }
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::d2i), 2);
-      break;
-    case Bytecodes::_d2l:
-      if (UseSSE >= 2) {
-        __ push_d(xmm0);
-      } else {
-        __ push(rcx);          // reserve space for argument
-        __ push(rcx);
-        __ fstp_d(at_rsp());   // pass double argument on stack
-      }
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::d2l), 2);
-      break;
-    case Bytecodes::_d2f:
-      if (UseSSE <= 1) {
-        __ push(rcx);          // reserve space for f2ieee()
-        __ f2ieee();           // truncate to float size
-        __ pop(rcx);           // adjust rsp
-        if (UseSSE == 1) {
-          // The cvtsd2ss instruction is not available if UseSSE==1, therefore
-          // the conversion is performed using the FPU in this case.
-          __ push_f();
-          __ pop_f(xmm0);
-        }
-      } else { // UseSSE >= 2
-        __ cvtsd2ss(xmm0, xmm0);
-      }
-      break;
-    default             :
-      ShouldNotReachHere();
-  }
-#endif
 }
 
 void TemplateTable::lcmp() {
   transition(ltos, itos);
-#ifdef _LP64
   Label done;
   __ pop_l(rdx);
   __ cmpq(rdx, rax);
@@ -2083,13 +1557,6 @@ void TemplateTable::lcmp() {
   __ setb(Assembler::notEqual, rax);
   __ movzbl(rax, rax);
   __ bind(done);
-#else
-
-  // y = rdx:rax
-  __ pop_l(rbx, rcx);             // get x = rcx:rbx
-  __ lcmp2int(rcx, rbx, rdx, rax);// rcx := cmp(x, y)
-  __ mov(rax, rcx);
-#endif
 }
 
 void TemplateTable::float_cmp(bool is_float, int unordered_result) {
@@ -2121,18 +1588,7 @@ void TemplateTable::float_cmp(bool is_float, int unordered_result) {
     }
     __ bind(done);
   } else {
-#ifdef _LP64
     ShouldNotReachHere();
-#else
-    if (is_float) {
-      __ fld_s(at_rsp());
-    } else {
-      __ fld_d(at_rsp());
-      __ pop(rdx);
-    }
-    __ pop(rcx);
-    __ fcmp2int(rax, unordered_result < 0);
-#endif // _LP64
   }
 }
 
@@ -2157,7 +1613,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
   if (!is_wide) {
     __ sarl(rdx, 16);
   }
-  LP64_ONLY(__ movl2ptr(rdx, rdx));
+  __ movl2ptr(rdx, rdx);
 
   // Handle all the JSR stuff here, then exit.
   // It's much shorter and cleaner than intermingling with the non-JSR
@@ -2183,8 +1639,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
   // Adjust the bcp in r13 by the displacement in rdx
   __ addptr(rbcp, rdx);
 
-  assert(UseLoopCounter || !UseOnStackReplacement,
-         "on-stack-replacement requires loop counters");
+  assert(UseLoopCounter || !UseOnStackReplacement, "on-stack-replacement requires loop counters");
   Label backedge_counter_overflow;
   Label profile_method;
   Label dispatch;
@@ -2272,7 +1727,6 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
           const int overflow_frequency = 1024;
           __ andl(rbx, overflow_frequency - 1);
           __ jcc(Assembler::zero, backedge_counter_overflow);
-
         }
       } else {
         if (UseOnStackReplacement) {
@@ -2280,7 +1734,6 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
           // counters
           __ cmp32(rax, Address(rcx, in_bytes(MethodCounters::interpreter_backward_branch_limit_offset())));
           __ jcc(Assembler::aboveEqual, backedge_counter_overflow);
-
         }
       }
     }
@@ -2333,19 +1786,16 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
       // it will be preserved in rbx.
       __ mov(rbx, rax);
 
-      NOT_LP64(__ get_thread(rcx));
-
       call_VM(noreg, CAST_FROM_FN_PTR(address, SharedRuntime::OSR_migration_begin));
 
       // rax is OSR buffer, move it to expected parameter location
-      LP64_ONLY(__ mov(j_rarg0, rax));
-      NOT_LP64(__ mov(rcx, rax));
+      __ mov(j_rarg0, rax);
       // We use j_rarg definitions here so that registers don't conflict as parameter
       // registers change across platforms as we are in the midst of a calling
       // sequence to the OSR nmethod and we don't want collision. These are NOT parameters.
 
-      const Register retaddr   = LP64_ONLY(j_rarg2) NOT_LP64(rdi);
-      const Register sender_sp = LP64_ONLY(j_rarg1) NOT_LP64(rdx);
+      const Register retaddr   = j_rarg2;
+      const Register sender_sp = j_rarg1;
 
       // pop the interpreter frame
       __ movptr(sender_sp, Address(rbp, frame::interpreter_frame_sender_sp_offset * wordSize)); // get sender sp
@@ -2416,8 +1866,7 @@ void TemplateTable::if_acmp(Condition cc) {
 void TemplateTable::ret() {
   transition(vtos, vtos);
   locals_index(rbx);
-  LP64_ONLY(__ movslq(rbx, iaddress(rbx))); // get return bci, compute return bcp
-  NOT_LP64(__ movptr(rbx, iaddress(rbx)));
+  __ movslq(rbx, iaddress(rbx)); // get return bci, compute return bcp
   __ profile_ret(rbx, rcx);
   __ get_method(rax);
   __ movptr(rbcp, Address(rax, Method::const_offset()));
@@ -2461,7 +1910,7 @@ void TemplateTable::tableswitch() {
   // continue execution
   __ bind(continue_execution);
   __ bswapl(rdx);
-  LP64_ONLY(__ movl2ptr(rdx, rdx));
+  __ movl2ptr(rdx, rdx);
   __ load_unsigned_byte(rbx, Address(rbcp, rdx, Address::times_1));
   __ addptr(rbcp, rdx);
   __ dispatch_only(vtos, true);
@@ -2550,9 +1999,6 @@ void TemplateTable::fast_binaryswitch() {
   const Register h     = rdi;
   const Register temp  = rsi;
 
-  // Find array start
-  NOT_LP64(__ save_bcp());
-
   __ lea(array, at_bcp(3 * BytesPerInt)); // btw: should be able to
                                           // get rid of this
                                           // instruction (change
@@ -2609,10 +2055,7 @@ void TemplateTable::fast_binaryswitch() {
   __ movl(j , Address(array, i, Address::times_8, BytesPerInt));
   __ profile_switch_case(i, key, array);
   __ bswapl(j);
-  LP64_ONLY(__ movslq(j, j));
-
-  NOT_LP64(__ restore_bcp());
-  NOT_LP64(__ restore_locals());                           // restore rdi
+  __ movslq(j, j);
 
   __ load_unsigned_byte(rbx, Address(rbcp, j, Address::times_1));
   __ addptr(rbcp, j);
@@ -2623,10 +2066,7 @@ void TemplateTable::fast_binaryswitch() {
   __ profile_switch_default(i);
   __ movl(j, Address(array, -2 * BytesPerInt));
   __ bswapl(j);
-  LP64_ONLY(__ movslq(j, j));
-
-  NOT_LP64(__ restore_bcp());
-  NOT_LP64(__ restore_locals());
+  __ movslq(j, j);
 
   __ load_unsigned_byte(rbx, Address(rbcp, j, Address::times_1));
   __ addptr(rbcp, j);
@@ -2636,12 +2076,11 @@ void TemplateTable::fast_binaryswitch() {
 void TemplateTable::_return(TosState state) {
   transition(state, state);
 
-  assert(_desc->calls_vm(),
-         "inconsistent calls_vm information"); // call in remove_activation
+  assert(_desc->calls_vm(), "inconsistent calls_vm information"); // call in remove_activation
 
   if (_desc->bytecode() == Bytecodes::_return_register_finalizer) {
-    assert(state == vtos, "only valid state");
-    Register robj = LP64_ONLY(c_rarg1) NOT_LP64(rax);
+    assert(state == vtos, "only valid state");
+    Register robj = c_rarg1;
     __ movptr(robj, aaddress(0));
     __ load_klass(rdi, robj);
     __ movl(rdi, Address(rdi, Klass::access_flags_offset()));
@@ -2656,14 +2095,7 @@ void TemplateTable::_return(TosState state) {
 
   if (SafepointMechanism::uses_thread_local_poll() && _desc->bytecode() != Bytecodes::_return_register_finalizer) {
     Label no_safepoint;
-    NOT_PRODUCT(__ block_comment("Thread-local Safepoint poll"));
-#ifdef _LP64
     __ testb(Address(r15_thread, Thread::polling_page_offset()), SafepointMechanism::poll_bit());
-#else
-    const Register thread = rdi;
-    __ get_thread(thread);
-    __ testb(Address(thread, Thread::polling_page_offset()), SafepointMechanism::poll_bit());
-#endif
     __ jcc(Assembler::zero, no_safepoint);
     __ push(state);
     __ call_VM(noreg, CAST_FROM_FN_PTR(address,
@@ -2718,10 +2150,7 @@ void TemplateTable::volatile_barrier(Assembler::Membar_mask_bits order_constrain
   __ membar(order_constraint);
 }
 
-void TemplateTable::resolve_cache_and_index(int byte_no,
-                                            Register Rcache,
-                                            Register index,
-                                            size_t index_size) {
+void TemplateTable::resolve_cache_and_index(int byte_no, Register Rcache, Register index, size_t index_size) {
   const Register temp = rbx;
   assert_different_registers(Rcache, index, temp);
 
@@ -2734,7 +2163,7 @@ void TemplateTable::resolve_cache_and_index(int byte_no,
   default: break;
   }
 
-  assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
+  assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
   __ get_cache_and_index_and_bytecode_at_bcp(Rcache, index, temp, byte_no, 1, index_size);
   __ cmpl(temp, code);  // have we resolved this bytecode?
   __ jcc(Assembler::equal, resolved);
@@ -2749,29 +2178,18 @@ void TemplateTable::resolve_cache_and_index(int byte_no,
 }
 
 // The cache and index registers must be set before call
-void TemplateTable::load_field_cp_cache_entry(Register obj,
-                                              Register cache,
-                                              Register index,
-                                              Register off,
-                                              Register flags,
-                                              bool is_static = false) {
+void TemplateTable::load_field_cp_cache_entry(Register obj, Register cache, Register index, Register off, Register flags, bool is_static = false) {
   assert_different_registers(cache, index, flags, off);
 
   ByteSize cp_base_offset = ConstantPoolCache::base_offset();
   // Field offset
-  __ movptr(off, Address(cache, index, Address::times_ptr,
-                         in_bytes(cp_base_offset +
-                                  ConstantPoolCacheEntry::f2_offset())));
+  __ movptr(off, Address(cache, index, Address::times_ptr, in_bytes(cp_base_offset + ConstantPoolCacheEntry::f2_offset())));
   // Flags
-  __ movl(flags, Address(cache, index, Address::times_ptr,
-                         in_bytes(cp_base_offset +
-                                  ConstantPoolCacheEntry::flags_offset())));
+  __ movl(flags, Address(cache, index, Address::times_ptr, in_bytes(cp_base_offset + ConstantPoolCacheEntry::flags_offset())));
 
   // klass overwrite register
   if (is_static) {
-    __ movptr(obj, Address(cache, index, Address::times_ptr,
-                           in_bytes(cp_base_offset +
-                                    ConstantPoolCacheEntry::f1_offset())));
+    __ movptr(obj, Address(cache, index, Address::times_ptr, in_bytes(cp_base_offset + ConstantPoolCacheEntry::f1_offset())));
     const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ movptr(obj, Address(obj, mirror_offset));
     __ resolve_oop_handle(obj);
@@ -2793,7 +2211,7 @@ void TemplateTable::load_invoke_cp_cache_entry(int byte_no,
   assert_different_registers(itable_index, flags);
   assert_different_registers(itable_index, cache, index);
   // determine constant pool cache field offsets
-  assert(is_invokevirtual == (byte_no == f2_byte), "is_invokevirtual flag redundant");
+  assert(is_invokevirtual == (byte_no == f2_byte), "is_invokevirtual flag redundant");
   const int method_offset = in_bytes(
     ConstantPoolCache::base_offset() +
       ((byte_no == f2_byte)
@@ -2816,41 +2234,6 @@ void TemplateTable::load_invoke_cp_cache_entry(int byte_no,
   __ movl(flags, Address(cache, index, Address::times_ptr, flags_offset));
 }
 
-// The registers cache and index expected to be set before call.
-// Correct values of the cache and index registers are preserved.
-void TemplateTable::jvmti_post_field_access(Register cache,
-                                            Register index,
-                                            bool is_static,
-                                            bool has_tos) {
-  if (JvmtiExport::can_post_field_access()) {
-    // Check to see if a field access watch has been set before we take
-    // the time to call into the VM.
-    Label L1;
-    assert_different_registers(cache, index, rax);
-    __ mov32(rax, ExternalAddress((address) JvmtiExport::get_field_access_count_addr()));
-    __ testl(rax,rax);
-    __ jcc(Assembler::zero, L1);
-
-    // cache entry pointer
-    __ addptr(cache, in_bytes(ConstantPoolCache::base_offset()));
-    __ shll(index, LogBytesPerWord);
-    __ addptr(cache, index);
-    if (is_static) {
-      __ xorptr(rax, rax);      // NULL object reference
-    } else {
-      __ pop(atos);         // Get the object
-      __ verify_oop(rax);
-      __ push(atos);        // Restore stack state
-    }
-    // rax,:   object pointer or NULL
-    // cache: cache entry pointer
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::post_field_access),
-               rax, cache);
-    __ get_cache_and_index_at_bcp(cache, index, 1);
-    __ bind(L1);
-  }
-}
-
 void TemplateTable::pop_and_check_object(Register r) {
   __ pop_ptr(r);
   __ null_check(r);  // for field access must check obj.
@@ -2862,13 +2245,12 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   const Register cache = rcx;
   const Register index = rdx;
-  const Register obj   = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
+  const Register obj   = c_rarg3;
   const Register off   = rbx;
   const Register flags = rax;
-  const Register bc    = LP64_ONLY(c_rarg3) NOT_LP64(rcx); // uses same reg as obj, so don't mix them
+  const Register bc    = c_rarg3; // uses same reg as obj, so don't mix them
 
   resolve_cache_and_index(byte_no, cache, index, sizeof(u2));
-  jvmti_post_field_access(cache, index, is_static, false);
   load_field_cp_cache_entry(obj, cache, index, off, flags, is_static);
 
   if (!is_static) pop_and_check_object(obj);
@@ -2879,7 +2261,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
   // Make sure we don't need to mask edx after the above shift
-  assert(btos == 0, "change code, btos != 0");
+  assert(btos == 0, "change code, btos != 0");
 
   __ andl(flags, ConstantPoolCacheEntry::tos_state_mask);
 
@@ -2963,7 +2345,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_LONG, IN_HEAP | MO_RELAXED, noreg /* ltos */, field, noreg, noreg);
   __ push(ltos);
   // Rewrite bytecode to be faster
-  LP64_ONLY(if (!is_static && rc == may_rewrite) patch_bytecode(Bytecodes::_fast_lgetfield, bc, rbx));
+  if (!is_static && rc == may_rewrite) patch_bytecode(Bytecodes::_fast_lgetfield, bc, rbx);
   __ jmp(Done);
 
   __ bind(notLong);
@@ -2980,10 +2362,6 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ jmp(Done);
 
   __ bind(notFloat);
-#ifdef ASSERT
-  __ cmpl(flags, dtos);
-  __ jcc(Assembler::notEqual, notDouble);
-#endif
   // dtos
   __ access_load_at(T_DOUBLE, IN_HEAP, noreg /* dtos */, field, noreg, noreg);
   __ push(dtos);
@@ -2991,13 +2369,6 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_dgetfield, bc, rbx);
   }
-#ifdef ASSERT
-  __ jmp(Done);
-
-
-  __ bind(notDouble);
-  __ stop("Bad state");
-#endif
 
   __ bind(Done);
   // [jk] not needed currently
@@ -3017,93 +2388,6 @@ void TemplateTable::getstatic(int byte_no) {
   getfield_or_static(byte_no, true);
 }
 
-
-// The registers cache and index expected to be set before call.
-// The function may destroy various registers, just not the cache and index registers.
-void TemplateTable::jvmti_post_field_mod(Register cache, Register index, bool is_static) {
-
-  const Register robj = LP64_ONLY(c_rarg2)   NOT_LP64(rax);
-  const Register RBX  = LP64_ONLY(c_rarg1)   NOT_LP64(rbx);
-  const Register RCX  = LP64_ONLY(c_rarg3)   NOT_LP64(rcx);
-  const Register RDX  = LP64_ONLY(rscratch1) NOT_LP64(rdx);
-
-  ByteSize cp_base_offset = ConstantPoolCache::base_offset();
-
-  if (JvmtiExport::can_post_field_modification()) {
-    // Check to see if a field modification watch has been set before
-    // we take the time to call into the VM.
-    Label L1;
-    assert_different_registers(cache, index, rax);
-    __ mov32(rax, ExternalAddress((address)JvmtiExport::get_field_modification_count_addr()));
-    __ testl(rax, rax);
-    __ jcc(Assembler::zero, L1);
-
-    __ get_cache_and_index_at_bcp(robj, RDX, 1);
-
-
-    if (is_static) {
-      // Life is simple.  Null out the object pointer.
-      __ xorl(RBX, RBX);
-
-    } else {
-      // Life is harder. The stack holds the value on top, followed by
-      // the object.  We don't know the size of the value, though; it
-      // could be one or two words depending on its type. As a result,
-      // we must find the type to determine where the object is.
-#ifndef _LP64
-      Label two_word, valsize_known;
-#endif
-      __ movl(RCX, Address(robj, RDX,
-                           Address::times_ptr,
-                           in_bytes(cp_base_offset +
-                                     ConstantPoolCacheEntry::flags_offset())));
-      NOT_LP64(__ mov(rbx, rsp));
-      __ shrl(RCX, ConstantPoolCacheEntry::tos_state_shift);
-
-      // Make sure we don't need to mask rcx after the above shift
-      ConstantPoolCacheEntry::verify_tos_state_shift();
-#ifdef _LP64
-      __ movptr(c_rarg1, at_tos_p1());  // initially assume a one word jvalue
-      __ cmpl(c_rarg3, ltos);
-      __ cmovptr(Assembler::equal,
-                 c_rarg1, at_tos_p2()); // ltos (two word jvalue)
-      __ cmpl(c_rarg3, dtos);
-      __ cmovptr(Assembler::equal,
-                 c_rarg1, at_tos_p2()); // dtos (two word jvalue)
-#else
-      __ cmpl(rcx, ltos);
-      __ jccb(Assembler::equal, two_word);
-      __ cmpl(rcx, dtos);
-      __ jccb(Assembler::equal, two_word);
-      __ addptr(rbx, Interpreter::expr_offset_in_bytes(1)); // one word jvalue (not ltos, dtos)
-      __ jmpb(valsize_known);
-
-      __ bind(two_word);
-      __ addptr(rbx, Interpreter::expr_offset_in_bytes(2)); // two words jvalue
-
-      __ bind(valsize_known);
-      // setup object pointer
-      __ movptr(rbx, Address(rbx, 0));
-#endif
-    }
-    // cache entry pointer
-    __ addptr(robj, in_bytes(cp_base_offset));
-    __ shll(RDX, LogBytesPerWord);
-    __ addptr(robj, RDX);
-    // object (tos)
-    __ mov(RCX, rsp);
-    // c_rarg1: object pointer set up above (NULL if static)
-    // c_rarg2: cache entry pointer
-    // c_rarg3: jvalue object on the stack
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::post_field_modification),
-               RBX, robj, RCX);
-    __ get_cache_and_index_at_bcp(cache, index, 1);
-    __ bind(L1);
-  }
-}
-
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
   transition(vtos, vtos);
 
@@ -3112,10 +2396,9 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
   const Register obj   = rcx;
   const Register off   = rbx;
   const Register flags = rax;
-  const Register bc    = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
+  const Register bc    = c_rarg3;
 
   resolve_cache_and_index(byte_no, cache, index, sizeof(u2));
-  jvmti_post_field_mod(cache, index, is_static);
   load_field_cp_cache_entry(obj, cache, index, off, flags, is_static);
 
   // [jk] not needed currently
@@ -3129,14 +2412,13 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
 
   // field addresses
   const Address field(obj, off, Address::times_1, 0*wordSize);
-  NOT_LP64( const Address hi(obj, off, Address::times_1, 1*wordSize);)
 
   Label notByte, notBool, notInt, notShort, notChar,
         notLong, notFloat, notObj, notDouble;
 
   __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
 
-  assert(btos == 0, "change code, btos != 0");
+  assert(btos == 0, "change code, btos != 0");
   __ andl(flags, ConstantPoolCacheEntry::tos_state_mask);
   __ jcc(Assembler::notZero, notByte);
 
@@ -3232,7 +2514,6 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
   __ jcc(Assembler::notEqual, notLong);
 
   // ltos
-#ifdef _LP64
   {
     __ pop(ltos);
     if (!is_static) pop_and_check_object(obj);
@@ -3242,32 +2523,6 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
     }
     __ jmp(Done);
   }
-#else
-  {
-    Label notVolatileLong;
-    __ testl(rdx, rdx);
-    __ jcc(Assembler::zero, notVolatileLong);
-
-    __ pop(ltos);  // overwrites rdx, do this after testing volatile.
-    if (!is_static) pop_and_check_object(obj);
-
-    // Replace with real volatile test
-    __ access_store_at(T_LONG, IN_HEAP | MO_RELAXED, field, noreg /* ltos */, noreg, noreg);
-    // volatile_barrier();
-    volatile_barrier(Assembler::Membar_mask_bits(Assembler::StoreLoad |
-                                                 Assembler::StoreStore));
-    // Don't rewrite volatile version
-    __ jmp(notVolatile);
-
-    __ bind(notVolatileLong);
-
-    __ pop(ltos);  // overwrites rdx
-    if (!is_static) pop_and_check_object(obj);
-    __ access_store_at(T_LONG, IN_HEAP, field, noreg /* ltos */, noreg, noreg);
-    // Don't rewrite to _fast_lputfield for potential volatile case.
-    __ jmp(notVolatile);
-  }
-#endif // _LP64
 
   __ bind(notLong);
   __ cmpl(flags, ftos);
@@ -3285,10 +2540,6 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
   }
 
   __ bind(notFloat);
-#ifdef ASSERT
-  __ cmpl(flags, dtos);
-  __ jcc(Assembler::notEqual, notDouble);
-#endif
 
   // dtos
   {
@@ -3299,13 +2550,6 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteContr
       patch_bytecode(Bytecodes::_fast_dputfield, bc, rbx, true, byte_no);
     }
   }
-
-#ifdef ASSERT
-  __ jmp(Done);
-
-  __ bind(notDouble);
-  __ stop("Bad state");
-#endif
 
   __ bind(Done);
 
@@ -3329,70 +2573,10 @@ void TemplateTable::putstatic(int byte_no) {
   putfield_or_static(byte_no, true);
 }
 
-void TemplateTable::jvmti_post_fast_field_mod() {
-
-  const Register scratch = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
-
-  if (JvmtiExport::can_post_field_modification()) {
-    // Check to see if a field modification watch has been set before
-    // we take the time to call into the VM.
-    Label L2;
-    __ mov32(scratch, ExternalAddress((address)JvmtiExport::get_field_modification_count_addr()));
-    __ testl(scratch, scratch);
-    __ jcc(Assembler::zero, L2);
-    __ pop_ptr(rbx);                  // copy the object pointer from tos
-    __ verify_oop(rbx);
-    __ push_ptr(rbx);                 // put the object pointer back on tos
-    // Save tos values before call_VM() clobbers them. Since we have
-    // to do it for every data type, we use the saved values as the
-    // jvalue object.
-    switch (bytecode()) {          // load values into the jvalue object
-    case Bytecodes::_fast_aputfield: __ push_ptr(rax); break;
-    case Bytecodes::_fast_bputfield: // fall through
-    case Bytecodes::_fast_zputfield: // fall through
-    case Bytecodes::_fast_sputfield: // fall through
-    case Bytecodes::_fast_cputfield: // fall through
-    case Bytecodes::_fast_iputfield: __ push_i(rax); break;
-    case Bytecodes::_fast_dputfield: __ push(dtos); break;
-    case Bytecodes::_fast_fputfield: __ push(ftos); break;
-    case Bytecodes::_fast_lputfield: __ push_l(rax); break;
-
-    default:
-      ShouldNotReachHere();
-    }
-    __ mov(scratch, rsp);             // points to jvalue on the stack
-    // access constant pool cache entry
-    LP64_ONLY(__ get_cache_entry_pointer_at_bcp(c_rarg2, rax, 1));
-    NOT_LP64(__ get_cache_entry_pointer_at_bcp(rax, rdx, 1));
-    __ verify_oop(rbx);
-    // rbx: object pointer copied above
-    // c_rarg2: cache entry pointer
-    // c_rarg3: jvalue object on the stack
-    LP64_ONLY(__ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::post_field_modification), rbx, c_rarg2, c_rarg3));
-    NOT_LP64(__ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::post_field_modification), rbx, rax, rcx));
-
-    switch (bytecode()) {             // restore tos values
-    case Bytecodes::_fast_aputfield: __ pop_ptr(rax); break;
-    case Bytecodes::_fast_bputfield: // fall through
-    case Bytecodes::_fast_zputfield: // fall through
-    case Bytecodes::_fast_sputfield: // fall through
-    case Bytecodes::_fast_cputfield: // fall through
-    case Bytecodes::_fast_iputfield: __ pop_i(rax); break;
-    case Bytecodes::_fast_dputfield: __ pop(dtos); break;
-    case Bytecodes::_fast_fputfield: __ pop(ftos); break;
-    case Bytecodes::_fast_lputfield: __ pop_l(rax); break;
-    default: break;
-    }
-    __ bind(L2);
-  }
-}
-
 void TemplateTable::fast_storefield(TosState state) {
   transition(state, vtos);
 
   ByteSize base = ConstantPoolCache::base_offset();
-
-  jvmti_post_fast_field_mod();
 
   // access constant pool cache
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
@@ -3426,11 +2610,7 @@ void TemplateTable::fast_storefield(TosState state) {
     do_oop_store(_masm, field, rax);
     break;
   case Bytecodes::_fast_lputfield:
-#ifdef _LP64
     __ access_store_at(T_LONG, IN_HEAP, field, noreg /* ltos */, noreg, noreg);
-#else
-  __ stop("should not be rewritten");
-#endif
     break;
   case Bytecodes::_fast_iputfield:
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
@@ -3468,28 +2648,6 @@ void TemplateTable::fast_storefield(TosState state) {
 void TemplateTable::fast_accessfield(TosState state) {
   transition(atos, state);
 
-  // Do the JVMTI work here to avoid disturbing the register state below
-  if (JvmtiExport::can_post_field_access()) {
-    // Check to see if a field access watch has been set before we
-    // take the time to call into the VM.
-    Label L1;
-    __ mov32(rcx, ExternalAddress((address) JvmtiExport::get_field_access_count_addr()));
-    __ testl(rcx, rcx);
-    __ jcc(Assembler::zero, L1);
-    // access constant pool cache entry
-    LP64_ONLY(__ get_cache_entry_pointer_at_bcp(c_rarg2, rcx, 1));
-    NOT_LP64(__ get_cache_entry_pointer_at_bcp(rcx, rdx, 1));
-    __ verify_oop(rax);
-    __ push_ptr(rax);  // save object pointer before call_VM() clobbers it
-    LP64_ONLY(__ mov(c_rarg1, rax));
-    // c_rarg1: object pointer copied above
-    // c_rarg2: cache entry pointer
-    LP64_ONLY(__ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::post_field_access), c_rarg1, c_rarg2));
-    NOT_LP64(__ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::post_field_access), rax, rcx));
-    __ pop_ptr(rax); // restore object pointer
-    __ bind(L1);
-  }
-
   // access constant pool cache
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
   // replace index with field offset from cache entry
@@ -3517,11 +2675,7 @@ void TemplateTable::fast_accessfield(TosState state) {
     __ verify_oop(rax);
     break;
   case Bytecodes::_fast_lgetfield:
-#ifdef _LP64
     __ access_load_at(T_LONG, IN_HEAP, noreg /* ltos */, field, noreg, noreg);
-#else
-  __ stop("should not be rewritten");
-#endif
     break;
   case Bytecodes::_fast_igetfield:
     __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
@@ -3624,10 +2778,10 @@ void TemplateTable::prepare_invoke(int byte_no,
   const bool is_invokespecial    = code == Bytecodes::_invokespecial;
   const bool load_receiver       = (recv  != noreg);
   const bool save_flags          = (flags != noreg);
-  assert(load_receiver == (code != Bytecodes::_invokestatic && code != Bytecodes::_invokedynamic), "");
-  assert(save_flags    == (is_invokeinterface || is_invokevirtual), "need flags for vfinal");
-  assert(flags == noreg || flags == rdx, "");
-  assert(recv  == noreg || recv  == rcx, "");
+  assert(load_receiver == (code != Bytecodes::_invokestatic && code != Bytecodes::_invokedynamic), "");
+  assert(save_flags    == (is_invokeinterface || is_invokevirtual), "need flags for vfinal");
+  assert(flags == noreg || flags == rdx, "");
+  assert(recv  == noreg || recv  == rcx, "");
 
   // setup registers & access constant pool cache
   if (recv  == noreg)  recv  = rcx;
@@ -3649,7 +2803,7 @@ void TemplateTable::prepare_invoke(int byte_no,
     // since the parameter_size includes it.
     __ push(rbx);
     __ mov(rbx, index);
-    assert(ConstantPoolCacheEntry::_indy_resolved_references_appendix_offset == 0, "appendix expected at index+0");
+    assert(ConstantPoolCacheEntry::_indy_resolved_references_appendix_offset == 0, "appendix expected at index+0");
     __ load_resolved_reference_at_index(index, rbx);
     __ pop(rbx);
     __ push(index);  // push appendix (MethodType, CallSite, etc.)
@@ -3680,9 +2834,8 @@ void TemplateTable::prepare_invoke(int byte_no,
   {
     const address table_addr = (address) Interpreter::invoke_return_entry_table_for(code);
     ExternalAddress table(table_addr);
-    LP64_ONLY(__ lea(rscratch1, table));
-    LP64_ONLY(__ movptr(flags, Address(rscratch1, flags, Address::times_ptr)));
-    NOT_LP64(__ movptr(flags, ArrayAddress(table, Address(noreg, flags, Address::times_ptr))));
+    __ lea(rscratch1, table);
+    __ movptr(flags, Address(rscratch1, flags, Address::times_ptr));
   }
 
   // push return address
@@ -3696,13 +2849,11 @@ void TemplateTable::prepare_invoke(int byte_no,
   }
 }
 
-void TemplateTable::invokevirtual_helper(Register index,
-                                         Register recv,
-                                         Register flags) {
+void TemplateTable::invokevirtual_helper(Register index, Register recv, Register flags) {
   // Uses temporary registers rax, rdx
   assert_different_registers(index, recv, rax, rdx);
-  assert(index == rbx, "");
-  assert(recv  == rcx, "");
+  assert(index == rbx, "");
+  assert(recv  == rcx, "");
 
   // Test for an invoke of a final method
   Label notFinal;
@@ -3711,8 +2862,7 @@ void TemplateTable::invokevirtual_helper(Register index,
   __ jcc(Assembler::zero, notFinal);
 
   const Register method = index;  // method must be rbx
-  assert(method == rbx,
-         "Method* must be rbx for interpreter calling convention");
+  assert(method == rbx, "Method* must be rbx for interpreter calling convention");
 
   // do the call - the index is actually the method to call
   // that is, f2 is a vtable index if !is_vfinal, else f2 is a Method*
@@ -3744,7 +2894,7 @@ void TemplateTable::invokevirtual_helper(Register index,
 
 void TemplateTable::invokevirtual(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f2_byte, "use this argument");
+  assert(byte_no == f2_byte, "use this argument");
   prepare_invoke(byte_no,
                  rbx,    // method or vtable index
                  noreg,  // unused itable index
@@ -3759,7 +2909,7 @@ void TemplateTable::invokevirtual(int byte_no) {
 
 void TemplateTable::invokespecial(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f1_byte, "use this argument");
+  assert(byte_no == f1_byte, "use this argument");
   prepare_invoke(byte_no, rbx, noreg,  // get f1 Method*
                  rcx);  // get receiver also for null check
   __ verify_oop(rcx);
@@ -3772,7 +2922,7 @@ void TemplateTable::invokespecial(int byte_no) {
 
 void TemplateTable::invokestatic(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f1_byte, "use this argument");
+  assert(byte_no == f1_byte, "use this argument");
   prepare_invoke(byte_no, rbx);  // get f1 Method*
   // do the call
   __ profile_call(rax);
@@ -3780,17 +2930,15 @@ void TemplateTable::invokestatic(int byte_no) {
   __ jump_from_interpreted(rbx, rax);
 }
 
-
 void TemplateTable::fast_invokevfinal(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f2_byte, "use this argument");
+  assert(byte_no == f2_byte, "use this argument");
   __ stop("fast_invokevfinal not used on x86");
 }
 
-
 void TemplateTable::invokeinterface(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f1_byte, "use this argument");
+  assert(byte_no == f1_byte, "use this argument");
   prepare_invoke(byte_no, rax, rbx,  // get f1 Klass*, f2 Method*
                  rcx, rdx); // recv, flags
 
@@ -3909,17 +3057,11 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ restore_bcp();      // rbcp must be correct for exception handler   (was destroyed)
   __ restore_locals();   // make sure locals pointer is correct as well (was destroyed)
   // Pass arguments for generating a verbose error message.
-#ifdef _LP64
   recvKlass = c_rarg1;
   Register method    = c_rarg2;
   if (recvKlass != rdx) { __ movq(recvKlass, rdx); }
   if (method != rcx)    { __ movq(method, rcx);    }
-#else
-  recvKlass = rdx;
-  Register method    = rcx;
-#endif
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_AbstractMethodErrorVerbose),
-             recvKlass, method);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_AbstractMethodErrorVerbose), recvKlass, method);
   // The call_VM checks for exception, so we should never return here.
   __ should_not_reach_here();
 
@@ -3929,16 +3071,15 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ restore_bcp();      // rbcp must be correct for exception handler   (was destroyed)
   __ restore_locals();   // make sure locals pointer is correct as well (was destroyed)
   // Pass arguments for generating a verbose error message.
-  LP64_ONLY( if (recvKlass != rdx) { __ movq(recvKlass, rdx); } )
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose),
-             recvKlass, rax);
+   if (recvKlass != rdx) { __ movq(recvKlass, rdx); }
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose), recvKlass, rax);
   // the call_VM checks for exception, so we should never return here.
   __ should_not_reach_here();
 }
 
 void TemplateTable::invokehandle(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f1_byte, "use this argument");
+  assert(byte_no == f1_byte, "use this argument");
   const Register rbx_method = rbx;
   const Register rax_mtype  = rax;
   const Register rcx_recv   = rcx;
@@ -3963,7 +3104,7 @@ void TemplateTable::invokehandle(int byte_no) {
 
 void TemplateTable::invokedynamic(int byte_no) {
   transition(vtos, vtos);
-  assert(byte_no == f1_byte, "use this argument");
+  assert(byte_no == f1_byte, "use this argument");
 
   const Register rbx_method   = rbx;
   const Register rax_callsite = rax;
@@ -4038,12 +3179,7 @@ void TemplateTable::_new() {
   const bool allow_shared_alloc =
     Universe::heap()->supports_inline_contig_alloc();
 
-  const Register thread = LP64_ONLY(r15_thread) NOT_LP64(rcx);
-#ifndef _LP64
-  if (UseTLAB || allow_shared_alloc) {
-    __ get_thread(thread);
-  }
-#endif // _LP64
+  const Register thread = r15_thread;
 
   if (UseTLAB) {
     __ tlab_allocate(thread, rax, rdx, 0, rcx, rbx, slow_case);
@@ -4076,21 +3212,11 @@ void TemplateTable::_new() {
     __ shrl(rdx, LogBytesPerLong); // divide by 2*oopSize and set carry flag if odd
 
     // rdx must have been multiple of 8
-#ifdef ASSERT
-    // make sure rdx was multiple of 8
-    Label L;
-    // Ignore partial flag stall after shrl() since it is debug VM
-    __ jccb(Assembler::carryClear, L);
-    __ stop("object size is not multiple of 2 - adjust this code");
-    __ bind(L);
-    // rdx must be > 0, no extra check needed here
-#endif
 
     // initialize remaining object fields: rdx was a multiple of 8
     { Label loop;
     __ bind(loop);
     __ movptr(Address(rax, rdx, Address::times_8, sizeof(oopDesc) - 1*oopSize), rcx);
-    NOT_LP64(__ movptr(Address(rax, rdx, Address::times_8, sizeof(oopDesc) - 2*oopSize), rcx));
     __ decrement(rdx);
     __ jcc(Assembler::notZero, loop);
     }
@@ -4106,10 +3232,8 @@ void TemplateTable::_new() {
                 (intptr_t)markOopDesc::prototype()); // header
       __ pop(rcx);   // get saved klass back in the register.
     }
-#ifdef _LP64
     __ xorl(rsi, rsi); // use zero reg to clear memory (shorter code)
     __ store_klass_gap(rax, rsi);  // zero klass gap for compressed oops
-#endif
     __ store_klass(rax, rcx);  // klass
 
     {
@@ -4129,8 +3253,8 @@ void TemplateTable::_new() {
   __ pop(rcx);   // restore stack pointer to what it was when we came in.
   __ bind(slow_case_no_pop);
 
-  Register rarg1 = LP64_ONLY(c_rarg1) NOT_LP64(rax);
-  Register rarg2 = LP64_ONLY(c_rarg2) NOT_LP64(rdx);
+  Register rarg1 = c_rarg1;
+  Register rarg2 = c_rarg2;
 
   __ get_constant_pool(rarg1);
   __ get_unsigned_2_byte_index_at_bcp(rarg2, 1);
@@ -4143,7 +3267,7 @@ void TemplateTable::_new() {
 
 void TemplateTable::newarray() {
   transition(itos, atos);
-  Register rarg1 = LP64_ONLY(c_rarg1) NOT_LP64(rdx);
+  Register rarg1 = c_rarg1;
   __ load_unsigned_byte(rarg1, at_bcp(1));
   call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::newarray),
           rarg1, rax);
@@ -4152,8 +3276,8 @@ void TemplateTable::newarray() {
 void TemplateTable::anewarray() {
   transition(itos, atos);
 
-  Register rarg1 = LP64_ONLY(c_rarg1) NOT_LP64(rcx);
-  Register rarg2 = LP64_ONLY(c_rarg2) NOT_LP64(rdx);
+  Register rarg1 = c_rarg1;
+  Register rarg2 = c_rarg2;
 
   __ get_unsigned_2_byte_index_at_bcp(rarg2, 1);
   __ get_constant_pool(rarg1);
@@ -4186,14 +3310,7 @@ void TemplateTable::checkcast() {
   call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::quicken_io_cc));
 
   // vm_result_2 has metadata result
-#ifndef _LP64
-  // borrow rdi from locals
-  __ get_thread(rdi);
-  __ get_vm_result_2(rax, rdi);
-  __ restore_locals();
-#else
   __ get_vm_result_2(rax, r15_thread);
-#endif
 
   __ pop_ptr(rdx); // restore receiver
   __ jmpb(resolved);
@@ -4250,14 +3367,7 @@ void TemplateTable::instanceof() {
   call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::quicken_io_cc));
   // vm_result_2 has metadata result
 
-#ifndef _LP64
-  // borrow rdi from locals
-  __ get_thread(rdi);
-  __ get_vm_result_2(rax, rdi);
-  __ restore_locals();
-#else
   __ get_vm_result_2(rax, r15_thread);
-#endif
 
   __ pop_ptr(rdx); // restore receiver
   __ verify_oop(rdx);
@@ -4295,7 +3405,6 @@ void TemplateTable::instanceof() {
   // rax = 1: obj != NULL and obj is     an instanceof the specified klass
 }
 
-
 //----------------------------------------------------------------------------------------------------
 // Breakpoints
 void TemplateTable::_breakpoint() {
@@ -4305,7 +3414,7 @@ void TemplateTable::_breakpoint() {
 
   transition(vtos, vtos);
 
-  Register rarg = LP64_ONLY(c_rarg1) NOT_LP64(rcx);
+  Register rarg = c_rarg1;
 
   // get the unpatched byte code
   __ get_method(rarg);
@@ -4365,9 +3474,9 @@ void TemplateTable::monitorenter() {
 
   Label allocated;
 
-  Register rtop = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
-  Register rbot = LP64_ONLY(c_rarg2) NOT_LP64(rbx);
-  Register rmon = LP64_ONLY(c_rarg1) NOT_LP64(rdx);
+  Register rtop = c_rarg3;
+  Register rbot = c_rarg2;
+  Register rmon = c_rarg1;
 
   // initialize entry pointer
   __ xorl(rmon, rmon); // points to free slot or NULL
@@ -4460,8 +3569,8 @@ void TemplateTable::monitorexit() {
         rbp, frame::interpreter_frame_initial_sp_offset * wordSize);
   const int entry_size = frame::interpreter_frame_monitor_size() * wordSize;
 
-  Register rtop = LP64_ONLY(c_rarg1) NOT_LP64(rdx);
-  Register rbot = LP64_ONLY(c_rarg2) NOT_LP64(rbx);
+  Register rtop = c_rarg1;
+  Register rbot = c_rarg2;
 
   Label found;
 
@@ -4513,7 +3622,7 @@ void TemplateTable::wide() {
 void TemplateTable::multianewarray() {
   transition(vtos, atos);
 
-  Register rarg = LP64_ONLY(c_rarg1) NOT_LP64(rax);
+  Register rarg = c_rarg1;
   __ load_unsigned_byte(rax, at_bcp(3)); // get number of dimensions
   // last dim is on top of stack; we want address of first one:
   // first_addr = last_addr + (ndims - 1) * stackElementSize - 1*wordsize

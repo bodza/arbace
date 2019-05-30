@@ -1,35 +1,9 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_OSTREAM_HPP
 #define SHARE_VM_UTILITIES_OSTREAM_HPP
 
 #include "memory/allocation.hpp"
 #include "runtime/timer.hpp"
 #include "utilities/globalDefinitions.hpp"
-
-DEBUG_ONLY(class ResourceMark;)
 
 // Output streams for printing
 //
@@ -104,7 +78,6 @@ class outputStream : public ResourceObj {
    void cr();
    void cr_indent();
    void bol() { if (_position > 0)  cr(); }
-
 
    // Time stamp
    TimeStamp& time_stamp() { return _stamp; }
@@ -193,7 +166,6 @@ class stringStream : public outputStream {
   size_t buffer_pos;
   size_t buffer_length;
   bool   buffer_fixed;
-  DEBUG_ONLY(ResourceMark* rm;)
  public:
   stringStream(size_t initial_bufsize = 256);
   stringStream(char* fixed_buffer, size_t fixed_buffer_size);
@@ -225,8 +197,6 @@ class fileStream : public outputStream {
   void rewind() { ::rewind(_file); }
   void flush();
 };
-
-CDS_ONLY(extern fileStream*   classlist_file;)
 
 // unlike fileStream, fdStream does unbuffered I/O by calling
 // open() and write() directly. It is async-safe, but output
@@ -274,24 +244,4 @@ class bufferedStream : public outputStream {
 
 #define O_BUFLEN 2000   // max size of output of individual print() methods
 
-#ifndef PRODUCT
-
-class networkStream : public bufferedStream {
-
-  private:
-    int _socket;
-
-  public:
-    networkStream();
-    ~networkStream();
-
-    bool connect(const char *host, short port);
-    bool is_open() const { return _socket != -1; }
-    int read(char *buf, size_t len);
-    void close();
-    virtual void flush();
-};
-
 #endif
-
-#endif // SHARE_VM_UTILITIES_OSTREAM_HPP

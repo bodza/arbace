@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "assembler_aarch64.inline.hpp"
@@ -34,18 +9,11 @@
 #include "oops/klassVtable.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "vmreg_aarch64.inline.hpp"
-#ifdef COMPILER2
-#include "opto/runtime.hpp"
-#endif
 
 // machine-dependent part of VtableStubs: create VtableStub of correct size and
 // initialize its code
 
 #define __ masm->
-
-#ifndef PRODUCT
-extern "C" void bad_compiled_vtable_index(JavaThread* thread, oop receiver, int index);
-#endif
 
 VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   // Read "A word on VtableStub sizing" in share/code/vtableStubs.hpp for details on stub sizing.
@@ -67,61 +35,18 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   CodeBuffer      cb(s->entry_point(), stub_code_length);
   MacroAssembler* masm = new MacroAssembler(&cb);
 
-#if (!defined(PRODUCT) && defined(COMPILER2))
-  if (CountCompiledCalls) {
-    __ lea(r16, ExternalAddress((address) SharedRuntime::nof_megamorphic_calls_addr()));
-    __ incrementw(Address(r16));
-  }
-#endif
-
   // get receiver (need to skip return address on top of stack)
-  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
+  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
 
   // get receiver klass
   address npe_addr = __ pc();
   __ load_klass(r16, j_rarg0);
 
-#ifndef PRODUCT
-  if (DebugVtables) {
-    Label L;
-    // TODO: find upper bound for this debug code.
-    start_pc = __ pc();
-
-    // check offset vs vtable length
-    __ ldrw(rscratch1, Address(r16, Klass::vtable_length_offset()));
-    __ cmpw(rscratch1, vtable_index * vtableEntry::size());
-    __ br(Assembler::GT, L);
-    __ enter();
-    __ mov(r2, vtable_index);
-
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address, bad_compiled_vtable_index), j_rarg0, r2);
-    const ptrdiff_t estimate = 256;
-    const ptrdiff_t codesize = __ pc() - start_pc;
-    slop_delta  = estimate - codesize;  // call_VM varies in length, depending on data
-    slop_bytes += slop_delta;
-    assert(slop_delta >= 0, "vtable #%d: Code size estimate (%d) for DebugVtables too small, required: %d", vtable_index, (int)estimate, (int)codesize);
-
-    __ leave();
-    __ bind(L);
-  }
-#endif // PRODUCT
-
   start_pc = __ pc();
   __ lookup_virtual_method(r16, vtable_index, rmethod);
   slop_delta  = 8 - (int)(__ pc() - start_pc);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "negative slop(%d) encountered, adjust code size estimate!", slop_delta);
-
-#ifndef PRODUCT
-  if (DebugVtables) {
-    Label L;
-    __ cbz(rmethod, L);
-    __ ldr(rscratch1, Address(rmethod, Method::from_compiled_offset()));
-    __ cbnz(rscratch1, L);
-    __ stop("Vtable entry is NULL");
-    __ bind(L);
-  }
-#endif // PRODUCT
+  assert(slop_delta >= 0, "negative slop(%d) encountered, adjust code size estimate!", slop_delta);
 
   // r0: receiver klass
   // rmethod: Method*
@@ -135,7 +60,6 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
 
   return s;
 }
-
 
 VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   // Read "A word on VtableStub sizing" in share/code/vtableStubs.hpp for details on stub sizing.
@@ -156,15 +80,8 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   CodeBuffer      cb(s->entry_point(), stub_code_length);
   MacroAssembler* masm = new MacroAssembler(&cb);
 
-#if (!defined(PRODUCT) && defined(COMPILER2))
-  if (CountCompiledCalls) {
-    __ lea(r10, ExternalAddress((address) SharedRuntime::nof_megamorphic_calls_addr()));
-    __ incrementw(Address(r10));
-  }
-#endif
-
   // get receiver (need to skip return address on top of stack)
-  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
+  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
 
   // Entry arguments:
   //  rscratch2: CompiledICHolder
@@ -215,18 +132,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   const ptrdiff_t codesize = typecheckSize + lookupSize;
   slop_delta  = (int)(estimate - codesize);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "itable #%d: Code size estimate (%d) for lookup_interface_method too small, required: %d", itable_index, (int)estimate, (int)codesize);
-
-#ifdef ASSERT
-  if (DebugVtables) {
-    Label L2;
-    __ cbz(rmethod, L2);
-    __ ldr(rscratch1, Address(rmethod, Method::from_compiled_offset()));
-    __ cbnz(rscratch1, L2);
-    __ stop("compiler entrypoint is null");
-    __ bind(L2);
-  }
-#endif // ASSERT
+  assert(slop_delta >= 0, "itable #%d: Code size estimate (%d) for lookup_interface_method too small, required: %d", itable_index, (int)estimate, (int)codesize);
 
   // rmethod: Method*
   // j_rarg0: receiver
@@ -240,7 +146,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   // We force resolving of the call site by jumping to the "handle
   // wrong method" stub, and so let the interpreter runtime do all the
   // dirty work.
-  assert(SharedRuntime::get_handle_wrong_method_stub() != NULL, "check initialization order");
+  assert(SharedRuntime::get_handle_wrong_method_stub() != NULL, "check initialization order");
   __ far_jump(RuntimeAddress(SharedRuntime::get_handle_wrong_method_stub()));
 
   masm->flush();

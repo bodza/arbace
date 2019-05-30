@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "c1/c1_CodeStubs.hpp"
@@ -36,7 +11,6 @@
 #include "nativeInst_aarch64.hpp"
 #include "oops/compiledICHolder.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "register_aarch64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/signature.hpp"
@@ -44,14 +18,13 @@
 #include "runtime/vframeArray.hpp"
 #include "vmreg_aarch64.inline.hpp"
 
-
 // Implementation of StubAssembler
 
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, int args_size) {
   // setup registers
-  assert(!(oop_result1->is_valid() || metadata_result->is_valid()) || oop_result1 != metadata_result, "registers must be different");
-  assert(oop_result1 != rthread && metadata_result != rthread, "registers must be different");
-  assert(args_size >= 0, "illegal args_size");
+  assert(!(oop_result1->is_valid() || metadata_result->is_valid()) || oop_result1 != metadata_result, "registers must be different");
+  assert(oop_result1 != rthread && metadata_result != rthread, "registers must be different");
+  assert(args_size >= 0, "illegal args_size");
   bool align_stack = false;
 
   mov(c_rarg0, rthread);
@@ -66,17 +39,6 @@ int StubAssembler::call_RT(Register oop_result1, Register metadata_result, addre
   bind(retaddr);
   int call_offset = offset();
   // verify callee-saved register
-#ifdef ASSERT
-  push(r0, sp);
-  { Label L;
-    get_thread(r0);
-    cmp(rthread, r0);
-    br(Assembler::EQ, L);
-    stop("StubAssembler::call_RT: rthread not callee saved?");
-    bind(L);
-  }
-  pop(r0, sp);
-#endif
   reset_last_Java_frame(true);
   maybe_isb();
 
@@ -113,12 +75,10 @@ int StubAssembler::call_RT(Register oop_result1, Register metadata_result, addre
   return call_offset;
 }
 
-
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, Register arg1) {
   mov(c_rarg1, arg1);
   return call_RT(oop_result1, metadata_result, entry, 1);
 }
-
 
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, Register arg1, Register arg2) {
   if (c_rarg1 == arg2) {
@@ -136,7 +96,6 @@ int StubAssembler::call_RT(Register oop_result1, Register metadata_result, addre
   }
   return call_RT(oop_result1, metadata_result, entry, 2);
 }
-
 
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, Register arg1, Register arg2, Register arg3) {
   // if there is any conflict use the stack
@@ -191,13 +150,11 @@ void StubFrame::load_argument(int offset_in_words, Register reg) {
   __ load_parameter(offset_in_words, reg);
 }
 
-
 StubFrame::~StubFrame() {
   __ epilogue();
 }
 
 #undef __
-
 
 // Implementation of Runtime1
 
@@ -258,8 +215,7 @@ static OopMap* generate_oop_map(StubAssembler* sasm, bool save_fpu_registers) {
   return oop_map;
 }
 
-static OopMap* save_live_registers(StubAssembler* sasm,
-                                   bool save_fpu_registers = true) {
+static OopMap* save_live_registers(StubAssembler* sasm, bool save_fpu_registers = true) {
   __ block_comment("save_live_registers");
 
   __ push(RegSet::range(r0, r29), sp);         // integer registers except lr & sp
@@ -303,14 +259,12 @@ static void restore_live_registers_except_r0(StubAssembler* sasm, bool restore_f
   __ pop(RegSet::range(r2, r29), sp);
 }
 
-
-
 void Runtime1::initialize_pd() {
   int i;
   int sp_offset = 0;
 
   // all float registers are saved explicitly
-  assert(FrameMap::nof_fpu_regs == 32, "double registers not handled here");
+  assert(FrameMap::nof_fpu_regs == 32, "double registers not handled here");
   for (i = 0; i < FrameMap::nof_fpu_regs; i++) {
     fpu_reg_save_offsets[i] = sp_offset;
     sp_offset += 2;   // SP offsets are in halfwords
@@ -322,7 +276,6 @@ void Runtime1::initialize_pd() {
     sp_offset += 2;   // SP offsets are in halfwords
   }
 }
-
 
 // target: the entry point of the method that creates and posts the exception oop
 // has_argument: true if the exception needs arguments (passed in rscratch1 and rscratch2)
@@ -344,7 +297,6 @@ OopMapSet* Runtime1::generate_exception_throw(StubAssembler* sasm, address targe
   __ should_not_reach_here();
   return oop_maps;
 }
-
 
 OopMapSet* Runtime1::generate_handle_exception(StubID id, StubAssembler *sasm) {
   __ block_comment("generate_handle_exception");
@@ -400,22 +352,6 @@ OopMapSet* Runtime1::generate_handle_exception(StubID id, StubAssembler *sasm) {
   // verify that r0 contains a valid exception
   __ verify_not_null_oop(exception_oop);
 
-#ifdef ASSERT
-  // check that fields in JavaThread for exception oop and issuing pc are
-  // empty before writing to them
-  Label oop_empty;
-  __ ldr(rscratch1, Address(rthread, JavaThread::exception_oop_offset()));
-  __ cbz(rscratch1, oop_empty);
-  __ stop("exception oop already set");
-  __ bind(oop_empty);
-
-  Label pc_empty;
-  __ ldr(rscratch1, Address(rthread, JavaThread::exception_pc_offset()));
-  __ cbz(rscratch1, pc_empty);
-  __ stop("exception pc already set");
-  __ bind(pc_empty);
-#endif
-
   // save exception oop and issuing pc into JavaThread
   // (exception handler will load it from here)
   __ str(exception_oop, Address(rthread, JavaThread::exception_oop_offset()));
@@ -457,7 +393,6 @@ OopMapSet* Runtime1::generate_handle_exception(StubID id, StubAssembler *sasm) {
   return oop_maps;
 }
 
-
 void Runtime1::generate_unwind_exception(StubAssembler *sasm) {
   // incoming parameters
   const Register exception_oop = r0;
@@ -469,21 +404,6 @@ void Runtime1::generate_unwind_exception(StubAssembler *sasm) {
 
   // verify that only r0, is valid at this time
   __ invalidate_registers(false, true, true, true, true, true);
-
-#ifdef ASSERT
-  // check that fields in JavaThread for exception oop and issuing pc are empty
-  Label oop_empty;
-  __ ldr(rscratch1, Address(rthread, JavaThread::exception_oop_offset()));
-  __ cbz(rscratch1, oop_empty);
-  __ stop("exception oop must be empty");
-  __ bind(oop_empty);
-
-  Label pc_empty;
-  __ ldr(rscratch1, Address(rthread, JavaThread::exception_pc_offset()));
-  __ cbz(rscratch1, pc_empty);
-  __ stop("exception pc must be empty");
-  __ bind(pc_empty);
-#endif
 
   // Save our return address because
   // exception_handler_for_return_address will destroy it.  We also
@@ -520,15 +440,13 @@ void Runtime1::generate_unwind_exception(StubAssembler *sasm) {
   __ br(handler_addr);
 }
 
-
-
 OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   // use the maximum number of runtime-arguments here because it is difficult to
   // distinguish each RT-Call.
   // Note: This number affects also the RT-Call in generate_handle_exception because
   //       the oop-map is shared for all calls.
   DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-  assert(deopt_blob != NULL, "deoptimization blob must have been created");
+  assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
   OopMap* oop_map = save_live_registers(sasm);
 
@@ -542,15 +460,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   OopMapSet* oop_maps = new OopMapSet();
   oop_maps->add_gc_map(__ offset(), oop_map);
   // verify callee-saved register
-#ifdef ASSERT
-  { Label L;
-    __ get_thread(rscratch1);
-    __ cmp(rthread, rscratch1);
-    __ br(Assembler::EQ, L);
-    __ stop("StubAssembler::call_RT: rthread not callee saved?");
-    __ bind(L);
-  }
-#endif
   __ reset_last_Java_frame(true);
   __ maybe_isb();
 
@@ -579,21 +488,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
     // load throwing pc: this is the return address of the stub
     __ mov(r3, lr);
 
-#ifdef ASSERT
-    // check that fields in JavaThread for exception oop and issuing pc are empty
-    Label oop_empty;
-    __ ldr(rscratch1, Address(rthread, Thread::pending_exception_offset()));
-    __ cbz(rscratch1, oop_empty);
-    __ stop("exception oop must be empty");
-    __ bind(oop_empty);
-
-    Label pc_empty;
-    __ ldr(rscratch1, Address(rthread, JavaThread::exception_pc_offset()));
-    __ cbz(rscratch1, pc_empty);
-    __ stop("exception pc must be empty");
-    __ bind(pc_empty);
-#endif
-
     // store exception oop and throwing pc to JavaThread
     __ str(r0, Address(rthread, JavaThread::exception_oop_offset()));
     __ str(r3, Address(rthread, JavaThread::exception_pc_offset()));
@@ -610,7 +504,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
 
     __ bind(L);
   }
-
 
   // Runtime will return true if the nmethod has been deoptimized during
   // the patching process. In that case we must do a deopt reexecute instead.
@@ -632,7 +525,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
 
   return oop_maps;
 }
-
 
 OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
@@ -683,7 +575,7 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         } else if (id == fast_new_instance_id) {
           __ set_info("fast new_instance", dont_gc_arguments);
         } else {
-          assert(id == fast_new_instance_init_check_id, "bad StubID");
+          assert(id == fast_new_instance_init_check_id, "bad StubID");
           __ set_info("fast new_instance init check", dont_gc_arguments);
         }
 
@@ -706,22 +598,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
             __ cmpw(rscratch1, InstanceKlass::fully_initialized);
             __ br(Assembler::NE, slow_path);
           }
-
-#ifdef ASSERT
-          // assert object can be fast path allocated
-          {
-            Label ok, not_ok;
-            __ ldrw(obj_size, Address(klass, Klass::layout_helper_offset()));
-            __ cmp(obj_size, 0u);
-            __ br(Assembler::LE, not_ok);  // make sure it's an instance (LH > 0)
-            __ tstw(obj_size, Klass::_lh_instance_slow_path_bit);
-            __ br(Assembler::EQ, ok);
-            __ bind(not_ok);
-            __ stop("assert(can be fast path allocated)");
-            __ should_not_reach_here();
-            __ bind(ok);
-          }
-#endif // ASSERT
 
           // get the instance size (size is postive so movl is fine for 64bit)
           __ ldrw(obj_size, Address(klass, Klass::layout_helper_offset()));
@@ -783,25 +659,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ set_info("new_object_array", dont_gc_arguments);
         }
 
-#ifdef ASSERT
-        // assert object type is really an array of the proper kind
-        {
-          Label ok;
-          Register t0 = obj;
-          __ ldrw(t0, Address(klass, Klass::layout_helper_offset()));
-          __ asrw(t0, t0, Klass::_lh_array_tag_shift);
-          int tag = ((id == new_type_array_id)
-                     ? Klass::_lh_array_tag_type_value
-                     : Klass::_lh_array_tag_obj_value);
-          __ mov(rscratch1, tag);
-          __ cmpw(t0, rscratch1);
-          __ br(Assembler::EQ, ok);
-          __ stop("assert(is an array klass)");
-          __ should_not_reach_here();
-          __ bind(ok);
-        }
-#endif // ASSERT
-
         // If TLAB is disabled, see if there is support for inlining contiguous
         // allocations.
         // Otherwise, just go to the slow path.
@@ -833,8 +690,8 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
           __ initialize_header(obj, klass, length, t1, t2);
           __ ldrb(t1, Address(klass, in_bytes(Klass::layout_helper_offset()) + (Klass::_lh_header_size_shift / BitsPerByte)));
-          assert(Klass::_lh_header_size_shift % BitsPerByte == 0, "bytewise");
-          assert(Klass::_lh_header_size_mask <= 0xFF, "bytewise");
+          assert(Klass::_lh_header_size_shift % BitsPerByte == 0, "bytewise");
+          assert(Klass::_lh_header_size_mask <= 0xFF, "bytewise");
           __ andr(t1, t1, Klass::_lh_header_size_mask);
           __ sub(arr_size, arr_size, t1);  // body length
           __ add(t1, t1, obj);       // body start
@@ -1029,7 +886,7 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps->add_gc_map(call_offset, oop_map);
         restore_live_registers(sasm);
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
+        assert(deopt_blob != NULL, "deoptimization blob must have been created");
         __ leave();
         __ far_jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }
@@ -1116,12 +973,11 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         restore_live_registers(sasm);
         __ leave();
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
+        assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
         __ far_jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }
       break;
-
 
     default:
       { StubFrame f(sasm, "unimplemented entry", dont_gc_arguments);

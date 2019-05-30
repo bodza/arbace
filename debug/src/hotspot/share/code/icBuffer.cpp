@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/codeCache.hpp"
 #include "code/compiledIC.hpp"
@@ -51,13 +27,12 @@ void ICStub::finalize() {
   if (!is_empty()) {
     ResourceMark rm;
     CompiledIC *ic = CompiledIC_at(CodeCache::find_compiled(ic_site()), ic_site());
-    assert(CodeCache::find_compiled(ic->instruction_address()) != NULL, "inline cache in non-compiled?");
+    assert(CodeCache::find_compiled(ic->instruction_address()) != NULL, "inline cache in non-compiled?");
 
-    assert(this == ICStub_from_destination_address(ic->stub_address()), "wrong owner of ic buffer");
+    assert(this == ICStub_from_destination_address(ic->stub_address()), "wrong owner of ic buffer");
     ic->set_ic_destination_and_value(destination(), cached_value());
   }
 }
-
 
 address ICStub::destination() const {
   return InlineCacheBuffer::ic_buffer_entry_point(code_begin());
@@ -67,7 +42,6 @@ void* ICStub::cached_value() const {
   return InlineCacheBuffer::ic_buffer_cached_value(code_begin());
 }
 
-
 void ICStub::set_stub(CompiledIC *ic, void* cached_val, address dest_addr) {
   // We cannot store a pointer to the 'ic' object, since it is resource allocated. Instead we
   // store the location of the inline cache. Then we have enough information recreate the CompiledIC
@@ -76,10 +50,9 @@ void ICStub::set_stub(CompiledIC *ic, void* cached_val, address dest_addr) {
 
   // Assemble new stub
   InlineCacheBuffer::assemble_ic_buffer_code(code_begin(), cached_val, dest_addr);
-  assert(destination() == dest_addr,   "can recover destination");
-  assert(cached_value() == cached_val, "can recover destination");
+  assert(destination() == dest_addr,   "can recover destination");
+  assert(cached_value() == cached_val, "can recover destination");
 }
-
 
 void ICStub::clear() {
   if (CompiledIC::is_icholder_entry(destination())) {
@@ -88,34 +61,21 @@ void ICStub::clear() {
   _ic_site = NULL;
 }
 
-
-#ifndef PRODUCT
-// anybody calling to this stub will trap
-
-void ICStub::verify() {
-}
-
-void ICStub::print() {
-  tty->print_cr("ICStub: site: " INTPTR_FORMAT, p2i(_ic_site));
-}
-#endif
-
 //-----------------------------------------------------------------------------------------------
 // Implementation of InlineCacheBuffer
 
 void InlineCacheBuffer::init_next_stub() {
   ICStub* ic_stub = (ICStub*)buffer()->request_committed (ic_stub_code_size());
-  assert (ic_stub != NULL, "no room for a single stub");
+  assert(ic_stub != NULL, "no room for a single stub");
   set_next_stub(ic_stub);
 }
 
 void InlineCacheBuffer::initialize() {
   if (_buffer != NULL) return; // already initialized
   _buffer = new StubQueue(new ICStubInterface, 10*K, InlineCacheBuffer_lock, "InlineCacheBuffer");
-  assert (_buffer != NULL, "cannot allocate InlineCacheBuffer");
+  assert(_buffer != NULL, "cannot allocate InlineCacheBuffer");
   init_next_stub();
 }
-
 
 ICStub* InlineCacheBuffer::new_ic_stub() {
   while (true) {
@@ -141,7 +101,6 @@ ICStub* InlineCacheBuffer::new_ic_stub() {
   return NULL;
 }
 
-
 void InlineCacheBuffer::update_inline_caches() {
   if (buffer()->number_of_stubs() > 1) {
     if (TraceICBuffer) {
@@ -153,25 +112,21 @@ void InlineCacheBuffer::update_inline_caches() {
   release_pending_icholders();
 }
 
-
 bool InlineCacheBuffer::contains(address instruction_address) {
   return buffer()->contains(instruction_address);
 }
-
 
 bool InlineCacheBuffer::is_empty() {
   return buffer()->number_of_stubs() == 1;    // always has sentinel
 }
 
-
 void InlineCacheBuffer_init() {
   InlineCacheBuffer::initialize();
 }
 
-
 void InlineCacheBuffer::create_transition_stub(CompiledIC *ic, void* cached_value, address entry) {
-  assert(!SafepointSynchronize::is_at_safepoint(), "should not be called during a safepoint");
-  assert (CompiledIC_lock->is_locked(), "");
+  assert(!SafepointSynchronize::is_at_safepoint(), "should not be called during a safepoint");
+  assert(CompiledIC_lock->is_locked(), "");
   if (TraceICBuffer) {
     tty->print_cr("  create transition stub for " INTPTR_FORMAT " destination " INTPTR_FORMAT " cached value " INTPTR_FORMAT,
                   p2i(ic->instruction_address()), p2i(entry), p2i(cached_value));
@@ -193,22 +148,19 @@ void InlineCacheBuffer::create_transition_stub(CompiledIC *ic, void* cached_valu
   set_next_stub(new_ic_stub()); // can cause safepoint synchronization
 }
 
-
 address InlineCacheBuffer::ic_destination_for(CompiledIC *ic) {
   ICStub* stub = ICStub_from_destination_address(ic->stub_address());
   return stub->destination();
 }
-
 
 void* InlineCacheBuffer::cached_value_for(CompiledIC *ic) {
   ICStub* stub = ICStub_from_destination_address(ic->stub_address());
   return stub->cached_value();
 }
 
-
 // Free CompiledICHolder*s that are no longer in use
 void InlineCacheBuffer::release_pending_icholders() {
-  assert(SafepointSynchronize::is_at_safepoint(), "should only be called during a safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "should only be called during a safepoint");
   CompiledICHolder* holder = _pending_released;
   _pending_released = NULL;
   while (holder != NULL) {
@@ -217,7 +169,7 @@ void InlineCacheBuffer::release_pending_icholders() {
     holder = next;
     _pending_count--;
   }
-  assert(_pending_count == 0, "wrong count");
+  assert(_pending_count == 0, "wrong count");
 }
 
 // Enqueue this icholder for release during the next safepoint.  It's

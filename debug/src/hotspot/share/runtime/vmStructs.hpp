@@ -1,35 +1,9 @@
-/*
- * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_VMSTRUCTS_HPP
 #define SHARE_VM_RUNTIME_VMSTRUCTS_HPP
 
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
-#endif
 
 // This table encapsulates the debugging information required by the
 // serviceability agent in order to run. Specifically, we need to
@@ -140,15 +114,9 @@ public:
   // the data structure (debug build only)
   static void init();
 
-#ifndef PRODUCT
-  // Execute unit tests
-  static void test();
-#endif
-
 private:
   // Look up a type in localHotSpotVMTypes using strcmp() (debug build only).
   // Returns 1 if found, 0 if not.
-  //  debug_only(static int findType(const char* typeName);)
   static int findType(const char* typeName);
 };
 
@@ -160,28 +128,28 @@ private:
 //
 
 // This macro generates a VMStructEntry line for a nonstatic field
-#define GENERATE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)              \
+#define GENERATE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  { QUOTE(typeName), QUOTE(fieldName), QUOTE(type), 0, offset_of(typeName, fieldName), NULL },
 
 // This macro generates a VMStructEntry line for a static field
-#define GENERATE_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)                 \
+#define GENERATE_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  { QUOTE(typeName), QUOTE(fieldName), QUOTE(type), 1, 0, &typeName::fieldName },
 
 // This macro generates a VMStructEntry line for a static pointer volatile field,
 // e.g.: "static ObjectMonitor * volatile gBlockList;"
-#define GENERATE_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type)    \
+#define GENERATE_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  { QUOTE(typeName), QUOTE(fieldName), QUOTE(type), 1, 0, (void *)&typeName::fieldName },
 
 // This macro generates a VMStructEntry line for an unchecked
 // nonstatic field, in which the size of the type is also specified.
 // The type string is given as NULL, indicating an "opaque" type.
-#define GENERATE_UNCHECKED_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, size)    \
+#define GENERATE_UNCHECKED_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, size) \
   { QUOTE(typeName), QUOTE(fieldName), NULL, 0, offset_of(typeName, fieldName), NULL },
 
 // This macro generates a VMStructEntry line for an unchecked
 // static field, in which the size of the type is also specified.
 // The type string is given as NULL, indicating an "opaque" type.
-#define GENERATE_UNCHECKED_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, size)       \
+#define GENERATE_UNCHECKED_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, size) \
  { QUOTE(typeName), QUOTE(fieldName), NULL, 1, 0, (void*) &typeName::fieldName },
 
 // This macro generates the sentinel value indicating the end of the list
@@ -189,21 +157,21 @@ private:
  { NULL, NULL, NULL, 0, 0, NULL }
 
 // This macro checks the type of a VMStructEntry by comparing pointer types
-#define CHECK_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)                 \
- {typeName *dummyObj = NULL; type* dummy = &dummyObj->fieldName;                   \
-  assert(offset_of(typeName, fieldName) < sizeof(typeName), "Illegal nonstatic struct entry, field offset too large"); }
+#define CHECK_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
+ {typeName *dummyObj = NULL; type* dummy = &dummyObj->fieldName; \
+  assert(offset_of(typeName, fieldName) < sizeof(typeName), "Illegal nonstatic struct entry, field offset too large"); }
 
 // This macro checks the type of a volatile VMStructEntry by comparing pointer types
-#define CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)        \
+#define CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  {typedef type dummyvtype; typeName *dummyObj = NULL; volatile dummyvtype* dummy = &dummyObj->fieldName; }
 
 // This macro checks the type of a static VMStructEntry by comparing pointer types
-#define CHECK_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)                    \
+#define CHECK_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  {type* dummy = &typeName::fieldName; }
 
 // This macro checks the type of a static pointer volatile VMStructEntry by comparing pointer types,
 // e.g.: "static ObjectMonitor * volatile gBlockList;"
-#define CHECK_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type)       \
+#define CHECK_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type) \
  {type volatile * dummy = &typeName::fieldName; }
 
 // This macro ensures the type of a field and its containing type are
@@ -212,13 +180,13 @@ private:
 // which seems to prevent very long lines from compiling. This assertion
 // means that an entry in VMStructs::localHotSpotVMStructs[] was not
 // found in VMStructs::localHotSpotVMTypes[].
-#define ENSURE_FIELD_TYPE_PRESENT(typeName, fieldName, type)                       \
- { assert(findType(QUOTE(typeName)) != 0, "type \"" QUOTE(typeName) "\" not found in type table"); \
-   assert(findType(QUOTE(type)) != 0, "type \"" QUOTE(type) "\" not found in type table"); }
+#define ENSURE_FIELD_TYPE_PRESENT(typeName, fieldName, type) \
+ { \
+    assert(findType(QUOTE(typeName)) != 0, "type \"" QUOTE(typeName) "\" not found in type table"); \
+   assert(findType(QUOTE(type)) != 0, "type \"" QUOTE(type) "\" not found in type table"); }
 
 // This is a no-op macro for unchecked fields
 #define CHECK_NO_OP(a, b, c)
-
 
 //--------------------------------------------------------------------------------
 // VMTypeEntry macros
@@ -248,7 +216,6 @@ private:
 #define CHECK_VM_TYPE_NO_OP(a)
 #define CHECK_SINGLE_ARG_VM_TYPE_NO_OP(a)
 
-
 //--------------------------------------------------------------------------------
 // VMIntConstantEntry macros
 //
@@ -266,7 +233,6 @@ private:
 #define GENERATE_VM_INT_CONSTANT_LAST_ENTRY() \
  { NULL, 0 }
 
-
 //--------------------------------------------------------------------------------
 // VMLongConstantEntry macros
 //
@@ -280,7 +246,6 @@ private:
 // This macro generates the sentinel value indicating the end of the list
 #define GENERATE_VM_LONG_CONSTANT_LAST_ENTRY() \
  { NULL, 0 }
-
 
 //--------------------------------------------------------------------------------
 // VMAddressEntry macros
@@ -299,4 +264,4 @@ private:
 #define GENERATE_VM_ADDRESS_LAST_ENTRY() \
  { NULL, NULL }
 
-#endif // SHARE_VM_RUNTIME_VMSTRUCTS_HPP
+#endif

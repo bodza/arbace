@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_ICBUFFER_HPP
 #define SHARE_VM_CODE_ICBUFFER_HPP
 
@@ -76,8 +52,8 @@ class ICStub: public Stub {
   void* cached_value() const;   // cached_value for stub
 
   // Debugging
-  void    verify()            PRODUCT_RETURN;
-  void    print()             PRODUCT_RETURN;
+  void    verify()            {};
+  void    print()             {};
 
   // Creation
   friend ICStub* ICStub_from_destination_address(address destination_address);
@@ -86,9 +62,6 @@ class ICStub: public Stub {
 // ICStub Creation
 inline ICStub* ICStub_from_destination_address(address destination_address) {
   ICStub* stub = (ICStub*) (destination_address - align_up(sizeof(ICStub), CodeEntryAlignment));
-  #ifdef ASSERT
-  stub->verify();
-  #endif
   return stub;
 }
 
@@ -112,7 +85,6 @@ class InlineCacheBuffer: public AllStatic {
   static void       init_next_stub();
 
   static ICStub* new_ic_stub();
-
 
   // Machine-dependent implementation of ICBuffer
   static void    assemble_ic_buffer_code(address code_begin, void* cached_value, address entry_point);
@@ -143,4 +115,4 @@ class InlineCacheBuffer: public AllStatic {
   static void*   cached_value_for(CompiledIC *ic);
 };
 
-#endif // SHARE_VM_CODE_ICBUFFER_HPP
+#endif

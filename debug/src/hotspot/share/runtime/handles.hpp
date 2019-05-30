@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_HANDLES_HPP
 #define SHARE_VM_RUNTIME_HANDLES_HPP
 
@@ -67,7 +43,9 @@ class Handle {
 
  protected:
   oop     obj() const                            { return _handle == NULL ? (oop)NULL : *_handle; }
-  oop     non_null_obj() const                   { assert(_handle != NULL, "resolving NULL handle"); return *_handle; }
+  oop     non_null_obj() const                   {
+    assert(_handle != NULL, "resolving NULL handle");
+    return *_handle; }
 
  public:
   // Constructors
@@ -100,22 +78,21 @@ class Handle {
 };
 
 // Specific Handles for different oop types
-#define DEF_HANDLE(type, is_a)                   \
-  class type##Handle: public Handle {            \
-   protected:                                    \
+#define DEF_HANDLE(type, is_a) \
+  class type##Handle: public Handle { \
+   protected: \
     type##Oop    obj() const                     { return (type##Oop)Handle::obj(); } \
     type##Oop    non_null_obj() const            { return (type##Oop)Handle::non_null_obj(); } \
-                                                 \
-   public:                                       \
-    /* Constructors */                           \
+ \
+   public: \
+    /* Constructors */ \
     type##Handle ()                              : Handle()                 {} \
     inline type##Handle (Thread* thread, type##Oop obj); \
-    \
-    /* Operators for ease of use */              \
+ \
+    /* Operators for ease of use */ \
     type##Oop    operator () () const            { return obj(); } \
     type##Oop    operator -> () const            { return non_null_obj(); } \
   };
-
 
 DEF_HANDLE(instance         , is_instance_noinline         )
 DEF_HANDLE(array            , is_array_noinline            )
@@ -130,40 +107,41 @@ DEF_HANDLE(typeArray        , is_typeArray_noinline        )
 // and destruction for parameters.
 
 // Specific Handles for different oop types
-#define DEF_METADATA_HANDLE(name, type)          \
-  class name##Handle;                            \
-  class name##Handle : public StackObj {         \
-    type*     _value;                            \
-    Thread*   _thread;                           \
-   protected:                                    \
+#define DEF_METADATA_HANDLE(name, type) \
+  class name##Handle; \
+  class name##Handle : public StackObj { \
+    type*     _value; \
+    Thread*   _thread; \
+   protected: \
     type*        obj() const                     { return _value; } \
-    type*        non_null_obj() const            { assert(_value != NULL, "resolving NULL _value"); return _value; } \
-                                                 \
-   public:                                       \
-    /* Constructors */                           \
-    name##Handle () : _value(NULL), _thread(NULL) {}   \
-    name##Handle (type* obj);                    \
-    name##Handle (Thread* thread, type* obj);    \
-                                                 \
-    name##Handle (const name##Handle &h);        \
+    type*        non_null_obj() const            { \
+        assert(_value != NULL, "resolving NULL _value"); \
+        return _value; } \
+ \
+   public: \
+    /* Constructors */ \
+    name##Handle () : _value(NULL), _thread(NULL) {} \
+    name##Handle (type* obj); \
+    name##Handle (Thread* thread, type* obj); \
+ \
+    name##Handle (const name##Handle &h); \
     name##Handle& operator=(const name##Handle &s); \
-                                                 \
-    /* Destructor */                             \
-    ~name##Handle ();                            \
-    void remove();                               \
-                                                 \
-    /* Operators for ease of use */              \
+ \
+    /* Destructor */ \
+    ~name##Handle (); \
+    void remove(); \
+ \
+    /* Operators for ease of use */ \
     type*        operator () () const            { return obj(); } \
     type*        operator -> () const            { return non_null_obj(); } \
-                                                 \
+ \
     bool    operator == (type* o) const          { return obj() == o; } \
     bool    operator == (const name##Handle& h) const  { return obj() == h.obj(); } \
-                                                 \
-    /* Null checks */                            \
+ \
+    /* Null checks */ \
     bool    is_null() const                      { return _value == NULL; } \
     bool    not_null() const                     { return _value != NULL; } \
   };
-
 
 DEF_METADATA_HANDLE(method, Method)
 DEF_METADATA_HANDLE(constantPool, ConstantPool)
@@ -174,46 +152,29 @@ class HandleArea: public Arena {
   friend class HandleMark;
   friend class NoHandleMark;
   friend class ResetNoHandleMark;
-#ifdef ASSERT
-  int _handle_mark_nesting;
-  int _no_handle_mark_nesting;
-#endif
   HandleArea* _prev;          // link to outer (older) area
  public:
   // Constructor
   HandleArea(HandleArea* prev) : Arena(mtThread, Chunk::tiny_size) {
-    debug_only(_handle_mark_nesting    = 0);
-    debug_only(_no_handle_mark_nesting = 0);
     _prev = prev;
   }
 
   // Handle allocation
  private:
   oop* real_allocate_handle(oop obj) {
-#ifdef ASSERT
-    oop* handle = (oop*) (UseMallocOnly ? internal_malloc_4(oopSize) : Amalloc_4(oopSize));
-#else
     oop* handle = (oop*) Amalloc_4(oopSize);
-#endif
     *handle = obj;
     return handle;
   }
  public:
-#ifdef ASSERT
-  oop* allocate_handle(oop obj);
-#else
   oop* allocate_handle(oop obj) { return real_allocate_handle(obj); }
-#endif
 
   // Garbage collection support
   void oops_do(OopClosure* f);
 
   // Number of handles in use
   size_t used() const     { return Arena::used() / oopSize; }
-
-  debug_only(bool no_handle_mark_active() { return _no_handle_mark_nesting > 0; })
 };
-
 
 //------------------------------------------------------------------------------------------------------------------------
 // Handles are allocated in a (growable) thread local handle area. Deallocation
@@ -275,26 +236,15 @@ class HandleMark {
 
 class NoHandleMark: public StackObj {
  public:
-#ifdef ASSERT
-  NoHandleMark();
-  ~NoHandleMark();
-#else
   NoHandleMark()  {}
   ~NoHandleMark() {}
-#endif
 };
-
 
 class ResetNoHandleMark: public StackObj {
   int _no_handle_mark_nesting;
  public:
-#ifdef ASSERT
-  ResetNoHandleMark();
-  ~ResetNoHandleMark();
-#else
   ResetNoHandleMark()  {}
   ~ResetNoHandleMark() {}
-#endif
 };
 
 // The HandleMarkCleaner is a faster version of HandleMark.
@@ -310,4 +260,4 @@ class HandleMarkCleaner: public StackObj {
   inline ~HandleMarkCleaner();
 };
 
-#endif // SHARE_VM_RUNTIME_HANDLES_HPP
+#endif

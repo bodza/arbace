@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2014, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_VALUETYPE_HPP
 #define SHARE_VM_C1_C1_VALUETYPE_HPP
 
@@ -59,7 +35,6 @@ class   AddressType;
 class     AddressConstant;
 class   IllegalType;
 
-
 // predefined types
 extern VoidType*       voidType;
 extern IntType*        intType;
@@ -73,12 +48,10 @@ extern ClassType*      classType;
 extern AddressType*    addressType;
 extern IllegalType*    illegalType;
 
-
 // predefined constants
 extern IntConstant*    intZero;
 extern IntConstant*    intOne;
 extern ObjectConstant* objectNull;
-
 
 // tags
 enum ValueTag {
@@ -97,7 +70,6 @@ enum ValueTag {
   number_of_tags
 };
 
-
 class ValueType: public CompilationResourceObj {
  private:
   const int _size;
@@ -114,7 +86,7 @@ class ValueType: public CompilationResourceObj {
   virtual ValueType* base() const                = 0; // the 'canonical' type (e.g., intType for an IntConstant)
   ValueTag tag() const { return _tag; }          // the 'canonical' tag  (useful for type matching)
   int size() const {                             // the size of an object of the type in words
-    assert(_size > -1, "shouldn't be asking for size");
+    assert(_size > -1, "shouldn't be asking for size");
     return _size;
   }
   virtual const char tchar() const               = 0; // the type 'character' for printing
@@ -180,7 +152,6 @@ class ValueType: public CompilationResourceObj {
   void print(outputStream* s = tty)              { s->print("%s", name()); }
 };
 
-
 class VoidType: public ValueType {
  public:
   VoidType(): ValueType(voidTag, 0) {}
@@ -190,7 +161,6 @@ class VoidType: public ValueType {
   virtual VoidType* as_VoidType()                { return this; }
 };
 
-
 class IntType: public ValueType {
  public:
   IntType(): ValueType(intTag, 1) {}
@@ -199,7 +169,6 @@ class IntType: public ValueType {
   virtual const char* name() const               { return "int"; }
   virtual IntType* as_IntType()                  { return this; }
 };
-
 
 class IntConstant: public IntType {
  private:
@@ -214,7 +183,6 @@ class IntConstant: public IntType {
   virtual IntConstant* as_IntConstant()          { return this; }
 };
 
-
 class IntInterval: public IntType {
  private:
   jint _beg;
@@ -222,7 +190,7 @@ class IntInterval: public IntType {
 
  public:
   IntInterval(jint beg, jint end) {
-    assert(beg <= end, "illegal interval");
+    assert(beg <= end, "illegal interval");
     _beg = beg;
     _end = end;
   }
@@ -233,7 +201,6 @@ class IntInterval: public IntType {
   virtual bool is_interval() const               { return true; }
 };
 
-
 class LongType: public ValueType {
  public:
   LongType(): ValueType(longTag, 2) {}
@@ -242,7 +209,6 @@ class LongType: public ValueType {
   virtual const char* name() const               { return "long"; }
   virtual LongType* as_LongType()                { return this; }
 };
-
 
 class LongConstant: public LongType {
  private:
@@ -257,7 +223,6 @@ class LongConstant: public LongType {
   virtual LongConstant* as_LongConstant()        { return this; }
 };
 
-
 class FloatType: public ValueType {
  public:
   FloatType(): ValueType(floatTag, 1) {}
@@ -266,7 +231,6 @@ class FloatType: public ValueType {
   virtual const char* name() const               { return "float"; }
   virtual FloatType* as_FloatType()              { return this; }
 };
-
 
 class FloatConstant: public FloatType {
  private:
@@ -281,7 +245,6 @@ class FloatConstant: public FloatType {
   virtual FloatConstant* as_FloatConstant()      { return this; }
 };
 
-
 class DoubleType: public ValueType {
  public:
   DoubleType(): ValueType(doubleTag, 2) {}
@@ -290,7 +253,6 @@ class DoubleType: public ValueType {
   virtual const char* name() const               { return "double"; }
   virtual DoubleType* as_DoubleType()            { return this; }
 };
-
 
 class DoubleConstant: public DoubleType {
  private:
@@ -305,7 +267,6 @@ class DoubleConstant: public DoubleType {
   virtual DoubleConstant* as_DoubleConstant()    { return this; }
 };
 
-
 class ObjectType: public ValueType {
  public:
   ObjectType(): ValueType(objectTag, 1) {}
@@ -318,7 +279,6 @@ class ObjectType: public ValueType {
   bool is_loaded() const;
   jobject encoding() const;
 };
-
 
 class ObjectConstant: public ObjectType {
  private:
@@ -335,12 +295,10 @@ class ObjectConstant: public ObjectType {
   virtual ciType* exact_type() const;
 };
 
-
 class ArrayType: public ObjectType {
  public:
   virtual ArrayType* as_ArrayType()              { return this; }
 };
-
 
 class ArrayConstant: public ArrayType {
  private:
@@ -363,7 +321,7 @@ class StableArrayConstant: public ArrayConstant {
 
  public:
   StableArrayConstant(ciArray* value, jint dimension) : ArrayConstant(value) {
-    assert(dimension > 0, "not a stable array");
+    assert(dimension > 0, "not a stable array");
     _dimension = dimension;
   }
 
@@ -376,7 +334,6 @@ class InstanceType: public ObjectType {
  public:
   virtual InstanceType* as_InstanceType()        { return this; }
 };
-
 
 class InstanceConstant: public InstanceType {
  private:
@@ -393,7 +350,6 @@ class InstanceConstant: public InstanceType {
   virtual ciType* exact_type() const;
 };
 
-
 class MetadataType: public ValueType {
  public:
   MetadataType(): ValueType(metaDataTag, 1) {}
@@ -406,12 +362,10 @@ class MetadataType: public ValueType {
   virtual ciMetadata* constant_value() const            { ShouldNotReachHere(); return NULL;  }
 };
 
-
 class ClassType: public MetadataType {
  public:
   virtual ClassType* as_ClassType()              { return this; }
 };
-
 
 class ClassConstant: public ClassType {
  private:
@@ -428,12 +382,10 @@ class ClassConstant: public ClassType {
   virtual ciType* exact_type() const;
 };
 
-
 class MethodType: public MetadataType {
  public:
   virtual MethodType* as_MethodType()                   { return this; }
 };
-
 
 class MethodConstant: public MethodType {
  private:
@@ -450,12 +402,10 @@ class MethodConstant: public MethodType {
   virtual ciMetadata* constant_value() const            { return _value; }
 };
 
-
 class MethodDataType: public MetadataType {
  public:
   virtual MethodDataType* as_MethodDataType()           { return this; }
 };
-
 
 class MethodDataConstant: public MethodDataType {
  private:
@@ -472,7 +422,6 @@ class MethodDataConstant: public MethodDataType {
   virtual ciMetadata* constant_value() const            { return _value; }
 };
 
-
 class AddressType: public ValueType {
  public:
   AddressType(): ValueType(addressTag, 1) {}
@@ -481,7 +430,6 @@ class AddressType: public ValueType {
   virtual const char* name() const               { return "address"; }
   virtual AddressType* as_AddressType()          { return this; }
 };
-
 
 class AddressConstant: public AddressType {
  private:
@@ -497,7 +445,6 @@ class AddressConstant: public AddressType {
   virtual AddressConstant* as_AddressConstant()  { return this; }
 };
 
-
 class IllegalType: public ValueType {
  public:
   IllegalType(): ValueType(illegalTag, -1) {}
@@ -507,7 +454,6 @@ class IllegalType: public ValueType {
   virtual IllegalType* as_IllegalType()          { return this; }
 };
 
-
 // conversion between ValueTypes, BasicTypes, and ciConstants
 ValueType* as_ValueType(BasicType type);
 ValueType* as_ValueType(ciConstant value);
@@ -515,4 +461,4 @@ BasicType  as_BasicType(ValueType* type);
 
 inline ValueType* as_ValueType(ciType* type) { return as_ValueType(type->basic_type()); }
 
-#endif // SHARE_VM_C1_C1_VALUETYPE_HPP
+#endif

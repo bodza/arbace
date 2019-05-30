@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/copyFailedInfo.hpp"
 #include "gc/shared/gcHeapSummary.hpp"
@@ -36,9 +12,7 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ticks.hpp"
-#if INCLUDE_G1GC
 #include "gc/g1/evacuationInfo.hpp"
-#endif
 
 void GCTracer::report_gc_start_impl(GCCause::Cause cause, const Ticks& timestamp) {
   _shared_gc_info.set_cause(cause);
@@ -69,49 +43,6 @@ void GCTracer::report_gc_reference_stats(const ReferenceProcessorStats& rps) con
   send_reference_stats_event(REF_PHANTOM, rps.phantom_count());
 }
 
-#if INCLUDE_SERVICES
-class ObjectCountEventSenderClosure : public KlassInfoClosure {
-  const double _size_threshold_percentage;
-  const size_t _total_size_in_words;
-  const Ticks _timestamp;
-
- public:
-  ObjectCountEventSenderClosure(size_t total_size_in_words, const Ticks& timestamp) :
-    _size_threshold_percentage(ObjectCountCutOffPercent / 100),
-    _total_size_in_words(total_size_in_words),
-    _timestamp(timestamp)
-  {}
-
-  virtual void do_cinfo(KlassInfoEntry* entry) {
-    if (should_send_event(entry)) {
-      ObjectCountEventSender::send(entry, _timestamp);
-    }
-  }
-
- private:
-  bool should_send_event(const KlassInfoEntry* entry) const {
-    double percentage_of_heap = ((double) entry->words()) / _total_size_in_words;
-    return percentage_of_heap >= _size_threshold_percentage;
-  }
-};
-
-void GCTracer::report_object_count_after_gc(BoolObjectClosure* is_alive_cl) {
-  assert(is_alive_cl != NULL, "Must supply function to check liveness");
-
-  if (ObjectCountEventSender::should_send_event()) {
-    ResourceMark rm;
-
-    KlassInfoTable cit(false);
-    if (!cit.allocation_failed()) {
-      HeapInspection hi(false, false, false, NULL);
-      hi.populate_table(&cit, is_alive_cl);
-      ObjectCountEventSenderClosure event_sender(cit.size_of_instances_in_words(), Ticks::now());
-      cit.iterate(&event_sender);
-    }
-  }
-}
-#endif // INCLUDE_SERVICES
-
 void GCTracer::report_gc_heap_summary(GCWhen::Type when, const GCHeapSummary& heap_summary) const {
   send_gc_heap_summary_event(when, heap_summary);
 }
@@ -126,7 +57,7 @@ void GCTracer::report_metaspace_summary(GCWhen::Type when, const MetaspaceSummar
 }
 
 void YoungGCTracer::report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions) {
-  assert(_tenuring_threshold != UNSET_TENURING_THRESHOLD, "Tenuring threshold has not been reported");
+  assert(_tenuring_threshold != UNSET_TENURING_THRESHOLD, "Tenuring threshold has not been reported");
 
   GCTracer::report_gc_end_impl(timestamp, time_partitions);
   send_young_gc_event();
@@ -184,7 +115,6 @@ void OldGCTracer::report_concurrent_mode_failure() {
   send_concurrent_mode_failure_event();
 }
 
-#if INCLUDE_G1GC
 void G1MMUTracer::report_mmu(double time_slice_sec, double gc_time_sec, double max_time_sec) {
   send_g1_mmu_event(time_slice_sec * MILLIUNITS,
                     gc_time_sec * MILLIUNITS,
@@ -251,5 +181,3 @@ void G1OldTracer::report_gc_start_impl(GCCause::Cause cause, const Ticks& timest
 void G1OldTracer::set_gc_cause(GCCause::Cause cause) {
   _shared_gc_info.set_cause(cause);
 }
-
-#endif // INCLUDE_G1GC

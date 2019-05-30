@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_OOPMAPCACHE_HPP
 #define SHARE_VM_INTERPRETER_OOPMAPCACHE_HPP
 
@@ -54,12 +30,10 @@
 // 10 dead value
 // 11 <unused>                                   (we cannot distinguish between dead oops or values with the current oop map generator)
 
-
 class OffsetClosure  {
  public:
   virtual void offset_do(int offset) = 0;
 };
-
 
 class InterpreterOopMap: ResourceObj {
   friend class OopMapCache;
@@ -91,9 +65,6 @@ class InterpreterOopMap: ResourceObj {
                                   // "protected" so that sub classes can
                                   // access it without using trickery in
                                   // methd bit_mask().
-#ifdef ASSERT
-  bool _resource_allocate_bit_mask;
-#endif
 
   // access methods
   Method*        method() const                  { return _method; }
@@ -140,7 +111,6 @@ class InterpreterOopMap: ResourceObj {
   bool is_oop (int offset) const                 { return (entry_at(offset) & (1 << oop_bit_number )) != 0; }
 
   int expression_stack_size() const              { return _expression_stack_size; }
-
 };
 
 class OopMapCache : public CHeapObj<mtClass> {
@@ -176,4 +146,4 @@ class OopMapCache : public CHeapObj<mtClass> {
   static void cleanup_old_entries();
 };
 
-#endif // SHARE_VM_INTERPRETER_OOPMAPCACHE_HPP
+#endif

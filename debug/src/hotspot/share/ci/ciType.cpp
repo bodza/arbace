@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciEnv.hpp"
 #include "ci/ciType.hpp"
@@ -41,14 +17,13 @@ ciType* ciType::_basic_types[T_CONFLICT+1];
 // ciType::ciType
 //
 ciType::ciType(BasicType basic_type) : ciMetadata() {
-  assert(basic_type >= T_BOOLEAN && basic_type <= T_CONFLICT, "range check");
+  assert(basic_type >= T_BOOLEAN && basic_type <= T_CONFLICT, "range check");
   _basic_type = basic_type;
 }
 
 ciType::ciType(Klass* k) : ciMetadata(k) {
   _basic_type = k->is_array_klass() ? T_ARRAY : T_OBJECT;
 }
-
 
 // ------------------------------------------------------------------
 // ciType::is_subtype_of
@@ -68,7 +43,7 @@ const char* ciType::name() {
   if (is_primitive_type()) {
     return type2name(basic_type());
   } else {
-    assert(is_klass(), "must be");
+    assert(is_klass(), "must be");
     return as_klass()->name()->as_utf8();
   }
 }
@@ -91,8 +66,6 @@ void ciType::print_name_on(outputStream* st) {
   st->print("%s", name());
 }
 
-
-
 // ------------------------------------------------------------------
 // ciType::java_mirror
 //
@@ -114,7 +87,6 @@ ciKlass* ciType::box_klass() {
   return CURRENT_THREAD_ENV->get_instance_klass(SystemDictionary::box_klass(basic_type()));
 }
 
-
 // ------------------------------------------------------------------
 // ciType::make
 //
@@ -124,9 +96,9 @@ ciKlass* ciType::box_klass() {
 ciType* ciType::make(BasicType t) {
   // short, etc.
   // Note: Bare T_ADDRESS means a raw pointer type, not a return_address.
-  assert((uint)t < T_CONFLICT+1, "range check");
+  assert((uint)t < T_CONFLICT+1, "range check");
   if (t == T_OBJECT)  return ciEnv::_Object_klass;  // java/lang/Object
-  assert(_basic_types[t] != NULL, "domain check");
+  assert(_basic_types[t] != NULL, "domain check");
   return _basic_types[t];
 }
 
@@ -139,7 +111,7 @@ ciType* ciType::make(BasicType t) {
 // ciReturnAddress::ciReturnAddress
 //
 ciReturnAddress::ciReturnAddress(int bci) : ciType(T_ADDRESS) {
-  assert(0 <= bci, "bci cannot be negative");
+  assert(0 <= bci, "bci cannot be negative");
   _bci = bci;
 }
 

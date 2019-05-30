@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_INSTRUCTION_HPP
 #define SHARE_VM_C1_C1_INSTRUCTION_HPP
 
@@ -37,7 +13,6 @@ class InstructionPrinter;
 class IRScope;
 class LIR_OprDesc;
 typedef LIR_OprDesc* LIR_Opr;
-
 
 // Instruction class hierarchy
 //
@@ -109,9 +84,6 @@ class   ProfileInvoke;
 class   RuntimeCall;
 class   MemBar;
 class   RangeCheckPredicate;
-#ifdef ASSERT
-class   Assert;
-#endif
 
 // A Value is a reference to the instruction creating the value
 typedef Instruction* Value;
@@ -125,13 +97,11 @@ class BlockClosure: public CompilationResourceObj {
   virtual void block_do(BlockBegin* block)       = 0;
 };
 
-
 // A simple closure class for visiting the values of an Instruction
 class ValueVisitor: public StackObj {
  public:
   virtual void visit(Value* v) = 0;
 };
-
 
 // Some array and list classes
 typedef GrowableArray<BlockBegin*> BlockBeginArray;
@@ -146,9 +116,8 @@ class BlockList: public GrowableArray<BlockBegin*> {
   void iterate_backward(BlockClosure* closure);
   void blocks_do(void f(BlockBegin*));
   void values_do(ValueVisitor* f);
-  void print(bool cfg_only = false, bool live_only = false) PRODUCT_RETURN;
+  void print(bool cfg_only = false, bool live_only = false) {};
 };
-
 
 // InstructionVisitors provide type-based dispatch for instructions.
 // For each concrete Instruction class X, a virtual function do_X is
@@ -208,11 +177,7 @@ class InstructionVisitor: public StackObj {
   virtual void do_RuntimeCall    (RuntimeCall*     x) = 0;
   virtual void do_MemBar         (MemBar*          x) = 0;
   virtual void do_RangeCheckPredicate(RangeCheckPredicate* x) = 0;
-#ifdef ASSERT
-  virtual void do_Assert         (Assert*          x) = 0;
-#endif
 };
-
 
 // Hashing support
 //
@@ -223,7 +188,6 @@ class InstructionVisitor: public StackObj {
 #define HASH2(x1, x2        )                    ((HASH1(x1        ) << 7) ^ HASH1(x2))
 #define HASH3(x1, x2, x3    )                    ((HASH2(x1, x2    ) << 7) ^ HASH1(x3))
 #define HASH4(x1, x2, x3, x4)                    ((HASH3(x1, x2, x3) << 7) ^ HASH1(x4))
-
 
 // The following macros are used to implement instruction-specific hashing.
 // By default, each instruction implements hash() and is_equal(Value), used
@@ -240,56 +204,50 @@ class InstructionVisitor: public StackObj {
 //       bug (no value numbering for that node). However, this situation is
 //       so unlikely, that we are not going to handle it specially.
 
-#define HASHING1(class_name, enabled, f1)             \
-  virtual intx hash() const {                         \
-    return (enabled) ? HASH2(name(), f1) : 0;         \
-  }                                                   \
-  virtual bool is_equal(Value v) const {              \
-    if (!(enabled)  ) return false;                   \
-    class_name* _v = v->as_##class_name();            \
-    if (_v == NULL  ) return false;                   \
-    if (f1 != _v->f1) return false;                   \
-    return true;                                      \
-  }                                                   \
+#define HASHING1(class_name, enabled, f1) \
+  virtual intx hash() const { \
+    return (enabled) ? HASH2(name(), f1) : 0; \
+  } \
+  virtual bool is_equal(Value v) const { \
+    if (!(enabled)  ) return false; \
+    class_name* _v = v->as_##class_name(); \
+    if (_v == NULL  ) return false; \
+    if (f1 != _v->f1) return false; \
+    return true; \
+  } \
 
+#define HASHING2(class_name, enabled, f1, f2) \
+  virtual intx hash() const { \
+    return (enabled) ? HASH3(name(), f1, f2) : 0; \
+  } \
+  virtual bool is_equal(Value v) const { \
+    if (!(enabled)  ) return false; \
+    class_name* _v = v->as_##class_name(); \
+    if (_v == NULL  ) return false; \
+    if (f1 != _v->f1) return false; \
+    if (f2 != _v->f2) return false; \
+    return true; \
+  } \
 
-#define HASHING2(class_name, enabled, f1, f2)         \
-  virtual intx hash() const {                         \
-    return (enabled) ? HASH3(name(), f1, f2) : 0;     \
-  }                                                   \
-  virtual bool is_equal(Value v) const {              \
-    if (!(enabled)  ) return false;                   \
-    class_name* _v = v->as_##class_name();            \
-    if (_v == NULL  ) return false;                   \
-    if (f1 != _v->f1) return false;                   \
-    if (f2 != _v->f2) return false;                   \
-    return true;                                      \
-  }                                                   \
-
-
-#define HASHING3(class_name, enabled, f1, f2, f3)     \
-  virtual intx hash() const {                          \
+#define HASHING3(class_name, enabled, f1, f2, f3) \
+  virtual intx hash() const { \
     return (enabled) ? HASH4(name(), f1, f2, f3) : 0; \
-  }                                                   \
-  virtual bool is_equal(Value v) const {              \
-    if (!(enabled)  ) return false;                   \
-    class_name* _v = v->as_##class_name();            \
-    if (_v == NULL  ) return false;                   \
-    if (f1 != _v->f1) return false;                   \
-    if (f2 != _v->f2) return false;                   \
-    if (f3 != _v->f3) return false;                   \
-    return true;                                      \
-  }                                                   \
-
+  } \
+  virtual bool is_equal(Value v) const { \
+    if (!(enabled)  ) return false; \
+    class_name* _v = v->as_##class_name(); \
+    if (_v == NULL  ) return false; \
+    if (f1 != _v->f1) return false; \
+    if (f2 != _v->f2) return false; \
+    if (f3 != _v->f3) return false; \
+    return true; \
+  } \
 
 // The mother of all instructions...
 
 class Instruction: public CompilationResourceObj {
  private:
   int          _id;                              // the unique instruction id
-#ifndef PRODUCT
-  int          _printable_bci;                   // the bci of the instruction for printing
-#endif
   int          _use_count;                       // the number of instructions refering to this value (w/o prev/next); only roots can have use count = 0 or > 1
   int          _pin_state;                       // set of PinReason describing the reason for pinning
   ValueType*   _type;                            // the instruction value type
@@ -311,7 +269,7 @@ class Instruction: public CompilationResourceObj {
   BlockBegin*  _block;                           // Block that contains this instruction
 
   void set_type(ValueType* type) {
-    assert(type != NULL, "type must exist");
+    assert(type != NULL, "type must exist");
     _type = type;
   }
 
@@ -411,9 +369,6 @@ class Instruction: public CompilationResourceObj {
   // creation
   Instruction(ValueType* type, ValueStack* state_before = NULL, bool type_is_constant = false)
   : _use_count(0)
-#ifndef PRODUCT
-  , _printable_bci(-99)
-#endif
   , _pin_state(0)
   , _type(type)
   , _next(NULL)
@@ -425,17 +380,12 @@ class Instruction: public CompilationResourceObj {
   , _exception_handlers(NULL)
   {
     check_state(state_before);
-    assert(type != NULL && (!type->is_constant() || type_is_constant), "type must exist");
+    assert(type != NULL && (!type->is_constant() || type_is_constant), "type must exist");
     update_exception_state(_state_before);
   }
 
   // accessors
   int id() const                                 { return _id; }
-#ifndef PRODUCT
-  bool has_printable_bci() const                 { return _printable_bci != -99; }
-  int printable_bci() const                      { assert(has_printable_bci(), "_printable_bci should have been set"); return _printable_bci; }
-  void set_printable_bci(int bci)                { _printable_bci = bci; }
-#endif
   int dominator_depth();
   int use_count() const                          { return _use_count; }
   int pin_state() const                          { return _pin_state; }
@@ -463,13 +413,15 @@ class Instruction: public CompilationResourceObj {
   void pin(PinReason reason)                     { _pin_state |= reason; }
   void pin()                                     { _pin_state |= PinUnknown; }
   // DANGEROUS: only used by EliminateStores
-  void unpin(PinReason reason)                   { assert((reason & PinUnknown) == 0, "can't unpin unknown state"); _pin_state &= ~reason; }
+  void unpin(PinReason reason)                   {
+    assert((reason & PinUnknown) == 0, "can't unpin unknown state");
+    _pin_state &= ~reason; }
 
   Instruction* set_next(Instruction* next) {
-    assert(next->has_printable_bci(), "_printable_bci should have been set");
-    assert(next != NULL, "must not be NULL");
-    assert(as_BlockEnd() == NULL, "BlockEnd instructions must have no next");
-    assert(next->can_be_linked(), "shouldn't link these instructions into list");
+    assert(next->has_printable_bci(), "_printable_bci should have been set");
+    assert(next != NULL, "must not be NULL");
+    assert(as_BlockEnd() == NULL, "BlockEnd instructions must have no next");
+    assert(next->can_be_linked(), "shouldn't link these instructions into list");
 
     BlockBegin *block = this->block();
     next->_block = block;
@@ -480,9 +432,6 @@ class Instruction: public CompilationResourceObj {
   }
 
   Instruction* set_next(Instruction* next, int bci) {
-#ifndef PRODUCT
-    next->set_printable_bci(bci);
-#endif
     return set_next(next);
   }
 
@@ -503,16 +452,11 @@ class Instruction: public CompilationResourceObj {
   }
 
   Instruction *insert_after_same_bci(Instruction *i) {
-#ifndef PRODUCT
-    i->set_printable_bci(printable_bci());
-#endif
     return insert_after(i);
   }
 
   void set_subst(Instruction* subst)             {
-    assert(subst == NULL ||
-           type()->base() == subst->type()->base() ||
-           subst->type()->base() == illegalType, "type can't change");
+    assert(subst == NULL || type()->base() == subst->type()->base() || subst->type()->base() == illegalType, "type can't change");
     _subst = subst;
   }
   void set_exception_handlers(XHandlers *xhandlers) { _exception_handlers = xhandlers; }
@@ -520,7 +464,9 @@ class Instruction: public CompilationResourceObj {
   void set_state_before(ValueStack* s)           { check_state(s); _state_before = s; }
 
   // machine-specifics
-  void set_operand(LIR_Opr operand)              { assert(operand != LIR_OprFact::illegalOpr, "operand must exist"); _operand = operand; }
+  void set_operand(LIR_Opr operand)              {
+    assert(operand != LIR_OprFact::illegalOpr, "operand must exist");
+    _operand = operand; }
   void clear_operand()                           { _operand = LIR_OprFact::illegalOpr; }
 
   // generic
@@ -577,10 +523,6 @@ class Instruction: public CompilationResourceObj {
   virtual ProfileInvoke*    as_ProfileInvoke()   { return NULL; }
   virtual RangeCheckPredicate* as_RangeCheckPredicate() { return NULL; }
 
-#ifdef ASSERT
-  virtual Assert*           as_Assert()          { return NULL; }
-#endif
-
   virtual void visit(InstructionVisitor* v)      = 0;
 
   virtual bool can_trap() const                  { return false; }
@@ -598,42 +540,30 @@ class Instruction: public CompilationResourceObj {
   HASHING1(Instruction, false, id())             // hashing disabled by default
 
   // debugging
-  static void check_state(ValueStack* state)     PRODUCT_RETURN;
-  void print()                                   PRODUCT_RETURN;
-  void print_line()                              PRODUCT_RETURN;
-  void print(InstructionPrinter& ip)             PRODUCT_RETURN;
+  static void check_state(ValueStack* state)     {};
+  void print()                                   {};
+  void print_line()                              {};
+  void print(InstructionPrinter& ip)             {};
 };
-
 
 // The following macros are used to define base (i.e., non-leaf)
 // and leaf instruction classes. They define class-name related
 // generic functionality in one place.
 
-#define BASE(class_name, super_class_name)       \
-  class class_name: public super_class_name {    \
-   public:                                       \
-    virtual class_name* as_##class_name()        { return this; }              \
+#define BASE(class_name, super_class_name) \
+  class class_name: public super_class_name { \
+   public: \
+    virtual class_name* as_##class_name()        { return this; } \
 
-
-#define LEAF(class_name, super_class_name)       \
-  BASE(class_name, super_class_name)             \
-   public:                                       \
-    virtual const char* name() const             { return #class_name; }       \
+#define LEAF(class_name, super_class_name) \
+  BASE(class_name, super_class_name) \
+   public: \
+    virtual const char* name() const             { return #class_name; } \
     virtual void visit(InstructionVisitor* v)    { v->do_##class_name(this); } \
-
 
 // Debugging support
 
-
-#ifdef ASSERT
-class AssertValues: public ValueVisitor {
-  void visit(Value* x)             { assert((*x) != NULL, "value must exist"); }
-};
-  #define ASSERT_VALUES                          { AssertValues assert_value; values_do(&assert_value); }
-#else
-  #define ASSERT_VALUES
-#endif // ASSERT
-
+#define ASSERT_VALUES
 
 // A Phi is a phi function in the sense of SSA form. It stands for
 // the value of a local variable at the beginning of a join block.
@@ -651,7 +581,6 @@ LEAF(Phi, Instruction)
   , _index(index)
   {
     _block = b;
-    NOT_PRODUCT(set_printable_bci(Value(b)->printable_bci()));
     if (type->is_illegal()) {
       make_illegal();
     }
@@ -667,8 +596,12 @@ LEAF(Phi, Instruction)
   // accessors
   bool  is_local() const          { return _index >= 0; }
   bool  is_on_stack() const       { return !is_local(); }
-  int   local_index() const       { assert(is_local(), ""); return _index; }
-  int   stack_index() const       { assert(is_on_stack(), ""); return -(_index+1); }
+  int   local_index() const       {
+    assert(is_local(), "");
+    return _index; }
+  int   stack_index() const       {
+    assert(is_on_stack(), "");
+    return -(_index+1); }
 
   Value operand_at(int i) const;
   int   operand_count() const;
@@ -693,7 +626,6 @@ LEAF(Phi, Instruction)
   }
 };
 
-
 // A local is a placeholder for an incoming argument to a function call.
 LEAF(Local, Instruction)
  private:
@@ -708,7 +640,6 @@ LEAF(Local, Instruction)
     , _declared_type(declared)
     , _is_receiver(receiver)
   {
-    NOT_PRODUCT(set_printable_bci(-1));
   }
 
   // accessors
@@ -721,21 +652,20 @@ LEAF(Local, Instruction)
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
 };
 
-
 LEAF(Constant, Instruction)
  public:
   // creation
   Constant(ValueType* type):
       Instruction(type, NULL, /*type_is_constant*/ true)
   {
-    assert(type->is_constant(), "must be a constant");
+    assert(type->is_constant(), "must be a constant");
   }
 
   Constant(ValueType* type, ValueStack* state_before):
     Instruction(type, state_before, /*type_is_constant*/ true)
   {
-    assert(state_before != NULL, "only used for constants which need patching");
-    assert(type->is_constant(), "must be a constant");
+    assert(state_before != NULL, "only used for constants which need patching");
+    assert(type->is_constant(), "must be a constant");
     // since it's patching it needs to be pinned
     pin();
   }
@@ -767,7 +697,6 @@ LEAF(Constant, Instruction)
     }
   }
 };
-
 
 BASE(AccessField, Instruction)
  private:
@@ -822,7 +751,6 @@ BASE(AccessField, Instruction)
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_obj); }
 };
 
-
 LEAF(LoadField, AccessField)
  public:
   // creation
@@ -836,7 +764,6 @@ LEAF(LoadField, AccessField)
   // generic
   HASHING2(LoadField, !needs_patching() && !field()->is_volatile(), obj()->subst(), offset())  // cannot be eliminated if needs patching or if volatile
 };
-
 
 LEAF(StoreField, AccessField)
  private:
@@ -862,7 +789,6 @@ LEAF(StoreField, AccessField)
   virtual void input_values_do(ValueVisitor* f)   { AccessField::input_values_do(f); f->visit(&_value); }
 };
 
-
 BASE(AccessArray, Instruction)
  private:
   Value       _array;
@@ -885,7 +811,6 @@ BASE(AccessArray, Instruction)
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_array); }
 };
 
-
 LEAF(ArrayLength, AccessArray)
  private:
   NullCheck*  _explicit_null_check;              // For explicit null check elimination
@@ -906,7 +831,6 @@ LEAF(ArrayLength, AccessArray)
   // generic
   HASHING1(ArrayLength, true, array()->subst())
 };
-
 
 BASE(AccessIndexed, AccessArray)
  private:
@@ -942,7 +866,6 @@ BASE(AccessIndexed, AccessArray)
   virtual void input_values_do(ValueVisitor* f)   { AccessArray::input_values_do(f); f->visit(&_index); if (_length != NULL) f->visit(&_length); }
 };
 
-
 LEAF(LoadIndexed, AccessIndexed)
  private:
   NullCheck*  _explicit_null_check;              // For explicit null check elimination
@@ -966,7 +889,6 @@ LEAF(LoadIndexed, AccessIndexed)
   // generic
   HASHING2(LoadIndexed, true, array()->subst(), index()->subst())
 };
-
 
 LEAF(StoreIndexed, AccessIndexed)
  private:
@@ -1005,7 +927,6 @@ LEAF(StoreIndexed, AccessIndexed)
   virtual void input_values_do(ValueVisitor* f)   { AccessIndexed::input_values_do(f); f->visit(&_value); }
 };
 
-
 LEAF(NegateOp, Instruction)
  private:
   Value _x;
@@ -1022,7 +943,6 @@ LEAF(NegateOp, Instruction)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_x); }
 };
-
 
 BASE(Op2, Instruction)
  private:
@@ -1048,7 +968,7 @@ BASE(Op2, Instruction)
 
   // manipulators
   void swap_operands() {
-    assert(is_commutative(), "operation must be commutative");
+    assert(is_commutative(), "operation must be commutative");
     Value t = _x; _x = _y; _y = t;
   }
 
@@ -1056,7 +976,6 @@ BASE(Op2, Instruction)
   virtual bool is_commutative() const            { return false; }
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_x); f->visit(&_y); }
 };
-
 
 LEAF(ArithmeticOp, Op2)
  public:
@@ -1077,7 +996,6 @@ LEAF(ArithmeticOp, Op2)
   HASHING3(Op2, true, op(), x()->subst(), y()->subst())
 };
 
-
 LEAF(ShiftOp, Op2)
  public:
   // creation
@@ -1086,7 +1004,6 @@ LEAF(ShiftOp, Op2)
   // generic
   HASHING3(Op2, true, op(), x()->subst(), y()->subst())
 };
-
 
 LEAF(LogicOp, Op2)
  public:
@@ -1098,7 +1015,6 @@ LEAF(LogicOp, Op2)
   HASHING3(Op2, true, op(), x()->subst(), y()->subst())
 };
 
-
 LEAF(CompareOp, Op2)
  public:
   // creation
@@ -1109,7 +1025,6 @@ LEAF(CompareOp, Op2)
   // generic
   HASHING3(Op2, true, op(), x()->subst(), y()->subst())
 };
-
 
 LEAF(IfOp, Op2)
  private:
@@ -1124,7 +1039,7 @@ LEAF(IfOp, Op2)
   , _fval(fval)
   {
     ASSERT_VALUES
-    assert(tval->type()->tag() == fval->type()->tag(), "types must match");
+    assert(tval->type()->tag() == fval->type()->tag(), "types must match");
   }
 
   // accessors
@@ -1137,7 +1052,6 @@ LEAF(IfOp, Op2)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { Op2::input_values_do(f); f->visit(&_tval); f->visit(&_fval); }
 };
-
 
 LEAF(Convert, Instruction)
  private:
@@ -1159,7 +1073,6 @@ LEAF(Convert, Instruction)
   HASHING2(Convert, true, op(), value()->subst())
 };
 
-
 LEAF(NullCheck, Instruction)
  private:
   Value       _obj;
@@ -1172,7 +1085,7 @@ LEAF(NullCheck, Instruction)
   {
     ASSERT_VALUES
     set_can_trap(true);
-    assert(_obj->type()->is_object(), "null check must be applied to objects only");
+    assert(_obj->type()->is_object(), "null check must be applied to objects only");
     pin(Instruction::PinExplicitNullCheck);
   }
 
@@ -1187,7 +1100,6 @@ LEAF(NullCheck, Instruction)
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_obj); }
   HASHING1(NullCheck, true, obj()->subst())
 };
-
 
 // This node is supposed to cast the type of another node to a more precise
 // declared type.
@@ -1211,7 +1123,6 @@ LEAF(TypeCast, Instruction)
   virtual void input_values_do(ValueVisitor* f)  { f->visit(&_obj); }
 };
 
-
 BASE(StateSplit, Instruction)
  private:
   ValueStack* _state;
@@ -1233,13 +1144,14 @@ BASE(StateSplit, Instruction)
   IRScope* scope() const;                        // the state's scope
 
   // manipulation
-  void set_state(ValueStack* state)              { assert(_state == NULL, "overwriting existing state"); check_state(state); _state = state; }
+  void set_state(ValueStack* state)              {
+    assert(_state == NULL, "overwriting existing state");
+    check_state(state); _state = state; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
   virtual void state_values_do(ValueVisitor* f);
 };
-
 
 LEAF(Invoke, StateSplit)
  private:
@@ -1289,7 +1201,6 @@ LEAF(Invoke, StateSplit)
   virtual void state_values_do(ValueVisitor *f);
 };
 
-
 LEAF(NewInstance, StateSplit)
  private:
   ciInstanceKlass* _klass;
@@ -1313,7 +1224,6 @@ LEAF(NewInstance, StateSplit)
   ciType* exact_type() const;
   ciType* declared_type() const;
 };
-
 
 BASE(NewArray, StateSplit)
  private:
@@ -1341,7 +1251,6 @@ BASE(NewArray, StateSplit)
   virtual void input_values_do(ValueVisitor* f)   { StateSplit::input_values_do(f); f->visit(&_length); }
 };
 
-
 LEAF(NewTypeArray, NewArray)
  private:
   BasicType _elt_type;
@@ -1358,7 +1267,6 @@ LEAF(NewTypeArray, NewArray)
   ciType* exact_type() const;
 };
 
-
 LEAF(NewObjectArray, NewArray)
  private:
   ciKlass* _klass;
@@ -1371,7 +1279,6 @@ LEAF(NewObjectArray, NewArray)
   ciKlass* klass() const                         { return _klass; }
   ciType* exact_type() const;
 };
-
 
 LEAF(NewMultiArray, NewArray)
  private:
@@ -1401,7 +1308,6 @@ LEAF(NewMultiArray, NewArray)
     for (int i = 0; i < _dims->length(); i++) f->visit(_dims->adr_at(i));
   }
 };
-
 
 BASE(TypeCheck, StateSplit)
  private:
@@ -1442,7 +1348,6 @@ BASE(TypeCheck, StateSplit)
   int       profiled_bci() const                     { return _profiled_bci;        }
 };
 
-
 LEAF(CheckCast, TypeCheck)
  public:
   // creation
@@ -1469,7 +1374,6 @@ LEAF(CheckCast, TypeCheck)
   ciType* declared_type() const;
 };
 
-
 LEAF(InstanceOf, TypeCheck)
  public:
   // creation
@@ -1477,7 +1381,6 @@ LEAF(InstanceOf, TypeCheck)
 
   virtual bool needs_exception_state() const     { return false; }
 };
-
 
 BASE(AccessMonitor, StateSplit)
  private:
@@ -1503,7 +1406,6 @@ BASE(AccessMonitor, StateSplit)
   virtual void input_values_do(ValueVisitor* f)   { StateSplit::input_values_do(f); f->visit(&_obj); }
 };
 
-
 LEAF(MonitorEnter, AccessMonitor)
  public:
   // creation
@@ -1517,7 +1419,6 @@ LEAF(MonitorEnter, AccessMonitor)
   virtual bool can_trap() const                  { return true; }
 };
 
-
 LEAF(MonitorExit, AccessMonitor)
  public:
   // creation
@@ -1527,7 +1428,6 @@ LEAF(MonitorExit, AccessMonitor)
     ASSERT_VALUES
   }
 };
-
 
 LEAF(Intrinsic, StateSplit)
  private:
@@ -1556,7 +1456,7 @@ LEAF(Intrinsic, StateSplit)
   , _args(args)
   , _recv(NULL)
   {
-    assert(args != NULL, "args must exist");
+    assert(args != NULL, "args must exist");
     ASSERT_VALUES
     set_flag(PreservesStateFlag, preserves_state);
     set_flag(CanTrapFlag,        cantrap);
@@ -1577,7 +1477,9 @@ LEAF(Intrinsic, StateSplit)
   Value argument_at(int i) const                 { return _args->at(i); }
 
   bool has_receiver() const                      { return (_recv != NULL); }
-  Value receiver() const                         { assert(has_receiver(), "must have receiver"); return _recv; }
+  Value receiver() const                         {
+    assert(has_receiver(), "must have receiver");
+    return _recv; }
   bool preserves_state() const                   { return check_flag(PreservesStateFlag); }
 
   bool arg_needs_null_check(int i) const {
@@ -1595,7 +1497,6 @@ LEAF(Intrinsic, StateSplit)
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
   }
 };
-
 
 class LIR_List;
 
@@ -1689,9 +1590,6 @@ LEAF(BlockBegin, StateSplit)
   , _stores_to_locals()
   {
     _block = this;
-#ifndef PRODUCT
-    set_printable_bci(bci);
-#endif
   }
 
   // accessors
@@ -1767,8 +1665,12 @@ LEAF(BlockBegin, StateSplit)
   BlockBegin* exception_handler_at(int i) const  { return _exception_handlers.at(i); }
 
   // states of the instructions that have an edge to this exception handler
-  int number_of_exception_states()               { assert(is_set(exception_entry_flag), "only for xhandlers"); return _exception_states == NULL ? 0 : _exception_states->length(); }
-  ValueStack* exception_state_at(int idx) const  { assert(is_set(exception_entry_flag), "only for xhandlers"); return _exception_states->at(idx); }
+  int number_of_exception_states()               {
+    assert(is_set(exception_entry_flag), "only for xhandlers");
+    return _exception_states == NULL ? 0 : _exception_states->length(); }
+  ValueStack* exception_state_at(int idx) const  {
+    assert(is_set(exception_entry_flag), "only for xhandlers");
+    return _exception_states->at(idx); }
   int add_exception_state(ValueStack* state);
 
   // flags
@@ -1808,13 +1710,13 @@ LEAF(BlockBegin, StateSplit)
 
   // merging
   bool try_merge(ValueStack* state);             // try to merge states at block begin
-  void merge(ValueStack* state)                  { bool b = try_merge(state); assert(b, "merge failed"); }
+  void merge(ValueStack* state)                  { bool b = try_merge(state);
+  assert(b, "merge failed"); }
 
   // debugging
-  void print_block()                             PRODUCT_RETURN;
-  void print_block(InstructionPrinter& ip, bool live_only = false) PRODUCT_RETURN;
+  void print_block()                             {};
+  void print_block(InstructionPrinter& ip, bool live_only = false) {};
 };
-
 
 BASE(BlockEnd, StateSplit)
  private:
@@ -1824,10 +1726,6 @@ BASE(BlockEnd, StateSplit)
   BlockList* sux() const                         { return _sux; }
 
   void set_sux(BlockList* sux) {
-#ifdef ASSERT
-    assert(sux != NULL, "sux must exist");
-    for (int i = sux->length() - 1; i >= 0; i--) assert(sux->at(i) != NULL, "sux must exist");
-#endif
     _sux = sux;
   }
 
@@ -1856,7 +1754,6 @@ BASE(BlockEnd, StateSplit)
   int sux_index(BlockBegin* sux) const           { return _sux->find(sux); }
   void substitute_sux(BlockBegin* old_sux, BlockBegin* new_sux);
 };
-
 
 LEAF(Goto, BlockEnd)
  public:
@@ -1900,31 +1797,6 @@ LEAF(Goto, BlockEnd)
   void set_direction(Direction d)                { _direction = d; }
 };
 
-#ifdef ASSERT
-LEAF(Assert, Instruction)
-  private:
-  Value       _x;
-  Condition   _cond;
-  Value       _y;
-  char        *_message;
-
- public:
-  // creation
-  // unordered_is_true is valid for float/double compares only
-   Assert(Value x, Condition cond, bool unordered_is_true, Value y);
-
-  // accessors
-  Value x() const                                { return _x; }
-  Condition cond() const                         { return _cond; }
-  bool unordered_is_true() const                 { return check_flag(UnorderedIsTrueFlag); }
-  Value y() const                                { return _y; }
-  const char *message() const                    { return _message; }
-
-  // generic
-  virtual void input_values_do(ValueVisitor* f)  { f->visit(&_x); f->visit(&_y); }
-};
-#endif
-
 LEAF(RangeCheckPredicate, StateSplit)
  private:
   Value       _x;
@@ -1943,7 +1815,7 @@ LEAF(RangeCheckPredicate, StateSplit)
   {
     ASSERT_VALUES
     set_flag(UnorderedIsTrueFlag, unordered_is_true);
-    assert(x->type()->tag() == y->type()->tag(), "types must match");
+    assert(x->type()->tag() == y->type()->tag(), "types must match");
     this->set_state(state);
     check_state();
   }
@@ -1992,7 +1864,7 @@ LEAF(If, BlockEnd)
   {
     ASSERT_VALUES
     set_flag(UnorderedIsTrueFlag, unordered_is_true);
-    assert(x->type()->tag() == y->type()->tag(), "types must match");
+    assert(x->type()->tag() == y->type()->tag(), "types must match");
     BlockList* s = new BlockList(2);
     s->append(tsux);
     s->append(fsux);
@@ -2020,7 +1892,7 @@ LEAF(If, BlockEnd)
   }
 
   void swap_sux() {
-    assert(number_of_sux() == 2, "wrong number of successors");
+    assert(number_of_sux() == 2, "wrong number of successors");
     BlockList* s = sux();
     BlockBegin* t = s->at(0); s->at_put(0, s->at(1)); s->at_put(1, t);
     _cond = negate(_cond);
@@ -2034,7 +1906,6 @@ LEAF(If, BlockEnd)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_x); f->visit(&_y); }
 };
-
 
 LEAF(IfInstanceOf, BlockEnd)
  private:
@@ -2052,7 +1923,7 @@ LEAF(IfInstanceOf, BlockEnd)
   , _instanceof_bci(instanceof_bci)
   {
     ASSERT_VALUES
-    assert(instanceof_bci >= 0, "illegal bci");
+    assert(instanceof_bci >= 0, "illegal bci");
     BlockList* s = new BlockList(2);
     s->append(tsux);
     s->append(fsux);
@@ -2079,7 +1950,7 @@ LEAF(IfInstanceOf, BlockEnd)
 
   // manipulation
   void swap_sux() {
-    assert(number_of_sux() == 2, "wrong number of successors");
+    assert(number_of_sux() == 2, "wrong number of successors");
     BlockList* s = sux();
     BlockBegin* t = s->at(0); s->at_put(0, s->at(1)); s->at_put(1, t);
     _test_is_instance = !_test_is_instance;
@@ -2088,7 +1959,6 @@ LEAF(IfInstanceOf, BlockEnd)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_obj); }
 };
-
 
 BASE(Switch, BlockEnd)
  private:
@@ -2113,7 +1983,6 @@ BASE(Switch, BlockEnd)
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_tag); }
 };
 
-
 LEAF(TableSwitch, Switch)
  private:
   int _lo_key;
@@ -2122,13 +1991,13 @@ LEAF(TableSwitch, Switch)
   // creation
   TableSwitch(Value tag, BlockList* sux, int lo_key, ValueStack* state_before, bool is_safepoint)
     : Switch(tag, sux, state_before, is_safepoint)
-  , _lo_key(lo_key) { assert(_lo_key <= hi_key(), "integer overflow"); }
+  , _lo_key(lo_key) {
+    assert(_lo_key <= hi_key(), "integer overflow"); }
 
   // accessors
   int lo_key() const                             { return _lo_key; }
   int hi_key() const                             { return _lo_key + (length() - 1); }
 };
-
 
 LEAF(LookupSwitch, Switch)
  private:
@@ -2139,14 +2008,13 @@ LEAF(LookupSwitch, Switch)
   LookupSwitch(Value tag, BlockList* sux, intArray* keys, ValueStack* state_before, bool is_safepoint)
   : Switch(tag, sux, state_before, is_safepoint)
   , _keys(keys) {
-    assert(keys != NULL, "keys must exist");
-    assert(keys->length() == length(), "sux & keys have incompatible lengths");
+    assert(keys != NULL, "keys must exist");
+    assert(keys->length() == length(), "sux & keys have incompatible lengths");
   }
 
   // accessors
   int key_at(int i) const                        { return _keys->at(i); }
 };
-
 
 LEAF(Return, BlockEnd)
  private:
@@ -2169,7 +2037,6 @@ LEAF(Return, BlockEnd)
   }
 };
 
-
 LEAF(Throw, BlockEnd)
  private:
   Value _exception;
@@ -2188,13 +2055,12 @@ LEAF(Throw, BlockEnd)
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_exception); }
 };
 
-
 LEAF(Base, BlockEnd)
  public:
   // creation
   Base(BlockBegin* std_entry, BlockBegin* osr_entry) : BlockEnd(illegalType, NULL, false) {
-    assert(std_entry->is_set(BlockBegin::std_entry_flag), "std entry must be flagged");
-    assert(osr_entry == NULL || osr_entry->is_set(BlockBegin::osr_entry_flag), "osr entry must be flagged");
+    assert(std_entry->is_set(BlockBegin::std_entry_flag), "std entry must be flagged");
+    assert(osr_entry == NULL || osr_entry->is_set(BlockBegin::osr_entry_flag), "osr entry must be flagged");
     BlockList* s = new BlockList(2);
     if (osr_entry != NULL) s->append(osr_entry);
     s->append(std_entry); // must be default sux!
@@ -2206,20 +2072,14 @@ LEAF(Base, BlockEnd)
   BlockBegin* osr_entry() const                  { return number_of_sux() < 2 ? NULL : sux_at(0); }
 };
 
-
 LEAF(OsrEntry, Instruction)
  public:
   // creation
-#ifdef _LP64
   OsrEntry() : Instruction(longType) { pin(); }
-#else
-  OsrEntry() : Instruction(intType)  { pin(); }
-#endif
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { }
 };
-
 
 // Models the incoming exception at a catch site
 LEAF(ExceptionObject, Instruction)
@@ -2232,7 +2092,6 @@ LEAF(ExceptionObject, Instruction)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { }
 };
-
 
 // Models needed rounding for floating-point values on Intel.
 // Currently only used to represent rounding of double-precision
@@ -2256,7 +2115,6 @@ LEAF(RoundFP, Instruction)
   // generic
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_input); }
 };
-
 
 BASE(UnsafeOp, Instruction)
  private:
@@ -2282,7 +2140,6 @@ BASE(UnsafeOp, Instruction)
   virtual void input_values_do(ValueVisitor* f)   { }
 };
 
-
 BASE(UnsafeRawOp, UnsafeOp)
  private:
   Value _base;                                   // Base address (a Java long)
@@ -2299,7 +2156,7 @@ BASE(UnsafeRawOp, UnsafeOp)
   , _log2_scale(0)
   {
     // Can not use ASSERT_VALUES because index may be NULL
-    assert(addr != NULL && addr->type()->is_long(), "just checking");
+    assert(addr != NULL && addr->type()->is_long(), "just checking");
   }
 
   UnsafeRawOp(BasicType basic_type, Value base, Value index, int log2_scale, bool is_put)
@@ -2328,7 +2185,6 @@ BASE(UnsafeRawOp, UnsafeOp)
                                                    if (has_index()) f->visit(&_index); }
 };
 
-
 LEAF(UnsafeGetRaw, UnsafeRawOp)
  private:
  bool _may_be_unaligned, _is_wide;  // For OSREntry
@@ -2350,7 +2206,6 @@ LEAF(UnsafeGetRaw, UnsafeRawOp)
   bool is_wide()                                  { return _is_wide; }
 };
 
-
 LEAF(UnsafePutRaw, UnsafeRawOp)
  private:
   Value _value;                                  // Value to be stored
@@ -2360,7 +2215,7 @@ LEAF(UnsafePutRaw, UnsafeRawOp)
   : UnsafeRawOp(basic_type, addr, true)
   , _value(value)
   {
-    assert(value != NULL, "just checking");
+    assert(value != NULL, "just checking");
     ASSERT_VALUES
   }
 
@@ -2368,7 +2223,7 @@ LEAF(UnsafePutRaw, UnsafeRawOp)
   : UnsafeRawOp(basic_type, base, index, log2_scale, true)
   , _value(value)
   {
-    assert(value != NULL, "just checking");
+    assert(value != NULL, "just checking");
     ASSERT_VALUES
   }
 
@@ -2379,7 +2234,6 @@ LEAF(UnsafePutRaw, UnsafeRawOp)
   virtual void input_values_do(ValueVisitor* f)   { UnsafeRawOp::input_values_do(f);
                                                    f->visit(&_value); }
 };
-
 
 BASE(UnsafeObjectOp, UnsafeOp)
  private:
@@ -2402,7 +2256,6 @@ BASE(UnsafeObjectOp, UnsafeOp)
                                                    f->visit(&_offset); }
 };
 
-
 LEAF(UnsafeGetObject, UnsafeObjectOp)
  public:
   UnsafeGetObject(BasicType basic_type, Value object, Value offset, bool is_volatile)
@@ -2411,7 +2264,6 @@ LEAF(UnsafeGetObject, UnsafeObjectOp)
     ASSERT_VALUES
   }
 };
-
 
 LEAF(UnsafePutObject, UnsafeObjectOp)
  private:
@@ -2625,10 +2477,14 @@ class BlockPair: public CompilationResourceObj {
 
 typedef GrowableArray<BlockPair*> BlockPairList;
 
-inline int         BlockBegin::number_of_sux() const            { assert(_end == NULL || _end->number_of_sux() == _successors.length(), "mismatch"); return _successors.length(); }
-inline BlockBegin* BlockBegin::sux_at(int i) const              { assert(_end == NULL || _end->sux_at(i) == _successors.at(i), "mismatch");          return _successors.at(i); }
-inline void        BlockBegin::add_successor(BlockBegin* sux)   { assert(_end == NULL, "Would create mismatch with successors of BlockEnd");         _successors.append(sux); }
+inline int         BlockBegin::number_of_sux() const            {
+    assert(_end == NULL || _end->number_of_sux() == _successors.length(), "mismatch");
+    return _successors.length(); }
+inline BlockBegin* BlockBegin::sux_at(int i) const              {
+    assert(_end == NULL || _end->sux_at(i) == _successors.at(i), "mismatch");          return _successors.at(i); }
+inline void        BlockBegin::add_successor(BlockBegin* sux)   {
+    assert(_end == NULL, "Would create mismatch with successors of BlockEnd");         _successors.append(sux); }
 
 #undef ASSERT_VALUES
 
-#endif // SHARE_VM_C1_C1_INSTRUCTION_HPP
+#endif

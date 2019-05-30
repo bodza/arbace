@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_ARRAYOOP_HPP
 #define SHARE_VM_OOPS_ARRAYOOP_HPP
 
@@ -39,7 +15,6 @@
 //  Klass*    // 32 bits if compressed but declared 64 in LP64.
 //  length    // shares klass memory or allocated after declared fields.
 
-
 class arrayOopDesc : public oopDesc {
   friend class VMStructs;
   friend class arrayOopDescTest;
@@ -53,12 +28,6 @@ class arrayOopDesc : public oopDesc {
   static int header_size_in_bytes() {
     size_t hs = align_up(length_offset_in_bytes() + sizeof(int),
                               HeapWordSize);
-#ifdef ASSERT
-    // make sure it isn't called before UseCompressedOops is initialized.
-    static size_t arrayoopdesc_hs = 0;
-    if (arrayoopdesc_hs == 0) arrayoopdesc_hs = hs;
-    assert(arrayoopdesc_hs == hs, "header size can't change");
-#endif // ASSERT
     return (int)hs;
   }
 
@@ -91,11 +60,11 @@ class arrayOopDesc : public oopDesc {
   template <typename T>
   static T* obj_offset_to_raw(arrayOop obj, size_t offset_in_bytes, T* raw) {
     if (obj != NULL) {
-      assert(raw == NULL, "either raw or in-heap");
+      assert(raw == NULL, "either raw or in-heap");
       char* base = reinterpret_cast<char*>((void*) obj);
       raw = reinterpret_cast<T*>(base + offset_in_bytes);
     } else {
-      assert(raw != NULL, "either raw or in-heap");
+      assert(raw != NULL, "either raw or in-heap");
     }
     return raw;
   }
@@ -131,8 +100,8 @@ class arrayOopDesc : public oopDesc {
   // overflow. We also need to make sure that this will not overflow a size_t on
   // 32 bit platforms when we convert it to a byte size.
   static int32_t max_array_length(BasicType type) {
-    assert(type >= 0 && type < T_CONFLICT, "wrong type");
-    assert(type2aelembytes(type) != 0, "wrong type");
+    assert(type >= 0 && type < T_CONFLICT, "wrong type");
+    assert(type2aelembytes(type) != 0, "wrong type");
 
     const size_t max_element_words_per_size_t =
       align_down((SIZE_MAX/HeapWordSize - header_size(type)), MinObjAlignment);
@@ -147,7 +116,6 @@ class arrayOopDesc : public oopDesc {
     }
     return (int32_t)max_elements_per_size_t;
   }
-
 };
 
-#endif // SHARE_VM_OOPS_ARRAYOOP_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_DEOPTIMIZATION_HPP
 #define SHARE_VM_RUNTIME_DEOPTIMIZATION_HPP
 
@@ -56,11 +32,9 @@ class Deoptimization : AllStatic {
     Reason_intrinsic,             // saw unexpected operand to intrinsic (@bci)
     Reason_bimorphic,             // saw unexpected object class in bimorphic inlining (@bci)
 
-#if INCLUDE_JVMCI
     Reason_unreached0             = Reason_null_assert,
     Reason_type_checked_inlining  = Reason_intrinsic,
     Reason_optimized_type_check   = Reason_bimorphic,
-#endif
 
     Reason_profile_predicate,     // compiler generated predicate moved from frequent branch in a loop failed
 
@@ -80,13 +54,11 @@ class Deoptimization : AllStatic {
     Reason_rtm_state_change,      // rtm state change detected
     Reason_unstable_if,           // a branch predicted always false was taken
     Reason_unstable_fused_if,     // fused two ifs that had each one untaken branch. One is now taken.
-#if INCLUDE_JVMCI
     Reason_aliasing,              // optimistic assumption about aliasing failed
     Reason_transfer_to_interpreter, // explicit transferToInterpreter()
     Reason_not_compiled_exception_handler,
     Reason_unresolved,
     Reason_jsr_mismatch,
-#endif
 
     // Reason_tenured is counted separately, add normal counted Reasons above.
     // Related to MethodData::_trap_hist_limit where Reason_tenured isn't included
@@ -119,7 +91,7 @@ class Deoptimization : AllStatic {
     _action_shift = 0,
     _reason_shift = _action_shift+_action_bits,
     _debug_id_shift = _reason_shift+_reason_bits,
-    BC_CASE_LIMIT = PRODUCT_ONLY(1) NOT_PRODUCT(4) // for _deoptimization_hist
+    BC_CASE_LIMIT = 1 // for _deoptimization_hist
   };
 
   enum UnpackType {
@@ -138,9 +110,7 @@ class Deoptimization : AllStatic {
   static void deoptimize(JavaThread* thread, frame fr, RegisterMap *reg_map);
   static void deoptimize(JavaThread* thread, frame fr, RegisterMap *reg_map, DeoptReason reason);
 
-#if INCLUDE_JVMCI
   static address deoptimize_for_missing_exception_handler(CompiledMethod* cm);
-#endif
 
   private:
   // Does the actual work for deoptimizing a single frame
@@ -153,8 +123,7 @@ class Deoptimization : AllStatic {
   // executing in a particular CodeBlob if UseBiasedLocking is enabled
   static void revoke_biases_of_monitors(CodeBlob* cb);
 
-#if COMPILER2_OR_JVMCI
-JVMCI_ONLY(public:)
+public:
 
   // Support for restoring non-escaping objects
   static bool realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS);
@@ -163,8 +132,6 @@ JVMCI_ONLY(public:)
   static void reassign_fields(frame* fr, RegisterMap* reg_map, GrowableArray<ScopeValue*>* objects, bool realloc_failures, bool skip_internal);
   static void relock_objects(GrowableArray<MonitorInfo*>* monitors, JavaThread* thread, bool realloc_failures);
   static void pop_frames_failed_reallocs(JavaThread* thread, vframeArray* array);
-  NOT_PRODUCT(static void print_objects(GrowableArray<ScopeValue*>* objects, bool realloc_failures);)
-#endif // COMPILER2_OR_JVMCI
 
   public:
   static vframeArray* create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures);
@@ -331,17 +298,17 @@ JVMCI_ONLY(public:)
   }
   static int make_trap_request(DeoptReason reason, DeoptAction action,
                                int index = -1) {
-    assert((1 << _reason_bits) >= Reason_LIMIT, "enough bits");
-    assert((1 << _action_bits) >= Action_LIMIT, "enough bits");
+    assert((1 << _reason_bits) >= Reason_LIMIT, "enough bits");
+    assert((1 << _action_bits) >= Action_LIMIT, "enough bits");
     int trap_request;
     if (index != -1)
       trap_request = index;
     else
       trap_request = (~(((reason) << _reason_shift)
                         + ((action) << _action_shift)));
-    assert(reason == trap_request_reason(trap_request), "valid reason");
-    assert(action == trap_request_action(trap_request), "valid action");
-    assert(index  == trap_request_index(trap_request),  "valid index");
+    assert(reason == trap_request_reason(trap_request), "valid reason");
+    assert(action == trap_request_action(trap_request), "valid action");
+    assert(index  == trap_request_index(trap_request),  "valid index");
     return trap_request;
   }
 
@@ -430,9 +397,7 @@ JVMCI_ONLY(public:)
                                                int trap_bci,
                                                DeoptReason reason,
                                                bool update_total_trap_count,
-#if INCLUDE_JVMCI
                                                bool is_osr,
-#endif
                                                Method* compiled_method,
                                                //outputs:
                                                uint& ret_this_trap_count,
@@ -463,4 +428,4 @@ public:
   static bool is_active() { return _is_active; }
 };
 
-#endif // SHARE_VM_RUNTIME_DEOPTIMIZATION_HPP
+#endif

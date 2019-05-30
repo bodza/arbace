@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, 2108, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_AARCH64_VM_NATIVEINST_AARCH64_HPP
 #define CPU_AARCH64_VM_NATIVEINST_AARCH64_HPP
 
@@ -87,7 +62,6 @@ class NativeInstruction {
   address ptr_at(int offset) const     { return *(address*) addr_at(offset); }
 
   oop  oop_at (int offset) const       { return *(oop*) addr_at(offset); }
-
 
   void set_char_at(int offset, char c)        { *addr_at(offset) = (u_char)c; }
   void set_int_at(int offset, jint  i)        { *(jint*)addr_at(offset) = i; }
@@ -179,9 +153,6 @@ public:
 
 inline NativePltCall* nativePltCall_at(address address) {
   NativePltCall* call = (NativePltCall*) address;
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
@@ -214,7 +185,7 @@ class NativeCall: public NativeInstruction {
   void set_destination(address dest)        {
     int offset = dest - instruction_address();
     unsigned int insn = 0b100101 << 26;
-    assert((offset & 3) == 0, "should be");
+    assert((offset & 3) == 0, "should be");
     offset >>= 2;
     offset &= (1 << 26) - 1; // mask off insn part
     insn |= offset;
@@ -232,16 +203,6 @@ class NativeCall: public NativeInstruction {
   static bool is_call_before(address return_address) {
     return is_call_at(return_address - NativeCall::return_address_offset);
   }
-
-#if INCLUDE_AOT
-  // Return true iff a call from instr to target is out of range.
-  // Used for calls from JIT- to AOT-compiled code.
-  static bool is_far_call(address instr, address target) {
-    // On AArch64 we use trampolines which can reach anywhere in the
-    // address space, so calls are never out of range.
-    return false;
-  }
-#endif
 
   // MT-safe patching of a call instruction.
   static void insert(address code_pos, address entry);
@@ -269,17 +230,11 @@ class NativeCall: public NativeInstruction {
 
 inline NativeCall* nativeCall_at(address address) {
   NativeCall* call = (NativeCall*)(address - NativeCall::instruction_offset);
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
 inline NativeCall* nativeCall_before(address return_address) {
   NativeCall* call = (NativeCall*)(return_address - NativeCall::return_address_offset);
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
@@ -302,7 +257,7 @@ class NativeMovConstReg: public NativeInstruction {
       return addr_at(2*4);
     else if (is_ldr_literal_at(instruction_address()))
       return(addr_at(4));
-    assert(false, "Unknown instruction in NativeMovConstReg");
+    assert(false, "Unknown instruction in NativeMovConstReg");
     return NULL;
   }
 
@@ -328,17 +283,11 @@ class NativeMovConstReg: public NativeInstruction {
 
 inline NativeMovConstReg* nativeMovConstReg_at(address address) {
   NativeMovConstReg* test = (NativeMovConstReg*)(address - NativeMovConstReg::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
 
 inline NativeMovConstReg* nativeMovConstReg_before(address address) {
   NativeMovConstReg* test = (NativeMovConstReg*)(address - NativeMovConstReg::instruction_size - NativeMovConstReg::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
 
@@ -346,9 +295,6 @@ class NativeMovConstRegPatching: public NativeMovConstReg {
  private:
     friend NativeMovConstRegPatching* nativeMovConstRegPatching_at(address address) {
     NativeMovConstRegPatching* test = (NativeMovConstRegPatching*)(address - instruction_offset);
-    #ifdef ASSERT
-      test->verify();
-    #endif
     return test;
     }
 };
@@ -403,9 +349,6 @@ class NativeMovRegMem: public NativeInstruction {
 
 inline NativeMovRegMem* nativeMovRegMem_at (address address) {
   NativeMovRegMem* test = (NativeMovRegMem*)(address - NativeMovRegMem::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
 
@@ -460,9 +403,6 @@ private:
 
 inline NativeLoadGot* nativeLoadGot_at(address addr) {
   NativeLoadGot* load = (NativeLoadGot*) addr;
-#ifdef ASSERT
-  load->verify();
-#endif
   return load;
 }
 
@@ -497,9 +437,6 @@ class NativeJump: public NativeInstruction {
 
 inline NativeJump* nativeJump_at(address address) {
   NativeJump* jump = (NativeJump*)(address - NativeJump::instruction_offset);
-#ifdef ASSERT
-  jump->verify();
-#endif
   return jump;
 }
 
@@ -522,7 +459,6 @@ public:
 
 inline NativeGeneralJump* nativeGeneralJump_at(address address) {
   NativeGeneralJump* jump = (NativeGeneralJump*)(address);
-  debug_only(jump->verify();)
   return jump;
 }
 
@@ -556,7 +492,6 @@ class NativePopReg : public NativeInstruction {
   // Insert a pop instruction
   static void insert(address code_pos, Register reg);
 };
-
 
 class NativeIllegalInstruction: public NativeInstruction {
  public:
@@ -633,7 +568,7 @@ inline bool is_NativeCallTrampolineStub_at(address addr) {
 }
 
 inline NativeCallTrampolineStub* nativeCallTrampolineStub_at(address addr) {
-  assert(is_NativeCallTrampolineStub_at(addr), "no call trampoline found");
+  assert(is_NativeCallTrampolineStub_at(addr), "no call trampoline found");
   return (NativeCallTrampolineStub*)addr;
 }
 
@@ -644,7 +579,7 @@ public:
 };
 
 inline NativeMembar *NativeMembar_at(address addr) {
-  assert(nativeInstruction_at(addr)->is_Membar(), "no membar found");
+  assert(nativeInstruction_at(addr)->is_Membar(), "no membar found");
   return (NativeMembar*)addr;
 }
 
@@ -684,21 +619,19 @@ public:
   size_t size_in_bytes() { return 1 << size(); }
   bool is_not_pre_post_index() { return (is_ldst_ur() || is_ldst_unsigned_offset()); }
   bool is_load() {
-    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 ||
-           Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
+    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 || Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
 
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01;
   }
   bool is_store() {
-    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 ||
-           Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
+    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 || Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
 
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00;
   }
 };
 
 inline NativeLdSt *NativeLdSt_at(address addr) {
-  assert(nativeInstruction_at(addr)->is_Imm_LdSt(), "no immediate load/store found");
+  assert(nativeInstruction_at(addr)->is_Imm_LdSt(), "no immediate load/store found");
   return (NativeLdSt*)addr;
 }
-#endif // CPU_AARCH64_VM_NATIVEINST_AARCH64_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/javaClasses.hpp"
@@ -38,10 +14,8 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
-#if INCLUDE_G1GC
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1Policy.hpp"
-#endif // INCLUDE_G1GC
 
 VM_GC_Operation::~VM_GC_Operation() {
   CollectedHeap* ch = Universe::heap();
@@ -74,16 +48,14 @@ bool VM_GC_Operation::skip_operation() const {
   }
   if (!skip && GCLocker::is_active_and_needs_gc()) {
     skip = Universe::heap()->is_maximal_no_gc();
-    assert(!(skip && (_gc_cause == GCCause::_gc_locker)),
-           "GCLocker cannot be active when initiating GC");
+    assert(!(skip && (_gc_cause == GCCause::_gc_locker)), "GCLocker cannot be active when initiating GC");
   }
   return skip;
 }
 
 bool VM_GC_Operation::doit_prologue() {
-  assert(Thread::current()->is_Java_thread(), "just checking");
-  assert(((_gc_cause != GCCause::_no_gc) &&
-          (_gc_cause != GCCause::_no_cause_specified)), "Illegal GCCause");
+  assert(Thread::current()->is_Java_thread(), "just checking");
+  assert(((_gc_cause != GCCause::_no_gc) && (_gc_cause != GCCause::_no_cause_specified)), "Illegal GCCause");
 
   // To be able to handle a GC the VM initialization needs to be completed.
   if (!is_init_completed()) {
@@ -108,9 +80,8 @@ bool VM_GC_Operation::doit_prologue() {
   return _prologue_succeeded;
 }
 
-
 void VM_GC_Operation::doit_epilogue() {
-  assert(Thread::current()->is_Java_thread(), "just checking");
+  assert(Thread::current()->is_Java_thread(), "just checking");
   // Clean up old interpreter OopMap entries that were replaced
   // during the GC thread root traversal.
   OopMapCache::cleanup_old_entries();
@@ -157,14 +128,13 @@ void VM_GC_HeapInspection::doit() {
   inspect.heap_inspection(_out);
 }
 
-
 void VM_GenCollectForAllocation::doit() {
   SvcGCMarker sgcm(SvcGCMarker::MINOR);
 
   GenCollectedHeap* gch = GenCollectedHeap::heap();
   GCCauseSetter gccs(gch, _gc_cause);
   _result = gch->satisfy_failed_allocation(_word_size, _tlab);
-  assert(gch->is_in_reserved_or_null(_result), "result not in heap");
+  assert(gch->is_in_reserved_or_null(_result), "result not in heap");
 
   if (_result == NULL && GCLocker::is_active_and_needs_gc()) {
     set_gc_locked();
@@ -187,20 +157,13 @@ VM_CollectForMetadataAllocation::VM_CollectForMetadataAllocation(ClassLoaderData
                                                                  GCCause::Cause gc_cause)
     : VM_GC_Operation(gc_count_before, gc_cause, full_gc_count_before, true),
       _loader_data(loader_data), _size(size), _mdtype(mdtype), _result(NULL) {
-  assert(_size != 0, "An allocation should always be requested with this operation.");
+  assert(_size != 0, "An allocation should always be requested with this operation.");
   AllocTracer::send_allocation_requiring_gc_event(_size * HeapWordSize, GCId::peek());
 }
 
 // Returns true iff concurrent GCs unloads metadata.
 bool VM_CollectForMetadataAllocation::initiate_concurrent_GC() {
-#if INCLUDE_CMSGC
-  if (UseConcMarkSweepGC && CMSClassUnloadingEnabled) {
-    MetaspaceGC::set_should_concurrent_collect(true);
-    return true;
-  }
-#endif
 
-#if INCLUDE_G1GC
   if (UseG1GC && ClassUnloadingWithConcurrentMark) {
     G1CollectedHeap* g1h = G1CollectedHeap::heap();
     g1h->g1_policy()->collector_state()->set_initiate_conc_mark_if_possible(true);
@@ -217,7 +180,6 @@ bool VM_CollectForMetadataAllocation::initiate_concurrent_GC() {
     }
     return true;
   }
-#endif
 
   return false;
 }

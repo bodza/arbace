@@ -1,34 +1,9 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_ValueStack.hpp"
 #include "ci/ciArray.hpp"
 #include "runtime/sharedRuntime.hpp"
-
 
 class PrintValueVisitor: public ValueVisitor {
   void visit(Value* vp) {
@@ -37,16 +12,11 @@ class PrintValueVisitor: public ValueVisitor {
 };
 
 void Canonicalizer::set_canonical(Value x) {
-  assert(x != NULL, "value must exist");
+  assert(x != NULL, "value must exist");
   // Note: we can not currently substitute root nodes which show up in
   // the instruction stream (because the instruction list is embedded
   // in the instructions).
   if (canonical() != x) {
-#ifndef PRODUCT
-    if (!x->has_printable_bci()) {
-      x->set_printable_bci(bci());
-    }
-#endif
     if (PrintCanonicalization) {
       PrintValueVisitor do_print_value;
       canonical()->input_values_do(&do_print_value);
@@ -56,16 +26,14 @@ void Canonicalizer::set_canonical(Value x) {
       x->print_line();
       tty->cr();
     }
-    assert(_canonical->type()->tag() == x->type()->tag(), "types must match");
+    assert(_canonical->type()->tag() == x->type()->tag(), "types must match");
     _canonical = x;
   }
 }
 
-
 void Canonicalizer::move_const_to_right(Op2* x) {
   if (x->x()->type()->is_constant() && x->is_commutative()) x->swap_operands();
 }
-
 
 void Canonicalizer::do_Op2(Op2* x) {
   if (x->x() == x->y()) {
@@ -190,7 +158,6 @@ void Canonicalizer::do_Op2(Op2* x) {
   }
 }
 
-
 void Canonicalizer::do_Phi            (Phi*             x) {}
 void Canonicalizer::do_Constant       (Constant*        x) {}
 void Canonicalizer::do_Local          (Local*           x) {}
@@ -228,7 +195,6 @@ void Canonicalizer::do_StoreField     (StoreField*      x) {
       return;
     }
   }
-
 }
 
 void Canonicalizer::do_ArrayLength    (ArrayLength*     x) {
@@ -244,7 +210,7 @@ void Canonicalizer::do_ArrayLength    (ArrayLength*     x) {
     Constant* length;
     if (na->length() != NULL &&
         (length = na->length()->as_Constant()) != NULL) {
-      assert(length->type()->as_IntConstant() != NULL, "array length must be integer");
+      assert(length->type()->as_IntConstant() != NULL, "array length must be integer");
       set_constant(length->type()->as_IntConstant()->value());
     }
 
@@ -273,7 +239,7 @@ void Canonicalizer::do_LoadIndexed    (LoadIndexed*     x) {
   StableArrayConstant* array = x->array()->type()->as_StableArrayConstant();
   IntConstant* index = x->index()->type()->as_IntConstant();
 
-  assert(array == NULL || FoldStableValues, "not enabled");
+  assert(array == NULL || FoldStableValues, "not enabled");
 
   // Constant fold loads from stable arrays.
   if (!x->mismatched() && array != NULL && index != NULL) {
@@ -286,14 +252,14 @@ void Canonicalizer::do_LoadIndexed    (LoadIndexed*     x) {
     ciConstant field_val = array->value()->element_value(idx);
     if (!field_val.is_null_or_zero()) {
       jint dimension = array->dimension();
-      assert(dimension <= array->value()->array_type()->dimension(), "inconsistent info");
+      assert(dimension <= array->value()->array_type()->dimension(), "inconsistent info");
       ValueType* value = NULL;
       if (dimension > 1) {
         // Preserve information about the dimension for the element.
-        assert(field_val.as_object()->is_array(), "not an array");
+        assert(field_val.as_object()->is_array(), "not an array");
         value = new StableArrayConstant(field_val.as_object()->as_array(), dimension - 1);
       } else {
-        assert(dimension == 1, "sanity");
+        assert(dimension == 1, "sanity");
         value = as_ValueType(field_val);
       }
       set_canonical(new Constant(value));
@@ -325,7 +291,6 @@ void Canonicalizer::do_StoreIndexed   (StoreIndexed*    x) {
   }
 }
 
-
 void Canonicalizer::do_NegateOp(NegateOp* x) {
   ValueType* t = x->x()->type();
   if (t->is_constant()) {
@@ -339,9 +304,7 @@ void Canonicalizer::do_NegateOp(NegateOp* x) {
   }
 }
 
-
 void Canonicalizer::do_ArithmeticOp   (ArithmeticOp*    x) { do_Op2(x); }
-
 
 void Canonicalizer::do_ShiftOp        (ShiftOp*         x) {
   ValueType* t = x->x()->type();
@@ -386,7 +349,6 @@ void Canonicalizer::do_ShiftOp        (ShiftOp*         x) {
     }
   }
 }
-
 
 void Canonicalizer::do_LogicOp        (LogicOp*         x) { do_Op2(x); }
 void Canonicalizer::do_CompareOp      (CompareOp*       x) {
@@ -466,7 +428,6 @@ void Canonicalizer::do_CompareOp      (CompareOp*       x) {
   }
 }
 
-
 void Canonicalizer::do_IfInstanceOf(IfInstanceOf*    x) {}
 
 void Canonicalizer::do_IfOp(IfOp* x) {
@@ -474,7 +435,6 @@ void Canonicalizer::do_IfOp(IfOp* x) {
   //          we map the condition to the op for now!
   move_const_to_right(x);
 }
-
 
 void Canonicalizer::do_Intrinsic      (Intrinsic*       x) {
   switch (x->id()) {
@@ -515,7 +475,7 @@ void Canonicalizer::do_Intrinsic      (Intrinsic*       x) {
     break;
   }
   case vmIntrinsics::_isInstance          : {
-    assert(x->number_of_arguments() == 2, "wrong type");
+    assert(x->number_of_arguments() == 2, "wrong type");
 
     InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
     if (c != NULL && !c->value()->is_null_object()) {
@@ -529,7 +489,7 @@ void Canonicalizer::do_Intrinsic      (Intrinsic*       x) {
         // and try to canonicalize even further
         do_InstanceOf(i);
       } else {
-        assert(t->is_primitive_type(), "should be a primitive type");
+        assert(t->is_primitive_type(), "should be a primitive type");
         // cls.isInstance(obj) always returns false for primitive classes
         set_constant(0);
       }
@@ -537,7 +497,7 @@ void Canonicalizer::do_Intrinsic      (Intrinsic*       x) {
     break;
   }
   case vmIntrinsics::_isPrimitive        : {
-    assert(x->number_of_arguments() == 1, "wrong type");
+    assert(x->number_of_arguments() == 1, "wrong type");
 
     // Class.isPrimitive is known on constant classes:
     InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
@@ -621,7 +581,6 @@ void Canonicalizer::do_Convert        (Convert*         x) {
       }
     }
   }
-
 }
 
 void Canonicalizer::do_NullCheck      (NullCheck*       x) {
@@ -683,13 +642,11 @@ void Canonicalizer::do_InstanceOf     (InstanceOf*      x) {
       set_constant(0);
     }
   }
-
 }
 void Canonicalizer::do_MonitorEnter   (MonitorEnter*    x) {}
 void Canonicalizer::do_MonitorExit    (MonitorExit*     x) {}
 void Canonicalizer::do_BlockBegin     (BlockBegin*      x) {}
 void Canonicalizer::do_Goto           (Goto*            x) {}
-
 
 static bool is_true(jlong x, If::Condition cond, jlong y) {
   switch (cond) {
@@ -820,13 +777,12 @@ void Canonicalizer::do_If(If* x) {
       BlockBegin* sux = x->fsux();
       set_canonical(new Goto(sux, x->state_before(), is_safepoint(x, sux)));
     } else {
-      assert(x->cond() == Instruction::neq, "only other valid case");
+      assert(x->cond() == Instruction::neq, "only other valid case");
       BlockBegin* sux = x->tsux();
       set_canonical(new Goto(sux, x->state_before(), is_safepoint(x, sux)));
     }
   }
 }
-
 
 void Canonicalizer::do_TableSwitch(TableSwitch* x) {
   if (x->tag()->type()->is_constant()) {
@@ -850,12 +806,11 @@ void Canonicalizer::do_TableSwitch(TableSwitch* x) {
     //       GraphBuilder (i.e., we should never reach here).
     return;
     // simplify to If
-    assert(x->lo_key() == x->hi_key(), "keys must be the same");
+    assert(x->lo_key() == x->hi_key(), "keys must be the same");
     Constant* key = new Constant(new IntConstant(x->lo_key()));
     set_canonical(new If(x->tag(), If::eql, true, key, x->sux_at(0), x->default_sux(), x->state_before(), x->is_safepoint()));
   }
 }
-
 
 void Canonicalizer::do_LookupSwitch(LookupSwitch* x) {
   if (x->tag()->type()->is_constant()) {
@@ -881,12 +836,11 @@ void Canonicalizer::do_LookupSwitch(LookupSwitch* x) {
     //       GraphBuilder (i.e., we should never reach here).
     return;
     // simplify to If
-    assert(x->length() == 1, "length must be the same");
+    assert(x->length() == 1, "length must be the same");
     Constant* key = new Constant(new IntConstant(x->key_at(0)));
     set_canonical(new If(x->tag(), If::eql, true, key, x->sux_at(0), x->default_sux(), x->state_before(), x->is_safepoint()));
   }
 }
-
 
 void Canonicalizer::do_Return         (Return*          x) {}
 void Canonicalizer::do_Throw          (Throw*           x) {}
@@ -897,39 +851,20 @@ void Canonicalizer::do_ExceptionObject(ExceptionObject* x) {}
 static bool match_index_and_scale(Instruction*  instr,
                                   Instruction** index,
                                   int*          log2_scale) {
-  // Skip conversion ops. This works only on 32bit because of the implicit l2i that the
-  // unsafe performs.
-#ifndef _LP64
-  Convert* convert = instr->as_Convert();
-  if (convert != NULL && convert->op() == Bytecodes::_i2l) {
-    assert(convert->value()->type() == intType, "invalid input type");
-    instr = convert->value();
-  }
-#endif
-
   ShiftOp* shift = instr->as_ShiftOp();
   if (shift != NULL) {
     if (shift->op() == Bytecodes::_lshl) {
-      assert(shift->x()->type() == longType, "invalid input type");
+      assert(shift->x()->type() == longType, "invalid input type");
     } else {
-#ifndef _LP64
-      if (shift->op() == Bytecodes::_ishl) {
-        assert(shift->x()->type() == intType, "invalid input type");
-      } else {
-        return false;
-      }
-#else
       return false;
-#endif
     }
-
 
     // Constant shift value?
     Constant* con = shift->y()->as_Constant();
     if (con == NULL) return false;
     // Well-known type and value?
     IntConstant* val = con->type()->as_IntConstant();
-    assert(val != NULL, "Should be an int constant");
+    assert(val != NULL, "Should be an int constant");
 
     *index = shift->x();
     int tmp_scale = val->value();
@@ -955,23 +890,12 @@ static bool match_index_and_scale(Instruction*  instr,
     long const_value;
     // Check for integer multiply
     if (arith->op() == Bytecodes::_lmul) {
-      assert((*index)->type() == longType, "invalid input type");
+      assert((*index)->type() == longType, "invalid input type");
       LongConstant* val = con->type()->as_LongConstant();
-      assert(val != NULL, "expecting a long constant");
+      assert(val != NULL, "expecting a long constant");
       const_value = val->value();
     } else {
-#ifndef _LP64
-      if (arith->op() == Bytecodes::_imul) {
-        assert((*index)->type() == intType, "invalid input type");
-        IntConstant* val = con->type()->as_IntConstant();
-        assert(val != NULL, "expecting an int constant");
-        const_value = val->value();
-      } else {
-        return false;
-      }
-#else
       return false;
-#endif
     }
     switch (const_value) {
     case 1: *log2_scale = 0; return true;
@@ -985,7 +909,6 @@ static bool match_index_and_scale(Instruction*  instr,
   // Unknown instruction sequence; don't touch it
   return false;
 }
-
 
 static bool match(UnsafeRawOp* x,
                   Instruction** base,
@@ -1004,12 +927,12 @@ static bool match(UnsafeRawOp* x,
   } else if (match_index_and_scale(root->x(), index, log2_scale)) {
     *base = root->y();
     match_found = true;
-  } else if (NOT_LP64(root->y()->as_Convert() != NULL) LP64_ONLY(false)) {
+  } else if (false) {
     // Skipping i2l works only on 32bit because of the implicit l2i that the unsafe performs.
     // 64bit needs a real sign-extending conversion.
     Convert* convert = root->y()->as_Convert();
     if (convert->op() == Bytecodes::_i2l) {
-      assert(convert->value()->type() == intType, "should be an int");
+      assert(convert->value()->type() == intType, "should be an int");
       // pick base and index, setting scale at 1
       *base  = root->x();
       *index = convert->value();
@@ -1028,7 +951,6 @@ static bool match(UnsafeRawOp* x,
   // there's no profit to reshaping the expression.
   return !root->is_pinned();
 }
-
 
 void Canonicalizer::do_UnsafeRawOp(UnsafeRawOp* x) {
   Instruction* base = NULL;
@@ -1057,7 +979,4 @@ void Canonicalizer::do_ProfileReturnType(ProfileReturnType* x) {}
 void Canonicalizer::do_ProfileInvoke(ProfileInvoke* x) {}
 void Canonicalizer::do_RuntimeCall(RuntimeCall* x) {}
 void Canonicalizer::do_RangeCheckPredicate(RangeCheckPredicate* x) {}
-#ifdef ASSERT
-void Canonicalizer::do_Assert(Assert* x) {}
-#endif
 void Canonicalizer::do_MemBar(MemBar* x) {}

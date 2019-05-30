@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_INTERPRETERRUNTIME_HPP
 #define SHARE_VM_INTERPRETER_INTERPRETERRUNTIME_HPP
 
@@ -50,7 +26,7 @@ class InterpreterRuntime: AllStatic {
 #ifdef CC_INTERP
   // Profile traps in C++ interpreter.
   static void      note_trap(JavaThread* thread, int reason, Method *method, int trap_bci);
-#endif // CC_INTERP
+#endif
 
   // Inner work method for Interpreter's frequency counter overflow.
   static nmethod* frequency_counter_overflow_inner(JavaThread* thread, address branch_bcp);
@@ -88,9 +64,6 @@ class InterpreterRuntime: AllStatic {
   static void    create_exception(JavaThread* thread, char* name, char* message);
   static void    create_klass_exception(JavaThread* thread, char* name, oopDesc* obj);
   static address exception_handler_for_exception(JavaThread* thread, oopDesc* exception);
-#if INCLUDE_JVMTI
-  static void    member_name_arg_or_null(JavaThread* thread, address dmh, Method* m, address bcp);
-#endif
   static void    throw_pending_exception(JavaThread* thread);
 
 #ifdef CC_INTERP
@@ -102,7 +75,7 @@ class InterpreterRuntime: AllStatic {
   static void    note_arrayCheck_trap(JavaThread* thread, Method *method, int trap_bci);
   // A dummy for macros that shall not profile traps.
   static void    note_no_trap(JavaThread* thread, Method *method, int trap_bci) {}
-#endif // CC_INTERP
+#endif
 
   static void resolve_from_cache(JavaThread* thread, Bytecodes::Code bytecode);
  private:
@@ -132,19 +105,11 @@ class InterpreterRuntime: AllStatic {
   static void    at_safepoint(JavaThread* thread);
 
   // Debugger support
-  static void post_field_access(JavaThread *thread, oopDesc* obj,
-    ConstantPoolCacheEntry *cp_entry);
-  static void post_field_modification(JavaThread *thread, oopDesc* obj,
-    ConstantPoolCacheEntry *cp_entry, jvalue *value);
-  static void post_method_entry(JavaThread *thread);
-  static void post_method_exit (JavaThread *thread);
   static int  interpreter_contains(address pc);
 
   // Native signature handlers
   static void prepare_native_call(JavaThread* thread, Method* method);
-  static address slow_signature_handler(JavaThread* thread,
-                                        Method* method,
-                                        intptr_t* from, intptr_t* to);
+  static address slow_signature_handler(JavaThread* thread, Method* method, intptr_t* from, intptr_t* to);
 
 #if defined(IA32) || defined(AMD64) || defined(ARM)
   // Popframe support (only needed on x86, AMD64 and ARM)
@@ -152,7 +117,7 @@ class InterpreterRuntime: AllStatic {
 #endif
 
   // bytecode tracing is only used by the TraceBytecodes
-  static intptr_t trace_bytecode(JavaThread* thread, intptr_t preserve_this_value, intptr_t tos, intptr_t tos2) PRODUCT_RETURN0;
+  static intptr_t trace_bytecode(JavaThread* thread, intptr_t preserve_this_value, intptr_t tos, intptr_t tos2) { return 0; };
 
   // Platform dependent stuff
 #include CPU_HEADER(interpreterRT)
@@ -167,12 +132,8 @@ class InterpreterRuntime: AllStatic {
   static jint    bcp_to_di(Method* method, address cur_bcp);
   static void    profile_method(JavaThread* thread);
   static void    update_mdp_for_ret(JavaThread* thread, int bci);
-#ifdef ASSERT
-  static void    verify_mdp(Method* method, address bcp, address mdp);
-#endif // ASSERT
   static MethodCounters* build_method_counters(JavaThread* thread, Method* m);
 };
-
 
 class SignatureHandlerLibrary: public AllStatic {
  public:
@@ -196,4 +157,4 @@ class SignatureHandlerLibrary: public AllStatic {
   static void add(uint64_t fingerprint, address handler);
 };
 
-#endif // SHARE_VM_INTERPRETER_INTERPRETERRUNTIME_HPP
+#endif

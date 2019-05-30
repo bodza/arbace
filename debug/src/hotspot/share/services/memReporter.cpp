@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 
 #include "memory/allocation.hpp"
@@ -90,7 +67,6 @@ void MemReporterBase::print_virtual_memory_region(const char* type, address base
   output()->print("[" PTR_FORMAT " - " PTR_FORMAT "] %s " SIZE_FORMAT "%s",
     p2i(base), p2i(base + size), type, amount_in_current_scale(size), scale);
 }
-
 
 void MemSummaryReporter::report() {
   const char* scale = current_scale();
@@ -190,8 +166,7 @@ void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag,
 }
 
 void MemSummaryReporter::report_metadata(Metaspace::MetadataType type) const {
-  assert(type == Metaspace::NonClassType || type == Metaspace::ClassType,
-    "Invalid metadata type");
+  assert(type == Metaspace::NonClassType || type == Metaspace::ClassType, "Invalid metadata type");
   const char* name = (type == Metaspace::NonClassType) ?
     "Metadata:   " : "Class space:";
 
@@ -203,7 +178,7 @@ void MemSummaryReporter::report_metadata(Metaspace::MetadataType type) const {
               + MetaspaceUtils::free_chunks_total_bytes(type)
               + MetaspaceUtils::free_in_vs_bytes(type);
 
-  assert(committed >= used + free, "Sanity");
+  assert(committed >= used + free, "Sanity");
   size_t waste = committed - (used + free);
 
   out->print_cr("%27s (  %s)", " ", name);
@@ -241,8 +216,7 @@ void MemDetailReporter::report_malloc_sites() {
     stack->print_on(out);
     out->print("%29s", " ");
     MEMFLAGS flag = malloc_site->flags();
-    assert((flag >= 0 && flag < (int)mt_number_of_types) && flag != mtNone,
-      "Must have a valid memory type");
+    assert((flag >= 0 && flag < (int)mt_number_of_types) && flag != mtNone, "Must have a valid memory type");
     print_malloc(malloc_site->size(), malloc_site->count(),flag);
     out->print_cr("\n");
   }
@@ -270,7 +244,6 @@ void MemDetailReporter::report_virtual_memory_allocation_sites()  {
   }
 }
 
-
 void MemDetailReporter::report_virtual_memory_map() {
   // Virtual memory map always in base address order
   VirtualMemoryAllocationIterator itr = _baseline.virtual_memory_allocations();
@@ -283,7 +256,7 @@ void MemDetailReporter::report_virtual_memory_map() {
 }
 
 void MemDetailReporter::report_virtual_memory_region(const ReservedMemoryRegion* reserved_rgn) {
-  assert(reserved_rgn != NULL, "NULL pointer");
+  assert(reserved_rgn != NULL, "NULL pointer");
 
   // Don't report if size is too small
   if (amount_in_current_scale(reserved_rgn->size()) == 0) return;
@@ -310,7 +283,7 @@ void MemDetailReporter::report_virtual_memory_region(const ReservedMemoryRegion*
       // One region spanning the entire reserved region, with the same stack trace.
       // Don't print this regions because the "reserved and committed" line above
       // already indicates that the region is comitted.
-      assert(itr.next() == NULL, "Unexpectedly more than one regions");
+      assert(itr.next() == NULL, "Unexpectedly more than one regions");
       return;
     }
   }
@@ -414,7 +387,6 @@ void MemSummaryDiffReporter::print_virtual_memory_diff(size_t current_reserved, 
     out->print(" %+ld%s", committed_diff, scale);
   }
 }
-
 
 void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
   const MallocMemory* early_malloc, const VirtualMemory* early_vm,
@@ -549,7 +521,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
       }
       out->print_cr(")");
     } else if (flag == mtClass) {
-      assert(current_ms != NULL && early_ms != NULL, "Sanity");
+      assert(current_ms != NULL && early_ms != NULL, "Sanity");
       print_metaspace_diff(current_ms, early_ms);
     }
     out->print_cr(" ");
@@ -607,7 +579,6 @@ void MemSummaryDiffReporter::print_metaspace_diff(Metaspace::MetadataType type,
     out->print(" %+ld%s", diff_free, scale);
   }
   out->print_cr(")");
-
 
   // Diff waste
   out->print("%27s (    waste=" SIZE_FORMAT "%s =%2.2f%%", " ",
@@ -687,7 +658,6 @@ void MemDetailDiffReporter::diff_virtual_memory_sites() const {
   }
 }
 
-
 void MemDetailDiffReporter::new_malloc_site(const MallocSite* malloc_site) const {
   diff_malloc_site(malloc_site->call_stack(), malloc_site->size(), malloc_site->count(),
     0, 0, malloc_site->flags());
@@ -715,7 +685,7 @@ void MemDetailDiffReporter::diff_malloc_site(const NativeCallStack* stack, size_
   size_t current_count, size_t early_size, size_t early_count, MEMFLAGS flags) const {
   outputStream* out = output();
 
-  assert(stack != NULL, "NULL stack");
+  assert(stack != NULL, "NULL stack");
 
   if (diff_in_current_scale(current_size, early_size) == 0) {
       return;
@@ -728,7 +698,6 @@ void MemDetailDiffReporter::diff_malloc_site(const NativeCallStack* stack, size_
 
   out->print_cr(")\n");
 }
-
 
 void MemDetailDiffReporter::new_virtual_memory_site(const VirtualMemoryAllocationSite* site) const {
   diff_virtual_memory_site(site->call_stack(), site->reserved(), site->committed(), 0, 0);

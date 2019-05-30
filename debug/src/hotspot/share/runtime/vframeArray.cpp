@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/vmreg.inline.hpp"
@@ -32,7 +8,6 @@
 #include "memory/universe.hpp"
 #include "oops/methodData.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/jvmtiThreadState.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/monitorChunk.hpp"
@@ -42,9 +17,6 @@
 #include "runtime/vframe_hp.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
-#ifdef COMPILER2
-#include "opto/runtime.hpp"
-#endif
 
 int vframeArrayElement:: bci(void) const { return (_bci == SynchronizationEntryBCI ? 0 : _bci); }
 
@@ -65,9 +37,6 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
   _method = vf->method();
   _bci    = vf->raw_bci();
   _reexecute = vf->should_reexecute();
-#ifdef ASSERT
-  _removed_monitors = false;
-#endif
 
   int index;
 
@@ -85,12 +54,12 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
     // Migrate the BasicLocks from the stack to the monitor chunk
     for (index = 0; index < list->length(); index++) {
       MonitorInfo* monitor = list->at(index);
-      assert(!monitor->owner_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
+      assert(!monitor->owner_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
       BasicObjectLock* dest = _monitors->at(index);
       if (monitor->owner_is_scalar_replaced()) {
         dest->set_obj(NULL);
       } else {
-        assert(monitor->owner() == NULL || (!monitor->owner()->is_unlocked() && !monitor->owner()->has_bias_pattern()), "object must be null or locked, and unbiased");
+        assert(monitor->owner() == NULL || (!monitor->owner()->is_unlocked() && !monitor->owner()->has_bias_pattern()), "object must be null or locked, and unbiased");
         dest->set_obj(monitor->owner());
         monitor->lock()->move_to(monitor->owner(), dest->lock());
       }
@@ -118,7 +87,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
     StackValue* value = locs->at(index);
     switch(value->type()) {
       case T_OBJECT:
-        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
+        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
         // preserve object type
         _locals->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
         break;
@@ -143,7 +112,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
     StackValue* value = exprs->at(index);
     switch(value->type()) {
       case T_OBJECT:
-        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
+        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
         // preserve object type
         _expressions->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
         break;
@@ -187,7 +156,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     bcp = method()->bcp_from(0); // first byte code
     pc  = Interpreter::deopt_entry(vtos, 0); // step = 0 since we don't skip current bytecode
   } else if (should_reexecute()) { //reexecute this bytecode
-    assert(is_top_frame, "reexecute allowed only for the top frame");
+    assert(is_top_frame, "reexecute allowed only for the top frame");
     bcp = method()->bcp_from(bci());
     pc  = Interpreter::deopt_reexecute_entry(method(), bcp);
   } else {
@@ -195,7 +164,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     pc  = Interpreter::deopt_continue_after_entry(method(), bcp, callee_parameters, is_top_frame);
     use_next_mdp = true;
   }
-  assert(Bytecodes::is_defined(*bcp), "must be a valid bytecode");
+  assert(Bytecodes::is_defined(*bcp), "must be a valid bytecode");
 
   // Monitorenter and pending exceptions:
   //
@@ -211,8 +180,8 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   //
   // For realloc failure exception we just pop frames, skip the guarantee.
 
-  assert(*bcp != Bytecodes::_monitorenter || is_top_frame, "a _monitorenter must be a top frame");
-  assert(thread->deopt_compiled_method() != NULL, "compiled method should be known");
+  assert(*bcp != Bytecodes::_monitorenter || is_top_frame, "a _monitorenter must be a top frame");
+  assert(thread->deopt_compiled_method() != NULL, "compiled method should be known");
   guarantee(realloc_failure_exception || !(thread->deopt_compiled_method()->is_compiled_by_c2() &&
               *bcp == Bytecodes::_monitorenter             &&
               exec_mode == Deoptimization::Unpack_exception),
@@ -221,39 +190,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   int popframe_preserved_args_size_in_bytes = 0;
   int popframe_preserved_args_size_in_words = 0;
   if (is_top_frame) {
-    JvmtiThreadState *state = thread->jvmti_thread_state();
-    if (JvmtiExport::can_pop_frame() &&
-        (thread->has_pending_popframe() || thread->popframe_forcing_deopt_reexecution())) {
-      if (thread->has_pending_popframe()) {
-        // Pop top frame after deoptimization
-#ifndef CC_INTERP
-        pc = Interpreter::remove_activation_preserving_args_entry();
-#else
-        // Do an uncommon trap type entry. c++ interpreter will know
-        // to pop frame and preserve the args
-        pc = Interpreter::deopt_entry(vtos, 0);
-        use_next_mdp = false;
-#endif
-      } else {
-        // Reexecute invoke in top frame
-        pc = Interpreter::deopt_entry(vtos, 0);
-        use_next_mdp = false;
-        popframe_preserved_args_size_in_bytes = in_bytes(thread->popframe_preserved_args_size());
-        // Note: the PopFrame-related extension of the expression stack size is done in
-        // Deoptimization::fetch_unroll_info_helper
-        popframe_preserved_args_size_in_words = in_words(thread->popframe_preserved_args_size_in_words());
-      }
-    } else if (!realloc_failure_exception && JvmtiExport::can_force_early_return() && state != NULL && state->is_earlyret_pending()) {
-      // Force early return from top frame after deoptimization
-#ifndef CC_INTERP
-      pc = Interpreter::remove_activation_early_entry(state->earlyret_tos());
-#endif
-    } else {
-      if (realloc_failure_exception && JvmtiExport::can_force_early_return() && state != NULL && state->is_earlyret_pending()) {
-        state->clr_earlyret_pending();
-        state->set_earlyret_oop(NULL);
-        state->clr_earlyret_value();
-      }
+    {
       // Possibly override the previous pc computation of the top (youngest) frame
       switch (exec_mode) {
       case Deoptimization::Unpack_deopt:
@@ -280,7 +217,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
 
   // Setup the interpreter frame
 
-  assert(method() != NULL, "method must exist");
+  assert(method() != NULL, "method must exist");
   int temps = expressions()->size();
 
   int locks = monitors() == NULL ? 0 : monitors()->number_of_monitors();
@@ -303,7 +240,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
 
   _frame.patch_pc(thread, pc);
 
-  assert (!method()->is_synchronized() || locks > 0 || _removed_monitors || raw_bci() == SynchronizationEntryBCI, "synchronized methods must have monitors");
+  assert(!method()->is_synchronized() || locks > 0 || _removed_monitors || raw_bci() == SynchronizationEntryBCI, "synchronized methods must have monitors");
 
   BasicObjectLock* top = iframe()->interpreter_frame_monitor_begin();
   for (int index = 0; index < locks; index++) {
@@ -342,26 +279,9 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     switch(value->type()) {
       case T_INT:
         *addr = value->get_int();
-#ifndef PRODUCT
-        if (PrintDeoptimizationDetails) {
-          tty->print_cr("Reconstructed expression %d (INT): %d", i, (int)(*addr));
-        }
-#endif
         break;
       case T_OBJECT:
         *addr = value->get_int(T_OBJECT);
-#ifndef PRODUCT
-        if (PrintDeoptimizationDetails) {
-          tty->print("Reconstructed expression %d (OBJECT): ", i);
-          oop o = (oop)(address)(*addr);
-          if (o == NULL) {
-            tty->print_cr("NULL");
-          } else {
-            ResourceMark rm;
-            tty->print_raw_cr(o->klass()->name()->as_C_string());
-          }
-        }
-#endif
         break;
       case T_CONFLICT:
         // A dead stack slot.  Initialize to null in case it is an oop.
@@ -372,7 +292,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     }
   }
 
-
   // Unpack the locals
   for(i = 0; i < locals()->size(); i++) {
     StackValue *value = locals()->at(i);
@@ -380,26 +299,9 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     switch(value->type()) {
       case T_INT:
         *addr = value->get_int();
-#ifndef PRODUCT
-        if (PrintDeoptimizationDetails) {
-          tty->print_cr("Reconstructed local %d (INT): %d", i, (int)(*addr));
-        }
-#endif
         break;
       case T_OBJECT:
         *addr = value->get_int(T_OBJECT);
-#ifndef PRODUCT
-        if (PrintDeoptimizationDetails) {
-          tty->print("Reconstructed local %d (OBJECT): ", i);
-          oop o = (oop)(address)(*addr);
-          if (o == NULL) {
-            tty->print_cr("NULL");
-          } else {
-            ResourceMark rm;
-            tty->print_raw_cr(o->klass()->name()->as_C_string());
-          }
-        }
-#endif
         break;
       case T_CONFLICT:
         // A dead location. If it is an oop then we need a NULL to prevent GC from following it
@@ -410,75 +312,18 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     }
   }
 
-  if (is_top_frame && JvmtiExport::can_pop_frame() && thread->popframe_forcing_deopt_reexecution()) {
-    // An interpreted frame was popped but it returns to a deoptimized
-    // frame. The incoming arguments to the interpreted activation
-    // were preserved in thread-local storage by the
-    // remove_activation_preserving_args_entry in the interpreter; now
-    // we put them back into the just-unpacked interpreter frame.
-    // Note that this assumes that the locals arena grows toward lower
-    // addresses.
-    if (popframe_preserved_args_size_in_words != 0) {
-      void* saved_args = thread->popframe_preserved_args();
-      assert(saved_args != NULL, "must have been saved by interpreter");
-#ifdef ASSERT
-      assert(popframe_preserved_args_size_in_words <=
-             iframe()->interpreter_frame_expression_stack_size()*Interpreter::stackElementWords,
-             "expression stack size should have been extended");
-#endif // ASSERT
-      int top_element = iframe()->interpreter_frame_expression_stack_size()-1;
-      intptr_t* base;
-      if (frame::interpreter_frame_expression_stack_direction() < 0) {
-        base = iframe()->interpreter_frame_expression_stack_at(top_element);
-      } else {
-        base = iframe()->interpreter_frame_expression_stack();
-      }
-      Copy::conjoint_jbytes(saved_args,
-                            base,
-                            popframe_preserved_args_size_in_bytes);
-      thread->popframe_free_preserved_args();
-    }
-  }
-
-#ifndef PRODUCT
-  if (PrintDeoptimizationDetails) {
-    ttyLocker ttyl;
-    tty->print_cr("[%d Interpreted Frame]", ++unpack_counter);
-    iframe()->print_on(tty);
-    RegisterMap map(thread);
-    vframe* f = vframe::new_vframe(iframe(), &map, thread);
-    f->print();
-
-    tty->print_cr("locals size     %d", locals()->size());
-    tty->print_cr("expression size %d", expressions()->size());
-
-    method()->print_value();
-    tty->cr();
-    // method()->print_codes();
-  } else if (TraceDeoptimization) {
-    tty->print("     ");
-    method()->print_value();
-    Bytecodes::Code code = Bytecodes::java_code_at(method(), bcp);
-    int bci = method()->bci_from(bcp);
-    tty->print(" - %s", Bytecodes::name(code));
-    tty->print(" @ bci %d ", bci);
-    tty->print_cr("sp = " PTR_FORMAT, p2i(iframe()->sp()));
-  }
-#endif // PRODUCT
-
   // The expression stack and locals are in the resource area don't leave
   // a dangling pointer in the vframeArray we leave around for debug
   // purposes
 
   _locals = _expressions = NULL;
-
 }
 
 int vframeArrayElement::on_stack_size(int callee_parameters,
                                       int callee_locals,
                                       bool is_top_frame,
                                       int popframe_extra_stack_expression_els) const {
-  assert(method()->max_locals() == locals()->size(), "just checking");
+  assert(method()->max_locals() == locals()->size(), "just checking");
   int locks = monitors() == NULL ? 0 : monitors()->number_of_monitors();
   int temps = expressions()->size();
   return Interpreter::size_activation(method()->max_stack(),
@@ -489,7 +334,6 @@ int vframeArrayElement::on_stack_size(int callee_parameters,
                                       callee_locals,
                                       is_top_frame);
 }
-
 
 intptr_t* vframeArray::unextended_sp() const {
   return _original.unextended_sp();
@@ -623,54 +467,7 @@ void vframeArray::deallocate_monitor_chunks() {
   }
 }
 
-#ifndef PRODUCT
-
-bool vframeArray::structural_compare(JavaThread* thread, GrowableArray<compiledVFrame*>* chunk) {
-  if (owner_thread() != thread) return false;
-  int index = 0;
-#if 0 // FIXME can't do this comparison
-
-  // Compare only within vframe array.
-  for (deoptimizedVFrame* vf = deoptimizedVFrame::cast(vframe_at(first_index())); vf; vf = vf->deoptimized_sender_or_null()) {
-    if (index >= chunk->length() || !vf->structural_compare(chunk->at(index))) return false;
-    index++;
-  }
-  if (index != chunk->length()) return false;
-#endif
-
-  return true;
-}
-
-#endif
-
 address vframeArray::register_location(int i) const {
-  assert(0 <= i && i < RegisterMap::reg_count, "index out of bounds");
+  assert(0 <= i && i < RegisterMap::reg_count, "index out of bounds");
   return (address) & _callee_registers[i];
 }
-
-
-#ifndef PRODUCT
-
-// Printing
-
-// Note: we cannot have print_on as const, as we allocate inside the method
-void vframeArray::print_on_2(outputStream* st)  {
-  st->print_cr(" - sp: " INTPTR_FORMAT, p2i(sp()));
-  st->print(" - thread: ");
-  Thread::current()->print();
-  st->print_cr(" - frame size: %d", frame_size());
-  for (int index = 0; index < frames() ; index++ ) {
-    element(index)->print(st);
-  }
-}
-
-void vframeArrayElement::print(outputStream* st) {
-  st->print_cr(" - interpreter_frame -> sp: " INTPTR_FORMAT, p2i(iframe()->sp()));
-}
-
-void vframeArray::print_value_on(outputStream* st) const {
-  st->print_cr("vframeArray [%d] ", frames());
-}
-
-
-#endif

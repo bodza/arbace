@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -84,23 +60,14 @@ int Abstract_VM_Version::_vm_build_number = VERSION_BUILD;
 unsigned int Abstract_VM_Version::_parallel_worker_threads = 0;
 bool Abstract_VM_Version::_parallel_worker_threads_initialized = false;
 
-#if defined(_LP64)
-  #define VMLP "64-Bit "
-#else
-  #define VMLP ""
-#endif
+#define VMLP "64-Bit "
 
 #ifndef VMTYPE
-  #ifdef TIERED
-    #define VMTYPE "Server"
-  #else // TIERED
   #ifdef ZERO
     #define VMTYPE "Zero"
-  #else // ZERO
-     #define VMTYPE COMPILER1_PRESENT("Client")   \
-                    COMPILER2_PRESENT("Server")
-  #endif // ZERO
-  #endif // TIERED
+  #else
+    #define VMTYPE "Client"
+  #endif
 #endif
 
 #ifndef HOTSPOT_VM_DISTRO
@@ -112,7 +79,6 @@ const char* Abstract_VM_Version::vm_name() {
   return VMNAME;
 }
 
-
 const char* Abstract_VM_Version::vm_vendor() {
 #ifdef VENDOR
   return VENDOR;
@@ -120,7 +86,6 @@ const char* Abstract_VM_Version::vm_vendor() {
   return "Oracle Corporation";
 #endif
 }
-
 
 const char* Abstract_VM_Version::vm_info_string() {
   switch (Arguments::mode()) {
@@ -130,30 +95,17 @@ const char* Abstract_VM_Version::vm_info_string() {
       if (UseSharedSpaces) {
         if (UseAOT) {
           return "mixed mode, aot, sharing";
-#ifdef TIERED
-        } else if(is_client_compilation_mode_vm()) {
-          return "mixed mode, emulated-client, sharing";
-#endif
         } else {
           return "mixed mode, sharing";
          }
       } else {
         if (UseAOT) {
           return "mixed mode, aot";
-#ifdef TIERED
-        } else if(is_client_compilation_mode_vm()) {
-          return "mixed mode, emulated-client";
-#endif
         } else {
           return "mixed mode";
         }
       }
     case Arguments::_comp:
-#ifdef TIERED
-      if (is_client_compilation_mode_vm()) {
-         return UseSharedSpaces ? "compiled mode, emulated-client, sharing" : "compiled mode, emulated-client";
-      }
-#endif
       return UseSharedSpaces ? "compiled mode, sharing"    : "compiled mode";
   };
   ShouldNotReachHere();
@@ -174,10 +126,9 @@ const char* Abstract_VM_Version::jre_release_version() {
   return VERSION_STRING;
 }
 
-#define OS       LINUX_ONLY("linux")             \
-                 WINDOWS_ONLY("windows")         \
-                 SOLARIS_ONLY("solaris")         \
-                 AIX_ONLY("aix")                 \
+#define OS       LINUX_ONLY("linux") \
+                 SOLARIS_ONLY("solaris") \
+                 AIX_ONLY("aix") \
                  BSD_ONLY("bsd")
 
 #ifndef CPU
@@ -188,16 +139,16 @@ const char* Abstract_VM_Version::jre_release_version() {
 #define CPU      "ppc64le"
 #else
 #define CPU      "ppc64"
-#endif // PPC64
+#endif
 #else
-#define CPU      AARCH64_ONLY("aarch64")         \
-                 AMD64_ONLY("amd64")             \
-                 IA32_ONLY("x86")                \
-                 IA64_ONLY("ia64")               \
-                 S390_ONLY("s390")               \
+#define CPU      AARCH64_ONLY("aarch64") \
+                 AMD64_ONLY("amd64") \
+                 IA32_ONLY("x86") \
+                 IA64_ONLY("ia64") \
+                 S390_ONLY("s390") \
                  SPARC_ONLY("sparc")
-#endif // !ZERO
-#endif // !CPU
+#endif
+#endif
 
 const char *Abstract_VM_Version::vm_platform_string() {
   return OS "-" CPU;
@@ -301,7 +252,6 @@ unsigned int Abstract_VM_Version::jvm_version() {
          (Abstract_VM_Version::vm_build_number() & 0xFF);
 }
 
-
 void VM_Version_init() {
   VM_Version::initialize();
 
@@ -318,7 +268,7 @@ unsigned int Abstract_VM_Version::nof_parallel_worker_threads(
                                                       unsigned int den,
                                                       unsigned int switch_pt) {
   if (FLAG_IS_DEFAULT(ParallelGCThreads)) {
-    assert(ParallelGCThreads == 0, "Default ParallelGCThreads is not 0");
+    assert(ParallelGCThreads == 0, "Default ParallelGCThreads is not 0");
     unsigned int threads;
     // For very large machines, there are diminishing returns
     // for large numbers of worker threads.  Instead of
@@ -330,16 +280,6 @@ unsigned int Abstract_VM_Version::nof_parallel_worker_threads(
     threads = (ncpus <= switch_pt) ?
              ncpus :
              (switch_pt + ((ncpus - switch_pt) * num) / den);
-#ifndef _LP64
-    // On 32-bit binaries the virtual address space available to the JVM
-    // is usually limited to 2-3 GB (depends on the platform).
-    // Do not use up address space with too many threads (stacks and per-thread
-    // data). Note that x86 apps running on Win64 have 2 stacks per thread.
-    // GC may more generally scale down threads by max heap size (etc), but the
-    // consequences of over-provisioning threads are higher on 32-bit JVMS,
-    // so add hard limit here:
-    threads = MIN2(threads, (2*switch_pt));
-#endif
     return threads;
   } else {
     return ParallelGCThreads;
@@ -349,7 +289,6 @@ unsigned int Abstract_VM_Version::nof_parallel_worker_threads(
 unsigned int Abstract_VM_Version::calc_parallel_worker_threads() {
   return nof_parallel_worker_threads(5, 8, 8);
 }
-
 
 // Does not set the _initialized flag since it is
 // a global flag.

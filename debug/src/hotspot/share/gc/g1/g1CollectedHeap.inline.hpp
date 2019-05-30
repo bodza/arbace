@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1COLLECTEDHEAP_INLINE_HPP
 #define SHARE_VM_GC_G1_G1COLLECTEDHEAP_INLINE_HPP
 
@@ -64,9 +40,7 @@ inline HeapRegion* G1CollectedHeap::next_region_in_humongous(HeapRegion* hr) con
 }
 
 inline uint G1CollectedHeap::addr_to_region(HeapWord* addr) const {
-  assert(is_in_reserved(addr),
-         "Cannot calculate region index for address " PTR_FORMAT " that is outside of the heap [" PTR_FORMAT ", " PTR_FORMAT ")",
-         p2i(addr), p2i(reserved_region().start()), p2i(reserved_region().end()));
+  assert(is_in_reserved(addr), "Cannot calculate region index for address " PTR_FORMAT " that is outside of the heap [" PTR_FORMAT ", " PTR_FORMAT ")", p2i(addr), p2i(reserved_region().start()), p2i(reserved_region().end()));
   return (uint)(pointer_delta(addr, reserved_region().start(), sizeof(uint8_t)) >> HeapRegion::LogOfHRGrainBytes);
 }
 
@@ -76,10 +50,8 @@ inline HeapWord* G1CollectedHeap::bottom_addr_for_region(uint index) const {
 
 template <class T>
 inline HeapRegion* G1CollectedHeap::heap_region_containing(const T addr) const {
-  assert(addr != NULL, "invariant");
-  assert(is_in_g1_reserved((const void*) addr),
-         "Address " PTR_FORMAT " is outside of the heap ranging from [" PTR_FORMAT " to " PTR_FORMAT ")",
-         p2i((void*)addr), p2i(g1_reserved().start()), p2i(g1_reserved().end()));
+  assert(addr != NULL, "invariant");
+  assert(is_in_g1_reserved((const void*) addr), "Address " PTR_FORMAT " is outside of the heap ranging from [" PTR_FORMAT " to " PTR_FORMAT ")", p2i((void*)addr), p2i(g1_reserved().start()), p2i(g1_reserved().end()));
   return _hrm.addr_to_region((HeapWord*) addr);
 }
 
@@ -102,14 +74,13 @@ G1CollectedHeap::dirty_young_block(HeapWord* start, size_t word_size) {
   // Assign the containing region to containing_hr so that we don't
   // have to keep calling heap_region_containing() in the
   // asserts below.
-  DEBUG_ONLY(HeapRegion* containing_hr = heap_region_containing(start);)
-  assert(word_size > 0, "pre-condition");
-  assert(containing_hr->is_in(start), "it should contain start");
-  assert(containing_hr->is_young(), "it should be young");
-  assert(!containing_hr->is_humongous(), "it should not be humongous");
+  assert(word_size > 0, "pre-condition");
+  assert(containing_hr->is_in(start), "it should contain start");
+  assert(containing_hr->is_young(), "it should be young");
+  assert(!containing_hr->is_humongous(), "it should not be humongous");
 
   HeapWord* end = start + word_size;
-  assert(containing_hr->is_in(end - 1), "it should also contain end - 1");
+  assert(containing_hr->is_in(end - 1), "it should also contain end - 1");
 
   MemRegion mr(start, end);
   card_table()->g1_mark_as_young(mr);
@@ -147,78 +118,6 @@ void G1CollectedHeap::register_humongous_region_with_cset(uint index) {
   _in_cset_fast_test.set_humongous(index);
 }
 
-#ifndef PRODUCT
-// Support for G1EvacuationFailureALot
-
-inline bool
-G1CollectedHeap::evacuation_failure_alot_for_gc_type(bool for_young_gc,
-                                                     bool during_initial_mark,
-                                                     bool mark_or_rebuild_in_progress) {
-  bool res = false;
-  if (mark_or_rebuild_in_progress) {
-    res |= G1EvacuationFailureALotDuringConcMark;
-  }
-  if (during_initial_mark) {
-    res |= G1EvacuationFailureALotDuringInitialMark;
-  }
-  if (for_young_gc) {
-    res |= G1EvacuationFailureALotDuringYoungGC;
-  } else {
-    // GCs are mixed
-    res |= G1EvacuationFailureALotDuringMixedGC;
-  }
-  return res;
-}
-
-inline void
-G1CollectedHeap::set_evacuation_failure_alot_for_current_gc() {
-  if (G1EvacuationFailureALot) {
-    // Note we can't assert that _evacuation_failure_alot_for_current_gc
-    // is clear here. It may have been set during a previous GC but that GC
-    // did not copy enough objects (i.e. G1EvacuationFailureALotCount) to
-    // trigger an evacuation failure and clear the flags and and counts.
-
-    // Check if we have gone over the interval.
-    const size_t gc_num = total_collections();
-    const size_t elapsed_gcs = gc_num - _evacuation_failure_alot_gc_number;
-
-    _evacuation_failure_alot_for_current_gc = (elapsed_gcs >= G1EvacuationFailureALotInterval);
-
-    // Now check if G1EvacuationFailureALot is enabled for the current GC type.
-    const bool in_young_only_phase = collector_state()->in_young_only_phase();
-    const bool in_initial_mark_gc = collector_state()->in_initial_mark_gc();
-    const bool mark_or_rebuild_in_progress = collector_state()->mark_or_rebuild_in_progress();
-
-    _evacuation_failure_alot_for_current_gc &=
-      evacuation_failure_alot_for_gc_type(in_young_only_phase,
-                                          in_initial_mark_gc,
-                                          mark_or_rebuild_in_progress);
-  }
-}
-
-inline bool G1CollectedHeap::evacuation_should_fail() {
-  if (!G1EvacuationFailureALot || !_evacuation_failure_alot_for_current_gc) {
-    return false;
-  }
-  // G1EvacuationFailureALot is in effect for current GC
-  // Access to _evacuation_failure_alot_count is not atomic;
-  // the value does not have to be exact.
-  if (++_evacuation_failure_alot_count < G1EvacuationFailureALotCount) {
-    return false;
-  }
-  _evacuation_failure_alot_count = 0;
-  return true;
-}
-
-inline void G1CollectedHeap::reset_evacuation_should_fail() {
-  if (G1EvacuationFailureALot) {
-    _evacuation_failure_alot_gc_number = total_collections();
-    _evacuation_failure_alot_count = 0;
-    _evacuation_failure_alot_for_current_gc = false;
-  }
-}
-#endif  // #ifndef PRODUCT
-
 inline bool G1CollectedHeap::is_in_young(const oop obj) {
   if (obj == NULL) {
     return false;
@@ -249,12 +148,12 @@ inline bool G1CollectedHeap::is_obj_dead_full(const oop obj) const {
 }
 
 inline void G1CollectedHeap::set_humongous_reclaim_candidate(uint region, bool value) {
-  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
+  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
   _humongous_reclaim_candidates.set_candidate(region, value);
 }
 
 inline bool G1CollectedHeap::is_humongous_reclaim_candidate(uint region) {
-  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
+  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
   return _humongous_reclaim_candidates.is_candidate(region);
 }
 
@@ -276,4 +175,4 @@ inline void G1CollectedHeap::set_humongous_is_live(oop obj) {
   }
 }
 
-#endif // SHARE_VM_GC_G1_G1COLLECTEDHEAP_INLINE_HPP
+#endif

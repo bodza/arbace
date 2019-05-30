@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_SYMBOL_HPP
 #define SHARE_VM_OOPS_SYMBOL_HPP
 
@@ -129,7 +105,7 @@ class Symbol : public MetaspaceObj {
   }
 
   void byte_at_put(int index, int value) {
-    assert(index >=0 && index < _length, "symbol index overflow");
+    assert(index >=0 && index < _length, "symbol index overflow");
     _body[index] = value;
   }
 
@@ -170,7 +146,7 @@ class Symbol : public MetaspaceObj {
   }
 
   int byte_at(int index) const {
-    assert(index >=0 && index < _length, "symbol index overflow");
+    assert(index >=0 && index < _length, "symbol index overflow");
     return base()[index];
   }
 
@@ -186,7 +162,7 @@ class Symbol : public MetaspaceObj {
       if (str[l] != (char) byte_at(l))
         return false;
     }
-    assert(l == -1, "we should be at the beginning");
+    assert(l == -1, "we should be at the beginning");
     return true;
   }
   bool equals(const char* str) const { return equals(str, (int) strlen(str)); }
@@ -245,14 +221,6 @@ class Symbol : public MetaspaceObj {
   void print_value()   { print_value_on(tty); }
 
   static bool is_valid(Symbol* s);
-
-#ifndef PRODUCT
-  // Empty constructor to create a dummy symbol object on stack
-  // only for getting its vtable pointer.
-  Symbol() { }
-
-  static int _total_count;
-#endif
 };
 
 // Note: this comparison is used for vtable sorting only; it doesn't matter
@@ -263,4 +231,4 @@ int Symbol::fast_compare(const Symbol* other) const {
  return (((uintptr_t)this < (uintptr_t)other) ? -1
    : ((uintptr_t)this == (uintptr_t) other) ? 0 : 1);
 }
-#endif // SHARE_VM_OOPS_SYMBOL_HPP
+#endif

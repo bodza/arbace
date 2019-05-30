@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaClasses.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -29,7 +5,6 @@
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/typeArrayOop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/flags/jvmFlag.hpp"
 #include "runtime/globals.hpp"
@@ -77,7 +52,6 @@ static jint get_properties(AttachOperation* op, outputStream* out, Symbol* seria
   JavaValue result(T_OBJECT);
   JavaCallArguments args;
 
-
   Symbol* signature = vmSymbols::serializePropertiesToByteArray_signature();
   JavaCalls::call_static(&result,
                          k,
@@ -93,8 +67,8 @@ static jint get_properties(AttachOperation* op, outputStream* out, Symbol* seria
 
   // The result should be a [B
   oop res = (oop)result.get_jobject();
-  assert(res->is_typeArray(), "just checking");
-  assert(TypeArrayKlass::cast(res->klass())->element_type() == T_BYTE, "just checking");
+  assert(res->is_typeArray(), "just checking");
+  assert(TypeArrayKlass::cast(res->klass())->element_type() == T_BYTE, "just checking");
 
   // copy the bytes to the output stream
   typeArrayOop ba = typeArrayOop(res);
@@ -102,36 +76,6 @@ static jint get_properties(AttachOperation* op, outputStream* out, Symbol* seria
   out->print_raw((const char*)addr, ba->length());
 
   return JNI_OK;
-}
-
-// Implementation of "load" command.
-static jint load_agent(AttachOperation* op, outputStream* out) {
-  // get agent name and options
-  const char* agent = op->arg(0);
-  const char* absParam = op->arg(1);
-  const char* options = op->arg(2);
-
-  // If loading a java agent then need to ensure that the java.instrument module is loaded
-  if (strcmp(agent, "instrument") == 0) {
-    Thread* THREAD = Thread::current();
-    ResourceMark rm(THREAD);
-    HandleMark hm(THREAD);
-    JavaValue result(T_OBJECT);
-    Handle h_module_name = java_lang_String::create_from_str("java.instrument", THREAD);
-    JavaCalls::call_static(&result,
-                           SystemDictionary::module_Modules_klass(),
-                           vmSymbols::loadModule_name(),
-                           vmSymbols::loadModule_signature(),
-                           h_module_name,
-                           THREAD);
-    if (HAS_PENDING_EXCEPTION) {
-      java_lang_Throwable::print(PENDING_EXCEPTION, out);
-      CLEAR_PENDING_EXCEPTION;
-      return JNI_ERR;
-    }
-  }
-
-  return JvmtiExport::load_agent_library(agent, absParam, options, out);
 }
 
 // Implementation of "properties" command.
@@ -156,9 +100,6 @@ static jint data_dump(AttachOperation* op, outputStream* out) {
   if (!ReduceSignalUsage) {
     AttachListener::pd_data_dump();
   } else {
-    if (JvmtiExport::should_post_data_dump()) {
-      JvmtiExport::post_data_dump();
-    }
   }
   return JNI_OK;
 }
@@ -324,7 +265,6 @@ static AttachOperationFunctionInfo funcs[] = {
   { "agentProperties",  get_agent_properties },
   { "datadump",         data_dump },
   { "dumpheap",         dump_heap },
-  { "load",             load_agent },
   { "properties",       get_system_properties },
   { "threaddump",       thread_dump },
   { "inspectheap",      heap_inspection },
@@ -334,8 +274,6 @@ static AttachOperationFunctionInfo funcs[] = {
   { NULL,               NULL }
 };
 
-
-
 // The Attach Listener threads services a queue. It dequeues an operation
 // from the queue, examines the operation name (command), and dispatches
 // to the corresponding function to perform the operation.
@@ -343,9 +281,8 @@ static AttachOperationFunctionInfo funcs[] = {
 static void attach_listener_thread_entry(JavaThread* thread, TRAPS) {
   os::set_priority(thread, NearMaxPriority);
 
-  assert(thread == Thread::current(), "Must be");
-  assert(thread->stack_base() != NULL && thread->stack_size() > 0,
-         "Should already be setup");
+  assert(thread == Thread::current(), "Must be");
+  assert(thread->stack_base() != NULL && thread->stack_size() > 0, "Should already be setup");
 
   if (AttachListener::pd_init() != 0) {
     return;
@@ -374,7 +311,7 @@ static void attach_listener_thread_entry(JavaThread* thread, TRAPS) {
       AttachOperationFunctionInfo* info = NULL;
       for (int i=0; funcs[i].name != NULL; i++) {
         const char* name = funcs[i].name;
-        assert(strlen(name) <= AttachOperation::name_length_max, "operation <= name_length_max");
+        assert(strlen(name) <= AttachOperation::name_length_max, "operation <= name_length_max");
         if (strcmp(op->name(), name) == 0) {
           info = &(funcs[i]);
           break;

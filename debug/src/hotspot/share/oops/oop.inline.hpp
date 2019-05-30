@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_OOP_INLINE_HPP
 #define SHARE_VM_OOPS_OOP_INLINE_HPP
 
@@ -117,13 +93,13 @@ Klass* oopDesc::klass_or_null_acquire() const volatile {
 Klass** oopDesc::klass_addr(HeapWord* mem) {
   // Only used internally and with CMS and will not work with
   // UseCompressedOops
-  assert(!UseCompressedClassPointers, "only supported with uncompressed klass pointers");
+  assert(!UseCompressedClassPointers, "only supported with uncompressed klass pointers");
   ByteSize offset = byte_offset_of(oopDesc, _metadata._klass);
   return (Klass**) (((char*)mem) + in_bytes(offset));
 }
 
 narrowKlass* oopDesc::compressed_klass_addr(HeapWord* mem) {
-  assert(UseCompressedClassPointers, "only called by compressed klass pointers");
+  assert(UseCompressedClassPointers, "only called by compressed klass pointers");
   ByteSize offset = byte_offset_of(oopDesc, _metadata._compressed_klass);
   return (narrowKlass*) (((char*)mem) + in_bytes(offset));
 }
@@ -136,10 +112,10 @@ narrowKlass* oopDesc::compressed_klass_addr() {
   return compressed_klass_addr((HeapWord*)this);
 }
 
-#define CHECK_SET_KLASS(k)                                                \
-  do {                                                                    \
-    assert(Universe::is_bootstrapping() || k != NULL, "NULL Klass");      \
-    assert(Universe::is_bootstrapping() || k->is_klass(), "not a Klass"); \
+#define CHECK_SET_KLASS(k) \
+  do { \
+    assert(Universe::is_bootstrapping() || k != NULL, "NULL Klass"); \
+    assert(Universe::is_bootstrapping() || k->is_klass(), "not a Klass"); \
   } while (0)
 
 void oopDesc::set_klass(Klass* k) {
@@ -257,19 +233,15 @@ int oopDesc::size_given_klass(Klass* klass)  {
       //  || is_typeArray()                    // covers second scenario above
       // If and when UseParallelGC uses the same obj array oop stealing/chunking
       // technique, we will need to suitably modify the assertion.
-      assert((s == klass->oop_size(this)) ||
-             (Universe::heap()->is_gc_active() &&
-              ((is_typeArray() && UseConcMarkSweepGC) ||
-               (is_objArray()  && is_forwarded() && (UseConcMarkSweepGC || UseParallelGC || UseG1GC)))),
-             "wrong array object size");
+      assert((s == klass->oop_size(this)) || (Universe::heap()->is_gc_active() && ((is_typeArray() && UseConcMarkSweepGC) || (is_objArray()  && is_forwarded() && (UseConcMarkSweepGC || UseParallelGC || UseG1GC)))), "wrong array object size");
     } else {
       // Must be zero, so bite the bullet and take the virtual call.
       s = klass->oop_size(this);
     }
   }
 
-  assert(s > 0, "Oop size must be greater than zero, not %d", s);
-  assert(is_object_aligned(s), "Oop size is not properly aligned: %d", s);
+  assert(s > 0, "Oop size must be greater than zero, not %d", s);
+  assert(is_object_aligned(s), "Oop size is not properly aligned: %d", s);
   return s;
 }
 
@@ -347,26 +319,20 @@ bool oopDesc::is_forwarded() const {
 
 // Used by scavengers
 void oopDesc::forward_to(oop p) {
-  assert(check_obj_alignment(p),
-         "forwarding to something not aligned");
-  assert(Universe::heap()->is_in_reserved(p),
-         "forwarding to something not in heap");
-  assert(!MetaspaceShared::is_archive_object(oop(this)) &&
-         !MetaspaceShared::is_archive_object(p),
-         "forwarding archive object");
+  assert(check_obj_alignment(p), "forwarding to something not aligned");
+  assert(Universe::heap()->is_in_reserved(p), "forwarding to something not in heap");
+  assert(!MetaspaceShared::is_archive_object(oop(this)) && !MetaspaceShared::is_archive_object(p), "forwarding archive object");
   markOop m = markOopDesc::encode_pointer_as_mark(p);
-  assert(m->decode_pointer() == p, "encoding must be reversable");
+  assert(m->decode_pointer() == p, "encoding must be reversable");
   set_mark_raw(m);
 }
 
 // Used by parallel scavengers
 bool oopDesc::cas_forward_to(oop p, markOop compare, atomic_memory_order order) {
-  assert(check_obj_alignment(p),
-         "forwarding to something not aligned");
-  assert(Universe::heap()->is_in_reserved(p),
-         "forwarding to something not in heap");
+  assert(check_obj_alignment(p), "forwarding to something not aligned");
+  assert(Universe::heap()->is_in_reserved(p), "forwarding to something not in heap");
   markOop m = markOopDesc::encode_pointer_as_mark(p);
-  assert(m->decode_pointer() == p, "encoding must be reversable");
+  assert(m->decode_pointer() == p, "encoding must be reversable");
   return cas_set_mark_raw(m, compare, order) == compare;
 }
 
@@ -375,12 +341,12 @@ oop oopDesc::forward_to_atomic(oop p, atomic_memory_order order) {
   markOop forwardPtrMark = markOopDesc::encode_pointer_as_mark(p);
   markOop curMark;
 
-  assert(forwardPtrMark->decode_pointer() == p, "encoding must be reversable");
-  assert(sizeof(markOop) == sizeof(intptr_t), "CAS below requires this.");
+  assert(forwardPtrMark->decode_pointer() == p, "encoding must be reversable");
+  assert(sizeof(markOop) == sizeof(intptr_t), "CAS below requires this.");
 
   while (!oldMark->is_marked()) {
     curMark = cas_set_mark_raw(forwardPtrMark, oldMark, order);
-    assert(is_forwarded(), "object should have been forwarded");
+    assert(is_forwarded(), "object should have been forwarded");
     if (curMark == oldMark) {
       return NULL;
     }
@@ -409,7 +375,7 @@ oop oopDesc::forwardee_acquire() const {
 
 // The following method needs to be MT safe.
 uint oopDesc::age() const {
-  assert(!is_forwarded(), "Attempt to read age from forwarded mark");
+  assert(!is_forwarded(), "Attempt to read age from forwarded mark");
   if (has_displaced_mark_raw()) {
     return displaced_mark_raw()->age();
   } else {
@@ -418,37 +384,13 @@ uint oopDesc::age() const {
 }
 
 void oopDesc::incr_age() {
-  assert(!is_forwarded(), "Attempt to increment age of forwarded mark");
+  assert(!is_forwarded(), "Attempt to increment age of forwarded mark");
   if (has_displaced_mark_raw()) {
     set_displaced_mark_raw(displaced_mark_raw()->incr_age());
   } else {
     set_mark_raw(mark_raw()->incr_age());
   }
 }
-
-#if INCLUDE_PARALLELGC
-void oopDesc::pc_follow_contents(ParCompactionManager* cm) {
-  klass()->oop_pc_follow_contents(this, cm);
-}
-
-void oopDesc::pc_update_contents(ParCompactionManager* cm) {
-  Klass* k = klass();
-  if (!k->is_typeArray_klass()) {
-    // It might contain oops beyond the header, so take the virtual call.
-    k->oop_pc_update_pointers(this, cm);
-  }
-  // Else skip it.  The TypeArrayKlass in the header never needs scavenging.
-}
-
-void oopDesc::ps_push_contents(PSPromotionManager* pm) {
-  Klass* k = klass();
-  if (!k->is_typeArray_klass()) {
-    // It might contain oops beyond the header, so take the virtual call.
-    k->oop_ps_push_contents(this, pm);
-  }
-  // Else skip it.  The TypeArrayKlass in the header never needs scavenging.
-}
-#endif // INCLUDE_PARALLELGC
 
 template <typename OopClosureType>
 void oopDesc::oop_iterate(OopClosureType* cl) {
@@ -510,4 +452,4 @@ void oopDesc::set_displaced_mark_raw(markOop m) {
   mark_raw()->set_displaced_mark_helper(m);
 }
 
-#endif // SHARE_VM_OOPS_OOP_INLINE_HPP
+#endif

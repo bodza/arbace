@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 
 #include "gc/shared/blockOffsetTable.inline.hpp"
@@ -46,8 +22,8 @@ CardGeneration::CardGeneration(ReservedSpace rs,
 {
   HeapWord* start = (HeapWord*)rs.base();
   size_t reserved_byte_size = rs.size();
-  assert((uintptr_t(start) & 3) == 0, "bad alignment");
-  assert((reserved_byte_size & 3) == 0, "bad alignment");
+  assert((uintptr_t(start) & 3) == 0, "bad alignment");
+  assert((reserved_byte_size & 3) == 0, "bad alignment");
   MemRegion reserved_mr(start, heap_word_size(reserved_byte_size));
   _bts = new BlockOffsetSharedArray(reserved_mr,
                                     heap_word_size(initial_byte_size));
@@ -145,7 +121,6 @@ bool CardGeneration::grow_to_reserved() {
   const size_t remaining_bytes = _virtual_space.uncommitted_size();
   if (remaining_bytes > 0) {
     success = grow_by(remaining_bytes);
-    DEBUG_ONLY(if (!success) log_warning(gc)("grow to reserved failed");)
   }
   return success;
 }
@@ -187,7 +162,7 @@ void CardGeneration::invalidate_remembered_set() {
 }
 
 void CardGeneration::compute_new_size() {
-  assert(_shrink_factor <= 100, "invalid shrink factor");
+  assert(_shrink_factor <= 100, "invalid shrink factor");
   size_t current_shrink_factor = _shrink_factor;
   _shrink_factor = 0;
 
@@ -204,7 +179,7 @@ void CardGeneration::compute_new_size() {
   size_t minimum_desired_capacity = (size_t)MIN2(min_tmp, double(max_uintx));
   // Don't shrink less than the initial generation size
   minimum_desired_capacity = MAX2(minimum_desired_capacity, initial_size());
-  assert(used_after_gc <= minimum_desired_capacity, "sanity check");
+  assert(used_after_gc <= minimum_desired_capacity, "sanity check");
 
     const size_t free_after_gc = free();
     const double free_percentage = ((double)free_after_gc) / capacity_after_gc;
@@ -249,8 +224,7 @@ void CardGeneration::compute_new_size() {
                              _capacity_at_prologue / (double) K,
                              minimum_desired_capacity / (double) K,
                              maximum_desired_capacity / (double) K);
-    assert(minimum_desired_capacity <= maximum_desired_capacity,
-           "sanity check");
+    assert(minimum_desired_capacity <= maximum_desired_capacity, "sanity check");
 
     if (capacity_after_gc > maximum_desired_capacity) {
       // Capacity too large, compute shrinking size
@@ -270,7 +244,7 @@ void CardGeneration::compute_new_size() {
           _shrink_factor = MIN2(current_shrink_factor * 4, (size_t) 100);
         }
       }
-      assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
+      assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
       log_trace(gc, heap)("    shrinking:  initSize: %.1fK  maximum_desired_capacity: %.1fK",
                                initial_size() / (double) K, maximum_desired_capacity / (double) K);
       log_trace(gc, heap)("    shrink_bytes: %.1fK  current_shrink_factor: " SIZE_FORMAT "  new shrink factor: " SIZE_FORMAT "  _min_heap_delta_bytes: %.1fK",
@@ -289,7 +263,7 @@ void CardGeneration::compute_new_size() {
     expansion_for_promotion = MIN2(expansion_for_promotion, max_shrink_bytes);
     // We have two shrinking computations, take the largest
     shrink_bytes = MAX2(shrink_bytes, expansion_for_promotion);
-    assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
+    assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
     log_trace(gc, heap)("    aggressive shrinking:  _capacity_at_prologue: %.1fK  capacity_after_gc: %.1fK  expansion_for_promotion: %.1fK  shrink_bytes: %.1fK",
                         capacity_after_gc / (double) K,
                         _capacity_at_prologue / (double) K,

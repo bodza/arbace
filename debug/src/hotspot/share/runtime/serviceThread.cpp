@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/stringTable.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
@@ -29,7 +5,6 @@
 #include "runtime/serviceThread.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/os.hpp"
-#include "prims/jvmtiImpl.hpp"
 #include "services/diagnosticArgument.hpp"
 #include "services/diagnosticFramework.hpp"
 #include "services/gcNotifier.hpp"
@@ -79,12 +54,10 @@ void ServiceThread::initialize() {
 void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
   while (true) {
     bool sensors_changed = false;
-    bool has_jvmti_events = false;
     bool has_gc_notification_event = false;
     bool has_dcmd_notification_event = false;
     bool acs_notify = false;
     bool stringtable_work = false;
-    JvmtiDeferredEvent jvmti_event;
     {
       // Need state transition ThreadBlockInVM so that this thread
       // will be handled by safepoint correctly when this thread is
@@ -98,7 +71,6 @@ void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
 
       MutexLockerEx ml(Service_lock, Mutex::_no_safepoint_check_flag);
       while (!(sensors_changed = LowMemoryDetector::has_pending_requests()) &&
-             !(has_jvmti_events = JvmtiDeferredEventQueue::has_events()) &&
               !(has_gc_notification_event = GCNotifier::has_event()) &&
               !(has_dcmd_notification_event = DCmdFactory::has_pending_jmx_notification()) &&
               !(stringtable_work = StringTable::has_work())) {
@@ -106,18 +78,10 @@ void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
         // pending JVMTI event or JMX GC notification to post
         Service_lock->wait(Mutex::_no_safepoint_check_flag);
       }
-
-      if (has_jvmti_events) {
-        jvmti_event = JvmtiDeferredEventQueue::dequeue();
-      }
     }
 
     if (stringtable_work) {
       StringTable::do_concurrent_work(jt);
-    }
-
-    if (has_jvmti_events) {
-      jvmti_event.post();
     }
 
     if (sensors_changed) {

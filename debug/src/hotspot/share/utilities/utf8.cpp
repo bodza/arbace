@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "utilities/utf8.hpp"
 
@@ -224,10 +200,9 @@ void UTF8::as_quoted_ascii(const char* utf8_str, int utf8_length, char* buf, int
       p += 6;
     }
   }
-  assert(p < end, "sanity");
+  assert(p < end, "sanity");
   *p = '\0';
 }
-
 
 const char* UTF8::from_quoted_ascii(const char* quoted_ascii_str) {
   const char *ptr = quoted_ascii_str;
@@ -303,12 +278,11 @@ const char* UTF8::from_quoted_ascii(const char* quoted_ascii_str) {
   return buffer;
 }
 
-
 // Returns NULL if 'c' it not found. This only works as long
 // as 'c' is an ASCII character
 const jbyte* UTF8::strrchr(const jbyte* base, int length, jbyte c) {
-  assert(length >= 0, "sanity check");
-  assert(c >= 0, "does not work for non-ASCII characters");
+  assert(length >= 0, "sanity check");
+  assert(c >= 0, "does not work for non-ASCII characters");
   // Skip backwards in string until 'c' is found or end is reached
   while(--length >= 0 && base[length] != c);
   return (length < 0) ? NULL : &base[length];
@@ -390,8 +364,8 @@ bool UTF8::is_legal_utf8(const unsigned char* buffer, int length,
           }
         }
         return false;
-    }  // end of switch
-  } // end of for
+    }
+  }
   return true;
 }
 
@@ -448,7 +422,7 @@ char* UNICODE::as_utf8(T* base, int& length) {
   int utf8_len = utf8_length(base, length);
   u_char* buf = NEW_RESOURCE_ARRAY(u_char, utf8_len + 1);
   char* result = as_utf8(base, length, (char*) buf, utf8_len + 1);
-  assert((int) strlen(result) == utf8_len, "length prediction must be correct");
+  assert((int) strlen(result) == utf8_len, "length prediction must be correct");
   // Set string length to uft8 length
   length = utf8_len;
   return (char*) result;

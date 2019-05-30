@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_ALLOCATION_HPP
 #define SHARE_VM_MEMORY_ALLOCATION_HPP
 
@@ -92,21 +68,7 @@ typedef AllocFailStrategy::AllocFailEnum AllocFailType;
 // that supports printing.
 // We avoid the superclass in product mode to save space.
 
-#ifdef PRODUCT
 #define ALLOCATION_SUPER_CLASS_SPEC
-#else
-#define ALLOCATION_SUPER_CLASS_SPEC : public AllocatedObj
-class AllocatedObj {
- public:
-  // Printing support
-  void print() const;
-  void print_value() const;
-
-  virtual void print_on(outputStream* st) const;
-  virtual void print_value_on(outputStream* st) const;
-};
-#endif
-
 
 /*
  * Memory types
@@ -140,19 +102,9 @@ enum MemoryType {
 
 typedef MemoryType MEMFLAGS;
 
-
-#if INCLUDE_NMT
-
-extern bool NMT_track_callsite;
-
-#else
-
 const bool NMT_track_callsite = false;
 
-#endif // INCLUDE_NMT
-
 class NativeCallStack;
-
 
 char* AllocateHeap(size_t size,
                    MEMFLAGS flags,
@@ -323,7 +275,6 @@ class AllStatic {
   ~AllStatic() { ShouldNotCallThis(); }
 };
 
-
 extern char* resource_allocate_bytes(size_t size,
     AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
 extern char* resource_allocate_bytes(Thread* thread, size_t size,
@@ -342,26 +293,7 @@ extern void resource_free_bytes( char *old, size_t size );
 class ResourceObj ALLOCATION_SUPER_CLASS_SPEC {
  public:
   enum allocation_type { STACK_OR_EMBEDDED = 0, RESOURCE_AREA, C_HEAP, ARENA, allocation_mask = 0x3 };
-  static void set_allocation_type(address res, allocation_type type) NOT_DEBUG_RETURN;
-#ifdef ASSERT
- private:
-  // When this object is allocated on stack the new() operator is not
-  // called but garbage on stack may look like a valid allocation_type.
-  // Store negated 'this' pointer when new() is called to distinguish cases.
-  // Use second array's element for verification value to distinguish garbage.
-  uintptr_t _allocation_t[2];
-  bool is_type_set() const;
- public:
-  allocation_type get_allocation_type() const;
-  bool allocated_on_stack()    const { return get_allocation_type() == STACK_OR_EMBEDDED; }
-  bool allocated_on_res_area() const { return get_allocation_type() == RESOURCE_AREA; }
-  bool allocated_on_C_heap()   const { return get_allocation_type() == C_HEAP; }
-  bool allocated_on_arena()    const { return get_allocation_type() == ARENA; }
-  ResourceObj(); // default constructor
-  ResourceObj(const ResourceObj& r); // default copy constructor
-  ResourceObj& operator=(const ResourceObj& r); // default copy assignment
-  ~ResourceObj();
-#endif // ASSERT
+  static void set_allocation_type(address res, allocation_type type) {};
 
  public:
   void* operator new(size_t size, allocation_type type, MEMFLAGS flags) throw();
@@ -377,25 +309,21 @@ class ResourceObj ALLOCATION_SUPER_CLASS_SPEC {
 
   void* operator new(size_t size) throw() {
       address res = (address)resource_allocate_bytes(size);
-      DEBUG_ONLY(set_allocation_type(res, RESOURCE_AREA);)
       return res;
   }
 
   void* operator new(size_t size, const std::nothrow_t& nothrow_constant) throw() {
       address res = (address)resource_allocate_bytes(size, AllocFailStrategy::RETURN_NULL);
-      DEBUG_ONLY(if (res != NULL) set_allocation_type(res, RESOURCE_AREA);)
       return res;
   }
 
   void* operator new [](size_t size) throw() {
       address res = (address)resource_allocate_bytes(size);
-      DEBUG_ONLY(set_allocation_type(res, RESOURCE_AREA);)
       return res;
   }
 
   void* operator new [](size_t size, const std::nothrow_t& nothrow_constant) throw() {
       address res = (address)resource_allocate_bytes(size, AllocFailStrategy::RETURN_NULL);
-      DEBUG_ONLY(if (res != NULL) set_allocation_type(res, RESOURCE_AREA);)
       return res;
   }
 
@@ -407,89 +335,73 @@ class ResourceObj ALLOCATION_SUPER_CLASS_SPEC {
 // or object to determine whether it should reside in the C heap on in
 // the resource area.
 
-#define NEW_RESOURCE_ARRAY(type, size)\
+#define NEW_RESOURCE_ARRAY(type, size) \
   (type*) resource_allocate_bytes((size) * sizeof(type))
 
-#define NEW_RESOURCE_ARRAY_RETURN_NULL(type, size)\
+#define NEW_RESOURCE_ARRAY_RETURN_NULL(type, size) \
   (type*) resource_allocate_bytes((size) * sizeof(type), AllocFailStrategy::RETURN_NULL)
 
-#define NEW_RESOURCE_ARRAY_IN_THREAD(thread, type, size)\
+#define NEW_RESOURCE_ARRAY_IN_THREAD(thread, type, size) \
   (type*) resource_allocate_bytes(thread, (size) * sizeof(type))
 
-#define NEW_RESOURCE_ARRAY_IN_THREAD_RETURN_NULL(thread, type, size)\
+#define NEW_RESOURCE_ARRAY_IN_THREAD_RETURN_NULL(thread, type, size) \
   (type*) resource_allocate_bytes(thread, (size) * sizeof(type), AllocFailStrategy::RETURN_NULL)
 
-#define REALLOC_RESOURCE_ARRAY(type, old, old_size, new_size)\
+#define REALLOC_RESOURCE_ARRAY(type, old, old_size, new_size) \
   (type*) resource_reallocate_bytes((char*)(old), (old_size) * sizeof(type), (new_size) * sizeof(type))
 
-#define REALLOC_RESOURCE_ARRAY_RETURN_NULL(type, old, old_size, new_size)\
-  (type*) resource_reallocate_bytes((char*)(old), (old_size) * sizeof(type),\
+#define REALLOC_RESOURCE_ARRAY_RETURN_NULL(type, old, old_size, new_size) \
+  (type*) resource_reallocate_bytes((char*)(old), (old_size) * sizeof(type), \
                                     (new_size) * sizeof(type), AllocFailStrategy::RETURN_NULL)
 
-#define FREE_RESOURCE_ARRAY(type, old, size)\
+#define FREE_RESOURCE_ARRAY(type, old, size) \
   resource_free_bytes((char*)(old), (size) * sizeof(type))
 
-#define FREE_FAST(old)\
+#define FREE_FAST(old) \
     /* nop */
 
-#define NEW_RESOURCE_OBJ(type)\
+#define NEW_RESOURCE_OBJ(type) \
   NEW_RESOURCE_ARRAY(type, 1)
 
-#define NEW_RESOURCE_OBJ_RETURN_NULL(type)\
+#define NEW_RESOURCE_OBJ_RETURN_NULL(type) \
   NEW_RESOURCE_ARRAY_RETURN_NULL(type, 1)
 
-#define NEW_C_HEAP_ARRAY3(type, size, memflags, pc, allocfail)\
+#define NEW_C_HEAP_ARRAY3(type, size, memflags, pc, allocfail) \
   (type*) AllocateHeap((size) * sizeof(type), memflags, pc, allocfail)
 
-#define NEW_C_HEAP_ARRAY2(type, size, memflags, pc)\
+#define NEW_C_HEAP_ARRAY2(type, size, memflags, pc) \
   (type*) (AllocateHeap((size) * sizeof(type), memflags, pc))
 
-#define NEW_C_HEAP_ARRAY(type, size, memflags)\
+#define NEW_C_HEAP_ARRAY(type, size, memflags) \
   (type*) (AllocateHeap((size) * sizeof(type), memflags))
 
-#define NEW_C_HEAP_ARRAY2_RETURN_NULL(type, size, memflags, pc)\
+#define NEW_C_HEAP_ARRAY2_RETURN_NULL(type, size, memflags, pc) \
   NEW_C_HEAP_ARRAY3(type, (size), memflags, pc, AllocFailStrategy::RETURN_NULL)
 
-#define NEW_C_HEAP_ARRAY_RETURN_NULL(type, size, memflags)\
+#define NEW_C_HEAP_ARRAY_RETURN_NULL(type, size, memflags) \
   NEW_C_HEAP_ARRAY3(type, (size), memflags, CURRENT_PC, AllocFailStrategy::RETURN_NULL)
 
-#define REALLOC_C_HEAP_ARRAY(type, old, size, memflags)\
+#define REALLOC_C_HEAP_ARRAY(type, old, size, memflags) \
   (type*) (ReallocateHeap((char*)(old), (size) * sizeof(type), memflags))
 
-#define REALLOC_C_HEAP_ARRAY_RETURN_NULL(type, old, size, memflags)\
+#define REALLOC_C_HEAP_ARRAY_RETURN_NULL(type, old, size, memflags) \
   (type*) (ReallocateHeap((char*)(old), (size) * sizeof(type), memflags, AllocFailStrategy::RETURN_NULL))
 
 #define FREE_C_HEAP_ARRAY(type, old) \
   FreeHeap((char*)(old))
 
 // allocate type in heap without calling ctor
-#define NEW_C_HEAP_OBJ(type, memflags)\
+#define NEW_C_HEAP_OBJ(type, memflags) \
   NEW_C_HEAP_ARRAY(type, 1, memflags)
 
-#define NEW_C_HEAP_OBJ_RETURN_NULL(type, memflags)\
+#define NEW_C_HEAP_OBJ_RETURN_NULL(type, memflags) \
   NEW_C_HEAP_ARRAY_RETURN_NULL(type, 1, memflags)
 
 // deallocate obj of type in heap without calling dtor
-#define FREE_C_HEAP_OBJ(objname)\
+#define FREE_C_HEAP_OBJ(objname) \
   FreeHeap((char*)objname);
 
 // for statistics
-#ifndef PRODUCT
-class AllocStats : StackObj {
-  julong start_mallocs, start_frees;
-  julong start_malloc_bytes, start_mfree_bytes, start_res_bytes;
- public:
-  AllocStats();
-
-  julong num_mallocs();    // since creation of receiver
-  julong alloc_bytes();
-  julong num_frees();
-  julong free_bytes();
-  julong resource_bytes();
-  void   print();
-};
-#endif
-
 
 //------------------------------ReallocMark---------------------------------
 // Code which uses REALLOC_RESOURCE_ARRAY should check an associated
@@ -497,12 +409,9 @@ class AllocStats : StackObj {
 // pointer.  Any operation that could __potentially__ cause a reallocation
 // should check the ReallocMark.
 class ReallocMark: public StackObj {
-protected:
-  NOT_PRODUCT(int _nesting;)
-
 public:
-  ReallocMark()   PRODUCT_RETURN;
-  void check()    PRODUCT_RETURN;
+  ReallocMark()   {};
+  void check()    {};
 };
 
 // Helper class to allocate arrays that may become large.
@@ -552,4 +461,4 @@ class MallocArrayAllocator : public AllStatic {
   static void free(E* addr);
 };
 
-#endif // SHARE_VM_MEMORY_ALLOCATION_HPP
+#endif

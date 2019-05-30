@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_STACK_HPP
 #define SHARE_VM_UTILITIES_STACK_HPP
 
@@ -87,7 +63,7 @@ protected:
 
 #ifdef __GNUC__
 #define inline
-#endif // __GNUC__
+#endif
 
 template <class E, MEMFLAGS F>
 class Stack:  public StackBase<F>
@@ -156,9 +132,6 @@ protected:
   void free_segments(E* seg);          // Free all segments in the list.
   inline void reset(bool reset_cache); // Reset all data fields.
 
-  DEBUG_ONLY(void verify(bool at_empty_transition) const;)
-  DEBUG_ONLY(void zap_segment(E* seg, bool zap_link_field) const;)
-
 private:
   E* _cur_seg;    // Current segment.
   E* _cache;      // Segment cache to avoid ping-ponging.
@@ -209,6 +182,6 @@ private:
 
 #ifdef __GNUC__
 #undef inline
-#endif // __GNUC__
+#endif
 
-#endif // SHARE_VM_UTILITIES_STACK_HPP
+#endif

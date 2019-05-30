@@ -1,34 +1,9 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_VMGCOPERATIONS_HPP
 #define SHARE_VM_GC_SHARED_VMGCOPERATIONS_HPP
 
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
 #include "memory/heapInspection.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "runtime/handles.hpp"
 #include "runtime/jniHandles.hpp"
 #include "runtime/synchronizer.hpp"
@@ -120,7 +95,6 @@ class VM_GC_Operation: public VM_Operation {
   static void notify_gc_end();
 };
 
-
 class VM_GC_HeapInspection: public VM_GC_Operation {
  private:
   outputStream* _out;
@@ -177,7 +151,7 @@ class VM_GenCollectForAllocation : public VM_CollectForAllocation {
                              uint gc_count_before)
     : VM_CollectForAllocation(word_size, gc_count_before, GCCause::_allocation_failure),
       _tlab(tlab) {
-    assert(word_size != 0, "An allocation should always be requested with this operation.");
+    assert(word_size != 0, "An allocation should always be requested with this operation.");
   }
   ~VM_GenCollectForAllocation()  {}
   virtual VMOp_Type type() const { return VMOp_GenCollectForAllocation; }
@@ -224,8 +198,6 @@ class VM_CollectForMetadataAllocation: public VM_GC_Operation {
 };
 
 class SvcGCMarker : public StackObj {
- private:
-  JvmtiGCMarker _jgcm;
  public:
   typedef enum { MINOR, FULL, CONCURRENT, OTHER } reason_type;
 
@@ -238,4 +210,4 @@ class SvcGCMarker : public StackObj {
   }
 };
 
-#endif // SHARE_VM_GC_SHARED_VMGCOPERATIONS_HPP
+#endif

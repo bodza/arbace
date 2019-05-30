@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciUtilities.hpp"
 #include "gc/shared/cardTable.hpp"
@@ -86,7 +62,7 @@ void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
     adr = obj;
   }
   // (Else it's an array (or unknown), and we want more precise card marks.)
-  assert(adr != NULL, "");
+  assert(adr != NULL, "");
 
   IdealKit ideal(kit, true);
 
@@ -142,7 +118,7 @@ void CardTableBarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* siz
   // If necessary, emit some card marks afterwards.  (Non-arrays only.)
   bool card_mark = !is_array && !use_ReduceInitialCardMarks();
   if (card_mark) {
-    assert(!is_array, "");
+    assert(!is_array, "");
     // Put in store barrier for any and all oops we are sticking
     // into this object.  (We could avoid this if we could prove
     // that the object type contains no oop fields at all.)
@@ -169,19 +145,19 @@ bool CardTableBarrierSetC2::is_gc_barrier_node(Node* node) const {
 }
 
 void CardTableBarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) const {
-  assert(node->Opcode() == Op_CastP2X, "ConvP2XNode required");
+  assert(node->Opcode() == Op_CastP2X, "ConvP2XNode required");
   Node *shift = node->unique_out();
   Node *addp = shift->unique_out();
   for (DUIterator_Last jmin, j = addp->last_outs(jmin); j >= jmin; --j) {
     Node *mem = addp->last_out(j);
     if (UseCondCardMark && mem->is_Load()) {
-      assert(mem->Opcode() == Op_LoadB, "unexpected code shape");
+      assert(mem->Opcode() == Op_LoadB, "unexpected code shape");
       // The load is checking if the card has been written so
       // replace it with zero to fold the test.
       macro->replace_node(mem, macro->intcon(0));
       continue;
     }
-    assert(mem->is_Store(), "store required");
+    assert(mem->is_Store(), "store required");
     macro->replace_node(mem, mem->in(MemNode::Memory));
   }
 }

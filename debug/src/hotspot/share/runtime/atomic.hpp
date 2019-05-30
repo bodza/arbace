@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_ATOMIC_HPP
 #define SHARE_VM_RUNTIME_ATOMIC_HPP
 
@@ -141,7 +117,7 @@ public:
                                      atomic_memory_order order = memory_order_conservative);
 
 private:
-WINDOWS_ONLY(public:) // VS2017 warns (C2027) use of undefined type if IsPointerConvertible is declared private
+  // VS2017 warns (C2027) use of undefined type if IsPointerConvertible is declared private
   // Test whether From is implicitly convertible to To.
   // From and To must be pointer types.
   // Note: Provides the limited subset of C++11 std::is_convertible
@@ -648,10 +624,10 @@ template<>
 struct Atomic::AddImpl<short, short> {
   short operator()(short add_value, short volatile* dest, atomic_memory_order order) const {
 #ifdef VM_LITTLE_ENDIAN
-    assert((intx(dest) & 0x03) == 0x02, "wrong alignment");
+    assert((intx(dest) & 0x03) == 0x02, "wrong alignment");
     int new_value = Atomic::add(add_value << 16, (volatile int*)(dest-1), order);
 #else
-    assert((intx(dest) & 0x03) == 0x00, "wrong alignment");
+    assert((intx(dest) & 0x03) == 0x00, "wrong alignment");
     int new_value = Atomic::add(add_value << 16, (volatile int*)(dest), order);
 #endif
     return (short)(new_value >> 16); // preserves sign
@@ -896,4 +872,4 @@ inline D Atomic::xchg(T exchange_value, volatile D* dest, atomic_memory_order or
   return XchgImpl<T, D>()(exchange_value, dest, order);
 }
 
-#endif // SHARE_VM_RUNTIME_ATOMIC_HPP
+#endif

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "precompiled.hpp"
 #include "compiler/disassembler.hpp"
 #include "oops/oop.inline.hpp"
@@ -39,7 +16,7 @@
 
 jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, Handle method, TRAPS) {
   if (inst->is_call() || inst->is_jump()) {
-    assert(NativeCall::instruction_size == (int)NativeJump::instruction_size, "unexpected size");
+    assert(NativeCall::instruction_size == (int)NativeJump::instruction_size, "unexpected size");
     return (pc_offset + NativeCall::instruction_size);
   } else if (inst->is_mov_literal64()) {
     // mov+call instruction pair
@@ -49,12 +26,12 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, Hand
       offset += 1; /* prefix byte for extended register R8-R15 */
       call++;
     }
-    assert(call[0] == 0xFF, "expected call");
+    assert(call[0] == 0xFF, "expected call");
     offset += 2; /* opcode byte + modrm byte */
     return (offset);
   } else if (inst->is_call_reg()) {
     // the inlined vtable stub contains a "call register" instruction
-    assert(method.not_null(), "only valid for virtual calls");
+    assert(method.not_null(), "only valid for virtual calls");
     return (pc_offset + ((NativeCallReg *) inst)->next_instruction_offset());
   } else if (inst->is_cond_jump()) {
     address pc = (address) (inst);
@@ -69,14 +46,10 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) 
   Handle obj(THREAD, HotSpotObjectConstantImpl::object(constant));
   jobject value = JNIHandles::make_local(obj());
   if (HotSpotObjectConstantImpl::compressed(constant)) {
-#ifdef _LP64
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     int oop_index = _oop_recorder->find_index(value);
     _instructions->relocate(pc, oop_Relocation::spec(oop_index), Assembler::narrow_oop_operand);
     TRACE_jvmci_3("relocating (narrow oop constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
-#else
-    JVMCI_ERROR("compressed oop on 32bit");
-#endif
   } else {
     address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
     *((jobject*) operand) = value;
@@ -88,13 +61,9 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) 
 void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle constant, TRAPS) {
   address pc = _instructions->start() + pc_offset;
   if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
-#ifdef _LP64
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     *((narrowKlass*) operand) = record_narrow_metadata_reference(_instructions, operand, constant, CHECK);
     TRACE_jvmci_3("relocating (narrow metaspace constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
-#else
-    JVMCI_ERROR("compressed Klass* on 32bit");
-#endif
   } else {
     address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
     *((void**) operand) = record_metadata_reference(_instructions, operand, constant, CHECK);
@@ -110,7 +79,7 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
   address dest = _constants->start() + data_offset;
 
   long disp = dest - next_instruction;
-  assert(disp == (jint) disp, "disp doesn't fit in 32 bits");
+  assert(disp == (jint) disp, "disp doesn't fit in 32 bits");
   *((jint*) operand) = (jint) disp;
 
   _instructions->relocate(pc, section_word_Relocation::spec((address) dest, CodeBuffer::SECT_CONSTS), Assembler::disp32_operand);
@@ -146,19 +115,12 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
 }
 
 void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, jint pc_offset, TRAPS) {
-#ifdef ASSERT
-  Method* method = NULL;
-  // we need to check, this might also be an unresolved method
-  if (hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
-    method = getMethodFromHotSpotMethod(hotspot_method());
-  }
-#endif
   switch (_next_call_type) {
     case INLINE_INVOKE:
       break;
     case INVOKEVIRTUAL:
     case INVOKEINTERFACE: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokeinterface");
+      assert(method == NULL || !method->is_static(), "cannot call static method with invokeinterface");
 
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       call->set_destination(SharedRuntime::get_resolve_virtual_call_stub());
@@ -168,7 +130,7 @@ void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, 
       break;
     }
     case INVOKESTATIC: {
-      assert(method == NULL || method->is_static(), "cannot call non-static method with invokestatic");
+      assert(method == NULL || method->is_static(), "cannot call non-static method with invokestatic");
 
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       call->set_destination(SharedRuntime::get_resolve_static_call_stub());
@@ -177,7 +139,7 @@ void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, 
       break;
     }
     case INVOKESPECIAL: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokespecial");
+      assert(method == NULL || !method->is_static(), "cannot call static method with invokespecial");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       call->set_destination(SharedRuntime::get_resolve_opt_virtual_call_stub());
       _instructions->relocate(call->instruction_address(),
@@ -197,7 +159,6 @@ static void relocate_poll_near(address pc) {
   intptr_t new_disp = (intptr_t) (os::get_polling_page() + offset) - (intptr_t) ni;
   *disp = (int32_t)new_disp;
 }
-
 
 void CodeInstaller::pd_relocate_poll(address pc, jint mark, TRAPS) {
   switch (mark) {

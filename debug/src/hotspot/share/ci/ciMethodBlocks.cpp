@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2006, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciMethodBlocks.hpp"
 #include "ci/ciStreams.hpp"
@@ -30,17 +6,15 @@
 
 // ciMethodBlocks
 
-
-
 ciBlock *ciMethodBlocks::block_containing(int bci) {
   ciBlock *blk = _bci_to_block[bci];
   return blk;
 }
 
 bool ciMethodBlocks::is_block_start(int bci) {
-  assert(bci >=0 && bci < _code_size, "valid bytecode range");
+  assert(bci >=0 && bci < _code_size, "valid bytecode range");
   ciBlock *b = _bci_to_block[bci];
-  assert(b != NULL, "must have block for bytecode");
+  assert(b != NULL, "must have block for bytecode");
   return b->start_bci() == bci;
 }
 
@@ -54,7 +28,7 @@ ciBlock *ciMethodBlocks::split_block_at(int bci) {
   ciBlock *former_block = block_containing(bci);
   ciBlock *new_block = new(_arena) ciBlock(_method, _num_blocks++, former_block->start_bci());
   _blocks->append(new_block);
-  assert(former_block != NULL, "must not be NULL");
+  assert(former_block != NULL, "must not be NULL");
   new_block->set_limit_bci(bci);
   former_block->set_start_bci(bci);
   for (int pos=bci-1; pos >= 0; pos--) {
@@ -116,7 +90,7 @@ void ciMethodBlocks::do_analysis() {
     // Determine if a new block has been made at the current bci.  If
     // this block differs from our current range, switch to the new
     // one and end the old one.
-    assert(cur_block != NULL, "must always have a current block");
+    assert(cur_block != NULL, "must always have a current block");
     ciBlock *new_block = block_containing(bci);
     if (new_block == NULL || new_block == cur_block) {
       // We have not marked this bci as the start of a new block.
@@ -334,72 +308,15 @@ void ciMethodBlocks::clear_processed() {
     _blocks->at(i)->clear_processed();
 }
 
-#ifndef PRODUCT
-void ciMethodBlocks::dump() {
-  tty->print("---- blocks for method: ");
-  _method->print();
-  tty->cr();
-  for (int i = 0; i < _blocks->length(); i++) {
-    tty->print("  B%d: ", i); _blocks->at(i)->dump();
-  }
-}
-#endif
-
-
 ciBlock::ciBlock(ciMethod *method, int index, int start_bci) :
-#ifndef PRODUCT
-                         _method(method),
-#endif
                          _idx(index), _flags(0), _start_bci(start_bci), _limit_bci(-1), _control_bci(fall_through_bci),
                          _ex_start_bci(-1), _ex_limit_bci(-1) {
 }
 
 void ciBlock::set_exception_range(int start_bci, int limit_bci)  {
-   assert(limit_bci >= start_bci, "valid range");
-   assert(!is_handler() && _ex_start_bci == -1 && _ex_limit_bci == -1, "must not be handler");
+   assert(limit_bci >= start_bci, "valid range");
+   assert(!is_handler() && _ex_start_bci == -1 && _ex_limit_bci == -1, "must not be handler");
    _ex_start_bci = start_bci;
    _ex_limit_bci = limit_bci;
    set_handler();
 }
-
-#ifndef PRODUCT
-static const char *flagnames[] = {
-  "Processed",
-  "Handler",
-  "MayThrow",
-  "Jsr",
-  "Ret",
-  "RetTarget",
-  "HasHandler",
-};
-
-void ciBlock::dump() {
-  tty->print(" [%d .. %d), {", _start_bci, _limit_bci);
-  for (int i = 0; i < 7; i++) {
-    if ((_flags & (1 << i)) != 0) {
-      tty->print(" %s", flagnames[i]);
-    }
-  }
-  tty->print(" ]");
-  if (is_handler())
-    tty->print(" handles(%d..%d)", _ex_start_bci, _ex_limit_bci);
-  tty->cr();
-}
-
-// ------------------------------------------------------------------
-// ciBlock::print_on
-void ciBlock::print_on(outputStream* st) const {
-  st->print_cr("--------------------------------------------------------");
-  st->print   ("ciBlock [%d - %d) control : ", start_bci(), limit_bci());
-  if (control_bci() == fall_through_bci) {
-    st->print_cr("%d:fall through", limit_bci());
-  } else {
-    st->print_cr("%d:%s", control_bci(),
-        Bytecodes::name(method()->java_code_at_bci(control_bci())));
-  }
-
-  if (Verbose || WizardMode) {
-    method()->print_codes_on(start_bci(), limit_bci(), st);
-  }
-}
-#endif

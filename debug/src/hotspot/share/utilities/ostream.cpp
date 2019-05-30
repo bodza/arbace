@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "compiler/compileLog.hpp"
@@ -84,7 +60,7 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
                                        const char* format, va_list ap,
                                        bool add_cr,
                                        size_t& result_len) {
-  assert(buflen >= 2, "buffer too small");
+  assert(buflen >= 2, "buffer too small");
 
   const char* result;
   if (add_cr)  buflen--;
@@ -100,12 +76,11 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
     if (add_cr && result_len >= buflen)  result_len = buflen-1;  // truncate
   } else {
     int written = os::vsnprintf(buffer, buflen, format, ap);
-    assert(written >= 0, "vsnprintf encoding error");
+    assert(written >= 0, "vsnprintf encoding error");
     result = buffer;
     if ((size_t)written < buflen) {
       result_len = written;
     } else {
-      DEBUG_ONLY(warning("increase O_BUFLEN in ostream.hpp -- output truncated");)
       result_len = buflen - 1;
     }
   }
@@ -178,7 +153,7 @@ void outputStream::move_to(int col, int slop, int min_space) {
 }
 
 void outputStream::put(char ch) {
-  assert(ch != 0, "please fix call site");
+  assert(ch != 0, "please fix call site");
   char buf[] = { ch, '\0' };
   write(buf, 1);
 }
@@ -312,7 +287,6 @@ stringStream::stringStream(size_t initial_size) : outputStream() {
   buffer        = NEW_RESOURCE_ARRAY(char, buffer_length);
   buffer_pos    = 0;
   buffer_fixed  = false;
-  DEBUG_ONLY(rm = Thread::current()->current_resource_mark();)
 }
 
 // useful for output to fixed chunks of memory, such as performance counters
@@ -338,10 +312,7 @@ void stringStream::write(const char* s, size_t len) {
         end = buffer_length * 2;
       }
       char* oldbuf = buffer;
-      assert(rm == NULL || Thread::current()->current_resource_mark() == rm,
-             "StringStream is re-allocated with a different ResourceMark. Current: "
-             PTR_FORMAT " original: " PTR_FORMAT,
-             p2i(Thread::current()->current_resource_mark()), p2i(rm));
+      assert(rm == NULL || Thread::current()->current_resource_mark() == rm, "StringStream is re-allocated with a different ResourceMark. Current: " PTR_FORMAT " original: " PTR_FORMAT, p2i(Thread::current()->current_resource_mark()), p2i(rm));
       buffer = NEW_RESOURCE_ARRAY(char, end);
       if (buffer_pos > 0) {
         memcpy(buffer, oldbuf, buffer_pos);
@@ -374,7 +345,6 @@ stringStream::~stringStream() {}
 
 xmlStream*   xtty;
 outputStream* tty;
-CDS_ONLY(fileStream* classlist_file;) // Only dump the classes that can be stored into the CDS archive
 extern Mutex* tty_lock;
 
 #define EXTRACHARLEN   32
@@ -704,13 +674,13 @@ void defaultStream::start_log() {
       // System properties don't generally contain newlines, so don't bother with unparsing.
       outputStream *text = xs->text();
       for (SystemProperty* p = Arguments::system_properties(); p != NULL; p = p->next()) {
-        assert(p->key() != NULL, "p->key() is NULL");
+        assert(p->key() != NULL, "p->key() is NULL");
         if (p->is_readable()) {
           // Print in two stages to avoid problems with long
           // keys/values.
           text->print_raw(p->key());
           text->put('=');
-          assert(p->value() != NULL, "p->value() is NULL");
+          assert(p->value() != NULL, "p->value() is NULL");
           text->print_raw_cr(p->value());
         }
       }
@@ -901,16 +871,6 @@ void ostream_init() {
 void ostream_init_log() {
   // Note : this must be called AFTER ostream_init()
 
-#if INCLUDE_CDS
-  // For -XX:DumpLoadedClassList=<file> option
-  if (DumpLoadedClassList != NULL) {
-    const char* list_name = make_log_name(DumpLoadedClassList, NULL);
-    classlist_file = new(ResourceObj::C_HEAP, mtInternal)
-                         fileStream(list_name);
-    FREE_C_HEAP_ARRAY(char, list_name);
-  }
-#endif
-
   // If we haven't lazily initialized the logfile yet, do it now,
   // to avoid the possibility of lazy initialization during a VM
   // crash, which can affect the stability of the fatal error handler.
@@ -923,11 +883,6 @@ void ostream_exit() {
   static bool ostream_exit_called = false;
   if (ostream_exit_called)  return;
   ostream_exit_called = true;
-#if INCLUDE_CDS
-  if (classlist_file != NULL) {
-    delete classlist_file;
-  }
-#endif
   if (tty != defaultStream::instance) {
     delete tty;
   }
@@ -1004,75 +959,3 @@ bufferedStream::~bufferedStream() {
     FREE_C_HEAP_ARRAY(char, buffer);
   }
 }
-
-#ifndef PRODUCT
-
-#if defined(SOLARIS) || defined(LINUX) || defined(AIX) || defined(_ALLBSD_SOURCE)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#elif defined(_WINDOWS)
-#include <winsock2.h>
-#endif
-
-// Network access
-networkStream::networkStream() : bufferedStream(1024*10, 1024*10) {
-
-  _socket = -1;
-
-  int result = os::socket(AF_INET, SOCK_STREAM, 0);
-  if (result <= 0) {
-    assert(false, "Socket could not be created!");
-  } else {
-    _socket = result;
-  }
-}
-
-int networkStream::read(char *buf, size_t len) {
-  return os::recv(_socket, buf, (int)len, 0);
-}
-
-void networkStream::flush() {
-  if (size() != 0) {
-    int result = os::raw_send(_socket, (char *)base(), size(), 0);
-    assert(result != -1, "connection error");
-    assert(result == (int)size(), "didn't send enough data");
-  }
-  reset();
-}
-
-networkStream::~networkStream() {
-  close();
-}
-
-void networkStream::close() {
-  if (_socket != -1) {
-    flush();
-    os::socket_close(_socket);
-    _socket = -1;
-  }
-}
-
-bool networkStream::connect(const char *ip, short port) {
-
-  struct sockaddr_in server;
-  server.sin_family = AF_INET;
-  server.sin_port = htons(port);
-
-  server.sin_addr.s_addr = inet_addr(ip);
-  if (server.sin_addr.s_addr == (uint32_t)-1) {
-    struct hostent* host = os::get_host_by_name((char*)ip);
-    if (host != NULL) {
-      memcpy(&server.sin_addr, host->h_addr_list[0], host->h_length);
-    } else {
-      return false;
-    }
-  }
-
-
-  int result = os::connect(_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in));
-  return (result >= 0);
-}
-
-#endif

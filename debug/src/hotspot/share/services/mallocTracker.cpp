@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 
 #include "runtime/atomic.hpp"
@@ -58,9 +35,8 @@ void MallocMemorySnapshot::make_adjustment() {
   _malloc[chunk_idx].record_free(arena_size);
 }
 
-
 void MallocMemorySummary::initialize() {
-  assert(sizeof(_snapshot) >= sizeof(MallocMemorySnapshot), "Sanity Check");
+  assert(sizeof(_snapshot) >= sizeof(MallocMemorySnapshot), "Sanity Check");
   // Uses placement new operator to initialize static area.
   ::new ((void*)_snapshot)MallocMemorySnapshot();
 }
@@ -105,12 +81,12 @@ bool MallocTracker::initialize(NMT_TrackingLevel level) {
 }
 
 bool MallocTracker::transition(NMT_TrackingLevel from, NMT_TrackingLevel to) {
-  assert(from != NMT_off, "Can not transition from off state");
-  assert(to != NMT_off, "Can not transition to off state");
-  assert (from != NMT_minimal, "cannot transition from minimal state");
+  assert(from != NMT_off, "Can not transition from off state");
+  assert(to != NMT_off, "Can not transition to off state");
+  assert(from != NMT_minimal, "cannot transition from minimal state");
 
   if (from == NMT_detail) {
-    assert(to == NMT_minimal || to == NMT_summary, "Just check");
+    assert(to == NMT_minimal || to == NMT_summary, "Just check");
     MallocSiteTable::shutdown();
   }
   return true;
@@ -137,15 +113,7 @@ void* MallocTracker::record_malloc(void* malloc_base, size_t size, MEMFLAGS flag
 
   // The alignment check: 8 bytes alignment for 32 bit systems.
   //                      16 bytes alignment for 64-bit systems.
-  assert(((size_t)memblock & (sizeof(size_t) * 2 - 1)) == 0, "Alignment check");
-
-#ifdef ASSERT
-  if (level > NMT_minimal) {
-    // Read back
-    assert(get_size(memblock) == size,   "Wrong size");
-    assert(get_flags(memblock) == flags, "Wrong flags");
-  }
-#endif
+  assert(((size_t)memblock & (sizeof(size_t) * 2 - 1)) == 0, "Alignment check");
 
   return memblock;
 }
@@ -161,5 +129,3 @@ void* MallocTracker::record_free(void* memblock) {
 
   return (void*)header;
 }
-
-

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CIENV_HPP
 #define SHARE_VM_CI_CIENV_HPP
 
@@ -66,12 +42,6 @@ private:
 
   char* _name_buffer;
   int   _name_buffer_len;
-
-  // Cache Jvmti state
-  bool  _jvmti_can_hotswap_or_post_breakpoint;
-  bool  _jvmti_can_access_local_variables;
-  bool  _jvmti_can_post_on_exceptions;
-  bool  _jvmti_can_pop_frame;
 
   // Cache DTrace flags
   bool  _dtrace_extended_probes;
@@ -335,13 +305,6 @@ public:
   bool break_at_compile() { return _break_at_compile; }
   void set_break_at_compile(bool z) { _break_at_compile = z; }
 
-  // Cache Jvmti state
-  void  cache_jvmti_state();
-  bool  jvmti_state_changed() const;
-  bool  should_retain_local_variables() const;
-  bool  jvmti_can_hotswap_or_post_breakpoint() const { return _jvmti_can_hotswap_or_post_breakpoint; }
-  bool  jvmti_can_post_on_exceptions()         const { return _jvmti_can_post_on_exceptions; }
-
   // Cache DTrace flags
   void  cache_dtrace_flags();
   bool  dtrace_extended_probes() const { return _dtrace_extended_probes; }
@@ -372,21 +335,20 @@ public:
                        bool                      has_wide_vectors,
                        RTMState                  rtm_state = NoRTM);
 
-
   // Access to certain well known ciObjects.
 #define WK_KLASS_FUNC(name, ignore_s, ignore_o) \
   ciInstanceKlass* name() { \
-    return _##name;\
+    return _##name; \
   }
   WK_KLASSES_DO(WK_KLASS_FUNC)
 #undef WK_KLASS_FUNC
 
   ciInstance* NullPointerException_instance() {
-    assert(_NullPointerException_instance != NULL, "initialization problem");
+    assert(_NullPointerException_instance != NULL, "initialization problem");
     return _NullPointerException_instance;
   }
   ciInstance* ArithmeticException_instance() {
-    assert(_ArithmeticException_instance != NULL, "initialization problem");
+    assert(_ArithmeticException_instance != NULL, "initialization problem");
     return _ArithmeticException_instance;
   }
 
@@ -466,4 +428,4 @@ public:
   void dump_compile_data(outputStream* out);
 };
 
-#endif // SHARE_VM_CI_CIENV_HPP
+#endif

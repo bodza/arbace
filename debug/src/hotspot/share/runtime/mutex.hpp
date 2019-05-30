@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_MUTEX_HPP
 #define SHARE_VM_RUNTIME_MUTEX_HPP
 
@@ -59,7 +35,6 @@
 // then you'll want change the unlock() fast path from:
 //    STB;MEMBAR #storeload; LDN
 // to a full-word CAS of the lockword.
-
 
 union SplitWord {   // full-word with separately addressable LSB
   volatile intptr_t FullWord ;
@@ -133,19 +108,10 @@ class Monitor : public CHeapObj<mtInternal> {
   char _name[MONITOR_NAME_LEN];          // Name of mutex
 
   // Debugging fields for naming, deadlock detection, etc. (some only used in debug mode)
-#ifndef PRODUCT
-  bool      _allow_vm_block;
-  debug_only(int _rank;)                 // rank (to avoid/detect potential deadlocks)
-  debug_only(Monitor * _next;)           // Used by a Thread to link up owned locks
-  debug_only(Thread* _last_owner;)       // the last thread to own the lock
-  debug_only(static bool contains(Monitor * locks, Monitor * lock);)
-  debug_only(static Monitor * get_least_ranked_lock(Monitor * locks);)
-  debug_only(Monitor * get_least_ranked_lock_besides_this(Monitor * locks);)
-#endif
 
-  void set_owner_implementation(Thread* owner)                        PRODUCT_RETURN;
-  void check_prelock_state     (Thread* thread, bool safepoint_check) PRODUCT_RETURN;
-  void check_block_state       (Thread* thread)                       PRODUCT_RETURN;
+  void set_owner_implementation(Thread* owner)                        {};
+  void check_prelock_state     (Thread* thread, bool safepoint_check) {};
+  void check_block_state       (Thread* thread)                       {};
 
   // platform-dependent support code can go here (in os_<os_family>.cpp)
  public:
@@ -170,8 +136,6 @@ class Monitor : public CHeapObj<mtInternal> {
     _safepoint_check_always       // Causes error if locked without a safepoint
                                   // check.
   };
-
-  NOT_PRODUCT(SafepointCheckRequired _safepoint_check_required;)
 
   enum WaitResults {
     CONDVAR_EVENT,         // Wait returned because of condition variable notification
@@ -208,7 +172,6 @@ class Monitor : public CHeapObj<mtInternal> {
   bool notify();
   bool notify_all();
 
-
   void lock(); // prints out warning if VM thread blocks
   void lock(Thread *thread); // overloaded with current thread
   void unlock();
@@ -234,25 +197,9 @@ class Monitor : public CHeapObj<mtInternal> {
 
   void print_on_error(outputStream* st) const;
 
-  #ifndef PRODUCT
-    void print_on(outputStream* st) const;
-    void print() const                      { print_on(tty); }
-    debug_only(int    rank() const          { return _rank; })
-    bool   allow_vm_block()                 { return _allow_vm_block; }
-
-    debug_only(Monitor *next()  const         { return _next; })
-    debug_only(void   set_next(Monitor *next) { _next = next; })
-  #endif
-
   void set_owner(Thread* owner) {
-  #ifndef PRODUCT
-    set_owner_implementation(owner);
-    debug_only(void verify_Monitor(Thread* thr));
-  #else
     _owner = owner;
-  #endif
   }
-
 };
 
 class PaddedMonitor : public Monitor {
@@ -290,7 +237,6 @@ class PaddedMonitor : public Monitor {
 // The Mutex/Monitor design parallels that of Java-monitors, being based on
 // thread-specific park-unpark platform-specific primitives.
 
-
 class Mutex : public Monitor {      // degenerate Monitor
  public:
    Mutex(int rank, const char *name, bool allow_vm_block = false,
@@ -317,4 +263,4 @@ public:
     Mutex(rank, name, allow_vm_block, safepoint_check_required) {};
 };
 
-#endif // SHARE_VM_RUNTIME_MUTEX_HPP
+#endif

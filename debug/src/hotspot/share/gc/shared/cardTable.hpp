@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_CARDTABLE_HPP
 #define SHARE_VM_GC_SHARED_CARDTABLE_HPP
 
@@ -151,13 +127,9 @@ public:
 
   // Mapping from address to card marking array entry
   jbyte* byte_for(const void* p) const {
-    assert(_whole_heap.contains(p),
-           "Attempt to access p = " PTR_FORMAT " out of bounds of "
-           " card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")",
-           p2i(p), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
+    assert(_whole_heap.contains(p), "Attempt to access p = " PTR_FORMAT " out of bounds of card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")", p2i(p), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
     jbyte* result = &_byte_map_base[uintptr_t(p) >> card_shift];
-    assert(result >= _byte_map && result < _byte_map + _byte_map_size,
-           "out of bounds accessor for card marking array");
+    assert(result >= _byte_map && result < _byte_map + _byte_map_size, "out of bounds accessor for card marking array");
     return result;
   }
 
@@ -182,25 +154,16 @@ public:
 
   // Mapping from card marking array entry to address of first word
   HeapWord* addr_for(const jbyte* p) const {
-    assert(p >= _byte_map && p < _byte_map + _byte_map_size,
-           "out of bounds access to card marking array. p: " PTR_FORMAT
-           " _byte_map: " PTR_FORMAT " _byte_map + _byte_map_size: " PTR_FORMAT,
-           p2i(p), p2i(_byte_map), p2i(_byte_map + _byte_map_size));
+    assert(p >= _byte_map && p < _byte_map + _byte_map_size, "out of bounds access to card marking array. p: " PTR_FORMAT " _byte_map: " PTR_FORMAT " _byte_map + _byte_map_size: " PTR_FORMAT, p2i(p), p2i(_byte_map), p2i(_byte_map + _byte_map_size));
     size_t delta = pointer_delta(p, _byte_map_base, sizeof(jbyte));
     HeapWord* result = (HeapWord*) (delta << card_shift);
-    assert(_whole_heap.contains(result),
-           "Returning result = " PTR_FORMAT " out of bounds of "
-           " card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")",
-           p2i(result), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
+    assert(_whole_heap.contains(result), "Returning result = " PTR_FORMAT " out of bounds of " " card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")", p2i(result), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
     return result;
   }
 
   // Mapping from address to card marking array index.
   size_t index_for(void* p) {
-    assert(_whole_heap.contains(p),
-           "Attempt to access p = " PTR_FORMAT " out of bounds of "
-           " card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")",
-           p2i(p), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
+    assert(_whole_heap.contains(p), "Attempt to access p = " PTR_FORMAT " out of bounds of " " card marking array's _whole_heap = [" PTR_FORMAT "," PTR_FORMAT ")", p2i(p), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
     return byte_for(p) - _byte_map;
   }
 
@@ -258,9 +221,9 @@ public:
 
   // val_equals -> it will check that all cards covered by mr equal val
   // !val_equals -> it will check that all cards covered by mr do not equal val
-  void verify_region(MemRegion mr, jbyte val, bool val_equals) PRODUCT_RETURN;
-  void verify_not_dirty_region(MemRegion mr) PRODUCT_RETURN;
-  void verify_dirty_region(MemRegion mr) PRODUCT_RETURN;
+  void verify_region(MemRegion mr, jbyte val, bool val_equals) {};
+  void verify_not_dirty_region(MemRegion mr) {};
+  void verify_dirty_region(MemRegion mr) {};
 };
 
-#endif // SHARE_VM_GC_SHARED_CARDTABLE_HPP
+#endif

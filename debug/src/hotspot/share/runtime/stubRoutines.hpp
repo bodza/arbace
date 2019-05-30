@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_STUBROUTINES_HPP
 #define SHARE_VM_RUNTIME_STUBROUTINES_HPP
 
@@ -73,7 +49,6 @@
 // 3. add a public accessor function to the instance variable
 // 4. implement the corresponding generator function in the platform-dependent
 //    stubGenerator_<arch>.cpp file and call the function in generate_all() of that file
-
 
 class StubRoutines: AllStatic {
 
@@ -295,7 +270,6 @@ class StubRoutines: AllStatic {
   static address addr_fpu_subnormal_bias1()                { return (address)&_fpu_subnormal_bias1; }
   static address addr_fpu_subnormal_bias2()                { return (address)&_fpu_subnormal_bias2; }
 
-
   static address select_arraycopy_function(BasicType t, bool aligned, bool disjoint, const char* &name, bool dest_uninitialized);
 
   static address jbyte_arraycopy()  { return _jbyte_arraycopy; }
@@ -387,23 +361,23 @@ class StubRoutines: AllStatic {
   static address zero_aligned_words()  { return _zero_aligned_words; }
 
   static double  intrinsic_log10(double d) {
-    assert(_intrinsic_log10 != NULL, "must be defined");
+    assert(_intrinsic_log10 != NULL, "must be defined");
     return _intrinsic_log10(d);
   }
   static double  intrinsic_pow(double d, double d2) {
-    assert(_intrinsic_pow != NULL, "must be defined");
+    assert(_intrinsic_pow != NULL, "must be defined");
     return _intrinsic_pow(d, d2);
   }
   static double  intrinsic_sin(double d) {
-    assert(_intrinsic_sin != NULL, "must be defined");
+    assert(_intrinsic_sin != NULL, "must be defined");
     return _intrinsic_sin(d);
   }
   static double  intrinsic_cos(double d) {
-    assert(_intrinsic_cos != NULL, "must be defined");
+    assert(_intrinsic_cos != NULL, "must be defined");
     return _intrinsic_cos(d);
   }
   static double  intrinsic_tan(double d) {
-    assert(_intrinsic_tan != NULL, "must be defined");
+    assert(_intrinsic_tan != NULL, "must be defined");
     return _intrinsic_tan(d);
   }
 
@@ -424,9 +398,7 @@ class StubRoutines: AllStatic {
   }
 
   static address continuation_for_safefetch_fault(address pc) {
-    assert(_safefetch32_continuation_pc != NULL &&
-           _safefetchN_continuation_pc  != NULL,
-           "not initialized");
+    assert(_safefetch32_continuation_pc != NULL && _safefetchN_continuation_pc  != NULL, "not initialized");
 
     if (pc == _safefetch32_fault_pc) return _safefetch32_continuation_pc;
     if (pc == _safefetchN_fault_pc)  return _safefetchN_continuation_pc;
@@ -457,14 +429,13 @@ class StubRoutines: AllStatic {
 // Safefetch allows to load a value from a location that's not known
 // to be valid. If the load causes a fault, the error value is returned.
 inline int SafeFetch32(int* adr, int errValue) {
-  assert(StubRoutines::SafeFetch32_stub(), "stub not yet generated");
+  assert(StubRoutines::SafeFetch32_stub(), "stub not yet generated");
   return StubRoutines::SafeFetch32_stub()(adr, errValue);
 }
 inline intptr_t SafeFetchN(intptr_t* adr, intptr_t errValue) {
-  assert(StubRoutines::SafeFetchN_stub(), "stub not yet generated");
+  assert(StubRoutines::SafeFetchN_stub(), "stub not yet generated");
   return StubRoutines::SafeFetchN_stub()(adr, errValue);
 }
-
 
 // returns true if SafeFetch32 and SafeFetchN can be used safely (stubroutines are already generated)
 inline bool CanUseSafeFetch32() {
@@ -474,4 +445,4 @@ inline bool CanUseSafeFetch32() {
 inline bool CanUseSafeFetchN() {
   return StubRoutines::SafeFetchN_stub() ? true : false;
 }
-#endif // SHARE_VM_RUNTIME_STUBROUTINES_HPP
+#endif

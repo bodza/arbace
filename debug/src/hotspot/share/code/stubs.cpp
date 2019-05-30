@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/codeBlob.hpp"
 #include "code/codeCache.hpp"
@@ -30,7 +6,6 @@
 #include "oops/oop.inline.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "utilities/align.hpp"
-
 
 // Implementation of StubQueue
 //
@@ -63,7 +38,6 @@
 // CAUTION: DO NOT MESS WITH THIS CODE IF YOU CANNOT PROVE
 // ITS CORRECTNESS! THIS CODE IS MORE SUBTLE THAN IT LOOKS!
 
-
 StubQueue::StubQueue(StubInterface* stub_interface, int buffer_size,
                      Mutex* lock, const char* name) : _mutex(lock) {
   intptr_t size = align_up(buffer_size, 2*BytesPerWord);
@@ -79,7 +53,6 @@ StubQueue::StubQueue(StubInterface* stub_interface, int buffer_size,
   _queue_end       = 0;
   _number_of_stubs = 0;
 }
-
 
 StubQueue::~StubQueue() {
   // Note: Currently StubQueues are never destroyed so nothing needs to be done here.
@@ -106,7 +79,6 @@ Stub* StubQueue::stub_containing(address pc) const {
   return NULL;
 }
 
-
 Stub* StubQueue::request_committed(int code_size) {
   Stub* s = request(code_size);
   CodeStrings strings;
@@ -114,9 +86,8 @@ Stub* StubQueue::request_committed(int code_size) {
   return s;
 }
 
-
 Stub* StubQueue::request(int requested_code_size) {
-  assert(requested_code_size > 0, "requested_code_size must be > 0");
+  assert(requested_code_size > 0, "requested_code_size must be > 0");
   if (_mutex != NULL) _mutex->lock();
   Stub* s = current_stub();
   int requested_size = align_up(stub_code_size_to_size(requested_code_size), CodeEntryAlignment);
@@ -124,7 +95,7 @@ Stub* StubQueue::request(int requested_code_size) {
     if (is_contiguous()) {
       // Queue: |...|XXXXXXX|.............|
       //        ^0  ^begin  ^end          ^size = limit
-      assert(_buffer_limit == _buffer_size, "buffer must be fully usable");
+      assert(_buffer_limit == _buffer_size, "buffer must be fully usable");
       if (_queue_end + requested_size <= _buffer_size) {
         // code fits in at the end => nothing to do
         CodeStrings strings;
@@ -133,15 +104,15 @@ Stub* StubQueue::request(int requested_code_size) {
       } else {
         // stub doesn't fit in at the queue end
         // => reduce buffer limit & wrap around
-        assert(!is_empty(), "just checkin'");
+        assert(!is_empty(), "just checkin'");
         _buffer_limit = _queue_end;
         _queue_end = 0;
       }
     }
   }
   if (requested_size <= available_space()) {
-    assert(!is_contiguous(), "just checkin'");
-    assert(_buffer_limit <= _buffer_size, "queue invariant broken");
+    assert(!is_contiguous(), "just checkin'");
+    assert(_buffer_limit <= _buffer_size, "queue invariant broken");
     // Queue: |XXX|.......|XXXXXXX|.......|
     //        ^0  ^end    ^begin  ^limit  ^size
     s = current_stub();
@@ -154,27 +125,23 @@ Stub* StubQueue::request(int requested_code_size) {
   return NULL;
 }
 
-
 void StubQueue::commit(int committed_code_size, CodeStrings& strings) {
-  assert(committed_code_size > 0, "committed_code_size must be > 0");
+  assert(committed_code_size > 0, "committed_code_size must be > 0");
   int committed_size = align_up(stub_code_size_to_size(committed_code_size), CodeEntryAlignment);
   Stub* s = current_stub();
-  assert(committed_size <= stub_size(s), "committed size must not exceed requested size");
+  assert(committed_size <= stub_size(s), "committed size must not exceed requested size");
   stub_initialize(s, committed_size, strings);
   _queue_end += committed_size;
   _number_of_stubs++;
   if (_mutex != NULL) _mutex->unlock();
-  debug_only(stub_verify(s);)
 }
-
 
 void StubQueue::remove_first() {
   if (number_of_stubs() == 0) return;
   Stub* s = first();
-  debug_only(stub_verify(s);)
   stub_finalize(s);
   _queue_begin += stub_size(s);
-  assert(_queue_begin <= _buffer_limit, "sanity check");
+  assert(_queue_begin <= _buffer_limit, "sanity check");
   if (_queue_begin == _queue_end) {
     // buffer empty
     // => reset queue indices
@@ -190,19 +157,15 @@ void StubQueue::remove_first() {
   _number_of_stubs--;
 }
 
-
 void StubQueue::remove_first(int n) {
   int i = MIN2(n, number_of_stubs());
   while (i-- > 0) remove_first();
 }
 
-
 void StubQueue::remove_all(){
-  debug_only(verify();)
   remove_first(number_of_stubs());
-  assert(number_of_stubs() == 0, "sanity check");
+  assert(number_of_stubs() == 0, "sanity check");
 }
-
 
 void StubQueue::verify() {
   // verify only if initialized
@@ -232,11 +195,9 @@ void StubQueue::verify() {
   guarantee(_queue_begin != _queue_end || n == 0, "buffer indices must be the same");
 }
 
-
 void StubQueue::print() {
   MutexLockerEx lock(_mutex);
   for (Stub* s = first(); s != NULL; s = next(s)) {
     stub_print(s);
   }
 }
-

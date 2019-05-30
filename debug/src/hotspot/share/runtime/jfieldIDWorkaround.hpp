@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_JFIELDIDWORKAROUND_HPP
 #define SHARE_VM_RUNTIME_JFIELDIDWORKAROUND_HPP
 
@@ -65,19 +41,10 @@ class jfieldIDWorkaround: AllStatic {
 
     checked_mask_in_place  = right_n_bits(checked_bits)  << checked_shift,
     instance_mask_in_place = right_n_bits(instance_bits) << instance_shift,
-#ifndef _WIN64
     large_offset_mask      = right_n_bits(large_offset_bits),
     small_offset_mask      = right_n_bits(small_offset_bits),
     klass_mask             = right_n_bits(klass_bits)
-#endif
     };
-
-#ifdef _WIN64
-    // These values are too big for Win64
-    const static uintptr_t large_offset_mask = right_n_bits(large_offset_bits);
-    const static uintptr_t small_offset_mask = right_n_bits(small_offset_bits);
-    const static uintptr_t klass_mask        = right_n_bits(klass_bits);
-#endif
 
   // helper routines:
   static bool is_checked_jfieldID(jfieldID id) {
@@ -113,22 +80,18 @@ class jfieldIDWorkaround: AllStatic {
       as_uint |= encode_klass_hash(k, offset);
     }
     jfieldID result = (jfieldID) as_uint;
-#ifndef ASSERT
     // always verify in debug mode; switchable in anything else
     if (VerifyJNIFields)
-#endif // ASSERT
     {
       verify_instance_jfieldID(k, result);
     }
-    assert(raw_instance_offset(result) == (offset & large_offset_mask), "extract right offset");
+    assert(raw_instance_offset(result) == (offset & large_offset_mask), "extract right offset");
     return result;
   }
 
   static intptr_t from_instance_jfieldID(Klass* k, jfieldID id) {
-#ifndef ASSERT
     // always verify in debug mode; switchable in anything else
     if (VerifyJNIFields)
-#endif // ASSERT
     {
       verify_instance_jfieldID(k, id);
     }
@@ -136,24 +99,22 @@ class jfieldIDWorkaround: AllStatic {
   }
 
   static jfieldID to_static_jfieldID(JNIid* id) {
-    assert(id->is_static_field_id(), "from_JNIid, but not static field id");
+    assert(id->is_static_field_id(), "from_JNIid, but not static field id");
     jfieldID result = (jfieldID) id;
-    assert(from_static_jfieldID(result) == id, "must produce the same static id");
+    assert(from_static_jfieldID(result) == id, "must produce the same static id");
     return result;
   }
 
   static JNIid* from_static_jfieldID(jfieldID id) {
-    assert(jfieldIDWorkaround::is_static_jfieldID(id),
-           "to_JNIid, but not static jfieldID");
+    assert(jfieldIDWorkaround::is_static_jfieldID(id), "to_JNIid, but not static jfieldID");
     JNIid* result = (JNIid*) id;
-    assert(result->is_static_field_id(), "to_JNIid, but not static field id");
+    assert(result->is_static_field_id(), "to_JNIid, but not static field id");
     return result;
   }
 
   static jfieldID to_jfieldID(InstanceKlass* k, int offset, bool is_static) {
     if (is_static) {
       JNIid *id = k->jni_id_for(offset);
-      debug_only(id->set_is_static_field_id());
       return jfieldIDWorkaround::to_static_jfieldID(id);
     } else {
       return jfieldIDWorkaround::to_instance_jfieldID(k, offset);
@@ -161,4 +122,4 @@ class jfieldIDWorkaround: AllStatic {
   }
 };
 
-#endif // SHARE_VM_RUNTIME_JFIELDIDWORKAROUND_HPP
+#endif

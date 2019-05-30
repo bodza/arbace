@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2018 SAP SE. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 
 #include "classfile/classLoaderData.inline.hpp"
@@ -34,7 +9,6 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/ostream.hpp"
 
-
 ClassLoaderHierarchyDCmd::ClassLoaderHierarchyDCmd(outputStream* output, bool heap)
   : DCmdWithParser(output, heap),
    _show_classes("show-classes", "Print loaded classes.", "BOOLEAN", false, "false"),
@@ -44,7 +18,6 @@ ClassLoaderHierarchyDCmd::ClassLoaderHierarchyDCmd(outputStream* output, bool he
   _dcmdparser.add_dcmd_option(&_verbose);
   _dcmdparser.add_dcmd_option(&_fold);
 }
-
 
 int ClassLoaderHierarchyDCmd::num_arguments() {
   ResourceMark rm;
@@ -95,7 +68,7 @@ public:
   }
 
   void pop() {
-    assert(_pos > 0, "must be");
+    assert(_pos > 0, "must be");
     _pos --;
   }
 
@@ -123,7 +96,6 @@ public:
 
   LoadedClassInfo(Klass* klass, const ClassLoaderData* cld)
     : _klass(klass), _cld(cld) {}
-
 };
 
 class LoaderTreeNode : public ResourceObj {
@@ -220,7 +192,7 @@ class LoaderTreeNode : public ResourceObj {
         if (_classes != NULL) {
           for (LoadedClassInfo* lci = _classes; lci; lci = lci->_next) {
             // Non-anonymous classes should live in the primary CLD of its loader
-            assert(lci->_cld == _cld, "must be");
+            assert(lci->_cld == _cld, "must be");
 
             branchtracker.print(st);
             if (lci == _classes) { // first iteration
@@ -258,7 +230,7 @@ class LoaderTreeNode : public ResourceObj {
             }
             st->print("%s", lci->_klass->external_name());
             // For anonymous classes, also print CLD if verbose. Should be a different one than the primary CLD.
-            assert(lci->_cld != _cld, "must be");
+            assert(lci->_cld != _cld, "must be");
             if (verbose) {
               st->print("  (Loader Data: " PTR_FORMAT ")", p2i(lci->_cld));
             }
@@ -272,10 +244,8 @@ class LoaderTreeNode : public ResourceObj {
           branchtracker.print(st);
           st->cr();
         }
-
-      } // end: print_classes
-
-    } // Pop branchtracker mark
+      }
+    }
 
     // Print children, recursively
     LoaderTreeNode* c = _child;
@@ -283,14 +253,13 @@ class LoaderTreeNode : public ResourceObj {
       c->print_with_childs(st, branchtracker, print_classes, verbose);
       c = c->_next;
     }
-
   }
 
   // Helper: Attempt to fold this node into the target node. If success, returns true.
   // Folding can be done if both nodes are leaf nodes and they refer to the same loader class
   // and they have the same name or no name (note: leaf check is done by caller).
   bool can_fold_into(LoaderTreeNode* target_node) const {
-    assert(is_leaf() && target_node->is_leaf(), "must be leaf");
+    assert(is_leaf() && target_node->is_leaf(), "must be leaf");
     return _cld->class_loader_klass() == target_node->_cld->class_loader_klass() &&
            _cld->name() == target_node->_cld->name();
   }
@@ -313,7 +282,7 @@ public:
   }
 
   void add_sibling(LoaderTreeNode* info) {
-    assert(info->_next == NULL, "must be");
+    assert(info->_next == NULL, "must be");
     info->_next = _next;
     _next = info;
   }
@@ -378,7 +347,7 @@ public:
       if (matching_node != NULL) {
         // Increase fold count for the matching node and remove folded node from the child list.
         matching_node->_num_folded ++;
-        assert(prev != NULL, "Sanity"); // can never happen since we do not fold the first node.
+        assert(prev != NULL, "Sanity"); // can never happen since we do not fold the first node.
         prev->_next = node->_next;
       } else {
         prev = node;
@@ -391,7 +360,6 @@ public:
     BranchTracker bwt;
     print_with_childs(st, bwt, print_classes, print_add_info);
   }
-
 };
 
 class LoadedClassCollectClosure : public KlassClosure {
@@ -416,7 +384,7 @@ class LoaderInfoScanClosure : public CLDClosure {
   LoaderTreeNode* _root;
 
   static void fill_in_classes(LoaderTreeNode* info, const ClassLoaderData* cld) {
-    assert(info != NULL && cld != NULL, "must be");
+    assert(info != NULL && cld != NULL, "must be");
     LoadedClassCollectClosure lccc(cld);
     const_cast<ClassLoaderData*>(cld)->classes_do(&lccc);
     if (lccc._num_classes > 0) {
@@ -426,7 +394,7 @@ class LoaderInfoScanClosure : public CLDClosure {
 
   LoaderTreeNode* find_node_or_add_empty_node(oop loader_oop) {
 
-    assert(_root != NULL, "root node must exist");
+    assert(_root != NULL, "root node must exist");
 
     if (loader_oop == NULL) {
       return _root;
@@ -449,13 +417,12 @@ class LoaderInfoScanClosure : public CLDClosure {
       } else {
         parent_info = find_node_or_add_empty_node(parent_oop);
       }
-      assert(parent_info != NULL, "must be");
+      assert(parent_info != NULL, "must be");
 
       parent_info->add_child(info);
     }
     return info;
   }
-
 
 public:
   LoaderInfoScanClosure(bool print_classes, bool verbose)
@@ -477,11 +444,11 @@ public:
     const oop loader_oop = cld->class_loader();
 
     LoaderTreeNode* info = find_node_or_add_empty_node(loader_oop);
-    assert(info != NULL, "must be");
+    assert(info != NULL, "must be");
 
     // Update CLD in node, but only if this is the primary CLD for this loader.
     if (cld->is_anonymous() == false) {
-      assert(info->cld() == NULL, "there should be only one primary CLD per loader");
+      assert(info->cld() == NULL, "there should be only one primary CLD per loader");
       info->set_cld(cld);
     }
 
@@ -492,9 +459,7 @@ public:
   void fold() {
     _root->fold_children();
   }
-
 };
-
 
 class ClassLoaderHierarchyVMOperation : public VM_Operation {
   outputStream* const _out;
@@ -511,7 +476,7 @@ public:
   }
 
   void doit() {
-    assert(SafepointSynchronize::is_at_safepoint(), "must be a safepoint");
+    assert(SafepointSynchronize::is_at_safepoint(), "must be a safepoint");
     ResourceMark rm;
     LoaderInfoScanClosure cl (_show_classes, _verbose);
     ClassLoaderDataGraph::cld_do(&cl);

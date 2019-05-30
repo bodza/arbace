@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_STUBROUTINES_X86_HPP
 #define CPU_X86_VM_STUBROUTINES_X86_HPP
 
@@ -32,15 +8,14 @@
 static bool returns_to_call_stub(address return_pc) { return return_pc == _call_stub_return_address; }
 
 enum platform_dependent_constants {
-  code_size1 = 20000 LP64_ONLY(+10000),         // simply increase if too small (assembler will crash if too small)
-  code_size2 = 33800 LP64_ONLY(+10000)           // simply increase if too small (assembler will crash if too small)
+  code_size1 = 20000 +10000,         // simply increase if too small (assembler will crash if too small)
+  code_size2 = 33800 +10000           // simply increase if too small (assembler will crash if too small)
 };
 
 class x86 {
  friend class StubGenerator;
  friend class VMStructs;
 
-#ifdef _LP64
  private:
   static address _get_previous_fp_entry;
   static address _get_previous_sp_entry;
@@ -96,15 +71,6 @@ class x86 {
   static address double_sign_flip() {
     return _double_sign_flip;
   }
-#else // !LP64
-
- private:
-  static address _verify_fpu_cntrl_wrd_entry;
-
- public:
-  static address verify_fpu_cntrl_wrd_entry() { return _verify_fpu_cntrl_wrd_entry; }
-
-#endif // !LP64
 
  private:
   static address _verify_mxcsr_entry;
@@ -131,7 +97,6 @@ class x86 {
   //k256 table for sha256
   static juint _k256[];
   static address _k256_adr;
-#ifdef _LP64
   static juint _k256_W[];
   static address _k256_W_adr;
   static julong _k512_W[];
@@ -146,7 +111,6 @@ class x86 {
   static address _left_shift_mask;
   static address _and_mask;
   static address _url_charset;
-#endif
   // byte flip mask for sha256
   static address _pshuffle_byte_flip_mask_addr;
 
@@ -202,7 +166,6 @@ class x86 {
   static address upper_word_mask_addr() { return _upper_word_mask_addr; }
   static address shuffle_byte_flip_mask_addr() { return _shuffle_byte_flip_mask_addr; }
   static address k256_addr()      { return _k256_adr; }
-#ifdef _LP64
   static address k256_W_addr()    { return _k256_W_adr; }
   static address k512_W_addr()    { return _k512_W_addr; }
   static address pshuffle_byte_flip_mask_addr_sha512() { return _pshuffle_byte_flip_mask_addr_sha512; }
@@ -213,7 +176,6 @@ class x86 {
   static address base64_right_shift_mask_addr() { return _right_shift_mask; }
   static address base64_left_shift_mask_addr() { return _left_shift_mask; }
   static address base64_and_mask_addr() { return _and_mask; }
-#endif
   static address pshuffle_byte_flip_mask_addr() { return _pshuffle_byte_flip_mask_addr; }
   static void generate_CRC32C_table(bool is_pclmulqdq_supported);
   static address _ONEHALF_addr()      { return _ONEHALF_adr; }
@@ -235,7 +197,6 @@ class x86 {
   static address _Pi4x3_addr()      { return _Pi4x3_adr; }
   static address _Pi4x4_addr()      { return _Pi4x4_adr; }
   static address _ones_addr()      { return _ones_adr; }
-
 };
 
-#endif // CPU_X86_VM_STUBROUTINES_X86_HPP
+#endif

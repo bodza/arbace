@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_SYSTEMDICTIONARYSHARED_HPP
 #define SHARE_VM_CLASSFILE_SYSTEMDICTIONARYSHARED_HPP
 
@@ -29,7 +5,6 @@
 #include "classfile/dictionary.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "memory/filemap.hpp"
-
 
 /*===============================================================================
 
@@ -54,7 +29,6 @@
 
     Starting from JDK9, each class in the classlist may be specified with
     these keywords: "id", "super", "interfaces", "loader" and "source".
-
 
     BUILTIN               Only the "id" keyword may be (optionally) specified. All other
                           keywords are forbidden.
@@ -81,7 +55,6 @@
 
     # UNREGISTERED
     Bar id: 3 super: 0 interfaces: 1 source: /foo.jar
-
 
 [3] Identifying the loader_type of archived classes in the shared dictionary
 
@@ -156,7 +129,7 @@ public:
          Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object);
   int finalize_verification_constraints();
   void check_verification_constraints(InstanceKlass* klass, TRAPS);
-  void metaspace_pointers_do(MetaspaceClosure* it) NOT_CDS_RETURN;
+  void metaspace_pointers_do(MetaspaceClosure* it) {};
 };
 
 class SharedDictionary : public Dictionary {
@@ -204,7 +177,6 @@ private:
                                                Handle class_loader,
                                                TRAPS);
   static Handle get_package_name(Symbol*  class_name, TRAPS);
-
 
   // Package handling:
   //
@@ -290,7 +262,6 @@ public:
                                                Handle class_loader,
                                                TRAPS);
 
-
   static void allocate_shared_data_arrays(int size, TRAPS);
   static void oops_do(OopClosure* f);
   static void roots_oops_do(OopClosure* f) {
@@ -327,7 +298,7 @@ public:
   static size_t dictionary_entry_size() {
     return (DumpSharedSpaces) ? sizeof(SharedDictionaryEntry) : sizeof(DictionaryEntry);
   }
-  static void init_shared_dictionary_entry(Klass* k, DictionaryEntry* entry) NOT_CDS_RETURN;
+  static void init_shared_dictionary_entry(Klass* k, DictionaryEntry* entry) {};
   static bool is_builtin(DictionaryEntry* ent) {
     // Can't use virtual function is_builtin because DictionaryEntry doesn't initialize
     // vtable because it's not constructed properly.
@@ -337,7 +308,7 @@ public:
 
   // For convenient access to the SharedDictionaryEntry's of the archived classes.
   static SharedDictionary* shared_dictionary() {
-    assert(!DumpSharedSpaces, "not for dumping");
+    assert(!DumpSharedSpaces, "not for dumping");
     return (SharedDictionary*)SystemDictionary::shared_dictionary();
   }
 
@@ -346,8 +317,8 @@ public:
   }
 
   static void update_shared_entry(Klass* klass, int id) {
-    assert(DumpSharedSpaces, "sanity");
-    assert((SharedDictionary*)(klass->class_loader_data()->dictionary()) != NULL, "sanity");
+    assert(DumpSharedSpaces, "sanity");
+    assert((SharedDictionary*)(klass->class_loader_data()->dictionary()) != NULL, "sanity");
     ((SharedDictionary*)(klass->class_loader_data()->dictionary()))->update_entry(klass, id);
   }
 
@@ -369,10 +340,10 @@ public:
   // between dump time and runtime.
   static bool add_verification_constraint(Klass* k, Symbol* name,
                   Symbol* from_name, bool from_field_is_protected,
-                  bool from_is_array, bool from_is_object) NOT_CDS_RETURN_(false);
-  static void finalize_verification_constraints() NOT_CDS_RETURN;
+                  bool from_is_array, bool from_is_object) { return false; };
+  static void finalize_verification_constraints() {};
   static void check_verification_constraints(InstanceKlass* klass,
-                                              TRAPS) NOT_CDS_RETURN;
+                                              TRAPS) {};
 };
 
-#endif // SHARE_VM_CLASSFILE_SYSTEMDICTIONARYSHARED_HPP
+#endif

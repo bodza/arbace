@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Google and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/orderAccess.hpp"
@@ -54,13 +30,12 @@ static uint64_t next_random(uint64_t rnd) {
 }
 
 static double fast_log2(const double & d) {
-  assert(d>0, "bad value passed to assert");
+  assert(d>0, "bad value passed to assert");
   uint64_t x = 0;
-  assert(sizeof(d) == sizeof(x),
-         "double and uint64_t do not have the same size");
+  assert(sizeof(d) == sizeof(x), "double and uint64_t do not have the same size");
   x = *reinterpret_cast<const uint64_t*>(&d);
   const uint32_t x_high = x >> 32;
-  assert(FastLogNumBits <= 20, "FastLogNumBits should be less than 20.");
+  assert(FastLogNumBits <= 20, "FastLogNumBits should be less than 20.");
   const uint32_t y = x_high >> (20 - FastLogNumBits) & FastLogMask;
   const int32_t exponent = ((x_high >> 20) & 0x7FF) - 1023;
   return exponent + log_table[y];
@@ -97,7 +72,7 @@ void ThreadHeapSampler::pick_next_geometric_sample() {
   double log_val = (fast_log2(q) - 26);
   double result =
       (0.0 < log_val ? 0.0 : log_val) * (-log(2.0) * (get_sampling_interval())) + 1;
-  assert(result > 0 && result < SIZE_MAX, "Result is not in an acceptable range.");
+  assert(result > 0 && result < SIZE_MAX, "Result is not in an acceptable range.");
   size_t interval = static_cast<size_t>(result);
   _bytes_until_sample = interval;
 }
@@ -125,8 +100,6 @@ void ThreadHeapSampler::check_for_sampling(oop obj, size_t allocation_size, size
     return;
   }
 
-  JvmtiExport::sampled_object_alloc_event_collector(obj);
-
   size_t overflow_bytes = total_allocated_bytes - _bytes_until_sample;
   pick_next_sample(overflow_bytes);
 }
@@ -139,8 +112,7 @@ void ThreadHeapSampler::init_log_table() {
   }
 
   for (int i = 0; i < (1 << FastLogNumBits); i++) {
-    log_table[i] = (log(1.0 + static_cast<double>(i+0.5) / (1 << FastLogNumBits))
-                    / log(2.0));
+    log_table[i] = (log(1.0 + static_cast<double>(i+0.5) / (1 << FastLogNumBits)) / log(2.0));
   }
 
   log_table_initialized = true;
@@ -176,7 +148,7 @@ bool ThreadHeapSampler::sampling_collector_present() const {
 }
 
 bool ThreadHeapSampler::remove_sampling_collector() {
-  assert(_collectors_present > 0, "Problem with collector counter.");
+  assert(_collectors_present > 0, "Problem with collector counter.");
   _collectors_present--;
   return true;
 }

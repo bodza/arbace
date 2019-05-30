@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_STACKMAPTABLEFORMAT_HPP
 #define SHARE_VM_CLASSFILE_STACKMAPTABLEFORMAT_HPP
 
@@ -90,21 +66,21 @@ class verification_type_info {
   bool is_uninitialized() const { return tag() == ITEM_Uninitialized; }
 
   u2 cpool_index() const {
-    assert(is_object(), "This type has no cp_index");
+    assert(is_object(), "This type has no cp_index");
     return Bytes::get_Java_u2(cpool_index_addr());
   }
   void set_cpool_index(u2 idx) {
-    assert(is_object(), "This type has no cp_index");
+    assert(is_object(), "This type has no cp_index");
     Bytes::put_Java_u2(cpool_index_addr(), idx);
   }
 
   u2 bci() const {
-    assert(is_uninitialized(), "This type has no bci");
+    assert(is_uninitialized(), "This type has no bci");
     return Bytes::get_Java_u2(bci_addr());
   }
 
   void set_bci(u2 bci) {
-    assert(is_uninitialized(), "This type has no bci");
+    assert(is_uninitialized(), "This type has no bci");
     Bytes::put_Java_u2(bci_addr(), bci);
   }
 
@@ -230,7 +206,7 @@ class same_frame : public stack_map_frame {
   }
 
   static same_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_frame*)addr;
   }
 
@@ -246,7 +222,7 @@ class same_frame : public stack_map_frame {
   int offset_delta() const { return frame_type_to_offset_delta(frame_type()); }
 
   void set_offset_delta(int offset_delta) {
-    assert(offset_delta <= 64, "Offset too large for same_frame");
+    assert(offset_delta <= 64, "Offset too large for same_frame");
     set_frame_type(offset_delta_to_frame_type(offset_delta));
   }
 
@@ -281,7 +257,7 @@ class same_frame_extended : public stack_map_frame {
   }
 
   static same_frame_extended* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame type");
+    assert(is_frame_type(*addr), "Wrong frame type");
     return (same_frame_extended*)addr;
   }
 
@@ -335,7 +311,7 @@ class same_locals_1_stack_item_frame : public stack_map_frame {
   }
 
   static same_locals_1_stack_item_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_locals_1_stack_item_frame*)addr;
   }
 
@@ -361,8 +337,7 @@ class same_locals_1_stack_item_frame : public stack_map_frame {
   int offset_delta() const { return frame_type_to_offset_delta(frame_type()); }
 
   void set_offset_delta(int offset_delta) {
-    assert(offset_delta > 0 && offset_delta <= 64,
-           "Offset too large for this frame type");
+    assert(offset_delta > 0 && offset_delta <= 64, "Offset too large for this frame type");
     set_frame_type(offset_delta_to_frame_type(offset_delta));
   }
 
@@ -410,7 +385,7 @@ class same_locals_1_stack_item_extended : public stack_map_frame {
   }
 
   static same_locals_1_stack_item_extended* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_locals_1_stack_item_extended*)addr;
   }
 
@@ -486,7 +461,7 @@ class chop_frame : public stack_map_frame {
   }
 
   static chop_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (chop_frame*)addr;
   }
 
@@ -511,11 +486,11 @@ class chop_frame : public stack_map_frame {
 
   int chops() const {
     int chops = frame_type_to_chops(frame_type());
-    assert(chops > 0 && chops < 4, "Invalid number of chops in frame");
+    assert(chops > 0 && chops < 4, "Invalid number of chops in frame");
     return chops;
   }
   void set_chops(int chops) {
-    assert(chops > 0 && chops <= 3, "Bad number of chops");
+    assert(chops > 0 && chops <= 3, "Bad number of chops");
     set_frame_type(chops_to_frame_type(chops));
   }
 
@@ -547,7 +522,7 @@ class append_frame : public stack_map_frame {
   }
 
   static u1 appends_to_frame_type(int appends) {
-    assert(appends > 0 && appends < 4, "Invalid append amount");
+    assert(appends > 0 && appends < 4, "Invalid append amount");
     return 251 + appends;
   }
 
@@ -557,7 +532,7 @@ class append_frame : public stack_map_frame {
   }
 
   static append_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (append_frame*)addr;
   }
 
@@ -601,13 +576,13 @@ class append_frame : public stack_map_frame {
   }
 
   void set_appends(int appends) {
-    assert(appends > 0 && appends < 4, "Bad number of appends");
+    assert(appends > 0 && appends < 4, "Bad number of appends");
     set_frame_type(appends_to_frame_type(appends));
   }
 
   int number_of_types() const {
     int appends = frame_type_to_appends(frame_type());
-    assert(appends > 0 && appends < 4, "Invalid number of appends in frame");
+    assert(appends > 0 && appends < 4, "Invalid number of appends in frame");
     return appends;
   }
   verification_type_info* types() const {
@@ -667,7 +642,7 @@ class full_frame : public stack_map_frame {
   }
 
   static full_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
+    assert(is_frame_type(*addr), "Wrong frame id");
     return (full_frame*)addr;
   }
 
@@ -822,13 +797,13 @@ class full_frame : public stack_map_frame {
 #define VIRTUAL_DISPATCH(stack_frame_type, func_name, args) \
   stack_frame_type* item_##stack_frame_type = as_##stack_frame_type(); \
   if (item_##stack_frame_type != NULL) { \
-    return item_##stack_frame_type->func_name args;  \
+    return item_##stack_frame_type->func_name args; \
   }
 
 #define VOID_VIRTUAL_DISPATCH(stack_frame_type, func_name, args) \
   stack_frame_type* item_##stack_frame_type = as_##stack_frame_type(); \
   if (item_##stack_frame_type != NULL) { \
-    item_##stack_frame_type->func_name args;  \
+    item_##stack_frame_type->func_name args; \
     return; \
   }
 
@@ -963,4 +938,4 @@ class stack_map_table_attribute {
 
 #undef FOR_EACH_STACKMAP_FRAME_TYPE
 
-#endif // SHARE_VM_CLASSFILE_STACKMAPTABLEFORMAT_HPP
+#endif

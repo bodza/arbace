@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "compiler/compilerOracle.hpp"
@@ -251,7 +227,7 @@ TypedMethodOptionMatcher::~TypedMethodOptionMatcher() {
 }
 
 TypedMethodOptionMatcher* TypedMethodOptionMatcher::parse_method_pattern(char*& line, const char*& error_msg) {
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
+  assert(error_msg == NULL, "Dont call here with error_msg already set");
   TypedMethodOptionMatcher* tom = new TypedMethodOptionMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, tom);
   if (error_msg != NULL) {
@@ -281,7 +257,7 @@ template<typename T>
 static void add_option_string(TypedMethodOptionMatcher* matcher,
                                         const char* option,
                                         T value) {
-  assert(matcher != option_list, "No circular lists please");
+  assert(matcher != option_list, "No circular lists please");
   matcher->init(option, get_type_for<T>(), option_list);
   matcher->set_value<T>(value);
   option_list = matcher;
@@ -296,7 +272,7 @@ static bool check_predicate(OracleCommand command, const methodHandle& method) {
 }
 
 static void add_predicate(OracleCommand command, BasicMatcher* bm) {
-  assert(command != OptionCommand, "must use add_option_string");
+  assert(command != OptionCommand, "must use add_option_string");
   if (command == LogCommand && !LogCompilation && lists[LogCommand] == NULL) {
     tty->print_cr("Warning:  +LogCompilation must be enabled in order for individual methods to be logged.");
   }
@@ -374,8 +350,7 @@ bool CompilerOracle::should_break_at(const methodHandle& method) {
 }
 
 static OracleCommand parse_command_name(const char * line, int* bytes_read) {
-  assert(ARRAY_SIZE(command_names) == OracleCommandCount,
-         "command_names size mismatch");
+  assert(ARRAY_SIZE(command_names) == OracleCommandCount, "command_names size mismatch");
 
   *bytes_read = 0;
   char command[33];
@@ -551,7 +526,7 @@ int skip_whitespace(char* line) {
 }
 
 void CompilerOracle::print_parse_error(const char*&  error_msg, char* original_line) {
-  assert(error_msg != NULL, "Must have error_message");
+  assert(error_msg != NULL, "Must have error_message");
 
   ttyLocker ttyl;
   tty->print_cr("CompileCommand: An error occurred during parsing");
@@ -609,7 +584,7 @@ void CompilerOracle::parse_from_line(char* line) {
     line++; // skip the ','
     TypedMethodOptionMatcher* archetype = TypedMethodOptionMatcher::parse_method_pattern(line, error_msg);
     if (archetype == NULL) {
-      assert(error_msg != NULL, "Must have error_message");
+      assert(error_msg != NULL, "Must have error_message");
       print_parse_error(error_msg, original_line);
       return;
     }
@@ -644,20 +619,20 @@ void CompilerOracle::parse_from_line(char* line) {
       }
       if (typed_matcher != NULL && !_quiet) {
         // Print out the last match added
-        assert(error_msg == NULL, "No error here");
+        assert(error_msg == NULL, "No error here");
         ttyLocker ttyl;
         tty->print("CompileCommand: %s ", command_names[command]);
         typed_matcher->print();
       }
       line += skip_whitespace(line);
-    } // while(
+    }
     delete archetype;
   } else {  // not an OptionCommand)
-    assert(error_msg == NULL, "Don't call here with error_msg already set");
+    assert(error_msg == NULL, "Don't call here with error_msg already set");
 
     BasicMatcher* matcher = BasicMatcher::parse_method_pattern(line, error_msg);
     if (error_msg != NULL) {
-      assert(matcher == NULL, "consistency");
+      assert(matcher == NULL, "consistency");
       print_parse_error(error_msg, original_line);
       return;
     }
@@ -682,10 +657,6 @@ void CompilerOracle::print_tip() {
 static const char* default_cc_file = ".hotspot_compiler";
 
 static const char* cc_file() {
-#ifdef ASSERT
-  if (CompileCommandFile == NULL)
-    return default_cc_file;
-#endif
   return CompileCommandFile;
 }
 
@@ -696,7 +667,7 @@ bool CompilerOracle::has_command_file() {
 bool CompilerOracle::_quiet = false;
 
 void CompilerOracle::parse_from_file() {
-  assert(has_command_file(), "command file must be specified");
+  assert(has_command_file(), "command file must be specified");
   FILE* stream = fopen(cc_file(), "rt");
   if (stream == NULL) return;
 
@@ -739,7 +710,7 @@ void CompilerOracle::parse_from_string(const char* str, void (*parse_line)(char*
 }
 
 void CompilerOracle::append_comment_to_file(const char* message) {
-  assert(has_command_file(), "command file must be specified");
+  assert(has_command_file(), "command file must be specified");
   fileStream stream(fopen(cc_file(), "at"));
   stream.print("# ");
   for (int index = 0; message[index] != '\0'; index++) {
@@ -750,7 +721,7 @@ void CompilerOracle::append_comment_to_file(const char* message) {
 }
 
 void CompilerOracle::append_exclude_to_file(const methodHandle& method) {
-  assert(has_command_file(), "command file must be specified");
+  assert(has_command_file(), "command file must be specified");
   fileStream stream(fopen(cc_file(), "at"));
   stream.print("exclude ");
   method->method_holder()->name()->print_symbol_on(&stream);
@@ -760,7 +731,6 @@ void CompilerOracle::append_exclude_to_file(const methodHandle& method) {
   stream.cr();
   stream.cr();
 }
-
 
 void compilerOracle_init() {
   CompilerOracle::parse_from_string(CompileCommand, CompilerOracle::parse_from_line);
@@ -784,7 +754,6 @@ void compilerOracle_init() {
     }
   }
 }
-
 
 void CompilerOracle::parse_compile_only(char * line) {
   int i;

@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2008, 2009, 2010 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_ZERO_VM_STACK_ZERO_HPP
 #define CPU_ZERO_VM_STACK_ZERO_HPP
 
@@ -48,16 +23,16 @@ class ZeroStack {
   int suggest_size(Thread *thread) const;
 
   void setup(void *mem, size_t size) {
-    assert(needs_setup(), "already set up");
-    assert(!(size & WordAlignmentMask), "unaligned");
+    assert(needs_setup(), "already set up");
+    assert(!(size & WordAlignmentMask), "unaligned");
 
     _base = (intptr_t *) mem;
     _top  = _base + (size >> LogBytesPerWord);
     _sp   = _top;
   }
   void teardown() {
-    assert(!needs_setup(), "not set up");
-    assert(_sp == _top, "stuff on stack at teardown");
+    assert(!needs_setup(), "not set up");
+    assert(_sp == _top, "stuff on stack at teardown");
 
     _base = NULL;
     _top  = NULL;
@@ -68,7 +43,7 @@ class ZeroStack {
     return _sp;
   }
   void set_sp(intptr_t *new_sp) {
-    assert(_top >= new_sp && new_sp >= _base, "bad stack pointer");
+    assert(_top >= new_sp && new_sp >= _base, "bad stack pointer");
     _sp = new_sp;
   }
 
@@ -80,17 +55,17 @@ class ZeroStack {
   }
 
   void push(intptr_t value) {
-    assert(_sp > _base, "stack overflow");
+    assert(_sp > _base, "stack overflow");
     *(--_sp) = value;
   }
   intptr_t pop() {
-    assert(_sp < _top, "stack underflow");
+    assert(_sp < _top, "stack underflow");
     return *(_sp++);
   }
 
   void *alloc(size_t size) {
     int count = align_up(size, wordSize) >> LogBytesPerWord;
-    assert(count <= available_words(), "stack overflow");
+    assert(count <= available_words(), "stack overflow");
     return _sp -= count;
   }
 
@@ -104,7 +79,7 @@ class ZeroStack {
   static void handle_overflow(TRAPS);
 
  public:
-  void zap(int c) PRODUCT_RETURN;
+  void zap(int c) {};
 
  public:
   static ByteSize base_offset() {
@@ -117,7 +92,6 @@ class ZeroStack {
     return byte_offset_of(ZeroStack, _sp);
   }
 };
-
 
 class EntryFrame;
 class InterpreterFrame;
@@ -184,15 +158,15 @@ class ZeroFrame {
 
  public:
   EntryFrame *as_entry_frame() const {
-    assert(is_entry_frame(), "should be");
+    assert(is_entry_frame(), "should be");
     return (EntryFrame *) this;
   }
   InterpreterFrame *as_interpreter_frame() const {
-    assert(is_interpreter_frame(), "should be");
+    assert(is_interpreter_frame(), "should be");
     return (InterpreterFrame *) this;
   }
   FakeStubFrame *as_fake_stub_frame() const {
-    assert(is_fake_stub_frame(), "should be");
+    assert(is_fake_stub_frame(), "should be");
     return (FakeStubFrame *) this;
   }
 
@@ -212,4 +186,4 @@ class ZeroFrame {
                         int       buflen) const;
 };
 
-#endif // CPU_ZERO_VM_STACK_ZERO_HPP
+#endif

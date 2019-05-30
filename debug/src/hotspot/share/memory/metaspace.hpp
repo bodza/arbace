@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #ifndef SHARE_VM_MEMORY_METASPACE_HPP
 #define SHARE_VM_MEMORY_METASPACE_HPP
 
@@ -129,7 +106,6 @@ class Metaspace : public AllStatic {
 
   static size_t _commit_alignment;
   static size_t _reserve_alignment;
-  DEBUG_ONLY(static bool   _frozen;)
 
   // Virtual Space lists for both classes and other metadata
   static metaspace::VirtualSpaceList* _space_list;
@@ -144,14 +120,14 @@ class Metaspace : public AllStatic {
   static metaspace::VirtualSpaceList* space_list()       { return _space_list; }
   static metaspace::VirtualSpaceList* class_space_list() { return _class_space_list; }
   static metaspace::VirtualSpaceList* get_space_list(MetadataType mdtype) {
-    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
+    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == ClassType ? class_space_list() : space_list();
   }
 
   static metaspace::ChunkManager* chunk_manager_metadata() { return _chunk_manager_metadata; }
   static metaspace::ChunkManager* chunk_manager_class()    { return _chunk_manager_class; }
   static metaspace::ChunkManager* get_chunk_manager(MetadataType mdtype) {
-    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
+    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == ClassType ? chunk_manager_class() : chunk_manager_metadata();
   }
 
@@ -162,26 +138,21 @@ class Metaspace : public AllStatic {
 
   static const MetaspaceTracer* tracer() { return _tracer; }
   static void freeze() {
-    assert(DumpSharedSpaces, "sanity");
-    DEBUG_ONLY(_frozen = true;)
+    assert(DumpSharedSpaces, "sanity");
   }
   static void assert_not_frozen() {
-    assert(!_frozen, "sanity");
+    assert(!_frozen, "sanity");
   }
-#ifdef _LP64
   static void allocate_metaspace_compressed_klass_ptrs(char* requested_addr, address cds_base);
-#endif
 
  private:
 
-#ifdef _LP64
   static void set_narrow_klass_base_and_shift(address metaspace_base, address cds_base);
 
   // Returns true if can use CDS with metaspace allocated as specified address.
   static bool can_use_cds_with_metaspace_addr(char* metaspace_base, address cds_base);
 
   static void initialize_class_space(ReservedSpace rs);
-#endif
 
  public:
 
@@ -214,17 +185,16 @@ class Metaspace : public AllStatic {
 
   static const char* metadata_type_name(Metaspace::MetadataType mdtype);
 
-  static void print_compressed_class_space(outputStream* st, const char* requested_addr = 0) NOT_LP64({});
+  static void print_compressed_class_space(outputStream* st, const char* requested_addr = 0);
 
   // Return TRUE only if UseCompressedClassPointers is True.
   static bool using_class_space() {
-    return NOT_LP64(false) LP64_ONLY(UseCompressedClassPointers);
+    return UseCompressedClassPointers;
   }
 
   static bool is_class_space_allocation(MetadataType mdType) {
     return mdType == ClassType && using_class_space();
   }
-
 };
 
 // Manages the metaspace portion belonging to a class loader
@@ -254,7 +224,7 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   metaspace::SpaceManager* vsm() const { return _vsm; }
   metaspace::SpaceManager* class_vsm() const { return _class_vsm; }
   metaspace::SpaceManager* get_space_manager(Metaspace::MetadataType mdtype) {
-    assert(mdtype != Metaspace::MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
+    assert(mdtype != Metaspace::MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == Metaspace::ClassType ? class_vsm() : vsm();
   }
 
@@ -317,7 +287,6 @@ class MetaspaceUtils : AllStatic {
   static void inc_used(Metaspace::MetadataType mdtype, size_t words);
   static void dec_overhead(Metaspace::MetadataType mdtype, size_t words);
   static void inc_overhead(Metaspace::MetadataType mdtype, size_t words);
-
 
   // Getters for the in-use counters.
   static size_t capacity_words(Metaspace::MetadataType mdtype)        { return _capacity_words[mdtype]; }
@@ -484,4 +453,4 @@ class MetaspaceGC : AllStatic {
   static void compute_new_size();
 };
 
-#endif // SHARE_VM_MEMORY_METASPACE_HPP
+#endif

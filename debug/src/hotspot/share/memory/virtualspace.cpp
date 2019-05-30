@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
@@ -72,8 +48,7 @@ ReservedSpace::ReservedSpace(size_t size, size_t alignment,
 
 ReservedSpace::ReservedSpace(char* base, size_t size, size_t alignment,
                              bool special, bool executable) : _fd_for_heap(-1) {
-  assert((size % os::vm_allocation_granularity()) == 0,
-         "size not allocation aligned");
+  assert((size % os::vm_allocation_granularity()) == 0, "size not allocation aligned");
   _base = base;
   _size = size;
   _alignment = alignment;
@@ -103,7 +78,7 @@ static bool failed_to_reserve_as_requested(char* base, char* requested_address,
   if (base != NULL) {
     // Different reserve address may be acceptable in other cases
     // but for compressed oops heap should be at requested address.
-    assert(UseCompressedOops, "currently requested address used only for compressed oops");
+    assert(UseCompressedOops, "currently requested address used only for compressed oops");
     log_debug(gc, heap, coops)("Reserved memory not at requested address: " PTR_FORMAT " vs " PTR_FORMAT, p2i(base), p2i(requested_address));
     // OS ignored requested address. Try different address.
     if (special) {
@@ -121,12 +96,9 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large,
                                char* requested_address,
                                bool executable) {
   const size_t granularity = os::vm_allocation_granularity();
-  assert((size & (granularity - 1)) == 0,
-         "size not aligned to os::vm_allocation_granularity()");
-  assert((alignment & (granularity - 1)) == 0,
-         "alignment not aligned to os::vm_allocation_granularity()");
-  assert(alignment == 0 || is_power_of_2((intptr_t)alignment),
-         "not a power of 2");
+  assert((size & (granularity - 1)) == 0, "size not aligned to os::vm_allocation_granularity()");
+  assert((alignment & (granularity - 1)) == 0, "alignment not aligned to os::vm_allocation_granularity()");
+  assert(alignment == 0 || is_power_of_2((intptr_t)alignment), "not a power of 2");
 
   alignment = MAX2(alignment, (size_t)os::vm_page_size());
 
@@ -166,10 +138,7 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large,
         return;
       }
       // Check alignment constraints.
-      assert((uintptr_t) base % alignment == 0,
-             "Large pages returned a non-aligned address, base: "
-             PTR_FORMAT " alignment: " SIZE_FORMAT_HEX,
-             p2i(base), alignment);
+      assert((uintptr_t) base % alignment == 0, "Large pages returned a non-aligned address, base: " PTR_FORMAT " alignment: " SIZE_FORMAT_HEX, p2i(base), alignment);
       _special = true;
     } else {
       // failed; try to reserve regular memory below
@@ -215,7 +184,7 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large,
         // As a result of the alignment constraints, the allocated base differs
         // from the requested address. Return back to the caller who can
         // take remedial action (like try again without a requested address).
-        assert(_base == NULL, "should be");
+        assert(_base == NULL, "should be");
         return;
       }
     }
@@ -232,7 +201,7 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large,
 
 ReservedSpace ReservedSpace::first_part(size_t partition_size, size_t alignment,
                                         bool split, bool realloc) {
-  assert(partition_size <= size(), "partition failed");
+  assert(partition_size <= size(), "partition failed");
   if (split) {
     os::split_reserved_memory(base(), size(), partition_size, realloc);
   }
@@ -241,35 +210,29 @@ ReservedSpace ReservedSpace::first_part(size_t partition_size, size_t alignment,
   return result;
 }
 
-
 ReservedSpace
 ReservedSpace::last_part(size_t partition_size, size_t alignment) {
-  assert(partition_size <= size(), "partition failed");
+  assert(partition_size <= size(), "partition failed");
   ReservedSpace result(base() + partition_size, size() - partition_size,
                        alignment, special(), executable());
   return result;
 }
 
-
 size_t ReservedSpace::page_align_size_up(size_t size) {
   return align_up(size, os::vm_page_size());
 }
-
 
 size_t ReservedSpace::page_align_size_down(size_t size) {
   return align_down(size, os::vm_page_size());
 }
 
-
 size_t ReservedSpace::allocation_align_size_up(size_t size) {
   return align_up(size, os::vm_allocation_granularity());
 }
 
-
 size_t ReservedSpace::allocation_align_size_down(size_t size) {
   return align_down(size, os::vm_allocation_granularity());
 }
-
 
 void ReservedSpace::release() {
   if (is_reserved()) {
@@ -298,12 +261,11 @@ static size_t noaccess_prefix_size(size_t alignment) {
 }
 
 void ReservedHeapSpace::establish_noaccess_prefix() {
-  assert(_alignment >= (size_t)os::vm_page_size(), "must be at least page size big");
+  assert(_alignment >= (size_t)os::vm_page_size(), "must be at least page size big");
   _noaccess_prefix = noaccess_prefix_size(_alignment);
 
   if (base() && base() + _size > (char *)OopEncodingHeapMax) {
     if (true
-        WIN64_ONLY(&& !UseLargePages)
         AIX_ONLY(&& os::vm_page_size() != 64*K)) {
       // Protect memory at the base of the allocated region.
       // If special, the page was committed (only matters on windows)
@@ -314,7 +276,7 @@ void ReservedHeapSpace::establish_noaccess_prefix() {
                                  PTR_FORMAT " / " INTX_FORMAT " bytes",
                                  p2i(_base),
                                  _noaccess_prefix);
-      assert(Universe::narrow_oop_use_implicit_null_checks() == true, "not initialized?");
+      assert(Universe::narrow_oop_use_implicit_null_checks() == true, "not initialized?");
     } else {
       Universe::set_narrow_oop_use_implicit_null_checks(false);
     }
@@ -322,7 +284,7 @@ void ReservedHeapSpace::establish_noaccess_prefix() {
 
   _base += _noaccess_prefix;
   _size -= _noaccess_prefix;
-  assert(((uintptr_t)_base % _alignment == 0), "must be exactly of required alignment");
+  assert(((uintptr_t)_base % _alignment == 0), "must be exactly of required alignment");
 }
 
 // Tries to allocate memory of size 'size' at address requested_address with alignment 'alignment'.
@@ -364,10 +326,7 @@ void ReservedHeapSpace::try_reserve_heap(size_t size,
 
     if (base != NULL) {
       // Check alignment constraints.
-      assert((uintptr_t) base % alignment == 0,
-             "Large pages returned a non-aligned address, base: "
-             PTR_FORMAT " alignment: " SIZE_FORMAT_HEX,
-             p2i(base), alignment);
+      assert((uintptr_t) base % alignment == 0, "Large pages returned a non-aligned address, base: " PTR_FORMAT " alignment: " SIZE_FORMAT_HEX, p2i(base), alignment);
       _special = true;
     }
   }
@@ -492,12 +451,9 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
   guarantee(alignment == MAX2(alignment, (size_t)os::vm_page_size()), "alignment too small");
 
   const size_t granularity = os::vm_allocation_granularity();
-  assert((size & (granularity - 1)) == 0,
-         "size not aligned to os::vm_allocation_granularity()");
-  assert((alignment & (granularity - 1)) == 0,
-         "alignment not aligned to os::vm_allocation_granularity()");
-  assert(alignment == 0 || is_power_of_2((intptr_t)alignment),
-         "not a power of 2");
+  assert((size & (granularity - 1)) == 0, "size not aligned to os::vm_allocation_granularity()");
+  assert((alignment & (granularity - 1)) == 0, "alignment not aligned to os::vm_allocation_granularity()");
+  assert(alignment == 0 || is_power_of_2((intptr_t)alignment), "not a power of 2");
 
   // The necessary attach point alignment for generated wish addresses.
   // This is needed to increase the chance of attaching for mmap and shmat.
@@ -585,7 +541,7 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
             (_base + size >  (char *)OopEncodingHeapMax && // Not zerobased or unscaled address.
              !Universe::is_disjoint_heap_base_address((address)_base)))) {  // Not disjoint address.
       char* const attach_point = addresses[i];
-      assert(attach_point >= aligned_heap_base_min_address, "Flag support broken");
+      assert(attach_point >= aligned_heap_base_min_address, "Flag support broken");
       try_reserve_heap(size + noaccess_prefix, alignment, large, attach_point);
       i++;
     }
@@ -627,10 +583,8 @@ ReservedHeapSpace::ReservedHeapSpace(size_t size, size_t alignment, bool large, 
     initialize(size, alignment, large, NULL, false);
   }
 
-  assert(markOopDesc::encode_pointer_as_mark(_base)->decode_pointer() == _base,
-         "area must be distinguishable from marks for mark-sweep");
-  assert(markOopDesc::encode_pointer_as_mark(&_base[size])->decode_pointer() == &_base[size],
-         "area must be distinguishable from marks for mark-sweep");
+  assert(markOopDesc::encode_pointer_as_mark(_base)->decode_pointer() == _base, "area must be distinguishable from marks for mark-sweep");
+  assert(markOopDesc::encode_pointer_as_mark(&_base[size])->decode_pointer() == &_base[size], "area must be distinguishable from marks for mark-sweep");
 
   if (base() != NULL) {
     MemTracker::record_virtual_memory_type((address)base(), mtJavaHeap);
@@ -670,7 +624,6 @@ VirtualSpace::VirtualSpace() {
   _executable             = false;
 }
 
-
 bool VirtualSpace::initialize(ReservedSpace rs, size_t committed_size) {
   const size_t max_commit_granularity = os::page_size_for_region_unaligned(rs.size(), 1);
   return initialize_with_granularity(rs, committed_size, max_commit_granularity);
@@ -678,8 +631,8 @@ bool VirtualSpace::initialize(ReservedSpace rs, size_t committed_size) {
 
 bool VirtualSpace::initialize_with_granularity(ReservedSpace rs, size_t committed_size, size_t max_commit_granularity) {
   if(!rs.is_reserved()) return false;  // allocation failed.
-  assert(_low_boundary == NULL, "VirtualSpace already initialized");
-  assert(max_commit_granularity > 0, "Granularity must be non-zero.");
+  assert(_low_boundary == NULL, "VirtualSpace already initialized");
+  assert(max_commit_granularity > 0, "Granularity must be non-zero.");
 
   _low_boundary  = rs.base();
   _high_boundary = low_boundary() + rs.size();
@@ -723,11 +676,9 @@ bool VirtualSpace::initialize_with_granularity(ReservedSpace rs, size_t committe
   return true;
 }
 
-
 VirtualSpace::~VirtualSpace() {
   release();
 }
-
 
 void VirtualSpace::release() {
   // This does not release memory it reserved.
@@ -749,16 +700,13 @@ void VirtualSpace::release() {
   _executable             = false;
 }
 
-
 size_t VirtualSpace::committed_size() const {
   return pointer_delta(high(), low(), sizeof(char));
 }
 
-
 size_t VirtualSpace::reserved_size() const {
   return pointer_delta(high_boundary(), low_boundary(), sizeof(char));
 }
-
 
 size_t VirtualSpace::uncommitted_size()  const {
   return reserved_size() - committed_size();
@@ -774,40 +722,16 @@ size_t VirtualSpace::actual_committed_size() const {
   size_t committed_middle = pointer_delta(_middle_high, _lower_high_boundary,  sizeof(char));
   size_t committed_high   = pointer_delta(_upper_high,  _middle_high_boundary, sizeof(char));
 
-#ifdef ASSERT
-  size_t lower  = pointer_delta(_lower_high_boundary,  _low_boundary,         sizeof(char));
-  size_t middle = pointer_delta(_middle_high_boundary, _lower_high_boundary,  sizeof(char));
-  size_t upper  = pointer_delta(_upper_high_boundary,  _middle_high_boundary, sizeof(char));
-
-  if (committed_high > 0) {
-    assert(committed_low == lower, "Must be");
-    assert(committed_middle == middle, "Must be");
-  }
-
-  if (committed_middle > 0) {
-    assert(committed_low == lower, "Must be");
-  }
-  if (committed_middle < middle) {
-    assert(committed_high == 0, "Must be");
-  }
-
-  if (committed_low < lower) {
-    assert(committed_high == 0, "Must be");
-    assert(committed_middle == 0, "Must be");
-  }
-#endif
-
   return committed_low + committed_middle + committed_high;
 }
-
 
 bool VirtualSpace::contains(const void* p) const {
   return low() <= (const char*) p && (const char*) p < high();
 }
 
 static void pretouch_expanded_memory(void* start, void* end) {
-  assert(is_aligned(start, os::vm_page_size()), "Unexpected alignment");
-  assert(is_aligned(end,   os::vm_page_size()), "Unexpected alignment");
+  assert(is_aligned(start, os::vm_page_size()), "Unexpected alignment");
+  assert(is_aligned(end,   os::vm_page_size()), "Unexpected alignment");
 
   os::pretouch_memory(start, end);
 }
@@ -819,11 +743,6 @@ static bool commit_expanded(char* start, size_t size, size_t alignment, bool pre
     }
     return true;
   }
-
-  debug_only(warning(
-      "INFO: os::commit_memory(" PTR_FORMAT ", " PTR_FORMAT
-      " size=" SIZE_FORMAT ", executable=%d) failed",
-      p2i(start), p2i(start + size), size, executable);)
 
   return false;
 }
@@ -853,7 +772,7 @@ bool VirtualSpace::expand_by(size_t bytes, bool pre_touch) {
 
   char* previous_high = high();
   char* unaligned_new_high = high() + bytes;
-  assert(unaligned_new_high <= high_boundary(), "cannot expand by more than upper boundary");
+  assert(unaligned_new_high <= high_boundary(), "cannot expand by more than upper boundary");
 
   // Calculate where the new high for each of the regions should be.  If
   // the low_boundary() and high_boundary() are LargePageSizeInBytes aligned
@@ -892,16 +811,13 @@ bool VirtualSpace::expand_by(size_t bytes, bool pre_touch) {
   }
 
   // Check contiguity.
-  assert(low_boundary() <= lower_high() && lower_high() <= lower_high_boundary(),
-         "high address must be contained within the region");
-  assert(lower_high_boundary() <= middle_high() && middle_high() <= middle_high_boundary(),
-         "high address must be contained within the region");
-  assert(middle_high_boundary() <= upper_high() && upper_high() <= upper_high_boundary(),
-         "high address must be contained within the region");
+  assert(low_boundary() <= lower_high() && lower_high() <= lower_high_boundary(), "high address must be contained within the region");
+  assert(lower_high_boundary() <= middle_high() && middle_high() <= middle_high_boundary(), "high address must be contained within the region");
+  assert(middle_high_boundary() <= upper_high() && upper_high() <= upper_high_boundary(), "high address must be contained within the region");
 
   // Commit regions
   if (lower_needs > 0) {
-    assert(lower_high() + lower_needs <= lower_high_boundary(), "must not expand beyond region");
+    assert(lower_high() + lower_needs <= lower_high_boundary(), "must not expand beyond region");
     if (!commit_expanded(lower_high(), lower_needs, _lower_alignment, pre_touch, _executable)) {
       return false;
     }
@@ -909,7 +825,7 @@ bool VirtualSpace::expand_by(size_t bytes, bool pre_touch) {
   }
 
   if (middle_needs > 0) {
-    assert(middle_high() + middle_needs <= middle_high_boundary(), "must not expand beyond region");
+    assert(middle_high() + middle_needs <= middle_high_boundary(), "must not expand beyond region");
     if (!commit_expanded(middle_high(), middle_needs, _middle_alignment, pre_touch, _executable)) {
       return false;
     }
@@ -917,7 +833,7 @@ bool VirtualSpace::expand_by(size_t bytes, bool pre_touch) {
   }
 
   if (upper_needs > 0) {
-    assert(upper_high() + upper_needs <= upper_high_boundary(), "must not expand beyond region");
+    assert(upper_high() + upper_needs <= upper_high_boundary(), "must not expand beyond region");
     if (!commit_expanded(upper_high(), upper_needs, _upper_alignment, pre_touch, _executable)) {
       return false;
     }
@@ -942,7 +858,7 @@ void VirtualSpace::shrink_by(size_t size) {
   }
 
   char* unaligned_new_high = high() - size;
-  assert(unaligned_new_high >= low_boundary(), "cannot shrink past lower boundary");
+  assert(unaligned_new_high >= low_boundary(), "cannot shrink past lower boundary");
 
   // Calculate new unaligned address
   char* unaligned_upper_new_high =
@@ -975,45 +891,30 @@ void VirtualSpace::shrink_by(size_t size) {
   }
 
   // Check contiguity.
-  assert(middle_high_boundary() <= upper_high() &&
-         upper_high() <= upper_high_boundary(),
-         "high address must be contained within the region");
-  assert(lower_high_boundary() <= middle_high() &&
-         middle_high() <= middle_high_boundary(),
-         "high address must be contained within the region");
-  assert(low_boundary() <= lower_high() &&
-         lower_high() <= lower_high_boundary(),
-         "high address must be contained within the region");
+  assert(middle_high_boundary() <= upper_high() && upper_high() <= upper_high_boundary(), "high address must be contained within the region");
+  assert(lower_high_boundary() <= middle_high() && middle_high() <= middle_high_boundary(), "high address must be contained within the region");
+  assert(low_boundary() <= lower_high() && lower_high() <= lower_high_boundary(), "high address must be contained within the region");
 
   // Uncommit
   if (upper_needs > 0) {
-    assert(middle_high_boundary() <= aligned_upper_new_high &&
-           aligned_upper_new_high + upper_needs <= upper_high_boundary(),
-           "must not shrink beyond region");
+    assert(middle_high_boundary() <= aligned_upper_new_high && aligned_upper_new_high + upper_needs <= upper_high_boundary(), "must not shrink beyond region");
     if (!os::uncommit_memory(aligned_upper_new_high, upper_needs)) {
-      debug_only(warning("os::uncommit_memory failed"));
       return;
     } else {
       _upper_high -= upper_needs;
     }
   }
   if (middle_needs > 0) {
-    assert(lower_high_boundary() <= aligned_middle_new_high &&
-           aligned_middle_new_high + middle_needs <= middle_high_boundary(),
-           "must not shrink beyond region");
+    assert(lower_high_boundary() <= aligned_middle_new_high && aligned_middle_new_high + middle_needs <= middle_high_boundary(), "must not shrink beyond region");
     if (!os::uncommit_memory(aligned_middle_new_high, middle_needs)) {
-      debug_only(warning("os::uncommit_memory failed"));
       return;
     } else {
       _middle_high -= middle_needs;
     }
   }
   if (lower_needs > 0) {
-    assert(low_boundary() <= aligned_lower_new_high &&
-           aligned_lower_new_high + lower_needs <= lower_high_boundary(),
-           "must not shrink beyond region");
+    assert(low_boundary() <= aligned_lower_new_high && aligned_lower_new_high + lower_needs <= lower_high_boundary(), "must not shrink beyond region");
     if (!os::uncommit_memory(aligned_lower_new_high, lower_needs)) {
-      debug_only(warning("os::uncommit_memory failed"));
       return;
     } else {
       _lower_high -= lower_needs;
@@ -1022,397 +923,3 @@ void VirtualSpace::shrink_by(size_t size) {
 
   _high -= size;
 }
-
-#ifndef PRODUCT
-void VirtualSpace::check_for_contiguity() {
-  // Check contiguity.
-  assert(low_boundary() <= lower_high() &&
-         lower_high() <= lower_high_boundary(),
-         "high address must be contained within the region");
-  assert(lower_high_boundary() <= middle_high() &&
-         middle_high() <= middle_high_boundary(),
-         "high address must be contained within the region");
-  assert(middle_high_boundary() <= upper_high() &&
-         upper_high() <= upper_high_boundary(),
-         "high address must be contained within the region");
-  assert(low() >= low_boundary(), "low");
-  assert(low_boundary() <= lower_high_boundary(), "lower high boundary");
-  assert(upper_high_boundary() <= high_boundary(), "upper high boundary");
-  assert(high() <= upper_high(), "upper high");
-}
-
-void VirtualSpace::print_on(outputStream* out) {
-  out->print   ("Virtual space:");
-  if (special()) out->print(" (pinned in memory)");
-  out->cr();
-  out->print_cr(" - committed: " SIZE_FORMAT, committed_size());
-  out->print_cr(" - reserved:  " SIZE_FORMAT, reserved_size());
-  out->print_cr(" - [low, high]:     [" INTPTR_FORMAT ", " INTPTR_FORMAT "]",  p2i(low()), p2i(high()));
-  out->print_cr(" - [low_b, high_b]: [" INTPTR_FORMAT ", " INTPTR_FORMAT "]",  p2i(low_boundary()), p2i(high_boundary()));
-}
-
-void VirtualSpace::print() {
-  print_on(tty);
-}
-
-/////////////// Unit tests ///////////////
-
-#ifndef PRODUCT
-
-#define test_log(...) \
-  do {\
-    if (VerboseInternalVMTests) { \
-      tty->print_cr(__VA_ARGS__); \
-      tty->flush(); \
-    }\
-  } while (false)
-
-class TestReservedSpace : AllStatic {
- public:
-  static void small_page_write(void* addr, size_t size) {
-    size_t page_size = os::vm_page_size();
-
-    char* end = (char*)addr + size;
-    for (char* p = (char*)addr; p < end; p += page_size) {
-      *p = 1;
-    }
-  }
-
-  static void release_memory_for_test(ReservedSpace rs) {
-    if (rs.special()) {
-      guarantee(os::release_memory_special(rs.base(), rs.size()), "Shouldn't fail");
-    } else {
-      guarantee(os::release_memory(rs.base(), rs.size()), "Shouldn't fail");
-    }
-  }
-
-  static void test_reserved_space1(size_t size, size_t alignment) {
-    test_log("test_reserved_space1(%p)", (void*) (uintptr_t) size);
-
-    assert(is_aligned(size, alignment), "Incorrect input parameters");
-
-    ReservedSpace rs(size,          // size
-                     alignment,     // alignment
-                     UseLargePages, // large
-                     (char *)NULL); // requested_address
-
-    test_log(" rs.special() == %d", rs.special());
-
-    assert(rs.base() != NULL, "Must be");
-    assert(rs.size() == size, "Must be");
-
-    assert(is_aligned(rs.base(), alignment), "aligned sizes should always give aligned addresses");
-    assert(is_aligned(rs.size(), alignment), "aligned sizes should always give aligned addresses");
-
-    if (rs.special()) {
-      small_page_write(rs.base(), size);
-    }
-
-    release_memory_for_test(rs);
-  }
-
-  static void test_reserved_space2(size_t size) {
-    test_log("test_reserved_space2(%p)", (void*)(uintptr_t)size);
-
-    assert(is_aligned(size, os::vm_allocation_granularity()), "Must be at least AG aligned");
-
-    ReservedSpace rs(size);
-
-    test_log(" rs.special() == %d", rs.special());
-
-    assert(rs.base() != NULL, "Must be");
-    assert(rs.size() == size, "Must be");
-
-    if (rs.special()) {
-      small_page_write(rs.base(), size);
-    }
-
-    release_memory_for_test(rs);
-  }
-
-  static void test_reserved_space3(size_t size, size_t alignment, bool maybe_large) {
-    test_log("test_reserved_space3(%p, %p, %d)",
-        (void*)(uintptr_t)size, (void*)(uintptr_t)alignment, maybe_large);
-
-    if (size < alignment) {
-      // Tests might set -XX:LargePageSizeInBytes=<small pages> and cause unexpected input arguments for this test.
-      assert((size_t)os::vm_page_size() == os::large_page_size(), "Test needs further refinement");
-      return;
-    }
-
-    assert(is_aligned(size, os::vm_allocation_granularity()), "Must be at least AG aligned");
-    assert(is_aligned(size, alignment), "Must be at least aligned against alignment");
-
-    bool large = maybe_large && UseLargePages && size >= os::large_page_size();
-
-    ReservedSpace rs(size, alignment, large, false);
-
-    test_log(" rs.special() == %d", rs.special());
-
-    assert(rs.base() != NULL, "Must be");
-    assert(rs.size() == size, "Must be");
-
-    if (rs.special()) {
-      small_page_write(rs.base(), size);
-    }
-
-    release_memory_for_test(rs);
-  }
-
-
-  static void test_reserved_space1() {
-    size_t size = 2 * 1024 * 1024;
-    size_t ag   = os::vm_allocation_granularity();
-
-    test_reserved_space1(size,      ag);
-    test_reserved_space1(size * 2,  ag);
-    test_reserved_space1(size * 10, ag);
-  }
-
-  static void test_reserved_space2() {
-    size_t size = 2 * 1024 * 1024;
-    size_t ag = os::vm_allocation_granularity();
-
-    test_reserved_space2(size * 1);
-    test_reserved_space2(size * 2);
-    test_reserved_space2(size * 10);
-    test_reserved_space2(ag);
-    test_reserved_space2(size - ag);
-    test_reserved_space2(size);
-    test_reserved_space2(size + ag);
-    test_reserved_space2(size * 2);
-    test_reserved_space2(size * 2 - ag);
-    test_reserved_space2(size * 2 + ag);
-    test_reserved_space2(size * 3);
-    test_reserved_space2(size * 3 - ag);
-    test_reserved_space2(size * 3 + ag);
-    test_reserved_space2(size * 10);
-    test_reserved_space2(size * 10 + size / 2);
-  }
-
-  static void test_reserved_space3() {
-    size_t ag = os::vm_allocation_granularity();
-
-    test_reserved_space3(ag,      ag    , false);
-    test_reserved_space3(ag * 2,  ag    , false);
-    test_reserved_space3(ag * 3,  ag    , false);
-    test_reserved_space3(ag * 2,  ag * 2, false);
-    test_reserved_space3(ag * 4,  ag * 2, false);
-    test_reserved_space3(ag * 8,  ag * 2, false);
-    test_reserved_space3(ag * 4,  ag * 4, false);
-    test_reserved_space3(ag * 8,  ag * 4, false);
-    test_reserved_space3(ag * 16, ag * 4, false);
-
-    if (UseLargePages) {
-      size_t lp = os::large_page_size();
-
-      // Without large pages
-      test_reserved_space3(lp,     ag * 4, false);
-      test_reserved_space3(lp * 2, ag * 4, false);
-      test_reserved_space3(lp * 4, ag * 4, false);
-      test_reserved_space3(lp,     lp    , false);
-      test_reserved_space3(lp * 2, lp    , false);
-      test_reserved_space3(lp * 3, lp    , false);
-      test_reserved_space3(lp * 2, lp * 2, false);
-      test_reserved_space3(lp * 4, lp * 2, false);
-      test_reserved_space3(lp * 8, lp * 2, false);
-
-      // With large pages
-      test_reserved_space3(lp, ag * 4    , true);
-      test_reserved_space3(lp * 2, ag * 4, true);
-      test_reserved_space3(lp * 4, ag * 4, true);
-      test_reserved_space3(lp, lp        , true);
-      test_reserved_space3(lp * 2, lp    , true);
-      test_reserved_space3(lp * 3, lp    , true);
-      test_reserved_space3(lp * 2, lp * 2, true);
-      test_reserved_space3(lp * 4, lp * 2, true);
-      test_reserved_space3(lp * 8, lp * 2, true);
-    }
-  }
-
-  static void test_reserved_space() {
-    test_reserved_space1();
-    test_reserved_space2();
-    test_reserved_space3();
-  }
-};
-
-void TestReservedSpace_test() {
-  TestReservedSpace::test_reserved_space();
-}
-
-#define assert_equals(actual, expected)  \
-  assert(actual == expected,             \
-         "Got " SIZE_FORMAT " expected " \
-         SIZE_FORMAT, actual, expected);
-
-#define assert_ge(value1, value2)                  \
-  assert(value1 >= value2,                         \
-         "'" #value1 "': " SIZE_FORMAT " '"        \
-         #value2 "': " SIZE_FORMAT, value1, value2);
-
-#define assert_lt(value1, value2)                  \
-  assert(value1 < value2,                          \
-         "'" #value1 "': " SIZE_FORMAT " '"        \
-         #value2 "': " SIZE_FORMAT, value1, value2);
-
-
-class TestVirtualSpace : AllStatic {
-  enum TestLargePages {
-    Default,
-    Disable,
-    Reserve,
-    Commit
-  };
-
-  static ReservedSpace reserve_memory(size_t reserve_size_aligned, TestLargePages mode) {
-    switch(mode) {
-    default:
-    case Default:
-    case Reserve:
-      return ReservedSpace(reserve_size_aligned);
-    case Disable:
-    case Commit:
-      return ReservedSpace(reserve_size_aligned,
-                           os::vm_allocation_granularity(),
-                           /* large */ false, /* exec */ false);
-    }
-  }
-
-  static bool initialize_virtual_space(VirtualSpace& vs, ReservedSpace rs, TestLargePages mode) {
-    switch(mode) {
-    default:
-    case Default:
-    case Reserve:
-      return vs.initialize(rs, 0);
-    case Disable:
-      return vs.initialize_with_granularity(rs, 0, os::vm_page_size());
-    case Commit:
-      return vs.initialize_with_granularity(rs, 0, os::page_size_for_region_unaligned(rs.size(), 1));
-    }
-  }
-
- public:
-  static void test_virtual_space_actual_committed_space(size_t reserve_size, size_t commit_size,
-                                                        TestLargePages mode = Default) {
-    size_t granularity = os::vm_allocation_granularity();
-    size_t reserve_size_aligned = align_up(reserve_size, granularity);
-
-    ReservedSpace reserved = reserve_memory(reserve_size_aligned, mode);
-
-    assert(reserved.is_reserved(), "Must be");
-
-    VirtualSpace vs;
-    bool initialized = initialize_virtual_space(vs, reserved, mode);
-    assert(initialized, "Failed to initialize VirtualSpace");
-
-    vs.expand_by(commit_size, false);
-
-    if (vs.special()) {
-      assert_equals(vs.actual_committed_size(), reserve_size_aligned);
-    } else {
-      assert_ge(vs.actual_committed_size(), commit_size);
-      // Approximate the commit granularity.
-      // Make sure that we don't commit using large pages
-      // if large pages has been disabled for this VirtualSpace.
-      size_t commit_granularity = (mode == Disable || !UseLargePages) ?
-                                   os::vm_page_size() : os::large_page_size();
-      assert_lt(vs.actual_committed_size(), commit_size + commit_granularity);
-    }
-
-    reserved.release();
-  }
-
-  static void test_virtual_space_actual_committed_space_one_large_page() {
-    if (!UseLargePages) {
-      return;
-    }
-
-    size_t large_page_size = os::large_page_size();
-
-    ReservedSpace reserved(large_page_size, large_page_size, true, false);
-
-    assert(reserved.is_reserved(), "Must be");
-
-    VirtualSpace vs;
-    bool initialized = vs.initialize(reserved, 0);
-    assert(initialized, "Failed to initialize VirtualSpace");
-
-    vs.expand_by(large_page_size, false);
-
-    assert_equals(vs.actual_committed_size(), large_page_size);
-
-    reserved.release();
-  }
-
-  static void test_virtual_space_actual_committed_space() {
-    test_virtual_space_actual_committed_space(4 * K, 0);
-    test_virtual_space_actual_committed_space(4 * K, 4 * K);
-    test_virtual_space_actual_committed_space(8 * K, 0);
-    test_virtual_space_actual_committed_space(8 * K, 4 * K);
-    test_virtual_space_actual_committed_space(8 * K, 8 * K);
-    test_virtual_space_actual_committed_space(12 * K, 0);
-    test_virtual_space_actual_committed_space(12 * K, 4 * K);
-    test_virtual_space_actual_committed_space(12 * K, 8 * K);
-    test_virtual_space_actual_committed_space(12 * K, 12 * K);
-    test_virtual_space_actual_committed_space(64 * K, 0);
-    test_virtual_space_actual_committed_space(64 * K, 32 * K);
-    test_virtual_space_actual_committed_space(64 * K, 64 * K);
-    test_virtual_space_actual_committed_space(2 * M, 0);
-    test_virtual_space_actual_committed_space(2 * M, 4 * K);
-    test_virtual_space_actual_committed_space(2 * M, 64 * K);
-    test_virtual_space_actual_committed_space(2 * M, 1 * M);
-    test_virtual_space_actual_committed_space(2 * M, 2 * M);
-    test_virtual_space_actual_committed_space(10 * M, 0);
-    test_virtual_space_actual_committed_space(10 * M, 4 * K);
-    test_virtual_space_actual_committed_space(10 * M, 8 * K);
-    test_virtual_space_actual_committed_space(10 * M, 1 * M);
-    test_virtual_space_actual_committed_space(10 * M, 2 * M);
-    test_virtual_space_actual_committed_space(10 * M, 5 * M);
-    test_virtual_space_actual_committed_space(10 * M, 10 * M);
-  }
-
-  static void test_virtual_space_disable_large_pages() {
-    if (!UseLargePages) {
-      return;
-    }
-    // These test cases verify that if we force VirtualSpace to disable large pages
-    test_virtual_space_actual_committed_space(10 * M, 0, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 4 * K, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 8 * K, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 1 * M, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 2 * M, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 5 * M, Disable);
-    test_virtual_space_actual_committed_space(10 * M, 10 * M, Disable);
-
-    test_virtual_space_actual_committed_space(10 * M, 0, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 4 * K, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 8 * K, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 1 * M, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 2 * M, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 5 * M, Reserve);
-    test_virtual_space_actual_committed_space(10 * M, 10 * M, Reserve);
-
-    test_virtual_space_actual_committed_space(10 * M, 0, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 4 * K, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 8 * K, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 1 * M, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 2 * M, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 5 * M, Commit);
-    test_virtual_space_actual_committed_space(10 * M, 10 * M, Commit);
-  }
-
-  static void test_virtual_space() {
-    test_virtual_space_actual_committed_space();
-    test_virtual_space_actual_committed_space_one_large_page();
-    test_virtual_space_disable_large_pages();
-  }
-};
-
-void TestVirtualSpace_test() {
-  TestVirtualSpace::test_virtual_space();
-}
-
-#endif // PRODUCT
-
-#endif

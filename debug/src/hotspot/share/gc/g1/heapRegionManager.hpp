@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_HEAPREGIONMANAGER_HPP
 #define SHARE_VM_GC_G1_HEAPREGIONMANAGER_HPP
 
@@ -119,10 +95,6 @@ class HeapRegionManager: public CHeapObj<mtGC> {
   uint find_empty_from_idx_reverse(uint start_idx, uint* res_idx) const;
   // Allocate a new HeapRegion for the given index.
   HeapRegion* new_heap_region(uint hrm_index);
-#ifdef ASSERT
-public:
-  bool is_free(HeapRegion* hr) const;
-#endif
   // Returns whether the given region is available for allocation.
   bool is_available(uint region) const;
 
@@ -171,8 +143,8 @@ public:
     HeapRegion* hr = _free_list.remove_region(is_old);
 
     if (hr != NULL) {
-      assert(hr->next() == NULL, "Single region should not have next");
-      assert(is_available(hr->hrm_index()), "Must be committed");
+      assert(hr->next() == NULL, "Single region should not have next");
+      assert(is_available(hr->hrm_index()), "Must be committed");
     }
     return hr;
   }
@@ -253,7 +225,7 @@ public:
   void verify();
 
   // Do some sanity checking.
-  void verify_optional() PRODUCT_RETURN;
+  void verify_optional() {};
 };
 
 // The HeapRegionClaimer is used during parallel iteration over heap regions,
@@ -283,4 +255,4 @@ class HeapRegionClaimer : public StackObj {
   // Claim the given region, returns true if successfully claimed.
   bool claim_region(uint region_index);
 };
-#endif // SHARE_VM_GC_G1_HEAPREGIONMANAGER_HPP
+#endif

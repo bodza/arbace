@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_FRAME_HPP
 #define SHARE_VM_RUNTIME_FRAME_HPP
 
@@ -39,7 +15,6 @@ typedef class BytecodeInterpreter* interpreterState;
 class CodeBlob;
 class FrameValues;
 class vframeArray;
-
 
 // A frame represents a physical stack frame (an activation).  Frames
 // can be C or Java frames, and the Java frames can be interpreted or
@@ -66,15 +41,6 @@ class frame {
   // Constructors
   frame();
 
-#ifndef PRODUCT
-  // This is a generic constructor which is only used by pns() in debug.cpp.
-  // pns (i.e. print native stack) uses this constructor to create a starting
-  // frame for stack walking. The implementation of this constructor is platform
-  // dependent (i.e. SPARC doesn't need an 'fp' argument an will ignore it) but
-  // we want to keep the signature generic because pns() is shared code.
-  frame(void* sp, void* fp, void* pc);
-#endif
-
   // Accessors
 
   // pc: Returns the pc at which this frame will continue normally.
@@ -92,7 +58,6 @@ class frame {
 
   intptr_t* sp() const           { return _sp; }
   void set_sp( intptr_t* newsp ) { _sp = newsp; }
-
 
   CodeBlob* cb() const           { return _cb; }
 
@@ -262,9 +227,7 @@ class frame {
   // not setup)
   oop interpreter_callee_receiver(Symbol* signature)     { return *interpreter_callee_receiver_addr(signature); }
 
-
   oop* interpreter_callee_receiver_addr(Symbol* signature);
-
 
   // expression stack (may go up or down, direction == 1 or -1)
  public:
@@ -277,7 +240,6 @@ class frame {
   intptr_t* interpreter_frame_tos_at(jint offset) const;
   intptr_t* interpreter_frame_tos_address() const;
 
-
   jint  interpreter_frame_expression_stack_size() const;
 
   intptr_t* interpreter_frame_sender_sp() const;
@@ -286,7 +248,7 @@ class frame {
   // template based interpreter deoptimization support
   void  set_interpreter_frame_sender_sp(intptr_t* sender_sp);
   void interpreter_frame_set_monitor_end(BasicObjectLock* value);
-#endif // CC_INTERP
+#endif
 
   // Address of the temp oop in the frame. Needed as GC root.
   oop* interpreter_frame_temp_oop_addr() const;
@@ -388,57 +350,8 @@ class frame {
   // Usage:
   // assert(frame::verify_return_pc(return_address), "must be a return pc");
 
-  NOT_PRODUCT(void pd_ps();)  // platform dependent frame printing
-
 #include CPU_HEADER(frame)
-
 };
-
-#ifndef PRODUCT
-// A simple class to describe a location on the stack
-class FrameValue {
- public:
-  intptr_t* location;
-  char* description;
-  int owner;
-  int priority;
-
-  FrameValue() {
-    location = NULL;
-    description = NULL;
-    owner = -1;
-    priority = 0;
-  }
-
-};
-
-
-// A collection of described stack values that can print a symbolic
-// description of the stack memory.  Interpreter frame values can be
-// in the caller frames so all the values are collected first and then
-// sorted before being printed.
-class FrameValues {
- private:
-  GrowableArray<FrameValue> _values;
-
-  static int compare(FrameValue* a, FrameValue* b) {
-    if (a->location == b->location) {
-      return a->priority - b->priority;
-    }
-    return a->location - b->location;
-  }
-
- public:
-  // Used by frame functions to describe locations.
-  void describe(int owner, intptr_t* location, const char* description, int priority = 0);
-
-#ifdef ASSERT
-  void validate();
-#endif
-  void print(JavaThread* thread);
-};
-
-#endif
 
 //
 // StackFrameStream iterates through the frames of a thread starting from
@@ -469,4 +382,4 @@ class StackFrameStream : public StackObj {
   RegisterMap* register_map()     { return &_reg_map; }
 };
 
-#endif // SHARE_VM_RUNTIME_FRAME_HPP
+#endif

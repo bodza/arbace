@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_CONSTMETHODOOP_HPP
 #define SHARE_VM_OOPS_CONSTMETHODOOP_HPP
 
@@ -86,13 +62,11 @@
 // IMPORTANT: If anything gets added here, there need to be changes to
 // ensure that ServicabilityAgent doesn't get broken as a result!
 
-
 // Utility class describing elements in checked exceptions table inlined in Method*.
 class CheckedExceptionElement {
  public:
   u2 class_cp_index;
 };
-
 
 // Utility class describing elements in local variable table inlined in Method*.
 class LocalVariableTableElement {
@@ -125,16 +99,16 @@ class KlassSizeStats;
 class AdapterHandlerEntry;
 
 // Class to collect the sizes of ConstMethod inline tables
-#define INLINE_TABLES_DO(do_element)            \
-  do_element(localvariable_table_length)        \
-  do_element(compressed_linenumber_size)        \
-  do_element(exception_table_length)            \
-  do_element(checked_exceptions_length)         \
-  do_element(method_parameters_length)          \
-  do_element(generic_signature_index)           \
-  do_element(method_annotations_length)         \
-  do_element(parameter_annotations_length)      \
-  do_element(type_annotations_length)           \
+#define INLINE_TABLES_DO(do_element) \
+  do_element(localvariable_table_length) \
+  do_element(compressed_linenumber_size) \
+  do_element(exception_table_length) \
+  do_element(checked_exceptions_length) \
+  do_element(method_parameters_length) \
+  do_element(generic_signature_index) \
+  do_element(method_annotations_length) \
+  do_element(parameter_annotations_length) \
+  do_element(type_annotations_length) \
   do_element(default_annotations_length)
 
 #define INLINE_TABLE_DECLARE(sym)    int _##sym;
@@ -290,18 +264,18 @@ public:
 
   // adapter
   void set_adapter_entry(AdapterHandlerEntry* adapter) {
-    assert(!is_shared(), "shared methods have fixed adapter_trampoline");
+    assert(!is_shared(), "shared methods have fixed adapter_trampoline");
     _adapter = adapter;
   }
   void set_adapter_trampoline(AdapterHandlerEntry** trampoline) {
-    assert(DumpSharedSpaces, "must be");
-    assert(*trampoline == NULL, "must be NULL during dump time, to be initialized at run time");
+    assert(DumpSharedSpaces, "must be");
+    assert(*trampoline == NULL, "must be NULL during dump time, to be initialized at run time");
     _adapter_trampoline = trampoline;
   }
   void update_adapter_trampoline(AdapterHandlerEntry* adapter) {
-    assert(is_shared(), "must be");
+    assert(is_shared(), "must be");
     *_adapter_trampoline = adapter;
-    assert(this->adapter() == adapter, "must be");
+    assert(this->adapter() == adapter, "must be");
   }
   AdapterHandlerEntry* adapter() {
     if (is_shared()) {
@@ -328,15 +302,9 @@ public:
   }
 
   uint64_t set_fingerprint(uint64_t new_fingerprint) {
-#ifdef ASSERT
-    // Assert only valid if complete/valid 64 bit _fingerprint value is read.
-    uint64_t oldfp = fingerprint();
-#endif // ASSERT
     _fingerprint = new_fingerprint;
-    assert(oldfp == 0L || new_fingerprint == oldfp,
-           "fingerprint cannot change");
-    assert(((new_fingerprint >> 32) != 0x80000000) && (int)new_fingerprint !=0,
-           "fingerprint should call init to set initial value");
+    assert(oldfp == 0L || new_fingerprint == oldfp, "fingerprint cannot change");
+    assert(((new_fingerprint >> 32) != 0x80000000) && (int)new_fingerprint !=0, "fingerprint should call init to set initial value");
     return new_fingerprint;
   }
 
@@ -357,7 +325,7 @@ public:
     }
   }
   void set_generic_signature_index(u2 index)    {
-    assert(has_generic_signature(), "");
+    assert(has_generic_signature(), "");
     u2* addr = generic_signature_index_addr();
     *addr = index;
   }
@@ -376,16 +344,11 @@ public:
   // ConstMethods should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
 
-#if INCLUDE_SERVICES
-  void collect_statistics(KlassSizeStats *sz) const;
-#endif
-
   // code size
   int code_size() const                          { return _code_size; }
   void set_code_size(int size) {
-    assert(max_method_code_size < (1 << 16),
-           "u2 is too small to hold method code size in general");
-    assert(0 <= size && size <= max_method_code_size, "invalid code size");
+    assert(max_method_code_size < (1 << 16), "u2 is too small to hold method code size in general");
+    assert(0 <= size && size <= max_method_code_size, "invalid code size");
     _code_size = size;
   }
 
@@ -431,7 +394,6 @@ public:
 
   bool has_default_annotations() const
     { return (_flags & _has_default_annotations) != 0; }
-
 
   AnnotationArray** method_annotations_addr() const;
   AnnotationArray* method_annotations() const  {
@@ -529,12 +491,12 @@ public:
   int  size_of_parameters() const                { return _size_of_parameters; }
   void set_size_of_parameters(int size)          { _size_of_parameters = size; }
 
-  void set_result_type(BasicType rt)             { assert(rt < 16, "result type too large");
+  void set_result_type(BasicType rt)             {
+    assert(rt < 16, "result type too large");
                                                    _result_type = (u1)rt; }
   // Deallocation for RedefineClasses
   void deallocate_contents(ClassLoaderData* loader_data);
   bool is_klass() const { return false; }
-  DEBUG_ONLY(bool on_stack() { return false; })
 
   void metaspace_pointers_do(MetaspaceClosure* it);
   MetaspaceObj::Type type() const { return ConstMethodType; }
@@ -561,4 +523,4 @@ private:
   void verify_on(outputStream* st);
 };
 
-#endif // SHARE_VM_OOPS_CONSTMETHODOOP_HPP
+#endif

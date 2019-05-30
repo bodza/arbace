@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_QUICKSORT_HPP
 #define SHARE_VM_UTILITIES_QUICKSORT_HPP
 
@@ -47,7 +23,7 @@ class QuickSort : AllStatic {
   // A side effect of this is that arrays of length <= 3 are sorted.
   template<class T, class C>
   static size_t find_pivot(T* array, size_t length, C comparator) {
-    assert(length > 1, "length of array must be > 0");
+    assert(length > 1, "length of array must be > 0");
 
     size_t middle_index = length / 2;
     size_t last_index = length - 1;
@@ -74,10 +50,10 @@ class QuickSort : AllStatic {
 
     for ( ; true; ++left_index, --right_index) {
       for ( ; comparator(array[left_index], pivot_val) < 0; ++left_index) {
-        assert(left_index < length, "reached end of partition");
+        assert(left_index < length, "reached end of partition");
       }
       for ( ; comparator(array[right_index], pivot_val) > 0; --right_index) {
-        assert(right_index > 0, "reached start of partition");
+        assert(right_index > 0, "reached start of partition");
       }
 
       if (left_index < right_index) {
@@ -126,5 +102,4 @@ class QuickSort : AllStatic {
   }
 };
 
-
-#endif //SHARE_VM_UTILITIES_QUICKSORT_HPP
+#endif

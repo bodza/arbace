@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef OS_LINUX_VM_OSTHREAD_LINUX_HPP
 #define OS_LINUX_VM_OSTHREAD_LINUX_HPP
  public:
@@ -51,17 +27,6 @@
   sigset_t  caller_sigmask() const       { return _caller_sigmask; }
   void    set_caller_sigmask(sigset_t sigmask)  { _caller_sigmask = sigmask; }
 
-#ifndef PRODUCT
-  // Used for debugging, return a unique integer for each thread.
-  int thread_identifier() const   { return _thread_id; }
-#endif
-#ifdef ASSERT
-  // We expect no reposition failures so kill vm if we get one.
-  //
-  bool valid_reposition_failure() {
-    return false;
-  }
-#endif // ASSERT
   pthread_t pthread_id() const {
     return _pthread_id;
   }
@@ -132,4 +97,4 @@ private:
 // osThread_solaris.hpp 1.24 99/08/27 13:11:54
 // End
 
-#endif // OS_LINUX_VM_OSTHREAD_LINUX_HPP
+#endif

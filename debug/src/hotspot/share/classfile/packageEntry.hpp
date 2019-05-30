@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_PACKAGEENTRY_HPP
 #define SHARE_VM_CLASSFILE_PACKAGEENTRY_HPP
 
@@ -31,10 +7,6 @@
 #include "utilities/hashtable.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ostream.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrTraceIdExtension.hpp"
-#endif
-
 
 // A PackageEntry basically represents a Java package.  It contains:
 //   - Symbol* containing the package's name.
@@ -109,7 +81,6 @@ private:
   // Contains list of modules this package is qualifiedly exported to.  Access
   // to this list is protected by the Module_lock.
   GrowableArray<ModuleEntry*>* _qualified_exports;
-  JFR_ONLY(DEFINE_TRACE_ID_FIELD;)
 
   // Initial size of a package entry's list of qualified exports.
   enum {QUAL_EXP_SIZE = 43};
@@ -166,7 +137,7 @@ public:
         // No-op for open modules since all packages are unqualifiedly exported
         return;
     }
-    assert(Module_lock->owned_by_self(), "should have the Module_lock");
+    assert(Module_lock->owned_by_self(), "should have the Module_lock");
     _export_flags = PKG_EXP_UNQUALIFIED;
   }
 
@@ -203,8 +174,6 @@ public:
 
   // iteration of qualified exports
   void package_exports_do(ModuleClosure* f);
-
-  JFR_ONLY(DEFINE_TRACE_ID_METHODS;)
 
   // Purge dead weak references out of exported list when any given class loader is unloaded.
   void purge_qualified_exports();
@@ -265,4 +234,4 @@ public:
   void verify();
 };
 
-#endif // SHARE_VM_CLASSFILE_PACKAGEENTRY_HPP
+#endif

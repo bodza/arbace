@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_ARENA_HPP
 #define SHARE_VM_ARENA_HPP
 
@@ -55,12 +31,8 @@ class Chunk: CHeapObj<mtChunk> {
   enum {
     // default sizes; make them slightly smaller than 2**k to guard against
     // buddy-system style malloc implementations
-#ifdef _LP64
     slack      = 40,            // [RGV] Not sure if this is right, but make it
                                 //       a multiple of 8.
-#else
-    slack      = 20,            // suspected sizeof(Chunk) + internal malloc headers
-#endif
 
     tiny_size  =  256  - slack, // Size of first chunk (tiny)
     init_size  =  1*K  - slack, // Size of first chunk (normal aka small)
@@ -106,11 +78,7 @@ protected:
   void* grow(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
   size_t _size_in_bytes;        // Size of arena (used for native memory tracking)
 
-  NOT_PRODUCT(static julong _bytes_allocated;) // total #bytes allocated since start
   friend class AllocStats;
-  debug_only(void* malloc(size_t size);)
-  debug_only(void* internal_malloc_4(size_t x);)
-  NOT_PRODUCT(void inc_bytes_allocated(size_t x);)
 
   void signal_out_of_memory(size_t request, const char* whence) const;
 
@@ -143,12 +111,10 @@ protected:
 
   // Fast allocate in the arena.  Common case is: pointer test + increment.
   void* Amalloc(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert(is_power_of_2(ARENA_AMALLOC_ALIGNMENT) , "should be a power of 2");
+    assert(is_power_of_2(ARENA_AMALLOC_ALIGNMENT) , "should be a power of 2");
     x = ARENA_ALIGN(x);
-    debug_only(if (UseMallocOnly) return malloc(x);)
     if (!check_for_overflow(x, "Arena::Amalloc", alloc_failmode))
       return NULL;
-    NOT_PRODUCT(inc_bytes_allocated(x);)
     if (_hwm + x > _max) {
       return grow(x, alloc_failmode);
     } else {
@@ -159,11 +125,9 @@ protected:
   }
   // Further assume size is padded out to words
   void *Amalloc_4(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
-    debug_only(if (UseMallocOnly) return malloc(x);)
+    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
     if (!check_for_overflow(x, "Arena::Amalloc_4", alloc_failmode))
       return NULL;
-    NOT_PRODUCT(inc_bytes_allocated(x);)
     if (_hwm + x > _max) {
       return grow(x, alloc_failmode);
     } else {
@@ -176,34 +140,20 @@ protected:
   // Allocate with 'double' alignment. It is 8 bytes on sparc.
   // In other cases Amalloc_D() should be the same as Amalloc_4().
   void* Amalloc_D(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
-    debug_only(if (UseMallocOnly) return malloc(x);)
-#if defined(SPARC) && !defined(_LP64)
-#define DALIGN_M1 7
-    size_t delta = (((size_t)_hwm + DALIGN_M1) & ~DALIGN_M1) - (size_t)_hwm;
-    x += delta;
-#endif
+    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
     if (!check_for_overflow(x, "Arena::Amalloc_D", alloc_failmode))
       return NULL;
-    NOT_PRODUCT(inc_bytes_allocated(x);)
     if (_hwm + x > _max) {
       return grow(x, alloc_failmode); // grow() returns a result aligned >= 8 bytes.
     } else {
       char *old = _hwm;
       _hwm += x;
-#if defined(SPARC) && !defined(_LP64)
-      old += delta; // align to 8-bytes
-#endif
       return old;
     }
   }
 
   // Fast delete in area.  Common case is: NOP (except for storage reclaimed)
   void Afree(void *ptr, size_t size) {
-#ifdef ASSERT
-    if (ZapResourceArea) memset(ptr, badResourceValue, size); // zap freed memory
-    if (UseMallocOnly) return;
-#endif
     if (((char*)ptr) + size == _hwm) _hwm = (char*)ptr;
   }
 
@@ -223,8 +173,8 @@ protected:
   size_t size_in_bytes() const         {  return _size_in_bytes; };
   void set_size_in_bytes(size_t size);
 
-  static void free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2)  PRODUCT_RETURN;
-  static void free_all(char** start, char** end)                                     PRODUCT_RETURN;
+  static void free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2)  {};
+  static void free_all(char** start, char** end)                                     {};
 
 private:
   // Reset this Arena to empty, access will trigger grow if necessary
@@ -240,7 +190,7 @@ private:
 #define NEW_ARENA_ARRAY(arena, type, size) \
   (type*) (arena)->Amalloc((size) * sizeof(type))
 
-#define REALLOC_ARENA_ARRAY(arena, type, old, old_size, new_size)    \
+#define REALLOC_ARENA_ARRAY(arena, type, old, old_size, new_size) \
   (type*) (arena)->Arealloc((char*)(old), (old_size) * sizeof(type), \
                             (new_size) * sizeof(type) )
 
@@ -250,4 +200,4 @@ private:
 #define NEW_ARENA_OBJ(arena, type) \
   NEW_ARENA_ARRAY(arena, type, 1)
 
-#endif // SHARE_VM_ARENA_HPP
+#endif

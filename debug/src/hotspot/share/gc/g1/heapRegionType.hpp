@@ -1,34 +1,10 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_HEAPREGIONTYPE_HPP
 #define SHARE_VM_GC_G1_HEAPREGIONTYPE_HPP
 
 #include "gc/g1/g1HeapRegionTraceType.hpp"
 
 #define hrt_assert_is_valid(tag) \
-  assert(is_valid((tag)), "invalid HR type: %u", (uint) (tag))
+  assert(is_valid((tag)), "invalid HR type: %u", (uint) (tag))
 
 class HeapRegionType {
 friend class VMStructs;
@@ -113,7 +89,7 @@ private:
     hrt_assert_is_valid(tag);
     hrt_assert_is_valid(before);
     hrt_assert_is_valid(_tag);
-    assert(_tag == before, "HR tag: %u, expected: %u new tag; %u", _tag, before, tag);
+    assert(_tag == before, "HR tag: %u, expected: %u new tag; %u", _tag, before, tag);
     _tag = tag;
   }
 
@@ -159,7 +135,7 @@ public:
   // Returns whether the region type has been changed or not.
   bool relabel_as_old() {
     //assert(!is_free(), "Should not try to move Free region");
-    assert(!is_humongous(), "Should not try to move Humongous region");
+    assert(!is_humongous(), "Should not try to move Humongous region");
     if (is_old()) {
       return false;
     }
@@ -186,4 +162,4 @@ public:
   HeapRegionType() : _tag(FreeTag) { hrt_assert_is_valid(_tag); }
 };
 
-#endif // SHARE_VM_GC_G1_HEAPREGIONTYPE_HPP
+#endif

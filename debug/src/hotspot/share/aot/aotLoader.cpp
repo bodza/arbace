@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 
@@ -99,15 +76,6 @@ void AOTLoader::metadata_do(void f(Metadata*)) {
       (*heap)->metadata_do(f);
     }
   }
-}
-
-// Flushing and deoptimization in case of evolution
-void AOTLoader::flush_evol_dependents_on(InstanceKlass* dependee) {
-  // make non entrant and mark for deoptimization
-  FOR_ALL_AOT_HEAPS(heap) {
-    (*heap)->flush_evol_dependents_on(dependee);
-  }
-  Deoptimization::deoptimize_dependents();
 }
 
 /**
@@ -280,17 +248,6 @@ void AOTLoader::load_library(const char* name, bool exit_on_error) {
   }
   add_library(lib);
 }
-
-#ifndef PRODUCT
-void AOTLoader::print_statistics() {
-  { ttyLocker ttyl;
-    tty->print_cr("--- AOT Statistics ---");
-    tty->print_cr("AOT libraries loaded: %d", heaps_count());
-    AOTCodeHeap::print_statistics();
-  }
-}
-#endif
-
 
 bool AOTLoader::reconcile_dynamic_invoke(InstanceKlass* holder, int index, Method* adapter_method, Klass* appendix_klass) {
   if (!UseAOT) {

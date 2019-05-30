@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaAssertions.hpp"
 #include "classfile/javaClasses.hpp"
@@ -41,7 +17,7 @@ JavaAssertions::OptionList*     JavaAssertions::_packages = 0;
 
 JavaAssertions::OptionList::OptionList(const char* name, bool enabled,
   OptionList* next) {
-  assert(name != 0, "need a name");
+  assert(name != 0, "need a name");
   _name = name;
   _enabled = enabled;
   _next = next;
@@ -54,7 +30,7 @@ int JavaAssertions::OptionList::count(OptionList* p) {
 }
 
 void JavaAssertions::addOption(const char* name, bool enable) {
-  assert(name != 0, "must have a name");
+  assert(name != 0, "must have a name");
 
   // Copy the name.  The storage needs to exist for the the lifetime of the vm;
   // it is never freed, so will be leaked (along with other option strings -
@@ -133,13 +109,13 @@ objArrayHandle names, typeArrayHandle enabled, TRAPS) {
   // it was created by prepending successive items from the command line).
   int index;
   for (index = len - 1; p != 0; p = p->next(), --index) {
-    assert(index >= 0, "length does not match list");
+    assert(index >= 0, "length does not match list");
     Handle s = java_lang_String::create_from_str(p->name(), CHECK);
     s = java_lang_String::char_converter(s, '/', '.', CHECK);
     names->obj_at_put(index, s());
     enabled->bool_at_put(index, p->enabled());
   }
-  assert(index == -1, "length does not match list");
+  assert(index == -1, "length does not match list");
 }
 
 inline JavaAssertions::OptionList*
@@ -166,7 +142,7 @@ JavaAssertions::match_package(const char* classname) {
   for (/* empty */; len > 0 && classname[len] != '/'; --len) /* empty */;
 
   do {
-    assert(len == 0 || classname[len] == '/', "not a package name");
+    assert(len == 0 || classname[len] == '/', "not a package name");
     for (OptionList* p = _packages; p != 0; p = p->next()) {
       if (strncmp(p->name(), classname, len) == 0 && p->name()[len] == '\0') {
         return p;
@@ -190,7 +166,7 @@ const char* typefound, const char* namefound, bool enabled) {
 }
 
 bool JavaAssertions::enabled(const char* classname, bool systemClass) {
-  assert(classname != 0, "must have a classname");
+  assert(classname != 0, "must have a classname");
 
   // This will be slow if the number of assertion options on the command line is
   // large--it traverses two lists, one of them multiple times.  Could use a

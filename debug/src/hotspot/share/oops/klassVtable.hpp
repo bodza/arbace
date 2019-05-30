@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_KLASSVTABLE_HPP
 #define SHARE_VM_OOPS_KLASSVTABLE_HPP
 
@@ -44,9 +20,6 @@ class klassVtable {
   Klass*       _klass;            // my klass
   int          _tableOffset;      // offset of start of vtable data within klass
   int          _length;           // length of vtable (number of entries)
-#ifndef PRODUCT
-  int          _verify_count;     // to make verify faster
-#endif
 
   // Ordering important, so greater_than (>) can be used as an merge operator.
   enum AccessType {
@@ -95,23 +68,10 @@ class klassVtable {
                                                    Array<Klass*>* local_interfaces,
                                                    TRAPS);
 
-#if INCLUDE_JVMTI
-  // RedefineClasses() API support:
-  // If any entry of this vtable points to any of old_methods,
-  // replace it with the corresponding new_method.
-  // trace_name_printed is set to true if the current call has
-  // printed the klass name so that other routines in the adjust_*
-  // group don't print the klass name.
-  bool adjust_default_method(int vtable_index, Method* old_method, Method* new_method);
-  void adjust_method_entries(InstanceKlass* holder, bool * trace_name_printed);
-  bool check_no_old_or_obsolete_entries();
-  void dump_vtable();
-#endif // INCLUDE_JVMTI
-
   // Debugging code
-  void print()                                              PRODUCT_RETURN;
+  void print()                                              {};
   void verify(outputStream* st, bool force = false);
-  static void print_statistics()                            PRODUCT_RETURN;
+  static void print_statistics()                            {};
 
  protected:
   friend class vtableEntry;
@@ -178,7 +138,6 @@ class klassVtable {
   bool is_preinitialized_vtable();
 };
 
-
 // private helper class for klassVtable
 // description of entry points:
 //    destination is interpreted:
@@ -202,30 +161,31 @@ class vtableEntry {
 
  private:
   Method* _method;
-  void set(Method* method)  { assert(method != NULL, "use clear"); _method = method; }
+  void set(Method* method)  {
+    assert(method != NULL, "use clear");
+    _method = method; }
   void clear()                { _method = NULL; }
-  void print()                                        PRODUCT_RETURN;
+  void print()                                        {};
   void verify(klassVtable* vt, outputStream* st);
 
   friend class klassVtable;
 };
 
-
 inline Method* klassVtable::method_at(int i) const {
-  assert(i >= 0 && i < _length, "index out of bounds");
-  assert(table()[i].method() != NULL, "should not be null");
-  assert(((Metadata*)table()[i].method())->is_method(), "should be method");
+  assert(i >= 0 && i < _length, "index out of bounds");
+  assert(table()[i].method() != NULL, "should not be null");
+  assert(((Metadata*)table()[i].method())->is_method(), "should be method");
   return table()[i].method();
 }
 
 inline Method* klassVtable::unchecked_method_at(int i) const {
-  assert(i >= 0 && i < _length, "index out of bounds");
+  assert(i >= 0 && i < _length, "index out of bounds");
   return table()[i].method();
 }
 
 inline Method** klassVtable::adr_method_at(int i) const {
   // Allow one past the last entry to be referenced; useful for loop bounds.
-  assert(i >= 0 && i <= _length, "index out of bounds");
+  assert(i >= 0 && i <= _length, "index out of bounds");
   return (Method**)(address(table() + i) + vtableEntry::method_offset_in_bytes());
 }
 
@@ -255,7 +215,6 @@ class itableOffsetEntry {
   friend class klassItable;
 };
 
-
 class itableMethodEntry {
  private:
   Method* _method;
@@ -279,16 +238,16 @@ class itableMethodEntry {
 // Format of an itable
 //
 //    ---- offset table ---
-//    Klass* of interface 1             \
+//    Klass* of interface 1 \
 //    offset to vtable from start of oop  / offset table entry
 //    ...
-//    Klass* of interface n             \
+//    Klass* of interface n \
 //    offset to vtable from start of oop  / offset table entry
 //    --- vtable for interface 1 ---
-//    Method*                             \
+//    Method* \
 //    compiler entry point                / method table entry
 //    ...
-//    Method*                             \
+//    Method* \
 //    compiler entry point                / method table entry
 //    -- vtable for interface 2 ---
 //    ...
@@ -304,28 +263,18 @@ class klassItable {
  public:
   klassItable(InstanceKlass* klass);
 
-  itableOffsetEntry* offset_entry(int i) { assert(0 <= i && i <= _size_offset_table, "index out of bounds");
+  itableOffsetEntry* offset_entry(int i) {
+    assert(0 <= i && i <= _size_offset_table, "index out of bounds");
                                            return &((itableOffsetEntry*)vtable_start())[i]; }
 
-  itableMethodEntry* method_entry(int i) { assert(0 <= i && i <= _size_method_table, "index out of bounds");
+  itableMethodEntry* method_entry(int i) {
+    assert(0 <= i && i <= _size_method_table, "index out of bounds");
                                            return &((itableMethodEntry*)method_start())[i]; }
 
   int size_offset_table()                { return _size_offset_table; }
 
   // Initialization
   void initialize_itable(bool checkconstraints, TRAPS);
-
-#if INCLUDE_JVMTI
-  // RedefineClasses() API support:
-  // if any entry of this itable points to any of old_methods,
-  // replace it with the corresponding new_method.
-  // trace_name_printed is set to true if the current call has
-  // printed the klass name so that other routines in the adjust_*
-  // group don't print the klass name.
-  void adjust_method_entries(InstanceKlass* holder, bool * trace_name_printed);
-  bool check_no_old_or_obsolete_entries();
-  void dump_itable();
-#endif // INCLUDE_JVMTI
 
   // Setup of itable
   static int assign_itable_indices_for_interface(Klass* klass);
@@ -337,7 +286,7 @@ class klassItable {
   static Method* method_for_itable_index(Klass* klass, int itable_index);
 
   // Debugging/Statistics
-  static void print_statistics() PRODUCT_RETURN;
+  static void print_statistics() {};
  private:
   intptr_t* vtable_start() const { return ((intptr_t*)_klass) + _table_offset; }
   intptr_t* method_start() const { return vtable_start() + _size_offset_table * itableOffsetEntry::size(); }
@@ -345,11 +294,7 @@ class klassItable {
   // Helper methods
   static int  calc_itable_size(int num_interfaces, int num_methods) { return (num_interfaces * itableOffsetEntry::size()) + (num_methods * itableMethodEntry::size()); }
 
-  // Statistics
-  NOT_PRODUCT(static int  _total_classes;)   // Total no. of classes with itables
-  NOT_PRODUCT(static long _total_size;)      // Total no. of bytes used for itables
-
-  static void update_stats(int size) PRODUCT_RETURN NOT_PRODUCT({ _total_classes++; _total_size += size; })
+  static void update_stats(int size) {}
 };
 
-#endif // SHARE_VM_OOPS_KLASSVTABLE_HPP
+#endif

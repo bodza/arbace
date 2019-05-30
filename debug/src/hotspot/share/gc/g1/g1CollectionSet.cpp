@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1CollectionSet.hpp"
@@ -85,8 +61,7 @@ void G1CollectionSet::init_region_lengths(uint eden_cset_region_length,
   _eden_region_length     = eden_cset_region_length;
   _survivor_region_length = survivor_cset_region_length;
 
-  assert((size_t) young_region_length() == _collection_set_cur_length,
-         "Young region length %u should match collection set length " SIZE_FORMAT, young_region_length(), _collection_set_cur_length);
+  assert((size_t) young_region_length() == _collection_set_cur_length, "Young region length %u should match collection set length " SIZE_FORMAT, young_region_length(), _collection_set_cur_length);
 
   _old_region_length      = 0;
 }
@@ -105,14 +80,14 @@ void G1CollectionSet::set_recorded_rs_lengths(size_t rs_lengths) {
 void G1CollectionSet::add_old_region(HeapRegion* hr) {
   assert_at_safepoint_on_vm_thread();
 
-  assert(_inc_build_state == Active, "Precondition");
-  assert(hr->is_old(), "the region should be old");
+  assert(_inc_build_state == Active, "Precondition");
+  assert(hr->is_old(), "the region should be old");
 
-  assert(!hr->in_collection_set(), "should not already be in the CSet");
+  assert(!hr->in_collection_set(), "should not already be in the CSet");
   _g1h->register_old_region_with_cset(hr);
 
   _collection_set_regions[_collection_set_cur_length++] = hr->hrm_index();
-  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set now larger than maximum size.");
+  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set now larger than maximum size.");
 
   _bytes_used_before += hr->used();
   size_t rs_length = hr->rem_set()->occupied();
@@ -122,8 +97,8 @@ void G1CollectionSet::add_old_region(HeapRegion* hr) {
 
 // Initialize the per-collection-set information
 void G1CollectionSet::start_incremental_building() {
-  assert(_collection_set_cur_length == 0, "Collection set must be empty before starting a new collection set.");
-  assert(_inc_build_state == Inactive, "Precondition");
+  assert(_collection_set_cur_length == 0, "Collection set must be empty before starting a new collection set.");
+  assert(_inc_build_state == Inactive, "Precondition");
 
   _inc_bytes_used_before = 0;
 
@@ -135,8 +110,8 @@ void G1CollectionSet::start_incremental_building() {
 }
 
 void G1CollectionSet::finalize_incremental_building() {
-  assert(_inc_build_state == Active, "Precondition");
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at a safepoint");
+  assert(_inc_build_state == Active, "Precondition");
+  assert(SafepointSynchronize::is_at_safepoint(), "should be at a safepoint");
 
   // The two "main" fields, _inc_recorded_rs_lengths and
   // _inc_predicted_elapsed_time_ms, are updated by the thread
@@ -201,8 +176,8 @@ void G1CollectionSet::iterate_from(HeapRegionClosure* cl, uint worker_id, uint t
 void G1CollectionSet::update_young_region_prediction(HeapRegion* hr,
                                                      size_t new_rs_length) {
   // Update the CSet information that is dependent on the new RS length
-  assert(hr->is_young(), "Precondition");
-  assert(!SafepointSynchronize::is_at_safepoint(), "should not be at a safepoint");
+  assert(hr->is_young(), "Precondition");
+  assert(!SafepointSynchronize::is_at_safepoint(), "should not be at a safepoint");
 
   // We could have updated _inc_recorded_rs_lengths and
   // _inc_predicted_elapsed_time_ms directly but we'd need to do
@@ -227,11 +202,11 @@ void G1CollectionSet::update_young_region_prediction(HeapRegion* hr,
 }
 
 void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
-  assert(hr->is_young(), "invariant");
-  assert(_inc_build_state == Active, "Precondition");
+  assert(hr->is_young(), "invariant");
+  assert(_inc_build_state == Active, "Precondition");
 
   size_t collection_set_length = _collection_set_cur_length;
-  assert(collection_set_length <= INT_MAX, "Collection set is too large with %d entries", (int)collection_set_length);
+  assert(collection_set_length <= INT_MAX, "Collection set is too large with %d entries", (int)collection_set_length);
   hr->set_young_index_in_cset((int)collection_set_length);
 
   _collection_set_regions[collection_set_length] = hr->hrm_index();
@@ -239,7 +214,7 @@ void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
   // update to the length field.
   OrderAccess::storestore();
   _collection_set_cur_length++;
-  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set larger than maximum allowed.");
+  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set larger than maximum allowed.");
 
   // This routine is used when:
   // * adding survivor regions to the incremental cset at the end of an
@@ -273,85 +248,19 @@ void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
     _inc_bytes_used_before += hr->used();
   }
 
-  assert(!hr->in_collection_set(), "invariant");
+  assert(!hr->in_collection_set(), "invariant");
   _g1h->register_young_region_with_cset(hr);
 }
 
 void G1CollectionSet::add_survivor_regions(HeapRegion* hr) {
-  assert(hr->is_survivor(), "Must only add survivor regions, but is %s", hr->get_type_str());
+  assert(hr->is_survivor(), "Must only add survivor regions, but is %s", hr->get_type_str());
   add_young_region_common(hr);
 }
 
 void G1CollectionSet::add_eden_region(HeapRegion* hr) {
-  assert(hr->is_eden(), "Must only add eden regions, but is %s", hr->get_type_str());
+  assert(hr->is_eden(), "Must only add eden regions, but is %s", hr->get_type_str());
   add_young_region_common(hr);
 }
-
-#ifndef PRODUCT
-class G1VerifyYoungAgesClosure : public HeapRegionClosure {
-public:
-  bool _valid;
-public:
-  G1VerifyYoungAgesClosure() : HeapRegionClosure(), _valid(true) { }
-
-  virtual bool do_heap_region(HeapRegion* r) {
-    guarantee(r->is_young(), "Region must be young but is %s", r->get_type_str());
-
-    SurvRateGroup* group = r->surv_rate_group();
-
-    if (group == NULL) {
-      log_error(gc, verify)("## encountered NULL surv_rate_group in young region");
-      _valid = false;
-    }
-
-    if (r->age_in_surv_rate_group() < 0) {
-      log_error(gc, verify)("## encountered negative age in young region");
-      _valid = false;
-    }
-
-    return false;
-  }
-
-  bool valid() const { return _valid; }
-};
-
-bool G1CollectionSet::verify_young_ages() {
-  assert_at_safepoint_on_vm_thread();
-
-  G1VerifyYoungAgesClosure cl;
-  iterate(&cl);
-
-  if (!cl.valid()) {
-    LogStreamHandle(Error, gc, verify) log;
-    print(&log);
-  }
-
-  return cl.valid();
-}
-
-class G1PrintCollectionSetDetailClosure : public HeapRegionClosure {
-  outputStream* _st;
-public:
-  G1PrintCollectionSetDetailClosure(outputStream* st) : HeapRegionClosure(), _st(st) { }
-
-  virtual bool do_heap_region(HeapRegion* r) {
-    assert(r->in_collection_set(), "Region %u should be in collection set", r->hrm_index());
-    _st->print_cr("  " HR_FORMAT ", P: " PTR_FORMAT "N: " PTR_FORMAT ", age: %4d",
-                  HR_FORMAT_PARAMS(r),
-                  p2i(r->prev_top_at_mark_start()),
-                  p2i(r->next_top_at_mark_start()),
-                  r->age_in_surv_rate_group_cond());
-    return false;
-  }
-};
-
-void G1CollectionSet::print(outputStream* st) {
-  st->print_cr("\nCollection_set:");
-
-  G1PrintCollectionSetDetailClosure cl(st);
-  iterate(&cl);
-}
-#endif // !PRODUCT
 
 double G1CollectionSet::finalize_young_part(double target_pause_time_ms, G1SurvivorRegions* survivors) {
   double young_start_time_sec = os::elapsedTime();
@@ -507,43 +416,3 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
 
   QuickSort::sort(_collection_set_regions, _collection_set_cur_length, compare_region_idx, true);
 }
-
-#ifdef ASSERT
-class G1VerifyYoungCSetIndicesClosure : public HeapRegionClosure {
-private:
-  size_t _young_length;
-  int* _heap_region_indices;
-public:
-  G1VerifyYoungCSetIndicesClosure(size_t young_length) : HeapRegionClosure(), _young_length(young_length) {
-    _heap_region_indices = NEW_C_HEAP_ARRAY(int, young_length, mtGC);
-    for (size_t i = 0; i < young_length; i++) {
-      _heap_region_indices[i] = -1;
-    }
-  }
-  ~G1VerifyYoungCSetIndicesClosure() {
-    FREE_C_HEAP_ARRAY(int, _heap_region_indices);
-  }
-
-  virtual bool do_heap_region(HeapRegion* r) {
-    const int idx = r->young_index_in_cset();
-
-    assert(idx > -1, "Young index must be set for all regions in the incremental collection set but is not for region %u.", r->hrm_index());
-    assert((size_t)idx < _young_length, "Young cset index too large for region %u", r->hrm_index());
-
-    assert(_heap_region_indices[idx] == -1,
-           "Index %d used by multiple regions, first use by region %u, second by region %u",
-           idx, _heap_region_indices[idx], r->hrm_index());
-
-    _heap_region_indices[idx] = r->hrm_index();
-
-    return false;
-  }
-};
-
-void G1CollectionSet::verify_young_cset_indices() const {
-  assert_at_safepoint_on_vm_thread();
-
-  G1VerifyYoungCSetIndicesClosure cl(_collection_set_cur_length);
-  iterate(&cl);
-}
-#endif

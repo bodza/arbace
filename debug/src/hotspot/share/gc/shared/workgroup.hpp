@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_WORKGROUP_HPP
 #define SHARE_VM_GC_SHARED_WORKGROUP_HPP
 
@@ -151,19 +127,16 @@ class AbstractWorkGang : public CHeapObj<mtInternal> {
   }
 
   virtual uint active_workers() const {
-    assert(_active_workers <= _total_workers,
-           "_active_workers: %u > _total_workers: %u", _active_workers, _total_workers);
-    assert(UseDynamicNumberOfGCThreads || _active_workers == _total_workers,
-           "Unless dynamic should use total workers");
+    assert(_active_workers <= _total_workers, "_active_workers: %u > _total_workers: %u", _active_workers, _total_workers);
+    assert(UseDynamicNumberOfGCThreads || _active_workers == _total_workers, "Unless dynamic should use total workers");
     return _active_workers;
   }
 
   uint update_active_workers(uint v) {
-    assert(v <= _total_workers,
-           "Trying to set more workers active than there are");
+    assert(v <= _total_workers, "Trying to set more workers active than there are");
     _active_workers = MIN2(v, _total_workers);
     add_workers(false /* exit_on_failure */);
-    assert(v != 0, "Trying to set active workers to 0");
+    assert(v != 0, "Trying to set active workers to 0");
     log_trace(gc, task)("%s: using %d out of %d workers", name(), _active_workers, _total_workers);
     return _active_workers;
   }
@@ -317,9 +290,6 @@ class SubTasksDone: public CHeapObj<mtInternal> {
   volatile uint* _tasks;
   uint _n_tasks;
   volatile uint _threads_completed;
-#ifdef ASSERT
-  volatile uint _claimed;
-#endif
 
   // Set all tasks to unclaimed.
   void clear();
@@ -406,4 +376,4 @@ public:
   bool all_tasks_completed();
 };
 
-#endif // SHARE_VM_GC_SHARED_WORKGROUP_HPP
+#endif

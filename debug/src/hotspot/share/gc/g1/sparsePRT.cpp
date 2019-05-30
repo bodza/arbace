@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "gc/g1/heapRegionBounds.inline.hpp"
@@ -40,9 +16,8 @@ STATIC_ASSERT(sizeof(SparsePRTEntry) % sizeof(int) == 0);
 void SparsePRTEntry::init(RegionIdx_t region_ind) {
   // Check that the card array element type can represent all cards in the region.
   // Choose a large SparsePRTEntry::card_elem_t (e.g. CardIdx_t) if required.
-  assert(((size_t)1 << (sizeof(SparsePRTEntry::card_elem_t) * BitsPerByte)) *
-         G1CardTable::card_size >= HeapRegionBounds::max_size(), "precondition");
-  assert(G1RSetSparseRegionEntries > 0, "precondition");
+  assert(((size_t)1 << (sizeof(SparsePRTEntry::card_elem_t) * BitsPerByte)) * G1CardTable::card_size >= HeapRegionBounds::max_size(), "precondition");
+  assert(G1RSetSparseRegionEntries > 0, "precondition");
   _region_ind = region_ind;
   _next_index = RSHashTable::NullEntry;
   _next_null = 0;
@@ -78,8 +53,8 @@ void SparsePRTEntry::copy_cards(card_elem_t* cards) const {
 
 void SparsePRTEntry::copy_cards(SparsePRTEntry* e) const {
   copy_cards(e->_cards);
-  assert(_next_null >= 0, "invariant");
-  assert(_next_null <= cards_num(), "invariant");
+  assert(_next_null >= 0, "invariant");
+  assert(_next_null <= cards_num(), "invariant");
   e->_next_null = _next_null;
 }
 
@@ -128,11 +103,10 @@ void RSHashTable::clear() {
 
 bool RSHashTable::add_card(RegionIdx_t region_ind, CardIdx_t card_index) {
   SparsePRTEntry* e = entry_for_region_ind_create(region_ind);
-  assert(e != NULL && e->r_ind() == region_ind,
-         "Postcondition of call above.");
+  assert(e != NULL && e->r_ind() == region_ind, "Postcondition of call above.");
   SparsePRTEntry::AddCardResult res = e->add_card(card_index);
   if (res == SparsePRTEntry::added) _occupied_cards++;
-  assert(e->num_valid_cards() > 0, "Postcondition");
+  assert(e->num_valid_cards() > 0, "Postcondition");
   return res != SparsePRTEntry::overflow;
 }
 
@@ -147,8 +121,8 @@ SparsePRTEntry* RSHashTable::get_entry(RegionIdx_t region_ind) const {
 
   if (cur_ind == NullEntry) return NULL;
   // Otherwise...
-  assert(cur->r_ind() == region_ind, "Postcondition of loop + test above.");
-  assert(cur->num_valid_cards() > 0, "Inv");
+  assert(cur->r_ind() == region_ind, "Postcondition of loop + test above.");
+  assert(cur->num_valid_cards() > 0, "Inv");
   return cur;
 }
 
@@ -209,11 +183,11 @@ void RSHashTable::free_entry(int fi) {
 }
 
 void RSHashTable::add_entry(SparsePRTEntry* e) {
-  assert(e->num_valid_cards() > 0, "Precondition.");
+  assert(e->num_valid_cards() > 0, "Precondition.");
   SparsePRTEntry* e2 = entry_for_region_ind_create(e->r_ind());
   e->copy_cards(e2);
   _occupied_cards += e2->num_valid_cards();
-  assert(e2->num_valid_cards() > 0, "Postcondition.");
+  assert(e2->num_valid_cards() > 0, "Postcondition.");
 }
 
 CardIdx_t RSHashTableIter::find_first_card_in_list() {
@@ -298,7 +272,6 @@ void SparsePRT::add_to_expanded_list(SparsePRT* sprt) {
   }
 }
 
-
 SparsePRT* SparsePRT::get_from_expanded_list() {
   SparsePRT* hd = _head_expanded_list;
   while (hd != NULL) {
@@ -325,24 +298,24 @@ void SparsePRT::do_cleanup_work(SparsePRTCleanupTask* sprt_cleanup_task) {
 }
 
 void SparsePRT::finish_cleanup_task(SparsePRTCleanupTask* sprt_cleanup_task) {
-  assert(ParGCRareEvent_lock->owned_by_self(), "pre-condition");
+  assert(ParGCRareEvent_lock->owned_by_self(), "pre-condition");
   SparsePRT* head = sprt_cleanup_task->head();
   SparsePRT* tail = sprt_cleanup_task->tail();
   if (head != NULL) {
-    assert(tail != NULL, "if head is not NULL, so should tail");
+    assert(tail != NULL, "if head is not NULL, so should tail");
 
     tail->set_next_expanded(_head_expanded_list);
     _head_expanded_list = head;
   } else {
-    assert(tail == NULL, "if head is NULL, so should tail");
+    assert(tail == NULL, "if head is NULL, so should tail");
   }
 }
 
 bool SparsePRT::should_be_on_expanded_list() {
   if (_expanded) {
-    assert(_cur != _next, "if _expanded is true, cur should be != _next");
+    assert(_cur != _next, "if _expanded is true, cur should be != _next");
   } else {
-    assert(_cur == _next, "if _expanded is false, cur should be == _next");
+    assert(_cur == _next, "if _expanded is false, cur should be == _next");
   }
   return expanded();
 }
@@ -356,7 +329,6 @@ void SparsePRT::cleanup_all() {
   }
 }
 
-
 SparsePRT::SparsePRT(HeapRegion* hr) :
   _hr(hr), _expanded(false), _next_expanded(NULL)
 {
@@ -364,13 +336,11 @@ SparsePRT::SparsePRT(HeapRegion* hr) :
   _next = _cur;
 }
 
-
 SparsePRT::~SparsePRT() {
-  assert(_next != NULL && _cur != NULL, "Inv");
+  assert(_next != NULL && _cur != NULL, "Inv");
   if (_cur != _next) { delete _cur; }
   delete _next;
 }
-
 
 size_t SparsePRT::mem_size() const {
   // We ignore "_cur" here, because it either = _next, or else it is
@@ -435,7 +405,7 @@ void SparsePRT::expand() {
 }
 
 void SparsePRTCleanupTask::add(SparsePRT* sprt) {
-  assert(sprt->should_be_on_expanded_list(), "pre-condition");
+  assert(sprt->should_be_on_expanded_list(), "pre-condition");
 
   sprt->set_next_expanded(NULL);
   if (_tail != NULL) {

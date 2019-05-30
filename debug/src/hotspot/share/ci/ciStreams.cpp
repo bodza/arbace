@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciCallSite.hpp"
 #include "ci/ciConstant.hpp"
@@ -48,7 +24,6 @@ int ciExceptionHandlerStream::count() {
 
   _pos = -1;
   _end = _method->_handler_count;
-
 
   next();
   while (!is_done()) {
@@ -94,12 +69,12 @@ Bytecodes::Code ciBytecodeStream::next_wide_or_table(Bytecodes::Code bc) {
   case Bytecodes::_wide:
     // Special handling for the wide bytcode
     // Get following bytecode; do not return wide
-    assert(Bytecodes::Code(_pc[0]) == Bytecodes::_wide, "");
+    assert(Bytecodes::Code(_pc[0]) == Bytecodes::_wide, "");
     bc = Bytecodes::java_code(_raw_bc = (Bytecodes::Code)_pc[1]);
-    assert(Bytecodes::wide_length_for(bc) > 2, "must make progress");
+    assert(Bytecodes::wide_length_for(bc) > 2, "must make progress");
     _pc += Bytecodes::wide_length_for(bc);
     _was_wide = _pc;              // Flag last wide bytecode found
-    assert(is_wide(), "accessor works right");
+    assert(is_wide(), "accessor works right");
     break;
 
   case Bytecodes::_lookupswitch:
@@ -149,7 +124,6 @@ void ciBytecodeStream::force_bci(int bci) {
     next();
   }
 }
-
 
 // ------------------------------------------------------------------
 // Constant pool access
@@ -264,13 +238,9 @@ constantTag ciBytecodeStream::get_constant_pool_tag(int index) const {
 // If this is a field access bytecode, get the constant pool
 // index of the referenced field.
 int ciBytecodeStream::get_field_index() {
-  assert(cur_bc() == Bytecodes::_getfield ||
-         cur_bc() == Bytecodes::_putfield ||
-         cur_bc() == Bytecodes::_getstatic ||
-         cur_bc() == Bytecodes::_putstatic, "wrong bc");
+  assert(cur_bc() == Bytecodes::_getfield || cur_bc() == Bytecodes::_putfield || cur_bc() == Bytecodes::_getstatic || cur_bc() == Bytecodes::_putstatic, "wrong bc");
   return get_index_u2_cpcache();
 }
-
 
 // ------------------------------------------------------------------
 // ciBytecodeStream::get_field
@@ -282,7 +252,6 @@ ciField* ciBytecodeStream::get_field(bool& will_link) {
   will_link = f->will_link(_method, _bc);
   return f;
 }
-
 
 // ------------------------------------------------------------------
 // ciBytecodeStream::get_declared_field_holder
@@ -336,18 +305,6 @@ int ciBytecodeStream::get_field_signature_index() {
 // If this is a method invocation bytecode, get the constant pool
 // index of the invoked method.
 int ciBytecodeStream::get_method_index() {
-#ifdef ASSERT
-  switch (cur_bc()) {
-  case Bytecodes::_invokeinterface:
-  case Bytecodes::_invokevirtual:
-  case Bytecodes::_invokespecial:
-  case Bytecodes::_invokestatic:
-  case Bytecodes::_invokedynamic:
-    break;
-  default:
-    ShouldNotReachHere();
-  }
-#endif
   if (has_index_u4())
     return get_index_u4();  // invokedynamic
   return get_index_u2_cpcache();

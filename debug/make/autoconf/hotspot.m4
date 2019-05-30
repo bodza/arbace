@@ -168,7 +168,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_DTRACE],
       HELP_MSG_MISSING_DEPENDENCY([dtrace])
       AC_MSG_ERROR([Cannot enable dtrace with missing dependencies. See above. $HELP_MSG])
     else
-      INCLUDE_DTRACE=true
+      INCLUDE_DTRACE=false # oops! true
       AC_MSG_RESULT([yes, forced])
     fi
   elif test "x$enable_dtrace" = "xno"; then
@@ -179,7 +179,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_DTRACE],
       INCLUDE_DTRACE=false
       AC_MSG_RESULT([no, missing dependencies])
     else
-      INCLUDE_DTRACE=true
+      INCLUDE_DTRACE=false # oops! true
       AC_MSG_RESULT([yes, dependencies present])
     fi
   else
@@ -243,9 +243,9 @@ AC_DEFUN_ONCE([HOTSPOT_ENABLE_DISABLE_CDS],
       [enable class data sharing feature in non-minimal VM. Default is auto, where cds is enabled if supported on the platform.])])
 
   if test "x$enable_cds" = "x" || test "x$enable_cds" = "xauto"; then
-    ENABLE_CDS="true"
+    ENABLE_CDS=false # oops! "true"
   elif test "x$enable_cds" = "xyes"; then
-    ENABLE_CDS="true"
+    ENABLE_CDS=false # oops! "true"
   elif test "x$enable_cds" = "xno"; then
     ENABLE_CDS="false"
   else
@@ -354,7 +354,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_JVM_FEATURES],
 
   # Turn on additional features based on other parts of configure
   if test "x$INCLUDE_DTRACE" = "xtrue"; then
-    JVM_FEATURES="$JVM_FEATURES dtrace"
+    JVM_FEATURES="$JVM_FEATURES" # oops! dtrace
   else
     if HOTSPOT_CHECK_JVM_FEATURE(dtrace); then
       AC_MSG_ERROR([To enable dtrace, you must use --enable-dtrace])
@@ -483,7 +483,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_JVM_FEATURES],
   fi
 
   # All variants but minimal (and custom) get these features
-  NON_MINIMAL_FEATURES="$NON_MINIMAL_FEATURES g1gc epsilongc jni-check jvmti management nmt services vm-structs" # oops! cmsgc parallelgc serialgc zgc
+  NON_MINIMAL_FEATURES="$NON_MINIMAL_FEATURES g1gc epsilongc" # oops! jni-check jvmti management nmt services vm-structs # oops! cmsgc parallelgc serialgc zgc
 
   AC_MSG_CHECKING([if cds should be enabled])
   if test "x$ENABLE_CDS" = "xtrue"; then
@@ -492,7 +492,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_JVM_FEATURES],
     else
       AC_MSG_RESULT([yes])
     fi
-    NON_MINIMAL_FEATURES="$NON_MINIMAL_FEATURES cds"
+    NON_MINIMAL_FEATURES="$NON_MINIMAL_FEATURES" # oops! cds
   else
     if test "x$enable_cds" = "xno"; then
       AC_MSG_RESULT([no, forced])
@@ -502,7 +502,7 @@ AC_DEFUN_ONCE([HOTSPOT_SETUP_JVM_FEATURES],
   fi
 
   # Enable features depending on variant.
-  JVM_FEATURES_server="compiler1 compiler2 $NON_MINIMAL_FEATURES $JVM_FEATURES $JVM_FEATURES_jvmci $JVM_FEATURES_aot $JVM_FEATURES_graal"
+  JVM_FEATURES_server="compiler1 $NON_MINIMAL_FEATURES $JVM_FEATURES $JVM_FEATURES_jvmci" # oops! compiler2 $JVM_FEATURES_aot $JVM_FEATURES_graal
   JVM_FEATURES_client="compiler1 $NON_MINIMAL_FEATURES $JVM_FEATURES"
   JVM_FEATURES_core="$NON_MINIMAL_FEATURES $JVM_FEATURES"
   JVM_FEATURES_minimal="compiler1 minimal serialgc $JVM_FEATURES $JVM_FEATURES_link_time_opt"

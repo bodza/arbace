@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2010, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_COMPILER_METHODLIVENESS_HPP
 #define SHARE_VM_COMPILER_METHODLIVENESS_HPP
 
@@ -163,7 +139,7 @@ class MethodLiveness : public ResourceObj {
 
     // -- Debugging.
 
-    void print_on(outputStream *os) const PRODUCT_RETURN;
+    void print_on(outputStream *os) const {};
 
   }; // End of MethodLiveness::BasicBlock
 
@@ -195,10 +171,8 @@ class MethodLiveness : public ResourceObj {
   // Our work list.
   BasicBlock *_work_list;
 
-#ifdef COMPILER1
   // bcis where blocks start are marked
   ArenaBitMap _bci_block_start;
-#endif // COMPILER1
 
   // -- Graph construction & Analysis
 
@@ -224,38 +198,12 @@ class MethodLiveness : public ResourceObj {
 
   // -- Timing and Statistics.
 
-
   // Timers
   static elapsedTimer _time_build_graph;
   static elapsedTimer _time_gen_kill;
   static elapsedTimer _time_flow;
   static elapsedTimer _time_query;
   static elapsedTimer _time_total;
-
-#ifndef PRODUCT
-
-  // Counts
-  static long _total_bytes;
-  static int  _total_methods;
-
-  static long _total_blocks;
-  static int  _max_method_blocks;
-
-  static long _total_edges;
-  static int  _max_block_edges;
-
-  static long _total_exc_edges;
-  static int  _max_block_exc_edges;
-
-  static long _total_method_locals;
-  static int  _max_method_locals;
-
-  static long _total_locals_queried;
-  static long _total_live_locals_queried;
-
-  static long _total_visits;
-
-#endif
 
  public:
   // Create a liveness analyzer for a method
@@ -267,11 +215,9 @@ class MethodLiveness : public ResourceObj {
   // Find out which locals are live at a specific bci.
   MethodLivenessResult get_liveness_at(int bci);
 
-#ifdef COMPILER1
   const BitMap& get_bci_block_start() const { return _bci_block_start; }
-#endif // COMPILER1
 
-  static void print_times() PRODUCT_RETURN;
+  static void print_times() {};
 };
 
-#endif // SHARE_VM_COMPILER_METHODLIVENESS_HPP
+#endif

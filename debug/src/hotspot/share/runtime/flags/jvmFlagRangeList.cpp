@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "classfile/stringTable.hpp"
@@ -299,20 +275,10 @@ void emit_range_double(const char* name, const double* ptr, double min, double m
 #define EMIT_RANGE_PRODUCT_RW_FLAG(type, name, value, doc)   ); emit_range_##type(#name,&name
 #define EMIT_RANGE_PD_PRODUCT_FLAG(type, name, doc)          ); emit_range_##type(#name,&name
 #define EMIT_RANGE_PD_DIAGNOSTIC_FLAG(type, name, doc)       ); emit_range_##type(#name,&name
-#ifndef PRODUCT
-#define EMIT_RANGE_DEVELOPER_FLAG(type, name, value, doc)    ); emit_range_##type(#name,&name
-#define EMIT_RANGE_PD_DEVELOPER_FLAG(type, name, doc)        ); emit_range_##type(#name,&name
-#define EMIT_RANGE_NOTPRODUCT_FLAG(type, name, value, doc)   ); emit_range_##type(#name,&name
-#else
 #define EMIT_RANGE_DEVELOPER_FLAG(type, name, value, doc)    ); emit_range_no(#name,&name
 #define EMIT_RANGE_PD_DEVELOPER_FLAG(type, name, doc)        ); emit_range_no(#name,&name
 #define EMIT_RANGE_NOTPRODUCT_FLAG(type, name, value, doc)   ); emit_range_no(#name,&name
-#endif
-#ifdef _LP64
 #define EMIT_RANGE_LP64_PRODUCT_FLAG(type, name, value, doc) ); emit_range_##type(#name,&name
-#else
-#define EMIT_RANGE_LP64_PRODUCT_FLAG(type, name, value, doc) ); emit_range_no(#name,&name
-#endif
 
 // Generate func argument to pass into emit_range_xxx functions
 #define EMIT_RANGE_CHECK(a, b)                               , a, b
@@ -351,7 +317,6 @@ void JVMFlagRangeList::init(void) {
                                 IGNORE_CONSTRAINT,
                                 IGNORE_WRITEABLE));
 
-#if INCLUDE_JVMCI
   emit_range_no(NULL JVMCI_FLAGS(EMIT_RANGE_DEVELOPER_FLAG,
                                  EMIT_RANGE_PD_DEVELOPER_FLAG,
                                  EMIT_RANGE_PRODUCT_FLAG,
@@ -363,9 +328,7 @@ void JVMFlagRangeList::init(void) {
                                  EMIT_RANGE_CHECK,
                                  IGNORE_CONSTRAINT,
                                  IGNORE_WRITEABLE));
-#endif // INCLUDE_JVMCI
 
-#ifdef COMPILER1
   emit_range_no(NULL C1_FLAGS(EMIT_RANGE_DEVELOPER_FLAG,
                               EMIT_RANGE_PD_DEVELOPER_FLAG,
                               EMIT_RANGE_PRODUCT_FLAG,
@@ -376,21 +339,6 @@ void JVMFlagRangeList::init(void) {
                               EMIT_RANGE_CHECK,
                               IGNORE_CONSTRAINT,
                               IGNORE_WRITEABLE));
-#endif // COMPILER1
-
-#ifdef COMPILER2
-  emit_range_no(NULL C2_FLAGS(EMIT_RANGE_DEVELOPER_FLAG,
-                              EMIT_RANGE_PD_DEVELOPER_FLAG,
-                              EMIT_RANGE_PRODUCT_FLAG,
-                              EMIT_RANGE_PD_PRODUCT_FLAG,
-                              EMIT_RANGE_DIAGNOSTIC_FLAG,
-                              EMIT_RANGE_PD_DIAGNOSTIC_FLAG,
-                              EMIT_RANGE_EXPERIMENTAL_FLAG,
-                              EMIT_RANGE_NOTPRODUCT_FLAG,
-                              EMIT_RANGE_CHECK,
-                              IGNORE_CONSTRAINT,
-                              IGNORE_WRITEABLE));
-#endif // COMPILER2
 }
 
 JVMFlagRange* JVMFlagRangeList::find(const char* name) {
@@ -412,7 +360,7 @@ void JVMFlagRangeList::print(outputStream* st, const char* name, RangeStrFunc de
   } else {
     JVMFlagConstraint* constraint = JVMFlagConstraintList::find(name);
     if (constraint != NULL) {
-      assert(default_range_str_func!=NULL, "default_range_str_func must be provided");
+      assert(default_range_str_func!=NULL, "default_range_str_func must be provided");
       st->print("%s", default_range_str_func());
     } else {
       st->print("[                           ...                           ]");

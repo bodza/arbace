@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_REFERENCEPROCESSOR_HPP
 #define SHARE_VM_GC_SHARED_REFERENCEPROCESSOR_HPP
 
@@ -49,7 +25,9 @@ public:
   inline bool is_empty() const;
   size_t length()               { return _len; }
   void   set_length(size_t len) { _len = len;  }
-  void   inc_length(size_t inc) { _len += inc; assert(_len > 0, "Error"); }
+  void   inc_length(size_t inc) { _len += inc;
+  assert(_len > 0, "Error");
+  }
   void   dec_length(size_t dec) { _len -= dec; }
 
   inline void clear();
@@ -76,10 +54,6 @@ private:
 
   OopClosure*        _keep_alive;
   BoolObjectClosure* _is_alive;
-
-  DEBUG_ONLY(
-  oop                _first_seen; // cyclic linked list check
-  )
 
   size_t             _processed;
   size_t             _removed;
@@ -108,7 +82,7 @@ public:
   // of a NULL referent in the discovered Reference object. This typically
   // happens in the case of concurrent collectors that may have done the
   // discovery concurrently, or interleaved, with mutator execution.
-  void load_ptrs(DEBUG_ONLY(bool allow_null_referent));
+  void load_ptrs();
 
   // Move to the next discovered reference.
   inline void next() {
@@ -149,7 +123,7 @@ public:
     } else {
       _current_discovered = _next_discovered;
     }
-    assert(_current_discovered != _first_seen, "cyclic ref_list found");
+    assert(_current_discovered != _first_seen, "cyclic ref_list found");
     _processed++;
   }
 };
@@ -193,7 +167,7 @@ public:
 
 private:
   size_t total_count(DiscoveredList lists[]) const;
-  void verify_total_count_zero(DiscoveredList lists[], const char* type) NOT_DEBUG_RETURN;
+  void verify_total_count_zero(DiscoveredList lists[], const char* type) {};
 
   // The SoftReference master timestamp clock
   static jlong _soft_ref_timestamp_clock;
@@ -351,11 +325,11 @@ private:
   // round-robin mod _num_queues (not: _not_ mod _max_num_queues)
   uint next_id() {
     uint id = _next_id;
-    assert(!_discovery_is_mt, "Round robin should only be used in serial discovery");
+    assert(!_discovery_is_mt, "Round robin should only be used in serial discovery");
     if (++_next_id == _num_queues) {
       _next_id = 0;
     }
-    assert(_next_id < _num_queues, "_next_id %u _num_queues %u _max_num_queues %u", _next_id, _num_queues, _max_num_queues);
+    assert(_next_id < _num_queues, "_next_id %u _num_queues %u _max_num_queues %u", _next_id, _num_queues, _max_num_queues);
     return id;
   }
   DiscoveredList* get_discovered_list(ReferenceType rt);
@@ -365,7 +339,7 @@ private:
   void clear_discovered_references(DiscoveredList& refs_list);
 
   void log_reflist(const char* prefix, DiscoveredList list[], uint num_active_queues);
-  void log_reflist_counts(DiscoveredList ref_lists[], uint num_active_queues) PRODUCT_RETURN;
+  void log_reflist_counts(DiscoveredList ref_lists[], uint num_active_queues) {};
 
   // Balances reference queues.
   void balance_queues(DiscoveredList refs_lists[]);
@@ -459,8 +433,8 @@ public:
   size_t total_reference_count(ReferenceType rt) const;
 
   // debugging
-  void verify_no_references_recorded() PRODUCT_RETURN;
-  void verify_referent(oop obj)        PRODUCT_RETURN;
+  void verify_no_references_recorded() {};
+  void verify_referent(oop obj)        {};
 
   bool adjust_no_of_processing_threads() const { return _adjust_no_of_processing_threads; }
 };
@@ -609,7 +583,6 @@ class ReferenceProcessorAtomicMutator: StackObj {
   }
 };
 
-
 // A utility class to temporarily change the MT processing
 // disposition of the given ReferenceProcessor instance
 // in the scope that contains it.
@@ -695,4 +668,4 @@ public:
   ~RefProcMTDegreeAdjuster();
 };
 
-#endif // SHARE_VM_GC_SHARED_REFERENCEPROCESSOR_HPP
+#endif

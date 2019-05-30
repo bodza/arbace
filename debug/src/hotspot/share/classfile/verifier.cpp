@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "classfile/classFileStream.hpp"
@@ -85,7 +61,6 @@ static void* verify_byte_codes_fn() {
   return (void*)_verify_byte_codes_fn;
 }
 
-
 // Methods in Verifier
 
 bool Verifier::should_verify_for(oop class_loader, bool should_verify_class) {
@@ -104,7 +79,7 @@ bool Verifier::relax_access_for(oop loader) {
 }
 
 void Verifier::trace_class_resolution(Klass* resolve_class, InstanceKlass* verify_class) {
-  assert(verify_class != NULL, "Unexpected null verify_class");
+  assert(verify_class != NULL, "Unexpected null verify_class");
   ResourceMark rm;
   Symbol* s = verify_class->source_file_name();
   const char* source_file = (s != NULL ? s->as_C_string() : NULL);
@@ -323,22 +298,22 @@ TypeOrigin TypeOrigin::null() {
   return TypeOrigin();
 }
 TypeOrigin TypeOrigin::local(u2 index, StackMapFrame* frame) {
-  assert(frame != NULL, "Must have a frame");
+  assert(frame != NULL, "Must have a frame");
   return TypeOrigin(CF_LOCALS, index, StackMapFrame::copy(frame),
      frame->local_at(index));
 }
 TypeOrigin TypeOrigin::stack(u2 index, StackMapFrame* frame) {
-  assert(frame != NULL, "Must have a frame");
+  assert(frame != NULL, "Must have a frame");
   return TypeOrigin(CF_STACK, index, StackMapFrame::copy(frame),
       frame->stack_at(index));
 }
 TypeOrigin TypeOrigin::sm_local(u2 index, StackMapFrame* frame) {
-  assert(frame != NULL, "Must have a frame");
+  assert(frame != NULL, "Must have a frame");
   return TypeOrigin(SM_LOCALS, index, StackMapFrame::copy(frame),
       frame->local_at(index));
 }
 TypeOrigin TypeOrigin::sm_stack(u2 index, StackMapFrame* frame) {
-  assert(frame != NULL, "Must have a frame");
+  assert(frame != NULL, "Must have a frame");
   return TypeOrigin(SM_STACK, index, StackMapFrame::copy(frame),
       frame->stack_at(index));
 }
@@ -393,20 +368,6 @@ void TypeOrigin::details(outputStream* ss) const {
       ;
   }
 }
-
-#ifdef ASSERT
-void TypeOrigin::print_on(outputStream* str) const {
-  str->print("{%d,%d,%p:", _origin, _index, _frame);
-  if (_frame != NULL) {
-    _frame->print_on(str);
-  } else {
-    str->print("null");
-  }
-  str->print(",");
-  _type.print_on(str);
-  str->print("}");
-}
-#endif
 
 void ErrorContext::details(outputStream* ss, const Method* method) const {
   if (is_valid()) {
@@ -702,7 +663,6 @@ void ClassVerifier::verify_method(const methodHandle& m, TRAPS) {
     stackmap_index = verify_stackmap_table(
       stackmap_index, bci, &current_frame, &stackmap_table,
       no_control_flow, CHECK_VERIFY(this));
-
 
     bool this_uninit = false;  // Set to true when invokespecial <init> initialized 'this'
     bool verified_exc_handlers = false;
@@ -1732,21 +1692,20 @@ void ClassVerifier::verify_method(const methodHandle& m, TRAPS) {
               "Bad instruction: %02x", opcode);
           no_control_flow = false;
           return;
-      }  // end switch
-    }  // end Merge with the next instruction
+      }
+    }
 
     // Look for possible jump target in exception handlers and see if it matches
     // current_frame.  Don't do this check if it has already been done (for
     // ([a,d,f,i,l]store* opcodes).  This check cannot be done earlier because
     // opcodes, such as invokespecial, may set the this_uninit flag.
-    assert(!(verified_exc_handlers && this_uninit),
-      "Exception handler targets got verified before this_uninit got set");
+    assert(!(verified_exc_handlers && this_uninit), "Exception handler targets got verified before this_uninit got set");
     if (!verified_exc_handlers && bci >= ex_min && bci < ex_max) {
       if (was_recursively_verified()) return;
       verify_exception_handler_targets(
         bci, this_uninit, &current_frame, &stackmap_table, CHECK_VERIFY(this));
     }
-  } // end while
+  }
 
   // Make sure that control flow does not fall through end of the method
   if (!no_control_flow) {
@@ -1984,11 +1943,6 @@ void ClassVerifier::verify_error(ErrorContext ctx, const char* msg, ...) {
   ss.vprint(msg, va);
   va_end(va);
   _message = ss.as_string();
-#ifdef ASSERT
-  ResourceMark rm;
-  const char* exception_name = _exception_type->as_C_string();
-  Exceptions::debug_check_abort(exception_name, NULL);
-#endif // ndef ASSERT
 }
 
 void ClassVerifier::class_format_error(const char* msg, ...) {
@@ -2072,7 +2026,7 @@ void ClassVerifier::verify_ldc(
       verify_cp_type(bci, index, cp, types, CHECK_VERIFY(this));
     }
   } else {
-    assert(opcode == Bytecodes::_ldc2_w, "must be ldc2_w");
+    assert(opcode == Bytecodes::_ldc2_w, "must be ldc2_w");
     types = (1 << JVM_CONSTANT_Double) | (1 << JVM_CONSTANT_Long)
           | (1 << JVM_CONSTANT_Dynamic);
     verify_cp_type(bci, index, cp, types, CHECK_VERIFY(this));
@@ -2117,8 +2071,7 @@ void ClassVerifier::verify_ldc(
         "from constant pool index %d", _klass->external_name(), index);
       return;
     }
-    assert(sizeof(VerificationType) == sizeof(uintptr_t),
-          "buffer type must match VerificationType size");
+    assert(sizeof(VerificationType) == sizeof(uintptr_t), "buffer type must match VerificationType size");
     uintptr_t constant_type_buffer[2];
     VerificationType* v_constant_type = (VerificationType*)constant_type_buffer;
     SignatureStream sig_stream(constant_type, false);
@@ -2208,7 +2161,6 @@ void ClassVerifier::verify_switch(
     stackmap_table->check_jump_target(
       current_frame, target, CHECK_VERIFY(this));
   }
-  NOT_PRODUCT(aligned_bcp = NULL);  // no longer valid at this point
 }
 
 bool ClassVerifier::name_in_supers(
@@ -2256,8 +2208,7 @@ void ClassVerifier::verify_field_instructions(RawBytecodeStream* bcs,
   }
   VerificationType target_class_type = ref_class_type;
 
-  assert(sizeof(VerificationType) == sizeof(uintptr_t),
-        "buffer type must match VerificationType size");
+  assert(sizeof(VerificationType) == sizeof(uintptr_t), "buffer type must match VerificationType size");
   uintptr_t field_type_buffer[2];
   VerificationType* field_type = (VerificationType*)field_type_buffer;
   // If we make a VerificationType[2] array directly, the compiler calls
@@ -2545,8 +2496,8 @@ bool ClassVerifier::ends_in_athrow(u4 start_bc_offset) {
 
       default:
         ;
-    } // end switch
-  } // end while loop
+    }
+  }
 
   return false;
 }
@@ -2600,7 +2551,7 @@ void ClassVerifier::verify_invoke_init(
       if (was_recursively_verified()) return;
       verify_exception_handler_targets(bci, true, current_frame,
                                        stackmap_table, CHECK_VERIFY(this));
-    } // in_try_block
+    }
 
     current_frame->initialize_object(type, current_type());
     *this_uninit = true;
@@ -2681,7 +2632,7 @@ bool ClassVerifier::is_same_or_direct_interface(
   if (local_interfaces != NULL) {
     for (int x = 0; x < local_interfaces->length(); x++) {
       Klass* k = local_interfaces->at(x);
-      assert (k != NULL && k->is_interface(), "invalid interface");
+      assert(k != NULL && k->is_interface(), "invalid interface");
       if (ref_class_type.equals(VerificationType::reference_type(k->name()))) {
         return true;
       }
@@ -2744,8 +2695,7 @@ void ClassVerifier::verify_invoke_instructions(
   // of parsing the signature once to find its size.
   // -3 is for '(', ')' and return descriptor; multiply by 2 is for
   // longs/doubles to be consertive.
-  assert(sizeof(VerificationType) == sizeof(uintptr_t),
-        "buffer type must match VerificationType size");
+  assert(sizeof(VerificationType) == sizeof(uintptr_t), "buffer type must match VerificationType size");
   uintptr_t on_stack_sig_types_buffer[128];
   // If we make a VerificationType[128] array directly, the compiler calls
   // to the c-runtime library to do the allocation instead of just
@@ -2770,14 +2720,6 @@ void ClassVerifier::verify_invoke_instructions(
     sig_stream.next();
   }
   int nargs = sig_i;
-
-#ifdef ASSERT
-  {
-    ArgumentSizeComputer size_it(method_sig);
-    assert(nargs == size_it.size(), "Argument sizes do not match");
-    assert(nargs <= (method_sig->utf8_length() - 3) * 2, "estimate of max size isn't conservative enough");
-  }
-#endif
 
   // Check instruction operands
   u2 bci = bcs->bci();
@@ -2848,7 +2790,6 @@ void ClassVerifier::verify_invoke_instructions(
           "interface method reference is in an indirect superinterface.");
       return;
     }
-
   }
   // Match method descriptor with operand stack
   for (int i = nargs - 1; i >= 0; i--) {  // Run backwards
@@ -2888,7 +2829,7 @@ void ClassVerifier::verify_invoke_instructions(
           current_frame->pop_stack(ref_class_type, CHECK_VERIFY(this));
         if (current_type() != stack_object_type) {
           if (was_recursively_verified()) return;
-          assert(cp->cache() == NULL, "not rewritten yet");
+          assert(cp->cache() == NULL, "not rewritten yet");
           Symbol* ref_class_name =
             cp->klass_name_at(cp->klass_ref_index_at(index));
           // See the comments in verify_field_instructions() for
@@ -2919,7 +2860,7 @@ void ClassVerifier::verify_invoke_instructions(
           }
         }
       } else {
-        assert(opcode == Bytecodes::_invokeinterface, "Unexpected opcode encountered");
+        assert(opcode == Bytecodes::_invokeinterface, "Unexpected opcode encountered");
         current_frame->pop_stack(ref_class_type, CHECK_VERIFY(this));
       }
     }

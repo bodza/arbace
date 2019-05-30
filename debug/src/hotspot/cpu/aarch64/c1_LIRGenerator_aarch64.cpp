@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -39,17 +14,12 @@
 #include "runtime/stubRoutines.hpp"
 #include "vmreg_aarch64.inline.hpp"
 
-#ifdef ASSERT
-#define __ gen()->lir(__FILE__, __LINE__)->
-#else
 #define __ gen()->lir()->
-#endif
 
 // Item will be loaded into a byte register; Intel only
 void LIRItem::load_byte_item() {
   load_item();
 }
-
 
 void LIRItem::load_nonconstant() {
   LIR_Opr r = value()->operand();
@@ -64,7 +34,6 @@ void LIRItem::load_nonconstant() {
 //               LIRGenerator
 //--------------------------------------------------------------
 
-
 LIR_Opr LIRGenerator::exceptionOopOpr() { return FrameMap::r0_oop_opr; }
 LIR_Opr LIRGenerator::exceptionPcOpr()  { return FrameMap::r3_opr; }
 LIR_Opr LIRGenerator::divInOpr()        { Unimplemented(); return LIR_OprFact::illegalOpr; }
@@ -74,7 +43,6 @@ LIR_Opr LIRGenerator::shiftCountOpr()   { Unimplemented(); return LIR_OprFact::i
 LIR_Opr LIRGenerator::syncLockOpr()     { return new_register(T_INT); }
 LIR_Opr LIRGenerator::syncTempOpr()     { return FrameMap::r0_opr; }
 LIR_Opr LIRGenerator::getThreadTemp()   { return LIR_OprFact::illegalOpr; }
-
 
 LIR_Opr LIRGenerator::result_register_for(ValueType* type, bool callee) {
   LIR_Opr opr;
@@ -89,10 +57,9 @@ LIR_Opr LIRGenerator::result_register_for(ValueType* type, bool callee) {
     default: ShouldNotReachHere(); return LIR_OprFact::illegalOpr;
   }
 
-  assert(opr->type_field() == as_OprType(as_BasicType(type)), "type mismatch");
+  assert(opr->type_field() == as_OprType(as_BasicType(type)), "type mismatch");
   return opr;
 }
-
 
 LIR_Opr LIRGenerator::rlock_byte(BasicType type) {
   LIR_Opr reg = new_register(T_INT);
@@ -100,9 +67,7 @@ LIR_Opr LIRGenerator::rlock_byte(BasicType type) {
   return reg;
 }
 
-
 //--------- loading items into registers --------------------------------
-
 
 bool LIRGenerator::can_store_as_constant(Value v, BasicType type) const {
   if (v->type()->as_IntConstant() != NULL) {
@@ -129,18 +94,14 @@ bool LIRGenerator::can_inline_as_constant(Value v) const {
   }
 }
 
-
 bool LIRGenerator::can_inline_as_constant(LIR_Const* c) const { return false; }
-
 
 LIR_Opr LIRGenerator::safepoint_poll_register() {
   return LIR_OprFact::illegalOpr;
 }
 
-
-LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index,
-                                            int shift, int disp, BasicType type) {
-  assert(base->is_register(), "must be");
+LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index, int shift, int disp, BasicType type) {
+  assert(base->is_register(), "must be");
   intx large_disp = disp;
 
   // accumulate fixed displacements
@@ -149,7 +110,7 @@ LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index,
     if (constant->type() == T_INT) {
       large_disp += index->as_jint() << shift;
     } else {
-      assert(constant->type() == T_LONG, "should be");
+      assert(constant->type() == T_LONG, "should be");
       jlong c = index->as_jlong() << shift;
       if ((jlong)((jint)c) == c) {
         large_disp += c;
@@ -193,13 +154,12 @@ LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index,
   if (large_disp == 0) {
     return new LIR_Address(base, index, type);
   } else {
-    assert(Address::offset_ok_for_immed(large_disp, 0), "must be");
+    assert(Address::offset_ok_for_immed(large_disp, 0), "must be");
     return new LIR_Address(base, large_disp, type);
   }
 }
 
-LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_opr,
-                                              BasicType type) {
+LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_opr, BasicType type) {
   int offset_in_bytes = arrayOopDesc::base_offset_in_bytes(type);
   int elem_size = type2aelembytes(type);
   int shift = exact_log2(elem_size);
@@ -249,15 +209,12 @@ LIR_Opr LIRGenerator::load_immediate(int x, BasicType type) {
   return r;
 }
 
-
-
 void LIRGenerator::increment_counter(address counter, BasicType type, int step) {
   LIR_Opr pointer = new_pointer_register();
   __ move(LIR_OprFact::intptrConst(counter), pointer);
   LIR_Address* addr = new LIR_Address(pointer, type);
   increment_counter(addr, step);
 }
-
 
 void LIRGenerator::increment_counter(LIR_Address* addr, int step) {
   LIR_Opr imm = NULL;
@@ -288,7 +245,6 @@ void LIRGenerator::cmp_reg_mem(LIR_Condition condition, LIR_Opr reg, LIR_Opr bas
   __ load(generate_address(base, disp, type), reg1, info);
   __ cmp(condition, reg, reg1);
 }
-
 
 bool LIRGenerator::strength_reduce_multiply(LIR_Opr left, int c, LIR_Opr result, LIR_Opr tmp) {
 
@@ -322,7 +278,7 @@ void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo*
 //----------------------------------------------------------------------
 
 void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
-  assert(x->is_pinned(),"");
+  assert(x->is_pinned(),"");
   LIRItem obj(x->obj(), this);
   obj.load_item();
 
@@ -347,9 +303,8 @@ void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
                         x->monitor_no(), info_for_exception, info);
 }
 
-
 void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-  assert(x->is_pinned(),"");
+  assert(x->is_pinned(),"");
 
   LIRItem obj(x->obj(), this);
   obj.dont_load_item();
@@ -360,14 +315,12 @@ void LIRGenerator::do_MonitorExit(MonitorExit* x) {
   monitor_exit(obj_temp, lock, syncTempOpr(), LIR_OprFact::illegalOpr, x->monitor_no());
 }
 
-
 void LIRGenerator::do_NegateOp(NegateOp* x) {
 
   LIRItem from(x->x(), this);
   from.load_item();
   LIR_Opr result = rlock_result(x);
   __ negate (from.result(), result);
-
 }
 
 // for  _fadd, _fmul, _fsub, _fdiv, _frem
@@ -465,10 +418,8 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
       break;
     }
 
-
   } else {
-    assert (x->op() == Bytecodes::_lmul || x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub,
-            "expect lmul, ladd or lsub");
+    assert(x->op() == Bytecodes::_lmul || x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub, "expect lmul, ladd or lsub");
     // add, sub, mul
     left.load_item();
     if (! right.is_register()) {
@@ -477,7 +428,7 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
           || ! Assembler::operand_valid_for_add_sub_immediate(right.get_jlong_constant())) {
         right.load_item();
       } else { // add, sub
-        assert (x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub, "expect ladd or lsub");
+        assert(x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub, "expect ladd or lsub");
         // don't load constants to save register
         right.load_nonconstant();
       }
@@ -531,7 +482,7 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
     rlock_result(x);
     arithmetic_op_int(x->op(), x->operand(), left_arg->result(), right_arg->result(), LIR_OprFact::illegalOpr);
   } else {
-    assert (x->op() == Bytecodes::_imul, "expect imul");
+    assert(x->op() == Bytecodes::_imul, "expect imul");
     if (right.is_constant()) {
       jint c = right.get_jint_constant();
       if (c > 0 && c < max_jint && (is_power_of_2(c) || is_power_of_2(c - 1) || is_power_of_2(c + 1))) {
@@ -556,7 +507,7 @@ void LIRGenerator::do_ArithmeticOp(ArithmeticOp* x) {
   }
 
   ValueTag tag = x->type()->tag();
-  assert(x->x()->type()->tag() == tag && x->y()->type()->tag() == tag, "wrong parameters");
+  assert(x->x()->type()->tag() == tag && x->y()->type()->tag() == tag, "wrong parameters");
   switch (tag) {
     case floatTag:
     case doubleTag:  do_ArithmeticOp_FPU(x);  return;
@@ -729,7 +680,7 @@ LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) 
   bool is_oop = type == T_OBJECT || type == T_ARRAY;
   LIR_Opr result = new_register(type);
   value.load_item();
-  assert(type == T_INT || is_oop LP64_ONLY( || type == T_LONG ), "unexpected type");
+  assert(type == T_INT || is_oop  || type == T_LONG , "unexpected type");
   LIR_Opr tmp = new_register(T_INT);
   __ xchg(addr, value.result(), result, tmp);
   return result;
@@ -738,14 +689,14 @@ LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) 
 LIR_Opr LIRGenerator::atomic_add(BasicType type, LIR_Opr addr, LIRItem& value) {
   LIR_Opr result = new_register(type);
   value.load_item();
-  assert(type == T_INT LP64_ONLY( || type == T_LONG ), "unexpected type");
+  assert(type == T_INT  || type == T_LONG , "unexpected type");
   LIR_Opr tmp = new_register(T_INT);
   __ xadd(addr, value.result(), result, tmp);
   return result;
 }
 
 void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1 || (x->number_of_arguments() == 2 && x->id() == vmIntrinsics::_dpow), "wrong type");
+  assert(x->number_of_arguments() == 1 || (x->number_of_arguments() == 2 && x->id() == vmIntrinsics::_dpow), "wrong type");
   if (x->id() == vmIntrinsics::_dexp || x->id() == vmIntrinsics::_dlog ||
       x->id() == vmIntrinsics::_dpow || x->id() == vmIntrinsics::_dcos ||
       x->id() == vmIntrinsics::_dsin || x->id() == vmIntrinsics::_dtan ||
@@ -756,7 +707,7 @@ void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
   switch (x->id()) {
     case vmIntrinsics::_dabs:
     case vmIntrinsics::_dsqrt: {
-      assert(x->number_of_arguments() == 1, "wrong type");
+      assert(x->number_of_arguments() == 1, "wrong type");
       LIRItem value(x->argument_at(0), this);
       value.load_item();
       LIR_Opr dst = rlock_result(x);
@@ -858,9 +809,8 @@ void LIRGenerator::do_LibmIntrinsic(Intrinsic* x) {
   __ move(result_reg, calc_result);
 }
 
-
 void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
-  assert(x->number_of_arguments() == 5, "wrong type");
+  assert(x->number_of_arguments() == 5, "wrong type");
 
   // Make all state_for calls early since they can emit code
   CodeEmitInfo* info = state_for(x, x->state());
@@ -901,7 +851,7 @@ void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
 }
 
 void LIRGenerator::do_update_CRC32(Intrinsic* x) {
-  assert(UseCRC32Intrinsics, "why are we here?");
+  assert(UseCRC32Intrinsics, "why are we here?");
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
   int flags = 0;
@@ -978,7 +928,7 @@ void LIRGenerator::do_update_CRC32(Intrinsic* x) {
 }
 
 void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
-  assert(UseCRC32CIntrinsics, "why are we here?");
+  assert(UseCRC32CIntrinsics, "why are we here?");
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
   int flags = 0;
@@ -1056,8 +1006,8 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
 }
 
 void LIRGenerator::do_FmaIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 3, "wrong type");
-  assert(UseFMA, "Needs FMA instructions support.");
+  assert(x->number_of_arguments() == 3, "wrong type");
+  assert(UseFMA, "Needs FMA instructions support.");
   LIRItem value(x->argument_at(0), this);
   LIRItem value1(x->argument_at(1), this);
   LIRItem value2(x->argument_at(2), this);
@@ -1097,16 +1047,11 @@ void LIRGenerator::do_Convert(Convert* x) {
 
   __ convert(x->op(), conv_input, conv_result);
 
-  assert(result->is_virtual(), "result must be virtual register");
+  assert(result->is_virtual(), "result must be virtual register");
   set_result(x, result);
 }
 
 void LIRGenerator::do_NewInstance(NewInstance* x) {
-#ifndef PRODUCT
-  if (PrintNotLoaded && !x->klass()->is_loaded()) {
-    tty->print_cr("   ###class not loaded at new bci %d", x->printable_bci());
-  }
-#endif
   CodeEmitInfo* info = state_for(x, x->state());
   LIR_Opr reg = result_register_for(x->type());
   new_instance(reg, x->klass(), x->is_unresolved(),
@@ -1175,7 +1120,6 @@ void LIRGenerator::do_NewObjectArray(NewObjectArray* x) {
   LIR_Opr result = rlock_result(x);
   __ move(reg, result);
 }
-
 
 void LIRGenerator::do_NewMultiArray(NewMultiArray* x) {
   Values* dims = x->dims();
@@ -1249,10 +1193,10 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
 
   CodeStub* stub;
   if (x->is_incompatible_class_change_check()) {
-    assert(patching_info == NULL, "can't patch this");
+    assert(patching_info == NULL, "can't patch this");
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    assert(patching_info == NULL, "can't patch this");
+    assert(patching_info == NULL, "can't patch this");
     stub = new DeoptimizeStub(info_for_exception,
                               Deoptimization::Reason_class_check,
                               Deoptimization::Action_none);
@@ -1291,7 +1235,7 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
 }
 
 void LIRGenerator::do_If(If* x) {
-  assert(x->number_of_sux() == 2, "inconsistency");
+  assert(x->number_of_sux() == 2, "inconsistency");
   ValueTag tag = x->x()->type()->tag();
   bool is_safepoint = x->is_safepoint();
 
@@ -1354,7 +1298,7 @@ void LIRGenerator::do_If(If* x) {
   } else {
     __ branch(lir_cond(cond), right->type(), x->tsux());
   }
-  assert(x->default_sux() == x->fsux(), "wrong destination above");
+  assert(x->default_sux() == x->fsux(), "wrong destination above");
   __ jump(x->default_sux());
 }
 
@@ -1364,13 +1308,11 @@ LIR_Opr LIRGenerator::getThreadPointer() {
 
 void LIRGenerator::trace_block_entry(BlockBegin* block) { Unimplemented(); }
 
-void LIRGenerator::volatile_field_store(LIR_Opr value, LIR_Address* address,
-                                        CodeEmitInfo* info) {
+void LIRGenerator::volatile_field_store(LIR_Opr value, LIR_Address* address, CodeEmitInfo* info) {
   __ volatile_store_mem_reg(value, address, info);
 }
 
-void LIRGenerator::volatile_field_load(LIR_Address* address, LIR_Opr result,
-                                       CodeEmitInfo* info) {
+void LIRGenerator::volatile_field_load(LIR_Address* address, LIR_Opr result, CodeEmitInfo* info) {
   // 8179954: We need to make sure that the code generated for
   // volatile accesses forms a sequentially-consistent set of
   // operations when combined with STLR and LDAR.  Without a leading

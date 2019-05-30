@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jni.h"
 #include "jvm.h"
@@ -36,7 +12,6 @@
 /*
  *      Implementation of class jdk.internal.perf.Perf
  */
-
 
 #define PERF_ENTRY(result_type, header) \
   JVM_ENTRY(result_type, header)
@@ -93,7 +68,6 @@ PERF_ENTRY(jobject, Perf_Attach(JNIEnv *env, jobject unused, jstring user, int v
     ThreadToNativeFromVM ttnfv(thread);
     return env->NewDirectByteBuffer(address, (jlong)capacity);
   }
-
 PERF_END
 
 PERF_ENTRY(void, Perf_Detach(JNIEnv *env, jobject unused, jobject buffer))
@@ -116,7 +90,6 @@ PERF_ENTRY(void, Perf_Detach(JNIEnv *env, jobject unused, jobject buffer))
   }
 
   PerfMemory::detach((char*)address, capacity, CHECK);
-
 PERF_END
 
 PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
@@ -127,7 +100,6 @@ PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
   char* name_utf = NULL;
 
   if (units <= 0 || units > PerfData::U_Last) {
-    debug_only(warning("unexpected units argument, units = %d", units));
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
   }
 
@@ -166,7 +138,6 @@ PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
     break;
 
   default: /* Illegal Argument */
-    debug_only(warning("unexpected variability value: %d", variability));
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
     break;
   }
@@ -177,7 +148,6 @@ PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
     ThreadToNativeFromVM ttnfv(thread);
     return env->NewDirectByteBuffer(lp, sizeof(jlong));
   }
-
 PERF_END
 
 PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
@@ -195,14 +165,12 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
   // check for valid variability classification
   if (variability != PerfData::V_Constant &&
       variability != PerfData::V_Variable) {
-    debug_only(warning("unexpected variability value: %d", variability));
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
   }
 
   // check for valid units
   if (units != PerfData::U_String) {
     // only String based ByteArray objects are currently supported
-    debug_only(warning("unexpected units value: %d", variability));
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
   }
 
@@ -239,7 +207,7 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
                                                     (char*)value_local,
                                                     CHECK_NULL);
 
-      assert(maxlength == value_length, "string constant length should be == maxlength");
+      assert(maxlength == value_length, "string constant length should be == maxlength");
       maxlength = value_length;
     }
     else {
@@ -250,7 +218,7 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
                                                     (char*)value_local,
                                                     CHECK_NULL);
 
-     assert(maxlength >= value_length,"string variable length should be <= maxlength");
+     assert(maxlength >= value_length,"string variable length should be <= maxlength");
     }
   }
 
@@ -260,7 +228,6 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
     ThreadToNativeFromVM ttnfv(thread);
     return env->NewDirectByteBuffer(cp, maxlength+1);
   }
-
 PERF_END
 
 PERF_ENTRY(jlong, Perf_HighResCounter(JNIEnv *env, jobject perf))
@@ -273,7 +240,6 @@ PERF_ENTRY(jlong, Perf_HighResCounter(JNIEnv *env, jobject perf))
   // incurred by all Java applications, which is unacceptable.
 
   return os::elapsed_counter();
-
 PERF_END
 
 PERF_ENTRY(jlong, Perf_HighResFrequency(JNIEnv *env, jobject perf))
@@ -286,7 +252,6 @@ PERF_ENTRY(jlong, Perf_HighResFrequency(JNIEnv *env, jobject perf))
   // incurred by all Java applications, which is unacceptable.
 
   return os::elapsed_frequency();
-
 PERF_END
 
 /// JVM_RegisterPerfMethods

@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_MacroAssembler.hpp"
 #include "c1/c1_Runtime1.hpp"
@@ -63,7 +38,7 @@ void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result,
 int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr, Register scratch, Label& slow_case) {
   const int aligned_mask = BytesPerWord -1;
   const int hdr_offset = oopDesc::mark_offset_in_bytes();
-  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
+  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done, fail;
   int null_check_offset = -1;
 
@@ -73,7 +48,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   str(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
 
   if (UseBiasedLocking) {
-    assert(scratch != noreg, "should have scratch register at this point");
+    assert(scratch != noreg, "should have scratch register at this point");
     null_check_offset = biased_locking_enter(disp_hdr, obj, hdr, scratch, false, done, &slow_case);
   } else {
     null_check_offset = offset();
@@ -121,11 +96,10 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   return null_check_offset;
 }
 
-
 void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_hdr, Label& slow_case) {
   const int aligned_mask = BytesPerWord -1;
   const int hdr_offset = oopDesc::mark_offset_in_bytes();
-  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
+  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
 
   if (UseBiasedLocking) {
@@ -158,7 +132,6 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
   // done
   bind(done);
 }
-
 
 // Defines obj, preserves var_size_in_bytes
 void C1_MacroAssembler::try_allocate(Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, Label& slow_case) {
@@ -196,7 +169,7 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
 
 // preserves obj, destroys len_in_bytes
 void C1_MacroAssembler::initialize_body(Register obj, Register len_in_bytes, int hdr_size_in_bytes, Register t1) {
-  assert(hdr_size_in_bytes >= 0, "header size must be positive or 0");
+  assert(hdr_size_in_bytes >= 0, "header size must be positive or 0");
   Label done;
 
   // len_in_bytes is positive and ptr sized
@@ -213,10 +186,9 @@ void C1_MacroAssembler::initialize_body(Register obj, Register len_in_bytes, int
   bind(done);
 }
 
-
 void C1_MacroAssembler::allocate_object(Register obj, Register t1, Register t2, int header_size, int object_size, Register klass, Label& slow_case) {
   assert_different_registers(obj, t1, t2); // XXX really?
-  assert(header_size >= 0 && object_size >= header_size, "illegal sizes");
+  assert(header_size >= 0 && object_size >= header_size, "illegal sizes");
 
   try_allocate(obj, noreg, object_size * BytesPerWord, t1, t2, slow_case);
 
@@ -224,8 +196,7 @@ void C1_MacroAssembler::allocate_object(Register obj, Register t1, Register t2, 
 }
 
 void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, bool is_tlab_allocated) {
-  assert((con_size_in_bytes & MinObjAlignmentInBytesMask) == 0,
-         "con_size_in_bytes is not multiple of alignment");
+  assert((con_size_in_bytes & MinObjAlignmentInBytesMask) == 0, "con_size_in_bytes is not multiple of alignment");
   const int hdr_size_in_bytes = instanceOopDesc::header_size() * HeapWordSize;
 
   initialize_header(obj, klass, noreg, t1, t2);
@@ -271,14 +242,13 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
          bind(entry_point);
        add(rscratch1, rscratch1, unroll * wordSize);
        cbnz(index, loop);
-
      }
   }
 
   membar(StoreStore);
 
   if (CURRENT_ENV->dtrace_alloc_probes()) {
-    assert(obj == r0, "must be");
+    assert(obj == r0, "must be");
     far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
   }
 
@@ -288,7 +258,7 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   assert_different_registers(obj, len, t1, t2, klass);
 
   // determine alignment mask
-  assert(!(BytesPerWord & 1), "must be a multiple of 2 for masking code to work");
+  assert(!(BytesPerWord & 1), "must be a multiple of 2 for masking code to work");
 
   // check for negative or excessive length
   mov(rscratch1, (int32_t)max_array_allocation_length);
@@ -312,23 +282,21 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   membar(StoreStore);
 
   if (CURRENT_ENV->dtrace_alloc_probes()) {
-    assert(obj == r0, "must be");
+    assert(obj == r0, "must be");
     far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
   }
 
   verify_oop(obj);
 }
 
-
 void C1_MacroAssembler::inline_cache_check(Register receiver, Register iCache) {
   verify_oop(receiver);
   // explicit NULL check not needed since load from [klass_offset] causes a trap
   // check against inline cache
-  assert(!MacroAssembler::needs_explicit_null_check(oopDesc::klass_offset_in_bytes()), "must add explicit null check");
+  assert(!MacroAssembler::needs_explicit_null_check(oopDesc::klass_offset_in_bytes()), "must add explicit null check");
 
   cmp_klass(receiver, iCache, rscratch1);
 }
-
 
 void C1_MacroAssembler::build_frame(int framesize, int bang_size_in_bytes) {
   // If we have to make this method not-entrant we'll overwrite its
@@ -336,7 +304,7 @@ void C1_MacroAssembler::build_frame(int framesize, int bang_size_in_bytes) {
   // must ensure that this first instruction is a B, BL, NOP, BKPT,
   // SVC, HVC, or SMC.  Make it a NOP.
   nop();
-  assert(bang_size_in_bytes >= framesize, "stack bang size incorrect");
+  assert(bang_size_in_bytes >= framesize, "stack bang size incorrect");
   // Make sure there is enough stack space for this method's activation.
   // Note that we do this before doing an enter().
   generate_stack_overflow_check(bang_size_in_bytes);
@@ -353,7 +321,6 @@ void C1_MacroAssembler::remove_frame(int framesize) {
   }
 }
 
-
 void C1_MacroAssembler::verified_entry() {
 }
 
@@ -366,32 +333,3 @@ void C1_MacroAssembler::load_parameter(int offset_in_words, Register reg) {
 
   ldr(reg, Address(rfp, (offset_in_words + 2) * BytesPerWord));
 }
-
-#ifndef PRODUCT
-
-void C1_MacroAssembler::verify_stack_oop(int stack_offset) {
-  if (!VerifyOops) return;
-  verify_oop_addr(Address(sp, stack_offset), "oop");
-}
-
-void C1_MacroAssembler::verify_not_null_oop(Register r) {
-  if (!VerifyOops) return;
-  Label not_null;
-  cbnz(r, not_null);
-  stop("non-null oop required");
-  bind(not_null);
-  verify_oop(r);
-}
-
-void C1_MacroAssembler::invalidate_registers(bool inv_r0, bool inv_r19, bool inv_r2, bool inv_r3, bool inv_r4, bool inv_r5) {
-#ifdef ASSERT
-  static int nn;
-  if (inv_r0) mov(r0, 0xDEAD);
-  if (inv_r19) mov(r19, 0xDEAD);
-  if (inv_r2) mov(r2, nn++);
-  if (inv_r3) mov(r3, 0xDEAD);
-  if (inv_r4) mov(r4, 0xDEAD);
-  if (inv_r5) mov(r5, 0xDEAD);
-#endif
-}
-#endif // ifndef PRODUCT

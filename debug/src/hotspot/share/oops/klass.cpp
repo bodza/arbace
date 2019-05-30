@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/dictionary.hpp"
@@ -48,8 +24,8 @@
 #include "utilities/stack.inline.hpp"
 
 void Klass::set_java_mirror(Handle m) {
-  assert(!m.is_null(), "New mirror should never be null.");
-  assert(_java_mirror.resolve() == NULL, "should only be used to initialize mirror");
+  assert(!m.is_null(), "New mirror should never be null.");
+  assert(_java_mirror.resolve() == NULL, "should only be used to initialize mirror");
   _java_mirror = class_loader_data()->add_handle(m);
 }
 
@@ -64,7 +40,7 @@ bool Klass::is_cloneable() const {
 
 void Klass::set_is_cloneable() {
   if (name() == vmSymbols::java_lang_invoke_MemberName()) {
-    assert(is_final(), "no subclasses allowed");
+    assert(is_final(), "no subclasses allowed");
     // MemberName cloning should not be intrinsified and always happen in JVM_Clone.
   } else if (is_instance_klass() && InstanceKlass::cast(this)->reference_type() != REF_NONE) {
     // Reference cloning should not be intrinsified and always happen in JVM_Clone.
@@ -133,37 +109,29 @@ Klass *Klass::LCA( Klass *k2 ) {
   }
 }
 
-
 void Klass::check_valid_for_instantiation(bool throwError, TRAPS) {
   ResourceMark rm(THREAD);
   THROW_MSG(throwError ? vmSymbols::java_lang_InstantiationError()
             : vmSymbols::java_lang_InstantiationException(), external_name());
 }
 
-
 void Klass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
   ResourceMark rm(THREAD);
-  assert(s != NULL, "Throw NPE!");
+  assert(s != NULL, "Throw NPE!");
   THROW_MSG(vmSymbols::java_lang_ArrayStoreException(),
             err_msg("arraycopy: source type %s is not an array", s->klass()->external_name()));
 }
-
 
 void Klass::initialize(TRAPS) {
   ShouldNotReachHere();
 }
 
 bool Klass::compute_is_subtype_of(Klass* k) {
-  assert(k->is_klass(), "argument must be a class");
+  assert(k->is_klass(), "argument must be a class");
   return is_subclass_of(k);
 }
 
 Klass* Klass::find_field(Symbol* name, Symbol* sig, fieldDescriptor* fd) const {
-#ifdef ASSERT
-  tty->print_cr("Error: find_field called on a klass oop."
-                " Likely error: reflection method does not correctly"
-                " wrap return value in a mirror object.");
-#endif
   ShouldNotReachHere();
   return NULL;
 }
@@ -171,11 +139,6 @@ Klass* Klass::find_field(Symbol* name, Symbol* sig, fieldDescriptor* fd) const {
 Method* Klass::uncached_lookup_method(const Symbol* name, const Symbol* signature,
                                       OverpassLookupMode overpass_mode,
                                       PrivateLookupMode private_mode) const {
-#ifdef ASSERT
-  tty->print_cr("Error: uncached_lookup_method called on a klass oop."
-                " Likely error: reflection method does not correctly"
-                " wrap return value in a mirror object.");
-#endif
   ShouldNotReachHere();
   return NULL;
 }
@@ -194,14 +157,12 @@ Klass::Klass(KlassID id) : _id(id),
                            _prototype_header(markOopDesc::prototype()),
                            _shared_class_path_index(-1),
                            _java_mirror(NULL) {
-  CDS_ONLY(_shared_class_flags = 0;)
-  CDS_JAVA_HEAP_ONLY(_archived_mirror = 0;)
   _primary_supers[0] = this;
   set_super_check_offset(in_bytes(primary_supers_offset()));
 }
 
 jint Klass::array_layout_helper(BasicType etype) {
-  assert(etype >= T_BOOLEAN && etype <= T_OBJECT, "valid etype");
+  assert(etype >= T_BOOLEAN && etype <= T_OBJECT, "valid etype");
   // Note that T_ARRAY is not allowed here.
   int  hsize = arrayOopDesc::base_offset_in_bytes(etype);
   int  esize = type2aelembytes(etype);
@@ -209,13 +170,13 @@ jint Klass::array_layout_helper(BasicType etype) {
   int  tag   =  isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
   int lh = array_layout_helper(tag, hsize, etype, exact_log2(esize));
 
-  assert(lh < (int)_lh_neutral_value, "must look like an array layout");
-  assert(layout_helper_is_array(lh), "correct kind");
-  assert(layout_helper_is_objArray(lh) == isobj, "correct kind");
-  assert(layout_helper_is_typeArray(lh) == !isobj, "correct kind");
-  assert(layout_helper_header_size(lh) == hsize, "correct decode");
-  assert(layout_helper_element_type(lh) == etype, "correct decode");
-  assert(1 << layout_helper_log2_element_size(lh) == esize, "correct decode");
+  assert(lh < (int)_lh_neutral_value, "must look like an array layout");
+  assert(layout_helper_is_array(lh), "correct kind");
+  assert(layout_helper_is_objArray(lh) == isobj, "correct kind");
+  assert(layout_helper_is_typeArray(lh) == !isobj, "correct kind");
+  assert(layout_helper_header_size(lh) == hsize, "correct decode");
+  assert(layout_helper_element_type(lh) == etype, "correct decode");
+  assert(1 << layout_helper_log2_element_size(lh) == esize, "correct decode");
 
   return lh;
 }
@@ -238,10 +199,9 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
   if (k == NULL) {
     set_super(NULL);
     _primary_supers[0] = this;
-    assert(super_depth() == 0, "Object must already be initialized properly");
+    assert(super_depth() == 0, "Object must already be initialized properly");
   } else if (k != super() || k == SystemDictionary::Object_klass()) {
-    assert(super() == NULL || super() == SystemDictionary::Object_klass(),
-           "initialize this only once to a non-trivial value");
+    assert(super() == NULL || super() == SystemDictionary::Object_klass(), "initialize this only once to a non-trivial value");
     set_super(k);
     Klass* sup = k;
     int sup_depth = sup->super_depth();
@@ -260,27 +220,6 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
       super_check_cell = &_secondary_super_cache;
     }
     set_super_check_offset((address)super_check_cell - (address) this);
-
-#ifdef ASSERT
-    {
-      juint j = super_depth();
-      assert(j == my_depth, "computed accessor gets right answer");
-      Klass* t = this;
-      while (!t->can_be_primary_super()) {
-        t = t->super();
-        j = t->super_depth();
-      }
-      for (juint j1 = j+1; j1 < primary_super_limit(); j1++) {
-        assert(primary_super_of_depth(j1) == NULL, "super list padding");
-      }
-      while (t != NULL) {
-        assert(primary_super_of_depth(j) == t, "super list initialization");
-        t = t->super();
-        --j;
-      }
-      assert(j == (juint)-1, "correct depth count");
-    }
-#endif
   }
 
   if (secondary_supers() == NULL) {
@@ -336,49 +275,39 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
       s2->at_put(j+fill_p, secondaries->at(j));  // add secondaries on the end.
     }
 
-  #ifdef ASSERT
-      // We must not copy any NULL placeholders left over from bootstrap.
-    for (int j = 0; j < s2->length(); j++) {
-      assert(s2->at(j) != NULL, "correct bootstrapping order");
-    }
-  #endif
-
     set_secondary_supers(s2);
   }
 }
 
 GrowableArray<Klass*>* Klass::compute_secondary_supers(int num_extra_slots,
                                                        Array<Klass*>* transitive_interfaces) {
-  assert(num_extra_slots == 0, "override for complex klasses");
-  assert(transitive_interfaces == NULL, "sanity");
+  assert(num_extra_slots == 0, "override for complex klasses");
+  assert(transitive_interfaces == NULL, "sanity");
   set_secondary_supers(Universe::the_empty_klass_array());
   return NULL;
 }
 
-
 InstanceKlass* Klass::superklass() const {
-  assert(super() == NULL || super()->is_instance_klass(), "must be instance klass");
+  assert(super() == NULL || super()->is_instance_klass(), "must be instance klass");
   return _super == NULL ? NULL : InstanceKlass::cast(_super);
 }
 
 void Klass::set_subklass(Klass* s) {
-  assert(s != this, "sanity check");
+  assert(s != this, "sanity check");
   _subklass = s;
 }
 
 void Klass::set_next_sibling(Klass* s) {
-  assert(s != this, "sanity check");
+  assert(s != this, "sanity check");
   _next_sibling = s;
 }
 
 void Klass::append_to_sibling_list() {
-  debug_only(verify();)
   // add ourselves to superklass' subklass list
   InstanceKlass* super = superklass();
   if (super == NULL) return;        // special case: class Object
-  assert((!super->is_interface()    // interfaces cannot be supers
-          && (super->superklass() == NULL || !is_interface())),
-         "an interface can only be a subklass of Object");
+  // interfaces cannot be supers
+  assert((!super->is_interface() && (super->superklass() == NULL || !is_interface())), "an interface can only be a subklass of Object");
   Klass* prev_first_subklass = super->subklass();
   if (prev_first_subklass != NULL) {
     // set our sibling to be the superklass' previous first subklass
@@ -386,7 +315,6 @@ void Klass::append_to_sibling_list() {
   }
   // make ourselves the superklass' first subklass
   super->set_subklass(this);
-  debug_only(verify();)
 }
 
 oop Klass::holder_phantom() const {
@@ -405,17 +333,11 @@ void Klass::clean_weak_klass_links(bool unloading_occurred, bool clean_alive_kla
   while (!stack.is_empty()) {
     Klass* current = stack.pop();
 
-    assert(current->is_loader_alive(), "just checking, this should be live");
+    assert(current->is_loader_alive(), "just checking, this should be live");
 
     // Find and set the first alive subklass
     Klass* sub = current->subklass();
     while (sub != NULL && !sub->is_loader_alive()) {
-#ifndef PRODUCT
-      if (log_is_enabled(Trace, class, unload)) {
-        ResourceMark rm;
-        log_trace(class, unload)("unlinking class (subclass): %s", sub->external_name());
-      }
-#endif
       sub = sub->next_sibling();
     }
     current->set_subklass(sub);
@@ -475,8 +397,7 @@ void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 void Klass::remove_unshareable_info() {
-  assert (DumpSharedSpaces, "only called for DumpSharedSpaces");
-  JFR_ONLY(REMOVE_ID(this);)
+  assert(DumpSharedSpaces, "only called for DumpSharedSpaces");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("remove: %s", external_name());
@@ -492,7 +413,7 @@ void Klass::remove_unshareable_info() {
 }
 
 void Klass::remove_java_mirror() {
-  assert (DumpSharedSpaces, "only called for DumpSharedSpaces");
+  assert(DumpSharedSpaces, "only called for DumpSharedSpaces");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("remove java_mirror: %s", external_name());
@@ -502,9 +423,8 @@ void Klass::remove_java_mirror() {
 }
 
 void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protection_domain, TRAPS) {
-  assert(is_klass(), "ensure C++ vtable is restored");
-  assert(is_shared(), "must be set");
-  JFR_ONLY(RESTORE_ID(this);)
+  assert(is_klass(), "ensure C++ vtable is restored");
+  assert(is_shared(), "must be set");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("restore: %s", external_name());
@@ -564,27 +484,12 @@ void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protec
   }
 }
 
-#if INCLUDE_CDS_JAVA_HEAP
-// Used at CDS dump time to access the archived mirror. No GC barrier.
-oop Klass::archived_java_mirror_raw() {
-  assert(has_raw_archived_mirror(), "must have raw archived mirror");
-  return CompressedOops::decode(_archived_mirror);
-}
-
-// No GC barrier
-void Klass::set_archived_java_mirror_raw(oop m) {
-  assert(DumpSharedSpaces, "called only during runtime");
-  _archived_mirror = CompressedOops::encode(m);
-}
-#endif // INCLUDE_CDS_JAVA_HEAP
-
 Klass* Klass::array_klass_or_null(int rank) {
   EXCEPTION_MARK;
   // No exception can be thrown by array_klass_impl when called with or_null == true.
   // (In anycase, the execption mark will fail if it do so)
   return array_klass_impl(true, rank, THREAD);
 }
-
 
 Klass* Klass::array_klass_or_null() {
   EXCEPTION_MARK;
@@ -593,12 +498,10 @@ Klass* Klass::array_klass_or_null() {
   return array_klass_impl(true, THREAD);
 }
 
-
 Klass* Klass::array_klass_impl(bool or_null, int rank, TRAPS) {
   fatal("array_klass should be dispatched to InstanceKlass, ObjArrayKlass or TypeArrayKlass");
   return NULL;
 }
-
 
 Klass* Klass::array_klass_impl(bool or_null, TRAPS) {
   fatal("array_klass should be dispatched to InstanceKlass, ObjArrayKlass or TypeArrayKlass");
@@ -619,9 +522,9 @@ const char* Klass::external_name() const {
       size_t name_len = name()->utf8_length();
       char*  result   = NEW_RESOURCE_ARRAY(char, name_len + addr_len + 1);
       name()->as_klass_external_name(result, (int) name_len + 1);
-      assert(strlen(result) == name_len, "");
+      assert(strlen(result) == name_len, "");
       strcpy(result + name_len, addr_buf);
-      assert(strlen(result) == name_len + addr_len, "");
+      assert(strlen(result) == name_len + addr_len, "");
       return result;
     }
   }
@@ -648,12 +551,6 @@ jint Klass::compute_modifier_flags(TRAPS) const {
 int Klass::atomic_incr_biased_lock_revocation_count() {
   return (int) Atomic::add(1, &_biased_lock_revocation_count);
 }
-
-// Unless overridden, jvmti_class_status has no flags set.
-jint Klass::jvmti_class_status() const {
-  return 0;
-}
-
 
 // Printing
 
@@ -689,25 +586,13 @@ void Klass::oop_print_value_on(oop obj, outputStream* st) {
   obj->print_address_on(st);
 }
 
-#if INCLUDE_SERVICES
-// Size Statistics
-void Klass::collect_statistics(KlassSizeStats *sz) const {
-  sz->_klass_bytes = sz->count(this);
-  sz->_mirror_bytes = sz->count(java_mirror());
-  sz->_secondary_supers_bytes = sz->count_array(secondary_supers());
-
-  sz->_ro_bytes += sz->_secondary_supers_bytes;
-  sz->_rw_bytes += sz->_klass_bytes + sz->_mirror_bytes;
-}
-#endif // INCLUDE_SERVICES
-
 // Verification
 
 void Klass::verify_on(outputStream* st) {
 
   // This can be expensive, but it is worth checking that this klass is actually
   // in the CLD graph but not in production.
-  assert(Metaspace::contains((address)this), "Should be");
+  assert(Metaspace::contains((address)this), "Should be");
 
   guarantee(this->is_klass(),"should be klass");
 
@@ -760,35 +645,12 @@ vtableEntry* Klass::start_of_vtable() const {
 }
 
 Method* Klass::method_at_vtable(int index)  {
-#ifndef PRODUCT
-  assert(index >= 0, "valid vtable index");
-  if (DebugVtables) {
-    verify_vtable_index(index);
-  }
-#endif
   return start_of_vtable()[index].method();
 }
 
 ByteSize Klass::vtable_start_offset() {
   return in_ByteSize(InstanceKlass::header_size() * wordSize);
 }
-
-#ifndef PRODUCT
-
-bool Klass::verify_vtable_index(int i) {
-  int limit = vtable_length()/vtableEntry::size();
-  assert(i >= 0 && i < limit, "index %d out of bounds %d", i, limit);
-  return true;
-}
-
-bool Klass::verify_itable_index(int i) {
-  assert(is_instance_klass(), "");
-  int method_count = klassItable::method_count_for_interface(this);
-  assert(i >= 0 && i < method_count, "index out of bounds");
-  return true;
-}
-
-#endif // PRODUCT
 
 // Caller needs ResourceMark
 // joint_in_module_of_loader provides an optimization if 2 classes are in
@@ -799,7 +661,7 @@ bool Klass::verify_itable_index(int i) {
 //                      are in module <module-name>[@<version>]
 //                      of loader <loader-name_and_id>[, parent loader <parent-loader-name_and_id>]
 const char* Klass::joint_in_module_of_loader(const Klass* class2, bool include_parent_loader) const {
-  assert(module() == class2->module(), "classes do not have the same module");
+  assert(module() == class2->module(), "classes do not have the same module");
   const char* class1_name = external_name();
   size_t len = strlen(class1_name) + 1;
 
@@ -870,7 +732,7 @@ const char* Klass::class_in_module_of_loader(bool use_are, bool include_parent_l
 
   // 3. class loader's name_and_id
   ClassLoaderData* cld = class_loader_data();
-  assert(cld != NULL, "class_loader_data should not be null");
+  assert(cld != NULL, "class_loader_data should not be null");
   const char* loader_name_and_id = cld->loader_name_and_id();
   len += strlen(loader_name_and_id);
 

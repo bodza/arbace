@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_HASHTABLE_HPP
 #define SHARE_VM_UTILITIES_HASHTABLE_HPP
 
@@ -38,8 +14,6 @@
 //
 // %note:
 //  - TableEntrys are allocated in blocks to reduce the space overhead.
-
-
 
 template <MEMFLAGS F> class BasicHashtableEntry : public CHeapObj<F> {
   friend class VMStructs;
@@ -95,8 +69,6 @@ public:
   }
 };
 
-
-
 template <class T, MEMFLAGS F> class HashtableEntry : public BasicHashtableEntry<F> {
   friend class VMStructs;
 private:
@@ -116,8 +88,6 @@ public:
   }
 };
 
-
-
 template <MEMFLAGS F> class HashtableBucket : public CHeapObj<F> {
   friend class VMStructs;
 private:
@@ -135,9 +105,7 @@ public:
 
   // The following method is not MT-safe and must be done under lock.
   BasicHashtableEntry<F>** entry_addr()  { return &_entry; }
-
 };
-
 
 template <MEMFLAGS F> class BasicHashtable : public CHeapObj<F> {
   friend class VMStructs;
@@ -156,7 +124,7 @@ public:
   // Bucket handling
   int hash_to_index(unsigned int full_hash) const {
     int h = full_hash % _table_size;
-    assert(h >= 0 && h < _table_size, "Illegal hash value");
+    assert(h >= 0 && h < _table_size, "Illegal hash value");
     return h;
   }
 
@@ -239,9 +207,8 @@ public:
 
   bool resize(int new_size);
 
-  template <class T> void verify_table(const char* table_name) PRODUCT_RETURN;
+  template <class T> void verify_table(const char* table_name) {};
 };
-
 
 template <class T, MEMFLAGS F> class Hashtable : public BasicHashtable<F> {
   friend class VMStructs;
@@ -255,7 +222,7 @@ public:
     : BasicHashtable<F>(table_size, entry_size, buckets, number_of_entries) { }
 
   // Debugging
-  void print()               PRODUCT_RETURN;
+  void print()               {};
 
   unsigned int compute_hash(const Symbol* name) const {
     return (unsigned int) name->identity_hash();
@@ -305,7 +272,6 @@ template <class T, MEMFLAGS F> class RehashableHashtable : public Hashtable<T, F
                    HashtableBucket<F>* buckets, int number_of_entries)
     : Hashtable<T, F>(table_size, entry_size, buckets, number_of_entries) { }
 
-
   // Function to move these elements into the new table.
   void move_to(RehashableHashtable<T, F>* new_table);
   static bool use_alternate_hashcode();
@@ -319,4 +285,4 @@ template <class T, MEMFLAGS F> juint RehashableHashtable<T, F>::_seed = 0;
 template <class T, MEMFLAGS F> juint RehashableHashtable<T, F>::seed() { return _seed; };
 template <class T, MEMFLAGS F> bool  RehashableHashtable<T, F>::use_alternate_hashcode() { return _seed != 0; };
 
-#endif // SHARE_VM_UTILITIES_HASHTABLE_HPP
+#endif

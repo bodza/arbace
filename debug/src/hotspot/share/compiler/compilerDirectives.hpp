@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_COMPILER_COMPILERDIRECTIVES_HPP
 #define SHARE_VM_COMPILER_COMPILERDIRECTIVES_HPP
 
@@ -48,29 +24,8 @@
     cflags(CompilerDirectivesIgnoreCompileCommands, bool, CompilerDirectivesIgnoreCompileCommands, X) \
     cflags(DisableIntrinsic,        ccstrlist, DisableIntrinsic, DisableIntrinsic)
 
-#ifdef COMPILER1
-  #define compilerdirectives_c1_flags(cflags)
-#else
-  #define compilerdirectives_c1_flags(cflags)
-#endif
-
-#ifdef COMPILER2
-  #define compilerdirectives_c2_flags(cflags) \
-    cflags(BlockLayoutByFrequency,  bool, BlockLayoutByFrequency,  BlockLayoutByFrequency) \
-    cflags(PrintOptoAssembly,       bool, PrintOptoAssembly, PrintOptoAssembly) \
-    cflags(PrintIntrinsics,         bool, PrintIntrinsics, PrintIntrinsics) \
-NOT_PRODUCT(cflags(TraceOptoPipelining, bool, TraceOptoPipelining, TraceOptoPipelining)) \
-NOT_PRODUCT(cflags(TraceOptoOutput,     bool, TraceOptoOutput, TraceOptoOutput)) \
-    cflags(TraceSpilling,           bool, TraceSpilling, TraceSpilling) \
-    cflags(Vectorize,               bool, false, Vectorize) \
-    cflags(VectorizeDebug,          uintx, 0, VectorizeDebug) \
-    cflags(CloneMapDebug,           bool, false, CloneMapDebug) \
-    cflags(IGVPrintLevel,           intx, PrintIdealGraphLevel, IGVPrintLevel) \
-    cflags(MaxNodeLimit,            intx, MaxNodeLimit, MaxNodeLimit) \
-ZGC_ONLY(cflags(ZOptimizeLoadBarriers, bool, ZOptimizeLoadBarriers, ZOptimizeLoadBarriers))
-#else
-  #define compilerdirectives_c2_flags(cflags)
-#endif
+#define compilerdirectives_c1_flags(cflags)
+#define compilerdirectives_c2_flags(cflags)
 
 class CompilerDirectives;
 class DirectiveSet;
@@ -186,4 +141,4 @@ public:
   DirectiveSet* _c2_store;
 };
 
-#endif // SHARE_VM_COMPILER_COMPILERDIRECTIVES_HPP
+#endif

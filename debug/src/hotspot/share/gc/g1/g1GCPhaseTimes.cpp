@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1GCPhaseTimes.hpp"
@@ -44,7 +20,7 @@ G1GCPhaseTimes::G1GCPhaseTimes(STWGCTimer* gc_timer, uint max_gc_threads) :
   _gc_pause_time_ms(0.0),
   _ref_phase_times((GCTimer*)gc_timer, max_gc_threads)
 {
-  assert(max_gc_threads > 0, "Must have some GC threads");
+  assert(max_gc_threads > 0, "Must have some GC threads");
 
   _gc_par_phases[GCWorkerStart] = new WorkerDataArray<double>(max_gc_threads, "GC Worker Start (ms):");
   _gc_par_phases[ExtRootScan] = new WorkerDataArray<double>(max_gc_threads, "Ext Root Scanning (ms):");
@@ -58,7 +34,6 @@ G1GCPhaseTimes::G1GCPhaseTimes(STWGCTimer* gc_timer, uint max_gc_threads) :
   _gc_par_phases[ManagementRoots] = new WorkerDataArray<double>(max_gc_threads, "Management Roots (ms):");
   _gc_par_phases[SystemDictionaryRoots] = new WorkerDataArray<double>(max_gc_threads, "SystemDictionary Roots (ms):");
   _gc_par_phases[CLDGRoots] = new WorkerDataArray<double>(max_gc_threads, "CLDG Roots (ms):");
-  _gc_par_phases[JVMTIRoots] = new WorkerDataArray<double>(max_gc_threads, "JVMTI Roots (ms):");
   _gc_par_phases[CMRefRoots] = new WorkerDataArray<double>(max_gc_threads, "CM RefProcessor Roots (ms):");
   _gc_par_phases[WaitForStrongCLD] = new WorkerDataArray<double>(max_gc_threads, "Wait For Strong CLD (ms):");
   _gc_par_phases[WeakCLDRoots] = new WorkerDataArray<double>(max_gc_threads, "Weak CLD Roots (ms):");
@@ -72,9 +47,6 @@ G1GCPhaseTimes::G1GCPhaseTimes(STWGCTimer* gc_timer, uint max_gc_threads) :
   }
   _gc_par_phases[ScanRS] = new WorkerDataArray<double>(max_gc_threads, "Scan RS (ms):");
   _gc_par_phases[CodeRoots] = new WorkerDataArray<double>(max_gc_threads, "Code Root Scanning (ms):");
-#if INCLUDE_AOT
-  _gc_par_phases[AOTCodeRoots] = new WorkerDataArray<double>(max_gc_threads, "AOT Root Scanning (ms):");
-#endif
   _gc_par_phases[ObjCopy] = new WorkerDataArray<double>(max_gc_threads, "Object Copy (ms):");
   _gc_par_phases[Termination] = new WorkerDataArray<double>(max_gc_threads, "Termination (ms):");
   _gc_par_phases[GCWorkerTotal] = new WorkerDataArray<double>(max_gc_threads, "GC Worker Total (ms):");
@@ -165,7 +137,7 @@ void G1GCPhaseTimes::note_gc_start() {
 }
 
 #define ASSERT_PHASE_UNINITIALIZED(phase) \
-    assert(_gc_par_phases[phase] == NULL || _gc_par_phases[phase]->get(i) == uninitialized, "Phase " #phase " reported for thread that was not started");
+    assert(_gc_par_phases[phase] == NULL || _gc_par_phases[phase]->get(i) == uninitialized, "Phase " #phase " reported for thread that was not started");
 
 double G1GCPhaseTimes::worker_time(GCParPhases phase, uint worker) {
   if (_gc_par_phases[phase] == NULL) {
@@ -186,7 +158,7 @@ void G1GCPhaseTimes::note_gc_end() {
   for (uint i = 0; i < _max_gc_threads; i++) {
     double worker_start = _gc_par_phases[GCWorkerStart]->get(i);
     if (worker_start != uninitialized) {
-      assert(_gc_par_phases[GCWorkerEnd]->get(i) != uninitialized, "Worker started but not ended.");
+      assert(_gc_par_phases[GCWorkerEnd]->get(i) != uninitialized, "Worker started but not ended.");
       double total_worker_time = _gc_par_phases[GCWorkerEnd]->get(i) - _gc_par_phases[GCWorkerStart]->get(i);
       record_time_secs(GCWorkerTotal, i , total_worker_time);
 
@@ -243,7 +215,7 @@ double G1GCPhaseTimes::average_time_ms(GCParPhases phase) {
 }
 
 size_t G1GCPhaseTimes::sum_thread_work_items(GCParPhases phase, uint index) {
-  assert(_gc_par_phases[phase]->thread_work_items(index) != NULL, "No sub count");
+  assert(_gc_par_phases[phase]->thread_work_items(index) != NULL, "No sub count");
   return _gc_par_phases[phase]->thread_work_items(index)->sum();
 }
 
@@ -362,9 +334,6 @@ double G1GCPhaseTimes::print_evacuate_collection_set() const {
   }
   debug_phase(_gc_par_phases[ScanRS]);
   debug_phase(_gc_par_phases[CodeRoots]);
-#if INCLUDE_AOT
-  debug_phase(_gc_par_phases[AOTCodeRoots]);
-#endif
   debug_phase(_gc_par_phases[ObjCopy]);
   debug_phase(_gc_par_phases[Termination]);
   debug_phase(_gc_par_phases[Other]);
@@ -419,9 +388,7 @@ double G1GCPhaseTimes::print_post_evacuate_collection_set() const {
 
   debug_time("Redirty Cards", _recorded_redirty_logged_cards_time_ms);
   trace_phase(_gc_par_phases[RedirtyCards]);
-#if COMPILER2_OR_JVMCI
   debug_time("DerivedPointerTable Update", _cur_derived_pointer_table_update_time_ms);
-#endif
 
   debug_time("Free Collection Set", _recorded_total_free_cset_time_ms);
   trace_time("Free Collection Set Serial", _recorded_serial_free_cset_time_ms);
@@ -437,7 +404,6 @@ double G1GCPhaseTimes::print_post_evacuate_collection_set() const {
     debug_time("Resize TLABs", _cur_resize_tlab_time_ms);
   }
   debug_time("Expand Heap After Collection", _cur_expand_heap_time_ms);
-
 
   return sum_ms;
 }
@@ -471,7 +437,7 @@ G1EvacPhaseWithTrimTimeTracker::G1EvacPhaseWithTrimTimeTracker(G1ParScanThreadSt
   _trim_time(trim_time),
   _stopped(false) {
 
-  assert(_pss->trim_ticks().value() == 0, "Possibly remaining trim ticks left over from previous use");
+  assert(_pss->trim_ticks().value() == 0, "Possibly remaining trim ticks left over from previous use");
 }
 
 G1EvacPhaseWithTrimTimeTracker::~G1EvacPhaseWithTrimTimeTracker() {
@@ -481,7 +447,7 @@ G1EvacPhaseWithTrimTimeTracker::~G1EvacPhaseWithTrimTimeTracker() {
 }
 
 void G1EvacPhaseWithTrimTimeTracker::stop() {
-  assert(!_stopped, "Should only be called once");
+  assert(!_stopped, "Should only be called once");
   _total_time += (Ticks::now() - _start) - _pss->trim_ticks();
   _trim_time += _pss->trim_ticks();
   _pss->reset_trim_ticks();
@@ -520,4 +486,3 @@ G1EvacPhaseTimesTracker::~G1EvacPhaseTimesTracker() {
     _phase_times->record_or_add_objcopy_time_secs(_worker_id, _trim_time.seconds());
   }
 }
-

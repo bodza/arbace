@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/dictionary.hpp"
 #include "classfile/classLoaderData.inline.hpp"
@@ -39,7 +15,6 @@ void LoaderConstraintEntry::set_loader(int i, oop p) {
 
 LoaderConstraintTable::LoaderConstraintTable(int table_size)
   : Hashtable<InstanceKlass*, mtClass>(table_size, sizeof(LoaderConstraintEntry)) {};
-
 
 LoaderConstraintEntry* LoaderConstraintTable::new_entry(
                                  unsigned int hash, Symbol* name,
@@ -87,9 +62,8 @@ LoaderConstraintEntry** LoaderConstraintTable::find_loader_constraint(
   return pp;
 }
 
-
 void LoaderConstraintTable::purge_loader_constraints() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   LogTarget(Info, class, loader, constraints) lt;
   // Remove unloaded entries from constraint table
   for (int index = 0; index < table_size(); index++) {
@@ -157,11 +131,6 @@ void LoaderConstraintTable::purge_loader_constraints() {
         FREE_C_HEAP_ARRAY(oop, probe->loaders());
         free_entry(probe);
       } else {
-#ifdef ASSERT
-        if (probe->klass() != NULL) {
-          assert(probe->klass()->is_loader_alive(), "klass should be live");
-        }
-#endif
         // Go to next entry
         p = probe->next_addr();
       }
@@ -264,7 +233,7 @@ bool LoaderConstraintTable::add_entry(Symbol* class_name,
                       );
       }
     } else {
-      assert((*pp1)->klass() == klass, "loader constraints corrupted");
+      assert((*pp1)->klass() == klass, "loader constraints corrupted");
     }
   } else if (*pp1 == NULL) {
     extend_loader_constraint(*pp2, class_loader1, klass);
@@ -276,7 +245,6 @@ bool LoaderConstraintTable::add_entry(Symbol* class_name,
 
   return true;
 }
-
 
 // return true if the constraint was updated, false if the constraint is
 // violated
@@ -313,7 +281,7 @@ InstanceKlass* LoaderConstraintTable::find_constrained_klass(Symbol* name,
                                                        Handle loader) {
   LoaderConstraintEntry *p = *(find_loader_constraint(name, loader));
   if (p != NULL && p->klass() != NULL) {
-    assert(p->klass()->is_instance_klass(), "sanity");
+    assert(p->klass()->is_instance_klass(), "sanity");
     if (!p->klass()->is_loaded()) {
       // Only return fully loaded classes.  Classes found through the
       // constraints might still be in the process of loading.
@@ -339,7 +307,6 @@ void LoaderConstraintTable::ensure_loader_constraint_capacity(
     }
 }
 
-
 void LoaderConstraintTable::extend_loader_constraint(LoaderConstraintEntry* p,
                                                      Handle loader,
                                                      InstanceKlass* klass) {
@@ -360,10 +327,9 @@ void LoaderConstraintTable::extend_loader_constraint(LoaderConstraintEntry* p,
   if (p->klass() == NULL) {
     p->set_klass(klass);
   } else {
-    assert(klass == NULL || p->klass() == klass, "constraints corrupted");
+    assert(klass == NULL || p->klass() == klass, "constraints corrupted");
   }
 }
-
 
 void LoaderConstraintTable::merge_loader_constraints(
                                                    LoaderConstraintEntry** pp1,
@@ -409,12 +375,12 @@ void LoaderConstraintTable::merge_loader_constraints(
   // have been violated, or the constraints had been corrupted (and an
   // assertion would fail).
   if (p2->klass() != NULL) {
-    assert(p2->klass() == klass, "constraints corrupted");
+    assert(p2->klass() == klass, "constraints corrupted");
   }
   if (p1->klass() == NULL) {
     p1->set_klass(klass);
   } else {
-    assert(p1->klass() == klass, "constraints corrupted");
+    assert(p1->klass() == klass, "constraints corrupted");
   }
 
   *pp2 = p2->next();
@@ -422,7 +388,6 @@ void LoaderConstraintTable::merge_loader_constraints(
   free_entry(p2);
   return;
 }
-
 
 void LoaderConstraintTable::verify(PlaceholderTable* placeholders) {
   Thread *thread = Thread::current();
@@ -458,7 +423,7 @@ void LoaderConstraintTable::verify(PlaceholderTable* placeholders) {
         }
       }
       for (int n = 0; n< probe->num_loaders(); n++) {
-        assert(ClassLoaderDataGraph::contains_loader_data(probe->loader_data(n)), "The loader is missing");
+        assert(ClassLoaderDataGraph::contains_loader_data(probe->loader_data(n)), "The loader is missing");
       }
     }
   }

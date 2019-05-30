@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -40,7 +16,6 @@
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/forte.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "prims/methodHandles.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -61,7 +36,6 @@ void AbstractInterpreter::initialize() {
   if (PrintBytecodePairHistogram)                            BytecodePairHistogram::reset();
 
   InvocationCounter::reinitialize(DelayCompilationDuringStartup);
-
 }
 
 void AbstractInterpreter::print() {
@@ -82,7 +56,6 @@ void AbstractInterpreter::print() {
   tty->print_cr("----------------------------------------------------------------------");
   tty->cr();
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------
 // Implementation of interpreter
@@ -105,7 +78,6 @@ AbstractInterpreterGenerator::AbstractInterpreterGenerator(StubQueue* _code) {
   _masm                      = NULL;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------
 // Entry points
 
@@ -116,10 +88,10 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
   // Method handle primitive?
   if (m->is_method_handle_intrinsic()) {
     vmIntrinsics::ID id = m->intrinsic_id();
-    assert(MethodHandles::is_signature_polymorphic(id), "must match an intrinsic");
+    assert(MethodHandles::is_signature_polymorphic(id), "must match an intrinsic");
     MethodKind kind = (MethodKind)( method_handle_invoke_FIRST +
                                     ((int)id - vmIntrinsics::FIRST_MH_SIG_POLY) );
-    assert(kind <= method_handle_invoke_LAST, "parallel enum ranges");
+    assert(kind <= method_handle_invoke_LAST, "parallel enum ranges");
     return kind;
   }
 
@@ -138,13 +110,13 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
     case vmIntrinsics::_doubleToRawLongBits: return java_lang_Double_doubleToRawLongBits;
     default:                                 break;
   }
-#endif // CC_INTERP
+#endif
 
   // Native method?
   // Note: This test must come _before_ the test for intrinsic
   //       methods. See also comments below.
   if (m->is_native()) {
-    assert(!m->is_method_handle_intrinsic(), "overlapping bits here, watch out");
+    assert(!m->is_method_handle_intrinsic(), "overlapping bits here, watch out");
     return m->is_synchronized() ? native_synchronized : native;
   }
 
@@ -193,7 +165,7 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
     // TODO: We should have used ::is_accessor above, but fast accessors in Zero expect only getters.
     // See CppInterpreter::accessor_entry in cppInterpreter_zero.cpp. This should be fixed in Zero,
     // then the call above updated to ::is_accessor
-    assert(m->size_of_parameters() == 1, "fast code for accessors assumes parameter size = 1");
+    assert(m->size_of_parameters() == 1, "fast code for accessors assumes parameter size = 1");
     return accessor;
   }
 
@@ -201,37 +173,9 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
   return zerolocals;
 }
 
-#if INCLUDE_CDS
-
-address AbstractInterpreter::get_trampoline_code_buffer(AbstractInterpreter::MethodKind kind) {
-  const size_t trampoline_size = SharedRuntime::trampoline_size();
-  address addr = MetaspaceShared::cds_i2i_entry_code_buffers((size_t)(AbstractInterpreter::number_of_method_entries) * trampoline_size);
-  addr += (size_t)(kind) * trampoline_size;
-
-  return addr;
-}
-
-void AbstractInterpreter::update_cds_entry_table(AbstractInterpreter::MethodKind kind) {
-  if (DumpSharedSpaces || UseSharedSpaces) {
-    address trampoline = get_trampoline_code_buffer(kind);
-    _cds_entry_table[kind] = trampoline;
-
-    CodeBuffer buffer(trampoline, (int)(SharedRuntime::trampoline_size()));
-    MacroAssembler _masm(&buffer);
-    SharedRuntime::generate_trampoline(&_masm, _entry_table[kind]);
-
-    if (PrintInterpreter) {
-      Disassembler::decode(buffer.insts_begin(), buffer.insts_end());
-    }
-  }
-}
-
-#endif
-
 void AbstractInterpreter::set_entry_for_kind(AbstractInterpreter::MethodKind kind, address entry) {
-  assert(kind >= method_handle_invoke_FIRST &&
-         kind <= method_handle_invoke_LAST, "late initialization only for MH entry points");
-  assert(_entry_table[kind] == _entry_table[abstract], "previous value must be AME entry");
+  assert(kind >= method_handle_invoke_FIRST && kind <= method_handle_invoke_LAST, "late initialization only for MH entry points");
+  assert(_entry_table[kind] == _entry_table[abstract], "previous value must be AME entry");
   _entry_table[kind] = entry;
 
   update_cds_entry_table(kind);
@@ -257,46 +201,6 @@ bool AbstractInterpreter::is_not_reached(const methodHandle& method, int bci) {
   return true;
 }
 
-
-#ifndef PRODUCT
-void AbstractInterpreter::print_method_kind(MethodKind kind) {
-  switch (kind) {
-    case zerolocals             : tty->print("zerolocals"             ); break;
-    case zerolocals_synchronized: tty->print("zerolocals_synchronized"); break;
-    case native                 : tty->print("native"                 ); break;
-    case native_synchronized    : tty->print("native_synchronized"    ); break;
-    case empty                  : tty->print("empty"                  ); break;
-    case accessor               : tty->print("accessor"               ); break;
-    case abstract               : tty->print("abstract"               ); break;
-    case java_lang_math_sin     : tty->print("java_lang_math_sin"     ); break;
-    case java_lang_math_cos     : tty->print("java_lang_math_cos"     ); break;
-    case java_lang_math_tan     : tty->print("java_lang_math_tan"     ); break;
-    case java_lang_math_abs     : tty->print("java_lang_math_abs"     ); break;
-    case java_lang_math_sqrt    : tty->print("java_lang_math_sqrt"    ); break;
-    case java_lang_math_log     : tty->print("java_lang_math_log"     ); break;
-    case java_lang_math_log10   : tty->print("java_lang_math_log10"   ); break;
-    case java_lang_math_fmaD    : tty->print("java_lang_math_fmaD"    ); break;
-    case java_lang_math_fmaF    : tty->print("java_lang_math_fmaF"    ); break;
-    case java_util_zip_CRC32_update           : tty->print("java_util_zip_CRC32_update"); break;
-    case java_util_zip_CRC32_updateBytes      : tty->print("java_util_zip_CRC32_updateBytes"); break;
-    case java_util_zip_CRC32_updateByteBuffer : tty->print("java_util_zip_CRC32_updateByteBuffer"); break;
-    case java_util_zip_CRC32C_updateBytes     : tty->print("java_util_zip_CRC32C_updateBytes"); break;
-    case java_util_zip_CRC32C_updateDirectByteBuffer: tty->print("java_util_zip_CRC32C_updateDirectByteByffer"); break;
-    default:
-      if (kind >= method_handle_invoke_FIRST &&
-          kind <= method_handle_invoke_LAST) {
-        const char* kind_name = vmIntrinsics::name_at(method_handle_intrinsic(kind));
-        if (kind_name[0] == '_')  kind_name = &kind_name[1];  // '_invokeExact' => 'invokeExact'
-        tty->print("method_handle_%s", kind_name);
-        break;
-      }
-      ShouldNotReachHere();
-      break;
-  }
-}
-#endif // PRODUCT
-
-
 //------------------------------------------------------------------------------------------------------------------------
 // Deoptimization support
 
@@ -304,11 +208,11 @@ void AbstractInterpreter::print_method_kind(MethodKind kind) {
  * If a deoptimization happens, this function returns the point of next bytecode to continue execution.
  */
 address AbstractInterpreter::deopt_continue_after_entry(Method* method, address bcp, int callee_parameters, bool is_top_frame) {
-  assert(method->contains(bcp), "just checkin'");
+  assert(method->contains(bcp), "just checkin'");
 
   // Get the original and rewritten bytecode.
   Bytecodes::Code code = Bytecodes::java_code_at(method, bcp);
-  assert(!Interpreter::bytecode_should_reexecute(code), "should not reexecute");
+  assert(!Interpreter::bytecode_should_reexecute(code), "should not reexecute");
 
   const int bci = method->bci_from(bcp);
 
@@ -378,13 +282,11 @@ address AbstractInterpreter::deopt_continue_after_entry(Method* method, address 
 // Note: Bytecodes::_athrow is a special case in that it does not return
 //       Interpreter::deopt_entry(vtos, 0) like others
 address AbstractInterpreter::deopt_reexecute_entry(Method* method, address bcp) {
-  assert(method->contains(bcp), "just checkin'");
+  assert(method->contains(bcp), "just checkin'");
   Bytecodes::Code code   = Bytecodes::java_code_at(method, bcp);
-#if defined(COMPILER1) || INCLUDE_JVMCI
   if(code == Bytecodes::_athrow ) {
     return Interpreter::rethrow_exception_entry();
   }
-#endif /* COMPILER1 || INCLUDE_JVMCI */
   return Interpreter::deopt_entry(vtos, 0);
 }
 
@@ -426,10 +328,8 @@ bool AbstractInterpreter::bytecode_should_reexecute(Bytecodes::Code code) {
     case Bytecodes::_getstatic :
     case Bytecodes::_putstatic :
     case Bytecodes::_aastore   :
-#ifdef COMPILER1
     //special case of reexecution
     case Bytecodes::_athrow    :
-#endif
       return true;
 
     default:

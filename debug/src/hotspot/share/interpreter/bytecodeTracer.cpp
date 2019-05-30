@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
@@ -36,7 +12,6 @@
 #include "runtime/mutexLocker.hpp"
 #include "runtime/timer.hpp"
 #include "utilities/align.hpp"
-
 
 // Standard closure for BytecodeTracer: prints the current bytecode
 // and its attributes using bytecode-specific information.
@@ -66,7 +41,6 @@ class BytecodePrinter: public BytecodeClosure {
   Method* method()                 { return _current_method; }
   bool      is_wide()                { return _is_wide; }
   Bytecodes::Code raw_code()         { return Bytecodes::Code(_code); }
-
 
   bool      check_index(int i, int& cp_index, outputStream* st = tty);
   bool      check_cp_cache_index(int i, int& cp_index, outputStream* st = tty);
@@ -151,7 +125,6 @@ class BytecodePrinter: public BytecodeClosure {
   }
 };
 
-
 // Implementation of BytecodeTracer
 
 // %%% This set_closure thing seems overly general, given that
@@ -166,7 +139,6 @@ static BytecodePrinter std_closure;
 BytecodeClosure* BytecodeTracer::std_closure() {
   return &::std_closure;
 }
-
 
 void BytecodeTracer::trace(const methodHandle& method, address bcp, uintptr_t tos, uintptr_t tos2, outputStream* st) {
   if (TraceBytecodes && BytecodeCounter::counter_value() >= TraceBytecodesAt) {
@@ -243,7 +215,6 @@ bool BytecodePrinter::check_index(int i, int& cp_index, outputStream* st) {
     if (!okay) return false;
   }
 
-
   // check cp index
   if (cp_index >= 0 && cp_index < ilimit) {
     if (WizardMode)  st->print(" cp[%d]", cp_index);
@@ -271,17 +242,6 @@ bool BytecodePrinter::check_cp_cache_index(int i, int& cp_index, outputStream* s
   size /= sizeof(ConstantPoolCacheEntry);
   climit = (int) size;
 
-#ifdef ASSERT
-  {
-    const int CPCACHE_INDEX_TAG = ConstantPool::CPCACHE_INDEX_TAG;
-    if (i >= CPCACHE_INDEX_TAG && i < climit + CPCACHE_INDEX_TAG) {
-      i -= CPCACHE_INDEX_TAG;
-    } else {
-      st->print_cr(" CP[%d] missing bias?", i);
-      return false;
-    }
-  }
-#endif //ASSERT
   if (i >= 0 && i < climit) {
     cp_index = cache->entry_at(i)->constant_pool_index();
   } else {
@@ -290,7 +250,6 @@ bool BytecodePrinter::check_cp_cache_index(int i, int& cp_index, outputStream* s
     }
   return true;
   }
-
 
 bool BytecodePrinter::check_obj_index(int i, int& cp_index, outputStream* st) {
   ConstantPool* constants = method()->constants();
@@ -305,10 +264,9 @@ bool BytecodePrinter::check_obj_index(int i, int& cp_index, outputStream* st) {
 }
 }
 
-
 bool BytecodePrinter::check_invokedynamic_index(int i, int& cp_index, outputStream* st) {
   ConstantPool* constants = method()->constants();
-  assert(ConstantPool::is_invokedynamic_index(i), "not secondary index?");
+  assert(ConstantPool::is_invokedynamic_index(i), "not secondary index?");
   i = ConstantPool::decode_invokedynamic_index(i) + ConstantPool::CPCACHE_INDEX_TAG;
 
   return check_cp_cache_index(i, cp_index, st);
@@ -392,7 +350,6 @@ void BytecodePrinter::print_field_or_method(int orig_i, int i, outputStream* st)
   }
 }
 
-
 void BytecodePrinter::print_attributes(int bci, outputStream* st) {
   // Show attributes of pre-rewritten codes
   Bytecodes::Code code = Bytecodes::java_code(raw_code());
@@ -453,7 +410,7 @@ void BytecodePrinter::print_attributes(int bci, outputStream* st) {
         BasicType atype = (BasicType)get_index_u1();
         const char* str = type2name(atype);
         if (str == NULL || atype == T_OBJECT || atype == T_ARRAY) {
-          assert(false, "Unidentified basic type");
+          assert(false, "Unidentified basic type");
         }
         st->print_cr(" %s", str);
       }
@@ -587,7 +544,6 @@ void BytecodePrinter::print_attributes(int bci, outputStream* st) {
       break;
   }
 }
-
 
 void BytecodePrinter::bytecode_epilog(int bci, outputStream* st) {
   MethodData* mdo = method()->method_data();

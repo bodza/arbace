@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_BYTECODES_HPP
 #define SHARE_VM_INTERPRETER_BYTECODES_HPP
 
@@ -302,7 +278,6 @@ class Bytecodes: AllStatic {
 
     _shouldnotreachhere   ,          // For debugging
 
-
     number_of_codes
   };
 
@@ -348,17 +323,15 @@ class Bytecodes: AllStatic {
   static void        def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap, Code java_code);
 
   // Verify that bcp points into method
-#ifdef ASSERT
-  static bool        check_method(const Method* method, address bcp);
-#endif
   static bool check_must_rewrite(Bytecodes::Code bc);
 
  public:
   // Conversion
-  static void        check          (Code code)    { assert(is_defined(code),      "illegal code: %d", (int)code); }
-  static void        wide_check     (Code code)    { assert(wide_is_defined(code), "illegal code: %d", (int)code); }
+  static void        check          (Code code)    {
+    assert(is_defined(code),      "illegal code: %d", (int)code); }
+  static void        wide_check     (Code code)    {
+    assert(wide_is_defined(code), "illegal code: %d", (int)code); }
   static Code        cast           (int  code)    { return (Code)code; }
-
 
   // Fetch a bytecode, hiding breakpoints as necessary.  The method
   // argument is used for conversion of breakpoints into the original
@@ -367,9 +340,9 @@ class Bytecodes: AllStatic {
   // NULL since in that case the bcp and Method* are unrelated
   // memory.
   static Code       code_at(const Method* method, address bcp) {
-    assert(method == NULL || check_method(method, bcp), "bcp must point into method");
+    assert(method == NULL || check_method(method, bcp), "bcp must point into method");
     Code code = cast(*bcp);
-    assert(code != _breakpoint || method != NULL, "need Method* to decode breakpoint");
+    assert(code != _breakpoint || method != NULL, "need Method* to decode breakpoint");
     return (code != _breakpoint) ? code : non_breakpoint_code_at(method, bcp);
   }
   static Code       java_code_at(const Method* method, address bcp) {
@@ -423,14 +396,16 @@ class Bytecodes: AllStatic {
                                                            || code == _fconst_0 || code == _dconst_0); }
   static bool        is_return      (Code code)    { return (_ireturn <= code && code <= _return); }
   static bool        is_invoke      (Code code)    { return (_invokevirtual <= code && code <= _invokedynamic); }
-  static bool        has_receiver   (Code code)    { assert(is_invoke(code), "");  return code == _invokevirtual ||
+  static bool        has_receiver   (Code code)    {
+    assert(is_invoke(code), "");
+    return code == _invokevirtual ||
                                                                                           code == _invokespecial ||
                                                                                           code == _invokeinterface; }
   static bool        has_optional_appendix(Code code) { return code == _invokedynamic || code == _invokehandle; }
 
   static int         compute_flags  (const char* format, int more_flags = 0);  // compute the flags
   static int         flags          (int code, bool is_wide) {
-    assert(code == (u_char)code, "must be a byte");
+    assert(code == (u_char)code, "must be a byte");
     return _flags[code + (is_wide ? (1<<BitsPerByte) : 0)];
   }
   static int         format_bits    (Code code, bool is_wide) { return flags(code, is_wide) & _all_fmt_bits; }
@@ -442,4 +417,4 @@ class Bytecodes: AllStatic {
   static void        initialize     ();
 };
 
-#endif // SHARE_VM_INTERPRETER_BYTECODES_HPP
+#endif

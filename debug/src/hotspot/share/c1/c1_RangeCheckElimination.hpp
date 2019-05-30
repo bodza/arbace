@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_RANGECHECKELIMINATION_HPP
 #define SHARE_VM_C1_C1_RANGECHECKELIMINATION_HPP
 
@@ -80,9 +56,6 @@ public:
     Bound(int lower, Value lower_instr, int upper, Value upper_instr);
     ~Bound();
 
-#ifdef ASSERT
-    void add_assertion(Instruction *instruction, Instruction *position, int i, Value instr, Instruction::Condition cond);
-#endif
     int upper();
     Value upper_instr();
     int lower();
@@ -104,7 +77,6 @@ public:
   private:
     void init();
   };
-
 
   class Visitor : public InstructionVisitor {
   private:
@@ -169,14 +141,7 @@ public:
     void do_RuntimeCall    (RuntimeCall*     x) { /* nothing to do */ };
     void do_MemBar         (MemBar*          x) { /* nothing to do */ };
     void do_RangeCheckPredicate(RangeCheckPredicate* x) { /* nothing to do */ };
-#ifdef ASSERT
-    void do_Assert         (Assert*          x) { /* nothing to do */ };
-#endif
   };
-
-#ifdef ASSERT
-  void add_assertions(Bound *bound, Instruction *instruction, Instruction *position);
-#endif
 
   typedef GrowableArray<Bound*> BoundStack;
   typedef GrowableArray<BoundStack*> BoundMap;
@@ -240,4 +205,4 @@ public:
   static void print_statistics();
 };
 
-#endif // SHARE_VM_C1_C1_RANGECHECKELIMINATION_HPP
+#endif

@@ -1,31 +1,7 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_ELF_FILE_HPP
 #define SHARE_VM_UTILITIES_ELF_FILE_HPP
 
-#if !defined(_WINDOWS) && !defined(__APPLE__) && !defined(_AIX)
+#if !defined(__APPLE__) && !defined(_AIX)
 
 #if defined(__OpenBSD__)
 #include <sys/exec_elf.h>
@@ -33,8 +9,6 @@
 #include <elf.h>
 #endif
 #include <stdio.h>
-
-#ifdef _LP64
 
 typedef Elf64_Half      Elf_Half;
 typedef Elf64_Word      Elf_Word;
@@ -48,23 +22,6 @@ typedef Elf64_Sym       Elf_Sym;
 
 #if !defined(_ALLBSD_SOURCE) || defined(__APPLE__)
 #define ELF_ST_TYPE ELF64_ST_TYPE
-#endif
-
-#else
-
-typedef Elf32_Half      Elf_Half;
-typedef Elf32_Word      Elf_Word;
-typedef Elf32_Off       Elf_Off;
-typedef Elf32_Addr      Elf_Addr;
-
-typedef Elf32_Ehdr      Elf_Ehdr;
-typedef Elf32_Shdr      Elf_Shdr;
-typedef Elf32_Phdr      Elf_Phdr;
-typedef Elf32_Sym       Elf_Sym;
-
-#if !defined(_ALLBSD_SOURCE) || defined(__APPLE__)
-#define ELF_ST_TYPE ELF32_ST_TYPE
-#endif
 #endif
 
 #include "globalDefinitions.hpp"
@@ -161,7 +118,7 @@ public:
   }
 
   bool same_elf_file(const char* filepath) const {
-    assert(filepath != NULL, "null file path");
+    assert(filepath != NULL, "null file path");
     return (_filepath != NULL && !strcmp(filepath, _filepath));
   }
 
@@ -201,7 +158,6 @@ private:
   // return a string table at specified section index
   ElfStringTable* get_string_table(int index);
 
-
   FILE* const fd() const { return _file; }
 
   // Cleanup string, symbol and function descriptor tables
@@ -212,6 +168,6 @@ public:
   static bool _do_not_cache_elf_section;
 };
 
-#endif // !_WINDOWS && !__APPLE__
+#endif
 
-#endif // SHARE_VM_UTILITIES_ELF_FILE_HPP
+#endif

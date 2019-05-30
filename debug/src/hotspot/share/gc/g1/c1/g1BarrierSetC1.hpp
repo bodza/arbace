@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_GC_G1_C1_G1BARRIERSETC1_HPP
 #define SHARE_GC_G1_C1_G1BARRIERSETC1_HPP
 
@@ -45,8 +21,8 @@ class G1PreBarrierStub: public CodeStub {
     _addr(addr), _pre_val(pre_val), _do_load(true),
     _patch_code(patch_code), _info(info)
   {
-    assert(_pre_val->is_register(), "should be temporary register");
-    assert(_addr->is_address(), "should be the address of the field");
+    assert(_pre_val->is_register(), "should be temporary register");
+    assert(_addr->is_address(), "should be the address of the field");
   }
 
   // Version that _does not_ generate load of the previous value; the
@@ -55,7 +31,7 @@ class G1PreBarrierStub: public CodeStub {
     _addr(LIR_OprFact::illegalOpr), _pre_val(pre_val), _do_load(false),
     _patch_code(lir_patch_none), _info(NULL)
   {
-    assert(_pre_val->is_register(), "should be a register");
+    assert(_pre_val->is_register(), "should be a register");
   }
 
   LIR_Opr addr() const { return _addr; }
@@ -81,9 +57,6 @@ class G1PreBarrierStub: public CodeStub {
       visitor->do_input(_pre_val);
     }
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("G1PreBarrierStub"); }
-#endif // PRODUCT
 };
 
 class G1PostBarrierStub: public CodeStub {
@@ -106,9 +79,6 @@ class G1PostBarrierStub: public CodeStub {
     visitor->do_input(_addr);
     visitor->do_input(_new_val);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("G1PostBarrierStub"); }
-#endif // PRODUCT
 };
 
 class CodeBlob;
@@ -135,4 +105,4 @@ class G1BarrierSetC1 : public ModRefBarrierSetC1 {
   virtual void generate_c1_runtime_stubs(BufferBlob* buffer_blob);
 };
 
-#endif // SHARE_GC_G1_C1_G1BARRIERSETC1_HPP
+#endif

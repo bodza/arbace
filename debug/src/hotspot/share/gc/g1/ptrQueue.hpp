@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_PTRQUEUE_HPP
 #define SHARE_VM_GC_G1_PTRQUEUE_HPP
 
@@ -66,20 +42,18 @@ class PtrQueue {
 
   // Get the capacity, in bytes.  The capacity must have been set.
   size_t capacity_in_bytes() const {
-    assert(_capacity_in_bytes > 0, "capacity not set");
+    assert(_capacity_in_bytes > 0, "capacity not set");
     return _capacity_in_bytes;
   }
 
   void set_capacity(size_t entries) {
     size_t byte_capacity = index_to_byte_index(entries);
-    assert(_capacity_in_bytes == 0 || _capacity_in_bytes == byte_capacity,
-           "changing capacity " SIZE_FORMAT " -> " SIZE_FORMAT,
-           _capacity_in_bytes, byte_capacity);
+    assert(_capacity_in_bytes == 0 || _capacity_in_bytes == byte_capacity, "changing capacity " SIZE_FORMAT " -> " SIZE_FORMAT, _capacity_in_bytes, byte_capacity);
     _capacity_in_bytes = byte_capacity;
   }
 
   static size_t byte_index_to_index(size_t ind) {
-    assert(is_aligned(ind, _element_size), "precondition");
+    assert(is_aligned(ind, _element_size), "precondition");
     return ind / _element_size;
   }
 
@@ -97,7 +71,7 @@ protected:
 
   void set_index(size_t new_index) {
     size_t byte_index = index_to_byte_index(new_index);
-    assert(byte_index <= capacity_in_bytes(), "precondition");
+    assert(byte_index <= capacity_in_bytes(), "precondition");
     _index = byte_index;
   }
 
@@ -160,7 +134,7 @@ public:
   size_t size() const {
     size_t result = 0;
     if (_buf != NULL) {
-      assert(_index <= capacity_in_bytes(), "Invariant");
+      assert(_index <= capacity_in_bytes(), "Invariant");
       result = byte_index_to_index(capacity_in_bytes() - _index);
     }
     return result;
@@ -178,8 +152,7 @@ public:
     if (!b && _buf != NULL) {
       reset();
     } else if (b && _buf != NULL) {
-      assert(index() == capacity(),
-             "invariant: queues are empty when activated.");
+      assert(index() == capacity(), "invariant: queues are empty when activated.");
     }
   }
 
@@ -208,7 +181,6 @@ protected:
   }
 
   static ByteSize byte_width_of_active() { return in_ByteSize(sizeof(bool)); }
-
 };
 
 class BufferNode {
@@ -343,7 +315,7 @@ public:
 
   // Get the buffer size.  Must have been set.
   size_t buffer_size() const {
-    assert(_buffer_size > 0, "buffer size not set");
+    assert(_buffer_size > 0, "buffer size not set");
     return _buffer_size;
   }
 
@@ -369,4 +341,4 @@ public:
   void notify_if_necessary();
 };
 
-#endif // SHARE_VM_GC_G1_PTRQUEUE_HPP
+#endif

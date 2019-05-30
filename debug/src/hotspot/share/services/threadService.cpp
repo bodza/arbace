@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "memory/allocation.hpp"
@@ -107,7 +83,7 @@ static bool is_hidden_thread(JavaThread *thread) {
 }
 
 void ThreadService::add_thread(JavaThread* thread, bool daemon) {
-  assert(Threads_lock->owned_by_self(), "must have threads lock");
+  assert(Threads_lock->owned_by_self(), "must have threads lock");
 
   // Do not count hidden threads
   if (is_hidden_thread(thread)) {
@@ -138,14 +114,14 @@ void ThreadService::decrement_thread_counts(JavaThread* jt, bool daemon) {
 }
 
 void ThreadService::remove_thread(JavaThread* thread, bool daemon) {
-  assert(Threads_lock->owned_by_self(), "must have threads lock");
+  assert(Threads_lock->owned_by_self(), "must have threads lock");
 
   // Do not count hidden threads
   if (is_hidden_thread(thread)) {
     return;
   }
 
-  assert(!thread->is_terminated(), "must not be terminated");
+  assert(!thread->is_terminated(), "must not be terminated");
   if (!thread->is_exiting()) {
     // JavaThread::exit() skipped calling current_thread_exiting()
     decrement_thread_counts(thread, daemon);
@@ -156,37 +132,21 @@ void ThreadService::remove_thread(JavaThread* thread, bool daemon) {
 
   // Counts are incremented at the same time, but atomic counts are
   // decremented earlier than perf counts.
-  assert(_live_threads_count->get_value() > count,
-    "thread count mismatch %d : %d",
-    (int)_live_threads_count->get_value(), count);
+  assert(_live_threads_count->get_value() > count, "thread count mismatch %d : %d", (int)_live_threads_count->get_value(), count);
 
   _live_threads_count->dec(1);
   if (daemon) {
-    assert(_daemon_threads_count->get_value() > daemon_count,
-      "thread count mismatch %d : %d",
-      (int)_daemon_threads_count->get_value(), daemon_count);
+    assert(_daemon_threads_count->get_value() > daemon_count, "thread count mismatch %d : %d", (int)_daemon_threads_count->get_value(), daemon_count);
 
     _daemon_threads_count->dec(1);
   }
 
   // Counts are incremented at the same time, but atomic counts are
   // decremented earlier than perf counts.
-  assert(_daemon_threads_count->get_value() >= daemon_count,
-    "thread count mismatch %d : %d",
-    (int)_daemon_threads_count->get_value(), daemon_count);
-  assert(_live_threads_count->get_value() >= count,
-    "thread count mismatch %d : %d",
-    (int)_live_threads_count->get_value(), count);
-  assert(_live_threads_count->get_value() > 0 ||
-    (_live_threads_count->get_value() == 0 && count == 0 &&
-    _daemon_threads_count->get_value() == 0 && daemon_count == 0),
-    "thread counts should reach 0 at the same time, live %d,%d daemon %d,%d",
-    (int)_live_threads_count->get_value(), count,
-    (int)_daemon_threads_count->get_value(), daemon_count);
-  assert(_daemon_threads_count->get_value() > 0 ||
-    (_daemon_threads_count->get_value() == 0 && daemon_count == 0),
-    "thread counts should reach 0 at the same time, daemon %d,%d",
-    (int)_daemon_threads_count->get_value(), daemon_count);
+  assert(_daemon_threads_count->get_value() >= daemon_count, "thread count mismatch %d : %d", (int)_daemon_threads_count->get_value(), daemon_count);
+  assert(_live_threads_count->get_value() >= count, "thread count mismatch %d : %d", (int)_live_threads_count->get_value(), count);
+  assert(_live_threads_count->get_value() > 0 || (_live_threads_count->get_value() == 0 && count == 0 && _daemon_threads_count->get_value() == 0 && daemon_count == 0), "thread counts should reach 0 at the same time, live %d,%d daemon %d,%d", (int)_live_threads_count->get_value(), count, (int)_daemon_threads_count->get_value(), daemon_count);
+  assert(_daemon_threads_count->get_value() > 0 || (_daemon_threads_count->get_value() == 0 && daemon_count == 0), "thread counts should reach 0 at the same time, daemon %d,%d", (int)_daemon_threads_count->get_value(), daemon_count);
 }
 
 void ThreadService::current_thread_exiting(JavaThread* jt, bool daemon) {
@@ -195,16 +155,15 @@ void ThreadService::current_thread_exiting(JavaThread* jt, bool daemon) {
     return;
   }
 
-  assert(jt == JavaThread::current(), "Called by current thread");
-  assert(!jt->is_terminated() && jt->is_exiting(), "must be exiting");
+  assert(jt == JavaThread::current(), "Called by current thread");
+  assert(!jt->is_terminated() && jt->is_exiting(), "must be exiting");
 
   decrement_thread_counts(jt, daemon);
 }
 
 // FIXME: JVMTI should call this function
 Handle ThreadService::get_current_contended_monitor(JavaThread* thread) {
-  assert(thread != NULL, "should be non-NULL");
-  debug_only(Thread::check_for_dangling_thread_pointer(thread);)
+  assert(thread != NULL, "should be non-NULL");
 
   ObjectMonitor *wait_obj = thread->current_waiting_monitor();
 
@@ -212,7 +171,7 @@ Handle ThreadService::get_current_contended_monitor(JavaThread* thread) {
   if (wait_obj != NULL) {
     // thread is doing an Object.wait() call
     obj = (oop) wait_obj->object();
-    assert(obj != NULL, "Object.wait() should have an object");
+    assert(obj != NULL, "Object.wait() should have an object");
   } else {
     ObjectMonitor *enter_obj = thread->current_pending_monitor();
     if (enter_obj != NULL) {
@@ -292,7 +251,7 @@ void ThreadService::remove_thread_dump(ThreadDumpResult* dump) {
       break;
     }
   }
-  assert(found, "The threaddump result to be removed must exist.");
+  assert(found, "The threaddump result to be removed must exist.");
 }
 
 // Dump stack trace of threads specified in the given threads array.
@@ -301,7 +260,7 @@ void ThreadService::remove_thread_dump(ThreadDumpResult* dump) {
 Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads,
                                         int num_threads,
                                         TRAPS) {
-  assert(num_threads > 0, "just checking");
+  assert(num_threads > 0, "just checking");
 
   ThreadDumpResult dump_result;
   VM_ThreadDump op(&dump_result,
@@ -321,8 +280,8 @@ Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads,
   objArrayHandle result_obj(THREAD, r);
 
   int num_snapshots = dump_result.num_snapshots();
-  assert(num_snapshots == num_threads, "Must have num_threads thread snapshots");
-  assert(num_snapshots == 0 || dump_result.t_list_has_been_set(), "ThreadsList must have been set if we have a snapshot");
+  assert(num_snapshots == num_threads, "Must have num_threads thread snapshots");
+  assert(num_snapshots == 0 || dump_result.t_list_has_been_set(), "ThreadsList must have been set if we have a snapshot");
   int i = 0;
   for (ThreadSnapshot* ts = dump_result.snapshots(); ts != NULL; i++, ts = ts->next()) {
     ThreadStackTrace* stacktrace = ts->get_stack_trace();
@@ -355,7 +314,7 @@ void ThreadService::reset_contention_time_stat(JavaThread* thread) {
 
 // Find deadlocks involving object monitors and concurrent locks if concurrent_locks is true
 DeadlockCycle* ThreadService::find_deadlocks_at_safepoint(ThreadsList * t_list, bool concurrent_locks) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
 
   // This code was modified from the original Threads::find_deadlocks code.
   int globalDfn = 0, thisDfn;
@@ -469,7 +428,6 @@ DeadlockCycle* ThreadService::find_deadlocks_at_safepoint(ThreadsList * t_list, 
         waitingToLockBlocker = currentThread->current_park_blocker();
       }
     }
-
   }
   delete cycle;
   return deadlocks;
@@ -503,10 +461,8 @@ ThreadDumpResult::~ThreadDumpResult() {
   }
 }
 
-
 void ThreadDumpResult::add_thread_snapshot(ThreadSnapshot* ts) {
-  assert(_num_threads == 0 || _num_snapshots < _num_threads,
-         "_num_snapshots must be less than _num_threads");
+  assert(_num_threads == 0 || _num_snapshots < _num_threads, "_num_snapshots must be less than _num_threads");
   _num_snapshots++;
   if (_snapshots == NULL) {
     _snapshots = ts;
@@ -545,7 +501,7 @@ StackFrameInfo::StackFrameInfo(javaVFrame* jvf, bool with_lock_info) {
       _locked_monitors = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<oop>(length, true);
       for (int i = 0; i < length; i++) {
         MonitorInfo* monitor = list->at(i);
-        assert(monitor->owner() != NULL, "This monitor must have an owning object");
+        assert(monitor->owner() != NULL, "This monitor must have an owning object");
         _locked_monitors->append(monitor->owner());
       }
     }
@@ -574,7 +530,6 @@ void StackFrameInfo::print_on(outputStream* st) const {
     oop o = _locked_monitors->at(i);
     st->print_cr("\t- locked <" INTPTR_FORMAT "> (a %s)", p2i(o), o->klass()->external_name());
   }
-
 }
 
 // Iterate through monitor cache to find JNI locked monitors
@@ -620,7 +575,7 @@ ThreadStackTrace::~ThreadStackTrace() {
 }
 
 void ThreadStackTrace::dump_stack_at_safepoint(int maxDepth) {
-  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
+  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
 
   if (_thread->has_last_Java_frame()) {
     RegisterMap reg_map(_thread);
@@ -649,9 +604,8 @@ void ThreadStackTrace::dump_stack_at_safepoint(int maxDepth) {
   }
 }
 
-
 bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
-  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
+  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
 
   bool found = false;
   int num_frames = get_stack_depth();
@@ -661,7 +615,7 @@ bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
     GrowableArray<oop>* locked_monitors = frame->locked_monitors();
     for (int j = 0; j < len; j++) {
       oop monitor = locked_monitors->at(j);
-      assert(monitor != NULL, "must be a Java object");
+      assert(monitor != NULL, "must be a Java object");
       if (oopDesc::equals(monitor, object)) {
         found = true;
         break;
@@ -673,7 +627,7 @@ bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
 
 Handle ThreadStackTrace::allocate_fill_stack_trace_element_array(TRAPS) {
   InstanceKlass* ik = SystemDictionary::StackTraceElement_klass();
-  assert(ik != NULL, "must be loaded in 1.4+");
+  assert(ik != NULL, "must be loaded in 1.4+");
 
   // Allocate an array of java/lang/StackTraceElement object
   objArrayOop ste = oopFactory::new_objArray(ik, _depth, CHECK_NH);
@@ -712,7 +666,6 @@ void ThreadStackTrace::metadata_do(void f(Metadata*)) {
   }
 }
 
-
 ConcurrentLocksDump::~ConcurrentLocksDump() {
   if (_retain_map_on_free) {
     return;
@@ -727,7 +680,7 @@ ConcurrentLocksDump::~ConcurrentLocksDump() {
 
 void ConcurrentLocksDump::dump_at_safepoint() {
   // dump all locked concurrent locks
-  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
+  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
 
   GrowableArray<oop>* aos_objects = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<oop>(INITIAL_ARRAY_SIZE, true /* C_heap */);
 
@@ -740,7 +693,6 @@ void ConcurrentLocksDump::dump_at_safepoint() {
   delete aos_objects;
 }
 
-
 // build a map of JavaThread to all its owned AbstractOwnableSynchronizer
 void ConcurrentLocksDump::build_map(GrowableArray<oop>* aos_objects) {
   int length = aos_objects->length();
@@ -751,7 +703,7 @@ void ConcurrentLocksDump::build_map(GrowableArray<oop>* aos_objects) {
       // See comments in ThreadConcurrentLocks to see how this
       // JavaThread* is protected.
       JavaThread* thread = java_lang_Thread::thread(owner_thread_obj);
-      assert(o->is_instance(), "Must be an instanceOop");
+      assert(o->is_instance(), "Must be an instanceOop");
       add_lock(thread, (instanceOop) o);
     }
   }
@@ -902,7 +854,6 @@ void ThreadSnapshot::dump_stack_at_safepoint(int max_depth, bool with_locked_mon
   _stack_trace->dump_stack_at_safepoint(max_depth);
 }
 
-
 void ThreadSnapshot::oops_do(OopClosure* f) {
   f->do_oop(&_threadObj);
   f->do_oop(&_blocker_object);
@@ -920,7 +871,6 @@ void ThreadSnapshot::metadata_do(void f(Metadata*)) {
     _stack_trace->metadata_do(f);
   }
 }
-
 
 DeadlockCycle::DeadlockCycle() {
   _is_deadlock = false;
@@ -977,11 +927,10 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
       st->print("  waiting for ownable synchronizer " INTPTR_FORMAT ", (a %s)",
                 p2i(waitingToLockBlocker),
                 waitingToLockBlocker->klass()->external_name());
-      assert(waitingToLockBlocker->is_a(SystemDictionary::java_util_concurrent_locks_AbstractOwnableSynchronizer_klass()),
-             "Must be an AbstractOwnableSynchronizer");
+      assert(waitingToLockBlocker->is_a(SystemDictionary::java_util_concurrent_locks_AbstractOwnableSynchronizer_klass()), "Must be an AbstractOwnableSynchronizer");
       oop ownerObj = java_util_concurrent_locks_AbstractOwnableSynchronizer::get_owner_threadObj(waitingToLockBlocker);
       currentThread = java_lang_Thread::thread(ownerObj);
-      assert(currentThread != NULL, "AbstractOwnableSynchronizer owning thread is unexpectedly NULL");
+      assert(currentThread != NULL, "AbstractOwnableSynchronizer owning thread is unexpectedly NULL");
     }
     st->print("%s \"%s\"", owner_desc, currentThread->get_thread_name());
   }
@@ -1005,7 +954,7 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
 ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread,
                                              bool include_jvmti_agent_threads,
                                              bool include_jni_attaching_threads) {
-  assert(cur_thread == Thread::current(), "Check current thread");
+  assert(cur_thread == Thread::current(), "Check current thread");
 
   int init_size = ThreadService::get_live_thread_count();
   _threads_array = new GrowableArray<instanceHandle>(init_size);

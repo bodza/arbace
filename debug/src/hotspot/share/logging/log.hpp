@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #ifndef SHARE_VM_LOGGING_LOG_HPP
 #define SHARE_VM_LOGGING_LOG_HPP
 
@@ -52,18 +29,11 @@ class LogMessageBuffer;
 // Macros for logging that should be excluded in product builds.
 // Available for levels Info, Debug and Trace. Includes test macro that
 // evaluates to false in product builds.
-#ifndef PRODUCT
-#define log_develop_info(...)  (!log_is_enabled(Info, __VA_ARGS__))   ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Info>
-#define log_develop_debug(...) (!log_is_enabled(Debug, __VA_ARGS__)) ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Debug>
-#define log_develop_trace(...) (!log_is_enabled(Trace, __VA_ARGS__))  ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Trace>
-#define log_develop_is_enabled(level, ...)  log_is_enabled(level, __VA_ARGS__)
-#else
 #define DUMMY_ARGUMENT_CONSUMER(...)
 #define log_develop_info(...)  DUMMY_ARGUMENT_CONSUMER
 #define log_develop_debug(...) DUMMY_ARGUMENT_CONSUMER
 #define log_develop_trace(...) DUMMY_ARGUMENT_CONSUMER
 #define log_develop_is_enabled(...)  false
-#endif
 
 // Convenience macro to test if the logging is enabled on the specified level for given tags.
 #define log_is_enabled(level, ...) (LogImpl<LOG_TAGS(__VA_ARGS__)>::is_level(LogLevel::level))
@@ -195,7 +165,6 @@ public:
     LogImpl<T0, T1, T2, T3, T4, GuardTag>::vwrite(level, fmt, args);
     va_end(args);
   }
-
 };
 
-#endif // SHARE_VM_LOGGING_LOG_HPP
+#endif

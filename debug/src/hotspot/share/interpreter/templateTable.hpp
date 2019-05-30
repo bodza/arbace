@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_TEMPLATETABLE_HPP
 #define SHARE_VM_INTERPRETER_TEMPLATETABLE_HPP
 
@@ -73,7 +49,6 @@ class Template {
   TosState  tos_out() const                      { return _tos_out; }
   void      generate(InterpreterMacroAssembler* masm);
 };
-
 
 // The TemplateTable defines all Templates and provides accessor functions
 // to get the template for a given bytecode.
@@ -320,18 +295,13 @@ class TemplateTable: AllStatic {
 
   static void shouldnotreachhere();
 
-  // jvmti support
-  static void jvmti_post_field_access(Register cache, Register index, bool is_static, bool has_tos);
-  static void jvmti_post_field_mod(Register cache, Register index, bool is_static);
-  static void jvmti_post_fast_field_mod();
-
   // debugging of TemplateGenerator
   static void transition(TosState tos_in, TosState tos_out);// checks if in/out states expected by template generator correspond to table entries
 
   // initialization helpers
   static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(            ), char filler );
   static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(int arg     ), int arg     );
- static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(bool arg    ), bool arg    );
+  static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(bool arg    ), bool arg    );
   static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(TosState tos), TosState tos);
   static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(Operation op), Operation op);
   static void def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(Condition cc), Condition cc);
@@ -352,8 +322,7 @@ class TemplateTable: AllStatic {
 
   // Platform specifics
 #include CPU_HEADER(templateTable)
-
 };
-#endif /* !CC_INTERP */
+#endif
 
-#endif // SHARE_VM_INTERPRETER_TEMPLATETABLE_HPP
+#endif

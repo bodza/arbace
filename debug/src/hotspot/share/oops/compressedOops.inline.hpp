@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_OOPS_COMPRESSEDOOPS_INLINE_HPP
 #define SHARE_OOPS_COMPRESSEDOOPS_INLINE_HPP
 
@@ -44,11 +20,11 @@ namespace CompressedOops {
   inline bool is_null(narrowOop obj) { return obj == 0; }
 
   inline oop decode_not_null(narrowOop v) {
-    assert(!is_null(v), "narrow oop value can never be zero");
+    assert(!is_null(v), "narrow oop value can never be zero");
     address base = Universe::narrow_oop_base();
     int    shift = Universe::narrow_oop_shift();
     oop result = (oop)(void*)((uintptr_t)base + ((uintptr_t)v << shift));
-    assert(check_obj_alignment(result), "address not aligned: " INTPTR_FORMAT, p2i((void*) result));
+    assert(check_obj_alignment(result), "address not aligned: " INTPTR_FORMAT, p2i((void*) result));
     return result;
   }
 
@@ -57,16 +33,16 @@ namespace CompressedOops {
   }
 
   inline narrowOop encode_not_null(oop v) {
-    assert(!is_null(v), "oop value can never be zero");
-    assert(check_obj_alignment(v), "Address not aligned");
-    assert(Universe::heap()->is_in_reserved(v), "Address not in heap");
+    assert(!is_null(v), "oop value can never be zero");
+    assert(check_obj_alignment(v), "Address not aligned");
+    assert(Universe::heap()->is_in_reserved(v), "Address not in heap");
     address base = Universe::narrow_oop_base();
     int    shift = Universe::narrow_oop_shift();
     uint64_t  pd = (uint64_t)(pointer_delta((void*)v, (void*)base, 1));
-    assert(OopEncodingHeapMax > pd, "change encoding max if new encoding");
+    assert(OopEncodingHeapMax > pd, "change encoding max if new encoding");
     uint64_t result = pd >> shift;
-    assert((result & CONST64(0xffffffff00000000)) == 0, "narrow oop overflow");
-    assert(decode(result) == v, "reversibility");
+    assert((result & CONST64(0xffffffff00000000)) == 0, "narrow oop overflow");
+    assert(decode(result) == v, "reversibility");
     return (narrowOop)result;
   }
 
@@ -81,4 +57,4 @@ namespace CompressedOops {
   inline narrowOop encode(narrowOop v)          { return v; }
 }
 
-#endif // SHARE_OOPS_COMPRESSEDOOPS_INLINE_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
@@ -38,7 +14,6 @@
 #include "runtime/sharedRuntime.hpp"
 #include "services/memTracker.hpp"
 #include "utilities/macros.hpp"
-
 
 // Initialization done by VM thread in vm_init_globals()
 void check_ThreadShadow();
@@ -97,7 +72,6 @@ void vm_init_globals() {
   SuspendibleThreadSet_init();
 }
 
-
 jint init_globals() {
   HandleMark hm;
   management_init();
@@ -124,9 +98,6 @@ jint init_globals() {
   javaClasses_init();// must happen after vtable initialization, before referenceProcessor_init
   referenceProcessor_init();
   jni_handles_init();
-#if INCLUDE_VM_STRUCTS
-  vmStructs_init();
-#endif // INCLUDE_VM_STRUCTS
 
   vtableStubs_init();
   InlineCacheBuffer_init();
@@ -144,12 +115,6 @@ jint init_globals() {
   stubRoutines_init2(); // note: StubRoutines need 2-phase init
   MethodHandles::generate_adapters();
 
-#if INCLUDE_NMT
-  // Solaris stack is walkable only after stubRoutines are set up.
-  // On Other platforms, the stack is always walkable.
-  NMT_stack_walkable = true;
-#endif // INCLUDE_NMT
-
   // All the flags that get adjusted by VM_Version_init and os::init_2
   // have been set so dump the flags now.
   if (PrintFlagsFinal || PrintFlagsRanges) {
@@ -158,7 +123,6 @@ jint init_globals() {
 
   return JNI_OK;
 }
-
 
 void exit_globals() {
   static bool destructorsCalled = false;
@@ -183,8 +147,7 @@ bool is_init_completed() {
   return _init_completed;
 }
 
-
 void set_init_completed() {
-  assert(Universe::is_fully_initialized(), "Should have completed initialization");
+  assert(Universe::is_fully_initialized(), "Should have completed initialization");
   _init_completed = true;
 }

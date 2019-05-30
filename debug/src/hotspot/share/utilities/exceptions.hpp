@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_EXCEPTIONS_HPP
 #define SHARE_VM_UTILITIES_EXCEPTIONS_HPP
 
@@ -43,8 +19,6 @@
 // The CHECK macros do this in a convenient way. Carrying around the
 // thread provides also convenient access to it (e.g. for Handle
 // creation, w/o the need for recomputation).
-
-
 
 // Forward declarations to be independent of the include structure.
 
@@ -93,7 +67,6 @@ class ThreadShadow: public CHeapObj<mtThread> {
   ThreadShadow() : _pending_exception(NULL),
                    _exception_file(NULL), _exception_line(0) {}
 };
-
 
 // Exceptions is a helper class that encapsulates all operations
 // that require access to the thread interface and which are
@@ -188,7 +161,6 @@ class Exceptions {
   static void log_exception(Handle exception, stringStream tempst);
 };
 
-
 // The THREAD & TRAPS macros facilitate the declaration of functions that throw exceptions.
 // Convention: Use the TRAPS macro as the last argument of such a function; e.g.:
 //
@@ -196,7 +168,6 @@ class Exceptions {
 
 #define THREAD __the_thread__
 #define TRAPS  Thread* THREAD
-
 
 // The CHECK... macros should be used to pass along a THREAD reference and to check for pending
 // exceptions. In special situations it is necessary to handle pending exceptions explicitly,
@@ -238,19 +209,19 @@ class Exceptions {
 
 #define THREAD_AND_LOCATION                      THREAD, __FILE__, __LINE__
 
-#define THROW_OOP(e)                                \
+#define THROW_OOP(e) \
   { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                             return;  }
 
-#define THROW_HANDLE(e)                                \
+#define THROW_HANDLE(e) \
   { Exceptions::_throw(THREAD_AND_LOCATION, e);                             return;  }
 
-#define THROW(name)                                 \
+#define THROW(name) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return;  }
 
-#define THROW_MSG(name, message)                    \
+#define THROW_MSG(name, message) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message); return;  }
 
-#define THROW_CAUSE(name, cause)   \
+#define THROW_CAUSE(name, cause) \
   { Exceptions::_throw_cause(THREAD_AND_LOCATION, name, cause); return; }
 
 #define THROW_MSG_LOADER(name, message, loader, protection_domain) \
@@ -259,16 +230,16 @@ class Exceptions {
 #define THROW_ARG(name, signature, args) \
   { Exceptions::_throw_args(THREAD_AND_LOCATION, name, signature, args);   return; }
 
-#define THROW_OOP_(e, result)                       \
+#define THROW_OOP_(e, result) \
   { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                           return result; }
 
-#define THROW_HANDLE_(e, result)                       \
+#define THROW_HANDLE_(e, result) \
   { Exceptions::_throw(THREAD_AND_LOCATION, e);                           return result; }
 
-#define THROW_(name, result)                        \
+#define THROW_(name, result) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return result; }
 
-#define THROW_MSG_(name, message, result)           \
+#define THROW_MSG_(name, message, result) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message); return result; }
 
 #define THROW_MSG_LOADER_(name, message, loader, protection_domain, result) \
@@ -277,12 +248,11 @@ class Exceptions {
 #define THROW_ARG_(name, signature, args, result) \
   { Exceptions::_throw_args(THREAD_AND_LOCATION, name, signature, args); return result; }
 
-#define THROW_MSG_CAUSE(name, message, cause)   \
+#define THROW_MSG_CAUSE(name, message, cause) \
   { Exceptions::_throw_msg_cause(THREAD_AND_LOCATION, name, message, cause); return; }
 
-#define THROW_MSG_CAUSE_(name, message, cause, result)   \
+#define THROW_MSG_CAUSE_(name, message, cause, result) \
   { Exceptions::_throw_msg_cause(THREAD_AND_LOCATION, name, message, cause); return result; }
-
 
 #define THROW_OOP_0(e)                      THROW_OOP_(e, 0)
 #define THROW_HANDLE_0(e)                   THROW_HANDLE_(e, 0)
@@ -300,12 +270,12 @@ class Exceptions {
 // call sites about which is statically known that the callee cannot throw an exception
 // even though it is declared with TRAPS.
 
-#define CATCH                              \
-  THREAD); if (HAS_PENDING_EXCEPTION) {    \
-    oop ex = PENDING_EXCEPTION;            \
-    CLEAR_PENDING_EXCEPTION;               \
-    ex->print();                           \
-    ShouldNotReachHere();                  \
+#define CATCH \
+  THREAD); if (HAS_PENDING_EXCEPTION) { \
+    oop ex = PENDING_EXCEPTION; \
+    CLEAR_PENDING_EXCEPTION; \
+    ex->print(); \
+    ShouldNotReachHere(); \
   } (void)(0
 
 // ExceptionMark is a stack-allocated helper class for local exception handling.
@@ -320,8 +290,6 @@ class ExceptionMark {
   ~ExceptionMark();
 };
 
-
-
 // Use an EXCEPTION_MARK for 'local' exceptions. EXCEPTION_MARK makes sure that no
 // pending exception exists upon entering its scope and tests that no pending exception
 // exists when leaving the scope.
@@ -332,4 +300,4 @@ class ExceptionMark {
 
 #define EXCEPTION_MARK                           Thread* THREAD = NULL; ExceptionMark __em(THREAD);
 
-#endif // SHARE_VM_UTILITIES_EXCEPTIONS_HPP
+#endif

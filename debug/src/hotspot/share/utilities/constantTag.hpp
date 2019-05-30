@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_CONSTANTTAG_HPP
 #define SHARE_VM_UTILITIES_CONSTANTTAG_HPP
 
@@ -29,7 +5,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 // constant tags in Java .class files
-
 
 enum {
   // See jvm.h for shared JVM_CONSTANT_XXX tags
@@ -46,7 +21,6 @@ enum {
   JVM_CONSTANT_DynamicInError           = 106,  // Error tag due to resolution error
   JVM_CONSTANT_InternalMax              = 106   // Last implementation tag
 };
-
 
 class constantTag {
  private:
@@ -108,9 +82,7 @@ class constantTag {
     _tag = JVM_CONSTANT_Invalid;
   }
   constantTag(jbyte tag) {
-    assert((tag >= 0 && tag <= JVM_CONSTANT_NameAndType) ||
-           (tag >= JVM_CONSTANT_MethodHandle && tag <= JVM_CONSTANT_InvokeDynamic) ||
-           (tag >= JVM_CONSTANT_InternalMin && tag <= JVM_CONSTANT_InternalMax), "Invalid constant tag");
+    assert((tag >= 0 && tag <= JVM_CONSTANT_NameAndType) || (tag >= JVM_CONSTANT_MethodHandle && tag <= JVM_CONSTANT_InvokeDynamic) || (tag >= JVM_CONSTANT_InternalMin && tag <= JVM_CONSTANT_InternalMax), "Invalid constant tag");
     _tag = tag;
   }
 
@@ -124,7 +96,7 @@ class constantTag {
       case T_DOUBLE: return constantTag(JVM_CONSTANT_Double);
       default:       break;
     }
-    assert(false, "bad basic type for tag");
+    assert(false, "bad basic type for tag");
     return constantTag();
   }
 
@@ -136,7 +108,7 @@ class constantTag {
 
   const char* internal_name() const;  // for error reporting
 
-  void print_on(outputStream* st) const PRODUCT_RETURN;
+  void print_on(outputStream* st) const {};
 };
 
-#endif // SHARE_VM_UTILITIES_CONSTANTTAG_HPP
+#endif

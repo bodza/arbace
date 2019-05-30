@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_CODEBLOB_HPP
 #define SHARE_VM_CODE_CODEBLOB_HPP
 
@@ -79,7 +55,6 @@ struct CodeBlobType {
 //   - header -\
 //     ...     |
 //   - code  <-/
-
 
 class CodeBlobLayout;
 
@@ -145,9 +120,13 @@ public:
 
   // Casting
   nmethod* as_nmethod_or_null()                { return is_nmethod() ? (nmethod*) this : NULL; }
-  nmethod* as_nmethod()                        { assert(is_nmethod(), "must be nmethod"); return (nmethod*) this; }
+  nmethod* as_nmethod()                        {
+    assert(is_nmethod(), "must be nmethod");
+    return (nmethod*) this; }
   CompiledMethod* as_compiled_method_or_null() { return is_compiled() ? (CompiledMethod*) this : NULL; }
-  CompiledMethod* as_compiled_method()         { assert(is_compiled(), "must be compiled"); return (CompiledMethod*) this; }
+  CompiledMethod* as_compiled_method()         {
+    assert(is_compiled(), "must be compiled");
+    return (CompiledMethod*) this; }
   CodeBlob* as_codeblob_or_null() const        { return (CodeBlob*) this; }
 
   // Boundaries
@@ -232,7 +211,7 @@ public:
 
   // Transfer ownership of comments to this CodeBlob
   void set_strings(CodeStrings& strings) {
-    assert(!is_aot(), "invalid on aot");
+    assert(!is_aot(), "invalid on aot");
     _strings.assign(strings);
   }
 
@@ -287,7 +266,7 @@ public:
     _code_offset(_content_offset),
     _data_offset(data_offset)
   {
-    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
+    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
 
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
@@ -308,7 +287,7 @@ public:
     _code_offset(_content_offset + cb->total_offset_of(cb->insts())),
     _data_offset(_content_offset + align_up(cb->total_content_size(), oopSize))
   {
-    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
+    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
 
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
@@ -335,7 +314,6 @@ public:
   address content_begin() const { return _content_begin; }
   address content_end() const { return _content_end; }
 };
-
 
 class RuntimeBlob : public CodeBlob {
   friend class VMStructs;
@@ -413,7 +391,6 @@ class BufferBlob: public RuntimeBlob {
   void print_value_on(outputStream* st) const;
 };
 
-
 //----------------------------------------------------------------------------------------------------
 // AdapterBlob: used to hold C2I/I2C adapters
 
@@ -456,7 +433,6 @@ public:
   // Typing
   virtual bool is_method_handles_adapter_blob() const { return true; }
 };
-
 
 //----------------------------------------------------------------------------------------------------
 // RuntimeStub: describes stubs used by compiled code to call a (static) C++ runtime routine
@@ -502,7 +478,6 @@ class RuntimeStub: public RuntimeBlob {
   void print_value_on(outputStream* st) const;
 };
 
-
 //----------------------------------------------------------------------------------------------------
 // Super-class for all blobs that exist in only one instance. Implements default behaviour.
 
@@ -535,7 +510,6 @@ class SingletonBlob: public RuntimeBlob {
   void print_value_on(outputStream* st) const;
 };
 
-
 //----------------------------------------------------------------------------------------------------
 // DeoptimizationBlob
 
@@ -549,11 +523,9 @@ class DeoptimizationBlob: public SingletonBlob {
 
   int _unpack_with_exception_in_tls;
 
-#if INCLUDE_JVMCI
   // Offsets when JVMCI calls uncommon_trap.
   int _uncommon_trap_offset;
   int _implicit_exception_uncommon_trap_offset;
-#endif
 
   // Creation support
   DeoptimizationBlob(
@@ -601,89 +573,26 @@ class DeoptimizationBlob: public SingletonBlob {
   // there may be live values in those registers during deopt.
   void set_unpack_with_exception_in_tls_offset(int offset) {
     _unpack_with_exception_in_tls = offset;
-    assert(code_contains(code_begin() + _unpack_with_exception_in_tls), "must be PC inside codeblob");
+    assert(code_contains(code_begin() + _unpack_with_exception_in_tls), "must be PC inside codeblob");
   }
   address unpack_with_exception_in_tls() const   { return code_begin() + _unpack_with_exception_in_tls; }
 
-#if INCLUDE_JVMCI
   // Offsets when JVMCI calls uncommon_trap.
   void set_uncommon_trap_offset(int offset) {
     _uncommon_trap_offset = offset;
-    assert(contains(code_begin() + _uncommon_trap_offset), "must be PC inside codeblob");
+    assert(contains(code_begin() + _uncommon_trap_offset), "must be PC inside codeblob");
   }
   address uncommon_trap() const                  { return code_begin() + _uncommon_trap_offset; }
 
   void set_implicit_exception_uncommon_trap_offset(int offset) {
     _implicit_exception_uncommon_trap_offset = offset;
-    assert(contains(code_begin() + _implicit_exception_uncommon_trap_offset), "must be PC inside codeblob");
+    assert(contains(code_begin() + _implicit_exception_uncommon_trap_offset), "must be PC inside codeblob");
   }
   address implicit_exception_uncommon_trap() const { return code_begin() + _implicit_exception_uncommon_trap_offset; }
-#endif // INCLUDE_JVMCI
 };
-
 
 //----------------------------------------------------------------------------------------------------
 // UncommonTrapBlob (currently only used by Compiler 2)
-
-#ifdef COMPILER2
-
-class UncommonTrapBlob: public SingletonBlob {
-  friend class VMStructs;
- private:
-  // Creation support
-  UncommonTrapBlob(
-    CodeBuffer* cb,
-    int         size,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
-
- public:
-  // Creation
-  static UncommonTrapBlob* create(
-    CodeBuffer* cb,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
-
-  // GC for args
-  void preserve_callee_argument_oops(frame fr, const RegisterMap *reg_map, OopClosure* f)  { /* nothing to do */ }
-
-  // Typing
-  bool is_uncommon_trap_stub() const             { return true; }
-};
-
-
-//----------------------------------------------------------------------------------------------------
-// ExceptionBlob: used for exception unwinding in compiled code (currently only used by Compiler 2)
-
-class ExceptionBlob: public SingletonBlob {
-  friend class VMStructs;
- private:
-  // Creation support
-  ExceptionBlob(
-    CodeBuffer* cb,
-    int         size,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
-
- public:
-  // Creation
-  static ExceptionBlob* create(
-    CodeBuffer* cb,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
-
-  // GC for args
-  void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { /* nothing to do */ }
-
-  // Typing
-  bool is_exception_stub() const                 { return true; }
-};
-#endif // COMPILER2
-
 
 //----------------------------------------------------------------------------------------------------
 // SafepointBlob: handles illegal_instruction exceptions during a safepoint
@@ -714,4 +623,4 @@ class SafepointBlob: public SingletonBlob {
   bool is_safepoint_stub() const                 { return true; }
 };
 
-#endif // SHARE_VM_CODE_CODEBLOB_HPP
+#endif

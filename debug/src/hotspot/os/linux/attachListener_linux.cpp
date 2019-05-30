@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
@@ -154,7 +130,6 @@ class ArgumentIterator : public StackObj {
   }
 };
 
-
 // atexit hook to stop listener and unlink the file that it is
 // bound too.
 extern "C" {
@@ -266,7 +241,7 @@ LinuxAttachOperation* LinuxAttachListener::read_request(int s) {
   do {
     int n;
     RESTARTABLE(read(s, buf+off, left), n);
-    assert(n <= left, "buffer was too small, impossible!");
+    assert(n <= left, "buffer was too small, impossible!");
     buf[max_len - 1] = '\0';
     if (n == -1) {
       return NULL;      // reset by peer or other error
@@ -330,7 +305,6 @@ LinuxAttachOperation* LinuxAttachListener::read_request(int s) {
   op->set_socket(s);
   return op;
 }
-
 
 // Dequeue an operation
 //
@@ -427,7 +401,6 @@ void LinuxAttachOperation::complete(jint result, bufferedStream* st) {
   delete this;
 }
 
-
 // AttachListener functions
 
 AttachOperation* AttachListener::dequeue() {
@@ -458,7 +431,7 @@ void AttachListener::vm_start() {
 
   int n = snprintf(fn, UNIX_PATH_MAX, "%s/.java_pid%d",
            os::get_temp_directory(), os::current_process_id());
-  assert(n < (int)UNIX_PATH_MAX, "java_pid file name buffer overflow");
+  assert(n < (int)UNIX_PATH_MAX, "java_pid file name buffer overflow");
 
   RESTARTABLE(::stat64(fn, &st), ret);
   if (ret == 0) {

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "classfile/symbolTable.hpp"
@@ -53,9 +29,7 @@
 #include "utilities/ostream.hpp"
 
 /*
- * HPROF binary format - description copied from:
- *   src/share/demo/jvmti/hprof/hprof_io.c
- *
+ * HPROF binary format
  *
  *  header    "JAVA PROFILE 1.0.2" (0-terminated)
  *
@@ -67,7 +41,6 @@
  * u4         low word    number of milliseconds since 0:00 GMT, 1/1/70
  * [record]*  a sequence of records.
  *
- *
  * Record format:
  *
  * u1         a TAG denoting the type of the record
@@ -76,7 +49,6 @@
  * u4         number of bytes *remaining* in the record. Note that
  *            this number excludes the tag and the length field itself.
  * [u1]*      BODY of the record (a sequence of bytes)
- *
  *
  * The following TAGs are supported:
  *
@@ -116,7 +88,6 @@
  *               u4         thread serial number
  *               u4         number of frames
  *               [id]*      stack frame IDs
- *
  *
  * HPROF_ALLOC_SITES        a set of heap allocation sites, obtained after GC
  *
@@ -302,7 +273,6 @@
  *                          0x00000002: cpu sampling on/off
  *                u2        stack trace depth
  *
- *
  * When the header is "JAVA PROFILE 1.0.2" a heap dump can optionally
  * be generated as a sequence of heap dump segments. This sequence is
  * terminated by an end record. The additional tags allowed by format
@@ -316,7 +286,6 @@
  * HPROF_HEAP_DUMP_END      denotes the end of a heap dump
  *
  */
-
 
 // HPROF tags
 
@@ -454,7 +423,7 @@ DumpWriter::DumpWriter(const char* path) {
       _size = _size >> 1;
     }
   } while (_buffer == NULL && _size > 0);
-  assert((_size > 0 && _buffer != NULL) || (_size == 0 && _buffer == NULL), "sanity check");
+  assert((_size > 0 && _buffer != NULL) || (_size == 0 && _buffer == NULL), "sanity check");
   _pos = 0;
   _error = NULL;
   _bytes_written = 0L;
@@ -495,7 +464,7 @@ julong DumpWriter::current_record_length() {
   if (is_open()) {
     // calculate the size of the dump record
     julong dump_end = bytes_written() + bytes_unwritten();
-    assert(dump_end == (size_t)current_offset(), "checking");
+    assert(dump_end == (size_t)current_offset(), "checking");
     julong dump_len = dump_end - dump_start() - 4;
     return dump_len;
   }
@@ -557,7 +526,7 @@ jlong DumpWriter::current_offset() {
   if (is_open()) {
     // the offset is the file offset plus whatever we have buffered
     jlong offset = os::current_file_offset(file_descriptor());
-    assert(offset >= 0, "lseek failed");
+    assert(offset >= 0, "lseek failed");
     return offset + position();
   } else {
     return (jlong)-1;
@@ -565,7 +534,7 @@ jlong DumpWriter::current_offset() {
 }
 
 void DumpWriter::seek_to_offset(jlong off) {
-  assert(off >= 0, "bad offset");
+  assert(off >= 0, "bad offset");
 
   // need to flush before seeking
   flush();
@@ -573,7 +542,7 @@ void DumpWriter::seek_to_offset(jlong off) {
   // may be closed due to I/O error
   if (is_open()) {
     jlong n = os::seek_to_file_offset(file_descriptor(), off);
-    assert(n >= 0, "lseek failed");
+    assert(n >= 0, "lseek failed");
   }
 }
 
@@ -597,36 +566,22 @@ void DumpWriter::write_u8(u8 x) {
 
 void DumpWriter::write_objectID(oop o) {
   address a = (address)o;
-#ifdef _LP64
   write_u8((u8)a);
-#else
-  write_u4((u4)a);
-#endif
 }
 
 void DumpWriter::write_symbolID(Symbol* s) {
   address a = (address)((uintptr_t)s);
-#ifdef _LP64
   write_u8((u8)a);
-#else
-  write_u4((u4)a);
-#endif
 }
 
 void DumpWriter::write_id(u4 x) {
-#ifdef _LP64
   write_u8((u8) x);
-#else
-  write_u4(x);
-#endif
 }
 
 // We use java mirror as the class ID
 void DumpWriter::write_classID(Klass* k) {
   write_objectID(k->java_mirror());
 }
-
-
 
 // Support class with a collection of functions used when dumping the heap
 
@@ -758,7 +713,7 @@ void DumperSupport::dump_field_value(DumpWriter* writer, char type, oop obj, int
     case JVM_SIGNATURE_CLASS :
     case JVM_SIGNATURE_ARRAY : {
       oop o = obj->obj_field_access<ON_UNKNOWN_OOP_REF>(offset);
-      assert(oopDesc::is_oop_or_null(o), "Expected an oop or NULL at " PTR_FORMAT, p2i(o));
+      assert(oopDesc::is_oop_or_null(o), "Expected an oop or NULL at " PTR_FORMAT, p2i(o));
       writer->write_objectID(o);
       break;
     }
@@ -1020,7 +975,7 @@ void DumperSupport::dump_class_and_array_classes(DumpWriter* writer, Klass* k) {
   k = k->array_klass_or_null();
   while (k != NULL) {
     Klass* klass = k;
-    assert(klass->is_objArray_klass(), "not an ObjArrayKlass");
+    assert(klass->is_objArray_klass(), "not an ObjArrayKlass");
 
     writer->write_u1(HPROF_GC_CLASS_DUMP);
     writer->write_classID(klass);
@@ -1028,7 +983,7 @@ void DumperSupport::dump_class_and_array_classes(DumpWriter* writer, Klass* k) {
 
     // super class of array classes is java.lang.Object
     java_super = klass->java_super();
-    assert(java_super != NULL, "checking");
+    assert(java_super != NULL, "checking");
     writer->write_classID(java_super);
 
     writer->write_objectID(ik->class_loader());
@@ -1060,7 +1015,7 @@ void DumperSupport::dump_basic_type_array_class(DumpWriter* writer, Klass* k) {
 
     // super class of array classes is java.lang.Object
     Klass* java_super = klass->java_super();
-    assert(java_super != NULL, "checking");
+    assert(java_super != NULL, "checking");
     writer->write_classID(java_super);
 
     writer->write_objectID(oop(NULL));    // loader
@@ -1083,7 +1038,7 @@ void DumperSupport::dump_basic_type_array_class(DumpWriter* writer, Klass* k) {
 // which means we need to truncate arrays that are too long.
 int DumperSupport::calculate_array_max_length(DumpWriter* writer, arrayOop array, short header_size) {
   BasicType type = ArrayKlass::cast(array->klass())->element_type();
-  assert(type >= T_BOOLEAN && type <= T_OBJECT, "invalid array element type");
+  assert(type >= T_BOOLEAN && type <= T_OBJECT, "invalid array element type");
 
   int length = array->length();
 
@@ -1255,12 +1210,11 @@ void DumperSupport::dump_stack_frame(DumpWriter* writer,
   writer->write_symbolID(m->name());                // method's name
   writer->write_symbolID(m->signature());           // method's signature
 
-  assert(m->method_holder()->is_instance_klass(), "not InstanceKlass");
+  assert(m->method_holder()->is_instance_klass(), "not InstanceKlass");
   writer->write_symbolID(m->method_holder()->source_file_name());  // source file name
   writer->write_u4(class_serial_num);               // class serial number
   writer->write_u4((u4) line_number);               // line number
 }
-
 
 // Support class used to generate HPROF_UTF8 records from the entries in the
 // SymbolTable.
@@ -1305,7 +1259,6 @@ class JNILocalsDumper : public OopClosure {
   void do_oop(narrowOop* obj_p) { ShouldNotReachHere(); }
 };
 
-
 void JNILocalsDumper::do_oop(oop* obj_p) {
   // ignore null handles
   oop o = *obj_p;
@@ -1316,7 +1269,6 @@ void JNILocalsDumper::do_oop(oop* obj_p) {
     writer()->write_u4((u4)_frame_num);
   }
 }
-
 
 // Support class used to generate HPROF_GC_ROOT_JNI_GLOBAL records
 
@@ -1347,7 +1299,6 @@ void JNIGlobalsDumper::do_oop(oop* obj_p) {
   }
 };
 
-
 // Support class used to generate HPROF_GC_ROOT_MONITOR_USED records
 
 class MonitorUsedDumper : public OopClosure {
@@ -1364,7 +1315,6 @@ class MonitorUsedDumper : public OopClosure {
   }
   void do_oop(narrowOop* obj_p) { ShouldNotReachHere(); }
 };
-
 
 // Support class used to generate HPROF_GC_ROOT_STICKY_CLASS records
 
@@ -1384,7 +1334,6 @@ class StickyClassDumper : public KlassClosure {
       }
     }
 };
-
 
 class VM_HeapDumper;
 
@@ -1448,14 +1397,18 @@ class VM_HeapDumper : public VM_GC_Operation {
   int _num_threads;
 
   // accessors and setters
-  static VM_HeapDumper* dumper()         {  assert(_global_dumper != NULL, "Error"); return _global_dumper; }
-  static DumpWriter* writer()            {  assert(_global_writer != NULL, "Error"); return _global_writer; }
+  static VM_HeapDumper* dumper()         {
+    assert(_global_dumper != NULL, "Error");
+  return _global_dumper; }
+  static DumpWriter* writer()            {
+    assert(_global_writer != NULL, "Error");
+  return _global_writer; }
   void set_global_dumper() {
-    assert(_global_dumper == NULL, "Error");
+    assert(_global_dumper == NULL, "Error");
     _global_dumper = this;
   }
   void set_global_writer() {
-    assert(_global_writer == NULL, "Error");
+    assert(_global_writer == NULL, "Error");
     _global_writer = _local_writer;
   }
   void clear_global_dumper() { _global_dumper = NULL; }
@@ -1497,7 +1450,7 @@ class VM_HeapDumper : public VM_GC_Operation {
     _stack_traces = NULL;
     _num_threads = 0;
     if (oome) {
-      assert(!Thread::current()->is_VM_thread(), "Dump from OutOfMemoryError cannot be called by the VMThread");
+      assert(!Thread::current()->is_VM_thread(), "Dump from OutOfMemoryError cannot be called by the VMThread");
       // get OutOfMemoryError zero-parameter constructor
       InstanceKlass* oome_ik = SystemDictionary::OutOfMemoryError_klass();
       _oome_constructor = oome_ik->find_method(vmSymbols::object_initializer_name(),
@@ -1556,7 +1509,7 @@ void DumperSupport::write_current_dump_record_length(DumpWriter* writer) {
     }
 
     // seek to the dump start and fix-up the length
-    assert(writer->dump_start() >= 0, "no dump start recorded");
+    assert(writer->dump_start() >= 0, "no dump start recorded");
     writer->seek_to_offset(writer->dump_start());
     writer->write_u4((u4)dump_len);
 
@@ -1655,7 +1608,7 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
   JNILocalsDumper blk(writer(), thread_serial_num);
 
   oop threadObj = java_thread->threadObj();
-  assert(threadObj != NULL, "sanity check");
+  assert(threadObj != NULL, "sanity check");
 
   int stack_depth = 0;
   if (java_thread->has_last_Java_frame()) {
@@ -1714,7 +1667,7 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
           } else {
             if (last_entry_frame != NULL) {
               // JNI locals for the entry frame
-              assert(last_entry_frame->is_entry_frame(), "checking");
+              assert(last_entry_frame->is_entry_frame(), "checking");
               last_entry_frame->entry_frame_call_wrapper()->handles()->oops_do(&blk);
             }
           }
@@ -1727,7 +1680,7 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
         // externalVFrame - if it's an entry frame then report any JNI locals
         // as roots when we find the corresponding native javaVFrame
         frame* fr = vf->frame_pointer();
-        assert(fr != NULL, "sanity check");
+        assert(fr != NULL, "sanity check");
         if (fr->is_entry_frame()) {
           last_entry_frame = fr;
         }
@@ -1740,7 +1693,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
   }
   return stack_depth;
 }
-
 
 // write a HPROF_GC_ROOT_THREAD_OBJ record for each java thread. Then walk
 // the stack so that locals and JNI locals are dumped.
@@ -1755,11 +1707,9 @@ void VM_HeapDumper::do_threads() {
     writer()->write_u4(thread_serial_num);  // thread number
     writer()->write_u4(stack_serial_num);   // stack trace serial number
     int num_frames = do_thread(thread, thread_serial_num);
-    assert(num_frames == _stack_traces[i]->get_stack_depth(),
-           "total number of Java frames not matched");
+    assert(num_frames == _stack_traces[i]->get_stack_depth(), "total number of Java frames not matched");
   }
 }
-
 
 // The VM operation that dumps the heap. The dump consists of the following
 // records:
@@ -1901,7 +1851,7 @@ void VM_HeapDumper::dump_stack_traces() {
       if (thread == _oome_thread && _oome_constructor != NULL) {
         int oome_serial_num = _klass_map->find(_oome_constructor->method_holder());
         // the class serial number starts from 1
-        assert(oome_serial_num > 0, "OutOfMemoryError class not found");
+        assert(oome_serial_num > 0, "OutOfMemoryError class not found");
         DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, oome_serial_num,
                                         _oome_constructor, 0);
         extra_frames++;
@@ -1911,7 +1861,7 @@ void VM_HeapDumper::dump_stack_traces() {
         Method* m = frame->method();
         int class_serial_num = _klass_map->find(m->method_holder());
         // the class serial number starts from 1
-        assert(class_serial_num > 0, "class not found");
+        assert(class_serial_num > 0, "class not found");
         DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, class_serial_num, m, frame->bci());
       }
       depth += extra_frames;
@@ -1931,7 +1881,7 @@ void VM_HeapDumper::dump_stack_traces() {
 
 // dump the heap to given path.
 int HeapDumper::dump(const char* path) {
-  assert(path != NULL && strlen(path) > 0, "path missing");
+  assert(path != NULL && strlen(path) > 0, "path missing");
 
   // print message in interactive case
   if (print_to_tty()) {
@@ -1953,7 +1903,7 @@ int HeapDumper::dump(const char* path) {
   // generate the dump
   VM_HeapDumper dumper(&writer, _gc_before_heap_dump, _oome);
   if (Thread::current()->is_VM_thread()) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Expected to be called at a safepoint");
+    assert(SafepointSynchronize::is_at_safepoint(), "Expected to be called at a safepoint");
     dumper.doit();
   } else {
     VMThread::execute(&dumper);
@@ -1985,7 +1935,6 @@ HeapDumper::~HeapDumper() {
   set_error(NULL);
 }
 
-
 // returns the error string (resource allocated), or NULL
 char* HeapDumper::error_as_C_string() const {
   if (error() != NULL) {
@@ -2006,7 +1955,7 @@ void HeapDumper::set_error(char* error) {
     _error = NULL;
   } else {
     _error = os::strdup(error);
-    assert(_error != NULL, "allocation failure");
+    assert(_error != NULL, "allocation failure");
   }
 }
 

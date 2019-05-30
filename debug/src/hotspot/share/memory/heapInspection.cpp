@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/moduleEntry.hpp"
@@ -194,11 +170,11 @@ uint KlassInfoTable::hash(const Klass* p) {
 
 KlassInfoEntry* KlassInfoTable::lookup(Klass* k) {
   uint         idx = hash(k) % _size;
-  assert(_buckets != NULL, "Allocation failure should have been caught");
+  assert(_buckets != NULL, "Allocation failure should have been caught");
   KlassInfoEntry*  e   = _buckets[idx].lookup(k);
   // Lookup may fail if this is a new klass for which we
   // could not allocate space for an new entry.
-  assert(e == NULL || k == e->klass(), "must be equal");
+  assert(e == NULL || k == e->klass(), "must be equal");
   return e;
 }
 
@@ -220,7 +196,7 @@ bool KlassInfoTable::record_instance(const oop obj) {
 }
 
 void KlassInfoTable::iterate(KlassInfoClosure* cic) {
-  assert(_size == 0 || _buckets != NULL, "Allocation failure should have been caught");
+  assert(_size == 0 || _buckets != NULL, "Allocation failure should have been caught");
   for (int index = 0; index < _size; index++) {
     _buckets[index].iterate(cic);
   }
@@ -369,7 +345,7 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
     // Add the class to the subclass array of its superclass.
     if (super != NULL) {
       KlassInfoEntry* super_cie = cit.lookup(super);
-      assert(super_cie != NULL, "could not lookup superclass");
+      assert(super_cie != NULL, "could not lookup superclass");
       super_cie->add_subclass(cie);
     }
   }
@@ -392,7 +368,7 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
   // maintain the list of classes we still need to process. Start things off
   // by priming it with java.lang.Object.
   KlassInfoEntry* jlo_cie = cit.lookup(SystemDictionary::Object_klass());
-  assert(jlo_cie != NULL, "could not lookup java.lang.Object");
+  assert(jlo_cie != NULL, "could not lookup java.lang.Object");
   class_stack.push(jlo_cie);
 
   // Repeatedly pop the top item off the stack, print its class info,
@@ -772,8 +748,8 @@ class FindInstanceClosure : public ObjectClosure {
 };
 
 void HeapInspection::find_instances_at_safepoint(Klass* k, GrowableArray<oop>* result) {
-  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
-  assert(Heap_lock->is_locked(), "should have the Heap_lock");
+  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
+  assert(Heap_lock->is_locked(), "should have the Heap_lock");
 
   // Ensure that the heap is parsable
   Universe::heap()->ensure_parsability(false);  // no need to retire TALBs

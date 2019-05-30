@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_MARKOOP_HPP
 #define SHARE_VM_OOPS_MARKOOP_HPP
 
@@ -113,7 +89,7 @@ class markOopDesc: public oopDesc {
          biased_lock_bits         = 1,
          max_hash_bits            = BitsPerWord - age_bits - lock_bits - biased_lock_bits,
          hash_bits                = max_hash_bits > 31 ? 31 : max_hash_bits,
-         cms_bits                 = LP64_ONLY(1) NOT_LP64(0),
+         cms_bits                 = 1,
          epoch_bits               = 2
   };
 
@@ -138,22 +114,13 @@ class markOopDesc: public oopDesc {
          epoch_mask_in_place      = epoch_mask << epoch_shift,
          cms_mask                 = right_n_bits(cms_bits),
          cms_mask_in_place        = cms_mask << cms_shift
-#ifndef _WIN64
-         ,hash_mask               = right_n_bits(hash_bits),
+         , hash_mask               = right_n_bits(hash_bits),
          hash_mask_in_place       = (address_word)hash_mask << hash_shift
-#endif
   };
 
   // Alignment of JavaThread pointers encoded in object header required by biased locking
   enum { biased_lock_alignment    = 2 << (epoch_shift + epoch_bits)
   };
-
-#ifdef _WIN64
-    // These values are too big for Win64
-    const static uintptr_t hash_mask = right_n_bits(hash_bits);
-    const static uintptr_t hash_mask_in_place  =
-                            (address_word)hash_mask << hash_shift;
-#endif
 
   enum { locked_value             = 0,
          unlocked_value           = 1,
@@ -182,7 +149,7 @@ class markOopDesc: public oopDesc {
     return (mask_bits(value(), biased_lock_mask_in_place) == biased_lock_pattern);
   }
   JavaThread* biased_locker() const {
-    assert(has_bias_pattern(), "should not call this otherwise");
+    assert(has_bias_pattern(), "should not call this otherwise");
     return (JavaThread*) ((intptr_t) (mask_bits(value(), ~(biased_lock_mask_in_place | age_mask_in_place | epoch_mask_in_place))));
   }
   // Indicates that the mark has the bias bit set but that it has not
@@ -194,12 +161,12 @@ class markOopDesc: public oopDesc {
   // changes due to too many bias revocations occurring, the biases
   // from the previous epochs are all considered invalid.
   int bias_epoch() const {
-    assert(has_bias_pattern(), "should not call this otherwise");
+    assert(has_bias_pattern(), "should not call this otherwise");
     return (mask_bits(value(), epoch_mask_in_place) >> epoch_shift);
   }
   markOop set_bias_epoch(int epoch) {
-    assert(has_bias_pattern(), "should not call this otherwise");
-    assert((epoch & (~epoch_mask)) == 0, "epoch overflow");
+    assert(has_bias_pattern(), "should not call this otherwise");
+    assert((epoch & (~epoch_mask)) == 0, "epoch overflow");
     return markOop(mask_bits(value(), ~epoch_mask_in_place) | (epoch << epoch_shift));
   }
   markOop incr_bias_epoch() {
@@ -275,14 +242,14 @@ class markOopDesc: public oopDesc {
     return ((value() & lock_mask_in_place) == locked_value);
   }
   BasicLock* locker() const {
-    assert(has_locker(), "check");
+    assert(has_locker(), "check");
     return (BasicLock*) value();
   }
   bool has_monitor() const {
     return ((value() & monitor_value) != 0);
   }
   ObjectMonitor* monitor() const {
-    assert(has_monitor(), "check");
+    assert(has_monitor(), "check");
     // Use xor instead of &~ to provide one extra tag-bit check.
     return (ObjectMonitor*) (value() ^ monitor_value);
   }
@@ -290,12 +257,12 @@ class markOopDesc: public oopDesc {
     return ((value() & unlocked_value) == 0);
   }
   markOop displaced_mark_helper() const {
-    assert(has_displaced_mark_helper(), "check");
+    assert(has_displaced_mark_helper(), "check");
     intptr_t ptr = (value() & ~monitor_value);
     return *(markOop*)ptr;
   }
   void set_displaced_mark_helper(markOop m) const {
-    assert(has_displaced_mark_helper(), "check");
+    assert(has_displaced_mark_helper(), "check");
     intptr_t ptr = (value() & ~monitor_value);
     *(markOop*)ptr = m;
   }
@@ -320,9 +287,9 @@ class markOopDesc: public oopDesc {
   }
   static markOop encode(JavaThread* thread, uint age, int bias_epoch) {
     intptr_t tmp = (intptr_t) thread;
-    assert(UseBiasedLocking && ((tmp & (epoch_mask_in_place | age_mask_in_place | biased_lock_mask_in_place)) == 0), "misaligned JavaThread pointer");
-    assert(age <= max_age, "age too large");
-    assert(bias_epoch <= max_bias_epoch, "bias epoch too large");
+    assert(UseBiasedLocking && ((tmp & (epoch_mask_in_place | age_mask_in_place | biased_lock_mask_in_place)) == 0), "misaligned JavaThread pointer");
+    assert(age <= max_age, "age too large");
+    assert(bias_epoch <= max_bias_epoch, "bias epoch too large");
     return (markOop) (tmp | (bias_epoch << epoch_shift) | (age << age_shift) | biased_lock_pattern);
   }
 
@@ -335,7 +302,7 @@ class markOopDesc: public oopDesc {
 
   uint    age()               const { return mask_bits(value() >> age_shift, age_mask); }
   markOop set_age(uint v) const {
-    assert((v & ~age_mask) == 0, "shouldn't overflow age field");
+    assert((v & ~age_mask) == 0, "shouldn't overflow age field");
     return markOop((value() & ~age_mask_in_place) | (((uintptr_t)v & age_mask) << age_shift));
   }
   markOop incr_age()          const { return age() == max_age ? markOop(this) : set_age(age() + 1); }
@@ -376,31 +343,25 @@ class markOopDesc: public oopDesc {
          size_bits                 = 35    // need for compressed oops 32G
        };
   // These values are too big for Win64
-  const static uintptr_t size_mask = LP64_ONLY(right_n_bits(size_bits))
-                                     NOT_LP64(0);
-  const static uintptr_t size_mask_in_place =
-                                     (address_word)size_mask << size_shift;
+  const static uintptr_t size_mask = right_n_bits(size_bits);
+  const static uintptr_t size_mask_in_place = (address_word)size_mask << size_shift;
 
-#ifdef _LP64
   static markOop cms_free_prototype() {
-    return markOop(((intptr_t)prototype() & ~cms_mask_in_place) |
-                   ((cms_free_chunk_pattern & cms_mask) << cms_shift));
+    return markOop(((intptr_t)prototype() & ~cms_mask_in_place) | ((cms_free_chunk_pattern & cms_mask) << cms_shift));
   }
   uintptr_t cms_encoding() const {
     return mask_bits(value() >> cms_shift, cms_mask);
   }
   bool is_cms_free_chunk() const {
-    return is_neutral() &&
-           (cms_encoding() & cms_free_chunk_pattern) == cms_free_chunk_pattern;
+    return is_neutral() && (cms_encoding() & cms_free_chunk_pattern) == cms_free_chunk_pattern;
   }
 
   size_t get_size() const       { return (size_t)(value() >> size_shift); }
   static markOop set_size_and_free(size_t size) {
-    assert((size & ~size_mask) == 0, "shouldn't overflow size field");
+    assert((size & ~size_mask) == 0, "shouldn't overflow size field");
     return markOop(((intptr_t)cms_free_prototype() & ~size_mask_in_place) |
                    (((intptr_t)size & size_mask) << size_shift));
   }
-#endif // _LP64
 };
 
-#endif // SHARE_VM_OOPS_MARKOOP_HPP
+#endif

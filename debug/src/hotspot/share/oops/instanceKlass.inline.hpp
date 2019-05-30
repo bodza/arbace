@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_INSTANCEKLASS_INLINE_HPP
 #define SHARE_VM_OOPS_INSTANCEKLASS_INLINE_HPP
 
@@ -82,9 +58,7 @@ ALWAYSINLINE void InstanceKlass::oop_oop_iterate_oop_map_bounded(OopMapBlock* ma
 
   T* const l   = (T*)mr.start();
   T* const h   = (T*)mr.end();
-  assert(mask_bits((intptr_t)l, sizeof(T)-1) == 0 &&
-         mask_bits((intptr_t)h, sizeof(T)-1) == 0,
-         "bounded region must be properly aligned");
+  assert(mask_bits((intptr_t)l, sizeof(T)-1) == 0 && mask_bits((intptr_t)h, sizeof(T)-1) == 0, "bounded region must be properly aligned");
 
   if (p < l) {
     p = l;
@@ -142,8 +116,7 @@ ALWAYSINLINE int InstanceKlass::oop_oop_iterate(oop obj, OopClosureType* closure
 
 template <typename T, class OopClosureType>
 ALWAYSINLINE int InstanceKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closure) {
-  assert(!Devirtualizer::do_metadata(closure),
-      "Code to handle metadata is not implemented");
+  assert(!Devirtualizer::do_metadata(closure), "Code to handle metadata is not implemented");
 
   oop_oop_iterate_oop_maps_reverse<T>(obj, closure);
 
@@ -163,4 +136,4 @@ ALWAYSINLINE int InstanceKlass::oop_oop_iterate_bounded(oop obj, OopClosureType*
   return size_helper();
 }
 
-#endif // SHARE_VM_OOPS_INSTANCEKLASS_INLINE_HPP
+#endif

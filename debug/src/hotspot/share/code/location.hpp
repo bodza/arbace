@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_LOCATION_HPP
 #define SHARE_VM_CODE_LOCATION_HPP
 
@@ -59,7 +35,6 @@ class Location {
     narrowoop                   // Narrow Oop (please GC me!)
   };
 
-
  private:
   enum {
     TYPE_MASK    = (juint) 0x0F,
@@ -75,9 +50,9 @@ class Location {
   // Create a bit-packed Location
   Location(Where where_, Type type_, unsigned offset_) {
     set(where_, type_, offset_);
-    assert( where () == where_ , "" );
-    assert( type  () == type_  , "" );
-    assert( offset() == offset_, "" );
+    assert( where () == where_ , "" );
+    assert( type  () == type_  , "" );
+    assert( offset() == offset_, "" );
   }
 
   inline void set(Where where_, Type type_, unsigned offset_) {
@@ -104,10 +79,16 @@ class Location {
   bool is_register() const    { return where() == in_register; }
   bool is_stack() const       { return where() == on_stack;    }
 
-  int stack_offset() const    { assert(where() == on_stack,    "wrong Where"); return offset()<<LogBytesPerInt; }
-  int register_number() const { assert(where() == in_register, "wrong Where"); return offset()   ; }
+  int stack_offset() const    {
+    assert(where() == on_stack,    "wrong Where");
+    return offset()<<LogBytesPerInt; }
+  int register_number() const {
+    assert(where() == in_register, "wrong Where");
+    return offset()   ; }
 
-  VMReg reg() const { assert(where() == in_register, "wrong Where"); return VMRegImpl::as_VMReg(offset())   ; }
+  VMReg reg() const {
+    assert(where() == in_register, "wrong Where");
+    return VMRegImpl::as_VMReg(offset())   ; }
 
   // Printing
   void print_on(outputStream* st) const;
@@ -120,4 +101,4 @@ class Location {
   static bool legal_offset_in_bytes(int offset_in_bytes);
 };
 
-#endif // SHARE_VM_CODE_LOCATION_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1ConcurrentMarkThread.inline.hpp"
@@ -74,8 +50,7 @@ bool VM_G1CollectForAllocation::doit_prologue() {
 
 void VM_G1CollectForAllocation::doit() {
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  assert(!_should_initiate_conc_mark || g1h->should_do_concurrent_full_gc(_gc_cause),
-      "only a GC locker, a System.gc(), stats update, whitebox, or a hum allocation induced GC should start a cycle");
+  assert(!_should_initiate_conc_mark || g1h->should_do_concurrent_full_gc(_gc_cause), "only a GC locker, a System.gc(), stats update, whitebox, or a hum allocation induced GC should start a cycle");
 
   if (_word_size > 0) {
     // An allocation has been requested. So, try to do that first.
@@ -120,7 +95,7 @@ void VM_G1CollectForAllocation::doit() {
     // just started marking cycle is complete - which may be a while. So
     // we do NOT retry the GC.
     if (!res) {
-      assert(_word_size == 0, "Concurrent Full GC/Humongous Object IM shouldn't be allocating");
+      assert(_word_size == 0, "Concurrent Full GC/Humongous Object IM shouldn't be allocating");
       if (_gc_cause != GCCause::_g1_humongous_allocation) {
         _should_retry_gc = true;
       }
@@ -150,7 +125,7 @@ void VM_G1CollectForAllocation::doit() {
     }
     guarantee(_pause_succeeded, "Elevated collections during the safepoint must always succeed.");
   } else {
-    assert(_result == NULL, "invariant");
+    assert(_result == NULL, "invariant");
     // The only reason for the pause to not be successful is that, the GC locker is
     // active (or has become active since the prologue was executed). In this case
     // we should retry the pause after waiting for the GC locker to become inactive.
@@ -167,8 +142,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
   // finish.
   if (GCCause::is_user_requested_gc(_gc_cause) &&
       _should_initiate_conc_mark) {
-    assert(ExplicitGCInvokesConcurrent,
-           "the only way to be here is if ExplicitGCInvokesConcurrent is set");
+    assert(ExplicitGCInvokesConcurrent, "the only way to be here is if ExplicitGCInvokesConcurrent is set");
 
     G1CollectedHeap* g1h = G1CollectedHeap::heap();
 
@@ -186,7 +160,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
       // The following is largely copied from CMS
 
       Thread* thr = Thread::current();
-      assert(thr->is_Java_thread(), "invariant");
+      assert(thr->is_Java_thread(), "invariant");
       JavaThread* jt = (JavaThread*)thr;
       ThreadToNativeFromVM native(jt);
 

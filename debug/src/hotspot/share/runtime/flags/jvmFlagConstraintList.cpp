@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
@@ -33,12 +9,7 @@
 #include "runtime/flags/jvmFlagConstraintsRuntime.hpp"
 #include "runtime/os.hpp"
 #include "utilities/macros.hpp"
-#ifdef COMPILER1
 #include "c1/c1_globals.hpp"
-#endif
-#ifdef COMPILER2
-#include "opto/c2_globals.hpp"
-#endif
 
 class JVMFlagConstraint_bool : public JVMFlagConstraint {
   JVMFlagConstraintFunc_bool _constraint;
@@ -248,20 +219,10 @@ void emit_constraint_double(const char* name, const double* ptr, JVMFlagConstrai
 #define EMIT_CONSTRAINT_PRODUCT_RW_FLAG(type, name, value, doc)   ); emit_constraint_##type(#name,&name
 #define EMIT_CONSTRAINT_PD_PRODUCT_FLAG(type, name, doc)          ); emit_constraint_##type(#name,&name
 #define EMIT_CONSTRAINT_PD_DIAGNOSTIC_FLAG(type, name, doc)       ); emit_constraint_##type(#name,&name
-#ifndef PRODUCT
-#define EMIT_CONSTRAINT_DEVELOPER_FLAG(type, name, value, doc)    ); emit_constraint_##type(#name,&name
-#define EMIT_CONSTRAINT_PD_DEVELOPER_FLAG(type, name, doc)        ); emit_constraint_##type(#name,&name
-#define EMIT_CONSTRAINT_NOTPRODUCT_FLAG(type, name, value, doc)   ); emit_constraint_##type(#name,&name
-#else
 #define EMIT_CONSTRAINT_DEVELOPER_FLAG(type, name, value, doc)    ); emit_constraint_no(#name,&name
 #define EMIT_CONSTRAINT_PD_DEVELOPER_FLAG(type, name, doc)        ); emit_constraint_no(#name,&name
 #define EMIT_CONSTRAINT_NOTPRODUCT_FLAG(type, name, value, doc)   ); emit_constraint_no(#name,&name
-#endif
-#ifdef _LP64
 #define EMIT_CONSTRAINT_LP64_PRODUCT_FLAG(type, name, value, doc) ); emit_constraint_##type(#name,&name
-#else
-#define EMIT_CONSTRAINT_LP64_PRODUCT_FLAG(type, name, value, doc) ); emit_constraint_no(#name,&name
-#endif
 
 // Generate func argument to pass into emit_constraint_xxx functions
 #define EMIT_CONSTRAINT_CHECK(func, type)                         , func, JVMFlagConstraint::type
@@ -301,8 +262,6 @@ void JVMFlagConstraintList::init(void) {
                                      EMIT_CONSTRAINT_CHECK,
                                      IGNORE_WRITEABLE));
 
-
-#ifdef COMPILER1
   emit_constraint_no(NULL C1_FLAGS(EMIT_CONSTRAINT_DEVELOPER_FLAG,
                                    EMIT_CONSTRAINT_PD_DEVELOPER_FLAG,
                                    EMIT_CONSTRAINT_PRODUCT_FLAG,
@@ -313,21 +272,6 @@ void JVMFlagConstraintList::init(void) {
                                    IGNORE_RANGE,
                                    EMIT_CONSTRAINT_CHECK,
                                    IGNORE_WRITEABLE));
-#endif // COMPILER1
-
-#ifdef COMPILER2
-  emit_constraint_no(NULL C2_FLAGS(EMIT_CONSTRAINT_DEVELOPER_FLAG,
-                                   EMIT_CONSTRAINT_PD_DEVELOPER_FLAG,
-                                   EMIT_CONSTRAINT_PRODUCT_FLAG,
-                                   EMIT_CONSTRAINT_PD_PRODUCT_FLAG,
-                                   EMIT_CONSTRAINT_DIAGNOSTIC_FLAG,
-                                   EMIT_CONSTRAINT_PD_DIAGNOSTIC_FLAG,
-                                   EMIT_CONSTRAINT_EXPERIMENTAL_FLAG,
-                                   EMIT_CONSTRAINT_NOTPRODUCT_FLAG,
-                                   IGNORE_RANGE,
-                                   EMIT_CONSTRAINT_CHECK,
-                                   IGNORE_WRITEABLE));
-#endif // COMPILER2
 }
 
 JVMFlagConstraint* JVMFlagConstraintList::find(const char* name) {

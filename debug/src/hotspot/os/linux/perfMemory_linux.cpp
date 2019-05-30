@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "logging/log.hpp"
@@ -93,7 +69,7 @@ static void delete_standard_memory(char* addr, size_t size) {
 static void save_memory_to_file(char* addr, size_t size) {
 
  const char* destfile = PerfMemory::get_perfdata_file_path();
- assert(destfile[0] != '\0', "invalid PerfData file path");
+ assert(destfile[0] != '\0', "invalid PerfData file path");
 
   int result;
 
@@ -132,7 +108,6 @@ static void save_memory_to_file(char* addr, size_t size) {
   FREE_C_HEAP_ARRAY(char, destfile);
 }
 
-
 // Shared Memory Implementation Details
 
 // Note: the solaris and linux shared memory implementation uses the mmap
@@ -147,7 +122,6 @@ static void save_memory_to_file(char* addr, size_t size) {
 // which is always a local file system and is sometimes a RAM based file
 // system.
 
-
 // return the user specific temporary directory name.
 //
 // If containerized process, get dirname of
@@ -160,7 +134,7 @@ static void save_memory_to_file(char* addr, size_t size) {
 static char* get_user_tmp_dir(const char* user, int vmid, int nspid) {
   char buffer[TMP_BUFFER_LEN];
   char* tmpdir = (char *)os::get_temp_directory();
-  assert(strlen(tmpdir) == 4, "No longer using /tmp - update buffer size");
+  assert(strlen(tmpdir) == 4, "No longer using /tmp - update buffer size");
 
   if (nspid != -1) {
     jio_snprintf(buffer, TMP_BUFFER_LEN, "/proc/%d/root%s", vmid, tmpdir);
@@ -211,7 +185,6 @@ static pid_t filename_to_pid(const char* filename) {
   return pid;
 }
 
-
 // Check if the given statbuf is considered a secure directory for
 // the backing store files. Returns true if the directory is considered
 // a secure location. Returns false if the statbuf is a symbolic link or
@@ -242,7 +215,6 @@ static bool is_statbuf_secure(struct stat *statp) {
   return true;
 }
 
-
 // Check if the given path is considered a secure directory for
 // the backing store files. Returns true if the directory exists
 // and is considered a secure location. Returns false if the path
@@ -261,7 +233,6 @@ static bool is_directory_secure(const char* path) {
   return is_statbuf_secure(&statbuf);
 }
 
-
 // Check if the given directory file descriptor is considered a secure
 // directory for the backing store files. Returns true if the directory
 // exists and is considered a secure location. Returns false if the path
@@ -279,7 +250,6 @@ static bool is_dirfd_secure(int dir_fd) {
   // The path exists, now check its mode.
   return is_statbuf_secure(&statbuf);
 }
-
 
 // Check to make sure fd1 and fd2 are referencing the same file system object.
 //
@@ -304,7 +274,6 @@ static bool is_same_fsobject(int fd1, int fd2) {
     return false;
   }
 }
-
 
 // Open the directory of the given path and validate it.
 // Return a DIR * of the open directory.
@@ -448,7 +417,6 @@ static bool is_file_secure(int fd, const char *filename) {
   return true;
 }
 
-
 // return the user name for the given user id
 //
 // the caller is expected to free the allocated memory.
@@ -537,7 +505,7 @@ static char* get_user_name_slow(int vmid, int nspid, TRAPS) {
   char buffer[MAXPATHLEN + 1];
   int searchpid;
   char* tmpdirname = (char *)os::get_temp_directory();
-  assert(strlen(tmpdirname) == 4, "No longer using /tmp - update buffer size");
+  assert(strlen(tmpdirname) == 4, "No longer using /tmp - update buffer size");
 
   if (nspid == -1) {
     searchpid = vmid;
@@ -717,7 +685,6 @@ static char* get_sharedmem_filename(const char* dirname, int vmid, int nspid) {
   return name;
 }
 
-
 // remove file
 //
 // this method removes the file specified by the given path
@@ -739,7 +706,6 @@ static void remove_file(const char* path) {
     }
   }
 }
-
 
 // cleanup stale shared memory resources
 //
@@ -1023,8 +989,7 @@ static char* mmap_create_shared(size_t size) {
   // cleanup any stale shared memory files
   cleanup_sharedmem_resources(dirname);
 
-  assert(((size > 0) && (size % os::vm_page_size() == 0)),
-         "unexpected PerfMemory region size");
+  assert(((size > 0) && (size % os::vm_page_size() == 0)), "unexpected PerfMemory region size");
 
   fd = create_sharedmem_resources(dirname, short_filename, size);
 
@@ -1039,7 +1004,7 @@ static char* mmap_create_shared(size_t size) {
   mapAddress = (char*)::mmap((char*)0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
   result = ::close(fd);
-  assert(result != OS_ERR, "could not close file");
+  assert(result != OS_ERR, "could not close file");
 
   if (mapAddress == MAP_FAILED) {
     if (PrintMiscellaneous && Verbose) {
@@ -1085,7 +1050,7 @@ static void delete_shared_memory(char* addr, size_t size) {
   // not performed. The memory will be reclaimed by the OS upon termination of
   // the process. The backing store file is deleted from the file system.
 
-  assert(!PerfDisableSharedMem, "shouldn't be here");
+  assert(!PerfDisableSharedMem, "shouldn't be here");
 
   if (backing_store_file_name != NULL) {
     remove_file(backing_store_file_name);
@@ -1218,12 +1183,12 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
     size = *sizep;
   }
 
-  assert(size > 0, "unexpected size <= 0");
+  assert(size > 0, "unexpected size <= 0");
 
   mapAddress = (char*)::mmap((char*)0, size, mmap_prot, MAP_SHARED, fd, 0);
 
   result = ::close(fd);
-  assert(result != OS_ERR, "could not close file");
+  assert(result != OS_ERR, "could not close file");
 
   if (mapAddress == MAP_FAILED) {
     if (PrintMiscellaneous && Verbose) {
@@ -1271,7 +1236,6 @@ void PerfMemory::create_memory_region(size_t size) {
   }
 
   if (_start != NULL) _capacity = size;
-
 }
 
 // delete the PerfData memory region
@@ -1282,7 +1246,7 @@ void PerfMemory::create_memory_region(size_t size) {
 //
 void PerfMemory::delete_memory_region() {
 
-  assert((start() != NULL && capacity() > 0), "verify proper state");
+  assert((start() != NULL && capacity() > 0), "verify proper state");
 
   // If user specifies PerfDataSaveFile, it will save the performance data
   // to the specified file name no matter whether PerfDataSaveToFile is specified
@@ -1344,8 +1308,8 @@ void PerfMemory::attach(const char* user, int vmid, PerfMemoryMode mode, char** 
 //
 void PerfMemory::detach(char* addr, size_t bytes, TRAPS) {
 
-  assert(addr != 0, "address sanity check");
-  assert(bytes > 0, "capacity sanity check");
+  assert(addr != 0, "address sanity check");
+  assert(bytes > 0, "capacity sanity check");
 
   if (PerfMemory::contains(addr) || PerfMemory::contains(addr + bytes - 1)) {
     // prevent accidental detachment of this process's PerfMemory region

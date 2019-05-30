@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2005, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_LINEARSCAN_HPP
 #define SHARE_VM_C1_C1_LINEARSCAN_HPP
 
@@ -68,7 +44,6 @@ enum IntervalKind {
   firstKind = fixedKind
 };
 
-
 // during linear scan an interval is in one of four states in
 enum IntervalState {
   unhandledState = 0, // unhandled state (not processed yet)
@@ -77,7 +52,6 @@ enum IntervalState {
   handledState  = 3,  // spilled or not life again
   invalidState = -1
 };
-
 
 enum IntervalSpillState {
   noDefinitionFound,  // starting state of calculation: no definition found yet
@@ -91,13 +65,11 @@ enum IntervalSpillState {
   noOptimization      // the interval has more then one definition (e.g. resulting from phi moves), so stores to memory are not optimized
 };
 
-
 #define for_each_interval_kind(kind) \
   for (IntervalKind kind = firstKind; kind < nofKinds; kind = (IntervalKind)(kind + 1))
 
 #define for_each_visitor_mode(mode) \
   for (LIR_OpVisitState::OprMode mode = LIR_OpVisitState::firstMode; mode < LIR_OpVisitState::numModes; mode = (LIR_OpVisitState::OprMode)(mode + 1))
-
 
 class LinearScan : public CompilationResourceObj {
   // declare classes used by LinearScan as friends because they
@@ -167,8 +139,12 @@ class LinearScan : public CompilationResourceObj {
   bool          bailed_out() const               { return compilation()->bailed_out(); }
 
   // access to block list (sorted in linear scan order)
-  int           block_count() const              { assert(_cached_blocks.length() == ir()->linear_scan_order()->length(), "invalid cached block list"); return _cached_blocks.length(); }
-  BlockBegin*   block_at(int idx) const          { assert(_cached_blocks.at(idx) == ir()->linear_scan_order()->at(idx), "invalid cached block list");   return _cached_blocks.at(idx); }
+  int           block_count() const              {
+    assert(_cached_blocks.length() == ir()->linear_scan_order()->length(), "invalid cached block list");
+    return _cached_blocks.length(); }
+  BlockBegin*   block_at(int idx) const          {
+    assert(_cached_blocks.at(idx) == ir()->linear_scan_order()->at(idx), "invalid cached block list");
+    return _cached_blocks.at(idx); }
 
   int           num_virtual_regs() const         { return _num_virtual_regs; }
   // size of live_in and live_out sets of BasicBlocks (BitMap needs rounded size for iteration)
@@ -185,7 +161,6 @@ class LinearScan : public CompilationResourceObj {
   bool use_fpu_stack_allocation() const          { return false; }
 #endif
 
-
   // access to interval list
   int           interval_count() const           { return _intervals.length(); }
   Interval*     interval_at(int reg_num) const   { return _intervals.at(reg_num); }
@@ -193,16 +168,25 @@ class LinearScan : public CompilationResourceObj {
   IntervalList* new_intervals_from_allocation() const { return _new_intervals_from_allocation; }
 
   // access to LIR_Ops and Blocks indexed by op_id
-  int          max_lir_op_id() const                { assert(_lir_ops.length() > 0, "no operations"); return (_lir_ops.length() - 1) << 1; }
-  LIR_Op*      lir_op_with_id(int op_id) const      { assert(op_id >= 0 && op_id <= max_lir_op_id() && op_id % 2 == 0, "op_id out of range or not even"); return _lir_ops.at(op_id >> 1); }
-  BlockBegin*  block_of_op_with_id(int op_id) const { assert(_block_of_op.length() > 0 && op_id >= 0 && op_id <= max_lir_op_id() + 1, "op_id out of range"); return _block_of_op.at(op_id >> 1); }
+  int          max_lir_op_id() const                {
+    assert(_lir_ops.length() > 0, "no operations");
+    return (_lir_ops.length() - 1) << 1; }
+  LIR_Op*      lir_op_with_id(int op_id) const      {
+    assert(op_id >= 0 && op_id <= max_lir_op_id() && op_id % 2 == 0, "op_id out of range or not even");
+    return _lir_ops.at(op_id >> 1); }
+  BlockBegin*  block_of_op_with_id(int op_id) const {
+    assert(_block_of_op.length() > 0 && op_id >= 0 && op_id <= max_lir_op_id() + 1, "op_id out of range");
+    return _block_of_op.at(op_id >> 1); }
 
   bool is_block_begin(int op_id)                    { return op_id == 0 || block_of_op_with_id(op_id) != block_of_op_with_id(op_id - 1); }
   bool covers_block_begin(int op_id_1, int op_id_2) { return block_of_op_with_id(op_id_1) != block_of_op_with_id(op_id_2); }
 
-  bool has_call(int op_id)                          { assert(op_id % 2 == 0, "must be even"); return _has_call.at(op_id >> 1); }
-  bool has_info(int op_id)                          { assert(op_id % 2 == 0, "must be even"); return _has_info.at(op_id >> 1); }
-
+  bool has_call(int op_id)                          {
+    assert(op_id % 2 == 0, "must be even");
+    return _has_call.at(op_id >> 1); }
+  bool has_info(int op_id)                          {
+    assert(op_id % 2 == 0, "must be even");
+    return _has_info.at(op_id >> 1); }
 
   // functions for converting LIR-Operands to register numbers
   static bool is_valid_reg_num(int reg_num)         { return reg_num >= 0; }
@@ -220,7 +204,6 @@ class LinearScan : public CompilationResourceObj {
 
   static bool is_in_fpu_register(const Interval* i);
   static bool is_oop_interval(const Interval* i);
-
 
   // General helper functions
   int         allocate_spill_slot(bool double_word);
@@ -259,7 +242,6 @@ class LinearScan : public CompilationResourceObj {
   // (sets live_in and live_out for each block)
   void compute_global_live_sets();
 
-
   // Phase 4: build intervals
   // (fills the list _intervals)
   //
@@ -286,12 +268,10 @@ class LinearScan : public CompilationResourceObj {
 
   void build_intervals();
 
-
   // Phase 5: actual register allocation
   // (Uses LinearScanWalker)
   //
   // helper functions for building a sorted list of intervals
-  NOT_PRODUCT(bool is_sorted(IntervalArray* intervals);)
   static int interval_cmp(Interval** a, Interval** b);
   void add_to_list(Interval** first, Interval** prev, Interval* interval);
   void create_unhandled_lists(Interval** list1, Interval** list2, bool (is_list1)(const Interval* i), bool (is_list2)(const Interval* i));
@@ -299,7 +279,6 @@ class LinearScan : public CompilationResourceObj {
   void sort_intervals_before_allocation();
   void sort_intervals_after_allocation();
   void allocate_registers();
-
 
   // Phase 6: resolve data flow
   // (insert moves at edges between blocks if intervals have been split)
@@ -360,28 +339,11 @@ class LinearScan : public CompilationResourceObj {
   void assign_reg_num(LIR_OpList* instructions, IntervalWalker* iw);
   void assign_reg_num();
 
-
   // Phase 8: fpu stack allocation
   // (Used only on x86 when fpu operands are present)
   void allocate_fpu_stack();
 
-
   // helper functions for printing state
-#ifndef PRODUCT
-  static void print_bitmap(BitMap& bitmap);
-  void        print_intervals(const char* label);
-  void        print_lir(int level, const char* label, bool hir_valid = true);
-#endif
-
-#ifdef ASSERT
-  // verification functions for allocation
-  // (check that all intervals have a correct register and that no registers are overwritten)
-  void verify();
-  void verify_intervals();
-  void verify_no_oops_in_fixed_intervals();
-  void verify_constants();
-  void verify_registers();
-#endif
 
  public:
   // creation
@@ -392,15 +354,12 @@ class LinearScan : public CompilationResourceObj {
 
   // accessors used by Compilation
   int         max_spills()  const { return _max_spills; }
-  int         num_calls() const   { assert(_num_calls >= 0, "not set"); return _num_calls; }
+  int         num_calls() const   {
+    assert(_num_calls >= 0, "not set");
+    return _num_calls; }
 
   // entry functions for printing
-#ifndef PRODUCT
-  static void print_statistics();
-  static void print_timers(double total);
-#endif
 };
-
 
 // Helper class for ordering moves that are inserted at the same position in the LIR
 // When moves between registers are inserted, it is important that the moves are
@@ -423,8 +382,13 @@ class MoveResolver: public StackObj {
   bool             _multiple_reads_allowed;
   int              _register_blocked[LinearScan::nof_regs];
 
-  int  register_blocked(int reg)                    { assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds"); return _register_blocked[reg]; }
-  void set_register_blocked(int reg, int direction) { assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds"); assert(direction == 1 || direction == -1, "out of bounds"); _register_blocked[reg] += direction; }
+  int  register_blocked(int reg)                    {
+    assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds");
+    return _register_blocked[reg]; }
+  void set_register_blocked(int reg, int direction) {
+    assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds");
+                                                      assert(direction == 1 || direction == -1, "out of bounds");
+                                                      _register_blocked[reg] += direction; }
 
   void block_registers(Interval* it);
   void unblock_registers(Interval* it);
@@ -435,12 +399,10 @@ class MoveResolver: public StackObj {
   void insert_move(Interval* from_interval, Interval* to_interval);
   void insert_move(LIR_Opr from_opr, Interval* to_interval);
 
-  DEBUG_ONLY(void verify_before_resolve();)
   void resolve_mappings();
  public:
   MoveResolver(LinearScan* allocator);
 
-  DEBUG_ONLY(void check_empty();)
   void set_multiple_reads_allowed() { _multiple_reads_allowed = true; }
   void set_insert_position(LIR_List* insert_list, int insert_idx);
   void move_insert_position(LIR_List* insert_list, int insert_idx);
@@ -451,7 +413,6 @@ class MoveResolver: public StackObj {
   LinearScan* allocator()   { return _allocator; }
   bool has_mappings()       { return _mapping_from.length() > 0; }
 };
-
 
 class Range : public CompilationResourceObj {
   friend class Interval;
@@ -481,9 +442,8 @@ class Range : public CompilationResourceObj {
   void             set_next(Range* next)         { _next = next; }
 
   // for testing
-  void             print(outputStream* out = tty) const PRODUCT_RETURN;
+  void             print(outputStream* out = tty) const {};
 };
-
 
 // Interval is an ordered list of disjoint ranges.
 
@@ -514,7 +474,6 @@ class Interval : public CompilationResourceObj {
   Interval*        _next;         // interval iteration: sorted list of Intervals (ends with sentinel)
   IntervalState    _state;        // interval iteration: to which set belongs this interval
 
-
   int              _assigned_reg;
   int              _assigned_regHi;
 
@@ -542,13 +501,21 @@ class Interval : public CompilationResourceObj {
 
   // accessors
   int              reg_num() const               { return _reg_num; }
-  void             set_reg_num(int r)            { assert(_reg_num == -1, "cannot change reg_num"); _reg_num = r; }
-  BasicType        type() const                  { assert(_reg_num == -1 || _reg_num >= LIR_OprDesc::vreg_base, "cannot access type for fixed interval"); return _type; }
-  void             set_type(BasicType type)      { assert(_reg_num < LIR_OprDesc::vreg_base || _type == T_ILLEGAL || _type == type, "overwriting existing type"); _type = type; }
+  void             set_reg_num(int r)            {
+    assert(_reg_num == -1, "cannot change reg_num");
+    _reg_num = r; }
+  BasicType        type() const                  {
+    assert(_reg_num == -1 || _reg_num >= LIR_OprDesc::vreg_base, "cannot access type for fixed interval");
+    return _type; }
+  void             set_type(BasicType type)      {
+    assert(_reg_num < LIR_OprDesc::vreg_base || _type == T_ILLEGAL || _type == type, "overwriting existing type");
+    _type = type; }
 
   Range*           first() const                 { return _first; }
   int              from() const                  { return _first->from(); }
-  int              to()                          { if (_cached_to == -1) _cached_to = calc_to(); assert(_cached_to == calc_to(), "invalid cached value"); return _cached_to; }
+  int              to()                          { if (_cached_to == -1) _cached_to = calc_to();
+  assert(_cached_to == calc_to(), "invalid cached value");
+  return _cached_to; }
   int              num_use_positions() const     { return _use_pos_and_kinds.length() / 2; }
 
   Interval*        next() const                  { return _next; }
@@ -569,15 +536,18 @@ class Interval : public CompilationResourceObj {
   // access to split parent and split children
   bool             is_split_parent() const       { return _split_parent == this; }
   bool             is_split_child() const        { return _split_parent != this; }
-  Interval*        split_parent() const          { assert(_split_parent->is_split_parent(), "must be"); return _split_parent; }
+  Interval*        split_parent() const          {
+    assert(_split_parent->is_split_parent(), "must be");
+    return _split_parent; }
   Interval*        split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mode);
   Interval*        split_child_before_op_id(int op_id);
   bool             split_child_covers(int op_id, LIR_OpVisitState::OprMode mode);
-  DEBUG_ONLY(void  check_split_children();)
 
   // information stored in split parent, but available for all children
   int              canonical_spill_slot() const            { return split_parent()->_canonical_spill_slot; }
-  void             set_canonical_spill_slot(int slot)      { assert(split_parent()->_canonical_spill_slot == -1, "overwriting existing value"); split_parent()->_canonical_spill_slot = slot; }
+  void             set_canonical_spill_slot(int slot)      {
+    assert(split_parent()->_canonical_spill_slot == -1, "overwriting existing value");
+    split_parent()->_canonical_spill_slot = slot; }
   Interval*        current_split_child() const             { return split_parent()->_current_split_child; }
   void             make_current_split_child()              { split_parent()->_current_split_child = this; }
 
@@ -587,8 +557,12 @@ class Interval : public CompilationResourceObj {
   // for spill optimization
   IntervalSpillState spill_state() const         { return split_parent()->_spill_state; }
   int              spill_definition_pos() const  { return split_parent()->_spill_definition_pos; }
-  void             set_spill_state(IntervalSpillState state) {  assert(state >= spill_state(), "state cannot decrease"); split_parent()->_spill_state = state; }
-  void             set_spill_definition_pos(int pos) { assert(spill_definition_pos() == -1, "cannot set the position twice"); split_parent()->_spill_definition_pos = pos; }
+  void             set_spill_state(IntervalSpillState state) {
+    assert(state >= spill_state(), "state cannot decrease");
+  split_parent()->_spill_state = state; }
+  void             set_spill_definition_pos(int pos) {
+    assert(spill_definition_pos() == -1, "cannot set the position twice");
+    split_parent()->_spill_definition_pos = pos; }
   // returns true if this interval has a shadow copy on the stack that is always correct
   bool             always_in_memory() const      { return split_parent()->_spill_state == storeAtDefinition || split_parent()->_spill_state == startInMemory; }
 
@@ -619,7 +593,9 @@ class Interval : public CompilationResourceObj {
 
   // range iteration
   void   rewind_range()                          { _current = _first; }
-  void   next_range()                            { assert(this != _end, "not allowed on sentinel"); _current = _current->next(); }
+  void   next_range()                            {
+    assert(this != _end, "not allowed on sentinel");
+    _current = _current->next(); }
   int    current_from() const                    { return _current->from(); }
   int    current_to() const                      { return _current->to(); }
   bool   current_at_end() const                  { return _current == Range::end(); }
@@ -627,9 +603,8 @@ class Interval : public CompilationResourceObj {
   int    current_intersects_at(Interval* it)     { return _current->intersects_at(it->_current); };
 
   // printing
-  void print(outputStream* out = tty) const      PRODUCT_RETURN;
+  void print(outputStream* out = tty) const      {};
 };
-
 
 class IntervalWalker : public CompilationResourceObj {
  protected:
@@ -644,7 +619,6 @@ class IntervalWalker : public CompilationResourceObj {
   int              _current_position;            // the current position (intercept point through the intervals)
   IntervalKind     _current_kind;                // and whether it is fixed_kind or any_kind.
 
-
   Compilation*     compilation() const               { return _compilation; }
   LinearScan*      allocator() const                 { return _allocator; }
 
@@ -652,7 +626,8 @@ class IntervalWalker : public CompilationResourceObj {
   void             bailout(const char* msg) const    { compilation()->bailout(msg); }
   bool             bailed_out() const                { return compilation()->bailed_out(); }
 
-  void check_bounds(IntervalKind kind) { assert(kind >= fixedKind && kind <= anyKind, "invalid interval_kind"); }
+  void check_bounds(IntervalKind kind) {
+    assert(kind >= fixedKind && kind <= anyKind, "invalid interval_kind"); }
 
   Interval** unhandled_first_addr(IntervalKind kind) { check_bounds(kind); return &_unhandled_first[kind]; }
   Interval** active_first_addr(IntervalKind kind)    { check_bounds(kind); return &_active_first[kind]; }
@@ -696,7 +671,6 @@ class IntervalWalker : public CompilationResourceObj {
 
   int current_position()           { return _current_position; }
 };
-
 
 // The actual linear scan register allocator
 class LinearScanWalker : public IntervalWalker {
@@ -775,8 +749,6 @@ class LinearScanWalker : public IntervalWalker {
   void             finish_allocation()           { _move_resolver.resolve_and_append_moves(); }
 };
 
-
-
 /*
 When a block has more than one predecessor, and all predecessors end with
 the same sequence of move-instructions, than this moves can be placed once
@@ -817,8 +789,6 @@ class EdgeMoveOptimizer : public StackObj {
   static void optimize(BlockList* code);
 };
 
-
-
 class ControlFlowOptimizer : public StackObj {
  private:
   BlockList _original_preds;
@@ -836,132 +806,12 @@ class ControlFlowOptimizer : public StackObj {
   void delete_unnecessary_jumps(BlockList* code);
   void delete_jumps_to_return(BlockList* code);
 
-  DEBUG_ONLY(void verify(BlockList* code);)
-
   ControlFlowOptimizer();
  public:
   static void optimize(BlockList* code);
 };
 
-
-#ifndef PRODUCT
-
-// Helper class for collecting statistics of LinearScan
-class LinearScanStatistic : public StackObj {
- public:
-  enum Counter {
-    // general counters
-    counter_method,
-    counter_fpu_method,
-    counter_loop_method,
-    counter_exception_method,
-    counter_loop,
-    counter_block,
-    counter_loop_block,
-    counter_exception_block,
-    counter_interval,
-    counter_fixed_interval,
-    counter_range,
-    counter_fixed_range,
-    counter_use_pos,
-    counter_fixed_use_pos,
-    counter_spill_slots,
-    blank_line_1,
-
-    // counter for classes of lir instructions
-    counter_instruction,
-    counter_label,
-    counter_entry,
-    counter_return,
-    counter_call,
-    counter_move,
-    counter_cmp,
-    counter_cond_branch,
-    counter_uncond_branch,
-    counter_stub_branch,
-    counter_alu,
-    counter_alloc,
-    counter_sync,
-    counter_throw,
-    counter_unwind,
-    counter_typecheck,
-    counter_fpu_stack,
-    counter_misc_inst,
-    counter_other_inst,
-    blank_line_2,
-
-    // counter for different types of moves
-    counter_move_total,
-    counter_move_reg_reg,
-    counter_move_reg_stack,
-    counter_move_stack_reg,
-    counter_move_stack_stack,
-    counter_move_reg_mem,
-    counter_move_mem_reg,
-    counter_move_const_any,
-
-    number_of_counters,
-    invalid_counter = -1
-  };
-
- private:
-  int _counters_sum[number_of_counters];
-  int _counters_max[number_of_counters];
-
-  void inc_counter(Counter idx, int value = 1) { _counters_sum[idx] += value; }
-
-  const char* counter_name(int counter_idx);
-  Counter base_counter(int counter_idx);
-
-  void sum_up(LinearScanStatistic &method_statistic);
-  void collect(LinearScan* allocator);
-
- public:
-  LinearScanStatistic();
-  void print(const char* title);
-  static void compute(LinearScan* allocator, LinearScanStatistic &global_statistic);
-};
-
-
-// Helper class for collecting compilation time of LinearScan
-class LinearScanTimers : public StackObj {
- public:
-  enum Timer {
-    timer_do_nothing,
-    timer_number_instructions,
-    timer_compute_local_live_sets,
-    timer_compute_global_live_sets,
-    timer_build_intervals,
-    timer_sort_intervals_before,
-    timer_allocate_registers,
-    timer_resolve_data_flow,
-    timer_sort_intervals_after,
-    timer_eliminate_spill_moves,
-    timer_assign_reg_num,
-    timer_allocate_fpu_stack,
-    timer_optimize_lir,
-
-    number_of_timers
-  };
-
- private:
-  elapsedTimer _timers[number_of_timers];
-  const char*  timer_name(int idx);
-
- public:
-  LinearScanTimers();
-
-  void begin_method();                     // called for each method when register allocation starts
-  void end_method(LinearScan* allocator);  // called for each method when register allocation completed
-  void print(double total_time);           // called before termination of VM to print global summary
-
-  elapsedTimer* timer(int idx) { return &(_timers[idx]); }
-};
-
-
-#endif // ifndef PRODUCT
-
 // Pick up platform-dependent implementation details
 #include CPU_HEADER(c1_LinearScan)
 
-#endif // SHARE_VM_C1_C1_LINEARSCAN_HPP
+#endif

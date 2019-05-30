@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_IR.hpp"
@@ -29,20 +5,7 @@
 #include "c1/c1_ValueSet.inline.hpp"
 #include "c1/c1_ValueStack.hpp"
 
-#ifndef PRODUCT
-
-  int ValueMap::_number_of_finds = 0;
-  int ValueMap::_number_of_hits = 0;
-  int ValueMap::_number_of_kills = 0;
-
-  #define TRACE_VALUE_NUMBERING(code) if (PrintValueNumbering) { code; }
-
-#else
-
-  #define TRACE_VALUE_NUMBERING(code)
-
-#endif
-
+#define TRACE_VALUE_NUMBERING(code)
 
 ValueMap::ValueMap()
   : _nesting(0)
@@ -50,9 +13,7 @@ ValueMap::ValueMap()
   , _killed_values()
   , _entry_count(0)
 {
-  NOT_PRODUCT(reset_statistics());
 }
-
 
 ValueMap::ValueMap(ValueMap* old)
   : _nesting(old->_nesting + 1)
@@ -65,7 +26,6 @@ ValueMap::ValueMap(ValueMap* old)
   }
   _killed_values.set_from(&old->_killed_values);
 }
-
 
 void ValueMap::increase_table_size() {
   int old_size = size();
@@ -105,19 +65,14 @@ void ValueMap::increase_table_size() {
   _entry_count = new_entry_count;
 }
 
-
 Value ValueMap::find_insert(Value x) {
   const intx hash = x->hash();
   if (hash != 0) {
-    // 0 hash means: exclude from value numbering
-    NOT_PRODUCT(_number_of_finds++);
-
     for (ValueMapEntry* entry = entry_at(entry_index(hash, size())); entry != NULL; entry = entry->next()) {
       if (entry->hash() == hash) {
         Value f = entry->value();
 
         if (!is_killed(f) && f->is_equal(x)) {
-          NOT_PRODUCT(_number_of_hits++);
           TRACE_VALUE_NUMBERING(tty->print_cr("Value Numbering: %s %c%d equal to %c%d  (size %d, entries %d, nesting-diff %d)", x->name(), x->type()->tchar(), x->id(), f->type()->tchar(), f->id(), size(), entry_count(), nesting() - entry->nesting()));
 
           if (entry->nesting() != nesting() && f->as_Constant() == NULL) {
@@ -125,10 +80,9 @@ Value ValueMap::find_insert(Value x) {
             // otherwise it is possible that they are not evaluated
             f->pin(Instruction::PinGlobalValueNumbering);
           }
-          assert(x->type()->tag() == f->type()->tag(), "should have same type");
+          assert(x->type()->tag() == f->type()->tag(), "should have same type");
 
           return f;
-
         }
       }
     }
@@ -147,51 +101,48 @@ Value ValueMap::find_insert(Value x) {
   return x;
 }
 
+#define GENERIC_KILL_VALUE(must_kill_implementation) \
+ \
+  for (int i = size() - 1; i >= 0; i--) { \
+    ValueMapEntry* prev_entry = NULL; \
+    for (ValueMapEntry* entry = entry_at(i); entry != NULL; entry = entry->next()) { \
+      Value value = entry->value(); \
+ \
+      must_kill_implementation(must_kill, entry, value) \
+ \
+      if (must_kill) { \
+        kill_value(value); \
+ \
+        if (prev_entry == NULL) { \
+          _entries.at_put(i, entry->next()); \
+          _entry_count--; \
+        } else if (prev_entry->nesting() == nesting()) { \
+          prev_entry->set_next(entry->next()); \
+          _entry_count--; \
+        } else { \
+          prev_entry = entry; \
+        } \
+ \
+        TRACE_VALUE_NUMBERING(tty->print_cr("Value Numbering: killed %s %c%d  (size %d, entries %d, nesting-diff %d)", value->name(), value->type()->tchar(), value->id(), size(), entry_count(), nesting() - entry->nesting())); \
+      } else { \
+        prev_entry = entry; \
+      } \
+    } \
+  } \
 
-#define GENERIC_KILL_VALUE(must_kill_implementation)                                     \
-  NOT_PRODUCT(_number_of_kills++);                                                       \
-                                                                                         \
-  for (int i = size() - 1; i >= 0; i--) {                                                \
-    ValueMapEntry* prev_entry = NULL;                                                    \
-    for (ValueMapEntry* entry = entry_at(i); entry != NULL; entry = entry->next()) {     \
-      Value value = entry->value();                                                      \
-                                                                                         \
-      must_kill_implementation(must_kill, entry, value)                                  \
-                                                                                         \
-      if (must_kill) {                                                                   \
-        kill_value(value);                                                               \
-                                                                                         \
-        if (prev_entry == NULL) {                                                        \
-          _entries.at_put(i, entry->next());                                             \
-          _entry_count--;                                                                \
-        } else if (prev_entry->nesting() == nesting()) {                                 \
-          prev_entry->set_next(entry->next());                                           \
-          _entry_count--;                                                                \
-        } else {                                                                         \
-          prev_entry = entry;                                                            \
-        }                                                                                \
-                                                                                         \
-        TRACE_VALUE_NUMBERING(tty->print_cr("Value Numbering: killed %s %c%d  (size %d, entries %d, nesting-diff %d)", value->name(), value->type()->tchar(), value->id(), size(), entry_count(), nesting() - entry->nesting()));   \
-      } else {                                                                           \
-        prev_entry = entry;                                                              \
-      }                                                                                  \
-    }                                                                                    \
-  }                                                                                      \
-
-#define MUST_KILL_MEMORY(must_kill, entry, value)                                        \
+#define MUST_KILL_MEMORY(must_kill, entry, value) \
   bool must_kill = value->as_LoadField() != NULL || value->as_LoadIndexed() != NULL;
 
-#define MUST_KILL_ARRAY(must_kill, entry, value)                                         \
-  bool must_kill = value->as_LoadIndexed() != NULL                                       \
+#define MUST_KILL_ARRAY(must_kill, entry, value) \
+  bool must_kill = value->as_LoadIndexed() != NULL \
                    && value->type()->tag() == type->tag();
 
-#define MUST_KILL_FIELD(must_kill, entry, value)                                         \
-  /* ciField's are not unique; must compare their contents */                            \
-  LoadField* lf = value->as_LoadField();                                                 \
-  bool must_kill = lf != NULL                                                            \
-                   && lf->field()->holder() == field->holder()                           \
+#define MUST_KILL_FIELD(must_kill, entry, value) \
+  /* ciField's are not unique; must compare their contents */ \
+  LoadField* lf = value->as_LoadField(); \
+  bool must_kill = lf != NULL \
+                   && lf->field()->holder() == field->holder() \
                    && (all_offsets || lf->field()->offset() == field->offset());
-
 
 void ValueMap::kill_memory() {
   GENERIC_KILL_VALUE(MUST_KILL_MEMORY);
@@ -206,59 +157,17 @@ void ValueMap::kill_field(ciField* field, bool all_offsets) {
 }
 
 void ValueMap::kill_map(ValueMap* map) {
-  assert(is_global_value_numbering(), "only for global value numbering");
+  assert(is_global_value_numbering(), "only for global value numbering");
   _killed_values.set_union(&map->_killed_values);
 }
 
 void ValueMap::kill_all() {
-  assert(is_local_value_numbering(), "only for local value numbering");
+  assert(is_local_value_numbering(), "only for local value numbering");
   for (int i = size() - 1; i >= 0; i--) {
     _entries.at_put(i, NULL);
   }
   _entry_count = 0;
 }
-
-
-#ifndef PRODUCT
-
-void ValueMap::print() {
-  tty->print_cr("(size %d, entries %d, nesting %d)", size(), entry_count(), nesting());
-
-  int entries = 0;
-  for (int i = 0; i < size(); i++) {
-    if (entry_at(i) != NULL) {
-      tty->print("  %2d: ", i);
-      for (ValueMapEntry* entry = entry_at(i); entry != NULL; entry = entry->next()) {
-        Value value = entry->value();
-        tty->print("%s %c%d (%s%d) -> ", value->name(), value->type()->tchar(), value->id(), is_killed(value) ? "x" : "", entry->nesting());
-        entries++;
-      }
-      tty->print_cr("NULL");
-    }
-  }
-
-  _killed_values.print();
-  assert(entry_count() == entries, "entry_count incorrect");
-}
-
-void ValueMap::reset_statistics() {
-  _number_of_finds = 0;
-  _number_of_hits = 0;
-  _number_of_kills = 0;
-}
-
-void ValueMap::print_statistics() {
-  float hit_rate = 0;
-  if (_number_of_finds != 0) {
-    hit_rate = (float)_number_of_hits / _number_of_finds;
-  }
-
-  tty->print_cr("finds:%3d  hits:%3d   kills:%3d  hit rate: %1.4f", _number_of_finds, _number_of_hits, _number_of_kills, hit_rate);
-}
-
-#endif
-
-
 
 class ShortLoopOptimizer : public ValueNumberingVisitor {
  private:
@@ -276,12 +185,13 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
   void      kill_memory()                                 { _too_complicated_loop = true; }
   void      kill_field(ciField* field, bool all_offsets)  {
     current_map()->kill_field(field, all_offsets);
-    assert(field->type()->basic_type() >= 0 && field->type()->basic_type() <= T_ARRAY, "Invalid type");
+    assert(field->type()->basic_type() >= 0 && field->type()->basic_type() <= T_ARRAY, "Invalid type");
     _has_field_store[field->type()->basic_type()] = true;
   }
   void      kill_array(ValueType* type)                   {
     current_map()->kill_array(type);
-    BasicType basic_type = as_BasicType(type); assert(basic_type >= 0 && basic_type <= T_ARRAY, "Invalid type");
+    BasicType basic_type = as_BasicType(type);
+    assert(basic_type >= 0 && basic_type <= T_ARRAY, "Invalid type");
     _has_indexed_store[basic_type] = true;
   }
 
@@ -298,12 +208,12 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
   }
 
   bool has_field_store(BasicType type) {
-    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
+    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
     return _has_field_store[type];
   }
 
   bool has_indexed_store(BasicType type) {
-    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
+    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
     return _has_indexed_store[type];
   }
 
@@ -338,7 +248,7 @@ LoopInvariantCodeMotion::LoopInvariantCodeMotion(ShortLoopOptimizer *slo, Global
     return;  // only the entry block does not have a predecessor
   }
 
-  assert(insertion_block->end()->as_Base() == NULL, "cannot insert into entry block");
+  assert(insertion_block->end()->as_Base() == NULL, "cannot insert into entry block");
   _insertion_point = insertion_block->end()->prev();
   _insert_is_pred = loop_header->is_predecessor(insertion_block);
 
@@ -348,12 +258,12 @@ LoopInvariantCodeMotion::LoopInvariantCodeMotion(ShortLoopOptimizer *slo, Global
   if (!_state) {
     // If, TableSwitch and LookupSwitch always have state_before when
     // loop invariant code motion happens..
-    assert(block_end->as_Goto(), "Block has to be goto");
+    assert(block_end->as_Goto(), "Block has to be goto");
     _state = block_end->state();
   }
 
   // the loop_blocks are filled by going backward from the loop header, so this processing order is best
-  assert(loop_blocks->at(0) == loop_header, "loop header must be first loop block");
+  assert(loop_blocks->at(0) == loop_header, "loop header must be first loop block");
   process_block(loop_header);
   for (int i = loop_blocks->length() - 1; i >= 1; i--) {
     process_block(loop_blocks->at(i));
@@ -375,7 +285,7 @@ void LoopInvariantCodeMotion::process_block(BlockBegin* block) {
     if (cur->as_Constant() != NULL) {
       cur_invariant = !cur->can_trap();
     } else if (cur->as_ArithmeticOp() != NULL || cur->as_LogicOp() != NULL || cur->as_ShiftOp() != NULL) {
-      assert(cur->as_Op2() != NULL, "must be Op2");
+      assert(cur->as_Op2() != NULL, "must be Op2");
       Op2* op2 = (Op2*)cur;
       cur_invariant = !op2->can_trap() && is_invariant(op2->x()) && is_invariant(op2->y());
     } else if (cur->as_LoadField() != NULL) {
@@ -483,7 +393,6 @@ bool ShortLoopOptimizer::process(BlockBegin* loop_header) {
   return true;
 }
 
-
 GlobalValueNumbering::GlobalValueNumbering(IR* ir)
   : _current_map(NULL)
   , _value_maps(ir->linear_scan_order()->length(), ir->linear_scan_order()->length(), NULL)
@@ -497,12 +406,12 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
   int num_blocks = blocks->length();
 
   BlockBegin* start_block = blocks->at(0);
-  assert(start_block == ir->start() && start_block->number_of_preds() == 0 && start_block->dominator() == NULL, "must be start block");
-  assert(start_block->next()->as_Base() != NULL && start_block->next()->next() == NULL, "start block must not have instructions");
+  assert(start_block == ir->start() && start_block->number_of_preds() == 0 && start_block->dominator() == NULL, "must be start block");
+  assert(start_block->next()->as_Base() != NULL && start_block->next()->next() == NULL, "start block must not have instructions");
 
   // method parameters are not linked in instructions list, so process them separateley
   for_each_state_value(start_block->state(), value,
-     assert(value->as_Local() != NULL, "only method parameters allowed");
+     assert(value->as_Local() != NULL, "only method parameters allowed");
      set_processed(value);
   );
 
@@ -514,17 +423,17 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
     TRACE_VALUE_NUMBERING(tty->print_cr("**** processing block B%d", block->block_id()));
 
     int num_preds = block->number_of_preds();
-    assert(num_preds > 0, "block must have predecessors");
+    assert(num_preds > 0, "block must have predecessors");
 
     BlockBegin* dominator = block->dominator();
-    assert(dominator != NULL, "dominator must exist");
-    assert(value_map_of(dominator) != NULL, "value map of dominator must exist");
+    assert(dominator != NULL, "dominator must exist");
+    assert(value_map_of(dominator) != NULL, "value map of dominator must exist");
 
     // create new value map with increased nesting
     _current_map = new ValueMap(value_map_of(dominator));
 
     if (num_preds == 1 && !block->is_set(BlockBegin::exception_entry_flag)) {
-      assert(dominator == block->pred_at(0), "dominator must be equal to predecessor");
+      assert(dominator == block->pred_at(0), "dominator must be equal to predecessor");
       // nothing to do here
 
     } else if (block->is_set(BlockBegin::linear_scan_loop_header_flag)) {
@@ -579,10 +488,10 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
 }
 
 void GlobalValueNumbering::substitute(Instruction* instr) {
-  assert(!instr->has_subst(), "substitution already set");
+  assert(!instr->has_subst(), "substitution already set");
   Value subst = current_map()->find_insert(instr);
   if (subst != instr) {
-    assert(!subst->has_subst(), "can't have a substitution");
+    assert(!subst->has_subst(), "can't have a substitution");
 
     TRACE_VALUE_NUMBERING(tty->print_cr("substitution for %d set to %d", instr->id(), subst->id()));
     instr->set_subst(subst);

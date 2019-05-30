@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -43,47 +19,6 @@ void LIR_Assembler::patching_epilog(PatchingStub* patch, LIR_PatchCode patch_cod
   }
   patch->install(_masm, patch_code, obj, info);
   append_code_stub(patch);
-
-#ifdef ASSERT
-  Bytecodes::Code code = info->scope()->method()->java_code_at_bci(info->stack()->bci());
-  if (patch->id() == PatchingStub::access_field_id) {
-    switch (code) {
-      case Bytecodes::_putstatic:
-      case Bytecodes::_getstatic:
-      case Bytecodes::_putfield:
-      case Bytecodes::_getfield:
-        break;
-      default:
-        ShouldNotReachHere();
-    }
-  } else if (patch->id() == PatchingStub::load_klass_id) {
-    switch (code) {
-      case Bytecodes::_new:
-      case Bytecodes::_anewarray:
-      case Bytecodes::_multianewarray:
-      case Bytecodes::_instanceof:
-      case Bytecodes::_checkcast:
-        break;
-      default:
-        ShouldNotReachHere();
-    }
-  } else if (patch->id() == PatchingStub::load_mirror_id) {
-    switch (code) {
-      case Bytecodes::_putstatic:
-      case Bytecodes::_getstatic:
-      case Bytecodes::_ldc:
-      case Bytecodes::_ldc_w:
-        break;
-      default:
-        ShouldNotReachHere();
-    }
-  } else if (patch->id() == PatchingStub::load_appendix_id) {
-    Bytecodes::Code bc_raw = info->scope()->method()->raw_code_at_bci(info->stack()->bci());
-    assert(Bytecodes::has_optional_appendix(bc_raw), "unexpected appendix resolution");
-  } else {
-    ShouldNotReachHere();
-  }
-#endif
 }
 
 PatchingStub::PatchID LIR_Assembler::patching_id(CodeEmitInfo* info) {
@@ -97,7 +32,6 @@ PatchingStub::PatchID LIR_Assembler::patching_id(CodeEmitInfo* info) {
 
 //---------------------------------------------------------------
 
-
 LIR_Assembler::LIR_Assembler(Compilation* c):
    _compilation(c)
  , _masm(c->masm())
@@ -110,21 +44,18 @@ LIR_Assembler::LIR_Assembler(Compilation* c):
   _slow_case_stubs = new CodeStubList();
 }
 
-
 LIR_Assembler::~LIR_Assembler() {
   // The unwind handler label may be unbound if this destructor is invoked because of a bail-out.
   // Reset it here to avoid an assertion.
   _unwind_handler_entry.reset();
 }
 
-
 void LIR_Assembler::check_codespace() {
   CodeSection* cs = _masm->code_section();
-  if (cs->remaining() < (int)(NOT_LP64(1*K)LP64_ONLY(2*K))) {
+  if (cs->remaining() < (int)(2*K)) {
     BAILOUT("CodeBuffer overflow");
   }
 }
-
 
 void LIR_Assembler::append_code_stub(CodeStub* stub) {
   _slow_case_stubs->append(stub);
@@ -137,36 +68,21 @@ void LIR_Assembler::emit_stubs(CodeStubList* stub_list) {
     check_codespace();
     CHECK_BAILOUT();
 
-#ifndef PRODUCT
-    if (CommentedAssembly) {
-      stringStream st;
-      s->print_name(&st);
-      st.print(" slow case");
-      _masm->block_comment(st.as_string());
-    }
-#endif
     s->emit_code(this);
-#ifdef ASSERT
-    s->assert_no_unbound_labels();
-#endif
   }
 }
-
 
 void LIR_Assembler::emit_slow_case_stubs() {
   emit_stubs(_slow_case_stubs);
 }
 
-
 bool LIR_Assembler::needs_icache(ciMethod* method) const {
   return !method->is_static();
 }
 
-
 int LIR_Assembler::code_offset() const {
   return _masm->offset();
 }
-
 
 address LIR_Assembler::pc() const {
   return _masm->pc();
@@ -186,10 +102,8 @@ void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
 
     for (int j = 0; j < handlers->length(); j++) {
       XHandler* handler = handlers->handler_at(j);
-      assert(handler->lir_op_id() != -1, "handler not processed by LinearScan");
-      assert(handler->entry_code() == NULL ||
-             handler->entry_code()->instructions_list()->last()->code() == lir_branch ||
-             handler->entry_code()->instructions_list()->last()->code() == lir_delay_slot, "last operation must be branch");
+      assert(handler->lir_op_id() != -1, "handler not processed by LinearScan");
+      assert(handler->entry_code() == NULL || handler->entry_code()->instructions_list()->last()->code() == lir_branch || handler->entry_code()->instructions_list()->last()->code() == lir_delay_slot, "last operation must be branch");
 
       if (handler->entry_pco() == -1) {
         // entry code not emitted yet
@@ -203,12 +117,11 @@ void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
           handler->set_entry_pco(handler->entry_block()->exception_handler_pco());
         }
 
-        assert(handler->entry_pco() != -1, "must be set now");
+        assert(handler->entry_pco() != -1, "must be set now");
       }
     }
   }
 }
-
 
 void LIR_Assembler::emit_code(BlockList* hir) {
   if (PrintLIR) {
@@ -222,10 +135,7 @@ void LIR_Assembler::emit_code(BlockList* hir) {
   }
 
   flush_debug_info(code_offset());
-
-  DEBUG_ONLY(check_no_unbound_labels());
 }
-
 
 void LIR_Assembler::emit_block(BlockBegin* block) {
   if (block->is_set(BlockBegin::backward_branch_target_flag)) {
@@ -239,30 +149,17 @@ void LIR_Assembler::emit_block(BlockBegin* block) {
     block->set_exception_handler_pco(code_offset());
   }
 
-#ifndef PRODUCT
-  if (PrintLIRWithAssembly) {
-    // don't print Phi's
-    InstructionPrinter ip(false);
-    block->print(ip);
-  }
-#endif /* PRODUCT */
-
-  assert(block->lir() != NULL, "must have LIR");
-  X86_ONLY(assert(_masm->rsp_offset() == 0, "frame size should be fixed"));
-
-#ifndef PRODUCT
-  if (CommentedAssembly) {
-    stringStream st;
-    st.print_cr(" block B%d [%d, %d]", block->block_id(), block->bci(), block->end()->printable_bci());
-    _masm->block_comment(st.as_string());
-  }
-#endif
+  assert(block->lir() != NULL, "must have LIR");
+  X86_ONLY(
+  assert(_masm->rsp_offset() == 0, "frame size should be fixed");
+  )
 
   emit_lir_list(block->lir());
 
-  X86_ONLY(assert(_masm->rsp_offset() == 0, "frame size should be fixed"));
+  X86_ONLY(
+  assert(_masm->rsp_offset() == 0, "frame size should be fixed");
+  )
 }
-
 
 void LIR_Assembler::emit_lir_list(LIR_List* list) {
   peephole(list);
@@ -274,54 +171,15 @@ void LIR_Assembler::emit_lir_list(LIR_List* list) {
     check_codespace();
     CHECK_BAILOUT();
 
-#ifndef PRODUCT
-    if (CommentedAssembly) {
-      // Don't record out every op since that's too verbose.  Print
-      // branches since they include block and stub names.  Also print
-      // patching moves since they generate funny looking code.
-      if (op->code() == lir_branch ||
-          (op->code() == lir_move && op->as_Op1()->patch_code() != lir_patch_none) ||
-          (op->code() == lir_leal && op->as_Op1()->patch_code() != lir_patch_none)) {
-        stringStream st;
-        op->print_on(&st);
-        _masm->block_comment(st.as_string());
-      }
-    }
-    if (PrintLIRWithAssembly) {
-      // print out the LIR operation followed by the resulting assembly
-      list->at(i)->print(); tty->cr();
-    }
-#endif /* PRODUCT */
-
     op->emit_code(this);
 
     if (compilation()->debug_info_recorder()->recording_non_safepoints()) {
       process_debug_info(op);
     }
-
-#ifndef PRODUCT
-    if (PrintLIRWithAssembly) {
-      _masm->code()->decode();
-    }
-#endif /* PRODUCT */
   }
 }
-
-#ifdef ASSERT
-void LIR_Assembler::check_no_unbound_labels() {
-  CHECK_BAILOUT();
-
-  for (int i = 0; i < _branch_target_blocks.length() - 1; i++) {
-    if (!_branch_target_blocks.at(i)->label()->is_bound()) {
-      tty->print_cr("label of block B%d is not bound", _branch_target_blocks.at(i)->block_id());
-      assert(false, "unbound label");
-    }
-  }
-}
-#endif
 
 //----------------------------------debug info--------------------------------
-
 
 void LIR_Assembler::add_debug_info_for_branch(CodeEmitInfo* info) {
   int pc_offset = code_offset();
@@ -331,7 +189,6 @@ void LIR_Assembler::add_debug_info_for_branch(CodeEmitInfo* info) {
     compilation()->add_exception_handlers_for_pco(pc_offset, info->exception_handlers());
   }
 }
-
 
 void LIR_Assembler::add_call_info(int pc_offset, CodeEmitInfo* cinfo) {
   flush_debug_info(pc_offset);
@@ -400,7 +257,7 @@ void LIR_Assembler::record_non_safepoint_debug_info() {
   int         bci       = vstack->bci();
 
   DebugInformationRecorder* debug_info = compilation()->debug_info_recorder();
-  assert(debug_info->recording_non_safepoints(), "sanity");
+  assert(debug_info->recording_non_safepoints(), "sanity");
 
   debug_info->add_non_safepoint(pc_offset);
 
@@ -417,7 +274,6 @@ void LIR_Assembler::record_non_safepoint_debug_info() {
 
   debug_info->end_non_safepoint(pc_offset);
 }
-
 
 ImplicitNullCheckStub* LIR_Assembler::add_debug_info_for_null_check_here(CodeEmitInfo* cinfo) {
   return add_debug_info_for_null_check(code_offset(), cinfo);
@@ -441,7 +297,6 @@ void LIR_Assembler::add_debug_info_for_div0(int pc_offset, CodeEmitInfo* cinfo) 
 void LIR_Assembler::emit_rtcall(LIR_OpRTCall* op) {
   rt_call(op->result_opr(), op->addr(), op->arguments(), op->tmp(), op->info());
 }
-
 
 void LIR_Assembler::emit_call(LIR_OpJavaCall* op) {
   verify_oop_map(op->info());
@@ -479,32 +334,17 @@ void LIR_Assembler::emit_call(LIR_OpJavaCall* op) {
   if (op->is_method_handle_invoke()) {
     compilation()->set_has_method_handle_invokes(true);
   }
-
-#if defined(X86) && defined(TIERED)
-  // C2 leave fpu stack dirty clean it
-  if (UseSSE < 2) {
-    int i;
-    for ( i = 1; i <= 7 ; i++ ) {
-      ffree(i);
-    }
-    if (!op->result_opr()->is_float_kind()) {
-      ffree(0);
-    }
-  }
-#endif // X86 && TIERED
 }
-
 
 void LIR_Assembler::emit_opLabel(LIR_OpLabel* op) {
   _masm->bind (*(op->label()));
 }
 
-
 void LIR_Assembler::emit_op1(LIR_Op1* op) {
   switch (op->code()) {
     case lir_move:
       if (op->move_kind() == lir_move_volatile) {
-        assert(op->patch_code() == lir_patch_none, "can't patch volatiles");
+        assert(op->patch_code() == lir_patch_none, "can't patch volatiles");
         volatile_move_op(op->in_opr(), op->result_opr(), op->type(), op->info());
       } else {
         move_op(op->in_opr(), op->result_opr(), op->type(),
@@ -593,7 +433,6 @@ void LIR_Assembler::emit_op1(LIR_Op1* op) {
   }
 }
 
-
 void LIR_Assembler::emit_op0(LIR_Op0* op) {
   switch (op->code()) {
     case lir_word_align: {
@@ -602,7 +441,7 @@ void LIR_Assembler::emit_op0(LIR_Op0* op) {
     }
 
     case lir_nop:
-      assert(op->info() == NULL, "not supported");
+      assert(op->info() == NULL, "not supported");
       _masm->nop();
       break;
 
@@ -690,13 +529,11 @@ void LIR_Assembler::emit_op0(LIR_Op0* op) {
   }
 }
 
-
 void LIR_Assembler::emit_op2(LIR_Op2* op) {
   switch (op->code()) {
     case lir_cmp:
       if (op->info() != NULL) {
-        assert(op->in_opr1()->is_address() || op->in_opr2()->is_address(),
-               "shouldn't be codeemitinfo for non-address operands");
+        assert(op->in_opr1()->is_address() || op->in_opr2()->is_address(), "shouldn't be codeemitinfo for non-address operands");
         add_debug_info_for_null_check_here(op->info()); // exception possible
       }
       comp_op(op->condition(), op->in_opr1(), op->in_opr2(), op);
@@ -729,7 +566,7 @@ void LIR_Assembler::emit_op2(LIR_Op2* op) {
     case lir_div:
     case lir_div_strictfp:
     case lir_rem:
-      assert(op->fpu_pop_count() < 2, "");
+      assert(op->fpu_pop_count() < 2, "");
       arith_op(
         op->code(),
         op->in_opr1(),
@@ -775,28 +612,23 @@ void LIR_Assembler::emit_op2(LIR_Op2* op) {
   }
 }
 
-
 void LIR_Assembler::build_frame() {
   _masm->build_frame(initial_frame_size_in_bytes(), bang_size_in_bytes());
 }
 
-
 void LIR_Assembler::roundfp_op(LIR_Opr src, LIR_Opr tmp, LIR_Opr dest, bool pop_fpu_stack) {
-  assert((src->is_single_fpu() && dest->is_single_stack()) ||
-         (src->is_double_fpu() && dest->is_double_stack()),
-         "round_fp: rounds register -> stack location");
+  assert((src->is_single_fpu() && dest->is_single_stack()) || (src->is_double_fpu() && dest->is_double_stack()), "round_fp: rounds register -> stack location");
 
   reg2stack (src, dest, src->type(), pop_fpu_stack);
 }
 
-
 void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_PatchCode patch_code, CodeEmitInfo* info, bool pop_fpu_stack, bool unaligned, bool wide) {
   if (src->is_register()) {
     if (dest->is_register()) {
-      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
+      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
       reg2reg(src,  dest);
     } else if (dest->is_stack()) {
-      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
+      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
       reg2stack(src, dest, type, pop_fpu_stack);
     } else if (dest->is_address()) {
       reg2mem(src, dest, type, patch_code, info, pop_fpu_stack, wide, unaligned);
@@ -805,7 +637,7 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     }
 
   } else if (src->is_stack()) {
-    assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
+    assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
     if (dest->is_register()) {
       stack2reg(src, dest, type);
     } else if (dest->is_stack()) {
@@ -818,10 +650,10 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     if (dest->is_register()) {
       const2reg(src, dest, patch_code, info); // patching is possible
     } else if (dest->is_stack()) {
-      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
+      assert(patch_code == lir_patch_none && info == NULL, "no patching and info allowed here");
       const2stack(src, dest);
     } else if (dest->is_address()) {
-      assert(patch_code == lir_patch_none, "no patching allowed here");
+      assert(patch_code == lir_patch_none, "no patching allowed here");
       const2mem(src, dest, type, info, wide);
     } else {
       ShouldNotReachHere();
@@ -835,32 +667,5 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
   }
 }
 
-
 void LIR_Assembler::verify_oop_map(CodeEmitInfo* info) {
-#ifndef PRODUCT
-  if (VerifyOops) {
-    OopMapStream s(info->oop_map());
-    while (!s.is_done()) {
-      OopMapValue v = s.current();
-      if (v.is_oop()) {
-        VMReg r = v.reg();
-        if (!r->is_stack()) {
-          stringStream st;
-          st.print("bad oop %s at %d", r->as_Register()->name(), _masm->offset());
-#ifdef SPARC
-          _masm->_verify_oop(r->as_Register(), os::strdup(st.as_string(), mtCompiler), __FILE__, __LINE__);
-#else
-          _masm->verify_oop(r->as_Register());
-#endif
-        } else {
-          _masm->verify_stack_oop(r->reg2stack() * VMRegImpl::stack_slot_size);
-        }
-      }
-      check_codespace();
-      CHECK_BAILOUT();
-
-      s.next();
-    }
-  }
-#endif
 }

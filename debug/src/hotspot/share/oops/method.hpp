@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_METHODOOP_HPP
 #define SHARE_VM_OOPS_METHODOOP_HPP
 
@@ -40,10 +16,6 @@
 #include "utilities/align.hpp"
 #include "utilities/growableArray.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrTraceIdExtension.hpp"
-#endif
-
 
 // A Method represents a Java method.
 //
@@ -94,11 +66,6 @@ class Method : public Metadata {
   };
   mutable u2 _flags;
 
-  JFR_ONLY(DEFINE_TRACE_FLAG;)
-
-#ifndef PRODUCT
-  int               _compiled_invocation_count;  // Number of nmethod invocations so far (for perf. debugging)
-#endif
   // Entry point for calling both from and to the interpreter.
   address _i2i_entry;           // All-args-on-stack calling convention
   // Entry point for calling from compiled code, to compiled code if it exists
@@ -111,10 +78,6 @@ class Method : public Metadata {
   // NULL only at safepoints (because of a de-opt).
   CompiledMethod* volatile _code;                       // Points to the corresponding piece of native code
   volatile address           _from_interpreted_entry; // Cache of _code ? _adapter->i2c_entry() : _i2i_entry
-
-#if INCLUDE_AOT && defined(TIERED)
-  CompiledMethod* _aot_code;
-#endif
 
   // Constructor
   Method(ConstMethod* xconst, AccessFlags access_flags);
@@ -138,7 +101,6 @@ class Method : public Metadata {
 
   ConstMethod* constMethod() const             { return _constMethod; }
   void set_constMethod(ConstMethod* xconst)    { _constMethod = xconst; }
-
 
   static address make_adapters(const methodHandle& mh, TRAPS);
   address from_compiled_entry() const;
@@ -196,53 +158,6 @@ class Method : public Metadata {
     return Bytecodes::code_at(this, bcp_from(bci));
   }
 
-  // JVMTI breakpoints
-#if !INCLUDE_JVMTI
-  Bytecodes::Code orig_bytecode_at(int bci) const {
-    ShouldNotReachHere();
-    return Bytecodes::_shouldnotreachhere;
-  }
-  void set_orig_bytecode_at(int bci, Bytecodes::Code code) {
-    ShouldNotReachHere();
-  };
-  u2   number_of_breakpoints() const {return 0;}
-#else // !INCLUDE_JVMTI
-  Bytecodes::Code orig_bytecode_at(int bci) const;
-  void set_orig_bytecode_at(int bci, Bytecodes::Code code);
-  void set_breakpoint(int bci);
-  void clear_breakpoint(int bci);
-  void clear_all_breakpoints();
-  // Tracking number of breakpoints, for fullspeed debugging.
-  // Only mutated by VM thread.
-  u2   number_of_breakpoints()             const {
-    MethodCounters* mcs = method_counters();
-    if (mcs == NULL) {
-      return 0;
-    } else {
-      return mcs->number_of_breakpoints();
-    }
-  }
-  void incr_number_of_breakpoints(TRAPS)         {
-    MethodCounters* mcs = get_method_counters(CHECK);
-    if (mcs != NULL) {
-      mcs->incr_number_of_breakpoints();
-    }
-  }
-  void decr_number_of_breakpoints(TRAPS)         {
-    MethodCounters* mcs = get_method_counters(CHECK);
-    if (mcs != NULL) {
-      mcs->decr_number_of_breakpoints();
-    }
-  }
-  // Initialization only
-  void clear_number_of_breakpoints()             {
-    MethodCounters* mcs = method_counters();
-    if (mcs != NULL) {
-      mcs->clear_number_of_breakpoints();
-    }
-  }
-#endif // !INCLUDE_JVMTI
-
   // index into InstanceKlass methods() array
   // note: also used by jfr
   u2 method_idnum() const           { return constMethod()->method_idnum(); }
@@ -276,7 +191,6 @@ class Method : public Metadata {
   int highest_osr_comp_level() const;
   void set_highest_osr_comp_level(int level);
 
-#if COMPILER2_OR_JVMCI
   // Count of times method was exited via exception while interpreting
   void interpreter_throwout_increment(TRAPS) {
     MethodCounters* mcs = get_method_counters(CHECK);
@@ -284,7 +198,6 @@ class Method : public Metadata {
       mcs->interpreter_throwout_increment();
     }
   }
-#endif
 
   int  interpreter_throwout_count() const        {
     MethodCounters* mcs = method_counters();
@@ -350,56 +263,6 @@ class Method : public Metadata {
 
   bool init_method_counters(MethodCounters* counters);
 
-#ifdef TIERED
-  // We are reusing interpreter_invocation_count as a holder for the previous event count!
-  // We can do that since interpreter_invocation_count is not used in tiered.
-  int prev_event_count() const                   {
-    if (method_counters() == NULL) {
-      return 0;
-    } else {
-      return method_counters()->interpreter_invocation_count();
-    }
-  }
-  void set_prev_event_count(int count) {
-    MethodCounters* mcs = method_counters();
-    if (mcs != NULL) {
-      mcs->set_interpreter_invocation_count(count);
-    }
-  }
-  jlong prev_time() const                        {
-    MethodCounters* mcs = method_counters();
-    return mcs == NULL ? 0 : mcs->prev_time();
-  }
-  void set_prev_time(jlong time) {
-    MethodCounters* mcs = method_counters();
-    if (mcs != NULL) {
-      mcs->set_prev_time(time);
-    }
-  }
-  float rate() const                             {
-    MethodCounters* mcs = method_counters();
-    return mcs == NULL ? 0 : mcs->rate();
-  }
-  void set_rate(float rate) {
-    MethodCounters* mcs = method_counters();
-    if (mcs != NULL) {
-      mcs->set_rate(rate);
-    }
-  }
-
-#if INCLUDE_AOT
-  void set_aot_code(CompiledMethod* aot_code) {
-    _aot_code = aot_code;
-  }
-
-  CompiledMethod* aot_code() const {
-    return _aot_code;
-  }
-#else
-  CompiledMethod* aot_code() const { return NULL; }
-#endif // INCLUDE_AOT
-#endif // TIERED
-
   int nmethod_age() const {
     if (method_counters() == NULL) {
       return INT_MAX;
@@ -426,21 +289,14 @@ class Method : public Metadata {
       return (mcs == NULL) ? 0 : mcs->interpreter_invocation_count();
     }
   }
-#if COMPILER2_OR_JVMCI
   int increment_interpreter_invocation_count(TRAPS) {
     if (TieredCompilation) ShouldNotReachHere();
     MethodCounters* mcs = get_method_counters(CHECK_0);
     return (mcs == NULL) ? 0 : mcs->increment_interpreter_invocation_count();
   }
-#endif
 
-#ifndef PRODUCT
-  int  compiled_invocation_count() const         { return _compiled_invocation_count;  }
-  void set_compiled_invocation_count(int count)  { _compiled_invocation_count = count; }
-#else
   // for PrintMethodData in a product build
   int  compiled_invocation_count() const         { return 0;  }
-#endif // not PRODUCT
 
   // Clear (non-shared space) pointers which could not be relevant
   // if this (shared) method were mapped into another JVM.
@@ -468,7 +324,7 @@ class Method : public Metadata {
   // setup entry points
   void link_method(const methodHandle& method, TRAPS);
   // clear entry points. Used by sharing code during dump time
-  void unlink_method() NOT_CDS_RETURN;
+  void unlink_method() {};
 
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
   virtual MetaspaceObj::Type type() const { return MethodType; }
@@ -484,13 +340,12 @@ class Method : public Metadata {
     nonvirtual_vtable_index = -2   // there is no need for vtable dispatch
     // 6330203 Note:  Do not use -1, which was overloaded with many meanings.
   };
-  DEBUG_ONLY(bool valid_vtable_index() const     { return _vtable_index >= nonvirtual_vtable_index; })
   bool has_vtable_index() const                  { return _vtable_index >= 0; }
   int  vtable_index() const                      { return _vtable_index; }
   void set_vtable_index(int index);
-  DEBUG_ONLY(bool valid_itable_index() const     { return _vtable_index <= pending_itable_index; })
   bool has_itable_index() const                  { return _vtable_index <= itable_index_max; }
-  int  itable_index() const                      { assert(valid_itable_index(), "");
+  int  itable_index() const                      {
+    assert(valid_itable_index(), "");
                                                    return itable_index_max - _vtable_index; }
   void set_itable_index(int index);
 
@@ -498,7 +353,7 @@ class Method : public Metadata {
   address interpreter_entry() const              { return _i2i_entry; }
   // Only used when first initialize so we can set _i2i_entry and _from_interpreted_entry
   void set_interpreter_entry(address entry) {
-    assert(!is_shared(), "shared method's interpreter entry should not be changed at run time");
+    assert(!is_shared(), "shared method's interpreter entry should not be changed at run time");
     if (_i2i_entry != entry) {
       _i2i_entry = entry;
     }
@@ -664,19 +519,12 @@ class Method : public Metadata {
   // simultaneously. Use with caution.
   bool has_compiled_code() const;
 
-#ifdef TIERED
-  bool has_aot_code() const                      { return aot_code() != NULL; }
-#endif
-
   // sizing
   static int header_size()                       {
     return align_up((int)sizeof(Method), wordSize) / wordSize;
   }
   static int size(bool is_native);
   int size() const                               { return method_size(); }
-#if INCLUDE_SERVICES
-  void collect_statistics(KlassSizeStats *sz) const;
-#endif
   void log_touched(TRAPS);
   static void print_touched_methods(outputStream* out);
 
@@ -691,9 +539,6 @@ class Method : public Metadata {
   static ByteSize method_counters_offset()       {
     return byte_offset_of(Method, _method_counters);
   }
-#ifndef PRODUCT
-  static ByteSize compiled_invocation_counter_offset() { return byte_offset_of(Method, _compiled_invocation_count); }
-#endif // not PRODUCT
   static ByteSize native_function_offset()       { return in_ByteSize(sizeof(Method));                 }
   static ByteSize from_interpreted_offset()      { return byte_offset_of(Method, _from_interpreted_entry ); }
   static ByteSize interpreter_entry_offset()     { return byte_offset_of(Method, _i2i_entry ); }
@@ -800,7 +645,7 @@ class Method : public Metadata {
   // to provide a valid jmethodID; the only sanity checks are in asserts;
   // result guaranteed not to be NULL.
   inline static Method* resolve_jmethod_id(jmethodID mid) {
-    assert(mid != NULL, "JNI method id should not be null");
+    assert(mid != NULL, "JNI method id should not be null");
     return *((Method**)mid);
   }
 
@@ -814,7 +659,7 @@ class Method : public Metadata {
 
   // Clear methods
   static void clear_jmethod_ids(ClassLoaderData* loader_data);
-  static void print_jmethod_ids(const ClassLoaderData* loader_data, outputStream* out) PRODUCT_RETURN;
+  static void print_jmethod_ids(const ClassLoaderData* loader_data, outputStream* out) {};
 
   // Get this method's jmethodID -- allocate if it doesn't exist
   jmethodID jmethod_id()                            { return method_holder()->get_jmethod_id(this); }
@@ -883,8 +728,6 @@ class Method : public Metadata {
   void set_has_reserved_stack_access(bool x) {
     _flags = x ? (_flags | _reserved_stack_access) : (_flags & ~_reserved_stack_access);
   }
-
-  JFR_ONLY(DEFINE_TRACE_FLAG_ACCESSOR;)
 
   ConstMethod::MethodType method_type() const {
       return _constMethod->method_type();
@@ -961,11 +804,7 @@ class Method : public Metadata {
 
   // Printing
   void print_short_name(outputStream* st = tty); // prints as klassname::methodname; Exposed so field engineers can debug VM
-#if INCLUDE_JVMTI
-  void print_name(outputStream* st = tty); // prints as "virtual void foo(int)"; exposed for TraceRedefineClasses
-#else
-  void print_name(outputStream* st = tty)        PRODUCT_RETURN; // prints as "virtual void foo(int)"
-#endif
+  void print_name(outputStream* st = tty)        {}; // prints as "virtual void foo(int)"
 
   // Helper routine used for method sorting
   static void sort_methods(Array<Method*>* methods, bool idempotent = false, bool set_idnums = true);
@@ -974,11 +813,8 @@ class Method : public Metadata {
   void deallocate_contents(ClassLoaderData* loader_data);
 
   // Printing
-#ifndef PRODUCT
-  void print_on(outputStream* st) const;
-#endif
   void print_value_on(outputStream* st) const;
-  void print_linkage_flags(outputStream* st) PRODUCT_RETURN;
+  void print_linkage_flags(outputStream* st) {};
 
   const char* internal_name() const { return "{method}"; }
 
@@ -993,10 +829,11 @@ class Method : public Metadata {
  private:
 
   // Inlined elements
-  address* native_function_addr() const          { assert(is_native(), "must be native"); return (address*) (this+1); }
+  address* native_function_addr() const          {
+    assert(is_native(), "must be native");
+    return (address*) (this+1); }
   address* signature_handler_addr() const        { return native_function_addr() + 1; }
 };
-
 
 // Utility class for compressing line number tables
 
@@ -1047,7 +884,6 @@ class CompressedLineNumberWriteStream: public CompressedWriteStream {
   void write_terminator()                        { write_byte(0); }
 };
 
-
 // Utility class for decompressing line number tables
 
 class CompressedLineNumberReadStream: public CompressedReadStream {
@@ -1063,55 +899,6 @@ class CompressedLineNumberReadStream: public CompressedReadStream {
   int bci() const                               { return _bci; }
   int line() const                              { return _line; }
 };
-
-
-#if INCLUDE_JVMTI
-
-/// Fast Breakpoints.
-
-// If this structure gets more complicated (because bpts get numerous),
-// move it into its own header.
-
-// There is presently no provision for concurrent access
-// to breakpoint lists, which is only OK for JVMTI because
-// breakpoints are written only at safepoints, and are read
-// concurrently only outside of safepoints.
-
-class BreakpointInfo : public CHeapObj<mtClass> {
-  friend class VMStructs;
- private:
-  Bytecodes::Code  _orig_bytecode;
-  int              _bci;
-  u2               _name_index;       // of method
-  u2               _signature_index;  // of method
-  BreakpointInfo*  _next;             // simple storage allocation
-
- public:
-  BreakpointInfo(Method* m, int bci);
-
-  // accessors
-  Bytecodes::Code orig_bytecode()                     { return _orig_bytecode; }
-  void        set_orig_bytecode(Bytecodes::Code code) { _orig_bytecode = code; }
-  int         bci()                                   { return _bci; }
-
-  BreakpointInfo*          next() const               { return _next; }
-  void                 set_next(BreakpointInfo* n)    { _next = n; }
-
-  // helps for searchers
-  bool match(const Method* m, int bci) {
-    return bci == _bci && match(m);
-  }
-
-  bool match(const Method* m) {
-    return _name_index == m->name_index() &&
-      _signature_index == m->signature_index();
-  }
-
-  void set(Method* method);
-  void clear(Method* method);
-};
-
-#endif // INCLUDE_JVMTI
 
 // Utility class for access exception handlers
 class ExceptionTable : public StackObj {
@@ -1135,44 +922,44 @@ class ExceptionTable : public StackObj {
   }
 
   u2 start_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     return _table[idx].start_pc;
   }
 
   void set_start_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     _table[idx].start_pc = value;
   }
 
   u2 end_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     return _table[idx].end_pc;
   }
 
   void set_end_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     _table[idx].end_pc = value;
   }
 
   u2 handler_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     return _table[idx].handler_pc;
   }
 
   void set_handler_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     _table[idx].handler_pc = value;
   }
 
   u2 catch_type_index(int idx) const {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     return _table[idx].catch_type_index;
   }
 
   void set_catch_type_index(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
+    assert(idx < _length, "out of bounds");
     _table[idx].catch_type_index = value;
   }
 };
 
-#endif // SHARE_VM_OOPS_METHODOOP_HPP
+#endif

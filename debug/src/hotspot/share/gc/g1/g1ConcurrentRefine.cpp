@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1BarrierSet.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
@@ -66,7 +42,7 @@ G1ConcurrentRefineThreadControl::~G1ConcurrentRefineThreadControl() {
 }
 
 jint G1ConcurrentRefineThreadControl::initialize(G1ConcurrentRefine* cr, uint num_max_threads) {
-  assert(cr != NULL, "G1ConcurrentRefine must not be NULL");
+  assert(cr != NULL, "G1ConcurrentRefine must not be NULL");
   _cr = cr;
   _num_max_threads = num_max_threads;
 
@@ -91,9 +67,7 @@ jint G1ConcurrentRefineThreadControl::initialize(G1ConcurrentRefine* cr, uint nu
 }
 
 void G1ConcurrentRefineThreadControl::maybe_activate_next(uint cur_worker_id) {
-  assert(cur_worker_id < _num_max_threads,
-         "Activating another thread from %u not allowed since there can be at most %u",
-         cur_worker_id, _num_max_threads);
+  assert(cur_worker_id < _num_max_threads, "Activating another thread from %u not allowed since there can be at most %u", cur_worker_id, _num_max_threads);
   if (cur_worker_id == (_num_max_threads - 1)) {
     // Already the last thread, there is no more thread to activate.
     return;
@@ -141,45 +115,38 @@ void G1ConcurrentRefineThreadControl::stop() {
 //   MIN2(x OP y, max_XXX_zone)
 // without needing to check for overflow in "x OP y", because the
 // ranges for x and y have been restricted.
-STATIC_ASSERT(sizeof(LP64_ONLY(jint) NOT_LP64(jshort)) <= (sizeof(size_t)/2));
-const size_t max_yellow_zone = LP64_ONLY(max_jint) NOT_LP64(max_jshort);
+STATIC_ASSERT(sizeof(jint) <= (sizeof(size_t)/2));
+const size_t max_yellow_zone = max_jint;
 const size_t max_green_zone = max_yellow_zone / 2;
 const size_t max_red_zone = INT_MAX; // For dcqs.set_max_completed_queue.
 STATIC_ASSERT(max_yellow_zone <= max_red_zone);
 
 // Range check assertions for green zone values.
-#define assert_zone_constraints_g(green)                        \
-  do {                                                          \
-    size_t azc_g_green = (green);                               \
-    assert(azc_g_green <= max_green_zone,                       \
-           "green exceeds max: " SIZE_FORMAT, azc_g_green);     \
+#define assert_zone_constraints_g(green) \
+  do { \
+    size_t azc_g_green = (green); \
+    assert(azc_g_green <= max_green_zone, "green exceeds max: " SIZE_FORMAT, azc_g_green); \
   } while (0)
 
 // Range check assertions for green and yellow zone values.
-#define assert_zone_constraints_gy(green, yellow)                       \
-  do {                                                                  \
-    size_t azc_gy_green = (green);                                      \
-    size_t azc_gy_yellow = (yellow);                                    \
-    assert_zone_constraints_g(azc_gy_green);                            \
-    assert(azc_gy_yellow <= max_yellow_zone,                            \
-           "yellow exceeds max: " SIZE_FORMAT, azc_gy_yellow);          \
-    assert(azc_gy_green <= azc_gy_yellow,                               \
-           "green (" SIZE_FORMAT ") exceeds yellow (" SIZE_FORMAT ")",  \
-           azc_gy_green, azc_gy_yellow);                                \
+#define assert_zone_constraints_gy(green, yellow) \
+  do { \
+    size_t azc_gy_green = (green); \
+    size_t azc_gy_yellow = (yellow); \
+    assert_zone_constraints_g(azc_gy_green); \
+    assert(azc_gy_yellow <= max_yellow_zone, "yellow exceeds max: " SIZE_FORMAT, azc_gy_yellow); \
+    assert(azc_gy_green <= azc_gy_yellow, "green (" SIZE_FORMAT ") exceeds yellow (" SIZE_FORMAT ")", azc_gy_green, azc_gy_yellow); \
   } while (0)
 
 // Range check assertions for green, yellow, and red zone values.
-#define assert_zone_constraints_gyr(green, yellow, red)                 \
-  do {                                                                  \
-    size_t azc_gyr_green = (green);                                     \
-    size_t azc_gyr_yellow = (yellow);                                   \
-    size_t azc_gyr_red = (red);                                         \
-    assert_zone_constraints_gy(azc_gyr_green, azc_gyr_yellow);          \
-    assert(azc_gyr_red <= max_red_zone,                                 \
-           "red exceeds max: " SIZE_FORMAT, azc_gyr_red);               \
-    assert(azc_gyr_yellow <= azc_gyr_red,                               \
-           "yellow (" SIZE_FORMAT ") exceeds red (" SIZE_FORMAT ")",    \
-           azc_gyr_yellow, azc_gyr_red);                                \
+#define assert_zone_constraints_gyr(green, yellow, red) \
+  do { \
+    size_t azc_gyr_green = (green); \
+    size_t azc_gyr_yellow = (yellow); \
+    size_t azc_gyr_red = (red); \
+    assert_zone_constraints_gy(azc_gyr_green, azc_gyr_yellow); \
+    assert(azc_gyr_red <= max_red_zone, "red exceeds max: " SIZE_FORMAT, azc_gyr_red); \
+    assert(azc_gyr_yellow <= azc_gyr_red, "yellow (" SIZE_FORMAT ") exceeds red (" SIZE_FORMAT ")", azc_gyr_yellow, azc_gyr_red); \
   } while (0)
 
 // Logging tag sequence for refinement control updates.

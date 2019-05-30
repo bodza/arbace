@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1PageBasedVirtualSpace.hpp"
 #include "gc/shared/workgroup.hpp"
@@ -277,19 +253,3 @@ void G1PageBasedVirtualSpace::pretouch(size_t start_page, size_t size_in_pages, 
 bool G1PageBasedVirtualSpace::contains(const void* p) const {
   return _low_boundary <= (const char*) p && (const char*) p < _high_boundary;
 }
-
-#ifndef PRODUCT
-void G1PageBasedVirtualSpace::print_on(outputStream* out) {
-  out->print   ("Virtual space:");
-  if (_special) out->print(" (pinned in memory)");
-  out->cr();
-  out->print_cr(" - committed: " SIZE_FORMAT, committed_size());
-  out->print_cr(" - reserved:  " SIZE_FORMAT, reserved_size());
-  out->print_cr(" - preferred page size: " SIZE_FORMAT, _page_size);
-  out->print_cr(" - [low_b, high_b]: [" PTR_FORMAT ", " PTR_FORMAT "]",  p2i(_low_boundary), p2i(_high_boundary));
-}
-
-void G1PageBasedVirtualSpace::print() {
-  print_on(tty);
-}
-#endif

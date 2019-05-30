@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_SERVICES_MEMORYMANAGER_HPP
 #define SHARE_VM_SERVICES_MEMORYMANAGER_HPP
 
@@ -64,7 +40,7 @@ public:
 
   int num_memory_pools() const           { return _num_pools; }
   MemoryPool* get_memory_pool(int index) {
-    assert(index >= 0 && index < _num_pools, "Invalid index");
+    assert(index >= 0 && index < _num_pools, "Invalid index");
     return _pools[index];
   }
 
@@ -107,11 +83,11 @@ public:
   jlong  end_time()               { return _end_time; }
   int    usage_array_size()       { return _usage_array_size; }
   MemoryUsage before_gc_usage_for_pool(int pool_index) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
+    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     return _before_gc_usage_array[pool_index];
   }
   MemoryUsage after_gc_usage_for_pool(int pool_index) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
+    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     return _after_gc_usage_array[pool_index];
   }
 
@@ -122,11 +98,11 @@ public:
   void set_start_time(jlong time) { _start_time = time; }
   void set_end_time(jlong time)   { _end_time = time; }
   void set_before_gc_usage(int pool_index, MemoryUsage usage) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
+    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     set_gc_usage(pool_index, usage, true /* before gc */);
   }
   void set_after_gc_usage(int pool_index, MemoryUsage usage) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
+    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     set_gc_usage(pool_index, usage, false /* after gc */);
   }
 
@@ -154,7 +130,7 @@ public:
   void add_pool(MemoryPool* pool, bool always_affected_by_gc);
 
   bool pool_always_affected_by_gc(int index) {
-    assert(index >= 0 && index < num_memory_pools(), "Invalid index");
+    assert(index >= 0 && index < num_memory_pools(), "Invalid index");
     return _pool_always_affected_by_gc[index];
   }
 
@@ -182,4 +158,4 @@ public:
   bool is_notification_enabled() { return _notification_enabled; }
 };
 
-#endif // SHARE_VM_SERVICES_MEMORYMANAGER_HPP
+#endif

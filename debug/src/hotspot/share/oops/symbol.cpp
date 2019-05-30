@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
-
 #include "precompiled.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/classLoaderData.hpp"
@@ -57,7 +32,7 @@ void* Symbol::operator new(size_t sz, int len, Arena* arena, TRAPS) throw() {
 }
 
 void Symbol::operator delete(void *p) {
-  assert(((Symbol*)p)->refcount() == 0, "should not call this");
+  assert(((Symbol*)p)->refcount() == 0, "should not call this");
   FreeHeap(p);
 }
 
@@ -72,10 +47,9 @@ bool Symbol::starts_with(const char* prefix, int len) const {
     if (prefix[len] != (char) byte_at(len))
       return false;
   }
-  assert(len == -1, "we should be at the beginning");
+  assert(len == -1, "we should be at the beginning");
   return true;
 }
-
 
 // ------------------------------------------------------------------
 // Symbol::index_of
@@ -83,7 +57,7 @@ bool Symbol::starts_with(const char* prefix, int len) const {
 // Finds if the given string is a substring of this symbol's utf8 bytes.
 // Return -1 on failure.  Otherwise return the first index where str occurs.
 int Symbol::index_of_at(int i, const char* str, int len) const {
-  assert(i >= 0 && i <= utf8_length(), "oob");
+  assert(i >= 0 && i <= utf8_length(), "oob");
   if (len <= 0)  return 0;
   char first_char = str[0];
   address bytes = (address) ((Symbol*)this)->base();
@@ -95,13 +69,12 @@ int Symbol::index_of_at(int i, const char* str, int len) const {
     scan = (address) memchr(scan, first_char, (limit + 1 - scan));
     if (scan == NULL)
       return -1;  // not found
-    assert(scan >= bytes+i && scan <= limit, "scan oob");
+    assert(scan >= bytes+i && scan <= limit, "scan oob");
     if (memcmp(scan, str, len) == 0)
       return (int)(scan - bytes);
   }
   return -1;
 }
-
 
 char* Symbol::as_C_string(char* buf, int size) const {
   if (size > 0) {
@@ -214,19 +187,12 @@ void Symbol::increment_refcount() {
   // shared archive.
   if (_refcount >= 0) { // not a permanent symbol
     Atomic::inc(&_refcount);
-    NOT_PRODUCT(Atomic::inc(&_total_count);)
   }
 }
 
 void Symbol::decrement_refcount() {
   if (_refcount >= 0) { // not a permanent symbol
     short new_value = Atomic::add(short(-1), &_refcount);
-#ifdef ASSERT
-    if (new_value == -1) { // we have transitioned from 0 -> -1
-      print();
-      assert(false, "reference count underflow for symbol");
-    }
-#endif
     (void)new_value;
   }
 }
@@ -280,6 +246,3 @@ bool Symbol::is_valid(Symbol* s) {
   jbyte* bytes = (jbyte*) s->bytes();
   return os::is_readable_range(bytes, bytes + len);
 }
-
-// SymbolTable prints this in its statistics
-NOT_PRODUCT(int Symbol::_total_count = 0;)

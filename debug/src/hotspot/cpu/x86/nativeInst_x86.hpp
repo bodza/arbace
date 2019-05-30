@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_NATIVEINST_X86_HPP
 #define CPU_X86_VM_NATIVEINST_X86_HPP
 
@@ -82,7 +58,6 @@ class NativeInstruction {
 
   oop  oop_at (int offset) const       { return *(oop*) addr_at(offset); }
 
-
   void set_char_at(int offset, char c)        { *addr_at(offset) = (u_char)c; wrote(offset); }
   void set_int_at(int offset, jint  i)        { *(jint*)addr_at(offset) = i;  wrote(offset); }
   void set_ptr_at (int offset, intptr_t  ptr) { *(intptr_t*) addr_at(offset) = ptr;  wrote(offset); }
@@ -102,9 +77,6 @@ class NativeInstruction {
 
 inline NativeInstruction* nativeInstruction_at(address address) {
   NativeInstruction* inst = (NativeInstruction*)address;
-#ifdef ASSERT
-  //inst->verify();
-#endif
   return inst;
 }
 
@@ -138,9 +110,6 @@ public:
 
 inline NativePltCall* nativePltCall_at(address address) {
   NativePltCall* call = (NativePltCall*) address;
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
@@ -175,12 +144,13 @@ class NativeCall: public NativeInstruction {
 #ifdef AMD64
     intptr_t disp = dest - return_address();
     guarantee(disp == (intptr_t)(jint)disp, "must be 32-bit offset");
-#endif // AMD64
+#endif
     set_int_at(displacement_offset, dest - return_address());
   }
   void  set_destination_mt_safe(address dest);
 
-  void  verify_alignment() { assert((intptr_t)addr_at(displacement_offset) % BytesPerInt == 0, "must be aligned"); }
+  void  verify_alignment() {
+    assert((intptr_t)addr_at(displacement_offset) % BytesPerInt == 0, "must be aligned"); }
   void  verify();
   void  print();
 
@@ -201,13 +171,6 @@ class NativeCall: public NativeInstruction {
       nativeCall_at(instr)->destination() == target;
   }
 
-#if INCLUDE_AOT
-  static bool is_far_call(address instr, address target) {
-    intptr_t disp = target - (instr + sizeof(int32_t));
-    return !Assembler::is_simm32(disp);
-  }
-#endif
-
   // MT-safe patching of a call instruction.
   static void insert(address code_pos, address entry);
 
@@ -216,17 +179,11 @@ class NativeCall: public NativeInstruction {
 
 inline NativeCall* nativeCall_at(address address) {
   NativeCall* call = (NativeCall*)(address - NativeCall::instruction_offset);
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
 inline NativeCall* nativeCall_before(address return_address) {
   NativeCall* call = (NativeCall*)(return_address - NativeCall::return_address_offset);
-#ifdef ASSERT
-  call->verify();
-#endif
   return call;
 }
 
@@ -257,7 +214,7 @@ class NativeMovConstReg: public NativeInstruction {
 #else
   static const bool has_rex = false;
   static const int rex_size = 0;
-#endif // AMD64
+#endif
  public:
   enum Intel_specific_constants {
     instruction_code            = 0xB8,
@@ -286,17 +243,11 @@ class NativeMovConstReg: public NativeInstruction {
 
 inline NativeMovConstReg* nativeMovConstReg_at(address address) {
   NativeMovConstReg* test = (NativeMovConstReg*)(address - NativeMovConstReg::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
 
 inline NativeMovConstReg* nativeMovConstReg_before(address address) {
   NativeMovConstReg* test = (NativeMovConstReg*)(address - NativeMovConstReg::instruction_size - NativeMovConstReg::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
 
@@ -304,9 +255,6 @@ class NativeMovConstRegPatching: public NativeMovConstReg {
  private:
     friend NativeMovConstRegPatching* nativeMovConstRegPatching_at(address address) {
     NativeMovConstRegPatching* test = (NativeMovConstRegPatching*)(address - instruction_offset);
-    #ifdef ASSERT
-      test->verify();
-    #endif
     return test;
   }
 };
@@ -391,12 +339,8 @@ class NativeMovRegMem: public NativeInstruction {
 
 inline NativeMovRegMem* nativeMovRegMem_at (address address) {
   NativeMovRegMem* test = (NativeMovRegMem*)(address - NativeMovRegMem::instruction_offset);
-#ifdef ASSERT
-  test->verify();
-#endif
   return test;
 }
-
 
 // An interface for accessing/manipulating native leal instruction of form:
 //        leal reg, [reg + offset]
@@ -408,7 +352,7 @@ class NativeLoadAddress: public NativeMovRegMem {
 #else
   static const bool has_rex = false;
   static const int rex_size = 0;
-#endif // AMD64
+#endif
  public:
   enum Intel_specific_constants {
     instruction_prefix_wide             = Assembler::REX_W,
@@ -426,9 +370,6 @@ class NativeLoadAddress: public NativeMovRegMem {
  private:
   friend NativeLoadAddress* nativeLoadAddress_at (address address) {
     NativeLoadAddress* test = (NativeLoadAddress*)(address - instruction_offset);
-    #ifdef ASSERT
-      test->verify();
-    #endif
     return test;
   }
 };
@@ -472,9 +413,6 @@ private:
 
 inline NativeLoadGot* nativeLoadGot_at(address addr) {
   NativeLoadGot* load = (NativeLoadGot*) addr;
-#ifdef ASSERT
-  load->verify();
-#endif
   return load;
 }
 
@@ -510,8 +448,8 @@ class NativeJump: public NativeInstruction {
       val = -5; // jump to self
     }
 #ifdef AMD64
-    assert((labs(val)  & 0xFFFFFFFF00000000) == 0 || dest == (address)-1, "must be 32bit offset or -1");
-#endif // AMD64
+    assert((labs(val)  & 0xFFFFFFFF00000000) == 0 || dest == (address)-1, "must be 32bit offset or -1");
+#endif
     set_int_at(data_offset, (jint)val);
   }
 
@@ -532,9 +470,6 @@ class NativeJump: public NativeInstruction {
 
 inline NativeJump* nativeJump_at(address address) {
   NativeJump* jump = (NativeJump*)(address - NativeJump::instruction_offset);
-#ifdef ASSERT
-  jump->verify();
-#endif
   return jump;
 }
 
@@ -550,14 +485,10 @@ class NativeFarJump: public NativeInstruction {
 
   // Unit testing stuff
   static void test() {}
-
 };
 
 inline NativeFarJump* nativeFarJump_at(address address) {
   NativeFarJump* jump = (NativeFarJump*)(address);
-#ifdef ASSERT
-  jump->verify();
-#endif
   return jump;
 }
 
@@ -590,7 +521,6 @@ class NativeGeneralJump: public NativeInstruction {
 
 inline NativeGeneralJump* nativeGeneralJump_at(address address) {
   NativeGeneralJump* jump = (NativeGeneralJump*)(address);
-  debug_only(jump->verify();)
   return jump;
 }
 
@@ -620,7 +550,6 @@ public:
 
 inline NativeGotJump* nativeGotJump_at(address addr) {
   NativeGotJump* jump = (NativeGotJump*)(addr);
-  debug_only(jump->verify());
   return jump;
 }
 
@@ -637,7 +566,6 @@ class NativePopReg : public NativeInstruction {
   // Insert a pop instruction
   static void insert(address code_pos, Register reg);
 };
-
 
 class NativeIllegalInstruction: public NativeInstruction {
  public:
@@ -721,7 +649,6 @@ inline bool NativeInstruction::is_safepoint_poll() {
   if (ubyte_at(0) == NativeTstRegMem::instruction_code_memXregl &&
       ubyte_at(1) == 0x05) { // 00 rax 101
     address fault = addr_at(6) + int_at(2);
-    NOT_JVMCI(assert(!Assembler::is_polling_page_far(), "unexpected poll encoding");)
     return os::is_poll_address(fault);
   }
   // Now try decoding a far safepoint:
@@ -731,7 +658,6 @@ inline bool NativeInstruction::is_safepoint_poll() {
        (ubyte_at(2) & NativeTstRegMem::modrm_mask) == NativeTstRegMem::modrm_reg) ||
       (ubyte_at(0) == NativeTstRegMem::instruction_code_memXregl &&
        (ubyte_at(1) & NativeTstRegMem::modrm_mask) == NativeTstRegMem::modrm_reg)) {
-    NOT_JVMCI(assert(Assembler::is_polling_page_far(), "unexpected poll encoding");)
     return true;
   }
   return false;
@@ -740,7 +666,7 @@ inline bool NativeInstruction::is_safepoint_poll() {
            ubyte_at(0) == NativeTstRegMem::instruction_code_memXregl ) &&
            (ubyte_at(1)&0xC7) == 0x05 && /* Mod R/M == disp32 */
            (os::is_poll_address((address)int_at(2)));
-#endif // AMD64
+#endif
 }
 
 inline bool NativeInstruction::is_mov_literal64() {
@@ -749,7 +675,7 @@ inline bool NativeInstruction::is_mov_literal64() {
           (ubyte_at(1) & (0xff ^ NativeMovConstReg::register_mask)) == 0xB8);
 #else
   return false;
-#endif // AMD64
+#endif
 }
 
-#endif // CPU_X86_VM_NATIVEINST_X86_HPP
+#endif

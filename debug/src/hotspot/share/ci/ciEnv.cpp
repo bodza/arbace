@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "ci/ciConstant.hpp"
@@ -42,7 +18,7 @@
 #include "compiler/disassembler.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "jfr/jfrEvents.hpp"
+// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -54,7 +30,6 @@
 #include "oops/objArrayKlass.hpp"
 #include "oops/objArrayOop.inline.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "runtime/init.hpp"
 #include "runtime/reflection.hpp"
 #include "runtime/jniHandles.inline.hpp"
@@ -63,12 +38,7 @@
 #include "runtime/thread.inline.hpp"
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
-#endif
-#ifdef COMPILER2
-#include "opto/runtime.hpp"
-#endif
 
 // ciEnv
 //
@@ -89,10 +59,6 @@ jobject ciEnv::_ArrayIndexOutOfBoundsException_handle = NULL;
 jobject ciEnv::_ArrayStoreException_handle = NULL;
 jobject ciEnv::_ClassCastException_handle = NULL;
 
-#ifndef PRODUCT
-static bool firstEnv = true;
-#endif /* PRODUCT */
-
 // ------------------------------------------------------------------
 // ciEnv::ciEnv
 ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
@@ -101,7 +67,7 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
 
   // Set up ciEnv::current immediately, for the sake of ciObjectFactory, etc.
   thread->set_env(this);
-  assert(ciEnv::current() == this, "sanity");
+  assert(ciEnv::current() == this, "sanity");
 
   _oop_recorder = NULL;
   _debug_info = NULL;
@@ -111,13 +77,10 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
   _compilable = MethodCompilable;
   _break_at_compile = false;
   _compiler_data = NULL;
-#ifndef PRODUCT
-  assert(!firstEnv, "not initialized properly");
-#endif /* !PRODUCT */
 
   _system_dictionary_modification_counter = system_dictionary_modification_counter;
   _num_inlined_bytecodes = 0;
-  assert(task == NULL || thread->task() == task, "sanity");
+  assert(task == NULL || thread->task() == task, "sanity");
   _task = task;
   _log = NULL;
 
@@ -134,13 +97,13 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
   // Assertions ensure that these instances are not accessed before
   // their initialization.
 
-  assert(Universe::is_fully_initialized(), "should be complete");
+  assert(Universe::is_fully_initialized(), "should be complete");
 
   oop o = Universe::null_ptr_exception_instance();
-  assert(o != NULL, "should have been initialized");
+  assert(o != NULL, "should have been initialized");
   _NullPointerException_instance = get_object(o)->as_instance();
   o = Universe::arithmetic_exception_instance();
-  assert(o != NULL, "should have been initialized");
+  assert(o != NULL, "should have been initialized");
   _ArithmeticException_instance = get_object(o)->as_instance();
 
   _ArrayIndexOutOfBoundsException_instance = NULL;
@@ -148,11 +111,6 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
   _ClassCastException_instance = NULL;
   _the_null_string = NULL;
   _the_min_jint_string = NULL;
-
-  _jvmti_can_hotswap_or_post_breakpoint = false;
-  _jvmti_can_access_local_variables = false;
-  _jvmti_can_post_on_exceptions = false;
-  _jvmti_can_pop_frame = false;
 }
 
 ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
@@ -160,9 +118,9 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
 
   // Set up ciEnv::current immediately, for the sake of ciObjectFactory, etc.
   CompilerThread* current_thread = CompilerThread::current();
-  assert(current_thread->env() == NULL, "must be");
+  assert(current_thread->env() == NULL, "must be");
   current_thread->set_env(this);
-  assert(ciEnv::current() == this, "sanity");
+  assert(ciEnv::current() == this, "sanity");
 
   _oop_recorder = NULL;
   _debug_info = NULL;
@@ -172,10 +130,6 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
   _compilable = MethodCompilable_never;
   _break_at_compile = false;
   _compiler_data = NULL;
-#ifndef PRODUCT
-  assert(firstEnv, "must be first");
-  firstEnv = false;
-#endif /* !PRODUCT */
 
   _system_dictionary_modification_counter = 0;
   _num_inlined_bytecodes = 0;
@@ -195,7 +149,7 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
   // Assertions ensure that these instances are not accessed before
   // their initialization.
 
-  assert(Universe::is_fully_initialized(), "must be");
+  assert(Universe::is_fully_initialized(), "must be");
 
   _NullPointerException_instance = NULL;
   _ArithmeticException_instance = NULL;
@@ -204,11 +158,6 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
   _ClassCastException_instance = NULL;
   _the_null_string = NULL;
   _the_min_jint_string = NULL;
-
-  _jvmti_can_hotswap_or_post_breakpoint = false;
-  _jvmti_can_access_local_variables = false;
-  _jvmti_can_post_on_exceptions = false;
-  _jvmti_can_pop_frame = false;
 }
 
 ciEnv::~ciEnv() {
@@ -219,42 +168,6 @@ ciEnv::~ciEnv() {
       // be reading it.
       current_thread->set_env(NULL);
   )
-}
-
-// ------------------------------------------------------------------
-// Cache Jvmti state
-void ciEnv::cache_jvmti_state() {
-  VM_ENTRY_MARK;
-  // Get Jvmti capabilities under lock to get consistant values.
-  MutexLocker mu(JvmtiThreadState_lock);
-  _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint();
-  _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables();
-  _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions();
-  _jvmti_can_pop_frame                  = JvmtiExport::can_pop_frame();
-}
-
-bool ciEnv::should_retain_local_variables() const {
-  return _jvmti_can_access_local_variables || _jvmti_can_pop_frame;
-}
-
-bool ciEnv::jvmti_state_changed() const {
-  if (!_jvmti_can_access_local_variables &&
-      JvmtiExport::can_access_local_variables()) {
-    return true;
-  }
-  if (!_jvmti_can_hotswap_or_post_breakpoint &&
-      JvmtiExport::can_hotswap_or_post_breakpoint()) {
-    return true;
-  }
-  if (!_jvmti_can_post_on_exceptions &&
-      JvmtiExport::can_post_on_exceptions()) {
-    return true;
-  }
-  if (!_jvmti_can_pop_frame &&
-      JvmtiExport::can_pop_frame()) {
-    return true;
-  }
-  return false;
 }
 
 // ------------------------------------------------------------------
@@ -349,7 +262,7 @@ ciMethod* ciEnv::get_method_from_handle(Method* method) {
 int ciEnv::array_element_offset_in_bytes(ciArray* a_h, ciObject* o_h) {
   VM_ENTRY_MARK;
   objArrayOop a = (objArrayOop)a_h->get_oop();
-  assert(a->is_objArray(), "");
+  assert(a->is_objArray(), "");
   int length = a->length();
   oop o = o_h->get_oop();
   for (int i = 0; i < length; i++) {
@@ -357,7 +270,6 @@ int ciEnv::array_element_offset_in_bytes(ciArray* a_h, ciObject* o_h) {
   }
   return -1;
 }
-
 
 // ------------------------------------------------------------------
 // ciEnv::check_klass_accessiblity
@@ -588,7 +500,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
   EXCEPTION_CONTEXT;
   int index = pool_index;
   if (cache_index >= 0) {
-    assert(index < 0, "only one kind of index at a time");
+    assert(index < 0, "only one kind of index at a time");
     index = cpool->object_to_cp_index(cache_index);
     oop obj = cpool->resolved_references()->obj_at(cache_index);
     if (obj != NULL) {
@@ -604,7 +516,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
         if (!is_java_primitive(bt))  return ciConstant();
         jvalue value;
         BasicType bt2 = java_lang_boxing_object::get_value(obj, &value);
-        assert(bt2 == bt, "");
+        assert(bt2 == bt, "");
         switch (bt2) {
         case T_DOUBLE:  return ciConstant(value.d);
         case T_FLOAT:   return ciConstant(value.f);
@@ -621,7 +533,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
       if (ciobj->is_array()) {
         return ciConstant(T_ARRAY, ciobj);
       } else {
-        assert(ciobj->is_instance(), "should be an instance");
+        assert(ciobj->is_instance(), "should be an instance");
         return ciConstant(T_OBJECT, ciobj);
       }
     }
@@ -637,7 +549,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
     return ciConstant((jdouble)cpool->double_at(index));
   } else if (tag.is_string()) {
     oop string = NULL;
-    assert(cache_index >= 0, "should have a cache index");
+    assert(cache_index >= 0, "should have a cache index");
     if (cpool->is_pseudo_string_at(index)) {
       string = cpool->pseudo_string_at(index, cache_index);
     } else {
@@ -652,7 +564,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
     if (constant->is_array()) {
       return ciConstant(T_ARRAY, constant);
     } else {
-      assert (constant->is_instance(), "must be an instance, or not? ");
+      assert(constant->is_instance(), "must be an instance, or not? ");
       return ciConstant(T_OBJECT, constant);
     }
   } else if (tag.is_klass() || tag.is_unresolved_klass()) {
@@ -663,8 +575,7 @@ ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
       record_out_of_memory_failure();
       return ciConstant();
     }
-    assert (klass->is_instance_klass() || klass->is_array_klass(),
-            "must be an instance or array klass ");
+    assert(klass->is_instance_klass() || klass->is_array_klass(), "must be an instance or array klass ");
     return ciConstant(T_OBJECT, klass->java_mirror());
   } else if (tag.is_method_type()) {
     // must execute Java code to link this CP entry into cache[i].f1
@@ -744,7 +655,7 @@ Method* ciEnv::lookup_method(ciInstanceKlass* accessor,
                              Bytecodes::Code  bc,
                              constantTag      tag) {
   // Accessibility checks are performed in ciEnv::get_method_by_index_impl.
-  assert(check_klass_accessibility(accessor, holder->get_Klass()), "holder not accessible");
+  assert(check_klass_accessibility(accessor, holder->get_Klass()), "holder not accessible");
 
   InstanceKlass* accessor_klass = accessor->get_instanceKlass();
   Klass* holder_klass = holder->get_Klass();
@@ -772,7 +683,6 @@ Method* ciEnv::lookup_method(ciInstanceKlass* accessor,
 
   return dest_method();
 }
-
 
 // ------------------------------------------------------------------
 // ciEnv::get_method_by_index_impl
@@ -836,7 +746,7 @@ ciMethod* ciEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
 
     if (holder_is_accessible) {  // Our declared holder is loaded.
       constantTag tag = cpool->tag_ref_at(index);
-      assert(accessor->get_instanceKlass() == cpool->pool_holder(), "not the pool holder?");
+      assert(accessor->get_instanceKlass() == cpool->pool_holder(), "not the pool holder?");
       Method* m = lookup_method(accessor, holder, name_sym, sig_sym, bc, tag);
       if (m != NULL &&
           (bc == Bytecodes::_invokestatic
@@ -844,11 +754,6 @@ ciMethod* ciEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
            : !m->method_holder()->is_loaded())) {
         m = NULL;
       }
-#ifdef ASSERT
-      if (m != NULL && ReplayCompiles && !ciReplay::is_loaded(m)) {
-        m = NULL;
-      }
-#endif
       if (m != NULL) {
         // We found the method.
         return get_method(m);
@@ -863,7 +768,6 @@ ciMethod* ciEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
     return get_unloaded_method(holder, name, signature, accessor);
   }
 }
-
 
 // ------------------------------------------------------------------
 // ciEnv::get_instance_klass_for_declared_method_holder
@@ -887,7 +791,6 @@ ciInstanceKlass* ciEnv::get_instance_klass_for_declared_method_holder(ciKlass* m
   return NULL;
 }
 
-
 // ------------------------------------------------------------------
 // ciEnv::get_method_by_index
 ciMethod* ciEnv::get_method_by_index(const constantPoolHandle& cpool,
@@ -895,7 +798,6 @@ ciMethod* ciEnv::get_method_by_index(const constantPoolHandle& cpool,
                                      ciInstanceKlass* accessor) {
   GUARDED_VM_ENTRY(return get_method_by_index_impl(cpool, index, bc, accessor);)
 }
-
 
 // ------------------------------------------------------------------
 // ciEnv::name_buffer
@@ -972,11 +874,6 @@ void ciEnv::register_method(ciMethod* target,
     MutexLocker ml(Compile_lock);
     NoSafepointVerifier nsv;
 
-    // Change in Jvmti state may invalidate compilation.
-    if (!failing() && jvmti_state_changed()) {
-      record_failure("Jvmti state change invalidated dependencies");
-    }
-
     // Change in DTrace flags may invalidate compilation.
     if (!failing() &&
         ( (!dtrace_extended_probes() && ExtendedDTraceProbes) ||
@@ -1023,8 +920,8 @@ void ciEnv::register_method(ciMethod* target,
       return;
     }
 
-    assert(offsets->value(CodeOffsets::Deopt) != -1, "must have deopt entry");
-    assert(offsets->value(CodeOffsets::Exceptions) != -1, "must have exception entry");
+    assert(offsets->value(CodeOffsets::Deopt) != -1, "must have deopt entry");
+    assert(offsets->value(CodeOffsets::Exceptions) != -1, "must have exception entry");
 
     nm =  nmethod::new_nmethod(method,
                                compile_id(),
@@ -1089,7 +986,7 @@ void ciEnv::register_method(ciMethod* target,
       }
       nm->make_in_use();
     }
-  }  // safepoints are allowed again
+  }
 
   if (nm != NULL) {
     // JVMTI -- compiled method notification (must be done outside lock)
@@ -1099,7 +996,6 @@ void ciEnv::register_method(ciMethod* target,
     record_failure("code cache is full");
   }
 }
-
 
 // ------------------------------------------------------------------
 // ciEnv::find_system_klass
@@ -1206,15 +1102,9 @@ void ciEnv::dump_compile_data(outputStream* out) {
                entry_bci, comp_level);
     if (compiler_data() != NULL) {
       if (is_c2_compile(comp_level)) {
-#ifdef COMPILER2
-        // Dump C2 inlining data.
-        ((Compile*)compiler_data())->dump_inline_data(out);
-#endif
       } else if (is_c1_compile(comp_level)) {
-#ifdef COMPILER1
         // Dump C1 inlining data.
         ((Compilation*)compiler_data())->dump_inline_data(out);
-#endif
       }
     }
     out->cr();
@@ -1223,11 +1113,6 @@ void ciEnv::dump_compile_data(outputStream* out) {
 
 void ciEnv::dump_replay_data_unsafe(outputStream* out) {
   ResourceMark rm;
-#if INCLUDE_JVMTI
-  out->print_cr("JvmtiExport can_access_local_variables %d",     _jvmti_can_access_local_variables);
-  out->print_cr("JvmtiExport can_hotswap_or_post_breakpoint %d", _jvmti_can_hotswap_or_post_breakpoint);
-  out->print_cr("JvmtiExport can_post_on_exceptions %d",         _jvmti_can_post_on_exceptions);
-#endif // INCLUDE_JVMTI
 
   GrowableArray<ciMetadata*>* objects = _factory->get_ci_metadata();
   out->print_cr("# %d ciObject found", objects->length());

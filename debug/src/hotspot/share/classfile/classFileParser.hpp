@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_CLASSFILEPARSER_HPP
 #define SHARE_VM_CLASSFILE_CLASSFILEPARSER_HPP
 
@@ -334,23 +310,13 @@ class ClassFileParser {
     if (!b) { classfile_parse_error(msg, CHECK); }
   }
 
-  void report_assert_property_failure(const char* msg, TRAPS) const PRODUCT_RETURN;
-  void report_assert_property_failure(const char* msg, int index, TRAPS) const PRODUCT_RETURN;
+  void report_assert_property_failure(const char* msg, TRAPS) const {};
+  void report_assert_property_failure(const char* msg, int index, TRAPS) const {};
 
   inline void assert_property(bool b, const char* msg, TRAPS) const {
-#ifdef ASSERT
-    if (!b) {
-      report_assert_property_failure(msg, THREAD);
-    }
-#endif
   }
 
   inline void assert_property(bool b, const char* msg, int index, TRAPS) const {
-#ifdef ASSERT
-    if (!b) {
-      report_assert_property_failure(msg, index, THREAD);
-    }
-#endif
   }
 
   inline void check_property(bool property,
@@ -429,14 +395,14 @@ class ClassFileParser {
                                         TRAPS) const;
 
   bool has_cp_patch_at(int index) const {
-    assert(index >= 0, "oob");
+    assert(index >= 0, "oob");
     return (_cp_patches != NULL
             && index < _cp_patches->length()
             && _cp_patches->adr_at(index)->not_null());
   }
 
   Handle cp_patch_at(int index) const {
-    assert(has_cp_patch_at(index), "oob");
+    assert(has_cp_patch_at(index), "oob");
     return _cp_patches->at(index);
   }
 
@@ -539,11 +505,6 @@ class ClassFileParser {
   bool is_internal() const { return INTERNAL == _pub_level; }
 
   static bool verify_unqualified_name(const char* name, unsigned int length, int type);
-
-#ifdef ASSERT
-  static bool is_internal_format(Symbol* class_name);
-#endif
-
 };
 
-#endif // SHARE_VM_CLASSFILE_CLASSFILEPARSER_HPP
+#endif

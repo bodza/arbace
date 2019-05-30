@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1MARKSTACK_INLINE_HPP
 #define SHARE_VM_GC_G1_G1MARKSTACK_INLINE_HPP
 
@@ -69,10 +45,9 @@ template <class T> inline void G1FullGCMarker::mark_and_push(T* p) {
     oop obj = CompressedOops::decode_not_null(heap_oop);
     if (mark_object(obj)) {
       _oop_stack.push(obj);
-      assert(_bitmap->is_marked(obj), "Must be marked now - map self");
+      assert(_bitmap->is_marked(obj), "Must be marked now - map self");
     } else {
-      assert(_bitmap->is_marked(obj) || G1ArchiveAllocator::is_closed_archive_object(obj),
-             "Must be marked by other or closed archive object");
+      assert(_bitmap->is_marked(obj) || G1ArchiveAllocator::is_closed_archive_object(obj), "Must be marked by other or closed archive object");
     }
   }
 }
@@ -87,7 +62,7 @@ inline bool G1FullGCMarker::pop_object(oop& oop) {
 
 inline void G1FullGCMarker::push_objarray(oop obj, size_t index) {
   ObjArrayTask task(obj, index);
-  assert(task.is_valid(), "bad ObjArrayTask");
+  assert(task.is_valid(), "bad ObjArrayTask");
   _objarray_stack.push(task);
 }
 
@@ -106,7 +81,7 @@ inline void G1FullGCMarker::follow_array(objArrayOop array) {
 void G1FullGCMarker::follow_array_chunk(objArrayOop array, int index) {
   const int len = array->length();
   const int beg_index = index;
-  assert(beg_index < len || len == 0, "index too large");
+  assert(beg_index < len || len == 0, "index too large");
 
   const int stride = MIN2(len - beg_index, (int) ObjArrayMarkingStride);
   const int end_index = beg_index + stride;
@@ -122,13 +97,13 @@ void G1FullGCMarker::follow_array_chunk(objArrayOop array, int index) {
     _verify_closure.set_containing_obj(array);
     array->oop_iterate_range(&_verify_closure, beg_index, end_index);
     if (_verify_closure.failures()) {
-      assert(false, "Failed");
+      assert(false, "Failed");
     }
   }
 }
 
 inline void G1FullGCMarker::follow_object(oop obj) {
-  assert(_bitmap->is_marked(obj), "should be marked");
+  assert(_bitmap->is_marked(obj), "should be marked");
   if (obj->is_objArray()) {
     // Handle object arrays explicitly to allow them to
     // be split into chunks if needed.
@@ -143,7 +118,7 @@ inline void G1FullGCMarker::follow_object(oop obj) {
       obj->oop_iterate(&_verify_closure);
       if (_verify_closure.failures()) {
         log_warning(gc, verify)("Failed after %d", _verify_closure._cc);
-        assert(false, "Failed");
+        assert(false, "Failed");
       }
     }
   }
@@ -153,7 +128,7 @@ void G1FullGCMarker::drain_stack() {
   do {
     oop obj;
     while (pop_object(obj)) {
-      assert(_bitmap->is_marked(obj), "must be marked");
+      assert(_bitmap->is_marked(obj), "must be marked");
       follow_object(obj);
     }
     // Process ObjArrays one at a time to avoid marking stack bloat.

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_GENERATION_HPP
 #define SHARE_VM_GC_SHARED_GENERATION_HPP
 
@@ -141,7 +117,7 @@ class Generation: public CHeapObj<mtGC> {
   // allocate and initialize ("weak") refs processing support
   virtual void ref_processor_init();
   void set_ref_processor(ReferenceProcessor* rp) {
-    assert(_ref_processor == NULL, "clobbering existing _ref_processor");
+    assert(_ref_processor == NULL, "clobbering existing _ref_processor");
     _ref_processor = rp;
   }
 
@@ -380,11 +356,6 @@ class Generation: public CHeapObj<mtGC> {
     // that guarantees monotonically non-decreasing values provided
     // the underlying platform provides such a source. So we still
     // have to guard against non-monotonicity.
-    NOT_PRODUCT(
-      if (now < _time_of_last_gc) {
-        log_warning(gc)("time warp: " JLONG_FORMAT " to " JLONG_FORMAT, _time_of_last_gc, now);
-      }
-    )
     return _time_of_last_gc;
   }
 
@@ -400,16 +371,6 @@ class Generation: public CHeapObj<mtGC> {
   // the collection of the young generation has completed.
   GCStats* gc_stats() const { return _gc_stats; }
   virtual void update_gc_stats(Generation* current_generation, bool full) {}
-
-#if INCLUDE_SERIALGC
-  // Mark sweep support phase2
-  virtual void prepare_for_compaction(CompactPoint* cp);
-  // Mark sweep support phase3
-  virtual void adjust_pointers();
-  // Mark sweep support phase4
-  virtual void compact();
-  virtual void post_compact() { ShouldNotReachHere(); }
-#endif
 
   // Support for CMS's rescan. In this general form we return a pointer
   // to an abstract object that can be used, based on specific previously
@@ -543,14 +504,13 @@ public:
   virtual CollectorCounters* counters() { return _gc_counters; }
 
   GCMemoryManager* gc_manager() const {
-    assert(_gc_manager != NULL, "not initialized yet");
+    assert(_gc_manager != NULL, "not initialized yet");
     return _gc_manager;
   }
 
   void set_gc_manager(GCMemoryManager* gc_manager) {
     _gc_manager = gc_manager;
   }
-
 };
 
-#endif // SHARE_VM_GC_SHARED_GENERATION_HPP
+#endif

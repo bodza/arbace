@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_OBJARRAYOOP_HPP
 #define SHARE_VM_OOPS_OBJARRAYOOP_HPP
 
@@ -52,25 +28,8 @@ private:
   // Give size of objArrayOop in HeapWords minus the header
   static int array_size(int length) {
     const uint OopsPerHeapWord = HeapWordSize/heapOopSize;
-    assert(OopsPerHeapWord >= 1 && (HeapWordSize % heapOopSize == 0),
-           "Else the following (new) computation would be in error");
+    assert(OopsPerHeapWord >= 1 && (HeapWordSize % heapOopSize == 0), "Else the following (new) computation would be in error");
     uint res = ((uint)length + OopsPerHeapWord - 1)/OopsPerHeapWord;
-#ifdef ASSERT
-    // The old code is left in for sanity-checking; it'll
-    // go away pretty soon. XXX
-    // Without UseCompressedOops, this is simply:
-    // oop->length() * HeapWordsPerOop;
-    // With narrowOops, HeapWordsPerOop is 1/2 or equal 0 as an integer.
-    // The oop elements are aligned up to wordSize
-    const uint HeapWordsPerOop = heapOopSize/HeapWordSize;
-    uint old_res;
-    if (HeapWordsPerOop > 0) {
-      old_res = length * HeapWordsPerOop;
-    } else {
-      old_res = align_up((uint)length, OopsPerHeapWord)/OopsPerHeapWord;
-    }
-    assert(res == old_res, "Inconsistency between old and new.");
-#endif  // ASSERT
     return res;
   }
 
@@ -99,8 +58,8 @@ private:
     // This returns the object size in HeapWords.
     uint asz = array_size(length);
     uint osz = align_object_size(header_size() + asz);
-    assert(osz >= asz,   "no overflow");
-    assert((int)osz > 0, "no overflow");
+    assert(osz >= asz,   "no overflow");
+    assert((int)osz > 0, "no overflow");
     return (int)osz;
   }
 
@@ -112,4 +71,4 @@ public:
   void oop_iterate_range(OopClosureType* blk, int start, int end);
 };
 
-#endif // SHARE_VM_OOPS_OBJARRAYOOP_HPP
+#endif

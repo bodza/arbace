@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef SHARE_VM_AOT_AOTCOMPILEDMETHOD_HPP
 #define SHARE_VM_AOT_AOTCOMPILEDMETHOD_HPP
 
@@ -82,7 +59,6 @@ public:
   int handler_table_size() const { return handler_table_end() - handler_table_begin(); }
   int nul_chk_table_size() const { return nul_chk_table_end() - nul_chk_table_begin(); }
   bool has_unsafe_access() const { return _unsafe_access != 0; }
-
 };
 
 /*
@@ -238,11 +214,6 @@ private:
   address get_original_pc(const frame* fr) { return *orig_pc_addr(fr); }
   void    set_original_pc(const frame* fr, address pc) { *orig_pc_addr(fr) = pc; }
 
-#ifdef HOTSWAP
-  // Flushing and deoptimization in case of evolution
-  void flush_evol_dependents_on(InstanceKlass* dependee);
-#endif // HOTSWAP
-
   virtual void metadata_do(void f(Metadata*));
 
   bool metadata_got_contains(Metadata **p) {
@@ -259,7 +230,7 @@ private:
 
   // inlined and non-virtual for AOTCodeHeap::oops_do
   void do_oops(OopClosure* f) {
-    assert(_is_alive(), "");
+    assert(_is_alive(), "");
     if (_oop != NULL) {
       f->do_oop(&_oop);
     }
@@ -267,7 +238,6 @@ private:
     metadata_oops_do(metadata_begin(), metadata_end(), f);
 #endif
   }
-
 
 protected:
   // AOT compiled methods are not flushed
@@ -286,7 +256,6 @@ private:
 protected:
   virtual bool do_unloading_oops(address low_boundary, BoolObjectClosure* is_alive);
   virtual bool do_unloading_jvmci() { return false; }
-
 };
 
 class PltNativeCallWrapper: public NativeCallWrapper {
@@ -321,4 +290,4 @@ public:
   }
 };
 
-#endif //SHARE_VM_AOT_AOTCOMPILEDMETHOD_HPP
+#endif

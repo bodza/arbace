@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_VFRAME_HPP
 #define SHARE_VM_RUNTIME_VFRAME_HPP
 
@@ -66,7 +42,7 @@ class vframe: public ResourceObj {
   frame              fr()           const { return _fr;       }
   CodeBlob*          cb()         const { return _fr.cb();  }
   CompiledMethod*   nm()         const {
-      assert( cb() != NULL && cb()->is_compiled(), "usage");
+      assert( cb() != NULL && cb()->is_compiled(), "usage");
       return (CompiledMethod*) cb();
   }
 
@@ -93,14 +69,7 @@ class vframe: public ResourceObj {
   virtual bool is_java_frame()        const { return false; }
   virtual bool is_interpreted_frame() const { return false; }
   virtual bool is_compiled_frame()    const { return false; }
-
-#ifndef PRODUCT
-  // printing operations
-  virtual void print_value() const;
-  virtual void print();
-#endif
 };
-
 
 class javaVFrame: public vframe {
  public:
@@ -127,7 +96,7 @@ class javaVFrame: public vframe {
  public:
   // casting
   static javaVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_java_frame(), "must be java frame");
+    assert(vf == NULL || vf->is_java_frame(), "must be java frame");
     return (javaVFrame*) vf;
   }
 
@@ -139,19 +108,6 @@ class javaVFrame: public vframe {
   void print_lock_info_on(outputStream* st, int frame_count);
   void print_lock_info(int frame_count) { print_lock_info_on(tty, frame_count); }
 
-#ifndef PRODUCT
- public:
-  // printing operations
-  void print();
-  void print_value() const;
-  void print_activation(int index) const;
-
-  // verify operations
-  virtual void verify() const;
-
-  // Structural compare
-  bool structural_compare(javaVFrame* other);
-#endif
   friend class vframe;
 };
 
@@ -179,7 +135,7 @@ class interpretedVFrame: public javaVFrame {
 
   // casting
   static interpretedVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_interpreted_frame(), "must be interpreted frame");
+    assert(vf == NULL || vf->is_interpreted_frame(), "must be interpreted frame");
     return (interpretedVFrame*) vf;
   }
 
@@ -190,25 +146,13 @@ class interpretedVFrame: public javaVFrame {
   // returns where the parameters starts relative to the frame pointer
   int start_of_parameters() const;
 
-#ifndef PRODUCT
- public:
-  // verify operations
-  void verify() const;
-#endif
   friend class vframe;
 };
-
 
 class externalVFrame: public vframe {
  protected:
   externalVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : vframe(fr, reg_map, thread) {}
 
-#ifndef PRODUCT
- public:
-  // printing operations
-  void print_value() const;
-  void print();
-#endif
   friend class vframe;
 };
 
@@ -222,19 +166,12 @@ class entryVFrame: public externalVFrame {
  public:
   // casting
   static entryVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_entry_frame(), "must be entry frame");
+    assert(vf == NULL || vf->is_entry_frame(), "must be entry frame");
     return (entryVFrame*) vf;
   }
 
-#ifndef PRODUCT
- public:
-  // printing
-  void print_value() const;
-  void print();
-#endif
   friend class vframe;
 };
-
 
 // A MonitorInfo is a ResourceObject that describes a the pair:
 // 1) the owner of the monitor
@@ -253,7 +190,7 @@ class MonitorInfo : public ResourceObj {
       _owner = owner;
       _owner_klass = NULL;
     } else {
-      assert(eliminated, "monitor should be eliminated for scalar replaced object");
+      assert(eliminated, "monitor should be eliminated for scalar replaced object");
       _owner = NULL;
       _owner_klass = owner;
     }
@@ -263,11 +200,11 @@ class MonitorInfo : public ResourceObj {
   }
   // Accessors
   oop        owner() const {
-    assert(!_owner_is_scalar_replaced, "should not be called for scalar replaced object");
+    assert(!_owner_is_scalar_replaced, "should not be called for scalar replaced object");
     return _owner;
   }
   oop   owner_klass() const {
-    assert(_owner_is_scalar_replaced, "should not be called for not scalar replaced object");
+    assert(_owner_is_scalar_replaced, "should not be called for not scalar replaced object");
     return _owner_klass;
   }
   BasicLock* lock()  const { return _lock;  }
@@ -302,8 +239,6 @@ class vframeStreamCommon : StackObj {
   // Helper routine for security_get_caller_frame
   void skip_prefixed_method_and_wrappers();
 
-  DEBUG_ONLY(void found_bad_method_frame() const;)
-
  public:
   // Constructor
   inline vframeStreamCommon(JavaThread* thread);
@@ -316,7 +251,7 @@ class vframeStreamCommon : StackObj {
 
   CodeBlob*          cb()         const { return _frame.cb();  }
   CompiledMethod*   nm()         const {
-      assert( cb() != NULL && cb()->is_compiled(), "usage");
+      assert( cb() != NULL && cb()->is_compiled(), "usage");
       return (CompiledMethod*) cb();
   }
 
@@ -348,4 +283,4 @@ class vframeStream : public vframeStreamCommon {
   vframeStream(JavaThread* thread, frame top_frame, bool stop_at_java_call_stub = false);
 };
 
-#endif // SHARE_VM_RUNTIME_VFRAME_HPP
+#endif

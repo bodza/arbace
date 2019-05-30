@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_GENERATEOOPMAP_HPP
 #define SHARE_VM_OOPS_GENERATEOOPMAP_HPP
 
@@ -45,7 +21,6 @@ class StackMap;
 
 typedef void (*jmpFct_t)(GenerateOopMap *c, int bcpDelta, int* data);
 
-
 //  RetTable
 //
 // Contains maping between jsr targets and there return addresses. One-to-many mapping
@@ -62,14 +37,15 @@ class RetTableEntry : public ResourceObj {
   // Query
   int target_bci() const                      { return _target_bci; }
   int nof_jsrs() const                        { return _jsrs->length(); }
-  int jsrs(int i) const                       { assert(i>=0 && i<nof_jsrs(), "Index out of bounds"); return _jsrs->at(i); }
+  int jsrs(int i) const                       {
+    assert(i>=0 && i<nof_jsrs(), "Index out of bounds");
+    return _jsrs->at(i); }
 
   // Update entry
   void add_jsr    (int return_bci)            { _jsrs->append(return_bci); }
   void add_delta  (int bci, int delta);
   RetTableEntry * next()  const               { return _next; }
 };
-
 
 class RetTable {
  private:
@@ -117,7 +93,6 @@ class CellTypeState {
                                               // 0 if it is a "line" reference.
          ref_data_mask        = right_n_bits(24) };
 
-
   // These values are used to initialize commonly used CellTypeState
   // constants.
   enum { bottom_value         = 0,
@@ -155,24 +130,24 @@ class CellTypeState {
   }
 
   static CellTypeState make_addr(int bci) {
-    assert((bci >= 0) && (bci < info_data_mask), "check to see if ret addr is valid");
+    assert((bci >= 0) && (bci < info_data_mask), "check to see if ret addr is valid");
     return make_any(addr_bit | not_bottom_info_bit | (bci & info_data_mask));
   }
 
   static CellTypeState make_slot_ref(int slot_num) {
-    assert(slot_num >= 0 && slot_num < ref_data_mask, "slot out of range");
+    assert(slot_num >= 0 && slot_num < ref_data_mask, "slot out of range");
     return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit | ref_slot_bit |
                     (slot_num & ref_data_mask));
   }
 
   static CellTypeState make_line_ref(int bci) {
-    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
+    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
     return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit |
                     (bci & ref_data_mask));
   }
 
   static CellTypeState make_lock_ref(int bci) {
-    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
+    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
     return make_any(ref_bit | not_bottom_info_bit | (bci & ref_data_mask));
   }
 
@@ -208,8 +183,7 @@ class CellTypeState {
   bool is_info_bottom() const           { return ((_state & not_bottom_info_bit) == 0); }
   bool is_info_top() const              { return ((_state & top_info_bit) != 0); }
   int  get_info() const {
-    assert((!is_info_top() && !is_info_bottom()),
-           "check to make sure top/bottom info is not used");
+    assert((!is_info_top() && !is_info_bottom()), "check to make sure top/bottom info is not used");
     return (_state & info_data_mask);
   }
 
@@ -245,7 +219,6 @@ class CellTypeState {
   static CellTypeState addr;
 };
 
-
 //
 // BasicBlockStruct
 //
@@ -279,9 +252,10 @@ class BasicBlock: ResourceObj {
   // This info. is setup in a pre-parse before the real abstract interpretation starts.
   bool is_dead() const                      { return _stack_top == _dead_basic_block; }
   bool is_alive() const                     { return _stack_top != _dead_basic_block; }
-  void mark_as_alive()                      { assert(is_dead(), "must be dead"); _stack_top = _unreached; }
+  void mark_as_alive()                      {
+    assert(is_dead(), "must be dead");
+    _stack_top = _unreached; }
 };
-
 
 //
 //  GenerateOopMap
@@ -525,20 +499,12 @@ class ResolveOopMapConflicts: public GenerateOopMap {
                                            int stack_top)                 {}
   virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { _must_clear_locals = init_vars->length() > 0; }
 
-#ifndef PRODUCT
-  // Statistics
-  static int _nof_invocations;
-  static int _nof_rewrites;
-  static int _nof_relocations;
-#endif
-
  public:
   ResolveOopMapConflicts(const methodHandle& method) : GenerateOopMap(method) { _must_clear_locals = false; };
 
   methodHandle do_potential_rewrite(TRAPS);
   bool must_clear_locals() const { return _must_clear_locals; }
 };
-
 
 //
 // Subclass used by the compiler to generate pairing infomation
@@ -563,4 +529,4 @@ class GeneratePairingInfo: public GenerateOopMap {
   // Call compute_map(CHECK) to generate info.
 };
 
-#endif // SHARE_VM_OOPS_GENERATEOOPMAP_HPP
+#endif

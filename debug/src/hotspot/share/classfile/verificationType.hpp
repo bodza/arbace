@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_VERIFICATIONTYPE_HPP
 #define SHARE_VM_CLASSFILE_VERIFICATIONTYPE_HPP
 
@@ -157,7 +133,7 @@ class VerificationType {
 
   // For reference types, store the actual Symbol
   static VerificationType reference_type(Symbol* sh) {
-      assert(((uintptr_t)sh & 0x3) == 0, "Symbols must be aligned");
+      assert(((uintptr_t)sh & 0x3) == 0, "Symbols must be aligned");
       // If the above assert fails in the future because oop* isn't aligned,
       // then this type encoding system will have to change to have a tag value
       // to descriminate between oops and primitives.
@@ -191,7 +167,7 @@ class VerificationType {
     // allow this to return true, we can perform the test using only
     // 2 operations rather than 8 (3 masks, 3 compares and 2 logical 'ands').
     // Since noone should call this on a query type anyway, this is ok.
-    assert(!is_check(), "Must not be a check type (wrong value returned)");
+    assert(!is_check(), "Must not be a check type (wrong value returned)");
     return ((_u._data & Category1) != Primitive);
     // should only return false if it's a primitive, and the category1 flag
     // is not set.
@@ -233,17 +209,17 @@ class VerificationType {
     { return is_uninitialized() && bci() == BciForThis; }
 
   VerificationType to_category2_2nd() const {
-    assert(is_category2(), "Must be a double word");
+    assert(is_category2(), "Must be a double word");
     return VerificationType(is_long() ? Long_2nd : Double_2nd);
   }
 
   u2 bci() const {
-    assert(is_uninitialized(), "Must be uninitialized type");
+    assert(is_uninitialized(), "Must be uninitialized type");
     return ((_u._data & BciMask) >> 1 * BitsPerByte);
   }
 
   Symbol* name() const {
-    assert(is_reference() && !is_null(), "Must be a non-null reference");
+    assert(is_reference() && !is_null(), "Must be a non-null reference");
     return _u._sym;
   }
 
@@ -320,7 +296,7 @@ class VerificationType {
   VerificationType get_component(ClassVerifier* context, TRAPS) const;
 
   int dimensions() const {
-    assert(is_array(), "Must be an array");
+    assert(is_array(), "Must be an array");
     int index = 0;
     while (name()->byte_at(index) == '[') index++;
     return index;
@@ -341,4 +317,4 @@ class VerificationType {
                                               TRAPS);
 };
 
-#endif // SHARE_VM_CLASSFILE_VERIFICATIONTYPE_HPP
+#endif

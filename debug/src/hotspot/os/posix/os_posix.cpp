@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
@@ -59,11 +35,11 @@
   #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#define check_with_errno(check_type, cond, msg)                             \
-  do {                                                                      \
-    int err = errno;                                                        \
-    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err),   \
-               os::errno_name(err));                                        \
+#define check_with_errno(check_type, cond, msg) \
+  do { \
+    int err = errno; \
+    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), \
+               os::errno_name(err)); \
 } while (false)
 
 #define assert_with_errno(cond, msg)    check_with_errno(assert, cond, msg)
@@ -142,9 +118,8 @@ int os::get_native_stack(address* stack, int frames, int toSkip) {
   return num_of_frames;
 }
 
-
 bool os::unsetenv(const char* name) {
-  assert(name != NULL, "Null pointer");
+  assert(name != NULL, "Null pointer");
   return (::unsetenv(name) == 0);
 }
 
@@ -204,7 +179,7 @@ static char* reserve_mmapped_memory(size_t bytes, char* requested_addr) {
   char * addr;
   int flags = MAP_PRIVATE NOT_AIX( | MAP_NORESERVE ) | MAP_ANONYMOUS;
   if (requested_addr != NULL) {
-    assert((uintptr_t)requested_addr % os::vm_page_size() == 0, "Requested address should be aligned to OS page size");
+    assert((uintptr_t)requested_addr % os::vm_page_size() == 0, "Requested address should be aligned to OS page size");
     flags |= MAP_FIXED;
   }
 
@@ -242,7 +217,7 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
 
 // Map the given address range to the provided file descriptor.
 char* os::map_memory_to_file(char* base, size_t size, int fd) {
-  assert(fd != -1, "File descriptor is not valid");
+  assert(fd != -1, "File descriptor is not valid");
 
   // allocate space for the file
   int ret = util_posix_fallocate(fd, 0, (off_t)size);
@@ -272,8 +247,8 @@ char* os::map_memory_to_file(char* base, size_t size, int fd) {
 }
 
 char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, int fd) {
-  assert(fd != -1, "File descriptor is not valid");
-  assert(base != NULL, "Base cannot be NULL");
+  assert(fd != -1, "File descriptor is not valid");
+  assert(base != NULL, "Base cannot be NULL");
 
   return map_memory_to_file(base, size, fd);
 }
@@ -282,12 +257,11 @@ char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, in
 // so on posix, unmap the section at the start and at the end of the chunk that we mapped
 // rather than unmapping and remapping the whole chunk to get requested alignment.
 char* os::reserve_memory_aligned(size_t size, size_t alignment, int file_desc) {
-  assert((alignment & (os::vm_allocation_granularity() - 1)) == 0,
-      "Alignment must be a multiple of allocation granularity (page size)");
-  assert((size & (alignment -1)) == 0, "size must be 'alignment' aligned");
+  assert((alignment & (os::vm_allocation_granularity() - 1)) == 0, "Alignment must be a multiple of allocation granularity (page size)");
+  assert((size & (alignment -1)) == 0, "size must be 'alignment' aligned");
 
   size_t extra_size = size + alignment;
-  assert(extra_size >= size, "overflow, size is too large to allow alignment");
+  assert(extra_size >= size, "overflow, size is too large to allow alignment");
 
   char* extra_base;
   if (file_desc != -1) {
@@ -380,16 +354,10 @@ void os::Posix::print_rlimit_info(outputStream* st) {
   if (rlim.rlim_cur == RLIM_INFINITY) st->print("infinity");
   else st->print(UINT64_FORMAT "k", uint64_t(rlim.rlim_cur) / 1024);
 
-  // Isn't there on solaris
-#if defined(AIX)
-  st->print(", NPROC ");
-  st->print("%d", sysconf(_SC_CHILD_MAX));
-#elif !defined(SOLARIS)
   st->print(", NPROC ");
   getrlimit(RLIMIT_NPROC, &rlim);
   if (rlim.rlim_cur == RLIM_INFINITY) st->print("infinity");
   else st->print(UINT64_FORMAT, uint64_t(rlim.rlim_cur));
-#endif
 
   st->print(", NOFILE ");
   getrlimit(RLIMIT_NOFILE, &rlim);
@@ -420,9 +388,6 @@ void os::Posix::print_uname_info(outputStream* st) {
   struct utsname name;
   uname(&name);
   st->print("%s ", name.sysname);
-#ifdef ASSERT
-  st->print("%s ", name.nodename);
-#endif
   st->print("%s ", name.release);
   st->print("%s ", name.version);
   st->print("%s", name.machine);
@@ -460,7 +425,6 @@ void os::Posix::print_user_info(outputStream* st) {
   st->cr();
 }
 
-
 bool os::get_host_name(char* buf, size_t buflen) {
   struct utsname name;
   uname(&name);
@@ -480,56 +444,7 @@ bool os::has_allocatable_memory_limit(julong* limit) {
     *limit = (julong)rlim.rlim_cur;
     result = true;
   }
-#ifdef _LP64
   return result;
-#else
-  // arbitrary virtual space limit for 32 bit Unices found by testing. If
-  // getrlimit above returned a limit, bound it with this limit. Otherwise
-  // directly use it.
-  const julong max_virtual_limit = (julong)3800*M;
-  if (result) {
-    *limit = MIN2(*limit, max_virtual_limit);
-  } else {
-    *limit = max_virtual_limit;
-  }
-
-  // bound by actually allocatable memory. The algorithm uses two bounds, an
-  // upper and a lower limit. The upper limit is the current highest amount of
-  // memory that could not be allocated, the lower limit is the current highest
-  // amount of memory that could be allocated.
-  // The algorithm iteratively refines the result by halving the difference
-  // between these limits, updating either the upper limit (if that value could
-  // not be allocated) or the lower limit (if the that value could be allocated)
-  // until the difference between these limits is "small".
-
-  // the minimum amount of memory we care about allocating.
-  const julong min_allocation_size = M;
-
-  julong upper_limit = *limit;
-
-  // first check a few trivial cases
-  if (is_allocatable(upper_limit) || (upper_limit <= min_allocation_size)) {
-    *limit = upper_limit;
-  } else if (!is_allocatable(min_allocation_size)) {
-    // we found that not even min_allocation_size is allocatable. Return it
-    // anyway. There is no point to search for a better value any more.
-    *limit = min_allocation_size;
-  } else {
-    // perform the binary search.
-    julong lower_limit = min_allocation_size;
-    while ((upper_limit - lower_limit) > min_allocation_size) {
-      julong temp_limit = ((upper_limit - lower_limit) / 2) + lower_limit;
-      temp_limit = align_down(temp_limit, min_allocation_size);
-      if (is_allocatable(temp_limit)) {
-        lower_limit = temp_limit;
-      } else {
-        upper_limit = temp_limit;
-      }
-    }
-    *limit = lower_limit;
-  }
-  return true;
-#endif
 }
 
 const char* os::get_current_directory(char *buf, size_t buflen) {
@@ -594,7 +509,7 @@ char* os::build_agent_function_name(const char *sym_name, const char *lib_name,
 }
 
 int os::sleep(Thread* thread, jlong millis, bool interruptible) {
-  assert(thread == Thread::current(),  "thread consistency check");
+  assert(thread == Thread::current(),  "thread consistency check");
 
   ParkEvent * const slp = thread->_SleepEvent ;
   slp->reset() ;
@@ -613,7 +528,7 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       if (newtime - prevtime < 0) {
         // time moving backwards, should only happen if no monotonic clock
         // not a guarantee() because JVM should not abort on kernel/glibc bugs
-        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected in os::sleep(interruptible)");
+        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected in os::sleep(interruptible)");
       } else {
         millis -= (newtime - prevtime) / NANOSECS_PER_MILLISEC;
       }
@@ -625,7 +540,7 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       prevtime = newtime;
 
       {
-        assert(thread->is_Java_thread(), "sanity check");
+        assert(thread->is_Java_thread(), "sanity check");
         JavaThread *jt = (JavaThread *) thread;
         ThreadBlockInVM tbivm(jt);
         OSThreadWaitState osts(jt->osthread(), false /* not Object.wait() */);
@@ -652,7 +567,7 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       if (newtime - prevtime < 0) {
         // time moving backwards, should only happen if no monotonic clock
         // not a guarantee() because JVM should not abort on kernel/glibc bugs
-        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected on os::sleep(!interruptible)");
+        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected on os::sleep(!interruptible)");
       } else {
         millis -= (newtime - prevtime) / NANOSECS_PER_MILLISEC;
       }
@@ -670,7 +585,6 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
 // interrupt support
 
 void os::interrupt(Thread* thread) {
-  debug_only(Thread::check_for_dangling_thread_pointer(thread);)
 
   OSThread* osthread = thread->osthread();
 
@@ -693,7 +607,6 @@ void os::interrupt(Thread* thread) {
 }
 
 bool os::is_interrupted(Thread* thread, bool clear_interrupted) {
-  debug_only(Thread::check_for_dangling_thread_pointer(thread);)
 
   OSThread* osthread = thread->osthread();
 
@@ -718,8 +631,6 @@ bool os::is_interrupted(Thread* thread, bool clear_interrupted) {
 
   return interrupted;
 }
-
-
 
 static const struct {
   int sig; const char* name;
@@ -992,7 +903,7 @@ const char* os::exception_name(int sig, char* buf, size_t size) {
 #define NUM_IMPORTANT_SIGS 32
 // Returns one-line short description of a signal set in a user provided buffer.
 const char* os::Posix::describe_signal_set_short(const sigset_t* set, char* buffer, size_t buf_size) {
-  assert(buf_size == (NUM_IMPORTANT_SIGS + 1), "wrong buffer size");
+  assert(buf_size == (NUM_IMPORTANT_SIGS + 1), "wrong buffer size");
   // Note: for shortness, just print out the first 32. That should
   // cover most of the useful ones, apart from realtime signals.
   for (int sig = 1; sig <= NUM_IMPORTANT_SIGS; sig++) {
@@ -1022,7 +933,7 @@ const char* os::Posix::describe_sa_flags(int flags, char* buffer, size_t size) {
   bool first = true;
   int idx = 0;
 
-  assert(buffer, "invalid argument");
+  assert(buffer, "invalid argument");
 
   if (size == 0) {
     return buffer;
@@ -1116,24 +1027,9 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
     // no explanation found what keyerr would be
     { SIGSEGV, SEGV_KEYERR,  "SEGV_KEYERR",  "key error" },
 #endif
-#if defined(IA64) && !defined(AIX)
+#if defined(IA64)
     { SIGSEGV, SEGV_PSTKOVF, "SEGV_PSTKOVF", "Paragraph stack overflow" },
 #endif
-#if defined(__sparc) && defined(SOLARIS)
-// define Solaris Sparc M7 ADI SEGV signals
-#if !defined(SEGV_ACCADI)
-#define SEGV_ACCADI 3
-#endif
-    { SIGSEGV, SEGV_ACCADI,  "SEGV_ACCADI",  "ADI not enabled for mapped object." },
-#if !defined(SEGV_ACCDERR)
-#define SEGV_ACCDERR 4
-#endif
-    { SIGSEGV, SEGV_ACCDERR, "SEGV_ACCDERR", "ADI disrupting exception." },
-#if !defined(SEGV_ACCPERR)
-#define SEGV_ACCPERR 5
-#endif
-    { SIGSEGV, SEGV_ACCPERR, "SEGV_ACCPERR", "ADI precise exception." },
-#endif // defined(__sparc) && defined(SOLARIS)
     { SIGBUS,  BUS_ADRALN,   "BUS_ADRALN",   "Invalid address alignment." },
     { SIGBUS,  BUS_ADRERR,   "BUS_ADRERR",   "Nonexistent physical address." },
     { SIGBUS,  BUS_OBJERR,   "BUS_OBJERR",   "Object-specific hardware error." },
@@ -1277,7 +1173,6 @@ void os::print_siginfo(outputStream* os, const void* si0) {
     os->print(", si_band: %ld", si->si_band);
 #endif
   }
-
 }
 
 int os::Posix::unblock_thread_signal_mask(const sigset_t *set) {
@@ -1285,28 +1180,20 @@ int os::Posix::unblock_thread_signal_mask(const sigset_t *set) {
 }
 
 address os::Posix::ucontext_get_pc(const ucontext_t* ctx) {
-#if defined(AIX)
-   return Aix::ucontext_get_pc(ctx);
-#elif defined(BSD)
+#if defined(BSD)
    return Bsd::ucontext_get_pc(ctx);
 #elif defined(LINUX)
    return Linux::ucontext_get_pc(ctx);
-#elif defined(SOLARIS)
-   return Solaris::ucontext_get_pc(ctx);
 #else
    VMError::report_and_die("unimplemented ucontext_get_pc");
 #endif
 }
 
 void os::Posix::ucontext_set_pc(ucontext_t* ctx, address pc) {
-#if defined(AIX)
-   Aix::ucontext_set_pc(ctx, pc);
-#elif defined(BSD)
+#if defined(BSD)
    Bsd::ucontext_set_pc(ctx, pc);
 #elif defined(LINUX)
    Linux::ucontext_set_pc(ctx, pc);
-#elif defined(SOLARIS)
-   Solaris::ucontext_set_pc(ctx, pc);
 #else
    VMError::report_and_die("unimplemented ucontext_get_pc");
 #endif
@@ -1330,7 +1217,7 @@ char* os::Posix::describe_pthread_attr(char* buf, size_t buflen, const pthread_a
 char* os::Posix::realpath(const char* filename, char* outbuf, size_t outbuflen) {
 
   if (filename == NULL || outbuf == NULL || outbuflen < 1) {
-    assert(false, "os::Posix::realpath: invalid arguments.");
+    assert(false, "os::Posix::realpath: invalid arguments.");
     errno = EINVAL;
     return NULL;
   }
@@ -1365,7 +1252,6 @@ char* os::Posix::realpath(const char* filename, char* outbuf, size_t outbuflen) 
     }
   }
   return result;
-
 }
 
 int os::stat(const char *path, struct stat *sbuf) {
@@ -1528,7 +1414,7 @@ bool os::ThreadCrashProtection::call(os::CrashProtectionCallback& cb) {
   Thread::muxAcquire(&_crash_mux, "CrashProtection");
 
   _protected_thread = Thread::current_or_null();
-  assert(_protected_thread != NULL, "Cannot crash protect a NULL thread");
+  assert(_protected_thread != NULL, "Cannot crash protect a NULL thread");
 
   // we cannot rely on sigsetjmp/siglongjmp to save/restore the signal mask
   // since on at least some systems (OS X) siglongjmp will restore the mask
@@ -1554,7 +1440,7 @@ bool os::ThreadCrashProtection::call(os::CrashProtectionCallback& cb) {
 }
 
 void os::ThreadCrashProtection::restore() {
-  assert(_crash_protection != NULL, "must have crash protection");
+  assert(_crash_protection != NULL, "must have crash protection");
   siglongjmp(_jmpbuf, 1);
 }
 
@@ -1570,7 +1456,6 @@ void os::ThreadCrashProtection::check_crash_protection(int sig,
     }
   }
 }
-
 
 // Shared pthread_mutex/cond based PlatformEvent implementation.
 // Not currently usable by Solaris.
@@ -1714,7 +1599,7 @@ void os::Posix::init_2(void) {
                _use_clock_monotonic_condattr ? "CLOCK_MONOTONIC" : "the default clock");
 }
 
-#else // !SUPPORTS_CLOCK_MONOTONIC
+#else
 
 void os::Posix::init(void) {
   pthread_init_common();
@@ -1726,7 +1611,7 @@ void os::Posix::init_2(void) {
   log_info(os)("Relative timed-wait using pthread_cond_timedwait is associated with the default clock");
 }
 
-#endif // SUPPORTS_CLOCK_MONOTONIC
+#endif
 
 os::PlatformEvent::PlatformEvent() {
   int status = pthread_cond_init(_cond, _condAttr);
@@ -1803,7 +1688,6 @@ static void unpack_abs_time(timespec* abstime, jlong deadline, jlong now_sec) {
 }
 
 static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
-  DEBUG_ONLY(int max_secs = MAX_SECS;)
 
   if (timeout < 0) {
     timeout = 0;
@@ -1816,14 +1700,13 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
     int status = _clock_gettime(CLOCK_MONOTONIC, &now);
     assert_status(status == 0, status, "clock_gettime");
     calc_rel_time(abstime, timeout, now.tv_sec, now.tv_nsec, NANOUNITS);
-    DEBUG_ONLY(max_secs += now.tv_sec;)
   } else {
 
 #else
 
   { // Match the block scope.
 
-#endif // SUPPORTS_CLOCK_MONOTONIC
+#endif
 
     // Time-of-day clock is all we can reliably use.
     struct timeval now;
@@ -1834,13 +1717,12 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
     } else {
       calc_rel_time(abstime, timeout, now.tv_sec, now.tv_usec, MICROUNITS);
     }
-    DEBUG_ONLY(max_secs += now.tv_sec;)
   }
 
-  assert(abstime->tv_sec >= 0, "tv_sec < 0");
-  assert(abstime->tv_sec <= max_secs, "tv_sec > max_secs");
-  assert(abstime->tv_nsec >= 0, "tv_nsec < 0");
-  assert(abstime->tv_nsec < NANOUNITS, "tv_nsec >= NANOUNITS");
+  assert(abstime->tv_sec >= 0, "tv_sec < 0");
+  assert(abstime->tv_sec <= max_secs, "tv_sec > max_secs");
+  assert(abstime->tv_nsec >= 0, "tv_nsec < 0");
+  assert(abstime->tv_nsec < NANOUNITS, "tv_nsec >= NANOUNITS");
 }
 
 // PlatformEvent
@@ -1866,7 +1748,7 @@ void os::PlatformEvent::park() {       // AKA "down()"
 
   // Invariant: Only the thread associated with the PlatformEvent
   // may call park().
-  assert(_nParked == 0, "invariant");
+  assert(_nParked == 0, "invariant");
 
   int v;
 
@@ -1907,7 +1789,7 @@ int os::PlatformEvent::park(jlong millis) {
 
   // Invariant: Only the thread associated with the Event/PlatformEvent
   // may call park().
-  assert(_nParked == 0, "invariant");
+  assert(_nParked == 0, "invariant");
 
   int v;
   // atomically decrement _event
@@ -1982,7 +1864,7 @@ void os::PlatformEvent::unpark() {
   int status = pthread_mutex_lock(_mutex);
   assert_status(status == 0, status, "mutex_lock");
   int anyWaiters = _nParked;
-  assert(anyWaiters == 0 || anyWaiters == 1, "invariant");
+  assert(anyWaiters == 0 || anyWaiters == 1, "invariant");
   status = pthread_mutex_unlock(_mutex);
   assert_status(status == 0, status, "mutex_unlock");
 
@@ -2028,7 +1910,7 @@ void Parker::park(bool isAbsolute, jlong time) {
   if (Atomic::xchg(0, &_counter) > 0) return;
 
   Thread* thread = Thread::current();
-  assert(thread->is_Java_thread(), "Must be JavaThread");
+  assert(thread->is_Java_thread(), "Must be JavaThread");
   JavaThread *jt = (JavaThread *)thread;
 
   // Optional optimization -- avoid state transitions if there's
@@ -2076,7 +1958,7 @@ void Parker::park(bool isAbsolute, jlong time) {
   jt->set_suspend_equivalent();
   // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()
 
-  assert(_cur_index == -1, "invariant");
+  assert(_cur_index == -1, "invariant");
   if (time == 0) {
     _cur_index = REL_INDEX; // arbitrary choice when not timed
     status = pthread_cond_wait(&_cond[_cur_index], _mutex);
@@ -2128,5 +2010,4 @@ void Parker::unpark() {
   }
 }
 
-
-#endif // !SOLARIS
+#endif

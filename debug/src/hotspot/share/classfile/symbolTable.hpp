@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_SYMBOLTABLE_HPP
 #define SHARE_VM_CLASSFILE_SYMBOLTABLE_HPP
 
@@ -173,7 +149,7 @@ public:
   static uint bucket_size() { return sizeof(HashtableBucket<mtSymbol>); }
 
   static void create_table() {
-    assert(_the_table == NULL, "One symbol table allowed.");
+    assert(_the_table == NULL, "One symbol table allowed.");
     _the_table = new SymbolTable();
     initialize_symbols(symbol_alloc_arena_size);
   }
@@ -217,14 +193,14 @@ public:
 
   // Symbol creation
   static Symbol* new_symbol(const char* utf8_buffer, int length, TRAPS) {
-    assert(utf8_buffer != NULL, "just checking");
+    assert(utf8_buffer != NULL, "just checking");
     return lookup(utf8_buffer, length, THREAD);
   }
   static Symbol*       new_symbol(const char* name, TRAPS) {
     return new_symbol(name, (int)strlen(name), THREAD);
   }
   static Symbol*       new_symbol(const Symbol* sym, int begin, int end, TRAPS) {
-    assert(begin <= end && end <= sym->utf8_length(), "just checking");
+    assert(begin <= end && end <= sym->utf8_length(), "just checking");
     return lookup(sym, begin, end, THREAD);
   }
 
@@ -247,8 +223,8 @@ public:
   }
 
   // Histogram
-  static void print_histogram()     PRODUCT_RETURN;
-  static void print()     PRODUCT_RETURN;
+  static void print_histogram()     {};
+  static void print()     {};
 
   // Debugging
   static void verify();
@@ -269,4 +245,4 @@ public:
   static int parallel_claimed_index()        { return _parallel_claimed_idx; }
 };
 
-#endif // SHARE_VM_CLASSFILE_SYMBOLTABLE_HPP
+#endif

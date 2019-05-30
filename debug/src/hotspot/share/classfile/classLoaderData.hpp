@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_CLASSLOADERDATA_HPP
 #define SHARE_VM_CLASSFILE_CLASSLOADERDATA_HPP
 
@@ -33,9 +9,6 @@
 #include "runtime/mutex.hpp"
 #include "utilities/growableArray.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrTraceIdExtension.hpp"
-#endif
 
 // external name (synthetic) for the primordial "bootstrap" class loader instance
 #define BOOTSTRAP_LOADER_NAME "bootstrap"
@@ -154,7 +127,7 @@ class ClassLoaderDataGraph : public AllStatic {
   static bool has_metaspace_oom()           { return _metaspace_oom; }
   static void set_metaspace_oom(bool value) { _metaspace_oom = value; }
 
-  static void print_on(outputStream * const out) PRODUCT_RETURN;
+  static void print_on(outputStream * const out) {};
   static void print() { print_on(tty); }
   static void verify();
 
@@ -165,10 +138,6 @@ class ClassLoaderDataGraph : public AllStatic {
   static inline void dec_instance_classes(size_t count);
   static inline void inc_array_classes(size_t count);
   static inline void dec_array_classes(size_t count);
-
-#ifndef PRODUCT
-  static bool contains_loader_data(ClassLoaderData* loader_data);
-#endif
 
   // Check if ClassLoaderData is part of the ClassLoaderDataGraph (not unloaded)
   // Usage without lock only allowed during error reporting.
@@ -204,7 +173,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
     // However, multiple threads can execute oops_do concurrently with add.
     oop* add(oop o);
     bool contains(oop p);
-    NOT_PRODUCT(bool owner_of(oop* p);)
     void oops_do(OopClosure* f);
 
     int count() const;
@@ -245,8 +213,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   ChunkedHandleList _handles; // Handles to constant pool arrays, Modules, etc, which
                               // have the same life cycle of the corresponding ClassLoader.
 
-  NOT_PRODUCT(volatile int _dependency_count;)  // number of class loader dependencies
-
   Klass* volatile _klasses;              // The classes defined by the class loader.
   PackageEntryTable* volatile _packages; // The packages defined by the class loader.
   ModuleEntryTable*  volatile _modules;  // The modules defined by the class loader.
@@ -268,7 +234,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   Klass*  _class_loader_klass;
   Symbol* _name;
   Symbol* _name_and_id;
-  JFR_ONLY(DEFINE_TRACE_ID_FIELD;)
 
   void set_next(ClassLoaderData* next) { _next = next; }
   ClassLoaderData* next() const        { return _next; }
@@ -358,7 +323,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
 
   // Returns true if this class loader data is for a loader going away.
   bool is_unloading() const     {
-    assert(!(is_the_null_class_loader_data() && _unloading), "The null class loader can never be unloaded");
+    assert(!(is_the_null_class_loader_data() && _unloading), "The null class loader can never be unloaded");
     return _unloading;
   }
 
@@ -378,7 +343,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   void set_jmethod_ids(JNIMethodBlock* new_block)  { _jmethod_ids = new_block; }
 
   void print()                                     { print_on(tty); }
-  void print_on(outputStream* out) const PRODUCT_RETURN;
+  void print_on(outputStream* out) const {};
   void print_value()                               { print_value_on(tty); }
   void print_value_on(outputStream* out) const;
   void verify();
@@ -418,8 +383,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   // Obtain the class loader's _name_and_id, works during unloading.
   const char* loader_name_and_id() const;
   Symbol* name_and_id() const { return _name_and_id; }
-
-  JFR_ONLY(DEFINE_TRACE_ID_METHODS;)
 };
 
 // An iterator that distributes Klasses to parallel worker threads.
@@ -439,7 +402,7 @@ class ClassLoaderDataGraphMetaspaceIterator : public StackObj {
   ~ClassLoaderDataGraphMetaspaceIterator();
   bool repeat() { return _data != NULL; }
   ClassLoaderMetaspace* get_next() {
-    assert(_data != NULL, "Should not be NULL in call to the iterator");
+    assert(_data != NULL, "Should not be NULL in call to the iterator");
     ClassLoaderMetaspace* result = _data->metaspace_or_null();
     _data = _data->next();
     // This result might be NULL for class loaders without metaspace
@@ -449,4 +412,4 @@ class ClassLoaderDataGraphMetaspaceIterator : public StackObj {
     return result;
   }
 };
-#endif // SHARE_VM_CLASSFILE_CLASSLOADERDATA_HPP
+#endif

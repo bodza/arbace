@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciField.hpp"
 #include "ci/ciInstanceKlass.hpp"
@@ -72,9 +48,9 @@ ciField::ciField(ciInstanceKlass* klass, int index) :
   ASSERT_IN_VM;
   CompilerThread *THREAD = CompilerThread::current();
 
-  assert(ciObjectFactory::is_initialized(), "not a shared field");
+  assert(ciObjectFactory::is_initialized(), "not a shared field");
 
-  assert(klass->get_instanceKlass()->is_linked(), "must be linked before using its constant-pool");
+  assert(klass->get_instanceKlass()->is_linked(), "must be linked before using its constant-pool");
 
   constantPoolHandle cpool(THREAD, klass->get_instanceKlass()->constants());
 
@@ -183,7 +159,7 @@ ciField::ciField(ciInstanceKlass* klass, int index) :
     return;
   }
 
-  assert(canonical_holder == field_desc.field_holder(), "just checking");
+  assert(canonical_holder == field_desc.field_holder(), "just checking");
   initialize_from(&field_desc);
 }
 
@@ -209,8 +185,7 @@ ciField::ciField(fieldDescriptor *fd) :
   initialize_from(fd);
 
   // Either (a) it is marked shared, or else (b) we are done bootstrapping.
-  assert(is_shared() || ciObjectFactory::is_initialized(),
-         "bootstrap classes must not create & cache unshared fields");
+  assert(is_shared() || ciObjectFactory::is_initialized(), "bootstrap classes must not create & cache unshared fields");
 }
 
 static bool trust_final_non_static_fields(ciInstanceKlass* holder) {
@@ -248,7 +223,7 @@ void ciField::initialize_from(fieldDescriptor* fd) {
   _flags = ciFlags(fd->access_flags());
   _offset = fd->offset();
   Klass* field_holder = fd->field_holder();
-  assert(field_holder != NULL, "null field_holder");
+  assert(field_holder != NULL, "null field_holder");
   _holder = CURRENT_ENV->get_instance_klass(field_holder);
 
   // Check to see if the field is constant.
@@ -260,7 +235,7 @@ void ciField::initialize_from(fieldDescriptor* fd) {
       // not be constant is when the field is a *special* static & final field
       // whose value may change.  The three examples are java.lang.System.in,
       // java.lang.System.out, and java.lang.System.err.
-      assert(SystemDictionary::System_klass() != NULL, "Check once per vm");
+      assert(SystemDictionary::System_klass() != NULL, "Check once per vm");
       if (k == SystemDictionary::System_klass()) {
         // Check offsets for case 2: System.in, System.out, or System.err
         if( _offset == java_lang_System::in_offset_in_bytes()  ||
@@ -279,10 +254,10 @@ void ciField::initialize_from(fieldDescriptor* fd) {
     }
   } else {
     // For CallSite objects treat the target field as a compile time constant.
-    assert(SystemDictionary::CallSite_klass() != NULL, "should be already initialized");
+    assert(SystemDictionary::CallSite_klass() != NULL, "should be already initialized");
     if (k == SystemDictionary::CallSite_klass() &&
         _offset == java_lang_invoke_CallSite::target_offset_in_bytes()) {
-      assert(!has_initialized_final_update(), "CallSite is not supposed to have writes to final fields outside initializers");
+      assert(!has_initialized_final_update(), "CallSite is not supposed to have writes to final fields outside initializers");
       _is_constant = true;
     } else {
       // Non-final & non-stable fields are not constants.
@@ -295,7 +270,7 @@ void ciField::initialize_from(fieldDescriptor* fd) {
 // ciField::constant_value
 // Get the constant value of a this static field.
 ciConstant ciField::constant_value() {
-  assert(is_static() && is_constant(), "illegal call to constant_value()");
+  assert(is_static() && is_constant(), "illegal call to constant_value()");
   if (!_holder->is_initialized()) {
     return ciConstant(); // Not initialized yet
   }
@@ -315,8 +290,8 @@ ciConstant ciField::constant_value() {
 // ciField::constant_value_of
 // Get the constant value of non-static final field in the given object.
 ciConstant ciField::constant_value_of(ciObject* object) {
-  assert(!is_static() && is_constant(), "only if field is non-static constant");
-  assert(object->is_instance(), "must be instance");
+  assert(!is_static() && is_constant(), "only if field is non-static constant");
+  assert(object->is_instance(), "must be instance");
   ciConstant field_value = object->as_instance()->field_value(this);
   if (FoldStableValues && is_stable() && field_value.is_null_or_zero()) {
     return ciConstant();
@@ -352,7 +327,6 @@ ciType* ciField::compute_type_impl() {
   return type;
 }
 
-
 // ------------------------------------------------------------------
 // ciField::will_link
 //
@@ -361,9 +335,7 @@ ciType* ciField::compute_type_impl() {
 bool ciField::will_link(ciMethod* accessing_method,
                         Bytecodes::Code bc) {
   VM_ENTRY_MARK;
-  assert(bc == Bytecodes::_getstatic || bc == Bytecodes::_putstatic ||
-         bc == Bytecodes::_getfield  || bc == Bytecodes::_putfield,
-         "unexpected bytecode");
+  assert(bc == Bytecodes::_getstatic || bc == Bytecodes::_putstatic || bc == Bytecodes::_getfield  || bc == Bytecodes::_putfield, "unexpected bytecode");
 
   if (_offset == -1) {
     // at creation we couldn't link to our holder so we need to

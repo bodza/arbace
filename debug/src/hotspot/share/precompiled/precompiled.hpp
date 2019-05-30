@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 // Precompiled headers are turned off for Sun Studion,
 // or if the user passes --disable-precompiled-headers to configure.
 
@@ -122,7 +98,6 @@
 # include "interpreter/linkResolver.hpp"
 # include "interpreter/templateInterpreter.hpp"
 # include "interpreter/templateTable.hpp"
-# include "jvmtifiles/jvmti.h"
 # include "logging/log.hpp"
 # include "memory/allocation.hpp"
 # include "memory/arena.hpp"
@@ -154,7 +129,6 @@
 # include "oops/symbol.hpp"
 # include "oops/typeArrayKlass.hpp"
 # include "oops/typeArrayOop.hpp"
-# include "prims/jvmtiExport.hpp"
 # include "prims/methodHandles.hpp"
 # include "runtime/arguments.hpp"
 # include "runtime/atomic.hpp"
@@ -242,45 +216,6 @@
 # include "utilities/preserveException.hpp"
 # include "utilities/sizes.hpp"
 # include "utilities/utf8.hpp"
-#ifdef COMPILER2
-# include "libadt/dict.hpp"
-# include "libadt/set.hpp"
-# include "libadt/vectset.hpp"
-# include "opto/ad.hpp"
-# include "opto/addnode.hpp"
-# include "opto/adlcVMDeps.hpp"
-# include "opto/block.hpp"
-# include "opto/c2_globals.hpp"
-# include "opto/callnode.hpp"
-# include "opto/castnode.hpp"
-# include "opto/cfgnode.hpp"
-# include "opto/compile.hpp"
-# include "opto/connode.hpp"
-# include "opto/convertnode.hpp"
-# include "opto/countbitsnode.hpp"
-# include "opto/idealGraphPrinter.hpp"
-# include "opto/intrinsicnode.hpp"
-# include "opto/loopnode.hpp"
-# include "opto/machnode.hpp"
-# include "opto/matcher.hpp"
-# include "opto/memnode.hpp"
-# include "opto/movenode.hpp"
-# include "opto/mulnode.hpp"
-# include "opto/multnode.hpp"
-# include "opto/narrowptrnode.hpp"
-# include "opto/opaquenode.hpp"
-# include "opto/opcodes.hpp"
-# include "opto/optoreg.hpp"
-# include "opto/phase.hpp"
-# include "opto/phaseX.hpp"
-# include "opto/regalloc.hpp"
-# include "opto/regmask.hpp"
-# include "opto/runtime.hpp"
-# include "opto/subnode.hpp"
-# include "opto/type.hpp"
-# include "opto/vectornode.hpp"
-#endif // COMPILER2
-#ifdef COMPILER1
 # include "c1/c1_Compilation.hpp"
 # include "c1/c1_Defs.hpp"
 # include "c1/c1_FrameMap.hpp"
@@ -288,22 +223,7 @@
 # include "c1/c1_MacroAssembler.hpp"
 # include "c1/c1_ValueType.hpp"
 # include "c1/c1_globals.hpp"
-#endif // COMPILER1
-#if INCLUDE_JVMCI
 # include "jvmci/jvmci_globals.hpp"
-#endif // INCLUDE_JVMCI
-#if INCLUDE_CMSGC
-# include "gc/cms/allocationStats.hpp"
-# include "gc/cms/compactibleFreeListSpace.hpp"
-# include "gc/cms/concurrentMarkSweepGeneration.hpp"
-# include "gc/cms/freeChunk.hpp"
-# include "gc/cms/gSpaceCounters.hpp"
-# include "gc/cms/jvmFlagConstraintsCMS.hpp"
-# include "gc/cms/parOopClosures.hpp"
-# include "gc/cms/promotionInfo.hpp"
-# include "gc/cms/yieldingWorkgroup.hpp"
-#endif // INCLUDE_CMSGC
-#if INCLUDE_G1GC
 # include "gc/g1/dirtyCardQueue.hpp"
 # include "gc/g1/g1BlockOffsetTable.hpp"
 # include "gc/g1/g1OopClosures.hpp"
@@ -311,27 +231,5 @@
 # include "gc/g1/jvmFlagConstraintsG1.hpp"
 # include "gc/g1/ptrQueue.hpp"
 # include "gc/g1/satbMarkQueue.hpp"
-#endif // INCLUDE_G1GC
-#if INCLUDE_PARALLELGC
-# include "gc/parallel/gcAdaptivePolicyCounters.hpp"
-# include "gc/parallel/immutableSpace.hpp"
-# include "gc/parallel/jvmFlagConstraintsParallel.hpp"
-# include "gc/parallel/mutableSpace.hpp"
-# include "gc/parallel/objectStartArray.hpp"
-# include "gc/parallel/parMarkBitMap.hpp"
-# include "gc/parallel/parallelScavengeHeap.hpp"
-# include "gc/parallel/psAdaptiveSizePolicy.hpp"
-# include "gc/parallel/psCompactionManager.hpp"
-# include "gc/parallel/psGCAdaptivePolicyCounters.hpp"
-# include "gc/parallel/psGenerationCounters.hpp"
-# include "gc/parallel/psOldGen.hpp"
-# include "gc/parallel/psVirtualspace.hpp"
-# include "gc/parallel/psYoungGen.hpp"
-# include "gc/parallel/spaceCounters.hpp"
-#endif // INCLUDE_PARALLELGC
-#if INCLUDE_SERIALGC
-# include "gc/serial/cSpaceCounters.hpp"
-# include "gc/serial/defNewGeneration.hpp"
-#endif // INCLUDE_SERIALGC
 
-#endif // !DONT_USE_PRECOMPILED_HEADER
+#endif

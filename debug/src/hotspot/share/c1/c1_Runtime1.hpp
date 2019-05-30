@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_RUNTIME1_HPP
 #define SHARE_VM_C1_C1_RUNTIME1_HPP
 
@@ -38,39 +14,39 @@ class StubAssembler;
 // by the Compiler1.
 
 #define RUNTIME1_STUBS(stub, last_entry) \
-  stub(dtrace_object_alloc)          \
-  stub(unwind_exception)             \
-  stub(forward_exception)            \
+  stub(dtrace_object_alloc) \
+  stub(unwind_exception) \
+  stub(forward_exception) \
   stub(throw_range_check_failed)       /* throws ArrayIndexOutOfBoundsException */ \
   stub(throw_index_exception)          /* throws IndexOutOfBoundsException */ \
-  stub(throw_div0_exception)         \
+  stub(throw_div0_exception) \
   stub(throw_null_pointer_exception) \
-  stub(register_finalizer)           \
-  stub(new_instance)                 \
-  stub(fast_new_instance)            \
+  stub(register_finalizer) \
+  stub(new_instance) \
+  stub(fast_new_instance) \
   stub(fast_new_instance_init_check) \
-  stub(new_type_array)               \
-  stub(new_object_array)             \
-  stub(new_multi_array)              \
+  stub(new_type_array) \
+  stub(new_object_array) \
+  stub(new_multi_array) \
   stub(handle_exception_nofpu)         /* optimized version that does not preserve fpu registers */ \
-  stub(handle_exception)             \
+  stub(handle_exception) \
   stub(handle_exception_from_callee) \
-  stub(throw_array_store_exception)  \
-  stub(throw_class_cast_exception)   \
-  stub(throw_incompatible_class_change_error)   \
-  stub(slow_subtype_check)           \
-  stub(monitorenter)                 \
+  stub(throw_array_store_exception) \
+  stub(throw_class_cast_exception) \
+  stub(throw_incompatible_class_change_error) \
+  stub(slow_subtype_check) \
+  stub(monitorenter) \
   stub(monitorenter_nofpu)             /* optimized version that does not preserve fpu registers */ \
-  stub(monitorexit)                  \
+  stub(monitorexit) \
   stub(monitorexit_nofpu)              /* optimized version that does not preserve fpu registers */ \
-  stub(deoptimize)                   \
-  stub(access_field_patching)        \
-  stub(load_klass_patching)          \
-  stub(load_mirror_patching)         \
-  stub(load_appendix_patching)       \
-  stub(fpu2long_stub)                \
-  stub(counter_overflow)             \
-  stub(predicate_failed_trap)        \
+  stub(deoptimize) \
+  stub(access_field_patching) \
+  stub(load_klass_patching) \
+  stub(load_mirror_patching) \
+  stub(load_appendix_patching) \
+  stub(fpu2long_stub) \
+  stub(counter_overflow) \
+  stub(predicate_failed_trap) \
   last_entry(number_of_ids)
 
 #define DECLARE_STUB_ID(x)       x ## _id ,
@@ -93,31 +69,6 @@ class Runtime1: public AllStatic {
   };
 
   // statistics
-#ifndef PRODUCT
-  static int _resolve_invoke_cnt;
-  static int _handle_wrong_method_cnt;
-  static int _ic_miss_cnt;
-  static int _generic_arraycopy_cnt;
-  static int _generic_arraycopystub_cnt;
-  static int _arraycopy_slowcase_cnt;
-  static int _arraycopy_checkcast_cnt;
-  static int _arraycopy_checkcast_attempt_cnt;
-  static int _new_type_array_slowcase_cnt;
-  static int _new_object_array_slowcase_cnt;
-  static int _new_instance_slowcase_cnt;
-  static int _new_multi_array_slowcase_cnt;
-  static int _monitorenter_slowcase_cnt;
-  static int _monitorexit_slowcase_cnt;
-  static int _patch_code_slowcase_cnt;
-  static int _throw_range_check_exception_count;
-  static int _throw_index_exception_count;
-  static int _throw_div0_exception_count;
-  static int _throw_null_pointer_exception_count;
-  static int _throw_class_cast_exception_count;
-  static int _throw_incompatible_class_change_error_count;
-  static int _throw_array_store_exception_count;
-  static int _throw_count;
-#endif
 
  private:
   static CodeBlob* _blobs[number_of_ids];
@@ -186,17 +137,12 @@ class Runtime1: public AllStatic {
   // method tracing
   static void trace_block_entry(jint block_id);
 
-#ifndef PRODUCT
-  static address throw_count_address()               { return (address)&_throw_count;             }
-  static address arraycopy_count_address(BasicType type);
-#endif
-
   // directly accessible leaf routine
   static int  is_instance_of(oopDesc* mirror, oopDesc* obj);
 
   static void predicate_failed_trap(JavaThread* thread);
 
-  static void print_statistics()                 PRODUCT_RETURN;
+  static void print_statistics()                 {};
 };
 
-#endif // SHARE_VM_C1_C1_RUNTIME1_HPP
+#endif

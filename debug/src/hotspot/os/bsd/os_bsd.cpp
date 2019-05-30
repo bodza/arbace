@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2019, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 // no precompiled headers
 #include "jvm.h"
 #include "classfile/classLoader.hpp"
@@ -156,7 +132,6 @@ static pid_t _initial_pid = 0;
 static int SR_signum = SIGUSR2;
 sigset_t SR_sigset;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // utility functions
 
@@ -174,8 +149,7 @@ julong os::Bsd::available_memory() {
   vm_statistics64_data_t vmstat;
   kern_return_t kerr = host_statistics64(mach_host_self(), HOST_VM_INFO64,
                                          (host_info64_t)&vmstat, &count);
-  assert(kerr == KERN_SUCCESS,
-         "host_statistics64 failed - check mach_host_self() and count");
+  assert(kerr == KERN_SUCCESS, "host_statistics64 failed - check mach_host_self() and count");
   if (kerr == KERN_SUCCESS) {
     available = vmstat.free_count * os::vm_page_size();
   }
@@ -199,8 +173,6 @@ bool os::have_special_privileges() {
   return privileges;
 }
 
-
-
 // Cpu architecture string
 #if   defined(ZERO)
 static char cpu_arch[] = ZERO_LIBARCH;
@@ -215,22 +187,13 @@ static char cpu_arch[] = "arm";
 #elif defined(PPC32)
 static char cpu_arch[] = "ppc";
 #elif defined(SPARC)
-  #ifdef _LP64
 static char cpu_arch[] = "sparcv9";
-  #else
-static char cpu_arch[] = "sparc";
-  #endif
 #else
   #error Add appropriate cpu_arch setting
 #endif
 
 // Compiler variant
-#ifdef COMPILER2
-  #define COMPILER_VARIANT "server"
-#else
-  #define COMPILER_VARIANT "client"
-#endif
-
+#define COMPILER_VARIANT "client"
 
 void os::Bsd::initialize_system_info() {
   int mib[2];
@@ -243,7 +206,7 @@ void os::Bsd::initialize_system_info() {
   mib[1] = HW_NCPU;
   len = sizeof(cpu_val);
   if (sysctl(mib, 2, &cpu_val, &len, NULL, 0) != -1 && cpu_val >= 1) {
-    assert(len == sizeof(cpu_val), "unexpected data size");
+    assert(len == sizeof(cpu_val), "unexpected data size");
     set_processor_count(cpu_val);
   } else {
     set_processor_count(1);   // fallback
@@ -265,7 +228,7 @@ void os::Bsd::initialize_system_info() {
 
   len = sizeof(mem_val);
   if (sysctl(mib, 2, &mem_val, &len, NULL, 0) != -1) {
-    assert(len == sizeof(mem_val), "unexpected data size");
+    assert(len == sizeof(mem_val), "unexpected data size");
     _physical_memory = mem_val;
   } else {
     _physical_memory = 256 * 1024 * 1024;       // fallback (XXXBSD?)
@@ -408,7 +371,7 @@ void os::init_system_properties_values() {
 
   FREE_C_HEAP_ARRAY(char, buf);
 
-#else // __APPLE__
+#else
 
   #define SYS_EXTENSIONS_DIR   "/Library/Java/Extensions"
   #define SYS_EXTENSIONS_DIRS  SYS_EXTENSIONS_DIR ":/Network" SYS_EXTENSIONS_DIR ":/System" SYS_EXTENSIONS_DIR ":/usr/lib/java"
@@ -510,7 +473,7 @@ void os::init_system_properties_values() {
 #undef SYS_EXTENSIONS_DIR
 #undef SYS_EXTENSIONS_DIRS
 
-#endif // __APPLE__
+#endif
 
 #undef SYS_EXT_DIR
 #undef EXTENSIONS_DIR
@@ -530,12 +493,11 @@ extern "C" void breakpoint() {
 ////////////////////////////////////////////////////////////////////////////////
 // signal support
 
-debug_only(static bool signal_sets_initialized = false);
 static sigset_t unblocked_sigs, vm_sigs;
 
 void os::Bsd::signal_sets_init() {
   // Should also have an assertion stating we are still single-threaded.
-  assert(!signal_sets_initialized, "Already initialized");
+  assert(!signal_sets_initialized, "Already initialized");
   // Fill in signals that are necessarily unblocked for all threads in
   // the VM. Currently, we unblock the following signals:
   // SHUTDOWN{1,2,3}_SIGNAL: for shutdown hooks support (unless over-ridden
@@ -559,7 +521,6 @@ void os::Bsd::signal_sets_init() {
   if (!ReduceSignalUsage) {
     if (!os::Posix::is_sig_ignored(SHUTDOWN1_SIGNAL)) {
       sigaddset(&unblocked_sigs, SHUTDOWN1_SIGNAL);
-
     }
     if (!os::Posix::is_sig_ignored(SHUTDOWN2_SIGNAL)) {
       sigaddset(&unblocked_sigs, SHUTDOWN2_SIGNAL);
@@ -573,21 +534,19 @@ void os::Bsd::signal_sets_init() {
   if (!ReduceSignalUsage) {
     sigaddset(&vm_sigs, BREAK_SIGNAL);
   }
-  debug_only(signal_sets_initialized = true);
-
 }
 
 // These are signals that are unblocked while a thread is running Java.
 // (For some reason, they get blocked by default.)
 sigset_t* os::Bsd::unblocked_signals() {
-  assert(signal_sets_initialized, "Not initialized");
+  assert(signal_sets_initialized, "Not initialized");
   return &unblocked_sigs;
 }
 
 // These are the signals that are blocked while a (non-VM) thread is
 // running Java. Only the VM thread handles these signals.
 sigset_t* os::Bsd::vm_signals() {
-  assert(signal_sets_initialized, "Not initialized");
+  assert(signal_sets_initialized, "Not initialized");
   return &vm_sigs;
 }
 
@@ -612,7 +571,6 @@ void os::Bsd::hotspot_sigmask(Thread* thread) {
     }
   }
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 // create new thread
@@ -711,7 +669,7 @@ static void *thread_native_entry(Thread *thread) {
 
 bool os::create_thread(Thread* thread, ThreadType thr_type,
                        size_t req_stack_size) {
-  assert(thread->osthread() == NULL, "caller responsible");
+  assert(thread->osthread() == NULL, "caller responsible");
 
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
@@ -772,7 +730,6 @@ bool os::create_thread(Thread* thread, ThreadType thr_type,
         sync_with_child->wait(Mutex::_no_safepoint_check_flag);
       }
     }
-
   }
 
   // Aborted due to thread limit being reached
@@ -784,7 +741,7 @@ bool os::create_thread(Thread* thread, ThreadType thr_type,
 
   // The thread is returned suspended (in state INITIALIZED),
   // and is started higher up in the call chain
-  assert(state == INITIALIZED, "race condition");
+  assert(state == INITIALIZED, "race condition");
   return true;
 }
 
@@ -793,14 +750,11 @@ bool os::create_thread(Thread* thread, ThreadType thr_type,
 
 // bootstrap the main thread
 bool os::create_main_thread(JavaThread* thread) {
-  assert(os::Bsd::_main_thread == pthread_self(), "should be called inside main thread");
+  assert(os::Bsd::_main_thread == pthread_self(), "should be called inside main thread");
   return create_attached_thread(thread);
 }
 
 bool os::create_attached_thread(JavaThread* thread) {
-#ifdef ASSERT
-  thread->verify_not_published();
-#endif
 
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
@@ -839,7 +793,7 @@ bool os::create_attached_thread(JavaThread* thread) {
 
 void os::pd_start_thread(Thread* thread) {
   OSThread * osthread = thread->osthread();
-  assert(osthread->get_state() != INITIALIZED, "just checking");
+  assert(osthread->get_state() != INITIALIZED, "just checking");
   Monitor* sync_with_child = osthread->startThread_lock();
   MutexLockerEx ml(sync_with_child, Mutex::_no_safepoint_check_flag);
   sync_with_child->notify();
@@ -847,12 +801,11 @@ void os::pd_start_thread(Thread* thread) {
 
 // Free Bsd resources related to the OSThread
 void os::free_thread(OSThread* osthread) {
-  assert(osthread != NULL, "osthread not set");
+  assert(osthread != NULL, "osthread not set");
 
   // We are told to free resources of the argument thread,
   // but we can only really operate on the current thread.
-  assert(Thread::current()->osthread() == osthread,
-         "os::free_thread but not current thread");
+  assert(Thread::current()->osthread() == osthread, "os::free_thread but not current thread");
 
   // Restore caller's signal mask
   sigset_t sigmask = osthread->caller_sigmask();
@@ -891,14 +844,14 @@ double os::elapsedVTime() {
 jlong os::javaTimeMillis() {
   timeval time;
   int status = gettimeofday(&time, NULL);
-  assert(status != -1, "bsd error");
+  assert(status != -1, "bsd error");
   return jlong(time.tv_sec) * 1000  +  jlong(time.tv_usec / 1000);
 }
 
 void os::javaTimeSystemUTC(jlong &seconds, jlong &nanos) {
   timeval time;
   int status = gettimeofday(&time, NULL);
-  assert(status != -1, "bsd error");
+  assert(status != -1, "bsd error");
   seconds = jlong(time.tv_sec);
   nanos = jlong(time.tv_usec) * 1000;
 }
@@ -925,8 +878,6 @@ void os::Bsd::clock_init() {
 }
 #endif
 
-
-
 #ifdef __APPLE__
 
 jlong os::javaTimeNanos() {
@@ -937,7 +888,7 @@ jlong os::javaTimeNanos() {
     return prev;   // same or retrograde time;
   }
   const uint64_t obsv = Atomic::cmpxchg(now, &Bsd::_max_abstime, prev);
-  assert(obsv >= prev, "invariant");   // Monotonicity
+  assert(obsv >= prev, "invariant");   // Monotonicity
   // If the CAS succeeded then we're done and return "now".
   // If the CAS failed and the observed value "obsv" is >= now then
   // we should return "obsv".  If the CAS failed and now > obsv > prv then
@@ -953,44 +904,25 @@ jlong os::javaTimeNanos() {
   return (prev == obsv) ? now : obsv;
 }
 
-#else // __APPLE__
+#else
 
 jlong os::javaTimeNanos() {
   if (os::supports_monotonic_clock()) {
     struct timespec tp;
     int status = Bsd::_clock_gettime(CLOCK_MONOTONIC, &tp);
-    assert(status == 0, "gettime error");
+    assert(status == 0, "gettime error");
     jlong result = jlong(tp.tv_sec) * (1000 * 1000 * 1000) + jlong(tp.tv_nsec);
     return result;
   } else {
     timeval time;
     int status = gettimeofday(&time, NULL);
-    assert(status != -1, "bsd error");
+    assert(status != -1, "bsd error");
     jlong usecs = jlong(time.tv_sec) * (1000 * 1000) + jlong(time.tv_usec);
     return 1000 * usecs;
   }
 }
 
-#endif // __APPLE__
-
-void os::javaTimeNanos_info(jvmtiTimerInfo *info_ptr) {
-  if (os::supports_monotonic_clock()) {
-    info_ptr->max_value = ALL_64_BITS;
-
-    // CLOCK_MONOTONIC - amount of time since some arbitrary point in the past
-    info_ptr->may_skip_backward = false;      // not subject to resetting or drifting
-    info_ptr->may_skip_forward = false;       // not subject to resetting or drifting
-  } else {
-    // gettimeofday - based on time in seconds since the Epoch thus does not wrap
-    info_ptr->max_value = ALL_64_BITS;
-
-    // gettimeofday is a real time clock so it skips
-    info_ptr->may_skip_backward = true;
-    info_ptr->may_skip_forward = true;
-  }
-
-  info_ptr->kind = JVMTI_TIMER_ELAPSED;                // elapsed not CPU time
-}
+#endif
 
 // Return the real, user, and system times in seconds from an
 // arbitrary fixed point in the past.
@@ -1011,7 +943,6 @@ bool os::getTimesSecs(double* process_real_time,
     return true;
   }
 }
-
 
 char * os::local_time_string(char *buf, size_t buflen) {
   struct tm t;
@@ -1050,7 +981,6 @@ void os::shutdown() {
   if (abort_hook != NULL) {
     abort_hook();
   }
-
 }
 
 // Note: os::abort() might be called very early during initialization, or
@@ -1059,14 +989,6 @@ void os::shutdown() {
 void os::abort(bool dump_core, void* siginfo, const void* context) {
   os::shutdown();
   if (dump_core) {
-#ifndef PRODUCT
-    fdStream out(defaultStream::output_fd());
-    out.print_raw("Current thread is ");
-    char buf[16];
-    jio_snprintf(buf, sizeof(buf), UINTX_FORMAT, os::current_thread_id());
-    out.print_raw_cr(buf);
-    out.print_raw_cr("Dumping core ...");
-#endif
     ::abort(); // dump core
   }
 
@@ -1174,9 +1096,9 @@ const char* os::get_temp_directory() {
   }
   return temp_path;
 }
-#else // __APPLE__
+#else
 const char* os::get_temp_directory() { return "/tmp"; }
-#endif // __APPLE__
+#endif
 
 // check if addr is inside libjvm.so
 bool os::address_is_in_vm(address addr) {
@@ -1187,7 +1109,7 @@ bool os::address_is_in_vm(address addr) {
     if (dladdr(CAST_FROM_FN_PTR(void *, os::address_is_in_vm), &dlinfo) != 0) {
       libjvm_base_addr = (address)dlinfo.dli_fbase;
     }
-    assert(libjvm_base_addr !=NULL, "Cannot obtain base address for libjvm");
+    assert(libjvm_base_addr !=NULL, "Cannot obtain base address for libjvm");
   }
 
   if (dladdr((void *)addr, &dlinfo) != 0) {
@@ -1197,14 +1119,13 @@ bool os::address_is_in_vm(address addr) {
   return false;
 }
 
-
 #define MACH_MAXSYMLEN 256
 
 bool os::dll_address_to_function_name(address addr, char *buf,
                                       int buflen, int *offset,
                                       bool demangle) {
   // buf is not optional, but offset is optional
-  assert(buf != NULL, "sanity check");
+  assert(buf != NULL, "sanity check");
 
   Dl_info dlinfo;
   char localbuf[MACH_MAXSYMLEN];
@@ -1245,7 +1166,7 @@ bool os::dll_address_to_function_name(address addr, char *buf,
 bool os::dll_address_to_library_name(address addr, char* buf,
                                      int buflen, int* offset) {
   // buf is not optional, but offset is optional
-  assert(buf != NULL, "sanity check");
+  assert(buf != NULL, "sanity check");
 
   Dl_info dlinfo;
 
@@ -1284,7 +1205,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   ebuf[ebuflen-1]='\0';
 
   return NULL;
-#endif // STATIC_BUILD
+#endif
 }
 #else
 void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
@@ -1310,7 +1231,6 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     // No more space in ebuf for additional diagnostics message
     return NULL;
   }
-
 
   int file_descriptor= ::open(filename, O_RDONLY | O_NONBLOCK);
 
@@ -1409,7 +1329,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   #elif  (defined M68K)
   static  Elf32_Half running_arch_code=EM_68K;
   #else
-    #error Method os::dll_load requires that one of following is defined:\
+    #error Method os::dll_load requires that one of following is defined: \
          IA32, AMD64, IA64, __sparc, __powerpc__, ARM, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K
   #endif
 
@@ -1429,8 +1349,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     }
   }
 
-  assert(running_arch_index != -1,
-         "Didn't find running architecture code (running_arch_code) in arch_array");
+  assert(running_arch_index != -1, "Didn't find running architecture code (running_arch_code) in arch_array");
   if (running_arch_index == -1) {
     // Even though running architecture detection failed
     // we may still continue with reporting dlerror() message
@@ -1447,7 +1366,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: architecture word width mismatch)");
     return NULL;
   }
-#endif // !S390
+#endif
 
   if (lib_arch.compat_class != arch_array[running_arch_index].compat_class) {
     if (lib_arch.name!=NULL) {
@@ -1463,9 +1382,9 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   }
 
   return NULL;
-#endif // STATIC_BUILD
+#endif
 }
-#endif // !__APPLE__
+#endif
 
 void* os::get_default_process_handle() {
 #ifdef __APPLE__
@@ -1650,7 +1569,7 @@ static char saved_jvm_path[MAXPATHLEN] = {0};
 void os::jvm_path(char *buf, jint buflen) {
   // Error checking.
   if (buflen < MAXPATHLEN) {
-    assert(false, "must use a large-enough buffer");
+    assert(false, "must use a large-enough buffer");
     buf[0] = '\0';
     return;
   }
@@ -1664,7 +1583,7 @@ void os::jvm_path(char *buf, jint buflen) {
   bool ret = dll_address_to_library_name(
                                          CAST_FROM_FN_PTR(address, os::jvm_path),
                                          dli_fname, sizeof(dli_fname), NULL);
-  assert(ret, "cannot locate libjvm");
+  assert(ret, "cannot locate libjvm");
   char *rp = NULL;
   if (ret && dli_fname[0] != '\0') {
     rp = os::Posix::realpath(dli_fname, buf, buflen);
@@ -1697,7 +1616,7 @@ void os::jvm_path(char *buf, jint buflen) {
 
         // Check the current module name "libjvm"
         p = strrchr(buf, '/');
-        assert(strstr(p, "/libjvm") == p, "invalid library name");
+        assert(strstr(p, "/libjvm") == p, "invalid library name");
 
         rp = os::Posix::realpath(java_home_var, buf, buflen);
         if (rp == NULL) {
@@ -1707,7 +1626,7 @@ void os::jvm_path(char *buf, jint buflen) {
         // determine if this is a legacy image or modules image
         // modules image doesn't have "jre" subdirectory
         len = strlen(buf);
-        assert(len < buflen, "Ran out of buffer space");
+        assert(len < buflen, "Ran out of buffer space");
         jrelib_p = buf + len;
 
         // Add the appropriate library subdir
@@ -1831,7 +1750,7 @@ void os::signal_notify(int sig) {
   } else {
     // Signal thread is not created with ReduceSignalUsage and jdk_misc_signal_init
     // initialization isn't called.
-    assert(ReduceSignalUsage, "signal semaphore should be created");
+    assert(ReduceSignalUsage, "signal semaphore should be created");
   }
 }
 
@@ -1877,13 +1796,13 @@ int os::signal_wait() {
 
 int os::vm_page_size() {
   // Seems redundant as all get out
-  assert(os::Bsd::page_size() != -1, "must call os::init");
+  assert(os::Bsd::page_size() != -1, "must call os::init");
   return os::Bsd::page_size();
 }
 
 // Solaris allocates memory by pages.
 int os::vm_allocation_granularity() {
-  assert(os::Bsd::page_size() != -1, "must call os::init");
+  assert(os::Bsd::page_size() != -1, "must call os::init");
   return os::Bsd::page_size();
 }
 
@@ -1949,10 +1868,6 @@ bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
   }
 #endif
 
-  // Warn about any commit errors we see in non-product builds just
-  // in case mmap() doesn't work as described on the man page.
-  NOT_PRODUCT(warn_fail_commit_memory(addr, size, exec, errno);)
-
   return false;
 }
 
@@ -1964,10 +1879,10 @@ bool os::pd_commit_memory(char* addr, size_t size, size_t alignment_hint,
 
 void os::pd_commit_memory_or_exit(char* addr, size_t size, bool exec,
                                   const char* mesg) {
-  assert(mesg != NULL, "mesg must be specified");
+  assert(mesg != NULL, "mesg must be specified");
   if (!pd_commit_memory(addr, size, exec)) {
     // add extra info in product mode for vm_exit_out_of_memory():
-    PRODUCT_ONLY(warn_fail_commit_memory(addr, size, exec, errno);)
+    warn_fail_commit_memory(addr, size, exec, errno);
     vm_exit_out_of_memory(size, OOM_MMAP_ERROR, "%s", mesg);
   }
 }
@@ -2018,7 +1933,6 @@ char *os::scan_pages(char *start, char* end, page_info* page_expected, page_info
   return end;
 }
 
-
 bool os::pd_uncommit_memory(char* addr, size_t size) {
 #ifdef __OpenBSD__
   // XXX: Work-around mmap/MAP_FIXED bug temporarily on OpenBSD
@@ -2052,7 +1966,7 @@ static char* anon_mmap(char* requested_addr, size_t bytes, bool fixed) {
 
   flags = MAP_PRIVATE | MAP_NORESERVE | MAP_ANONYMOUS;
   if (fixed) {
-    assert((uintptr_t)requested_addr % os::Bsd::page_size() == 0, "unaligned address");
+    assert((uintptr_t)requested_addr % os::Bsd::page_size() == 0, "unaligned address");
     flags |= MAP_FIXED;
   }
 
@@ -2087,7 +2001,7 @@ static bool bsd_mprotect(char* addr, size_t size, int prot) {
   // 'addr' likely indicates problem in the VM (e.g. trying to change
   // protection of malloc'ed or statically allocated memory). Check the
   // caller if you hit this assert.
-  assert(addr == bottom, "sanity check");
+  assert(addr == bottom, "sanity check");
 
   size = align_up(pointer_delta(addr, bottom, 1) + size, os::Bsd::page_size());
   return ::mprotect(bottom, size, prot) == 0;
@@ -2128,13 +2042,12 @@ static size_t _large_page_size = 0;
 void os::large_page_init() {
 }
 
-
 char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr, bool exec) {
   fatal("This code is not used or maintained.");
 
   // "exec" is passed in but not used.  Creating the shared image for
   // the code cache doesn't have an SHM_X executable permission to check.
-  assert(UseLargePages && UseSHM, "only for SHM large pages");
+  assert(UseLargePages && UseSHM, "only for SHM large pages");
 
   key_t key = IPC_PRIVATE;
   char *addr;
@@ -2222,7 +2135,7 @@ bool os::can_execute_large_page_memory() {
 }
 
 char* os::pd_attempt_reserve_memory_at(size_t bytes, char* requested_addr, int file_desc) {
-  assert(file_desc >= 0, "file_desc is not valid");
+  assert(file_desc >= 0, "file_desc is not valid");
   char* result = pd_attempt_reserve_memory_at(bytes, requested_addr);
   if (result != NULL) {
     if (replace_existing_mapping_with_file_mapping(result, bytes, file_desc) == NULL) {
@@ -2246,7 +2159,7 @@ char* os::pd_attempt_reserve_memory_at(size_t bytes, char* requested_addr) {
   // about at this low abstraction level.  If we need higher alignment,
   // we can either pass an alignment to this method or verify alignment
   // in one of the methods further up the call chain.  See bug 5044738.
-  assert(bytes % os::vm_page_size() == 0, "reserving unexpected size block");
+  assert(bytes % os::vm_page_size() == 0, "reserving unexpected size block");
 
   // Repeatedly allocate blocks until the block is allocated at the
   // right spot.
@@ -2320,7 +2233,7 @@ size_t os::read_at(int fd, void *buf, unsigned int nBytes, jlong offset) {
 void os::naked_short_sleep(jlong ms) {
   struct timespec req;
 
-  assert(ms < 1000, "Un-interruptable sleep, short time use only");
+  assert(ms < 1000, "Un-interruptable sleep, short time use only");
   req.tv_sec = 0;
   if (ms > 0) {
     req.tv_nsec = (ms % 1000) * 1000000;
@@ -2546,7 +2459,7 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
   int old_errno = errno;
 
   Thread* thread = Thread::current_or_null_safe();
-  assert(thread != NULL, "Missing current thread in SR_handler");
+  assert(thread != NULL, "Missing current thread in SR_handler");
 
   // On some systems we have seen signal delivery get "stuck" until the signal
   // mask is changed as part of thread termination. Check that the current thread
@@ -2558,7 +2471,7 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
     return;
   }
 
-  assert(thread->is_VM_thread() || thread->is_Java_thread(), "Must be VMThread or JavaThread");
+  assert(thread->is_VM_thread() || thread->is_Java_thread(), "Must be VMThread or JavaThread");
 
   OSThread* osthread = thread->osthread();
 
@@ -2607,7 +2520,6 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
   errno = old_errno;
 }
 
-
 static int SR_initialize() {
   struct sigaction act;
   char *s;
@@ -2623,8 +2535,7 @@ static int SR_initialize() {
     }
   }
 
-  assert(SR_signum > SIGSEGV && SR_signum > SIGBUS,
-         "SR_signum must be greater than max(SIGSEGV, SIGBUS), see 4355769");
+  assert(SR_signum > SIGSEGV && SR_signum > SIGBUS, "SR_signum must be greater than max(SIGSEGV, SIGBUS), see 4355769");
 
   sigemptyset(&SR_sigset);
   sigaddset(&SR_sigset, SR_signum);
@@ -2664,8 +2575,8 @@ static const int RANDOMLY_LARGE_INTEGER2 = 100;
 // returns true on success and false on error - really an error is fatal
 // but this seems the normal response to library errors
 static bool do_suspend(OSThread* osthread) {
-  assert(osthread->sr.is_running(), "thread should be running");
-  assert(!sr_semaphore.trywait(), "semaphore has invalid state");
+  assert(osthread->sr.is_running(), "thread should be running");
+  assert(!sr_semaphore.trywait(), "semaphore has invalid state");
 
   // mark as suspended and send signal
   if (osthread->sr.request_suspend() != os::SuspendResume::SR_SUSPEND_REQUEST) {
@@ -2703,8 +2614,8 @@ static bool do_suspend(OSThread* osthread) {
 }
 
 static void do_resume(OSThread* osthread) {
-  assert(osthread->sr.is_suspended(), "thread should be suspended");
-  assert(!sr_semaphore.trywait(), "invalid semaphore state");
+  assert(osthread->sr.is_suspended(), "thread should be suspended");
+  assert(!sr_semaphore.trywait(), "invalid semaphore state");
 
   if (osthread->sr.request_wakeup() != os::SuspendResume::SR_WAKEUP_REQUEST) {
     // failed to switch to WAKEUP_REQUEST
@@ -2760,12 +2671,11 @@ extern "C" JNIEXPORT int JVM_handle_bsd_signal(int signo, siginfo_t* siginfo,
                                                int abort_if_unrecognized);
 
 static void signalHandler(int sig, siginfo_t* info, void* uc) {
-  assert(info != NULL && uc != NULL, "it must be old kernel");
+  assert(info != NULL && uc != NULL, "it must be old kernel");
   int orig_errno = errno;  // Preserve errno value over signal handler.
   JVM_handle_bsd_signal(sig, info, uc, true);
   errno = orig_errno;
 }
-
 
 // This boolean allows users to forward their own non-matching signals
 // to JVM_handle_bsd_signal, harmlessly.
@@ -2861,7 +2771,7 @@ struct sigaction* os::Bsd::get_preinstalled_handler(int sig) {
 }
 
 void os::Bsd::save_preinstalled_handler(int sig, struct sigaction& oldAct) {
-  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
+  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
   sigact[sig] = oldAct;
   sigs |= (uint32_t)1 << (sig-1);
 }
@@ -2870,12 +2780,12 @@ void os::Bsd::save_preinstalled_handler(int sig, struct sigaction& oldAct) {
 int sigflags[NSIG];
 
 int os::Bsd::get_our_sigflags(int sig) {
-  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
+  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
   return sigflags[sig];
 }
 
 void os::Bsd::set_our_sigflags(int sig, int flags) {
-  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
+  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
   if (sig > 0 && sig < NSIG) {
     sigflags[sig] = flags;
   }
@@ -2929,16 +2839,16 @@ void os::Bsd::set_signal_handler(int sig, bool set_installed) {
 #endif
 
   // Save flags, which are set by ours
-  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
+  assert(sig > 0 && sig < NSIG, "vm signal out of expected range");
   sigflags[sig] = sigAct.sa_flags;
 
   int ret = sigaction(sig, &sigAct, &oldAct);
-  assert(ret == 0, "check");
+  assert(ret == 0, "check");
 
   void* oldhand2  = oldAct.sa_sigaction
                   ? CAST_FROM_FN_PTR(void*, oldAct.sa_sigaction)
                   : CAST_FROM_FN_PTR(void*, oldAct.sa_handler);
-  assert(oldhand2 == oldhand, "no concurrent signal handler installation");
+  assert(oldhand2 == oldhand, "no concurrent signal handler installation");
 }
 
 // install signal handlers for signals that HotSpot needs to
@@ -2960,7 +2870,7 @@ void os::Bsd::install_signal_handlers() {
       get_signal_action = CAST_TO_FN_PTR(get_signal_t,
                                          dlsym(RTLD_DEFAULT, "JVM_get_signal_action"));
       libjsig_is_loaded = true;
-      assert(UseSignalChaining, "should enable signal-chaining");
+      assert(UseSignalChaining, "should enable signal-chaining");
     }
     if (libjsig_is_loaded) {
       // Tell libjsig jvm is setting signal handlers
@@ -2993,7 +2903,7 @@ void os::Bsd::install_signal_handlers() {
                                   EXCEPTION_STATE_IDENTITY,
                                   MACHINE_THREAD_STATE);
 
-    assert(kr == KERN_SUCCESS, "could not set mach task signal handler");
+    assert(kr == KERN_SUCCESS, "could not set mach task signal handler");
 #endif
 
     if (libjsig_is_loaded) {
@@ -3019,7 +2929,6 @@ void os::Bsd::install_signal_handlers() {
     }
   }
 }
-
 
 /////
 // glibc on Bsd platform uses non-documented flag
@@ -3099,12 +3008,11 @@ static void print_signal_handler(outputStream* st, int sig,
   st->cr();
 }
 
-
-#define DO_SIGNAL_CHECK(sig)                      \
-  do {                                            \
-    if (!sigismember(&check_signal_done, sig)) {  \
-      os::Bsd::check_signal_handler(sig);         \
-    }                                             \
+#define DO_SIGNAL_CHECK(sig) \
+  do { \
+    if (!sigismember(&check_signal_done, sig)) { \
+      os::Bsd::check_signal_handler(sig); \
+    } \
   } while (0)
 
 // This method is a periodic task to check for misbehaving JNI applications
@@ -3124,7 +3032,6 @@ void os::run_periodic_checks() {
   DO_SIGNAL_CHECK(SIGBUS);
   DO_SIGNAL_CHECK(SIGPIPE);
   DO_SIGNAL_CHECK(SIGXFSZ);
-
 
   // ReduceSignalUsage allows the user to override these handlers
   // see comments at the very top and jvm_md.h
@@ -3146,7 +3053,6 @@ void os::Bsd::check_signal_handler(int sig) {
   char buf[O_BUFLEN];
   address jvmHandler = NULL;
 
-
   struct sigaction act;
   if (os_sigaction == NULL) {
     // only trust the default sigaction, in case it has been interposed
@@ -3156,13 +3062,11 @@ void os::Bsd::check_signal_handler(int sig) {
 
   os_sigaction(sig, (struct sigaction*)NULL, &act);
 
-
   act.sa_flags &= SIGNIFICANT_SIGNAL_MASK;
 
   address thisHandler = (act.sa_flags & SA_SIGINFO)
     ? CAST_FROM_FN_PTR(address, act.sa_sigaction)
     : CAST_FROM_FN_PTR(address, act.sa_handler);
-
 
   switch (sig) {
   case SIGSEGV:
@@ -3490,7 +3394,7 @@ bool os::message_box(const char* title, const char* message) {
 static inline struct timespec get_mtime(const char* filename) {
   struct stat st;
   int ret = os::stat(filename, &st);
-  assert(ret == 0, "failed to stat() file '%s': %s", filename, strerror(errno));
+  assert(ret == 0, "failed to stat() file '%s': %s", filename, strerror(errno));
 #ifdef __APPLE__
   return st.st_mtimespec;
 #else
@@ -3592,7 +3496,6 @@ int os::open(const char *path, int oflag, int mode) {
   return fd;
 }
 
-
 // create binary file, rewriting existing file if required
 int os::create_binary_file(const char* path, bool rewrite_existing) {
   int oflags = O_WRONLY | O_CREAT;
@@ -3672,7 +3575,6 @@ char* os::pd_map_memory(int fd, const char* file_name, size_t file_offset,
   return mapped_address;
 }
 
-
 // Remap a block of memory.
 char* os::pd_remap_memory(int fd, const char* file_name, size_t file_offset,
                           char *addr, size_t bytes, bool read_only,
@@ -3681,7 +3583,6 @@ char* os::pd_remap_memory(int fd, const char* file_name, size_t file_offset,
   return os::map_memory(fd, file_name, file_offset, addr, bytes, read_only,
                         allow_exec);
 }
-
 
 // Unmap a block of memory.
 bool os::pd_unmap_memory(char* addr, size_t bytes) {
@@ -3747,21 +3648,6 @@ jlong os::thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
   Unimplemented();
   return 0;
 #endif
-}
-
-
-void os::current_thread_cpu_time_info(jvmtiTimerInfo *info_ptr) {
-  info_ptr->max_value = ALL_64_BITS;       // will not wrap in less than 64 bits
-  info_ptr->may_skip_backward = false;     // elapsed time not wall time
-  info_ptr->may_skip_forward = false;      // elapsed time not wall time
-  info_ptr->kind = JVMTI_TIMER_TOTAL_CPU;  // user+system time is returned
-}
-
-void os::thread_cpu_time_info(jvmtiTimerInfo *info_ptr) {
-  info_ptr->max_value = ALL_64_BITS;       // will not wrap in less than 64 bits
-  info_ptr->may_skip_backward = false;     // elapsed time not wall time
-  info_ptr->may_skip_forward = false;      // elapsed time not wall time
-  info_ptr->kind = JVMTI_TIMER_TOTAL_CPU;  // user+system time is returned
 }
 
 bool os::is_thread_cpu_time_supported() {
@@ -3884,12 +3770,6 @@ int os::get_core_path(char* buffer, size_t bufferSize) {
 
   return n;
 }
-
-#ifndef PRODUCT
-void TestReserveMemorySpecial_test() {
-  // No tests available for this platform
-}
-#endif
 
 bool os::start_debugging(char *buf, int buflen) {
   int len = (int)strlen(buf);

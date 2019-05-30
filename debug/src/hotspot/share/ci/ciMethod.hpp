@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CIMETHOD_HPP
 #define SHARE_VM_CI_CIMETHOD_HPP
 
@@ -96,10 +72,6 @@ class ciMethod : public ciMetadata {
 
   // Optional liveness analyzer.
   MethodLiveness* _liveness;
-#if defined(COMPILER2)
-  ciTypeFlow*         _flow;
-  BCEscapeAnalyzer*   _bcea;
-#endif
 
   ciMethod(const methodHandle& h_m, ciInstanceKlass* holder);
   ciMethod(ciInstanceKlass* holder, ciSymbol* name, ciSymbol* signature, ciInstanceKlass* accessor);
@@ -116,7 +88,7 @@ class ciMethod : public ciMetadata {
 
   void code_at_put(int bci, Bytecodes::Code code) {
     Bytecodes::check(code);
-    assert(0 <= bci && bci < code_size(), "valid bci");
+    assert(0 <= bci && bci < code_size(), "valid bci");
     address bcp = _code + bci;
     *bcp = code;
   }
@@ -126,7 +98,8 @@ class ciMethod : public ciMetadata {
   void assert_call_type_ok(int bci);
 
  public:
-  void check_is_loaded() const                   { assert(is_loaded(), "not loaded"); }
+  void check_is_loaded() const                   {
+    assert(is_loaded(), "not loaded"); }
 
   // Basic method information.
   ciFlags flags() const                          { check_is_loaded(); return _flags; }
@@ -167,7 +140,7 @@ class ciMethod : public ciMetadata {
 
   Method* get_Method() const {
     Method* m = (Method*)_metadata;
-    assert(m != NULL, "illegal use of unloaded method");
+    assert(m != NULL, "illegal use of unloaded method");
     return m;
   }
 
@@ -243,9 +216,7 @@ class ciMethod : public ciMetadata {
 
   ResourceBitMap live_local_oops_at_bci(int bci);
 
-#ifdef COMPILER1
   const BitMap& bci_block_start();
-#endif
 
   ciTypeFlow*   get_flow_analysis();
   ciTypeFlow*   get_osr_flow_analysis(int osr_bci);  // alternate entry point
@@ -269,7 +240,7 @@ class ciMethod : public ciMetadata {
     bool ignored_will_link;
     ciSignature* declared_signature;
     get_method_at_bci(bci, ignored_will_link, &declared_signature);
-    assert(declared_signature != NULL, "cannot be null");
+    assert(declared_signature != NULL, "cannot be null");
     return declared_signature;
   }
 
@@ -363,4 +334,4 @@ class ciMethod : public ciMetadata {
   static bool is_consistent_info(ciMethod* declared_method, ciMethod* resolved_method);
 };
 
-#endif // SHARE_VM_CI_CIMETHOD_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_VERIFIER_HPP
 #define SHARE_VM_CLASSFILE_VERIFIER_HPP
 
@@ -139,10 +115,6 @@ class TypeOrigin {
   const StackMapFrame* frame() const { return _frame; }
   bool is_valid() const { return _origin != NONE; }
   u2 index() const { return _index; }
-
-#ifdef ASSERT
-  void print_on(outputStream* str) const;
-#endif
 };
 
 class ErrorContext {
@@ -232,16 +204,6 @@ class ErrorContext {
   }
 
   void details(outputStream* ss, const Method* method) const;
-
-#ifdef ASSERT
-  void print_on(outputStream* str) const {
-    str->print("error_context(%d, %d,", _bci, _fault);
-    _type.print_on(str);
-    str->print(",");
-    _expected.print_on(str);
-    str->print(")");
-  }
-#endif
 
  private:
   void location_details(outputStream* ss, const Method* method) const;
@@ -427,7 +389,6 @@ class ClassVerifier : public StackObj {
   }
 
   TypeOrigin ref_ctx(const char* str, TRAPS);
-
 };
 
 inline int ClassVerifier::change_sig_to_verificationType(
@@ -440,7 +401,7 @@ inline int ClassVerifier::change_sig_to_verificationType(
         Symbol* name = sig_type->as_symbol(CHECK_0);
         // Create another symbol to save as signature stream unreferences this symbol.
         Symbol* name_copy = create_temporary_symbol(name);
-        assert(name_copy == name, "symbols don't match");
+        assert(name_copy == name, "symbols don't match");
         *inference_type =
           VerificationType::reference_type(name_copy);
         return 1;
@@ -469,4 +430,4 @@ inline int ClassVerifier::change_sig_to_verificationType(
   }
 }
 
-#endif // SHARE_VM_CLASSFILE_VERIFIER_HPP
+#endif

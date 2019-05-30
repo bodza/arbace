@@ -1,34 +1,9 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_ValueType.hpp"
 #include "ci/ciArray.hpp"
 #include "ci/ciInstance.hpp"
 #include "ci/ciNullObject.hpp"
 #include "memory/resourceArea.hpp"
-
 
 // predefined types
 VoidType*       voidType     = NULL;
@@ -43,12 +18,10 @@ ClassType*      classType    = NULL;
 AddressType*    addressType  = NULL;
 IllegalType*    illegalType  = NULL;
 
-
 // predefined constants
 IntConstant*    intZero      = NULL;
 IntConstant*    intOne       = NULL;
 ObjectConstant* objectNull   = NULL;
-
 
 void ValueType::initialize(Arena* arena) {
   // Note: Must initialize all types for each compilation
@@ -72,19 +45,16 @@ void ValueType::initialize(Arena* arena) {
   objectNull  = new (arena) ObjectConstant(ciNullObject::make());
 };
 
-
 ValueType* ValueType::meet(ValueType* y) const {
   // incomplete & conservative solution for now - fix this!
-  assert(tag() == y->tag(), "types must match");
+  assert(tag() == y->tag(), "types must match");
   return base();
 }
-
 
 ValueType* ValueType::join(ValueType* y) const {
   Unimplemented();
   return NULL;
 }
-
 
 ciType* ObjectConstant::exact_type() const {
   ciObject* c = constant_value();
@@ -102,19 +72,18 @@ ciType* ClassConstant::exact_type() const {
   return Compilation::current()->env()->Class_klass();
 }
 
-
 jobject ObjectType::encoding() const {
-  assert(is_constant(), "must be");
+  assert(is_constant(), "must be");
   return constant_value()->constant_encoding();
 }
 
 bool ObjectType::is_loaded() const {
-  assert(is_constant(), "must be");
+  assert(is_constant(), "must be");
   return constant_value()->is_loaded();
 }
 
 bool MetadataType::is_loaded() const {
-  assert(is_constant(), "must be");
+  assert(is_constant(), "must be");
   return constant_value()->is_loaded();
 }
 
@@ -141,7 +110,6 @@ ValueType* as_ValueType(BasicType type) {
                     return illegalType;
   }
 }
-
 
 ValueType* as_ValueType(ciConstant value) {
   switch (value.basic_type()) {
@@ -171,7 +139,6 @@ ValueType* as_ValueType(ciConstant value) {
                     return illegalType;
   }
 }
-
 
 BasicType as_BasicType(ValueType* type) {
   switch (type->tag()) {

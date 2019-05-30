@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Red Hat, Inc. All rights reserved.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/epsilon/epsilonHeap.hpp"
 #include "gc/epsilon/epsilonMemoryPool.hpp"
@@ -112,13 +89,13 @@ size_t EpsilonHeap::unsafe_max_tlab_alloc(Thread* thr) const {
 
 EpsilonHeap* EpsilonHeap::heap() {
   CollectedHeap* heap = Universe::heap();
-  assert(heap != NULL, "Uninitialized access to EpsilonHeap::heap()");
-  assert(heap->kind() == CollectedHeap::Epsilon, "Not an Epsilon heap");
+  assert(heap != NULL, "Uninitialized access to EpsilonHeap::heap()");
+  assert(heap->kind() == CollectedHeap::Epsilon, "Not an Epsilon heap");
   return (EpsilonHeap*)heap;
 }
 
 HeapWord* EpsilonHeap::allocate_work(size_t size) {
-  assert(is_object_aligned(size), "Allocation size should be aligned: " SIZE_FORMAT, size);
+  assert(is_object_aligned(size), "Allocation size should be aligned: " SIZE_FORMAT, size);
 
   HeapWord* res = _space->par_allocate(size);
 
@@ -132,12 +109,12 @@ HeapWord* EpsilonHeap::allocate_work(size_t size) {
     if (want_space < space_left) {
       // Enough space to expand in bulk:
       bool expand = _virtual_space.expand_by(want_space);
-      assert(expand, "Should be able to expand");
+      assert(expand, "Should be able to expand");
     } else if (size < space_left) {
       // No space to expand in bulk, and this allocation is still possible,
       // take all the remaining space:
       bool expand = _virtual_space.expand_by(space_left);
-      assert(expand, "Should be able to expand");
+      assert(expand, "Should be able to expand");
     } else {
       // No space left:
       return NULL;
@@ -166,7 +143,7 @@ HeapWord* EpsilonHeap::allocate_work(size_t size) {
     }
   }
 
-  assert(is_object_aligned(res), "Object should be aligned: " PTR_FORMAT, p2i(res));
+  assert(is_object_aligned(res), "Object should be aligned: " PTR_FORMAT, p2i(res));
   return res;
 }
 
@@ -188,7 +165,7 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
       int64_t last_time = EpsilonThreadLocalData::last_tlab_time(thread);
       time = (int64_t) os::javaTimeNanos();
 
-      assert(last_time <= time, "time should be monotonic");
+      assert(last_time <= time, "time should be monotonic");
 
       // If the thread had not allocated recently, retract the ergonomic size.
       // This conserves memory when the thread had initial burst of allocations,
@@ -214,14 +191,10 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
   size = align_up(size, MinObjAlignment);
 
   // Check that adjustments did not break local and global invariants
-  assert(is_object_aligned(size),
-         "Size honors object alignment: " SIZE_FORMAT, size);
-  assert(min_size <= size,
-         "Size honors min size: "  SIZE_FORMAT " <= " SIZE_FORMAT, min_size, size);
-  assert(size <= _max_tlab_size,
-         "Size honors max size: "  SIZE_FORMAT " <= " SIZE_FORMAT, size, _max_tlab_size);
-  assert(size <= CollectedHeap::max_tlab_size(),
-         "Size honors global max size: "  SIZE_FORMAT " <= " SIZE_FORMAT, size, CollectedHeap::max_tlab_size());
+  assert(is_object_aligned(size), "Size honors object alignment: " SIZE_FORMAT, size);
+  assert(min_size <= size, "Size honors min size: "  SIZE_FORMAT " <= " SIZE_FORMAT, min_size, size);
+  assert(size <= _max_tlab_size, "Size honors max size: "  SIZE_FORMAT " <= " SIZE_FORMAT, size, _max_tlab_size);
+  assert(size <= CollectedHeap::max_tlab_size(), "Size honors global max size: "  SIZE_FORMAT " <= " SIZE_FORMAT, size, CollectedHeap::max_tlab_size());
 
   if (log_is_enabled(Trace, gc)) {
     ResourceMark rm;
@@ -271,7 +244,7 @@ void EpsilonHeap::collect(GCCause::Cause cause) {
       // While Epsilon does not do GC, it has to perform sizing adjustments, otherwise we would
       // re-enter the safepoint again very soon.
 
-      assert(SafepointSynchronize::is_at_safepoint(), "Expected at safepoint");
+      assert(SafepointSynchronize::is_at_safepoint(), "Expected at safepoint");
       log_info(gc)("GC request for \"%s\" is handled", GCCause::to_string(cause));
       MetaspaceGC::compute_new_size();
       print_metaspace_info();

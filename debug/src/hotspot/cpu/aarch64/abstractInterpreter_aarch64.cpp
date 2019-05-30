@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/interpreter.hpp"
 #include "oops/constMethod.hpp"
@@ -31,7 +6,6 @@
 #include "utilities/align.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/macros.hpp"
-
 
 int AbstractInterpreter::BasicType_as_index(BasicType type) {
   int i = 0;
@@ -49,8 +23,7 @@ int AbstractInterpreter::BasicType_as_index(BasicType type) {
     case T_ARRAY  : i = 9; break;
     default       : ShouldNotReachHere();
   }
-  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers,
-         "index out of bounds");
+  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers, "index out of bounds");
   return i;
 }
 
@@ -71,13 +44,7 @@ int AbstractInterpreter::size_top_interpreter_activation(Method* method) {
 }
 
 // asm based interpreter deoptimization helpers
-int AbstractInterpreter::size_activation(int max_stack,
-                                         int temps,
-                                         int extra_args,
-                                         int monitors,
-                                         int callee_params,
-                                         int callee_locals,
-                                         bool is_top_frame) {
+int AbstractInterpreter::size_activation(int max_stack, int temps, int extra_args, int monitors, int callee_params, int callee_locals, bool is_top_frame) {
   // Note: This calculation must exactly parallel the frame setup
   // in TemplateInterpreterGenerator::generate_method_entry.
 
@@ -126,22 +93,12 @@ void AbstractInterpreter::layout_activation(Method* method,
   int extra_locals = (method->max_locals() - method->size_of_parameters()) *
     Interpreter::stackElementWords;
 
-#ifdef ASSERT
-  assert(caller->sp() == interpreter_frame->sender_sp(), "Frame not properly walkable");
-#endif
-
   interpreter_frame->interpreter_frame_set_method(method);
   // NOTE the difference in using sender_sp and
   // interpreter_frame_sender_sp interpreter_frame_sender_sp is
   // the original sp of the caller (the unextended_sp) and
   // sender_sp is fp+8/16 (32bit/64bit) XXX
   intptr_t* locals = interpreter_frame->sender_sp() + max_locals - 1;
-
-#ifdef ASSERT
-  if (caller->is_interpreted_frame()) {
-    assert(locals < caller->fp() + frame::interpreter_frame_initial_sp_offset, "bad placement");
-  }
-#endif
 
   interpreter_frame->interpreter_frame_set_locals(locals);
   BasicObjectLock* montop = interpreter_frame->interpreter_frame_monitor_begin();

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -40,9 +16,6 @@
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
-#ifdef COMPILER2
-#include "opto/runtime.hpp"
-#endif
 
 // Declaration and definition of StubGenerator (no .hpp file).
 // For a more detailed description of the stub routine structure
@@ -51,11 +24,7 @@
 #define __ _masm->
 #define a__ ((Assembler*)_masm)->
 
-#ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
-#else
-#define BLOCK_COMMENT(str) __ block_comment(str)
-#endif
 
 #define BIND(label) bind(label); BLOCK_COMMENT(#label ":")
 
@@ -68,28 +37,9 @@ const int FPU_CNTRL_WRD_MASK = 0xFFFF;
 class StubGenerator: public StubCodeGenerator {
  private:
 
-#ifdef PRODUCT
 #define inc_counter_np(counter) ((void)0)
-#else
-  void inc_counter_np_(int& counter) {
-    __ incrementl(ExternalAddress((address)&counter));
-  }
-#define inc_counter_np(counter) \
-  BLOCK_COMMENT("inc_counter " #counter); \
-  inc_counter_np_(counter);
-#endif //PRODUCT
 
   void inc_copy_counter_np(BasicType t) {
-#ifndef PRODUCT
-    switch (t) {
-    case T_BYTE:    inc_counter_np(SharedRuntime::_jbyte_array_copy_ctr); return;
-    case T_SHORT:   inc_counter_np(SharedRuntime::_jshort_array_copy_ctr); return;
-    case T_INT:     inc_counter_np(SharedRuntime::_jint_array_copy_ctr); return;
-    case T_LONG:    inc_counter_np(SharedRuntime::_jlong_array_copy_ctr); return;
-    case T_OBJECT:  inc_counter_np(SharedRuntime::_oop_array_copy_ctr); return;
-    }
-    ShouldNotReachHere();
-#endif //PRODUCT
   }
 
   //------------------------------------------------------------------------------------------------------------------------
@@ -117,13 +67,12 @@ class StubGenerator: public StubCodeGenerator {
   //  8 [ parameter_size       ]
   //  9 [ thread               ]
 
-
   address generate_call_stub(address& return_address) {
     StubCodeMark mark(this, "StubRoutines", "call_stub");
     address start = __ pc();
 
     // stub code parameters / addresses
-    assert(frame::entry_frame_call_wrapper_offset == 2, "adjust this code");
+    assert(frame::entry_frame_call_wrapper_offset == 2, "adjust this code");
     bool  sse_save = false;
     const Address rsp_after_call(rbp, -4 * wordSize); // same as in generate_catch_exception()!
     const int     locals_count_in_bytes  (4*wordSize);
@@ -169,17 +118,6 @@ class StubGenerator: public StubCodeGenerator {
     // make sure the control word is correct.
     __ fldcw(ExternalAddress(StubRoutines::addr_fpu_cntrl_wrd_std()));
 
-#ifdef ASSERT
-    // make sure we have no pending exceptions
-    { Label L;
-      __ movptr(rcx, thread);
-      __ cmpptr(Address(rcx, Thread::pending_exception_offset()), (int32_t)NULL_WORD);
-      __ jcc(Assembler::equal, L);
-      __ stop("StubRoutines::call_stub: entered with pending exception");
-      __ bind(L);
-    }
-#endif
-
     // pass parameters if any
     BLOCK_COMMENT("pass parameters if any");
     Label parameters_done;
@@ -218,31 +156,6 @@ class StubGenerator: public StubCodeGenerator {
 
     BLOCK_COMMENT("call_stub_return_address:");
     return_address = __ pc();
-
-#ifdef COMPILER2
-    {
-      Label L_skip;
-      if (UseSSE >= 2) {
-        __ verify_FPU(0, "call_stub_return");
-      } else {
-        for (int i = 1; i < 8; i++) {
-          __ ffree(i);
-        }
-
-        // UseSSE <= 1 so double result should be left on TOS
-        __ movl(rsi, result_type);
-        __ cmpl(rsi, T_DOUBLE);
-        __ jcc(Assembler::equal, L_skip);
-        if (UseSSE == 0) {
-          // UseSSE == 0 so float result should be left on TOS
-          __ cmpl(rsi, T_FLOAT);
-          __ jcc(Assembler::equal, L_skip);
-        }
-        __ ffree(0);
-      }
-      __ BIND(L_skip);
-    }
-#endif // COMPILER2
 
     // store result depending on type
     // (everything that is not T_LONG, T_FLOAT or T_DOUBLE is treated as T_INT)
@@ -308,7 +221,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   //------------------------------------------------------------------------------------------------------------------------
   // Return point for a Java call if there's an exception thrown in Java code.
   // The exception is caught and transformed into a pending exception stored in
@@ -328,16 +240,6 @@ class StubGenerator: public StubCodeGenerator {
 
     // get thread directly
     __ movptr(rcx, thread);
-#ifdef ASSERT
-    // verify that threads correspond
-    { Label L;
-      __ get_thread(rbx);
-      __ cmpptr(rbx, rcx);
-      __ jcc(Assembler::equal, L);
-      __ stop("StubRoutines::catch_exception: threads must correspond");
-      __ bind(L);
-    }
-#endif
     // set pending exception
     __ verify_oop(rax);
     __ movptr(Address(rcx, Thread::pending_exception_offset()), rax          );
@@ -345,12 +247,11 @@ class StubGenerator: public StubCodeGenerator {
            ExternalAddress((address)__FILE__));
     __ movl(Address(rcx, Thread::exception_line_offset   ()), __LINE__ );
     // complete return to VM
-    assert(StubRoutines::_call_stub_return_address != NULL, "_call_stub_return_address must have been generated before");
+    assert(StubRoutines::_call_stub_return_address != NULL, "_call_stub_return_address must have been generated before");
     __ jump(RuntimeAddress(StubRoutines::_call_stub_return_address));
 
     return start;
   }
-
 
   //------------------------------------------------------------------------------------------------------------------------
   // Continuation point for runtime calls returning with a pending exception.
@@ -381,17 +282,6 @@ class StubGenerator: public StubCodeGenerator {
     // the exception handler will reset the stack pointer -> ignore them.
     // A potential result in registers can be ignored as well.
 
-#ifdef ASSERT
-    // make sure this code is only executed if there is a pending exception
-    { Label L;
-      __ get_thread(thread);
-      __ cmpptr(Address(thread, Thread::pending_exception_offset()), (int32_t)NULL_WORD);
-      __ jcc(Assembler::notEqual, L);
-      __ stop("StubRoutines::forward exception: no pending exception (1)");
-      __ bind(L);
-    }
-#endif
-
     // compute exception handler into rbx,
     __ get_thread(thread);
     __ movptr(exception_pc, Address(rsp, 0));
@@ -405,16 +295,6 @@ class StubGenerator: public StubCodeGenerator {
     __ movptr(exception_oop, Address(thread, Thread::pending_exception_offset()));
     __ movptr(Address(thread, Thread::pending_exception_offset()), NULL_WORD);
 
-#ifdef ASSERT
-    // make sure exception is set
-    { Label L;
-      __ testptr(exception_oop, exception_oop);
-      __ jcc(Assembler::notEqual, L);
-      __ stop("StubRoutines::forward exception: no pending exception (2)");
-      __ bind(L);
-    }
-#endif
-
     // Verify that there is really a valid exception in RAX.
     __ verify_oop(exception_oop);
 
@@ -426,7 +306,6 @@ class StubGenerator: public StubCodeGenerator {
 
     return start;
   }
-
 
   //----------------------------------------------------------------------------------------------------
   // Support for int32_t Atomic::xchg(int32_t exchange_value, volatile int32_t* dest)
@@ -465,7 +344,6 @@ class StubGenerator: public StubCodeGenerator {
   // JNI code does not return to Java code without restoring the
   // MXCSR register to our expected state.
 
-
   address generate_verify_mxcsr() {
     StubCodeMark mark(this, "StubRoutines", "verify_mxcsr");
     address start = __ pc();
@@ -496,7 +374,6 @@ class StubGenerator: public StubCodeGenerator {
 
     return start;
   }
-
 
   //---------------------------------------------------------------------------
   // Support for void verify_fpu_cntrl_wrd()
@@ -559,7 +436,7 @@ class StubGenerator: public StubCodeGenerator {
                 framesize
   };
 
-  assert(FPUStateSizeInWords == 27, "update stack layout");
+  assert(FPUStateSizeInWords == 27, "update stack layout");
 
     // Save outgoing argument to stack across push_FPU_state()
     __ subptr(rsp, wordSize * 2);
@@ -602,7 +479,6 @@ class StubGenerator: public StubCodeGenerator {
 
     return start;
   }
-
 
   //----------------------------------------------------------------------------------------------------
   // Non-destructive plausibility checks for oops
@@ -662,7 +538,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   // Copy 64 bytes chunks
   //
   // Inputs:
@@ -671,7 +546,7 @@ class StubGenerator: public StubCodeGenerator {
   //   qword_count - 8-bytes element count, negative
   //
   void xmm_copy_forward(Register from, Register to_from, Register qword_count) {
-    assert( UseSSE >= 2, "supported cpu only" );
+    assert( UseSSE >= 2, "supported cpu only" );
     Label L_copy_64_bytes_loop, L_copy_64_bytes, L_copy_8_bytes, L_exit;
 
     // Copy 64-byte chunks
@@ -749,7 +624,7 @@ class StubGenerator: public StubCodeGenerator {
   //   qword_count - 8-bytes element count, negative
   //
   void mmx_copy_forward(Register from, Register to_from, Register qword_count) {
-    assert( VM_Version::supports_mmx(), "supported cpu only" );
+    assert( VM_Version::supports_mmx(), "supported cpu only" );
     Label L_copy_64_bytes_loop, L_copy_64_bytes, L_copy_8_bytes, L_exit;
     // Copy 64-byte chunks
     __ jmpb(L_copy_64_bytes);
@@ -936,7 +811,6 @@ class StubGenerator: public StubCodeGenerator {
     __ ret(0);
     return start;
   }
-
 
   address generate_fill(BasicType t, bool aligned, const char *name) {
     __ align(CodeEntryAlignment);
@@ -1139,7 +1013,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   address generate_disjoint_long_copy(address* entry, const char *name) {
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", name);
@@ -1185,8 +1058,7 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-  address generate_conjoint_long_copy(address nooverlap_target,
-                                      address* entry, const char *name) {
+  address generate_conjoint_long_copy(address nooverlap_target, address* entry, const char *name) {
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", name);
     address start = __ pc();
@@ -1244,7 +1116,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   // Helper for generating a dynamic type check.
   // The sub_klass must be one of {rbx, rdx, rsi}.
   // The temp is killed.
@@ -1256,8 +1127,8 @@ class StubGenerator: public StubCodeGenerator {
     BLOCK_COMMENT("type_check:");
 
     Label L_fallthrough;
-#define LOCAL_JCC(assembler_con, label_ptr)                             \
-    if (label_ptr != NULL)  __ jcc(assembler_con, *(label_ptr));        \
+#define LOCAL_JCC(assembler_con, label_ptr) \
+    if (label_ptr != NULL)  __ jcc(assembler_con, *(label_ptr)); \
     else                    __ jcc(assembler_con, L_fallthrough) /*omit semi*/
 
     // The following is a strange variation of the fast path which requires
@@ -1384,7 +1255,7 @@ class StubGenerator: public StubCodeGenerator {
     // Copy from low to high addresses, indexed from the end of each array.
     __ lea(end_from, end_from_addr);
     __ lea(end_to,   end_to_addr);
-    assert(length == count, "");        // else fix next line:
+    assert(length == count, "");
     __ negptr(count);                   // negate and test the length
     __ jccb(Assembler::notZero, L_load_element);
 
@@ -1534,7 +1405,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   // Perform range checks on the proposed arraycopy.
   // Smashes src_pos and dst_pos.  (Uses them up for temps.)
   void arraycopy_range_checks(Register src,
@@ -1559,7 +1429,6 @@ class StubGenerator: public StubCodeGenerator {
 
     BLOCK_COMMENT("arraycopy_range_checks done");
   }
-
 
   //
   //  Generate generic array copy stubs
@@ -1595,7 +1464,7 @@ class StubGenerator: public StubCodeGenerator {
     // Short-hop target to L_failed.  Makes for denser prologue code.
     __ BIND(L_failed_0);
     __ jmp(L_failed);
-    assert(__ offset() % CodeEntryAlignment == 0, "no further alignment needed");
+    assert(__ offset() % CodeEntryAlignment == 0, "no further alignment needed");
 
     __ align(CodeEntryAlignment);
     address start = __ pc();
@@ -1665,21 +1534,6 @@ class StubGenerator: public StubCodeGenerator {
     const Register rcx_src_klass = rcx;    // array klass
     __ movptr(rcx_src_klass, Address(src, oopDesc::klass_offset_in_bytes()));
 
-#ifdef ASSERT
-    //  assert(src->klass() != NULL);
-    BLOCK_COMMENT("assert klasses not null");
-    { Label L1, L2;
-      __ testptr(rcx_src_klass, rcx_src_klass);
-      __ jccb(Assembler::notZero, L2);   // it is broken if klass is NULL
-      __ bind(L1);
-      __ stop("broken null klass");
-      __ bind(L2);
-      __ cmpptr(dst_klass_addr, (int32_t)NULL_WORD);
-      __ jccb(Assembler::equal, L1);      // this would be broken also
-      BLOCK_COMMENT("assert done");
-    }
-#endif //ASSERT
-
     // Load layout helper (32-bits)
     //
     //  |array_tag|     | header_size | element_type |     |log2_element_size|
@@ -1701,7 +1555,7 @@ class StubGenerator: public StubCodeGenerator {
     __ jccb(Assembler::notEqual, L_failed_0);
 
     const Register rcx_lh = rcx;  // layout helper
-    assert(rcx_lh == rcx_src_klass, "known alias");
+    assert(rcx_lh == rcx_src_klass, "known alias");
     __ movl(rcx_lh, src_klass_lh_addr);
 
     //  if (!src->is_Array()) return -1;
@@ -1709,14 +1563,6 @@ class StubGenerator: public StubCodeGenerator {
     __ jcc(Assembler::greaterEqual, L_failed_0); // signed cmp
 
     // At this point, it is known to be a typeArray (array_tag 0x3).
-#ifdef ASSERT
-    { Label L;
-      __ cmpl(rcx_lh, (Klass::_lh_array_tag_type_value << Klass::_lh_array_tag_shift));
-      __ jcc(Assembler::greaterEqual, L); // signed cmp
-      __ stop("must be a primitive array");
-      __ bind(L);
-    }
-#endif
 
     assert_different_registers(src, src_pos, dst, dst_pos, rcx_lh);
     arraycopy_range_checks(src, src_pos, dst, dst_pos, LENGTH, L_failed);
@@ -1750,11 +1596,11 @@ class StubGenerator: public StubCodeGenerator {
     BLOCK_COMMENT("scale indexes to element size");
     __ movl2ptr(rsi, SRC_POS);  // src_pos
     __ shlptr(rsi);             // src_pos << rcx (log2 elsize)
-    assert(src_array == from, "");
+    assert(src_array == from, "");
     __ addptr(from, rsi);       // from = src_array + SRC_POS << log2 elsize
     __ movl2ptr(rdi, DST_POS);  // dst_pos
     __ shlptr(rdi);             // dst_pos << rcx (log2 elsize)
-    assert(dst_array == to, "");
+    assert(dst_array == to, "");
     __ addptr(to,  rdi);        // to   = dst_array + DST_POS << log2 elsize
     __ movptr(FROM, from);      // src_addr
     __ mov(rdi_elsize, rcx_lh); // log2 elsize
@@ -1768,10 +1614,6 @@ class StubGenerator: public StubCodeGenerator {
     __ jump_cc(Assembler::equal, RuntimeAddress(entry_jshort_arraycopy));
     __ cmpl(rdi_elsize, LogBytesPerInt);
     __ jump_cc(Assembler::equal, RuntimeAddress(entry_jint_arraycopy));
-#ifdef ASSERT
-    __ cmpl(rdi_elsize, LogBytesPerLong);
-    __ jccb(Assembler::notEqual, L_failed);
-#endif
     __ pop(rdi); // Do pops here since jlong_arraycopy stub does not do it.
     __ pop(rsi);
     __ jump(RuntimeAddress(entry_jlong_arraycopy));
@@ -1819,8 +1661,8 @@ class StubGenerator: public StubCodeGenerator {
 
       Register rsi_dst_klass = rsi;
       Register rdi_temp      = rdi;
-      assert(rsi_dst_klass == src_pos, "expected alias w/ src_pos");
-      assert(rdi_temp      == dst_pos, "expected alias w/ dst_pos");
+      assert(rsi_dst_klass == src_pos, "expected alias w/ src_pos");
+      assert(rdi_temp      == dst_pos, "expected alias w/ dst_pos");
       Address dst_klass_lh_addr(rsi_dst_klass, lh_offset);
 
       // Before looking at dst.length, make sure dst is also an objArray.
@@ -2072,7 +1914,6 @@ class StubGenerator: public StubCodeGenerator {
     __ BIND(next_block);          // next instruction
   }
 
-
   // Arguments:
   //
   // Inputs:
@@ -2081,7 +1922,7 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_encryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
+    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_encryptBlock");
     Label L_doLast;
@@ -2171,7 +2012,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   // Arguments:
   //
   // Inputs:
@@ -2180,7 +2020,7 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_decryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
+    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_decryptBlock");
     Label L_doLast;
@@ -2304,7 +2144,7 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_cipherBlockChaining_encryptAESCrypt() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
+    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_encryptAESCrypt");
     address start = __ pc();
@@ -2444,7 +2284,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-
   // CBC AES Decryption.
   // In 32-bit stub, because of lack of registers we do not try to parallelize 4 blocks at a time.
   //
@@ -2462,7 +2301,7 @@ class StubGenerator: public StubCodeGenerator {
   //
 
   address generate_cipherBlockChaining_decryptAESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
+    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_decryptAESCrypt");
     address start = __ pc();
@@ -2523,11 +2362,11 @@ class StubGenerator: public StubCodeGenerator {
     __ cmpl(rvec, 60);
     __ jcc(Assembler::equal, L_multiBlock_loopTop[2]);
 
-#define DoFour(opc, src_reg)           \
-  __ opc(xmm_result0, src_reg);         \
-  __ opc(xmm_result1, src_reg);         \
-  __ opc(xmm_result2, src_reg);         \
-  __ opc(xmm_result3, src_reg);         \
+#define DoFour(opc, src_reg) \
+  __ opc(xmm_result0, src_reg); \
+  __ opc(xmm_result1, src_reg); \
+  __ opc(xmm_result2, src_reg); \
+  __ opc(xmm_result3, src_reg); \
 
     for (int k = 0; k < 3; ++k) {
       __ align(OptoLoopAlignment);
@@ -2635,7 +2474,7 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_counterMode_AESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
+    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "counterMode_AESCrypt");
     address start = __ pc();
@@ -2743,10 +2582,10 @@ class StubGenerator: public StubCodeGenerator {
     //key128 begins here
     __ movptr(pos, 0); // init pos before L_multiBlock_loopTop
 
-#define CTR_DoFour(opc, src_reg)               \
-    __ opc(xmm_result0, src_reg);              \
-    __ opc(xmm_result1, src_reg);              \
-    __ opc(xmm_result2, src_reg);              \
+#define CTR_DoFour(opc, src_reg) \
+    __ opc(xmm_result0, src_reg); \
+    __ opc(xmm_result1, src_reg); \
+    __ opc(xmm_result2, src_reg); \
     __ opc(xmm_result3, src_reg);
 
     // k == 0 :  generate code for key_128
@@ -3075,7 +2914,7 @@ class StubGenerator: public StubCodeGenerator {
 
   /* Single and multi-block ghash operations */
   address generate_ghash_processBlocks() {
-    assert(UseGHASHIntrinsics, "need GHASH intrinsics and CLMUL support");
+    assert(UseGHASHIntrinsics, "need GHASH intrinsics and CLMUL support");
     __ align(CodeEntryAlignment);
     Label L_ghash_loop, L_exit;
     StubCodeMark mark(this, "StubRoutines", "ghash_processBlocks");
@@ -3223,7 +3062,7 @@ class StubGenerator: public StubCodeGenerator {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-    assert(UseCRC32Intrinsics, "need AVX and CLMUL instructions");
+    assert(UseCRC32Intrinsics, "need AVX and CLMUL instructions");
 
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
@@ -3279,7 +3118,7 @@ class StubGenerator: public StubCodeGenerator {
   *       rax  - int crc result
   */
   address generate_updateBytesCRC32C(bool is_pclmulqdq_supported) {
-    assert(UseCRC32CIntrinsics, "need SSE4_2");
+    assert(UseCRC32CIntrinsics, "need SSE4_2");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32C");
     address start = __ pc();
@@ -3347,7 +3186,6 @@ class StubGenerator: public StubCodeGenerator {
     __ ret(0);
 
     return start;
-
   }
 
  address generate_libmLog() {
@@ -3374,7 +3212,6 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
  address generate_libmLog10() {
@@ -3401,7 +3238,6 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
  address generate_libmPow() {
@@ -3428,7 +3264,6 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
  address generate_libm_reduce_pi04l() {
@@ -3440,7 +3275,6 @@ class StubGenerator: public StubCodeGenerator {
    __ libm_reduce_pi04l(rax, rcx, rdx, rbx, rsi, rdi, rbp, rsp);
 
    return start;
-
  }
 
  address generate_libm_sin_cos_huge() {
@@ -3455,7 +3289,6 @@ class StubGenerator: public StubCodeGenerator {
    __ libm_sincos_huge(x0, x1, rax, rcx, rdx, rbx, rsi, rdi, rbp, rsp);
 
    return start;
-
  }
 
  address generate_libmSin() {
@@ -3480,7 +3313,6 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
  address generate_libmCos() {
@@ -3507,7 +3339,6 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
  address generate_libm_tan_cot_huge() {
@@ -3522,7 +3353,6 @@ class StubGenerator: public StubCodeGenerator {
    __ libm_tancot_huge(x0, x1, rax, rcx, rdx, rbx, rsi, rdi, rbp, rsp);
 
    return start;
-
  }
 
  address generate_libmTan() {
@@ -3549,12 +3379,10 @@ class StubGenerator: public StubCodeGenerator {
    __ ret(0);
 
    return start;
-
  }
 
   // Safefetch stubs.
-  void generate_safefetch(const char* name, int size, address* entry,
-                          address* fault_pc, address* continuation_pc) {
+  void generate_safefetch(const char* name, int size, address* entry, address* fault_pc, address* continuation_pc) {
     // safefetch signatures:
     //   int      SafeFetch32(int*      adr, int      errValue);
     //   intptr_t SafeFetchN (intptr_t* adr, intptr_t errValue);
@@ -3628,8 +3456,7 @@ class StubGenerator: public StubCodeGenerator {
   // exceptions (e.g., NullPointerException or AbstractMethodError on entry) are
   // either at call sites or otherwise assume that stack unwinding will be initiated,
   // so caller saved registers were assumed volatile in the compiler.
-  address generate_throw_exception(const char* name, address runtime_entry,
-                                   Register arg1 = noreg, Register arg2 = noreg) {
+  address generate_throw_exception(const char* name, address runtime_entry, Register arg1 = noreg, Register arg2 = noreg) {
 
     int insts_size = 256;
     int locs_size  = 32;
@@ -3662,7 +3489,7 @@ class StubGenerator: public StubCodeGenerator {
       __ movptr(Address(rsp, arg1_off * wordSize), arg1);
     }
     if (arg2 != noreg) {
-      assert(arg1 != noreg, "missing reg arg");
+      assert(arg1 != noreg, "missing reg arg");
       __ movptr(Address(rsp, arg2_off * wordSize), arg2);
     }
 
@@ -3686,20 +3513,11 @@ class StubGenerator: public StubCodeGenerator {
     __ leave(); // required for proper stackwalking of RuntimeStub frame
 
     // check for pending exceptions
-#ifdef ASSERT
-    Label L;
-    __ cmpptr(Address(java_thread, Thread::pending_exception_offset()), (int32_t)NULL_WORD);
-    __ jcc(Assembler::notEqual, L);
-    __ should_not_reach_here();
-    __ bind(L);
-#endif /* ASSERT */
     __ jump(RuntimeAddress(StubRoutines::forward_exception_entry()));
-
 
     RuntimeStub* stub = RuntimeStub::new_runtime_stub(name, &code, frame_complete, framesize, oop_maps, false);
     return stub->entry_point();
   }
-
 
   void create_control_words() {
     // Round to nearest, 53-bit mode, exceptions masked
@@ -3878,7 +3696,6 @@ class StubGenerator: public StubCodeGenerator {
     StubRoutines::_safefetchN_continuation_pc = StubRoutines::_safefetch32_continuation_pc;
   }
 
-
  public:
   StubGenerator(CodeBuffer* code, bool all) : StubCodeGenerator(code) {
     if (all) {
@@ -3888,7 +3705,6 @@ class StubGenerator: public StubCodeGenerator {
     }
   }
 }; // end class declaration
-
 
 void StubGenerator_generate(CodeBuffer* code, bool all) {
   StubGenerator g(code, all);

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/c2/barrierSetC2.hpp"
 #include "opto/arraycopynode.hpp"
@@ -75,7 +51,7 @@ Node* BarrierSetC2::store_at_resolved(C2Access& access, C2AccessValue& val) cons
   bool requires_atomic_access = (decorators & MO_UNORDERED) == 0;
 
   bool in_native = (decorators & IN_NATIVE) != 0;
-  assert(!in_native, "not supported yet");
+  assert(!in_native, "not supported yet");
 
   if (access.type() == T_DOUBLE) {
     Node* new_val = kit->dstore_rounding(val.node());
@@ -104,7 +80,7 @@ Node* BarrierSetC2::load_at_resolved(C2Access& access, const Type* val_type) con
   bool pinned = (decorators & C2_PINNED_LOAD) != 0;
 
   bool in_native = (decorators & IN_NATIVE) != 0;
-  assert(!in_native, "not supported yet");
+  assert(!in_native, "not supported yet");
 
   MemNode::MemOrd mo = access.mem_node_mo();
   LoadNode::ControlDependency dep = pinned ? LoadNode::Pinned : LoadNode::DependsOnlyOnTest;
@@ -209,7 +185,6 @@ public:
       }
     }
   }
-
 };
 
 Node* BarrierSetC2::store_at(C2Access& access, C2AccessValue& val) const {
@@ -234,7 +209,7 @@ MemNode::MemOrd C2Access::mem_node_mo() const {
     } else if (is_write) {
       return MemNode::release;
     } else {
-      assert(is_read, "what else?");
+      assert(is_read, "what else?");
       return MemNode::acquire;
     }
   } else if ((_decorators & MO_RELEASE) != 0) {
@@ -276,7 +251,7 @@ void C2Access::fixup_decorators() {
     const TypePtr* adr_type = _addr.type();
     Node* adr = _addr.node();
     if (!needs_cpu_membar() && adr_type->isa_instptr()) {
-      assert(adr_type->meet(TypePtr::NULL_PTR) != adr_type->remove_speculative(), "should be not null");
+      assert(adr_type->meet(TypePtr::NULL_PTR) != adr_type->remove_speculative(), "should be not null");
       intptr_t offset = Type::OffsetBot;
       AddPNode::Ideal_base_and_offset(adr, &_kit->gvn(), offset);
       if (offset >= 0) {
@@ -302,7 +277,7 @@ static void pin_atomic_op(C2AtomicAccess& access) {
   // when their results aren't used.
   GraphKit* kit = access.kit();
   Node* load_store = access.raw_access();
-  assert(load_store != NULL, "must pin atomic op");
+  assert(load_store != NULL, "must pin atomic op");
   Node* proj = kit->gvn().transform(new SCMemProjNode(load_store));
   kit->set_memory(proj, access.alias_idx());
 }
@@ -324,13 +299,11 @@ Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node*
   Node* load_store = NULL;
 
   if (access.is_oop()) {
-#ifdef _LP64
     if (adr->bottom_type()->is_ptr_to_narrowoop()) {
       Node *newval_enc = kit->gvn().transform(new EncodePNode(new_val, new_val->bottom_type()->make_narrowoop()));
       Node *oldval_enc = kit->gvn().transform(new EncodePNode(expected_val, expected_val->bottom_type()->make_narrowoop()));
       load_store = kit->gvn().transform(new CompareAndExchangeNNode(kit->control(), mem, adr, newval_enc, oldval_enc, adr_type, value_type->make_narrowoop(), mo));
     } else
-#endif
     {
       load_store = kit->gvn().transform(new CompareAndExchangePNode(kit->control(), mem, adr, new_val, expected_val, adr_type, value_type->is_oopptr(), mo));
     }
@@ -360,11 +333,9 @@ Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node*
   access.set_raw_access(load_store);
   pin_atomic_op(access);
 
-#ifdef _LP64
   if (access.is_oop() && adr->bottom_type()->is_ptr_to_narrowoop()) {
     return kit->gvn().transform(new DecodeNNode(load_store, load_store->get_ptr_type()));
   }
-#endif
 
   return load_store;
 }
@@ -380,7 +351,6 @@ Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node
   Node* adr = access.addr().node();
 
   if (access.is_oop()) {
-#ifdef _LP64
     if (adr->bottom_type()->is_ptr_to_narrowoop()) {
       Node *newval_enc = kit->gvn().transform(new EncodePNode(new_val, new_val->bottom_type()->make_narrowoop()));
       Node *oldval_enc = kit->gvn().transform(new EncodePNode(expected_val, expected_val->bottom_type()->make_narrowoop()));
@@ -390,7 +360,6 @@ Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node
         load_store = kit->gvn().transform(new CompareAndSwapNNode(kit->control(), mem, adr, newval_enc, oldval_enc, mo));
       }
     } else
-#endif
     {
       if (is_weak_cas) {
         load_store = kit->gvn().transform(new WeakCompareAndSwapPNode(kit->control(), mem, adr, new_val, expected_val, mo));
@@ -451,12 +420,10 @@ Node* BarrierSetC2::atomic_xchg_at_resolved(C2AtomicAccess& access, Node* new_va
   Node* load_store = NULL;
 
   if (access.is_oop()) {
-#ifdef _LP64
     if (adr->bottom_type()->is_ptr_to_narrowoop()) {
       Node *newval_enc = kit->gvn().transform(new EncodePNode(new_val, new_val->bottom_type()->make_narrowoop()));
       load_store = kit->gvn().transform(new GetAndSetNNode(kit->control(), mem, adr, newval_enc, adr_type, value_type->make_narrowoop()));
     } else
-#endif
     {
       load_store = kit->gvn().transform(new GetAndSetPNode(kit->control(), mem, adr, new_val, adr_type, value_type->is_oopptr()));
     }
@@ -482,11 +449,9 @@ Node* BarrierSetC2::atomic_xchg_at_resolved(C2AtomicAccess& access, Node* new_va
   access.set_raw_access(load_store);
   pin_atomic_op(access);
 
-#ifdef _LP64
   if (access.is_oop() && adr->bottom_type()->is_ptr_to_narrowoop()) {
     return kit->gvn().transform(new DecodeNNode(load_store, load_store->get_ptr_type()));
   }
-#endif
 
   return load_store;
 }
@@ -557,7 +522,7 @@ void BarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* size, bool i
   // 12 - 64-bit VM, compressed klass
   // 16 - 64-bit VM, normal klass
   if (base_off % BytesPerLong != 0) {
-    assert(UseCompressedClassPointers, "");
+    assert(UseCompressedClassPointers, "");
     if (is_array) {
       // Exclude length to copy by 8 bytes words.
       base_off += sizeof(int);
@@ -565,7 +530,7 @@ void BarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* size, bool i
       // Include klass to copy by 8 bytes words.
       base_off = instanceOopDesc::klass_offset_in_bytes();
     }
-    assert(base_off % BytesPerLong == 0, "expect 8 bytes alignment");
+    assert(base_off % BytesPerLong == 0, "expect 8 bytes alignment");
   }
   Node* src_base  = kit->basic_plus_adr(src,  base_off);
   Node* dst_base = kit->basic_plus_adr(dst, base_off);

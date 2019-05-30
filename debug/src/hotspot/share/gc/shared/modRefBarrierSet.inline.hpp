@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_MODREFBARRIERSET_INLINE_HPP
 #define SHARE_VM_GC_SHARED_MODREFBARRIERSET_INLINE_HPP
 
@@ -49,8 +25,7 @@ void ModRefBarrierSet::write_ref_array(HeapWord* start, size_t count) {
   HeapWord* aligned_start = align_down(start, HeapWordSize);
   HeapWord* aligned_end   = align_up  (end,   HeapWordSize);
   // If compressed oops were not being used, these should already be aligned
-  assert(UseCompressedOops || (aligned_start == start && aligned_end == end),
-         "Expected heap word alignment of start and end");
+  assert(UseCompressedOops || (aligned_start == start && aligned_end == end), "Expected heap word alignment of start and end");
   write_ref_array_work(MemRegion(aligned_start, aligned_end));
 }
 
@@ -106,7 +81,7 @@ oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
     Raw::oop_arraycopy(NULL, 0, src_raw, NULL, 0, dst_raw, length);
     bs->write_ref_array((HeapWord*)dst_raw, length);
   } else {
-    assert(dst_obj != NULL, "better have an actual oop");
+    assert(dst_obj != NULL, "better have an actual oop");
     Klass* bound = objArrayOop(dst_obj)->element_klass();
     T* from = const_cast<T*>(src_raw);
     T* end = from + length;
@@ -120,7 +95,7 @@ oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
         const size_t pd = pointer_delta(p, dst_raw, (size_t)heapOopSize);
         // pointer delta is scaled to number of elements (length field in
         // objArrayOop) which we assume is 32 bit.
-        assert(pd == (size_t)(int)pd, "length field overflow");
+        assert(pd == (size_t)(int)pd, "length field overflow");
         bs->write_ref_array((HeapWord*)dst_raw, pd);
         return false;
       }
@@ -138,4 +113,4 @@ clone_in_heap(oop src, oop dst, size_t size) {
   bs->write_region(MemRegion((HeapWord*)(void*)dst, size));
 }
 
-#endif // SHARE_VM_GC_SHARED_MODREFBARRIERSET_INLINE_HPP
+#endif

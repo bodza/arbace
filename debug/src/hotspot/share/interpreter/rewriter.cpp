@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "interpreter/interpreter.hpp"
@@ -49,7 +25,7 @@ void Rewriter::compute_index_maps() {
         add_cp_cache_entry(i);
         break;
       case JVM_CONSTANT_Dynamic:
-        assert(_pool->has_dynamic_constant(), "constant pool's _has_dynamic_constant flag not set");
+        assert(_pool->has_dynamic_constant(), "constant pool's _has_dynamic_constant flag not set");
         add_resolved_references_entry(i);
         break;
       case JVM_CONSTANT_String            : // fall through
@@ -85,7 +61,7 @@ void Rewriter::restore_bytecodes() {
   for (int i = len-1; i >= 0; i--) {
     Method* method = _methods->at(i);
     scan_method(method, true, &invokespecial_error);
-    assert(!invokespecial_error, "reversing should not get an invokespecial error");
+    assert(!invokespecial_error, "reversing should not get an invokespecial error");
   }
 }
 
@@ -112,14 +88,8 @@ void Rewriter::make_constant_pool_cache(TRAPS) {
     MetadataFactory::free_metadata(loader_data, cache);
     _pool->set_cache(NULL);  // so the verifier isn't confused
   } else {
-    DEBUG_ONLY(
-    if (DumpSharedSpaces) {
-      cache->verify_just_initialized();
-    })
   }
 }
-
-
 
 // The new finalization semantics says that registration of
 // finalizable objects must be performed on successful return from the
@@ -162,7 +132,6 @@ void Rewriter::rewrite_Object_init(const methodHandle& method, TRAPS) {
   }
 }
 
-
 // Rewrite a classfile-order CP index into a native-order CPC index.
 void Rewriter::rewrite_member_reference(address bcp, int offset, bool reverse) {
   address p = bcp + offset;
@@ -203,18 +172,17 @@ void Rewriter::rewrite_invokespecial(address bcp, int offset, bool reverse, bool
   }
 }
 
-
 // Adjust the invocation bytecode for a signature-polymorphic method (MethodHandle.invoke, etc.)
 void Rewriter::maybe_rewrite_invokehandle(address opc, int cp_index, int cache_index, bool reverse) {
   if (!reverse) {
     if ((*opc) == (u1)Bytecodes::_invokevirtual ||
         // allow invokespecial as an alias, although it would be very odd:
         (*opc) == (u1)Bytecodes::_invokespecial) {
-      assert(_pool->tag_at(cp_index).is_method(), "wrong index");
+      assert(_pool->tag_at(cp_index).is_method(), "wrong index");
       // Determine whether this is a signature-polymorphic method.
       if (cp_index >= _method_handle_invokers.length())  return;
       int status = _method_handle_invokers.at(cp_index);
-      assert(status >= -1 && status <= 1, "oob tri-state");
+      assert(status >= -1 && status <= 1, "oob tri-state");
       if (status == 0) {
         if (_pool->klass_ref_at_noresolve(cp_index) == vmSymbols::java_lang_invoke_MethodHandle() &&
             MethodHandles::is_signature_polymorphic_name(SystemDictionary::MethodHandle_klass(),
@@ -251,10 +219,9 @@ void Rewriter::maybe_rewrite_invokehandle(address opc, int cp_index, int cache_i
   }
 }
 
-
 void Rewriter::rewrite_invokedynamic(address bcp, int offset, bool reverse) {
   address p = bcp + offset;
-  assert(p[-1] == Bytecodes::_invokedynamic, "not invokedynamic bytecode");
+  assert(p[-1] == Bytecodes::_invokedynamic, "not invokedynamic bytecode");
   if (!reverse) {
     int cp_index = Bytes::get_Java_u2(p);
     int cache_index = add_invokedynamic_cp_cache_entry(cp_index);
@@ -281,7 +248,7 @@ void Rewriter::rewrite_invokedynamic(address bcp, int offset, bool reverse) {
     // cpCache plus the delta if the invokedynamic bytecodes were adjusted.
     int adjustment = cp_cache_delta() + _first_iteration_cp_cache_limit;
     int cp_index = invokedynamic_cp_cache_entry_pool_index(cache_index - adjustment);
-    assert(_pool->tag_at(cp_index).is_invoke_dynamic(), "wrong index");
+    assert(_pool->tag_at(cp_index).is_invoke_dynamic(), "wrong index");
     // zero out 4 bytes
     Bytes::put_Java_u4(p, 0);
     Bytes::put_Java_u2(p, cp_index);
@@ -295,8 +262,7 @@ void Rewriter::patch_invokedynamic_bytecodes() {
   int delta = cp_cache_delta();
   if (delta > 0) {
     int length = _patch_invokedynamic_bcps->length();
-    assert(length == _patch_invokedynamic_refs->length(),
-           "lengths should match");
+    assert(length == _patch_invokedynamic_refs->length(), "lengths should match");
     for (int i = 0; i < length; i++) {
       address p = _patch_invokedynamic_bcps->at(i);
       int cache_index = ConstantPool::decode_invokedynamic_index(
@@ -307,8 +273,7 @@ void Rewriter::patch_invokedynamic_bytecodes() {
       // add delta to each.
       int resolved_index = _patch_invokedynamic_refs->at(i);
       for (int entry = 0; entry < ConstantPoolCacheEntry::_indy_resolved_references_entries; entry++) {
-        assert(_invokedynamic_references_map.at(resolved_index + entry) == cache_index,
-             "should be the same index");
+        assert(_invokedynamic_references_map.at(resolved_index + entry) == cache_index, "should be the same index");
         _invokedynamic_references_map.at_put(resolved_index+entry,
                                              cache_index + delta);
       }
@@ -316,12 +281,11 @@ void Rewriter::patch_invokedynamic_bytecodes() {
   }
 }
 
-
 // Rewrite some ldc bytecodes to _fast_aldc
 void Rewriter::maybe_rewrite_ldc(address bcp, int offset, bool is_wide,
                                  bool reverse) {
   if (!reverse) {
-    assert((*bcp) == (is_wide ? Bytecodes::_ldc_w : Bytecodes::_ldc), "not ldc bytecode");
+    assert((*bcp) == (is_wide ? Bytecodes::_ldc_w : Bytecodes::_ldc), "not ldc bytecode");
     address p = bcp + offset;
     int cp_index = is_wide ? Bytes::get_Java_u2(p) : (u1)(*p);
     constantTag tag = _pool->tag_at(cp_index).value();
@@ -336,11 +300,11 @@ void Rewriter::maybe_rewrite_ldc(address bcp, int offset, bool is_wide,
       int ref_index = cp_entry_to_resolved_references(cp_index);
       if (is_wide) {
         (*bcp) = Bytecodes::_fast_aldc_w;
-        assert(ref_index == (u2)ref_index, "index overflow");
+        assert(ref_index == (u2)ref_index, "index overflow");
         Bytes::put_native_u2(p, ref_index);
       } else {
         (*bcp) = Bytecodes::_fast_aldc;
-        assert(ref_index == (u1)ref_index, "index overflow");
+        assert(ref_index == (u1)ref_index, "index overflow");
         (*p) = (u1)ref_index;
       }
     }
@@ -353,17 +317,16 @@ void Rewriter::maybe_rewrite_ldc(address bcp, int offset, bool is_wide,
       int pool_index = resolved_references_entry_to_pool_index(ref_index);
       if (is_wide) {
         (*bcp) = Bytecodes::_ldc_w;
-        assert(pool_index == (u2)pool_index, "index overflow");
+        assert(pool_index == (u2)pool_index, "index overflow");
         Bytes::put_Java_u2(p, pool_index);
       } else {
         (*bcp) = Bytecodes::_ldc;
-        assert(pool_index == (u1)pool_index, "index overflow");
+        assert(pool_index == (u1)pool_index, "index overflow");
         (*p) = (u1)pool_index;
       }
     }
   }
 }
-
 
 // Rewrites a method given the index_map information
 void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_error) {
@@ -399,7 +362,7 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
       }
     }
 
-    assert(bc_length != 0, "impossible bytecode length");
+    assert(bc_length != 0, "impossible bytecode length");
 
     switch (c) {
       case Bytecodes::_lookupswitch   : {
@@ -501,7 +464,7 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
   if (nof_jsrs > 0) {
     method->set_has_jsrs();
     // Second pass will revisit this method.
-    assert(method->has_jsrs(), "didn't we just set this?");
+    assert(method->has_jsrs(), "didn't we just set this?");
   }
 }
 
@@ -519,7 +482,7 @@ methodHandle Rewriter::rewrite_jsrs(const methodHandle& method, TRAPS) {
 }
 
 void Rewriter::rewrite_bytecodes(TRAPS) {
-  assert(_pool->cache() == NULL, "constant pool cache must not be set yet");
+  assert(_pool->cache() == NULL, "constant pool cache must not be set yet");
 
   // determine index maps for Method* rewriting
   compute_index_maps();
@@ -538,7 +501,7 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
         break;
       }
     }
-    assert(did_rewrite, "must find Object::<init> to rewrite it");
+    assert(did_rewrite, "must find Object::<init> to rewrite it");
   }
 
   // rewrite methods, in two passes
@@ -566,7 +529,7 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
 
 void Rewriter::rewrite(InstanceKlass* klass, TRAPS) {
   if (!DumpSharedSpaces) {
-    assert(!klass->is_shared(), "archive methods must not be rewritten at run time");
+    assert(!klass->is_shared(), "archive methods must not be rewritten at run time");
   }
   ResourceMark rm(THREAD);
   Rewriter     rw(klass, klass->constants(), klass->methods(), CHECK);
@@ -588,12 +551,6 @@ Rewriter::Rewriter(InstanceKlass* klass, const constantPoolHandle& cpool, Array<
 
   // Rewrite bytecodes - exception here exits.
   rewrite_bytecodes(CHECK);
-
-  // Stress restoring bytecodes
-  if (StressRewriter) {
-    restore_bytecodes();
-    rewrite_bytecodes(CHECK);
-  }
 
   // allocate constant pool cache, now that we've seen all the bytecodes
   make_constant_pool_cache(THREAD);

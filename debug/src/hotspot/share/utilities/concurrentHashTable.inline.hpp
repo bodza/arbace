@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_UTILITIES_CONCURRENT_HASH_TABLE_INLINE_HPP
 #define SHARE_UTILITIES_CONCURRENT_HASH_TABLE_INLINE_HPP
 
@@ -41,16 +17,6 @@
 
 // Number from spinYield.hpp. In some loops SpinYield would be unfair.
 #define SPINPAUSES_PER_YIELD 8192
-
-#ifdef ASSERT
-#ifdef _LP64
-// Two low bits are not usable.
-static const void* POISON_PTR = (void*)UCONST64(0xfbadbadbadbadbac);
-#else
-// Two low bits are not usable.
-static const void* POISON_PTR = (void*)0xffbadbac;
-#endif
-#endif
 
 // Node
 template <typename VALUE, typename CONFIG, MEMFLAGS F>
@@ -77,7 +43,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
     typename ConcurrentHashTable<VALUE, CONFIG, F>::Node* node) const
 {
   // Due to this assert this methods is not static.
-  assert(is_locked(), "Must be locked.");
+  assert(is_locked(), "Must be locked.");
   Node** tmp = (Node**)dst;
   OrderAccess::release_store(tmp, clear_set_state(node, *dst));
 }
@@ -128,7 +94,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   Bucket::release_assign_last_node_next(
      typename ConcurrentHashTable<VALUE, CONFIG, F>::Node* node)
 {
-  assert(is_locked(), "Must be locked.");
+  assert(is_locked(), "Must be locked.");
   Node* const volatile * ret = first_ptr();
   while (clear_state(*ret) != NULL) {
     ret = clear_state(*ret)->next_ptr();
@@ -170,9 +136,8 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   Bucket::unlock()
 {
-  assert(is_locked(), "Must be locked.");
-  assert(!have_redirect(),
-         "Unlocking a bucket after it has reached terminal state.");
+  assert(is_locked(), "Must be locked.");
+  assert(!have_redirect(), "Unlocking a bucket after it has reached terminal state.");
   OrderAccess::release_store(&_first, clear_state(first()));
 }
 
@@ -180,7 +145,7 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   Bucket::redirect()
 {
-  assert(is_locked(), "Must be locked.");
+  assert(is_locked(), "Must be locked.");
   OrderAccess::release_store(&_first, set_state(_first, STATE_REDIRECT_BIT));
 }
 
@@ -191,8 +156,7 @@ inline ConcurrentHashTable<VALUE, CONFIG, F>::
     : _log2_size(log2_size), _size(((size_t)1ul) << _log2_size),
       _hash_mask(~(~((size_t)0) << _log2_size))
 {
-  assert(_log2_size >= SIZE_SMALL_LOG2 && _log2_size <= SIZE_BIG_LOG2,
-         "Bad size");
+  assert(_log2_size >= SIZE_SMALL_LOG2 && _log2_size <= SIZE_BIG_LOG2, "Bad size");
   void* memory = NEW_C_HEAP_ARRAY(Bucket, _size, F);
   _buckets = new (memory) Bucket[_size];
 }
@@ -296,13 +260,13 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   write_synchonize_on_visible_epoch(Thread* thread)
 {
-  assert(_resize_lock_owner == thread, "Re-size lock not held");
+  assert(_resize_lock_owner == thread, "Re-size lock not held");
   OrderAccess::fence(); // Prevent below load from floating up.
   // If no reader saw this version we can skip write_synchronize.
   if (OrderAccess::load_acquire(&_invisible_epoch) == thread) {
     return;
   }
-  assert(_invisible_epoch == NULL, "Two thread doing bulk operations");
+  assert(_invisible_epoch == NULL, "Two thread doing bulk operations");
   // We set this/next version that we are synchronizing for to not published.
   // A reader will zero this flag if it reads this/next version.
   OrderAccess::release_store(&_invisible_epoch, thread);
@@ -315,7 +279,7 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
 {
   if (_resize_lock->try_lock()) {
     if (_resize_lock_owner != NULL) {
-      assert(locker != _resize_lock_owner, "Already own lock");
+      assert(locker != _resize_lock_owner, "Already own lock");
       // We got mutex but internal state is locked.
       _resize_lock->unlock();
       return false;
@@ -341,7 +305,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
     // If holder of lock dropped mutex for safepoint mutex might be unlocked,
     // and _resize_lock_owner will contain the owner.
     if (_resize_lock_owner != NULL) {
-      assert(locker != _resize_lock_owner, "Already own lock");
+      assert(locker != _resize_lock_owner, "Already own lock");
       // We got mutex but internal state is locked.
       _resize_lock->unlock();
       yield.wait();
@@ -358,7 +322,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   unlock_resize_lock(Thread* locker)
 {
   _invisible_epoch = 0;
-  assert(locker == _resize_lock_owner, "Not unlocked by locker.");
+  assert(locker == _resize_lock_owner, "Not unlocked by locker.");
   _resize_lock_owner = NULL;
   _resize_lock->unlock();
 }
@@ -407,7 +371,6 @@ ConcurrentHashTable<VALUE, CONFIG, F>::
   GlobalCounter::write_synchronize();
   // _new_table not read any more.
   _new_table = NULL;
-  DEBUG_ONLY(_new_table = (InternalTable*)POISON_PTR;)
   return old_table;
 }
 
@@ -415,8 +378,8 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_grow_range(Thread* thread, size_t start, size_t stop)
 {
-  assert(stop <= _table->_size, "Outside backing array");
-  assert(_new_table != NULL, "Grow not proper setup before start");
+  assert(stop <= _table->_size, "Outside backing array");
+  assert(_new_table != NULL, "Grow not proper setup before start");
   // The state is also copied here. Hence all buckets in new table will be
   // locked. I call the siblings odd/even, where even have high bit 0 and odd
   // have high bit 1.
@@ -437,17 +400,11 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
     if (!unzip_bucket(thread, _table, _new_table, even_index, odd_index)) {
       // If bucket is empty, unzip does nothing.
       // We must make sure readers go to new table before we poison the bucket.
-      DEBUG_ONLY(GlobalCounter::write_synchronize();)
     }
 
     // Unlock for writes into the new table buckets.
     _new_table->get_bucket(even_index)->unlock();
     _new_table->get_bucket(odd_index)->unlock();
-
-    DEBUG_ONLY(
-       bucket->release_assign_node_ptr(
-          _table->get_bucket(even_index)->first_ptr(), (Node*)POISON_PTR);
-    )
   }
 }
 
@@ -457,7 +414,7 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_remove(Thread* thread, LOOKUP_FUNC& lookup_f, DELETE_FUNC& delete_f)
 {
   Bucket* bucket = get_bucket_locked(thread, lookup_f.get_hash());
-  assert(bucket->is_locked(), "Must be locked.");
+  assert(bucket->is_locked(), "Must be locked.");
   Node* const volatile * rem_n_prev = bucket->first_ptr();
   Node* rem_n = bucket->first();
   bool have_dead = false;
@@ -491,12 +448,11 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
 {
   // Here we have resize lock so table is SMR safe, and there is no new
   // table. Can do this in parallel if we want.
-  assert((is_mt && _resize_lock_owner != NULL) ||
-         (!is_mt && _resize_lock_owner == thread), "Re-size lock not held");
+  assert((is_mt && _resize_lock_owner != NULL) || (!is_mt && _resize_lock_owner == thread), "Re-size lock not held");
   Node* ndel[BULK_DELETE_LIMIT];
   InternalTable* table = get_table();
-  assert(start_idx < stop_idx, "Must be");
-  assert(stop_idx <= _table->_size, "Must be");
+  assert(start_idx < stop_idx, "Must be");
+  assert(stop_idx <= _table->_size, "Must be");
   // Here manual do critical section since we don't want to take the cost of
   // locking the bucket if there is nothing to delete. But we can have
   // concurrent single deletes. The _invisible_epoch can only be used by the
@@ -528,7 +484,6 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
     for (size_t node_it = 0; node_it < nd; node_it++) {
       del_f(ndel[node_it]->value());
       Node::destroy_node(ndel[node_it]);
-      DEBUG_ONLY(ndel[node_it] = (Node*)POISON_PTR;)
     }
     GlobalCounter::critical_section_begin(thread);
   }
@@ -564,7 +519,6 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
     GlobalCounter::write_synchronize();
     for (size_t node_it = 0; node_it < dels; node_it++) {
       Node::destroy_node(ndel[node_it]);
-      DEBUG_ONLY(ndel[node_it] = (Node*)POISON_PTR;)
     }
   }
 }
@@ -705,7 +659,7 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   if (!try_resize_lock(thread)) {
     return false;
   }
-  assert(_resize_lock_owner == thread, "Re-size lock not held");
+  assert(_resize_lock_owner == thread, "Re-size lock not held");
   if (_table->_log2_size == _log2_start_size ||
       _table->_log2_size <= log2_size) {
     unlock_resize_lock(thread);
@@ -719,17 +673,11 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_shrink_epilog(Thread* thread)
 {
-  assert(_resize_lock_owner == thread, "Re-size lock not held");
+  assert(_resize_lock_owner == thread, "Re-size lock not held");
 
   InternalTable* old_table = set_table_from_new();
   _size_limit_reached = false;
   unlock_resize_lock(thread);
-#ifdef ASSERT
-  for (size_t i = 0; i < old_table->_size; i++) {
-    assert(old_table->get_bucket(i++)->first() == POISON_PTR,
-           "No poison found");
-  }
-#endif
   // ABA safe, old_table not visible to any other threads.
   delete old_table;
 }
@@ -763,11 +711,6 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::
 
     // Unlock for writes into new smaller table.
     _new_table->get_bucket(bucket_it)->unlock();
-
-    DEBUG_ONLY(b_old_even->release_assign_node_ptr(b_old_even->first_ptr(),
-                                                   (Node*)POISON_PTR);)
-    DEBUG_ONLY(b_old_odd->release_assign_node_ptr(b_old_odd->first_ptr(),
-                                                  (Node*)POISON_PTR);)
   }
 }
 
@@ -776,13 +719,13 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_shrink(Thread* thread, size_t log2_size)
 {
   if (!internal_shrink_prolog(thread, log2_size)) {
-    assert(_resize_lock_owner != thread, "Re-size lock held");
+    assert(_resize_lock_owner != thread, "Re-size lock held");
     return false;
   }
-  assert(_resize_lock_owner == thread, "Should be locked by me");
+  assert(_resize_lock_owner == thread, "Should be locked by me");
   internal_shrink_range(thread, 0, _new_table->_size);
   internal_shrink_epilog(thread);
-  assert(_resize_lock_owner != thread, "Re-size lock held");
+  assert(_resize_lock_owner != thread, "Re-size lock held");
   return true;
 }
 
@@ -819,16 +762,10 @@ template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_grow_epilog(Thread* thread)
 {
-  assert(_resize_lock_owner == thread, "Should be locked");
+  assert(_resize_lock_owner == thread, "Should be locked");
 
   InternalTable* old_table = set_table_from_new();
   unlock_resize_lock(thread);
-#ifdef ASSERT
-  for (size_t i = 0; i < old_table->_size; i++) {
-    assert(old_table->get_bucket(i++)->first() == POISON_PTR,
-           "No poison found");
-  }
-#endif
   // ABA safe, old_table not visible to any other threads.
   delete old_table;
 }
@@ -838,13 +775,13 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   internal_grow(Thread* thread, size_t log2_size)
 {
   if (!internal_grow_prolog(thread, log2_size)) {
-    assert(_resize_lock_owner != thread, "Re-size lock held");
+    assert(_resize_lock_owner != thread, "Re-size lock held");
     return false;
   }
-  assert(_resize_lock_owner == thread, "Should be locked by me");
+  assert(_resize_lock_owner == thread, "Should be locked by me");
   internal_grow_range(thread, 0, _table->_size);
   internal_grow_epilog(thread);
-  assert(_resize_lock_owner != thread, "Re-size lock held");
+  assert(_resize_lock_owner != thread, "Re-size lock held");
   return true;
 }
 
@@ -925,7 +862,7 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   } else if (i == 0 && clean) {
     // We only do cleaning on fast inserts.
     Bucket* bucket = get_bucket_locked(thread, lookup_f.get_hash());
-    assert(bucket->is_locked(), "Must be locked.");
+    assert(bucket->is_locked(), "Must be locked.");
     delete_in_bucket(thread, bucket, lookup_f);
     bucket->unlock();
   }
@@ -957,7 +894,7 @@ template <typename FUNC>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   do_scan_locked(Thread* thread, FUNC& scan_f)
 {
-  assert(_resize_lock_owner == thread, "Re-size lock not held");
+  assert(_resize_lock_owner == thread, "Re-size lock not held");
   // We can do a critical section over the entire loop but that would block
   // updates for a long time. Instead we choose to block resizes.
   InternalTable* table = get_table();
@@ -1008,7 +945,7 @@ inline ConcurrentHashTable<VALUE, CONFIG, F>::
     new Mutex(Mutex::leaf, "ConcurrentHashTable", false,
               Monitor::_safepoint_check_never);
   _table = new InternalTable(log2size);
-  assert(log2size_limit >= log2size, "bad ergo");
+  assert(log2size_limit >= log2size, "bad ergo");
   _size_limit_reached = _table->_log2_size == _log2_size_limit;
 }
 
@@ -1082,10 +1019,10 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   // This is an unsafe operation.
   InternalTable* table = get_table();
   Bucket* bucket = get_bucket_in(table, hash);
-  assert(!bucket->have_redirect() && !bucket->is_locked(), "bad");
+  assert(!bucket->have_redirect() && !bucket->is_locked(), "bad");
   Node* new_node = Node::create_node(value, bucket->first());
   if (!bucket->cas_first(new_node, bucket->first())) {
-    assert(false, "bad");
+    assert(false, "bad");
   }
   return true;
 }
@@ -1108,11 +1045,11 @@ template <typename SCAN_FUNC>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::
   do_scan(Thread* thread, SCAN_FUNC& scan_f)
 {
-  assert(_resize_lock_owner != thread, "Re-size lock held");
+  assert(_resize_lock_owner != thread, "Re-size lock held");
   lock_resize_lock(thread);
   do_scan_locked(thread, scan_f);
   unlock_resize_lock(thread);
-  assert(_resize_lock_owner != thread, "Re-size lock held");
+  assert(_resize_lock_owner != thread, "Re-size lock held");
 }
 
 template <typename VALUE, typename CONFIG, MEMFLAGS F>
@@ -1125,7 +1062,7 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   }
   do_bulk_delete_locked(thread, eval_f, del_f);
   unlock_resize_lock(thread);
-  assert(_resize_lock_owner != thread, "Re-size lock held");
+  assert(_resize_lock_owner != thread, "Re-size lock held");
   return true;
 }
 
@@ -1209,22 +1146,22 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   if (!try_resize_lock(thread)) {
     return false;
   }
-  assert(_new_table == NULL || _new_table == POISON_PTR, "Must be NULL");
+  assert(_new_table == NULL || _new_table == POISON_PTR, "Must be NULL");
   for (size_t bucket_it = 0; bucket_it < _table->_size; bucket_it++) {
     Bucket* bucket = _table->get_bucket(bucket_it);
-    assert(!bucket->have_redirect() && !bucket->is_locked(), "Table must be uncontended");
+    assert(!bucket->have_redirect() && !bucket->is_locked(), "Table must be uncontended");
     while (bucket->first() != NULL) {
       Node* move_node = bucket->first();
       bool ok = bucket->cas_first(move_node->next(), move_node);
-      assert(ok, "Uncontended cas must work");
+      assert(ok, "Uncontended cas must work");
       bool dead_hash = false;
       size_t insert_hash = CONFIG::get_hash(*move_node->value(), &dead_hash);
       if (!dead_hash) {
         Bucket* insert_bucket = to_cht->get_bucket(insert_hash);
-        assert(!bucket->have_redirect() && !bucket->is_locked(), "Not bit should be present");
+        assert(!bucket->have_redirect() && !bucket->is_locked(), "Not bit should be present");
         move_node->set_next(insert_bucket->first());
         ok = insert_bucket->cas_first(move_node, insert_bucket->first());
-        assert(ok, "Uncontended cas must work");
+        assert(ok, "Uncontended cas must work");
       }
     }
   }
@@ -1232,4 +1169,4 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::
   return true;
 }
 
-#endif // include guard
+#endif

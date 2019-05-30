@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_SERVICES_THREADSERVICE_HPP
 #define SHARE_VM_SERVICES_THREADSERVICE_HPP
 
@@ -130,7 +106,6 @@ private:
   jlong        _sleep_count;
   elapsedTimer _sleep_timer;
 
-
   // These two reset flags are set to true when another thread
   // requests to reset the statistics.  The actual statistics
   // are reset when the thread contention occurs and attempts
@@ -234,7 +209,6 @@ public:
   jlong       monitor_wait_ticks()        { return _monitor_wait_ticks; }
   jlong       sleep_count()               { return _sleep_count; }
   jlong       sleep_ticks()               { return _sleep_ticks; }
-
 
   oop         blocker_object()            { return _blocker_object; }
   oop         blocker_object_owner()      { return _blocker_object_owner; }
@@ -343,10 +317,10 @@ class ConcurrentLocksDump : public StackObj {
 
  public:
   ConcurrentLocksDump(bool retain_map_on_free) : _map(NULL), _last(NULL), _retain_map_on_free(retain_map_on_free) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
+    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
   };
   ConcurrentLocksDump() : _map(NULL), _last(NULL), _retain_map_on_free(false) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
+    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
   };
   ~ConcurrentLocksDump();
 
@@ -415,7 +389,6 @@ public:
   instanceHandle get_threadObj(int index) { return _threads_array->at(index); }
 };
 
-
 // abstract utility class to set new thread states, and restore previous after the block exits
 class JavaThreadStatusChanger : public StackObj {
  private:
@@ -432,8 +405,7 @@ class JavaThreadStatusChanger : public StackObj {
   }
 
  public:
-  static void set_thread_status(JavaThread* java_thread,
-                                java_lang_Thread::ThreadStatus state) {
+  static void set_thread_status(JavaThread* java_thread, java_lang_Thread::ThreadStatus state) {
     java_lang_Thread::set_thread_status(java_thread->threadObj(), state);
   }
 
@@ -443,8 +415,7 @@ class JavaThreadStatusChanger : public StackObj {
     }
   }
 
-  JavaThreadStatusChanger(JavaThread* java_thread,
-                          java_lang_Thread::ThreadStatus state) : _old_state(java_lang_Thread::NEW) {
+  JavaThreadStatusChanger(JavaThread* java_thread, java_lang_Thread::ThreadStatus state) : _old_state(java_lang_Thread::NEW) {
     save_old_state(java_thread);
     set_thread_status(state);
   }
@@ -545,7 +516,7 @@ class JavaThreadBlockedOnMonitorEnterState : public JavaThreadStatusChanger {
   // java_thread is waiting thread being blocked on monitor reenter.
   // Current thread is the notifying thread which holds the monitor.
   static bool wait_reenter_begin(JavaThread *java_thread, ObjectMonitor *obj_m) {
-    assert((java_thread != NULL), "Java thread should not be null here");
+    assert((java_thread != NULL), "Java thread should not be null here");
     bool active = false;
     if (is_alive(java_thread)) {
       active = contended_enter_begin(java_thread);
@@ -562,7 +533,7 @@ class JavaThreadBlockedOnMonitorEnterState : public JavaThreadStatusChanger {
 
   JavaThreadBlockedOnMonitorEnterState(JavaThread *java_thread, ObjectMonitor *obj_m) :
     _stat(NULL), _active(false), JavaThreadStatusChanger(java_thread) {
-    assert((java_thread != NULL), "Java thread should not be null here");
+    assert((java_thread != NULL), "Java thread should not be null here");
     // Change thread status and collect contended enter stats for monitor contended
     // enter done for external java world objects and it is contended. All other cases
     // like for vm internal objects and for external objects which are not contended
@@ -608,4 +579,4 @@ class JavaThreadSleepState : public JavaThreadStatusChanger {
   }
 };
 
-#endif // SHARE_VM_SERVICES_THREADSERVICE_HPP
+#endif

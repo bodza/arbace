@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/classLoaderData.inline.hpp"
@@ -63,19 +39,12 @@
 #include "runtime/vframe.inline.hpp"
 #include "utilities/align.hpp"
 #include "utilities/preserveException.hpp"
-#if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaClasses.hpp"
-#endif
 
-#define INJECTED_FIELD_COMPUTE_OFFSET(klass, name, signature, may_be_java)    \
+#define INJECTED_FIELD_COMPUTE_OFFSET(klass, name, signature, may_be_java) \
   klass::_##name##_offset = JavaClasses::compute_injected_offset(JavaClasses::klass##_##name##_enum);
 
-#if INCLUDE_CDS
-#define INJECTED_FIELD_SERIALIZE_OFFSET(klass, name, signature, may_be_java) \
-  f->do_u4((u4*)&_##name##_offset);
-#endif
-
-#define DECLARE_INJECTED_FIELD(klass, name, signature, may_be_java)           \
+#define DECLARE_INJECTED_FIELD(klass, name, signature, may_be_java) \
   { SystemDictionary::WK_KLASS_ENUM_NAME(klass), vmSymbols::VM_SYMBOL_ENUM_NAME(name##_name), vmSymbols::VM_SYMBOL_ENUM_NAME(signature), may_be_java },
 
 InjectedField JavaClasses::_injected_fields[] = {
@@ -85,7 +54,6 @@ InjectedField JavaClasses::_injected_fields[] = {
 int JavaClasses::compute_injected_offset(InjectedFieldID id) {
   return _injected_fields[id].compute_offset();
 }
-
 
 InjectedField* JavaClasses::get_injected(Symbol* class_name, int* field_count) {
   *field_count = 0;
@@ -100,9 +68,9 @@ InjectedField* JavaClasses::get_injected(Symbol* class_name, int* field_count) {
   int start = -1;
 
 #define LOOKUP_INJECTED_FIELD(klass, name, signature, may_be_java) \
-  if (sid == vmSymbols::VM_SYMBOL_ENUM_NAME(klass)) {              \
-    count++;                                                       \
-    if (start == -1) start = klass##_##name##_enum;                \
+  if (sid == vmSymbols::VM_SYMBOL_ENUM_NAME(klass)) { \
+    count++; \
+    if (start == -1) start = klass##_##name##_enum; \
   }
   ALL_INJECTED_FIELDS(LOOKUP_INJECTED_FIELD);
 #undef LOOKUP_INJECTED_FIELD
@@ -113,7 +81,6 @@ InjectedField* JavaClasses::get_injected(Symbol* class_name, int* field_count) {
   }
   return NULL;
 }
-
 
 // Helpful routine for computing field offsets at run time rather than hardcoding them
 // Finds local fields only, including static fields.  Static field offsets are from the
@@ -132,12 +99,6 @@ static void compute_offset(int &dest_offset,
     ResourceMark rm;
     log_error(class)("Invalid layout of %s field: %s type: %s", ik->external_name(),
                      name_symbol->as_C_string(), signature_symbol->as_C_string());
-#ifndef PRODUCT
-    // Prints all fields and offsets
-    Log(class) lt;
-    LogStream ls(lt.error());
-    ik->print_on(&ls);
-#endif //PRODUCT
     vm_exit_during_initialization("Invalid layout of preloaded class: use -Xlog:class+load=info to see the origin of the problem class");
   }
   dest_offset = fd.offset();
@@ -178,14 +139,6 @@ bool java_lang_String::is_instance(oop obj) {
   return is_instance_inlined(obj);
 }
 
-#if INCLUDE_CDS
-#define FIELD_SERIALIZE_OFFSET(offset, klass, name, signature, is_static) \
-  f->do_u4((u4*)&offset)
-
-#define FIELD_SERIALIZE_OFFSET_OPTIONAL(offset, klass, name, signature) \
-  f->do_u4((u4*)&offset)
-#endif
-
 #define FIELD_COMPUTE_OFFSET(offset, klass, name, signature, is_static) \
   compute_offset(offset, klass, name, vmSymbols::signature(), is_static)
 
@@ -208,13 +161,6 @@ void java_lang_String::compute_offsets() {
   initialized = true;
 }
 
-#if INCLUDE_CDS
-void java_lang_String::serialize(SerializeClosure* f) {
-  STRING_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-  f->do_u4((u4*)&initialized);
-}
-#endif
-
 class CompactStringsFixup : public FieldClosure {
 private:
   bool _value;
@@ -225,8 +171,8 @@ public:
   void do_field(fieldDescriptor* fd) {
     if (fd->name() == vmSymbols::compact_strings_name()) {
       oop mirror = fd->field_holder()->java_mirror();
-      assert(fd->field_holder() == SystemDictionary::String_klass(), "Should be String");
-      assert(mirror != NULL, "String must have mirror already");
+      assert(fd->field_holder() == SystemDictionary::String_klass(), "Should be String");
+      assert(mirror != NULL, "String must have mirror already");
       mirror->bool_field_put(fd->offset(), _value);
     }
   }
@@ -238,8 +184,8 @@ void java_lang_String::set_compact_strings(bool value) {
 }
 
 Handle java_lang_String::basic_create(int length, bool is_latin1, TRAPS) {
-  assert(initialized, "Must be initialized");
-  assert(CompactStrings || !is_latin1, "Must be UTF16 without CompactStrings");
+  assert(initialized, "Must be initialized");
+  assert(CompactStrings || !is_latin1, "Must be UTF16 without CompactStrings");
 
   // Create the String object first, so there's a chance that the String
   // and the char array it points to end up in the same cache line.
@@ -264,7 +210,7 @@ Handle java_lang_String::create_from_unicode(jchar* unicode, int length, TRAPS) 
   bool is_latin1 = CompactStrings && UNICODE::is_latin1(unicode, length);
   Handle h_obj = basic_create(length, is_latin1, CHECK_NH);
   typeArrayOop buffer = value(h_obj());
-  assert(TypeArrayKlass::cast(buffer->klass())->element_type() == T_BYTE, "only byte[]");
+  assert(TypeArrayKlass::cast(buffer->klass())->element_type() == T_BYTE, "only byte[]");
   if (is_latin1) {
     for (int index = 0; index < length; index++) {
       buffer->byte_at_put(index, (jbyte)unicode[index]);
@@ -274,18 +220,6 @@ Handle java_lang_String::create_from_unicode(jchar* unicode, int length, TRAPS) 
       buffer->char_at_put(index, unicode[index]);
     }
   }
-
-#ifdef ASSERT
-  {
-    ResourceMark rm;
-    char* expected = UNICODE::as_utf8(unicode, length);
-    char* actual = as_utf8_string(h_obj());
-    if (strcmp(expected, actual) != 0) {
-      tty->print_cr("Unicode conversion failure: %s --> %s", expected, actual);
-      ShouldNotReachHere();
-    }
-  }
-#endif
 
   return h_obj;
 }
@@ -318,22 +252,6 @@ Handle java_lang_String::create_from_str(const char* utf8_str, TRAPS) {
     }
   }
 
-#ifdef ASSERT
-  // This check is too strict because the input string is not necessarily valid UTF8.
-  // For example, it may be created with arbitrary content via jni_NewStringUTF.
-  /*
-  {
-    ResourceMark rm;
-    const char* expected = utf8_str;
-    char* actual = as_utf8_string(h_obj());
-    if (strcmp(expected, actual) != 0) {
-      tty->print_cr("String conversion failure: %s --> %s", expected, actual);
-      ShouldNotReachHere();
-    }
-  }
-  */
-#endif
-
   return h_obj;
 }
 
@@ -365,24 +283,12 @@ Handle java_lang_String::create_from_symbol(Symbol* symbol, TRAPS) {
     }
   }
 
-#ifdef ASSERT
-  {
-    ResourceMark rm;
-    const char* expected = symbol->as_utf8();
-    char* actual = as_utf8_string(h_obj());
-    if (strncmp(expected, actual, utf8_len) != 0) {
-      tty->print_cr("Symbol conversion failure: %s --> %s", expected, actual);
-      ShouldNotReachHere();
-    }
-  }
-#endif
-
   return h_obj;
 }
 
 // Converts a C string to a Java String based on current encoding
 Handle java_lang_String::create_from_platform_dependent_str(const char* str, TRAPS) {
-  assert(str != NULL, "bad arguments");
+  assert(str != NULL, "bad arguments");
 
   typedef jstring (*to_java_string_fn_t)(JNIEnv*, const char *);
   static to_java_string_fn_t _to_java_string_fn = NULL;
@@ -397,7 +303,7 @@ Handle java_lang_String::create_from_platform_dependent_str(const char* str, TRA
 
   jstring js = NULL;
   { JavaThread* thread = (JavaThread*)THREAD;
-    assert(thread->is_Java_thread(), "must be java thread");
+    assert(thread->is_Java_thread(), "must be java thread");
     HandleMark hm(thread);
     ThreadToNativeFromVM ttn(thread);
     js = (_to_java_string_fn)(thread->jni_environment(), str);
@@ -421,14 +327,14 @@ char* java_lang_String::as_platform_dependent_str(Handle java_string, TRAPS) {
 
   char *native_platform_string;
   { JavaThread* thread = (JavaThread*)THREAD;
-    assert(thread->is_Java_thread(), "must be java thread");
+    assert(thread->is_Java_thread(), "must be java thread");
     JNIEnv *env = thread->jni_environment();
     jstring js = (jstring) JNIHandles::make_local(env, java_string());
     bool is_copy;
     HandleMark hm(thread);
     ThreadToNativeFromVM ttn(thread);
     native_platform_string = (_to_platform_string_fn)(env, js, &is_copy);
-    assert(is_copy == JNI_TRUE, "is_copy value changed");
+    assert(is_copy == JNI_TRUE, "is_copy value changed");
     JNIHandles::destroy_local(js);
   }
   return native_platform_string;
@@ -557,8 +463,8 @@ char* java_lang_String::as_quoted_ascii(oop java_string) {
     result = NEW_RESOURCE_ARRAY(char, result_length);
     UNICODE::as_quoted_ascii(base, length, result, result_length);
   }
-  assert(result_length >= length + 1, "must not be shorter");
-  assert(result_length == (int)strlen(result) + 1, "must match");
+  assert(result_length >= length + 1, "must not be shorter");
+  assert(result_length == (int)strlen(result) + 1, "must match");
   return result;
 }
 
@@ -637,7 +543,7 @@ char* java_lang_String::as_utf8_string(oop java_string, char* buf, int buflen) {
 char* java_lang_String::as_utf8_string(oop java_string, int start, int len) {
   typeArrayOop value  = java_lang_String::value(java_string);
   int          length = java_lang_String::length(java_string);
-  assert(start + len <= length, "just checking");
+  assert(start + len <= length, "just checking");
   bool      is_latin1 = java_lang_String::is_latin1(java_string);
   if (!is_latin1) {
     jchar* position = value->char_at_addr(start);
@@ -651,7 +557,7 @@ char* java_lang_String::as_utf8_string(oop java_string, int start, int len) {
 char* java_lang_String::as_utf8_string(oop java_string, int start, int len, char* buf, int buflen) {
   typeArrayOop value  = java_lang_String::value(java_string);
   int          length = java_lang_String::length(java_string);
-  assert(start + len <= length, "just checking");
+  assert(start + len <= length, "just checking");
   bool      is_latin1 = java_lang_String::is_latin1(java_string);
   if (!is_latin1) {
     jchar* position = value->char_at_addr(start);
@@ -663,8 +569,7 @@ char* java_lang_String::as_utf8_string(oop java_string, int start, int len, char
 }
 
 bool java_lang_String::equals(oop java_string, jchar* chars, int len) {
-  assert(java_string->klass() == SystemDictionary::String_klass(),
-         "must be java_string");
+  assert(java_string->klass() == SystemDictionary::String_klass(), "must be java_string");
   typeArrayOop value = java_lang_String::value_no_keepalive(java_string);
   int length = java_lang_String::length(java_string);
   if (length != len) {
@@ -688,10 +593,8 @@ bool java_lang_String::equals(oop java_string, jchar* chars, int len) {
 }
 
 bool java_lang_String::equals(oop str1, oop str2) {
-  assert(str1->klass() == SystemDictionary::String_klass(),
-         "must be java String");
-  assert(str2->klass() == SystemDictionary::String_klass(),
-         "must be java String");
+  assert(str1->klass() == SystemDictionary::String_klass(), "must be java String");
+  assert(str2->klass() == SystemDictionary::String_klass(), "must be java String");
   typeArrayOop value1    = java_lang_String::value_no_keepalive(str1);
   int          length1   = java_lang_String::length(str1);
   bool         is_latin1 = java_lang_String::is_latin1(str1);
@@ -714,7 +617,7 @@ bool java_lang_String::equals(oop str1, oop str2) {
 }
 
 void java_lang_String::print(oop java_string, outputStream* st) {
-  assert(java_string->klass() == SystemDictionary::String_klass(), "must be java_string");
+  assert(java_string->klass() == SystemDictionary::String_klass(), "must be java_string");
   typeArrayOop value  = java_lang_String::value_no_keepalive(java_string);
 
   if (value == NULL) {
@@ -735,9 +638,8 @@ void java_lang_String::print(oop java_string, outputStream* st) {
   st->print("\"");
 }
 
-
 static void initialize_static_field(fieldDescriptor* fd, Handle mirror, TRAPS) {
-  assert(mirror.not_null() && fd->is_static(), "just checking");
+  assert(mirror.not_null() && fd->is_static(), "just checking");
   if (fd->has_initial_value()) {
     BasicType t = fd->field_type();
     switch (t) {
@@ -767,8 +669,7 @@ static void initialize_static_field(fieldDescriptor* fd, Handle mirror, TRAPS) {
         break;
       case T_OBJECT:
         {
-          assert(fd->signature() == vmSymbols::string_signature(),
-                 "just checking");
+          assert(fd->signature() == vmSymbols::string_signature(), "just checking");
           if (DumpSharedSpaces && MetaspaceShared::is_archive_object(mirror())) {
             // Archive the String field and update the pointer.
             oop s = mirror()->obj_field(fd->offset());
@@ -787,9 +688,8 @@ static void initialize_static_field(fieldDescriptor* fd, Handle mirror, TRAPS) {
   }
 }
 
-
 void java_lang_Class::fixup_mirror(Klass* k, TRAPS) {
-  assert(InstanceMirrorKlass::offset_of_static_fields() != 0, "must have been computed already");
+  assert(InstanceMirrorKlass::offset_of_static_fields() != 0, "must have been computed already");
 
   // If the offset was read from the shared archive, it was fixed up already
   if (!k->is_shared()) {
@@ -809,7 +709,7 @@ void java_lang_Class::fixup_mirror(Klass* k, TRAPS) {
   if (k->is_shared() && k->has_raw_archived_mirror()) {
     if (MetaspaceShared::open_archive_heap_region_mapped()) {
       bool present = restore_archived_mirror(k, Handle(), Handle(), Handle(), CHECK);
-      assert(present, "Missing archived mirror for %s", k->external_name());
+      assert(present, "Missing archived mirror for %s", k->external_name());
       return;
     } else {
       k->set_java_mirror_handle(NULL);
@@ -842,16 +742,16 @@ void java_lang_Class::set_mirror_module_field(Klass* k, Handle mirror, Handle mo
     // During startup, the module may be NULL only if java.base has not been defined yet.
     // Put the class on the fixup_module_list to patch later when the java.lang.Module
     // for java.base is known.
-    assert(!Universe::is_module_initialized(), "Incorrect java.lang.Module pre module system initialization");
+    assert(!Universe::is_module_initialized(), "Incorrect java.lang.Module pre module system initialization");
 
     bool javabase_was_defined = false;
     {
       MutexLocker m1(Module_lock, THREAD);
       // Keep list of classes needing java.base module fixup
       if (!ModuleEntryTable::javabase_defined()) {
-        assert(k->java_mirror() != NULL, "Class's mirror is null");
+        assert(k->java_mirror() != NULL, "Class's mirror is null");
         k->class_loader_data()->inc_keep_alive();
-        assert(fixup_module_field_list() != NULL, "fixup_module_field_list not initialized");
+        assert(fixup_module_field_list() != NULL, "fixup_module_field_list not initialized");
         fixup_module_field_list()->push(k);
       } else {
         javabase_was_defined = true;
@@ -861,16 +761,12 @@ void java_lang_Class::set_mirror_module_field(Klass* k, Handle mirror, Handle mo
     // If java.base was already defined then patch this particular class with java.base.
     if (javabase_was_defined) {
       ModuleEntry *javabase_entry = ModuleEntryTable::javabase_moduleEntry();
-      assert(javabase_entry != NULL && javabase_entry->module() != NULL,
-             "Setting class module field, " JAVA_BASE_NAME " should be defined");
+      assert(javabase_entry != NULL && javabase_entry->module() != NULL, "Setting class module field, " JAVA_BASE_NAME " should be defined");
       Handle javabase_handle(THREAD, javabase_entry->module());
       set_module(mirror(), javabase_handle());
     }
   } else {
-    assert(Universe::is_module_initialized() ||
-           (ModuleEntryTable::javabase_defined() &&
-            (oopDesc::equals(module(), ModuleEntryTable::javabase_moduleEntry()->module()))),
-           "Incorrect java.lang.Module specification while creating mirror");
+    assert(Universe::is_module_initialized() || (ModuleEntryTable::javabase_defined() && (oopDesc::equals(module(), ModuleEntryTable::javabase_moduleEntry()->module()))), "Incorrect java.lang.Module specification while creating mirror");
     set_module(mirror(), module());
   }
 }
@@ -888,8 +784,8 @@ void java_lang_Class::allocate_fixup_lists() {
 
 void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
                                     Handle module, Handle protection_domain, TRAPS) {
-  assert(k != NULL, "Use create_basic_type_mirror for primitive types");
-  assert(k->java_mirror() == NULL, "should only assign mirror once");
+  assert(k != NULL, "Use create_basic_type_mirror for primitive types");
+  assert(k->java_mirror() == NULL, "should only assign mirror once");
 
   // Use this moment of initialization to cache modifier_flags also,
   // to support Class.getModifiers().  Instance classes recalculate
@@ -909,7 +805,7 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
     java_lang_Class::set_klass(mirror(), k);
 
     InstanceMirrorKlass* mk = InstanceMirrorKlass::cast(mirror->klass());
-    assert(oop_size(mirror()) == mk->instance_size(k), "should have been set");
+    assert(oop_size(mirror()) == mk->instance_size(k), "should have been set");
 
     java_lang_Class::set_static_oop_field_count(mirror(), mk->compute_static_oop_field_count(mirror()));
 
@@ -919,12 +815,12 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
         BasicType type = TypeArrayKlass::cast(k)->element_type();
         comp_mirror = Handle(THREAD, Universe::java_mirror(type));
       } else {
-        assert(k->is_objArray_klass(), "Must be");
+        assert(k->is_objArray_klass(), "Must be");
         Klass* element_klass = ObjArrayKlass::cast(k)->element_klass();
-        assert(element_klass != NULL, "Must have an element klass");
+        assert(element_klass != NULL, "Must have an element klass");
         comp_mirror = Handle(THREAD, element_klass->java_mirror());
       }
-      assert(comp_mirror() != NULL, "must have a mirror");
+      assert(comp_mirror() != NULL, "must have a mirror");
 
       // Two-way link between the array klass and its component mirror:
       // (array_klass) k -> mirror -> component_mirror -> array_klass -> k
@@ -932,7 +828,7 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
       // See below for ordering dependencies between field array_klass in component mirror
       // and java_mirror in this klass.
     } else {
-      assert(k->is_instance_klass(), "Must be");
+      assert(k->is_instance_klass(), "Must be");
 
       initialize_mirror_fields(k, mirror, protection_domain, THREAD);
       if (HAS_PENDING_EXCEPTION) {
@@ -946,7 +842,7 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
     }
 
     // set the classLoader field in the java_lang_Class instance
-    assert(oopDesc::equals(class_loader(), k->class_loader()), "should be same");
+    assert(oopDesc::equals(class_loader(), k->class_loader()), "should be same");
     set_class_loader(mirror(), class_loader());
 
     // Setup indirection from klass->mirror
@@ -963,359 +859,73 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
       release_set_array_klass(comp_mirror(), k);
     }
   } else {
-    assert(fixup_mirror_list() != NULL, "fixup_mirror_list not initialized");
+    assert(fixup_mirror_list() != NULL, "fixup_mirror_list not initialized");
     fixup_mirror_list()->push(k);
   }
 }
 
-#if INCLUDE_CDS_JAVA_HEAP
-// Clears mirror fields. Static final fields with initial values are reloaded
-// from constant pool. The object identity hash is in the object header and is
-// not affected.
-class ResetMirrorField: public FieldClosure {
- private:
-  Handle _m;
-
- public:
-  ResetMirrorField(Handle mirror) : _m(mirror) {}
-
-  void do_field(fieldDescriptor* fd) {
-    assert(DumpSharedSpaces, "dump time only");
-    assert(_m.not_null(), "Mirror cannot be NULL");
-
-    if (fd->is_static() && fd->has_initial_value()) {
-      initialize_static_field(fd, _m, Thread::current());
-      return;
-    }
-
-    BasicType ft = fd->field_type();
-    switch (ft) {
-      case T_BYTE:
-        _m()->byte_field_put(fd->offset(), 0);
-        break;
-      case T_CHAR:
-        _m()->char_field_put(fd->offset(), 0);
-        break;
-      case T_DOUBLE:
-        _m()->double_field_put(fd->offset(), 0);
-        break;
-      case T_FLOAT:
-        _m()->float_field_put(fd->offset(), 0);
-        break;
-      case T_INT:
-        _m()->int_field_put(fd->offset(), 0);
-        break;
-      case T_LONG:
-        _m()->long_field_put(fd->offset(), 0);
-        break;
-      case T_SHORT:
-        _m()->short_field_put(fd->offset(), 0);
-        break;
-      case T_BOOLEAN:
-        _m()->bool_field_put(fd->offset(), false);
-        break;
-      case T_ARRAY:
-      case T_OBJECT: {
-        // It might be useful to cache the String field, but
-        // for now just clear out any reference field
-        oop o = _m()->obj_field(fd->offset());
-        _m()->obj_field_put(fd->offset(), NULL);
-        break;
-      }
-      default:
-        ShouldNotReachHere();
-        break;
-     }
-  }
-};
-
-void java_lang_Class::archive_basic_type_mirrors(TRAPS) {
-  assert(MetaspaceShared::is_heap_object_archiving_allowed(),
-         "MetaspaceShared::is_heap_object_archiving_allowed() must be true");
-
-  for (int t = 0; t <= T_VOID; t++) {
-    oop m = Universe::_mirrors[t];
-    if (m != NULL) {
-      // Update the field at _array_klass_offset to point to the relocated array klass.
-      oop archived_m = MetaspaceShared::archive_heap_object(m, THREAD);
-      Klass *ak = (Klass*)(archived_m->metadata_field(_array_klass_offset));
-      assert(ak != NULL || t == T_VOID, "should not be NULL");
-      if (ak != NULL) {
-        Klass *reloc_ak = MetaspaceShared::get_relocated_klass(ak);
-        archived_m->metadata_field_put(_array_klass_offset, reloc_ak);
-      }
-
-      // Clear the fields. Just to be safe
-      Klass *k = m->klass();
-      Handle archived_mirror_h(THREAD, archived_m);
-      ResetMirrorField reset(archived_mirror_h);
-      InstanceKlass::cast(k)->do_nonstatic_fields(&reset);
-
-      log_trace(cds, mirror)("Archived %s mirror object from " PTR_FORMAT " ==> " PTR_FORMAT,
-                             type2name((BasicType)t), p2i(Universe::_mirrors[t]), p2i(archived_m));
-
-      Universe::_mirrors[t] = archived_m;
-    }
-  }
-
-  assert(Universe::_mirrors[T_INT] != NULL &&
-         Universe::_mirrors[T_FLOAT] != NULL &&
-         Universe::_mirrors[T_DOUBLE] != NULL &&
-         Universe::_mirrors[T_BYTE] != NULL &&
-         Universe::_mirrors[T_BOOLEAN] != NULL &&
-         Universe::_mirrors[T_CHAR] != NULL &&
-         Universe::_mirrors[T_LONG] != NULL &&
-         Universe::_mirrors[T_SHORT] != NULL &&
-         Universe::_mirrors[T_VOID] != NULL, "sanity");
-
-  Universe::set_int_mirror(Universe::_mirrors[T_INT]);
-  Universe::set_float_mirror(Universe::_mirrors[T_FLOAT]);
-  Universe::set_double_mirror(Universe::_mirrors[T_DOUBLE]);
-  Universe::set_byte_mirror(Universe::_mirrors[T_BYTE]);
-  Universe::set_bool_mirror(Universe::_mirrors[T_BOOLEAN]);
-  Universe::set_char_mirror(Universe::_mirrors[T_CHAR]);
-  Universe::set_long_mirror(Universe::_mirrors[T_LONG]);
-  Universe::set_short_mirror(Universe::_mirrors[T_SHORT]);
-  Universe::set_void_mirror(Universe::_mirrors[T_VOID]);
-}
-
-//
-// After the mirror object is successfully archived, the archived
-// klass is set with _has_archived_raw_mirror flag.
-//
-// The _has_archived_raw_mirror flag is cleared at runtime when the
-// archived mirror is restored. If archived java heap data cannot
-// be used at runtime, new mirror object is created for the shared
-// class. The _has_archived_raw_mirror is cleared also during the process.
-oop java_lang_Class::archive_mirror(Klass* k, TRAPS) {
-  assert(MetaspaceShared::is_heap_object_archiving_allowed(),
-         "MetaspaceShared::is_heap_object_archiving_allowed() must be true");
-
-  // Mirror is already archived
-  if (k->has_raw_archived_mirror()) {
-    assert(k->archived_java_mirror_raw() != NULL, "no archived mirror");
-    return k->archived_java_mirror_raw();
-  }
-
-  // No mirror
-  oop mirror = k->java_mirror();
-  if (mirror == NULL) {
-    return NULL;
-  }
-
-  if (k->is_instance_klass()) {
-    InstanceKlass *ik = InstanceKlass::cast(k);
-    assert(ik->signers() == NULL && !k->has_signer_and_not_archived(),
-           "class with signer cannot be supported");
-
-    if (!(ik->is_shared_boot_class() || ik->is_shared_platform_class() ||
-          ik->is_shared_app_class())) {
-      // Archiving mirror for classes from non-builtin loaders is not
-      // supported. Clear the _java_mirror within the archived class.
-      k->set_java_mirror_handle(NULL);
-      return NULL;
-    }
-  }
-
-  // Now start archiving the mirror object
-  oop archived_mirror = MetaspaceShared::archive_heap_object(mirror, THREAD);
-  if (archived_mirror == NULL) {
-    return NULL;
-  }
-
-  archived_mirror = process_archived_mirror(k, mirror, archived_mirror, THREAD);
-  if (archived_mirror == NULL) {
-    return NULL;
-  }
-
-  k->set_archived_java_mirror_raw(archived_mirror);
-
-  k->set_has_raw_archived_mirror();
-
-  ResourceMark rm;
-  log_trace(cds, mirror)("Archived %s mirror object from " PTR_FORMAT " ==> " PTR_FORMAT,
-                         k->external_name(), p2i(mirror), p2i(archived_mirror));
-
-  return archived_mirror;
-}
-
-// The process is based on create_mirror().
-oop java_lang_Class::process_archived_mirror(Klass* k, oop mirror,
-                                             oop archived_mirror,
-                                             Thread *THREAD) {
-  // Clear nonstatic fields in archived mirror. Some of the fields will be set
-  // to archived metadata and objects below.
-  Klass *c = archived_mirror->klass();
-  Handle archived_mirror_h(THREAD, archived_mirror);
-  ResetMirrorField reset(archived_mirror_h);
-  InstanceKlass::cast(c)->do_nonstatic_fields(&reset);
-
-  if (k->is_array_klass()) {
-    oop archived_comp_mirror;
-    if (k->is_typeArray_klass()) {
-      // The primitive type mirrors are already archived. Get the archived mirror.
-      oop comp_mirror = java_lang_Class::component_mirror(mirror);
-      archived_comp_mirror = MetaspaceShared::find_archived_heap_object(comp_mirror);
-      assert(archived_comp_mirror != NULL, "Must be");
-    } else {
-      assert(k->is_objArray_klass(), "Must be");
-      Klass* element_klass = ObjArrayKlass::cast(k)->element_klass();
-      assert(element_klass != NULL, "Must have an element klass");
-      archived_comp_mirror = archive_mirror(element_klass, THREAD);
-      if (archived_comp_mirror == NULL) {
-        return NULL;
-      }
-    }
-    java_lang_Class::set_component_mirror(archived_mirror, archived_comp_mirror);
-  } else {
-    assert(k->is_instance_klass(), "Must be");
-
-    // Reset local static fields in the mirror
-    InstanceKlass::cast(k)->do_local_static_fields(&reset);
-
-    java_lang_Class:set_init_lock(archived_mirror, NULL);
-
-    set_protection_domain(archived_mirror, NULL);
-  }
-
-  // clear class loader and mirror_module_field
-  set_class_loader(archived_mirror, NULL);
-  set_module(archived_mirror, NULL);
-
-  // The archived mirror's field at _klass_offset is still pointing to the original
-  // klass. Updated the field in the archived mirror to point to the relocated
-  // klass in the archive.
-  Klass *reloc_k = MetaspaceShared::get_relocated_klass(as_Klass(mirror));
-  log_debug(cds, mirror)("Relocate mirror metadata field at _klass_offset from " PTR_FORMAT " ==> " PTR_FORMAT,
-                         p2i(as_Klass(mirror)), p2i(reloc_k));
-  archived_mirror->metadata_field_put(_klass_offset, reloc_k);
-
-  // The field at _array_klass_offset is pointing to the original one dimension
-  // higher array klass if exists. Relocate the pointer.
-  Klass *arr = array_klass_acquire(mirror);
-  if (arr != NULL) {
-    Klass *reloc_arr = MetaspaceShared::get_relocated_klass(arr);
-    log_debug(cds, mirror)("Relocate mirror metadata field at _array_klass_offset from " PTR_FORMAT " ==> " PTR_FORMAT,
-                           p2i(arr), p2i(reloc_arr));
-    archived_mirror->metadata_field_put(_array_klass_offset, reloc_arr);
-  }
-  return archived_mirror;
-}
-
-// Returns true if the mirror is updated, false if no archived mirror
-// data is present. After the archived mirror object is restored, the
-// shared klass' _has_raw_archived_mirror flag is cleared.
-bool java_lang_Class::restore_archived_mirror(Klass *k,
-                                              Handle class_loader, Handle module,
-                                              Handle protection_domain, TRAPS) {
-  oop m = MetaspaceShared::materialize_archived_object(k->archived_java_mirror_raw());
-
-  if (m == NULL) {
-    return false;
-  }
-
-  log_debug(cds, mirror)("Archived mirror is: " PTR_FORMAT, p2i(m));
-
-  // mirror is archived, restore
-  assert(MetaspaceShared::is_archive_object(m), "must be archived mirror object");
-  Handle mirror(THREAD, m);
-
-  // The java.lang.Class field offsets were archived and reloaded from archive.
-  // No need to put classes on the fixup_mirror_list before java.lang.Class
-  // is loaded.
-
-  if (!k->is_array_klass()) {
-    // - local static final fields with initial values were initialized at dump time
-
-    // create the init_lock
-    typeArrayOop r = oopFactory::new_typeArray(T_INT, 0, CHECK_(false));
-    set_init_lock(mirror(), r);
-
-    if (protection_domain.not_null()) {
-      set_protection_domain(mirror(), protection_domain());
-    }
-  }
-
-  assert(class_loader() == k->class_loader(), "should be same");
-  if (class_loader.not_null()) {
-    set_class_loader(mirror(), class_loader());
-  }
-
-  k->set_java_mirror(mirror);
-  k->clear_has_raw_archived_mirror();
-
-  set_mirror_module_field(k, mirror, module, THREAD);
-
-  ResourceMark rm;
-  log_trace(cds, mirror)("Restored %s archived mirror " PTR_FORMAT, k->external_name(), p2i(mirror()));
-
-  return true;
-}
-#endif // INCLUDE_CDS_JAVA_HEAP
-
 void java_lang_Class::fixup_module_field(Klass* k, Handle module) {
-  assert(_module_offset != 0, "must have been computed already");
+  assert(_module_offset != 0, "must have been computed already");
   java_lang_Class::set_module(k->java_mirror(), module());
 }
 
 int  java_lang_Class::oop_size(oop java_class) {
-  assert(_oop_size_offset != 0, "must be set");
+  assert(_oop_size_offset != 0, "must be set");
   int size = java_class->int_field(_oop_size_offset);
-  assert(size > 0, "Oop size must be greater than zero, not %d", size);
+  assert(size > 0, "Oop size must be greater than zero, not %d", size);
   return size;
 }
 
 void java_lang_Class::set_oop_size(HeapWord* java_class, int size) {
-  assert(_oop_size_offset != 0, "must be set");
-  assert(size > 0, "Oop size must be greater than zero, not %d", size);
+  assert(_oop_size_offset != 0, "must be set");
+  assert(size > 0, "Oop size must be greater than zero, not %d", size);
   *(int*)(((char*)java_class) + _oop_size_offset) = size;
 }
 
 int  java_lang_Class::static_oop_field_count(oop java_class) {
-  assert(_static_oop_field_count_offset != 0, "must be set");
+  assert(_static_oop_field_count_offset != 0, "must be set");
   return java_class->int_field(_static_oop_field_count_offset);
 }
 void java_lang_Class::set_static_oop_field_count(oop java_class, int size) {
-  assert(_static_oop_field_count_offset != 0, "must be set");
+  assert(_static_oop_field_count_offset != 0, "must be set");
   java_class->int_field_put(_static_oop_field_count_offset, size);
 }
 
 oop java_lang_Class::protection_domain(oop java_class) {
-  assert(_protection_domain_offset != 0, "must be set");
+  assert(_protection_domain_offset != 0, "must be set");
   return java_class->obj_field(_protection_domain_offset);
 }
 void java_lang_Class::set_protection_domain(oop java_class, oop pd) {
-  assert(_protection_domain_offset != 0, "must be set");
+  assert(_protection_domain_offset != 0, "must be set");
   java_class->obj_field_put(_protection_domain_offset, pd);
 }
 
 void java_lang_Class::set_component_mirror(oop java_class, oop comp_mirror) {
-  assert(_component_mirror_offset != 0, "must be set");
+  assert(_component_mirror_offset != 0, "must be set");
     java_class->obj_field_put(_component_mirror_offset, comp_mirror);
   }
 oop java_lang_Class::component_mirror(oop java_class) {
-  assert(_component_mirror_offset != 0, "must be set");
+  assert(_component_mirror_offset != 0, "must be set");
   return java_class->obj_field(_component_mirror_offset);
 }
 
 oop java_lang_Class::init_lock(oop java_class) {
-  assert(_init_lock_offset != 0, "must be set");
+  assert(_init_lock_offset != 0, "must be set");
   return java_class->obj_field(_init_lock_offset);
 }
 void java_lang_Class::set_init_lock(oop java_class, oop init_lock) {
-  assert(_init_lock_offset != 0, "must be set");
+  assert(_init_lock_offset != 0, "must be set");
   java_class->obj_field_put(_init_lock_offset, init_lock);
 }
 
 objArrayOop java_lang_Class::signers(oop java_class) {
-  assert(_signers_offset != 0, "must be set");
+  assert(_signers_offset != 0, "must be set");
   return (objArrayOop)java_class->obj_field(_signers_offset);
 }
 void java_lang_Class::set_signers(oop java_class, objArrayOop signers) {
-  assert(_signers_offset != 0, "must be set");
+  assert(_signers_offset != 0, "must be set");
   java_class->obj_field_put(_signers_offset, (oop)signers);
 }
-
 
 void java_lang_Class::set_class_loader(oop java_class, oop loader) {
   // jdk7 runs Queens in bootstrapping and jdk8-9 has no coordinated pushes yet.
@@ -1325,22 +935,22 @@ void java_lang_Class::set_class_loader(oop java_class, oop loader) {
 }
 
 oop java_lang_Class::class_loader(oop java_class) {
-  assert(_class_loader_offset != 0, "must be set");
+  assert(_class_loader_offset != 0, "must be set");
   return java_class->obj_field(_class_loader_offset);
 }
 
 oop java_lang_Class::module(oop java_class) {
-  assert(_module_offset != 0, "must be set");
+  assert(_module_offset != 0, "must be set");
   return java_class->obj_field(_module_offset);
 }
 
 void java_lang_Class::set_module(oop java_class, oop module) {
-  assert(_module_offset != 0, "must be set");
+  assert(_module_offset != 0, "must be set");
   java_class->obj_field_put(_module_offset, module);
 }
 
 oop java_lang_Class::name(Handle java_class, TRAPS) {
-  assert(_name_offset != 0, "must be set");
+  assert(_name_offset != 0, "must be set");
   oop o = java_class->obj_field(_name_offset);
   if (o == NULL) {
     o = StringTable::intern(java_lang_Class::as_external_name(java_class()), THREAD);
@@ -1350,12 +960,12 @@ oop java_lang_Class::name(Handle java_class, TRAPS) {
 }
 
 oop java_lang_Class::source_file(oop java_class) {
-  assert(_source_file_offset != 0, "must be set");
+  assert(_source_file_offset != 0, "must be set");
   return java_class->obj_field(_source_file_offset);
 }
 
 void java_lang_Class::set_source_file(oop java_class, oop source_file) {
-  assert(_source_file_offset != 0, "must be set");
+  assert(_source_file_offset != 0, "must be set");
   java_class->obj_field_put(_source_file_offset, source_file);
 }
 
@@ -1365,34 +975,27 @@ oop java_lang_Class::create_basic_type_mirror(const char* basic_type_name, Basic
   oop java_class = InstanceMirrorKlass::cast(SystemDictionary::Class_klass())->allocate_instance(NULL, CHECK_0);
   if (type != T_VOID) {
     Klass* aklass = Universe::typeArrayKlassObj(type);
-    assert(aklass != NULL, "correct bootstrap");
+    assert(aklass != NULL, "correct bootstrap");
     release_set_array_klass(java_class, aklass);
   }
-#ifdef ASSERT
-  InstanceMirrorKlass* mk = InstanceMirrorKlass::cast(SystemDictionary::Class_klass());
-  assert(java_lang_Class::static_oop_field_count(java_class) == 0, "should have been zeroed by allocation");
-#endif
   return java_class;
 }
 
-
 Klass* java_lang_Class::as_Klass(oop java_class) {
   //%note memory_2
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   Klass* k = ((Klass*)java_class->metadata_field(_klass_offset));
-  assert(k == NULL || k->is_klass(), "type check");
+  assert(k == NULL || k->is_klass(), "type check");
   return k;
 }
 
-
 void java_lang_Class::set_klass(oop java_class, Klass* klass) {
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   java_class->metadata_field_put(_klass_offset, klass);
 }
 
-
 void java_lang_Class::print_signature(oop java_class, outputStream* st) {
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   Symbol* name = NULL;
   bool is_instance = false;
   if (is_primitive(java_class)) {
@@ -1412,7 +1015,7 @@ void java_lang_Class::print_signature(oop java_class, outputStream* st) {
 }
 
 Symbol* java_lang_Class::as_signature(oop java_class, bool intern_if_not_found, TRAPS) {
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   Symbol* name;
   if (is_primitive(java_class)) {
     name = vmSymbols::type_signature(primitive_type(java_class));
@@ -1443,7 +1046,7 @@ Symbol* java_lang_Class::as_signature(oop java_class, bool intern_if_not_found, 
 // See Klass::external_name().
 // For primitive type Java mirrors, its type name is returned.
 const char* java_lang_Class::as_external_name(oop java_class) {
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   const char* name = NULL;
   if (is_primitive(java_class)) {
     name = type2name(primitive_type(java_class));
@@ -1458,50 +1061,39 @@ const char* java_lang_Class::as_external_name(oop java_class) {
 
 Klass* java_lang_Class::array_klass_acquire(oop java_class) {
   Klass* k = ((Klass*)java_class->metadata_field_acquire(_array_klass_offset));
-  assert(k == NULL || k->is_klass() && k->is_array_klass(), "should be array klass");
+  assert(k == NULL || k->is_klass() && k->is_array_klass(), "should be array klass");
   return k;
 }
 
-
 void java_lang_Class::release_set_array_klass(oop java_class, Klass* klass) {
-  assert(klass->is_klass() && klass->is_array_klass(), "should be array klass");
+  assert(klass->is_klass() && klass->is_array_klass(), "should be array klass");
   java_class->release_metadata_field_put(_array_klass_offset, klass);
 }
-
 
 bool java_lang_Class::is_primitive(oop java_class) {
   // should assert:
   //assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   bool is_primitive = (java_class->metadata_field(_klass_offset) == NULL);
 
-#ifdef ASSERT
-  if (is_primitive) {
-    Klass* k = ((Klass*)java_class->metadata_field(_array_klass_offset));
-    assert(k == NULL || is_java_primitive(ArrayKlass::cast(k)->element_type()),
-        "Should be either the T_VOID primitive or a java primitive");
-  }
-#endif
-
   return is_primitive;
 }
 
-
 BasicType java_lang_Class::primitive_type(oop java_class) {
-  assert(java_lang_Class::is_primitive(java_class), "just checking");
+  assert(java_lang_Class::is_primitive(java_class), "just checking");
   Klass* ak = ((Klass*)java_class->metadata_field(_array_klass_offset));
   BasicType type = T_VOID;
   if (ak != NULL) {
     // Note: create_basic_type_mirror above initializes ak to a non-null value.
     type = ArrayKlass::cast(ak)->element_type();
   } else {
-    assert(oopDesc::equals(java_class, Universe::void_mirror()), "only valid non-array primitive");
+    assert(oopDesc::equals(java_class, Universe::void_mirror()), "only valid non-array primitive");
   }
-  assert(oopDesc::equals(Universe::java_mirror(type), java_class), "must be consistent");
+  assert(oopDesc::equals(Universe::java_mirror(type), java_class), "must be consistent");
   return type;
 }
 
 BasicType java_lang_Class::as_BasicType(oop java_class, Klass** reference_klass) {
-  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
+  assert(java_lang_Class::is_instance(java_class), "must be a Class object");
   if (is_primitive(java_class)) {
     if (reference_klass != NULL)
       (*reference_klass) = NULL;
@@ -1513,11 +1105,10 @@ BasicType java_lang_Class::as_BasicType(oop java_class, Klass** reference_klass)
   }
 }
 
-
 oop java_lang_Class::primitive_mirror(BasicType t) {
   oop mirror = Universe::java_mirror(t);
-  assert(mirror != NULL && mirror->is_a(SystemDictionary::Class_klass()), "must be a Class");
-  assert(java_lang_Class::is_primitive(mirror), "must be primitive");
+  assert(mirror != NULL && mirror->is_a(SystemDictionary::Class_klass()), "must be a Class");
+  assert(java_lang_Class::is_primitive(mirror), "must be primitive");
   return mirror;
 }
 
@@ -1549,17 +1140,6 @@ void java_lang_Class::compute_offsets() {
   CLASS_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_Class::serialize(SerializeClosure* f) {
-  f->do_u4((u4*)&offsets_computed);
-  f->do_u4((u4*)&_init_lock_offset);
-
-  CLASS_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-
-  CLASS_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 int java_lang_Class::classRedefinedCount(oop the_class_mirror) {
   if (classRedefinedCount_offset == -1) {
     // If we don't have an offset for it then just return -1 as a marker.
@@ -1577,7 +1157,6 @@ void java_lang_Class::set_classRedefinedCount(oop the_class_mirror, int value) {
 
   the_class_mirror->int_field_put(classRedefinedCount_offset, value);
 }
-
 
 // Note: JDK1.1 and before had a privateInfo_offset field which was used for the
 //       platform thread structure, and a eetop offset which was used for thread
@@ -1617,74 +1196,57 @@ int java_lang_Thread::_park_event_offset = 0 ;
   macro(_park_event_offset,    k, "nativeParkEventPointer", long_signature, false)
 
 void java_lang_Thread::compute_offsets() {
-  assert(_group_offset == 0, "offsets should be initialized only once");
+  assert(_group_offset == 0, "offsets should be initialized only once");
 
   InstanceKlass* k = SystemDictionary::Thread_klass();
   THREAD_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_Thread::serialize(SerializeClosure* f) {
-  THREAD_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 JavaThread* java_lang_Thread::thread(oop java_thread) {
   return (JavaThread*)java_thread->address_field(_eetop_offset);
 }
-
 
 void java_lang_Thread::set_thread(oop java_thread, JavaThread* thread) {
   java_thread->address_field_put(_eetop_offset, (address)thread);
 }
 
-
 oop java_lang_Thread::name(oop java_thread) {
   return java_thread->obj_field(_name_offset);
 }
-
 
 void java_lang_Thread::set_name(oop java_thread, oop name) {
   java_thread->obj_field_put(_name_offset, name);
 }
 
-
 ThreadPriority java_lang_Thread::priority(oop java_thread) {
   return (ThreadPriority)java_thread->int_field(_priority_offset);
 }
-
 
 void java_lang_Thread::set_priority(oop java_thread, ThreadPriority priority) {
   java_thread->int_field_put(_priority_offset, priority);
 }
 
-
 oop java_lang_Thread::threadGroup(oop java_thread) {
   return java_thread->obj_field(_group_offset);
 }
 
-
 bool java_lang_Thread::is_stillborn(oop java_thread) {
   return java_thread->bool_field(_stillborn_offset) != 0;
 }
-
 
 // We never have reason to turn the stillborn bit off
 void java_lang_Thread::set_stillborn(oop java_thread) {
   java_thread->bool_field_put(_stillborn_offset, true);
 }
 
-
 bool java_lang_Thread::is_alive(oop java_thread) {
   JavaThread* thr = java_lang_Thread::thread(java_thread);
   return (thr != NULL);
 }
 
-
 bool java_lang_Thread::is_daemon(oop java_thread) {
   return java_thread->bool_field(_daemon_offset) != 0;
 }
-
 
 void java_lang_Thread::set_daemon(oop java_thread) {
   java_thread->bool_field_put(_daemon_offset, true);
@@ -1697,7 +1259,6 @@ oop java_lang_Thread::context_class_loader(oop java_thread) {
 oop java_lang_Thread::inherited_access_control_context(oop java_thread) {
   return java_thread->obj_field(_inheritedAccessControlContext_offset);
 }
-
 
 jlong java_lang_Thread::stackSize(oop java_thread) {
   if (_stackSize_offset > 0) {
@@ -1720,9 +1281,7 @@ void java_lang_Thread::set_thread_status(oop java_thread,
 java_lang_Thread::ThreadStatus java_lang_Thread::get_thread_status(oop java_thread) {
   // Make sure the caller is operating on behalf of the VM or is
   // running VM code (state == _thread_in_vm).
-  assert(Threads_lock->owned_by_self() || Thread::current()->is_VM_thread() ||
-         JavaThread::current()->thread_state() == _thread_in_vm,
-         "Java Thread is not running in vm");
+  assert(Threads_lock->owned_by_self() || Thread::current()->is_VM_thread() || JavaThread::current()->thread_state() == _thread_in_vm, "Java Thread is not running in vm");
   // The threadStatus is only present starting in 1.5
   if (_thread_status_offset > 0) {
     return (java_lang_Thread::ThreadStatus)java_thread->int_field(_thread_status_offset);
@@ -1740,7 +1299,6 @@ java_lang_Thread::ThreadStatus java_lang_Thread::get_thread_status(oop java_thre
   }
 }
 
-
 jlong java_lang_Thread::thread_id(oop java_thread) {
   // The thread ID field is only present starting in 1.5
   if (_tid_offset > 0) {
@@ -1751,8 +1309,7 @@ jlong java_lang_Thread::thread_id(oop java_thread) {
 }
 
 oop java_lang_Thread::park_blocker(oop java_thread) {
-  assert(JDK_Version::current().supports_thread_park_blocker() &&
-         _park_blocker_offset != 0, "Must support parkBlocker field");
+  assert(JDK_Version::current().supports_thread_park_blocker() && _park_blocker_offset != 0, "Must support parkBlocker field");
 
   if (_park_blocker_offset > 0) {
     return java_thread->obj_field(_park_blocker_offset);
@@ -1776,9 +1333,8 @@ bool java_lang_Thread::set_park_event(oop java_thread, jlong ptr) {
   return false;
 }
 
-
 const char* java_lang_Thread::thread_status_name(oop java_thread) {
-  assert(_thread_status_offset != 0, "Must have thread status");
+  assert(_thread_status_offset != 0, "Must have thread status");
   ThreadStatus status = (java_lang_Thread::ThreadStatus)java_thread->int_field(_thread_status_offset);
   switch (status) {
     case NEW                      : return "NEW";
@@ -1804,7 +1360,7 @@ int java_lang_ThreadGroup::_nthreads_offset = 0;
 int java_lang_ThreadGroup::_ngroups_offset = 0;
 
 oop  java_lang_ThreadGroup::parent(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return java_thread_group->obj_field(_parent_offset);
 }
 
@@ -1820,40 +1376,40 @@ const char* java_lang_ThreadGroup::name(oop java_thread_group) {
 }
 
 int java_lang_ThreadGroup::nthreads(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return java_thread_group->int_field(_nthreads_offset);
 }
 
 objArrayOop java_lang_ThreadGroup::threads(oop java_thread_group) {
   oop threads = java_thread_group->obj_field(_threads_offset);
-  assert(threads != NULL, "threadgroups should have threads");
-  assert(threads->is_objArray(), "just checking"); // Todo: Add better type checking code
+  assert(threads != NULL, "threadgroups should have threads");
+  assert(threads->is_objArray(), "just checking"); // Todo: Add better type checking code
   return objArrayOop(threads);
 }
 
 int java_lang_ThreadGroup::ngroups(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return java_thread_group->int_field(_ngroups_offset);
 }
 
 objArrayOop java_lang_ThreadGroup::groups(oop java_thread_group) {
   oop groups = java_thread_group->obj_field(_groups_offset);
-  assert(groups == NULL || groups->is_objArray(), "just checking"); // Todo: Add better type checking code
+  assert(groups == NULL || groups->is_objArray(), "just checking"); // Todo: Add better type checking code
   return objArrayOop(groups);
 }
 
 ThreadPriority java_lang_ThreadGroup::maxPriority(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return (ThreadPriority) java_thread_group->int_field(_maxPriority_offset);
 }
 
 bool java_lang_ThreadGroup::is_destroyed(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return java_thread_group->bool_field(_destroyed_offset) != 0;
 }
 
 bool java_lang_ThreadGroup::is_daemon(oop java_thread_group) {
-  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
+  assert(oopDesc::is_oop(java_thread_group), "thread group must be oop");
   return java_thread_group->bool_field(_daemon_offset) != 0;
 }
 
@@ -1869,17 +1425,11 @@ bool java_lang_ThreadGroup::is_daemon(oop java_thread_group) {
   macro(_ngroups_offset,     k, vmSymbols::ngroups_name(),     int_signature,               false)
 
 void java_lang_ThreadGroup::compute_offsets() {
-  assert(_parent_offset == 0, "offsets should be initialized only once");
+  assert(_parent_offset == 0, "offsets should be initialized only once");
 
   InstanceKlass* k = SystemDictionary::ThreadGroup_klass();
   THREADGROUP_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_ThreadGroup::serialize(SerializeClosure* f) {
-  THREADGROUP_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 #define THROWABLE_FIELDS_DO(macro) \
   macro(backtrace_offset,     k, "backtrace",     object_signature,                  false); \
@@ -1893,12 +1443,6 @@ void java_lang_Throwable::compute_offsets() {
   THROWABLE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_Throwable::serialize(SerializeClosure* f) {
-  THROWABLE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 oop java_lang_Throwable::unassigned_stacktrace() {
   InstanceKlass* ik = SystemDictionary::Throwable_klass();
   oop base = ik->static_field_base_raw();
@@ -1908,7 +1452,6 @@ oop java_lang_Throwable::unassigned_stacktrace() {
 oop java_lang_Throwable::backtrace(oop throwable) {
   return throwable->obj_field_acquire(backtrace_offset);
 }
-
 
 void java_lang_Throwable::set_backtrace(oop throwable, oop value) {
   throwable->release_obj_field_put(backtrace_offset, value);
@@ -1926,7 +1469,6 @@ oop java_lang_Throwable::message(oop throwable) {
   return throwable->obj_field(detailMessage_offset);
 }
 
-
 // Return Symbol for detailed_message or NULL
 Symbol* java_lang_Throwable::detail_message(oop throwable) {
   PRESERVE_EXCEPTION_MARK;  // Keep original exception
@@ -1941,7 +1483,6 @@ void java_lang_Throwable::set_message(oop throwable, oop value) {
   throwable->obj_field_put(detailMessage_offset, value);
 }
 
-
 void java_lang_Throwable::set_stacktrace(oop throwable, oop st_element_array) {
   throwable->obj_field_put(stackTrace_offset, st_element_array);
 }
@@ -1950,11 +1491,10 @@ void java_lang_Throwable::clear_stacktrace(oop throwable) {
   set_stacktrace(throwable, NULL);
 }
 
-
 void java_lang_Throwable::print(oop throwable, outputStream* st) {
   ResourceMark rm;
   Klass* k = throwable->klass();
-  assert(k != NULL, "just checking");
+  assert(k != NULL, "just checking");
   st->print("%s", k->external_name());
   oop msg = message(throwable);
   if (msg != NULL) {
@@ -1966,10 +1506,9 @@ void java_lang_Throwable::print(oop throwable, outputStream* st) {
 const int MAX_VERSION = USHRT_MAX;
 
 static inline bool version_matches(Method* method, int version) {
-  assert(version < MAX_VERSION, "version is too big");
+  assert(version < MAX_VERSION, "version is too big");
   return method != NULL && (method->constants()->version() == version);
 }
-
 
 // This class provides a simple wrapper over the internal structure of
 // exception backtrace to insulate users of the backtrace from needing
@@ -1999,22 +1538,22 @@ class BacktraceBuilder: public StackObj {
   // get info out of chunks
   static typeArrayOop get_methods(objArrayHandle chunk) {
     typeArrayOop methods = typeArrayOop(chunk->obj_at(trace_methods_offset));
-    assert(methods != NULL, "method array should be initialized in backtrace");
+    assert(methods != NULL, "method array should be initialized in backtrace");
     return methods;
   }
   static typeArrayOop get_bcis(objArrayHandle chunk) {
     typeArrayOop bcis = typeArrayOop(chunk->obj_at(trace_bcis_offset));
-    assert(bcis != NULL, "bci array should be initialized in backtrace");
+    assert(bcis != NULL, "bci array should be initialized in backtrace");
     return bcis;
   }
   static objArrayOop get_mirrors(objArrayHandle chunk) {
     objArrayOop mirrors = objArrayOop(chunk->obj_at(trace_mirrors_offset));
-    assert(mirrors != NULL, "mirror array should be initialized in backtrace");
+    assert(mirrors != NULL, "mirror array should be initialized in backtrace");
     return mirrors;
   }
   static typeArrayOop get_names(objArrayHandle chunk) {
     typeArrayOop names = typeArrayOop(chunk->obj_at(trace_names_offset));
-    assert(names != NULL, "names array should be initialized in backtrace");
+    assert(names != NULL, "names array should be initialized in backtrace");
     return names;
   }
 
@@ -2032,10 +1571,7 @@ class BacktraceBuilder: public StackObj {
     _bcis = get_bcis(backtrace);
     _mirrors = get_mirrors(backtrace);
     _names = get_names(backtrace);
-    assert(_methods->length() == _bcis->length() &&
-           _methods->length() == _mirrors->length() &&
-           _mirrors->length() == _names->length(),
-           "method and source information arrays should match");
+    assert(_methods->length() == _bcis->length() && _methods->length() == _mirrors->length() && _mirrors->length() == _names->length(), "method and source information arrays should match");
 
     // head is the preallocated backtrace
     _head = backtrace();
@@ -2104,11 +1640,10 @@ class BacktraceBuilder: public StackObj {
 
     // We need to save the mirrors in the backtrace to keep the class
     // from being unloaded while we still have this stack trace.
-    assert(method->method_holder()->java_mirror() != NULL, "never push null for mirror");
+    assert(method->method_holder()->java_mirror() != NULL, "never push null for mirror");
     _mirrors->obj_at_put(_index, method->method_holder()->java_mirror());
     _index++;
   }
-
 };
 
 struct BacktraceElement : public StackObj {
@@ -2143,7 +1678,7 @@ class BacktraceIterator : public StackObj {
  public:
   BacktraceIterator(objArrayHandle result, Thread* thread) {
     init(result, thread);
-    assert(_methods.is_null() || _methods->length() == java_lang_Throwable::trace_chunk_size, "lengths don't match");
+    assert(_methods.is_null() || _methods->length() == java_lang_Throwable::trace_chunk_size, "lengths don't match");
   }
 
   BacktraceElement next(Thread* thread) {
@@ -2167,7 +1702,6 @@ class BacktraceIterator : public StackObj {
     return _result.not_null() && _mirrors->obj_at(_index) != NULL;
   }
 };
-
 
 // Print stack trace element to resource allocated buffer
 static void print_stack_element_to_stream(outputStream* st, Handle mirror, int method_id,
@@ -2304,7 +1838,7 @@ void java_lang_Throwable::print_stack_trace(Handle throwable, outputStream* st) 
  * Print the throwable stack trace by calling the Java method java.lang.Throwable.printStackTrace().
  */
 void java_lang_Throwable::java_printStackTrace(Handle throwable, TRAPS) {
-  assert(throwable->is_a(SystemDictionary::Throwable_klass()), "Throwable instance expected");
+  assert(throwable->is_a(SystemDictionary::Throwable_klass()), "Throwable instance expected");
   JavaValue result(T_VOID);
   JavaCalls::call_virtual(&result,
                           throwable,
@@ -2346,12 +1880,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
   // basically handles everything by hand. This significantly improved the
   // speed of this method call up to 28.5% on Solaris sparc. 27.1% on Windows.
   // See bug 6333838 for  more details.
-  // The "ASSERT" here is to verify this method generates the exactly same stack
-  // trace as utilizing vframe.
-#ifdef ASSERT
-  vframeStream st(thread);
-  methodHandle st_method(THREAD, st.method());
-#endif
   int total_count = 0;
   RegisterMap map(thread, false);
   int decode_offset = 0;
@@ -2399,16 +1927,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
         }
       }
     }
-#ifdef ASSERT
-    assert(st_method() == method && st.bci() == bci,
-           "Wrong stack trace");
-    st.next();
-    // vframeStream::method isn't GC-safe so store off a copy
-    // of the Method* in case we GC.
-    if (!st.at_end()) {
-      st_method = st.method();
-    }
-#endif
 
     // the format of the stacktrace will be:
     // - 1 or more fillInStackTrace frames for the exception class (skipped)
@@ -2425,7 +1943,7 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
       }
     }
     if (!skip_throwableInit_check) {
-      assert(skip_fillInStackTrace_check, "logic error in backtrace filtering");
+      assert(skip_fillInStackTrace_check, "logic error in backtrace filtering");
 
       // skip <init> methods of the exception class and superclasses
       // This is simlar to classic VM.
@@ -2479,19 +1997,18 @@ void java_lang_Throwable::allocate_backtrace(Handle throwable, TRAPS) {
   set_backtrace(throwable(), bt.backtrace());
 }
 
-
 void java_lang_Throwable::fill_in_stack_trace_of_preallocated_backtrace(Handle throwable) {
   // Fill in stack trace into preallocated backtrace (no GC)
 
   // No-op if stack trace is disabled
   if (!StackTraceInThrowable) return;
 
-  assert(throwable->is_a(SystemDictionary::Throwable_klass()), "sanity check");
+  assert(throwable->is_a(SystemDictionary::Throwable_klass()), "sanity check");
 
   JavaThread* THREAD = JavaThread::current();
 
   objArrayHandle backtrace (THREAD, (objArrayOop)java_lang_Throwable::backtrace(throwable()));
-  assert(backtrace.not_null(), "backtrace should have been preallocated");
+  assert(backtrace.not_null(), "backtrace should have been preallocated");
 
   ResourceMark rm(THREAD);
   vframeStream st(THREAD);
@@ -2515,7 +2032,7 @@ void java_lang_Throwable::fill_in_stack_trace_of_preallocated_backtrace(Handle t
 
   // We support the Throwable immutability protocol defined for Java 7.
   java_lang_Throwable::set_stacktrace(throwable(), java_lang_Throwable::unassigned_stacktrace());
-  assert(java_lang_Throwable::unassigned_stacktrace() != NULL, "not initialized");
+  assert(java_lang_Throwable::unassigned_stacktrace() != NULL, "not initialized");
 }
 
 void java_lang_Throwable::get_stack_trace_elements(Handle throwable,
@@ -2525,7 +2042,7 @@ void java_lang_Throwable::get_stack_trace_elements(Handle throwable,
     THROW(vmSymbols::java_lang_NullPointerException());
   }
 
-  assert(stack_trace_array_h->is_objArray(), "Stack trace array should be an array of StackTraceElenent");
+  assert(stack_trace_array_h->is_objArray(), "Stack trace array should be an array of StackTraceElenent");
 
   if (stack_trace_array_h->length() != depth(throwable())) {
     THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
@@ -2558,7 +2075,7 @@ void java_lang_Throwable::get_stack_trace_elements(Handle throwable,
 oop java_lang_StackTraceElement::create(const methodHandle& method, int bci, TRAPS) {
   // Allocate java.lang.StackTraceElement instance
   InstanceKlass* k = SystemDictionary::StackTraceElement_klass();
-  assert(k != NULL, "must be loaded in 1.4+");
+  assert(k != NULL, "must be loaded in 1.4+");
   if (k->should_be_initialized()) {
     k->initialize(CHECK_0);
   }
@@ -2573,7 +2090,7 @@ oop java_lang_StackTraceElement::create(const methodHandle& method, int bci, TRA
 void java_lang_StackTraceElement::fill_in(Handle element,
                                           InstanceKlass* holder, const methodHandle& method,
                                           int version, int bci, Symbol* name, TRAPS) {
-  assert(element->is_a(SystemDictionary::StackTraceElement_klass()), "sanity check");
+  assert(element->is_a(SystemDictionary::StackTraceElement_klass()), "sanity check");
 
   ResourceMark rm(THREAD);
   HandleMark hm(THREAD);
@@ -2660,7 +2177,7 @@ void java_lang_StackFrameInfo::set_method_and_bci(Handle stackFrame, const metho
   java_lang_StackFrameInfo::set_bci(stackFrame(), bci);
   // method may be redefined; store the version
   int version = method->constants()->version();
-  assert((jushort)version == version, "version should be short");
+  assert((jushort)version == version, "version should be short");
   java_lang_StackFrameInfo::set_version(stackFrame(), (short)version);
 }
 
@@ -2687,13 +2204,6 @@ void java_lang_StackFrameInfo::compute_offsets() {
   STACKFRAMEINFO_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_StackFrameInfo::serialize(SerializeClosure* f) {
-  STACKFRAMEINFO_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-  STACKFRAMEINFO_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 #define LIVESTACKFRAMEINFO_FIELDS_DO(macro) \
   macro(_monitors_offset,   k, "monitors",    object_array_signature, false); \
   macro(_locals_offset,     k, "locals",      object_array_signature, false); \
@@ -2705,12 +2215,6 @@ void java_lang_LiveStackFrameInfo::compute_offsets() {
   LIVESTACKFRAMEINFO_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_LiveStackFrameInfo::serialize(SerializeClosure* f) {
-  LIVESTACKFRAMEINFO_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 #define ACCESSIBLEOBJECT_FIELDS_DO(macro) \
   macro(override_offset, k, "override", bool_signature, false)
 
@@ -2719,19 +2223,13 @@ void java_lang_reflect_AccessibleObject::compute_offsets() {
   ACCESSIBLEOBJECT_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_reflect_AccessibleObject::serialize(SerializeClosure* f) {
-  ACCESSIBLEOBJECT_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 jboolean java_lang_reflect_AccessibleObject::override(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return (jboolean) reflect->bool_field(override_offset);
 }
 
 void java_lang_reflect_AccessibleObject::set_override(oop reflect, jboolean value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   reflect->bool_field_put(override_offset, (int) value);
 }
 
@@ -2760,88 +2258,82 @@ void java_lang_reflect_Method::compute_offsets() {
   METHOD_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_reflect_Method::serialize(SerializeClosure* f) {
-  METHOD_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 Handle java_lang_reflect_Method::create(TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   Klass* klass = SystemDictionary::reflect_Method_klass();
   // This class is eagerly initialized during VM initialization, since we keep a refence
   // to one of the methods
-  assert(InstanceKlass::cast(klass)->is_initialized(), "must be initialized");
+  assert(InstanceKlass::cast(klass)->is_initialized(), "must be initialized");
   return InstanceKlass::cast(klass)->allocate_instance_handle(THREAD);
 }
 
 oop java_lang_reflect_Method::clazz(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->obj_field(clazz_offset);
 }
 
 void java_lang_reflect_Method::set_clazz(oop reflect, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
    reflect->obj_field_put(clazz_offset, value);
 }
 
 int java_lang_reflect_Method::slot(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->int_field(slot_offset);
 }
 
 void java_lang_reflect_Method::set_slot(oop reflect, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   reflect->int_field_put(slot_offset, value);
 }
 
 oop java_lang_reflect_Method::name(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return method->obj_field(name_offset);
 }
 
 void java_lang_reflect_Method::set_name(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   method->obj_field_put(name_offset, value);
 }
 
 oop java_lang_reflect_Method::return_type(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return method->obj_field(returnType_offset);
 }
 
 void java_lang_reflect_Method::set_return_type(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   method->obj_field_put(returnType_offset, value);
 }
 
 oop java_lang_reflect_Method::parameter_types(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return method->obj_field(parameterTypes_offset);
 }
 
 void java_lang_reflect_Method::set_parameter_types(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   method->obj_field_put(parameterTypes_offset, value);
 }
 
 oop java_lang_reflect_Method::exception_types(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return method->obj_field(exceptionTypes_offset);
 }
 
 void java_lang_reflect_Method::set_exception_types(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   method->obj_field_put(exceptionTypes_offset, value);
 }
 
 int java_lang_reflect_Method::modifiers(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return method->int_field(modifiers_offset);
 }
 
 void java_lang_reflect_Method::set_modifiers(oop method, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   method->int_field_put(modifiers_offset, value);
 }
 
@@ -2850,14 +2342,14 @@ bool java_lang_reflect_Method::has_signature_field() {
 }
 
 oop java_lang_reflect_Method::signature(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   return method->obj_field(signature_offset);
 }
 
 void java_lang_reflect_Method::set_signature(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   method->obj_field_put(signature_offset, value);
 }
 
@@ -2866,14 +2358,14 @@ bool java_lang_reflect_Method::has_annotations_field() {
 }
 
 oop java_lang_reflect_Method::annotations(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   return method->obj_field(annotations_offset);
 }
 
 void java_lang_reflect_Method::set_annotations(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   method->obj_field_put(annotations_offset, value);
 }
 
@@ -2882,14 +2374,14 @@ bool java_lang_reflect_Method::has_parameter_annotations_field() {
 }
 
 oop java_lang_reflect_Method::parameter_annotations(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
   return method->obj_field(parameter_annotations_offset);
 }
 
 void java_lang_reflect_Method::set_parameter_annotations(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
   method->obj_field_put(parameter_annotations_offset, value);
 }
 
@@ -2898,14 +2390,14 @@ bool java_lang_reflect_Method::has_annotation_default_field() {
 }
 
 oop java_lang_reflect_Method::annotation_default(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotation_default_field(), "annotation default field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotation_default_field(), "annotation default field must be present");
   return method->obj_field(annotation_default_offset);
 }
 
 void java_lang_reflect_Method::set_annotation_default(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotation_default_field(), "annotation default field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotation_default_field(), "annotation default field must be present");
   method->obj_field_put(annotation_default_offset, value);
 }
 
@@ -2914,14 +2406,14 @@ bool java_lang_reflect_Method::has_type_annotations_field() {
 }
 
 oop java_lang_reflect_Method::type_annotations(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   return method->obj_field(type_annotations_offset);
 }
 
 void java_lang_reflect_Method::set_type_annotations(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   method->obj_field_put(type_annotations_offset, value);
 }
 
@@ -2936,7 +2428,6 @@ void java_lang_reflect_Method::set_type_annotations(oop method, oop value) {
   macro##_OPTIONAL(parameter_annotations_offset, k, vmSymbols::parameter_annotations_name(), byte_array_signature); \
   macro##_OPTIONAL(type_annotations_offset,      k, vmSymbols::type_annotations_name(),      byte_array_signature)
 
-
 void java_lang_reflect_Constructor::compute_offsets() {
   InstanceKlass* k = SystemDictionary::reflect_Constructor_klass();
   // The generic signature and annotations fields are only present in 1.5
@@ -2947,14 +2438,8 @@ void java_lang_reflect_Constructor::compute_offsets() {
   CONSTRUCTOR_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_reflect_Constructor::serialize(SerializeClosure* f) {
-  CONSTRUCTOR_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 Handle java_lang_reflect_Constructor::create(TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   Symbol* name = vmSymbols::java_lang_reflect_Constructor();
   Klass* k = SystemDictionary::resolve_or_fail(name, true, CHECK_NH);
   InstanceKlass* ik = InstanceKlass::cast(k);
@@ -2964,52 +2449,52 @@ Handle java_lang_reflect_Constructor::create(TRAPS) {
 }
 
 oop java_lang_reflect_Constructor::clazz(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->obj_field(clazz_offset);
 }
 
 void java_lang_reflect_Constructor::set_clazz(oop reflect, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
    reflect->obj_field_put(clazz_offset, value);
 }
 
 oop java_lang_reflect_Constructor::parameter_types(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return constructor->obj_field(parameterTypes_offset);
 }
 
 void java_lang_reflect_Constructor::set_parameter_types(oop constructor, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   constructor->obj_field_put(parameterTypes_offset, value);
 }
 
 oop java_lang_reflect_Constructor::exception_types(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return constructor->obj_field(exceptionTypes_offset);
 }
 
 void java_lang_reflect_Constructor::set_exception_types(oop constructor, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   constructor->obj_field_put(exceptionTypes_offset, value);
 }
 
 int java_lang_reflect_Constructor::slot(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->int_field(slot_offset);
 }
 
 void java_lang_reflect_Constructor::set_slot(oop reflect, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   reflect->int_field_put(slot_offset, value);
 }
 
 int java_lang_reflect_Constructor::modifiers(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return constructor->int_field(modifiers_offset);
 }
 
 void java_lang_reflect_Constructor::set_modifiers(oop constructor, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   constructor->int_field_put(modifiers_offset, value);
 }
 
@@ -3018,14 +2503,14 @@ bool java_lang_reflect_Constructor::has_signature_field() {
 }
 
 oop java_lang_reflect_Constructor::signature(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   return constructor->obj_field(signature_offset);
 }
 
 void java_lang_reflect_Constructor::set_signature(oop constructor, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   constructor->obj_field_put(signature_offset, value);
 }
 
@@ -3034,14 +2519,14 @@ bool java_lang_reflect_Constructor::has_annotations_field() {
 }
 
 oop java_lang_reflect_Constructor::annotations(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   return constructor->obj_field(annotations_offset);
 }
 
 void java_lang_reflect_Constructor::set_annotations(oop constructor, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   constructor->obj_field_put(annotations_offset, value);
 }
 
@@ -3050,14 +2535,14 @@ bool java_lang_reflect_Constructor::has_parameter_annotations_field() {
 }
 
 oop java_lang_reflect_Constructor::parameter_annotations(oop method) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
   return method->obj_field(parameter_annotations_offset);
 }
 
 void java_lang_reflect_Constructor::set_parameter_annotations(oop method, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_parameter_annotations_field(), "parameter annotations field must be present");
   method->obj_field_put(parameter_annotations_offset, value);
 }
 
@@ -3066,14 +2551,14 @@ bool java_lang_reflect_Constructor::has_type_annotations_field() {
 }
 
 oop java_lang_reflect_Constructor::type_annotations(oop constructor) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   return constructor->obj_field(type_annotations_offset);
 }
 
 void java_lang_reflect_Constructor::set_type_annotations(oop constructor, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   constructor->obj_field_put(type_annotations_offset, value);
 }
 
@@ -3096,14 +2581,8 @@ void java_lang_reflect_Field::compute_offsets() {
   FIELD_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_reflect_Field::serialize(SerializeClosure* f) {
-  FIELD_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 Handle java_lang_reflect_Field::create(TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   Symbol* name = vmSymbols::java_lang_reflect_Field();
   Klass* k = SystemDictionary::resolve_or_fail(name, true, CHECK_NH);
   InstanceKlass* ik = InstanceKlass::cast(k);
@@ -3113,52 +2592,52 @@ Handle java_lang_reflect_Field::create(TRAPS) {
 }
 
 oop java_lang_reflect_Field::clazz(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->obj_field(clazz_offset);
 }
 
 void java_lang_reflect_Field::set_clazz(oop reflect, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
    reflect->obj_field_put(clazz_offset, value);
 }
 
 oop java_lang_reflect_Field::name(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return field->obj_field(name_offset);
 }
 
 void java_lang_reflect_Field::set_name(oop field, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   field->obj_field_put(name_offset, value);
 }
 
 oop java_lang_reflect_Field::type(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return field->obj_field(type_offset);
 }
 
 void java_lang_reflect_Field::set_type(oop field, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   field->obj_field_put(type_offset, value);
 }
 
 int java_lang_reflect_Field::slot(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return reflect->int_field(slot_offset);
 }
 
 void java_lang_reflect_Field::set_slot(oop reflect, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   reflect->int_field_put(slot_offset, value);
 }
 
 int java_lang_reflect_Field::modifiers(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return field->int_field(modifiers_offset);
 }
 
 void java_lang_reflect_Field::set_modifiers(oop field, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   field->int_field_put(modifiers_offset, value);
 }
 
@@ -3167,14 +2646,14 @@ bool java_lang_reflect_Field::has_signature_field() {
 }
 
 oop java_lang_reflect_Field::signature(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   return field->obj_field(signature_offset);
 }
 
 void java_lang_reflect_Field::set_signature(oop field, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_signature_field(), "signature field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_signature_field(), "signature field must be present");
   field->obj_field_put(signature_offset, value);
 }
 
@@ -3183,14 +2662,14 @@ bool java_lang_reflect_Field::has_annotations_field() {
 }
 
 oop java_lang_reflect_Field::annotations(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   return field->obj_field(annotations_offset);
 }
 
 void java_lang_reflect_Field::set_annotations(oop field, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_annotations_field(), "annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_annotations_field(), "annotations field must be present");
   field->obj_field_put(annotations_offset, value);
 }
 
@@ -3199,14 +2678,14 @@ bool java_lang_reflect_Field::has_type_annotations_field() {
 }
 
 oop java_lang_reflect_Field::type_annotations(oop field) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   return field->obj_field(type_annotations_offset);
 }
 
 void java_lang_reflect_Field::set_type_annotations(oop field, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
-  assert(has_type_annotations_field(), "type_annotations field must be present");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(has_type_annotations_field(), "type_annotations field must be present");
   field->obj_field_put(type_annotations_offset, value);
 }
 
@@ -3219,12 +2698,6 @@ void reflect_ConstantPool::compute_offsets() {
   CONSTANTPOOL_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void reflect_ConstantPool::serialize(SerializeClosure* f) {
-  CONSTANTPOOL_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 #define PARAMETER_FIELDS_DO(macro) \
   macro(name_offset,        k, vmSymbols::name_name(),        string_signature, false); \
   macro(modifiers_offset,   k, vmSymbols::modifiers_name(),   int_signature,    false); \
@@ -3236,14 +2709,8 @@ void java_lang_reflect_Parameter::compute_offsets() {
   PARAMETER_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_reflect_Parameter::serialize(SerializeClosure* f) {
-  PARAMETER_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 Handle java_lang_reflect_Parameter::create(TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   Symbol* name = vmSymbols::java_lang_reflect_Parameter();
   Klass* k = SystemDictionary::resolve_or_fail(name, true, CHECK_NH);
   InstanceKlass* ik = InstanceKlass::cast(k);
@@ -3253,52 +2720,51 @@ Handle java_lang_reflect_Parameter::create(TRAPS) {
 }
 
 oop java_lang_reflect_Parameter::name(oop param) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return param->obj_field(name_offset);
 }
 
 void java_lang_reflect_Parameter::set_name(oop param, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   param->obj_field_put(name_offset, value);
 }
 
 int java_lang_reflect_Parameter::modifiers(oop param) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return param->int_field(modifiers_offset);
 }
 
 void java_lang_reflect_Parameter::set_modifiers(oop param, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   param->int_field_put(modifiers_offset, value);
 }
 
 int java_lang_reflect_Parameter::index(oop param) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return param->int_field(index_offset);
 }
 
 void java_lang_reflect_Parameter::set_index(oop param, int value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   param->int_field_put(index_offset, value);
 }
 
 oop java_lang_reflect_Parameter::executable(oop param) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return param->obj_field(executable_offset);
 }
 
 void java_lang_reflect_Parameter::set_executable(oop param, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   param->obj_field_put(executable_offset, value);
 }
-
 
 int java_lang_Module::loader_offset;
 int java_lang_Module::name_offset;
 int java_lang_Module::_module_entry_offset = -1;
 
 Handle java_lang_Module::create(Handle loader, Handle module_name, TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return JavaCalls::construct_new_instance(SystemDictionary::Module_klass(),
                           vmSymbols::java_lang_module_init_signature(),
                           loader, module_name, CHECK_NH);
@@ -3314,37 +2780,30 @@ void java_lang_Module::compute_offsets() {
   MODULE_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_Module::serialize(SerializeClosure* f) {
-  MODULE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-  MODULE_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 oop java_lang_Module::loader(oop module) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return module->obj_field(loader_offset);
 }
 
 void java_lang_Module::set_loader(oop module, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   module->obj_field_put(loader_offset, value);
 }
 
 oop java_lang_Module::name(oop module) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   return module->obj_field(name_offset);
 }
 
 void java_lang_Module::set_name(oop module, oop value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   module->obj_field_put(name_offset, value);
 }
 
 ModuleEntry* java_lang_Module::module_entry(oop module) {
-  assert(_module_entry_offset != -1, "Uninitialized module_entry_offset");
-  assert(module != NULL, "module can't be null");
-  assert(oopDesc::is_oop(module), "module must be oop");
+  assert(_module_entry_offset != -1, "Uninitialized module_entry_offset");
+  assert(module != NULL, "module can't be null");
+  assert(oopDesc::is_oop(module), "module must be oop");
 
   ModuleEntry* module_entry = (ModuleEntry*)module->address_field(_module_entry_offset);
   if (module_entry == NULL) {
@@ -3359,34 +2818,33 @@ ModuleEntry* java_lang_Module::module_entry(oop module) {
 }
 
 void java_lang_Module::set_module_entry(oop module, ModuleEntry* module_entry) {
-  assert(_module_entry_offset != -1, "Uninitialized module_entry_offset");
-  assert(module != NULL, "module can't be null");
-  assert(oopDesc::is_oop(module), "module must be oop");
+  assert(_module_entry_offset != -1, "Uninitialized module_entry_offset");
+  assert(module != NULL, "module can't be null");
+  assert(oopDesc::is_oop(module), "module must be oop");
   module->address_field_put(_module_entry_offset, (address)module_entry);
 }
 
 Handle reflect_ConstantPool::create(TRAPS) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   InstanceKlass* k = SystemDictionary::reflect_ConstantPool_klass();
   // Ensure it is initialized
   k->initialize(CHECK_NH);
   return k->allocate_instance_handle(THREAD);
 }
 
-
 void reflect_ConstantPool::set_cp(oop reflect, ConstantPool* value) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
   oop mirror = value->pool_holder()->java_mirror();
   // Save the mirror to get back the constant pool.
   reflect->obj_field_put(_oop_offset, mirror);
 }
 
 ConstantPool* reflect_ConstantPool::get_cp(oop reflect) {
-  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
+  assert(Universe::is_fully_initialized(), "Need to find another solution to the reflection problem");
 
   oop mirror = reflect->obj_field(_oop_offset);
   Klass* k = java_lang_Class::as_Klass(mirror);
-  assert(k->is_instance_klass(), "Must be");
+  assert(k->is_instance_klass(), "Must be");
 
   // Get the constant pool back from the klass.  Since class redefinition
   // merges the new constant pool into the old, this is essentially the
@@ -3404,12 +2862,6 @@ void reflect_UnsafeStaticFieldAccessorImpl::compute_offsets() {
   UNSAFESTATICFIELDACCESSORIMPL_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void reflect_UnsafeStaticFieldAccessorImpl::serialize(SerializeClosure* f) {
-  UNSAFESTATICFIELDACCESSORIMPL_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 oop java_lang_boxing_object::initialize_and_allocate(BasicType type, TRAPS) {
   Klass* k = SystemDictionary::box_klass(type);
   if (k == NULL)  return NULL;
@@ -3417,7 +2869,6 @@ oop java_lang_boxing_object::initialize_and_allocate(BasicType type, TRAPS) {
   if (!ik->is_initialized())  ik->initialize(CHECK_0);
   return ik->allocate_instance(THREAD);
 }
-
 
 oop java_lang_boxing_object::create(BasicType type, jvalue* value, TRAPS) {
   oop box = initialize_and_allocate(type, CHECK_0);
@@ -3453,7 +2904,6 @@ oop java_lang_boxing_object::create(BasicType type, jvalue* value, TRAPS) {
   return box;
 }
 
-
 BasicType java_lang_boxing_object::basic_type(oop box) {
   if (box == NULL)  return T_ILLEGAL;
   BasicType type = SystemDictionary::box_klass_type(box->klass());
@@ -3461,7 +2911,6 @@ BasicType java_lang_boxing_object::basic_type(oop box) {
     return T_ILLEGAL;
   return type;
 }
-
 
 BasicType java_lang_boxing_object::get_value(oop box, jvalue* value) {
   BasicType type = SystemDictionary::box_klass_type(box->klass());
@@ -3492,10 +2941,9 @@ BasicType java_lang_boxing_object::get_value(oop box, jvalue* value) {
     break;
   default:
     return T_ILLEGAL;
-  } // end switch
+  }
   return type;
 }
-
 
 BasicType java_lang_boxing_object::set_value(oop box, jvalue* value) {
   BasicType type = SystemDictionary::box_klass_type(box->klass());
@@ -3526,10 +2974,9 @@ BasicType java_lang_boxing_object::set_value(oop box, jvalue* value) {
     break;
   default:
     return T_ILLEGAL;
-  } // end switch
+  }
   return type;
 }
-
 
 void java_lang_boxing_object::print(BasicType type, jvalue* value, outputStream* st) {
   switch (type) {
@@ -3548,7 +2995,7 @@ void java_lang_boxing_object::print(BasicType type, jvalue* value, outputStream*
 // Support for java_lang_ref_Reference
 
 bool java_lang_ref_Reference::is_referent_field(oop obj, ptrdiff_t offset) {
-  assert(obj != NULL, "sanity");
+  assert(obj != NULL, "sanity");
   if (offset != java_lang_ref_Reference::referent_offset) {
     return false;
   }
@@ -3560,7 +3007,7 @@ bool java_lang_ref_Reference::is_referent_field(oop obj, ptrdiff_t offset) {
 
   InstanceKlass* ik = InstanceKlass::cast(obj->klass());
   bool is_reference = ik->reference_type() != REF_NONE;
-  assert(!is_reference || ik->is_subclass_of(SystemDictionary::Reference_klass()), "sanity");
+  assert(!is_reference || ik->is_subclass_of(SystemDictionary::Reference_klass()), "sanity");
   return is_reference;
 }
 
@@ -3575,12 +3022,6 @@ void java_lang_ref_SoftReference::compute_offsets() {
   InstanceKlass* k = SystemDictionary::SoftReference_klass();
   SOFTREFERENCE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_ref_SoftReference::serialize(SerializeClosure* f) {
-  SOFTREFERENCE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 jlong java_lang_ref_SoftReference::timestamp(oop ref) {
   return ref->long_field(timestamp_offset);
@@ -3604,8 +3045,7 @@ int java_lang_invoke_DirectMethodHandle::_member_offset;
 
 oop java_lang_invoke_DirectMethodHandle::member(oop dmh) {
   oop member_name = NULL;
-  assert(oopDesc::is_oop(dmh) && java_lang_invoke_DirectMethodHandle::is_instance(dmh),
-         "a DirectMethodHandle oop is expected");
+  assert(oopDesc::is_oop(dmh) && java_lang_invoke_DirectMethodHandle::is_instance(dmh), "a DirectMethodHandle oop is expected");
   return dmh->obj_field(member_offset_in_bytes());
 }
 
@@ -3616,12 +3056,6 @@ void java_lang_invoke_DirectMethodHandle::compute_offsets() {
   InstanceKlass* k = SystemDictionary::DirectMethodHandle_klass();
   DIRECTMETHODHANDLE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_invoke_DirectMethodHandle::serialize(SerializeClosure* f) {
-  DIRECTMETHODHANDLE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 // Support for java_lang_invoke_MethodHandle
 
@@ -3649,12 +3083,6 @@ void java_lang_invoke_MethodHandle::compute_offsets() {
   METHODHANDLE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_invoke_MethodHandle::serialize(SerializeClosure* f) {
-  METHODHANDLE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 #define MEMBERNAME_FIELDS_DO(macro) \
   macro(_clazz_offset,   k, vmSymbols::clazz_name(),   class_signature,  false); \
   macro(_name_offset,    k, vmSymbols::name_name(),    string_signature, false); \
@@ -3668,44 +3096,24 @@ void java_lang_invoke_MemberName::compute_offsets() {
   MEMBERNAME_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_invoke_MemberName::serialize(SerializeClosure* f) {
-  MEMBERNAME_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-  MEMBERNAME_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 void java_lang_invoke_ResolvedMethodName::compute_offsets() {
   InstanceKlass* k = SystemDictionary::ResolvedMethodName_klass();
-  assert(k != NULL, "jdk mismatch");
+  assert(k != NULL, "jdk mismatch");
   RESOLVEDMETHOD_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_invoke_ResolvedMethodName::serialize(SerializeClosure* f) {
-  RESOLVEDMETHOD_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 #define LAMBDAFORM_FIELDS_DO(macro) \
   macro(_vmentry_offset, k, "vmentry", java_lang_invoke_MemberName_signature, false)
 
 void java_lang_invoke_LambdaForm::compute_offsets() {
   InstanceKlass* k = SystemDictionary::LambdaForm_klass();
-  assert (k != NULL, "jdk mismatch");
+  assert(k != NULL, "jdk mismatch");
   LAMBDAFORM_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_invoke_LambdaForm::serialize(SerializeClosure* f) {
-  LAMBDAFORM_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 bool java_lang_invoke_LambdaForm::is_instance(oop obj) {
   return obj != NULL && is_subclass(obj->klass());
 }
-
 
 oop java_lang_invoke_MethodHandle::type(oop mh) {
   return mh->obj_field(_type_offset);
@@ -3716,96 +3124,94 @@ void java_lang_invoke_MethodHandle::set_type(oop mh, oop mtype) {
 }
 
 oop java_lang_invoke_MethodHandle::form(oop mh) {
-  assert(_form_offset != 0, "");
+  assert(_form_offset != 0, "");
   return mh->obj_field(_form_offset);
 }
 
 void java_lang_invoke_MethodHandle::set_form(oop mh, oop lform) {
-  assert(_form_offset != 0, "");
+  assert(_form_offset != 0, "");
   mh->obj_field_put(_form_offset, lform);
 }
 
 /// MemberName accessors
 
 oop java_lang_invoke_MemberName::clazz(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   return mname->obj_field(_clazz_offset);
 }
 
 void java_lang_invoke_MemberName::set_clazz(oop mname, oop clazz) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->obj_field_put(_clazz_offset, clazz);
 }
 
 oop java_lang_invoke_MemberName::name(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   return mname->obj_field(_name_offset);
 }
 
 void java_lang_invoke_MemberName::set_name(oop mname, oop name) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->obj_field_put(_name_offset, name);
 }
 
 oop java_lang_invoke_MemberName::type(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   return mname->obj_field(_type_offset);
 }
 
 void java_lang_invoke_MemberName::set_type(oop mname, oop type) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->obj_field_put(_type_offset, type);
 }
 
 int java_lang_invoke_MemberName::flags(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   return mname->int_field(_flags_offset);
 }
 
 void java_lang_invoke_MemberName::set_flags(oop mname, int flags) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->int_field_put(_flags_offset, flags);
 }
 
-
 // Return vmtarget from ResolvedMethodName method field through indirection
 Method* java_lang_invoke_MemberName::vmtarget(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   oop method = mname->obj_field(_method_offset);
   return method == NULL ? NULL : java_lang_invoke_ResolvedMethodName::vmtarget(method);
 }
 
 bool java_lang_invoke_MemberName::is_method(oop mname) {
-  assert(is_instance(mname), "must be MemberName");
+  assert(is_instance(mname), "must be MemberName");
   return (flags(mname) & (MN_IS_METHOD | MN_IS_CONSTRUCTOR)) > 0;
 }
 
 void java_lang_invoke_MemberName::set_method(oop mname, oop resolved_method) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->obj_field_put(_method_offset, resolved_method);
 }
 
 intptr_t java_lang_invoke_MemberName::vmindex(oop mname) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   return (intptr_t) mname->address_field(_vmindex_offset);
 }
 
 void java_lang_invoke_MemberName::set_vmindex(oop mname, intptr_t index) {
-  assert(is_instance(mname), "wrong type");
+  assert(is_instance(mname), "wrong type");
   mname->address_field_put(_vmindex_offset, (address) index);
 }
 
-
 Method* java_lang_invoke_ResolvedMethodName::vmtarget(oop resolved_method) {
-  assert(is_instance(resolved_method), "wrong type");
+  assert(is_instance(resolved_method), "wrong type");
   Method* m = (Method*)resolved_method->address_field(_vmtarget_offset);
-  assert(m->is_method(), "must be");
+  assert(m->is_method(), "must be");
   return m;
 }
 
 // Used by redefinition to change Method* to new Method* with same hash (name, signature)
 void java_lang_invoke_ResolvedMethodName::set_vmtarget(oop resolved_method, Method* m) {
-  assert(is_instance(resolved_method), "wrong type");
+  assert(is_instance(resolved_method), "wrong type");
   resolved_method->address_field_put(_vmtarget_offset, (address)m);
 }
 
@@ -3829,10 +3235,9 @@ oop java_lang_invoke_ResolvedMethodName::find_resolved_method(const methodHandle
 }
 
 oop java_lang_invoke_LambdaForm::vmentry(oop lform) {
-  assert(is_instance(lform), "wrong type");
+  assert(is_instance(lform), "wrong type");
   return lform->obj_field(_vmentry_offset);
 }
-
 
 // Support for java_lang_invoke_MethodType
 
@@ -3847,12 +3252,6 @@ void java_lang_invoke_MethodType::compute_offsets() {
   InstanceKlass* k = SystemDictionary::MethodType_klass();
   METHODTYPE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_lang_invoke_MethodType::serialize(SerializeClosure* f) {
-  METHODTYPE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 void java_lang_invoke_MethodType::print_signature(oop mt, outputStream* st) {
   st->print("(");
@@ -3894,12 +3293,12 @@ bool java_lang_invoke_MethodType::equals(oop mt1, oop mt2) {
 }
 
 oop java_lang_invoke_MethodType::rtype(oop mt) {
-  assert(is_instance(mt), "must be a MethodType");
+  assert(is_instance(mt), "must be a MethodType");
   return mt->obj_field(_rtype_offset);
 }
 
 objArrayOop java_lang_invoke_MethodType::ptypes(oop mt) {
-  assert(is_instance(mt), "must be a MethodType");
+  assert(is_instance(mt), "must be a MethodType");
   return (objArrayOop) mt->obj_field(_ptypes_offset);
 }
 
@@ -3927,7 +3326,6 @@ int java_lang_invoke_MethodType::rtype_slot_count(oop mt) {
   return type2size[bt];
 }
 
-
 // Support for java_lang_invoke_CallSite
 
 int java_lang_invoke_CallSite::_target_offset;
@@ -3942,14 +3340,8 @@ void java_lang_invoke_CallSite::compute_offsets() {
   CALLSITE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_invoke_CallSite::serialize(SerializeClosure* f) {
-  CALLSITE_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 oop java_lang_invoke_CallSite::context(oop call_site) {
-  assert(java_lang_invoke_CallSite::is_instance(call_site), "");
+  assert(java_lang_invoke_CallSite::is_instance(call_site), "");
 
   oop dep_oop = call_site->obj_field(_context_offset);
   return dep_oop;
@@ -3964,14 +3356,8 @@ void java_lang_invoke_MethodHandleNatives_CallSiteContext::compute_offsets() {
   CALLSITECONTEXT_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_invoke_MethodHandleNatives_CallSiteContext::serialize(SerializeClosure* f) {
-  CALLSITECONTEXT_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 DependencyContext java_lang_invoke_MethodHandleNatives_CallSiteContext::vmdependencies(oop call_site) {
-  assert(java_lang_invoke_MethodHandleNatives_CallSiteContext::is_instance(call_site), "");
+  assert(java_lang_invoke_MethodHandleNatives_CallSiteContext::is_instance(call_site), "");
   intptr_t* vmdeps_addr = (intptr_t*)call_site->field_addr(_vmdependencies_offset);
   DependencyContext dep_ctx(vmdeps_addr);
   return dep_ctx;
@@ -3991,25 +3377,19 @@ int java_security_AccessControlContext::_isAuthorized_offset = -1;
   macro(_isAuthorized_offset,      k, "isAuthorized", bool_signature, false)
 
 void java_security_AccessControlContext::compute_offsets() {
-  assert(_isPrivileged_offset == 0, "offsets should be initialized only once");
+  assert(_isPrivileged_offset == 0, "offsets should be initialized only once");
   InstanceKlass* k = SystemDictionary::AccessControlContext_klass();
   ACCESSCONTROLCONTEXT_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_security_AccessControlContext::serialize(SerializeClosure* f) {
-  ACCESSCONTROLCONTEXT_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 bool java_security_AccessControlContext::is_authorized(Handle context) {
-  assert(context.not_null() && context->klass() == SystemDictionary::AccessControlContext_klass(), "Invalid type");
-  assert(_isAuthorized_offset != -1, "should be set");
+  assert(context.not_null() && context->klass() == SystemDictionary::AccessControlContext_klass(), "Invalid type");
+  assert(_isAuthorized_offset != -1, "should be set");
   return context->bool_field(_isAuthorized_offset) != 0;
 }
 
 oop java_security_AccessControlContext::create(objArrayHandle context, bool isPrivileged, Handle privileged_context, TRAPS) {
-  assert(_isPrivileged_offset != 0, "offsets should have been initialized");
+  assert(_isPrivileged_offset != 0, "offsets should have been initialized");
   // Ensure klass is initialized
   SystemDictionary::AccessControlContext_klass()->initialize(CHECK_0);
   // Allocate result
@@ -4025,7 +3405,6 @@ oop java_security_AccessControlContext::create(objArrayHandle context, bool isPr
   return result;
 }
 
-
 // Support for java_lang_ClassLoader
 
 bool java_lang_ClassLoader::offsets_computed = false;
@@ -4036,12 +3415,12 @@ int  java_lang_ClassLoader::nameAndId_offset = -1;
 int  java_lang_ClassLoader::unnamedModule_offset = -1;
 
 ClassLoaderData* java_lang_ClassLoader::loader_data(oop loader) {
-  assert(loader != NULL && oopDesc::is_oop(loader), "loader must be oop");
+  assert(loader != NULL && oopDesc::is_oop(loader), "loader must be oop");
   return HeapAccess<>::load_at(loader, _loader_data_offset);
 }
 
 ClassLoaderData* java_lang_ClassLoader::cmpxchg_loader_data(ClassLoaderData* new_data, oop loader, ClassLoaderData* expected_data) {
-  assert(loader != NULL && oopDesc::is_oop(loader), "loader must be oop");
+  assert(loader != NULL && oopDesc::is_oop(loader), "loader must be oop");
   return HeapAccess<>::atomic_cmpxchg_at(new_data, loader, _loader_data_offset, expected_data);
 }
 
@@ -4053,7 +3432,7 @@ ClassLoaderData* java_lang_ClassLoader::cmpxchg_loader_data(ClassLoaderData* new
   macro(parent_offset,          k1, "parent",               classloader_signature, false)
 
 void java_lang_ClassLoader::compute_offsets() {
-  assert(!offsets_computed, "offsets should be initialized only once");
+  assert(!offsets_computed, "offsets should be initialized only once");
   offsets_computed = true;
 
   InstanceKlass* k1 = SystemDictionary::ClassLoader_klass();
@@ -4062,22 +3441,15 @@ void java_lang_ClassLoader::compute_offsets() {
   CLASSLOADER_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_ClassLoader::serialize(SerializeClosure* f) {
-  CLASSLOADER_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-  CLASSLOADER_INJECTED_FIELDS(INJECTED_FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 oop java_lang_ClassLoader::parent(oop loader) {
-  assert(is_instance(loader), "loader must be oop");
+  assert(is_instance(loader), "loader must be oop");
   return loader->obj_field(parent_offset);
 }
 
 // Returns the name field of this class loader.  If the name field has not
 // been set, null will be returned.
 oop java_lang_ClassLoader::name(oop loader) {
-  assert(is_instance(loader), "loader must be oop");
+  assert(is_instance(loader), "loader must be oop");
   return loader->obj_field(name_offset);
 }
 
@@ -4088,22 +3460,21 @@ oop java_lang_ClassLoader::name(oop loader) {
 //   If built-in loader, then omit '@<id>' as there is only one instance.
 // Use ClassLoader::loader_name_id() to obtain this String as a char*.
 oop java_lang_ClassLoader::nameAndId(oop loader) {
-  assert(is_instance(loader), "loader must be oop");
+  assert(is_instance(loader), "loader must be oop");
   return loader->obj_field(nameAndId_offset);
 }
 
 bool java_lang_ClassLoader::isAncestor(oop loader, oop cl) {
-  assert(is_instance(loader), "loader must be oop");
-  assert(cl == NULL || is_instance(cl), "cl argument must be oop");
+  assert(is_instance(loader), "loader must be oop");
+  assert(cl == NULL || is_instance(cl), "cl argument must be oop");
   oop acl = loader;
-  debug_only(jint loop_count = 0);
   // This loop taken verbatim from ClassLoader.java:
   do {
     acl = parent(acl);
     if (oopDesc::equals(cl, acl)) {
       return true;
     }
-    assert(++loop_count > 0, "loop_count overflow");
+    assert(++loop_count > 0, "loop_count overflow");
   } while (acl != NULL);
   return false;
 }
@@ -4111,7 +3482,6 @@ bool java_lang_ClassLoader::isAncestor(oop loader, oop cl) {
 bool java_lang_ClassLoader::is_instance(oop obj) {
   return obj != NULL && is_subclass(obj->klass());
 }
-
 
 // For class loader classes, parallelCapable defined
 // based on non-null field
@@ -4159,7 +3529,7 @@ oop java_lang_ClassLoader::non_reflection_class_loader(oop loader) {
 }
 
 oop java_lang_ClassLoader::unnamedModule(oop loader) {
-  assert(is_instance(loader), "loader must be oop");
+  assert(is_instance(loader), "loader must be oop");
   return loader->obj_field(unnamedModule_offset);
 }
 
@@ -4218,16 +3588,9 @@ void java_lang_System::compute_offsets() {
   SYSTEM_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_System::serialize(SerializeClosure* f) {
-   SYSTEM_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 int java_lang_System::in_offset_in_bytes() { return static_in_offset; }
 int java_lang_System::out_offset_in_bytes() { return static_out_offset; }
 int java_lang_System::err_offset_in_bytes() { return static_err_offset; }
-
 
 bool java_lang_System::has_security_manager() {
   InstanceKlass* ik = SystemDictionary::System_klass();
@@ -4342,12 +3705,6 @@ void java_lang_StackTraceElement::compute_offsets() {
   STACKTRACEELEMENT_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_StackTraceElement::serialize(SerializeClosure* f) {
-  STACKTRACEELEMENT_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 void java_lang_StackTraceElement::set_fileName(oop element, oop value) {
   element->obj_field_put(fileName_offset, value);
 }
@@ -4417,12 +3774,6 @@ void java_lang_AssertionStatusDirectives::compute_offsets() {
   ASSERTIONSTATUSDIRECTIVES_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
-#if INCLUDE_CDS
-void java_lang_AssertionStatusDirectives::serialize(SerializeClosure* f) {
-  ASSERTIONSTATUSDIRECTIVES_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
-
 void java_lang_AssertionStatusDirectives::set_classes(oop o, oop val) {
   o->obj_field_put(classes_offset, val);
 }
@@ -4443,7 +3794,6 @@ void java_lang_AssertionStatusDirectives::set_deflt(oop o, bool val) {
   o->bool_field_put(deflt_offset, val);
 }
 
-
 // Support for intrinsification of java.nio.Buffer.checkIndex
 int java_nio_Buffer::limit_offset() {
   return _limit_offset;
@@ -4454,15 +3804,9 @@ int java_nio_Buffer::limit_offset() {
 
 void java_nio_Buffer::compute_offsets() {
   InstanceKlass* k = SystemDictionary::nio_Buffer_klass();
-  assert(k != NULL, "must be loaded in 1.4+");
+  assert(k != NULL, "must be loaded in 1.4+");
   BUFFER_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
-
-#if INCLUDE_CDS
-void java_nio_Buffer::serialize(SerializeClosure* f) {
-  BUFFER_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 #define AOS_FIELDS_DO(macro) \
   macro(_owner_offset, k, "exclusiveOwnerThread", thread_signature, false)
@@ -4473,15 +3817,9 @@ void java_util_concurrent_locks_AbstractOwnableSynchronizer::compute_offsets() {
 }
 
 oop java_util_concurrent_locks_AbstractOwnableSynchronizer::get_owner_threadObj(oop obj) {
-  assert(_owner_offset != 0, "Must be initialized");
+  assert(_owner_offset != 0, "Must be initialized");
   return obj->obj_field(_owner_offset);
 }
-
-#if INCLUDE_CDS
-void java_util_concurrent_locks_AbstractOwnableSynchronizer::serialize(SerializeClosure* f) {
-  AOS_FIELDS_DO(FIELD_SERIALIZE_OFFSET);
-}
-#endif
 
 static int member_offset(int hardcoded_offset) {
   return (hardcoded_offset * heapOopSize) + instanceOopDesc::base_offset_in_bytes();
@@ -4502,7 +3840,6 @@ void JavaClasses::compute_hard_coded_offsets() {
   java_lang_ref_Reference::next_offset        = member_offset(java_lang_ref_Reference::hc_next_offset);
   java_lang_ref_Reference::discovered_offset  = member_offset(java_lang_ref_Reference::hc_discovered_offset);
 }
-
 
 // Compute non-hard-coded field offsets of all the classes in this file
 void JavaClasses::compute_offsets() {
@@ -4549,71 +3886,6 @@ void JavaClasses::compute_offsets() {
   AbstractAssembler::update_delayed_values();
 }
 
-#ifndef PRODUCT
-
-// These functions exist to assert the validity of hard-coded field offsets to guard
-// against changes in the class files
-
-bool JavaClasses::check_offset(const char *klass_name, int hardcoded_offset, const char *field_name, const char* field_sig) {
-  EXCEPTION_MARK;
-  fieldDescriptor fd;
-  TempNewSymbol klass_sym = SymbolTable::new_symbol(klass_name, CATCH);
-  Klass* k = SystemDictionary::resolve_or_fail(klass_sym, true, CATCH);
-  InstanceKlass* ik = InstanceKlass::cast(k);
-  TempNewSymbol f_name = SymbolTable::new_symbol(field_name, CATCH);
-  TempNewSymbol f_sig  = SymbolTable::new_symbol(field_sig, CATCH);
-  if (!ik->find_local_field(f_name, f_sig, &fd)) {
-    tty->print_cr("Nonstatic field %s.%s not found", klass_name, field_name);
-    return false;
-  }
-  if (fd.is_static()) {
-    tty->print_cr("Nonstatic field %s.%s appears to be static", klass_name, field_name);
-    return false;
-  }
-  if (fd.offset() == hardcoded_offset ) {
-    return true;
-  } else {
-    tty->print_cr("Offset of nonstatic field %s.%s is hardcoded as %d but should really be %d.",
-                  klass_name, field_name, hardcoded_offset, fd.offset());
-    return false;
-  }
-}
-
-// Check the hard-coded field offsets of all the classes in this file
-
-void JavaClasses::check_offsets() {
-  bool valid = true;
-
-#define CHECK_OFFSET(klass_name, cpp_klass_name, field_name, field_sig) \
-  valid &= check_offset(klass_name, cpp_klass_name :: field_name ## _offset, #field_name, field_sig)
-
-#define CHECK_LONG_OFFSET(klass_name, cpp_klass_name, field_name, field_sig) \
-  valid &= check_offset(klass_name, cpp_klass_name :: long_ ## field_name ## _offset, #field_name, field_sig)
-
-  // Boxed primitive objects (java_lang_boxing_object)
-
-  CHECK_OFFSET("java/lang/Boolean",   java_lang_boxing_object, value, "Z");
-  CHECK_OFFSET("java/lang/Character", java_lang_boxing_object, value, "C");
-  CHECK_OFFSET("java/lang/Float",     java_lang_boxing_object, value, "F");
-  CHECK_LONG_OFFSET("java/lang/Double", java_lang_boxing_object, value, "D");
-  CHECK_OFFSET("java/lang/Byte",      java_lang_boxing_object, value, "B");
-  CHECK_OFFSET("java/lang/Short",     java_lang_boxing_object, value, "S");
-  CHECK_OFFSET("java/lang/Integer",   java_lang_boxing_object, value, "I");
-  CHECK_LONG_OFFSET("java/lang/Long", java_lang_boxing_object, value, "J");
-
-  // java.lang.ref.Reference
-
-  CHECK_OFFSET("java/lang/ref/Reference", java_lang_ref_Reference, referent, "Ljava/lang/Object;");
-  CHECK_OFFSET("java/lang/ref/Reference", java_lang_ref_Reference, queue, "Ljava/lang/ref/ReferenceQueue;");
-  CHECK_OFFSET("java/lang/ref/Reference", java_lang_ref_Reference, next, "Ljava/lang/ref/Reference;");
-  // Fake field
-  //CHECK_OFFSET("java/lang/ref/Reference", java_lang_ref_Reference, discovered, "Ljava/lang/ref/Reference;");
-
-  if (!valid) vm_exit_during_initialization("Hard-coded field offset verification failed");
-}
-
-#endif // PRODUCT
-
 int InjectedField::compute_offset() {
   InstanceKlass* ik = InstanceKlass::cast(klass());
   for (AllFieldStream fs(ik); !fs.done(); fs.next()) {
@@ -4627,13 +3899,6 @@ int InjectedField::compute_offset() {
   }
   ResourceMark rm;
   tty->print_cr("Invalid layout of %s at %s/%s%s", ik->external_name(), name()->as_C_string(), signature()->as_C_string(), may_be_java ? " (may_be_java)" : "");
-#ifndef PRODUCT
-  ik->print();
-  tty->print_cr("all fields:");
-  for (AllFieldStream fs(ik); !fs.done(); fs.next()) {
-    tty->print_cr("  name: %s, sig: %s, flags: %08x", fs.name()->as_C_string(), fs.signature()->as_C_string(), fs.access_flags().as_int());
-  }
-#endif //PRODUCT
   vm_exit_during_initialization("Invalid layout of preloaded class: use -Xlog:class+load=info to see the origin of the problem class");
   return -1;
 }

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "runtime/globals.hpp"
 #include "runtime/globals_extension.hpp"
@@ -36,31 +12,11 @@ const char* compilertype2name_tab[compiler_number_of_types] = {
   "jvmci"
 };
 
-#if defined(COMPILER2)
-CompLevel  CompLevel_highest_tier      = CompLevel_full_optimization;  // pure C2 and tiered or JVMCI and tiered
-#elif defined(COMPILER1)
 CompLevel  CompLevel_highest_tier      = CompLevel_simple;             // pure C1 or JVMCI
-#else
-CompLevel  CompLevel_highest_tier      = CompLevel_none;
-#endif
 
-#if defined(TIERED)
-CompLevel  CompLevel_initial_compile   = CompLevel_full_profile;        // tiered
-#elif defined(COMPILER1) || INCLUDE_JVMCI
 CompLevel  CompLevel_initial_compile   = CompLevel_simple;              // pure C1 or JVMCI
-#elif defined(COMPILER2)
-CompLevel  CompLevel_initial_compile   = CompLevel_full_optimization;   // pure C2
-#else
-CompLevel  CompLevel_initial_compile   = CompLevel_none;
-#endif
 
-#if defined(COMPILER2)
-CompMode  Compilation_mode             = CompMode_server;
-#elif defined(COMPILER1)
 CompMode  Compilation_mode             = CompMode_client;
-#else
-CompMode  Compilation_mode             = CompMode_none;
-#endif
 
 // Returns threshold scaled with CompileThresholdScaling
 intx CompilerConfig::scaled_compile_threshold(intx threshold) {
@@ -110,81 +66,6 @@ intx CompilerConfig::scaled_freq_log(intx freq_log, double scale) {
     return log2_intptr(scaled_freq);
   }
 }
-
-#ifdef TIERED
-void set_client_compilation_mode() {
-  Compilation_mode = CompMode_client;
-  CompLevel_highest_tier = CompLevel_simple;
-  CompLevel_initial_compile = CompLevel_simple;
-  FLAG_SET_ERGO(bool, TieredCompilation, false);
-  FLAG_SET_ERGO(bool, ProfileInterpreter, false);
-#if INCLUDE_JVMCI
-  FLAG_SET_ERGO(bool, EnableJVMCI, false);
-  FLAG_SET_ERGO(bool, UseJVMCICompiler, false);
-#endif
-#if INCLUDE_AOT
-  FLAG_SET_ERGO(bool, UseAOT, false);
-#endif
-  if (FLAG_IS_DEFAULT(NeverActAsServerClassMachine)) {
-    FLAG_SET_ERGO(bool, NeverActAsServerClassMachine, true);
-  }
-  if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
-    FLAG_SET_ERGO(uintx, InitialCodeCacheSize, 160*K);
-  }
-  if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
-    FLAG_SET_ERGO(uintx, ReservedCodeCacheSize, 32*M);
-  }
-  if (FLAG_IS_DEFAULT(NonProfiledCodeHeapSize)) {
-    FLAG_SET_ERGO(uintx, NonProfiledCodeHeapSize, 27*M);
-  }
-  if (FLAG_IS_DEFAULT(ProfiledCodeHeapSize)) {
-    FLAG_SET_ERGO(uintx, ProfiledCodeHeapSize, 0);
-  }
-  if (FLAG_IS_DEFAULT(NonNMethodCodeHeapSize)) {
-    FLAG_SET_ERGO(uintx, NonNMethodCodeHeapSize, 5*M);
-  }
-  if (FLAG_IS_DEFAULT(CodeCacheExpansionSize)) {
-    FLAG_SET_ERGO(uintx, CodeCacheExpansionSize, 32*K);
-  }
-  if (FLAG_IS_DEFAULT(MetaspaceSize)) {
-    FLAG_SET_ERGO(size_t, MetaspaceSize, 12*M);
-  }
-  if (FLAG_IS_DEFAULT(MaxRAM)) {
-    // Do not use FLAG_SET_ERGO to update MaxRAM, as this will impact
-    // heap setting done based on available phys_mem (see Arguments::set_heap_size).
-    FLAG_SET_DEFAULT(MaxRAM, 1ULL*G);
-  }
-  if (FLAG_IS_DEFAULT(CompileThreshold)) {
-    FLAG_SET_ERGO(intx, CompileThreshold, 1500);
-  }
-  if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
-    FLAG_SET_ERGO(intx, OnStackReplacePercentage, 933);
-  }
-  if (FLAG_IS_DEFAULT(CICompilerCount)) {
-    FLAG_SET_ERGO(intx, CICompilerCount, 1);
-  }
-}
-
-bool compilation_mode_selected() {
-  return !FLAG_IS_DEFAULT(TieredCompilation) ||
-         !FLAG_IS_DEFAULT(TieredStopAtLevel) ||
-         !FLAG_IS_DEFAULT(UseAOT)
-         JVMCI_ONLY(|| !FLAG_IS_DEFAULT(EnableJVMCI)
-                    || !FLAG_IS_DEFAULT(UseJVMCICompiler));
-}
-
-void select_compilation_mode_ergonomically() {
-#if defined(_WINDOWS) && !defined(_LP64)
-  if (FLAG_IS_DEFAULT(NeverActAsServerClassMachine)) {
-    FLAG_SET_ERGO(bool, NeverActAsServerClassMachine, true);
-  }
-#endif
-  if (NeverActAsServerClassMachine) {
-    set_client_compilation_mode();
-  }
-}
-
-#endif // TIERED
 
 void CompilerConfig::set_tiered_flags() {
   // With tiered, set default policy to SimpleThresholdPolicy, which is 2.
@@ -242,7 +123,6 @@ void CompilerConfig::set_tiered_flags() {
   }
 }
 
-#if INCLUDE_JVMCI
 void set_jvmci_specific_flags() {
   if (UseJVMCICompiler) {
     Compilation_mode = CompMode_server;
@@ -276,12 +156,11 @@ void set_jvmci_specific_flags() {
     }
   }
 }
-#endif // INCLUDE_JVMCI
 
 bool CompilerConfig::check_args_consistency(bool status) {
   // Check lower bounds of the code cache
   // Template Interpreter code is approximately 3X larger in debug builds.
-  uint min_code_cache_size = CodeCacheMinimumUseSpace DEBUG_ONLY(* 3);
+  uint min_code_cache_size = CodeCacheMinimumUseSpace;
   if (ReservedCodeCacheSize < InitialCodeCacheSize) {
     jio_fprintf(defaultStream::error_stream(),
                 "Invalid ReservedCodeCacheSize: %dK. Must be at least InitialCodeCacheSize=%dK.\n",
@@ -305,11 +184,9 @@ bool CompilerConfig::check_args_consistency(bool status) {
     status = false;
   }
 
-#ifdef _LP64
   if (!FLAG_IS_DEFAULT(CICompilerCount) && !FLAG_IS_DEFAULT(CICompilerCountPerCPU) && CICompilerCountPerCPU) {
     warning("The VM option CICompilerCountPerCPU overrides CICompilerCount.");
   }
-#endif
 
   if (BackgroundCompilation && (CompileTheWorld || ReplayCompiles)) {
     if (!FLAG_IS_DEFAULT(BackgroundCompilation)) {
@@ -317,26 +194,6 @@ bool CompilerConfig::check_args_consistency(bool status) {
     }
     FLAG_SET_CMDLINE(bool, BackgroundCompilation, false);
   }
-
-#ifdef COMPILER2
-  if (PostLoopMultiversioning && !RangeCheckElimination) {
-    if (!FLAG_IS_DEFAULT(PostLoopMultiversioning)) {
-      warning("PostLoopMultiversioning disabled because RangeCheckElimination is disabled.");
-    }
-    FLAG_SET_CMDLINE(bool, PostLoopMultiversioning, false);
-  }
-  if (UseCountedLoopSafepoints && LoopStripMiningIter == 0) {
-    if (!FLAG_IS_DEFAULT(UseCountedLoopSafepoints) || !FLAG_IS_DEFAULT(LoopStripMiningIter)) {
-      warning("When counted loop safepoints are enabled, LoopStripMiningIter must be at least 1 (a safepoint every 1 iteration): setting it to 1");
-    }
-    LoopStripMiningIter = 1;
-  } else if (!UseCountedLoopSafepoints && LoopStripMiningIter > 0) {
-    if (!FLAG_IS_DEFAULT(UseCountedLoopSafepoints) || !FLAG_IS_DEFAULT(LoopStripMiningIter)) {
-      warning("Disabling counted safepoints implies no loop strip mining: setting LoopStripMiningIter to 0");
-    }
-    LoopStripMiningIter = 0;
-  }
-#endif // COMPILER2
 
   if (Arguments::is_interpreter_only()) {
     if (UseCompiler) {
@@ -357,7 +214,6 @@ bool CompilerConfig::check_args_consistency(bool status) {
       }
       FLAG_SET_CMDLINE(bool, TieredCompilation, false);
     }
-#if INCLUDE_JVMCI
     if (EnableJVMCI) {
       if (!FLAG_IS_DEFAULT(EnableJVMCI) || !FLAG_IS_DEFAULT(UseJVMCICompiler)) {
         warning("JVMCI Compiler disabled due to -Xint.");
@@ -365,11 +221,8 @@ bool CompilerConfig::check_args_consistency(bool status) {
       FLAG_SET_CMDLINE(bool, EnableJVMCI, false);
       FLAG_SET_CMDLINE(bool, UseJVMCICompiler, false);
     }
-#endif
   } else {
-#if INCLUDE_JVMCI
     status = status && JVMCIGlobals::check_jvmci_flags_are_consistent();
-#endif
   }
   return status;
 }
@@ -379,28 +232,15 @@ void CompilerConfig::ergo_initialize() {
     return; // Nothing to do.
   }
 
-#ifdef TIERED
-  if (!compilation_mode_selected()) {
-    select_compilation_mode_ergonomically();
-  }
-#endif
-
-#if INCLUDE_JVMCI
   // Check that JVMCI compiler supports selested GC.
   // Should be done after GCConfig::initialize() was called.
   JVMCIGlobals::check_jvmci_supported_gc();
   set_jvmci_specific_flags();
-#endif
 
   if (TieredCompilation) {
     set_tiered_flags();
   } else {
     int max_compilation_policy_choice = 1;
-#ifdef COMPILER2
-    if (is_server_compilation_mode_vm()) {
-      max_compilation_policy_choice = 2;
-    }
-#endif
     // Check if the policy is valid.
     if (CompilationPolicyChoice >= max_compilation_policy_choice) {
       vm_exit_during_initialization(
@@ -417,32 +257,4 @@ void CompilerConfig::ergo_initialize() {
     warning("On-stack-replacement requires loop counters; enabling loop counters");
     FLAG_SET_DEFAULT(UseLoopCounter, true);
   }
-
-#ifdef COMPILER2
-  if (!EliminateLocks) {
-    EliminateNestedLocks = false;
-  }
-  if (!Inline) {
-    IncrementalInline = false;
-  }
-#ifndef PRODUCT
-  if (!IncrementalInline) {
-    AlwaysIncrementalInline = false;
-  }
-  if (PrintIdealGraphLevel > 0) {
-    FLAG_SET_ERGO(bool, PrintIdealGraph, true);
-  }
-#endif
-  if (!UseTypeSpeculation && FLAG_IS_DEFAULT(TypeProfileLevel)) {
-    // nothing to use the profiling, turn if off
-    FLAG_SET_DEFAULT(TypeProfileLevel, 0);
-  }
-  if (!FLAG_IS_DEFAULT(OptoLoopAlignment) && FLAG_IS_DEFAULT(MaxLoopPad)) {
-    FLAG_SET_DEFAULT(MaxLoopPad, OptoLoopAlignment-1);
-  }
-  if (FLAG_IS_DEFAULT(LoopStripMiningIterShortLoop)) {
-    // blind guess
-    LoopStripMiningIterShortLoop = LoopStripMiningIter / 10;
-  }
-#endif // COMPILER2
 }

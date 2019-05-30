@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_OBJECTMONITOR_INLINE_HPP
 #define SHARE_VM_RUNTIME_OBJECTMONITOR_INLINE_HPP
 
@@ -37,7 +13,7 @@ inline markOop ObjectMonitor::header() const {
 }
 
 inline volatile markOop* ObjectMonitor::header_addr() {
-  assert((intptr_t)this == (intptr_t)&_header, "sync code expects this");
+  assert((intptr_t)this == (intptr_t)&_header, "sync code expects this");
   return &_header;
 }
 
@@ -58,17 +34,16 @@ inline void* ObjectMonitor::owner() const {
 }
 
 inline void ObjectMonitor::clear() {
-  assert(_header, "Fatal logic error in ObjectMonitor header!");
-  assert(_count == 0, "Fatal logic error in ObjectMonitor count!");
-  assert(_waiters == 0, "Fatal logic error in ObjectMonitor waiters!");
-  assert(_recursions == 0, "Fatal logic error in ObjectMonitor recursions!");
-  assert(_object != NULL, "Fatal logic error in ObjectMonitor object!");
-  assert(_owner == 0, "Fatal logic error in ObjectMonitor owner!");
+  assert(_header, "Fatal logic error in ObjectMonitor header!");
+  assert(_count == 0, "Fatal logic error in ObjectMonitor count!");
+  assert(_waiters == 0, "Fatal logic error in ObjectMonitor waiters!");
+  assert(_recursions == 0, "Fatal logic error in ObjectMonitor recursions!");
+  assert(_object != NULL, "Fatal logic error in ObjectMonitor object!");
+  assert(_owner == 0, "Fatal logic error in ObjectMonitor owner!");
 
   _header = NULL;
   _object = NULL;
 }
-
 
 inline void* ObjectMonitor::object() const {
   return _object;
@@ -86,7 +61,7 @@ inline bool ObjectMonitor::check(TRAPS) {
   if (THREAD != _owner) {
     if (THREAD->is_lock_owned((address) _owner)) {
       _owner = THREAD;  // regain ownership of inflated monitor
-      assert (_recursions == 0, "invariant") ;
+      assert(_recursions == 0, "invariant");
     } else {
       check_slow(THREAD);
       return false;
@@ -94,7 +69,6 @@ inline bool ObjectMonitor::check(TRAPS) {
   }
   return true;
 }
-
 
 // return number of threads contending for this monitor
 inline jint ObjectMonitor::contentions() const {
@@ -109,5 +83,4 @@ inline void ObjectMonitor::set_owner(void* owner) {
   _recursions = 0;
 }
 
-
-#endif // SHARE_VM_RUNTIME_OBJECTMONITOR_INLINE_HPP
+#endif

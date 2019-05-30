@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_PERFDATA_HPP
 #define SHARE_VM_RUNTIME_PERFDATA_HPP
 
@@ -351,7 +327,6 @@ class PerfLongSampleHelper : public CHeapObj<mtInternal> {
 
 typedef PerfLongSampleHelper PerfSampleHelper;
 
-
 /*
  * PerfLong is the base class for the various Long PerfData subtypes.
  * it contains implementation details that are common among its derived
@@ -574,7 +549,6 @@ class PerfStringVariable : public PerfString {
     inline void set_value(const char* val) { set_string(val); }
 };
 
-
 /*
  * The PerfDataList class is a container class for managing lists
  * of PerfData items. The intention of this class is to allow for
@@ -655,7 +629,6 @@ class PerfDataList : public CHeapObj<mtInternal> {
     // iteration over the container.
     inline PerfData* at(int index);
 };
-
 
 /*
  * The PerfDataManager class is responsible for creating PerfData
@@ -751,7 +724,6 @@ class PerfDataManager : AllStatic {
                             int instance);
     static char* name_space(const char* name_space, int instance);
 
-
     // these methods provide the general interface for creating
     // performance data resources. The types of performance data
     // resources can be extended by adding additional create<type>
@@ -766,7 +738,6 @@ class PerfDataManager : AllStatic {
                                                   const char* name,
                                                   PerfData::Units u,
                                                   jlong val, TRAPS);
-
 
     // Variable Types
     static PerfStringVariable* create_string_variable(CounterNS ns,
@@ -801,7 +772,6 @@ class PerfDataManager : AllStatic {
                                                   PerfLongSampleHelper* sh,
                                                   TRAPS);
 
-
     // Counter Types
     static PerfLongCounter* create_long_counter(CounterNS ns, const char* name,
                                                 PerfData::Units u,
@@ -820,7 +790,6 @@ class PerfDataManager : AllStatic {
                                                 PerfData::Units u,
                                                 PerfLongSampleHelper* sh,
                                                 TRAPS);
-
 
     // these creation methods are provided for ease of use. These allow
     // Long performance data types to be created with a shorthand syntax.
@@ -877,15 +846,15 @@ class PerfDataManager : AllStatic {
 };
 
 // Useful macros to create the performance counters
-#define NEWPERFTICKCOUNTER(counter, counter_ns, counter_name)  \
+#define NEWPERFTICKCOUNTER(counter, counter_ns, counter_name) \
   {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
                                              PerfData::U_Ticks,CHECK);}
 
-#define NEWPERFEVENTCOUNTER(counter, counter_ns, counter_name)  \
+#define NEWPERFEVENTCOUNTER(counter, counter_ns, counter_name) \
   {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
                                              PerfData::U_Events,CHECK);}
 
-#define NEWPERFBYTECOUNTER(counter, counter_ns, counter_name)  \
+#define NEWPERFBYTECOUNTER(counter, counter_ns, counter_name) \
   {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
                                              PerfData::U_Bytes,CHECK);}
 
@@ -970,4 +939,4 @@ class PerfTraceTimedEvent : public PerfTraceTime {
     }
 };
 
-#endif // SHARE_VM_RUNTIME_PERFDATA_HPP
+#endif

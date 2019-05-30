@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_SIGNATURE_HPP
 #define SHARE_VM_RUNTIME_SIGNATURE_HPP
 
@@ -116,15 +92,14 @@ class SignatureIterator: public ResourceObj {
   virtual void do_array (int begin, int end) = 0;
 
   static bool is_static(uint64_t fingerprint) {
-    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
+    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
     return fingerprint & is_static_bit;
   }
   static BasicType return_type(uint64_t fingerprint) {
-    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
+    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
     return (BasicType) ((fingerprint >> static_feature_size) & result_feature_mask);
   }
 };
-
 
 // Specialized SignatureIterators: Used to compute signature specific values.
 
@@ -147,7 +122,6 @@ class SignatureTypeNames : public SignatureIterator {
  public:
   SignatureTypeNames(Symbol* signature) : SignatureIterator(signature) {}
 };
-
 
 class SignatureInfo: public SignatureIterator {
  protected:
@@ -178,9 +152,7 @@ class SignatureInfo: public SignatureIterator {
     _size         = 0;
     _return_type  = T_ILLEGAL;
   }
-
 };
-
 
 // Specialized SignatureIterator: Used to compute the argument size.
 
@@ -193,7 +165,6 @@ class ArgumentSizeComputer: public SignatureInfo {
   int       size()                     { lazy_iterate_parameters(); return _size; }
 };
 
-
 class ArgumentCount: public SignatureInfo {
  private:
   void set(int size, BasicType type)   { _size ++; }
@@ -202,7 +173,6 @@ class ArgumentCount: public SignatureInfo {
 
   int       size()                     { lazy_iterate_parameters(); return _size; }
 };
-
 
 // Specialized SignatureIterator: Used to compute the result type.
 
@@ -214,7 +184,6 @@ class ResultTypeFinder: public SignatureInfo {
 
   ResultTypeFinder(Symbol* signature) : SignatureInfo(signature) {}
 };
-
 
 // Fingerprinter computes a unique ID for a given method. The ID
 // is a bitvector characterizing the methods signature (incl. the receiver).
@@ -257,7 +226,7 @@ class Fingerprinter: public SignatureIterator {
       return _fingerprint;
     }
 
-    assert( (int)mh->result_type() <= (int)result_feature_mask, "bad result type");
+    assert( (int)mh->result_type() <= (int)result_feature_mask, "bad result type");
     _fingerprint = mh->result_type();
     _fingerprint <<= static_feature_size;
     if (mh->is_static())  _fingerprint |= 1;
@@ -268,7 +237,6 @@ class Fingerprinter: public SignatureIterator {
     return _fingerprint;
   }
 };
-
 
 // Specialized SignatureIterator: Used for native call purposes
 
@@ -285,19 +253,11 @@ class NativeSignatureIterator: public SignatureIterator {
   void do_bool  ()                     { pass_int();    _jni_offset++; _offset++;       }
   void do_char  ()                     { pass_int();    _jni_offset++; _offset++;       }
   void do_float ()                     { pass_float();  _jni_offset++; _offset++;       }
-#ifdef _LP64
   void do_double()                     { pass_double(); _jni_offset++; _offset += 2;    }
-#else
-  void do_double()                     { pass_double(); _jni_offset += 2; _offset += 2; }
-#endif
   void do_byte  ()                     { pass_int();    _jni_offset++; _offset++;       }
   void do_short ()                     { pass_int();    _jni_offset++; _offset++;       }
   void do_int   ()                     { pass_int();    _jni_offset++; _offset++;       }
-#ifdef _LP64
   void do_long  ()                     { pass_long();   _jni_offset++; _offset += 2;    }
-#else
-  void do_long  ()                     { pass_long();   _jni_offset += 2; _offset += 2; }
-#endif
   void do_void  ()                     { ShouldNotReachHere();                               }
   void do_object(int begin, int end)   { pass_object(); _jni_offset++; _offset++;        }
   void do_array (int begin, int end)   { pass_object(); _jni_offset++; _offset++;        }
@@ -312,11 +272,7 @@ class NativeSignatureIterator: public SignatureIterator {
   virtual void pass_long()             = 0;
   virtual void pass_object()           = 0;
   virtual void pass_float()            = 0;
-#ifdef _LP64
   virtual void pass_double()           = 0;
-#else
-  virtual void pass_double()           { pass_long(); }  // may be same as long
-#endif
 
   NativeSignatureIterator(const methodHandle& method) : SignatureIterator(method->signature()) {
     _method = method;
@@ -340,7 +296,6 @@ class NativeSignatureIterator: public SignatureIterator {
   void iterate() { iterate(Fingerprinter(method()).fingerprint());
   }
 
-
   // Optimized path if we have the bitvector form of signature
   void iterate( uint64_t fingerprint ) {
 
@@ -352,7 +307,6 @@ class NativeSignatureIterator: public SignatureIterator {
     SignatureIterator::iterate_parameters( fingerprint );
   }
 };
-
 
 // Handy stream for iterating over signature
 
@@ -428,4 +382,4 @@ class SignatureVerifier : public StackObj {
     static bool invalid_name_char(char);
 };
 
-#endif // SHARE_VM_RUNTIME_SIGNATURE_HPP
+#endif

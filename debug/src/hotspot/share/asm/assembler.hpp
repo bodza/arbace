@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_ASM_ASSEMBLER_HPP
 #define SHARE_VM_ASM_ASSEMBLER_HPP
 
@@ -104,23 +80,18 @@ class Label {
    * After binding, be sure 'patch_instructions' is called later to link
    */
   void bind_loc(int loc) {
-    assert(loc >= 0, "illegal locator");
-    assert(_loc == -1, "already bound");
+    assert(loc >= 0, "illegal locator");
+    assert(_loc == -1, "already bound");
     _loc = loc;
   }
   void bind_loc(int pos, int sect) { bind_loc(CodeBuffer::locator(pos, sect)); }
-
-#ifndef PRODUCT
-  // Iterates over all unresolved instructions for printing
-  void print_instructions(MacroAssembler* masm) const;
-#endif // PRODUCT
 
   /**
    * Returns the position of the the Label in the code buffer
    * The position is a 'locator', which encodes both offset and section.
    */
   int loc() const {
-    assert(_loc >= 0, "unbound label");
+    assert(_loc >= 0, "unbound label");
     return _loc;
   }
   int loc_pos()  const { return CodeBuffer::locator_pos(loc()); }
@@ -161,7 +132,7 @@ class Label {
   }
 
   ~Label() {
-    assert(is_bound() || is_unused(), "Label was never bound to a location, but it was used as a jmp target");
+    assert(is_bound() || is_unused(), "Label was never bound to a location, but it was used as a jmp target");
   }
 
   void reset() {
@@ -189,8 +160,12 @@ class RegisterOrConstant {
   RegisterOrConstant(Register r): _r(r), _c(0) {}
   RegisterOrConstant(intptr_t c): _r(noreg), _c(c) {}
 
-  Register as_register() const { assert(is_register(),""); return _r; }
-  intptr_t as_constant() const { assert(is_constant(),""); return _c; }
+  Register as_register() const {
+    assert(is_register(),"");
+    return _r; }
+  intptr_t as_constant() const {
+    assert(is_constant(),"");
+    return _c; }
 
   Register register_or_noreg() const { return _r; }
   intptr_t constant_or_zero() const  { return _c; }
@@ -229,7 +204,7 @@ class AbstractAssembler : public ResourceObj  {
 
    public:
     InstructionMark(AbstractAssembler* assm) : _assm(assm) {
-      assert(assm->inst_mark() == NULL, "overlapping instructions");
+      assert(assm->inst_mark() == NULL, "overlapping instructions");
       _assm->set_inst_mark();
     }
     ~InstructionMark() {
@@ -237,38 +212,11 @@ class AbstractAssembler : public ResourceObj  {
     }
   };
   friend class InstructionMark;
-#ifdef ASSERT
-  // Make it return true on platforms which need to verify
-  // instruction boundaries for some operations.
-  static bool pd_check_instruction_mark();
-
-  // Add delta to short branch distance to verify that it still fit into imm8.
-  int _short_branch_delta;
-
-  int  short_branch_delta() const { return _short_branch_delta; }
-  void set_short_branch_delta()   { _short_branch_delta = 32; }
-  void clear_short_branch_delta() { _short_branch_delta = 0; }
-
-  class ShortBranchVerifier: public StackObj {
-   private:
-    AbstractAssembler* _assm;
-
-   public:
-    ShortBranchVerifier(AbstractAssembler* assm) : _assm(assm) {
-      assert(assm->short_branch_delta() == 0, "overlapping instructions");
-      _assm->set_short_branch_delta();
-    }
-    ~ShortBranchVerifier() {
-      _assm->clear_short_branch_delta();
-    }
-  };
-#else
   // Dummy in product.
   class ShortBranchVerifier: public StackObj {
    public:
     ShortBranchVerifier(AbstractAssembler* assm) {}
   };
-#endif
 
  public:
 
@@ -327,9 +275,7 @@ class AbstractAssembler : public ResourceObj  {
 
   // Constants in code
   void relocate(RelocationHolder const& rspec, int format = 0) {
-    assert(!pd_check_instruction_mark()
-        || inst_mark() == NULL || inst_mark() == code_section()->end(),
-        "call relocate() between instructions");
+    assert(!pd_check_instruction_mark() || inst_mark() == NULL || inst_mark() == code_section()->end(), "call relocate() between instructions");
     code_section()->relocate(code_section()->end(), rspec, format);
   }
   void relocate(   relocInfo::relocType rtype, int format = 0) {
@@ -439,7 +385,6 @@ class AbstractAssembler : public ResourceObj  {
   void generate_stack_overflow_check( int frame_size_in_bytes );
   virtual void bang_stack_with_offset(int offset) = 0;
 
-
   /**
    * A platform-dependent method to patch a jump instruction that refers
    * to this label.
@@ -448,9 +393,8 @@ class AbstractAssembler : public ResourceObj  {
    * @param masm the assembler which generated the branch
    */
   void pd_patch_instruction(address branch, address target);
-
 };
 
 #include CPU_HEADER(assembler)
 
-#endif // SHARE_VM_ASM_ASSEMBLER_HPP
+#endif

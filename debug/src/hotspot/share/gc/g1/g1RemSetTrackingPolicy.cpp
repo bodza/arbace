@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/collectionSetChooser.hpp"
 #include "gc/g1/g1RemSetTrackingPolicy.hpp"
@@ -80,14 +56,14 @@ static void print_before_rebuild(HeapRegion* r, bool selected_for_rebuild, size_
 }
 
 bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool is_live) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
-  assert(r->is_humongous(), "Region %u should be humongous", r->hrm_index());
+  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
+  assert(r->is_humongous(), "Region %u should be humongous", r->hrm_index());
 
   if (r->is_archive()) {
     return false;
   }
 
-  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
+  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
 
   bool selected_for_rebuild = false;
   // For humongous regions, to be of interest for rebuilding the remembered set the following must apply:
@@ -105,8 +81,8 @@ bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool
 }
 
 bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_bytes) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
-  assert(!r->is_humongous(), "Region %u is humongous", r->hrm_index());
+  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
+  assert(!r->is_humongous(), "Region %u is humongous", r->hrm_index());
 
   // Only consider updating the remembered set for old gen regions - excluding archive regions
   // which never move (but are "Old" regions).
@@ -114,7 +90,7 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
     return false;
   }
 
-  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
+  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
 
   size_t between_ntams_and_top = (r->top() - r->next_top_at_mark_start()) * HeapWordSize;
   size_t total_live_bytes = live_bytes + between_ntams_and_top;
@@ -139,7 +115,7 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
 }
 
 void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
 
   if (r->is_old_or_humongous()) {
     if (r->rem_set()->is_updating()) {
@@ -155,8 +131,7 @@ void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
       uint const region_idx = r->hrm_index();
       for (uint j = region_idx; j < (region_idx + size_in_regions); j++) {
         HeapRegion* const cur = g1h->region_at(j);
-        assert(!cur->is_continues_humongous() || cur->rem_set()->is_empty(),
-               "Continues humongous region %u remset should be empty", j);
+        assert(!cur->is_continues_humongous() || cur->rem_set()->is_empty(), "Continues humongous region %u remset should be empty", j);
         cur->rem_set()->clear_locked(true /* only_cardset */);
       }
     }

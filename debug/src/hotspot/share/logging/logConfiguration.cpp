@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "logging/log.hpp"
@@ -56,26 +33,16 @@ class ConfigurationLock : public StackObj {
  private:
   // Semaphore used as lock
   static Semaphore _semaphore;
-  debug_only(static intx _locking_thread_id;)
  public:
   ConfigurationLock() {
     _semaphore.wait();
-    debug_only(_locking_thread_id = os::current_thread_id());
   }
   ~ConfigurationLock() {
-    debug_only(_locking_thread_id = -1);
     _semaphore.signal();
   }
-  debug_only(static bool current_thread_has_lock();)
 };
 
 Semaphore ConfigurationLock::_semaphore(1);
-#ifdef ASSERT
-intx ConfigurationLock::_locking_thread_id = -1;
-bool ConfigurationLock::current_thread_has_lock() {
-  return _locking_thread_id == os::current_thread_id();
-}
-#endif
 
 void LogConfiguration::post_initialize() {
   // Reset the reconfigured status of all outputs
@@ -103,7 +70,7 @@ void LogConfiguration::post_initialize() {
 void LogConfiguration::initialize(jlong vm_start_time) {
   LogFileOutput::set_file_name_parameters(vm_start_time);
   LogDecorations::initialize(vm_start_time);
-  assert(_outputs == NULL, "Should not initialize _outputs before this function, initialize called twice?");
+  assert(_outputs == NULL, "Should not initialize _outputs before this function, initialize called twice?");
   _outputs = NEW_C_HEAP_ARRAY(LogOutput*, 2, mtLogging);
   _outputs[0] = &StdoutLog;
   _outputs[1] = &StderrLog;
@@ -162,7 +129,7 @@ static bool normalize_output_name(const char* full_name, char* buffer, size_t le
   }
 
   int ret = jio_snprintf(buffer, len, "%.*s%.*s", prefix_len, prefix, name_len, name);
-  assert(ret > 0, "buffer issue");
+  assert(ret > 0, "buffer issue");
   return true;
 }
 
@@ -203,9 +170,7 @@ size_t LogConfiguration::add_output(LogOutput* output) {
 }
 
 void LogConfiguration::delete_output(size_t idx) {
-  assert(idx > 1 && idx < _n_outputs,
-         "idx must be in range 1 < idx < _n_outputs, but idx = " SIZE_FORMAT
-         " and _n_outputs = " SIZE_FORMAT, idx, _n_outputs);
+  assert(idx > 1 && idx < _n_outputs, "idx must be in range 1 < idx < _n_outputs, but idx = " SIZE_FORMAT " and _n_outputs = " SIZE_FORMAT, idx, _n_outputs);
   LogOutput* output = _outputs[idx];
   // Swap places with the last output and shrink the array
   _outputs[idx] = _outputs[--_n_outputs];
@@ -214,8 +179,8 @@ void LogConfiguration::delete_output(size_t idx) {
 }
 
 void LogConfiguration::configure_output(size_t idx, const LogSelectionList& selections, const LogDecorators& decorators) {
-  assert(ConfigurationLock::current_thread_has_lock(), "Must hold configuration lock to call this function.");
-  assert(idx < _n_outputs, "Invalid index, idx = " SIZE_FORMAT " and _n_outputs = " SIZE_FORMAT, idx, _n_outputs);
+  assert(ConfigurationLock::current_thread_has_lock(), "Must hold configuration lock to call this function.");
+  assert(idx < _n_outputs, "Invalid index, idx = " SIZE_FORMAT " and _n_outputs = " SIZE_FORMAT, idx, _n_outputs);
   LogOutput* output = _outputs[idx];
 
   output->_reconfigured = true;
@@ -270,11 +235,11 @@ void LogConfiguration::configure_output(size_t idx, const LogSelectionList& sele
   }
 
   output->update_config_string(on_level);
-  assert(strlen(output->config_string()) > 0, "should always have a config description");
+  assert(strlen(output->config_string()) > 0, "should always have a config description");
 }
 
 void LogConfiguration::disable_output(size_t idx) {
-  assert(idx < _n_outputs, "invalid index: " SIZE_FORMAT " (_n_outputs: " SIZE_FORMAT ")", idx, _n_outputs);
+  assert(idx < _n_outputs, "invalid index: " SIZE_FORMAT " (_n_outputs: " SIZE_FORMAT ")", idx, _n_outputs);
   LogOutput* out = _outputs[idx];
 
   // Remove the output from all tagsets.
@@ -308,17 +273,15 @@ void LogConfiguration::configure_stdout(LogLevelType level, int exact_match, ...
     LogTagType tag = static_cast<LogTagType>(va_arg(ap, int));
     tags[i] = tag;
     if (tag == LogTag::__NO_TAG) {
-      assert(i > 0, "Must specify at least one tag!");
+      assert(i > 0, "Must specify at least one tag!");
       break;
     }
   }
-  assert(i < LogTag::MaxTags || static_cast<LogTagType>(va_arg(ap, int)) == LogTag::__NO_TAG,
-         "Too many tags specified! Can only have up to " SIZE_FORMAT " tags in a tag set.", LogTag::MaxTags);
+  assert(i < LogTag::MaxTags || static_cast<LogTagType>(va_arg(ap, int)) == LogTag::__NO_TAG, "Too many tags specified! Can only have up to " SIZE_FORMAT " tags in a tag set.", LogTag::MaxTags);
   va_end(ap);
 
   LogSelection selection(tags, !exact_match, level);
-  assert(selection.tag_sets_selected() > 0,
-         "configure_stdout() called with invalid/non-existing log selection");
+  assert(selection.tag_sets_selected() > 0, "configure_stdout() called with invalid/non-existing log selection");
   LogSelectionList list(selection);
 
   // Apply configuration to stdout (output #0), with the same decorators as before.
@@ -374,16 +337,14 @@ bool LogConfiguration::parse_command_line_arguments(const char* opts) {
     Log(logging) log;
     char* start = errbuf;
     char* end = strchr(start, '\n');
-    assert(end != NULL, "line must end with newline '%s'", start);
+    assert(end != NULL, "line must end with newline '%s'", start);
     do {
-      assert(start < errbuf + sizeof(errbuf) &&
-             end < errbuf + sizeof(errbuf),
-             "buffer overflow");
+      assert(start < errbuf + sizeof(errbuf) && end < errbuf + sizeof(errbuf), "buffer overflow");
       *end = '\0';
       log.write(level, "%s", start);
       start = end + 1;
       end = strchr(start, '\n');
-      assert(end != NULL || *start == '\0', "line must end with newline '%s'", start);
+      assert(end != NULL || *start == '\0', "line must end with newline '%s'", start);
     } while (end != NULL);
   }
 
@@ -396,7 +357,7 @@ bool LogConfiguration::parse_log_arguments(const char* outputstr,
                                            const char* decoratorstr,
                                            const char* output_options,
                                            outputStream* errstream) {
-  assert(errstream != NULL, "errstream can not be NULL");
+  assert(errstream != NULL, "errstream can not be NULL");
   if (outputstr == NULL || strlen(outputstr) == 0) {
     outputstr = "stdout";
   }
@@ -580,7 +541,7 @@ void LogConfiguration::rotate_all_outputs() {
 }
 
 void LogConfiguration::register_update_listener(UpdateListenerFunction cb) {
-  assert(cb != NULL, "Should not register NULL as listener");
+  assert(cb != NULL, "Should not register NULL as listener");
   ConfigurationLock cl;
   size_t idx = _n_listener_callbacks++;
   _listener_callbacks = REALLOC_C_HEAP_ARRAY(UpdateListenerFunction,
@@ -591,7 +552,7 @@ void LogConfiguration::register_update_listener(UpdateListenerFunction cb) {
 }
 
 void LogConfiguration::notify_update_listeners() {
-  assert(ConfigurationLock::current_thread_has_lock(), "notify_update_listeners must be called in ConfigurationLock scope (lock held)");
+  assert(ConfigurationLock::current_thread_has_lock(), "notify_update_listeners must be called in ConfigurationLock scope (lock held)");
   for (size_t i = 0; i < _n_listener_callbacks; i++) {
     _listener_callbacks[i]();
   }

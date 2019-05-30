@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_MACROS_HPP
 #define SHARE_VM_UTILITIES_MACROS_HPP
 
@@ -46,322 +22,13 @@
 #define PASTE_TOKENS_AUX(x, y) PASTE_TOKENS_AUX2(x, y)
 #define PASTE_TOKENS_AUX2(x, y) x ## y
 
-// -DINCLUDE_<something>=0 | 1 can be specified on the command line to include
-// or exclude functionality.
-
-#ifndef INCLUDE_JVMTI
-#define INCLUDE_JVMTI 1
-#endif  // INCLUDE_JVMTI
-
-#if INCLUDE_JVMTI
-#define JVMTI_ONLY(x) x
-#define NOT_JVMTI(x)
-#define NOT_JVMTI_RETURN
-#define NOT_JVMTI_RETURN_(code) /* next token must be ; */
-#else
-#define JVMTI_ONLY(x)
-#define NOT_JVMTI(x) x
-#define NOT_JVMTI_RETURN { return; }
-#define NOT_JVMTI_RETURN_(code) { return code; }
-#endif // INCLUDE_JVMTI
-
-#ifndef INCLUDE_VM_STRUCTS
-#define INCLUDE_VM_STRUCTS 1
-#endif
-
-#if INCLUDE_VM_STRUCTS
-#define NOT_VM_STRUCTS_RETURN        /* next token must be ; */
-#define NOT_VM_STRUCTS_RETURN_(code) /* next token must be ; */
-#else
-#define NOT_VM_STRUCTS_RETURN           {}
-#define NOT_VM_STRUCTS_RETURN_(code) { return code; }
-#endif // INCLUDE_VM_STRUCTS
-
-#ifndef INCLUDE_JNI_CHECK
-#define INCLUDE_JNI_CHECK 1
-#endif
-
-#if INCLUDE_JNI_CHECK
-#define NOT_JNI_CHECK_RETURN        /* next token must be ; */
-#define NOT_JNI_CHECK_RETURN_(code) /* next token must be ; */
-#else
-#define NOT_JNI_CHECK_RETURN            {}
-#define NOT_JNI_CHECK_RETURN_(code) { return code; }
-#endif // INCLUDE_JNI_CHECK
-
-#ifndef INCLUDE_SERVICES
-#define INCLUDE_SERVICES 1
-#endif
-
-#if INCLUDE_SERVICES
-#define NOT_SERVICES_RETURN        /* next token must be ; */
-#define NOT_SERVICES_RETURN_(code) /* next token must be ; */
-#else
-#define NOT_SERVICES_RETURN             {}
-#define NOT_SERVICES_RETURN_(code) { return code; }
-#endif // INCLUDE_SERVICES
-
-#ifndef INCLUDE_CDS
-#define INCLUDE_CDS 1
-#endif
-
-#if INCLUDE_CDS
-#define CDS_ONLY(x) x
-#define NOT_CDS(x)
-#define NOT_CDS_RETURN        /* next token must be ; */
-#define NOT_CDS_RETURN0       /* next token must be ; */
-#define NOT_CDS_RETURN_(code) /* next token must be ; */
-#else
-#define CDS_ONLY(x)
-#define NOT_CDS(x) x
-#define NOT_CDS_RETURN        {}
-#define NOT_CDS_RETURN0       { return 0; }
-#define NOT_CDS_RETURN_(code) { return code; }
-#endif // INCLUDE_CDS
-
-#ifndef INCLUDE_MANAGEMENT
-#define INCLUDE_MANAGEMENT 1
-#endif // INCLUDE_MANAGEMENT
-
-#if INCLUDE_MANAGEMENT
-#define NOT_MANAGEMENT_RETURN        /* next token must be ; */
-#define NOT_MANAGEMENT_RETURN_(code) /* next token must be ; */
-#else
-#define NOT_MANAGEMENT_RETURN        {}
-#define NOT_MANAGEMENT_RETURN_(code) { return code; }
-#endif // INCLUDE_MANAGEMENT
-
-#ifndef INCLUDE_CMSGC
-#define INCLUDE_CMSGC 1
-#endif // INCLUDE_CMSGC
-
-#if INCLUDE_CMSGC
-#define CMSGC_ONLY(x) x
-#define CMSGC_ONLY_ARG(arg) arg,
-#define NOT_CMSGC(x)
-#define NOT_CMSGC_RETURN        /* next token must be ; */
-#define NOT_CMSGC_RETURN_(code) /* next token must be ; */
-#else
-#define CMSGC_ONLY(x)
-#define CMSGC_ONLY_ARG(x)
-#define NOT_CMSGC(x) x
-#define NOT_CMSGC_RETURN        {}
-#define NOT_CMSGC_RETURN_(code) { return code; }
-#endif // INCLUDE_CMSGC
-
-#ifndef INCLUDE_EPSILONGC
-#define INCLUDE_EPSILONGC 1
-#endif // INCLUDE_EPSILONGC
-
-#if INCLUDE_EPSILONGC
-#define EPSILONGC_ONLY(x) x
-#define EPSILONGC_ONLY_ARG(arg) arg,
-#define NOT_EPSILONGC(x)
-#define NOT_EPSILONGC_RETURN        /* next token must be ; */
-#define NOT_EPSILONGC_RETURN_(code) /* next token must be ; */
-#else
-#define EPSILONGC_ONLY(x)
-#define EPSILONGC_ONLY_ARG(arg)
-#define NOT_EPSILONGC(x) x
-#define NOT_EPSILONGC_RETURN        {}
-#define NOT_EPSILONGC_RETURN_(code) { return code; }
-#endif // INCLUDE_EPSILONGC
-
-#ifndef INCLUDE_G1GC
-#define INCLUDE_G1GC 1
-#endif // INCLUDE_G1GC
-
-#if INCLUDE_G1GC
-#define G1GC_ONLY(x) x
-#define G1GC_ONLY_ARG(arg) arg,
-#define NOT_G1GC(x)
-#define NOT_G1GC_RETURN        /* next token must be ; */
-#define NOT_G1GC_RETURN_(code) /* next token must be ; */
-#else
-#define G1GC_ONLY(x)
-#define G1GC_ONLY_ARG(arg)
-#define NOT_G1GC(x) x
-#define NOT_G1GC_RETURN        {}
-#define NOT_G1GC_RETURN_(code) { return code; }
-#endif // INCLUDE_G1GC
-
-#ifndef INCLUDE_PARALLELGC
-#define INCLUDE_PARALLELGC 1
-#endif // INCLUDE_PARALLELGC
-
-#if INCLUDE_PARALLELGC
-#define PARALLELGC_ONLY(x) x
-#define PARALLELGC_ONLY_ARG(arg) arg,
-#define NOT_PARALLELGC(x)
-#define NOT_PARALLELGC_RETURN        /* next token must be ; */
-#define NOT_PARALLELGC_RETURN_(code) /* next token must be ; */
-#else
-#define PARALLELGC_ONLY(x)
-#define PARALLELGC_ONLY_ARG(arg)
-#define NOT_PARALLELGC(x) x
-#define NOT_PARALLELGC_RETURN        {}
-#define NOT_PARALLELGC_RETURN_(code) { return code; }
-#endif // INCLUDE_PARALLELGC
-
-#ifndef INCLUDE_SERIALGC
-#define INCLUDE_SERIALGC 1
-#endif // INCLUDE_SERIALGC
-
-#if INCLUDE_SERIALGC
-#define SERIALGC_ONLY(x) x
-#define SERIALGC_ONLY_ARG(arg) arg,
-#define NOT_SERIALGC(x)
-#define NOT_SERIALGC_RETURN        /* next token must be ; */
-#define NOT_SERIALGC_RETURN_(code) /* next token must be ; */
-#else
-#define SERIALGC_ONLY(x)
-#define SERIALGC_ONLY_ARG(arg)
-#define NOT_SERIALGC(x) x
-#define NOT_SERIALGC_RETURN        {}
-#define NOT_SERIALGC_RETURN_(code) { return code; }
-#endif // INCLUDE_SERIALGC
-
-#ifndef INCLUDE_ZGC
-#define INCLUDE_ZGC 1
-#endif // INCLUDE_ZGC
-
-#if INCLUDE_ZGC
-#define ZGC_ONLY(x) x
-#define ZGC_ONLY_ARG(arg) arg,
-#define NOT_ZGC(x)
-#define NOT_ZGC_RETURN        /* next token must be ; */
-#define NOT_ZGC_RETURN_(code) /* next token must be ; */
-#else
-#define ZGC_ONLY(x)
-#define ZGC_ONLY_ARG(arg)
-#define NOT_ZGC(x) x
-#define NOT_ZGC_RETURN        {}
-#define NOT_ZGC_RETURN_(code) { return code; }
-#endif // INCLUDE_ZGC
-
-#ifndef INCLUDE_NMT
-#define INCLUDE_NMT 1
-#endif // INCLUDE_NMT
-
-#if INCLUDE_NMT
-#define NOT_NMT_RETURN        /* next token must be ; */
-#define NOT_NMT_RETURN_(code) /* next token must be ; */
-#define NMT_ONLY(x) x
-#define NOT_NMT(x)
-#else
-#define NOT_NMT_RETURN        {}
-#define NOT_NMT_RETURN_(code) { return code; }
-#define NMT_ONLY(x)
-#define NOT_NMT(x) x
-#endif // INCLUDE_NMT
-
-#ifndef INCLUDE_JFR
-#define INCLUDE_JFR 1
-#endif
-
-#if INCLUDE_JFR
-#define JFR_ONLY(code) code
-#else
-#define JFR_ONLY(code)
-#endif
-
-#ifndef INCLUDE_JVMCI
-#define INCLUDE_JVMCI 1
-#endif
-
-#ifndef INCLUDE_AOT
-#define INCLUDE_AOT 1
-#endif
-
-#if INCLUDE_AOT && !INCLUDE_JVMCI
-#  error "Must have JVMCI for AOT"
-#endif
-
-#if INCLUDE_JVMCI
-#define JVMCI_ONLY(code) code
-#define NOT_JVMCI(code)
-#define NOT_JVMCI_RETURN /* next token must be ; */
-#else
-#define JVMCI_ONLY(code)
-#define NOT_JVMCI(code) code
-#define NOT_JVMCI_RETURN {}
-#endif // INCLUDE_JVMCI
-
-#if INCLUDE_AOT
-#define AOT_ONLY(code) code
-#define NOT_AOT(code)
-#define NOT_AOT_RETURN /* next token must be ; */
-#else
-#define AOT_ONLY(code)
-#define NOT_AOT(code) code
-#define NOT_AOT_RETURN {}
-#endif // INCLUDE_AOT
-
-// COMPILER1 variant
-#ifdef COMPILER1
-#ifdef COMPILER2
-  #define TIERED
-#endif
-#define COMPILER1_PRESENT(code) code
-#define NOT_COMPILER1(code)
-#else // COMPILER1
-#define COMPILER1_PRESENT(code)
-#define NOT_COMPILER1(code) code
-#endif // COMPILER1
-
-// COMPILER2 variant
-#ifdef COMPILER2
-#define COMPILER2_PRESENT(code) code
-#define NOT_COMPILER2(code)
-#else // COMPILER2
-#define COMPILER2_PRESENT(code)
-#define NOT_COMPILER2(code) code
-#endif // COMPILER2
-
-// COMPILER2 or JVMCI
-#if defined(COMPILER2) || INCLUDE_JVMCI
-#define COMPILER2_OR_JVMCI 1
-#define COMPILER2_OR_JVMCI_PRESENT(code) code
-#define NOT_COMPILER2_OR_JVMCI(code)
-#else
-#define COMPILER2_OR_JVMCI 0
-#define COMPILER2_OR_JVMCI_PRESENT(code)
-#define NOT_COMPILER2_OR_JVMCI(code) code
-#endif
-
-#ifdef TIERED
-#define TIERED_ONLY(code) code
-#define NOT_TIERED(code)
-#else // TIERED
-#define TIERED_ONLY(code)
-#define NOT_TIERED(code) code
-#endif // TIERED
-
-
-// PRODUCT variant
-#ifdef PRODUCT
-#define PRODUCT_ONLY(code) code
-#define NOT_PRODUCT(code)
-#define NOT_PRODUCT_ARG(arg)
-#define PRODUCT_RETURN  {}
-#define PRODUCT_RETURN0 { return 0; }
-#define PRODUCT_RETURN_(code) { code }
-#else // PRODUCT
-#define PRODUCT_ONLY(code)
-#define NOT_PRODUCT(code) code
-#define NOT_PRODUCT_ARG(arg) arg,
-#define PRODUCT_RETURN  /*next token must be ;*/
-#define PRODUCT_RETURN0 /*next token must be ;*/
-#define PRODUCT_RETURN_(code)  /*next token must be ;*/
-#endif // PRODUCT
-
 #ifdef CHECK_UNHANDLED_OOPS
 #define CHECK_UNHANDLED_OOPS_ONLY(code) code
 #define NOT_CHECK_UNHANDLED_OOPS(code)
 #else
 #define CHECK_UNHANDLED_OOPS_ONLY(code)
 #define NOT_CHECK_UNHANDLED_OOPS(code)  code
-#endif // CHECK_UNHANDLED_OOPS
+#endif
 
 #ifdef CC_INTERP
 #define CC_INTERP_ONLY(code) code
@@ -369,28 +36,7 @@
 #else
 #define CC_INTERP_ONLY(code)
 #define NOT_CC_INTERP(code) code
-#endif // CC_INTERP
-
-#ifdef ASSERT
-#define DEBUG_ONLY(code) code
-#define NOT_DEBUG(code)
-#define NOT_DEBUG_RETURN  /*next token must be ;*/
-// Historical.
-#define debug_only(code) code
-#else // ASSERT
-#define DEBUG_ONLY(code)
-#define NOT_DEBUG(code) code
-#define NOT_DEBUG_RETURN {}
-#define debug_only(code)
-#endif // ASSERT
-
-#ifdef  _LP64
-#define LP64_ONLY(code) code
-#define NOT_LP64(code)
-#else  // !_LP64
-#define LP64_ONLY(code)
-#define NOT_LP64(code) code
-#endif // _LP64
+#endif
 
 #ifdef LINUX
 #define LINUX_ONLY(code) code
@@ -416,31 +62,15 @@
 #define NOT_SOLARIS(code) code
 #endif
 
-#ifdef _WINDOWS
-#define WINDOWS_ONLY(code) code
-#define NOT_WINDOWS(code)
-#else
-#define WINDOWS_ONLY(code)
-#define NOT_WINDOWS(code) code
-#endif
-
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #ifndef BSD
 #define BSD
-#endif // BSD defined in <sys/param.h>
+#endif
 #define BSD_ONLY(code) code
 #define NOT_BSD(code)
 #else
 #define BSD_ONLY(code)
 #define NOT_BSD(code) code
-#endif
-
-#ifdef _WIN64
-#define WIN64_ONLY(code) code
-#define NOT_WIN64(code)
-#else
-#define WIN64_ONLY(code)
-#define NOT_WIN64(code) code
 #endif
 
 #if defined(ZERO)
@@ -473,7 +103,7 @@
 // At least on AIX 7.1 this is a real problem because 'systemcfg.h' is indirectly included
 // by 'pthread.h' and other common system headers.
 
-#if defined(IA64) && !defined(AIX)
+#if defined(IA64)
 #define IA64_ONLY(code) code
 #define NOT_IA64(code)
 #else
@@ -620,27 +250,13 @@
 //  );
 
 #ifdef VM_LITTLE_ENDIAN
-  #define ATOMIC_SHORT_PAIR(atomic_decl, non_atomic_decl)  \
-    non_atomic_decl;                                       \
+  #define ATOMIC_SHORT_PAIR(atomic_decl, non_atomic_decl) \
+    non_atomic_decl; \
     atomic_decl
 #else
-  #define ATOMIC_SHORT_PAIR(atomic_decl, non_atomic_decl)  \
-    atomic_decl;                                           \
+  #define ATOMIC_SHORT_PAIR(atomic_decl, non_atomic_decl) \
+    atomic_decl; \
     non_atomic_decl
 #endif
 
-#if INCLUDE_CDS && INCLUDE_G1GC && defined(_LP64) && !defined(_WINDOWS)
-#define INCLUDE_CDS_JAVA_HEAP 1
-#define CDS_JAVA_HEAP_ONLY(x) x
-#define NOT_CDS_JAVA_HEAP(x)
-#define NOT_CDS_JAVA_HEAP_RETURN
-#define NOT_CDS_JAVA_HEAP_RETURN_(code)
-#else
-#define INCLUDE_CDS_JAVA_HEAP 0
-#define CDS_JAVA_HEAP_ONLY(x)
-#define NOT_CDS_JAVA_HEAP(x) x
-#define NOT_CDS_JAVA_HEAP_RETURN        {}
-#define NOT_CDS_JAVA_HEAP_RETURN_(code) { return code; }
 #endif
-
-#endif // SHARE_VM_UTILITIES_MACROS_HPP

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_JAVACALLS_HPP
 #define SHARE_VM_RUNTIME_JAVACALLS_HPP
 
@@ -69,9 +45,7 @@ class JavaCallWrapper: StackObj {
   void             oops_do(OopClosure* f);
 
   bool             is_first_frame() const   { return _anchor.last_Java_sp() == NULL; }
-
 };
-
 
 // Encapsulates arguments to a JavaCall (faster, safer, and more convenient than using var-args)
 class JavaCallArguments : public StackObj {
@@ -88,7 +62,7 @@ class JavaCallArguments : public StackObj {
   int         _size;
   int         _max_size;
   bool        _start_at_zero;      // Support late setting of receiver
-  JVMCI_ONLY(nmethod*    _alternative_target;) // Nmethod that should be called instead of normal target
+  nmethod*    _alternative_target; // Nmethod that should be called instead of normal target
 
   void initialize() {
     // Starts at first element to support set_receiver.
@@ -98,7 +72,7 @@ class JavaCallArguments : public StackObj {
     _max_size = _default_size;
     _size = 0;
     _start_at_zero = false;
-    JVMCI_ONLY(_alternative_target = NULL;)
+    _alternative_target = NULL;
   }
 
   // Helper for push_oop and the like.  The value argument is a
@@ -138,13 +112,12 @@ class JavaCallArguments : public StackObj {
       _max_size = max_size;
       _size = 0;
       _start_at_zero = false;
-      JVMCI_ONLY(_alternative_target = NULL;)
+      _alternative_target = NULL;
     } else {
       initialize();
     }
   }
 
-#if INCLUDE_JVMCI
   void set_alternative_target(nmethod* target) {
     _alternative_target = target;
   }
@@ -152,7 +125,6 @@ class JavaCallArguments : public StackObj {
   nmethod* alternative_target() {
     return _alternative_target;
   }
-#endif
 
   // The possible values for _value_state elements.
   enum {
@@ -197,15 +169,14 @@ class JavaCallArguments : public StackObj {
 
   // receiver
   Handle receiver() {
-    assert(_size > 0, "must at least be one argument");
-    assert(_value_state[0] == value_state_handle,
-           "first argument must be an oop");
-    assert(_value[0] != 0, "receiver must be not-null");
+    assert(_size > 0, "must at least be one argument");
+    assert(_value_state[0] == value_state_handle, "first argument must be an oop");
+    assert(_value[0] != 0, "receiver must be not-null");
     return Handle((oop*)_value[0], false);
   }
 
   void set_receiver(Handle h) {
-    assert(_start_at_zero == false, "can only be called once");
+    assert(_start_at_zero == false, "can only be called once");
     _start_at_zero = true;
     _value_state--;
     _value--;
@@ -268,4 +239,4 @@ class JavaCalls: AllStatic {
   static void call(JavaValue* result, const methodHandle& method, JavaCallArguments* args, TRAPS);
 };
 
-#endif // SHARE_VM_RUNTIME_JAVACALLS_HPP
+#endif

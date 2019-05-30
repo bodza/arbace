@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "logging/log.hpp"
@@ -136,7 +112,7 @@ void PerfMemory::initialize() {
     _top = _start + sizeof(PerfDataPrologue);
   }
 
-  assert(_prologue != NULL, "prologue pointer must be initialized");
+  assert(_prologue != NULL, "prologue pointer must be initialized");
 
 #ifdef VM_LITTLE_ENDIAN
   _prologue->magic = (jint)0xc0c0feca;
@@ -210,7 +186,7 @@ char* PerfMemory::alloc(size_t size) {
 
   MutexLocker ml(PerfDataMemAlloc_lock);
 
-  assert(is_usable(), "called before init or after destroy");
+  assert(is_usable(), "called before init or after destroy");
 
   // check that there is enough memory for this request
   if ((_top + size) >= _end) {
@@ -224,7 +200,7 @@ char* PerfMemory::alloc(size_t size) {
 
   _top += size;
 
-  assert(contains(result), "PerfData memory pointer out of range");
+  assert(contains(result), "PerfData memory pointer out of range");
 
   _prologue->used = (jint)used();
   _prologue->num_entries = _prologue->num_entries + 1;
@@ -235,7 +211,7 @@ char* PerfMemory::alloc(size_t size) {
 void PerfMemory::mark_updated() {
   if (!UsePerfData) return;
 
-  assert(is_usable(), "called before init or after destroy");
+  assert(is_usable(), "called before init or after destroy");
 
   _prologue->mod_time_stamp = os::elapsed_counter();
 }
@@ -253,7 +229,7 @@ char* PerfMemory::get_perfdata_file_path() {
                                    dest_file, JVM_MAXPATHLEN)) {
       FREE_C_HEAP_ARRAY(char, dest_file);
       if (PrintMiscellaneous && Verbose) {
-        warning("Invalid performance data file path name specified, "\
+        warning("Invalid performance data file path name specified, " \
                 "fall back to a default name");
       }
     } else {

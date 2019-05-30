@@ -1,28 +1,3 @@
-/*
-* Copyright (c) 2016, Intel Corporation.
-*
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-*
-* This code is free software; you can redistribute it and/or modify it
-* under the terms of the GNU General Public License version 2 only, as
-* published by the Free Software Foundation.
-*
-* This code is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-* version 2 for more details (a copy is included in the LICENSE file that
-* accompanied this code).
-*
-* You should have received a copy of the GNU General Public License version
-* 2 along with this work; if not, write to the Free Software Foundation,
-* Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-*
-* Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
-* or visit www.oracle.com if you need additional information or have any
-* questions.
-*
-*/
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
@@ -52,7 +27,6 @@ void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1,
   // Save hash values for addition after rounds
   movdqu(Address(rsp, 0), e0);
   movdqu(Address(rsp, 16), abcd);
-
 
   // Rounds 0 - 3
   movdqu(msg0, Address(buf, 0));
@@ -230,24 +204,16 @@ void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1,
   pextrd(Address(state, 16), e0, 3);
 
   bind(done_hash);
-
 }
 
 // xmm0 (msg) is used as an implicit argument to sh256rnds2
 // and state0 and state1 can never use xmm0 register.
 // ofs and limit are used for multi-block byte array.
 // int com.sun.security.provider.DigestBase.implCompressMultiBlock(byte[] b, int ofs, int limit)
-#ifdef _LP64
 void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0,
   XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4,
   Register buf, Register state, Register ofs, Register limit, Register rsp,
   bool multi_block, XMMRegister shuf_mask) {
-#else
-void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0,
-  XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4,
-  Register buf, Register state, Register ofs, Register limit, Register rsp,
-  bool multi_block) {
-#endif
   Label start, done_hash, loop0;
 
   address K256 = StubRoutines::x86::k256_addr();
@@ -263,9 +229,7 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
   palignr(state0, state1, 8);
   pblendw(state1, msgtmp4, 0xF0);
 
-#ifdef _LP64
   movdqu(shuf_mask, ExternalAddress(pshuffle_byte_flip_mask));
-#endif
   lea(rax, ExternalAddress(K256));
 
   bind(loop0);
@@ -274,11 +238,7 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
 
   // Rounds 0-3
   movdqu(msg, Address(buf, 0));
-#ifdef _LP64
   pshufb(msg, shuf_mask);
-#else
-  pshufb(msg, ExternalAddress(pshuffle_byte_flip_mask));
-#endif
   movdqa(msgtmp0, msg);
   paddd(msg, Address(rax, 0));
   sha256rnds2(state1, state0);
@@ -287,11 +247,7 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
 
   // Rounds 4-7
   movdqu(msg, Address(buf, 16));
-#ifdef _LP64
   pshufb(msg, shuf_mask);
-#else
-  pshufb(msg, ExternalAddress(pshuffle_byte_flip_mask));
-#endif
   movdqa(msgtmp1, msg);
   paddd(msg, Address(rax, 16));
   sha256rnds2(state1, state0);
@@ -301,11 +257,7 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
 
   // Rounds 8-11
   movdqu(msg, Address(buf, 32));
-#ifdef _LP64
   pshufb(msg, shuf_mask);
-#else
-  pshufb(msg, ExternalAddress(pshuffle_byte_flip_mask));
-#endif
   movdqa(msgtmp2, msg);
   paddd(msg, Address(rax, 32));
   sha256rnds2(state1, state0);
@@ -315,11 +267,7 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
 
   // Rounds 12-15
   movdqu(msg, Address(buf, 48));
-#ifdef _LP64
   pshufb(msg, shuf_mask);
-#else
-  pshufb(msg, ExternalAddress(pshuffle_byte_flip_mask));
-#endif
   movdqa(msgtmp3, msg);
   paddd(msg, Address(rax, 48));
   sha256rnds2(state1, state0);
@@ -491,10 +439,8 @@ void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegiste
   movdqu(Address(state, 16), state1);
 
   bind(done_hash);
-
 }
 
-#ifdef _LP64
 /*
   The algorithm below is based on Intel publication:
   "Fast SHA-256 Implementations on Intelë Architecture Processors" by Jim Guilford, Kirk Yap and Vinodh Gopal.
@@ -554,13 +500,11 @@ void MacroAssembler::sha256_AVX2_one_round_compute(
   andl(reg_T1, reg_c);        // reg_T1 = reg_a&reg_c                              ; MAJB
   addl(reg_y2, reg_y0);       // reg_y2 = S1 + CH                          ; --
 
-
   addl(reg_d, reg_h);         // reg_d = k + w + reg_h + reg_d                     ; --
   orl(reg_y3, reg_T1);        // reg_y3 = MAJ = (reg_a|reg_c)&reg_b)|(reg_a&reg_c)             ; MAJ
   addl(reg_h, reg_y1);        // reg_h = k + w + reg_h + S0                    ; --
 
   addl(reg_d, reg_y2);        // reg_d = k + w + reg_h + reg_d + S1 + CH = reg_d + t1  ; --
-
 
   if (iter%4 == 3) {
     addl(reg_h, reg_y2);      // reg_h = k + w + reg_h + S0 + S1 + CH = t1 + S0; --
@@ -722,7 +666,6 @@ const Register& y0       = r13;
 const Register& y1       = r14;
 const Register& y2       = r15;
 
-
 enum {
   _XFER_SIZE = 2*64*4, // 2 blocks, 64 rounds, 4 bytes/round
   _INP_END_SIZE = 8,
@@ -738,20 +681,10 @@ enum {
   STACK_SIZE = _RSP      + _RSP_SIZE
 };
 
-#ifndef _WIN64
   push(rcx);    // linux: this is limit, need at the end
   push(rdx);    // linux: this is ofs
-#else
-  push(r8);     // win64: this is ofs
-  push(r9);     // win64: this is limit, we need them again at the very and
-#endif
-
 
   push(rbx);
-#ifdef _WIN64
-  push(rsi);
-  push(rdi);
-#endif
   push(rbp);
   push(r12);
   push(r13);
@@ -763,13 +696,11 @@ enum {
   andq(rsp, -32);
   movq(Address(rsp, _RSP), rax);
 
-#ifndef _WIN64
   // copy linux params to win64 params, therefore the rest of code will be the same for both
   movq(r9,  rcx);
   movq(r8,  rdx);
   movq(rdx, rsi);
   movq(rcx, rdi);
-#endif
 
   // setting original assembly ABI
   /** message to encrypt in INP */
@@ -982,7 +913,6 @@ bind(only_one_block);
   // load g - r10 after use as scratch
   movl(h, Address(CTX, 4*7));   // 0x5be0cd19
 
-
   pshuffle_byte_flip_mask_addr = pshuffle_byte_flip_mask;
   vmovdqu(BYTE_FLIP_MASK, ExternalAddress(pshuffle_byte_flip_mask_addr + 0)); //[PSHUFFLE_BYTE_FLIP_MASK wrt rip]
   vmovdqu(SHUF_00BA, ExternalAddress(pshuffle_byte_flip_mask_addr + 32));     //[_SHUF_00BA wrt rip]
@@ -1002,28 +932,14 @@ bind(done_hash);
   pop(r13);
   pop(r12);
   pop(rbp);
-#ifdef _WIN64
-  pop(rdi);
-  pop(rsi);
-#endif
   pop(rbx);
 
-#ifdef _WIN64
-  pop(r9);
-  pop(r8);
-#else
   pop(rdx);
   pop(rcx);
-#endif
 
   if (multi_block) {
-#ifdef _WIN64
-const Register& limit_end = r9;
-const Register& ofs_end   = r8;
-#else
 const Register& limit_end = rcx;
 const Register& ofs_end   = rdx;
-#endif
     movq(rax, ofs_end);
 
 bind(compute_size1);
@@ -1044,11 +960,7 @@ void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, 
     const Register& y0 = r13;
     const Register& y1 = r14;
     const Register& y2 = r15;
-#ifdef _WIN64
-    const Register& y3 = rcx;
-#else
     const Register& y3 = rdi;
-#endif
     const Register& T1 = r12;
 
     if (iteration % 4 > 0) {
@@ -1114,11 +1026,7 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
     const Register& y0 = r13;
     const Register& y1 = r14;
     const Register& y2 = r15;
-#ifdef _WIN64
-    const Register& y3 = rcx;
-#else
     const Register& y3 = rdi;
-#endif
     const Register& T1 = r12;
 
     if (iteration % 4 == 0) {
@@ -1254,17 +1162,6 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
     const XMMRegister& XFER = xmm0; // YTMP0
     const XMMRegister& BYTE_FLIP_MASK = xmm9; // ymm9
     const XMMRegister& YMM_MASK_LO = xmm10; // ymm10
-#ifdef _WIN64
-    const Register& INP = rcx; //1st arg
-    const Register& CTX = rdx; //2nd arg
-    const Register& NUM_BLKS = r8; //3rd arg
-    const Register& c = rdi;
-    const Register& d = rsi;
-    const Register& e = r8;
-    const Register& y3 = rcx;
-    const Register& offset = r8;
-    const Register& input_limit = r9;
-#else
     const Register& INP = rdi; //1st arg
     const Register& CTX = rsi; //2nd arg
     const Register& NUM_BLKS = rdx; //3rd arg
@@ -1274,7 +1171,6 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
     const Register& y3 = rdi;
     const Register& offset = rdx;
     const Register& input_limit = rcx;
-#endif
 
     const Register& TBL = rbp;
 
@@ -1294,11 +1190,7 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
       _INP_END_SIZE = 8,
       _RSP_SAVE_SIZE = 8,  // defined as resq 1
 
-#ifdef _WIN64
-      _GPR_SAVE_SIZE = 8 * 8, // defined as resq 8
-#else
       _GPR_SAVE_SIZE = 6 * 8 // resq 6
-#endif
     };
 
     enum
@@ -1313,13 +1205,8 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
     };
 
 //Saving offset and limit as it will help with blocksize calculation for multiblock SHA512.
-#ifdef _WIN64
-    push(r8);    // win64: this is ofs
-    push(r9);    // win64: this is limit, we need them again at the very end.
-#else
     push(rdx);   // linux : this is ofs, need at the end for multiblock calculation
     push(rcx);   // linux: This is the limit.
-#endif
 
     //Allocate Stack Space
     movq(rax, rsp);
@@ -1334,11 +1221,6 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
     movq(Address(rsp, (_GPR + 24)), r13);
     movq(Address(rsp, (_GPR + 32)), r14);
     movq(Address(rsp, (_GPR + 40)), r15);
-
-#ifdef _WIN64
-    movq(Address(rsp, (_GPR + 48)), rsi);
-    movq(Address(rsp, (_GPR + 56)), rdi);
-#endif
 
     vpblendd(xmm0, xmm0, xmm1, 0xF0, AVX_128bit);
     vpblendd(xmm0, xmm0, xmm1, 0xF0, AVX_256bit);
@@ -1487,30 +1369,15 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
     movq(r14, Address(rsp, (_GPR + 32)));
     movq(r15, Address(rsp, (_GPR + 40)));
 
-#ifdef _WIN64
-    movq(rsi, Address(rsp, (_GPR + 48)));
-    movq(rdi, Address(rsp, (_GPR + 56)));
-#endif
-
     //Restore Stack Pointer
     movq(rsp, Address(rsp, _RSP));
 
-#ifdef _WIN64
-    pop(r9);
-    pop(r8);
-#else
     pop(rcx);
     pop(rdx);
-#endif
 
     if (multi_block) {
-#ifdef _WIN64
-      const Register& limit_end = r9;
-      const Register& ofs_end = r8;
-#else
       const Register& limit_end = rcx;
       const Register& ofs_end   = rdx;
-#endif
       movq(rax, ofs_end);
       bind(compute_size);
       cmpptr(rax, limit_end);
@@ -1520,6 +1387,3 @@ void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegiste
       bind(compute_size_end);
     }
 }
-
-#endif //#ifdef _LP64
-

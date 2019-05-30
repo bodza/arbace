@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1FullGCMarker.inline.hpp"
@@ -46,13 +22,9 @@ G1VerifyOopClosure::G1VerifyOopClosure(VerifyOption option) :
 }
 
 void G1VerifyOopClosure::print_object(outputStream* out, oop obj) {
-#ifdef PRODUCT
   Klass* k = obj->klass();
   const char* class_name = InstanceKlass::cast(k)->external_name();
   out->print_cr("class name %s", class_name);
-#else // PRODUCT
-  obj->print_on(out);
-#endif // PRODUCT
 }
 
 template <class T> void G1VerifyOopClosure::do_oop_work(T* p) {

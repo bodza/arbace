@@ -1,29 +1,5 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
-#include "jfr/jfrEvents.hpp"
+// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/flags/jvmFlag.hpp"
@@ -85,11 +61,7 @@ const char* JVMFlag::get_double_default_range_str() {
 }
 
 static bool is_product_build() {
-#ifdef PRODUCT
   return true;
-#else
-  return false;
-#endif
 }
 
 JVMFlag::Error JVMFlag::check_writable(bool changed) {
@@ -271,13 +243,12 @@ JVMFlag::Error JVMFlag::set_ccstr(ccstr value) {
   return error;
 }
 
-
 JVMFlag::Flags JVMFlag::get_origin() {
   return Flags(_flags & VALUE_ORIGIN_MASK);
 }
 
 void JVMFlag::set_origin(Flags origin) {
-  assert((origin & VALUE_ORIGIN_MASK) == origin, "sanity");
+  assert((origin & VALUE_ORIGIN_MASK) == origin, "sanity");
   Flags new_origin = Flags((origin == COMMAND_LINE) ? Flags(origin | ORIG_COMMAND_LINE) : origin);
   _flags = Flags((_flags & ~VALUE_ORIGIN_MASK) | new_origin);
 }
@@ -331,11 +302,7 @@ bool JVMFlag::is_read_write() const {
  * true for notproduct and develop flags in product builds.
  */
 bool JVMFlag::is_constant_in_binary() const {
-#ifdef PRODUCT
   return is_notproduct() || is_develop();
-#else
-  return false;
-#endif
 }
 
 bool JVMFlag::is_unlocker() const {
@@ -355,9 +322,9 @@ bool JVMFlag::is_unlocked() const {
 }
 
 void JVMFlag::clear_diagnostic() {
-  assert(is_diagnostic(), "sanity");
+  assert(is_diagnostic(), "sanity");
   _flags = Flags(_flags & ~KIND_DIAGNOSTIC);
-  assert(!is_diagnostic(), "sanity");
+  assert(!is_diagnostic(), "sanity");
 }
 
 // Get custom message for this locked flag, or NULL if
@@ -525,12 +492,6 @@ void JVMFlag::print_on(outputStream* st, bool withComments, bool printRanges) {
     fill_to_pos(st, col6_pos);
     print_origin(st, col6_width);
 
-#ifndef PRODUCT
-    if (withComments) {
-      fill_to_pos(st, col7_pos);
-      st->print("%s", _doc);
-    }
-#endif
     st->cr();
   } else if (!is_bool() && !is_ccstr()) {
     // The command line options -XX:+PrintFlags* cause this function to be called
@@ -612,12 +573,6 @@ void JVMFlag::print_on(outputStream* st, bool withComments, bool printRanges) {
     fill_to_pos(st, col6_pos);
     print_origin(st, col6_width);
 
-#ifndef PRODUCT
-    if (withComments) {
-      fill_to_pos(st, col7_pos);
-      st->print("%s", _doc);
-    }
-#endif
     st->cr();
   }
 }
@@ -659,17 +614,17 @@ void JVMFlag::print_kind(outputStream* st, unsigned int width) {
         if (is_first) {
           is_first = false;
         } else {
-          assert(buffer_used + 1 < buffer_size, "Too small buffer");
+          assert(buffer_used + 1 < buffer_size, "Too small buffer");
           jio_snprintf(kind + buffer_used, buffer_size - buffer_used, " ");
           buffer_used++;
         }
         size_t length = strlen(d.name);
-        assert(buffer_used + length < buffer_size, "Too small buffer");
+        assert(buffer_used + length < buffer_size, "Too small buffer");
         jio_snprintf(kind + buffer_used, buffer_size - buffer_used, "%s", d.name);
         buffer_used += length;
       }
     }
-    assert(buffer_used + 2 <= buffer_size, "Too small buffer");
+    assert(buffer_used + 2 <= buffer_size, "Too small buffer");
     jio_snprintf(kind + buffer_used, buffer_size - buffer_used, "}");
     st->print("%*s", width, kind);
   }
@@ -760,54 +715,50 @@ const char* JVMFlag::flag_error_str(JVMFlag::Error error) {
 // 4991491 do not "optimize out" the was_set false values: omitting them
 // tickles a Microsoft compiler bug causing flagTable to be malformed
 
-#define RUNTIME_PRODUCT_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT) },
-#define RUNTIME_PD_PRODUCT_FLAG_STRUCT(  type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define RUNTIME_DIAGNOSTIC_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DIAGNOSTIC) },
-#define RUNTIME_PD_DIAGNOSTIC_FLAG_STRUCT(type, name,       doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define RUNTIME_EXPERIMENTAL_FLAG_STRUCT(type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_EXPERIMENTAL) },
-#define RUNTIME_MANAGEABLE_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_MANAGEABLE) },
-#define RUNTIME_PRODUCT_RW_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_READ_WRITE) },
-#define RUNTIME_DEVELOP_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DEVELOP) },
-#define RUNTIME_PD_DEVELOP_FLAG_STRUCT(  type, name,        doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define RUNTIME_NOTPRODUCT_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_NOT_PRODUCT) },
+#define RUNTIME_PRODUCT_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT) },
+#define RUNTIME_PD_PRODUCT_FLAG_STRUCT(  type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define RUNTIME_DIAGNOSTIC_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DIAGNOSTIC) },
+#define RUNTIME_PD_DIAGNOSTIC_FLAG_STRUCT(type, name,       doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define RUNTIME_EXPERIMENTAL_FLAG_STRUCT(type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_EXPERIMENTAL) },
+#define RUNTIME_MANAGEABLE_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_MANAGEABLE) },
+#define RUNTIME_PRODUCT_RW_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_READ_WRITE) },
+#define RUNTIME_DEVELOP_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DEVELOP) },
+#define RUNTIME_PD_DEVELOP_FLAG_STRUCT(  type, name,        doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define RUNTIME_NOTPRODUCT_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_NOT_PRODUCT) },
 
-#define JVMCI_PRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_PRODUCT) },
-#define JVMCI_PD_PRODUCT_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define JVMCI_DIAGNOSTIC_FLAG_STRUCT(    type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DIAGNOSTIC) },
-#define JVMCI_PD_DIAGNOSTIC_FLAG_STRUCT( type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define JVMCI_EXPERIMENTAL_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_EXPERIMENTAL) },
-#define JVMCI_DEVELOP_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DEVELOP) },
-#define JVMCI_PD_DEVELOP_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define JVMCI_NOTPRODUCT_FLAG_STRUCT(    type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_NOT_PRODUCT) },
+#define JVMCI_PRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_PRODUCT) },
+#define JVMCI_PD_PRODUCT_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define JVMCI_DIAGNOSTIC_FLAG_STRUCT(    type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DIAGNOSTIC) },
+#define JVMCI_PD_DIAGNOSTIC_FLAG_STRUCT( type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define JVMCI_EXPERIMENTAL_FLAG_STRUCT(  type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_EXPERIMENTAL) },
+#define JVMCI_DEVELOP_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DEVELOP) },
+#define JVMCI_PD_DEVELOP_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define JVMCI_NOTPRODUCT_FLAG_STRUCT(    type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_JVMCI | JVMFlag::KIND_NOT_PRODUCT) },
 
-#ifdef _LP64
-#define RUNTIME_LP64_PRODUCT_FLAG_STRUCT(type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_LP64_PRODUCT) },
-#else
-#define RUNTIME_LP64_PRODUCT_FLAG_STRUCT(type, name, value, doc) /* flag is constant */
-#endif // _LP64
+#define RUNTIME_LP64_PRODUCT_FLAG_STRUCT(type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_LP64_PRODUCT) },
 
-#define C1_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_PRODUCT) },
-#define C1_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C1_DIAGNOSTIC_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DIAGNOSTIC) },
-#define C1_PD_DIAGNOSTIC_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C1_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DEVELOP) },
-#define C1_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C1_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_NOT_PRODUCT) },
+#define C1_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_PRODUCT) },
+#define C1_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C1_DIAGNOSTIC_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DIAGNOSTIC) },
+#define C1_PD_DIAGNOSTIC_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C1_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DEVELOP) },
+#define C1_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C1_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C1 | JVMFlag::KIND_NOT_PRODUCT) },
 
-#define C2_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_PRODUCT) },
-#define C2_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C2_DIAGNOSTIC_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DIAGNOSTIC) },
-#define C2_PD_DIAGNOSTIC_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C2_EXPERIMENTAL_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_EXPERIMENTAL) },
-#define C2_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DEVELOP) },
-#define C2_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
-#define C2_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_NOT_PRODUCT) },
+#define C2_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_PRODUCT) },
+#define C2_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_PRODUCT | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C2_DIAGNOSTIC_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DIAGNOSTIC) },
+#define C2_PD_DIAGNOSTIC_FLAG_STRUCT(    type, name,        doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DIAGNOSTIC | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C2_EXPERIMENTAL_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_EXPERIMENTAL) },
+#define C2_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DEVELOP) },
+#define C2_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_DEVELOP | JVMFlag::KIND_PLATFORM_DEPENDENT) },
+#define C2_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_C2 | JVMFlag::KIND_NOT_PRODUCT) },
 
-#define ARCH_PRODUCT_FLAG_STRUCT(        type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_PRODUCT) },
-#define ARCH_DIAGNOSTIC_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_DIAGNOSTIC) },
-#define ARCH_EXPERIMENTAL_FLAG_STRUCT(   type, name, value, doc) { #type, XSTR(name), &name,         NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_EXPERIMENTAL) },
-#define ARCH_DEVELOP_FLAG_STRUCT(        type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_DEVELOP) },
-#define ARCH_NOTPRODUCT_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), (void*) &name, NOT_PRODUCT_ARG(doc) JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_NOT_PRODUCT) },
+#define ARCH_PRODUCT_FLAG_STRUCT(        type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_PRODUCT) },
+#define ARCH_DIAGNOSTIC_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_DIAGNOSTIC) },
+#define ARCH_EXPERIMENTAL_FLAG_STRUCT(   type, name, value, doc) { #type, XSTR(name), &name,         JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_EXPERIMENTAL) },
+#define ARCH_DEVELOP_FLAG_STRUCT(        type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_DEVELOP) },
+#define ARCH_NOTPRODUCT_FLAG_STRUCT(     type, name, value, doc) { #type, XSTR(name), (void*) &name, JVMFlag::Flags(JVMFlag::DEFAULT | JVMFlag::KIND_ARCH | JVMFlag::KIND_NOT_PRODUCT) },
 
 static JVMFlag flagTable[] = {
   VM_FLAGS(RUNTIME_DEVELOP_FLAG_STRUCT, \
@@ -835,7 +786,6 @@ static JVMFlag flagTable[] = {
                    IGNORE_RANGE, \
                    IGNORE_CONSTRAINT, \
                    IGNORE_WRITEABLE)
-#if INCLUDE_JVMCI
   JVMCI_FLAGS(JVMCI_DEVELOP_FLAG_STRUCT, \
               JVMCI_PD_DEVELOP_FLAG_STRUCT, \
               JVMCI_PRODUCT_FLAG_STRUCT, \
@@ -847,8 +797,6 @@ static JVMFlag flagTable[] = {
               IGNORE_RANGE, \
               IGNORE_CONSTRAINT, \
               IGNORE_WRITEABLE)
-#endif // INCLUDE_JVMCI
-#ifdef COMPILER1
   C1_FLAGS(C1_DEVELOP_FLAG_STRUCT, \
            C1_PD_DEVELOP_FLAG_STRUCT, \
            C1_PRODUCT_FLAG_STRUCT, \
@@ -859,20 +807,6 @@ static JVMFlag flagTable[] = {
            IGNORE_RANGE, \
            IGNORE_CONSTRAINT, \
            IGNORE_WRITEABLE)
-#endif // COMPILER1
-#ifdef COMPILER2
-  C2_FLAGS(C2_DEVELOP_FLAG_STRUCT, \
-           C2_PD_DEVELOP_FLAG_STRUCT, \
-           C2_PRODUCT_FLAG_STRUCT, \
-           C2_PD_PRODUCT_FLAG_STRUCT, \
-           C2_DIAGNOSTIC_FLAG_STRUCT, \
-           C2_PD_DIAGNOSTIC_FLAG_STRUCT, \
-           C2_EXPERIMENTAL_FLAG_STRUCT, \
-           C2_NOTPRODUCT_FLAG_STRUCT, \
-           IGNORE_RANGE, \
-           IGNORE_CONSTRAINT, \
-           IGNORE_WRITEABLE)
-#endif // COMPILER2
   ARCH_FLAGS(ARCH_DEVELOP_FLAG_STRUCT, \
              ARCH_PRODUCT_FLAG_STRUCT, \
              ARCH_DIAGNOSTIC_FLAG_STRUCT, \
@@ -958,24 +892,24 @@ JVMFlag* JVMFlag::fuzzy_match(const char* name, size_t length, bool allow_locked
 
 // Returns the address of the index'th element
 static JVMFlag* address_of_flag(JVMFlagsWithType flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
+  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   return &JVMFlag::flags[flag];
 }
 
 bool JVMFlagEx::is_default(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
+  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_default();
 }
 
 bool JVMFlagEx::is_ergo(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
+  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_ergonomic();
 }
 
 bool JVMFlagEx::is_cmdline(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
+  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_command_line();
 }
@@ -989,7 +923,7 @@ bool JVMFlag::wasSetOnCmdline(const char* name, bool* value) {
 
 void JVMFlagEx::setOnCmdLine(JVMFlagsWithType flag) {
   JVMFlag* faddr = address_of_flag(flag);
-  assert(faddr != NULL, "Unknown flag");
+  assert(faddr != NULL, "Unknown flag");
   faddr->set_command_line();
 }
 
@@ -1314,7 +1248,6 @@ static JVMFlag::Error apply_constraint_and_check_range_size_t(const char* name, 
   return status;
 }
 
-
 JVMFlag::Error JVMFlag::size_tAtPut(JVMFlag* flag, size_t* value, JVMFlag::Flags origin) {
   const char* name;
   if (flag == NULL) return JVMFlag::INVALID_FLAG;
@@ -1465,14 +1398,6 @@ void JVMFlag::printSetFlags(outputStream* out) {
   FREE_C_HEAP_ARRAY(JVMFlag*, array);
 }
 
-#ifndef PRODUCT
-
-void JVMFlag::verify() {
-  assert(Arguments::check_vm_args_consistency(), "Some flag settings conflict");
-}
-
-#endif // PRODUCT
-
 void JVMFlag::printFlags(outputStream* out, bool withComments, bool printRanges, bool skipDefaults) {
   // Print the flags sorted by name
   // note: this method is called before the thread structure is in place
@@ -1511,4 +1436,3 @@ void JVMFlag::printError(bool verbose, const char* msg, ...) {
     va_end(listPointer);
   }
 }
-

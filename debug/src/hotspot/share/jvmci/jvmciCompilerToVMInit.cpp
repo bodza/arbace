@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 // no precompiled headers
 #include "ci/ciUtilities.hpp"
 #include "gc/shared/barrierSet.hpp"
@@ -33,7 +10,6 @@
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "utilities/resourceHash.hpp"
-
 
 int CompilerToVM::Data::Klass_vtable_start_offset;
 int CompilerToVM::Data::Klass_vtable_length_offset;
@@ -116,8 +92,8 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   _max_oop_map_stack_offset = (OopMapValue::register_mask - VMRegImpl::stack2reg(0)->value()) * VMRegImpl::stack_slot_size;
   int max_oop_map_stack_index = _max_oop_map_stack_offset / VMRegImpl::stack_slot_size;
-  assert(OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index)), "should be valid");
-  assert(!OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index + 1)), "should be invalid");
+  assert(OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index)), "should be valid");
+  assert(!OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index + 1)), "should be invalid");
 
   symbol_init = (address) vmSymbols::object_initializer_name();
   symbol_clinit = (address) vmSymbols::class_initializer_name();
@@ -125,7 +101,7 @@ void CompilerToVM::Data::initialize(TRAPS) {
   BarrierSet* bs = BarrierSet::barrier_set();
   if (bs->is_a(BarrierSet::CardTableBarrierSet)) {
     jbyte* base = ci_card_table_address();
-    assert(base != NULL, "unexpected byte_map_base");
+    assert(base != NULL, "unexpected byte_map_base");
     cardtable_start_address = base;
     cardtable_shift = CardTable::card_shift;
   } else {
@@ -136,11 +112,11 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   vm_page_size = os::vm_page_size();
 
-#define SET_TRIGFUNC(name)                                      \
-  if (StubRoutines::name() != NULL) {                           \
-    name = StubRoutines::name();                                \
-  } else {                                                      \
-    name = CAST_FROM_FN_PTR(address, SharedRuntime::name);      \
+#define SET_TRIGFUNC(name) \
+  if (StubRoutines::name() != NULL) { \
+    name = StubRoutines::name(); \
+  } else { \
+    name = CAST_FROM_FN_PTR(address, SharedRuntime::name); \
   }
 
   SET_TRIGFUNC(dsin);
@@ -163,26 +139,26 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   Handle kls_str;
 #define VM_SYMBOL_TO_STRING(s) \
   java_lang_String::create_from_symbol(vmSymbols::symbol_at(vmSymbols::VM_SYMBOL_ENUM_NAME(s)), CHECK_(objArrayHandle()))
-#define VM_INTRINSIC_INFO(id, kls, name, sig, ignore_fcode) {             \
+#define VM_INTRINSIC_INFO(id, kls, name, sig, ignore_fcode) { \
     instanceHandle vmIntrinsicMethod = InstanceKlass::cast(VMIntrinsicMethod::klass())->allocate_instance_handle(CHECK_(objArrayHandle())); \
-    vmSymbols::SID sid = vmSymbols::VM_SYMBOL_ENUM_NAME(kls);             \
-    if (kls_sid != sid) {                                                 \
-      kls_str = VM_SYMBOL_TO_STRING(kls);                                 \
-      kls_sid = sid;                                                      \
-    }                                                                     \
-    Handle name_str = VM_SYMBOL_TO_STRING(name);                          \
-    Handle sig_str = VM_SYMBOL_TO_STRING(sig);                            \
-    VMIntrinsicMethod::set_declaringClass(vmIntrinsicMethod, kls_str());  \
-    VMIntrinsicMethod::set_name(vmIntrinsicMethod, name_str());           \
-    VMIntrinsicMethod::set_descriptor(vmIntrinsicMethod, sig_str());      \
-    VMIntrinsicMethod::set_id(vmIntrinsicMethod, vmIntrinsics::id);       \
-      vmIntrinsics->obj_at_put(index++, vmIntrinsicMethod());             \
+    vmSymbols::SID sid = vmSymbols::VM_SYMBOL_ENUM_NAME(kls); \
+    if (kls_sid != sid) { \
+      kls_str = VM_SYMBOL_TO_STRING(kls); \
+      kls_sid = sid; \
+    } \
+    Handle name_str = VM_SYMBOL_TO_STRING(name); \
+    Handle sig_str = VM_SYMBOL_TO_STRING(sig); \
+    VMIntrinsicMethod::set_declaringClass(vmIntrinsicMethod, kls_str()); \
+    VMIntrinsicMethod::set_name(vmIntrinsicMethod, name_str()); \
+    VMIntrinsicMethod::set_descriptor(vmIntrinsicMethod, sig_str()); \
+    VMIntrinsicMethod::set_id(vmIntrinsicMethod, vmIntrinsics::id); \
+      vmIntrinsics->obj_at_put(index++, vmIntrinsicMethod()); \
   }
 
   VM_INTRINSICS_DO(VM_INTRINSIC_INFO, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE)
 #undef VM_SYMBOL_TO_STRING
 #undef VM_INTRINSIC_INFO
-  assert(index == vmIntrinsics::ID_LIMIT - 1, "must be");
+  assert(index == vmIntrinsics::ID_LIMIT - 1, "must be");
 
   return vmIntrinsics;
 }
@@ -191,71 +167,64 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
  * The set of VM flags known to be used.
  */
 #define PREDEFINED_CONFIG_FLAGS(do_bool_flag, do_intx_flag, do_uintx_flag) \
-  do_intx_flag(AllocateInstancePrefetchLines)                              \
-  do_intx_flag(AllocatePrefetchDistance)                                   \
-  do_intx_flag(AllocatePrefetchInstr)                                      \
-  do_intx_flag(AllocatePrefetchLines)                                      \
-  do_intx_flag(AllocatePrefetchStepSize)                                   \
-  do_intx_flag(AllocatePrefetchStyle)                                      \
-  do_intx_flag(BciProfileWidth)                                            \
-  do_bool_flag(BootstrapJVMCI)                                             \
-  do_bool_flag(CITime)                                                     \
-  do_bool_flag(CITimeEach)                                                 \
-  do_uintx_flag(CodeCacheSegmentSize)                                      \
-  do_intx_flag(CodeEntryAlignment)                                         \
-  do_bool_flag(CompactFields)                                              \
-  NOT_PRODUCT(do_intx_flag(CompileTheWorldStartAt))                        \
-  NOT_PRODUCT(do_intx_flag(CompileTheWorldStopAt))                         \
-  do_intx_flag(ContendedPaddingWidth)                                      \
-  do_bool_flag(DontCompileHugeMethods)                                     \
-  do_bool_flag(EagerJVMCI)                                                 \
-  do_bool_flag(EnableContended)                                            \
-  do_intx_flag(FieldsAllocationStyle)                                      \
-  do_bool_flag(FoldStableValues)                                           \
-  do_bool_flag(ForceUnreachable)                                           \
-  do_intx_flag(HugeMethodLimit)                                            \
-  do_bool_flag(Inline)                                                     \
-  do_intx_flag(JVMCICounterSize)                                           \
-  do_bool_flag(JVMCIPrintProperties)                                       \
-  do_bool_flag(JVMCIUseFastLocking)                                        \
-  do_intx_flag(MethodProfileWidth)                                         \
-  do_intx_flag(ObjectAlignmentInBytes)                                     \
-  do_bool_flag(PrintInlining)                                              \
-  do_bool_flag(ReduceInitialCardMarks)                                     \
-  do_bool_flag(RestrictContended)                                          \
-  do_intx_flag(StackReservedPages)                                         \
-  do_intx_flag(StackShadowPages)                                           \
-  do_bool_flag(TLABStats)                                                  \
-  do_uintx_flag(TLABWasteIncrement)                                        \
-  do_intx_flag(TypeProfileWidth)                                           \
-  do_bool_flag(UseAESIntrinsics)                                           \
-  X86_ONLY(do_intx_flag(UseAVX))                                           \
-  do_bool_flag(UseBiasedLocking)                                           \
-  do_bool_flag(UseCRC32Intrinsics)                                         \
-  do_bool_flag(UseCompressedClassPointers)                                 \
-  do_bool_flag(UseCompressedOops)                                          \
-  X86_ONLY(do_bool_flag(UseCountLeadingZerosInstruction))                  \
-  X86_ONLY(do_bool_flag(UseCountTrailingZerosInstruction))                 \
-  do_bool_flag(UseConcMarkSweepGC)                                         \
-  do_bool_flag(UseG1GC)                                                    \
-  do_bool_flag(UseParallelGC)                                              \
-  do_bool_flag(UseParallelOldGC)                                           \
-  do_bool_flag(UseSerialGC)                                                \
-  do_bool_flag(UseZGC)                                                     \
-  do_bool_flag(UseEpsilonGC)                                               \
-  COMPILER2_PRESENT(do_bool_flag(UseMontgomeryMultiplyIntrinsic))          \
-  COMPILER2_PRESENT(do_bool_flag(UseMontgomerySquareIntrinsic))            \
-  COMPILER2_PRESENT(do_bool_flag(UseMulAddIntrinsic))                      \
-  COMPILER2_PRESENT(do_bool_flag(UseMultiplyToLenIntrinsic))               \
-  do_bool_flag(UsePopCountInstruction)                                     \
-  do_bool_flag(UseSHA1Intrinsics)                                          \
-  do_bool_flag(UseSHA256Intrinsics)                                        \
-  do_bool_flag(UseSHA512Intrinsics)                                        \
-  do_intx_flag(UseSSE)                                                     \
-  COMPILER2_PRESENT(do_bool_flag(UseSquareToLenIntrinsic))                 \
-  do_bool_flag(UseStackBanging)                                            \
-  do_bool_flag(UseTLAB)                                                    \
-  do_bool_flag(VerifyOops)                                                 \
+  do_intx_flag(AllocateInstancePrefetchLines) \
+  do_intx_flag(AllocatePrefetchDistance) \
+  do_intx_flag(AllocatePrefetchInstr) \
+  do_intx_flag(AllocatePrefetchLines) \
+  do_intx_flag(AllocatePrefetchStepSize) \
+  do_intx_flag(AllocatePrefetchStyle) \
+  do_intx_flag(BciProfileWidth) \
+  do_bool_flag(BootstrapJVMCI) \
+  do_bool_flag(CITime) \
+  do_bool_flag(CITimeEach) \
+  do_uintx_flag(CodeCacheSegmentSize) \
+  do_intx_flag(CodeEntryAlignment) \
+  do_bool_flag(CompactFields) \
+  do_intx_flag(ContendedPaddingWidth) \
+  do_bool_flag(DontCompileHugeMethods) \
+  do_bool_flag(EagerJVMCI) \
+  do_bool_flag(EnableContended) \
+  do_intx_flag(FieldsAllocationStyle) \
+  do_bool_flag(FoldStableValues) \
+  do_bool_flag(ForceUnreachable) \
+  do_intx_flag(HugeMethodLimit) \
+  do_bool_flag(Inline) \
+  do_intx_flag(JVMCICounterSize) \
+  do_bool_flag(JVMCIPrintProperties) \
+  do_bool_flag(JVMCIUseFastLocking) \
+  do_intx_flag(MethodProfileWidth) \
+  do_intx_flag(ObjectAlignmentInBytes) \
+  do_bool_flag(PrintInlining) \
+  do_bool_flag(ReduceInitialCardMarks) \
+  do_bool_flag(RestrictContended) \
+  do_intx_flag(StackReservedPages) \
+  do_intx_flag(StackShadowPages) \
+  do_bool_flag(TLABStats) \
+  do_uintx_flag(TLABWasteIncrement) \
+  do_intx_flag(TypeProfileWidth) \
+  do_bool_flag(UseAESIntrinsics) \
+  X86_ONLY(do_intx_flag(UseAVX)) \
+  do_bool_flag(UseBiasedLocking) \
+  do_bool_flag(UseCRC32Intrinsics) \
+  do_bool_flag(UseCompressedClassPointers) \
+  do_bool_flag(UseCompressedOops) \
+  X86_ONLY(do_bool_flag(UseCountLeadingZerosInstruction)) \
+  X86_ONLY(do_bool_flag(UseCountTrailingZerosInstruction)) \
+  do_bool_flag(UseConcMarkSweepGC) \
+  do_bool_flag(UseG1GC) \
+  do_bool_flag(UseParallelGC) \
+  do_bool_flag(UseParallelOldGC) \
+  do_bool_flag(UseSerialGC) \
+  do_bool_flag(UseZGC) \
+  do_bool_flag(UseEpsilonGC) \
+  do_bool_flag(UsePopCountInstruction) \
+  do_bool_flag(UseSHA1Intrinsics) \
+  do_bool_flag(UseSHA256Intrinsics) \
+  do_bool_flag(UseSHA512Intrinsics) \
+  do_intx_flag(UseSSE) \
+  do_bool_flag(UseStackBanging) \
+  do_bool_flag(UseTLAB) \
+  do_bool_flag(VerifyOops) \
 
 #define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
 #define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL);} while(0)
@@ -369,7 +338,7 @@ jobjectArray readConfiguration0(JNIEnv *env, TRAPS) {
     vmConstants->obj_at_put(insert++, name());
     vmConstants->obj_at_put(insert++, value);
   }
-  assert(insert == len * 2, "must be");
+  assert(insert == len * 2, "must be");
 
   len = JVMCIVMStructs::localHotSpotVMAddresses_count();
   objArrayHandle vmAddresses = oopFactory::new_objArray_handle(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);
@@ -382,15 +351,7 @@ jobjectArray readConfiguration0(JNIEnv *env, TRAPS) {
   }
 
 #define COUNT_FLAG(ignore) +1
-#ifdef ASSERT
-#define CHECK_FLAG(type, name) { \
-  JVMFlag* flag = JVMFlag::find_flag(#name, strlen(#name), /*allow_locked*/ true, /* return_flag */ true); \
-  assert(flag != NULL, "No such flag named " #name); \
-  assert(flag->is_##type(), "JVMFlag " #name " is not of type " #type); \
-}
-#else
 #define CHECK_FLAG(type, name)
-#endif
 
 #define ADD_FLAG(type, name, convert) { \
   CHECK_FLAG(type, name) \

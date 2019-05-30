@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_GENCOLLECTEDHEAP_HPP
 #define SHARE_VM_GC_SHARED_GENCOLLECTEDHEAP_HPP
 
@@ -115,7 +91,6 @@ protected:
     GCH_PS_Management_oops_do,
     GCH_PS_SystemDictionary_oops_do,
     GCH_PS_ClassLoaderDataGraph_oops_do,
-    GCH_PS_jvmti_oops_do,
     GCH_PS_CodeCache_oops_do,
     GCH_PS_aot_oops_do,
     GCH_PS_younger_gens,
@@ -245,10 +220,6 @@ public:
   // Assumes the the young gen address range is less than that of the old gen.
   bool is_in_young(oop p);
 
-#ifdef ASSERT
-  bool is_in_partial_collection(const void* p);
-#endif
-
   virtual bool is_scavengable(oop obj) {
     return is_in_young(obj);
   }
@@ -320,8 +291,7 @@ public:
 
   // Total number of full collections completed.
   unsigned int total_full_collections_completed() {
-    assert(_full_collections_completed <= _total_full_collections,
-           "Can't complete more collections than were started");
+    assert(_full_collections_completed <= _total_full_collections, "Can't complete more collections than were started");
     return _full_collections_completed;
   }
 
@@ -404,11 +374,6 @@ public:
                                   OopClosure* root_closure,
                                   OopStorage::ParState<false, false>* par_state_string);
 
-  // Accessor for memory state verification support
-  NOT_PRODUCT(
-    virtual size_t skip_header_HeapWords() { return 0; }
-  )
-
   virtual void gc_prologue(bool full);
   virtual void gc_epilogue(bool full);
 
@@ -472,7 +437,6 @@ public:
                               oop obj,
                               size_t obj_size);
 
-
 private:
   // Return true if an allocation should be attempted in the older generation
   // if it fails in the younger generation.  Return false, otherwise.
@@ -487,14 +451,7 @@ private:
 
   // Override
   void check_for_non_bad_heap_word_value(HeapWord* addr,
-    size_t size) PRODUCT_RETURN;
-
-#if INCLUDE_SERIALGC
-  // For use by mark-sweep.  As implemented, mark-sweep-compact is global
-  // in an essential way: compaction is performed across generations, by
-  // iterating over spaces.
-  void prepare_for_compaction();
-#endif
+    size_t size) {};
 
   // Perform a full collection of the generations up to and including max_generation.
   // This is the low level interface used by the public versions of
@@ -502,7 +459,7 @@ private:
   void collect_locked(GCCause::Cause cause, GenerationType max_generation);
 
   // Save the tops of the spaces in all generations
-  void record_gen_tops_before_GC() PRODUCT_RETURN;
+  void record_gen_tops_before_GC() {};
 };
 
-#endif // SHARE_VM_GC_SHARED_GENCOLLECTEDHEAP_HPP
+#endif

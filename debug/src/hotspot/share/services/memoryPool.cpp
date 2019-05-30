@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -63,13 +39,12 @@ MemoryPool::MemoryPool(const char* name,
 }
 
 void MemoryPool::add_manager(MemoryManager* mgr) {
-  assert(_num_managers < MemoryPool::max_num_managers, "_num_managers exceeds the max");
+  assert(_num_managers < MemoryPool::max_num_managers, "_num_managers exceeds the max");
   if (_num_managers < MemoryPool::max_num_managers) {
     _managers[_num_managers] = mgr;
     _num_managers++;
   }
 }
-
 
 // Returns an instanceHandle of a MemoryPool object.
 // It creates a MemoryPool instance when the first time
@@ -153,7 +128,7 @@ void MemoryPool::record_peak_memory_usage() {
 }
 
 static void set_sensor_obj_at(SensorInfo** sensor_ptr, instanceHandle sh) {
-  assert(*sensor_ptr == NULL, "Should be called only once");
+  assert(*sensor_ptr == NULL, "Should be called only once");
   SensorInfo* sensor = new SensorInfo();
   sensor->set_sensor(sh());
   *sensor_ptr = sensor;

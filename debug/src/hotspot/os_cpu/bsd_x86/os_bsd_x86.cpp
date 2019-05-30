@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 // no precompiled headers
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
@@ -95,7 +71,7 @@
 #else
 #define SPELL_REG_SP "esp"
 #define SPELL_REG_FP "ebp"
-#endif // AMD64
+#endif
 
 #ifdef __FreeBSD__
 # define context_trapno uc_mcontext.mc_trapno
@@ -325,9 +301,9 @@ intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
 ExtendedPC os::Bsd::fetch_frame_from_ucontext(Thread* thread,
   const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
-  assert(thread != NULL, "just checking");
-  assert(ret_sp != NULL, "just checking");
-  assert(ret_fp != NULL, "just checking");
+  assert(thread != NULL, "just checking");
+  assert(ret_sp != NULL, "just checking");
+  assert(ret_fp != NULL, "just checking");
 
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
@@ -382,7 +358,7 @@ bool os::Bsd::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* u
     }
   } else {
     // more complex code with compiled code
-    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
+    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -399,7 +375,7 @@ bool os::Bsd::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* u
       }
     }
   }
-  assert(fr->is_java_frame(), "Safety check");
+  assert(fr->is_java_frame(), "Safety check");
   return true;
 }
 
@@ -426,7 +402,6 @@ intptr_t* _get_previous_fp() {
   return *ebp;
 #endif
 }
-
 
 frame os::current_frame() {
   intptr_t* fp = _get_previous_fp();
@@ -498,7 +473,7 @@ JVM_handle_bsd_signal(int sig,
     // can't decode this kind of signal
     info = NULL;
   } else {
-    assert(sig == info->si_signo, "bad siginfo");
+    assert(sig == info->si_signo, "bad siginfo");
   }
 */
   // decide if this trap can be handled by a stub
@@ -527,7 +502,7 @@ JVM_handle_bsd_signal(int sig,
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Bsd::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                assert(fr.is_java_frame(), "Must be a Java frame");
+                assert(fr.is_java_frame(), "Must be a Java frame");
                 frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
@@ -625,7 +600,7 @@ JVM_handle_bsd_signal(int sig,
           tty->print_cr("unknown opcode 0x%X with SIGFPE.", op);
           fatal("please update this code.");
         }
-#endif /* __APPLE__ */
+#endif
 
 #else
       if (sig == SIGFPE /* && info->si_code == FPE_INTDIV */) {
@@ -640,9 +615,9 @@ JVM_handle_bsd_signal(int sig,
           // the exception that we do the d2i by hand with different
           // rounding. Seems kind of weird.
           // NOTE: that we take the exception at the NEXT floating point instruction.
-          assert(pc[0] == 0xDB, "not a FIST opcode");
-          assert(pc[1] == 0x14, "not a FIST opcode");
-          assert(pc[2] == 0x24, "not a FIST opcode");
+          assert(pc[0] == 0xDB, "not a FIST opcode");
+          assert(pc[1] == 0x14, "not a FIST opcode");
+          assert(pc[2] == 0x24, "not a FIST opcode");
           return true;
         } else if (op == 0xF7) {
           // IDIV
@@ -653,7 +628,7 @@ JVM_handle_bsd_signal(int sig,
           tty->print_cr("unknown opcode 0x%X with SIGFPE.", op);
           fatal("please update this code.");
         }
-#endif // AMD64
+#endif
       } else if ((sig == SIGSEGV || sig == SIGBUS) &&
                !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
@@ -759,7 +734,7 @@ JVM_handle_bsd_signal(int sig,
       }
     }
   }
-#endif // !AMD64
+#endif
 
   if (stub != NULL) {
     // save all thread context in case we need to restore it
@@ -802,9 +777,8 @@ void os::Bsd::init_thread_fpu_state(void) {
 #ifndef AMD64
   // Set fpu to 53 bit precision. This happens too early to use a stub.
   fixcw();
-#endif // !AMD64
+#endif
 }
-
 
 // Check that the bsd kernel version is 2.4 or higher since earlier
 // versions do not support SSE without patches.
@@ -829,7 +803,7 @@ bool os::is_allocatable(size_t bytes) {
   }
 
   return addr != NULL;
-#endif // AMD64
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -839,17 +813,13 @@ bool os::is_allocatable(size_t bytes) {
 // HotSpot guard pages is added later.
 size_t os::Posix::_compiler_thread_min_stack_allowed = 48 * K;
 size_t os::Posix::_java_thread_min_stack_allowed = 48 * K;
-#ifdef _LP64
 size_t os::Posix::_vm_internal_thread_min_stack_allowed = 64 * K;
-#else
-size_t os::Posix::_vm_internal_thread_min_stack_allowed = (48 DEBUG_ONLY(+ 4)) * K;
-#endif // _LP64
 
 #ifndef AMD64
 #ifdef __GNUC__
 #define GET_GS() ({int gs; __asm__ volatile("movw %%gs, %w0":"=q"(gs)); gs&0xffff;})
 #endif
-#endif // AMD64
+#endif
 
 // return default stack size for thr_type
 size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
@@ -858,10 +828,9 @@ size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
   size_t s = (thr_type == os::compiler_thread ? 4 * M : 1 * M);
 #else
   size_t s = (thr_type == os::compiler_thread ? 2 * M : 512 * K);
-#endif // AMD64
+#endif
   return s;
 }
-
 
 // Java thread:
 //
@@ -953,8 +922,7 @@ static void current_stack_region(address * bottom, size_t * size) {
 
   pthread_attr_destroy(&attr);
 #endif
-  assert(os::current_stack_pointer() >= *bottom &&
-         os::current_stack_pointer() < *bottom + *size, "just checking");
+  assert(os::current_stack_pointer() >= *bottom && os::current_stack_pointer() < *bottom + *size, "just checking");
 }
 
 address os::current_stack_base() {
@@ -1019,7 +987,7 @@ void os::print_context(outputStream *st, const void *context) {
   st->cr();
   st->print(  "EIP=" INTPTR_FORMAT, (intptr_t)uc->context_eip);
   st->print(", EFLAGS=" INTPTR_FORMAT, (intptr_t)uc->context_eflags);
-#endif // AMD64
+#endif
   st->cr();
   st->cr();
 
@@ -1076,7 +1044,7 @@ void os::print_register_info(outputStream *st, const void *context) {
   st->print("EBP="); print_location(st, uc->context_ebp);
   st->print("ESI="); print_location(st, uc->context_esi);
   st->print("EDI="); print_location(st, uc->context_edi);
-#endif // AMD64
+#endif
 
   st->cr();
 }
@@ -1086,13 +1054,8 @@ void os::setup_fpu() {
   address fpu_cntrl = StubRoutines::addr_fpu_cntrl_wrd_std();
   __asm__ volatile (  "fldcw (%0)" :
                       : "r" (fpu_cntrl) : "memory");
-#endif // !AMD64
-}
-
-#ifndef PRODUCT
-void os::verify_stack_alignment() {
-}
 #endif
+}
 
 int os::extra_bang_size_in_bytes() {
   // JDK-8050147 requires the full cache line bang for x86.

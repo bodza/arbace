@@ -31,8 +31,6 @@ JVM_VARIANT_OUTPUTDIR := $(HOTSPOT_OUTPUTDIR)/variant-$(JVM_VARIANT)
 JVM_OUTPUTDIR := $(JVM_VARIANT_OUTPUTDIR)/libjvm
 JVM_SUPPORT_DIR := $(JVM_VARIANT_OUTPUTDIR)/support
 
-DTRACE_SUPPORT_DIR := $(JVM_SUPPORT_DIR)/dtrace
-
 LIB_OUTPUTDIR := $(call FindLibDirForModule, java.base)
 ifneq ($(filter client minimal, $(JVM_VARIANT)), )
   JVM_VARIANT_SUBDIR := $(JVM_VARIANT)

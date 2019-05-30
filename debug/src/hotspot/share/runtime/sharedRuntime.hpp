@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
 #define SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
 
@@ -68,15 +44,6 @@ class SharedRuntime: AllStatic {
   static SafepointBlob*      _polling_page_safepoint_handler_blob;
   static SafepointBlob*      _polling_page_return_handler_blob;
 
-#ifdef COMPILER2
-  static UncommonTrapBlob*   _uncommon_trap_blob;
-#endif // COMPILER2
-
-#ifndef PRODUCT
-  // Counters
-  static int     _nof_megamorphic_calls;         // total # of megamorphic calls (through vtable)
-#endif // !PRODUCT
-
  private:
   enum { POLL_AT_RETURN,  POLL_AT_LOOP, POLL_AT_VECTOR_LOOP };
   static SafepointBlob* generate_handler_blob(address call_ptr, int poll_type);
@@ -101,12 +68,6 @@ class SharedRuntime: AllStatic {
   static jfloat  frem(jfloat  x, jfloat  y);
   static jdouble drem(jdouble x, jdouble y);
 
-
-#ifdef _WIN64
-  // Workaround for fmod issue in the Windows x64 CRT
-  static double fmod_winx64(double x, double y);
-#endif
-
 #ifdef __SOFTFP__
   static jfloat  fadd(jfloat x, jfloat y);
   static jfloat  fsub(jfloat x, jfloat y);
@@ -117,7 +78,7 @@ class SharedRuntime: AllStatic {
   static jdouble dsub(jdouble x, jdouble y);
   static jdouble dmul(jdouble x, jdouble y);
   static jdouble ddiv(jdouble x, jdouble y);
-#endif // __SOFTFP__
+#endif
 
   // float conversion (needs to set appropriate rounding mode)
   static jint    f2i (jfloat  x);
@@ -132,7 +93,7 @@ class SharedRuntime: AllStatic {
   static jfloat  i2f (jint    x);
   static jdouble i2d (jint    x);
   static jdouble f2d (jfloat  x);
-#endif // __SOFTFP__
+#endif
 
   // double trigonometrics and transcendentals
   static jdouble dsin(jdouble x);
@@ -201,9 +162,7 @@ class SharedRuntime: AllStatic {
   static address continuation_for_implicit_exception(JavaThread* thread,
                                                      address faulting_pc,
                                                      ImplicitExceptionKind exception_kind);
-#if INCLUDE_JVMCI
   static address deoptimize_for_implicit_exception(JavaThread* thread, address pc, CompiledMethod* nm, int deopt_reason);
-#endif
 
   // Post-slow-path-allocation, pre-initializing-stores step for
   // implementing e.g. ReduceInitialCardMarks
@@ -216,46 +175,36 @@ class SharedRuntime: AllStatic {
   static address get_poll_stub(address pc);
 
   static address get_ic_miss_stub() {
-    assert(_ic_miss_blob!= NULL, "oops");
+    assert(_ic_miss_blob!= NULL, "oops");
     return _ic_miss_blob->entry_point();
   }
 
   static address get_handle_wrong_method_stub() {
-    assert(_wrong_method_blob!= NULL, "oops");
+    assert(_wrong_method_blob!= NULL, "oops");
     return _wrong_method_blob->entry_point();
   }
 
   static address get_handle_wrong_method_abstract_stub() {
-    assert(_wrong_method_abstract_blob!= NULL, "oops");
+    assert(_wrong_method_abstract_blob!= NULL, "oops");
     return _wrong_method_abstract_blob->entry_point();
   }
 
-#ifdef COMPILER2
-  static void generate_uncommon_trap_blob(void);
-  static UncommonTrapBlob* uncommon_trap_blob()                  { return _uncommon_trap_blob; }
-#endif // COMPILER2
-
   static address get_resolve_opt_virtual_call_stub() {
-    assert(_resolve_opt_virtual_call_blob != NULL, "oops");
+    assert(_resolve_opt_virtual_call_blob != NULL, "oops");
     return _resolve_opt_virtual_call_blob->entry_point();
   }
   static address get_resolve_virtual_call_stub() {
-    assert(_resolve_virtual_call_blob != NULL, "oops");
+    assert(_resolve_virtual_call_blob != NULL, "oops");
     return _resolve_virtual_call_blob->entry_point();
   }
   static address get_resolve_static_call_stub() {
-    assert(_resolve_static_call_blob != NULL, "oops");
+    assert(_resolve_static_call_blob != NULL, "oops");
     return _resolve_static_call_blob->entry_point();
   }
 
   static SafepointBlob* polling_page_return_handler_blob()     { return _polling_page_return_handler_blob; }
   static SafepointBlob* polling_page_safepoint_handler_blob()  { return _polling_page_safepoint_handler_blob; }
   static SafepointBlob* polling_page_vectors_safepoint_handler_blob()  { return _polling_page_vectors_safepoint_handler_blob; }
-
-  // Counters
-#ifndef PRODUCT
-  static address nof_megamorphic_calls_addr() { return (address)&_nof_megamorphic_calls; }
-#endif // PRODUCT
 
   // Helper routine for full-speed JVMTI exception throwing support
   static void throw_and_post_jvmti_exception(JavaThread *thread, Handle h_exception);
@@ -281,7 +230,6 @@ class SharedRuntime: AllStatic {
   // Utility method for retrieving the Java thread id, returns 0 if the
   // thread is not a well formed Java thread.
   static jlong get_java_tid(Thread* thread);
-
 
   // used by native wrappers to reenable yellow if overflow happened in native code
   static void reguard_yellow_pages();
@@ -337,7 +285,6 @@ class SharedRuntime: AllStatic {
   // Find the method that called us.
   static methodHandle find_callee_method(JavaThread* thread, TRAPS);
 
-
  private:
   static Handle find_callee_info(JavaThread* thread,
                                  Bytecodes::Code& bc,
@@ -353,10 +300,10 @@ class SharedRuntime: AllStatic {
   static address clean_opt_virtual_call_entry();
   static address clean_static_call_entry();
 
-#if defined(X86) && defined(COMPILER1)
+#if defined(X86)
   // For Object.hashCode, System.identityHashCode try to pull hashCode from object header if available.
   static void inline_check_hashcode_from_object_header(MacroAssembler* masm, const methodHandle& method, Register obj_reg, Register result);
-#endif // X86 && COMPILER1
+#endif
 
  public:
 
@@ -374,7 +321,7 @@ class SharedRuntime: AllStatic {
 
   static void check_member_name_argument_is_last_argument(const methodHandle& method,
                                                           const BasicType* sig_bt,
-                                                          const VMRegPair* regs) NOT_DEBUG_RETURN;
+                                                          const VMRegPair* regs) {};
 
   // Ditto except for calling C
   //
@@ -512,80 +459,7 @@ class SharedRuntime: AllStatic {
   static address handle_wrong_method_ic_miss(JavaThread* thread);
 
   static address handle_unsafe_access(JavaThread* thread, address next_pc);
-
-#ifndef PRODUCT
-
-  // Collect and print inline cache miss statistics
- private:
-  enum { maxICmiss_count = 100 };
-  static int     _ICmiss_index;                  // length of IC miss histogram
-  static int     _ICmiss_count[maxICmiss_count]; // miss counts
-  static address _ICmiss_at[maxICmiss_count];    // miss addresses
-  static void trace_ic_miss(address at);
-
- public:
-  static int _throw_null_ctr;                    // throwing a null-pointer exception
-  static int _ic_miss_ctr;                       // total # of IC misses
-  static int _wrong_method_ctr;
-  static int _resolve_static_ctr;
-  static int _resolve_virtual_ctr;
-  static int _resolve_opt_virtual_ctr;
-  static int _implicit_null_throws;
-  static int _implicit_div0_throws;
-
-  static int _jbyte_array_copy_ctr;        // Slow-path byte array copy
-  static int _jshort_array_copy_ctr;       // Slow-path short array copy
-  static int _jint_array_copy_ctr;         // Slow-path int array copy
-  static int _jlong_array_copy_ctr;        // Slow-path long array copy
-  static int _oop_array_copy_ctr;          // Slow-path oop array copy
-  static int _checkcast_array_copy_ctr;    // Slow-path oop array copy, with cast
-  static int _unsafe_array_copy_ctr;       // Slow-path includes alignment checks
-  static int _generic_array_copy_ctr;      // Slow-path includes type decoding
-  static int _slow_array_copy_ctr;         // Slow-path failed out to a method call
-
-  static int _new_instance_ctr;            // 'new' object requires GC
-  static int _new_array_ctr;               // 'new' array requires GC
-  static int _multi1_ctr, _multi2_ctr, _multi3_ctr, _multi4_ctr, _multi5_ctr;
-  static int _find_handler_ctr;            // find exception handler
-  static int _rethrow_ctr;                 // rethrow exception
-  static int _mon_enter_stub_ctr;          // monitor enter stub
-  static int _mon_exit_stub_ctr;           // monitor exit stub
-  static int _mon_enter_ctr;               // monitor enter slow
-  static int _mon_exit_ctr;                // monitor exit slow
-  static int _partial_subtype_ctr;         // SubRoutines::partial_subtype_check
-
-  // Statistics code
-  // stats for "normal" compiled calls (non-interface)
-  static int     _nof_normal_calls;              // total # of calls
-  static int     _nof_optimized_calls;           // total # of statically-bound calls
-  static int     _nof_inlined_calls;             // total # of inlined normal calls
-  static int     _nof_static_calls;              // total # of calls to static methods or super methods (invokespecial)
-  static int     _nof_inlined_static_calls;      // total # of inlined static calls
-  // stats for compiled interface calls
-  static int     _nof_interface_calls;           // total # of compiled calls
-  static int     _nof_optimized_interface_calls; // total # of statically-bound interface calls
-  static int     _nof_inlined_interface_calls;   // total # of inlined interface calls
-  static int     _nof_megamorphic_interface_calls;// total # of megamorphic interface calls
-  // stats for runtime exceptions
-  static int     _nof_removable_exceptions;      // total # of exceptions that could be replaced by branches due to inlining
-
- public: // for compiler
-  static address nof_normal_calls_addr()                { return (address)&_nof_normal_calls; }
-  static address nof_optimized_calls_addr()             { return (address)&_nof_optimized_calls; }
-  static address nof_inlined_calls_addr()               { return (address)&_nof_inlined_calls; }
-  static address nof_static_calls_addr()                { return (address)&_nof_static_calls; }
-  static address nof_inlined_static_calls_addr()        { return (address)&_nof_inlined_static_calls; }
-  static address nof_interface_calls_addr()             { return (address)&_nof_interface_calls; }
-  static address nof_optimized_interface_calls_addr()   { return (address)&_nof_optimized_interface_calls; }
-  static address nof_inlined_interface_calls_addr()     { return (address)&_nof_inlined_interface_calls; }
-  static address nof_megamorphic_interface_calls_addr() { return (address)&_nof_megamorphic_interface_calls; }
-  static void print_call_statistics(int comp_total);
-  static void print_statistics();
-  static void print_ic_miss_histogram();
-
-#endif // PRODUCT
 };
-
 
 // ---------------------------------------------------------------------------
 // Implementation of AdapterHandlerLibrary
@@ -629,22 +503,11 @@ class AdapterHandlerEntry : public BasicHashtableEntry<mtCode> {
   address _c2i_entry;
   address _c2i_unverified_entry;
 
-#ifdef ASSERT
-  // Captures code and signature used to generate this adapter when
-  // verifying adapter equivalence.
-  unsigned char* _saved_code;
-  int            _saved_code_length;
-#endif
-
   void init(AdapterFingerPrint* fingerprint, address i2c_entry, address c2i_entry, address c2i_unverified_entry) {
     _fingerprint = fingerprint;
     _i2c_entry = i2c_entry;
     _c2i_entry = c2i_entry;
     _c2i_unverified_entry = c2i_unverified_entry;
-#ifdef ASSERT
-    _saved_code = NULL;
-    _saved_code_length = 0;
-#endif
   }
 
   void deallocate();
@@ -665,12 +528,6 @@ class AdapterHandlerEntry : public BasicHashtableEntry<mtCode> {
     return (AdapterHandlerEntry*)BasicHashtableEntry<mtCode>::next();
   }
 
-#ifdef ASSERT
-  // Used to verify that code generated for shared adapters is equivalent
-  void save_code   (unsigned char* code, int length);
-  bool compare_code(unsigned char* code, int length);
-#endif
-
   //virtual void print_on(outputStream* st) const;  DO NOT USE
   void print_adapter_on(outputStream* st) const;
 };
@@ -685,9 +542,8 @@ class CDSAdapterHandlerEntry: public AdapterHandlerEntry {
 public:
   address get_c2i_entry_trampoline()             const { return _c2i_entry_trampoline; }
   AdapterHandlerEntry** get_adapter_trampoline() const { return _adapter_trampoline; }
-  void init() NOT_CDS_RETURN;
+  void init() {};
 };
-
 
 class AdapterHandlerLibrary: public AllStatic {
  private:
@@ -708,10 +564,6 @@ class AdapterHandlerLibrary: public AllStatic {
   static void print_handler(const CodeBlob* b) { print_handler_on(tty, b); }
   static void print_handler_on(outputStream* st, const CodeBlob* b);
   static bool contains(const CodeBlob* b);
-#ifndef PRODUCT
-  static void print_statistics();
-#endif // PRODUCT
-
 };
 
-#endif // SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
+#endif

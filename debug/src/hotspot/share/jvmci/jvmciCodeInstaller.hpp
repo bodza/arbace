@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 #define SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 
@@ -153,9 +130,6 @@ private:
   jint          _orig_pc_offset;
   jint          _parameter_count;
   jint          _constants_size;
-#ifndef PRODUCT
-  jobject       _comments_handle;
-#endif
 
   bool          _has_wide_vector;
   jobject       _word_kind_handle;
@@ -192,9 +166,6 @@ private:
   arrayOop code();
   arrayOop data_section();
   objArrayOop data_section_patches();
-#ifndef PRODUCT
-  objArrayOop comments();
-#endif
 
   oop word_kind();
 
@@ -217,9 +188,7 @@ protected:
   MonitorValue* get_monitor_value(Handle value, GrowableArray<ScopeValue*>* objects, TRAPS);
 
   void* record_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS);
-#ifdef _LP64
   narrowKlass record_narrow_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS);
-#endif
 
   // extract the fields of the HotSpotCompiledCode
   void initialize_fields(oop target, oop target_method, TRAPS);
@@ -273,6 +242,4 @@ protected:
  */
 Method* getMethodFromHotSpotMethod(oop hotspot_method);
 
-
-
-#endif // SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
+#endif

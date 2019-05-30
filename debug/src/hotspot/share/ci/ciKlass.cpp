@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciKlass.hpp"
 #include "ci/ciSymbol.hpp"
@@ -36,11 +12,11 @@
 // ------------------------------------------------------------------
 // ciKlass::ciKlass
 ciKlass::ciKlass(Klass* k) : ciType(k) {
-  assert(get_Klass()->is_klass(), "wrong type");
+  assert(get_Klass()->is_klass(), "wrong type");
   Klass* klass = get_Klass();
   _layout_helper = klass->layout_helper();
   Symbol* klass_name = klass->name();
-  assert(klass_name != NULL, "wrong ciKlass constructor");
+  assert(klass_name != NULL, "wrong ciKlass constructor");
   _name = CURRENT_ENV->get_symbol(klass_name);
 }
 
@@ -49,7 +25,7 @@ ciKlass::ciKlass(Klass* k) : ciType(k) {
 //
 // Nameless klass variant.
 ciKlass::ciKlass(Klass* k, ciSymbol* name) : ciType(k) {
-  assert(get_Klass()->is_klass(), "wrong type");
+  assert(get_Klass()->is_klass(), "wrong type");
   _name = name;
   _layout_helper = Klass::_lh_neutral_value;
 }
@@ -66,8 +42,8 @@ ciKlass::ciKlass(ciSymbol* name, BasicType bt) : ciType(bt) {
 // ------------------------------------------------------------------
 // ciKlass::is_subtype_of
 bool ciKlass::is_subtype_of(ciKlass* that) {
-  assert(this->is_loaded(), "must be loaded: %s", this->name()->as_quoted_ascii());
-  assert(that->is_loaded(), "must be loaded: %s", that->name()->as_quoted_ascii());
+  assert(this->is_loaded(), "must be loaded: %s", this->name()->as_quoted_ascii());
+  assert(that->is_loaded(), "must be loaded: %s", that->name()->as_quoted_ascii());
 
   // Check to see if the klasses are identical.
   if (this == that) {
@@ -85,8 +61,8 @@ bool ciKlass::is_subtype_of(ciKlass* that) {
 // ------------------------------------------------------------------
 // ciKlass::is_subclass_of
 bool ciKlass::is_subclass_of(ciKlass* that) {
-  assert(this->is_loaded(), "must be loaded: %s", this->name()->as_quoted_ascii());
-  assert(that->is_loaded(), "must be loaded: %s", that->name()->as_quoted_ascii());
+  assert(this->is_loaded(), "must be loaded: %s", this->name()->as_quoted_ascii());
+  assert(that->is_loaded(), "must be loaded: %s", that->name()->as_quoted_ascii());
 
   GUARDED_VM_ENTRY(return get_Klass()->is_subclass_of(that->get_Klass());)
 }
@@ -94,7 +70,7 @@ bool ciKlass::is_subclass_of(ciKlass* that) {
 // ------------------------------------------------------------------
 // ciKlass::super_depth
 juint ciKlass::super_depth() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
@@ -104,7 +80,7 @@ juint ciKlass::super_depth() {
 // ------------------------------------------------------------------
 // ciKlass::super_check_offset
 juint ciKlass::super_check_offset() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
@@ -114,7 +90,7 @@ juint ciKlass::super_check_offset() {
 // ------------------------------------------------------------------
 // ciKlass::super_of_depth
 ciKlass* ciKlass::super_of_depth(juint i) {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
@@ -125,7 +101,7 @@ ciKlass* ciKlass::super_of_depth(juint i) {
 // ------------------------------------------------------------------
 // ciKlass::can_be_primary_super
 bool ciKlass::can_be_primary_super() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
@@ -146,7 +122,7 @@ bool ciKlass::can_be_primary_super() {
 // been created as ciObjects anyway.  Something to think about...
 ciKlass*
 ciKlass::least_common_ancestor(ciKlass* that) {
-  assert(is_loaded() && that->is_loaded(), "must be loaded");
+  assert(is_loaded() && that->is_loaded(), "must be loaded");
   // Check to see if the klasses are identical.
   if (this == that) {
     return this;
@@ -178,7 +154,7 @@ ciKlass::least_common_ancestor(ciKlass* that) {
 //
 // Find a klass using this klass's class loader.
 ciKlass* ciKlass::find_klass(ciSymbol* klass_name) {
-  assert(is_loaded(), "cannot find_klass through an unloaded klass");
+  assert(is_loaded(), "cannot find_klass through an unloaded klass");
   return CURRENT_ENV->get_klass_by_name(this,
                                         klass_name, false);
 }
@@ -201,7 +177,7 @@ ciInstance* ciKlass::java_mirror() {
 // ------------------------------------------------------------------
 // ciKlass::modifier_flags
 jint ciKlass::modifier_flags() {
-  assert(is_loaded(), "not loaded");
+  assert(is_loaded(), "not loaded");
   GUARDED_VM_ENTRY(
     return get_Klass()->modifier_flags();
   )
@@ -210,7 +186,7 @@ jint ciKlass::modifier_flags() {
 // ------------------------------------------------------------------
 // ciKlass::access_flags
 jint ciKlass::access_flags() {
-  assert(is_loaded(), "not loaded");
+  assert(is_loaded(), "not loaded");
   GUARDED_VM_ENTRY(
     return get_Klass()->access_flags().as_int();
   )

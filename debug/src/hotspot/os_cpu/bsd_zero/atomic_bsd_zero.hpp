@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2011, 2015, Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef OS_CPU_BSD_ZERO_VM_ATOMIC_BSD_ZERO_HPP
 #define OS_CPU_BSD_ZERO_VM_ATOMIC_BSD_ZERO_HPP
 
@@ -96,7 +71,7 @@ static inline int m68k_lock_test_and_set(int newval, volatile int *ptr) {
         return prev;
     }
 }
-#endif // M68K
+#endif
 
 #ifdef ARM
 
@@ -112,8 +87,6 @@ static inline int m68k_lock_test_and_set(int newval, volatile int *ptr) {
 
 typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
 #define __kernel_cmpxchg (*(__kernel_cmpxchg_t *) 0xffff0fc0)
-
-
 
 /* Perform an atomic compare and swap: if the current value of `*PTR'
    is OLDVAL, then write NEWVAL into `*PTR'.  Return the contents of
@@ -157,7 +130,7 @@ static inline int arm_lock_test_and_set(int newval, volatile int *ptr) {
         return prev;
     }
 }
-#endif // ARM
+#endif
 
 template<size_t byte_size>
 struct Atomic::PlatformAdd
@@ -181,8 +154,8 @@ inline D Atomic::PlatformAdd<4>::add_and_fetch(I add_value, D volatile* dest,
   return add_using_helper<int>(m68k_add_and_fetch, add_value, dest);
 #else
   return __sync_add_and_fetch(dest, add_value);
-#endif // M68K
-#endif // ARM
+#endif
+#endif
 }
 
 template<>
@@ -218,8 +191,8 @@ inline T Atomic::PlatformXchg<4>::operator()(T exchange_value,
   // barrier.
   __sync_synchronize();
   return result;
-#endif // M68K
-#endif // ARM
+#endif
+#endif
 }
 
 template<>
@@ -251,8 +224,8 @@ inline T Atomic::PlatformCmpxchg<4>::operator()(T exchange_value,
   return cmpxchg_using_helper<int>(m68k_compare_and_swap, exchange_value, dest, compare_value);
 #else
   return __sync_val_compare_and_swap(dest, compare_value, exchange_value);
-#endif // M68K
-#endif // ARM
+#endif
+#endif
 }
 
 template<>
@@ -282,4 +255,4 @@ inline void Atomic::PlatformStore<8>::operator()(T store_value,
   os::atomic_copy64(reinterpret_cast<const volatile int64_t*>(&store_value), reinterpret_cast<volatile int64_t*>(dest));
 }
 
-#endif // OS_CPU_BSD_ZERO_VM_ATOMIC_BSD_ZERO_HPP
+#endif

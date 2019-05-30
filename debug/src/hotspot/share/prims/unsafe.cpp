@@ -1,33 +1,9 @@
-/*
- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jni.h"
 #include "jvm.h"
 #include "classfile/classFileStream.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "jfr/jfrEvents.hpp"
+// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -55,11 +31,9 @@
  * Implementation of the jdk.internal.misc.Unsafe class
  */
 
-
 #define MAX_OBJECT_SIZE \
   ( arrayOopDesc::header_size(T_DOUBLE) * HeapWordSize \
     + ((julong)max_jint * sizeof(double)) )
-
 
 #define UNSAFE_ENTRY(result_type, header) \
   JVM_ENTRY(static result_type, header)
@@ -68,7 +42,6 @@
   JVM_LEAF(static result_type, header)
 
 #define UNSAFE_END JVM_END
-
 
 static inline void* addr_from_java(jlong addr) {
   // This assert fails in a variety of ways on 32-bit systems.
@@ -79,10 +52,9 @@ static inline void* addr_from_java(jlong addr) {
 }
 
 static inline jlong addr_to_java(void* p) {
-  assert(p == (void*)(uintptr_t)p, "must not be odd high bits");
+  assert(p == (void*)(uintptr_t)p, "must not be odd high bits");
   return (uintptr_t)p;
 }
-
 
 // Note: The VM's obj_field and related accessors use byte-scaled
 // ("unscaled") offsets, just as the unsafe methods do.
@@ -103,20 +75,6 @@ static inline jlong field_offset_from_byte_offset(jlong byte_offset) {
 }
 
 static inline void assert_field_offset_sane(oop p, jlong field_offset) {
-#ifdef ASSERT
-  jlong byte_offset = field_offset_to_byte_offset(field_offset);
-
-  if (p != NULL) {
-    assert(byte_offset >= 0 && byte_offset <= (jlong)MAX_OBJECT_SIZE, "sane offset");
-    if (byte_offset == (jint)byte_offset) {
-      void* ptr_plus_disp = (address)p + byte_offset;
-      assert(p->field_addr_raw((jint)byte_offset) == ptr_plus_disp,
-             "raw [ptr+disp] must be consistent with oop::field_addr_raw");
-    }
-    jlong p_size = HeapWordSize * (jlong)(p->size());
-    assert(byte_offset < p_size, "Unsafe access: offset " INT64_FORMAT " > object's size " INT64_FORMAT, (int64_t)byte_offset, (int64_t)p_size);
-  }
-#endif
 }
 
 static inline void* index_oop_from_field_offset_long(oop p, jlong field_offset) {
@@ -142,7 +100,6 @@ jlong Unsafe_field_offset_to_byte_offset(jlong field_offset) {
 jlong Unsafe_field_offset_from_byte_offset(jlong byte_offset) {
   return byte_offset;
 }
-
 
 ///// Data read/writes on the Java heap and in native (off-heap) memory
 
@@ -231,7 +188,6 @@ public:
       HeapAccess<>::store_at(_obj, _offset, normalize_for_write(x));
     }
   }
-
 
   T get_volatile() {
     if (_obj == NULL) {
@@ -453,8 +409,8 @@ UNSAFE_LEAF(jint, Unsafe_PageSize()) {
 } UNSAFE_END
 
 static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
-  assert(clazz != NULL, "clazz must not be NULL");
-  assert(name != NULL, "name must not be NULL");
+  assert(clazz != NULL, "clazz must not be NULL");
+  assert(name != NULL, "name must not be NULL");
 
   ResourceMark rm(THREAD);
   char *utf_name = java_lang_String::as_utf8_string(JNIHandles::resolve_non_null(name));
@@ -476,7 +432,7 @@ static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
 }
 
 static jlong find_field_offset(jobject field, int must_be_static, TRAPS) {
-  assert(field != NULL, "field must not be NULL");
+  assert(field != NULL, "field must not be NULL");
 
   oop reflected   = JNIHandles::resolve_non_null(field);
   oop mirror      = java_lang_reflect_Field::clazz(reflected);
@@ -508,7 +464,7 @@ UNSAFE_ENTRY(jlong, Unsafe_StaticFieldOffset0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobject field)) {
-  assert(field != NULL, "field must not be NULL");
+  assert(field != NULL, "field must not be NULL");
 
   // Note:  In this VM implementation, a field address is always a short
   // offset from the base of a a klass metaobject.  Thus, the full dynamic
@@ -530,7 +486,7 @@ UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-  assert(clazz != NULL, "clazz must not be NULL");
+  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
 
@@ -543,7 +499,7 @@ UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, j
 UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-  assert(clazz != NULL, "clazz must not be NULL");
+  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* klass = java_lang_Class::as_Klass(mirror);
@@ -557,7 +513,7 @@ UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, 
 UNSAFE_END
 
 static void getBaseAndScale(int& base, int& scale, jclass clazz, TRAPS) {
-  assert(clazz != NULL, "clazz must not be NULL");
+  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* k = java_lang_Class::as_Klass(mirror);
@@ -570,7 +526,7 @@ static void getBaseAndScale(int& base, int& scale, jclass clazz, TRAPS) {
   } else if (k->is_typeArray_klass()) {
     TypeArrayKlass* tak = TypeArrayKlass::cast(k);
     base  = tak->array_header_in_bytes();
-    assert(base == arrayOopDesc::base_offset_in_bytes(tak->element_type()), "array_header_size semantics ok");
+    assert(base == arrayOopDesc::base_offset_in_bytes(tak->element_type()), "array_header_size semantics ok");
     scale = (1 << tak->log2_element_size());
   } else {
     ShouldNotReachHere();
@@ -583,7 +539,6 @@ UNSAFE_ENTRY(jint, Unsafe_ArrayBaseOffset0(JNIEnv *env, jobject unsafe, jclass c
 
   return field_offset_from_byte_offset(base);
 } UNSAFE_END
-
 
 UNSAFE_ENTRY(jint, Unsafe_ArrayIndexScale0(JNIEnv *env, jobject unsafe, jclass clazz)) {
   int base = 0, scale = 0;
@@ -606,7 +561,6 @@ UNSAFE_ENTRY(jint, Unsafe_ArrayIndexScale0(JNIEnv *env, jobject unsafe, jclass c
   return field_offset_from_byte_offset(scale) - field_offset_from_byte_offset(0);
 } UNSAFE_END
 
-
 static inline void throw_new(JNIEnv *env, const char *ename) {
   jclass cls = env->FindClass(ename);
   if (env->ExceptionCheck()) {
@@ -626,8 +580,8 @@ static jclass Unsafe_DefineClass_impl(JNIEnv *env, jstring name, jbyteArray data
   jclass result = 0;
   char buf[128];
 
-  assert(data != NULL, "Class bytes must not be NULL");
-  assert(length >= 0, "length must not be negative: %d", length);
+  assert(data != NULL, "Class bytes must not be NULL");
+  assert(length >= 0, "length must not be negative: %d", length);
 
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();
@@ -676,13 +630,11 @@ static jclass Unsafe_DefineClass_impl(JNIEnv *env, jstring name, jbyteArray data
   return result;
 }
 
-
 UNSAFE_ENTRY(jclass, Unsafe_DefineClass0(JNIEnv *env, jobject unsafe, jstring name, jbyteArray data, int offset, int length, jobject loader, jobject pd)) {
   ThreadToNativeFromVM ttnfv(thread);
 
   return Unsafe_DefineClass_impl(env, name, data, offset, length, loader, pd);
 } UNSAFE_END
-
 
 // define a class but do not make it known to the class loader or system dictionary
 // - host_class:  supplies context for linkage, access control, protection domain, and class loader
@@ -742,15 +694,15 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
                                  jclass host_class, jbyteArray data, jobjectArray cp_patches_jh,
                                  u1** temp_alloc,
                                  TRAPS) {
-  assert(host_class != NULL, "host_class must not be NULL");
-  assert(data != NULL, "data must not be NULL");
+  assert(host_class != NULL, "host_class must not be NULL");
+  assert(data != NULL, "data must not be NULL");
 
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();
   }
 
   jint length = typeArrayOop(JNIHandles::resolve_non_null(data))->length();
-  assert(length >= 0, "class_bytes_length must not be negative: %d", length);
+  assert(length >= 0, "class_bytes_length must not be negative: %d", length);
 
   int class_bytes_length = (int) length;
 
@@ -768,7 +720,7 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
   objArrayHandle cp_patches_h;
   if (cp_patches_jh != NULL) {
     oop p = JNIHandles::resolve_non_null(cp_patches_jh);
-    assert(p->is_objArray(), "cp_patches must be an object[]");
+    assert(p->is_objArray(), "cp_patches must be an object[]");
     cp_patches_h = objArrayHandle(THREAD, (objArrayOop)p);
   }
 
@@ -785,7 +737,7 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "Host class is null");
   }
 
-  assert(host_klass->is_instance_klass(), "Host class must be an instance class");
+  assert(host_klass->is_instance_klass(), "Host class must be an instance class");
 
   const char* host_source = host_klass->external_name();
   Handle      host_loader(THREAD, host_klass->class_loader());
@@ -854,8 +806,6 @@ UNSAFE_ENTRY(jclass, Unsafe_DefineAnonymousClass0(JNIEnv *env, jobject unsafe, j
 
   return (jclass) res_jh;
 } UNSAFE_END
-
-
 
 UNSAFE_ENTRY(void, Unsafe_ThrowException(JNIEnv *env, jobject unsafe, jthrowable thr)) {
   ThreadToNativeFromVM ttnfv(thread);
@@ -927,8 +877,8 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetLong(JNIEnv *env, jobject unsafe, job
 } UNSAFE_END
 
 static void post_thread_park_event(EventThreadPark* event, const oop obj, jlong timeout_nanos, jlong until_epoch_millis) {
-  assert(event != NULL, "invariant");
-  assert(event->should_commit(), "invariant");
+  assert(event != NULL, "invariant");
+  assert(event->should_commit(), "invariant");
   event->set_parkedClass((obj != NULL) ? obj->klass() : NULL);
   event->set_timeout(timeout_nanos);
   event->set_until(until_epoch_millis);
@@ -986,7 +936,7 @@ UNSAFE_ENTRY(void, Unsafe_Unpark(JNIEnv *env, jobject unsafe, jobject jthread)) 
         }
       }
     }
-  } // ThreadsListHandle is destroyed here.
+  }
 
   if (p != NULL) {
     HOTSPOT_THREAD_UNPARK((uintptr_t) p);
@@ -1000,7 +950,7 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
   jint ret;
 
   typeArrayOop a = typeArrayOop(JNIHandles::resolve_non_null(loadavg));
-  assert(a->is_typeArray(), "must be type array");
+  assert(a->is_typeArray(), "must be type array");
 
   ret = os::loadavg(la, nelem);
   if (ret == -1) {
@@ -1008,7 +958,7 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
   }
 
   // if successful, ret is the number of samples actually retrieved.
-  assert(ret >= 0 && ret <= max_nelem, "Unexpected loadavg return value");
+  assert(ret >= 0 && ret <= max_nelem, "Unexpected loadavg return value");
   switch(ret) {
     case 3: a->double_at_put(2, (jdouble)la[2]); // fall through
     case 2: a->double_at_put(1, (jdouble)la[1]); // fall through
@@ -1017,7 +967,6 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
 
   return ret;
 } UNSAFE_END
-
 
 /// JVM_RegisterUnsafeMethods
 
@@ -1041,7 +990,6 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
     {CC "put" #Type,      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type)}, \
     {CC "get" #Type "Volatile",      CC "(" OBJ "J)" #Desc,       FN_PTR(Unsafe_Get##Type##Volatile)}, \
     {CC "put" #Type "Volatile",      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type##Volatile)}
-
 
 static JNINativeMethod jdk_internal_misc_Unsafe_methods[] = {
     {CC "getObject",        CC "(" OBJ "J)" OBJ "",   FN_PTR(Unsafe_GetObject)},
@@ -1118,7 +1066,6 @@ static JNINativeMethod jdk_internal_misc_Unsafe_methods[] = {
 #undef DAC_Args
 
 #undef DECLARE_GETPUTOOP
-
 
 // This function is exported, used by NativeLookup.
 // The Unsafe_xxx functions above are called only from the interpreter.

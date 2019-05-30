@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/stackMapTableFormat.hpp"
 #include "interpreter/bytecodes.hpp"
@@ -177,9 +153,8 @@ methodHandle Relocator::insert_space_at(int bci, int size, u_char inst_buffer[],
   return new_method;
 }
 
-
 bool Relocator::handle_code_changes() {
-  assert(_changes != NULL, "changes vector must be initialized");
+  assert(_changes != NULL, "changes vector must be initialized");
 
   while (!_changes->is_empty()) {
     // Inv: everything is aligned.
@@ -200,7 +175,6 @@ bool Relocator::handle_code_changes() {
   }
   return true;
 }
-
 
 bool Relocator::is_opcode_lookupswitch(Bytecodes::Code bc) {
   switch (bc) {
@@ -268,7 +242,6 @@ int Relocator::get_orig_switch_pad(int bci, bool is_lookup_switch) {
   return -1;
 }
 
-
 // Push a ChangeJumpWiden if it doesn't already exist on the work queue,
 // otherwise adjust the item already there by delta.  The calculation for
 // new_delta is wrong for this because it uses the offset stored in the
@@ -280,7 +253,6 @@ void Relocator::push_jump_widen(int bci, int delta, int new_delta) {
   }
   _changes->push(new ChangeJumpWiden(bci, new_delta));
 }
-
 
 // The current instruction of "c" is a jump; one of its offset starts
 // at "offset" and is a short if "isShort" is "TRUE",
@@ -307,7 +279,6 @@ void Relocator::change_jump(int bci, int offset, bool is_short, int break_bci, i
     }
   }
 }
-
 
 // Changes all jumps crossing "break_bci" by "delta".  May enqueue things
 // on "rc->changes"
@@ -413,7 +384,6 @@ void Relocator::adjust_exception_table(int bci, int delta) {
   }
 }
 
-
 // The width of instruction at "bci" is changing by "delta".  Adjust the line number table.
 void Relocator::adjust_line_no_table(int bci, int delta) {
   if (method()->has_linenumber_table()) {
@@ -428,7 +398,6 @@ void Relocator::adjust_line_no_table(int bci, int delta) {
     set_compressed_line_number_table_size(writer.position());
   }
 }
-
 
 // The width of instruction at "bci" is changing by "delta".  Adjust the local variable table.
 void Relocator::adjust_local_var_table(int bci, int delta) {
@@ -490,9 +459,7 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
         if (frame->is_valid_offset(new_offset_delta)) {
           frame->set_offset_delta(new_offset_delta);
         } else {
-          assert(frame->is_same_frame() ||
-                 frame->is_same_locals_1_stack_item_frame(),
-                 "Frame must be one of the compressed forms");
+          assert(frame->is_same_frame() || frame->is_same_locals_1_stack_item_frame(), "Frame must be one of the compressed forms");
           // The new delta exceeds the capacity of the 'same_frame' or
           // 'same_frame_1_stack_item_frame' frame types.  We need to
           // convert these frames to the extended versions, but the extended
@@ -516,7 +483,6 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
 
           address frame_addr = (address)(data->adr_at(0) + frame_offset);
           frame = stack_map_frame::at(frame_addr);
-
 
           // Now convert the frames in place
           if (frame->is_same_frame()) {
@@ -564,7 +530,6 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
   }
 }
 
-
 bool Relocator::expand_code_array(int delta) {
   int length = MAX2(code_length() + delta, code_length() * (100+code_slop_pct()) / 100);
 
@@ -593,7 +558,6 @@ bool Relocator::expand_code_array(int delta) {
   return true;
 }
 
-
 // The instruction at "bci", whose size is "ilen", is changing size by
 // "delta".  Reallocate, move code, recalculate jumps, and enqueue
 // change items as necessary.
@@ -607,14 +571,14 @@ bool Relocator::relocate_code(int bci, int ilen, int delta) {
   }
 
   // We require 4-byte alignment of code arrays.
-  assert(((intptr_t)code_array() & 3) == 0, "check code alignment");
+  assert(((intptr_t)code_array() & 3) == 0, "check code alignment");
   // Change jumps before doing the copying; this routine requires aligned switches.
   change_jumps(bci, delta);
 
   // In case we have shrunken a tableswitch/lookupswitch statement, we store the last
   // bytes that get overwritten. We have to copy the bytes after the change_jumps method
   // has been called, since it is likely to update last offset in a tableswitch/lookupswitch
-  assert(delta >= -3, "We cannot overwrite more than 3 bytes.");
+  assert(delta >= -3, "We cannot overwrite more than 3 bytes.");
   if (delta < 0 && delta >= -3) {
     memcpy(_overwrite, addr_at(bci + ilen + delta), -delta);
   }
@@ -683,8 +647,8 @@ bool Relocator::handle_jump_widen(int bci, int delta) {
 
       // If 'if' points to the next bytecode after goto, it's already handled.
       // it shouldn't be.
-      assert (short_at(bci+1) != ilen+goto_length, "if relocation already handled");
-      assert(ilen == 3, "check length");
+      assert(short_at(bci+1) != ilen+goto_length, "if relocation already handled");
+      assert(ilen == 3, "check length");
 
       // Convert to 0 if <cond> goto 6
       //            3 _goto 11
@@ -712,11 +676,10 @@ bool Relocator::handle_jump_widen(int bci, int delta) {
       }
       int_at_put(cbci + 1, delta);
       break;
-
       }
     case Bytecodes::_goto:
     case Bytecodes::_jsr:
-      assert(ilen == 3, "check length");
+      assert(ilen == 3, "check length");
 
       if (!relocate_code(bci, 3, 2)) return false;
       if (bc == Bytecodes::_goto)
@@ -768,7 +731,7 @@ bool Relocator::handle_switch_pad(int bci, int old_pad, bool is_lookup_switch) {
       memmove(addr_at(bci + 1 + new_pad + len*4 + pad_delta),
               _overwrite, -pad_delta);
     } else {
-      assert(pad_delta > 0, "check");
+      assert(pad_delta > 0, "check");
       // Move the expanded instruction up.
       memmove(addr_at(bci +1 + new_pad),
               addr_at(bci +1 + old_pad),

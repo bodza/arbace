@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_THREADSMR_HPP
 #define SHARE_VM_RUNTIME_THREADSMR_HPP
 
@@ -54,34 +30,11 @@ class ThreadClosure;
 //     :  // do stuff with 'jt'...
 //   }
 //
-// JVM/TI jthread example:
-//   jthread thread = ...;
-//   :
-//   JavaThread* jt = NULL;
-//   ThreadsListHandle tlh;
-//   jvmtiError err = JvmtiExport::cv_external_thread_to_JavaThread(tlh.list(), thread, &jt, NULL);
-//   if (err != JVMTI_ERROR_NONE) {
-//     return err;
-//   }
-//   :  // do stuff with 'jt'...
-//
-// JVM/TI oop example (this one should be very rare):
-//   oop thread_obj = ...;
-//   :
-//   JavaThread *jt = NULL;
-//   ThreadsListHandle tlh;
-//   jvmtiError err = JvmtiExport::cv_oop_to_JavaThread(tlh.list(), thread_obj, &jt);
-//   if (err != JVMTI_ERROR_NONE) {
-//     return err;
-//   }
-//   :  // do stuff with 'jt'...
-//
 // A JavaThread * that is included in the ThreadsList that is held by
 // a ThreadsListHandle is protected as long as the ThreadsListHandle
 // remains in scope. The target JavaThread * may have logically exited,
 // but that target JavaThread * will not be deleted until it is no
 // longer protected by a ThreadsListHandle.
-
 
 // SMR Support for the Threads class.
 //
@@ -311,7 +264,7 @@ class JavaThreadIterator : public StackObj {
 
 public:
   JavaThreadIterator(ThreadsList *list) : _list(list), _index(0) {
-    assert(list != NULL, "ThreadsList must not be NULL.");
+    assert(list != NULL, "ThreadsList must not be NULL.");
   }
 
   JavaThread *first() {
@@ -370,4 +323,4 @@ public:
   }
 };
 
-#endif // SHARE_VM_RUNTIME_THREADSMR_HPP
+#endif

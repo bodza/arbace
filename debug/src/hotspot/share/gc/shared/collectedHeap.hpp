@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_COLLECTEDHEAP_HPP
 #define SHARE_VM_GC_SHARED_COLLECTEDHEAP_HPP
 
@@ -98,9 +74,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   friend class MemAllocator;
 
  private:
-#ifdef ASSERT
-  static int       _fire_out_of_memory_count;
-#endif
 
   GCHeapLog* _gc_heap_log;
 
@@ -114,8 +87,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   unsigned int _total_collections;          // ... started
   unsigned int _total_full_collections;     // ... started
-  NOT_PRODUCT(volatile size_t _promotion_failure_alot_count;)
-  NOT_PRODUCT(volatile size_t _promotion_failure_alot_gc_number;)
 
   // Reason for current garbage collection.  Should be set to
   // a value reflecting no collection between collections.
@@ -153,9 +124,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   static inline size_t filler_array_hdr_size();
   static inline size_t filler_array_min_size();
 
-  DEBUG_ONLY(static void fill_args_check(HeapWord* start, size_t words);)
-  DEBUG_ONLY(static void zap_filler_array(HeapWord* start, size_t words, bool zap = true);)
-
   // Fill with a single array; caller must ensure filler_array_min_size() <=
   // words <= filler_array_max_size().
   static inline void fill_with_array(HeapWord* start, size_t words, bool zap = true);
@@ -167,8 +135,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   // Verification functions
   virtual void check_for_non_bad_heap_word_value(HeapWord* addr, size_t size)
-    PRODUCT_RETURN;
-  debug_only(static void check_for_valid_allocation_state();)
+    {};
 
  public:
   enum Name {
@@ -240,8 +207,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // This method can be expensive so avoid using it in performance critical
   // code.
   virtual bool is_in(const void* p) const = 0;
-
-  DEBUG_ONLY(bool is_in_or_null(const void* p) const { return p == NULL || is_in(p); })
 
   // Let's define some terms: a "closed" subset of a heap is one that
   //
@@ -578,24 +543,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   virtual bool is_oop(oop object) const;
 
   // Non product verification and debugging.
-#ifndef PRODUCT
-  // Support for PromotionFailureALot.  Return true if it's time to cause a
-  // promotion failure.  The no-argument version uses
-  // this->_promotion_failure_alot_count as the counter.
-  bool promotion_should_fail(volatile size_t* count);
-  bool promotion_should_fail();
-
-  // Reset the PromotionFailureALot counters.  Should be called at the end of a
-  // GC in which promotion failure occurred.
-  void reset_promotion_should_fail(volatile size_t* count);
-  void reset_promotion_should_fail();
-#endif  // #ifndef PRODUCT
-
-#ifdef ASSERT
-  static int fired_fake_oom() {
-    return (CIFireOOMAt > 1 && _fire_out_of_memory_count >= CIFireOOMAt);
-  }
-#endif
 };
 
 // Class to set and reset the GC cause for a CollectedHeap.
@@ -615,4 +562,4 @@ class GCCauseSetter : StackObj {
   }
 };
 
-#endif // SHARE_VM_GC_SHARED_COLLECTEDHEAP_HPP
+#endif

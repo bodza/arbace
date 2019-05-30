@@ -166,7 +166,7 @@ define DeclareHotspotGensrcRecipe
 	+($(CD) $(TOPDIR)/make/hotspot && $(MAKE) $(MAKE_ARGS) -f gensrc/GenerateSources.gmk JVM_VARIANT=$1)
 endef
 
-$(foreach v, $(JVM_VARIANTS), $(eval $(call DeclareHotspotGensrcRecipe,$v)))
+# oops! $(foreach v, $(JVM_VARIANTS), $(eval $(call DeclareHotspotGensrcRecipe,$v)))
 
 define DeclareHotspotLibsRecipe
   hotspot-$1-libs:

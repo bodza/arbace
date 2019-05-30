@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_FIELDSTREAMS_HPP
 #define SHARE_VM_OOPS_FIELDSTREAMS_HPP
 
@@ -75,7 +51,7 @@ class FieldStreamBase : public StackObj {
       num_fields ++;
     }
     _generic_signature_slot = length + skipped_generic_signature_slots;
-    assert(_generic_signature_slot <= _fields->length(), "");
+    assert(_generic_signature_slot <= _fields->length(), "");
     return num_fields;
   }
 
@@ -105,7 +81,7 @@ class FieldStreamBase : public StackObj {
     _index = 0;
     _limit = klass->java_fields_count();
     init_generic_signature_start_slot();
-    assert(klass == field_holder(), "");
+    assert(klass == field_holder(), "");
   }
 
   // accessors
@@ -114,7 +90,7 @@ class FieldStreamBase : public StackObj {
   void next() {
     if (access_flags().field_has_generic_signature()) {
       _generic_signature_slot ++;
-      assert(_generic_signature_slot <= _fields->length(), "");
+      assert(_generic_signature_slot <= _fields->length(), "");
     }
     _index += 1;
   }
@@ -145,7 +121,7 @@ class FieldStreamBase : public StackObj {
 
   Symbol* generic_signature() const {
     if (access_flags().field_has_generic_signature()) {
-      assert(_generic_signature_slot < _fields->length(), "out of bounds");
+      assert(_generic_signature_slot < _fields->length(), "out of bounds");
       int index = _fields->at(_generic_signature_slot);
       return _constants->symbol_at(index);
     } else {
@@ -191,47 +167,46 @@ class JavaFieldStream : public FieldStreamBase {
   JavaFieldStream(const InstanceKlass* k): FieldStreamBase(k->fields(), k->constants(), 0, k->java_fields_count()) {}
 
   int name_index() const {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     return field()->name_index();
   }
   void set_name_index(int index) {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     field()->set_name_index(index);
   }
   int signature_index() const {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     return field()->signature_index();
   }
   void set_signature_index(int index) {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     field()->set_signature_index(index);
   }
   int generic_signature_index() const {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     if (access_flags().field_has_generic_signature()) {
-      assert(_generic_signature_slot < _fields->length(), "out of bounds");
+      assert(_generic_signature_slot < _fields->length(), "out of bounds");
       return _fields->at(_generic_signature_slot);
     } else {
       return 0;
     }
   }
   void set_generic_signature_index(int index) {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     if (access_flags().field_has_generic_signature()) {
-      assert(_generic_signature_slot < _fields->length(), "out of bounds");
+      assert(_generic_signature_slot < _fields->length(), "out of bounds");
       _fields->at_put(_generic_signature_slot, index);
     }
   }
   int initval_index() const {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     return field()->initval_index();
   }
   void set_initval_index(int index) {
-    assert(!field()->is_internal(), "regular only");
+    assert(!field()->is_internal(), "regular only");
     return field()->set_initval_index(index);
   }
 };
-
 
 // Iterate over only the internal fields
 class InternalFieldStream : public FieldStreamBase {
@@ -239,11 +214,10 @@ class InternalFieldStream : public FieldStreamBase {
   InternalFieldStream(InstanceKlass* k):      FieldStreamBase(k->fields(), k->constants(), k->java_fields_count(), 0) {}
 };
 
-
 class AllFieldStream : public FieldStreamBase {
  public:
   AllFieldStream(Array<u2>* fields, const constantPoolHandle& constants): FieldStreamBase(fields, constants) {}
   AllFieldStream(InstanceKlass* k):      FieldStreamBase(k->fields(), k->constants()) {}
 };
 
-#endif // SHARE_VM_OOPS_FIELDSTREAMS_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_TASKQUEUE_HPP
 #define SHARE_VM_GC_SHARED_TASKQUEUE_HPP
 
@@ -32,9 +8,7 @@
 
 // Simple TaskQueue stats that are collected by default in debug builds.
 
-#if !defined(TASKQUEUE_STATS) && defined(ASSERT)
-#define TASKQUEUE_STATS 1
-#elif !defined(TASKQUEUE_STATS)
+#if !defined(TASKQUEUE_STATS)
 #define TASKQUEUE_STATS 0
 #endif
 
@@ -42,7 +16,7 @@
 #define TASKQUEUE_STATS_ONLY(code) code
 #else
 #define TASKQUEUE_STATS_ONLY(code)
-#endif // TASKQUEUE_STATS
+#endif
 
 #if TASKQUEUE_STATS
 class TaskQueueStats {
@@ -80,8 +54,6 @@ public:
   // Print the statistics (does not include a line separator).
   void print(outputStream* const stream = tty, unsigned int width = 10) const;
 
-  DEBUG_ONLY(void verify() const;)
-
 private:
   size_t                    _stats[last_stat_id];
   static const char * const _names[last_stat_id];
@@ -100,7 +72,7 @@ void TaskQueueStats::record_overflow(size_t new_len) {
 void TaskQueueStats::reset() {
   memset(_stats, 0, sizeof(_stats));
 }
-#endif // TASKQUEUE_STATS
+#endif
 
 // TaskQueueSuper collects functionality common to all GenericTaskQueue instances.
 
@@ -108,7 +80,7 @@ template <unsigned int N, MEMFLAGS F>
 class TaskQueueSuper: public CHeapObj<F> {
 protected:
   // Internal type for indexing the queue; also used for the tag.
-  typedef NOT_LP64(uint16_t) LP64_ONLY(uint32_t) idx_t;
+  typedef uint32_t idx_t;
 
   // The first free element after the last one pushed (mod N).
   volatile uint _bottom;
@@ -308,7 +280,7 @@ private:
 
 template<class E, MEMFLAGS F, unsigned int N>
 GenericTaskQueue<E, F, N>::GenericTaskQueue() {
-  assert(sizeof(Age) == sizeof(size_t), "Depends on this.");
+  assert(sizeof(Age) == sizeof(size_t), "Depends on this.");
 }
 
 // OverflowTaskQueue is a TaskQueue that also includes an overflow stack for
@@ -394,7 +366,7 @@ public:
 
 template<class T, MEMFLAGS F> void
 GenericTaskQueueSet<T, F>::register_queue(uint i, T* q) {
-  assert(i < _n, "index out of range.");
+  assert(i < _n, "index out of range.");
   _queues[i] = q;
 }
 
@@ -496,11 +468,11 @@ class StarTask {
 
  public:
   StarTask(narrowOop* p) {
-    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
+    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
     _holder = (void *)((uintptr_t)p | COMPRESSED_OOP_MASK);
   }
   StarTask(oop* p)       {
-    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
+    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
     _holder = (void*)p;
   }
   StarTask()             { _holder = NULL; }
@@ -528,7 +500,7 @@ class ObjArrayTask
 public:
   ObjArrayTask(oop o = NULL, int idx = 0): _obj(o), _index(idx) { }
   ObjArrayTask(oop o, size_t idx): _obj(o), _index(int(idx)) {
-    assert(idx <= size_t(max_jint), "too big");
+    assert(idx <= size_t(max_jint), "too big");
   }
   ObjArrayTask(const ObjArrayTask& t): _obj(t._obj), _index(t._index) { }
 
@@ -547,8 +519,6 @@ public:
   inline oop obj()   const { return _obj; }
   inline int index() const { return _index; }
 
-  DEBUG_ONLY(bool is_valid() const); // Tasks to be pushed/popped must be valid.
-
 private:
   oop _obj;
   int _index;
@@ -564,4 +534,4 @@ typedef GenericTaskQueueSet<OopStarTaskQueue, mtGC> OopStarTaskQueueSet;
 typedef OverflowTaskQueue<size_t, mtGC>             RegionTaskQueue;
 typedef GenericTaskQueueSet<RegionTaskQueue, mtGC>  RegionTaskQueueSet;
 
-#endif // SHARE_VM_GC_SHARED_TASKQUEUE_HPP
+#endif

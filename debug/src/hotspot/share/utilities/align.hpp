@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_ALIGN_HPP
 #define SHARE_VM_UTILITIES_ALIGN_HPP
 
@@ -56,27 +32,27 @@ bool is_power_of_2_t(T x) {
 
 template <typename T, typename A>
 inline T align_up(T size, A alignment) {
-  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
+  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
 
   T ret = align_up_(size, alignment);
-  assert(is_aligned_(ret, alignment), "must be aligned: " UINT64_FORMAT, (uint64_t)ret);
+  assert(is_aligned_(ret, alignment), "must be aligned: " UINT64_FORMAT, (uint64_t)ret);
 
   return ret;
 }
 
 template <typename T, typename A>
 inline T align_down(T size, A alignment) {
-  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
+  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
 
   T ret = align_down_(size, alignment);
-  assert(is_aligned_(ret, alignment), "must be aligned: " UINT64_FORMAT, (uint64_t)ret);
+  assert(is_aligned_(ret, alignment), "must be aligned: " UINT64_FORMAT, (uint64_t)ret);
 
   return ret;
 }
 
 template <typename T, typename A>
 inline bool is_aligned(T size, A alignment) {
-  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
+  assert(is_power_of_2_t(alignment), "must be a power of 2: " UINT64_FORMAT, (uint64_t)alignment);
 
   return is_aligned_(size, alignment);
 }
@@ -149,4 +125,4 @@ inline T* clamp_address_in_page(T* addr, T* page_address, size_t page_size) {
   }
 }
 
-#endif // SHARE_VM_UTILITIES_ALIGN_HPP
+#endif

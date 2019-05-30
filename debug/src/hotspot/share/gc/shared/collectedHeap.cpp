@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/allocTracer.hpp"
@@ -50,10 +26,6 @@
 #include "utilities/copy.hpp"
 
 class ClassLoaderData;
-
-#ifdef ASSERT
-int CollectedHeap::_fire_out_of_memory_count = 0;
-#endif
 
 size_t CollectedHeap::_filler_array_max_size = 0;
 
@@ -192,7 +164,6 @@ bool CollectedHeap::is_oop(oop object) const {
 
 // Memory state functions.
 
-
 CollectedHeap::CollectedHeap() :
   _is_gc_active(false),
   _total_collections(0),
@@ -202,22 +173,15 @@ CollectedHeap::CollectedHeap() :
 {
   const size_t max_len = size_t(arrayOopDesc::max_array_length(T_INT));
   const size_t elements_per_word = HeapWordSize / sizeof(jint);
-  _filler_array_max_size = align_object_size(filler_array_hdr_size() +
-                                             max_len / elements_per_word);
-
-  NOT_PRODUCT(_promotion_failure_alot_count = 0;)
-  NOT_PRODUCT(_promotion_failure_alot_gc_number = 0;)
+  _filler_array_max_size = align_object_size(filler_array_hdr_size() + max_len / elements_per_word);
 
   if (UsePerfData) {
     EXCEPTION_MARK;
 
     // create the gc cause jvmstat counters
-    _perf_gc_cause = PerfDataManager::create_string_variable(SUN_GC, "cause",
-                             80, GCCause::to_string(_gc_cause), CHECK);
+    _perf_gc_cause = PerfDataManager::create_string_variable(SUN_GC, "cause", 80, GCCause::to_string(_gc_cause), CHECK);
 
-    _perf_gc_lastcause =
-                PerfDataManager::create_string_variable(SUN_GC, "lastCause",
-                             80, GCCause::to_string(_gc_lastcause), CHECK);
+    _perf_gc_lastcause = PerfDataManager::create_string_variable(SUN_GC, "lastCause", 80, GCCause::to_string(_gc_lastcause), CHECK);
   }
 
   // Create the ring log
@@ -233,8 +197,8 @@ CollectedHeap::CollectedHeap() :
 // heap lock is already held and that we are executing in
 // the context of the vm thread.
 void CollectedHeap::collect_as_vm_thread(GCCause::Cause cause) {
-  assert(Thread::current()->is_VM_thread(), "Precondition#1");
-  assert(Heap_lock->is_locked(), "Precondition#2");
+  assert(Thread::current()->is_VM_thread(), "Precondition#1");
+  assert(Heap_lock->is_locked(), "Precondition#2");
   GCCauseSetter gcs(this, cause);
   switch (cause) {
     case GCCause::_heap_inspection:
@@ -261,7 +225,7 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
   uint gc_count = 0;
   uint full_gc_count = 0;
 
-  assert(!Heap_lock->owned_by_self(), "Should not be holding the Heap_lock");
+  assert(!Heap_lock->owned_by_self(), "Should not be holding the Heap_lock");
 
   do {
     MetaWord* result = loader_data->metaspace_non_null()->allocate(word_size, mdtype);
@@ -328,17 +292,6 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
   } while (true);  // Until a GC is done
 }
 
-#ifndef PRODUCT
-void CollectedHeap::check_for_non_bad_heap_word_value(HeapWord* addr, size_t size) {
-  if (CheckMemoryInitialization && ZapUnusedHeapArea) {
-    for (size_t slot = 0; slot < size; slot += 1) {
-      assert((*(intptr_t*) (addr + slot)) == ((intptr_t) badHeapWordVal),
-             "Found non badHeapWordValue in pre-allocation check");
-    }
-  }
-}
-#endif // PRODUCT
-
 size_t CollectedHeap::max_tlab_size() const {
   // TLABs can't be bigger than we can fill with a int[Integer.MAX_VALUE].
   // This restriction could be removed by enabling filling with multiple arrays.
@@ -362,48 +315,29 @@ size_t CollectedHeap::filler_array_min_size() {
   return align_object_size(filler_array_hdr_size()); // align to MinObjAlignment
 }
 
-#ifdef ASSERT
-void CollectedHeap::fill_args_check(HeapWord* start, size_t words)
-{
-  assert(words >= min_fill_size(), "too small to fill");
-  assert(is_object_aligned(words), "unaligned size");
-  assert(Universe::heap()->is_in_reserved(start), "not in heap");
-  assert(Universe::heap()->is_in_reserved(start + words - 1), "not in heap");
-}
-
-void CollectedHeap::zap_filler_array(HeapWord* start, size_t words, bool zap)
-{
-  if (ZapFillerObjects && zap) {
-    Copy::fill_to_words(start + filler_array_hdr_size(),
-                        words - filler_array_hdr_size(), 0XDEAFBABE);
-  }
-}
-#endif // ASSERT
-
 void
 CollectedHeap::fill_with_array(HeapWord* start, size_t words, bool zap)
 {
-  assert(words >= filler_array_min_size(), "too small for an array");
-  assert(words <= filler_array_max_size(), "too big for a single object");
+  assert(words >= filler_array_min_size(), "too small for an array");
+  assert(words <= filler_array_max_size(), "too big for a single object");
 
   const size_t payload_size = words - filler_array_hdr_size();
   const size_t len = payload_size * HeapWordSize / sizeof(jint);
-  assert((int)len >= 0, "size too large " SIZE_FORMAT " becomes %d", words, (int)len);
+  assert((int)len >= 0, "size too large " SIZE_FORMAT " becomes %d", words, (int)len);
 
   ObjArrayAllocator allocator(Universe::intArrayKlassObj(), words, (int)len, /* do_zero */ false);
   allocator.initialize(start);
-  DEBUG_ONLY(zap_filler_array(start, words, zap);)
 }
 
 void
 CollectedHeap::fill_with_object_impl(HeapWord* start, size_t words, bool zap)
 {
-  assert(words <= filler_array_max_size(), "too big for a single object");
+  assert(words <= filler_array_max_size(), "too big for a single object");
 
   if (words >= filler_array_min_size()) {
     fill_with_array(start, words, zap);
   } else if (words > 0) {
-    assert(words == min_fill_size(), "unaligned size");
+    assert(words == min_fill_size(), "unaligned size");
     ObjAllocator allocator(SystemDictionary::Object_klass(), words);
     allocator.initialize(start);
   }
@@ -411,14 +345,12 @@ CollectedHeap::fill_with_object_impl(HeapWord* start, size_t words, bool zap)
 
 void CollectedHeap::fill_with_object(HeapWord* start, size_t words, bool zap)
 {
-  DEBUG_ONLY(fill_args_check(start, words);)
   HandleMark hm;  // Free handles before leaving.
   fill_with_object_impl(start, words, zap);
 }
 
 void CollectedHeap::fill_with_objects(HeapWord* start, size_t words, bool zap)
 {
-  DEBUG_ONLY(fill_args_check(start, words);)
   HandleMark hm;  // Free handles before leaving.
 
   // Multiple objects may be required depending on the filler array maximum size. Fill
@@ -471,18 +403,12 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
   // started allocating (nothing much to verify) or we have
   // started allocating but are now a full-fledged JavaThread
   // (and have thus made our TLAB's) available for filling.
-  assert(SafepointSynchronize::is_at_safepoint() ||
-         !is_init_completed(),
-         "Should only be called at a safepoint or at start-up"
-         " otherwise concurrent mutator activity may make heap "
-         " unparsable again");
+  assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "Should only be called at a safepoint or at start-up" " otherwise concurrent mutator activity may make heap " " unparsable again");
   const bool use_tlab = UseTLAB;
   // The main thread starts allocating via a TLAB even before it
   // has added itself to the threads list at vm boot-up.
   JavaThreadIteratorWithHandle jtiwh;
-  assert(!use_tlab || jtiwh.length() > 0,
-         "Attempt to fill tlabs before main thread has been added"
-         " to threads list is doomed to failure!");
+  assert(!use_tlab || jtiwh.length() > 0, "Attempt to fill tlabs before main thread has been added to threads list is doomed to failure!");
   BarrierSet *bs = BarrierSet::barrier_set();
   for (; JavaThread *thread = jtiwh.next(); ) {
      if (use_tlab) thread->tlab().make_parsable(retire_tlabs);
@@ -492,9 +418,7 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
 
 void CollectedHeap::accumulate_statistics_all_tlabs() {
   if (UseTLAB) {
-    assert(SafepointSynchronize::is_at_safepoint() ||
-         !is_init_completed(),
-         "should only accumulate statistics on tlabs at safepoint");
+    assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "should only accumulate statistics on tlabs at safepoint");
 
     ThreadLocalAllocBuffer::accumulate_statistics_before_gc();
   }
@@ -502,16 +426,14 @@ void CollectedHeap::accumulate_statistics_all_tlabs() {
 
 void CollectedHeap::resize_all_tlabs() {
   if (UseTLAB) {
-    assert(SafepointSynchronize::is_at_safepoint() ||
-         !is_init_completed(),
-         "should only resize tlabs at safepoint");
+    assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "should only resize tlabs at safepoint");
 
     ThreadLocalAllocBuffer::resize_all_tlabs();
   }
 }
 
 void CollectedHeap::full_gc_dump(GCTimer* timer, bool before) {
-  assert(timer != NULL, "timer is null");
+  assert(timer != NULL, "timer is null");
   if ((HeapDumpBeforeFullGC && before) || (HeapDumpAfterFullGC && !before)) {
     GCTraceTime(Info, gc) tm(before ? "Heap Dump (before full gc)" : "Heap Dump (after full gc)", timer);
     HeapDumper::dump_heap();
@@ -546,41 +468,6 @@ void CollectedHeap::initialize_reserved_region(HeapWord *start, HeapWord *end) {
 void CollectedHeap::post_initialize() {
   initialize_serviceability();
 }
-
-#ifndef PRODUCT
-
-bool CollectedHeap::promotion_should_fail(volatile size_t* count) {
-  // Access to count is not atomic; the value does not have to be exact.
-  if (PromotionFailureALot) {
-    const size_t gc_num = total_collections();
-    const size_t elapsed_gcs = gc_num - _promotion_failure_alot_gc_number;
-    if (elapsed_gcs >= PromotionFailureALotInterval) {
-      // Test for unsigned arithmetic wrap-around.
-      if (++*count >= PromotionFailureALotCount) {
-        *count = 0;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-bool CollectedHeap::promotion_should_fail() {
-  return promotion_should_fail(&_promotion_failure_alot_count);
-}
-
-void CollectedHeap::reset_promotion_should_fail(volatile size_t* count) {
-  if (PromotionFailureALot) {
-    _promotion_failure_alot_gc_number = total_collections();
-    *count = 0;
-  }
-}
-
-void CollectedHeap::reset_promotion_should_fail() {
-  reset_promotion_should_fail(&_promotion_failure_alot_count);
-}
-
-#endif  // #ifndef PRODUCT
 
 bool CollectedHeap::supports_object_pinning() const {
   return false;

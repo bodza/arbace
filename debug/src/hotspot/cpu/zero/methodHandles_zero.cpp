@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2009, 2010, 2011 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/cppInterpreterGenerator.hpp"
 #include "interpreter/interpreter.hpp"
@@ -48,7 +23,6 @@ void MethodHandles::invoke_target(Method* method, TRAPS) {
 
   // Convert the result
   istate->set_stack(stack->sp() - 1);
-
 }
 
 oop MethodHandles::popFromStack(TRAPS) {
@@ -63,7 +37,6 @@ oop MethodHandles::popFromStack(TRAPS) {
   istate->set_stack(topOfStack);
 
   return top;
-
 }
 
 void MethodHandles::throw_AME(Klass* rcvr, Method* interface_method, TRAPS) {
@@ -86,7 +59,7 @@ void MethodHandles::throw_AME(Klass* rcvr, Method* interface_method, TRAPS) {
       frame = frame->next();
     }
 
-    assert(frame != NULL, "must be");
+    assert(frame != NULL, "must be");
     thread->set_last_Java_frame(frame, sp);
   }
   InterpreterRuntime::throw_AbstractMethodErrorVerbose(thread, rcvr, interface_method);
@@ -94,7 +67,6 @@ void MethodHandles::throw_AME(Klass* rcvr, Method* interface_method, TRAPS) {
   if (!has_last_Java_frame) {
     thread->reset_last_Java_frame();
   }
-
 }
 
 int MethodHandles::method_handle_entry_invokeBasic(Method* method, intptr_t UNUSED, TRAPS) {
@@ -201,8 +173,7 @@ int MethodHandles::method_handle_entry_invalid(Method* method, intptr_t UNUSED, 
   return 0;
 }
 
-address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* masm,
-                                                                vmIntrinsics::ID iid) {
+address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* masm, vmIntrinsics::ID iid) {
   switch (iid) {
   case vmIntrinsics::_invokeGeneric:
   case vmIntrinsics::_compiledLambdaForm:
@@ -224,9 +195,3 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
     return NULL;
   }
 }
-
-#ifndef PRODUCT
-void MethodHandles::trace_method_handle(MacroAssembler* _masm, const char* adaptername) {
-  // This is just a stub.
-}
-#endif //PRODUCT

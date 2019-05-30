@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
@@ -59,17 +35,11 @@ bool HeapRegionManager::is_available(uint region) const {
   return _available_map.at(region);
 }
 
-#ifdef ASSERT
-bool HeapRegionManager::is_free(HeapRegion* hr) const {
-  return _free_list.contains(hr);
-}
-#endif
-
 HeapRegion* HeapRegionManager::new_heap_region(uint hrm_index) {
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
   HeapWord* bottom = g1h->bottom_addr_for_region(hrm_index);
   MemRegion mr(bottom, bottom + HeapRegion::GrainWords);
-  assert(reserved().contains(mr), "invariant");
+  assert(reserved().contains(mr), "invariant");
   return g1h->new_heap_region(hrm_index, mr);
 }
 
@@ -133,7 +103,7 @@ void HeapRegionManager::make_regions_available(uint start, uint num_regions, Wor
   _available_map.par_set_range(start, start + num_regions, BitMap::unknown_range);
 
   for (uint i = start; i < start + num_regions; i++) {
-    assert(is_available(i), "Just made region %u available but is apparently not.", i);
+    assert(is_available(i), "Just made region %u available but is apparently not.", i);
     HeapRegion* hr = at(i);
     if (G1CollectedHeap::heap()->hr_printer()->is_active()) {
       G1CollectedHeap::heap()->hr_printer()->commit(hr);
@@ -269,13 +239,6 @@ uint HeapRegionManager::find_unavailable_from_idx(uint start_idx, uint* res_idx)
     cur++;
   }
   num_regions = cur - *res_idx;
-#ifdef ASSERT
-  for (uint i = *res_idx; i < (*res_idx + num_regions); i++) {
-    assert(!is_available(i), "just checking");
-  }
-  assert(cur == max_length() || num_regions == 0 || is_available(cur),
-         "The region at the current position %u must be available or at the end of the heap.", cur);
-#endif
   return num_regions;
 }
 
@@ -336,7 +299,7 @@ void HeapRegionManager::par_iterate(HeapRegionClosure* blk, HeapRegionClaimer* h
   const uint n_regions = hrclaimer->n_regions();
   for (uint count = 0; count < n_regions; count++) {
     const uint index = (start_index + count) % n_regions;
-    assert(index < n_regions, "sanity");
+    assert(index < n_regions, "sanity");
     // Skip over unavailable regions
     if (!is_available(index)) {
       continue;
@@ -362,10 +325,10 @@ void HeapRegionManager::par_iterate(HeapRegionClosure* blk, HeapRegionClaimer* h
 }
 
 uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
-  assert(length() > 0, "the region sequence should not be empty");
-  assert(length() <= _allocated_heapregions_length, "invariant");
-  assert(_allocated_heapregions_length > 0, "we should have at least one region committed");
-  assert(num_regions_to_remove < length(), "We should never remove all regions");
+  assert(length() > 0, "the region sequence should not be empty");
+  assert(length() <= _allocated_heapregions_length, "invariant");
+  assert(_allocated_heapregions_length > 0, "we should have at least one region committed");
+  assert(num_regions_to_remove < length(), "We should never remove all regions");
 
   if (num_regions_to_remove == 0) {
     return 0;
@@ -392,13 +355,6 @@ uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
 }
 
 void HeapRegionManager::shrink_at(uint index, size_t num_regions) {
-#ifdef ASSERT
-  for (uint i = index; i < (index + num_regions); i++) {
-    assert(is_available(i), "Expected available region at index %u", i);
-    assert(at(i)->is_empty(), "Expected empty region at index %u", i);
-    assert(at(i)->is_free(), "Expected free region at index %u", i);
-  }
-#endif
   uncommit_regions(index, num_regions);
 }
 
@@ -423,11 +379,6 @@ uint HeapRegionManager::find_empty_from_idx_reverse(uint start_idx, uint* res_id
   *res_idx = cur + 1;
   num_regions_found = old_cur - cur;
 
-#ifdef ASSERT
-  for (uint i = *res_idx; i < (*res_idx + num_regions_found); i++) {
-    assert(at(i)->is_empty(), "just checking");
-  }
-#endif
   return num_regions_found;
 }
 
@@ -472,15 +423,9 @@ void HeapRegionManager::verify() {
   _free_list.verify();
 }
 
-#ifndef PRODUCT
-void HeapRegionManager::verify_optional() {
-  verify();
-}
-#endif // PRODUCT
-
 HeapRegionClaimer::HeapRegionClaimer(uint n_workers) :
     _n_workers(n_workers), _n_regions(G1CollectedHeap::heap()->_hrm._allocated_heapregions_length), _claims(NULL) {
-  assert(n_workers > 0, "Need at least one worker.");
+  assert(n_workers > 0, "Need at least one worker.");
   uint* new_claims = NEW_C_HEAP_ARRAY(uint, _n_regions, mtGC);
   memset(new_claims, Unclaimed, sizeof(*_claims) * _n_regions);
   _claims = new_claims;
@@ -493,17 +438,17 @@ HeapRegionClaimer::~HeapRegionClaimer() {
 }
 
 uint HeapRegionClaimer::offset_for_worker(uint worker_id) const {
-  assert(worker_id < _n_workers, "Invalid worker_id.");
+  assert(worker_id < _n_workers, "Invalid worker_id.");
   return _n_regions * worker_id / _n_workers;
 }
 
 bool HeapRegionClaimer::is_region_claimed(uint region_index) const {
-  assert(region_index < _n_regions, "Invalid index.");
+  assert(region_index < _n_regions, "Invalid index.");
   return _claims[region_index] == Claimed;
 }
 
 bool HeapRegionClaimer::claim_region(uint region_index) {
-  assert(region_index < _n_regions, "Invalid index.");
+  assert(region_index < _n_regions, "Invalid index.");
   uint old_val = Atomic::cmpxchg(Claimed, &_claims[region_index], Unclaimed);
   return old_val == Unclaimed;
 }

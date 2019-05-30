@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_GCLOCKER_HPP
 #define SHARE_VM_GC_SHARED_GCLOCKER_HPP
 
@@ -46,16 +22,10 @@ class GCLocker: public AllStatic {
                                          // note: bool is typedef'd as jint
   static volatile bool _doing_gc;        // unlock_critical() is doing a GC
 
-#ifdef ASSERT
-  // This lock count is updated for all operations and is used to
-  // validate the jni_lock_count that is computed during safepoints.
-  static volatile jint _debug_jni_lock_count;
-#endif
-
   // At a safepoint, visit all threads and count the number of active
   // critical sections.  This is used to ensure that all active
   // critical sections are exited before a new one is started.
-  static void verify_critical_count() NOT_DEBUG_RETURN;
+  static void verify_critical_count() {};
 
   static void jni_lock(JavaThread* thread);
   static void jni_unlock(JavaThread* thread);
@@ -72,7 +42,7 @@ class GCLocker: public AllStatic {
  public:
   // Accessors
   static bool is_active() {
-    assert(GCLocker::is_at_safepoint(), "only read at safepoint");
+    assert(GCLocker::is_at_safepoint(), "only read at safepoint");
     return is_active_internal();
   }
   static bool needs_gc()       { return _needs_gc;                        }
@@ -86,8 +56,8 @@ class GCLocker: public AllStatic {
   }
 
   // In debug mode track the locking state at all times
-  static void increment_debug_jni_lock_count() NOT_DEBUG_RETURN;
-  static void decrement_debug_jni_lock_count() NOT_DEBUG_RETURN;
+  static void increment_debug_jni_lock_count() {};
+  static void decrement_debug_jni_lock_count() {};
 
   // Set the current lock count
   static void set_jni_lock_count(int count) {
@@ -145,4 +115,4 @@ class GCLocker: public AllStatic {
   static address needs_gc_address() { return (address) &_needs_gc; }
 };
 
-#endif // SHARE_VM_GC_SHARED_GCLOCKER_HPP
+#endif

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #ifndef SHARE_VM_MEMORY_METACHUNK_HPP
 #define SHARE_VM_MEMORY_METACHUNK_HPP
 
@@ -154,20 +131,11 @@ class Metachunk : public Metabase<Metachunk> {
 
   ChunkIndex get_chunk_type() const     { return _chunk_type; }
   bool is_class() const                 { return _is_class; }
-
-  DEBUG_ONLY(void mangle(juint word_value);)
-  DEBUG_ONLY(void verify() const;)
-
 };
-
-
-// Helper function that does a bunch of checks for a chunk.
-DEBUG_ONLY(void do_verify_chunk(Metachunk* chunk);)
 
 // Given a Metachunk, update its in-use information (both in the
 // chunk and the occupancy map).
 void do_update_in_use_info_for_chunk(Metachunk* chunk, bool inuse);
+}
 
-} // namespace metaspace
-
-#endif  // SHARE_VM_MEMORY_METACHUNK_HPP
+#endif

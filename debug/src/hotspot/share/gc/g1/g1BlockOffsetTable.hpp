@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1BLOCKOFFSETTABLE_HPP
 #define SHARE_VM_GC_G1_G1BLOCKOFFSETTABLE_HPP
 
@@ -55,9 +31,7 @@ private:
   u_char* _offset_array;          // byte array keeping backwards offsets
 
   void check_offset(size_t offset, const char* msg) const {
-    assert(offset <= BOTConstants::N_words,
-           "%s - offset: " SIZE_FORMAT ", N_words: %u",
-           msg, offset, BOTConstants::N_words);
+    assert(offset <= BOTConstants::N_words, "%s - offset: " SIZE_FORMAT ", N_words: %u", msg, offset, BOTConstants::N_words);
   }
 
   // Bounds checking accessors:
@@ -76,7 +50,7 @@ private:
 
   bool is_card_boundary(HeapWord* p) const;
 
-  void check_index(size_t index, const char* msg) const NOT_DEBUG_RETURN;
+  void check_index(size_t index, const char* msg) const {};
 
 public:
 
@@ -116,9 +90,6 @@ private:
   // allocation boundary at which offset array must be updated
   HeapWord* _next_offset_threshold;
   size_t    _next_offset_index;      // index corresponding to that boundary
-
-  // Indicates if an object can span into this G1BlockOffsetTablePart.
-  debug_only(bool _object_can_span;)
 
   // This is the global BlockOffsetTable.
   G1BlockOffsetTable* _bot;
@@ -227,9 +198,9 @@ public:
   }
 
   void set_for_starts_humongous(HeapWord* obj_top, size_t fill_size);
-  void set_object_can_span(bool can_span) NOT_DEBUG_RETURN;
+  void set_object_can_span(bool can_span) {};
 
-  void print_on(outputStream* out) PRODUCT_RETURN;
+  void print_on(outputStream* out) {};
 };
 
-#endif // SHARE_VM_GC_G1_G1BLOCKOFFSETTABLE_HPP
+#endif

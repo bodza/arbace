@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_FRAME_X86_INLINE_HPP
 #define CPU_X86_VM_FRAME_X86_INLINE_HPP
 
@@ -46,7 +22,7 @@ inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
   _unextended_sp = sp;
   _fp = fp;
   _pc = pc;
-  assert(pc != NULL, "no pc?");
+  assert(pc != NULL, "no pc?");
   _cb = CodeCache::find_blob(pc);
   adjust_unextended_sp();
 
@@ -68,15 +44,14 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   _unextended_sp = unextended_sp;
   _fp = fp;
   _pc = pc;
-  assert(pc != NULL, "no pc?");
+  assert(pc != NULL, "no pc?");
   _cb = CodeCache::find_blob(pc);
   adjust_unextended_sp();
 
   address original_pc = CompiledMethod::get_deopt_original_pc(this);
   if (original_pc != NULL) {
     _pc = original_pc;
-    assert(_cb->as_compiled_method()->insts_contains_inclusive(_pc),
-           "original PC must be in the main code section of the the compiled method (or must be immediately following it)");
+    assert(_cb->as_compiled_method()->insts_contains_inclusive(_pc), "original PC must be in the main code section of the the compiled method (or must be immediately following it)");
     _deopt_state = is_deoptimized;
   } else {
     if (_cb->is_deoptimization_stub()) {
@@ -124,7 +99,7 @@ inline bool frame::equal(frame other) const {
               && unextended_sp() == other.unextended_sp()
               && fp() == other.fp()
               && pc() == other.pc();
-  assert(!ret || ret && cb() == other.cb() && _deopt_state == other._deopt_state, "inconsistent construction");
+  assert(!ret || ret && cb() == other.cb() && _deopt_state == other._deopt_state, "inconsistent construction");
   return ret;
 }
 
@@ -135,14 +110,14 @@ inline intptr_t* frame::id(void) const { return unextended_sp(); }
 
 // Relationals on frames based
 // Return true if the frame is younger (more recent activation) than the frame represented by id
-inline bool frame::is_younger(intptr_t* id) const { assert(this->id() != NULL && id != NULL, "NULL frame id");
+inline bool frame::is_younger(intptr_t* id) const {
+    assert(this->id() != NULL && id != NULL, "NULL frame id");
                                                     return this->id() < id ; }
 
 // Return true if the frame is older (less recent activation) than the frame represented by id
-inline bool frame::is_older(intptr_t* id) const   { assert(this->id() != NULL && id != NULL, "NULL frame id");
+inline bool frame::is_older(intptr_t* id) const   {
+    assert(this->id() != NULL && id != NULL, "NULL frame id");
                                                     return this->id() > id ; }
-
-
 
 inline intptr_t* frame::link() const              { return (intptr_t*) *(intptr_t **)addr_at(link_offset); }
 
@@ -167,12 +142,9 @@ inline intptr_t* frame::interpreter_frame_bcp_addr() const {
   return (intptr_t*)addr_at(interpreter_frame_bcp_offset);
 }
 
-
 inline intptr_t* frame::interpreter_frame_mdp_addr() const {
   return (intptr_t*)addr_at(interpreter_frame_mdp_offset);
 }
-
-
 
 // Constant pool cache
 
@@ -201,7 +173,7 @@ inline intptr_t* frame::interpreter_frame_tos_address() const {
     // sp() may have been extended or shrunk by an adapter.  At least
     // check that we don't fall behind the legal region.
     // For top deoptimized frame last_sp == interpreter_frame_monitor_end.
-    assert(last_sp <= (intptr_t*) interpreter_frame_monitor_end(), "bad tos");
+    assert(last_sp <= (intptr_t*) interpreter_frame_monitor_end(), "bad tos");
     return last_sp;
   }
 }
@@ -213,7 +185,6 @@ inline oop* frame::interpreter_frame_temp_oop_addr() const {
 inline int frame::interpreter_frame_monitor_size() {
   return BasicObjectLock::size();
 }
-
 
 // expression stack
 // (the max_stack arguments are used by the GC; see class FrameClosure)
@@ -245,4 +216,4 @@ inline void frame::set_saved_oop_result(RegisterMap* map, oop obj) {
   *result_adr = obj;
 }
 
-#endif // CPU_X86_VM_FRAME_X86_INLINE_HPP
+#endif

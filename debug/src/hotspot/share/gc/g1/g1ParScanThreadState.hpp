@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1PARSCANTHREADSTATE_HPP
 #define SHARE_VM_GC_G1_G1PARSCANTHREADSTATE_HPP
 
@@ -81,10 +57,8 @@ class G1ParScanThreadState : public CHeapObj<mtGC> {
   G1CardTable* ct()                              { return _ct; }
 
   InCSetState dest(InCSetState original) const {
-    assert(original.is_valid(),
-           "Original state invalid: " CSETSTATE_FORMAT, original.value());
-    assert(_dest[original.value()].is_valid_gen(),
-           "Dest state is invalid: " CSETSTATE_FORMAT, _dest[original.value()].value());
+    assert(original.is_valid(), "Original state invalid: " CSETSTATE_FORMAT, original.value());
+    assert(_dest[original.value()].is_valid_gen(), "Dest state is invalid: " CSETSTATE_FORMAT, _dest[original.value()].value());
     return _dest[original.value()];
   }
 
@@ -94,19 +68,11 @@ public:
 
   void set_ref_discoverer(ReferenceDiscoverer* rd) { _scanner.set_ref_discoverer(rd); }
 
-#ifdef ASSERT
-  bool queue_is_empty() const { return _refs->is_empty(); }
-
-  bool verify_ref(narrowOop* ref) const;
-  bool verify_ref(oop* ref) const;
-  bool verify_task(StarTask ref) const;
-#endif // ASSERT
-
   template <class T> void do_oop_ext(T* ref);
   template <class T> void push_on_queue(T* ref);
 
   template <class T> void update_rs(HeapRegion* from, T* p, oop o) {
-    assert(!HeapRegion::is_in_same_region(p, o), "Caller should have filtered out cross-region references already.");
+    assert(!HeapRegion::is_in_same_region(p, o), "Caller should have filtered out cross-region references already.");
     // If the field originates from the to-space, we don't need to include it
     // in the remembered set updates. Also, if we are not tracking the remembered
     // set in the destination region, do not bother either.
@@ -145,7 +111,7 @@ private:
   // This allows the compiler to create optimized code when popping references from
   // the work queue.
   inline bool has_partial_array_mask(narrowOop* ref) const {
-    assert(((uintptr_t)ref & G1_PARTIAL_ARRAY_MASK) != G1_PARTIAL_ARRAY_MASK, "Partial array oop reference encoded as narrowOop*");
+    assert(((uintptr_t)ref & G1_PARTIAL_ARRAY_MASK) != G1_PARTIAL_ARRAY_MASK, "Partial array oop reference encoded as narrowOop*");
     return false;
   }
 
@@ -155,7 +121,7 @@ private:
   // This means that unintentional use of this method with narrowOops are caught
   // by the compiler.
   inline oop* set_partial_array_mask(oop obj) const {
-    assert(((uintptr_t)(void *)obj & G1_PARTIAL_ARRAY_MASK) == 0, "Information loss!");
+    assert(((uintptr_t)(void *)obj & G1_PARTIAL_ARRAY_MASK) == 0, "Information loss!");
     return (oop*) ((uintptr_t)(void *)obj | G1_PARTIAL_ARRAY_MASK);
   }
 
@@ -232,4 +198,4 @@ class G1ParScanThreadStateSet : public StackObj {
   G1ParScanThreadState* new_par_scan_state(uint worker_id, size_t young_cset_length);
 };
 
-#endif // SHARE_VM_GC_G1_G1PARSCANTHREADSTATE_HPP
+#endif

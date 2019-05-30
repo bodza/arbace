@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CISTREAMS_HPP
 #define SHARE_VM_CI_CISTREAMS_HPP
 
@@ -44,12 +20,12 @@ private:
   Bytecodes::Code next_wide_or_table(Bytecodes::Code); // Handle _wide & complicated inline table
 
   static Bytecodes::Code check_java(Bytecodes::Code c) {
-    assert(Bytecodes::is_java_code(c), "should not return _fast bytecodes");
+    assert(Bytecodes::is_java_code(c), "should not return _fast bytecodes");
     return c;
   }
 
   static Bytecodes::Code check_defined(Bytecodes::Code c) {
-    assert(Bytecodes::is_defined(c), "");
+    assert(Bytecodes::is_defined(c), "");
     return c;
   }
 
@@ -72,8 +48,10 @@ private:
 
   void assert_wide(bool require_wide) const {
     if (require_wide)
-         { assert(is_wide(),  "must be a wide instruction"); }
-    else { assert(!is_wide(), "must not be a wide instruction"); }
+         {
+            assert(is_wide(),  "must be a wide instruction"); }
+    else {
+        assert(!is_wide(), "must not be a wide instruction"); }
   }
 
   Bytecode bytecode() const { return Bytecode(this, _bc_start); }
@@ -162,7 +140,7 @@ public:
   // Get a byte index following this bytecode.
   // If prefixed with a wide bytecode, get a wide index.
   int get_index() const {
-    assert(!has_cache_index(), "else use cpcache variant");
+    assert(!has_cache_index(), "else use cpcache variant");
     return (_pc == _was_wide)   // was widened?
       ? get_index_u2(true)      // yes, return wide index
       : get_index_u1();         // no, return narrow index
@@ -205,7 +183,7 @@ public:
 
   // 2-byte branch offset from next pc
   int next_get_dest() const {
-    assert(_pc < _end, "");
+    assert(_pc < _end, "");
     return next_bci() + next_bytecode().get_offset_s2(Bytecodes::_ifeq);
   }
 
@@ -270,7 +248,6 @@ public:
   ciObjArray* get_resolved_references();
 };
 
-
 // ciSignatureStream
 //
 // The class is used to iterate over the elements of a method signature.
@@ -315,14 +292,13 @@ public:
       while (!type()->is_klass()) {
         next();
       }
-      assert(!at_return_type(), "passed end of signature");
+      assert(!at_return_type(), "passed end of signature");
       sig_k = type()->as_klass();
       next();
     }
     return sig_k;
   }
 };
-
 
 // ciExceptionHandlerStream
 //
@@ -369,7 +345,7 @@ public:
                           ? exception_klass
                           : NULL);
     _bci = bci;
-    assert(_bci >= 0, "bci out of range");
+    assert(_bci >= 0, "bci out of range");
     _is_exact = is_exact;
     next();
   }
@@ -431,11 +407,9 @@ public:
   }
 };
 
-
-
 // Implementation for declarations in bytecode.hpp
 Bytecode::Bytecode(const ciBytecodeStream* stream, address bcp): _bcp(bcp != NULL ? bcp : stream->cur_bcp()), _code(Bytecodes::code_at(NULL, addr_at(0))) {}
 Bytecode_lookupswitch::Bytecode_lookupswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
 Bytecode_tableswitch::Bytecode_tableswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
 
-#endif // SHARE_VM_CI_CISTREAMS_HPP
+#endif

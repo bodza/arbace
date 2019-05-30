@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -48,7 +24,7 @@ ProtectionDomainCacheTable::ProtectionDomainCacheTable(int table_size)
 }
 
 void ProtectionDomainCacheTable::unlink() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be");
   for (int i = 0; i < table_size(); ++i) {
     ProtectionDomainCacheEntry** p = bucket_addr(i);
     ProtectionDomainCacheEntry* entry = bucket(i);
@@ -135,8 +111,8 @@ ProtectionDomainCacheEntry* ProtectionDomainCacheTable::find_entry(int index, Ha
 
 ProtectionDomainCacheEntry* ProtectionDomainCacheTable::add_entry(int index, unsigned int hash, Handle protection_domain) {
   assert_locked_or_safepoint(SystemDictionary_lock);
-  assert(index == index_for(protection_domain), "incorrect index?");
-  assert(find_entry(index, protection_domain) == NULL, "no double entry");
+  assert(index == index_for(protection_domain), "incorrect index?");
+  assert(find_entry(index, protection_domain) == NULL, "no double entry");
 
   ClassLoaderWeakHandle w = ClassLoaderWeakHandle::create(protection_domain);
   ProtectionDomainCacheEntry* p = new_entry(hash, w);

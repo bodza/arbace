@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -35,11 +10,7 @@
 
 #define __ _masm->
 
-#ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
-#else
-#define BLOCK_COMMENT(str) __ block_comment(str)
-#endif
 
 #define BIND(label) bind(label); BLOCK_COMMENT(#label ":")
 
@@ -50,88 +21,28 @@ void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_
   __ ldr(klass_reg, Address(klass_reg, java_lang_Class::klass_offset_in_bytes()));
 }
 
-#ifdef ASSERT
-static int check_nonzero(const char* xname, int x) {
-  assert(x != 0, "%s should be nonzero", xname);
-  return x;
-}
-#define NONZERO(x) check_nonzero(#x, x)
-#else //ASSERT
 #define NONZERO(x) (x)
-#endif //PRODUCT
 
-#ifdef ASSERT
-void MethodHandles::verify_klass(MacroAssembler* _masm,
-                                 Register obj, SystemDictionary::WKID klass_id,
-                                 const char* error_message) {
-  InstanceKlass** klass_addr = SystemDictionary::well_known_klass_addr(klass_id);
-  Klass* klass = SystemDictionary::well_known_klass(klass_id);
-  Register temp = rscratch2;
-  Register temp2 = rscratch1; // used by MacroAssembler::cmpptr
-  Label L_ok, L_bad;
-  BLOCK_COMMENT("verify_klass {");
-  __ verify_oop(obj);
-  __ cbz(obj, L_bad);
-  __ push(RegSet::of(temp, temp2), sp);
-  __ load_klass(temp, obj);
-  __ cmpptr(temp, ExternalAddress((address) klass_addr));
-  __ br(Assembler::EQ, L_ok);
-  intptr_t super_check_offset = klass->super_check_offset();
-  __ ldr(temp, Address(temp, super_check_offset));
-  __ cmpptr(temp, ExternalAddress((address) klass_addr));
-  __ br(Assembler::EQ, L_ok);
-  __ pop(RegSet::of(temp, temp2), sp);
-  __ bind(L_bad);
-  __ stop(error_message);
-  __ BIND(L_ok);
-  __ pop(RegSet::of(temp, temp2), sp);
-  BLOCK_COMMENT("} verify_klass");
-}
-
-void MethodHandles::verify_ref_kind(MacroAssembler* _masm, int ref_kind, Register member_reg, Register temp) {  }
-
-#endif //ASSERT
-
-void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp,
-                                            bool for_compiler_entry) {
-  assert(method == rmethod, "interpreter calling convention");
+void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp, bool for_compiler_entry) {
+  assert(method == rmethod, "interpreter calling convention");
   Label L_no_such_method;
   __ cbz(rmethod, L_no_such_method);
   __ verify_method_ptr(method);
 
-  if (!for_compiler_entry && JvmtiExport::can_post_interpreter_events()) {
-    Label run_compiled_code;
-    // JVMTI events, such as single-stepping, are implemented partly by avoiding running
-    // compiled code in threads for which the event is enabled.  Check here for
-    // interp_only_mode if these events CAN be enabled.
-
-    __ ldrb(rscratch1, Address(rthread, JavaThread::interp_only_mode_offset()));
-    __ cbnz(rscratch1, run_compiled_code);
-    __ ldr(rscratch1, Address(method, Method::interpreter_entry_offset()));
-    __ br(rscratch1);
-    __ BIND(run_compiled_code);
-  }
-
-  const ByteSize entry_offset = for_compiler_entry ? Method::from_compiled_offset() :
-                                                     Method::from_interpreted_offset();
+  const ByteSize entry_offset = for_compiler_entry ? Method::from_compiled_offset() : Method::from_interpreted_offset();
   __ ldr(rscratch1,Address(method, entry_offset));
   __ br(rscratch1);
   __ bind(L_no_such_method);
   __ far_jump(RuntimeAddress(StubRoutines::throw_AbstractMethodError_entry()));
 }
 
-void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
-                                        Register recv, Register method_temp,
-                                        Register temp2,
-                                        bool for_compiler_entry) {
+void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Register method_temp, Register temp2, bool for_compiler_entry) {
   BLOCK_COMMENT("jump_to_lambda_form {");
   // This is the initial entry point of a lazy method handle.
   // After type checking, it picks up the invoker from the LambdaForm.
   assert_different_registers(recv, method_temp, temp2);
-  assert(recv != noreg, "required register");
-  assert(method_temp == rmethod, "required register for loading method");
-
-  //NOT_PRODUCT({ FlagSetting fs(TraceMethodHandles, true); trace_method_handle(_masm, "LZMH"); });
+  assert(recv != noreg, "required register");
+  assert(method_temp == rmethod, "required register for loading method");
 
   // Load the invoker, as MH -> MH.form -> LF.vmentry
   __ verify_oop(recv);
@@ -164,10 +75,9 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
 }
 
 // Code generation
-address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* _masm,
-                                                                vmIntrinsics::ID iid) {
+address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid) {
   const bool not_for_compiler_entry = false;  // this is the interpreter entry
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
+  assert(is_signature_polymorphic(iid), "expected invoke iid");
   if (iid == vmIntrinsics::_invokeGeneric ||
       iid == vmIntrinsics::_compiledLambdaForm) {
     // Perhaps surprisingly, the symbolic references visible to Java are not directly used.
@@ -191,7 +101,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   address entry_point = __ pc();
 
   if (VerifyMethodHandles) {
-    assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
+    assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
 
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
@@ -211,7 +121,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   // First task:  Find out how big the argument list is.
   Address r3_first_arg_addr;
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
-  assert(ref_kind != 0 || iid == vmIntrinsics::_invokeBasic, "must be _invokeBasic or a linkTo intrinsic");
+  assert(ref_kind != 0 || iid == vmIntrinsics::_invokeBasic, "must be _invokeBasic or a linkTo intrinsic");
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
     __ ldr(argp, Address(rmethod, Method::const_offset()));
     __ load_sized_value(argp,
@@ -220,12 +130,10 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
     // assert(sizeof(u2) == sizeof(Method::_size_of_parameters), "");
     r3_first_arg_addr = __ argument_address(argp, -1);
   } else {
-    DEBUG_ONLY(argp = noreg);
   }
 
   if (!is_signature_polymorphic_static(iid)) {
     __ ldr(mh, r3_first_arg_addr);
-    DEBUG_ONLY(argp = noreg);
   }
 
   // r3_first_arg_addr is live!
@@ -241,7 +149,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
       // Load the receiver (not the MH; the actual MemberName's receiver) up from the interpreter stack.
       __ ldr(recv = r2, r3_first_arg_addr);
     }
-    DEBUG_ONLY(argp = noreg);
     Register rmember = rmethod;  // MemberName ptr; incoming method ptr is dead now
     __ pop(rmember);             // extract last argument
     generate_method_handle_dispatch(_masm, iid, recv, rmember, not_for_compiler_entry);
@@ -250,19 +157,14 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   return entry_point;
 }
 
-
-void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
-                                                    vmIntrinsics::ID iid,
-                                                    Register receiver_reg,
-                                                    Register member_reg,
-                                                    bool for_compiler_entry) {
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
+void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmIntrinsics::ID iid, Register receiver_reg, Register member_reg, bool for_compiler_entry) {
+  assert(is_signature_polymorphic(iid), "expected invoke iid");
   // temps used in this code are not used in *either* compiled or interpreted calling sequences
   Register temp1 = r10;
   Register temp2 = r11;
   Register temp3 = r14;  // r13 is live by this point: it contains the sender SP
   if (for_compiler_entry) {
-    assert(receiver_reg == (iid == vmIntrinsics::_linkToStatic ? noreg : j_rarg0), "only valid assignment");
+    assert(receiver_reg == (iid == vmIntrinsics::_linkToStatic ? noreg : j_rarg0), "only valid assignment");
     assert_different_registers(temp1,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
     assert_different_registers(temp2,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
     assert_different_registers(temp3,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
@@ -324,7 +226,6 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
     }
     if (iid == vmIntrinsics::_linkToSpecial ||
         iid == vmIntrinsics::_linkToStatic) {
-      DEBUG_ONLY(temp1_recv_klass = noreg);  // these guys didn't load the recv_klass
     }
 
     // Live registers at this point:
@@ -430,23 +331,3 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
     }
   }
 }
-
-#ifndef PRODUCT
-void trace_method_handle_stub(const char* adaptername,
-                              oop mh,
-                              intptr_t* saved_regs,
-                              intptr_t* entry_sp) {  }
-
-// The stub wraps the arguments in a struct on the stack to avoid
-// dealing with the different calling conventions for passing 6
-// arguments.
-struct MethodHandleStubArguments {
-  const char* adaptername;
-  oopDesc* mh;
-  intptr_t* saved_regs;
-  intptr_t* entry_sp;
-};
-void trace_method_handle_stub_wrapper(MethodHandleStubArguments* args) {  }
-
-void MethodHandles::trace_method_handle(MacroAssembler* _masm, const char* adaptername) {  }
-#endif //PRODUCT

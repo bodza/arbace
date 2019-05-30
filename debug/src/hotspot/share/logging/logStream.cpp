@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -33,7 +9,7 @@ LogStream::LineBuffer::LineBuffer()
 }
 
 LogStream::LineBuffer::~LineBuffer() {
-  assert(_pos == 0, "still outstanding bytes in the line buffer");
+  assert(_pos == 0, "still outstanding bytes in the line buffer");
   if (_buf != _smallbuf) {
     os::free(_buf);
   }
@@ -44,11 +20,11 @@ LogStream::LineBuffer::~LineBuffer() {
 // is larger than a reasonable max of 1 M. Caller must not assume
 // capacity without checking.
 void LogStream::LineBuffer::try_ensure_cap(size_t atleast) {
-  assert(_cap >= sizeof(_smallbuf), "sanity");
+  assert(_cap >= sizeof(_smallbuf), "sanity");
   if (_cap < atleast) {
     // Cap out at a reasonable max to prevent runaway leaks.
     const size_t reasonable_max = 1 * M;
-    assert(_cap <= reasonable_max, "sanity");
+    assert(_cap <= reasonable_max, "sanity");
     if (_cap == reasonable_max) {
       return;
     }
@@ -74,12 +50,12 @@ void LogStream::LineBuffer::try_ensure_cap(size_t atleast) {
     _buf = newbuf;
     _cap = newcap;
   }
-  assert(_cap >= atleast, "sanity");
+  assert(_cap >= atleast, "sanity");
 }
 
 void LogStream::LineBuffer::append(const char* s, size_t len) {
-  assert(_buf[_pos] == '\0', "sanity");
-  assert(_pos < _cap, "sanity");
+  assert(_buf[_pos] == '\0', "sanity");
+  assert(_pos < _cap, "sanity");
   const size_t minimum_capacity_needed = _pos + len + 1;
   try_ensure_cap(minimum_capacity_needed);
   // try_ensure_cap may not have enlarged the capacity to the full requested
@@ -119,5 +95,3 @@ LogStream::~LogStream() {
     _current_line.reset();
   }
 }
-
-

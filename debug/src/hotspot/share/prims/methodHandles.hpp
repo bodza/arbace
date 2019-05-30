@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_PRIMS_METHODHANDLES_HPP
 #define SHARE_VM_PRIMS_METHODHANDLES_HPP
 
@@ -35,7 +11,6 @@
 # include "entry_zero.hpp"
 # include "interpreter/interpreter.hpp"
 #endif
-
 
 class MacroAssembler;
 class Label;
@@ -104,20 +79,20 @@ class MethodHandles: AllStatic {
   }
 
   static bool is_signature_polymorphic_intrinsic(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
+    assert(is_signature_polymorphic(iid), "");
     // Most sig-poly methods are intrinsics which do not require an
     // appeal to Java for adapter code.
     return (iid != vmIntrinsics::_invokeGeneric);
   }
 
   static bool is_signature_polymorphic_static(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
+    assert(is_signature_polymorphic(iid), "");
     return (iid >= vmIntrinsics::FIRST_MH_STATIC &&
             iid <= vmIntrinsics::LAST_MH_SIG_POLY);
   }
 
   static bool has_member_arg(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
+    assert(is_signature_polymorphic(iid), "");
     return (iid >= vmIntrinsics::_linkToVirtual &&
             iid <= vmIntrinsics::_linkToInterface);
   }
@@ -170,11 +145,11 @@ public:
     return (ref_kind >= JVM_REF_MIN && ref_kind <= JVM_REF_MAX);
   }
   static bool ref_kind_is_field(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
+    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind <= JVM_REF_putStatic);
   }
   static bool ref_kind_is_getter(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
+    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind <= JVM_REF_getStatic);
   }
   static bool ref_kind_is_setter(int ref_kind) {
@@ -184,7 +159,7 @@ public:
     return !ref_kind_is_field(ref_kind) && (ref_kind != JVM_REF_newInvokeSpecial);
   }
   static bool ref_kind_has_receiver(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
+    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind & 1) != 0;
   }
   static bool ref_kind_is_static(int ref_kind) {
@@ -200,7 +175,7 @@ public:
 #include CPU_HEADER(methodHandles)
 
   // Tracing
-  static void trace_method_handle(MacroAssembler* _masm, const char* adaptername) PRODUCT_RETURN;
+  static void trace_method_handle(MacroAssembler* _masm, const char* adaptername) {};
   static void trace_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid);
 };
 
@@ -214,4 +189,4 @@ public:
   void generate();
 };
 
-#endif // SHARE_VM_PRIMS_METHODHANDLES_HPP
+#endif

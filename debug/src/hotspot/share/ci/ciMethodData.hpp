@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CIMETHODDATA_HPP
 #define SHARE_VM_CI_CIMETHODDATA_HPP
 
@@ -80,7 +56,7 @@ public:
     if (!TypeEntries::is_type_none(k) &&
         !TypeEntries::is_type_unknown(k)) {
       ciKlass* res = (ciKlass*)TypeEntries::klass_part(k);
-      assert(res != NULL, "invalid");
+      assert(res != NULL, "invalid");
       return res;
     } else {
       return NULL;
@@ -101,10 +77,6 @@ public:
   static intptr_t with_status(ciKlass* k, intptr_t in) {
     return TypeEntries::with_status((intptr_t)k, in);
   }
-
-#ifndef PRODUCT
-  static void print_ciklass(outputStream* st, intptr_t k);
-#endif
 };
 
 class ciTypeStackSlotEntries : public TypeStackSlotEntries, ciTypeEntries {
@@ -118,10 +90,6 @@ public:
   ProfilePtrKind ptr_kind(int i) const {
     return ciTypeEntries::ptr_kind(type(i));
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st) const;
-#endif
 };
 
 class ciReturnTypeEntry : public ReturnTypeEntry, ciTypeEntries {
@@ -135,10 +103,6 @@ public:
   ProfilePtrKind ptr_kind() const {
     return ciTypeEntries::ptr_kind(type());
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st) const;
-#endif
 };
 
 class ciCallTypeData : public CallTypeData {
@@ -158,22 +122,22 @@ public:
   }
 
   intptr_t argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
+    assert(has_arguments(), "no arg type profiling data");
     return args()->type(i);
   }
 
   ciKlass* valid_argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
+    assert(has_arguments(), "no arg type profiling data");
     return args()->valid_type(i);
   }
 
   intptr_t return_type() const {
-    assert(has_return(), "no ret type profiling data");
+    assert(has_return(), "no ret type profiling data");
     return ret()->type();
   }
 
   ciKlass* valid_return_type() const {
-    assert(has_return(), "no ret type profiling data");
+    assert(has_return(), "no ret type profiling data");
     return ret()->valid_type();
   }
 
@@ -184,10 +148,6 @@ public:
   ProfilePtrKind return_ptr_kind() const {
     return ret()->ptr_kind();
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-#endif
 };
 
 class ciReceiverTypeData : public ReceiverTypeData {
@@ -195,15 +155,15 @@ public:
   ciReceiverTypeData(DataLayout* layout) : ReceiverTypeData(layout) {};
 
   void set_receiver(uint row, ciKlass* recv) {
-    assert((uint)row < row_limit(), "oob");
+    assert((uint)row < row_limit(), "oob");
     set_intptr_at(receiver0_offset + row * receiver_type_row_cell_count,
                   (intptr_t) recv);
   }
 
   ciKlass* receiver(uint row) const {
-    assert((uint)row < row_limit(), "oob");
+    assert((uint)row < row_limit(), "oob");
     ciKlass* recv = (ciKlass*)intptr_at(receiver0_offset + row * receiver_type_row_cell_count);
-    assert(recv == NULL || recv->is_klass(), "wrong type");
+    assert(recv == NULL || recv->is_klass(), "wrong type");
     return recv;
   }
 
@@ -212,10 +172,6 @@ public:
     translate_receiver_data_from(data);
   }
   void translate_receiver_data_from(const ProfileData* data);
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-  void print_receiver_data_on(outputStream* st) const;
-#endif
 };
 
 class ciVirtualCallData : public VirtualCallData {
@@ -237,9 +193,6 @@ public:
   virtual void translate_from(const ProfileData* data) {
     rtd_super()->translate_receiver_data_from(data);
   }
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-#endif
 };
 
 class ciVirtualCallTypeData : public VirtualCallTypeData {
@@ -272,22 +225,22 @@ public:
   }
 
   intptr_t argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
+    assert(has_arguments(), "no arg type profiling data");
     return args()->type(i);
   }
 
   ciKlass* valid_argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
+    assert(has_arguments(), "no arg type profiling data");
     return args()->valid_type(i);
   }
 
   intptr_t return_type() const {
-    assert(has_return(), "no ret type profiling data");
+    assert(has_return(), "no ret type profiling data");
     return ret()->type();
   }
 
   ciKlass* valid_return_type() const {
-    assert(has_return(), "no ret type profiling data");
+    assert(has_return(), "no ret type profiling data");
     return ret()->valid_type();
   }
 
@@ -298,12 +251,7 @@ public:
   ProfilePtrKind return_ptr_kind() const {
     return ret()->ptr_kind();
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-#endif
 };
-
 
 class ciRetData : public RetData {
 public:
@@ -347,10 +295,6 @@ public:
   ProfilePtrKind parameter_ptr_kind(int i) const {
     return parameters()->ptr_kind(i);
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-#endif
 };
 
 class ciSpeculativeTrapData : public SpeculativeTrapData {
@@ -366,10 +310,6 @@ public:
   void set_method(ciMethod* m) {
     set_intptr_at(speculative_trap_method, (intptr_t)m);
   }
-
-#ifndef PRODUCT
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
-#endif
 };
 
 // ciMethodData
@@ -441,7 +381,7 @@ private:
   void print_impl(outputStream* st);
 
   DataLayout* data_layout_at(int data_index) const {
-    assert(data_index % sizeof(intptr_t) == 0, "unaligned");
+    assert(data_index % sizeof(intptr_t) == 0, "unaligned");
     return (DataLayout*) (((address)_data) + data_index);
   }
 
@@ -452,7 +392,7 @@ private:
   // hint accessors
   int      hint_di() const  { return _hint_di; }
   void set_hint_di(int di)  {
-    assert(!out_of_bounds(di), "hint_di out of bounds");
+    assert(!out_of_bounds(di), "hint_di out of bounds");
     _hint_di = di;
   }
   ciProfileData* data_before(int bci) {
@@ -464,7 +404,6 @@ private:
       return data_at(hint);
     return first_data();
   }
-
 
   // What is the index of the first data entry?
   int first_di() { return 0; }
@@ -560,7 +499,7 @@ public:
   // Helpful query functions that decode trap_state.
   int has_trap_at(ciProfileData* data, int reason);
   int has_trap_at(int bci, ciMethod* m, int reason) {
-    assert((m != NULL) == Deoptimization::reason_is_speculate(reason), "inconsistent method/reason");
+    assert((m != NULL) == Deoptimization::reason_is_speculate(reason), "inconsistent method/reason");
     return has_trap_at(bci_to_data(bci, m), reason);
   }
   int trap_recompiled_at(ciProfileData* data);
@@ -594,12 +533,7 @@ public:
   ByteSize offset_of_slot(ciProfileData* data, ByteSize slot_offset_in_data);
   int      byte_offset_of_slot(ciProfileData* data, ByteSize slot_offset_in_data) { return in_bytes(offset_of_slot(data, slot_offset_in_data)); }
 
-#ifndef PRODUCT
-  // printing support for method data
-  void print();
-  void print_data_on(outputStream* st);
-#endif
   void dump_replay_data(outputStream* out);
 };
 
-#endif // SHARE_VM_CI_CIMETHODDATA_HPP
+#endif

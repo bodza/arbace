@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1BiasedArray.hpp"
 #include "gc/g1/g1RegionToSpaceMapper.hpp"
@@ -124,7 +100,7 @@ class G1RegionsSmallerThanCommitSizeMapper : public G1RegionToSpaceMapper {
     bool all_zero_filled = true;
 
     for (uint i = start_idx; i < start_idx + num_regions; i++) {
-      assert(!_commit_map.at(i), "Trying to commit storage at region %u that is already committed", i);
+      assert(!_commit_map.at(i), "Trying to commit storage at region %u that is already committed", i);
       size_t idx = region_idx_to_page_idx(i);
       uint old_refcount = _refcounts.get_by_index(idx);
 
@@ -151,10 +127,10 @@ class G1RegionsSmallerThanCommitSizeMapper : public G1RegionToSpaceMapper {
 
   virtual void uncommit_regions(uint start_idx, size_t num_regions) {
     for (uint i = start_idx; i < start_idx + num_regions; i++) {
-      assert(_commit_map.at(i), "Trying to uncommit storage at region %u that is not committed", i);
+      assert(_commit_map.at(i), "Trying to uncommit storage at region %u that is not committed", i);
       size_t idx = region_idx_to_page_idx(i);
       uint old_refcount = _refcounts.get_by_index(idx);
-      assert(old_refcount > 0, "must be");
+      assert(old_refcount > 0, "must be");
       if (old_refcount == 1) {
         _storage.uncommit(idx, 1);
       }

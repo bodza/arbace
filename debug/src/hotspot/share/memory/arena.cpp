@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
@@ -68,7 +44,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
   // Allocate a new chunk from the pool (might expand the pool)
   NOINLINE void* allocate(size_t bytes, AllocFailType alloc_failmode) {
-    assert(bytes == _size, "bad size");
+    assert(bytes == _size, "bad size");
     void* p = NULL;
     // No VM lock can be taken inside ThreadCritical lock, so os::malloc
     // should be done outside ThreadCritical lock due to NMT
@@ -85,7 +61,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
   // Return a chunk to the pool
   void free(Chunk* chunk) {
-    assert(chunk->length() + Chunk::aligned_overhead_size() == _size, "bad size");
+    assert(chunk->length() + Chunk::aligned_overhead_size() == _size, "bad size");
     ThreadCritical tc;
     _num_used--;
 
@@ -126,10 +102,18 @@ class ChunkPool: public CHeapObj<mtInternal> {
   }
 
   // Accessors to preallocated pool's
-  static ChunkPool* large_pool()  { assert(_large_pool  != NULL, "must be initialized"); return _large_pool;  }
-  static ChunkPool* medium_pool() { assert(_medium_pool != NULL, "must be initialized"); return _medium_pool; }
-  static ChunkPool* small_pool()  { assert(_small_pool  != NULL, "must be initialized"); return _small_pool;  }
-  static ChunkPool* tiny_pool()   { assert(_tiny_pool   != NULL, "must be initialized"); return _tiny_pool;   }
+  static ChunkPool* large_pool()  {
+    assert(_large_pool  != NULL, "must be initialized");
+    return _large_pool;  }
+  static ChunkPool* medium_pool() {
+    assert(_medium_pool != NULL, "must be initialized");
+    return _medium_pool; }
+  static ChunkPool* small_pool()  {
+    assert(_small_pool  != NULL, "must be initialized");
+    return _small_pool;  }
+  static ChunkPool* tiny_pool()   {
+    assert(_tiny_pool   != NULL, "must be initialized");
+    return _tiny_pool;   }
 
   static void initialize() {
     _large_pool  = new ChunkPool(Chunk::size        + Chunk::aligned_overhead_size());
@@ -161,7 +145,6 @@ Chunk::clean_chunk_pool() {
   ChunkPool::clean();
 }
 
-
 //--------------------------------------------------------------------------------------
 // ChunkPoolCleaner implementation
 //
@@ -184,7 +167,7 @@ void* Chunk::operator new (size_t requested_size, AllocFailType alloc_failmode, 
   // allocations to come out aligned as expected the size must be aligned
   // to expected arena alignment.
   // expect requested_size but if sizeof(Chunk) doesn't match isn't proper size we must align it.
-  assert(ARENA_ALIGN(requested_size) == aligned_overhead_size(), "Bad alignment");
+  assert(ARENA_ALIGN(requested_size) == aligned_overhead_size(), "Bad alignment");
   size_t bytes = ARENA_ALIGN(requested_size) + length;
   switch (length) {
    case Chunk::size:        return ChunkPool::large_pool()->allocate(bytes, alloc_failmode);
@@ -235,11 +218,6 @@ void Chunk::next_chop() {
 }
 
 void Chunk::start_chunk_pool_cleaner_task() {
-#ifdef ASSERT
-  static bool task_created = false;
-  assert(!task_created, "should not start chuck pool cleaner twice");
-  task_created = true;
-#endif
   ChunkPoolCleaner* cleaner = new ChunkPoolCleaner();
   cleaner->enroll();
 }
@@ -287,12 +265,12 @@ Arena::~Arena() {
 }
 
 void* Arena::operator new(size_t size) throw() {
-  assert(false, "Use dynamic memory type binding");
+  assert(false, "Use dynamic memory type binding");
   return NULL;
 }
 
 void* Arena::operator new (size_t size, const std::nothrow_t&  nothrow_constant) throw() {
-  assert(false, "Use dynamic memory type binding");
+  assert(false, "Use dynamic memory type binding");
   return NULL;
 }
 
@@ -369,24 +347,9 @@ void* Arena::grow(size_t x, AllocFailType alloc_failmode) {
   return result;
 }
 
-
-
 // Reallocate storage in Arena.
 void *Arena::Arealloc(void* old_ptr, size_t old_size, size_t new_size, AllocFailType alloc_failmode) {
   if (new_size == 0) return NULL;
-#ifdef ASSERT
-  if (UseMallocOnly) {
-    // always allocate a new object  (otherwise we'll free this one twice)
-    char* copy = (char*)Amalloc(new_size, alloc_failmode);
-    if (copy == NULL) {
-      return NULL;
-    }
-    size_t n = MIN2(old_size, new_size);
-    if (n > 0) memcpy(copy, old_ptr, n);
-    Afree(old_ptr,old_size);    // Mostly done to keep stats accurate
-    return copy;
-  }
-#endif
   char *c_old = (char*)old_ptr; // Handy name
   // Stupid fast special case
   if( new_size <= old_size ) {  // Shrink in-place
@@ -415,27 +378,8 @@ void *Arena::Arealloc(void* old_ptr, size_t old_size, size_t new_size, AllocFail
   return new_ptr;
 }
 
-
 // Determine if pointer belongs to this Arena or not.
 bool Arena::contains( const void *ptr ) const {
-#ifdef ASSERT
-  if (UseMallocOnly) {
-    // really slow, but not easy to make fast
-    if (_chunk == NULL) return false;
-    char** bottom = (char**)_chunk->bottom();
-    for (char** p = (char**)_hwm - 1; p >= bottom; p--) {
-      if (*p == ptr) return true;
-    }
-    for (Chunk *c = _first; c != NULL; c = c->next()) {
-      if (c == _chunk) continue;  // current chunk has been processed
-      char** bottom = (char**)c->bottom();
-      for (char** p = (char**)c->top() - 1; p >= bottom; p--) {
-        if (*p == ptr) return true;
-      }
-    }
-    return false;
-  }
-#endif
   if( (void*)_chunk->bottom() <= ptr && ptr < (void*)_hwm )
     return true;                // Check for in this chunk
   for (Chunk *c = _first; c; c = c->next()) {
@@ -446,68 +390,3 @@ bool Arena::contains( const void *ptr ) const {
   }
   return false;                 // Not in any Chunk, so not in Arena
 }
-
-
-#ifdef ASSERT
-void* Arena::malloc(size_t size) {
-  assert(UseMallocOnly, "shouldn't call");
-  // use malloc, but save pointer in res. area for later freeing
-  char** save = (char**)internal_malloc_4(sizeof(char*));
-  return (*save = (char*)os::malloc(size, mtChunk));
-}
-
-// for debugging with UseMallocOnly
-void* Arena::internal_malloc_4(size_t x) {
-  assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
-  check_for_overflow(x, "Arena::internal_malloc_4");
-  if (_hwm + x > _max) {
-    return grow(x);
-  } else {
-    char *old = _hwm;
-    _hwm += x;
-    return old;
-  }
-}
-#endif
-
-
-//--------------------------------------------------------------------------------------
-// Non-product code
-
-#ifndef PRODUCT
-
-julong Arena::_bytes_allocated = 0;
-
-void Arena::inc_bytes_allocated(size_t x) { inc_stat_counter(&_bytes_allocated, x); }
-
-// debugging code
-inline void Arena::free_all(char** start, char** end) {
-  for (char** p = start; p < end; p++) if (*p) os::free(*p);
-}
-
-void Arena::free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2) {
-  assert(UseMallocOnly, "should not call");
-  // free all objects malloced since resource mark was created; resource area
-  // contains their addresses
-  if (chunk->next()) {
-    // this chunk is full, and some others too
-    for (Chunk* c = chunk->next(); c != NULL; c = c->next()) {
-      char* top = c->top();
-      if (c->next() == NULL) {
-        top = hwm2;     // last junk is only used up to hwm2
-        assert(c->contains(hwm2), "bad hwm2");
-      }
-      free_all((char**)c->bottom(), (char**)top);
-    }
-    assert(chunk->contains(hwm), "bad hwm");
-    assert(chunk->contains(max), "bad max");
-    free_all((char**)hwm, (char**)max);
-  } else {
-    // this chunk was partially used
-    assert(chunk->contains(hwm), "bad hwm");
-    assert(chunk->contains(hwm2), "bad hwm2");
-    free_all((char**)hwm, (char**)hwm2);
-  }
-}
-
-#endif // Non-product

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -107,7 +83,7 @@ bm_word_t* BitMap::allocate(const Allocator& allocator, idx_t size_in_bits, bool
 template <class Allocator>
 void BitMap::free(const Allocator& allocator, bm_word_t* map, idx_t  size_in_bits) {
   bm_word_t* ret = reallocate(allocator, map, size_in_bits, 0);
-  assert(ret == NULL, "Reallocate shouldn't have allocated");
+  assert(ret == NULL, "Reallocate shouldn't have allocated");
 }
 
 template <class Allocator>
@@ -119,8 +95,8 @@ void BitMap::resize(const Allocator& allocator, idx_t new_size_in_bits) {
 
 template <class Allocator>
 void BitMap::initialize(const Allocator& allocator, idx_t size_in_bits) {
-  assert(map() == NULL, "precondition");
-  assert(size() == 0,   "precondition");
+  assert(map() == NULL, "precondition");
+  assert(size() == 0,   "precondition");
 
   resize(allocator, size_in_bits);
 }
@@ -173,18 +149,6 @@ void CHeapBitMap::reinitialize(idx_t size_in_bits) {
   BitMap::reinitialize(CHeapBitMapAllocator(_flags), size_in_bits);
 }
 
-#ifdef ASSERT
-void BitMap::verify_index(idx_t index) const {
-  assert(index < _size, "BitMap index out of bounds");
-}
-
-void BitMap::verify_range(idx_t beg_index, idx_t end_index) const {
-  assert(beg_index <= end_index, "BitMap range error");
-  // Note that [0,0) and [size,size) are both valid ranges.
-  if (end_index != _size) verify_index(end_index);
-}
-#endif // #ifdef ASSERT
-
 void BitMap::pretouch() {
   os::pretouch_memory(word_addr(0), word_addr(size()));
 }
@@ -208,7 +172,7 @@ void BitMap::clear_range_within_word(idx_t beg, idx_t end) {
 }
 
 void BitMap::par_put_range_within_word(idx_t beg, idx_t end, bool value) {
-  assert(value == 0 || value == 1, "0 for clear, 1 for set");
+  assert(value == 0 || value == 1, "0 for clear, 1 for set");
   // With a valid range (beg <= end), this test ensures that end != 0, as
   // required by inverted_bit_mask_for_range.  Also avoids an unnecessary write.
   if (beg != end) {
@@ -361,7 +325,6 @@ void BitMap::par_at_put_range(idx_t beg, idx_t end, bool value) {
     par_put_range_within_word(beg, boundary, value);
     par_put_range_within_word(boundary, end, value);
   }
-
 }
 
 void BitMap::at_put_large_range(idx_t beg, idx_t end, bool value) {
@@ -394,8 +357,8 @@ void BitMap::par_at_put_large_range(idx_t beg, idx_t end, bool value) {
 }
 
 inline bm_word_t tail_mask(idx_t tail_bits) {
-  assert(tail_bits != 0, "precondition"); // Works, but shouldn't be called.
-  assert(tail_bits < (idx_t)BitsPerWord, "precondition");
+  assert(tail_bits != 0, "precondition"); // Works, but shouldn't be called.
+  assert(tail_bits < (idx_t)BitsPerWord, "precondition");
   return (bm_word_t(1) << tail_bits) - 1;
 }
 
@@ -417,7 +380,7 @@ inline bm_word_t merge_tail_of_map(bm_word_t new_value,
 }
 
 bool BitMap::contains(const BitMap& other) const {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   const bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -432,7 +395,7 @@ bool BitMap::contains(const BitMap& other) const {
 }
 
 bool BitMap::intersects(const BitMap& other) const {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   const bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -445,7 +408,7 @@ bool BitMap::intersects(const BitMap& other) const {
 }
 
 void BitMap::set_union(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -460,7 +423,7 @@ void BitMap::set_union(const BitMap& other) {
 }
 
 void BitMap::set_difference(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -475,7 +438,7 @@ void BitMap::set_difference(const BitMap& other) {
 }
 
 void BitMap::set_intersection(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -490,7 +453,7 @@ void BitMap::set_intersection(const BitMap& other) {
 }
 
 bool BitMap::set_union_with_result(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bool changed = false;
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
@@ -512,7 +475,7 @@ bool BitMap::set_union_with_result(const BitMap& other) {
 }
 
 bool BitMap::set_difference_with_result(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bool changed = false;
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
@@ -534,7 +497,7 @@ bool BitMap::set_difference_with_result(const BitMap& other) {
 }
 
 bool BitMap::set_intersection_with_result(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bool changed = false;
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
@@ -556,7 +519,7 @@ bool BitMap::set_intersection_with_result(const BitMap& other) {
 }
 
 void BitMap::set_from(const BitMap& other) {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t copy_words = word_index(size());
@@ -570,7 +533,7 @@ void BitMap::set_from(const BitMap& other) {
 }
 
 bool BitMap::is_same(const BitMap& other) const {
-  assert(size() == other.size(), "must have same size");
+  assert(size() == other.size(), "must have same size");
   const bm_word_t* dest_map = map();
   const bm_word_t* other_map = other.map();
   idx_t limit = word_index(size());
@@ -661,7 +624,7 @@ BitMap::idx_t BitMap::num_set_bits(bm_word_t w) {
 }
 
 BitMap::idx_t BitMap::num_set_bits_from_table(unsigned char c) {
-  assert(_pop_count_table != NULL, "precondition");
+  assert(_pop_count_table != NULL, "precondition");
   return _pop_count_table[c];
 }
 
@@ -683,15 +646,3 @@ void BitMap::print_on_error(outputStream* st, const char* prefix) const {
   st->print_cr("%s[" PTR_FORMAT ", " PTR_FORMAT ")",
       prefix, p2i(map()), p2i((char*)map() + (size() >> LogBitsPerByte)));
 }
-
-#ifndef PRODUCT
-
-void BitMap::print_on(outputStream* st) const {
-  tty->print("Bitmap(" SIZE_FORMAT "):", size());
-  for (idx_t index = 0; index < size(); index++) {
-    tty->print("%c", at(index) ? '1' : '0');
-  }
-  tty->cr();
-}
-
-#endif

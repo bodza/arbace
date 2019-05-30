@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2009, 2010, 2011 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/scopeDesc.hpp"
 #include "interpreter/interpreter.hpp"
@@ -39,16 +14,8 @@
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "vmreg_zero.inline.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
 #include "runtime/vframeArray.hpp"
-#endif
-
-#ifdef ASSERT
-void RegisterMap::check_location_valid() {
-  ShouldNotCallThis();
-}
-#endif
 
 bool frame::is_interpreted_frame() const {
   return zeroframe()->is_interpreter_frame();
@@ -59,19 +26,17 @@ bool frame::is_fake_stub_frame() const {
 }
 
 frame frame::sender_for_entry_frame(RegisterMap *map) const {
-  assert(zeroframe()->is_entry_frame(), "wrong type of frame");
-  assert(map != NULL, "map must be set");
-  assert(!entry_frame_is_first(), "next Java fp must be non zero");
-  assert(entry_frame_call_wrapper()->anchor()->last_Java_sp() == sender_sp(),
-         "sender should be next Java frame");
+  assert(zeroframe()->is_entry_frame(), "wrong type of frame");
+  assert(map != NULL, "map must be set");
+  assert(!entry_frame_is_first(), "next Java fp must be non zero");
+  assert(entry_frame_call_wrapper()->anchor()->last_Java_sp() == sender_sp(), "sender should be next Java frame");
   map->clear();
-  assert(map->include_argument_oops(), "should be set by clear");
+  assert(map->include_argument_oops(), "should be set by clear");
   return frame(zeroframe()->next(), sender_sp());
 }
 
 frame frame::sender_for_nonentry_frame(RegisterMap *map) const {
-  assert(zeroframe()->is_interpreter_frame() ||
-         zeroframe()->is_fake_stub_frame(), "wrong type of frame");
+  assert(zeroframe()->is_interpreter_frame() || zeroframe()->is_fake_stub_frame(), "wrong type of frame");
   return frame(zeroframe()->next(), sender_sp());
 }
 
@@ -94,7 +59,7 @@ BasicObjectLock* frame::interpreter_frame_monitor_begin() const {
 BasicObjectLock* frame::interpreter_frame_monitor_end() const {
   return (BasicObjectLock*) get_interpreterState()->stack_base();
 }
-#endif // CC_INTERP
+#endif
 
 void frame::patch_pc(Thread* thread, address pc) {
 
@@ -106,7 +71,7 @@ void frame::patch_pc(Thread* thread, address pc) {
   } else {
     // We borrow this call to set the thread pointer in the interpreter
     // state; the hook to set up deoptimized frames isn't supplied it.
-    assert(pc == NULL, "should be");
+    assert(pc == NULL, "should be");
     get_interpreterState()->set_thread((JavaThread *) thread);
   }
 }
@@ -121,9 +86,8 @@ bool frame::is_interpreted_frame_valid(JavaThread *thread) const {
   return false;
 }
 
-BasicType frame::interpreter_frame_result(oop* oop_result,
-                                          jvalue* value_result) {
-  assert(is_interpreted_frame(), "interpreted frame expected");
+BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result) {
+  assert(is_interpreted_frame(), "interpreted frame expected");
   Method* method = interpreter_frame_method();
   BasicType type = method->result_type();
   intptr_t* tos_addr = (intptr_t *) interpreter_frame_tos_address();
@@ -166,7 +130,7 @@ BasicType frame::interpreter_frame_result(oop* oop_result,
       oop* obj_p = (oop *) tos_addr;
       obj = (obj_p == NULL) ? (oop) NULL : *obj_p;
     }
-    assert(obj == NULL || Universe::heap()->is_in(obj), "sanity check");
+    assert(obj == NULL || Universe::heap()->is_in(obj), "sanity check");
     *oop_result = obj;
     break;
 
@@ -178,9 +142,7 @@ BasicType frame::interpreter_frame_result(oop* oop_result,
 }
 
 int frame::frame_size(RegisterMap* map) const {
-#ifdef PRODUCT
   ShouldNotCallThis();
-#endif // PRODUCT
   return 0; // make javaVFrame::print_value work
 }
 
@@ -282,12 +244,9 @@ void InterpreterFrame::identify_word(int   frame_index,
         istate->method()->name_and_sig_as_C_string(valuebuf, buflen);
       }
       else if (is_valid && !strcmp(field, "_bcp") && istate->bcp()) {
-        snprintf(valuebuf, buflen, PTR_FORMAT " (bci %d)",
-                 (intptr_t) istate->bcp(),
-                 istate->method()->bci_from(istate->bcp()));
+        snprintf(valuebuf, buflen, PTR_FORMAT " (bci %d)", (intptr_t) istate->bcp(), istate->method()->bci_from(istate->bcp()));
       }
-      snprintf(fieldbuf, buflen, "%sistate->%s",
-               field[strlen(field) - 1] == ')' ? "(": "", field);
+      snprintf(fieldbuf, buflen, "%sistate->%s", field[strlen(field) - 1] == ')' ? "(": "", field);
     }
     else if (addr == (intptr_t *) istate) {
       strncpy(fieldbuf, "(vtable for istate)", buflen);
@@ -335,10 +294,7 @@ void InterpreterFrame::identify_word(int   frame_index,
   }
 
   // Monitors and stack
-  identify_vp_word(frame_index, addr,
-                   (intptr_t *) istate->monitor_base(),
-                   istate->stack_base(),
-                   fieldbuf, buflen);
+  identify_vp_word(frame_index, addr, (intptr_t *) istate->monitor_base(), istate->stack_base(), fieldbuf, buflen);
 }
 
 void ZeroFrame::identify_vp_word(int       frame_index,
@@ -366,31 +322,12 @@ void ZeroFrame::identify_vp_word(int       frame_index,
 
   // Expression stack
   if (addr < stack_base) {
-    snprintf(fieldbuf, buflen, "%s[%d]",
-             frame_index == 0 ? "stack_word" : "local",
-             (int) (stack_base - addr - 1));
+    snprintf(fieldbuf, buflen, "%s[%d]", frame_index == 0 ? "stack_word" : "local", (int) (stack_base - addr - 1));
     return;
   }
 }
-
-#ifndef PRODUCT
-
-void frame::describe_pd(FrameValues& values, int frame_no) {
-
-}
-
-#endif
 
 intptr_t *frame::initial_deoptimization_info() {
   // unused... but returns fp() to minimize changes introduced by 7087445
   return fp();
 }
-
-#ifndef PRODUCT
-// This is a generic constructor which is only used by pns() in debug.cpp.
-frame::frame(void* sp, void* fp, void* pc) {
-  Unimplemented();
-}
-
-void frame::pd_ps() {}
-#endif

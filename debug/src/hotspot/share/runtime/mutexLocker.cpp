@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/os.inline.hpp"
@@ -57,7 +33,6 @@ Mutex*   ResolvedMethodTable_lock     = NULL;
 Mutex*   JmethodIdCreation_lock       = NULL;
 Mutex*   JfieldIdCreation_lock        = NULL;
 Monitor* JNICritical_lock             = NULL;
-Mutex*   JvmtiThreadState_lock        = NULL;
 Monitor* Heap_lock                    = NULL;
 Mutex*   ExpandHeap_lock              = NULL;
 Mutex*   AdapterHandlerLibrary_lock   = NULL;
@@ -105,10 +80,6 @@ Mutex*   ProfilePrint_lock            = NULL;
 Mutex*   ExceptionCache_lock          = NULL;
 Mutex*   OsrList_lock                 = NULL;
 
-#ifndef PRODUCT
-Mutex*   FullGCALot_lock              = NULL;
-#endif
-
 Mutex*   Debug1_lock                  = NULL;
 Mutex*   Debug2_lock                  = NULL;
 Mutex*   Debug3_lock                  = NULL;
@@ -133,13 +104,6 @@ Monitor* RedefineClasses_lock         = NULL;
 
 Mutex*   ThreadHeapSampler_lock       = NULL;
 
-#if INCLUDE_JFR
-Mutex*   JfrStacktrace_lock           = NULL;
-Monitor* JfrMsg_lock                  = NULL;
-Mutex*   JfrBuffer_lock               = NULL;
-Mutex*   JfrStream_lock               = NULL;
-#endif
-
 #ifndef SUPPORTS_NATIVE_CX8
 Mutex*   UnsafeJlong_lock             = NULL;
 #endif
@@ -151,33 +115,10 @@ Mutex*   MetaspaceExpand_lock         = NULL;
 static Monitor * _mutex_array[MAX_NUM_MUTEX];
 static int _num_mutex;
 
-#ifdef ASSERT
-void assert_locked_or_safepoint(const Monitor * lock) {
-  // check if this thread owns the lock (common case)
-  if (IgnoreLockingAssertions) return;
-  assert(lock != NULL, "Need non-NULL lock");
-  if (lock->owned_by_self()) return;
-  if (SafepointSynchronize::is_at_safepoint()) return;
-  if (!Universe::is_fully_initialized()) return;
-  // see if invoker of VM operation owns it
-  VM_Operation* op = VMThread::vm_operation();
-  if (op != NULL && op->calling_thread() == lock->owner()) return;
-  fatal("must own lock %s", lock->name());
-}
-
-// a stronger assertion than the above
-void assert_lock_strong(const Monitor * lock) {
-  if (IgnoreLockingAssertions) return;
-  assert(lock != NULL, "Need non-NULL lock");
-  if (lock->owned_by_self()) return;
-  fatal("must own lock %s", lock->name());
-}
-#endif
-
-#define def(var, type, pri, vm_block, safepoint_check_allowed ) {      \
+#define def(var, type, pri, vm_block, safepoint_check_allowed ) { \
   var = new type(Mutex::pri, #var, vm_block, safepoint_check_allowed); \
-  assert(_num_mutex < MAX_NUM_MUTEX, "increase MAX_NUM_MUTEX");        \
-  _mutex_array[_num_mutex++] = var;                                      \
+  assert(_num_mutex < MAX_NUM_MUTEX, "increase MAX_NUM_MUTEX"); \
+  _mutex_array[_num_mutex++] = var; \
 }
 
 // Using Padded subclasses to prevent false sharing of these global monitors and mutexes.
@@ -242,9 +183,6 @@ void mutex_init() {
   def(ExceptionCache_lock          , PaddedMutex  , leaf,        false, Monitor::_safepoint_check_always);     // serial profile printing
   def(OsrList_lock                 , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_never);
   def(Debug1_lock                  , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_never);
-#ifndef PRODUCT
-  def(FullGCALot_lock              , PaddedMutex  , leaf,        false, Monitor::_safepoint_check_always);     // a lock to make FullGCALot MT safe
-#endif
   def(BeforeExit_lock              , PaddedMonitor, leaf,        true,  Monitor::_safepoint_check_always);
   def(PerfDataMemAlloc_lock        , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_always);     // used for allocating PerfData memory for performance data
   def(PerfDataManager_lock         , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_always);     // used for synchronized access to PerfDataManager resources
@@ -285,7 +223,6 @@ void mutex_init() {
   def(DirectivesStack_lock         , PaddedMutex  , special,     true,  Monitor::_safepoint_check_never);
   def(MultiArray_lock              , PaddedMutex  , nonleaf+2,   false, Monitor::_safepoint_check_always);     // locks SymbolTable_lock
 
-  def(JvmtiThreadState_lock        , PaddedMutex  , nonleaf+2,   false, Monitor::_safepoint_check_always);     // Used by JvmtiThreadState/JvmtiEventController
   def(Management_lock              , PaddedMutex  , nonleaf+2,   false, Monitor::_safepoint_check_always);     // used for JVM management
 
   def(Compile_lock                 , PaddedMutex  , nonleaf+3,   true,  Monitor::_safepoint_check_sometimes);
@@ -304,13 +241,6 @@ void mutex_init() {
   if (WhiteBoxAPI) {
     def(Compilation_lock           , PaddedMonitor, leaf,        false, Monitor::_safepoint_check_never);
   }
-
-#if INCLUDE_JFR
-  def(JfrMsg_lock                  , PaddedMonitor, leaf,        true,  Monitor::_safepoint_check_always);
-  def(JfrBuffer_lock               , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_never);
-  def(JfrStream_lock               , PaddedMutex  , leaf+1,      true,  Monitor::_safepoint_check_never);      // ensure to rank lower than 'safepoint'
-  def(JfrStacktrace_lock           , PaddedMutex  , special,     true,  Monitor::_safepoint_check_sometimes);
-#endif
 
 #ifndef SUPPORTS_NATIVE_CX8
   def(UnsafeJlong_lock             , PaddedMutex  , special,     false, Monitor::_safepoint_check_never);

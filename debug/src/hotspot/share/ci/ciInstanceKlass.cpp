@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "ci/ciField.hpp"
 #include "ci/ciInstance.hpp"
@@ -42,7 +18,6 @@
 // This class represents a Klass* in the HotSpot virtual machine
 // whose Klass part in an InstanceKlass.
 
-
 // ------------------------------------------------------------------
 // ciInstanceKlass::ciInstanceKlass
 //
@@ -50,8 +25,8 @@
 ciInstanceKlass::ciInstanceKlass(Klass* k) :
   ciKlass(k)
 {
-  assert(get_Klass()->is_instance_klass(), "wrong type");
-  assert(get_instanceKlass()->is_loaded(), "must be at least loaded");
+  assert(get_Klass()->is_instance_klass(), "wrong type");
+  assert(get_instanceKlass()->is_loaded(), "must be at least loaded");
   InstanceKlass* ik = get_instanceKlass();
 
   AccessFlags access_flags = ik->access_flags();
@@ -79,7 +54,7 @@ ciInstanceKlass::ciInstanceKlass(Klass* k) :
     // It is enough to record a ciObject, since cached elements are never removed
     // during ciObjectFactory lifetime. ciObjectFactory itself is created for
     // every compilation and lives for the whole duration of the compilation.
-    assert(holder != NULL, "holder of anonymous class is the mirror which is never null");
+    assert(holder != NULL, "holder of anonymous class is the mirror which is never null");
     (void)CURRENT_ENV->get_object(holder);
   }
 
@@ -116,7 +91,7 @@ ciInstanceKlass::ciInstanceKlass(ciSymbol* name,
                                  jobject loader, jobject protection_domain)
   : ciKlass(name, T_OBJECT)
 {
-  assert(name->byte_at(0) != '[', "not an instance klass");
+  assert(name->byte_at(0) != '[', "not an instance klass");
   _init_state = (InstanceKlass::ClassState)0;
   _nonstatic_field_size = -1;
   _has_nonstatic_fields = false;
@@ -130,8 +105,6 @@ ciInstanceKlass::ciInstanceKlass(ciSymbol* name,
   _java_mirror = NULL;
   _field_cache = NULL;
 }
-
-
 
 // ------------------------------------------------------------------
 // ciInstanceKlass::compute_shared_is_initialized
@@ -187,7 +160,7 @@ ciConstantPoolCache* ciInstanceKlass::field_cache() {
     return NULL;
   }
   if (_field_cache == NULL) {
-    assert(!is_java_lang_Object(), "Object has no fields");
+    assert(!is_java_lang_Object(), "Object has no fields");
     Arena* arena = CURRENT_ENV->arena();
     _field_cache = new (arena) ciConstantPoolCache(arena, 5);
   }
@@ -198,14 +171,6 @@ ciConstantPoolCache* ciInstanceKlass::field_cache() {
 // ciInstanceKlass::get_canonical_holder
 //
 ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
-  #ifdef ASSERT
-  if (!(offset >= 0 && offset < layout_helper())) {
-    tty->print("*** get_canonical_holder(%d) on ", offset);
-    this->print();
-    tty->print_cr(" ***");
-  };
-  assert(offset >= 0 && offset < layout_helper(), "offset must be tame");
-  #endif
 
   if (offset < instanceOopDesc::base_offset_in_bytes()) {
     // All header offsets belong properly to java/lang/Object.
@@ -214,7 +179,7 @@ ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
 
   ciInstanceKlass* self = this;
   for (;;) {
-    assert(self->is_loaded(), "must be loaded to have size");
+    assert(self->is_loaded(), "must be loaded to have size");
     ciInstanceKlass* super = self->super();
     if (super == NULL || super->nof_nonstatic_fields() == 0 ||
         !super->contains_field_offset(offset)) {
@@ -342,7 +307,7 @@ void ciInstanceKlass::print_impl(outputStream* st) {
 //
 // Get the superklass of this klass.
 ciInstanceKlass* ciInstanceKlass::super() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
   if (_super == NULL && !is_java_lang_Object()) {
     GUARDED_VM_ENTRY(
       Klass* super_klass = get_instanceKlass()->super();
@@ -376,7 +341,7 @@ ciInstanceKlass* ciInstanceKlass::unique_concrete_subklass() {
   VM_ENTRY_MARK;
   InstanceKlass* ik = get_instanceKlass();
   Klass* up = ik->up_cast_abstract();
-  assert(up->is_instance_klass(), "must be InstanceKlass");
+  assert(up->is_instance_klass(), "must be InstanceKlass");
   if (ik == up) {
     return NULL;
   }
@@ -430,7 +395,6 @@ ciField* ciInstanceKlass::get_field_by_name(ciSymbol* name, ciSymbol* signature,
   return field;
 }
 
-
 static int sort_field_by_offset(ciField** a, ciField** b) {
   return (*a)->offset_in_bytes() - (*b)->offset_in_bytes();
   // (no worries about 32-bit overflow...)
@@ -439,7 +403,7 @@ static int sort_field_by_offset(ciField** a, ciField** b) {
 // ------------------------------------------------------------------
 // ciInstanceKlass::compute_nonstatic_fields
 int ciInstanceKlass::compute_nonstatic_fields() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   if (_nonstatic_fields != NULL)
     return _nonstatic_fields->length();
@@ -449,7 +413,7 @@ int ciInstanceKlass::compute_nonstatic_fields() {
     _nonstatic_fields = new (arena) GrowableArray<ciField*>(arena, 0, 0, NULL);
     return 0;
   }
-  assert(!is_java_lang_Object(), "bootstrap OK");
+  assert(!is_java_lang_Object(), "bootstrap OK");
 
   // Size in bytes of my fields, including inherited fields.
   int fsize = nonstatic_field_size() * heapOopSize;
@@ -460,7 +424,7 @@ int ciInstanceKlass::compute_nonstatic_fields() {
     int super_fsize  = super->nonstatic_field_size() * heapOopSize;
     int super_flen   = super->nof_nonstatic_fields();
     super_fields = super->_nonstatic_fields;
-    assert(super_flen == 0 || super_fields != NULL, "first get nof_fields");
+    assert(super_flen == 0 || super_fields != NULL, "first get nof_fields");
     // See if I am no larger than my super; if so, I can use his fields.
     if (fsize == super_fsize) {
       _nonstatic_fields = super_fields;
@@ -523,7 +487,7 @@ ciInstanceKlass::compute_nonstatic_fields_impl(GrowableArray<ciField*>*
     ciField* field = new (arena) ciField(&fd);
     fields->append(field);
   }
-  assert(fields->length() == flen, "sanity");
+  assert(fields->length() == flen, "sanity");
   return fields;
 }
 
@@ -539,7 +503,7 @@ bool ciInstanceKlass::compute_injected_fields_helper() {
 }
 
 void ciInstanceKlass::compute_injected_fields() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
 
   int has_injected_fields = 0;
   if (super() != NULL && super()->has_injected_fields()) {
@@ -550,7 +514,7 @@ void ciInstanceKlass::compute_injected_fields() {
       });
   }
   // may be concurrently initialized for shared ciInstanceKlass objects
-  assert(_has_injected_fields == -1 || _has_injected_fields == has_injected_fields, "broken concurrent initialization");
+  assert(_has_injected_fields == -1 || _has_injected_fields == has_injected_fields, "broken concurrent initialization");
   _has_injected_fields = has_injected_fields;
 }
 
@@ -573,7 +537,7 @@ ciMethod* ciInstanceKlass::find_method(ciSymbol* name, ciSymbol* signature) {
 // ------------------------------------------------------------------
 // ciInstanceKlass::is_leaf_type
 bool ciInstanceKlass::is_leaf_type() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
   if (is_shared()) {
     return is_final();  // approximately correct
   } else {
@@ -616,7 +580,7 @@ ciInstanceKlass* ciInstanceKlass::implementor() {
 }
 
 ciInstanceKlass* ciInstanceKlass::host_klass() {
-  assert(is_loaded(), "must be loaded");
+  assert(is_loaded(), "must be loaded");
   if (is_anonymous()) {
     VM_ENTRY_MARK
     Klass* host_klass = get_instanceKlass()->host_klass();
@@ -702,7 +666,6 @@ class StaticFinalFieldPrinter : public FieldClosure {
     }
   }
 };
-
 
 void ciInstanceKlass::dump_replay_data(outputStream* out) {
   ResourceMark rm;

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2004, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/adaptiveSizePolicy.hpp"
 #include "gc/shared/collectorPolicy.hpp"
@@ -61,8 +37,7 @@ AdaptiveSizePolicy::AdaptiveSizePolicy(size_t init_eden_size,
     _threshold_tolerance_percent(1.0 + ThresholdTolerance/100.0),
     _young_gen_change_for_minor_throughput(0),
     _old_gen_change_for_major_throughput(0) {
-  assert(AdaptiveSizePolicyGCTimeLimitThreshold > 0,
-    "No opportunity to clear SoftReferences before GC overhead limit");
+  assert(AdaptiveSizePolicyGCTimeLimitThreshold > 0, "No opportunity to clear SoftReferences before GC overhead limit");
   _avg_minor_pause    =
     new AdaptivePaddedAverage(AdaptiveTimeWeight, PausePadding);
   _avg_minor_interval = new AdaptiveWeightedAverage(AdaptiveTimeWeight);
@@ -143,9 +118,9 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
   }
 
   // Check once more that the number of workers is within the limits.
-  assert(min_workers <= total_workers, "Minimum workers not consistent with total workers");
-  assert(new_active_workers >= min_workers, "Minimum workers not observed");
-  assert(new_active_workers <= total_workers, "Total workers not observed");
+  assert(min_workers <= total_workers, "Minimum workers not consistent with total workers");
+  assert(new_active_workers >= min_workers, "Minimum workers not observed");
+  assert(new_active_workers <= total_workers, "Total workers not observed");
 
   if (ForceDynamicNumberOfGCThreads) {
     // Assume this is debugging and jiggle the number of GC threads.
@@ -162,9 +137,7 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
       }
       _debug_perturbation = !_debug_perturbation;
     }
-    assert((new_active_workers <= ParallelGCThreads) &&
-           (new_active_workers >= min_workers),
-      "Jiggled active workers too much");
+    assert((new_active_workers <= ParallelGCThreads) && (new_active_workers >= min_workers), "Jiggled active workers too much");
   }
 
   log_trace(gc, task)("GCTaskManager::calc_default_active_workers() : "
@@ -173,7 +146,7 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
      " active_workers_by_JT: " UINTX_FORMAT "  active_workers_by_heap_size: " UINTX_FORMAT,
      active_workers, new_active_workers, prev_active_workers,
      active_workers_by_JT, active_workers_by_heap_size);
-  assert(new_active_workers > 0, "Always need at least 1");
+  assert(new_active_workers > 0, "Always need at least 1");
   return new_active_workers;
 }
 
@@ -198,7 +171,7 @@ uint AdaptiveSizePolicy::calc_active_workers(uintx total_workers,
                                                      active_workers,
                                                      application_workers);
   }
-  assert(new_active_workers > 0, "Always need at least 1");
+  assert(new_active_workers > 0, "Always need at least 1");
   return new_active_workers;
 }
 
@@ -280,7 +253,7 @@ void AdaptiveSizePolicy::minor_collection_end(GCCause::Cause gc_cause) {
                         minor_pause_in_ms, _latest_minor_mutator_interval_seconds * MILLIUNITS);
 
     // Calculate variable used to estimate collection cost vs. gen sizes
-    assert(collection_cost >= 0.0, "Expected to be non-negative");
+    assert(collection_cost >= 0.0, "Expected to be non-negative");
     _minor_collection_estimator->update(eden_size_in_mbytes, collection_cost);
   }
 
@@ -393,7 +366,6 @@ double AdaptiveSizePolicy::decaying_gc_cost() const {
   return result;
 }
 
-
 void AdaptiveSizePolicy::clear_generation_free_space_flags() {
   set_change_young_gen_for_min_pauses(0);
   set_change_old_gen_for_maj_pauses(0);
@@ -451,7 +423,6 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
   // But don't force a promo size below the current promo size. Otherwise,
   // the promo size will shrink for no good reason.
   promo_limit = MAX2(promo_limit, _promo_size);
-
 
   log_trace(gc, ergo)(
         "PSAdaptiveSizePolicy::check_gc_overhead_limit:"
@@ -530,7 +501,7 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
       log_trace(gc, ergo)("GC is exceeding overhead limit of " UINTX_FORMAT "%%", GCTimeLimit);
       reset_gc_overhead_limit_count();
     } else if (print_gc_overhead_limit_would_be_exceeded) {
-      assert(gc_overhead_limit_count() > 0, "Should not be printing");
+      assert(gc_overhead_limit_count() > 0, "Should not be printing");
       log_trace(gc, ergo)("GC would exceed overhead limit of " UINTX_FORMAT "%% %d consecutive time(s)",
                           GCTimeLimit, gc_overhead_limit_count());
     }
@@ -539,7 +510,7 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
 // Printing
 
 bool AdaptiveSizePolicy::print() const {
-  assert(UseAdaptiveSizePolicy, "UseAdaptiveSizePolicy need to be enabled.");
+  assert(UseAdaptiveSizePolicy, "UseAdaptiveSizePolicy need to be enabled.");
 
   if (!log_is_enabled(Debug, gc, ergo)) {
     return false;
@@ -592,9 +563,7 @@ bool AdaptiveSizePolicy::print() const {
 
   // Throughput
   if (change_old_gen_for_throughput() == increase_old_gen_for_throughput_true) {
-    assert(change_young_gen_for_throughput() ==
-           increase_young_gen_for_througput_true,
-           "Both generations should be growing");
+    assert(change_young_gen_for_throughput() == increase_young_gen_for_througput_true, "Both generations should be growing");
     young_gen_action = grow_msg;
     tenured_gen_action = grow_msg;
   } else if (change_young_gen_for_throughput() ==
@@ -629,6 +598,6 @@ void AdaptiveSizePolicy::print_tenuring_threshold( uint new_tenuring_threshold_a
   } else if (increment_tenuring_threshold_for_gc_cost()) {
     log_debug(gc, ergo)("Tenuring threshold: (attempted to increase to balance GC costs) = %u", new_tenuring_threshold_arg);
   } else {
-    assert(!tenuring_threshold_change(), "(no change was attempted)");
+    assert(!tenuring_threshold_change(), "(no change was attempted)");
   }
 }

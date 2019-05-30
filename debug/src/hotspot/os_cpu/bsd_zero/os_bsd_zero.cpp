@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2009, 2010 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #if !defined(__APPLE__) && !defined(__NetBSD__)
 #include <pthread.h>
 # include <pthread_np.h> /* For pthread_attr_get_np */
@@ -97,7 +72,7 @@ char* os::non_memory_address_word() {
 #else
   // This is the value for x86; works pretty well for PPC too.
   return (char *) -1;
-#endif // SPARC
+#endif
 }
 
 address os::Bsd::ucontext_get_pc(const ucontext_t* uc) {
@@ -229,20 +204,6 @@ JVM_handle_bsd_signal(int sig,
     return false;
   }
 
-#ifndef PRODUCT
-  if (sig == SIGSEGV) {
-    fatal("\n#"
-          "\n#    /--------------------\\"
-          "\n#    | segmentation fault |"
-          "\n#    \\---\\ /--------------/"
-          "\n#        /"
-          "\n#    [-]        |\\_/|    "
-          "\n#    (+)=C      |o o|__  "
-          "\n#    | |        =-*-=__\\ "
-          "\n#    OOO        c_c_(___)");
-  }
-#endif // !PRODUCT
-
   const char *fmt =
       "caught unhandled signal " INT32_FORMAT " at address " PTR_FORMAT;
   char buf[128];
@@ -257,21 +218,7 @@ void os::Bsd::init_thread_fpu_state(void) {
 }
 
 bool os::is_allocatable(size_t bytes) {
-#ifdef _LP64
   return true;
-#else
-  if (bytes < 2 * G) {
-    return true;
-  }
-
-  char* addr = reserve_memory(bytes, NULL);
-
-  if (addr != NULL) {
-    release_memory(addr, bytes);
-  }
-
-  return addr != NULL;
-#endif // _LP64
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -282,11 +229,7 @@ size_t os::Posix::_java_thread_min_stack_allowed = 64 * K;
 size_t os::Posix::_vm_internal_thread_min_stack_allowed = 64 * K;
 
 size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
-#ifdef _LP64
   size_t s = (thr_type == os::compiler_thread ? 4 * M : 1 * M);
-#else
-  size_t s = (thr_type == os::compiler_thread ? 2 * M : 512 * K);
-#endif // _LP64
   return s;
 }
 
@@ -334,8 +277,8 @@ static void current_stack_region(address *bottom, size_t *size) {
   stack_top = stack_bottom + stack_bytes;
 #endif
 
-  assert(os::current_stack_pointer() >= stack_bottom, "should do");
-  assert(os::current_stack_pointer() < stack_top, "should do");
+  assert(os::current_stack_pointer() >= stack_bottom, "should do");
+  assert(os::current_stack_pointer() < stack_top, "should do");
 
   *bottom = stack_bottom;
   *size = stack_top - stack_bottom;
@@ -444,22 +387,6 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////
 // Implementations of atomic operations not supported by processors.
 //  -- http://gcc.gnu.org/onlinedocs/gcc-4.2.1/gcc/Atomic-Builtins.html
-
-#ifndef _LP64
-extern "C" {
-  long long unsigned int __sync_val_compare_and_swap_8(
-    volatile void *ptr,
-    long long unsigned int oldval,
-    long long unsigned int newval) {
-    ShouldNotCallThis();
-  }
-};
-#endif // !_LP64
-
-#ifndef PRODUCT
-void os::verify_stack_alignment() {
-}
-#endif
 
 int os::extra_bang_size_in_bytes() {
   // Zero does not require an additional stack bang.

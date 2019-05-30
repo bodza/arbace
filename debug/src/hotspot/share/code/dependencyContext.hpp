@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_DEPENDENCYCONTEXT_HPP
 #define SHARE_VM_CODE_DEPENDENCYCONTEXT_HPP
 
@@ -82,7 +58,7 @@ class DependencyContext : public StackObj {
   intptr_t* _dependency_context_addr;
 
   void set_dependencies(nmethodBucket* b) {
-    assert((intptr_t(b) & _has_stale_entries_mask) == 0, "should be aligned");
+    assert((intptr_t(b) & _has_stale_entries_mask) == 0, "should be aligned");
     if (has_stale_entries()) {
       *_dependency_context_addr = intptr_t(b) | _has_stale_entries_mask;
     } else {
@@ -114,21 +90,7 @@ class DependencyContext : public StackObj {
   static PerfCounter* _perf_total_buckets_stale_acc_count;
 
  public:
-#ifdef ASSERT
-  // Safepoints are forbidden during DC lifetime. GC can invalidate
-  // _dependency_context_addr if it relocates the holder
-  // (e.g. CallSiteContext Java object).
-  int _safepoint_counter;
-
-  DependencyContext(intptr_t* addr) : _dependency_context_addr(addr),
-    _safepoint_counter(SafepointSynchronize::_safepoint_counter) {}
-
-  ~DependencyContext() {
-    assert(_safepoint_counter == SafepointSynchronize::_safepoint_counter, "safepoint happened");
-  }
-#else
   DependencyContext(intptr_t* addr) : _dependency_context_addr(addr) {}
-#endif // ASSERT
 
   static const intptr_t EMPTY = 0; // dependencies = NULL, has_stale_entries = false
 
@@ -144,11 +106,5 @@ class DependencyContext : public StackObj {
   // Unsafe deallocation of nmethodBuckets. Used in IK::release_C_heap_structures
   // to clean up the context possibly containing live entries pointing to unloaded nmethods.
   void wipe();
-
-#ifndef PRODUCT
-  void print_dependent_nmethods(bool verbose);
-  bool is_dependent_nmethod(nmethod* nm);
-  bool find_stale_entries();
-#endif //PRODUCT
 };
-#endif // SHARE_VM_CODE_DEPENDENCYCONTEXT_HPP
+#endif

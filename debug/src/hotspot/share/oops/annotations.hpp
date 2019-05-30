@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_ANNOTATIONS_HPP
 #define SHARE_VM_OOPS_ANNOTATIONS_HPP
 
@@ -29,7 +5,6 @@
 #include "oops/metadata.hpp"
 #include "utilities/exceptions.hpp"
 #include "utilities/globalDefinitions.hpp"
-
 
 class ClassLoaderData;
 class outputStream;
@@ -60,17 +35,12 @@ class Annotations: public MetaspaceObj {
 
   static void free_contents(ClassLoaderData* loader_data, Array<AnnotationArray*>* p);
   void deallocate_contents(ClassLoaderData* loader_data);
-  DEBUG_ONLY(bool on_stack() { return false; })  // for template
 
   // Sizing (in words)
   static int size()    { return sizeof(Annotations) / wordSize; }
 
   // Annotations should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
-
-#if INCLUDE_SERVICES
-  void collect_statistics(KlassSizeStats *sz) const;
-#endif
 
   // Constructor to initialize to null
   Annotations() : _class_annotations(NULL),
@@ -99,9 +69,6 @@ class Annotations: public MetaspaceObj {
   static julong count_bytes(Array<AnnotationArray*>* p);
  public:
   const char* internal_name() const { return "{constant pool}"; }
-#ifndef PRODUCT
-  void print_on(outputStream* st) const;
-#endif
   void print_value_on(outputStream* st) const;
 };
-#endif // SHARE_VM_OOPS_ANNOTATIONS_HPP
+#endif

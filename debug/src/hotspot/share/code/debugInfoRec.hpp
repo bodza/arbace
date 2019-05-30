@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_DEBUGINFOREC_HPP
 #define SHARE_VM_CODE_DEBUGINFOREC_HPP
 
@@ -109,7 +85,6 @@ class DebugInformationRecorder: public ResourceObj {
                       DebugToken* expressions = NULL,
                       DebugToken* monitors    = NULL);
 
-
   void dump_object_pool(GrowableArray<ScopeValue*>* objects);
 
   // This call must follow every add_safepoint,
@@ -133,7 +108,7 @@ class DebugInformationRecorder: public ResourceObj {
   // verifies the debug information
   void verify(const nmethod* code);
 
-  static void print_statistics() PRODUCT_RETURN;
+  static void print_statistics() {};
 
   // Method for setting oopmaps to temporarily preserve old handling of oopmaps
   OopMapSet *_oopmaps;
@@ -150,15 +125,12 @@ class DebugInformationRecorder: public ResourceObj {
 
   DebugInfoWriteStream* stream() const { return _stream; }
 
-
  private:
   friend class ScopeDesc;
   friend class vframeStreamCommon;
   friend class DIR_Chunk;
 
   // True if we are recording non-safepoint scopes.
-  // This flag is set if DebugNonSafepoints is true, or if
-  // JVMTI post_compiled_method_load events are enabled.
   const bool _recording_non_safepoints;
 
   DebugInfoWriteStream* _stream;
@@ -169,11 +141,6 @@ class DebugInformationRecorder: public ResourceObj {
   GrowableArray<DIR_Chunk*>* _all_chunks;
   DIR_Chunk* _next_chunk;
   DIR_Chunk* _next_chunk_limit;
-
-#ifdef ASSERT
-  enum { rs_null, rs_safepoint, rs_non_safepoint };
-  int _recording_state;
-#endif
 
   PcDesc* _pcs;
   int     _pcs_size;
@@ -199,13 +166,8 @@ class DebugInformationRecorder: public ResourceObj {
   int  serialize_scope_values(GrowableArray<ScopeValue*>* values);
   int  find_sharable_decode_offset(int stream_offset);
 
-#ifndef PRODUCT
-  bool recorders_frozen();
-  void mark_recorders_frozen();
-#endif // PRODUCT
-
  public:
   enum { serialized_null = 0 };
 };
 
-#endif // SHARE_VM_CODE_DEBUGINFOREC_HPP
+#endif

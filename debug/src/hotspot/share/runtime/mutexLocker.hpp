@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_MUTEXLOCKER_HPP
 #define SHARE_VM_RUNTIME_MUTEXLOCKER_HPP
 
@@ -51,7 +27,6 @@ extern Mutex*   ResolvedMethodTable_lock;        // a lock on the ResolvedMethod
 extern Mutex*   JmethodIdCreation_lock;          // a lock on creating JNI method identifiers
 extern Mutex*   JfieldIdCreation_lock;           // a lock on creating JNI static field identifiers
 extern Monitor* JNICritical_lock;                // a lock used while entering and exiting JNI critical regions, allows GC to sometimes get in
-extern Mutex*   JvmtiThreadState_lock;           // a lock on modification of JVMTI thread data
 extern Monitor* Heap_lock;                       // a lock on the heap
 extern Mutex*   ExpandHeap_lock;                 // a lock on expanding the heap
 extern Mutex*   AdapterHandlerLibrary_lock;      // a lock on the AdapterHandlerLibrary
@@ -109,9 +84,6 @@ extern Mutex*   ProfilePrint_lock;               // a lock used to serialize the
 extern Mutex*   ExceptionCache_lock;             // a lock used to synchronize exception cache updates
 extern Mutex*   OsrList_lock;                    // a lock used to serialize access to OSR queues
 
-#ifndef PRODUCT
-extern Mutex*   FullGCALot_lock;                 // a lock to make FullGCALot MT safe
-#endif // PRODUCT
 extern Mutex*   Debug1_lock;                     // A bunch of pre-allocated locks that can be used for tracing
 extern Mutex*   Debug2_lock;                     // down synchronization related bugs!
 extern Mutex*   Debug3_lock;
@@ -132,19 +104,11 @@ extern Monitor* PeriodicTask_lock;               // protects the periodic task s
 extern Monitor* RedefineClasses_lock;            // locks classes from parallel redefinition
 extern Mutex*   ThreadHeapSampler_lock;          // protects the static data for initialization.
 
-#if INCLUDE_JFR
-extern Mutex*   JfrStacktrace_lock;              // used to guard access to the JFR stacktrace table
-extern Monitor* JfrMsg_lock;                     // protects JFR messaging
-extern Mutex*   JfrBuffer_lock;                  // protects JFR buffer operations
-extern Mutex*   JfrStream_lock;                  // protects JFR stream access
-#endif
-
 #ifndef SUPPORTS_NATIVE_CX8
 extern Mutex*   UnsafeJlong_lock;                // provides Unsafe atomic updates to jlongs on platforms that don't support cx8
 #endif
 
 extern Mutex*   MetaspaceExpand_lock;            // protects Metaspace virtualspace and chunk expansions
-
 
 extern Monitor* CodeHeapStateAnalytics_lock;     // lock print functions against concurrent analyze functions.
                                                  // Only used locally in PrintCodeCacheLayout processing.
@@ -174,16 +138,14 @@ class MutexLocker: StackObj {
   Monitor * _mutex;
  public:
   MutexLocker(Monitor * mutex) {
-    assert(mutex->rank() != Mutex::special,
-      "Special ranked mutex should only use MutexLockerEx");
+    assert(mutex->rank() != Mutex::special, "Special ranked mutex should only use MutexLockerEx");
     _mutex = mutex;
     _mutex->lock();
   }
 
   // Overloaded constructor passing current thread
   MutexLocker(Monitor * mutex, Thread *thread) {
-    assert(mutex->rank() != Mutex::special,
-      "Special ranked mutex should only use MutexLockerEx");
+    assert(mutex->rank() != Mutex::special, "Special ranked mutex should only use MutexLockerEx");
     _mutex = mutex;
     _mutex->lock(thread);
   }
@@ -191,17 +153,11 @@ class MutexLocker: StackObj {
   ~MutexLocker() {
     _mutex->unlock();
   }
-
 };
 
 // for debugging: check that we're already owning this lock (or are at a safepoint)
-#ifdef ASSERT
-void assert_locked_or_safepoint(const Monitor * lock);
-void assert_lock_strong(const Monitor * lock);
-#else
 #define assert_locked_or_safepoint(lock)
 #define assert_lock_strong(lock)
-#endif
 
 // A MutexLockerEx behaves like a MutexLocker when its constructor is
 // called with a Mutex.  Unlike a MutexLocker, its constructor can also be
@@ -217,8 +173,7 @@ class MutexLockerEx: public StackObj {
   MutexLockerEx(Monitor * mutex, bool no_safepoint_check = !Mutex::_no_safepoint_check_flag) {
     _mutex = mutex;
     if (_mutex != NULL) {
-      assert(mutex->rank() > Mutex::special || no_safepoint_check,
-        "Mutexes with rank special or lower should not do safepoint checks");
+      assert(mutex->rank() > Mutex::special || no_safepoint_check, "Mutexes with rank special or lower should not do safepoint checks");
       if (no_safepoint_check)
         _mutex->lock_without_safepoint_check();
       else
@@ -249,11 +204,6 @@ class MonitorLockerEx: public MutexLockerEx {
   }
 
   ~MonitorLockerEx() {
-    #ifdef ASSERT
-      if (_monitor != NULL) {
-        assert_lock_strong(_monitor);
-      }
-    #endif  // ASSERT
     // Superclass destructor will do unlocking
   }
 
@@ -281,8 +231,6 @@ class MonitorLockerEx: public MutexLockerEx {
   }
 };
 
-
-
 // A GCMutexLocker is usually initialized with a mutex that is
 // automatically acquired in order to do GC.  The function that
 // synchronizes using a GCMutexLocker may be called both during and between
@@ -297,8 +245,6 @@ public:
   GCMutexLocker(Monitor * mutex);
   ~GCMutexLocker() { if (_locked) _mutex->unlock(); }
 };
-
-
 
 // A MutexUnlocker temporarily exits a previously
 // entered mutex for the scope which contains the unlocker.
@@ -342,38 +288,4 @@ class MutexUnlockerEx: StackObj {
   }
 };
 
-#ifndef PRODUCT
-//
-// A special MutexLocker that allows:
-//   - reentrant locking
-//   - locking out of order
-//
-// Only to be used for verify code, where we can relax out dead-lock
-// detection code a bit (unsafe, but probably ok). This code is NEVER to
-// be included in a product version.
-//
-class VerifyMutexLocker: StackObj {
- private:
-  Monitor * _mutex;
-  bool   _reentrant;
- public:
-  VerifyMutexLocker(Monitor * mutex) {
-    _mutex     = mutex;
-    _reentrant = mutex->owned_by_self();
-    if (!_reentrant) {
-      // We temp. disable strict safepoint checking, while we require the lock
-      FlagSetting fs(StrictSafepointChecks, false);
-      _mutex->lock();
-    }
-  }
-
-  ~VerifyMutexLocker() {
-    if (!_reentrant) {
-      _mutex->unlock();
-    }
-  }
-};
-
 #endif
-
-#endif // SHARE_VM_RUNTIME_MUTEXLOCKER_HPP

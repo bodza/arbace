@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_MODULEENTRY_HPP
 #define SHARE_VM_CLASSFILE_MODULEENTRY_HPP
 
@@ -36,9 +12,6 @@
 #include "utilities/hashtable.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ostream.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrTraceIdExtension.hpp"
-#endif
 
 #define UNNAMED_MODULE "unnamed module"
 #define UNNAMED_MODULE_LEN 14
@@ -70,11 +43,9 @@ private:
   Symbol* _version;                    // module version number
   Symbol* _location;                   // module location
   bool _can_read_all_unnamed;
-  bool _has_default_read_edges;        // JVMTI redefine/retransform support
   bool _must_walk_reads;               // walk module's reads list at GC safepoints to purge out dead modules
   bool _is_open;                       // whether the packages in the module are all unqualifiedly exported
   bool _is_patched;                    // whether the module is patched via --patch-module
-  JFR_ONLY(DEFINE_TRACE_ID_FIELD;)
   enum {MODULE_READS_SIZE = 101};      // Initial size of list of modules that the module can read.
 
 public:
@@ -86,7 +57,6 @@ public:
     _version = NULL;
     _location = NULL;
     _can_read_all_unnamed = false;
-    _has_default_read_edges = false;
     _must_walk_reads = false;
     _is_patched = false;
     _is_open = false;
@@ -110,7 +80,7 @@ public:
   ClassLoaderData* loader_data() const                 { return _loader_data; }
 
   void set_loader_data(ClassLoaderData* cld) {
-    assert(!cld->is_anonymous(), "Unexpected anonymous class loader data");
+    assert(!cld->is_anonymous(), "Unexpected anonymous class loader data");
     _loader_data = cld;
   }
 
@@ -132,25 +102,12 @@ public:
   bool             is_named() const                    { return (name() != NULL); }
 
   bool can_read_all_unnamed() const {
-    assert(is_named() || _can_read_all_unnamed == true,
-           "unnamed modules can always read all unnamed modules");
+    assert(is_named() || _can_read_all_unnamed == true, "unnamed modules can always read all unnamed modules");
     return _can_read_all_unnamed;
   }
 
   // Modules can only go from strict to loose.
   void set_can_read_all_unnamed() { _can_read_all_unnamed = true; }
-
-  bool has_default_read_edges() const {
-    return _has_default_read_edges;
-  }
-
-  // Sets true and returns the previous value.
-  bool set_has_default_read_edges() {
-    MutexLocker ml(Module_lock);
-    bool prev = _has_default_read_edges;
-    _has_default_read_edges = true;
-    return prev;
-  }
 
   void set_is_patched() {
       _is_patched = true;
@@ -181,8 +138,6 @@ public:
 
   void print(outputStream* st = tty);
   void verify();
-
-  JFR_ONLY(DEFINE_TRACE_ID_METHODS;)
 };
 
 // Iterator interface
@@ -190,7 +145,6 @@ class ModuleClosure: public StackObj {
  public:
   virtual void do_module(ModuleEntry* module) = 0;
 };
-
 
 // The ModuleEntryTable is a Hashtable containing a list of all modules defined
 // by a particular class loader.  Each module is represented as a ModuleEntry node.
@@ -264,4 +218,4 @@ public:
   void verify();
 };
 
-#endif // SHARE_VM_CLASSFILE_MODULEENTRY_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
@@ -67,8 +43,8 @@ void G1StringDedupQueue::cancel_wait_impl() {
 }
 
 void G1StringDedupQueue::push_impl(uint worker_id, oop java_string) {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint");
-  assert(worker_id < _nqueues, "Invalid queue");
+  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint");
+  assert(worker_id < _nqueues, "Invalid queue");
 
   // Push and notify waiter
   G1StringDedupWorkerQueue& worker_queue = _queues[worker_id];
@@ -89,7 +65,7 @@ void G1StringDedupQueue::push_impl(uint worker_id, oop java_string) {
 }
 
 oop G1StringDedupQueue::pop_impl() {
-  assert(!SafepointSynchronize::is_at_safepoint(), "Must not be at safepoint");
+  assert(!SafepointSynchronize::is_at_safepoint(), "Must not be at safepoint");
   NoSafepointVerifier nsv;
 
   // Try all queues before giving up
@@ -116,7 +92,7 @@ oop G1StringDedupQueue::pop_impl() {
 }
 
 void G1StringDedupQueue::unlink_or_oops_do_impl(StringDedupUnlinkOrOopsDoClosure* cl, size_t queue) {
-  assert(queue < _nqueues, "Invalid queue");
+  assert(queue < _nqueues, "Invalid queue");
   StackIterator<oop, mtGC> iter(_queues[queue]);
   while (!iter.is_empty()) {
     oop* p = iter.next_addr();

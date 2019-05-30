@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_CANONICALIZER_HPP
 #define SHARE_VM_C1_C1_CANONICALIZER_HPP
 
@@ -40,10 +16,6 @@ class Canonicalizer: InstructionVisitor {
   void set_constant(jlong x)                     { set_canonical(new Constant(new LongConstant(x))); }
   void set_constant(jfloat x)                    { set_canonical(new Constant(new FloatConstant(x))); }
   void set_constant(jdouble x)                   { set_canonical(new Constant(new DoubleConstant(x))); }
-#ifdef _WINDOWS
-  // jint is defined as long in jni_md.h, so convert from int to jint
-  void set_constant(int x)                       { set_constant((jint)x); }
-#endif
   void move_const_to_right(Op2* x);
   void do_Op2(Op2* x);
   void do_UnsafeRawOp(UnsafeRawOp* x);
@@ -55,7 +27,6 @@ class Canonicalizer: InstructionVisitor {
 
  public:
   Canonicalizer(Compilation* c, Value x, int bci) : _compilation(c), _canonical(x), _bci(bci) {
-    NOT_PRODUCT(x->set_printable_bci(bci));
     if (CanonicalizeNodes) x->visit(this);
   }
   Value canonical() const                        { return _canonical; }
@@ -111,9 +82,6 @@ class Canonicalizer: InstructionVisitor {
   virtual void do_RuntimeCall    (RuntimeCall*     x);
   virtual void do_MemBar         (MemBar*          x);
   virtual void do_RangeCheckPredicate(RangeCheckPredicate* x);
-#ifdef ASSERT
-  virtual void do_Assert         (Assert*          x);
-#endif
 };
 
-#endif // SHARE_VM_C1_C1_CANONICALIZER_HPP
+#endif

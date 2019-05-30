@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "memory/allocation.inline.hpp"
@@ -171,13 +147,10 @@
               39. processor %d
                      CPU number last executed on.
 
-
-
  ///// SSCANF FORMAT STRING. Copy and use.
 
 field:        1  2  3  4  5  6  7  8  9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38 39
 format:       %d %s %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu %lu %ld %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %d %d
-
 
 */
 
@@ -205,7 +178,6 @@ format:       %d %s %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu %ld %ld %ld %l
 #ifndef _SCANFMT_
 #  define _SCANFMT_
 #endif
-
 
 struct CPUPerfTicks {
   uint64_t  used;
@@ -359,7 +331,6 @@ static OSReturn get_total_ticks(int which_logical_cpu, CPUPerfTicks* pticks) {
 
   return OS_OK;
 }
-
 
 static int get_systemtype(void) {
   static int procEntriesType = UNDETECTED;
@@ -641,9 +612,9 @@ int CPUPerformanceInterface::CPUPerformance::cpu_load_total_process(double* cpu_
 int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserLoad, double* pjvmKernelLoad, double* psystemTotalLoad) {
   double u, s, t;
 
-  assert(pjvmUserLoad != NULL, "pjvmUserLoad not inited");
-  assert(pjvmKernelLoad != NULL, "pjvmKernelLoad not inited");
-  assert(psystemTotalLoad != NULL, "psystemTotalLoad not inited");
+  assert(pjvmUserLoad != NULL, "pjvmUserLoad not inited");
+  assert(pjvmKernelLoad != NULL, "pjvmKernelLoad not inited");
+  assert(psystemTotalLoad != NULL, "psystemTotalLoad not inited");
 
   u = get_cpu_load(-1, &_counters, &s, CPU_LOAD_VM_ONLY);
   if (u < 0) {
@@ -753,7 +724,7 @@ bool SystemProcessInterface::SystemProcesses::ProcessIterator::is_dir(const char
 }
 
 int SystemProcessInterface::SystemProcesses::ProcessIterator::fsize(const char* name, uint64_t& size) const {
-  assert(name != NULL, "name pointer is NULL!");
+  assert(name != NULL, "name pointer is NULL!");
   size = 0;
   struct stat fbuf;
 
@@ -962,9 +933,9 @@ SystemProcessInterface::SystemProcesses::~SystemProcesses() {
 }
 
 int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const {
-  assert(system_processes != NULL, "system_processes pointer is NULL!");
-  assert(no_of_sys_processes != NULL, "system_processes counter pointers is NULL!");
-  assert(_iterator != NULL, "iterator is NULL!");
+  assert(system_processes != NULL, "system_processes pointer is NULL!");
+  assert(no_of_sys_processes != NULL, "system_processes counter pointers is NULL!");
+  assert(_iterator != NULL, "iterator is NULL!");
 
   // initialize pointers
   *no_of_sys_processes = 0;
@@ -1064,7 +1035,6 @@ class NetworkPerformanceInterface::NetworkPerformance : public CHeapObj<mtIntern
 };
 
 NetworkPerformanceInterface::NetworkPerformance::NetworkPerformance() {
-
 }
 
 bool NetworkPerformanceInterface::NetworkPerformance::initialize() {

@@ -1,32 +1,7 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "interpreter/invocationCounter.hpp"
 #include "runtime/frame.hpp"
 #include "runtime/handles.inline.hpp"
-
 
 // Implementation of InvocationCounter
 
@@ -54,14 +29,13 @@ void InvocationCounter::set_carry() {
 }
 
 void InvocationCounter::set_state(State state) {
-  assert(0 <= state && state < number_of_states, "illegal state");
+  assert(0 <= state && state < number_of_states, "illegal state");
   int init = _init[state];
   // prevent from going to zero, to distinguish from never-executed methods
   if (init == 0 && count() > 0)  init = 1;
   int carry = (_counter & carry_mask);    // the carry bit is sticky
   _counter = (init << number_of_noncount_bits) | carry | state;
 }
-
 
 void InvocationCounter::print() {
   tty->print_cr("invocation count: up = %d, limit = %d, carry = %s, state = %s",
@@ -81,7 +55,6 @@ InvocationCounter::Action InvocationCounter::_action[InvocationCounter::number_o
 int                       InvocationCounter::InterpreterInvocationLimit;
 int                       InvocationCounter::InterpreterBackwardBranchLimit;
 int                       InvocationCounter::InterpreterProfileLimit;
-
 
 const char* InvocationCounter::state_as_string(State state) {
   switch (state) {
@@ -103,29 +76,26 @@ const char* InvocationCounter::state_as_short_string(State state) {
   }
 }
 
-
 static address do_nothing(const methodHandle& method, TRAPS) {
   // dummy action for inactive invocation counters
   MethodCounters* mcs = method->method_counters();
-  assert(mcs != NULL, "");
+  assert(mcs != NULL, "");
   mcs->invocation_counter()->set_carry();
   mcs->invocation_counter()->set_state(InvocationCounter::wait_for_nothing);
   return NULL;
 }
 
-
 static address do_decay(const methodHandle& method, TRAPS) {
   // decay invocation counters so compilation gets delayed
   MethodCounters* mcs = method->method_counters();
-  assert(mcs != NULL, "");
+  assert(mcs != NULL, "");
   mcs->invocation_counter()->decay();
   return NULL;
 }
 
-
 void InvocationCounter::def(State state, int init, Action action) {
-  assert(0 <= state && state < number_of_states, "illegal state");
-  assert(0 <= init  && init  < count_limit, "initial value out of range");
+  assert(0 <= state && state < number_of_states, "illegal state");
+  assert(0 <= init  && init  < count_limit, "initial value out of range");
   _init  [state] = init;
   _action[state] = action;
 }
@@ -158,12 +128,8 @@ void InvocationCounter::reinitialize(bool delay_overflow) {
     InterpreterBackwardBranchLimit = ((CompileThreshold * OnStackReplacePercentage) / 100) << number_of_noncount_bits;
   }
 
-  assert(0 <= InterpreterBackwardBranchLimit,
-         "OSR threshold should be non-negative");
-  assert(0 <= InterpreterProfileLimit &&
-         InterpreterProfileLimit <= InterpreterInvocationLimit,
-         "profile threshold should be less than the compilation threshold "
-         "and non-negative");
+  assert(0 <= InterpreterBackwardBranchLimit, "OSR threshold should be non-negative");
+  assert(0 <= InterpreterProfileLimit && InterpreterProfileLimit <= InterpreterInvocationLimit, "profile threshold should be less than the compilation threshold " "and non-negative");
 }
 
 void invocationCounter_init() {

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/dictionary.hpp"
@@ -43,7 +19,6 @@
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/numberSeq.hpp"
 
-
 // This hashtable is implemented as an open hash table with a fixed number of buckets.
 
 template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry_free_list() {
@@ -64,7 +39,7 @@ template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry(unsig
       int block_size = MIN2(512, MAX2((int)_table_size / 2, (int)_number_of_entries));
       int len = _entry_size * block_size;
       len = 1 << log2_int(len); // round down to power of 2
-      assert(len >= _entry_size, "");
+      assert(len >= _entry_size, "");
       _first_free_entry = NEW_C_HEAP_ARRAY2(char, len, F, CURRENT_PC);
       _end_block = _first_free_entry + len;
     }
@@ -72,11 +47,10 @@ template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry(unsig
     _first_free_entry += _entry_size;
   }
 
-  assert(_entry_size % HeapWordSize == 0, "");
+  assert(_entry_size % HeapWordSize == 0, "");
   entry->set_hash(hashValue);
   return entry;
 }
-
 
 template <class T, MEMFLAGS F> HashtableEntry<T, F>* Hashtable<T, F>::new_entry(unsigned int hashValue, T obj) {
   HashtableEntry<T, F>* entry;
@@ -104,7 +78,7 @@ template <class T, MEMFLAGS F> HashtableEntry<T, F>* Hashtable<T, F>::allocate_n
 // rehash_count which is currently 100, there's probably something wrong.
 
 template <class T, MEMFLAGS F> bool RehashableHashtable<T, F>::check_rehash_table(int count) {
-  assert(this->table_size() != 0, "underflow");
+  assert(this->table_size() != 0, "underflow");
   if (count > (((double)this->number_of_entries()/(double)this->table_size())*rehash_multiple)) {
     // Set a flag for the next safepoint, which should be at some guaranteed
     // safepoint interval.
@@ -121,7 +95,7 @@ template <class T, MEMFLAGS F> void RehashableHashtable<T, F>::move_to(Rehashabl
 
   // Initialize the global seed for hashing.
   _seed = AltHashing::compute_seed();
-  assert(seed() != 0, "shouldn't be zero");
+  assert(seed() != 0, "shouldn't be zero");
 
   int saved_entry_count = this->number_of_entries();
 
@@ -180,9 +154,7 @@ template <MEMFLAGS F> void BasicHashtable<F>::BucketUnlinkContext::free_entry(Ba
 
 template <MEMFLAGS F> void BasicHashtable<F>::bulk_free_entries(BucketUnlinkContext* context) {
   if (context->_num_removed == 0) {
-    assert(context->_removed_head == NULL && context->_removed_tail == NULL,
-           "Zero entries in the unlink context, but elements linked from " PTR_FORMAT " to " PTR_FORMAT,
-           p2i(context->_removed_head), p2i(context->_removed_tail));
+    assert(context->_removed_head == NULL && context->_removed_tail == NULL, "Zero entries in the unlink context, but elements linked from " PTR_FORMAT " to " PTR_FORMAT, p2i(context->_removed_head), p2i(context->_removed_tail));
     return;
   }
 
@@ -216,7 +188,7 @@ template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_table() {
 
 // Dump the hash table entries (into CDS archive)
 template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
-  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
+  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
   intptr_t *plen = (intptr_t*)(top);
   top += sizeof(*plen);
 
@@ -230,7 +202,7 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
     }
   }
   *plen = (char*)(top) - (char*)plen - sizeof(*plen);
-  assert(top == end, "count_bytes_for_table is wrong");
+  assert(top == end, "count_bytes_for_table is wrong");
   // Set the shared bit.
 
   for (i = 0; i < _table_size; ++i) {
@@ -267,7 +239,7 @@ static int literal_size(ClassLoaderWeakHandle v) {
 }
 
 template <MEMFLAGS F> bool BasicHashtable<F>::resize(int new_size) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
 
   // Allocate new buckets
   HashtableBucket<F>* buckets_new = NEW_C_HEAP_ARRAY2_RETURN_NULL(HashtableBucket<F>, new_size, F, CURRENT_PC);
@@ -358,7 +330,6 @@ template <class T, MEMFLAGS F> void Hashtable<T, F>::print_table_statistics(outp
   st->print_cr("Maximum bucket size     : %9d", (int)summary.maximum());
 }
 
-
 // Dump the hash table buckets.
 
 template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_buckets() {
@@ -372,7 +343,7 @@ template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_buckets() {
 
 // Dump the buckets (into CDS archive)
 template <MEMFLAGS F> void BasicHashtable<F>::copy_buckets(char* top, char* end) {
-  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
+  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
   intptr_t len = _table_size * sizeof(HashtableBucket<F>);
   *(intptr_t*)(top) = len;
   top += sizeof(intptr_t);
@@ -383,69 +354,8 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_buckets(char* top, char* end)
   _buckets = (HashtableBucket<F>*)memcpy(top, (void*)_buckets, len);
   top += len;
 
-  assert(top == end, "count_bytes_for_buckets is wrong");
+  assert(top == end, "count_bytes_for_buckets is wrong");
 }
-
-#ifndef PRODUCT
-template <class T> void print_literal(T l) {
-  l->print();
-}
-
-static void print_literal(ClassLoaderWeakHandle l) {
-  l.print();
-}
-
-template <class T, MEMFLAGS F> void Hashtable<T, F>::print() {
-  ResourceMark rm;
-
-  for (int i = 0; i < BasicHashtable<F>::table_size(); i++) {
-    HashtableEntry<T, F>* entry = bucket(i);
-    while(entry != NULL) {
-      tty->print("%d : ", i);
-      print_literal(entry->literal());
-      tty->cr();
-      entry = entry->next();
-    }
-  }
-}
-
-template <MEMFLAGS F>
-template <class T> void BasicHashtable<F>::verify_table(const char* table_name) {
-  int element_count = 0;
-  int max_bucket_count = 0;
-  int max_bucket_number = 0;
-  for (int index = 0; index < table_size(); index++) {
-    int bucket_count = 0;
-    for (T* probe = (T*)bucket(index); probe != NULL; probe = probe->next()) {
-      probe->verify();
-      bucket_count++;
-    }
-    element_count += bucket_count;
-    if (bucket_count > max_bucket_count) {
-      max_bucket_count = bucket_count;
-      max_bucket_number = index;
-    }
-  }
-  guarantee(number_of_entries() == element_count,
-            "Verify of %s failed", table_name);
-
-  // Log some statistics about the hashtable
-  log_info(hashtables)("%s max bucket size %d bucket %d element count %d table size %d", table_name,
-                       max_bucket_count, max_bucket_number, _number_of_entries, _table_size);
-  if (_number_of_entries > 0 && log_is_enabled(Debug, hashtables)) {
-    for (int index = 0; index < table_size(); index++) {
-      int bucket_count = 0;
-      for (T* probe = (T*)bucket(index); probe != NULL; probe = probe->next()) {
-        log_debug(hashtables)("bucket %d hash " INTPTR_FORMAT, index, (intptr_t)probe->hash());
-        bucket_count++;
-      }
-      if (bucket_count > 0) {
-        log_debug(hashtables)("bucket %d count %d", index, bucket_count);
-      }
-    }
-  }
-}
-#endif // PRODUCT
 
 // Explicitly instantiate these types
 template class Hashtable<nmethod*, mtGC>;

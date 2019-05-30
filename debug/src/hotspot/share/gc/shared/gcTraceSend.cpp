@@ -1,40 +1,14 @@
-/*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/copyFailedInfo.hpp"
 #include "gc/shared/gcHeapSummary.hpp"
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/gcTrace.hpp"
 #include "gc/shared/gcWhen.hpp"
-#include "jfr/jfrEvents.hpp"
+// #include "jfr/jfrEvents.hpp"
 #include "runtime/os.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_G1GC
 #include "gc/g1/evacuationInfo.hpp"
 #include "gc/g1/g1YCTypes.hpp"
-#endif
 
 // All GC dependencies against the trace framework is contained within this file.
 
@@ -186,7 +160,6 @@ void OldGCTracer::send_concurrent_mode_failure_event() {
   }
 }
 
-#if INCLUDE_G1GC
 void G1NewTracer::send_g1_young_gc_event() {
   EventG1GarbageCollection e(UNTIMED);
   if (e.should_commit()) {
@@ -309,8 +282,6 @@ void G1NewTracer::send_adaptive_ihop_statistics(size_t threshold,
   }
 }
 
-#endif // INCLUDE_G1GC
-
 static JfrStructVirtualSpace to_struct(const VirtualSpaceSummary& summary) {
   JfrStructVirtualSpace space;
   space.set_start((TraceAddress)summary.start());
@@ -419,7 +390,7 @@ void GCTracer::send_meta_space_summary_event(GCWhen::Type when, const MetaspaceS
 
 class PhaseSender : public PhaseVisitor {
   void visit_pause(GCPhase* phase) {
-    assert(phase->level() < PhasesStack::PHASE_LEVELS, "Need more event types for PausePhase");
+    assert(phase->level() < PhasesStack::PHASE_LEVELS, "Need more event types for PausePhase");
 
     switch (phase->level()) {
       case 0: send_phase<EventGCPhasePause>(phase); break;
@@ -432,7 +403,7 @@ class PhaseSender : public PhaseVisitor {
   }
 
   void visit_concurrent(GCPhase* phase) {
-    assert(phase->level() < 1, "There is only one level for ConcurrentPhase");
+    assert(phase->level() < 1, "There is only one level for ConcurrentPhase");
 
     switch (phase->level()) {
       case 0: send_phase<EventGCPhaseConcurrent>(phase); break;
@@ -457,7 +428,7 @@ class PhaseSender : public PhaseVisitor {
     if (phase->type() == GCPhase::PausePhaseType) {
       visit_pause(phase);
     } else {
-      assert(phase->type() == GCPhase::ConcurrentPhaseType, "Should be ConcurrentPhaseType");
+      assert(phase->type() == GCPhase::ConcurrentPhaseType, "Should be ConcurrentPhaseType");
       visit_concurrent(phase);
     }
   }

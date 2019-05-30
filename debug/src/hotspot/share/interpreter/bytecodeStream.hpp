@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_BYTECODESTREAM_HPP
 #define SHARE_VM_INTERPRETER_BYTECODESTREAM_HPP
 
@@ -68,8 +44,8 @@ class BaseBytecodeStream: StackObj {
   // Iteration control
   void set_interval(int beg_bci, int end_bci) {
     // iterate over the interval [beg_bci, end_bci)
-    assert(0 <= beg_bci && beg_bci <= method()->code_size(), "illegal beg_bci");
-    assert(0 <= end_bci && end_bci <= method()->code_size(), "illegal end_bci");
+    assert(0 <= beg_bci && beg_bci <= method()->code_size(), "illegal beg_bci");
+    assert(0 <= end_bci && end_bci <= method()->code_size(), "illegal end_bci");
     // setup of iteration pointers
     _bci      = beg_bci;
     _next_bci = beg_bci;
@@ -97,7 +73,9 @@ class BaseBytecodeStream: StackObj {
   Bytecode        bytecode() const               { return Bytecode(_method(), bcp()); }
 
   // State changes
-  void            set_next_bci(int bci)          { assert(0 <= bci && bci <= method()->code_size(), "illegal bci"); _next_bci = bci; }
+  void            set_next_bci(int bci)          {
+    assert(0 <= bci && bci <= method()->code_size(), "illegal bci");
+    _next_bci = bci; }
 
   // Bytecode-specific attributes
   int             dest() const                   { return bci() + bytecode().get_offset_s2(raw_code()); }
@@ -107,8 +85,8 @@ class BaseBytecodeStream: StackObj {
   int             get_index_u1() const           { assert_raw_index_size(1); return *(jubyte*)(bcp()+1); }
 
  protected:
-  void assert_raw_index_size(int size) const NOT_DEBUG_RETURN;
-  void assert_raw_stream(bool want_raw) const NOT_DEBUG_RETURN;
+  void assert_raw_index_size(int size) const {};
+  void assert_raw_stream(bool want_raw) const {};
 };
 
 class RawBytecodeStream: public BaseBytecodeStream {
@@ -125,7 +103,7 @@ class RawBytecodeStream: public BaseBytecodeStream {
     Bytecodes::Code code;
     // set reading position
     _bci = _next_bci;
-    assert(!is_last_bytecode(), "caller should check is_last_bytecode()");
+    assert(!is_last_bytecode(), "caller should check is_last_bytecode()");
 
     address bcp = this->bcp();
     code        = Bytecodes::code_or_bp_at(bcp);
@@ -133,8 +111,7 @@ class RawBytecodeStream: public BaseBytecodeStream {
     // set next bytecode position
     int len = Bytecodes::length_for(code);
     if (len > 0 && (_bci <= _end_bci - len)) {
-      assert(code != Bytecodes::_wide && code != Bytecodes::_tableswitch
-             && code != Bytecodes::_lookupswitch, "can't be special bytecode");
+      assert(code != Bytecodes::_wide && code != Bytecodes::_tableswitch && code != Bytecodes::_lookupswitch, "can't be special bytecode");
       _is_wide = false;
       _next_bci += len;
       if (_next_bci <= _bci) { // Check for integer overflow
@@ -151,7 +128,9 @@ class RawBytecodeStream: public BaseBytecodeStream {
   // Unsigned indices, widening, with no swapping of bytes
   int             get_index() const          { return (is_wide()) ? get_index_u2_raw(bcp() + 2) : get_index_u1(); }
   // Get an unsigned 2-byte index, with no swapping of bytes.
-  int             get_index_u2() const       { assert(!is_wide(), ""); return get_index_u2_raw(bcp() + 1);  }
+  int             get_index_u2() const       {
+    assert(!is_wide(), "");
+    return get_index_u2_raw(bcp() + 1);  }
 
  private:
   int get_index_u2_raw(address p) const {
@@ -194,7 +173,7 @@ class BytecodeStream: public BaseBytecodeStream {
         raw_code = code = Bytecodes::_illegal;
       } else {
         _next_bci  += len;
-        assert(_bci < _next_bci, "length must be > 0");
+        assert(_bci < _next_bci, "length must be > 0");
         // set attributes
         _is_wide      = false;
         // check for special (uncommon) cases
@@ -203,7 +182,7 @@ class BytecodeStream: public BaseBytecodeStream {
           code = raw_code;  // wide BCs are always Java-normal
           _is_wide = true;
         }
-        assert(Bytecodes::is_java_code(code), "sanity check");
+        assert(Bytecodes::is_java_code(code), "sanity check");
       }
     }
     _raw_code = raw_code;
@@ -227,4 +206,4 @@ class BytecodeStream: public BaseBytecodeStream {
   bool            has_index_u4() const           { return bytecode().has_index_u4(raw_code()); }
 };
 
-#endif // SHARE_VM_INTERPRETER_BYTECODESTREAM_HPP
+#endif

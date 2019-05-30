@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -39,7 +15,7 @@ volatile bool LowMemoryDetector::_enabled_for_collected_pools = false;
 volatile jint LowMemoryDetector::_disabled_count = 0;
 
 bool LowMemoryDetector::has_pending_requests() {
-  assert(Service_lock->owned_by_self(), "Must own Service_lock");
+  assert(Service_lock->owned_by_self(), "Must own Service_lock");
   bool has_requests = false;
   int num_memory_pools = MemoryService::num_memory_pools();
   for (int i = 0; i < num_memory_pools; i++) {
@@ -204,13 +180,13 @@ SensorInfo::SensorInfo() {
 // If the current level is between high and low threshold, no change.
 //
 void SensorInfo::set_gauge_sensor_level(MemoryUsage usage, ThresholdSupport* high_low_threshold) {
-  assert(Service_lock->owned_by_self(), "Must own Service_lock");
-  assert(high_low_threshold->is_high_threshold_supported(), "just checking");
+  assert(Service_lock->owned_by_self(), "Must own Service_lock");
+  assert(high_low_threshold->is_high_threshold_supported(), "just checking");
 
   bool is_over_high = high_low_threshold->is_high_threshold_crossed(usage);
   bool is_below_low = high_low_threshold->is_low_threshold_crossed(usage);
 
-  assert(!(is_over_high && is_below_low), "Can't be both true");
+  assert(!(is_over_high && is_below_low), "Can't be both true");
 
   if (is_over_high &&
         ((!_sensor_on && _pending_trigger_count == 0) ||
@@ -259,13 +235,13 @@ void SensorInfo::set_gauge_sensor_level(MemoryUsage usage, ThresholdSupport* hig
 //      the sensor will be on (i.e. sensor is currently off
 //      and has pending trigger requests).
 void SensorInfo::set_counter_sensor_level(MemoryUsage usage, ThresholdSupport* counter_threshold) {
-  assert(Service_lock->owned_by_self(), "Must own Service_lock");
-  assert(counter_threshold->is_high_threshold_supported(), "just checking");
+  assert(Service_lock->owned_by_self(), "Must own Service_lock");
+  assert(counter_threshold->is_high_threshold_supported(), "just checking");
 
   bool is_over_high = counter_threshold->is_high_threshold_crossed(usage);
   bool is_below_low = counter_threshold->is_low_threshold_crossed(usage);
 
-  assert(!(is_over_high && is_below_low), "Can't be both true");
+  assert(!(is_over_high && is_below_low), "Can't be both true");
 
   if (is_over_high) {
     _pending_trigger_count++;
@@ -287,11 +263,10 @@ void SensorInfo::process_pending_requests(TRAPS) {
   } else {
     trigger(pending_count, CHECK);
   }
-
 }
 
 void SensorInfo::trigger(int count, TRAPS) {
-  assert(count <= _pending_trigger_count, "just checking");
+  assert(count <= _pending_trigger_count, "just checking");
   if (_sensor_obj != NULL) {
     InstanceKlass* sensorKlass = Management::sun_management_Sensor_klass(CHECK);
     Handle sensor_h(THREAD, _sensor_obj);
@@ -308,7 +283,7 @@ void SensorInfo::trigger(int count, TRAPS) {
     // Sensor::trigger(int) instead.  The pending request will be processed
     // but no notification will be sent.
     if (HAS_PENDING_EXCEPTION) {
-       assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOME here");
+       assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOME here");
        CLEAR_PENDING_EXCEPTION;
        trigger_method_signature = vmSymbols::int_void_signature();
     } else {
@@ -327,7 +302,7 @@ void SensorInfo::trigger(int count, TRAPS) {
        // We just clear the OOM pending exception that we might have encountered
        // in Java's tiggerAction(), and continue with updating the counters since
        // the Java counters have been updated too.
-       assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOME here");
+       assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOME here");
        CLEAR_PENDING_EXCEPTION;
      }
   }
@@ -335,7 +310,7 @@ void SensorInfo::trigger(int count, TRAPS) {
   {
     // Holds Service_lock and update the sensor state
     MutexLockerEx ml(Service_lock, Mutex::_no_safepoint_check_flag);
-    assert(_pending_trigger_count > 0, "Must have pending trigger");
+    assert(_pending_trigger_count > 0, "Must have pending trigger");
     _sensor_on = true;
     _sensor_count += count;
     _pending_trigger_count = _pending_trigger_count - count;
@@ -372,15 +347,3 @@ void SensorInfo::clear(int count, TRAPS) {
                             CHECK);
   }
 }
-
-//--------------------------------------------------------------
-// Non-product code
-
-#ifndef PRODUCT
-void SensorInfo::print() {
-  tty->print_cr("%s count = " SIZE_FORMAT " pending_triggers = %d pending_clears = %d",
-                (_sensor_on ? "on" : "off"),
-                _sensor_count, _pending_trigger_count, _pending_clear_count);
-}
-
-#endif // PRODUCT

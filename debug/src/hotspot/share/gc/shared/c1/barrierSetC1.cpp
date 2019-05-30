@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_Defs.hpp"
 #include "c1/c1_LIRGenerator.hpp"
@@ -32,11 +8,7 @@
 #define PATCHED_ADDR  (max_jint)
 #endif
 
-#ifdef ASSERT
-#define __ gen->lir(__FILE__, __LINE__)->
-#else
 #define __ gen->lir()->
-#endif
 
 LIR_Opr BarrierSetC1::resolve_address(LIRAccess& access, bool resolve_in_register) {
   DecoratorSet decorators = access.decorators();
@@ -73,7 +45,7 @@ LIR_Opr BarrierSetC1::resolve_address(LIRAccess& access, bool resolve_in_registe
 void BarrierSetC1::store_at(LIRAccess& access, LIR_Opr value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
+  assert(in_heap, "not supported yet");
 
   LIR_Opr resolved = resolve_address(access, false);
   access.set_resolved_addr(resolved);
@@ -83,7 +55,7 @@ void BarrierSetC1::store_at(LIRAccess& access, LIR_Opr value) {
 void BarrierSetC1::load_at(LIRAccess& access, LIR_Opr result) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
+  assert(in_heap, "not supported yet");
 
   LIR_Opr resolved = resolve_address(access, false);
   access.set_resolved_addr(resolved);
@@ -93,7 +65,7 @@ void BarrierSetC1::load_at(LIRAccess& access, LIR_Opr result) {
 LIR_Opr BarrierSetC1::atomic_cmpxchg_at(LIRAccess& access, LIRItem& cmp_value, LIRItem& new_value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
+  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -105,7 +77,7 @@ LIR_Opr BarrierSetC1::atomic_cmpxchg_at(LIRAccess& access, LIRItem& cmp_value, L
 LIR_Opr BarrierSetC1::atomic_xchg_at(LIRAccess& access, LIRItem& value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
+  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -117,7 +89,7 @@ LIR_Opr BarrierSetC1::atomic_xchg_at(LIRAccess& access, LIRItem& value) {
 LIR_Opr BarrierSetC1::atomic_add_at(LIRAccess& access, LIRItem& value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
+  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -232,7 +204,6 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
                      (jlong)constant->as_jint() :
                      constant->as_jlong());
 
-
     if (off_con != (jlong) java_lang_ref_Reference::referent_offset) {
       // The constant offset is something other than referent_offset.
       // We can skip generating/checking the remaining guards and
@@ -302,7 +273,7 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
       if (offset->type() == T_INT) {
         referent_off = LIR_OprFact::intConst(java_lang_ref_Reference::referent_offset);
       } else {
-        assert(offset->type() == T_LONG, "what else?");
+        assert(offset->type() == T_LONG, "what else?");
         referent_off = gen->new_register(T_LONG);
         __ move(LIR_OprFact::longConst(java_lang_ref_Reference::referent_offset), referent_off);
       }

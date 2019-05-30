@@ -1,56 +1,27 @@
-/*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/metadataOnStackMark.hpp"
 #include "code/codeCache.hpp"
 #include "compiler/compileBroker.hpp"
 #include "oops/metadata.hpp"
-#include "prims/jvmtiImpl.hpp"
 #include "runtime/synchronizer.hpp"
 #include "runtime/thread.hpp"
 #include "services/threadService.hpp"
 #include "utilities/chunkedList.hpp"
-#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
-#endif
 
 MetadataOnStackBuffer* MetadataOnStackMark::_used_buffers = NULL;
 MetadataOnStackBuffer* MetadataOnStackMark::_free_buffers = NULL;
 
 MetadataOnStackBuffer* MetadataOnStackMark::_current_buffer = NULL;
-NOT_PRODUCT(bool MetadataOnStackMark::_is_active = false;)
 
 // Walk metadata on the stack and mark it so that redefinition doesn't delete
 // it.  Class unloading only deletes in-error class files, methods created by
 // the relocator and dummy constant pools.  None of these appear anywhere except
 // in metadata Handles.
 MetadataOnStackMark::MetadataOnStackMark(bool redefinition_walk) {
-  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
-  assert(_used_buffers == NULL, "sanity check");
-  assert(!_is_active, "MetadataOnStackMarks do not nest");
-  NOT_PRODUCT(_is_active = true;)
+  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
+  assert(_used_buffers == NULL, "sanity check");
+  assert(!_is_active, "MetadataOnStackMarks do not nest");
 
   Threads::metadata_handles_do(Metadata::mark_on_stack);
 
@@ -58,16 +29,13 @@ MetadataOnStackMark::MetadataOnStackMark(bool redefinition_walk) {
     Threads::metadata_do(Metadata::mark_on_stack);
     CodeCache::metadata_do(Metadata::mark_on_stack);
     CompileBroker::mark_on_stack();
-    JvmtiCurrentBreakpoints::metadata_do(Metadata::mark_on_stack);
     ThreadService::metadata_do(Metadata::mark_on_stack);
-#if INCLUDE_JVMCI
     JVMCIRuntime::metadata_do(Metadata::mark_on_stack);
-#endif
   }
 }
 
 MetadataOnStackMark::~MetadataOnStackMark() {
-  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
+  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
   // Unmark everything that was marked.   Can't do the same walk because
   // redefine classes messes up the code cache so the set of methods
   // might not be the same.
@@ -95,8 +63,6 @@ MetadataOnStackMark::~MetadataOnStackMark() {
   }
 
   _used_buffers = NULL;
-
-  NOT_PRODUCT(_is_active = false;)
 }
 
 void MetadataOnStackMark::retire_buffer(MetadataOnStackBuffer* buffer) {
@@ -125,14 +91,14 @@ MetadataOnStackBuffer* MetadataOnStackMark::allocate_buffer() {
     allocated = new MetadataOnStackBuffer();
   }
 
-  assert(!allocated->is_full(), "Should not be full: " PTR_FORMAT, p2i(allocated));
+  assert(!allocated->is_full(), "Should not be full: " PTR_FORMAT, p2i(allocated));
 
   return allocated;
 }
 
 // Record which objects are marked so we can unmark the same objects.
 void MetadataOnStackMark::record(Metadata* m) {
-  assert(_is_active, "metadata on stack marking is active");
+  assert(_is_active, "metadata on stack marking is active");
 
   MetadataOnStackBuffer* buffer = _current_buffer;
 

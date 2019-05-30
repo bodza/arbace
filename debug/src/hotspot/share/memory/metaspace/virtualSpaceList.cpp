@@ -5,7 +5,6 @@
  *      Author: thomas
  */
 
-
 #include "precompiled.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -20,7 +19,6 @@
 #include "runtime/safepoint.hpp"
 
 namespace metaspace {
-
 
 VirtualSpaceList::~VirtualSpaceList() {
   VirtualSpaceListIterator iter(virtual_space_list());
@@ -39,11 +37,8 @@ void VirtualSpaceList::dec_reserved_words(size_t v) {
   _reserved_words = _reserved_words - v;
 }
 
-#define assert_committed_below_limit()                        \
-  assert(MetaspaceUtils::committed_bytes() <= MaxMetaspaceSize, \
-         "Too much committed memory. Committed: " SIZE_FORMAT \
-         " limit (MaxMetaspaceSize): " SIZE_FORMAT,           \
-          MetaspaceUtils::committed_bytes(), MaxMetaspaceSize);
+#define assert_committed_below_limit() \
+  assert(MetaspaceUtils::committed_bytes() <= MaxMetaspaceSize, "Too much committed memory. Committed: " SIZE_FORMAT " limit (MaxMetaspaceSize): " SIZE_FORMAT, MetaspaceUtils::committed_bytes(), MaxMetaspaceSize);
 
 void VirtualSpaceList::inc_committed_words(size_t v) {
   assert_lock_strong(MetaspaceExpand_lock);
@@ -72,7 +67,7 @@ void VirtualSpaceList::dec_virtual_space_count() {
 // nodes with a 0 container_count.  Remove Metachunks in
 // the node from their respective freelists.
 void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be called at safepoint for contains to work");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be called at safepoint for contains to work");
   assert_lock_strong(MetaspaceExpand_lock);
   // Don't use a VirtualSpaceListIterator because this
   // list is being changed and a straightforward use of an iterator is not safe.
@@ -81,18 +76,16 @@ void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
   VirtualSpaceNode* next_vsl = prev_vsl;
   while (next_vsl != NULL) {
     VirtualSpaceNode* vsl = next_vsl;
-    DEBUG_ONLY(vsl->verify_container_count();)
     next_vsl = vsl->next();
     // Don't free the current virtual space since it will likely
     // be needed soon.
     if (vsl->container_count() == 0 && vsl != current_virtual_space()) {
       log_trace(gc, metaspace, freelist)("Purging VirtualSpaceNode " PTR_FORMAT " (capacity: " SIZE_FORMAT
                                          ", used: " SIZE_FORMAT ").", p2i(vsl), vsl->capacity_words_in_vs(), vsl->used_words_in_vs());
-      DEBUG_ONLY(Atomic::inc(&g_internal_statistics.num_vsnodes_purged));
       // Unlink it from the list
       if (prev_vsl == vsl) {
         // This is the case of the current node being the first node.
-        assert(vsl == virtual_space_list(), "Expected to be the first node");
+        assert(vsl == virtual_space_list(), "Expected to be the first node");
         set_virtual_space_list(vsl->next());
       } else {
         prev_vsl->set_next(vsl->next());
@@ -108,18 +101,7 @@ void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
       prev_vsl = vsl;
     }
   }
-#ifdef ASSERT
-  if (purged_vsl != NULL) {
-    // List should be stable enough to use an iterator here.
-    VirtualSpaceListIterator iter(virtual_space_list());
-    while (iter.repeat()) {
-      VirtualSpaceNode* vsl = iter.get_next();
-      assert(vsl != purged_vsl, "Purge of vsl failed");
-    }
-  }
-#endif
 }
-
 
 // This function looks at the mmap regions in the metaspace without locking.
 // The chunks are added with store ordering and not deleted except for at
@@ -185,14 +167,12 @@ bool VirtualSpaceList::create_new_virtual_space(size_t vs_word_size) {
   assert_lock_strong(MetaspaceExpand_lock);
 
   if (is_class()) {
-    assert(false, "We currently don't support more than one VirtualSpace for"
-                  " the compressed class space. The initialization of the"
-                  " CCS uses another code path and should not hit this path.");
+    assert(false, "We currently don't support more than one VirtualSpace for" " the compressed class space. The initialization of the" " CCS uses another code path and should not hit this path.");
     return false;
   }
 
   if (vs_word_size == 0) {
-    assert(false, "vs_word_size should always be at least _reserve_alignment large.");
+    assert(false, "vs_word_size should always be at least _reserve_alignment large.");
     return false;
   }
 
@@ -206,12 +186,10 @@ bool VirtualSpaceList::create_new_virtual_space(size_t vs_word_size) {
     delete new_entry;
     return false;
   } else {
-    assert(new_entry->reserved_words() == vs_word_size,
-        "Reserved memory size differs from requested memory size");
+    assert(new_entry->reserved_words() == vs_word_size, "Reserved memory size differs from requested memory size");
     // ensure lock-free iteration sees fully initialized node
     OrderAccess::storestore();
     link_vs(new_entry);
-    DEBUG_ONLY(Atomic::inc(&g_internal_statistics.num_vsnodes_created));
     return true;
   }
 }
@@ -226,9 +204,6 @@ void VirtualSpaceList::link_vs(VirtualSpaceNode* new_entry) {
   inc_reserved_words(new_entry->reserved_words());
   inc_committed_words(new_entry->committed_words());
   inc_virtual_space_count();
-#ifdef ASSERT
-  new_entry->mangle();
-#endif
   LogTarget(Trace, gc, metaspace) lt;
   if (lt.is_enabled()) {
     LogStream ls(lt);
@@ -248,7 +223,7 @@ bool VirtualSpaceList::expand_node_by(VirtualSpaceNode* node,
   size_t after = node->committed_words();
 
   // after and before can be the same if the memory was pre-committed.
-  assert(after >= before, "Inconsistency");
+  assert(after >= before, "Inconsistency");
   inc_committed_words(after - before);
 
   return result;
@@ -257,7 +232,7 @@ bool VirtualSpaceList::expand_node_by(VirtualSpaceNode* node,
 bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   assert_is_aligned(min_words,       Metaspace::commit_alignment_words());
   assert_is_aligned(preferred_words, Metaspace::commit_alignment_words());
-  assert(min_words <= preferred_words, "Invalid arguments");
+  assert(min_words <= preferred_words, "Invalid arguments");
 
   const char* const class_or_not = (is_class() ? "class" : "non-class");
 
@@ -296,9 +271,7 @@ bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   if (create_new_virtual_space(grow_vs_words)) {
     if (current_virtual_space()->is_pre_committed()) {
       // The memory was pre-committed, so we are done here.
-      assert(min_words <= current_virtual_space()->committed_words(),
-          "The new VirtualSpace was pre-committed, so it"
-          "should be large enough to fit the alloc request.");
+      assert(min_words <= current_virtual_space()->committed_words(), "The new VirtualSpace was pre-committed, so it should be large enough to fit the alloc request.");
       return true;
     }
 
@@ -327,7 +300,6 @@ static size_t largest_possible_padding_size_for_chunk(size_t chunk_word_size, bo
   }
 }
 
-
 Metachunk* VirtualSpaceList::get_new_chunk(size_t chunk_word_size, size_t suggested_commit_granularity) {
 
   // Allocate a chunk out of the current virtual space.
@@ -354,7 +326,7 @@ Metachunk* VirtualSpaceList::get_new_chunk(size_t chunk_word_size, size_t sugges
   bool expanded = expand_by(min_word_size, preferred_word_size);
   if (expanded) {
     next = current_virtual_space()->get_chunk_vs(chunk_word_size);
-    assert(next != NULL, "The allocation was expected to succeed after the expansion");
+    assert(next != NULL, "The allocation was expected to succeed after the expansion");
   }
 
    return next;
@@ -382,6 +354,4 @@ void VirtualSpaceList::print_map(outputStream* st) const {
     i ++;
   }
 }
-
-} // namespace metaspace
-
+}

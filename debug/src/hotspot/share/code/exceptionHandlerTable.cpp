@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/exceptionHandlerTable.hpp"
 #include "code/nmethod.hpp"
@@ -36,10 +12,9 @@ void ExceptionHandlerTable::add_entry(HandlerTableEntry entry) {
     _table = REALLOC_RESOURCE_ARRAY(HandlerTableEntry, _table, _size, new_size);
     _size = new_size;
   }
-  assert(_length < _size, "sanity check");
+  assert(_length < _size, "sanity check");
   _table[_length++] = entry;
 }
-
 
 HandlerTableEntry* ExceptionHandlerTable::subtable_for(int catch_pco) const {
   int i = 0;
@@ -56,7 +31,6 @@ HandlerTableEntry* ExceptionHandlerTable::subtable_for(int catch_pco) const {
   return NULL;
 }
 
-
 ExceptionHandlerTable::ExceptionHandlerTable(int initial_size) {
   guarantee(initial_size > 0, "initial size must be > 0");
   _table  = NEW_RESOURCE_ARRAY(HandlerTableEntry, initial_size);
@@ -64,13 +38,11 @@ ExceptionHandlerTable::ExceptionHandlerTable(int initial_size) {
   _size   = initial_size;
 }
 
-
 ExceptionHandlerTable::ExceptionHandlerTable(const CompiledMethod* cm) {
   _table  = (HandlerTableEntry*)cm->handler_table_begin();
   _length = cm->handler_table_size() / sizeof(HandlerTableEntry);
   _size   = 0; // no space allocated by ExeptionHandlerTable!
 }
-
 
 void ExceptionHandlerTable::add_subtable(
   int                 catch_pco,
@@ -78,9 +50,9 @@ void ExceptionHandlerTable::add_subtable(
   GrowableArray<intptr_t>* scope_depths_from_top_scope,
   GrowableArray<intptr_t>* handler_pcos
 ) {
-  assert(subtable_for(catch_pco) == NULL, "catch handlers for this catch_pco added twice");
-  assert(handler_bcis->length() == handler_pcos->length(), "bci & pc table have different length");
-  assert(scope_depths_from_top_scope == NULL || handler_bcis->length() == scope_depths_from_top_scope->length(), "bci & scope_depths table have different length");
+  assert(subtable_for(catch_pco) == NULL, "catch handlers for this catch_pco added twice");
+  assert(handler_bcis->length() == handler_pcos->length(), "bci & pc table have different length");
+  assert(scope_depths_from_top_scope == NULL || handler_bcis->length() == scope_depths_from_top_scope->length(), "bci & scope_depths table have different length");
   if (handler_bcis->length() > 0) {
     // add subtable header
     add_entry(HandlerTableEntry(handler_bcis->length(), catch_pco, 0));
@@ -91,15 +63,14 @@ void ExceptionHandlerTable::add_subtable(
         scope_depth = scope_depths_from_top_scope->at(i);
       }
       add_entry(HandlerTableEntry(handler_bcis->at(i), handler_pcos->at(i), scope_depth));
-      assert(entry_for(catch_pco, handler_bcis->at(i), scope_depth)->pco() == handler_pcos->at(i), "entry not added correctly (1)");
-      assert(entry_for(catch_pco, handler_bcis->at(i), scope_depth)->scope_depth() == scope_depth, "entry not added correctly (2)");
+      assert(entry_for(catch_pco, handler_bcis->at(i), scope_depth)->pco() == handler_pcos->at(i), "entry not added correctly (1)");
+      assert(entry_for(catch_pco, handler_bcis->at(i), scope_depth)->scope_depth() == scope_depth, "entry not added correctly (2)");
     }
   }
 }
 
-
 void ExceptionHandlerTable::copy_to(CompiledMethod* cm) {
-  assert(size_in_bytes() == cm->handler_table_size(), "size of space allocated in compiled method incorrect");
+  assert(size_in_bytes() == cm->handler_table_size(), "size of space allocated in compiled method incorrect");
   copy_bytes_to(cm->handler_table_begin());
 }
 
@@ -119,7 +90,6 @@ HandlerTableEntry* ExceptionHandlerTable::entry_for(int catch_pco, int handler_b
   return NULL;
 }
 
-
 void ExceptionHandlerTable::print_subtable(HandlerTableEntry* t) const {
   int l = t->len();
   tty->print_cr("catch_pco = %d (%d entries)", t->pco(), l);
@@ -128,7 +98,6 @@ void ExceptionHandlerTable::print_subtable(HandlerTableEntry* t) const {
     tty->print_cr("  bci %d at scope depth %d -> pco %d", t->bci(), t->scope_depth(), t->pco());
   }
 }
-
 
 void ExceptionHandlerTable::print() const {
   tty->print_cr("ExceptionHandlerTable (size = %d bytes)", size_in_bytes());
@@ -161,8 +130,8 @@ void ImplicitExceptionTable::set_size( uint size ) {
 }
 
 void ImplicitExceptionTable::append( uint exec_off, uint cont_off ) {
-  assert( (sizeof(implicit_null_entry) >= 4) || (exec_off < 65535), "" );
-  assert( (sizeof(implicit_null_entry) >= 4) || (cont_off < 65535), "" );
+  assert( (sizeof(implicit_null_entry) >= 4) || (exec_off < 65535), "" );
+  assert( (sizeof(implicit_null_entry) >= 4) || (cont_off < 65535), "" );
   uint l = len();
   if (l == _size) {
     uint old_size_in_elements = _size*2;
@@ -203,11 +172,11 @@ ImplicitExceptionTable::ImplicitExceptionTable(const nmethod* nm) {
     _data++;
   }
   _size = len();
-  assert(size_in_bytes() <= nm->nul_chk_table_size(), "size of space allocated in nmethod incorrect");
+  assert(size_in_bytes() <= nm->nul_chk_table_size(), "size of space allocated in nmethod incorrect");
 }
 
 void ImplicitExceptionTable::copy_to( nmethod* nm ) {
-  assert(size_in_bytes() <= nm->nul_chk_table_size(), "size of space allocated in nmethod incorrect");
+  assert(size_in_bytes() <= nm->nul_chk_table_size(), "size of space allocated in nmethod incorrect");
   if (len() != 0) {
     implicit_null_entry* nmdata = (implicit_null_entry*)nm->nul_chk_table_begin();
     // store the length in the first uint
@@ -217,8 +186,8 @@ void ImplicitExceptionTable::copy_to( nmethod* nm ) {
     memmove( nmdata, _data, 2 * len() * sizeof(implicit_null_entry));
   } else {
     // zero length table takes zero bytes
-    assert(size_in_bytes() == 0, "bad size");
-    assert(nm->nul_chk_table_size() == 0, "bad size");
+    assert(size_in_bytes() == 0, "bad size");
+    assert(nm->nul_chk_table_size() == 0, "bad size");
   }
 }
 

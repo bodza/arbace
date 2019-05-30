@@ -1,33 +1,8 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/classLoaderStats.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
-
 
 class ClassStatsClosure : public KlassClosure {
 public:
@@ -41,7 +16,6 @@ public:
     _num_classes++;
   }
 };
-
 
 void ClassLoaderStatsClosure::do_cld(ClassLoaderData* cld) {
   oop cl = cld->class_loader();
@@ -91,14 +65,8 @@ void ClassLoaderStatsClosure::do_cld(ClassLoaderData* cld) {
   }
 }
 
-
 // Handles the difference in pointer width on 32 and 64 bit platforms
-#ifdef _LP64
-  #define SPACE "%8s"
-#else
-  #define SPACE "%s"
-#endif
-
+#define SPACE "%8s"
 
 bool ClassLoaderStatsClosure::do_entry(oop const& key, ClassLoaderStats* const& cls) {
   Klass* class_loader_klass = (cls->_class_loader == NULL ? NULL : cls->_class_loader->klass());
@@ -123,7 +91,6 @@ bool ClassLoaderStatsClosure::do_entry(oop const& key, ClassLoaderStats* const& 
   return true;
 }
 
-
 void ClassLoaderStatsClosure::print() {
   _out->print_cr("ClassLoader" SPACE " Parent" SPACE "      CLD*" SPACE "       Classes   ChunkSz   BlockSz  Type", "", "", "");
   _stats->iterate(this);
@@ -136,7 +103,6 @@ void ClassLoaderStatsClosure::print() {
   _out->print_cr("ChunkSz: Total size of all allocated metaspace chunks");
   _out->print_cr("BlockSz: Total size of all allocated metaspace blocks (each chunk has several blocks)");
 }
-
 
 void ClassLoaderStatsClosure::addEmptyParents(oop cl) {
   while (cl != NULL && java_lang_ClassLoader::loader_data(cl) == NULL) {
@@ -155,13 +121,11 @@ void ClassLoaderStatsClosure::addEmptyParents(oop cl) {
   }
 }
 
-
 void ClassLoaderStatsVMOperation::doit() {
   ClassLoaderStatsClosure clsc (_out);
   ClassLoaderDataGraph::cld_do(&clsc);
   clsc.print();
 }
-
 
 void ClassLoaderStatsDCmd::execute(DCmdSource source, TRAPS) {
   ClassLoaderStatsVMOperation op(output());

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaClasses.hpp"
 #include "logging/log.hpp"
@@ -38,7 +14,6 @@
 #include "runtime/safepointVerifiers.hpp"
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/macros.hpp"
-
 
 oop ResolvedMethodEntry::object() {
   return literal().resolve();
@@ -83,7 +58,6 @@ unsigned int ResolvedMethodTable::compute_hash(Method* method) {
   return name_hash ^ signature_hash;
 }
 
-
 oop ResolvedMethodTable::lookup(Method* method) {
   unsigned int hash = compute_hash(method);
   int index = hash_to_index(hash);
@@ -120,12 +94,11 @@ oop ResolvedMethodTable::find_method(Method* method) {
 
 oop ResolvedMethodTable::add_method(Handle resolved_method_name) {
   MutexLocker ml(ResolvedMethodTable_lock);
-  DEBUG_ONLY(NoSafepointVerifier nsv);
 
   // Check if method has been redefined while taking out ResolvedMethodTable_lock, if so
   // use new method.
   Method* method = (Method*)java_lang_invoke_ResolvedMethodName::vmtarget(resolved_method_name());
-  assert(method->is_method(), "must be method");
+  assert(method->is_method(), "must be method");
   if (method->is_old()) {
     // Replace method with redefined version
     InstanceKlass* holder = method->method_holder();
@@ -174,68 +147,3 @@ void ResolvedMethodTable::unlink() {
   log_debug(membername, table) ("ResolvedMethod entries counted %d removed %d",
                                 _oops_counted, _oops_removed);
 }
-
-#ifndef PRODUCT
-void ResolvedMethodTable::print() {
-  for (int i = 0; i < table_size(); ++i) {
-    ResolvedMethodEntry* entry = bucket(i);
-    while (entry != NULL) {
-      tty->print("%d : ", i);
-      oop rmethod_name = entry->object_no_keepalive();
-      if (rmethod_name != NULL) {
-        rmethod_name->print();
-        Method* m = (Method*)java_lang_invoke_ResolvedMethodName::vmtarget(rmethod_name);
-        m->print();
-      }
-      entry = entry->next();
-    }
-  }
-}
-#endif // PRODUCT
-
-#if INCLUDE_JVMTI
-// It is called at safepoint only for RedefineClasses
-void ResolvedMethodTable::adjust_method_entries(bool * trace_name_printed) {
-  assert(SafepointSynchronize::is_at_safepoint(), "only called at safepoint");
-  // For each entry in RMT, change to new method
-  for (int i = 0; i < _the_table->table_size(); ++i) {
-    for (ResolvedMethodEntry* entry = _the_table->bucket(i);
-         entry != NULL;
-         entry = entry->next()) {
-
-      oop mem_name = entry->object_no_keepalive();
-      // except ones removed
-      if (mem_name == NULL) {
-        continue;
-      }
-      Method* old_method = (Method*)java_lang_invoke_ResolvedMethodName::vmtarget(mem_name);
-
-      if (old_method->is_old()) {
-
-        if (old_method->is_deleted()) {
-          // leave deleted method in ResolvedMethod for now (this is a bug that we don't mark
-          // these on_stack)
-          continue;
-        }
-
-        InstanceKlass* holder = old_method->method_holder();
-        Method* new_method = holder->method_with_idnum(old_method->orig_method_idnum());
-        assert(holder == new_method->method_holder(), "call after swapping redefined guts");
-        assert(new_method != NULL, "method_with_idnum() should not be NULL");
-        assert(old_method != new_method, "sanity check");
-
-        java_lang_invoke_ResolvedMethodName::set_vmtarget(mem_name, new_method);
-
-        ResourceMark rm;
-        if (!(*trace_name_printed)) {
-          log_info(redefine, class, update)("adjust: name=%s", old_method->method_holder()->external_name());
-           *trace_name_printed = true;
-        }
-        log_debug(redefine, class, update, constantpool)
-          ("ResolvedMethod method update: %s(%s)",
-           new_method->name()->as_C_string(), new_method->signature()->as_C_string());
-      }
-    }
-  }
-}
-#endif // INCLUDE_JVMTI

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_LINKRESOLVER_HPP
 #define SHARE_VM_INTERPRETER_LINKRESOLVER_HPP
 
@@ -82,10 +58,6 @@ class CallInfo : public StackObj {
 
  public:
   CallInfo() {
-#ifndef PRODUCT
-    _call_kind  = CallInfo::unknown_kind;
-    _call_index = Method::garbage_vtable_index;
-#endif //PRODUCT
   }
 
   // utility to extract an effective CallInfo from a method and an optional receiver limit
@@ -109,28 +81,23 @@ class CallInfo : public StackObj {
   int          vtable_index() const {
     // Even for interface calls the vtable index could be non-negative.
     // See CallInfo::set_interface.
-    assert(has_vtable_index() || is_statically_bound(), "");
-    assert(call_kind() == vtable_call || call_kind() == direct_call, "");
+    assert(has_vtable_index() || is_statically_bound(), "");
+    assert(call_kind() == vtable_call || call_kind() == direct_call, "");
     // The returned value is < 0 if the call is statically bound.
     // But, the returned value may be >= 0 even if the kind is direct_call.
     // It is up to the caller to decide which way to go.
     return _call_index;
   }
   int          itable_index() const {
-    assert(call_kind() == itable_call, "");
+    assert(call_kind() == itable_call, "");
     // The returned value is always >= 0, a valid itable index.
     return _call_index;
   }
 
   // debugging
-#ifdef ASSERT
-  bool         has_vtable_index() const          { return _call_index >= 0 && _call_kind != CallInfo::itable_call; }
-  bool         is_statically_bound() const       { return _call_index == Method::nonvirtual_vtable_index; }
-#endif //ASSERT
-  void         verify() PRODUCT_RETURN;
-  void         print()  PRODUCT_RETURN;
+  void         verify() {};
+  void         print()  {};
 };
-
 
 // Condensed information from constant pool to use to resolve the method or field.
 //   resolved_klass = specified class (i.e., static receiver class)
@@ -186,7 +153,7 @@ class LinkInfo : public StackObj {
   bool check_access() const          { return _check_access; }
   char* method_string() const;
 
-  void         print()  PRODUCT_RETURN;
+  void         print()  {};
 };
 
 // Link information for getfield/putfield & getstatic/putstatic bytecodes
@@ -209,11 +176,11 @@ class LinkResolver: AllStatic {
   static methodHandle lookup_polymorphic_method(const LinkInfo& link_info,
                                                 Handle *appendix_result_or_null,
                                                 Handle *method_type_result, TRAPS);
- JVMCI_ONLY(public:) // Needed for CompilerToVM.resolveMethod()
+ public: // Needed for CompilerToVM.resolveMethod()
   // Not Linktime so doesn't take LinkInfo
   static methodHandle lookup_instance_method_in_klasses (Klass* klass, Symbol* name, Symbol* signature,
                                                          Klass::PrivateLookupMode private_mode, TRAPS);
- JVMCI_ONLY(private:)
+ private:
 
   // Similar loader constraint checking functions that throw
   // LinkageError with descriptive message.
@@ -362,4 +329,4 @@ class LinkResolver: AllStatic {
                                           const methodHandle& selected_method,
                                           Klass *recv_klass, TRAPS);
 };
-#endif // SHARE_VM_INTERPRETER_LINKRESOLVER_HPP
+#endif

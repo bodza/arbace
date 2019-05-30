@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_Compiler.hpp"
@@ -33,7 +9,7 @@
 #include "c1/c1_ValueType.hpp"
 #include "compiler/compileBroker.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "jfr/support/jfrIntrinsics.hpp"
+// #include "jfr/support/jfrIntrinsics.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -43,7 +19,6 @@
 #include "runtime/sharedRuntime.hpp"
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/macros.hpp"
-
 
 Compiler::Compiler() : AbstractCompiler(compiler_c1) {
 }
@@ -60,7 +35,6 @@ void Compiler::init_c1_runtime() {
   //       be moved somewhere outside of this constructor:
   Interval::initialize(arena);
 }
-
 
 void Compiler::initialize() {
   // Buffer blob must be allocated per C1 compiler thread at startup
@@ -79,14 +53,14 @@ void Compiler::initialize() {
 }
 
 int Compiler::code_buffer_size() {
-  assert(SegmentedCodeCache, "Should be only used with a segmented code cache");
+  assert(SegmentedCodeCache, "Should be only used with a segmented code cache");
   return Compilation::desired_max_code_buffer_size() + Compilation::desired_max_constant_size();
 }
 
 BufferBlob* Compiler::init_buffer_blob() {
   // Allocate buffer blob once at startup since allocation for each
   // compilation seems to be too expensive (at least on Intel win32).
-  assert (CompilerThread::current()->get_buffer_blob() == NULL, "Should initialize only once");
+  assert(CompilerThread::current()->get_buffer_blob() == NULL, "Should initialize only once");
 
   // setup CodeBuffer.  Preallocate a BufferBlob of size
   // NMethodSizeLimit plus some extra space for constants.
@@ -103,7 +77,7 @@ BufferBlob* Compiler::init_buffer_blob() {
 
 bool Compiler::is_intrinsic_supported(const methodHandle& method) {
   vmIntrinsics::ID id = method->intrinsic_id();
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
+  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   if (method->is_synchronized()) {
     // C1 does not support intrinsification of synchronized methods.
@@ -127,12 +101,8 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
     if (!VM_Version::supports_atomic_getset8()) return false;
     break;
   case vmIntrinsics::_getAndSetObject:
-#ifdef _LP64
     if (!UseCompressedOops && !VM_Version::supports_atomic_getset8()) return false;
     if (UseCompressedOops && !VM_Version::supports_atomic_getset4()) return false;
-#else
-    if (!VM_Version::supports_atomic_getset4()) return false;
-#endif
     break;
   case vmIntrinsics::_onSpinWait:
     if (!VM_Version::supports_on_spin_wait()) return false;
@@ -224,13 +194,6 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
   case vmIntrinsics::_compareAndSetObject:
   case vmIntrinsics::_getCharStringU:
   case vmIntrinsics::_putCharStringU:
-#ifdef JFR_HAVE_INTRINSICS
-  case vmIntrinsics::_counterTime:
-  case vmIntrinsics::_getEventWriter:
-#if defined(_LP64) || !defined(TRACE_ID_SHIFT)
-  case vmIntrinsics::_getClassId:
-#endif
-#endif
     break;
   default:
     return false; // Intrinsics not on the previous list are not available.
@@ -241,7 +204,7 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
 
 void Compiler::compile_method(ciEnv* env, ciMethod* method, int entry_bci, DirectiveSet* directive) {
   BufferBlob* buffer_blob = CompilerThread::current()->get_buffer_blob();
-  assert(buffer_blob != NULL, "Must exist");
+  assert(buffer_blob != NULL, "Must exist");
   // invoke compilation
   {
     // We are nested here because we need for the destructor
@@ -251,7 +214,6 @@ void Compiler::compile_method(ciEnv* env, ciMethod* method, int entry_bci, Direc
     Compilation c(this, env, method, entry_bci, buffer_blob, directive);
   }
 }
-
 
 void Compiler::print_timers() {
   Compilation::print_timers();

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_CODESTUBS_HPP
 #define SHARE_VM_C1_C1_CODESTUBS_HPP
 
@@ -52,29 +28,20 @@ class CodeStub: public CompilationResourceObj {
   CodeStub() {}
 
   // code generation
-  void assert_no_unbound_labels()                { assert(!_entry.is_unbound() && !_continuation.is_unbound(), "unbound label"); }
+  void assert_no_unbound_labels()                {
+    assert(!_entry.is_unbound() && !_continuation.is_unbound(), "unbound label"); }
   virtual void emit_code(LIR_Assembler* e) = 0;
   virtual CodeEmitInfo* info() const             { return NULL; }
   virtual bool is_exception_throw_stub() const   { return false; }
   virtual bool is_range_check_stub() const       { return false; }
   virtual bool is_divbyzero_stub() const         { return false; }
   virtual bool is_simple_exception_stub() const  { return false; }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const = 0;
-#endif
 
   // label access
   Label* entry()                                 { return &_entry; }
   Label* continuation()                          { return &_continuation; }
   // for LIR
   virtual void visit(LIR_OpVisitState* visit) {
-#ifndef PRODUCT
-    if (LIRTracePeephole && Verbose) {
-      tty->print("no visitor for ");
-      print_name(tty);
-      tty->cr();
-    }
-#endif
   }
 };
 
@@ -105,11 +72,6 @@ public:
     visitor->do_slow_case(_info);
     visitor->do_input(_method);
   }
-
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("CounterOverflowStub"); }
-#endif // PRODUCT
-
 };
 
 class ConversionStub: public CodeStub {
@@ -135,11 +97,7 @@ class ConversionStub: public CodeStub {
     visitor->do_input(_input);
     visitor->do_output(_result);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("ConversionStub"); }
-#endif // PRODUCT
 };
-
 
 // Throws ArrayIndexOutOfBoundsException by default but can be
 // configured to throw IndexOutOfBoundsException in constructor
@@ -164,9 +122,6 @@ class RangeCheckStub: public CodeStub {
     visitor->do_input(_index);
     if (_array) { visitor->do_input(_array); }
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("RangeCheckStub"); }
-#endif // PRODUCT
 };
 
 // stub used when predicate fails and deoptimization is needed
@@ -181,9 +136,6 @@ class PredicateFailedStub: public CodeStub {
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("PredicateFailedStub"); }
-#endif // PRODUCT
 };
 
 class DivByZeroStub: public CodeStub {
@@ -205,11 +157,7 @@ class DivByZeroStub: public CodeStub {
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("DivByZeroStub"); }
-#endif // PRODUCT
 };
-
 
 class ImplicitNullCheckStub: public CodeStub {
  private:
@@ -226,11 +174,7 @@ class ImplicitNullCheckStub: public CodeStub {
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("ImplicitNullCheckStub"); }
-#endif // PRODUCT
 };
-
 
 class NewInstanceStub: public CodeStub {
  private:
@@ -249,11 +193,7 @@ class NewInstanceStub: public CodeStub {
     visitor->do_input(_klass_reg);
     visitor->do_output(_result);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("NewInstanceStub"); }
-#endif // PRODUCT
 };
-
 
 class NewTypeArrayStub: public CodeStub {
  private:
@@ -270,13 +210,10 @@ class NewTypeArrayStub: public CodeStub {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
     visitor->do_input(_length);
-    assert(_result->is_valid(), "must be valid"); visitor->do_output(_result);
+    assert(_result->is_valid(), "must be valid");
+    visitor->do_output(_result);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("NewTypeArrayStub"); }
-#endif // PRODUCT
 };
-
 
 class NewObjectArrayStub: public CodeStub {
  private:
@@ -293,13 +230,10 @@ class NewObjectArrayStub: public CodeStub {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
     visitor->do_input(_length);
-    assert(_result->is_valid(), "must be valid"); visitor->do_output(_result);
+    assert(_result->is_valid(), "must be valid");
+    visitor->do_output(_result);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("NewObjectArrayStub"); }
-#endif // PRODUCT
 };
-
 
 class MonitorAccessStub: public CodeStub {
  protected:
@@ -311,12 +245,7 @@ class MonitorAccessStub: public CodeStub {
     _obj_reg  = obj_reg;
     _lock_reg  = lock_reg;
   }
-
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("MonitorAccessStub"); }
-#endif // PRODUCT
 };
-
 
 class MonitorEnterStub: public MonitorAccessStub {
  private:
@@ -332,11 +261,7 @@ class MonitorEnterStub: public MonitorAccessStub {
     visitor->do_input(_lock_reg);
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("MonitorEnterStub"); }
-#endif // PRODUCT
 };
-
 
 class MonitorExitStub: public MonitorAccessStub {
  private:
@@ -349,18 +274,14 @@ class MonitorExitStub: public MonitorAccessStub {
       _compute_lock(compute_lock), _monitor_ix(monitor_ix) { }
   virtual void emit_code(LIR_Assembler* e);
   virtual void visit(LIR_OpVisitState* visitor) {
-    assert(_obj_reg->is_illegal(), "unused");
+    assert(_obj_reg->is_illegal(), "unused");
     if (_compute_lock) {
       visitor->do_temp(_lock_reg);
     } else {
       visitor->do_input(_lock_reg);
     }
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("MonitorExitStub"); }
-#endif // PRODUCT
 };
-
 
 class PatchingStub: public CodeStub {
  public:
@@ -422,15 +343,11 @@ class PatchingStub: public CodeStub {
       NativeMovRegMem* n_move = nativeMovRegMem_at(pc_start());
       n_move->set_offset(field_offset);
     } else if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
-      assert(_obj != noreg, "must have register object for load_klass/load_mirror");
-#ifdef ASSERT
-      // verify that we're pointing at a NativeMovConstReg
-      nativeMovConstReg_at(pc_start());
-#endif
+      assert(_obj != noreg, "must have register object for load_klass/load_mirror");
     } else {
       ShouldNotReachHere();
     }
-    assert(_bytes_to_copy <= (masm->pc() - pc_start()), "not enough bytes");
+    assert(_bytes_to_copy <= (masm->pc() - pc_start()), "not enough bytes");
   }
 
   address pc_start() const                       { return _pc_start; }
@@ -441,11 +358,7 @@ class PatchingStub: public CodeStub {
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("PatchingStub"); }
-#endif // PRODUCT
 };
-
 
 //------------------------------------------------------------------------------
 // DeoptimizeStub
@@ -465,11 +378,7 @@ public:
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("DeoptimizeStub"); }
-#endif // PRODUCT
 };
-
 
 class SimpleExceptionStub: public CodeStub {
  private:
@@ -494,12 +403,7 @@ class SimpleExceptionStub: public CodeStub {
     if (_obj->is_valid()) visitor->do_input(_obj);
     visitor->do_slow_case(_info);
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("SimpleExceptionStub"); }
-#endif // PRODUCT
 };
-
-
 
 class ArrayStoreExceptionStub: public SimpleExceptionStub {
  private:
@@ -507,11 +411,7 @@ class ArrayStoreExceptionStub: public SimpleExceptionStub {
 
  public:
   ArrayStoreExceptionStub(LIR_Opr obj, CodeEmitInfo* info): SimpleExceptionStub(Runtime1::throw_array_store_exception_id, obj, info) {}
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("ArrayStoreExceptionStub"); }
-#endif // PRODUCT
 };
-
 
 class ArrayCopyStub: public CodeStub {
  private:
@@ -533,9 +433,6 @@ class ArrayCopyStub: public CodeStub {
     // don't pass in the code emit info since it's processed in the fast path
     visitor->do_slow_case();
   }
-#ifndef PRODUCT
-  virtual void print_name(outputStream* out) const { out->print("ArrayCopyStub"); }
-#endif // PRODUCT
 };
 
-#endif // SHARE_VM_C1_C1_CODESTUBS_HPP
+#endif

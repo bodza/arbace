@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, 2015, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_AARCH64_VM_C1_MACROASSEMBLER_AARCH64_HPP
 #define CPU_AARCH64_VM_C1_MACROASSEMBLER_AARCH64_HPP
 
@@ -35,7 +10,6 @@ using MacroAssembler::null_check;
   int _rsp_offset;    // track rsp changes
   // initialization
   void pd_init() { _rsp_offset = 0; }
-
 
  public:
   void try_allocate(
@@ -104,11 +78,11 @@ using MacroAssembler::null_check;
   int  rsp_offset() const { return _rsp_offset; }
   void set_rsp_offset(int n) { _rsp_offset = n; }
 
-  void invalidate_registers(bool inv_r0, bool inv_r19, bool inv_r2, bool inv_r3, bool inv_r4, bool inv_r5) PRODUCT_RETURN;
+  void invalidate_registers(bool inv_r0, bool inv_r19, bool inv_r2, bool inv_r3, bool inv_r4, bool inv_r5) {};
 
   // This platform only uses signal-based null checks. The Label is not needed.
   void null_check(Register r, Label *Lnull = NULL) { MacroAssembler::null_check(r); }
 
   void load_parameter(int offset_in_words, Register reg);
 
-#endif // CPU_AARCH64_VM_C1_MACROASSEMBLER_AARCH64_HPP
+#endif

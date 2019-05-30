@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jni.h"
 #include "jvm.h"
@@ -48,10 +24,8 @@
 // Heap objects are allowed to be directly referenced only in VM code,
 // not in native code.
 
-#define ASSERT_OOPS_ALLOWED                                          \
-    assert(JavaThread::current()->thread_state() == _thread_in_vm,   \
-           "jniCheck examining oops in bad state.")
-
+#define ASSERT_OOPS_ALLOWED \
+    assert(JavaThread::current()->thread_state() == _thread_in_vm, "jniCheck examining oops in bad state.")
 
 // Execute the given block of source code with the thread in VM state.
 // To do this, transition from the NATIVE state to the VM state, execute
@@ -59,20 +33,18 @@
 // performs the transition to VM state, its destructor restores the
 // NATIVE state.
 
-#define IN_VM(source_code)   {                                         \
-    {                                                                  \
-      ThreadInVMfromNative __tiv(thr);                                 \
-      source_code                                                      \
-    }                                                                  \
+#define IN_VM(source_code)   { \
+    { \
+      ThreadInVMfromNative __tiv(thr); \
+      source_code \
+    } \
   }
-
 
 /*
  * DECLARATIONS
  */
 
 static struct JNINativeInterface_ * unchecked_jni_NativeInterface;
-
 
 /*
  * MACRO DEFINITIONS
@@ -87,20 +59,19 @@ static struct JNINativeInterface_ * unchecked_jni_NativeInterface;
 
 // Check for env being the one value appropriate for this thread.
 
-#define JNI_ENTRY_CHECKED(result_type, header)                           \
-extern "C" {                                                             \
-  result_type JNICALL header {                                           \
-    JavaThread* thr = (JavaThread*) Thread::current_or_null();           \
-    if (thr == NULL || !thr->is_Java_thread()) {                         \
-      tty->print_cr("%s", fatal_using_jnienv_in_nonjava);                \
-      os::abort(true);                                                   \
-    }                                                                    \
-    JNIEnv* xenv = thr->jni_environment();                               \
-    if (env != xenv) {                                                   \
-      NativeReportJNIFatalError(thr, warn_wrong_jnienv);                 \
-    }                                                                    \
+#define JNI_ENTRY_CHECKED(result_type, header) \
+extern "C" { \
+  result_type JNICALL header { \
+    JavaThread* thr = (JavaThread*) Thread::current_or_null(); \
+    if (thr == NULL || !thr->is_Java_thread()) { \
+      tty->print_cr("%s", fatal_using_jnienv_in_nonjava); \
+      os::abort(true); \
+    } \
+    JNIEnv* xenv = thr->jni_environment(); \
+    if (env != xenv) { \
+      NativeReportJNIFatalError(thr, warn_wrong_jnienv); \
+    } \
     VM_ENTRY_BASE(result_type, header, thr)
-
 
 #define UNCHECKED() (unchecked_jni_NativeInterface)
 
@@ -133,7 +104,6 @@ static const char * fatal_instance_field_not_found = "Instance field not found i
 static const char * fatal_instance_field_mismatch = "Field type (instance) mismatch in JNI get/set field operations";
 static const char * fatal_non_string = "JNI string operation received a non-string";
 
-
 // When in VM state:
 static void ReportJNIWarning(JavaThread* thr, const char *msg) {
   tty->print_cr("WARNING in native method: %s", msg);
@@ -152,9 +122,6 @@ static void NativeReportJNIWarning(JavaThread* thr, const char *msg) {
     ReportJNIWarning(thr, msg);
   )
 }
-
-
-
 
 /*
  * SUPPORT FUNCTIONS
@@ -203,7 +170,6 @@ add_planned_handle_capacity(JNIHandleBlock* handles, size_t capacity) {
                                 handles->get_number_of_live_handles() +
                                 CHECK_JNI_LOCAL_REF_CAP_WARN_THRESHOLD);
 }
-
 
 static inline void
 functionEnterCritical(JavaThread* thr)
@@ -445,7 +411,6 @@ oop jniCheck::validate_handle(JavaThread* thr, jobject obj) {
   return NULL;
 }
 
-
 Method* jniCheck::validate_jmethod_id(JavaThread* thr, jmethodID method_id) {
   ASSERT_OOPS_ALLOWED;
   // do the fast jmethodID check first
@@ -460,7 +425,6 @@ Method* jniCheck::validate_jmethod_id(JavaThread* thr, jmethodID method_id) {
   }
   return moop;
 }
-
 
 oop jniCheck::validate_object(JavaThread* thr, jobject obj) {
   if (obj == NULL) return NULL;
@@ -511,7 +475,7 @@ Klass* jniCheck::validate_class(JavaThread* thr, jclass clazz, bool allow_primit
 
 void jniCheck::validate_throwable_klass(JavaThread* thr, Klass* klass) {
   ASSERT_OOPS_ALLOWED;
-  assert(klass != NULL, "klass argument must have a value");
+  assert(klass != NULL, "klass argument must have a value");
 
   if (!klass->is_instance_klass() ||
       !InstanceKlass::cast(klass)->is_subclass_of(SystemDictionary::Throwable_klass())) {
@@ -532,7 +496,6 @@ void jniCheck::validate_call_class(JavaThread* thr, jclass clazz, jmethodID meth
   jniCheck::validate_jmethod_id(thr, method_id);
   jniCheck::validate_class(thr, clazz, false);
 }
-
 
 /*
  * IMPLEMENTATION OF FUNCTIONS IN CHECKED TABLE
@@ -671,7 +634,7 @@ JNI_ENTRY_CHECKED(jint,
     functionEnter(thr);
     IN_VM(
       Klass* k = jniCheck::validate_class(thr, clazz, false);
-      assert(k != NULL, "validate_class shouldn't return NULL Klass*");
+      assert(k != NULL, "validate_class shouldn't return NULL Klass*");
       jniCheck::validate_throwable_klass(thr, k);
     )
     jint result = UNCHECKED()->ThrowNew(env, clazz, msg);
@@ -934,7 +897,7 @@ JNI_ENTRY_CHECKED(jmethodID,
 JNI_END
 
 #define WRAPPER_CallMethod(ResultType, Result) \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_Call##Result##Method(JNIEnv *env, \
                                    jobject obj, \
                                    jmethodID methodID, \
@@ -953,23 +916,23 @@ JNI_ENTRY_CHECKED(ResultType,  \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_Call##Result##MethodV(JNIEnv *env, \
                                     jobject obj, \
                                     jmethodID methodID, \
                                     va_list args)) \
     functionEnter(thr); \
-    IN_VM(\
+    IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
     ) \
-    ResultType result = UNCHECKED()->Call##Result##MethodV(env, obj, methodID,\
+    ResultType result = UNCHECKED()->Call##Result##MethodV(env, obj, methodID, \
                                                            args); \
     thr->set_pending_jni_exception_check("Call"#Result"MethodV"); \
     functionExit(thr); \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_Call##Result##MethodA(JNIEnv *env, \
                                     jobject obj, \
                                     jmethodID methodID, \
@@ -978,7 +941,7 @@ JNI_ENTRY_CHECKED(ResultType,  \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
     ) \
-    ResultType result = UNCHECKED()->Call##Result##MethodA(env, obj, methodID,\
+    ResultType result = UNCHECKED()->Call##Result##MethodA(env, obj, methodID, \
                                                            args); \
     thr->set_pending_jni_exception_check("Call"#Result"MethodA"); \
     functionExit(thr); \
@@ -1041,7 +1004,7 @@ JNI_ENTRY_CHECKED(void,
 JNI_END
 
 #define WRAPPER_CallNonvirtualMethod(ResultType, Result) \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_CallNonvirtual##Result##Method(JNIEnv *env, \
                                              jobject obj, \
                                              jclass clazz, \
@@ -1057,7 +1020,7 @@ JNI_ENTRY_CHECKED(ResultType,  \
     ResultType result = UNCHECKED()->CallNonvirtual##Result##MethodV(env, \
                                                                      obj, \
                                                                      clazz, \
-                                                                     methodID,\
+                                                                     methodID, \
                                                                      args); \
     va_end(args); \
     thr->set_pending_jni_exception_check("CallNonvirtual"#Result"Method"); \
@@ -1065,7 +1028,7 @@ JNI_ENTRY_CHECKED(ResultType,  \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_CallNonvirtual##Result##MethodV(JNIEnv *env, \
                                               jobject obj, \
                                               jclass clazz, \
@@ -1079,14 +1042,14 @@ JNI_ENTRY_CHECKED(ResultType,  \
     ResultType result = UNCHECKED()->CallNonvirtual##Result##MethodV(env, \
                                                                      obj, \
                                                                      clazz, \
-                                                                     methodID,\
+                                                                     methodID, \
                                                                      args); \
     thr->set_pending_jni_exception_check("CallNonvirtual"#Result"MethodV"); \
     functionExit(thr); \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType,  \
+JNI_ENTRY_CHECKED(ResultType, \
   checked_jni_CallNonvirtual##Result##MethodA(JNIEnv *env, \
                                               jobject obj, \
                                               jclass clazz, \
@@ -1100,7 +1063,7 @@ JNI_ENTRY_CHECKED(ResultType,  \
     ResultType result = UNCHECKED()->CallNonvirtual##Result##MethodA(env, \
                                                                      obj, \
                                                                      clazz, \
-                                                                     methodID,\
+                                                                     methodID, \
                                                                      args); \
     thr->set_pending_jni_exception_check("CallNonvirtual"#Result"MethodA"); \
     functionExit(thr); \
@@ -1183,7 +1146,7 @@ JNI_ENTRY_CHECKED(jfieldID,
 JNI_END
 
 #define WRAPPER_GetField(ReturnType,Result,FieldType) \
-JNI_ENTRY_CHECKED(ReturnType,  \
+JNI_ENTRY_CHECKED(ReturnType, \
   checked_jni_Get##Result##Field(JNIEnv *env, \
                                  jobject obj, \
                                  jfieldID fieldID)) \
@@ -1207,7 +1170,7 @@ WRAPPER_GetField(jfloat,   Float,   T_FLOAT)
 WRAPPER_GetField(jdouble,  Double,  T_DOUBLE)
 
 #define WRAPPER_SetField(ValueType,Result,FieldType) \
-JNI_ENTRY_CHECKED(void,  \
+JNI_ENTRY_CHECKED(void, \
   checked_jni_Set##Result##Field(JNIEnv *env, \
                                  jobject obj, \
                                  jfieldID fieldID, \
@@ -1230,7 +1193,6 @@ WRAPPER_SetField(jlong,    Long,    T_LONG)
 WRAPPER_SetField(jfloat,   Float,   T_FLOAT)
 WRAPPER_SetField(jdouble,  Double,  T_DOUBLE)
 
-
 JNI_ENTRY_CHECKED(jmethodID,
   checked_jni_GetStaticMethodID(JNIEnv *env,
                                 jclass clazz,
@@ -1246,7 +1208,7 @@ JNI_ENTRY_CHECKED(jmethodID,
 JNI_END
 
 #define WRAPPER_CallStaticMethod(ReturnType,Result) \
-JNI_ENTRY_CHECKED(ReturnType,  \
+JNI_ENTRY_CHECKED(ReturnType, \
   checked_jni_CallStatic##Result##Method(JNIEnv *env, \
                                          jclass clazz, \
                                          jmethodID methodID, \
@@ -1268,10 +1230,10 @@ JNI_ENTRY_CHECKED(ReturnType,  \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ReturnType,  \
+JNI_ENTRY_CHECKED(ReturnType, \
   checked_jni_CallStatic##Result##MethodV(JNIEnv *env, \
                                           jclass clazz, \
-                                          jmethodID methodID,\
+                                          jmethodID methodID, \
                                           va_list args)) \
     functionEnter(thr); \
     IN_VM( \
@@ -1287,7 +1249,7 @@ JNI_ENTRY_CHECKED(ReturnType,  \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ReturnType,  \
+JNI_ENTRY_CHECKED(ReturnType, \
   checked_jni_CallStatic##Result##MethodA(JNIEnv *env, \
                                           jclass clazz, \
                                           jmethodID methodID, \
@@ -1379,7 +1341,7 @@ JNI_ENTRY_CHECKED(jfieldID,
 JNI_END
 
 #define WRAPPER_GetStaticField(ReturnType,Result,FieldType) \
-JNI_ENTRY_CHECKED(ReturnType,  \
+JNI_ENTRY_CHECKED(ReturnType, \
   checked_jni_GetStatic##Result##Field(JNIEnv *env, \
                                        jclass clazz, \
                                        jfieldID fieldID)) \
@@ -1406,7 +1368,7 @@ WRAPPER_GetStaticField(jfloat,   Float,   T_FLOAT)
 WRAPPER_GetStaticField(jdouble,  Double,  T_DOUBLE)
 
 #define WRAPPER_SetStaticField(ValueType,Result,FieldType) \
-JNI_ENTRY_CHECKED(void,  \
+JNI_ENTRY_CHECKED(void, \
   checked_jni_SetStatic##Result##Field(JNIEnv *env, \
                                        jclass clazz, \
                                        jfieldID fieldID, \
@@ -1429,7 +1391,6 @@ WRAPPER_SetStaticField(jint,     Int,     T_INT)
 WRAPPER_SetStaticField(jlong,    Long,    T_LONG)
 WRAPPER_SetStaticField(jfloat,   Float,   T_FLOAT)
 WRAPPER_SetStaticField(jdouble,  Double,  T_DOUBLE)
-
 
 JNI_ENTRY_CHECKED(jstring,
   checked_jni_NewString(JNIEnv *env,
@@ -1466,7 +1427,7 @@ JNI_ENTRY_CHECKED(const jchar *,
     )
     jchar* new_result = NULL;
     const jchar *result = UNCHECKED()->GetStringChars(env,str,isCopy);
-    assert (isCopy == NULL || *isCopy == JNI_TRUE, "GetStringChars didn't return a copy as expected");
+    assert(isCopy == NULL || *isCopy == JNI_TRUE, "GetStringChars didn't return a copy as expected");
     if (result != NULL) {
       size_t len = UNCHECKED()->GetStringLength(env,str) + 1; // + 1 for NULL termination
       len *= sizeof(jchar);
@@ -1550,7 +1511,7 @@ JNI_ENTRY_CHECKED(const char *,
     )
     char* new_result = NULL;
     const char *result = UNCHECKED()->GetStringUTFChars(env,str,isCopy);
-    assert (isCopy == NULL || *isCopy == JNI_TRUE, "GetStringUTFChars didn't return a copy as expected");
+    assert(isCopy == NULL || *isCopy == JNI_TRUE, "GetStringUTFChars didn't return a copy as expected");
     if (result != NULL) {
       size_t len = strlen(result) + 1; // + 1 for NULL termination
       new_result = (char*) GuardedMemory::wrap_copy(result, len, STRING_UTF_TAG);
@@ -1668,7 +1629,7 @@ WRAPPER_NewScalarArray(jfloatArray, Float)
 WRAPPER_NewScalarArray(jdoubleArray, Double)
 
 #define WRAPPER_GetScalarArrayElements(ElementTag,ElementType,Result) \
-JNI_ENTRY_CHECKED(ElementType *,  \
+JNI_ENTRY_CHECKED(ElementType *, \
   checked_jni_Get##Result##ArrayElements(JNIEnv *env, \
                                          ElementType##Array array, \
                                          jboolean *isCopy)) \
@@ -1696,7 +1657,7 @@ WRAPPER_GetScalarArrayElements(T_FLOAT,   jfloat,   Float)
 WRAPPER_GetScalarArrayElements(T_DOUBLE,  jdouble,  Double)
 
 #define WRAPPER_ReleaseScalarArrayElements(ElementTag,ElementType,Result,Tag) \
-JNI_ENTRY_CHECKED(void,  \
+JNI_ENTRY_CHECKED(void, \
   checked_jni_Release##Result##ArrayElements(JNIEnv *env, \
                                              ElementType##Array array, \
                                              ElementType *elems, \
@@ -1723,7 +1684,7 @@ WRAPPER_ReleaseScalarArrayElements(T_FLOAT,  jfloat,   Float,   float)
 WRAPPER_ReleaseScalarArrayElements(T_DOUBLE, jdouble,  Double,  double)
 
 #define WRAPPER_GetScalarArrayRegion(ElementTag,ElementType,Result) \
-JNI_ENTRY_CHECKED(void,  \
+JNI_ENTRY_CHECKED(void, \
   checked_jni_Get##Result##ArrayRegion(JNIEnv *env, \
                                        ElementType##Array array, \
                                        jsize start, \
@@ -1747,7 +1708,7 @@ WRAPPER_GetScalarArrayRegion(T_FLOAT,   jfloat,   Float)
 WRAPPER_GetScalarArrayRegion(T_DOUBLE,  jdouble,  Double)
 
 #define WRAPPER_SetScalarArrayRegion(ElementTag,ElementType,Result) \
-JNI_ENTRY_CHECKED(void,  \
+JNI_ENTRY_CHECKED(void, \
   checked_jni_Set##Result##ArrayRegion(JNIEnv *env, \
                                        ElementType##Array array, \
                                        jsize start, \
@@ -1981,7 +1942,6 @@ JNI_ENTRY_CHECKED(jobjectRefType,
     functionExit(thr);
     return result;
 JNI_END
-
 
 JNI_ENTRY_CHECKED(jint,
   checked_jni_GetVersion(JNIEnv *env))
@@ -2291,7 +2251,6 @@ struct JNINativeInterface_  checked_jni_NativeInterface = {
     checked_jni_GetModule
 };
 
-
 // Returns the function structure
 struct JNINativeInterface_* jni_functions_check() {
 
@@ -2300,15 +2259,11 @@ struct JNINativeInterface_* jni_functions_check() {
   // make sure the last pointer in the checked table is not null, indicating
   // an addition to the JNINativeInterface_ structure without initializing
   // it in the checked table.
-  debug_only(int *lastPtr = (int *)((char *)&checked_jni_NativeInterface + \
-             sizeof(*unchecked_jni_NativeInterface) - sizeof(char *));)
-  assert(*lastPtr != 0,
-         "Mismatched JNINativeInterface tables, check for new entries");
+  assert(*lastPtr != 0, "Mismatched JNINativeInterface tables, check for new entries");
 
   // with -verbose:jni this message will print
   if (PrintJNIResolving) {
-    tty->print_cr("Checked JNI functions are being used to " \
-                  "validate JNI usage");
+    tty->print_cr("Checked JNI functions are being used to validate JNI usage");
   }
 
   return &checked_jni_NativeInterface;

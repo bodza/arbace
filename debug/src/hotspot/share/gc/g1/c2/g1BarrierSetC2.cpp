@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/c2/g1BarrierSetC2.hpp"
 #include "gc/g1/g1BarrierSet.hpp"
@@ -187,10 +163,10 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit,
 
   if (do_load) {
     // We need to generate the load of the previous value
-    assert(obj != NULL, "must have a base");
-    assert(adr != NULL, "where are loading from?");
-    assert(pre_val == NULL, "loaded already?");
-    assert(val_type != NULL, "need a type");
+    assert(obj != NULL, "must have a base");
+    assert(adr != NULL, "where are loading from?");
+    assert(pre_val == NULL, "loaded already?");
+    assert(val_type != NULL, "need a type");
 
     if (use_ReduceInitialCardMarks()
         && g1_can_remove_pre_barrier(kit, &kit->gvn(), adr, bt, alias_idx)) {
@@ -199,12 +175,12 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit,
 
   } else {
     // In this case both val_type and alias_idx are unused.
-    assert(pre_val != NULL, "must be loaded already");
+    assert(pre_val != NULL, "must be loaded already");
     // Nothing to be done if pre_val is null.
     if (pre_val->bottom_type() == TypePtr::NULL_PTR) return;
-    assert(pre_val->bottom_type()->basic_type() == T_OBJECT, "or we shouldn't be here");
+    assert(pre_val->bottom_type()->basic_type() == T_OBJECT, "or we shouldn't be here");
   }
-  assert(bt == T_OBJECT, "or we shouldn't be here");
+  assert(bt == T_OBJECT, "or we shouldn't be here");
 
   IdealKit ideal(kit, true);
 
@@ -218,7 +194,7 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit,
   float unlikely  = PROB_UNLIKELY(0.999);
 
   BasicType active_type = in_bytes(SATBMarkQueue::byte_width_of_active()) == 4 ? T_INT : T_BYTE;
-  assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 4 || in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "flag width");
+  assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 4 || in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "flag width");
 
   // Offsets into the thread
   const int marking_offset = in_bytes(G1ThreadLocalData::satb_mark_queue_active_offset());
@@ -236,7 +212,7 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit,
   // if (!marking)
   __ if_then(marking, BoolTest::ne, zero, unlikely); {
     BasicType index_bt = TypeX_X->basic_type();
-    assert(sizeof(size_t) == type2aelembytes(index_bt), "Loading G1 SATBMarkQueue::_index with wrong size.");
+    assert(sizeof(size_t) == type2aelembytes(index_bt), "Loading G1 SATBMarkQueue::_index with wrong size.");
     Node* index   = __ load(__ ctrl(), index_adr, TypeX_X, index_bt, Compile::AliasIdxRaw);
 
     if (do_load) {
@@ -366,7 +342,6 @@ void G1BarrierSetC2::g1_mark_card(GraphKit* kit,
   } __ else_(); {
     __ make_leaf_call(tf, CAST_FROM_FN_PTR(address, G1BarrierSetRuntime::write_ref_field_post_entry), "write_ref_field_post_entry", card_adr, __ thread());
   } __ end_if();
-
 }
 
 void G1BarrierSetC2::post_barrier(GraphKit* kit,
@@ -383,7 +358,7 @@ void G1BarrierSetC2::post_barrier(GraphKit* kit,
   if (val != NULL && val->is_Con() && val->bottom_type() == TypePtr::NULL_PTR) {
     // Must be NULL
     const Type* t = val->bottom_type();
-    assert(t == Type::TOP || t == TypePtr::NULL_PTR, "must be NULL");
+    assert(t == Type::TOP || t == TypePtr::NULL_PTR, "must be NULL");
     // No post barrier if writing NULLx
     return;
   }
@@ -407,7 +382,7 @@ void G1BarrierSetC2::post_barrier(GraphKit* kit,
     adr = obj;
   }
   // (Else it's an array (or unknown), and we want more precise card marks.)
-  assert(adr != NULL, "");
+  assert(adr != NULL, "");
 
   IdealKit ideal(kit, true);
 
@@ -484,7 +459,7 @@ void G1BarrierSetC2::post_barrier(GraphKit* kit,
     // We don't need a barrier here if the destination is a newly allocated object
     // in Eden. Otherwise, GC verification breaks because we assume that cards in Eden
     // are set to 'g1_young_gen' (see G1CardTable::verify_g1_young_region()).
-    assert(!use_ReduceInitialCardMarks(), "can only happen with card marking");
+    assert(!use_ReduceInitialCardMarks(), "can only happen with card marking");
     Node* card_val = __ load(__ ctrl(), card_adr, TypeInt::INT, T_BYTE, Compile::AliasIdxRaw);
     __ if_then(card_val, BoolTest::ne, young_card); {
       g1_mark_card(kit, ideal, card_adr, oop_store, alias_idx, index, index_adr, buffer, tf);
@@ -656,8 +631,8 @@ bool G1BarrierSetC2::is_gc_barrier_node(Node* node) const {
 }
 
 void G1BarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) const {
-  assert(node->Opcode() == Op_CastP2X, "ConvP2XNode required");
-  assert(node->outcnt() <= 2, "expects 1 or 2 users: Xor and URShift nodes");
+  assert(node->Opcode() == Op_CastP2X, "ConvP2XNode required");
+  assert(node->outcnt() <= 2, "expects 1 or 2 users: Xor and URShift nodes");
   // It could be only one user, URShift node, in Object.clone() intrinsic
   // but the new allocation is passed to arraycopy stub and it could not
   // be scalar replaced. So we don't check the case.
@@ -669,7 +644,7 @@ void G1BarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) c
   // Take Region node before eliminating post barrier since it also
   // eliminates CastP2X node when it has only one user.
   Node* this_region = node->in(0);
-  assert(this_region != NULL, "");
+  assert(this_region != NULL, "");
 
   // Remove G1 post barrier.
 
@@ -680,9 +655,7 @@ void G1BarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) c
   if (xorx != NULL) {
     Node* shift = xorx->unique_out();
     Node* cmpx = shift->unique_out();
-    assert(cmpx->is_Cmp() && cmpx->unique_out()->is_Bool() &&
-    cmpx->unique_out()->as_Bool()->_test._test == BoolTest::ne,
-    "missing region check in G1 post barrier");
+    assert(cmpx->is_Cmp() && cmpx->unique_out()->is_Bool() && cmpx->unique_out()->as_Bool()->_test._test == BoolTest::ne, "missing region check in G1 post barrier");
     macro->replace_node(cmpx, macro->makecon(TypeInt::CC_EQ));
 
     // Remove G1 pre barrier.
@@ -698,7 +671,7 @@ void G1BarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) c
       if (this_region->in(ind)->is_IfFalse() &&
           this_region->in(ind)->in(0)->Opcode() == Op_If) {
         Node* bol = this_region->in(ind)->in(0)->in(1);
-        assert(bol->is_Bool(), "");
+        assert(bol->is_Bool(), "");
         cmpx = bol->in(1);
         if (bol->as_Bool()->_test._test == BoolTest::ne &&
             cmpx->is_Cmp() && cmpx->in(2) == macro->intcon(0) &&
@@ -714,25 +687,23 @@ void G1BarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) c
       }
     }
   } else {
-    assert(!use_ReduceInitialCardMarks(), "can only happen with card marking");
+    assert(!use_ReduceInitialCardMarks(), "can only happen with card marking");
     // This is a G1 post barrier emitted by the Object.clone() intrinsic.
     // Search for the CastP2X->URShiftX->AddP->LoadB->Cmp path which checks if the card
     // is marked as young_gen and replace the Cmp with 0 (false) to collapse the barrier.
     Node* shift = node->find_out_with(Op_URShiftX);
-    assert(shift != NULL, "missing G1 post barrier");
+    assert(shift != NULL, "missing G1 post barrier");
     Node* addp = shift->unique_out();
     Node* load = addp->find_out_with(Op_LoadB);
-    assert(load != NULL, "missing G1 post barrier");
+    assert(load != NULL, "missing G1 post barrier");
     Node* cmpx = load->unique_out();
-    assert(cmpx->is_Cmp() && cmpx->unique_out()->is_Bool() &&
-           cmpx->unique_out()->as_Bool()->_test._test == BoolTest::ne,
-           "missing card value check in G1 post barrier");
+    assert(cmpx->is_Cmp() && cmpx->unique_out()->is_Bool() && cmpx->unique_out()->as_Bool()->_test._test == BoolTest::ne, "missing card value check in G1 post barrier");
     macro->replace_node(cmpx, macro->makecon(TypeInt::CC_EQ));
     // There is no G1 pre barrier in this case
   }
   // Now CastP2X can be removed since it is used only on dead path
   // which currently still alive until igvn optimize it.
-  assert(node->outcnt() == 0 || node->unique_out()->Opcode() == Op_URShiftX, "");
+  assert(node->outcnt() == 0 || node->unique_out()->Opcode() == Op_URShiftX, "");
   macro->replace_node(node, macro->top());
 }
 
@@ -754,12 +725,7 @@ Node* G1BarrierSetC2::step_over_gc_barrier(Node* c) const {
               c = c->in(0);
               if (c != NULL) {
                 c = c->in(0);
-                assert(call->in(0) == NULL ||
-                       call->in(0)->in(0) == NULL ||
-                       call->in(0)->in(0)->in(0) == NULL ||
-                       call->in(0)->in(0)->in(0)->in(0) == NULL ||
-                       call->in(0)->in(0)->in(0)->in(0)->in(0) == NULL ||
-                       c == call->in(0)->in(0)->in(0)->in(0)->in(0), "bad barrier shape");
+                assert(call->in(0) == NULL || call->in(0)->in(0) == NULL || call->in(0)->in(0)->in(0) == NULL || call->in(0)->in(0)->in(0)->in(0) == NULL || call->in(0)->in(0)->in(0)->in(0)->in(0) == NULL || c == call->in(0)->in(0)->in(0)->in(0)->in(0), "bad barrier shape");
                 return c;
               }
             }

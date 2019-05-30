@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1Allocator.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -104,41 +80,6 @@ void G1ParScanThreadState::waste(size_t& wasted, size_t& undo_wasted) {
   _plab_allocator->waste(wasted, undo_wasted);
 }
 
-#ifdef ASSERT
-bool G1ParScanThreadState::verify_ref(narrowOop* ref) const {
-  assert(ref != NULL, "invariant");
-  assert(UseCompressedOops, "sanity");
-  assert(!has_partial_array_mask(ref), "ref=" PTR_FORMAT, p2i(ref));
-  oop p = RawAccess<>::oop_load(ref);
-  assert(_g1h->is_in_g1_reserved(p),
-         "ref=" PTR_FORMAT " p=" PTR_FORMAT, p2i(ref), p2i(p));
-  return true;
-}
-
-bool G1ParScanThreadState::verify_ref(oop* ref) const {
-  assert(ref != NULL, "invariant");
-  if (has_partial_array_mask(ref)) {
-    // Must be in the collection set--it's already been copied.
-    oop p = clear_partial_array_mask(ref);
-    assert(_g1h->is_in_cset(p),
-           "ref=" PTR_FORMAT " p=" PTR_FORMAT, p2i(ref), p2i(p));
-  } else {
-    oop p = RawAccess<>::oop_load(ref);
-    assert(_g1h->is_in_g1_reserved(p),
-           "ref=" PTR_FORMAT " p=" PTR_FORMAT, p2i(ref), p2i(p));
-  }
-  return true;
-}
-
-bool G1ParScanThreadState::verify_task(StarTask ref) const {
-  if (ref.is_narrow()) {
-    return verify_ref((narrowOop*) ref);
-  } else {
-    return verify_ref((oop*) ref);
-  }
-}
-#endif // ASSERT
-
 void G1ParScanThreadState::trim_queue() {
   StarTask ref;
   do {
@@ -151,8 +92,8 @@ HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state,
                                                       InCSetState* dest,
                                                       size_t word_sz,
                                                       bool previous_plab_refill_failed) {
-  assert(state.is_in_cset_or_humongous(), "Unexpected state: " CSETSTATE_FORMAT, state.value());
-  assert(dest->is_in_cset_or_humongous(), "Unexpected dest: " CSETSTATE_FORMAT, dest->value());
+  assert(state.is_in_cset_or_humongous(), "Unexpected state: " CSETSTATE_FORMAT, state.value());
+  assert(dest->is_in_cset_or_humongous(), "Unexpected dest: " CSETSTATE_FORMAT, dest->value());
 
   // Right now we only have two types of regions (young / old) so
   // let's keep the logic here simple. We can generalize it when necessary.
@@ -180,7 +121,7 @@ HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state,
     return obj_ptr;
   } else {
     _old_gen_is_full = previous_plab_refill_failed;
-    assert(dest->is_old(), "Unexpected dest: " CSETSTATE_FORMAT, dest->value());
+    assert(dest->is_old(), "Unexpected dest: " CSETSTATE_FORMAT, dest->value());
     // no other space to try.
     return NULL;
   }
@@ -218,8 +159,7 @@ oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
   HeapRegion* const from_region = _g1h->heap_region_containing(old);
   // +1 to make the -1 indexes valid...
   const int young_index = from_region->young_index_in_cset()+1;
-  assert( (from_region->is_young() && young_index >  0) ||
-         (!from_region->is_young() && young_index == 0), "invariant" );
+  assert( (from_region->is_young() && young_index >  0) || (!from_region->is_young() && young_index == 0), "invariant" );
 
   uint age = 0;
   InCSetState dest_state = next_state(state, old_mark, age);
@@ -249,18 +189,8 @@ oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
     }
   }
 
-  assert(obj_ptr != NULL, "when we get here, allocation should have succeeded");
-  assert(_g1h->is_in_reserved(obj_ptr), "Allocated memory should be in the heap");
-
-#ifndef PRODUCT
-  // Should this evacuation fail?
-  if (_g1h->evacuation_should_fail()) {
-    // Doing this after all the allocation attempts also tests the
-    // undo_allocation() method too.
-    _plab_allocator->undo_allocation(dest_state, obj_ptr, word_sz);
-    return handle_evacuation_failure_par(old, old_mark);
-  }
-#endif // !PRODUCT
+  assert(obj_ptr != NULL, "when we get here, allocation should have succeeded");
+  assert(_g1h->is_in_reserved(obj_ptr), "Allocated memory should be in the heap");
 
   // We're going to allocate linearly, so might as well prefetch ahead.
   Prefetch::write(obj_ptr, PrefetchCopyIntervalInBytes);
@@ -292,10 +222,8 @@ oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
     if (G1StringDedup::is_enabled()) {
       const bool is_from_young = state.is_young();
       const bool is_to_young = dest_state.is_young();
-      assert(is_from_young == _g1h->heap_region_containing(old)->is_young(),
-             "sanity");
-      assert(is_to_young == _g1h->heap_region_containing(obj)->is_young(),
-             "sanity");
+      assert(is_from_young == _g1h->heap_region_containing(old)->is_young(), "sanity");
+      assert(is_to_young == _g1h->heap_region_containing(obj)->is_young(), "sanity");
       G1StringDedup::enqueue_from_evacuation(is_from_young,
                                              is_to_young,
                                              _worker_id,
@@ -324,7 +252,7 @@ oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
 }
 
 G1ParScanThreadState* G1ParScanThreadStateSet::state_for_worker(uint worker_id) {
-  assert(worker_id < _n_workers, "out of bounds access");
+  assert(worker_id < _n_workers, "out of bounds access");
   if (_states[worker_id] == NULL) {
     _states[worker_id] = new G1ParScanThreadState(_g1h, worker_id, _young_cset_length);
   }
@@ -332,12 +260,12 @@ G1ParScanThreadState* G1ParScanThreadStateSet::state_for_worker(uint worker_id) 
 }
 
 const size_t* G1ParScanThreadStateSet::surviving_young_words() const {
-  assert(_flushed, "thread local state from the per thread states should have been flushed");
+  assert(_flushed, "thread local state from the per thread states should have been flushed");
   return _surviving_young_words_total;
 }
 
 void G1ParScanThreadStateSet::flush() {
-  assert(!_flushed, "thread local state from the per thread states should be flushed once");
+  assert(!_flushed, "thread local state from the per thread states should be flushed once");
 
   for (uint worker_index = 0; worker_index < _n_workers; ++worker_index) {
     G1ParScanThreadState* pss = _states[worker_index];
@@ -354,7 +282,7 @@ void G1ParScanThreadStateSet::flush() {
 }
 
 oop G1ParScanThreadState::handle_evacuation_failure_par(oop old, markOop m) {
-  assert(_g1h->is_in_cset(old), "Object " PTR_FORMAT " should be in the CSet", p2i(old));
+  assert(_g1h->is_in_cset(old), "Object " PTR_FORMAT " should be in the CSet", p2i(old));
 
   oop forward_ptr = old->forward_to_atomic(old, memory_order_relaxed);
   if (forward_ptr == NULL) {
@@ -376,10 +304,7 @@ oop G1ParScanThreadState::handle_evacuation_failure_par(oop old, markOop m) {
     // Forward-to-self failed. Either someone else managed to allocate
     // space for this object (old != forward_ptr) or they beat us in
     // self-forwarding it (old == forward_ptr).
-    assert(old == forward_ptr || !_g1h->is_in_cset(forward_ptr),
-           "Object " PTR_FORMAT " forwarded to: " PTR_FORMAT " "
-           "should not be in the CSet",
-           p2i(old), p2i(forward_ptr));
+    assert(old == forward_ptr || !_g1h->is_in_cset(forward_ptr), "Object " PTR_FORMAT " forwarded to: " PTR_FORMAT " should not be in the CSet", p2i(old), p2i(forward_ptr));
     return forward_ptr;
   }
 }
@@ -397,7 +322,7 @@ G1ParScanThreadStateSet::G1ParScanThreadStateSet(G1CollectedHeap* g1h, uint n_wo
 }
 
 G1ParScanThreadStateSet::~G1ParScanThreadStateSet() {
-  assert(_flushed, "thread local state from the per thread states should have been flushed");
+  assert(_flushed, "thread local state from the per thread states should have been flushed");
   FREE_C_HEAP_ARRAY(G1ParScanThreadState*, _states);
   FREE_C_HEAP_ARRAY(size_t, _surviving_young_words_total);
 }

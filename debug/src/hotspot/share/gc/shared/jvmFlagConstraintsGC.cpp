@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectorPolicy.hpp"
@@ -35,21 +11,8 @@
 #include "runtime/thread.inline.hpp"
 #include "utilities/align.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_CMSGC
-#include "gc/cms/jvmFlagConstraintsCMS.hpp"
-#endif
-#if INCLUDE_G1GC
 #include "gc/g1/jvmFlagConstraintsG1.hpp"
-#endif
-#if INCLUDE_PARALLELGC
-#include "gc/parallel/jvmFlagConstraintsParallel.hpp"
-#endif
-#ifdef COMPILER1
 #include "c1/c1_globals.hpp"
-#endif // COMPILER1
-#ifdef COMPILER2
-#include "opto/c2_globals.hpp"
-#endif // COMPILER2
 
 // Some flags that have default values that indicate that the
 // JVM should automatically determine an appropriate value
@@ -62,20 +25,6 @@
 // As ParallelGCThreads differs among GC modes, we need constraint function.
 JVMFlag::Error ParallelGCThreadsConstraintFunc(uint value, bool verbose) {
   JVMFlag::Error status = JVMFlag::SUCCESS;
-
-#if INCLUDE_PARALLELGC
-  status = ParallelGCThreadsConstraintFuncParallel(value, verbose);
-  if (status != JVMFlag::SUCCESS) {
-    return status;
-  }
-#endif
-
-#if INCLUDE_CMSGC
-  status = ParallelGCThreadsConstraintFuncCMS(value, verbose);
-  if (status != JVMFlag::SUCCESS) {
-    return status;
-  }
-#endif
 
   return status;
 }
@@ -140,11 +89,6 @@ JVMFlag::Error YoungPLABSizeConstraintFunc(size_t value, bool verbose) {
 JVMFlag::Error OldPLABSizeConstraintFunc(size_t value, bool verbose) {
   JVMFlag::Error status = JVMFlag::SUCCESS;
 
-#if INCLUDE_CMSGC
-  if (UseConcMarkSweepGC) {
-    return OldPLABSizeConstraintFuncCMS(value, verbose);
-  } else
-#endif
   {
     status = MinMaxPLABSizeBounds("OldPLABSize", value, verbose);
   }
@@ -230,23 +174,11 @@ JVMFlag::Error MaxMetaspaceFreeRatioConstraintFunc(uintx value, bool verbose) {
 }
 
 JVMFlag::Error InitialTenuringThresholdConstraintFunc(uintx value, bool verbose) {
-#if INCLUDE_PARALLELGC
-  JVMFlag::Error status = InitialTenuringThresholdConstraintFuncParallel(value, verbose);
-  if (status != JVMFlag::SUCCESS) {
-    return status;
-  }
-#endif
 
   return JVMFlag::SUCCESS;
 }
 
 JVMFlag::Error MaxTenuringThresholdConstraintFunc(uintx value, bool verbose) {
-#if INCLUDE_PARALLELGC
-  JVMFlag::Error status = MaxTenuringThresholdConstraintFuncParallel(value, verbose);
-  if (status != JVMFlag::SUCCESS) {
-    return status;
-  }
-#endif
 
   // MaxTenuringThreshold=0 means NeverTenure=false && AlwaysTenure=true
   if ((value == 0) && (NeverTenure || !AlwaysTenure)) {
@@ -262,23 +194,19 @@ JVMFlag::Error MaxTenuringThresholdConstraintFunc(uintx value, bool verbose) {
 }
 
 JVMFlag::Error MaxGCPauseMillisConstraintFunc(uintx value, bool verbose) {
-#if INCLUDE_G1GC
   JVMFlag::Error status = MaxGCPauseMillisConstraintFuncG1(value, verbose);
   if (status != JVMFlag::SUCCESS) {
     return status;
   }
-#endif
 
   return JVMFlag::SUCCESS;
 }
 
 JVMFlag::Error GCPauseIntervalMillisConstraintFunc(uintx value, bool verbose) {
-#if INCLUDE_G1GC
   JVMFlag::Error status = GCPauseIntervalMillisConstraintFuncG1(value, verbose);
   if (status != JVMFlag::SUCCESS) {
     return status;
   }
-#endif
 
   return JVMFlag::SUCCESS;
 }
@@ -311,12 +239,10 @@ static JVMFlag::Error MaxSizeForAlignment(const char* name, size_t value, size_t
 static JVMFlag::Error MaxSizeForHeapAlignment(const char* name, size_t value, bool verbose) {
   size_t heap_alignment;
 
-#if INCLUDE_G1GC
   if (UseG1GC) {
     // For G1 GC, we don't know until G1CollectorPolicy is created.
     heap_alignment = MaxSizeForHeapAlignmentG1();
   } else
-#endif
   {
     heap_alignment = CollectorPolicy::compute_heap_alignment();
   }
@@ -352,12 +278,10 @@ JVMFlag::Error HeapBaseMinAddressConstraintFunc(size_t value, bool verbose) {
 }
 
 JVMFlag::Error NewSizeConstraintFunc(size_t value, bool verbose) {
-#if INCLUDE_G1GC
   JVMFlag::Error status = NewSizeConstraintFuncG1(value, verbose);
   if (status != JVMFlag::SUCCESS) {
     return status;
   }
-#endif
 
   return JVMFlag::SUCCESS;
 }

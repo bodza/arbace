@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_INTERP_MASM_X86_HPP
 #define CPU_X86_VM_INTERP_MASM_X86_HPP
 
@@ -53,15 +29,10 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
  public:
   InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code),
-    _locals_register(LP64_ONLY(r14) NOT_LP64(rdi)),
-    _bcp_register(LP64_ONLY(r13) NOT_LP64(rsi)) {}
+    _locals_register(r14),
+    _bcp_register(r13) {}
 
   void jump_to_entry(address entry);
-
- virtual void check_and_handle_popframe(Register java_thread);
- virtual void check_and_handle_earlyret(Register java_thread);
-
-  void load_earlyret_value(TosState state);
 
   // Interpreter-specific registers
   void save_bcp() {
@@ -128,9 +99,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
                                     Register index,  // the constant pool index (corrupted on return)
                                     Register klass); // contains the Klass on return
 
-  NOT_LP64(void f2ieee();)        // truncate ftos to 32bits
-  NOT_LP64(void d2ieee();)        // truncate dtos to 64bits
-
   // Expression stack
   void pop_ptr(Register r = rax);
   void pop_i(Register r = rax);
@@ -141,18 +109,8 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void pop_f(XMMRegister r);
   void pop_d(XMMRegister r);
   void push_d(XMMRegister r);
-#ifdef _LP64
   void pop_l(Register r = rax);
   void push_l(Register r = rax);
-#else
-  void pop_l(Register lo = rax, Register hi = rdx);
-  void pop_f();
-  void pop_d();
-
-  void push_l(Register lo = rax, Register hi = rdx);
-  void push_d();
-  void push_f();
-#endif // _LP64
 
   void pop(Register r) { ((MacroAssembler*)this)->pop(r); }
   void push(Register r) { ((MacroAssembler*)this)->push(r); }
@@ -169,7 +127,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
     movptr(rsp, Address(rbp, frame::interpreter_frame_monitor_block_top_offset * wordSize));
     // NULL last_sp until next java call
     movptr(Address(rbp, frame::interpreter_frame_last_sp_offset * wordSize), (int32_t)NULL_WORD);
-    NOT_LP64(empty_FPU_stack());
   }
 
   // Helpers for swap and dup
@@ -264,7 +221,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void profile_virtual_call(Register receiver, Register mdp,
                             Register scratch2,
                             bool receiver_can_be_null = false);
-  void profile_called_method(Register method, Register mdp, Register reg2) NOT_JVMCI_RETURN;
+  void profile_called_method(Register method, Register mdp, Register reg2) ;
   void profile_ret(Register return_bci, Register mdp);
   void profile_null_seen(Register mdp);
   void profile_typecheck(Register mdp, Register klass, Register scratch);
@@ -295,7 +252,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void profile_arguments_type(Register mdp, Register callee, Register tmp, bool is_virtual);
   void profile_return_type(Register mdp, Register ret, Register tmp);
   void profile_parameters_type(Register mdp, Register tmp1, Register tmp2);
-
 };
 
-#endif // CPU_X86_VM_INTERP_MASM_X86_HPP
+#endif

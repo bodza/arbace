@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/blockOffsetTable.inline.hpp"
 #include "gc/shared/cardTableRS.hpp"
@@ -74,8 +50,8 @@ size_t Generation::max_capacity() const {
 // By default we get a single threaded default reference processor;
 // generations needing multi-threaded refs processing or discovery override this method.
 void Generation::ref_processor_init() {
-  assert(_ref_processor == NULL, "a reference processor already exists");
-  assert(!_reserved.is_empty(), "empty generation?");
+  assert(_ref_processor == NULL, "a reference processor already exists");
+  assert(!_reserved.is_empty(), "empty generation?");
   _span_based_discoverer.set_span(_reserved);
   _ref_processor = new ReferenceProcessor(&_span_based_discoverer);    // a vanilla reference processor
   if (_ref_processor == NULL) {
@@ -158,13 +134,7 @@ bool Generation::promotion_attempt_is_safe(size_t max_promotion_in_bytes) const 
 
 // Ignores "ref" and calls allocate().
 oop Generation::promote(oop obj, size_t obj_size) {
-  assert(obj_size == (size_t)obj->size(), "bad obj_size passed in");
-
-#ifndef PRODUCT
-  if (GenCollectedHeap::heap()->promotion_should_fail()) {
-    return NULL;
-  }
-#endif  // #ifndef PRODUCT
+  assert(obj_size == (size_t)obj->size(), "bad obj_size passed in");
 
   HeapWord* result = allocate(obj_size, false);
   if (result != NULL) {
@@ -228,7 +198,7 @@ size_t Generation::block_size(const HeapWord* p) const {
   GenerationBlockSizeClosure blk(p);
   // Cast away const
   ((Generation*)this)->space_iterate(&blk);
-  assert(blk.size > 0, "seems reasonable");
+  assert(blk.size > 0, "seems reasonable");
   return blk.size;
 }
 
@@ -302,38 +272,3 @@ void Generation::safe_object_iterate(ObjectClosure* cl) {
   GenerationSafeObjIterateClosure blk(cl);
   space_iterate(&blk);
 }
-
-#if INCLUDE_SERIALGC
-
-void Generation::prepare_for_compaction(CompactPoint* cp) {
-  // Generic implementation, can be specialized
-  CompactibleSpace* space = first_compaction_space();
-  while (space != NULL) {
-    space->prepare_for_compaction(cp);
-    space = space->next_compaction_space();
-  }
-}
-
-class AdjustPointersClosure: public SpaceClosure {
- public:
-  void do_space(Space* sp) {
-    sp->adjust_pointers();
-  }
-};
-
-void Generation::adjust_pointers() {
-  // Note that this is done over all spaces, not just the compactible
-  // ones.
-  AdjustPointersClosure blk;
-  space_iterate(&blk, true);
-}
-
-void Generation::compact() {
-  CompactibleSpace* sp = first_compaction_space();
-  while (sp != NULL) {
-    sp->compact();
-    sp = sp->next_compaction_space();
-  }
-}
-
-#endif // INCLUDE_SERIALGC

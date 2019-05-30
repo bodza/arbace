@@ -1,33 +1,6 @@
-/*
- * Copyright (c) 2002, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_SPACEDECORATOR_HPP
 #define SHARE_VM_GC_SHARED_SPACEDECORATOR_HPP
 
-#if INCLUDE_PARALLELGC
-#include "gc/parallel/mutableSpace.hpp"
-#endif
 #include "gc/shared/space.hpp"
 #include "utilities/globalDefinitions.hpp"
 
@@ -98,7 +71,7 @@ class SpaceMangler: public CHeapObj<mtGC> {
   virtual HeapWord* end() const = 0;
 
   // Return true if q matches the mangled pattern.
-  static bool is_mangled(HeapWord* q) PRODUCT_RETURN0;
+  static bool is_mangled(HeapWord* q) { return 0; };
 
   // Used to save the an address in a space for later use during mangling.
   void set_top_for_allocations(HeapWord* v);
@@ -109,16 +82,16 @@ class SpaceMangler: public CHeapObj<mtGC> {
   // Mangle all the unused region [top, end)
   void mangle_unused_area_complete();
   // Do some sparse checking on the area that should have been mangled.
-  void check_mangled_unused_area(HeapWord* limit) PRODUCT_RETURN;
+  void check_mangled_unused_area(HeapWord* limit) {};
   // Do a complete check of the area that should be mangled.
-  void check_mangled_unused_area_complete() PRODUCT_RETURN;
+  void check_mangled_unused_area_complete() {};
 
   // Mangle the MemRegion.  This is a non-space specific mangler.  It
   // is used during the initial mangling of a space before the space
   // is fully constructed.  Also is used when a generation is expanded
   // and possibly before the spaces have been reshaped to to the new
   // size of the generation.
-  static void mangle_region(MemRegion mr) PRODUCT_RETURN;
+  static void mangle_region(MemRegion mr) {};
 };
 
 class ContiguousSpace;
@@ -136,19 +109,4 @@ class GenSpaceMangler: public SpaceMangler {
   GenSpaceMangler(ContiguousSpace* sp) : SpaceMangler(), _sp(sp) {}
 };
 
-#if INCLUDE_PARALLELGC
-// For use with ParallelScavengeHeap's.
-class MutableSpaceMangler: public SpaceMangler {
-  MutableSpace* _sp;
-
-  MutableSpace* sp() { return _sp; }
-
-  HeapWord* top() const { return _sp->top(); }
-  HeapWord* end() const { return _sp->end(); }
-
- public:
-  MutableSpaceMangler(MutableSpace* sp) : SpaceMangler(), _sp(sp) {}
-};
 #endif
-
-#endif // SHARE_VM_GC_SHARED_SPACEDECORATOR_HPP

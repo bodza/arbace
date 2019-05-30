@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "runtime/os.hpp"
 #include "utilities/decoder.hpp"
@@ -38,15 +14,15 @@ NativeCallStack::NativeCallStack(int toSkip, bool fillStack) :
     // to call os::get_native_stack. A tail call is used if _NMT_NOINLINE_ is not defined
     // (which means this is not a slowdebug build), and we are on 64-bit (except Windows).
     // This is not necessarily a rule, but what has been obvserved to date.
-#if (defined(_NMT_NOINLINE_) || defined(_WINDOWS) || !defined(_LP64))
+#if defined(_NMT_NOINLINE_)
     // Not a tail call.
     toSkip++;
-#if (defined(_NMT_NOINLINE_) && defined(BSD) && defined(_LP64))
+#if defined(_NMT_NOINLINE_) && defined(BSD)
     // Mac OS X slowdebug builds have this odd behavior where NativeCallStack::NativeCallStack
     // appears as two frames, so we need to skip an extra frame.
     toSkip++;
-#endif // Special-case for BSD.
-#endif // Not a tail call.
+#endif
+#endif
     os::get_native_stack(_stack, NMT_TrackingStackDepth, toSkip);
   } else {
     for (int index = 0; index < NMT_TrackingStackDepth; index ++) {

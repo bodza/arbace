@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2014, Red Hat Inc. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 // no precompiled headers
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
@@ -146,9 +121,9 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread,
   const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
-  assert(thread != NULL, "just checking");
-  assert(ret_sp != NULL, "just checking");
-  assert(ret_fp != NULL, "just checking");
+  assert(thread != NULL, "just checking");
+  assert(ret_sp != NULL, "just checking");
+  assert(ret_fp != NULL, "just checking");
 
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
@@ -189,12 +164,12 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
     // method returns the Java sender of the current frame.
     *fr = os::fetch_frame_from_context(uc);
     if (!fr->is_first_java_frame()) {
-      assert(fr->safe_for_sender(thread), "Safety check");
+      assert(fr->safe_for_sender(thread), "Safety check");
       *fr = fr->java_sender();
     }
   } else {
     // more complex code with compiled code
-    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
+    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -210,13 +185,13 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
                          - NativeInstruction::instruction_size);
       *fr = frame(sp, fp, pc);
       if (!fr->is_java_frame()) {
-        assert(fr->safe_for_sender(thread), "Safety check");
-        assert(!fr->is_first_frame(), "Safety check");
+        assert(fr->safe_for_sender(thread), "Safety check");
+        assert(!fr->is_first_frame(), "Safety check");
         *fr = fr->java_sender();
       }
     }
   }
-  assert(fr->is_java_frame(), "Safety check");
+  assert(fr->is_java_frame(), "Safety check");
   return true;
 }
 
@@ -243,7 +218,6 @@ intptr_t* _get_previous_fp() {
     return *fp;
   #endif
 }
-
 
 frame os::current_frame() {
   intptr_t* fp = _get_previous_fp();
@@ -329,7 +303,7 @@ JVM_handle_linux_signal(int sig,
     // can't decode this kind of signal
     info = NULL;
   } else {
-    assert(sig == info->si_signo, "bad siginfo");
+    assert(sig == info->si_signo, "bad siginfo");
   }
 */
   // decide if this trap can be handled by a stub
@@ -370,7 +344,7 @@ JVM_handle_linux_signal(int sig,
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Linux::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                assert(fr.is_java_frame(), "Must be a Java frame");
+                assert(fr.is_java_frame(), "Must be a Java frame");
                 frame activation =
                   SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
@@ -655,12 +629,6 @@ void os::print_register_info(outputStream *st, const void *context) {
 
 void os::setup_fpu() {
 }
-
-#ifndef PRODUCT
-void os::verify_stack_alignment() {
-  assert(((intptr_t)os::current_stack_pointer() & (StackAlignmentInBytes-1)) == 0, "incorrect stack alignment");
-}
-#endif
 
 int os::extra_bang_size_in_bytes() {
   // AArch64 does not require the additional stack bang.

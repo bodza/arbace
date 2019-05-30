@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_OS_PERF_HPP
 #define SHARE_VM_RUNTIME_OS_PERF_HPP
 
@@ -53,9 +29,7 @@ class EnvironmentVariable : public CHeapObj<mtInternal> {
     _key = key;
     _value = value;
   }
-
 };
-
 
 class CPUInformation : public CHeapObj<mtInternal> {
  private:
@@ -209,12 +183,12 @@ class NetworkInterface : public ResourceObj {
   _bytes_in(bytes_in),
   _bytes_out(bytes_out),
   _next(next) {
-    assert(name != NULL, "invariant");
+    assert(name != NULL, "invariant");
     const size_t length = strlen(name);
-    assert(allocated_on_res_area(), "invariant");
+    assert(allocated_on_res_area(), "invariant");
     _name = NEW_RESOURCE_ARRAY(char, length + 1);
     strncpy(_name, name, length + 1);
-    assert(strncmp(_name, name, length) == 0, "invariant");
+    assert(strncmp(_name, name, length) == 0, "invariant");
   }
 
   NetworkInterface* next() const {
@@ -287,4 +261,4 @@ class NetworkPerformanceInterface : public CHeapObj<mtInternal> {
   int network_utilization(NetworkInterface** network_interfaces) const;
 };
 
-#endif // SHARE_VM_RUNTIME_OS_PERF_HPP
+#endif

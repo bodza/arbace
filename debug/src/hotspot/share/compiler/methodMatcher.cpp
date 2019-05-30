@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "compiler/methodMatcher.hpp"
 #include "memory/oopFactory.hpp"
@@ -246,10 +222,10 @@ void MethodMatcher::parse_method_pattern(char*& line, const char*& error_msg, Me
   int bytes_read = 0;
   int total_bytes_read = 0;
 
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
+  assert(error_msg == NULL, "Dont call here with error_msg already set");
 
   if (!MethodMatcher::canonicalize(line, error_msg)) {
-    assert(error_msg != NULL, "Message must be set if parsing failed");
+    assert(error_msg != NULL, "Message must be set if parsing failed");
     return;
   }
 
@@ -271,7 +247,7 @@ void MethodMatcher::parse_method_pattern(char*& line, const char*& error_msg, Me
     }
 
     if (c_match == MethodMatcher::Unknown || m_match == MethodMatcher::Unknown) {
-      assert(error_msg != NULL, "Must have been set by check_mode()");
+      assert(error_msg != NULL, "Must have been set by check_mode()");
       return;
     }
 
@@ -344,7 +320,7 @@ void MethodMatcher::print_base(outputStream* st) {
 }
 
 BasicMatcher* BasicMatcher::parse_method_pattern(char* line, const char*& error_msg) {
-  assert(error_msg == NULL, "Don't call here with error_msg already set");
+  assert(error_msg == NULL, "Don't call here with error_msg already set");
   BasicMatcher* bm = new BasicMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, bm);
   if (error_msg != NULL) {
@@ -382,7 +358,7 @@ void InlineMatcher::print(outputStream* st) {
 }
 
 InlineMatcher* InlineMatcher::parse_method_pattern(char* line, const char*& error_msg) {
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
+  assert(error_msg == NULL, "Dont call here with error_msg already set");
   InlineMatcher* im = new InlineMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, im);
   if (error_msg != NULL) {
@@ -418,10 +394,10 @@ InlineMatcher* InlineMatcher::parse_inline_pattern(char* str, const char*& error
    str++;
 
    int bytes_read = 0;
-   assert(error_msg== NULL, "error_msg must not be set yet");
+   assert(error_msg== NULL, "error_msg must not be set yet");
    InlineMatcher* im = InlineMatcher::parse_method_pattern(str, error_msg);
    if (im == NULL) {
-     assert(error_msg != NULL, "Must have error message");
+     assert(error_msg != NULL, "Must have error message");
      return NULL;
    }
    im->set_action(_inline_action);

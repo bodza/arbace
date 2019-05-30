@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 
 #include "logging/log.hpp"
@@ -40,10 +17,7 @@
 namespace metaspace {
 
 #define assert_counter(expected_value, real_value, msg) \
-  assert( (expected_value) == (real_value),             \
-         "Counter mismatch (%s): expected " SIZE_FORMAT \
-         ", but got: " SIZE_FORMAT ".", msg, expected_value, \
-         real_value);
+  assert( (expected_value) == (real_value), "Counter mismatch (%s): expected " SIZE_FORMAT ", but got: " SIZE_FORMAT ".", msg, expected_value, real_value);
 
 // SpaceManager methods
 
@@ -91,8 +65,7 @@ size_t SpaceManager::get_initial_chunk_size(Metaspace::MetaspaceType type) const
   // Adjust to one of the fixed chunk sizes (unless humongous)
   const size_t adjusted = adjust_initial_chunk_size(requested);
 
-  assert(adjusted != 0, "Incorrect initial chunk size. Requested: "
-         SIZE_FORMAT " adjusted: " SIZE_FORMAT, requested, adjusted);
+  assert(adjusted != 0, "Incorrect initial chunk size. Requested: " SIZE_FORMAT " adjusted: " SIZE_FORMAT, requested, adjusted);
 
   return adjusted;
 }
@@ -146,11 +119,7 @@ size_t SpaceManager::calc_chunk_size(size_t word_size) {
   chunk_word_size =
     MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
 
-  assert(!SpaceManager::is_humongous(word_size) ||
-         chunk_word_size == if_humongous_sized_chunk,
-         "Size calculation is wrong, word_size " SIZE_FORMAT
-         " chunk_word_size " SIZE_FORMAT,
-         word_size, chunk_word_size);
+  assert(!SpaceManager::is_humongous(word_size) || chunk_word_size == if_humongous_sized_chunk, "Size calculation is wrong, word_size " SIZE_FORMAT " chunk_word_size " SIZE_FORMAT, word_size, chunk_word_size);
   Log(gc, metaspace, alloc) log;
   if (log.is_trace() && SpaceManager::is_humongous(word_size)) {
     log.trace("Metadata humongous allocation:");
@@ -172,11 +141,8 @@ void SpaceManager::track_metaspace_memory_usage() {
 
 MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
   assert_lock_strong(_lock);
-  assert(vs_list()->current_virtual_space() != NULL,
-         "Should have been set");
-  assert(current_chunk() == NULL ||
-         current_chunk()->allocate(word_size) == NULL,
-         "Don't need to expand");
+  assert(vs_list()->current_virtual_space() != NULL, "Should have been set");
+  assert(current_chunk() == NULL || current_chunk()->allocate(word_size) == NULL, "Don't need to expand");
   MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
   if (log_is_enabled(Trace, gc, metaspace, freelist)) {
@@ -249,7 +215,6 @@ void SpaceManager::account_for_new_chunk(const Metachunk* new_chunk) {
 
   _capacity_words += new_chunk->word_size();
   _overhead_words += Metachunk::overhead();
-  DEBUG_ONLY(new_chunk->verify());
   _num_chunks_by_type[new_chunk->get_chunk_type()] ++;
 
   // Adjust global counters:
@@ -280,11 +245,7 @@ void SpaceManager::account_for_spacemanager_death() {
 
 SpaceManager::~SpaceManager() {
 
-  // This call this->_lock which can't be done while holding MetaspaceExpand_lock
-  DEBUG_ONLY(verify_metrics());
-
-  MutexLockerEx fcl(MetaspaceExpand_lock,
-                    Mutex::_no_safepoint_check_flag);
+  MutexLockerEx fcl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
   chunk_manager()->slow_locked_verify();
 
@@ -307,10 +268,6 @@ SpaceManager::~SpaceManager() {
   // Follow each list of chunks-in-use and add them to the
   // free lists.  Each list is NULL terminated.
   chunk_manager()->return_chunk_list(chunk_list());
-#ifdef ASSERT
-  _chunk_list = NULL;
-  _current_chunk = NULL;
-#endif
 
   chunk_manager()->slow_locked_verify();
 
@@ -328,15 +285,14 @@ void SpaceManager::deallocate(MetaWord* p, size_t word_size) {
     _block_freelists = new BlockFreelist();
   }
   block_freelists()->return_block(p, raw_word_size);
-  DEBUG_ONLY(Atomic::inc(&(g_internal_statistics.num_deallocs)));
 }
 
 // Adds a chunk to the list of chunks in use.
 void SpaceManager::add_chunk(Metachunk* new_chunk, bool make_current) {
 
   assert_lock_strong(_lock);
-  assert(new_chunk != NULL, "Should not be NULL");
-  assert(new_chunk->next() == NULL, "Should not be on a list");
+  assert(new_chunk != NULL, "Should not be NULL");
+  assert(new_chunk->next() == NULL, "Should not be on a list");
 
   new_chunk->reset_empty();
 
@@ -358,7 +314,7 @@ void SpaceManager::add_chunk(Metachunk* new_chunk, bool make_current) {
   // Adjust counters.
   account_for_new_chunk(new_chunk);
 
-  assert(new_chunk->is_empty(), "Not ready for reuse");
+  assert(new_chunk->is_empty(), "Not ready for reuse");
   Log(gc, metaspace, freelist) log;
   if (log.is_trace()) {
     log.trace("SpaceManager::added chunk: ");
@@ -404,8 +360,6 @@ MetaWord* SpaceManager::allocate(size_t word_size) {
   BlockFreelist* fl =  block_freelists();
   MetaWord* p = NULL;
 
-  DEBUG_ONLY(if (VerifyMetaspace) verify_metrics_locked());
-
   // Allocation from the dictionary is expensive in the sense that
   // the dictionary has to be searched for a size.  Don't allocate
   // from the dictionary until it starts to get fat.  Is this
@@ -413,9 +367,6 @@ MetaWord* SpaceManager::allocate(size_t word_size) {
   // for allocations.  Do some profiling.  JJJ
   if (fl != NULL && fl->total_size() > allocation_from_dictionary_limit) {
     p = fl->get_block(raw_word_size);
-    if (p != NULL) {
-      DEBUG_ONLY(Atomic::inc(&g_internal_statistics.num_allocs_from_deallocated_blocks));
-    }
   }
   if (p == NULL) {
     p = allocate_work(raw_word_size);
@@ -428,11 +379,6 @@ MetaWord* SpaceManager::allocate(size_t word_size) {
 // This methods does not know about blocks (Metablocks)
 MetaWord* SpaceManager::allocate_work(size_t word_size) {
   assert_lock_strong(lock());
-#ifdef ASSERT
-  if (Metadebug::test_metadata_failure()) {
-    return NULL;
-  }
-#endif
   // Is there space in the current chunk?
   MetaWord* result = NULL;
 
@@ -454,18 +400,13 @@ MetaWord* SpaceManager::allocate_work(size_t word_size) {
 void SpaceManager::verify() {
   Metachunk* curr = chunk_list();
   while (curr != NULL) {
-    DEBUG_ONLY(do_verify_chunk(curr);)
-    assert(curr->is_tagged_free() == false, "Chunk should be tagged as in use.");
+    assert(curr->is_tagged_free() == false, "Chunk should be tagged as in use.");
     curr = curr->next();
   }
 }
 
 void SpaceManager::verify_chunk_size(Metachunk* chunk) {
-  assert(is_humongous(chunk->word_size()) ||
-         chunk->word_size() == medium_chunk_size() ||
-         chunk->word_size() == small_chunk_size() ||
-         chunk->word_size() == specialized_chunk_size(),
-         "Chunk size is wrong");
+  assert(is_humongous(chunk->word_size()) || chunk->word_size() == medium_chunk_size() || chunk->word_size() == small_chunk_size() || chunk->word_size() == specialized_chunk_size(), "Chunk size is wrong");
   return;
 }
 
@@ -494,29 +435,4 @@ void SpaceManager::add_to_statistics(SpaceManagerStatistics* out) const {
   MutexLockerEx cl(lock(), Mutex::_no_safepoint_check_flag);
   add_to_statistics_locked(out);
 }
-
-#ifdef ASSERT
-void SpaceManager::verify_metrics_locked() const {
-  assert_lock_strong(lock());
-
-  SpaceManagerStatistics stat;
-  add_to_statistics_locked(&stat);
-
-  UsedChunksStatistics chunk_stats = stat.totals();
-
-  DEBUG_ONLY(chunk_stats.check_sanity());
-
-  assert_counter(_capacity_words, chunk_stats.cap(), "SpaceManager::_capacity_words");
-  assert_counter(_used_words, chunk_stats.used(), "SpaceManager::_used_words");
-  assert_counter(_overhead_words, chunk_stats.overhead(), "SpaceManager::_overhead_words");
 }
-
-void SpaceManager::verify_metrics() const {
-  MutexLockerEx cl(lock(), Mutex::_no_safepoint_check_flag);
-  verify_metrics_locked();
-}
-#endif // ASSERT
-
-
-} // namespace metaspace
-

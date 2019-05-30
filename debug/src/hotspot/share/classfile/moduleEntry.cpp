@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jni.h"
 #include "classfile/classLoaderData.inline.hpp"
@@ -114,7 +90,7 @@ void ModuleEntry::set_shared_protection_domain(ClassLoaderData *loader_data,
 
 // Returns true if this module can read module m
 bool ModuleEntry::can_read(ModuleEntry* m) const {
-  assert(m != NULL, "No module to lookup in this module's reads list");
+  assert(m != NULL, "No module to lookup in this module's reads list");
 
   // Unnamed modules read everyone and all modules
   // read java.base.  If either of these conditions
@@ -125,18 +101,7 @@ bool ModuleEntry::can_read(ModuleEntry* m) const {
   }
 
   MutexLocker m1(Module_lock);
-  // This is a guard against possible race between agent threads that redefine
-  // or retransform classes in this module. Only one of them is adding the
-  // default read edges to the unnamed modules of the boot and app class loaders
-  // with an upcall to jdk.internal.module.Modules.transformedByAgent.
-  // At the same time, another thread can instrument the module classes by
-  // injecting dependencies that require the default read edges for resolution.
-  if (this->has_default_read_edges() && !m->is_named()) {
-    ClassLoaderData* cld = m->loader_data();
-    if (cld->is_the_null_class_loader_data() || cld->is_system_class_loader_data()) {
-      return true; // default read edge
-    }
-  }
+
   if (!has_reads_list()) {
     return false;
   } else {
@@ -152,6 +117,7 @@ void ModuleEntry::add_read(ModuleEntry* m) {
   }
 
   MutexLocker m1(Module_lock);
+
   if (m == NULL) {
     set_can_read_all_unnamed();
   } else {
@@ -175,7 +141,7 @@ void ModuleEntry::add_read(ModuleEntry* m) {
 // safepoint. Modules have the same life cycle as their defining class
 // loaders and should be removed if dead.
 void ModuleEntry::set_read_walk_required(ClassLoaderData* m_loader_data) {
-  assert(is_named(), "Cannot call set_read_walk_required on unnamed module");
+  assert(is_named(), "Cannot call set_read_walk_required on unnamed module");
   assert_locked_or_safepoint(Module_lock);
   if (!_must_walk_reads &&
       loader_data() != m_loader_data &&
@@ -204,7 +170,7 @@ bool ModuleEntry::has_reads_list() const {
 
 // Purge dead module entries out of reads list.
 void ModuleEntry::purge_reads() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
 
   if (_must_walk_reads && has_reads_list()) {
     // This module's _must_walk_reads flag will be reset based
@@ -234,7 +200,7 @@ void ModuleEntry::purge_reads() {
 
 void ModuleEntry::module_reads_do(ModuleClosure* f) {
   assert_locked_or_safepoint(Module_lock);
-  assert(f != NULL, "invariant");
+  assert(f != NULL, "invariant");
 
   if (has_reads_list()) {
     int reads_len = _reads->length();
@@ -245,7 +211,7 @@ void ModuleEntry::module_reads_do(ModuleClosure* f) {
 }
 
 void ModuleEntry::delete_reads() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   delete _reads;
   _reads = NULL;
 }
@@ -275,7 +241,7 @@ ModuleEntry* ModuleEntry::create_boot_unnamed_module(ClassLoaderData* cld) {
   // is not known until a call to JVM_SetBootLoaderUnnamedModule is made. At
   // this point initially create the ModuleEntry for the unnamed module.
   ModuleEntry* unnamed_module = new_unnamed_module_entry(Handle(), cld);
-  assert(unnamed_module != NULL, "boot loader unnamed module should not be null");
+  assert(unnamed_module != NULL, "boot loader unnamed module should not be null");
   return unnamed_module;
 }
 
@@ -302,8 +268,6 @@ ModuleEntry* ModuleEntry::new_unnamed_module_entry(Handle module_handle, ClassLo
 
   entry->set_loader_data(cld);
   entry->_is_open = true;
-
-  JFR_ONLY(INIT_ID(entry);)
 
   return entry;
 }
@@ -353,8 +317,8 @@ ModuleEntryTable::~ModuleEntryTable() {
       FREE_C_HEAP_ARRAY(char, to_remove);
     }
   }
-  assert(number_of_entries() == 0, "should have removed all entries");
-  assert(new_entry_free_list() == NULL, "entry present on ModuleEntryTable's free list");
+  assert(number_of_entries() == 0, "should have removed all entries");
+  assert(new_entry_free_list() == NULL, "entry present on ModuleEntryTable's free list");
   free_buckets();
 }
 
@@ -362,7 +326,7 @@ ModuleEntry* ModuleEntryTable::new_entry(unsigned int hash, Handle module_handle
                                          bool is_open, Symbol* name,
                                          Symbol* version, Symbol* location,
                                          ClassLoaderData* loader_data) {
-  assert(Module_lock->owned_by_self(), "should have the Module_lock");
+  assert(Module_lock->owned_by_self(), "should have the Module_lock");
   ModuleEntry* entry = (ModuleEntry*)Hashtable<Symbol*, mtModule>::allocate_new_entry(hash, name);
 
   // Initialize fields specific to a ModuleEntry
@@ -392,13 +356,11 @@ ModuleEntry* ModuleEntryTable::new_entry(unsigned int hash, Handle module_handle
     }
   }
 
-  JFR_ONLY(INIT_ID(entry);)
-
   return entry;
 }
 
 void ModuleEntryTable::add_entry(int index, ModuleEntry* new_entry) {
-  assert(Module_lock->owned_by_self(), "should have the Module_lock");
+  assert(Module_lock->owned_by_self(), "should have the Module_lock");
   Hashtable<Symbol*, mtModule>::add_entry(index, (HashtableEntry<Symbol*, mtModule>*)new_entry);
 }
 
@@ -408,8 +370,8 @@ ModuleEntry* ModuleEntryTable::locked_create_entry_or_null(Handle module_handle,
                                                            Symbol* module_version,
                                                            Symbol* module_location,
                                                            ClassLoaderData* loader_data) {
-  assert(module_name != NULL, "ModuleEntryTable locked_create_entry_or_null should never be called for unnamed module.");
-  assert(Module_lock->owned_by_self(), "should have the Module_lock");
+  assert(module_name != NULL, "ModuleEntryTable locked_create_entry_or_null should never be called for unnamed module.");
+  assert(Module_lock->owned_by_self(), "should have the Module_lock");
   // Check if module already exists.
   if (lookup_only(module_name) != NULL) {
     return NULL;
@@ -423,7 +385,7 @@ ModuleEntry* ModuleEntryTable::locked_create_entry_or_null(Handle module_handle,
 
 // lookup_only by Symbol* to find a ModuleEntry.
 ModuleEntry* ModuleEntryTable::lookup_only(Symbol* name) {
-  assert(name != NULL, "name cannot be NULL");
+  assert(name != NULL, "name cannot be NULL");
   int index = index_for(name);
   for (ModuleEntry* m = bucket(index); m != NULL; m = m->next()) {
     if (m->name()->fast_compare(name) == 0) {
@@ -436,7 +398,7 @@ ModuleEntry* ModuleEntryTable::lookup_only(Symbol* name) {
 // Remove dead modules from all other alive modules' reads list.
 // This should only occur at class unloading.
 void ModuleEntryTable::purge_all_module_reads() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   for (int i = 0; i < table_size(); i++) {
     for (ModuleEntry* entry = bucket(i);
                       entry != NULL;
@@ -447,11 +409,11 @@ void ModuleEntryTable::purge_all_module_reads() {
 }
 
 void ModuleEntryTable::finalize_javabase(Handle module_handle, Symbol* version, Symbol* location) {
-  assert(Module_lock->owned_by_self(), "should have the Module_lock");
+  assert(Module_lock->owned_by_self(), "should have the Module_lock");
   ClassLoaderData* boot_loader_data = ClassLoaderData::the_null_class_loader_data();
   ModuleEntryTable* module_table = boot_loader_data->modules();
 
-  assert(module_table != NULL, "boot loader's ModuleEntryTable not defined");
+  assert(module_table != NULL, "boot loader's ModuleEntryTable not defined");
 
   if (module_handle.is_null()) {
     fatal("Unable to finalize module definition for " JAVA_BASE_NAME);
@@ -459,7 +421,7 @@ void ModuleEntryTable::finalize_javabase(Handle module_handle, Symbol* version, 
 
   // Set java.lang.Module, version and location for java.base
   ModuleEntry* jb_module = javabase_moduleEntry();
-  assert(jb_module != NULL, JAVA_BASE_NAME " ModuleEntry not defined");
+  assert(jb_module != NULL, JAVA_BASE_NAME " ModuleEntry not defined");
   jb_module->set_version(version);
   jb_module->set_location(location);
   // Once java.base's ModuleEntry _module field is set with the known
@@ -496,7 +458,7 @@ void ModuleEntryTable::patch_javabase_entries(Handle module_handle) {
   int list_length = list->length();
   for (int i = 0; i < list_length; i++) {
     Klass* k = list->at(i);
-    assert(k->is_klass(), "List should only hold classes");
+    assert(k->is_klass(), "List should only hold classes");
     java_lang_Class::fixup_module_field(k, module_handle);
     k->class_loader_data()->dec_keep_alive();
   }

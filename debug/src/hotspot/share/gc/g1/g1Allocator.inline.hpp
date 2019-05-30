@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1ALLOCATOR_INLINE_HPP
 #define SHARE_VM_GC_G1_G1ALLOCATOR_INLINE_HPP
 
@@ -53,8 +29,7 @@ inline HeapWord* G1Allocator::attempt_allocation(size_t min_word_size,
 
 inline HeapWord* G1Allocator::attempt_allocation_locked(size_t word_size) {
   HeapWord* result = mutator_alloc_region()->attempt_allocation_locked(word_size);
-  assert(result != NULL || mutator_alloc_region()->get() == NULL,
-         "Must not have a mutator alloc region if there is no memory, but is " PTR_FORMAT, p2i(mutator_alloc_region()->get()));
+  assert(result != NULL || mutator_alloc_region()->get() == NULL, "Must not have a mutator alloc region if there is no memory, but is " PTR_FORMAT, p2i(mutator_alloc_region()->get()));
   return result;
 }
 
@@ -63,10 +38,8 @@ inline HeapWord* G1Allocator::attempt_allocation_force(size_t word_size) {
 }
 
 inline PLAB* G1PLABAllocator::alloc_buffer(InCSetState dest) {
-  assert(dest.is_valid(),
-         "Allocation buffer index out of bounds: " CSETSTATE_FORMAT, dest.value());
-  assert(_alloc_buffers[dest.value()] != NULL,
-         "Allocation buffer is NULL: " CSETSTATE_FORMAT, dest.value());
+  assert(dest.is_valid(), "Allocation buffer index out of bounds: " CSETSTATE_FORMAT, dest.value());
+  assert(_alloc_buffers[dest.value()] != NULL, "Allocation buffer is NULL: " CSETSTATE_FORMAT, dest.value());
   return _alloc_buffers[dest.value()];
 }
 
@@ -108,7 +81,7 @@ inline void G1ArchiveAllocator::enable_archive_object_check() {
 
 // Set the regions containing the specified address range as archive.
 inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
-  assert(_archive_check_enabled, "archive range check not enabled");
+  assert(_archive_check_enabled, "archive range check not enabled");
   log_info(gc, cds)("Mark %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
                      open ? "open" : "closed",
                      p2i(range.start()),
@@ -122,7 +95,7 @@ inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
 
 // Clear the archive regions map containing the specified address range.
 inline void G1ArchiveAllocator::clear_range_archive(MemRegion range, bool open) {
-  assert(_archive_check_enabled, "archive range check not enabled");
+  assert(_archive_check_enabled, "archive range check not enabled");
   log_info(gc, cds)("Clear %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
                     open ? "open" : "closed",
                     p2i(range.start()),
@@ -164,4 +137,4 @@ inline bool G1ArchiveAllocator::is_archive_object(oop object) {
                                       in_open_archive_range(object)));
 }
 
-#endif // SHARE_VM_GC_G1_G1ALLOCATOR_HPP
+#endif

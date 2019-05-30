@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef OS_CPU_LINUX_X86_VM_COPY_LINUX_X86_INLINE_HPP
 #define OS_CPU_LINUX_X86_VM_COPY_LINUX_X86_INLINE_HPP
 
@@ -67,7 +43,7 @@ static void pd_conjoint_words(const HeapWord* from, HeapWord* to, size_t count) 
                    : "=S" (from), "=D" (to), "=c" (count), "=r" (temp)
                    : "0"  (from), "1"  (to), "2"  (count), "3"  (temp)
                    : "memory", "flags");
-#endif // AMD64
+#endif
 }
 
 static void pd_disjoint_words(const HeapWord* from, HeapWord* to, size_t count) {
@@ -105,7 +81,7 @@ static void pd_disjoint_words(const HeapWord* from, HeapWord* to, size_t count) 
                    : "=S" (from), "=D" (to), "=c" (count), "=r" (temp)
                    : "0"  (from), "1"  (to), "2"  (count), "3"  (temp)
                    : "memory", "cc");
-#endif // AMD64
+#endif
 }
 
 static void pd_disjoint_words_atomic(const HeapWord* from, HeapWord* to, size_t count) {
@@ -129,7 +105,7 @@ static void pd_disjoint_words_atomic(const HeapWord* from, HeapWord* to, size_t 
 #else
   // pd_disjoint_words is word-atomic in this implementation.
   pd_disjoint_words(from, to, count);
-#endif // AMD64
+#endif
 }
 
 static void pd_aligned_conjoint_words(const HeapWord* from, HeapWord* to, size_t count) {
@@ -216,7 +192,7 @@ static void pd_conjoint_bytes(const void* from, void* to, size_t count) {
                    : "=S" (from), "=D" (to), "=c" (count), "=r" (temp)
                    : "0"  (from), "1"  (to), "2"  (count), "3"  (temp)
                    : "memory", "flags", "%edx");
-#endif // AMD64
+#endif
 }
 
 static void pd_conjoint_bytes_atomic(const void* from, void* to, size_t count) {
@@ -231,10 +207,10 @@ static void pd_conjoint_jints_atomic(const jint* from, jint* to, size_t count) {
 #ifdef AMD64
   _Copy_conjoint_jints_atomic(from, to, count);
 #else
-  assert(HeapWordSize == BytesPerInt, "heapwords and jints must be the same size");
+  assert(HeapWordSize == BytesPerInt, "heapwords and jints must be the same size");
   // pd_conjoint_words is word-atomic in this implementation.
   pd_conjoint_words((const HeapWord*)from, (HeapWord*)to, count);
-#endif // AMD64
+#endif
 }
 
 static void pd_conjoint_jlongs_atomic(const jlong* from, jlong* to, size_t count) {
@@ -259,18 +235,18 @@ static void pd_conjoint_jlongs_atomic(const jlong* from, jlong* to, size_t count
                        : "memory" );
     }
   }
-#endif // AMD64
+#endif
 }
 
 static void pd_conjoint_oops_atomic(const oop* from, oop* to, size_t count) {
 #ifdef AMD64
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
+  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
   _Copy_conjoint_jlongs_atomic((const jlong*)from, (jlong*)to, count);
 #else
-  assert(HeapWordSize == BytesPerOop, "heapwords and oops must be the same size");
+  assert(HeapWordSize == BytesPerOop, "heapwords and oops must be the same size");
   // pd_conjoint_words is word-atomic in this implementation.
   pd_conjoint_words((const HeapWord*)from, (HeapWord*)to, count);
-#endif // AMD64
+#endif
 }
 
 static void pd_arrayof_conjoint_bytes(const HeapWord* from, HeapWord* to, size_t count) {
@@ -286,7 +262,7 @@ static void pd_arrayof_conjoint_jints(const HeapWord* from, HeapWord* to, size_t
    _Copy_arrayof_conjoint_jints(from, to, count);
 #else
   pd_conjoint_jints_atomic((const jint*)from, (jint*)to, count);
-#endif // AMD64
+#endif
 }
 
 static void pd_arrayof_conjoint_jlongs(const HeapWord* from, HeapWord* to, size_t count) {
@@ -294,16 +270,16 @@ static void pd_arrayof_conjoint_jlongs(const HeapWord* from, HeapWord* to, size_
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 #else
   pd_conjoint_jlongs_atomic((const jlong*)from, (jlong*)to, count);
-#endif // AMD64
+#endif
 }
 
 static void pd_arrayof_conjoint_oops(const HeapWord* from, HeapWord* to, size_t count) {
 #ifdef AMD64
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
+  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 #else
   pd_conjoint_oops_atomic((const oop*)from, (oop*)to, count);
-#endif // AMD64
+#endif
 }
 
-#endif // OS_CPU_LINUX_X86_VM_COPY_LINUX_X86_INLINE_HPP
+#endif

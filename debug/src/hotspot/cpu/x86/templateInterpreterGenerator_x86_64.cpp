@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "interpreter/interp_masm.hpp"
@@ -33,86 +9,6 @@
 
 #define __ _masm->
 
-#ifdef _WIN64
-address TemplateInterpreterGenerator::generate_slow_signature_handler() {
-  address entry = __ pc();
-
-  // rbx: method
-  // r14: pointer to locals
-  // c_rarg3: first stack arg - wordSize
-  __ mov(c_rarg3, rsp);
-  // adjust rsp
-  __ subptr(rsp, 4 * wordSize);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::slow_signature_handler),
-             rbx, r14, c_rarg3);
-
-  // rax: result handler
-
-  // Stack layout:
-  // rsp: 3 integer or float args (if static first is unused)
-  //      1 float/double identifiers
-  //        return address
-  //        stack args
-  //        garbage
-  //        expression stack bottom
-  //        bcp (NULL)
-  //        ...
-
-  // Do FP first so we can use c_rarg3 as temp
-  __ movl(c_rarg3, Address(rsp, 3 * wordSize)); // float/double identifiers
-
-  for ( int i= 0; i < Argument::n_int_register_parameters_c-1; i++ ) {
-    XMMRegister floatreg = as_XMMRegister(i+1);
-    Label isfloatordouble, isdouble, next;
-
-    __ testl(c_rarg3, 1 << (i*2));      // Float or Double?
-    __ jcc(Assembler::notZero, isfloatordouble);
-
-    // Do Int register here
-    switch ( i ) {
-      case 0:
-        __ movl(rscratch1, Address(rbx, Method::access_flags_offset()));
-        __ testl(rscratch1, JVM_ACC_STATIC);
-        __ cmovptr(Assembler::zero, c_rarg1, Address(rsp, 0));
-        break;
-      case 1:
-        __ movptr(c_rarg2, Address(rsp, wordSize));
-        break;
-      case 2:
-        __ movptr(c_rarg3, Address(rsp, 2 * wordSize));
-        break;
-      default:
-        break;
-    }
-
-    __ jmp (next);
-
-    __ bind(isfloatordouble);
-    __ testl(c_rarg3, 1 << ((i*2)+1));     // Double?
-    __ jcc(Assembler::notZero, isdouble);
-
-// Do Float Here
-    __ movflt(floatreg, Address(rsp, i * wordSize));
-    __ jmp(next);
-
-// Do Double here
-    __ bind(isdouble);
-    __ movdbl(floatreg, Address(rsp, i * wordSize));
-
-    __ bind(next);
-  }
-
-
-  // restore rsp
-  __ addptr(rsp, 4 * wordSize);
-
-  __ ret(0);
-
-  return entry;
-}
-#else
 address TemplateInterpreterGenerator::generate_slow_signature_handler() {
   address entry = __ pc();
 
@@ -174,7 +70,6 @@ address TemplateInterpreterGenerator::generate_slow_signature_handler() {
 
   return entry;
 }
-#endif  // __WIN64
 
 /**
  * Method entry for static native methods:
@@ -447,11 +342,9 @@ address TemplateInterpreterGenerator::generate_math_entry(AbstractInterpreter::M
     __ addptr(rsp, 2*wordSize);
   }
 
-
   __ pop(rax);
   __ mov(rsp, r13);
   __ jmp(rax);
 
   return entry_point;
 }
-

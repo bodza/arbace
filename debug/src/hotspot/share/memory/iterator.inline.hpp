@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_ITERATOR_INLINE_HPP
 #define SHARE_VM_MEMORY_ITERATOR_INLINE_HPP
 
@@ -47,22 +23,6 @@ inline void MetadataVisitingOopIterateClosure::do_klass(Klass* k) {
   ClassLoaderData* cld = k->class_loader_data();
   MetadataVisitingOopIterateClosure::do_cld(cld);
 }
-
-#ifdef ASSERT
-// This verification is applied to all visited oops.
-// The closures can turn is off by overriding should_verify_oops().
-template <typename T>
-void OopIterateClosure::verify(T* p) {
-  if (should_verify_oops()) {
-    T heap_oop = RawAccess<>::oop_load(p);
-    if (!CompressedOops::is_null(heap_oop)) {
-      oop o = CompressedOops::decode_not_null(heap_oop);
-      assert(Universe::heap()->is_in_closed_subset(o),
-             "should be in closed *p " PTR_FORMAT " " PTR_FORMAT, p2i(p), p2i(o));
-    }
-  }
-}
-#endif
 
 // Implementation of the non-virtual do_oop dispatch.
 //
@@ -126,8 +86,6 @@ inline void Devirtualizer::do_oop_no_verify(OopClosureType* closure, T* p) {
 
 template <typename OopClosureType, typename T>
 inline void Devirtualizer::do_oop(OopClosureType* closure, T* p) {
-  debug_only(closure->verify(p));
-
   do_oop_no_verify(closure, p);
 }
 
@@ -222,7 +180,6 @@ void Devirtualizer::do_cld(OopClosureType* closure, ClassLoaderData* cld) {
 //   oop_oop_iterate function replaces the init function in the table, and
 //   succeeding calls will jump directly to oop_oop_iterate.
 
-
 template <typename OopClosureType>
 class OopOopIterateDispatch : public AllStatic {
 private:
@@ -285,7 +242,6 @@ public:
 template <typename OopClosureType>
 typename OopOopIterateDispatch<OopClosureType>::Table OopOopIterateDispatch<OopClosureType>::_table;
 
-
 template <typename OopClosureType>
 class OopOopIterateBoundedDispatch {
 private:
@@ -344,7 +300,6 @@ public:
 
 template <typename OopClosureType>
 typename OopOopIterateBoundedDispatch<OopClosureType>::Table OopOopIterateBoundedDispatch<OopClosureType>::_table;
-
 
 template <typename OopClosureType>
 class OopOopIterateBackwardsDispatch {
@@ -405,7 +360,6 @@ public:
 template <typename OopClosureType>
 typename OopOopIterateBackwardsDispatch<OopClosureType>::Table OopOopIterateBackwardsDispatch<OopClosureType>::_table;
 
-
 template <typename OopClosureType>
 void OopIteratorClosureDispatch::oop_oop_iterate(OopClosureType* cl, oop obj, Klass* klass) {
   OopOopIterateDispatch<OopClosureType>::function(klass)(cl, obj, klass);
@@ -421,4 +375,4 @@ void OopIteratorClosureDispatch::oop_oop_iterate_backwards(OopClosureType* cl, o
   OopOopIterateBackwardsDispatch<OopClosureType>::function(klass)(cl, obj, klass);
 }
 
-#endif // SHARE_VM_MEMORY_ITERATOR_INLINE_HPP
+#endif

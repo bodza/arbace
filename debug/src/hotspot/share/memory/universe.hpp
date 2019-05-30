@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_UNIVERSE_HPP
 #define SHARE_VM_MEMORY_UNIVERSE_HPP
 
@@ -39,7 +15,6 @@
 
 class CollectedHeap;
 class DeferredObjAllocEvent;
-
 
 // A helper class for caching a Method* when the user of the cache
 // only cares about the latest version of the Method*.  This cache safely
@@ -69,7 +44,6 @@ class LatestMethodCache : public CHeapObj<mtClass> {
   }
   void metaspace_pointers_do(MetaspaceClosure* it);
 };
-
 
 // For UseCompressedOops.
 struct NarrowPtrStruct {
@@ -196,10 +170,6 @@ class Universe: AllStatic {
   static address _narrow_ptrs_base;
   // CompressedClassSpaceSize set to 1GB, but appear 3GB away from _narrow_ptrs_base during CDS dump.
   static uint64_t _narrow_klass_range;
-  // array of dummy objects used with +FullGCAlot
-  debug_only(static objArrayOop _fullgc_alot_dummy_array;)
-  // index of next entry to clear
-  debug_only(static int         _fullgc_alot_dummy_next;)
 
   // Compiler/dispatch support
   static int  _base_vtable_size;                      // Java vtbl size of klass Object (in words)
@@ -233,24 +203,24 @@ class Universe: AllStatic {
 
   // Mirrors for primitive classes (created eagerly)
   static oop check_mirror(oop m) {
-    assert(m != NULL, "mirror not initialized");
+    assert(m != NULL, "mirror not initialized");
     return m;
   }
 
   static void     set_narrow_oop_base(address base) {
-    assert(UseCompressedOops, "no compressed oops?");
+    assert(UseCompressedOops, "no compressed oops?");
     _narrow_oop._base    = base;
   }
   static void     set_narrow_klass_base(address base) {
-    assert(UseCompressedClassPointers, "no compressed klass ptrs?");
+    assert(UseCompressedClassPointers, "no compressed klass ptrs?");
     _narrow_klass._base   = base;
   }
   static void     set_narrow_klass_range(uint64_t range) {
-     assert(UseCompressedClassPointers, "no compressed klass ptrs?");
+     assert(UseCompressedClassPointers, "no compressed klass ptrs?");
      _narrow_klass_range = range;
   }
   static void     set_narrow_oop_use_implicit_null_checks(bool use) {
-    assert(UseCompressedOops, "no compressed ptrs?");
+    assert(UseCompressedOops, "no compressed ptrs?");
     _narrow_oop._use_implicit_null_checks   = use;
   }
 
@@ -264,7 +234,7 @@ class Universe: AllStatic {
   static uintptr_t _verify_oop_mask;
   static uintptr_t _verify_oop_bits;
 
-  static void calculate_verify_data(HeapWord* low_boundary, HeapWord* high_boundary) PRODUCT_RETURN;
+  static void calculate_verify_data(HeapWord* low_boundary, HeapWord* high_boundary) {};
   static void compute_verify_oop_data();
 
  public:
@@ -283,8 +253,8 @@ class Universe: AllStatic {
   }
 
   static Klass* typeArrayKlassObj(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check for type: %s", type2name(t));
-    assert(_typeArrayKlassObjs[t] != NULL, "domain check");
+    assert((uint)t < T_VOID+1, "range check for type: %s", type2name(t));
+    assert(_typeArrayKlassObjs[t] != NULL, "domain check");
     return _typeArrayKlassObjs[t];
   }
 
@@ -313,7 +283,7 @@ class Universe: AllStatic {
   static oop _mirrors[T_VOID+1];
 
   static oop java_mirror(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check");
+    assert((uint)t < T_VOID+1, "range check");
     return check_mirror(_mirrors[t]);
   }
   static oop      main_thread_group()                 { return _main_thread_group; }
@@ -450,7 +420,7 @@ class Universe: AllStatic {
   }
 
   static void     set_narrow_klass_shift(int shift)       {
-    assert(shift == 0 || shift == LogKlassAlignmentInBytes, "invalid shift for klass ptrs");
+    assert(shift == 0 || shift == LogKlassAlignmentInBytes, "invalid shift for klass ptrs");
     _narrow_klass._shift   = shift;
   }
 
@@ -517,17 +487,14 @@ class Universe: AllStatic {
   static void print_heap_before_gc();
   static void print_heap_after_gc();
 
-  // Change the number of dummy objects kept reachable by the full gc dummy
-  // array; this should trigger relocation in a sliding compaction collector.
-  debug_only(static bool release_fullgc_alot_dummy();)
   // The non-oop pattern (see compiledIC.hpp, etc)
   static void*   non_oop_word();
 
   // Oop verification (see MacroAssembler::verify_oop)
-  static uintptr_t verify_oop_mask()          PRODUCT_RETURN0;
-  static uintptr_t verify_oop_bits()          PRODUCT_RETURN0;
-  static uintptr_t verify_mark_bits()         PRODUCT_RETURN0;
-  static uintptr_t verify_mark_mask()         PRODUCT_RETURN0;
+  static uintptr_t verify_oop_mask()          { return 0; };
+  static uintptr_t verify_oop_bits()          { return 0; };
+  static uintptr_t verify_mark_bits()         { return 0; };
+  static uintptr_t verify_mark_mask()         { return 0; };
 
   // Compiler support
   static int base_vtable_size()               { return _base_vtable_size; }
@@ -554,4 +521,4 @@ class DeferredObjAllocEvent : public CHeapObj<mtInternal> {
     oop    get_oop()  { return _oop; }
 };
 
-#endif // SHARE_VM_MEMORY_UNIVERSE_HPP
+#endif

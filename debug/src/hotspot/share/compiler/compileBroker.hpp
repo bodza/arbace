@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_COMPILER_COMPILEBROKER_HPP
 #define SHARE_VM_COMPILER_COMPILEBROKER_HPP
 
@@ -31,9 +7,7 @@
 #include "compiler/compilerDirectives.hpp"
 #include "runtime/perfData.hpp"
 #include "utilities/stack.hpp"
-#if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
-#endif
 
 class nmethod;
 class nmethodLocker;
@@ -71,7 +45,6 @@ class CompilerCounters : public CHeapObj<mtCompiler> {
     }
 
     int compile_type()                       { return _compile_type; }
-
 };
 
 // CompileQueue
@@ -111,7 +84,6 @@ class CompileQueue : public CHeapObj<mtCompiler> {
   bool         is_empty() const                  { return _first == NULL; }
   int          size()     const                  { return _size;          }
 
-
   // Redefine Classes support
   void mark_on_stack();
   void free_all();
@@ -119,7 +91,7 @@ class CompileQueue : public CHeapObj<mtCompiler> {
   void print(outputStream* st = tty);
 
   ~CompileQueue() {
-    assert (is_empty(), " Compile Queue must be empty");
+    assert(is_empty(), " Compile Queue must be empty");
   }
 };
 
@@ -148,7 +120,6 @@ class CompileBroker: AllStatic {
   // Compile type Information for print_last_compile() and CompilerCounters
   enum { no_compile, normal_compile, osr_compile, native_compile };
   static int assign_compile_id (const methodHandle& method, int osr_bci);
-
 
  private:
   static bool _initialized;
@@ -248,9 +219,7 @@ class CompileBroker: AllStatic {
                                           CompileTask::CompileReason compile_reason,
                                           bool                blocking);
   static void wait_for_completion(CompileTask* task);
-#if INCLUDE_JVMCI
   static bool wait_for_jvmci_completion(JVMCICompiler* comp, CompileTask* task, JavaThread* thread);
-#endif
 
   static void invoke_compiler_on_method(CompileTask* task);
   static void post_compile(CompilerThread* thread, CompileTask* task, bool success, ciEnv* ci_env,
@@ -375,10 +344,8 @@ public:
   // Redefine Classes support
   static void mark_on_stack();
 
-#if INCLUDE_JVMCI
   // Print curent compilation time stats for a given compiler
   static void print_times(AbstractCompiler* comp);
-#endif
 
   // Print a detailed accounting of compilation time
   static void print_times(bool per_compiler = true, bool aggregate = true);
@@ -391,14 +358,14 @@ public:
 
   // Provide access to compiler thread Java objects
   static jobject compiler1_object(int idx) {
-    assert(_compiler1_objects != NULL, "must be initialized");
-    assert(idx < _c1_count, "oob");
+    assert(_compiler1_objects != NULL, "must be initialized");
+    assert(idx < _c1_count, "oob");
     return _compiler1_objects[idx];
   }
 
   static jobject compiler2_object(int idx) {
-    assert(_compiler2_objects != NULL, "must be initialized");
-    assert(idx < _c2_count, "oob");
+    assert(_compiler2_objects != NULL, "must be initialized");
+    assert(idx < _c2_count, "oob");
     return _compiler2_objects[idx];
   }
 
@@ -427,4 +394,4 @@ public:
   static void print_heapinfo(outputStream *out, const char* function, const char* granularity );
 };
 
-#endif // SHARE_VM_COMPILER_COMPILEBROKER_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
@@ -78,8 +54,7 @@ TypeArrayKlass* TypeArrayKlass::create_klass(BasicType type,
 }
 
 TypeArrayKlass* TypeArrayKlass::allocate(ClassLoaderData* loader_data, BasicType type, Symbol* name, TRAPS) {
-  assert(TypeArrayKlass::header_size() <= InstanceKlass::header_size(),
-      "array klasses must be same size as InstanceKlass");
+  assert(TypeArrayKlass::header_size() <= InstanceKlass::header_size(), "array klasses must be same size as InstanceKlass");
 
   int size = ArrayKlass::static_size(TypeArrayKlass::header_size());
 
@@ -88,17 +63,17 @@ TypeArrayKlass* TypeArrayKlass::allocate(ClassLoaderData* loader_data, BasicType
 
 TypeArrayKlass::TypeArrayKlass(BasicType type, Symbol* name) : ArrayKlass(name, ID) {
   set_layout_helper(array_layout_helper(type));
-  assert(is_array_klass(), "sanity");
-  assert(is_typeArray_klass(), "sanity");
+  assert(is_array_klass(), "sanity");
+  assert(is_typeArray_klass(), "sanity");
 
   set_max_length(arrayOopDesc::max_array_length(type));
-  assert(size() >= TypeArrayKlass::header_size(), "bad size");
+  assert(size() >= TypeArrayKlass::header_size(), "bad size");
 
   set_class_loader_data(ClassLoaderData::the_null_class_loader_data());
 }
 
 typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
-  assert(log2_element_size() >= 0, "bad scale");
+  assert(log2_element_size() >= 0, "bad scale");
   if (length >= 0) {
     if (length <= max_length()) {
       size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
@@ -106,7 +81,6 @@ typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
                                                             do_zero, CHECK_NULL);
     } else {
       report_java_out_of_memory("Requested array size exceeds VM limit");
-      JvmtiExport::post_array_size_exhausted();
       THROW_OOP_0(Universe::out_of_memory_error_array_size());
     }
   } else {
@@ -116,14 +90,13 @@ typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
 
 oop TypeArrayKlass::multi_allocate(int rank, jint* last_size, TRAPS) {
   // For typeArrays this is only called for the last dimension
-  assert(rank == 1, "just checking");
+  assert(rank == 1, "just checking");
   int length = *last_size;
   return allocate(length, THREAD);
 }
 
-
 void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
-  assert(s->is_typeArray(), "must be type array");
+  assert(s->is_typeArray(), "must be type array");
 
   // Check destination type.
   if (!d->is_typeArray()) {
@@ -193,7 +166,7 @@ void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos
 // create a klass of array holding typeArrays
 Klass* TypeArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
   int dim = dimension();
-  assert(dim <= n, "check order of chain");
+  assert(dim <= n, "check order of chain");
     if (dim == n)
       return this;
 
@@ -215,7 +188,7 @@ Klass* TypeArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
         h_ak->set_lower_dimension(this);
         // use 'release' to pair with lock-free load
         release_set_higher_dimension(h_ak);
-        assert(h_ak->is_objArray_klass(), "incorrect initialization of ObjArrayKlass");
+        assert(h_ak->is_objArray_klass(), "incorrect initialization of ObjArrayKlass");
       }
     }
   } else {
@@ -233,7 +206,7 @@ Klass* TypeArrayKlass::array_klass_impl(bool or_null, TRAPS) {
 }
 
 int TypeArrayKlass::oop_size(oop obj) const {
-  assert(obj->is_typeArray(),"must be a type array");
+  assert(obj->is_typeArray(),"must be a type array");
   typeArrayOop t = typeArrayOop(obj);
   return t->object_size();
 }
@@ -258,19 +231,13 @@ const char* TypeArrayKlass::external_name(BasicType type) {
   return NULL;
 }
 
-
 // Printing
 
 void TypeArrayKlass::print_on(outputStream* st) const {
-#ifndef PRODUCT
-  assert(is_klass(), "must be klass");
-  print_value_on(st);
-  Klass::print_on(st);
-#endif //PRODUCT
 }
 
 void TypeArrayKlass::print_value_on(outputStream* st) const {
-  assert(is_klass(), "must be klass");
+  assert(is_klass(), "must be klass");
   st->print("{type array ");
   BasicType bt = element_type();
   if (bt == T_BOOLEAN) {
@@ -280,92 +247,6 @@ void TypeArrayKlass::print_value_on(outputStream* st) const {
   }
   st->print("}");
 }
-
-#ifndef PRODUCT
-
-static void print_boolean_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    st->print_cr(" - %3d: %s", index, (ta->bool_at(index) == 0) ? "false" : "true");
-  }
-}
-
-
-static void print_char_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    jchar c = ta->char_at(index);
-    st->print_cr(" - %3d: %x %c", index, c, isprint(c) ? c : ' ');
-  }
-}
-
-
-static void print_float_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    st->print_cr(" - %3d: %g", index, ta->float_at(index));
-  }
-}
-
-
-static void print_double_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    st->print_cr(" - %3d: %g", index, ta->double_at(index));
-  }
-}
-
-
-static void print_byte_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    jbyte c = ta->byte_at(index);
-    st->print_cr(" - %3d: %x %c", index, c, isprint(c) ? c : ' ');
-  }
-}
-
-
-static void print_short_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    int v = ta->ushort_at(index);
-    st->print_cr(" - %3d: 0x%x\t %d", index, v, v);
-  }
-}
-
-
-static void print_int_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    jint v = ta->int_at(index);
-    st->print_cr(" - %3d: 0x%x %d", index, v, v);
-  }
-}
-
-
-static void print_long_array(typeArrayOop ta, int print_len, outputStream* st) {
-  for (int index = 0; index < print_len; index++) {
-    jlong v = ta->long_at(index);
-    st->print_cr(" - %3d: 0x%x 0x%x", index, high(v), low(v));
-  }
-}
-
-
-void TypeArrayKlass::oop_print_on(oop obj, outputStream* st) {
-  ArrayKlass::oop_print_on(obj, st);
-  typeArrayOop ta = typeArrayOop(obj);
-  int print_len = MIN2((intx) ta->length(), MaxElementPrintSize);
-  switch (element_type()) {
-    case T_BOOLEAN: print_boolean_array(ta, print_len, st); break;
-    case T_CHAR:    print_char_array(ta, print_len, st);    break;
-    case T_FLOAT:   print_float_array(ta, print_len, st);   break;
-    case T_DOUBLE:  print_double_array(ta, print_len, st);  break;
-    case T_BYTE:    print_byte_array(ta, print_len, st);    break;
-    case T_SHORT:   print_short_array(ta, print_len, st);   break;
-    case T_INT:     print_int_array(ta, print_len, st);     break;
-    case T_LONG:    print_long_array(ta, print_len, st);    break;
-    default: ShouldNotReachHere();
-  }
-  int remaining = ta->length() - print_len;
-  if (remaining > 0) {
-    st->print_cr(" - <%d more elements, increase MaxElementPrintSize to print>", remaining);
-  }
-}
-
-#endif // PRODUCT
 
 const char* TypeArrayKlass::internal_name() const {
   return Klass::external_name();

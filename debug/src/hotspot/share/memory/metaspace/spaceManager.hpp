@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_MEMORY_METASPACE_SPACEMANAGER_HPP
 #define SHARE_MEMORY_METASPACE_SPACEMANAGER_HPP
 
@@ -71,7 +47,6 @@ class SpaceManager : public CHeapObj<mtClass> {
     anon_and_delegating_metadata_specialize_chunk_limit = 4,
 
     allocation_from_dictionary_limit = 4 * K
-
   };
 
   // Some running counters, but lets keep their number small to not add to much to
@@ -115,9 +90,6 @@ class SpaceManager : public CHeapObj<mtClass> {
 
   // Adds to the given statistic object. Expects to be locked with lock().
   void add_to_statistics_locked(SpaceManagerStatistics* out) const;
-
-  // Verify internal counters against the current state. Expects to be locked with lock().
-  DEBUG_ONLY(void verify_metrics_locked() const;)
 
  public:
   SpaceManager(Metaspace::MetadataType mdtype,
@@ -214,21 +186,14 @@ class SpaceManager : public CHeapObj<mtClass> {
     raw_bytes_size = align_up(raw_bytes_size, Metachunk::object_alignment());
 
     size_t raw_word_size = raw_bytes_size / BytesPerWord;
-    assert(raw_word_size * BytesPerWord == raw_bytes_size, "Size problem");
+    assert(raw_word_size * BytesPerWord == raw_bytes_size, "Size problem");
 
     return raw_word_size;
   }
 
   // Adds to the given statistic object.
   void add_to_statistics(SpaceManagerStatistics* out) const;
-
-  // Verify internal counters against the current state.
-  DEBUG_ONLY(void verify_metrics() const;)
-
 };
+}
 
-
-} // namespace metaspace
-
-#endif /* SHARE_MEMORY_METASPACE_SPACEMANAGER_HPP */
-
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_LIR.hpp"
@@ -50,7 +26,6 @@ BasicTypeArray* FrameMap::signature_type_array_for(const ciMethod* method) {
   return sta;
 }
 
-
 CallingConvention* FrameMap::java_calling_convention(const BasicTypeArray* signature, bool outgoing) {
   // compute the size of the arguments first.  The signature array
   // that java_calling_convention takes includes a T_VOID after double
@@ -76,17 +51,17 @@ CallingConvention* FrameMap::java_calling_convention(const BasicTypeArray* signa
   LIR_OprList* args = new LIR_OprList(signature->length());
   for (i = 0; i < sizeargs;) {
     BasicType t = sig_bt[i];
-    assert(t != T_VOID, "should be skipping these");
+    assert(t != T_VOID, "should be skipping these");
     LIR_Opr opr = map_to_opr(t, regs + i, outgoing);
     args->append(opr);
     if (opr->is_address()) {
       LIR_Address* addr = opr->as_address_ptr();
-      assert(addr->disp() == (int)addr->disp(), "out of range value");
+      assert(addr->disp() == (int)addr->disp(), "out of range value");
       out_preserve = MAX2(out_preserve, (intptr_t)(addr->disp() - STACK_BIAS) / 4);
     }
     i += type2size[t];
   }
-  assert(args->length() == signature->length(), "size mismatch");
+  assert(args->length() == signature->length(), "size mismatch");
   out_preserve += SharedRuntime::out_preserve_stack_slots();
 
   if (outgoing) {
@@ -95,7 +70,6 @@ CallingConvention* FrameMap::java_calling_convention(const BasicTypeArray* signa
   }
   return new CallingConvention(args, out_preserve);
 }
-
 
 CallingConvention* FrameMap::c_calling_convention(const BasicTypeArray* signature) {
   // compute the size of the arguments first.  The signature array
@@ -122,14 +96,14 @@ CallingConvention* FrameMap::c_calling_convention(const BasicTypeArray* signatur
   LIR_OprList* args = new LIR_OprList(signature->length());
   for (i = 0; i < sizeargs;) {
     BasicType t = sig_bt[i];
-    assert(t != T_VOID, "should be skipping these");
+    assert(t != T_VOID, "should be skipping these");
 
     // C calls are always outgoing
     bool outgoing = true;
     LIR_Opr opr = map_to_opr(t, regs + i, outgoing);
     // they might be of different types if for instance floating point
     // values are passed in cpu registers, but the sizes must match.
-    assert(type2size[opr->type()] == type2size[t], "type mismatch");
+    assert(type2size[opr->type()] == type2size[t], "type mismatch");
     args->append(opr);
     if (opr->is_address()) {
       LIR_Address* addr = opr->as_address_ptr();
@@ -137,12 +111,11 @@ CallingConvention* FrameMap::c_calling_convention(const BasicTypeArray* signatur
     }
     i += type2size[t];
   }
-  assert(args->length() == signature->length(), "size mismatch");
+  assert(args->length() == signature->length(), "size mismatch");
   out_preserve += SharedRuntime::out_preserve_stack_slots();
   update_reserved_argument_area_size(out_preserve * BytesPerWord);
   return new CallingConvention(args, out_preserve);
 }
-
 
 //--------------------------------------------------------
 //               FrameMap
@@ -152,16 +125,15 @@ bool      FrameMap::_init_done = false;
 Register  FrameMap::_cpu_rnr2reg [FrameMap::nof_cpu_regs];
 int       FrameMap::_cpu_reg2rnr [FrameMap::nof_cpu_regs];
 
-
 FrameMap::FrameMap(ciMethod* method, int monitors, int reserved_argument_area_size) {
-  assert(_init_done, "should already be completed");
+  assert(_init_done, "should already be completed");
 
   _framesize = -1;
   _num_spills = -1;
 
-  assert(monitors >= 0, "not set");
+  assert(monitors >= 0, "not set");
   _num_monitors = monitors;
-  assert(reserved_argument_area_size >= 0, "not set");
+  assert(reserved_argument_area_size >= 0, "not set");
   _reserved_argument_area_size = MAX2(4, reserved_argument_area_size) * BytesPerWord;
 
   _argcount = method->arg_size();
@@ -179,15 +151,13 @@ FrameMap::FrameMap(ciMethod* method, int monitors, int reserved_argument_area_si
     }
     java_index += type2size[opr->type()];
   }
-
 }
 
-
 bool FrameMap::finalize_frame(int nof_slots) {
-  assert(nof_slots >= 0, "must be positive");
-  assert(_num_spills == -1, "can only be set once");
+  assert(nof_slots >= 0, "must be positive");
+  assert(_num_spills == -1, "can only be set once");
   _num_spills = nof_slots;
-  assert(_framesize == -1, "should only be calculated once");
+  assert(_framesize == -1, "should only be calculated once");
   _framesize =  align_up(in_bytes(sp_offset_for_monitor_base(0)) +
                          _num_monitors * (int)sizeof(BasicObjectLock) +
                          (int)sizeof(intptr_t) +                        // offset of deopt orig pc
@@ -208,17 +178,16 @@ bool FrameMap::finalize_frame(int nof_slots) {
 
 VMReg FrameMap::sp_offset2vmreg(ByteSize offset) const {
   int offset_in_bytes = in_bytes(offset);
-  assert(offset_in_bytes % 4 == 0, "must be multiple of 4 bytes");
-  assert(offset_in_bytes / 4 < framesize() + oop_map_arg_count(), "out of range");
+  assert(offset_in_bytes % 4 == 0, "must be multiple of 4 bytes");
+  assert(offset_in_bytes / 4 < framesize() + oop_map_arg_count(), "out of range");
   return VMRegImpl::stack2reg(offset_in_bytes / 4);
 }
-
 
 bool FrameMap::location_for_sp_offset(ByteSize byte_offset_from_sp,
                                       Location::Type loc_type,
                                       Location* loc) const {
   int offset = in_bytes(byte_offset_from_sp);
-  assert(offset >= 0, "incorrect offset");
+  assert(offset >= 0, "incorrect offset");
   if (!Location::legal_offset_in_bytes(offset)) {
     return false;
   }
@@ -226,7 +195,6 @@ bool FrameMap::location_for_sp_offset(ByteSize byte_offset_from_sp,
   *loc = tmp_loc;
   return true;
 }
-
 
 bool FrameMap::locations_for_slot  (int index, Location::Type loc_type,
                                      Location* loc, Location* second) const {
@@ -246,31 +214,28 @@ bool FrameMap::locations_for_slot  (int index, Location::Type loc_type,
 // Public accessors //
 //////////////////////
 
-
 ByteSize FrameMap::sp_offset_for_slot(const int index) const {
   if (index < argcount()) {
     int offset = _argument_locations->at(index);
-    assert(offset != -1, "not a memory argument");
-    assert(offset >= framesize() * 4, "argument inside of frame");
+    assert(offset != -1, "not a memory argument");
+    assert(offset >= framesize() * 4, "argument inside of frame");
     return in_ByteSize(offset);
   }
   ByteSize offset = sp_offset_for_spill(index - argcount());
-  assert(in_bytes(offset) < framesize() * 4, "spill outside of frame");
+  assert(in_bytes(offset) < framesize() * 4, "spill outside of frame");
   return offset;
 }
-
 
 ByteSize FrameMap::sp_offset_for_double_slot(const int index) const {
   ByteSize offset = sp_offset_for_slot(index);
   if (index >= argcount()) {
-    assert(in_bytes(offset) + 4 < framesize() * 4, "spill outside of frame");
+    assert(in_bytes(offset) + 4 < framesize() * 4, "spill outside of frame");
   }
   return offset;
 }
 
-
 ByteSize FrameMap::sp_offset_for_spill(const int index) const {
-  assert(index >= 0 && index < _num_spills, "out of range");
+  assert(index >= 0 && index < _num_spills, "out of range");
   int offset = align_up(first_available_sp_in_frame + _reserved_argument_area_size, (int)sizeof(double)) +
     index * spill_slot_size_in_bytes;
   return in_ByteSize(offset);
@@ -293,7 +258,6 @@ ByteSize FrameMap::sp_offset_for_monitor_object(int index) const {
   return sp_offset_for_monitor_base(index) + in_ByteSize(BasicObjectLock::obj_offset_in_bytes());
 }
 
-
 // For OopMaps, map a local variable or spill index to an VMReg.
 // This is the offset from sp() in the frame of the slot for the index,
 // skewed by SharedInfo::stack0 to indicate a stack location (vs.a register.)
@@ -308,23 +272,19 @@ ByteSize FrameMap::sp_offset_for_monitor_object(int index) const {
 //    |                        |
 //  arguments            non-argument locals
 
-
 VMReg FrameMap::regname(LIR_Opr opr) const {
   if (opr->is_single_cpu()) {
-    assert(!opr->is_virtual(), "should not see virtual registers here");
+    assert(!opr->is_virtual(), "should not see virtual registers here");
     return opr->as_register()->as_VMReg();
   } else if (opr->is_single_stack()) {
     return sp_offset2vmreg(sp_offset_for_slot(opr->single_stack_ix()));
   } else if (opr->is_address()) {
     LIR_Address* addr = opr->as_address_ptr();
-    assert(addr->base() == stack_pointer(), "sp based addressing only");
+    assert(addr->base() == stack_pointer(), "sp based addressing only");
     return sp_offset2vmreg(in_ByteSize(addr->index()->as_jint()));
   }
   ShouldNotReachHere();
   return VMRegImpl::Bad();
 }
-
-
-
 
 // ------------ extra spill slots ---------------

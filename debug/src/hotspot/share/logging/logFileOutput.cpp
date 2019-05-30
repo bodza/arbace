@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "logging/log.hpp"
@@ -47,19 +24,19 @@ LogFileOutput::LogFileOutput(const char* name)
       _file_name(NULL), _archive_name(NULL), _archive_name_len(0),
       _rotate_size(DefaultFileSize), _file_count(DefaultFileCount),
       _current_size(0), _current_file(0), _rotation_semaphore(1) {
-  assert(strstr(name, Prefix) == name, "invalid output name '%s': missing prefix: %s", name, Prefix);
+  assert(strstr(name, Prefix) == name, "invalid output name '%s': missing prefix: %s", name, Prefix);
   _file_name = make_file_name(name + strlen(Prefix), _pid_str, _vm_start_time_str);
 }
 
 void LogFileOutput::set_file_name_parameters(jlong vm_start_time) {
   int res = jio_snprintf(_pid_str, sizeof(_pid_str), "%d", os::current_process_id());
-  assert(res > 0, "PID buffer too small");
+  assert(res > 0, "PID buffer too small");
 
   struct tm local_time;
   time_t utc_time = vm_start_time / 1000;
   os::localtime_pd(&utc_time, &local_time);
   res = (int)strftime(_vm_start_time_str, sizeof(_vm_start_time_str), TimestampFormat, &local_time);
-  assert(res > 0, "VM start time buffer too small.");
+  assert(res > 0, "VM start time buffer too small.");
 }
 
 LogFileOutput::~LogFileOutput() {
@@ -118,8 +95,7 @@ static uint next_file_number(const char* filename,
   for (uint i = 0; i < filecount; i++) {
     int ret = jio_snprintf(archive_name, len, "%s.%0*u",
                            filename, number_of_digits, i);
-    assert(ret > 0 && static_cast<size_t>(ret) == len - 1,
-           "incorrect buffer length calculation");
+    assert(ret > 0 && static_cast<size_t>(ret) == len - 1, "incorrect buffer length calculation");
 
     if (file_exists(archive_name) && !is_regular_file(archive_name)) {
       // We've encountered something that's not a regular file among the
@@ -297,10 +273,10 @@ int LogFileOutput::write(LogMessageBuffer::Iterator msg_iterator) {
 }
 
 void LogFileOutput::archive() {
-  assert(_archive_name != NULL && _archive_name_len > 0, "Rotation must be configured before using this function.");
+  assert(_archive_name != NULL && _archive_name_len > 0, "Rotation must be configured before using this function.");
   int ret = jio_snprintf(_archive_name, _archive_name_len, "%s.%0*u",
                          _file_name, _file_count_max_digits, _current_file);
-  assert(ret >= 0, "Buffer should always be large enough");
+  assert(ret >= 0, "Buffer should always be large enough");
 
   // Attempt to remove possibly existing archived log file before we rename.
   // Don't care if it fails, we really only care about the rename that follows.

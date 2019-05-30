@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1CONCURRENTMARK_HPP
 #define SHARE_VM_GC_G1_G1CONCURRENTMARK_HPP
 
@@ -58,7 +34,7 @@ private:
   static const uintptr_t ArraySliceBit = 1;
 
   G1TaskQueueEntry(oop obj) : _holder(obj) {
-    assert(_holder != NULL, "Not allowed to set NULL task queue element");
+    assert(_holder != NULL, "Not allowed to set NULL task queue element");
   }
   G1TaskQueueEntry(HeapWord* addr) : _holder((void*)((uintptr_t)addr | ArraySliceBit)) { }
 public:
@@ -79,12 +55,12 @@ public:
   }
 
   oop obj() const {
-    assert(!is_array_slice(), "Trying to read array slice " PTR_FORMAT " as oop", p2i(_holder));
+    assert(!is_array_slice(), "Trying to read array slice " PTR_FORMAT " as oop", p2i(_holder));
     return (oop)_holder;
   }
 
   HeapWord* slice() const {
-    assert(is_array_slice(), "Trying to read oop " PTR_FORMAT " as array slice", p2i(_holder));
+    assert(is_array_slice(), "Trying to read oop " PTR_FORMAT " as array slice", p2i(_holder));
     return (HeapWord*)((uintptr_t)_holder & ~ArraySliceBit);
   }
 
@@ -221,7 +197,7 @@ private:
 
   // Apply Fn to every oop on the mark stack. The mark stack must not
   // be modified while iterating.
-  template<typename Fn> void iterate(Fn fn) const PRODUCT_RETURN;
+  template<typename Fn> void iterate(Fn fn) const {};
 };
 
 // Root Regions are regions that are not empty at the beginning of a
@@ -441,7 +417,7 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   G1CMTask* task(uint id) {
     // During initial mark we use the parallel gc threads to do some work, so
     // we can only compare against _max_num_tasks.
-    assert(id < _max_num_tasks, "Task id %u not within bounds up to %u", id, _max_num_tasks);
+    assert(id < _max_num_tasks, "Task id %u not within bounds up to %u", id, _max_num_tasks);
     return _tasks[id];
   }
 
@@ -583,7 +559,7 @@ public:
   // Verify that there are no collection set oops on the stacks (taskqueues /
   // global mark stack) and fingers (global / per-task).
   // If marking is not in progress, it's a no-op.
-  void verify_no_cset_oops() PRODUCT_RETURN;
+  void verify_no_cset_oops() {};
 
   inline bool do_yield_check();
 
@@ -825,7 +801,7 @@ public:
 
   // Moves the local finger to a new location
   inline void move_finger_to(HeapWord* new_finger) {
-    assert(new_finger >= _finger && new_finger < _region_limit, "invariant");
+    assert(new_finger >= _finger && new_finger < _region_limit, "invariant");
     _finger = new_finger;
   }
 
@@ -874,4 +850,4 @@ public:
   ~G1PrintRegionLivenessInfoClosure();
 };
 
-#endif // SHARE_VM_GC_G1_G1CONCURRENTMARK_HPP
+#endif

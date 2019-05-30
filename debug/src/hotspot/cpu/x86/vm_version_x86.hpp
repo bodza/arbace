@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_VM_VERSION_X86_HPP
 #define CPU_X86_VM_VM_VERSION_X86_HPP
 
@@ -611,7 +587,7 @@ protected:
     if (supports_evex()) {
       // Verify that OS save/restore all bits of EVEX registers
       // during signal processing.
-      int nreg = 2 LP64_ONLY(+2);
+      int nreg = 2 +2;
       retVal = true;
       for (int i = 0; i < 16 * nreg; i++) { // 64 bytes per zmm register
         if (_cpuid_info.zmm_save[i] != ymm_test_value()) {
@@ -622,7 +598,7 @@ protected:
     } else if (supports_avx()) {
       // Verify that OS save/restore all bits of AVX registers
       // during signal processing.
-      int nreg = 2 LP64_ONLY(+2);
+      int nreg = 2 +2;
       retVal = true;
       for (int i = 0; i < 8 * nreg; i++) { // 32 bytes per ymm register
         if (_cpuid_info.ymm_save[i] != ymm_test_value()) {
@@ -634,7 +610,7 @@ protected:
       if (retVal == false) {
         // Verify that OS save/restore all bits of EVEX registers
         // during signal processing.
-        int nreg = 2 LP64_ONLY(+2);
+        int nreg = 2 +2;
         retVal = true;
         for (int i = 0; i < 16 * nreg; i++) { // 64 bytes per zmm register
           if (_cpuid_info.zmm_save[i] != ymm_test_value()) {
@@ -680,7 +656,6 @@ public:
   static void set_avx_cpuFeatures() { _features = (CPU_SSE | CPU_SSE2 | CPU_AVX | CPU_VZEROUPPER ); }
   static void set_evex_cpuFeatures() { _features = (CPU_AVX512F | CPU_SSE | CPU_SSE2 | CPU_VZEROUPPER ); }
 
-
   // Initialization
   static void initialize();
 
@@ -689,7 +664,7 @@ public:
 
   // Asserts
   static void assert_is_initialized() {
-    assert(_cpuid_info.std_cpuid1_eax.bits.family != 0, "VM_Version not initialized");
+    assert(_cpuid_info.std_cpuid1_eax.bits.family != 0, "VM_Version not initialized");
   }
 
   //
@@ -905,11 +880,7 @@ public:
         if (supports_sse4_2() && supports_ht()) { // Nehalem based cpus
           return 192;
         } else if (use_watermark_prefetch) { // watermark prefetching on Core
-#ifdef _LP64
           return 384;
-#else
-          return 320;
-#endif
         }
       }
       if (supports_sse2()) {
@@ -930,4 +901,4 @@ public:
   static bool supports_on_spin_wait() { return supports_sse2(); }
 };
 
-#endif // CPU_X86_VM_VM_VERSION_X86_HPP
+#endif

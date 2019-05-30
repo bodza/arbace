@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "code/relocInfo.hpp"
@@ -32,15 +8,12 @@
 #include "runtime/safepoint.hpp"
 #include "runtime/safepointMechanism.hpp"
 
-
 void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
 #ifdef AMD64
   x += o;
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm, call32, narrow oop
-  assert(which == Assembler::disp32_operand ||
-         which == Assembler::narrow_oop_operand ||
-         which == Assembler::imm_operand, "format unpacks ok");
+  assert(which == Assembler::disp32_operand || which == Assembler::narrow_oop_operand || which == Assembler::imm_operand, "format unpacks ok");
   if (which == Assembler::imm_operand) {
     if (verify_only) {
       guarantee(*pd_address_in_code() == x, "instructions must match");
@@ -80,9 +53,8 @@ void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
   } else {
     *pd_address_in_code() = x + o;
   }
-#endif // AMD64
+#endif
 }
-
 
 address Relocation::pd_call_destination(address orig_addr) {
   intptr_t adj = 0;
@@ -105,7 +77,6 @@ address Relocation::pd_call_destination(address orig_addr) {
     return NULL;
   }
 }
-
 
 void Relocation::pd_set_call_destination(address x) {
   NativeInstruction* ni = nativeInstruction_at(addr());
@@ -136,39 +107,33 @@ void Relocation::pd_set_call_destination(address x) {
   }
 }
 
-
 address* Relocation::pd_address_in_code() {
   // All embedded Intel addresses are stored in 32-bit words.
   // Since the addr points at the start of the instruction,
   // we must parse the instruction a bit to find the embedded word.
-  assert(is_data(), "must be a DataRelocation");
+  assert(is_data(), "must be a DataRelocation");
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm/imm32
 #ifdef AMD64
-  assert(which == Assembler::disp32_operand ||
-         which == Assembler::call32_operand ||
-         which == Assembler::imm_operand, "format unpacks ok");
+  assert(which == Assembler::disp32_operand || which == Assembler::call32_operand || which == Assembler::imm_operand, "format unpacks ok");
   // The "address" in the code is a displacement can't return it as
   // and address* since it is really a jint*
   guarantee(which == Assembler::imm_operand, "must be immediate operand");
 #else
-  assert(which == Assembler::disp32_operand || which == Assembler::imm_operand, "format unpacks ok");
-#endif // AMD64
+  assert(which == Assembler::disp32_operand || which == Assembler::imm_operand, "format unpacks ok");
+#endif
   return (address*) Assembler::locate_operand(addr(), which);
 }
-
 
 address Relocation::pd_get_address_from_code() {
 #ifdef AMD64
   // All embedded Intel addresses are stored in 32-bit words.
   // Since the addr points at the start of the instruction,
   // we must parse the instruction a bit to find the embedded word.
-  assert(is_data(), "must be a DataRelocation");
+  assert(is_data(), "must be a DataRelocation");
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm/imm32
-  assert(which == Assembler::disp32_operand ||
-         which == Assembler::call32_operand ||
-         which == Assembler::imm_operand, "format unpacks ok");
+  assert(which == Assembler::disp32_operand || which == Assembler::call32_operand || which == Assembler::imm_operand, "format unpacks ok");
   if (which != Assembler::imm_operand) {
     address ip = addr();
     address disp = Assembler::locate_operand(ip, which);
@@ -176,21 +141,15 @@ address Relocation::pd_get_address_from_code() {
     address a = next_ip + *(int32_t*) disp;
     return a;
   }
-#endif // AMD64
+#endif
   return *pd_address_in_code();
 }
 
 void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffer* dest) {
-#ifdef _LP64
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format();
-#if !INCLUDE_JVMCI
-  if (SafepointMechanism::uses_global_page_poll()) {
-    assert((which == Assembler::disp32_operand) == !Assembler::is_polling_page_far(), "format not set correctly");
-  }
-#endif
   if (which == Assembler::disp32_operand) {
-    assert(SafepointMechanism::uses_global_page_poll(), "should only have generated such a poll if global polling enabled");
+    assert(SafepointMechanism::uses_global_page_poll(), "should only have generated such a poll if global polling enabled");
     address orig_addr = old_addr_for(addr(), src, dest);
     NativeInstruction* oni = nativeInstruction_at(orig_addr);
     int32_t* orig_disp = (int32_t*) Assembler::locate_operand(orig_addr, which);
@@ -202,7 +161,6 @@ void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffe
     int32_t* disp = (int32_t*) Assembler::locate_operand(addr(), which);
     * disp = (int32_t)new_disp;
   }
-#endif // _LP64
 }
 
 void metadata_Relocation::pd_fix_value(address x) {

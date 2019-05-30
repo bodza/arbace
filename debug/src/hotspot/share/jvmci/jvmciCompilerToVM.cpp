@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "precompiled.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -67,7 +44,7 @@ void JNIHandleMark::push_jni_handle_block() {
     // Inlined code from jni_PushLocalFrame()
     JNIHandleBlock* java_handles = ((JavaThread*)thread)->active_handles();
     JNIHandleBlock* compile_handles = JNIHandleBlock::allocate_block(thread);
-    assert(compile_handles != NULL && java_handles != NULL, "should not be NULL");
+    assert(compile_handles != NULL && java_handles != NULL, "should not be NULL");
     compile_handles->set_pop_frame_link(java_handles);
     thread->set_active_handles(compile_handles);
   }
@@ -119,9 +96,9 @@ oop CompilerToVM::get_jvmci_type(JVMCIKlassHandle& klass, TRAPS) {
 }
 
 Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
-  assert(_index < _args->length(), "out of bounds");
+  assert(_index < _args->length(), "out of bounds");
   oop arg=((objArrayOop) (_args))->obj_at(_index++);
-  assert(expectedType == T_OBJECT || java_lang_boxing_object::is_instance(arg, expectedType), "arg type mismatch");
+  assert(expectedType == T_OBJECT || java_lang_boxing_object::is_instance(arg, expectedType), "arg type mismatch");
   return Handle(Thread::current(), arg);
 }
 
@@ -229,7 +206,7 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
         case Bytecodes::_fast_aldc: {
           int cpc_index = reconstituted_code->byte_at(bci + 1) & 0xff;
           int cp_index = method->constants()->object_to_cp_index(cpc_index);
-          assert(cp_index < method->constants()->length(), "sanity check");
+          assert(cp_index < method->constants()->length(), "sanity check");
           reconstituted_code->byte_at_put(bci + 1, (jbyte) cp_index);
           break;
         }
@@ -237,7 +214,7 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
         case Bytecodes::_fast_aldc_w: {
           int cpc_index = Bytes::get_native_u2((address) reconstituted_code->byte_at_addr(bci + 1));
           int cp_index = method->constants()->object_to_cp_index(cpc_index);
-          assert(cp_index < method->constants()->length(), "sanity check");
+          assert(cp_index < method->constants()->length(), "sanity check");
           Bytes::put_Java_u2((address) reconstituted_code->byte_at_addr(bci + 1), (u2) cp_index);
           break;
         }
@@ -275,7 +252,7 @@ C2V_VMENTRY(jobject, asResolvedJavaMethod, (JNIEnv *, jobject, jobject executabl
     mirror = java_lang_reflect_Constructor::clazz(executable);
     slot = java_lang_reflect_Constructor::slot(executable);
   } else {
-    assert(executable->klass() == SystemDictionary::reflect_Method_klass(), "wrong type");
+    assert(executable->klass() == SystemDictionary::reflect_Method_klass(), "wrong type");
     mirror = java_lang_reflect_Method::clazz(executable);
     slot = java_lang_reflect_Method::slot(executable);
   }
@@ -298,7 +275,7 @@ C2V_VMENTRY(jobject, getResolvedJavaMethod, (JNIEnv *, jobject, jobject base, jl
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
                 err_msg("Unexpected type: %s", base_object->klass()->external_name()));
   }
-  assert (method.is_null() || method->is_method(), "invalid read");
+  assert(method.is_null() || method->is_method(), "invalid read");
   oop result = CompilerToVM::get_jvmci_method(method, CHECK_NULL);
   return JNIHandles::make_local(THREAD, result);
 }
@@ -317,7 +294,7 @@ C2V_VMENTRY(jobject, getConstantPool, (JNIEnv *, jobject, jobject object_handle)
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
                 err_msg("Unexpected type: %s", object->klass()->external_name()));
   }
-  assert(!cp.is_null(), "npe");
+  assert(!cp.is_null(), "npe");
   JavaValue method_result(T_OBJECT);
   JavaCallArguments args;
   args.push_long((jlong) (address) cp());
@@ -353,7 +330,7 @@ C2V_VMENTRY(jobject, getResolvedJavaType, (JNIEnv *, jobject, jobject base, jlon
                         base_object != NULL ? base_object->klass()->external_name() : "null",
                         offset, compressed ? "true" : "false"));
   }
-  assert (klass == NULL || klass->is_klass(), "invalid read");
+  assert(klass == NULL || klass->is_klass(), "invalid read");
   oop result = CompilerToVM::get_jvmci_type(klass, CHECK_NULL);
   return JNIHandles::make_local(THREAD, result);
 }
@@ -400,7 +377,7 @@ C2V_END
 C2V_VMENTRY(jboolean, isCompilable,(JNIEnv *, jobject, jobject jvmci_method))
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
   constantPoolHandle cp = method->constMethod()->constants();
-  assert(!cp.is_null(), "npe");
+  assert(!cp.is_null(), "npe");
   // don't inline method when constant pool contains a CONSTANT_Dynamic
   return !method->is_not_compilable(CompLevel_full_optimization) && !cp->has_dynamic_constant();
 C2V_END
@@ -625,7 +602,7 @@ C2V_END
 
 C2V_VMENTRY(jboolean, hasFinalizableSubclass,(JNIEnv *, jobject, jobject jvmci_type))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
-  assert(klass != NULL, "method must not be called for primitive types");
+  assert(klass != NULL, "method must not be called for primitive types");
   return Dependencies::find_finalizable_subclass(klass) != NULL;
 C2V_END
 
@@ -686,10 +663,10 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   }
 
   if (result != JVMCIEnv::ok) {
-    assert(cb == NULL, "should be");
+    assert(cb == NULL, "should be");
   } else {
     if (installed_code_handle.not_null()) {
-      assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
+      assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
       nmethod::invalidate_installed_code(installed_code_handle, CHECK_0);
       {
         // Ensure that all updates to the InstalledCode fields are consistent.
@@ -936,7 +913,6 @@ C2V_VMENTRY(void, reprofile, (JNIEnv*, jobject, jobject jvmci_method))
   if (mcs != NULL) {
     mcs->clear_counters();
   }
-  NOT_PRODUCT(method->set_compiled_invocation_count(0));
 
   CompiledMethod* code = method->code();
   if (code != NULL) {
@@ -952,7 +928,6 @@ C2V_VMENTRY(void, reprofile, (JNIEnv*, jobject, jobject jvmci_method))
     method_data->initialize();
   }
 C2V_END
-
 
 C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject installed_code))
   Handle installed_code_handle(THREAD, JNIHandles::resolve(installed_code));
@@ -977,7 +952,6 @@ C2V_VMENTRY(int, allocateCompileId, (JNIEnv*, jobject, jobject jvmci_method, int
   }
   return CompileBroker::assign_compile_id_unlocked(THREAD, method, entry_bci);
 C2V_END
-
 
 C2V_VMENTRY(jboolean, isMature, (JNIEnv*, jobject, jlong metaspace_method_data))
   MethodData* mdo = CompilerToVM::asMethodData(metaspace_method_data);
@@ -1014,7 +988,7 @@ void call_interface(JavaValue* result, Klass* spec_klass, Symbol* name, Symbol* 
   LinkResolver::resolve_interface_call(
           callinfo, receiver, recvrKlass, link_info, true, CHECK);
   methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
+  assert(method.not_null(), "should have thrown exception");
 
   // Invoke the method
   JavaCalls::call(result, method, args, CHECK);
@@ -1071,7 +1045,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
               realloc_called = true;
 
               GrowableArray<ScopeValue*>* local_values = scope->locals();
-              assert(local_values != NULL, "NULL locals");
+              assert(local_values != NULL, "NULL locals");
               typeArrayOop array_oop = oopFactory::new_boolArray(local_values->length(), CHECK_NULL);
               typeArrayHandle array(THREAD, array_oop);
               for (int i = 0; i < local_values->length(); i++) {
@@ -1133,7 +1107,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
         if (result.get_jobject() != NULL) {
           return JNIHandles::make_local(thread, (oop) result.get_jobject());
         }
-        assert(initialSkip == 0, "There should be no match before initialSkip == 0");
+        assert(initialSkip == 0, "There should be no match before initialSkip == 0");
         if (HotSpotStackFrameReference::objectsMaterialized(frame_reference) == JNI_TRUE) {
           // the frame has been deoptimized, we need to re-synchronize the frame and vframe
           intptr_t* stack_pointer = (intptr_t*) HotSpotStackFrameReference::stackPointer(frame_reference);
@@ -1153,7 +1127,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
               THROW_MSG_NULL(vmSymbols::java_lang_IllegalStateException(), "vframe not found after deopt")
             }
             vf = vf->sender();
-            assert(vf->is_compiled_frame(), "Wrong frame type");
+            assert(vf->is_compiled_frame(), "Wrong frame type");
           }
         }
         frame_reference = HotSpotStackFrameReference::klass()->allocate_instance_handle(CHECK_NULL);
@@ -1165,7 +1139,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
       }
       frame_number++;
       vf = vf->sender();
-    } // end of vframe loop
+    }
 
     if (fst.is_done()) {
       break;
@@ -1173,7 +1147,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
     fst.next();
     vf = vframe::new_vframe(fst.current(), fst.register_map(), thread);
     frame_number = 0;
-  } // end of frame loop
+  }
 
   // the end was reached without finding a matching method
   return NULL;
@@ -1240,7 +1214,6 @@ C2V_VMENTRY(jint, isResolvedInvokeHandleInPool, (JNIEnv*, jobject, jobject jvmci
   return -1;
 C2V_END
 
-
 C2V_VMENTRY(jobject, getSignaturePolymorphicHolders, (JNIEnv*, jobject))
   objArrayHandle holders = oopFactory::new_objArray_handle(SystemDictionary::String_klass(), 2, CHECK_NULL);
   Handle mh = java_lang_String::create_from_str("Ljava/lang/invoke/MethodHandle;", CHECK_NULL);
@@ -1251,10 +1224,6 @@ C2V_VMENTRY(jobject, getSignaturePolymorphicHolders, (JNIEnv*, jobject))
 C2V_END
 
 C2V_VMENTRY(jboolean, shouldDebugNonSafepoints, (JNIEnv*, jobject))
-  //see compute_recording_non_safepoints in debugInfroRec.cpp
-  if (JvmtiExport::should_post_compiled_method_load() && FLAG_IS_DEFAULT(DebugNonSafepoints)) {
-    return true;
-  }
   return DebugNonSafepoints;
 C2V_END
 
@@ -1282,7 +1251,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     if (!fst.current()->is_compiled_frame()) {
       THROW_MSG(vmSymbols::java_lang_IllegalStateException(), "compiled stack frame expected")
     }
-    assert(fst.current()->cb()->is_nmethod(), "nmethod expected");
+    assert(fst.current()->cb()->is_nmethod(), "nmethod expected");
     ((nmethod*) fst.current()->cb())->make_not_entrant();
   }
   Deoptimization::deoptimize(thread, *fst.current(), fst.register_map(), Deoptimization::Reason_none);
@@ -1302,7 +1271,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
 
   GrowableArray<compiledVFrame*>* virtualFrames = new GrowableArray<compiledVFrame*>(10);
   while (true) {
-    assert(vf->is_compiled_frame(), "Wrong frame type");
+    assert(vf->is_compiled_frame(), "Wrong frame type");
     virtualFrames->push(compiledVFrame::cast(vf));
     if (vf->is_top()) {
       break;
@@ -1316,7 +1285,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 
   // Reallocate the non-escaping objects and restore their fields.
-  assert (virtualFrames->at(last_frame_number)->scope() != NULL,"invalid scope");
+  assert(virtualFrames->at(last_frame_number)->scope() != NULL,"invalid scope");
   GrowableArray<ScopeValue*>* objects = virtualFrames->at(last_frame_number)->scope()->objects();
 
   if (objects == NULL) {
@@ -1416,7 +1385,7 @@ C2V_VMENTRY(int, methodDataProfileDataSize, (JNIEnv*, jobject, jlong metaspace_m
   DataLayout* data    = mdo->extra_data_base();
   DataLayout* end   = mdo->extra_data_limit();
   for (;; data = mdo->next_extra(data)) {
-    assert(data < end, "moved past end of extra data");
+    assert(data < end, "moved past end of extra data");
     profile_data = data->data_in();
     if (mdo->dp_to_di(profile_data->dp()) == position) {
       return profile_data->size_in_bytes();

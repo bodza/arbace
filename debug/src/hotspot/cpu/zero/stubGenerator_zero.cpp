@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2017, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2010, 2015 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
 #include "assembler_zero.inline.hpp"
@@ -40,9 +15,6 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "stack_zero.inline.hpp"
-#ifdef COMPILER2
-#include "opto/runtime.hpp"
-#endif
 
 // For SafeFetch we need POSIX tls and setjmp
 #include <setjmp.h>
@@ -76,7 +48,7 @@ class StubGenerator: public StubCodeGenerator {
     ZeroStack *stack = thread->zero_stack();
 
     // Make sure we have no pending exceptions
-    assert(!HAS_PENDING_EXCEPTION, "call_stub called with pending exception");
+    assert(!HAS_PENDING_EXCEPTION, "call_stub called with pending exception");
 
     // Set up the stack if necessary
     bool stack_needs_teardown = false;
@@ -133,7 +105,7 @@ class StubGenerator: public StubCodeGenerator {
   // I'll write them properly when they're called from
   // something that's actually doing something.
   static void fake_arraycopy_stub(address src, address dst, int count) {
-    assert(count == 0, "huh?");
+    assert(count == 0, "huh?");
   }
 
   void generate_arraycopy_stubs() {
@@ -235,7 +207,6 @@ class StubGenerator: public StubCodeGenerator {
     pthread_setspecific(g_jmpbuf_key, NULL);
 
     return value;
-
   }
 
   void generate_initial() {
@@ -319,13 +290,13 @@ EntryFrame *EntryFrame::build(const intptr_t*  parameters,
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
+  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(ENTRY_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
+  assert(fp - stack->sp() == frame_type_off, "should be");
 
   stack->push((intptr_t) call_wrapper);
-  assert(fp - stack->sp() == call_wrapper_off, "should be");
+  assert(fp - stack->sp() == call_wrapper_off, "should be");
 
   for (int i = 0; i < parameter_words; i++)
     stack->push(parameters[i]);

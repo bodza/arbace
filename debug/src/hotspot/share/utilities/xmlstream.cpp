@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/nmethod.hpp"
 #include "memory/allocation.hpp"
@@ -47,27 +23,11 @@ void xmlStream::initialize(outputStream* out) {
   _text_init._outer_xmlStream = this;
   _text = &_text_init;
 
-#ifdef ASSERT
-  _element_depth = 0;
-  int   init_len = 100;
-  char* init_buf = NEW_C_HEAP_ARRAY(char, init_len, mtInternal);
-  _element_close_stack_low  = init_buf;
-  _element_close_stack_high = init_buf + init_len;
-  _element_close_stack_ptr  = init_buf + init_len - 1;
-  _element_close_stack_ptr[0] = '\0';
-#endif
-
   // Make sure each log uses the same base for time stamps.
   if (is_open()) {
     _out->time_stamp().update_to(1);
   }
 }
-
-#ifdef ASSERT
-xmlStream::~xmlStream() {
-  FREE_C_HEAP_ARRAY(char, _element_close_stack_low);
-}
-#endif
 
 // Pass the given chars directly to _out.
 void xmlStream::write(const char* s, size_t len) {
@@ -76,7 +36,6 @@ void xmlStream::write(const char* s, size_t len) {
   out()->write(s, len);
   update_position(s, len);
 }
-
 
 // Pass the given chars directly to _out, except that
 // we watch for special "<&>" chars.
@@ -142,72 +101,6 @@ void xmlStream::va_tag(bool push, const char* format, va_list ap) {
   _markup_state = (push ? HEAD : ELEM);
 }
 
-#ifdef ASSERT
-/// Debugging goo to make sure element tags nest properly.
-
-// ------------------------------------------------------------------
-void xmlStream::see_tag(const char* tag, bool push) {
-  assert_if_no_error(!inside_attrs(), "cannot start new element inside attrs");
-  if (!push)  return;
-
-  // tag goes up until either null or space:
-  const char* tag_end = strchr(tag, ' ');
-  size_t tag_len = (tag_end == NULL) ? strlen(tag) : tag_end - tag;
-  assert(tag_len > 0, "tag must not be empty");
-  // push the tag onto the stack, pulling down the pointer
-  char* old_ptr  = _element_close_stack_ptr;
-  char* old_low  = _element_close_stack_low;
-  char* push_ptr = old_ptr - (tag_len+1);
-  if (push_ptr < old_low) {
-    int old_len = _element_close_stack_high - old_ptr;
-    int new_len = old_len * 2;
-    if (new_len < 100)  new_len = 100;
-    char* new_low  = NEW_C_HEAP_ARRAY(char, new_len, mtInternal);
-    char* new_high = new_low + new_len;
-    char* new_ptr  = new_high - old_len;
-    memcpy(new_ptr, old_ptr, old_len);
-    _element_close_stack_high = new_high;
-    _element_close_stack_low  = new_low;
-    _element_close_stack_ptr  = new_ptr;
-    FREE_C_HEAP_ARRAY(char, old_low);
-    push_ptr = new_ptr - (tag_len+1);
-  }
-  assert(push_ptr >= _element_close_stack_low, "in range");
-  memcpy(push_ptr, tag, tag_len);
-  push_ptr[tag_len] = 0;
-  _element_close_stack_ptr = push_ptr;
-  _element_depth += 1;
-}
-
-// ------------------------------------------------------------------
-void xmlStream::pop_tag(const char* tag) {
-  assert_if_no_error(!inside_attrs(), "cannot close element inside attrs");
-  assert(_element_depth > 0, "must be in an element to close");
-  assert(*tag != 0, "tag must not be empty");
-  char* cur_tag = _element_close_stack_ptr;
-  bool  bad_tag = false;
-  while (*cur_tag != 0 && strcmp(cur_tag, tag) != 0) {
-    this->print_cr("</%s> <!-- missing closing tag -->", cur_tag);
-    _element_close_stack_ptr = (cur_tag += strlen(cur_tag) + 1);
-    _element_depth -= 1;
-    bad_tag = true;
-  }
-  if (*cur_tag == 0) {
-    bad_tag = true;
-  } else {
-    // Pop the stack, by skipping over the tag and its null.
-    _element_close_stack_ptr = cur_tag + strlen(cur_tag) + 1;
-    _element_depth -= 1;
-  }
-  if (bad_tag && !VMThread::should_terminate() && !VM_Exit::vm_exited() &&
-      !VMError::is_error_reported())
-  {
-    assert(false, "bad tag in log");
-  }
-}
-#endif
-
-
 // ------------------------------------------------------------------
 // First word in formatted string is element kind, and any subsequent
 // words must be XML attributes.  Outputs "<kind .../>".
@@ -223,7 +116,6 @@ void xmlStream::va_elem(const char* format, va_list ap) {
   va_begin_elem(format, ap);
   end_elem();
 }
-
 
 // ------------------------------------------------------------------
 // First word in formatted string is element kind, and any subsequent
@@ -243,7 +135,7 @@ void xmlStream::va_begin_elem(const char* format, va_list ap) {
 // ------------------------------------------------------------------
 // Outputs "/>".
 void xmlStream::end_elem() {
-  assert(_markup_state == ELEM, "misplaced end_elem");
+  assert(_markup_state == ELEM, "misplaced end_elem");
   print_raw("/>\n");
   _markup_state = BODY;
 }
@@ -257,7 +149,6 @@ void xmlStream::end_elem(const char* format, ...) {
   va_end(ap);
   end_elem();
 }
-
 
 // ------------------------------------------------------------------
 // First word in formatted string is element kind, and any subsequent
@@ -293,11 +184,10 @@ void xmlStream::va_begin_head(const char* format, va_list ap) {
 // ------------------------------------------------------------------
 // Outputs ">".
 void xmlStream::end_head() {
-  assert(_markup_state == HEAD, "misplaced end_head");
+  assert(_markup_state == HEAD, "misplaced end_head");
   print_raw(">\n");
   _markup_state = BODY;
 }
-
 
 // ------------------------------------------------------------------
 // Outputs formatted text, followed by ">".
@@ -308,7 +198,6 @@ void xmlStream::end_head(const char* format, ...) {
   va_end(ap);
   end_head();
 }
-
 
 // ------------------------------------------------------------------
 // Outputs "</kind>".
@@ -377,7 +266,6 @@ void xmlStream::stamp() {
   print_raw("'");
 }
 
-
 // ------------------------------------------------------------------
 // Output a method attribute, in the form " method='pkg/cls name sig'".
 // This is used only when there is no ciMethod available.
@@ -419,7 +307,6 @@ void xmlStream::method_text(const methodHandle& method) {
   print_raw(" ");  // separator
   method->signature()->print_symbol_on(text());
 }
-
 
 // ------------------------------------------------------------------
 // Output a klass attribute, in the form " klass='pkg/cls'".
@@ -470,7 +357,6 @@ void xmlStream::object_text(Handle x) {
   x->print_value_on(text());
 }
 
-
 void xmlStream::object(const char* attr, Metadata* x) {
   assert_if_no_error(inside_attrs(), "printing attributes");
   if (x == NULL)  return;
@@ -492,7 +378,6 @@ void xmlStream::object_text(Metadata* x) {
   else
     ShouldNotReachHere(); // Add impl if this is reached.
 }
-
 
 void xmlStream::flush() {
   out()->flush();

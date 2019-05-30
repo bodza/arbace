@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1Analytics.hpp"
 #include "gc/g1/g1Predictions.hpp"
@@ -59,7 +35,6 @@ static double cost_per_byte_ms_defaults[] = {
 static double constant_other_time_ms_defaults[] = {
   5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0
 };
-
 
 static double young_other_cost_per_region_ms_defaults[] = {
   0.3, 0.2, 0.2, 0.15, 0.15, 0.12, 0.12, 0.1
@@ -144,7 +119,7 @@ void G1Analytics::compute_pause_time_ratio(double interval_ms, double pause_time
     if (_recent_avg_pause_time_ratio < 0.0) {
       _recent_avg_pause_time_ratio = 0.0;
     } else {
-      assert(_recent_avg_pause_time_ratio - 1.0 > 0.0, "Ctl-point invariant");
+      assert(_recent_avg_pause_time_ratio - 1.0 > 0.0, "Ctl-point invariant");
       _recent_avg_pause_time_ratio = 1.0;
     }
   }

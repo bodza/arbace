@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_KLASS_HPP
 #define SHARE_VM_OOPS_KLASS_HPP
 
@@ -33,9 +9,6 @@
 #include "oops/oopHandle.hpp"
 #include "utilities/accessFlags.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrTraceIdExtension.hpp"
-#endif
 
 // Klass IDs for all subclasses of Klass
 enum KlassID {
@@ -154,8 +127,6 @@ class Klass : public Metadata {
   jint        _modifier_flags;  // Processed access flags, for use by Class.getModifiers.
   AccessFlags _access_flags;    // Access flags. The class/interface distinction is stored here.
 
-  JFR_ONLY(DEFINE_TRACE_ID_FIELD;)
-
   // Biased locking implementation and statistics
   // (the 64-bit chunk goes first, to avoid some fragmentation)
   jlong    _last_biased_lock_bulk_revocation_time;
@@ -172,23 +143,12 @@ private:
   // -1.
   jshort _shared_class_path_index;
 
-#if INCLUDE_CDS
-  // Flags of the current shared class.
-  u2     _shared_class_flags;
-  enum {
-    _has_raw_archived_mirror = 1,
-    _has_signer_and_not_archived = 1 << 2
-  };
-#endif
-  // The _archived_mirror is set at CDS dump time pointing to the cached mirror
-  // in the open archive heap region when archiving java object is supported.
-  CDS_JAVA_HEAP_ONLY(narrowOop _archived_mirror;)
-
 protected:
 
   // Constructor
   Klass(KlassID id);
-  Klass() : _id(KlassID(-1)) { assert(DumpSharedSpaces || UseSharedSpaces, "only for cds"); }
+  Klass() : _id(KlassID(-1)) {
+    assert(DumpSharedSpaces || UseSharedSpaces, "only for cds"); }
 
   void* operator new(size_t size, ClassLoaderData* loader_data, size_t word_size, TRAPS) throw();
 
@@ -230,9 +190,9 @@ protected:
   // Return the element of the _super chain of the given depth.
   // If there is no such element, return either NULL or this.
   Klass* primary_super_of_depth(juint i) const {
-    assert(i < primary_super_limit(), "oob");
+    assert(i < primary_super_limit(), "oob");
     Klass* super = _primary_supers[i];
-    assert(super == NULL || super->super_depth() == i, "correct display");
+    assert(super == NULL || super->super_depth() == i, "correct display");
     return super;
   }
 
@@ -250,8 +210,8 @@ protected:
       return primary_super_limit();
     } else {
       juint d = (super_check_offset() - in_bytes(primary_supers_offset())) / sizeof(Klass*);
-      assert(d < primary_super_limit(), "oob");
-      assert(_primary_supers[d] == this, "proper init");
+      assert(d < primary_super_limit(), "oob");
+      assert(_primary_supers[d] == this, "proper init");
       return d;
     }
   }
@@ -260,8 +220,8 @@ protected:
   oop java_mirror() const;
   void set_java_mirror(Handle m);
 
-  oop archived_java_mirror_raw() NOT_CDS_JAVA_HEAP_RETURN_(NULL); // no GC barrier
-  void set_archived_java_mirror_raw(oop m) NOT_CDS_JAVA_HEAP_RETURN; // no GC barrier
+  oop archived_java_mirror_raw() { return NULL; }; // no GC barrier
+  void set_archived_java_mirror_raw(oop m) {}; // no GC barrier
 
   // Temporary mirror switch used by RedefineClasses
   // Both mirrors are on the ClassLoaderData::_handles list already so no
@@ -304,24 +264,12 @@ protected:
   };
 
   void set_has_raw_archived_mirror() {
-    CDS_ONLY(_shared_class_flags |= _has_raw_archived_mirror;)
   }
   void clear_has_raw_archived_mirror() {
-    CDS_ONLY(_shared_class_flags &= ~_has_raw_archived_mirror;)
   }
   bool has_raw_archived_mirror() const {
-    CDS_ONLY(return (_shared_class_flags & _has_raw_archived_mirror) != 0;)
-    NOT_CDS(return false;)
+    return false;
   }
-#if INCLUDE_CDS
-  void set_has_signer_and_not_archived() {
-    _shared_class_flags |= _has_signer_and_not_archived;
-  }
-  bool has_signer_and_not_archived() const {
-    assert(DumpSharedSpaces, "dump time only");
-    return (_shared_class_flags & _has_signer_and_not_archived) != 0;
-  }
-#endif // INCLUDE_CDS
 
   // Obtain the module or package for this class
   virtual ModuleEntry* module() const = 0;
@@ -362,11 +310,11 @@ protected:
   static const unsigned int _lh_array_tag_type_value = 0Xffffffff; // ~0x00,  // 0xC0000000 >> 30
 
   static int layout_helper_size_in_bytes(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
+    assert(lh > (jint)_lh_neutral_value, "must be instance");
     return (int) lh & ~_lh_instance_slow_path_bit;
   }
   static bool layout_helper_needs_slow_path(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
+    assert(lh > (jint)_lh_neutral_value, "must be instance");
     return (lh & _lh_instance_slow_path_bit) != 0;
   }
   static bool layout_helper_is_instance(jint lh) {
@@ -384,15 +332,15 @@ protected:
     return (jint)lh < (jint)(_lh_array_tag_type_value << _lh_array_tag_shift);
   }
   static int layout_helper_header_size(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
+    assert(lh < (jint)_lh_neutral_value, "must be array");
     int hsize = (lh >> _lh_header_size_shift) & _lh_header_size_mask;
-    assert(hsize > 0 && hsize < (int)sizeof(oopDesc)*3, "sanity");
+    assert(hsize > 0 && hsize < (int)sizeof(oopDesc)*3, "sanity");
     return hsize;
   }
   static BasicType layout_helper_element_type(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
+    assert(lh < (jint)_lh_neutral_value, "must be array");
     int btvalue = (lh >> _lh_element_type_shift) & _lh_element_type_mask;
-    assert(btvalue >= T_BOOLEAN && btvalue <= T_OBJECT, "sanity");
+    assert(btvalue >= T_BOOLEAN && btvalue <= T_OBJECT, "sanity");
     return (BasicType) btvalue;
   }
 
@@ -401,20 +349,19 @@ protected:
   static int layout_helper_boolean_diffbit() {
     jint zlh = array_layout_helper(T_BOOLEAN);
     jint blh = array_layout_helper(T_BYTE);
-    assert(zlh != blh, "array layout helpers must differ");
+    assert(zlh != blh, "array layout helpers must differ");
     int diffbit = 1;
     while ((diffbit & (zlh ^ blh)) == 0 && (diffbit & zlh) == 0) {
       diffbit <<= 1;
-      assert(diffbit != 0, "make sure T_BOOLEAN has a different bit than T_BYTE");
+      assert(diffbit != 0, "make sure T_BOOLEAN has a different bit than T_BYTE");
     }
     return diffbit;
   }
 
   static int layout_helper_log2_element_size(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
+    assert(lh < (jint)_lh_neutral_value, "must be array");
     int l2esz = (lh >> _lh_log2_element_size_shift) & _lh_log2_element_size_mask;
-    assert(l2esz <= LogBytesPerLong,
-           "sanity. l2esz: 0x%x for lh: 0x%x", (uint)l2esz, (uint)lh);
+    assert(l2esz <= LogBytesPerLong, "sanity. l2esz: 0x%x for lh: 0x%x", (uint)l2esz, (uint)lh);
     return l2esz;
   }
   static jint array_layout_helper(jint tag, int hsize, BasicType etype, int log2_esize) {
@@ -428,7 +375,7 @@ protected:
       |    (slow_path_flag ? _lh_instance_slow_path_bit : 0);
   }
   static int layout_helper_to_size_helper(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
+    assert(lh > (jint)_lh_neutral_value, "must be instance");
     // Note that the following expression discards _lh_instance_slow_path_bit.
     return lh >> LogBytesPerWord;
   }
@@ -436,14 +383,7 @@ protected:
   static jint array_layout_helper(BasicType etype);
 
   // What is the maximum number of primary superclasses any klass can have?
-#ifdef PRODUCT
   static juint primary_super_limit()         { return _primary_super_limit; }
-#else
-  static juint primary_super_limit() {
-    assert(FastSuperclassLimit <= _primary_super_limit, "parameter oob");
-    return FastSuperclassLimit;
-  }
-#endif
 
   // vtables
   klassVtable vtable() const;
@@ -544,9 +484,6 @@ protected:
 
   // Size of klass in word size.
   virtual int size() const = 0;
-#if INCLUDE_SERVICES
-  virtual void collect_statistics(KlassSizeStats *sz) const;
-#endif
 
   // Returns the Java name for a class (Resource allocated)
   // For arrays, this returns the name of the element with a leading '['.
@@ -567,26 +504,10 @@ protected:
   const char* external_kind() const;
 
   // type testing operations
-#ifdef ASSERT
- protected:
-  virtual bool is_instance_klass_slow()     const { return false; }
-  virtual bool is_array_klass_slow()        const { return false; }
-  virtual bool is_objArray_klass_slow()     const { return false; }
-  virtual bool is_typeArray_klass_slow()    const { return false; }
-#endif // ASSERT
  public:
 
   // Fast non-virtual versions
-  #ifndef ASSERT
   #define assert_same_query(xval, xcheck) xval
-  #else
- private:
-  static bool assert_same_query(bool xval, bool xslow) {
-    assert(xval == xslow, "slow and fast queries agree");
-    return xval;
-  }
- public:
-  #endif
   inline  bool is_instance_klass()            const { return assert_same_query(
                                                       layout_helper_is_instance(layout_helper()),
                                                       is_instance_klass_slow()); }
@@ -649,8 +570,6 @@ protected:
   jlong last_biased_lock_bulk_revocation_time() { return _last_biased_lock_bulk_revocation_time; }
   void  set_last_biased_lock_bulk_revocation_time(jlong cur_time) { _last_biased_lock_bulk_revocation_time = cur_time; }
 
-  JFR_ONLY(DEFINE_TRACE_ID_METHODS;)
-
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
   virtual MetaspaceObj::Type type() const { return ClassType; }
 
@@ -670,13 +589,6 @@ protected:
 
   // GC specific object visitors
   //
-#if INCLUDE_PARALLELGC
-  // Parallel Scavenge
-  virtual void oop_ps_push_contents(  oop obj, PSPromotionManager* pm)   = 0;
-  // Parallel Compact
-  virtual void oop_pc_follow_contents(oop obj, ParCompactionManager* cm) = 0;
-  virtual void oop_pc_update_pointers(oop obj, ParCompactionManager* cm) = 0;
-#endif
 
   virtual void array_klasses_do(void f(Klass* k)) {}
 
@@ -692,9 +604,6 @@ protected:
   // jvm support
   virtual jint compute_modifier_flags(TRAPS) const;
 
-  // JVMTI support
-  virtual jint jvmti_class_status() const;
-
   // Printing
   virtual void print_on(outputStream* st) const;
 
@@ -706,11 +615,6 @@ protected:
   // Verification
   virtual void verify_on(outputStream* st);
   void verify() { verify_on(tty); }
-
-#ifndef PRODUCT
-  bool verify_vtable_index(int index);
-  bool verify_itable_index(int index);
-#endif
 
   virtual void oop_verify_on(oop obj, outputStream* st);
 
@@ -729,4 +633,4 @@ protected:
   static Klass* decode_klass(narrowKlass v);
 };
 
-#endif // SHARE_VM_OOPS_KLASS_HPP
+#endif

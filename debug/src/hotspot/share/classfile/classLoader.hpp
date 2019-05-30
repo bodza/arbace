@@ -1,31 +1,7 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_CLASSLOADER_HPP
 #define SHARE_VM_CLASSFILE_CLASSLOADER_HPP
 
-#include "jimage.hpp"
+// #include "jimage.hpp"
 #include "runtime/handles.hpp"
 #include "runtime/perfData.hpp"
 #include "utilities/exceptions.hpp"
@@ -39,7 +15,6 @@
 
 // Class path entry (directory or zip file)
 
-class JImageFile;
 class ClassFileStream;
 class PackageEntry;
 template <typename T> class GrowableArray;
@@ -54,14 +29,11 @@ public:
   virtual bool is_modules_image() const = 0;
   virtual bool is_jar_file() const = 0;
   virtual const char* name() const = 0;
-  virtual JImageFile* jimage() const = 0;
   // Constructor
   ClassPathEntry() : _next(NULL) {}
   // Attempt to locate file_name through this class path entry.
   // Returns a class file parsing stream if successfull.
   virtual ClassFileStream* open_stream(const char* name, TRAPS) = 0;
-  // Debugging
-  NOT_PRODUCT(virtual void compile_the_world(Handle loader, TRAPS) = 0;)
 };
 
 class ClassPathDirEntry: public ClassPathEntry {
@@ -71,14 +43,10 @@ class ClassPathDirEntry: public ClassPathEntry {
   bool is_modules_image() const { return false; }
   bool is_jar_file() const { return false;  }
   const char* name() const { return _dir; }
-  JImageFile* jimage() const { return NULL; }
   ClassPathDirEntry(const char* dir);
   virtual ~ClassPathDirEntry() {}
   ClassFileStream* open_stream(const char* name, TRAPS);
-  // Debugging
-  NOT_PRODUCT(void compile_the_world(Handle loader, TRAPS);)
 };
-
 
 // Type definitions for zip file and zip file entry
 typedef void* jzfile;
@@ -109,36 +77,13 @@ class ClassPathZipEntry: public ClassPathEntry {
   bool is_modules_image() const { return false; }
   bool is_jar_file() const { return true;  }
   const char* name() const { return _zip_name; }
-  JImageFile* jimage() const { return NULL; }
   ClassPathZipEntry(jzfile* zip, const char* zip_name, bool is_boot_append);
   virtual ~ClassPathZipEntry();
   u1* open_entry(const char* name, jint* filesize, bool nul_terminate, TRAPS);
-  u1* open_versioned_entry(const char* name, jint* filesize, TRAPS) NOT_CDS_RETURN_(NULL);
+  u1* open_versioned_entry(const char* name, jint* filesize, TRAPS) { return NULL; };
   ClassFileStream* open_stream(const char* name, TRAPS);
   void contents_do(void f(const char* name, void* context), void* context);
-  bool is_multiple_versioned(TRAPS) NOT_CDS_RETURN_(false);
-  // Debugging
-  NOT_PRODUCT(void compile_the_world(Handle loader, TRAPS);)
-};
-
-
-// For java image files
-class ClassPathImageEntry: public ClassPathEntry {
-private:
-  JImageFile* _jimage;
-  const char* _name;
-public:
-  bool is_modules_image() const;
-  bool is_jar_file() const { return false; }
-  bool is_open() const { return _jimage != NULL; }
-  const char* name() const { return _name == NULL ? "" : _name; }
-  JImageFile* jimage() const { return _jimage; }
-  ClassPathImageEntry(JImageFile* jimage, const char* name);
-  virtual ~ClassPathImageEntry();
-  ClassFileStream* open_stream(const char* name, TRAPS);
-
-  // Debugging
-  NOT_PRODUCT(void compile_the_world(Handle loader, TRAPS);)
+  bool is_multiple_versioned(TRAPS) { return false; };
 };
 
 // ModuleClassPathList contains a linked list of ClassPathEntry's
@@ -234,22 +179,8 @@ class ClassLoader: AllStatic {
   static ClassPathEntry* _last_append_entry;
 
   // Info used by CDS
-  CDS_ONLY(static SharedPathsMiscInfo * _shared_paths_misc_info;)
 
-  CDS_ONLY(static ClassPathEntry* _app_classpath_entries;)
-  CDS_ONLY(static ClassPathEntry* _last_app_classpath_entry;)
-  CDS_ONLY(static ClassPathEntry* _module_path_entries;)
-  CDS_ONLY(static ClassPathEntry* _last_module_path_entry;)
-  CDS_ONLY(static void setup_app_search_path(const char* class_path);)
-  CDS_ONLY(static void setup_module_search_path(const char* path, TRAPS);)
-  static void add_to_app_classpath_entries(const char* path,
-                                           ClassPathEntry* entry,
-                                           bool check_for_duplicates);
-  CDS_ONLY(static void add_to_module_path_entries(const char* path,
-                                           ClassPathEntry* entry);)
- public:
-  CDS_ONLY(static ClassPathEntry* app_classpath_entries() {return _app_classpath_entries;})
-  CDS_ONLY(static ClassPathEntry* module_path_entries() {return _module_path_entries;})
+  static void add_to_app_classpath_entries(const char* path, ClassPathEntry* entry, bool check_for_duplicates);
 
  protected:
   // Initialization:
@@ -262,7 +193,6 @@ class ClassLoader: AllStatic {
   static void create_javabase();
 
   static void load_zip_library();
-  static void load_jimage_library();
   static ClassPathEntry* create_class_path_entry(const char *path, const struct stat* st,
                                                  bool throw_exception,
                                                  bool is_boot_append, TRAPS);
@@ -292,7 +222,6 @@ class ClassLoader: AllStatic {
                                            bool check_for_duplicates,
                                            bool is_boot_append,
                                            bool throw_exception=true);
-  CDS_ONLY(static void update_module_path_entry_list(const char *path, TRAPS);)
   static void print_bootclasspath();
 
   // Timing
@@ -388,50 +317,12 @@ class ClassLoader: AllStatic {
   // Initialization
   static void initialize();
   static void classLoader_init2(TRAPS);
-  CDS_ONLY(static void initialize_shared_path();)
-  CDS_ONLY(static void initialize_module_path(TRAPS);)
 
   static int compute_Object_vtable();
 
   static ClassPathEntry* classpath_entry(int n);
 
   static bool is_in_patch_mod_entries(Symbol* module_name);
-
-#if INCLUDE_CDS
-  // Sharing dump and restore
-
-  // Helper function used by CDS code to get the number of boot classpath
-  // entries during shared classpath setup time.
-  static int num_boot_classpath_entries();
-
-  static ClassPathEntry* get_next_boot_classpath_entry(ClassPathEntry* e);
-
-  // Helper function used by CDS code to get the number of app classpath
-  // entries during shared classpath setup time.
-  static int num_app_classpath_entries();
-
-  // Helper function used by CDS code to get the number of module path
-  // entries during shared classpath setup time.
-  static int num_module_path_entries() {
-    assert(DumpSharedSpaces, "Should only be called at CDS dump time");
-    int num_entries = 0;
-    ClassPathEntry* e= ClassLoader::_module_path_entries;
-    while (e != NULL) {
-      num_entries ++;
-      e = e->next();
-    }
-    return num_entries;
-  }
-  static void  finalize_shared_paths_misc_info();
-  static int   get_shared_paths_misc_info_size();
-  static void* get_shared_paths_misc_info();
-  static bool  check_shared_paths_misc_info(void* info, int size);
-  static void  exit_with_path_failure(const char* error, const char* message);
-  static char* skip_uri_protocol(char* source);
-  static void  record_result(InstanceKlass* ik, const ClassFileStream* stream, TRAPS);
-#endif
-  static JImageLocationRef jimage_find_resource(JImageFile* jf, const char* module_name,
-                                                const char* file_name, jlong &size);
 
   static void  trace_class_path(const char* msg, const char* name = NULL);
 
@@ -463,18 +354,9 @@ class ClassLoader: AllStatic {
   static bool is_modules_image(const char* name) { return string_ends_with(name, MODULES_IMAGE_NAME); }
 
   // Debugging
-  static void verify()              PRODUCT_RETURN;
+  static void verify()              {};
 
   // Force compilation of all methods in all classes in bootstrap class path (stress test)
-#ifndef PRODUCT
- protected:
-  static int _compile_the_world_class_counter;
-  static int _compile_the_world_method_counter;
- public:
-  static void compile_the_world();
-  static void compile_the_world_in(char* name, Handle loader, TRAPS);
-  static int  compile_the_world_counter() { return _compile_the_world_class_counter; }
-#endif //PRODUCT
 };
 
 // PerfClassTraceTime is used to measure time for class loading related events.
@@ -538,4 +420,4 @@ class PerfClassTraceTime {
   void initialize();
 };
 
-#endif // SHARE_VM_CLASSFILE_CLASSLOADER_HPP
+#endif

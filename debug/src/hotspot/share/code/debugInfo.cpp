@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/debugInfo.hpp"
 #include "code/debugInfoRec.hpp"
@@ -51,18 +27,12 @@ void DebugInfoWriteStream::write_metadata(Metadata* h) {
 
 oop DebugInfoReadStream::read_oop() {
   oop o = code()->oop_at(read_int());
-  assert(oopDesc::is_oop_or_null(o), "oop only");
+  assert(oopDesc::is_oop_or_null(o), "oop only");
   return o;
 }
 
 ScopeValue* DebugInfoReadStream::read_object_value() {
   int id = read_int();
-#ifdef ASSERT
-  assert(_obj_pool != NULL, "object pool does not exist");
-  for (int i = _obj_pool->length() - 1; i >= 0; i--) {
-    assert(_obj_pool->at(i)->as_ObjectValue()->id() != id, "should not be read twice");
-  }
-#endif
   ObjectValue* result = new ObjectValue(id);
   // Cache the object since an object field could reference it.
   _obj_pool->push(result);
@@ -72,7 +42,7 @@ ScopeValue* DebugInfoReadStream::read_object_value() {
 
 ScopeValue* DebugInfoReadStream::get_cached_object() {
   int id = read_int();
-  assert(_obj_pool != NULL, "object pool does not exist");
+  assert(_obj_pool != NULL, "object pool does not exist");
   for (int i = _obj_pool->length() - 1; i >= 0; i--) {
     ObjectValue* ov = _obj_pool->at(i)->as_ObjectValue();
     if (ov->id() == id) {
@@ -127,7 +97,7 @@ void ObjectValue::set_value(oop value) {
 
 void ObjectValue::read_object(DebugInfoReadStream* stream) {
   _klass = read_from(stream);
-  assert(_klass->is_constant_oop(), "should be constant java mirror oop");
+  assert(_klass->is_constant_oop(), "should be constant java mirror oop");
   int length = stream->read_int();
   for (int i = 0; i < length; i++) {
     ScopeValue* val = read_from(stream);
@@ -157,15 +127,6 @@ void ObjectValue::print_on(outputStream* st) const {
 }
 
 void ObjectValue::print_fields_on(outputStream* st) const {
-#ifndef PRODUCT
-  if (_field_values.length() > 0) {
-    _field_values.at(0)->print_on(st);
-  }
-  for (int i = 1; i < _field_values.length(); i++) {
-    st->print(", ");
-    _field_values.at(i)->print_on(st);
-  }
-#endif
 }
 
 // ConstantIntValue
@@ -216,16 +177,6 @@ void ConstantDoubleValue::print_on(outputStream* st) const {
 // ConstantOopWriteValue
 
 void ConstantOopWriteValue::write_on(DebugInfoWriteStream* stream) {
-#ifdef ASSERT
-  {
-    // cannot use ThreadInVMfromNative here since in case of JVMCI compiler,
-    // thread is already in VM state.
-    ThreadInVMfromUnknown tiv;
-    assert(JNIHandles::resolve(value()) == NULL ||
-           Universe::heap()->is_in_reserved(JNIHandles::resolve(value())),
-           "Should be in heap");
- }
-#endif
   stream->write_int(CONSTANT_OOP_CODE);
   stream->write_handle(value());
 }
@@ -237,13 +188,11 @@ void ConstantOopWriteValue::print_on(outputStream* st) const {
   JNIHandles::resolve(value())->print_value_on(st);
 }
 
-
 // ConstantOopReadValue
 
 ConstantOopReadValue::ConstantOopReadValue(DebugInfoReadStream* stream) {
   _value = Handle(Thread::current(), stream->read_oop());
-  assert(_value() == NULL ||
-         Universe::heap()->is_in_reserved(_value()), "Should be in heap");
+  assert(_value() == NULL || Universe::heap()->is_in_reserved(_value()), "Should be in heap");
 }
 
 void ConstantOopReadValue::write_on(DebugInfoWriteStream* stream) {
@@ -253,7 +202,6 @@ void ConstantOopReadValue::write_on(DebugInfoWriteStream* stream) {
 void ConstantOopReadValue::print_on(outputStream* st) const {
   value()()->print_value_on(st);
 }
-
 
 // MonitorValue
 
@@ -274,16 +222,3 @@ void MonitorValue::write_on(DebugInfoWriteStream* stream) {
   _owner->write_on(stream);
   stream->write_bool(_eliminated);
 }
-
-#ifndef PRODUCT
-void MonitorValue::print_on(outputStream* st) const {
-  st->print("monitor{");
-  owner()->print_on(st);
-  st->print(",");
-  basic_lock().print_on(st);
-  st->print("}");
-  if (_eliminated) {
-    st->print(" (eliminated)");
-  }
-}
-#endif

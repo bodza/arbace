@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -111,7 +87,7 @@ uint FreeIdSet::claim_par_id() {
 
 void FreeIdSet::release_par_id(uint id) {
   MutexLockerEx x(_mon, Mutex::_no_safepoint_check_flag);
-  assert(_ids[id] == claimed, "Precondition.");
+  assert(_ids[id] == claimed, "Precondition.");
   _ids[id] = _hd;
   _hd = id;
   _claimed--;
@@ -180,32 +156,20 @@ bool DirtyCardQueueSet::apply_closure_to_buffer(CardTableEntryClosure* cl,
   size_t limit = buffer_size();
   for ( ; i < limit; ++i) {
     jbyte* card_ptr = static_cast<jbyte*>(buf[i]);
-    assert(card_ptr != NULL, "invariant");
+    assert(card_ptr != NULL, "invariant");
     if (!cl->do_card_ptr(card_ptr, worker_i)) {
       result = false;           // Incomplete processing.
       break;
     }
   }
   if (consume) {
-    assert(i <= buffer_size(), "invariant");
+    assert(i <= buffer_size(), "invariant");
     node->set_index(i);
   }
   return result;
 }
 
-#ifndef ASSERT
 #define assert_fully_consumed(node, buffer_size)
-#else
-#define assert_fully_consumed(node, buffer_size)                \
-  do {                                                          \
-    size_t _afc_index = (node)->index();                        \
-    size_t _afc_size = (buffer_size);                           \
-    assert(_afc_index == _afc_size,                             \
-           "Buffer was not fully consumed as claimed: index: "  \
-           SIZE_FORMAT ", size: " SIZE_FORMAT,                  \
-            _afc_index, _afc_size);                             \
-  } while (0)
-#endif // ASSERT
 
 bool DirtyCardQueueSet::mut_process_buffer(BufferNode* node) {
   guarantee(_free_ids != NULL, "must be");
@@ -222,7 +186,6 @@ bool DirtyCardQueueSet::mut_process_buffer(BufferNode* node) {
   return result;
 }
 
-
 BufferNode* DirtyCardQueueSet::get_completed_buffer(size_t stop_at) {
   BufferNode* nd = NULL;
   MutexLockerEx x(_cbl_mon, Mutex::_no_safepoint_check_flag);
@@ -234,15 +197,14 @@ BufferNode* DirtyCardQueueSet::get_completed_buffer(size_t stop_at) {
 
   if (_completed_buffers_head != NULL) {
     nd = _completed_buffers_head;
-    assert(_n_completed_buffers > 0, "Invariant");
+    assert(_n_completed_buffers > 0, "Invariant");
     _completed_buffers_head = nd->next();
     _n_completed_buffers--;
     if (_completed_buffers_head == NULL) {
-      assert(_n_completed_buffers == 0, "Invariant");
+      assert(_n_completed_buffers == 0, "Invariant");
       _completed_buffers_tail = NULL;
     }
   }
-  DEBUG_ONLY(assert_completed_buffer_list_len_correct_locked());
   return nd;
 }
 
@@ -260,7 +222,7 @@ bool DirtyCardQueueSet::apply_closure_to_completed_buffer(CardTableEntryClosure*
                                                           uint worker_i,
                                                           size_t stop_at,
                                                           bool during_pause) {
-  assert(!during_pause || stop_at == 0, "Should not leave any completed buffers during a pause");
+  assert(!during_pause || stop_at == 0, "Should not leave any completed buffers during a pause");
   BufferNode* nd = get_completed_buffer(stop_at);
   if (nd == NULL) {
     return false;
@@ -307,18 +269,16 @@ void DirtyCardQueueSet::clear() {
     }
     _n_completed_buffers = 0;
     _completed_buffers_tail = NULL;
-    DEBUG_ONLY(assert_completed_buffer_list_len_correct_locked());
   }
   while (buffers_to_delete != NULL) {
     BufferNode* nd = buffers_to_delete;
     buffers_to_delete = nd->next();
     deallocate_buffer(nd);
   }
-
 }
 
 void DirtyCardQueueSet::abandon_logs() {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
+  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   clear();
   // Since abandon is done only at safepoints, we can safely manipulate
   // these queues.
@@ -340,7 +300,7 @@ void DirtyCardQueueSet::concatenate_logs() {
   // of outstanding buffers.
   int save_max_completed_queue = _max_completed_queue;
   _max_completed_queue = max_jint;
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
+  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *t = jtiwh.next(); ) {
     concatenate_log(G1ThreadLocalData::dirty_card_queue(t));
   }

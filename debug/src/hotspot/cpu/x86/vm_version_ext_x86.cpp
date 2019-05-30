@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "utilities/macros.hpp"
@@ -128,11 +104,7 @@ class VM_Version_Ext_StubGenerator: public StubCodeGenerator {
     // LP64: rcx and rdx are first and second argument registers on windows
 
     __ push(rbp);
-#ifdef _LP64
     __ mov(rbp, c_rarg0); // cpuid_info address
-#else
-    __ movptr(rbp, Address(rsp, 8)); // cpuid_info address
-#endif
     __ push(rbx);
     __ push(rsi);
     __ pushf();          // preserve rbx, and flags
@@ -248,7 +220,6 @@ class VM_Version_Ext_StubGenerator: public StubCodeGenerator {
     return start;
   };
 };
-
 
 // VM_Version_Ext statics
 const size_t VM_Version_Ext::VENDOR_LENGTH = 13;
@@ -411,8 +382,8 @@ const char* VM_Version_Ext::cpu_family_description(void) {
 }
 
 int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_TYPE_DESC_BUF_SIZE, "buffer len should at least be == CPU_TYPE_DESC_BUF_SIZE!");
+  assert(buf != NULL, "buffer is NULL!");
+  assert(buf_len >= CPU_TYPE_DESC_BUF_SIZE, "buffer len should at least be == CPU_TYPE_DESC_BUF_SIZE!");
 
   const char* cpu_type = NULL;
   const char* x64 = NULL;
@@ -445,9 +416,9 @@ int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
 }
 
 int VM_Version_Ext::cpu_extended_brand_string(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_EBS_MAX_LENGTH, "buffer len should at least be == CPU_EBS_MAX_LENGTH!");
-  assert(getCPUIDBrandString_stub != NULL, "not initialized");
+  assert(buf != NULL, "buffer is NULL!");
+  assert(buf_len >= CPU_EBS_MAX_LENGTH, "buffer len should at least be == CPU_EBS_MAX_LENGTH!");
+  assert(getCPUIDBrandString_stub != NULL, "not initialized");
 
   // invoke newly generated asm code to fetch CPU Brand String
   getCPUIDBrandString_stub(&_cpuid_info);
@@ -478,16 +449,16 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
   size_t       written = 0;
   const char*  prefix = "";
 
-#define WRITE_TO_BUF(string)                                                          \
-  {                                                                                   \
+#define WRITE_TO_BUF(string) \
+  { \
     int res = jio_snprintf(&buf[written], buf_len - written, "%s%s", prefix, string); \
-    if (res < 0) {                                                                    \
-      return buf_len - 1;                                                             \
-    }                                                                                 \
-    written += res;                                                                   \
-    if (prefix[0] == '\0') {                                                          \
-      prefix = ", ";                                                                  \
-    }                                                                                 \
+    if (res < 0) { \
+      return buf_len - 1; \
+    } \
+    written += res; \
+    if (prefix[0] == '\0') { \
+      prefix = ", "; \
+    } \
   }
 
   for (flag = 1, fi = 0; flag <= 0x20000000 ; flag <<= 1, fi++) {
@@ -531,8 +502,8 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
  * feature set.
  */
 int VM_Version_Ext::cpu_detailed_description(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_DETAILED_DESC_BUF_SIZE, "buffer len should at least be == CPU_DETAILED_DESC_BUF_SIZE!");
+  assert(buf != NULL, "buffer is NULL!");
+  assert(buf_len >= CPU_DETAILED_DESC_BUF_SIZE, "buffer len should at least be == CPU_DETAILED_DESC_BUF_SIZE!");
 
   static const char* unknown = "<unknown>";
   char               vendor_id[VENDOR_LENGTH];
@@ -686,7 +657,6 @@ jlong VM_Version_Ext::max_qualified_cpu_freq_from_brand_string(void) {
   return frequency;
 }
 
-
 jlong VM_Version_Ext::maximum_qualified_cpu_frequency(void) {
   if (_max_qualified_cpu_frequency == 0) {
     _max_qualified_cpu_frequency = max_qualified_cpu_freq_from_brand_string();
@@ -823,7 +793,6 @@ const char* const VM_Version_Ext::_brand_id[] = {
   "Intel Pentium 4 processor",
   NULL
 };
-
 
 const char* const VM_Version_Ext::_feature_edx_id[] = {
   "On-Chip FPU",

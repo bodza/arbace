@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -42,7 +18,6 @@
 // ReturnType = FieldType | "V".
 // FieldType  = "B" | "C" | "D" | "F" | "I" | "J" | "S" | "Z" | "L" ClassName ";" | "[" FieldType.
 // ClassName  = string.
-
 
 SignatureIterator::SignatureIterator(Symbol* signature) {
   _signature       = signature;
@@ -109,10 +84,9 @@ int SignatureIterator::parse_type() {
       ShouldNotReachHere();
       break;
   }
-  assert(size >= 0, "size must be set");
+  assert(size >= 0, "size must be set");
   return size;
 }
-
 
 void SignatureIterator::check_signature_end() {
   if (_index < _signature->utf8_length()) {
@@ -122,7 +96,6 @@ void SignatureIterator::check_signature_end() {
   }
 }
 
-
 void SignatureIterator::dispatch_field() {
   // no '(', just one (field) type
   _index = 0;
@@ -130,7 +103,6 @@ void SignatureIterator::dispatch_field() {
   parse_type();
   check_signature_end();
 }
-
 
 void SignatureIterator::iterate_parameters() {
   // Parse parameters
@@ -152,7 +124,7 @@ void SignatureIterator::iterate_parameters( uint64_t fingerprint ) {
     return;
   }
 
-  assert(fingerprint, "Fingerprint should not be 0");
+  assert(fingerprint, "Fingerprint should not be 0");
 
   _parameter_index = 0;
   fingerprint = fingerprint >> (static_feature_size + result_feature_size);
@@ -208,7 +180,6 @@ void SignatureIterator::iterate_parameters( uint64_t fingerprint ) {
   _parameter_index = 0;
 }
 
-
 void SignatureIterator::iterate_returntype() {
   // Ignore parameters
   _index = 0;
@@ -263,7 +234,6 @@ void SignatureIterator::iterate_returntype() {
   _parameter_index = 0;
 }
 
-
 void SignatureIterator::iterate() {
   // Parse parameters
   _parameter_index = 0;
@@ -277,7 +247,6 @@ void SignatureIterator::iterate() {
   check_signature_end();
   _parameter_index = 0;
 }
-
 
 // Implementation of SignatureStream
 SignatureStream::SignatureStream(Symbol* signature, bool is_method) :
@@ -297,7 +266,6 @@ SignatureStream::~SignatureStream() {
 bool SignatureStream::is_done() const {
   return _end > _signature->utf8_length();
 }
-
 
 void SignatureStream::next_non_primitive(int t) {
   switch (t) {
@@ -337,7 +305,6 @@ void SignatureStream::next_non_primitive(int t) {
     default : ShouldNotReachHere();
   }
 }
-
 
 bool SignatureStream::is_object() const {
   return _type == T_OBJECT

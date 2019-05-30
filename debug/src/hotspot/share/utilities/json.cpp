@@ -1,28 +1,4 @@
 /*
- * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
-/*
  * This is not really json in the state it is now.
  * Some differences:
  * - Double quotes around the key in an object is not enforced.
@@ -48,7 +24,7 @@ JSON::JSON(const char* text, bool silent, outputStream* st)
 }
 
 void JSON::parse() {
-  assert(start != NULL, "Need something to parse");
+  assert(start != NULL, "Need something to parse");
   if (start == NULL) {
     _valid = false;
     error(INTERNAL_ERROR, "JSON parser was called with a string that was NULL.");
@@ -149,7 +125,6 @@ bool JSON::parse_json_value() {
 // Should only be called when we actually have the start of an object
 // Otherwise it is an internal error
 bool JSON::parse_json_object() {
-  NOT_PRODUCT(const char* prev_pos);
   int c;
 
   mark_pos();
@@ -176,11 +151,10 @@ bool JSON::parse_json_object() {
       break;
     }
 
-    NOT_PRODUCT(prev_pos = pos);
     if (parse_json_key() == false) {
       return false;
     }
-    assert(pos > prev_pos, "parsing stalled");
+    assert(pos > prev_pos, "parsing stalled");
 
     skip_to_token();
     mark_pos();
@@ -190,11 +164,10 @@ bool JSON::parse_json_object() {
 
     skip_to_token();
     mark_pos();
-    NOT_PRODUCT(prev_pos = pos);
     if (parse_json_value() == false) {
       return false;
     }
-    assert(pos > prev_pos, "parsing stalled");
+    assert(pos > prev_pos, "parsing stalled");
 
     c = skip_to_token();
     mark_pos();
@@ -206,14 +179,13 @@ bool JSON::parse_json_object() {
     }
   }
 
-  assert(c == '}', "array parsing ended without object end token ('}')");
+  assert(c == '}', "array parsing ended without object end token ('}')");
   return callback(JSON_OBJECT_END, NULL, --level);
 }
 
 // Should only be called when we actually have the start of an array
 // Otherwise it is an internal error
 bool JSON::parse_json_array() {
-  NOT_PRODUCT(const char* prev_pos);
   int c;
 
   mark_pos();
@@ -241,11 +213,10 @@ bool JSON::parse_json_array() {
     }
 
     mark_pos();
-    NOT_PRODUCT(prev_pos = pos);
     if (parse_json_value() == false) {
       return false;
     }
-    assert(pos > prev_pos, "parsing stalled");
+    assert(pos > prev_pos, "parsing stalled");
 
     c = skip_to_token();
     mark_pos();
@@ -257,7 +228,7 @@ bool JSON::parse_json_array() {
     }
   }
 
-  assert(c == ']', "array parsing ended without array end token (']')");
+  assert(c == ']', "array parsing ended without array end token (']')");
   return callback(JSON_ARRAY_END, NULL, --level);
 }
 
@@ -355,9 +326,9 @@ bool JSON::parse_json_number() {
   // Parsing number - for simplicity ints are limited to 2**53
   // sscanf as a double and check if part is 0.
   tokens = sscanf(pos, "%lf%n", &double_value, &read);
-  assert(tokens <= 1, "scanf implementation that counts as a token, parsing json numbers will always fail");
+  assert(tokens <= 1, "scanf implementation that counts as a token, parsing json numbers will always fail");
   if (tokens == 1) {
-    assert(read > 0, "sanity");
+    assert(read > 0, "sanity");
 
     if (floor(double_value) == double_value) {
       // No exponent - treat as an int
@@ -388,14 +359,14 @@ bool JSON::parse_json_symbol(const char* name, JSON_TYPE symbol) {
 }
 
 void JSON::mark_pos() {
-  assert((mark == start || *(mark - 1)) != 0, "buffer overrun");
-  assert(mark <= pos, "mark runahead");
+  assert((mark == start || *(mark - 1)) != 0, "buffer overrun");
+  assert(mark <= pos, "mark runahead");
 
   u_char c;
 
   while (mark < pos) {
     c = *mark;
-    assert(c != 0, "pos buffer overrun?");
+    assert(c != 0, "pos buffer overrun?");
     if (c != 0) {
       mark++;
       column++;
@@ -406,11 +377,11 @@ void JSON::mark_pos() {
     }
   }
 
-  assert(mark <= pos, "mark runahead");
+  assert(mark <= pos, "mark runahead");
 }
 
 u_char JSON::next() {
-  assert((pos == start || *(pos - 1)) != 0, "buffer overrun");
+  assert((pos == start || *(pos - 1)) != 0, "buffer overrun");
 
   u_char c = *pos;
   if (c != 0) {
@@ -450,7 +421,7 @@ int JSON::expect_any(const char* valid_chars, const char* error_msg, JSON_ERROR 
   u_char c;
 
   len = strlen(valid_chars);
-  assert(len > 0, "need non-empty string");
+  assert(len > 0, "need non-empty string");
 
   c = peek();
   if (c == 0) {
@@ -476,13 +447,13 @@ bool JSON::expect_string(const char* expected_string, const char* error_msg, JSO
   u_char c, expected_char;
   size_t len;
 
-  assert(expected_string != NULL, "need non-null string");
+  assert(expected_string != NULL, "need non-null string");
   len = strlen(expected_string);
-  assert(len > 0, "need non-empty string");
+  assert(len > 0, "need non-empty string");
 
   for (size_t i = 0; i < len; i++) {
     expected_char = expected_string[i];
-    assert(expected_char > ' ', "not sane for control characters");
+    assert(expected_char > ' ', "not sane for control characters");
     if (expected_char <= ' ') {
       error(INTERNAL_ERROR, "expect got a control char");
     }
@@ -656,9 +627,9 @@ void JSON::error(JSON_ERROR e, const char* format, ...) {
     va_end(args);
 
     line_start = mark - column;
-    assert(line_start >= start, "out of bounds");
-    assert(line_start <= mark, "out of bounds");
-    assert(line_start == start || line_start[-1] == '\n', "line counting error");
+    assert(line_start >= start, "out of bounds");
+    assert(line_start <= mark, "out of bounds");
+    assert(line_start == start || line_start[-1] == '\n', "line counting error");
 
     c = *pos;
     if (c == 0) {
@@ -685,4 +656,3 @@ void JSON::error(JSON_ERROR e, const char* format, ...) {
     _st->print_cr("%s", line_start);
   }
 }
-

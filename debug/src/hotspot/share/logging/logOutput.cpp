@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "jvm.h"
 #include "logging/log.hpp"
@@ -86,7 +63,6 @@ void LogOutput::add_to_config_string(const LogSelection& selection) {
   };
 }
 
-
 static int tag_cmp(const void *a, const void *b) {
   return static_cast<const LogTagType*>(a) - static_cast<const LogTagType*>(b);
 }
@@ -110,16 +86,15 @@ static void generate_all_subsets_of(LogTagType result[MaxSubsets][LogTag::MaxTag
                                     LogTagType subset[LogTag::MaxTags] = NULL,
                                     const size_t subset_size = 0,
                                     const size_t depth = 0) {
-  assert(subset_size <= LogTag::MaxTags, "subset must never have more than MaxTags tags");
-  assert(depth <= LogTag::MaxTags, "recursion depth overflow");
+  assert(subset_size <= LogTag::MaxTags, "subset must never have more than MaxTags tags");
+  assert(depth <= LogTag::MaxTags, "recursion depth overflow");
 
   if (subset == NULL) {
-    assert(*result_size == 0, "outer (non-recursive) call expects result_size to be 0");
+    assert(*result_size == 0, "outer (non-recursive) call expects result_size to be 0");
     // Make subset the first element in the result array initially
     subset = result[0];
   }
-  assert((void*) subset >= &result[0] && (void*) subset <= &result[MaxSubsets - 1],
-         "subset should always point to element in result");
+  assert((void*) subset >= &result[0] && (void*) subset <= &result[MaxSubsets - 1], "subset should always point to element in result");
 
   if (depth == LogTag::MaxTags || tags[depth] == LogTag::__NO_TAG) {
     if (subset_size == 0) {
@@ -129,7 +104,7 @@ static void generate_all_subsets_of(LogTagType result[MaxSubsets][LogTag::MaxTag
     if (subset_size != LogTag::MaxTags) {
       subset[subset_size] = LogTag::__NO_TAG;
     }
-    assert(*result_size < MaxSubsets, "subsets overflow");
+    assert(*result_size < MaxSubsets, "subsets overflow");
     *result_size += 1;
 
     // Bump subset and copy over current state
@@ -332,10 +307,9 @@ void LogOutput::update_config_string(const size_t on_level[LogLevel::Count]) {
       add_selections(&selections, &n_selections, &selections_cap, *deviates[d], deviates[d]->level_for(this));
     }
 
-    assert(n_deviates < deviating_tagsets, "deviating tag set array overflow");
-    assert(prev_deviates > n_deviates, "number of deviating tag sets must never grow");
+    assert(n_deviates < deviating_tagsets, "deviating tag set array overflow");
+    assert(prev_deviates > n_deviates, "number of deviating tag sets must never grow");
   }
   FREE_C_HEAP_ARRAY(LogTagSet*, deviates);
   FREE_C_HEAP_ARRAY(Selection, selections);
 }
-

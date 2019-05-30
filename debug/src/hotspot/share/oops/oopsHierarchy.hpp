@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_OOPSHIERARCHY_HPP
 #define SHARE_VM_OOPS_OOPSHIERARCHY_HPP
 
@@ -73,7 +49,6 @@ typedef class     typeArrayOopDesc*            typeArrayOop;
 
 class Thread;
 class PromotedObject;
-
 
 class oop {
   oopDesc* _o;
@@ -140,39 +115,39 @@ struct PrimitiveConversions::Translate<oop> : public TrueType {
   static Value recover(Decayed x) { return oop(x); }
 };
 
-#define DEF_OOP(type)                                                      \
-   class type##OopDesc;                                                    \
-   class type##Oop : public oop {                                          \
-     public:                                                               \
-       type##Oop() : oop() {}                                              \
-       type##Oop(const oop& o) : oop(o) {}                                 \
-       type##Oop(const volatile oop& o) : oop(o) {}                        \
-       type##Oop(const void* p) : oop(p) {}                                \
-       operator type##OopDesc* () const { return (type##OopDesc*)obj(); }  \
-       type##OopDesc* operator->() const {                                 \
-            return (type##OopDesc*)obj();                                  \
-       }                                                                   \
-       type##Oop& operator=(const type##Oop& o) {                          \
-            oop::operator=(o);                                             \
-            return *this;                                                  \
-       }                                                                   \
-       volatile type##Oop& operator=(const type##Oop& o) volatile {        \
-            (void)const_cast<oop&>(oop::operator=(o));                     \
-            return *this;                                                  \
-       }                                                                   \
-       volatile type##Oop& operator=(const volatile type##Oop& o) volatile {\
-            (void)const_cast<oop&>(oop::operator=(o));                     \
-            return *this;                                                  \
-       }                                                                   \
-   };                                                                      \
-                                                                           \
-   template<>                                                              \
-   struct PrimitiveConversions::Translate<type##Oop> : public TrueType {   \
-     typedef type##Oop Value;                                              \
-     typedef type##OopDesc* Decayed;                                       \
-                                                                           \
-     static Decayed decay(Value x) { return (type##OopDesc*)x.obj(); }     \
-     static Value recover(Decayed x) { return type##Oop(x); }              \
+#define DEF_OOP(type) \
+   class type##OopDesc; \
+   class type##Oop : public oop { \
+     public: \
+       type##Oop() : oop() {} \
+       type##Oop(const oop& o) : oop(o) {} \
+       type##Oop(const volatile oop& o) : oop(o) {} \
+       type##Oop(const void* p) : oop(p) {} \
+       operator type##OopDesc* () const { return (type##OopDesc*)obj(); } \
+       type##OopDesc* operator->() const { \
+            return (type##OopDesc*)obj(); \
+       } \
+       type##Oop& operator=(const type##Oop& o) { \
+            oop::operator=(o); \
+            return *this; \
+       } \
+       volatile type##Oop& operator=(const type##Oop& o) volatile { \
+            (void)const_cast<oop&>(oop::operator=(o)); \
+            return *this; \
+       } \
+       volatile type##Oop& operator=(const volatile type##Oop& o) volatile { \
+            (void)const_cast<oop&>(oop::operator=(o)); \
+            return *this; \
+       } \
+   }; \
+ \
+   template<> \
+   struct PrimitiveConversions::Translate<type##Oop> : public TrueType { \
+     typedef type##Oop Value; \
+     typedef type##OopDesc* Decayed; \
+ \
+     static Decayed decay(Value x) { return (type##OopDesc*)x.obj(); } \
+     static Value recover(Decayed x) { return type##Oop(x); } \
    };
 
 DEF_OOP(instance);
@@ -180,7 +155,7 @@ DEF_OOP(array);
 DEF_OOP(objArray);
 DEF_OOP(typeArray);
 
-#endif // CHECK_UNHANDLED_OOPS
+#endif
 
 // For CHECK_UNHANDLED_OOPS, it is ambiguous C++ behavior to have the oop
 // structure contain explicit user defined conversions of both numerical
@@ -208,7 +183,6 @@ class   ConstantPool;
 //      class CHeapObj
 class   CompiledICHolder;
 
-
 // The klass hierarchy is separate from the oop hierarchy.
 
 class Klass;
@@ -220,4 +194,4 @@ class   ArrayKlass;
 class     ObjArrayKlass;
 class     TypeArrayKlass;
 
-#endif // SHARE_VM_OOPS_OOPSHIERARCHY_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/compiledIC.hpp"
 #include "code/compiledMethod.inline.hpp"
@@ -90,9 +66,9 @@ const char* CompiledMethod::state() const {
 //-----------------------------------------------------------------------------
 
 void CompiledMethod::add_exception_cache_entry(ExceptionCache* new_entry) {
-  assert(ExceptionCache_lock->owned_by_self(),"Must hold the ExceptionCache_lock");
-  assert(new_entry != NULL,"Must be non null");
-  assert(new_entry->next() == NULL, "Must be null");
+  assert(ExceptionCache_lock->owned_by_self(),"Must hold the ExceptionCache_lock");
+  assert(new_entry != NULL,"Must be non null");
+  assert(new_entry->next() == NULL, "Must be null");
 
   ExceptionCache *ec = exception_cache();
   if (ec != NULL) {
@@ -183,7 +159,6 @@ bool CompiledMethod::is_at_poll_return(address pc) {
   return false;
 }
 
-
 bool CompiledMethod::is_at_poll_or_poll_return(address pc) {
   RelocIterator iter(this, pc, pc+1);
   while (iter.next()) {
@@ -206,7 +181,6 @@ void CompiledMethod::verify_oop_relocations() {
     }
   }
 }
-
 
 ScopeDesc* CompiledMethod::scope_desc_at(address pc) {
   PcDesc* pd = pc_desc_at(pc);
@@ -253,7 +227,7 @@ int CompiledMethod::verify_icholder_relocations() {
           tty->print("noticed icholder " INTPTR_FORMAT " ", p2i(ic->cached_icholder()));
           ic->print();
         }
-        assert(ic->cached_icholder() != NULL, "must be non-NULL");
+        assert(ic->cached_icholder() != NULL, "must be non-NULL");
         count++;
       }
     }
@@ -287,7 +261,7 @@ void CompiledMethod::preserve_callee_argument_oops(frame fr, const RegisterMap *
 }
 
 Method* CompiledMethod::attached_method(address call_instr) {
-  assert(code_contains(call_instr), "not part of the nmethod");
+  assert(code_contains(call_instr), "not part of the nmethod");
   RelocIterator iter(this, call_instr, call_instr + 1);
   while (iter.next()) {
     if (iter.addr() == call_instr) {
@@ -311,7 +285,7 @@ Method* CompiledMethod::attached_method_before_pc(address pc) {
 }
 
 void CompiledMethod::clear_inline_caches() {
-  assert(SafepointSynchronize::is_at_safepoint(), "cleaning of IC's only allowed at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "cleaning of IC's only allowed at safepoint");
   if (is_zombie()) {
     return;
   }
@@ -335,25 +309,6 @@ void CompiledMethod::clear_ic_stubs() {
   }
 }
 
-#ifdef ASSERT
-// Check class_loader is alive for this bit of metadata.
-static void check_class(Metadata* md) {
-   Klass* klass = NULL;
-   if (md->is_klass()) {
-     klass = ((Klass*)md);
-   } else if (md->is_method()) {
-     klass = ((Method*)md)->method_holder();
-   } else if (md->is_methodData()) {
-     klass = ((MethodData*)md)->method()->method_holder();
-   } else {
-     md->print();
-     ShouldNotReachHere();
-   }
-   assert(klass->is_loader_alive(), "must be alive");
-}
-#endif // ASSERT
-
-
 void CompiledMethod::clean_ic_if_metadata_is_dead(CompiledIC *ic) {
   if (ic->is_icholder_call()) {
     // The only exception is compiledICHolder metdata which may
@@ -372,7 +327,7 @@ void CompiledMethod::clean_ic_if_metadata_is_dead(CompiledIC *ic) {
         }
       } else if (ic_metdata->is_method()) {
         Method* method = (Method*)ic_metdata;
-        assert(!method->is_old(), "old method should have been cleaned");
+        assert(!method->is_old(), "old method should have been cleaned");
         if (method->method_holder()->is_loader_alive()) {
           return;
         }
@@ -404,38 +359,10 @@ unsigned char CompiledMethod::unloading_clock() {
   return OrderAccess::load_acquire(&_unloading_clock);
 }
 
-
 // static_stub_Relocations may have dangling references to
 // nmethods so trim them out here.  Otherwise it looks like
 // compiled code is maintaining a link to dead metadata.
 void CompiledMethod::clean_ic_stubs() {
-#ifdef ASSERT
-  address low_boundary = oops_reloc_begin();
-  RelocIterator iter(this, low_boundary);
-  while (iter.next()) {
-    address static_call_addr = NULL;
-    if (iter.type() == relocInfo::opt_virtual_call_type) {
-      CompiledIC* cic = CompiledIC_at(&iter);
-      if (!cic->is_call_to_interpreted()) {
-        static_call_addr = iter.addr();
-      }
-    } else if (iter.type() == relocInfo::static_call_type) {
-      CompiledStaticCall* csc = compiledStaticCall_at(iter.reloc());
-      if (!csc->is_call_to_interpreted()) {
-        static_call_addr = iter.addr();
-      }
-    }
-    if (static_call_addr != NULL) {
-      RelocIterator sciter(this, low_boundary);
-      while (sciter.next()) {
-        if (sciter.type() == relocInfo::static_stub_type &&
-            sciter.static_stub_reloc()->static_call() == static_call_addr) {
-          sciter.static_stub_reloc()->clear_inline_cache();
-        }
-      }
-    }
-  }
-#endif
 }
 
 // This is called at the end of the strong tracing/marking phase of a
@@ -444,8 +371,7 @@ void CompiledMethod::clean_ic_stubs() {
 
 void CompiledMethod::do_unloading(BoolObjectClosure* is_alive) {
   // Make sure the oop's ready to receive visitors
-  assert(!is_zombie() && !is_unloaded(),
-         "should not call follow on zombie or unloaded nmethod");
+  assert(!is_zombie() && !is_unloaded(), "should not call follow on zombie or unloaded nmethod");
 
   address low_boundary = oops_reloc_begin();
 
@@ -453,11 +379,9 @@ void CompiledMethod::do_unloading(BoolObjectClosure* is_alive) {
     return;
   }
 
-#if INCLUDE_JVMCI
   if (do_unloading_jvmci()) {
     return;
   }
-#endif
 
   // Cleanup exception cache and inline caches happens
   // after all the unloaded methods are found.
@@ -479,7 +403,7 @@ static bool clean_if_nmethod_is_unloaded(CompiledICorStaticCall *ic, address add
     // Clean inline caches pointing to both zombie and not_entrant methods
     if (clean_all || !nm->is_in_use() || (nm->method()->code() != nm)) {
       ic->set_to_clean(from->is_alive());
-      assert(ic->is_clean(), "nmethod " PTR_FORMAT "not clean %s", p2i(from), from->method()->name_and_sig_as_C_string());
+      assert(ic->is_clean(), "nmethod " PTR_FORMAT "not clean %s", p2i(from), from->method()->name_and_sig_as_C_string());
     }
   }
 
@@ -500,8 +424,7 @@ bool CompiledMethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unl
   ResourceMark rm;
 
   // Make sure the oop's ready to receive visitors
-  assert(!is_zombie() && !is_unloaded(),
-         "should not call follow on zombie or unloaded nmethod");
+  assert(!is_zombie() && !is_unloaded(), "should not call follow on zombie or unloaded nmethod");
 
   address low_boundary = oops_reloc_begin();
 
@@ -509,11 +432,9 @@ bool CompiledMethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unl
     return false;
   }
 
-#if INCLUDE_JVMCI
   if (do_unloading_jvmci()) {
     return false;
   }
-#endif
 
   return unload_nmethod_caches(/*parallel*/true, unloading_occurred);
 }
@@ -536,9 +457,6 @@ bool CompiledMethod::unload_nmethod_caches(bool parallel, bool unloading_occurre
 
   // All static stubs need to be cleaned.
   clean_ic_stubs();
-
-  // Check that the metadata embedded in the nmethod is alive
-  DEBUG_ONLY(metadata_do(check_class));
 
   return postponed;
 }
@@ -594,8 +512,7 @@ void CompiledMethod::do_unloading_parallel_postponed() {
   ResourceMark rm;
 
   // Make sure the oop's ready to receive visitors
-  assert(!is_zombie(),
-         "should not call follow on zombie nmethod");
+  assert(!is_zombie(), "should not call follow on zombie nmethod");
 
   RelocIterator iter(this, oops_reloc_begin());
   while(iter.next()) {

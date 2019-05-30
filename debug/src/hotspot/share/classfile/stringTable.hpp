@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_STRINGTABLE_HPP
 #define SHARE_VM_CLASSFILE_STRINGTABLE_HPP
 
@@ -105,7 +81,7 @@ private:
   static OopStorage* weak_storage() { return the_table()->_weak_handles; }
 
   static void create_table() {
-    assert(_the_table == NULL, "One string table allowed.");
+    assert(_the_table == NULL, "One string table allowed.");
     _the_table = new StringTable();
   }
 
@@ -164,15 +140,15 @@ private:
 
   // Sharing
  private:
-  oop lookup_shared(jchar* name, int len, unsigned int hash) NOT_CDS_JAVA_HEAP_RETURN_(NULL);
-  static void copy_shared_string_table(CompactStringTableWriter* ch_table) NOT_CDS_JAVA_HEAP_RETURN;
+  oop lookup_shared(jchar* name, int len, unsigned int hash) { return NULL; };
+  static void copy_shared_string_table(CompactStringTableWriter* ch_table) {};
  public:
-  static oop create_archived_string(oop s, Thread* THREAD) NOT_CDS_JAVA_HEAP_RETURN_(NULL);
+  static oop create_archived_string(oop s, Thread* THREAD) { return NULL; };
   static void set_shared_string_mapped() { _shared_string_mapped = true; }
   static bool shared_string_mapped()     { return _shared_string_mapped; }
-  static void shared_oops_do(OopClosure* f) NOT_CDS_JAVA_HEAP_RETURN;
-  static void write_to_archive() NOT_CDS_JAVA_HEAP_RETURN;
-  static void serialize(SerializeClosure* soc) NOT_CDS_JAVA_HEAP_RETURN;
+  static void shared_oops_do(OopClosure* f) {};
+  static void write_to_archive() {};
+  static void serialize(SerializeClosure* soc) {};
 
   // Jcmd
   static void dump(outputStream* st, bool verbose=false);
@@ -181,4 +157,4 @@ private:
   static void verify();
 };
 
-#endif // SHARE_VM_CLASSFILE_STRINGTABLE_HPP
+#endif

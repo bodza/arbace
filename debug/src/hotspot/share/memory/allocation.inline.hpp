@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_ALLOCATION_INLINE_HPP
 #define SHARE_VM_MEMORY_ALLOCATION_INLINE_HPP
 
@@ -32,21 +8,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 // Explicit C-heap memory management
-
-#ifndef PRODUCT
-// Increments unsigned long value for statistics (not atomic on MP).
-inline void inc_stat_counter(volatile julong* dest, julong add_value) {
-#if defined(SPARC) || defined(X86)
-  // Sparc and X86 have atomic jlong (8 bytes) instructions
-  julong value = Atomic::load(dest);
-  value += add_value;
-  Atomic::store(value, dest);
-#else
-  // possible word-tearing during load/store
-  *dest += add_value;
-#endif
-}
-#endif
 
 template <class E>
 size_t MmapArrayAllocator<E>::size_for(size_t length) {
@@ -91,7 +52,7 @@ E* MmapArrayAllocator<E>::allocate(size_t length, MEMFLAGS flags) {
 template <class E>
 void MmapArrayAllocator<E>::free(E* addr, size_t length) {
   bool result = os::release_memory((char*)addr, size_for(length));
-  assert(result, "Failed to release memory");
+  assert(result, "Failed to release memory");
 }
 
 template <class E>
@@ -171,4 +132,4 @@ void ArrayAllocator<E>::free(E* addr, size_t length) {
   }
 }
 
-#endif // SHARE_VM_MEMORY_ALLOCATION_INLINE_HPP
+#endif

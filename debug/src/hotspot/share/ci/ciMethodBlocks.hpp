@@ -1,34 +1,9 @@
-/*
- * Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CI_CIMETHODBLOCKS_HPP
 #define SHARE_VM_CI_CIMETHODBLOCKS_HPP
 
 #include "ci/ciMethod.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/growableArray.hpp"
-
 
 class ciBlock;
 
@@ -56,10 +31,6 @@ public:
   void clear_processed();
 
   ciBlock *make_dummy_block(); // a block not associated with a bci
-
-#ifndef PRODUCT
-  void dump();
-#endif
 };
 
 class ciBlock : public ResourceObj {
@@ -71,9 +42,6 @@ private:
   uint _flags;
   int _ex_start_bci;
   int _ex_limit_bci;
-#ifndef PRODUCT
-  ciMethod *_method;
-#endif
   enum {
     Processed   = (1 << 0),
     Handler     = (1 << 1),
@@ -83,7 +51,6 @@ private:
     RetTarget   = (1 << 5),
     HasHandler  = (1 << 6)
   };
-
 
 public:
   enum {
@@ -122,11 +89,6 @@ public:
   void  set_is_ret_target()         { _flags |= RetTarget; }
   void  set_has_handler()           { _flags |= HasHandler; }
   void  clear_exception_handler()   { _flags &= ~Handler; _ex_start_bci = -1; _ex_limit_bci = -1; }
-#ifndef PRODUCT
-  ciMethod *method() const          { return _method; }
-  void dump();
-  void print_on(outputStream* st) const  PRODUCT_RETURN;
-#endif
 };
 
-#endif // SHARE_VM_CI_CIMETHODBLOCKS_HPP
+#endif

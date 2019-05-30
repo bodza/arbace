@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_SPACE_HPP
 #define SHARE_VM_GC_SHARED_SPACE_HPP
 
@@ -220,17 +196,10 @@ class Space: public CHeapObj<mtGC> {
   // Allocation (return NULL if full).  Enforces mutual exclusion internally.
   virtual HeapWord* par_allocate(size_t word_size) = 0;
 
-#if INCLUDE_SERIALGC
-  // Mark-sweep-compact support: all spaces can update pointers to objects
-  // moving as a part of compaction.
-  virtual void adjust_pointers() = 0;
-#endif
-
   virtual void print() const;
   virtual void print_on(outputStream* st) const;
   virtual void print_short() const;
   virtual void print_short_on(outputStream* st) const;
-
 
   // Accessor for parallel sequential tasks.
   SequentialSubTasksDone* par_seq_tasks() { return &_par_seq_tasks; }
@@ -266,8 +235,6 @@ protected:
                                 // lowest location already done (or,
                                 // alternatively, the lowest address that
                                 // shouldn't be done again.  NULL means infinity.)
-  NOT_PRODUCT(HeapWord* _last_bottom;)
-  NOT_PRODUCT(HeapWord* _last_explicit_min_done;)
 
   // Get the actual top of the area on which the closure will
   // operate, given where the top is assumed to be (the end of the
@@ -291,21 +258,13 @@ public:
                         HeapWord* boundary) :
     _sp(sp), _cl(cl), _precision(precision), _boundary(boundary),
     _min_done(NULL) {
-    NOT_PRODUCT(_last_bottom = NULL);
-    NOT_PRODUCT(_last_explicit_min_done = NULL);
   }
 
   void do_MemRegion(MemRegion mr);
 
   void set_min_done(HeapWord* min_done) {
     _min_done = min_done;
-    NOT_PRODUCT(_last_explicit_min_done = _min_done);
   }
-#ifndef PRODUCT
-  void set_last_bottom(HeapWord* last_bottom) {
-    _last_bottom = last_bottom;
-  }
-#endif
 };
 
 // A structure to represent a point at which objects are being copied
@@ -369,7 +328,7 @@ private:
   inline size_t obj_size(const HeapWord* addr) const;
 
   template <class SpaceType>
-  static inline void verify_up_to_first_dead(SpaceType* space) NOT_DEBUG_RETURN;
+  static inline void verify_up_to_first_dead(SpaceType* space) {};
 
   template <class SpaceType>
   static inline void clear_empty_region(SpaceType* space);
@@ -386,8 +345,7 @@ public:
   HeapWord* compaction_top() const { return _compaction_top;    }
 
   void set_compaction_top(HeapWord* value) {
-    assert(value == NULL || (value >= bottom() && value <= end()),
-      "should point inside space");
+    assert(value == NULL || (value >= bottom() && value <= end()), "should point inside space");
     _compaction_top = value;
   }
 
@@ -406,24 +364,6 @@ public:
   void set_next_compaction_space(CompactibleSpace* csp) {
     _next_compaction_space = csp;
   }
-
-#if INCLUDE_SERIALGC
-  // MarkSweep support phase2
-
-  // Start the process of compaction of the current space: compute
-  // post-compaction addresses, and insert forwarding pointers.  The fields
-  // "cp->gen" and "cp->compaction_space" are the generation and space into
-  // which we are currently compacting.  This call updates "cp" as necessary,
-  // and leaves the "compaction_top" of the final value of
-  // "cp->compaction_space" up-to-date.  Offset tables may be updated in
-  // this phase as if the final copy had occurred; if so, "cp->threshold"
-  // indicates when the next such action should be taken.
-  virtual void prepare_for_compaction(CompactPoint* cp) = 0;
-  // MarkSweep support phase3
-  virtual void adjust_pointers();
-  // MarkSweep support phase4
-  virtual void compact();
-#endif // INCLUDE_SERIALGC
 
   // The maximum percentage of objects that can be dead in the compacted
   // live part of a compacted space ("deadwood" support.)
@@ -477,12 +417,6 @@ protected:
   // scan_limit(), scanned_block_is_obj(), and scanned_block_size(),
   // and possibly also overriding obj_size(), and adjust_obj_size().
   // These functions should avoid virtual calls whenever possible.
-
-#if INCLUDE_SERIALGC
-  // Frequently calls adjust_obj_size().
-  template <class SpaceType>
-  static inline void scan_and_adjust_pointers(SpaceType* space);
-#endif
 
   // Frequently calls obj_size().
   template <class SpaceType>
@@ -549,21 +483,21 @@ class ContiguousSpace: public CompactibleSpace {
   // pattern) the unused part of a space.
 
   // Used to save the an address in a space for later use during mangling.
-  void set_top_for_allocations(HeapWord* v) PRODUCT_RETURN;
+  void set_top_for_allocations(HeapWord* v) {};
   // Used to save the space's current top for later use during mangling.
-  void set_top_for_allocations() PRODUCT_RETURN;
+  void set_top_for_allocations() {};
 
   // Mangle regions in the space from the current top up to the
   // previously mangled part of the space.
-  void mangle_unused_area() PRODUCT_RETURN;
+  void mangle_unused_area() {};
   // Mangle [top, end)
-  void mangle_unused_area_complete() PRODUCT_RETURN;
+  void mangle_unused_area_complete() {};
 
   // Do some sparse checking on the area that should have been mangled.
-  void check_mangled_unused_area(HeapWord* limit) PRODUCT_RETURN;
+  void check_mangled_unused_area(HeapWord* limit) {};
   // Check the complete area that should have been mangled.
   // This code may be NULL depending on the macro DEBUG_MANGLING.
-  void check_mangled_unused_area_complete() PRODUCT_RETURN;
+  void check_mangled_unused_area_complete() {};
 
   // Size computations: sizes in bytes.
   size_t capacity() const        { return byte_size(bottom(), end()); }
@@ -597,14 +531,13 @@ class ContiguousSpace: public CompactibleSpace {
   // signaled early termination.
   HeapWord* object_iterate_careful(ObjectClosureCareful* cl);
   HeapWord* concurrent_iteration_safe_limit() {
-    assert(_concurrent_iteration_safe_limit <= top(),
-           "_concurrent_iteration_safe_limit update missed");
+    assert(_concurrent_iteration_safe_limit <= top(), "_concurrent_iteration_safe_limit update missed");
     return _concurrent_iteration_safe_limit;
   }
   // changes the safe limit, all objects from bottom() to the new
   // limit should be properly initialized
   void set_concurrent_iteration_safe_limit(HeapWord* new_limit) {
-    assert(new_limit <= top(), "uninitialized objects in the safe range");
+    assert(new_limit <= top(), "uninitialized objects in the safe range");
     _concurrent_iteration_safe_limit = new_limit;
   }
 
@@ -614,7 +547,7 @@ class ContiguousSpace: public CompactibleSpace {
 
   // Compaction support
   virtual void reset_after_compaction() {
-    assert(compaction_top() >= bottom() && compaction_top() <= end(), "should point inside space");
+    assert(compaction_top() >= bottom() && compaction_top() <= end(), "should point inside space");
     set_top(compaction_top());
     // set new iteration safe limit
     set_concurrent_iteration_safe_limit(compaction_top());
@@ -651,11 +584,6 @@ class ContiguousSpace: public CompactibleSpace {
   HeapWord** top_addr() { return &_top; }
   HeapWord** end_addr() { return &_end; }
 
-#if INCLUDE_SERIALGC
-  // Overrides for more efficient compaction support.
-  void prepare_for_compaction(CompactPoint* cp);
-#endif
-
   virtual void print_on(outputStream* st) const;
 
   // Checked dynamic downcasts.
@@ -670,7 +598,6 @@ class ContiguousSpace: public CompactibleSpace {
   // space.
   void allocate_temporary_filler(int factor);
 };
-
 
 // A dirty card to oop closure that does filtering.
 // It knows how to filter out objects that are outside of the _boundary.
@@ -768,7 +695,6 @@ class OffsetTableContigSpace: public ContiguousSpace {
   void verify() const;
 };
 
-
 // Class TenuredSpace is used by TenuredGeneration
 
 class TenuredSpace: public OffsetTableContigSpace {
@@ -782,4 +708,4 @@ class TenuredSpace: public OffsetTableContigSpace {
                MemRegion mr) :
     OffsetTableContigSpace(sharedOffsetArray, mr) {}
 };
-#endif // SHARE_VM_GC_SHARED_SPACE_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/collectionSetChooser.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -87,53 +63,14 @@ CollectionSetChooser::CollectionSetChooser() :
   _region_live_threshold_bytes = mixed_gc_live_threshold_bytes();
 }
 
-#ifndef PRODUCT
-void CollectionSetChooser::verify() {
-  guarantee(_end <= regions_length(), "_end: %u regions length: %u", _end, regions_length());
-  guarantee(_front <= _end, "_front: %u _end: %u", _front, _end);
-  uint index = 0;
-  size_t sum_of_reclaimable_bytes = 0;
-  while (index < _front) {
-    guarantee(regions_at(index) == NULL,
-              "all entries before _front should be NULL");
-    index += 1;
-  }
-  HeapRegion *prev = NULL;
-  while (index < _end) {
-    HeapRegion *curr = regions_at(index++);
-    guarantee(curr != NULL, "Regions in _regions array cannot be NULL");
-    guarantee(!curr->is_young(), "should not be young!");
-    guarantee(!curr->is_pinned(),
-              "Pinned region should not be in collection set (index %u)", curr->hrm_index());
-    if (prev != NULL) {
-      guarantee(order_regions(prev, curr) != 1,
-                "GC eff prev: %1.4f GC eff curr: %1.4f",
-                prev->gc_efficiency(), curr->gc_efficiency());
-    }
-    sum_of_reclaimable_bytes += curr->reclaimable_bytes();
-    prev = curr;
-  }
-  guarantee(sum_of_reclaimable_bytes == _remaining_reclaimable_bytes,
-            "reclaimable bytes inconsistent, "
-            "remaining: " SIZE_FORMAT " sum: " SIZE_FORMAT,
-            _remaining_reclaimable_bytes, sum_of_reclaimable_bytes);
-}
-#endif // !PRODUCT
-
 void CollectionSetChooser::sort_regions() {
   // First trim any unused portion of the top in the parallel case.
   if (_first_par_unreserved_idx > 0) {
-    assert(_first_par_unreserved_idx <= regions_length(),
-           "Or we didn't reserved enough length");
+    assert(_first_par_unreserved_idx <= regions_length(), "Or we didn't reserved enough length");
     regions_trunc_to(_first_par_unreserved_idx);
   }
   _regions.sort(order_regions);
-  assert(_end <= regions_length(), "Requirement");
-#ifdef ASSERT
-  for (uint i = 0; i < _end; i++) {
-    assert(regions_at(i) != NULL, "Should be true by sorting!");
-  }
-#endif // ASSERT
+  assert(_end <= regions_length(), "Requirement");
   if (log_is_enabled(Trace, gc, liveness)) {
     G1PrintRegionLivenessInfoClosure cl("Post-Sorting");
     for (uint i = 0; i < _end; ++i) {
@@ -145,11 +82,9 @@ void CollectionSetChooser::sort_regions() {
 }
 
 void CollectionSetChooser::add_region(HeapRegion* hr) {
-  assert(!hr->is_pinned(),
-         "Pinned region shouldn't be added to the collection set (index %u)", hr->hrm_index());
-  assert(hr->is_old(), "should be old but is %s", hr->get_type_str());
-  assert(hr->rem_set()->is_complete(),
-         "Trying to add region %u to the collection set with incomplete remembered set", hr->hrm_index());
+  assert(!hr->is_pinned(), "Pinned region shouldn't be added to the collection set (index %u)", hr->hrm_index());
+  assert(hr->is_old(), "should be old but is %s", hr->get_type_str());
+  assert(hr->rem_set()->is_complete(), "Trying to add region %u to the collection set with incomplete remembered set", hr->hrm_index());
   _regions.append(hr);
   _end++;
   _remaining_reclaimable_bytes += hr->reclaimable_bytes();
@@ -157,8 +92,8 @@ void CollectionSetChooser::add_region(HeapRegion* hr) {
 }
 
 void CollectionSetChooser::push(HeapRegion* hr) {
-  assert(hr != NULL, "Can't put back a NULL region");
-  assert(_front >= 1, "Too many regions have been put back");
+  assert(hr != NULL, "Can't put back a NULL region");
+  assert(_front >= 1, "Too many regions have been put back");
   _front--;
   regions_at_put(_front, hr);
   _remaining_reclaimable_bytes += hr->reclaimable_bytes();
@@ -171,21 +106,20 @@ void CollectionSetChooser::prepare_for_par_region_addition(uint n_threads,
   uint max_waste = n_threads * chunk_size;
   // it should be aligned with respect to chunk_size
   uint aligned_n_regions = (n_regions + chunk_size - 1) / chunk_size * chunk_size;
-  assert(aligned_n_regions % chunk_size == 0, "should be aligned");
+  assert(aligned_n_regions % chunk_size == 0, "should be aligned");
   regions_at_put_grow(aligned_n_regions + max_waste - 1, NULL);
 }
 
 uint CollectionSetChooser::claim_array_chunk(uint chunk_size) {
   uint res = (uint) Atomic::add((jint) chunk_size,
                                 (volatile jint*) &_first_par_unreserved_idx);
-  assert(regions_length() > res + chunk_size - 1,
-         "Should already have been expanded");
+  assert(regions_length() > res + chunk_size - 1, "Should already have been expanded");
   return res - chunk_size;
 }
 
 void CollectionSetChooser::set_region(uint index, HeapRegion* hr) {
-  assert(regions_at(index) == NULL, "precondition");
-  assert(hr->is_old(), "should be old but is %s", hr->get_type_str());
+  assert(regions_at(index) == NULL, "precondition");
+  assert(hr->is_old(), "should be old but is %s", hr->get_type_str());
   regions_at_put(index, hr);
   hr->calc_gc_efficiency();
 }
@@ -194,14 +128,14 @@ void CollectionSetChooser::update_totals(uint region_num,
                                          size_t reclaimable_bytes) {
   // Only take the lock if we actually need to update the totals.
   if (region_num > 0) {
-    assert(reclaimable_bytes > 0, "invariant");
+    assert(reclaimable_bytes > 0, "invariant");
     // We could have just used atomics instead of taking the
     // lock. However, we currently don't have an atomic add for size_t.
     MutexLockerEx x(ParGCRareEvent_lock, Mutex::_no_safepoint_check_flag);
     _end += region_num;
     _remaining_reclaimable_bytes += reclaimable_bytes;
   } else {
-    assert(reclaimable_bytes == 0, "invariant");
+    assert(reclaimable_bytes == 0, "invariant");
   }
 }
 
@@ -243,9 +177,7 @@ public:
       // sets for old regions.
       r->rem_set()->clear(true /* only_cardset */);
     } else {
-      assert(!r->is_old() || !r->rem_set()->is_tracked(),
-             "Missed to clear unused remembered set of region %u (%s) that is %s",
-             r->hrm_index(), r->get_type_str(), r->rem_set()->get_state_str());
+      assert(!r->is_old() || !r->rem_set()->is_tracked(), "Missed to clear unused remembered set of region %u (%s) that is %s", r->hrm_index(), r->get_type_str(), r->rem_set()->get_state_str());
     }
     return false;
   }
@@ -270,7 +202,7 @@ public:
 };
 
 uint CollectionSetChooser::calculate_parallel_work_chunk_size(uint n_workers, uint n_regions) const {
-  assert(n_workers > 0, "Active gc workers should be greater than 0");
+  assert(n_workers > 0, "Active gc workers should be greater than 0");
   const uint overpartition_factor = 4;
   const uint min_chunk_size = MAX2(n_regions / n_workers, 1U);
   return MAX2(n_regions / (n_workers * overpartition_factor), min_chunk_size);

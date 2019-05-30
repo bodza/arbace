@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_VALUESTACK_HPP
 #define SHARE_VM_C1_C1_VALUESTACK_HPP
 
@@ -50,12 +26,12 @@ class ValueStack: public CompilationResourceObj {
   Values   _locks;                               // the monitor stack (holding the locked values)
 
   Value check(ValueTag tag, Value t) {
-    assert(tag == t->type()->tag() || tag == objectTag && t->type()->tag() == addressTag, "types must correspond");
+    assert(tag == t->type()->tag() || tag == objectTag && t->type()->tag() == addressTag, "types must correspond");
     return t;
   }
 
   Value check(ValueTag tag, Value t, Value h) {
-    assert(h == NULL, "hi-word of doubleword value must be NULL");
+    assert(h == NULL, "hi-word of doubleword value must be NULL");
     return check(tag, t);
   }
 
@@ -74,9 +50,7 @@ class ValueStack: public CompilationResourceObj {
   ValueStack* copy_for_parsing()                 { return new ValueStack(this, Parsing, -99); }
 
   void set_caller_state(ValueStack* s)           {
-    assert(kind() == EmptyExceptionState ||
-           (Compilation::current()->env()->should_retain_local_variables() && kind() == ExceptionState),
-           "only EmptyExceptionStates can be modified");
+    assert(kind() == EmptyExceptionState, "only EmptyExceptionStates can be modified");
     _caller_state = s;
   }
 
@@ -99,15 +73,13 @@ class ValueStack: public CompilationResourceObj {
   void clear_locals();                           // sets all locals to NULL;
 
   void invalidate_local(int i) {
-    assert(!_locals.at(i)->type()->is_double_word() ||
-           _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
+    assert(!_locals.at(i)->type()->is_double_word() || _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     _locals.at_put(i, NULL);
   }
 
   Value local_at(int i) const {
     Value x = _locals.at(i);
-    assert(x == NULL || !x->type()->is_double_word() ||
-           _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
+    assert(x == NULL || !x->type()->is_double_word() || _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     return x;
   }
 
@@ -131,8 +103,7 @@ class ValueStack: public CompilationResourceObj {
   // stack access
   Value stack_at(int i) const {
     Value x = _stack.at(i);
-    assert(!x->type()->is_double_word() ||
-           _stack.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
+    assert(!x->type()->is_double_word() || _stack.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     return x;
   }
 
@@ -208,11 +179,9 @@ class ValueStack: public CompilationResourceObj {
   void setup_phi_for_local(BlockBegin* b, int index);
 
   // debugging
-  void print()  PRODUCT_RETURN;
-  void verify() PRODUCT_RETURN;
+  void print()  {};
+  void verify() {};
 };
-
-
 
 // Macro definitions for simple iteration of stack and local values of a ValueStack
 // The macros can be used like a for-loop. All variables (state, index and value)
@@ -237,37 +206,33 @@ class ValueStack: public CompilationResourceObj {
 // }
 // as an invariant, state is NULL now
 
-
 // construct a unique variable name with the line number where the macro is used
 #define temp_var3(x) temp__ ## x
 #define temp_var2(x) temp_var3(x)
 #define temp_var     temp_var2(__LINE__)
 
-#define for_each_state(state)  \
+#define for_each_state(state) \
   for (; state != NULL; state = state->caller_state())
 
-#define for_each_local_value(state, index, value)                                              \
-  int temp_var = state->locals_size();                                                         \
-  for (index = 0;                                                                              \
-       index < temp_var && (value = state->local_at(index), true);                             \
-       index += (value == NULL || value->type()->is_illegal() ? 1 : value->type()->size()))    \
+#define for_each_local_value(state, index, value) \
+  int temp_var = state->locals_size(); \
+  for (index = 0; \
+       index < temp_var && (value = state->local_at(index), true); \
+       index += (value == NULL || value->type()->is_illegal() ? 1 : value->type()->size())) \
     if (value != NULL)
 
-
-#define for_each_stack_value(state, index, value)                                              \
-  int temp_var = state->stack_size();                                                          \
-  for (index = 0;                                                                              \
-       index < temp_var && (value = state->stack_at(index), true);                             \
+#define for_each_stack_value(state, index, value) \
+  int temp_var = state->stack_size(); \
+  for (index = 0; \
+       index < temp_var && (value = state->stack_at(index), true); \
        index += value->type()->size())
 
-
-#define for_each_lock_value(state, index, value)                                               \
-  int temp_var = state->locks_size();                                                          \
-  for (index = 0;                                                                              \
-       index < temp_var && (value = state->lock_at(index), true);                              \
-       index++)                                                                                \
+#define for_each_lock_value(state, index, value) \
+  int temp_var = state->locks_size(); \
+  for (index = 0; \
+       index < temp_var && (value = state->lock_at(index), true); \
+       index++) \
     if (value != NULL)
-
 
 // Macro definition for simple iteration of all state values of a ValueStack
 // Because the code cannot be executed in a single loop, the code must be passed
@@ -279,25 +244,24 @@ class ValueStack: public CompilationResourceObj {
 //   do something with value (note that this is a macro parameter)
 // );
 
-#define for_each_state_value(v_state, v_value, v_code)                                         \
-{                                                                                              \
-  int cur_index;                                                                               \
-  ValueStack* cur_state = v_state;                                                             \
-  Value v_value;                                                                               \
-  for_each_state(cur_state) {                                                                  \
-    {                                                                                            \
-      for_each_local_value(cur_state, cur_index, v_value) {                                      \
-        v_code;                                                                                  \
-      }                                                                                          \
-    }                                                                                          \
-    {                                                                                            \
-      for_each_stack_value(cur_state, cur_index, v_value) {                                      \
-        v_code;                                                                                  \
-      }                                                                                          \
-    }                                                                                            \
-  }                                                                                            \
+#define for_each_state_value(v_state, v_value, v_code) \
+{ \
+  int cur_index; \
+  ValueStack* cur_state = v_state; \
+  Value v_value; \
+  for_each_state(cur_state) { \
+    { \
+      for_each_local_value(cur_state, cur_index, v_value) { \
+        v_code; \
+      } \
+    } \
+    { \
+      for_each_stack_value(cur_state, cur_index, v_value) { \
+        v_code; \
+      } \
+    } \
+  } \
 }
-
 
 // Macro definition for simple iteration of all phi functions of a block, i.e all
 // phi functions of the ValueStack where the block matches.
@@ -308,27 +272,27 @@ class ValueStack: public CompilationResourceObj {
 //   do something with the phi function phi (note that this is a macro parameter)
 // );
 
-#define for_each_phi_fun(v_block, v_phi, v_code)                                               \
-{                                                                                              \
-  int cur_index;                                                                               \
-  ValueStack* cur_state = v_block->state();                                                    \
-  Value value;                                                                                 \
-  {                                                                                            \
-    for_each_stack_value(cur_state, cur_index, value) {                                        \
-      Phi* v_phi = value->as_Phi();                                                            \
-      if (v_phi != NULL && v_phi->block() == v_block) {                                        \
-        v_code;                                                                                \
-      }                                                                                        \
-    }                                                                                          \
-  }                                                                                            \
-  {                                                                                            \
-    for_each_local_value(cur_state, cur_index, value) {                                        \
-      Phi* v_phi = value->as_Phi();                                                            \
-      if (v_phi != NULL && v_phi->block() == v_block) {                                        \
-        v_code;                                                                                \
-      }                                                                                        \
-    }                                                                                          \
-  }                                                                                            \
+#define for_each_phi_fun(v_block, v_phi, v_code) \
+{ \
+  int cur_index; \
+  ValueStack* cur_state = v_block->state(); \
+  Value value; \
+  { \
+    for_each_stack_value(cur_state, cur_index, value) { \
+      Phi* v_phi = value->as_Phi(); \
+      if (v_phi != NULL && v_phi->block() == v_block) { \
+        v_code; \
+      } \
+    } \
+  } \
+  { \
+    for_each_local_value(cur_state, cur_index, value) { \
+      Phi* v_phi = value->as_Phi(); \
+      if (v_phi != NULL && v_phi->block() == v_block) { \
+        v_code; \
+      } \
+    } \
+  } \
 }
 
-#endif // SHARE_VM_C1_C1_VALUESTACK_HPP
+#endif

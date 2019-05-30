@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_COMPILER_COMPILETASK_HPP
 #define SHARE_VM_COMPILER_COMPILETASK_HPP
 
@@ -75,9 +51,6 @@ class CompileTask : public CHeapObj<mtCompiler> {
 
  private:
   static CompileTask* _task_free_list;
-#ifdef ASSERT
-  static int          _num_allocated_tasks;
-#endif
 
   Monitor*     _lock;
   uint         _compile_id;
@@ -87,11 +60,9 @@ class CompileTask : public CHeapObj<mtCompiler> {
   bool         _is_complete;
   bool         _is_success;
   bool         _is_blocking;
-#if INCLUDE_JVMCI
   bool         _has_waiter;
   // Compiler thread for a blocking JVMCI compilation
   CompilerThread* _jvmci_compiler_thread;
-#endif
   int          _comp_level;
   int          _num_inlined_bytecodes;
   nmethodLocker* _code_handle;  // holder of eventual result
@@ -134,16 +105,14 @@ class CompileTask : public CHeapObj<mtCompiler> {
         return false;
     }
   }
-#if INCLUDE_JVMCI
   bool         has_waiter() const                { return _has_waiter; }
   void         clear_waiter()                    { _has_waiter = false; }
   CompilerThread* jvmci_compiler_thread() const  { return _jvmci_compiler_thread; }
   void         set_jvmci_compiler_thread(CompilerThread* t) {
-    assert(is_blocking(), "must be");
-    assert((t == NULL) != (_jvmci_compiler_thread == NULL), "must be");
+    assert(is_blocking(), "must be");
+    assert((t == NULL) != (_jvmci_compiler_thread == NULL), "must be");
     _jvmci_compiler_thread = t;
   }
-#endif
 
   nmethodLocker* code_handle() const             { return _code_handle; }
   void         set_code_handle(nmethodLocker* l) { _code_handle = l; }
@@ -212,4 +181,4 @@ public:
   static void print_inlining_ul(ciMethod* method, int inline_level, int bci, const char* msg = NULL);
 };
 
-#endif // SHARE_VM_COMPILER_COMPILETASK_HPP
+#endif

@@ -35,9 +35,6 @@ include HotspotCommon.gmk
 
 # The real work is done in these files
 
-include gensrc/GensrcAdlc.gmk
-include gensrc/GensrcDtrace.gmk
-
 $(eval $(call IncludeCustomExtension, hotspot/gensrc/GenerateSources.gmk))
 
 # While technically the rules below are "gendata" which can be done in parallel

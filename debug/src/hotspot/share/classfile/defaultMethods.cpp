@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/bytecodeAssembler.hpp"
 #include "classfile/defaultMethods.hpp"
@@ -159,7 +135,7 @@ class HierarchyVisitor : StackObj {
   Node* current_top() const { return _path.top(); }
   bool has_more_nodes() const { return !_path.is_empty(); }
   void push(InstanceKlass* cls, void* data) {
-    assert(cls != NULL, "Requires a valid instance class");
+    assert(cls != NULL, "Requires a valid instance class");
     Node* node = new Node(cls, data, has_super(cls));
     _path.push(node);
   }
@@ -237,7 +213,7 @@ class HierarchyVisitor : StackObj {
           next = top->next_interface();
           top->increment_visited_interface();
         }
-        assert(next != NULL, "Otherwise we shouldn't be here");
+        assert(next != NULL, "Otherwise we shouldn't be here");
         algo_data = algo->new_node_data(next);
         push(next, algo_data);
         top_needs_visit = true;
@@ -277,14 +253,14 @@ class KeepAliveRegistrar : public StackObj {
 
  public:
   KeepAliveRegistrar(Thread* thread) : _thread(thread), _keep_alive(20) {
-    assert(thread == Thread::current(), "Must be current thread");
+    assert(thread == Thread::current(), "Must be current thread");
   }
 
   ~KeepAliveRegistrar() {
     for (int i = _keep_alive.length() - 1; i >= 0; --i) {
       ConstantPool* cp = _keep_alive.at(i);
       int idx = _thread->metadata_handles()->find_from_end(cp);
-      assert(idx > 0, "Must be in the list");
+      assert(idx > 0, "Must be in the list");
       _thread->metadata_handles()->remove_at(idx);
     }
   }
@@ -313,7 +289,6 @@ class KeepAliveVisitor : public HierarchyVisitor<KeepAliveVisitor> {
     return true;
   }
 };
-
 
 // A method family contains a set of all methods that implement a single
 // erased method. As members of the set are collected while walking over the
@@ -411,7 +386,6 @@ class MethodFamily : public ResourceObj {
         if (entry.first->is_default_method()) {
           num_defaults++;
           default_index = qualified_index;
-
         }
       }
     }
@@ -423,7 +397,7 @@ class MethodFamily : public ResourceObj {
       if (qualified_methods.length() == 0) {
         _exception_message = generate_no_defaults_message(CHECK);
       } else {
-        assert(root != NULL, "Null root class");
+        assert(root != NULL, "Null root class");
         _exception_message = generate_method_message(root->name(), qualified_methods.at(0), CHECK);
       }
       _exception_name = vmSymbols::java_lang_AbstractMethodError();
@@ -454,7 +428,7 @@ class MethodFamily : public ResourceObj {
   }
 
   void print_selected(outputStream* str, int indent) const {
-    assert(has_target(), "Should be called otherwise");
+    assert(has_target(), "Should be called otherwise");
     streamIndentor si(str, indent * 2);
     str->indent().print("Selected method: ");
     print_method(str, _selected_target);
@@ -466,8 +440,8 @@ class MethodFamily : public ResourceObj {
   }
 
   void print_exception(outputStream* str, int indent) {
-    assert(throws_exception(), "Should be called otherwise");
-    assert(_exception_name != NULL, "exception_name should be set");
+    assert(throws_exception(), "Should be called otherwise");
+    assert(_exception_name != NULL, "exception_name should be set");
     streamIndentor si(str, indent * 2);
     str->indent().print_cr("%s: %s", _exception_name->as_C_string(), _exception_message->as_C_string());
   }
@@ -504,7 +478,6 @@ Symbol* MethodFamily::generate_conflicts_message(GrowableArray<Method*>* methods
   }
   return SymbolTable::new_symbol(ss.base(), (int)ss.size(), THREAD);
 }
-
 
 class StateRestorer;
 
@@ -609,7 +582,7 @@ static bool already_in_vtable_slots(GrowableArray<EmptyVtableSlot*>* slots, Meth
 static GrowableArray<EmptyVtableSlot*>* find_empty_vtable_slots(
     InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
 
-  assert(klass != NULL, "Must be valid class");
+  assert(klass != NULL, "Must be valid class");
 
   GrowableArray<EmptyVtableSlot*>* slots = new GrowableArray<EmptyVtableSlot*>();
 
@@ -740,10 +713,7 @@ class FindMethodsByErasedSig : public HierarchyVisitor<FindMethodsByErasedSig> {
     }
     return true;
   }
-
 };
-
-
 
 static void create_defaults_and_exceptions(
     GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS);
@@ -783,7 +753,7 @@ static void create_default_methods( InstanceKlass* klass,
 // The JVM does not create bridges nor handle generic signatures here.
 void DefaultMethods::generate_default_methods(
     InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
-  assert(klass != NULL, "invariant");
+  assert(klass != NULL, "invariant");
 
   // This resource mark is the bound for all memory allocation that takes
   // place during default method processing.  After this goes out of scope,
@@ -946,7 +916,7 @@ static void create_defaults_and_exceptions(
       if (method->has_target()) {
         Method* selected = method->get_selected_target();
         if (selected->method_holder()->is_interface()) {
-          assert(!selected->is_private(), "pushing private interface method as default");
+          assert(!selected->is_private(), "pushing private interface method as default");
           defaults.push(selected);
         }
       } else if (method->throws_exception()) {
@@ -965,7 +935,6 @@ static void create_defaults_and_exceptions(
       }
     }
   }
-
 
   log_debug(defaultmethods)("Created %d overpass methods", overpasses.length());
   log_debug(defaultmethods)("Created %d default  methods", defaults.length());
@@ -1010,15 +979,6 @@ static void sort_methods(GrowableArray<Method*>* methods) {
     if (sorted) break;
     sorted = true;
   }
-#ifdef ASSERT
-  uintptr_t prev = 0;
-  for (int i = 0; i < methods->length(); ++i) {
-    Method* mh = methods->at(i);
-    uintptr_t nv = (uintptr_t)mh->name();
-    assert(nv >= prev, "Incorrect overpass method ordering");
-    prev = nv;
-  }
-#endif
 }
 
 static void merge_in_new_methods(InstanceKlass* klass,
@@ -1036,7 +996,7 @@ static void merge_in_new_methods(InstanceKlass* klass,
       klass->class_loader_data(), new_size, NULL, CHECK);
 
   // original_ordering might be empty if this class has no methods of its own
-  if (JvmtiExport::can_maintain_original_method_order() || DumpSharedSpaces) {
+  if (DumpSharedSpaces) {
     merged_ordering = MetadataFactory::new_array<int>(
         klass->class_loader_data(), new_size, CHECK);
   }
@@ -1063,8 +1023,7 @@ static void merge_in_new_methods(InstanceKlass* klass,
       merged_methods->at_put(i, orig_method);
       original_methods->at_put(orig_idx, NULL);
       if (merged_ordering->length() > 0) {
-        assert(original_ordering != NULL && original_ordering->length() > 0,
-               "should have original order information for this method");
+        assert(original_ordering != NULL && original_ordering->length() > 0, "should have original order information for this method");
         merged_ordering->at_put(i, original_ordering->at(orig_idx));
       }
       ++orig_idx;
@@ -1081,15 +1040,6 @@ static void merge_in_new_methods(InstanceKlass* klass,
   }
 
   // Verify correct order
-#ifdef ASSERT
-  uintptr_t prev = 0;
-  for (int i = 0; i < merged_methods->length(); ++i) {
-    Method* mo = merged_methods->at(i);
-    uintptr_t nv = (uintptr_t)mo->name();
-    assert(nv >= prev, "Incorrect method ordering");
-    prev = nv;
-  }
-#endif
 
   // Replace klass methods with new merged lists
   klass->set_methods(merged_methods);

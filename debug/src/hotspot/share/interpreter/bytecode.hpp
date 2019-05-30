@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_BYTECODE_HPP
 #define SHARE_VM_INTERPRETER_BYTECODE_HPP
 
@@ -56,7 +32,7 @@ class Bytecode: public StackObj {
 
  public:
   Bytecode(Method* method, address bcp): _bcp(bcp), _code(Bytecodes::code_at(method, addr_at(0))) {
-    assert(method != NULL, "this form requires a valid Method*");
+    assert(method != NULL, "this form requires a valid Method*");
   }
   // Defined in ciStreams.hpp
   inline Bytecode(const ciBytecodeStream* stream, address bcp = NULL);
@@ -91,7 +67,7 @@ class Bytecode: public StackObj {
   }
   int get_index_u4(Bytecodes::Code bc) const {
     assert_same_format_as(bc); assert_index_size(4, bc);
-    assert(can_use_native_byte_order(bc), "");
+    assert(can_use_native_byte_order(bc), "");
     return Bytes::get_native_u4(addr_at(1));
   }
   bool has_index_u4(Bytecodes::Code bc) const {
@@ -117,16 +93,15 @@ class Bytecode: public StackObj {
   }
 
   // These are used locally and also from bytecode streams.
-  void assert_same_format_as(Bytecodes::Code testbc, bool is_wide = false) const NOT_DEBUG_RETURN;
-  static void assert_index_size(int required_size, Bytecodes::Code bc, bool is_wide = false) NOT_DEBUG_RETURN;
-  static void assert_offset_size(int required_size, Bytecodes::Code bc, bool is_wide = false) NOT_DEBUG_RETURN;
-  static void assert_constant_size(int required_size, int where, Bytecodes::Code bc, bool is_wide = false) NOT_DEBUG_RETURN;
-  static void assert_native_index(Bytecodes::Code bc, bool is_wide = false) NOT_DEBUG_RETURN;
+  void assert_same_format_as(Bytecodes::Code testbc, bool is_wide = false) const {};
+  static void assert_index_size(int required_size, Bytecodes::Code bc, bool is_wide = false) {};
+  static void assert_offset_size(int required_size, Bytecodes::Code bc, bool is_wide = false) {};
+  static void assert_constant_size(int required_size, int where, Bytecodes::Code bc, bool is_wide = false) {};
+  static void assert_native_index(Bytecodes::Code bc, bool is_wide = false) {};
   static bool can_use_native_byte_order(Bytecodes::Code bc, bool is_wide = false) {
     return (!Endian::is_Java_byte_ordering_different() || Bytecodes::native_byte_order(bc /*, is_wide*/));
   }
 };
-
 
 // Abstractions for lookupswitch bytecode
 class LookupswitchPair {
@@ -142,19 +117,18 @@ class LookupswitchPair {
   int  offset() const                            { return get_Java_u4_at(1 * jintSize); }
 };
 
-
 class Bytecode_lookupswitch: public Bytecode {
  public:
   Bytecode_lookupswitch(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
   // Defined in ciStreams.hpp
   inline Bytecode_lookupswitch(const ciBytecodeStream* stream);
-  void verify() const PRODUCT_RETURN;
+  void verify() const {};
 
   // Attributes
   int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
   int  number_of_pairs() const                   { return get_aligned_Java_u4_at(1 + 1*jintSize); }
   LookupswitchPair pair_at(int i) const          {
-    assert(0 <= i && i < number_of_pairs(), "pair index out of bounds");
+    assert(0 <= i && i < number_of_pairs(), "pair index out of bounds");
     return LookupswitchPair(aligned_addr_at(1 + (1 + i)*2*jintSize));
   }
 };
@@ -164,7 +138,7 @@ class Bytecode_tableswitch: public Bytecode {
   Bytecode_tableswitch(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
   // Defined in ciStreams.hpp
   inline Bytecode_tableswitch(const ciBytecodeStream* stream);
-  void verify() const PRODUCT_RETURN;
+  void verify() const {};
 
   // Attributes
   int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
@@ -242,7 +216,6 @@ inline Bytecode_invoke Bytecode_invoke_check(const methodHandle& method, int bci
   return Bytecode_invoke(method, bci, false);
 }
 
-
 // Abstraction for all field accesses (put/get field/static)
 class Bytecode_field: public Bytecode_member_ref {
  public:
@@ -268,7 +241,8 @@ class Bytecode_field: public Bytecode_member_ref {
 class Bytecode_checkcast: public Bytecode {
  public:
   Bytecode_checkcast(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { assert(Bytecodes::java_code(code()) == Bytecodes::_checkcast, "check checkcast"); }
+  void verify() const {
+    assert(Bytecodes::java_code(code()) == Bytecodes::_checkcast, "check checkcast"); }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_checkcast); };
@@ -278,7 +252,8 @@ class Bytecode_checkcast: public Bytecode {
 class Bytecode_instanceof: public Bytecode {
  public:
   Bytecode_instanceof(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { assert(code() == Bytecodes::_instanceof, "check instanceof"); }
+  void verify() const {
+    assert(code() == Bytecodes::_instanceof, "check instanceof"); }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_instanceof); };
@@ -287,7 +262,8 @@ class Bytecode_instanceof: public Bytecode {
 class Bytecode_new: public Bytecode {
  public:
   Bytecode_new(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { assert(java_code() == Bytecodes::_new, "check new"); }
+  void verify() const {
+    assert(java_code() == Bytecodes::_new, "check new"); }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_new); };
@@ -296,7 +272,8 @@ class Bytecode_new: public Bytecode {
 class Bytecode_multianewarray: public Bytecode {
  public:
   Bytecode_multianewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { assert(java_code() == Bytecodes::_multianewarray, "check new"); }
+  void verify() const {
+    assert(java_code() == Bytecodes::_multianewarray, "check new"); }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_multianewarray); };
@@ -305,7 +282,8 @@ class Bytecode_multianewarray: public Bytecode {
 class Bytecode_anewarray: public Bytecode {
  public:
   Bytecode_anewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { assert(java_code() == Bytecodes::_anewarray, "check anewarray"); }
+  void verify() const {
+    assert(java_code() == Bytecodes::_anewarray, "check anewarray"); }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_anewarray); };
@@ -322,11 +300,9 @@ class Bytecode_loadconstant: public Bytecode {
   Bytecode_loadconstant(const methodHandle& method, int bci): Bytecode(method(), method->bcp_from(bci)), _method(method()) { verify(); }
 
   void verify() const {
-    assert(_method != NULL, "must supply method");
+    assert(_method != NULL, "must supply method");
     Bytecodes::Code stdc = Bytecodes::java_code(code());
-    assert(stdc == Bytecodes::_ldc ||
-           stdc == Bytecodes::_ldc_w ||
-           stdc == Bytecodes::_ldc2_w, "load constant");
+    assert(stdc == Bytecodes::_ldc || stdc == Bytecodes::_ldc_w || stdc == Bytecodes::_ldc2_w, "load constant");
   }
 
   // Only non-standard bytecodes (fast_aldc) have reference cache indexes.
@@ -342,4 +318,4 @@ class Bytecode_loadconstant: public Bytecode {
   oop resolve_constant(TRAPS) const;
 };
 
-#endif // SHARE_VM_INTERPRETER_BYTECODE_HPP
+#endif

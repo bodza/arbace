@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_SERVICES_DIAGNOSTICCOMMAND_HPP
 #define SHARE_VM_SERVICES_DIAGNOSTICCOMMAND_HPP
 
@@ -158,49 +134,6 @@ public:
   virtual void execute(DCmdSource source, TRAPS);
 };
 
-class JVMTIDataDumpDCmd : public DCmd {
-public:
-  JVMTIDataDumpDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
-  static const char* name() { return "JVMTI.data_dump"; }
-  static const char* description() {
-    return "Signal the JVM to do a data-dump request for JVMTI.";
-  }
-  static const char* impact() {
-    return "High";
-  }
-  static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
-    return p;
-  }
-  static int num_arguments() { return 0; }
-  virtual void execute(DCmdSource source, TRAPS);
-};
-
-#if INCLUDE_SERVICES
-#if INCLUDE_JVMTI
-class JVMTIAgentLoadDCmd : public DCmdWithParser {
-protected:
-  DCmdArgument<char*> _libpath;
-  DCmdArgument<char*> _option;
-public:
-  JVMTIAgentLoadDCmd(outputStream* output, bool heap);
-  static const char* name() { return "JVMTI.agent_load"; }
-  static const char* description() {
-    return "Load JVMTI native agent.";
-  }
-  static const char* impact() { return "Low"; }
-  static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "control", NULL};
-    return p;
-  }
-  static int num_arguments();
-  virtual void execute(DCmdSource source, TRAPS);
-};
-#endif // INCLUDE_JVMTI
-#endif // INCLUDE_SERVICES
-
 class VMDynamicLibrariesDCmd : public DCmd {
 public:
   VMDynamicLibrariesDCmd(outputStream* output, bool heap);
@@ -325,34 +258,6 @@ public:
   virtual void execute(DCmdSource source, TRAPS);
 };
 
-#if INCLUDE_SERVICES   // Heap dumping supported
-// See also: dump_heap in attachListener.cpp
-class HeapDumpDCmd : public DCmdWithParser {
-protected:
-  DCmdArgument<char*> _filename;
-  DCmdArgument<bool>  _all;
-public:
-  HeapDumpDCmd(outputStream* output, bool heap);
-  static const char* name() {
-    return "GC.heap_dump";
-  }
-  static const char* description() {
-    return "Generate a HPROF format dump of the Java heap.";
-  }
-  static const char* impact() {
-    return "High: Depends on Java heap size and content. "
-           "Request a full GC unless the '-all' option is specified.";
-  }
-  static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
-    return p;
-  }
-  static int num_arguments();
-  virtual void execute(DCmdSource source, TRAPS);
-};
-#endif // INCLUDE_SERVICES
-
 // See also: inspectheap in attachListener.cpp
 class ClassHistogramDCmd : public DCmdWithParser {
 protected:
@@ -397,7 +302,6 @@ public:
   static int num_arguments();
   virtual void execute(DCmdSource source, TRAPS);
 };
-
 
 class ClassHierarchyDCmd : public DCmdWithParser {
 protected:
@@ -513,14 +417,12 @@ public:
   static int num_arguments();
 
   virtual void execute(DCmdSource source, TRAPS);
-
 };
 
 class JMXStartLocalDCmd : public DCmd {
 
   // Explicitly request start of local agent,
   // it will not be started by start dcmd
-
 
 public:
   JMXStartLocalDCmd(outputStream *output, bool heap_allocated);
@@ -534,7 +436,6 @@ public:
   }
 
   virtual void execute(DCmdSource source, TRAPS);
-
 };
 
 class JMXStopRemoteDCmd : public DCmd {
@@ -575,7 +476,6 @@ public:
   }
 
   virtual void execute(DCmdSource source, TRAPS);
-
 };
 
 class CompileQueueDCmd : public DCmd {
@@ -619,7 +519,6 @@ public:
   static int num_arguments() { return 0; }
   virtual void execute(DCmdSource source, TRAPS);
 };
-
 
 class CodeCacheDCmd : public DCmd {
 public:
@@ -867,26 +766,4 @@ public:
   virtual void execute(DCmdSource source, TRAPS);
 };
 
-#if INCLUDE_JVMTI
-class DebugOnCmdStartDCmd : public DCmdWithParser {
-public:
-  DebugOnCmdStartDCmd(outputStream* output, bool heap);
-  static const char* name() {
-    return "VM.start_java_debugging";
-  }
-  static const char* description() {
-    return "Starts up the Java debugging if the jdwp agentlib was enabled with the option onjcmd=y.";
-  }
-  static const char* impact() {
-    return "High: Switches the VM into Java debug mode.";
-  }
-  static const JavaPermission permission() {
-    JavaPermission p = { "java.lang.management.ManagementPermission", "monitor", NULL };
-    return p;
-  }
-  static int num_arguments() { return 0; }
-  virtual void execute(DCmdSource source, TRAPS);
-};
-#endif // INCLUDE_JVMTI
-
-#endif // SHARE_VM_SERVICES_DIAGNOSTICCOMMAND_HPP
+#endif

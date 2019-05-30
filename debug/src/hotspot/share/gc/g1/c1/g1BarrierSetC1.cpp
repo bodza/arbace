@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "c1/c1_LIRGenerator.hpp"
 #include "c1/c1_CodeStubs.hpp"
@@ -32,11 +8,7 @@
 #include "gc/g1/heapRegion.hpp"
 #include "utilities/macros.hpp"
 
-#ifdef ASSERT
-#define __ gen->lir(__FILE__, __LINE__)->
-#else
 #define __ gen->lir()->
-#endif
 
 void G1PreBarrierStub::emit_code(LIR_Assembler* ce) {
   G1BarrierSetAssembler* bs = (G1BarrierSetAssembler*)BarrierSet::barrier_set()->barrier_set_assembler();
@@ -81,8 +53,8 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
   CodeStub* slow;
 
   if (do_load) {
-    assert(pre_val == LIR_OprFact::illegalOpr, "sanity");
-    assert(addr_opr != LIR_OprFact::illegalOpr, "sanity");
+    assert(pre_val == LIR_OprFact::illegalOpr, "sanity");
+    assert(addr_opr != LIR_OprFact::illegalOpr, "sanity");
 
     if (patch)
       pre_val_patch_code = lir_patch_normal;
@@ -90,15 +62,15 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
     pre_val = gen->new_register(T_OBJECT);
 
     if (!addr_opr->is_address()) {
-      assert(addr_opr->is_register(), "must be");
+      assert(addr_opr->is_register(), "must be");
       addr_opr = LIR_OprFact::address(new LIR_Address(addr_opr, T_OBJECT));
     }
     slow = new G1PreBarrierStub(addr_opr, pre_val, pre_val_patch_code, info);
   } else {
-    assert(addr_opr == LIR_OprFact::illegalOpr, "sanity");
-    assert(pre_val->is_register(), "must be");
-    assert(pre_val->type() == T_OBJECT, "must be an object");
-    assert(info == NULL, "sanity");
+    assert(addr_opr == LIR_OprFact::illegalOpr, "sanity");
+    assert(pre_val->is_register(), "must be");
+    assert(pre_val->type() == T_OBJECT, "must be an object");
+    assert(info == NULL, "sanity");
 
     slow = new G1PreBarrierStub(pre_val);
   }
@@ -128,7 +100,7 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     }
     new_val = new_val_reg;
   }
-  assert(new_val->is_register(), "must be a register at this point");
+  assert(new_val->is_register(), "must be a register at this point");
 
   if (addr->is_address()) {
     LIR_Address* address = addr->as_address_ptr();
@@ -136,12 +108,12 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     if (!address->index()->is_valid() && address->disp() == 0) {
       __ move(address->base(), ptr);
     } else {
-      assert(address->disp() != max_jint, "lea doesn't support patched addresses!");
+      assert(address->disp() != max_jint, "lea doesn't support patched addresses!");
       __ leal(addr, ptr);
     }
     addr = ptr;
   }
-  assert(addr->is_register(), "must be a register at this point");
+  assert(addr->is_register(), "must be a register at this point");
 
   LIR_Opr xor_res = gen->new_pointer_register();
   LIR_Opr xor_shift_res = gen->new_pointer_register();
@@ -166,12 +138,12 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     __ leal(new_val, new_val_reg);
     new_val = new_val_reg;
   }
-  assert(new_val->is_register(), "must be a register at this point");
+  assert(new_val->is_register(), "must be a register at this point");
 
   __ cmp(lir_cond_notEqual, xor_shift_res, LIR_OprFact::intptrConst(NULL_WORD));
 
   CodeStub* slow = new G1PostBarrierStub(addr, new_val);
-  __ branch(lir_cond_notEqual, LP64_ONLY(T_LONG) NOT_LP64(T_INT), slow);
+  __ branch(lir_cond_notEqual, T_LONG, slow);
   __ branch_destination(slow->continuation());
 }
 

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/placeholders.hpp"
@@ -57,7 +33,6 @@ void PlaceholderTable::free_entry(PlaceholderEntry* entry) {
   Hashtable<Symbol*, mtClass>::free_entry(entry);
 }
 
-
 // Placeholder objects represent classes currently being loaded.
 // All threads examining the placeholder table must hold the
 // SystemDictionary_lock, so we don't need special precautions
@@ -66,14 +41,13 @@ void PlaceholderTable::add_entry(int index, unsigned int hash,
                                  Symbol* class_name, ClassLoaderData* loader_data,
                                  bool havesupername, Symbol* supername){
   assert_locked_or_safepoint(SystemDictionary_lock);
-  assert(class_name != NULL, "adding NULL obj");
+  assert(class_name != NULL, "adding NULL obj");
 
   // Both readers and writers are locked so it's safe to just
   // create the placeholder and insert it in the list without a membar.
   PlaceholderEntry* entry = new_entry(hash, class_name, loader_data, havesupername, supername);
   add_entry(index, entry);
 }
-
 
 // Remove a placeholder object.
 void PlaceholderTable::remove_entry(int index, unsigned int hash,
@@ -142,7 +116,6 @@ PlaceholderEntry* PlaceholderTable::find_and_add(int index, unsigned int hash,
   return probe;
 }
 
-
 // placeholder is used to track class loading internal states
 // placeholder existence now for loading superclass/superinterface
 // superthreadQ tracks class circularity, while loading superclass/superinterface
@@ -188,7 +161,6 @@ void PlaceholderEntry::verify() const {
 void PlaceholderTable::verify() {
   verify_table<PlaceholderEntry>("Placeholder Table");
 }
-
 
 // Note, doesn't append a cr
 // Can't call this print_on because HashtableEntry doesn't initialize its vptr

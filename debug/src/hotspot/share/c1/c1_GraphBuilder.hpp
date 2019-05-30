@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_GRAPHBUILDER_HPP
 #define SHARE_VM_C1_C1_GRAPHBUILDER_HPP
 
@@ -195,7 +171,9 @@ class GraphBuilder {
   ScopeData*        scope_data() const           { return _scope_data; }
   Compilation*      compilation() const          { return _compilation; }
   BlockList*        bci2block() const            { return scope_data()->bci2block(); }
-  ValueMap*         vmap() const                 { assert(UseLocalValueNumbering, "should not access otherwise"); return _vmap; }
+  ValueMap*         vmap() const                 {
+    assert(UseLocalValueNumbering, "should not access otherwise");
+    return _vmap; }
   bool              has_handler() const          { return scope_data()->has_handler(); }
 
   BlockBegin*       block() const                { return _block; }
@@ -404,14 +382,12 @@ class GraphBuilder {
   void check_args_for_profiling(Values* obj_args, int expected);
 
  public:
-  NOT_PRODUCT(void print_stats();)
-
   // initialization
   static void initialize();
 
   // public
   static bool can_trap(ciMethod* method, Bytecodes::Code code) {
-    assert(0 <= code && code < Bytecodes::number_of_java_codes, "illegal bytecode");
+    assert(0 <= code && code < Bytecodes::number_of_java_codes, "illegal bytecode");
     if (_can_trap[code]) return true;
     // special handling for finalizer registration
     return code == Bytecodes::_return && method->intrinsic_id() == vmIntrinsics::_Object_init;
@@ -424,4 +400,4 @@ class GraphBuilder {
   BlockBegin* start() const                      { return _start; }
 };
 
-#endif // SHARE_VM_C1_C1_GRAPHBUILDER_HPP
+#endif

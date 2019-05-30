@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_INTERPRETER_BYTECODEINTERPRETER_HPP
 #define SHARE_VM_INTERPRETER_BYTECODEINTERPRETER_HPP
 
@@ -37,7 +13,7 @@
 #ifdef CC_INTERP
 
 // JavaStack Implementation
-#define MORE_STACK(count)  \
+#define MORE_STACK(count) \
     (topOfStack -= ((count) * Interpreter::stackElementWords))
 
 // CVM definitions find hotspot equivalents...
@@ -49,7 +25,6 @@ union VMJavaVal64 {
     jdouble d;
     uint32_t      v[2];
 };
-
 
 typedef class BytecodeInterpreter* interpreterState;
 
@@ -101,8 +76,7 @@ public:
          more_monitors,             // need a new monitor
          throwing_exception,        // unwind stack and rethrow
          popping_frame,             // unwind call and retry call
-         do_osr,                    // request this invocation be OSR's
-         early_return               // early return as commanded by jvmti
+         do_osr                     // request this invocation be OSR's
     };
 
 private:
@@ -121,7 +95,6 @@ private:
     intptr_t*             _stack_base;    // base of expression stack
     intptr_t*             _stack_limit;   // limit of expression stack
     BasicObjectLock*      _monitor_base;  // base of monitors on the native stack
-
 
 public:
   // Constructor is only used by the initialization step. All other instances are created
@@ -172,7 +145,6 @@ typedef union VMSlotVal32 {
     address        a;     /* a return created by jsr or jsr_w */
 } VMSlotVal32;
 
-
 /*
  * Generic 32-bit wide stack slot definition.
  */
@@ -208,7 +180,6 @@ inline interpreterState prev() { return _prev_link; }
 
 inline intptr_t* stack() { return _stack; }
 inline void set_stack(intptr_t* new_stack) { _stack = new_stack; }
-
 
 inline intptr_t* stack_base() { return _stack_base; }
 inline intptr_t* stack_limit() { return _stack_limit; }
@@ -257,7 +228,6 @@ static jlong VMlongNeg(jlong op);
  */
 
 static jlong VMlongNot(jlong op);
-
 
 /*
  * Comparisons to 0:
@@ -431,7 +401,6 @@ static int32_t VMdoubleCompare(jdouble op1, jdouble op2, int32_t direction);
 
 static void VMmemCopy64(uint32_t to[2], const uint32_t from[2]);
 
-
 // Arithmetic operations
 
 /*
@@ -513,8 +482,6 @@ static void swap(intptr_t *tos);      /* swap top two elements */
 
 // The Interpreter used when
 static void run(interpreterState istate);
-// The interpreter used if JVMTI needs interpreter events
-static void runWithChecks(interpreterState istate);
 static void End_Of_Interpreter(void);
 
 // Inline static functions for Java Stack and Local manipulation
@@ -568,20 +535,14 @@ static void astore(intptr_t* topOfStack, int stack_offset,
 // Support for dup and swap
 static void copy_stack_slot(intptr_t *tos, int from_offset, int to_offset);
 
-#ifndef PRODUCT
-static const char* C_msg(BytecodeInterpreter::messages msg);
-void print();
-#endif // PRODUCT
-
 #ifdef ZERO
 # include "bytecodeInterpreter_zero.hpp"
 #else
 #error "Only Zero Bytecode Interpreter is supported"
 #endif
 
-
 }; // BytecodeInterpreter
 
-#endif // CC_INTERP
+#endif
 
-#endif // SHARE_VM_INTERPRETER_BYTECODEINTERPRETER_HPP
+#endif

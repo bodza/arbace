@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "rdtsc_x86.hpp"
 #include "runtime/thread.inline.hpp"
@@ -35,7 +11,7 @@ static bool rdtsc_elapsed_counter_enabled = false;
 static jlong tsc_frequency = 0;
 
 static jlong set_epoch() {
-  assert(0 == _epoch, "invariant");
+  assert(0 == _epoch, "invariant");
   _epoch = os::rdtsc();
   return _epoch;
 }
@@ -84,15 +60,15 @@ static void do_time_measurements(volatile jlong& time_base,
 }
 
 static jlong initialize_frequency() {
-  assert(0 == tsc_frequency, "invariant");
-  assert(0 == _epoch, "invariant");
+  assert(0 == tsc_frequency, "invariant");
+  assert(0 == _epoch, "invariant");
   const jlong initial_counter = set_epoch();
   if (initial_counter == 0) {
     return 0;
   }
   // os time frequency
   static double os_freq = (double)os::elapsed_frequency();
-  assert(os_freq > 0, "os_elapsed frequency corruption!");
+  assert(os_freq > 0, "os_elapsed frequency corruption!");
 
   double tsc_freq = .0;
   double os_to_tsc_conv_factor = 1.0;
@@ -152,7 +128,7 @@ static bool ergonomics() {
 
   if (!ft_enabled) {
     if (UseFastUnorderedTimeStamps && VM_Version::supports_tsc()) {
-      warning("\nThe hardware does not support invariant tsc (INVTSC) register and/or cannot guarantee tsc synchronization between sockets at startup.\n"\
+      warning("\nThe hardware does not support invariant tsc (INVTSC) register and/or cannot guarantee tsc synchronization between sockets at startup.\n" \
         "Values returned via rdtsc() are not guaranteed to be accurate, esp. when comparing values from cross sockets reads. Enabling UseFastUnorderedTimeStamps on non-invariant tsc hardware should be considered experimental.\n");
       ft_enabled = true;
     }
@@ -195,10 +171,10 @@ jlong Rdtsc::raw() {
 bool Rdtsc::initialize() {
   static bool initialized = false;
   if (!initialized) {
-    assert(!rdtsc_elapsed_counter_enabled, "invariant");
+    assert(!rdtsc_elapsed_counter_enabled, "invariant");
     VM_Version_Ext::initialize();
-    assert(0 == tsc_frequency, "invariant");
-    assert(0 == _epoch, "invariant");
+    assert(0 == tsc_frequency, "invariant");
+    assert(0 == _epoch, "invariant");
     bool result = initialize_elapsed_counter(); // init hw
     if (result) {
       result = ergonomics(); // check logical state

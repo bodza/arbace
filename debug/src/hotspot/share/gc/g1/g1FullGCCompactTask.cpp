@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1ConcurrentMarkBitMap.inline.hpp"
@@ -50,7 +26,7 @@ public:
           _bitmap->clear(obj);
           obj->init_mark_raw();
         } else {
-          assert(current->is_empty(), "Should have been cleared in phase 2.");
+          assert(current->is_empty(), "Should have been cleared in phase 2.");
         }
       }
       current->reset_during_compaction();
@@ -69,16 +45,16 @@ size_t G1FullGCCompactTask::G1CompactRegionClosure::apply(oop obj) {
 
   // copy object and reinit its mark
   HeapWord* obj_addr = (HeapWord*) obj;
-  assert(obj_addr != destination, "everything in this pass should be moving");
+  assert(obj_addr != destination, "everything in this pass should be moving");
   Copy::aligned_conjoint_words(obj_addr, destination, size);
   oop(destination)->init_mark_raw();
-  assert(oop(destination)->klass() != NULL, "should have a class");
+  assert(oop(destination)->klass() != NULL, "should have a class");
 
   return size;
 }
 
 void G1FullGCCompactTask::compact_region(HeapRegion* hr) {
-  assert(!hr->is_humongous(), "Should be no humongous regions in compaction queue");
+  assert(!hr->is_humongous(), "Should be no humongous regions in compaction queue");
   G1CompactRegionClosure compact(collector()->mark_bitmap());
   hr->apply_to_marked_objects(collector()->mark_bitmap(), &compact);
   // Once all objects have been moved the liveness information

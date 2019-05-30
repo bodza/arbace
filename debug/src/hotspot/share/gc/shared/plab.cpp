@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/plab.inline.hpp"
@@ -45,9 +21,7 @@ PLAB::PLAB(size_t desired_plab_sz_) :
 {
   // ArrayOopDesc::header_size depends on command line initialization.
   AlignmentReserve = oopDesc::header_size() > MinObjAlignment ? align_object_size(arrayOopDesc::header_size(T_INT)) : 0;
-  assert(min_size() > AlignmentReserve,
-         "Minimum PLAB size " SIZE_FORMAT " must be larger than alignment reserve " SIZE_FORMAT " "
-         "to be able to contain objects", min_size(), AlignmentReserve);
+  assert(min_size() > AlignmentReserve, "Minimum PLAB size " SIZE_FORMAT " must be larger than alignment reserve " SIZE_FORMAT " to be able to contain objects", min_size(), AlignmentReserve);
 }
 
 // If the minimum object size is greater than MinObjAlignment, we can
@@ -94,16 +68,15 @@ void PLAB::add_undo_waste(HeapWord* obj, size_t word_sz) {
 }
 
 void PLAB::undo_last_allocation(HeapWord* obj, size_t word_sz) {
-  assert(pointer_delta(_top, _bottom) >= word_sz, "Bad undo");
-  assert(pointer_delta(_top, obj) == word_sz, "Bad undo");
+  assert(pointer_delta(_top, _bottom) >= word_sz, "Bad undo");
+  assert(pointer_delta(_top, obj) == word_sz, "Bad undo");
   _top = obj;
 }
 
 void PLAB::undo_allocation(HeapWord* obj, size_t word_sz) {
   // Is the alloc in the current alloc buffer?
   if (contains(obj)) {
-    assert(contains(obj + word_sz - 1),
-      "should contain whole object");
+    assert(contains(obj + word_sz - 1), "should contain whole object");
     undo_last_allocation(obj, word_sz);
   } else {
     add_undo_waste(obj, word_sz);
@@ -151,16 +124,9 @@ void PLABStats::adjust_desired_plab_sz() {
     return;
   }
 
-  assert(is_object_aligned(max_size()) && min_size() <= max_size(),
-         "PLAB clipping computation may be incorrect");
+  assert(is_object_aligned(max_size()) && min_size() <= max_size(), "PLAB clipping computation may be incorrect");
 
-  assert(_allocated != 0 || _unused == 0,
-         "Inconsistency in PLAB stats: "
-         "_allocated: " SIZE_FORMAT ", "
-         "_wasted: " SIZE_FORMAT ", "
-         "_unused: " SIZE_FORMAT ", "
-         "_undo_wasted: " SIZE_FORMAT,
-         _allocated, _wasted, _unused, _undo_wasted);
+  assert(_allocated != 0 || _unused == 0, "Inconsistency in PLAB stats: _allocated: " SIZE_FORMAT ", _wasted: " SIZE_FORMAT ", _unused: " SIZE_FORMAT ", _undo_wasted: " SIZE_FORMAT, _allocated, _wasted, _unused, _undo_wasted);
 
   size_t plab_sz = compute_desired_plab_sz();
   // Take historical weighted average

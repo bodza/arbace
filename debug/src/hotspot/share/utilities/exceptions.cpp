@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -48,9 +24,8 @@ void check_ThreadShadow() {
   if (offset1 != offset2) fatal("ThreadShadow::_pending_exception is not positioned correctly");
 }
 
-
 void ThreadShadow::set_pending_exception(oop exception, const char* file, int line) {
-  assert(exception != NULL && oopDesc::is_oop(exception), "invalid exception oop");
+  assert(exception != NULL && oopDesc::is_oop(exception), "invalid exception oop");
   _pending_exception = exception;
   _exception_file    = file;
   _exception_line    = line;
@@ -76,18 +51,6 @@ bool Exceptions::special_exception(Thread* thread, const char* file, int line, H
    vm_exit_during_initialization(h_exception);
    ShouldNotReachHere();
   }
-
-#ifdef ASSERT
-  // Check for trying to throw stack overflow before initialization is complete
-  // to prevent infinite recursion trying to initialize stack overflow without
-  // adequate stack space.
-  // This can happen with stress testing a large value of StackShadowPages
-  if (h_exception()->klass() == SystemDictionary::StackOverflowError_klass()) {
-    InstanceKlass* ik = InstanceKlass::cast(h_exception->klass());
-    assert(ik->is_initialized(),
-           "need to increase java_thread_min_stack_allowed calculation");
-  }
-#endif // ASSERT
 
   if (thread->is_VM_thread()
       || !thread->can_call_java()) {
@@ -125,14 +88,14 @@ bool Exceptions::special_exception(Thread* thread, const char* file, int line, S
 // This method should only be called from generated code,
 // therefore the exception oop should be in the oopmap.
 void Exceptions::_throw_oop(Thread* thread, const char* file, int line, oop exception) {
-  assert(exception != NULL, "exception should not be NULL");
+  assert(exception != NULL, "exception should not be NULL");
   Handle h_exception(thread, exception);
   _throw(thread, file, line, h_exception);
 }
 
 void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exception, const char* message) {
   ResourceMark rm;
-  assert(h_exception() != NULL, "exception should not be NULL");
+  assert(h_exception() != NULL, "exception should not be NULL");
 
   // tracing (do this up front - so it works during boot strapping)
   log_info(exceptions)("Exception <%s%s%s> (" INTPTR_FORMAT ") \n"
@@ -156,7 +119,7 @@ void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exc
     Atomic::inc(&_linkage_errors);
   }
 
-  assert(h_exception->is_a(SystemDictionary::Throwable_klass()), "exception is not a subclass of java/lang/Throwable");
+  assert(h_exception->is_a(SystemDictionary::Throwable_klass()), "exception is not a subclass of java/lang/Throwable");
 
   // set the pending exception
   thread->set_pending_exception(h_exception(), file, line);
@@ -168,7 +131,6 @@ void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exc
                           p2i(h_exception()), file, line);
   }
 }
-
 
 void Exceptions::_throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message,
                             Handle h_loader, Handle h_protection_domain) {
@@ -208,7 +170,6 @@ void Exceptions::_throw_args(Thread* thread, const char* file, int line, Symbol*
   _throw(thread, file, line, exception);
 }
 
-
 // Methods for default parameters.
 // NOTE: These must be here (and not in the header file) because of include circularities.
 void Exceptions::_throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause) {
@@ -221,14 +182,13 @@ void Exceptions::_throw_cause(Thread* thread, const char* file, int line, Symbol
   _throw_cause(thread, file, line, name, h_cause, Handle(thread, NULL), Handle(thread, NULL));
 }
 
-
 void Exceptions::throw_stack_overflow_exception(Thread* THREAD, const char* file, int line, const methodHandle& method) {
   Handle exception;
   if (!THREAD->has_pending_exception()) {
     InstanceKlass* k = SystemDictionary::StackOverflowError_klass();
     oop e = k->allocate_instance(CHECK);
     exception = Handle(THREAD, e);  // fill_in_stack trace does gc
-    assert(k->is_initialized(), "need to increase java_thread_min_stack_allowed calculation");
+    assert(k->is_initialized(), "need to increase java_thread_min_stack_allowed calculation");
     if (StackTraceInThrowable) {
       java_lang_Throwable::fill_in_stack_trace(exception, method());
     }
@@ -251,16 +211,14 @@ void Exceptions::fthrow(Thread* thread, const char* file, int line, Symbol* h_na
   _throw_msg(thread, file, line, h_name, msg);
 }
 
-
 // Creates an exception oop, calls the <init> method with the given signature.
 // and returns a Handle
 Handle Exceptions::new_exception(Thread *thread, Symbol* name,
                                  Symbol* signature, JavaCallArguments *args,
                                  Handle h_loader, Handle h_protection_domain) {
-  assert(Universe::is_fully_initialized(),
-    "cannot be called during initialization");
-  assert(thread->is_Java_thread(), "can only be called by a Java thread");
-  assert(!thread->has_pending_exception(), "already has exception");
+  assert(Universe::is_fully_initialized(), "cannot be called during initialization");
+  assert(thread->is_Java_thread(), "can only be called by a Java thread");
+  assert(!thread->has_pending_exception(), "already has exception");
 
   Handle h_exception;
 
@@ -268,7 +226,7 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
   Klass* klass = SystemDictionary::resolve_or_fail(name, h_loader, h_protection_domain, true, thread);
 
   if (!thread->has_pending_exception()) {
-    assert(klass != NULL, "klass must exist");
+    assert(klass != NULL, "klass must exist");
     h_exception = JavaCalls::construct_new_instance(InstanceKlass::cast(klass),
                                 signature,
                                 args,
@@ -294,8 +252,7 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
 
   // Future: object initializer should take a cause argument
   if (h_cause.not_null()) {
-    assert(h_cause->is_a(SystemDictionary::Throwable_klass()),
-        "exception cause is not a subclass of java/lang/Throwable");
+    assert(h_cause->is_a(SystemDictionary::Throwable_klass()), "exception cause is not a subclass of java/lang/Throwable");
     JavaValue result1(T_OBJECT);
     JavaCallArguments args1;
     args1.set_receiver(h_exception);
@@ -481,7 +438,6 @@ ExceptionMark::ExceptionMark(Thread*& thread) {
     fatal("ExceptionMark constructor expects no pending exceptions");
   }
 }
-
 
 ExceptionMark::~ExceptionMark() {
   if (_thread->has_pending_exception()) {

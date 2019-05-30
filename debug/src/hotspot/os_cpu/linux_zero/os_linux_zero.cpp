@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
- * Copyright 2007, 2008, 2009, 2010 Red Hat, Inc.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 // no precompiled headers
 #include "jvm.h"
 #include "assembler_zero.inline.hpp"
@@ -93,7 +68,7 @@ char* os::non_memory_address_word() {
 #else
   // This is the value for x86; works pretty well for PPC too.
   return (char *) -1;
-#endif // SPARC
+#endif
 }
 
 address os::Linux::ucontext_get_pc(const ucontext_t* uc) {
@@ -105,9 +80,7 @@ void os::Linux::ucontext_set_pc(ucontext_t * uc, address pc) {
   ShouldNotCallThis();
 }
 
-ExtendedPC os::fetch_frame_from_context(const void* ucVoid,
-                                        intptr_t** ret_sp,
-                                        intptr_t** ret_fp) {
+ExtendedPC os::fetch_frame_from_context(const void* ucVoid, intptr_t** ret_sp, intptr_t** ret_fp) {
   ShouldNotCallThis();
   return NULL; // silence compile warnings
 }
@@ -118,10 +91,7 @@ frame os::fetch_frame_from_context(const void* ucVoid) {
 }
 
 extern "C" JNIEXPORT int
-JVM_handle_linux_signal(int sig,
-                        siginfo_t* info,
-                        void* ucVoid,
-                        int abort_if_unrecognized) {
+JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unrecognized) {
   ucontext_t* uc = (ucontext_t*) ucVoid;
 
   Thread* t = Thread::current_or_null_safe();
@@ -243,20 +213,6 @@ JVM_handle_linux_signal(int sig,
     return false;
   }
 
-#ifndef PRODUCT
-  if (sig == SIGSEGV) {
-    fatal("\n#"
-          "\n#    /--------------------\\"
-          "\n#    | segmentation fault |"
-          "\n#    \\---\\ /--------------/"
-          "\n#        /"
-          "\n#    [-]        |\\_/|    "
-          "\n#    (+)=C      |o o|__  "
-          "\n#    | |        =-*-=__\\ "
-          "\n#    OOO        c_c_(___)");
-  }
-#endif // !PRODUCT
-
   char buf[64];
 
   sprintf(buf, "caught unhandled signal %d", sig);
@@ -283,21 +239,7 @@ void os::Linux::set_fpu_control_word(int fpu) {
 }
 
 bool os::is_allocatable(size_t bytes) {
-#ifdef _LP64
   return true;
-#else
-  if (bytes < 2 * G) {
-    return true;
-  }
-
-  char* addr = reserve_memory(bytes, NULL);
-
-  if (addr != NULL) {
-    release_memory(addr, bytes);
-  }
-
-  return addr != NULL;
-#endif // _LP64
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -308,11 +250,7 @@ size_t os::Posix::_java_thread_min_stack_allowed = 64 * K;
 size_t os::Posix::_vm_internal_thread_min_stack_allowed = 64 * K;
 
 size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
-#ifdef _LP64
   size_t s = (thr_type == os::compiler_thread ? 4 * M : 1 * M);
-#else
-  size_t s = (thr_type == os::compiler_thread ? 2 * M : 512 * K);
-#endif // _LP64
   return s;
 }
 
@@ -339,7 +277,7 @@ static void current_stack_region(address *bottom, size_t *size) {
   // The block of memory returned by pthread_attr_getstack() includes
   // guard pages where present.  We need to trim these off.
   size_t page_bytes = os::Linux::page_size();
-  assert(((intptr_t) stack_bottom & (page_bytes - 1)) == 0, "unaligned stack");
+  assert(((intptr_t) stack_bottom & (page_bytes - 1)) == 0, "unaligned stack");
 
   size_t guard_bytes;
   res = pthread_attr_getguardsize(&attr, &guard_bytes);
@@ -347,7 +285,7 @@ static void current_stack_region(address *bottom, size_t *size) {
     fatal("pthread_attr_getguardsize failed with errno = %d", res);
   }
   int guard_pages = align_up(guard_bytes, page_bytes) / page_bytes;
-  assert(guard_bytes == guard_pages * page_bytes, "unaligned guard");
+  assert(guard_bytes == guard_pages * page_bytes, "unaligned guard");
 
 #ifdef IA64
   // IA64 has two stacks sharing the same area of memory, a normal
@@ -359,7 +297,7 @@ static void current_stack_region(address *bottom, size_t *size) {
   // to grow faster.
   int total_pages = align_down(stack_bytes, page_bytes) / page_bytes;
   stack_bottom += (total_pages - guard_pages) / 2 * page_bytes;
-#endif // IA64
+#endif
 
   stack_bottom += guard_bytes;
 
@@ -377,8 +315,8 @@ static void current_stack_region(address *bottom, size_t *size) {
     stack_bottom = stack_top - stack_bytes;
   }
 
-  assert(os::current_stack_pointer() >= stack_bottom, "should do");
-  assert(os::current_stack_pointer() < stack_top, "should do");
+  assert(os::current_stack_pointer() >= stack_bottom, "should do");
+  assert(os::current_stack_pointer() < stack_top, "should do");
 
   *bottom = stack_bottom;
   *size = stack_top - stack_bottom;
@@ -418,7 +356,6 @@ extern "C" {
   int SpinPause() {
       return -1; // silence compile warnings
   }
-
 
   void _Copy_conjoint_jshorts_atomic(jshort* from, jshort* to, size_t count) {
     if (from > to) {
@@ -463,24 +400,16 @@ extern "C" {
     }
   }
 
-  void _Copy_arrayof_conjoint_bytes(HeapWord* from,
-                                    HeapWord* to,
-                                    size_t    count) {
+  void _Copy_arrayof_conjoint_bytes(HeapWord* from, HeapWord* to, size_t count) {
     memmove(to, from, count);
   }
-  void _Copy_arrayof_conjoint_jshorts(HeapWord* from,
-                                      HeapWord* to,
-                                      size_t    count) {
+  void _Copy_arrayof_conjoint_jshorts(HeapWord* from, HeapWord* to, size_t count) {
     memmove(to, from, count * 2);
   }
-  void _Copy_arrayof_conjoint_jints(HeapWord* from,
-                                    HeapWord* to,
-                                    size_t    count) {
+  void _Copy_arrayof_conjoint_jints(HeapWord* from, HeapWord* to, size_t count) {
     memmove(to, from, count * 4);
   }
-  void _Copy_arrayof_conjoint_jlongs(HeapWord* from,
-                                     HeapWord* to,
-                                     size_t    count) {
+  void _Copy_arrayof_conjoint_jlongs(HeapWord* from, HeapWord* to, size_t count) {
     memmove(to, from, count * 8);
   }
 };
@@ -488,22 +417,6 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////
 // Implementations of atomic operations not supported by processors.
 //  -- http://gcc.gnu.org/onlinedocs/gcc-4.2.1/gcc/Atomic-Builtins.html
-
-#ifndef _LP64
-extern "C" {
-  long long unsigned int __sync_val_compare_and_swap_8(
-    volatile void *ptr,
-    long long unsigned int oldval,
-    long long unsigned int newval) {
-    ShouldNotCallThis();
-  }
-};
-#endif // !_LP64
-
-#ifndef PRODUCT
-void os::verify_stack_alignment() {
-}
-#endif
 
 int os::extra_bang_size_in_bytes() {
   // Zero does not require an additional stack banging.

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_COMPILER_ABSTRACTCOMPILER_HPP
 #define SHARE_VM_COMPILER_ABSTRACTCOMPILER_HPP
 
@@ -31,7 +7,6 @@
 
 typedef void (*initializer)(void);
 
-#if INCLUDE_JVMCI
 // Per-compiler statistics
 class CompilerStatistics {
   friend class VMStructs;
@@ -68,7 +43,6 @@ class CompilerStatistics {
   }
   CompilerStatistics() : _nmethods_size(0), _nmethods_code_size(0) {}
 };
-#endif // INCLUDE_JVMCI
 
 class AbstractCompiler : public CHeapObj<mtCompiler> {
  private:
@@ -86,9 +60,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
  private:
   const CompilerType _type;
 
-#if INCLUDE_JVMCI
   CompilerStatistics _stats;
-#endif
 
  public:
   AbstractCompiler(CompilerType type) : _type(type), _compiler_state(uninitialized), _num_compiler_threads(0) {}
@@ -173,15 +145,12 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
     ShouldNotReachHere();
   }
 
-
   // Print compilation timers and statistics
   virtual void print_timers() {
     ShouldNotReachHere();
   }
 
-#if INCLUDE_JVMCI
   CompilerStatistics* stats() { return &_stats; }
-#endif
 };
 
-#endif // SHARE_VM_COMPILER_ABSTRACTCOMPILER_HPP
+#endif

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -45,7 +21,6 @@ class StatSamplerTask : public PeriodicTask {
     void task() { StatSampler::collect_sample(); }
 };
 
-
 //----------------------------------------------------------
 // Implementation of StatSampler
 
@@ -67,7 +42,6 @@ void StatSampler::initialize() {
 
   // get copy of the sampled list
   _sampled = PerfDataManager::sampled();
-
 }
 
 /*
@@ -88,7 +62,6 @@ void StatSampler::engage() {
     _task->enroll();
   }
 }
-
 
 /*
  * the disengage() method is responsible for deactivating the periodic
@@ -134,7 +107,7 @@ void StatSampler::destroy() {
  */
 void StatSampler::sample_data(PerfDataList* list) {
 
-  assert(list != NULL, "null list unexpected");
+  assert(list != NULL, "null list unexpected");
 
   for (int index = 0; index < list->length(); index++) {
     PerfData* item = list->at(index);
@@ -167,7 +140,7 @@ void StatSampler::collect_sample() {
   //   _sampled = PerfDataManager::sampled();
   // }
 
-  assert(_sampled != NULL, "list not initialized");
+  assert(_sampled != NULL, "list not initialized");
 
   sample_data(_sampled);
 }
@@ -255,7 +228,6 @@ static PropertyCounters property_counters[] = {
   { NULL, SUN_PROPERTY }
 };
 
-
 /*
  * Method to create PerfData string instruments that contain the values
  * of various system properties. String instruments are created for each
@@ -272,12 +244,12 @@ void StatSampler::create_system_property_instrumentation(TRAPS) {
     for (int j = 0; property_counters[i].property_list[j] != NULL; j++) {
 
       const char* property_name = property_counters[i].property_list[j];
-      assert(property_name != NULL, "property name should not be NULL");
+      assert(property_name != NULL, "property name should not be NULL");
 
       const char* value = get_system_property(property_name, CHECK);
 
       // the property must exist
-      assert(value != NULL, "property name should be valid");
+      assert(value != NULL, "property name should be valid");
 
       if (value != NULL) {
         // create the property counter

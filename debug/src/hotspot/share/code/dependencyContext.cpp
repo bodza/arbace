@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/nmethod.hpp"
 #include "code/dependencies.hpp"
@@ -148,10 +124,6 @@ void DependencyContext::remove_dependent_nmethod(nmethod* nm, bool expunge) {
     }
     last = b;
   }
-#ifdef ASSERT
-  tty->print_raw_cr("### can't find dependent nmethod");
-  nm->print();
-#endif // ASSERT
   ShouldNotReachHere();
 }
 
@@ -161,14 +133,14 @@ void DependencyContext::remove_dependent_nmethod(nmethod* nm, bool expunge) {
 void DependencyContext::expunge_stale_entries() {
   assert_locked_or_safepoint(CodeCache_lock);
   if (!has_stale_entries()) {
-    assert(!find_stale_entries(), "inconsistent info");
+    assert(!find_stale_entries(), "inconsistent info");
     return;
   }
   nmethodBucket* first = dependencies();
   nmethodBucket* last = NULL;
   int removed = 0;
   for (nmethodBucket* b = first; b != NULL;) {
-    assert(b->count() >= 0, "bucket count: %d", b->count());
+    assert(b->count() >= 0, "bucket count: %d", b->count());
     nmethodBucket* next = b->next();
     if (b->count() == 0) {
       if (last == NULL) {
@@ -229,45 +201,6 @@ void DependencyContext::wipe() {
     b = next;
   }
 }
-
-#ifndef PRODUCT
-void DependencyContext::print_dependent_nmethods(bool verbose) {
-  int idx = 0;
-  for (nmethodBucket* b = dependencies(); b != NULL; b = b->next()) {
-    nmethod* nm = b->get_nmethod();
-    tty->print("[%d] count=%d { ", idx++, b->count());
-    if (!verbose) {
-      nm->print_on(tty, "nmethod");
-      tty->print_cr(" } ");
-    } else {
-      nm->print();
-      nm->print_dependencies();
-      tty->print_cr("--- } ");
-    }
-  }
-}
-
-bool DependencyContext::is_dependent_nmethod(nmethod* nm) {
-  for (nmethodBucket* b = dependencies(); b != NULL; b = b->next()) {
-    if (nm == b->get_nmethod()) {
-#ifdef ASSERT
-      int count = b->count();
-      assert(count >= 0, "count shouldn't be negative: %d", count);
-#endif
-      return true;
-    }
-  }
-  return false;
-}
-
-bool DependencyContext::find_stale_entries() {
-  for (nmethodBucket* b = dependencies(); b != NULL; b = b->next()) {
-    if (b->count() == 0)  return true;
-  }
-  return false;
-}
-
-#endif //PRODUCT
 
 int nmethodBucket::decrement() {
   return Atomic::sub(1, &_count);

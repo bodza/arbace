@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "code/nmethod.hpp"
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
@@ -110,10 +86,8 @@ void HeapRegion::setup_heap_region_size(size_t initial_heap_size, size_t max_hea
 }
 
 void HeapRegion::hr_clear(bool keep_remset, bool clear_space, bool locked) {
-  assert(_humongous_start_region == NULL,
-         "we should have already filtered out humongous regions");
-  assert(!in_collection_set(),
-         "Should not clear heap region %u in the collection set", hrm_index());
+  assert(_humongous_start_region == NULL, "we should have already filtered out humongous regions");
+  assert(!in_collection_set(), "Should not clear heap region %u in the collection set", hrm_index());
 
   set_young_index_in_cset(-1);
   uninstall_surv_rate_group();
@@ -195,8 +169,8 @@ void HeapRegion::set_closed_archive() {
 }
 
 void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
-  assert(!is_humongous(), "sanity / pre-condition");
-  assert(top() == bottom(), "should be empty");
+  assert(!is_humongous(), "sanity / pre-condition");
+  assert(top() == bottom(), "should be empty");
 
   report_region_type_change(G1HeapRegionTraceType::StartsHumongous);
   _type.set_starts_humongous();
@@ -206,9 +180,9 @@ void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
 }
 
 void HeapRegion::set_continues_humongous(HeapRegion* first_hr) {
-  assert(!is_humongous(), "sanity / pre-condition");
-  assert(top() == bottom(), "should be empty");
-  assert(first_hr->is_starts_humongous(), "pre-condition");
+  assert(!is_humongous(), "sanity / pre-condition");
+  assert(top() == bottom(), "should be empty");
+  assert(first_hr->is_starts_humongous(), "pre-condition");
 
   report_region_type_change(G1HeapRegionTraceType::ContinuesHumongous);
   _type.set_continues_humongous();
@@ -218,9 +192,9 @@ void HeapRegion::set_continues_humongous(HeapRegion* first_hr) {
 }
 
 void HeapRegion::clear_humongous() {
-  assert(is_humongous(), "pre-condition");
+  assert(is_humongous(), "pre-condition");
 
-  assert(capacity() == HeapRegion::GrainBytes, "pre-condition");
+  assert(capacity() == HeapRegion::GrainBytes, "pre-condition");
   _humongous_start_region = NULL;
 
   _bot_part.set_object_can_span(false);
@@ -235,9 +209,6 @@ HeapRegion::HeapRegion(uint hrm_index,
     _evacuation_failed(false),
     _prev_marked_bytes(0), _next_marked_bytes(0), _gc_efficiency(0.0),
     _next(NULL), _prev(NULL),
-#ifdef ASSERT
-    _containing_set(NULL),
-#endif // ASSERT
      _young_index_in_cset(-1), _surv_rate_group(NULL), _age_index(-1),
     _rem_set(NULL), _recorded_rs_length(0), _predicted_elapsed_time_ms(0)
 {
@@ -247,7 +218,7 @@ HeapRegion::HeapRegion(uint hrm_index,
 }
 
 void HeapRegion::initialize(MemRegion mr, bool clear_space, bool mangle_space) {
-  assert(_rem_set->is_empty(), "Remembered set must be empty");
+  assert(_rem_set->is_empty(), "Remembered set must be empty");
 
   G1ContiguousSpace::initialize(mr, clear_space, mangle_space);
 
@@ -286,8 +257,7 @@ void HeapRegion::note_self_forwarding_removal_start(bool during_initial_mark,
 }
 
 void HeapRegion::note_self_forwarding_removal_end(size_t marked_bytes) {
-  assert(marked_bytes <= used(),
-         "marked: " SIZE_FORMAT " used: " SIZE_FORMAT, marked_bytes, used());
+  assert(marked_bytes <= used(), "marked: " SIZE_FORMAT " used: " SIZE_FORMAT, marked_bytes, used());
   _prev_top_at_mark_start = top();
   _prev_marked_bytes = marked_bytes;
 }
@@ -399,7 +369,7 @@ void HeapRegion::verify_strong_code_roots(VerifyOption vo, bool* failures) const
     // be consistent until the strong code roots are rebuilt after the
     // actual GC. Skip verifying the strong code roots in this particular
     // time.
-    assert(VerifyDuringGC, "only way to get here");
+    assert(VerifyDuringGC, "only way to get here");
     return;
   }
 
@@ -475,17 +445,10 @@ public:
   int n_failures() { return _n_failures; }
 
   void print_object(outputStream* out, oop obj) {
-#ifdef PRODUCT
     Klass* k = obj->klass();
     const char* class_name = k->external_name();
     out->print_cr("class name %s", class_name);
-#else // PRODUCT
-    obj->print_on(out);
-#endif // PRODUCT
   }
-
-  // This closure provides its own oop verification code.
-  debug_only(virtual bool should_verify_oops() { return false; })
 };
 
 class VerifyLiveClosure : public G1VerificationClosure {
@@ -496,9 +459,8 @@ public:
 
   template <class T>
   void do_oop_work(T* p) {
-    assert(_containing_obj != NULL, "Precondition");
-    assert(!_g1h->is_obj_dead_cond(_containing_obj, _vo),
-      "Precondition");
+    assert(_containing_obj != NULL, "Precondition");
+    assert(!_g1h->is_obj_dead_cond(_containing_obj, _vo), "Precondition");
     verify_liveness(p);
   }
 
@@ -553,9 +515,8 @@ public:
 
   template <class T>
   void do_oop_work(T* p) {
-    assert(_containing_obj != NULL, "Precondition");
-    assert(!_g1h->is_obj_dead_cond(_containing_obj, _vo),
-      "Precondition");
+    assert(_containing_obj != NULL, "Precondition");
+    assert(!_g1h->is_obj_dead_cond(_containing_obj, _vo), "Precondition");
     verify_remembered_set(p);
   }
 
@@ -620,9 +581,6 @@ public:
   }
   virtual inline void do_oop(oop* p) { do_oop_work(p); }
   virtual inline void do_oop(narrowOop* p) { do_oop_work(p); }
-
-  // This closure provides its own oop verification code.
-  debug_only(virtual bool should_verify_oops() { return false; })
 };
 
 // This really ought to be commoned up into OffsetTableContigSpace somehow.
@@ -830,15 +788,6 @@ void G1ContiguousSpace::clear(bool mangle_space) {
   CompactibleSpace::clear(mangle_space);
   reset_bot();
 }
-#ifndef PRODUCT
-void G1ContiguousSpace::mangle_unused_area() {
-  mangle_unused_area_complete();
-}
-
-void G1ContiguousSpace::mangle_unused_area_complete() {
-  SpaceMangler::mangle_region(MemRegion(top(), end()));
-}
-#endif
 
 void G1ContiguousSpace::print() const {
   print_short();

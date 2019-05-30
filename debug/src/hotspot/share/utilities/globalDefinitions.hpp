@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_GLOBALDEFINITIONS_HPP
 #define SHARE_VM_UTILITIES_GLOBALDEFINITIONS_HPP
 
@@ -84,13 +60,8 @@
 #endif
 
 // Format pointers which change size between 32- and 64-bit.
-#ifdef  _LP64
 #define INTPTR_FORMAT "0x%016" PRIxPTR
 #define PTR_FORMAT    "0x%016" PRIxPTR
-#else   // !_LP64
-#define INTPTR_FORMAT "0x%08"  PRIxPTR
-#define PTR_FORMAT    "0x%08"  PRIxPTR
-#endif  // _LP64
 
 // Format pointers without leading zeros
 #define INTPTRNZ_FORMAT "0x%"  PRIxPTR
@@ -114,11 +85,7 @@
 
 const int LogBytesPerShort   = 1;
 const int LogBytesPerInt     = 2;
-#ifdef _LP64
 const int LogBytesPerWord    = 3;
-#else
-const int LogBytesPerWord    = 2;
-#endif
 const int LogBytesPerLong    = 3;
 
 const int BytesPerShort      = 1 << LogBytesPerShort;
@@ -167,11 +134,7 @@ const int jintAsStringSize = 12;
 // In fact this should be
 // log2_intptr(sizeof(class JavaThread)) - log2_intptr(64);
 // see os::set_memory_serialize_page()
-#ifdef _LP64
 const int SerializePageShiftCount = 4;
-#else
-const int SerializePageShiftCount = 3;
-#endif
 
 // An opaque struct of heap-word width, so that HeapWord* can be a generic
 // pointer into the heap.  We require that object sizes be measured in
@@ -184,10 +147,6 @@ class HeapWord {
   friend class VMStructs;
  private:
   char* i;
-#ifndef PRODUCT
- public:
-  char* value() { return i; }
-#endif
 };
 
 // Analogous opaque struct for metadata allocated from
@@ -199,11 +158,7 @@ class MetaWord {
 
 // HeapWordSize must be 2^LogHeapWordSize.
 const int HeapWordSize        = sizeof(HeapWord);
-#ifdef _LP64
 const int LogHeapWordSize     = 3;
-#else
-const int LogHeapWordSize     = 2;
-#endif
 const int HeapWordsPerLong    = BytesPerLong / HeapWordSize;
 const int LogHeapWordsPerLong = LogBytesPerLong - LogHeapWordSize;
 
@@ -244,12 +199,9 @@ const jint  NANOSECS_PER_MILLISEC = 1000000;
 // and therefore we need to be careful.
 
 inline const char* proper_unit_for_byte_size(size_t s) {
-#ifdef _LP64
   if (s >= 100*G) {
     return "G";
-  }
-#endif
-  if (s >= 100*M) {
+  } else if (s >= 100*M) {
     return "M";
   } else if (s >= 100*K) {
     return "K";
@@ -260,12 +212,9 @@ inline const char* proper_unit_for_byte_size(size_t s) {
 
 template <class T>
 inline T byte_size_in_proper_unit(T s) {
-#ifdef _LP64
   if (s >= 100*G) {
     return (T)(s/G);
-  }
-#endif
-  if (s >= 100*M) {
+  } else if (s >= 100*M) {
     return (T)(s/M);
   } else if (s >= 100*K) {
     return (T)(s/K);
@@ -275,26 +224,20 @@ inline T byte_size_in_proper_unit(T s) {
 }
 
 inline const char* exact_unit_for_byte_size(size_t s) {
-#ifdef _LP64
   if (s >= G && (s % G) == 0) {
     return "G";
-  }
-#endif
-  if (s >= M && (s % M) == 0) {
+  } else if (s >= M && (s % M) == 0) {
     return "M";
-  }
-  if (s >= K && (s % K) == 0) {
+  } else if (s >= K && (s % K) == 0) {
     return "K";
   }
   return "B";
 }
 
 inline size_t byte_size_in_exact_unit(size_t s) {
-#ifdef _LP64
   if (s >= G && (s % G) == 0) {
     return s / G;
   }
-#endif
   if (s >= M && (s % M) == 0) {
     return s / M;
   }
@@ -324,7 +267,6 @@ const uintx max_uintx = (uintx)-1;
 // max_uintx            0xFFFFFFFF      0xFFFFFFFFFFFFFFFF
 
 typedef unsigned int uint;   NEEDS_CLEANUP
-
 
 //----------------------------------------------------------------------------------------------------
 // Java type definitions
@@ -429,19 +371,11 @@ const int max_method_code_size = 64*K - 1;  // JVM spec, 2nd ed. section 4.8.1 (
 //----------------------------------------------------------------------------------------------------
 // Default and minimum StringTableSize values
 
-const int defaultStringTableSize = NOT_LP64(1024) LP64_ONLY(65536);
+const int defaultStringTableSize = 65536;
 const int minimumStringTableSize = 128;
 
 const int defaultSymbolTableSize = 20011;
 const int minimumSymbolTableSize = 1009;
-
-
-//----------------------------------------------------------------------------------------------------
-// HotSwap - for JVMTI   aka Class File Replacement and PopFrame
-//
-// Determines whether on-the-fly class replacement and frame popping are enabled.
-
-#define HOTSWAP
 
 //----------------------------------------------------------------------------------------------------
 // Object alignment, in units of HeapWords.
@@ -498,13 +432,11 @@ const bool support_IRIW_for_not_multiple_copy_atomic_cpu = false;
   #define DEFAULT_CACHE_LINE_SIZE 64
 #endif
 
-
 //----------------------------------------------------------------------------------------------------
 // Utility macros for compilers
 // used to silence compiler warnings
 
 #define Unused_Variable(var) var
-
 
 //----------------------------------------------------------------------------------------------------
 // Miscellaneous
@@ -569,7 +501,6 @@ union jlong_accessor {
 };
 
 void basic_types_init(); // cannot define here; uses assert
-
 
 // NOTE: replicated in SA in vm/agent/sun/jvm/hotspot/runtime/BasicType.java
 enum BasicType {
@@ -638,7 +569,6 @@ extern BasicType name2type(const char* name);
 // least common multiple
 extern size_t lcm(size_t a, size_t b);
 
-
 // NOTE: replicated in SA in vm/agent/sun/jvm/hotspot/runtime/BasicType.java
 enum BasicTypeSize {
   T_BOOLEAN_size     = 1,
@@ -656,12 +586,10 @@ enum BasicTypeSize {
   T_VOID_size        = 0
 };
 
-
 // maps a BasicType to its instance field storage type:
 // all sub-word integral types are widened to T_INT
 extern BasicType type2field[T_CONFLICT+1];
 extern BasicType type2wfield[T_CONFLICT+1];
-
 
 // size in bytes
 enum ArrayElementSize {
@@ -673,25 +601,15 @@ enum ArrayElementSize {
   T_SHORT_aelem_bytes       = 2,
   T_INT_aelem_bytes         = 4,
   T_LONG_aelem_bytes        = 8,
-#ifdef _LP64
   T_OBJECT_aelem_bytes      = 8,
   T_ARRAY_aelem_bytes       = 8,
-#else
-  T_OBJECT_aelem_bytes      = 4,
-  T_ARRAY_aelem_bytes       = 4,
-#endif
   T_NARROWOOP_aelem_bytes   = 4,
   T_NARROWKLASS_aelem_bytes = 4,
   T_VOID_aelem_bytes        = 0
 };
 
 extern int _type2aelembytes[T_CONFLICT+1]; // maps a BasicType to nof bytes used by its array element
-#ifdef ASSERT
-extern int type2aelembytes(BasicType t, bool allow_address = false); // asserts
-#else
 inline int type2aelembytes(BasicType t, bool allow_address = false) { return _type2aelembytes[t]; }
-#endif
-
 
 // JavaValue serves as a container for arbitrary Java values.
 
@@ -742,18 +660,15 @@ class JavaValue {
  jbyte get_jbyte() const { return (jbyte) (_value.i);}
  jchar get_jchar() const { return (jchar) (_value.i);}
  jshort get_jshort() const { return (jshort) (_value.i);}
-
 };
-
 
 #define STACK_BIAS      0
 // V9 Sparc CPU's running in 64 Bit mode use a stack bias of 7ff
 // in order to extend the reach of the stack pointer.
-#if defined(SPARC) && defined(_LP64)
+#if defined(SPARC)
 #undef STACK_BIAS
 #define STACK_BIAS      0x7ff
 #endif
-
 
 // TosState describes the top-of-stack state before and after the execution of
 // a bytecode or method. The top-of-stack value may be cached in one or more CPU
@@ -778,7 +693,6 @@ enum TosState {         // describes the tos cache contents
   number_of_states,
   ilgl                  // illegal state: should not occur
 };
-
 
 inline TosState as_TosState(BasicType type) {
   switch (type) {
@@ -813,11 +727,9 @@ inline BasicType as_BasicType(TosState state) {
   }
 }
 
-
 // Helper function to convert BasicType info into TosState
 // Note: Cannot define here as it uses global constant at the time being.
 TosState as_TosState(BasicType type);
-
 
 // JavaThreadState keeps track of which part of the code a thread is executing in. This
 // information is needed by the safepoint code.
@@ -849,8 +761,6 @@ enum JavaThreadState {
   _thread_blocked_trans     = 11, // corresponding transition state
   _thread_max_state         = 12  // maximum thread state+1 - used for statistics allocation
 };
-
-
 
 //----------------------------------------------------------------------------------------------------
 // 'Forward' declarations of frequently used classes
@@ -966,7 +876,6 @@ const juint    badMetaWordVal   = 0xBAADFADE;               // value used to zap
 const int      badCodeHeapNewVal= 0xCC;                     // value used to zap Code heap at allocation
 const int      badCodeHeapFreeVal = 0xDD;                   // value used to zap Code heap at deallocation
 
-
 // (These must be implemented as #defines because C++ compilers are
 // not obligated to inline non-integral constants!)
 #define       badAddress        ((address)::badAddressVal)
@@ -974,7 +883,7 @@ const int      badCodeHeapFreeVal = 0xDD;                   // value used to zap
 #define       badHeapWord       (::badHeapWordVal)
 
 // Default TaskQueue size is 16K (32-bit) or 128K (64-bit)
-#define TASKQUEUE_SIZE (NOT_LP64(1<<14) LP64_ONLY(1<<17))
+#define TASKQUEUE_SIZE (1<<17)
 
 //----------------------------------------------------------------------------------------------------
 // Utility functions for bitfield manipulations
@@ -1006,7 +915,6 @@ inline bool is_set_nth_bit(intptr_t  x, int n) { return mask_bits (x, nth_bit(n)
 inline intptr_t bitfield(intptr_t x, int start_bit_no, int field_length) {
   return mask_bits(x >> start_bit_no, right_n_bits(field_length));
 }
-
 
 //----------------------------------------------------------------------------------------------------
 // Utility functions for integers
@@ -1100,13 +1008,13 @@ inline int log2_jlong(jlong x) {
 
 //* the argument must be exactly a power of 2
 inline int exact_log2(intptr_t x) {
-  assert(is_power_of_2(x), "x must be a power of 2: " INTPTR_FORMAT, x);
+  assert(is_power_of_2(x), "x must be a power of 2: " INTPTR_FORMAT, x);
   return log2_intptr(x);
 }
 
 //* the argument must be exactly a power of 2
 inline int exact_log2_long(jlong x) {
-  assert(is_power_of_2_long(x), "x must be a power of 2: " JLONG_FORMAT, x);
+  assert(is_power_of_2_long(x), "x must be a power of 2: " JLONG_FORMAT, x);
   return log2_long(x);
 }
 
@@ -1199,7 +1107,6 @@ inline jfloat build_float_from( u1* p ) {
   return  *(jfloat*)&u;
 }
 
-
 // now (64-bit) longs
 
 inline jlong build_long_from( u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8 ) {
@@ -1217,7 +1124,6 @@ inline jlong build_long_from( u1* p ) {
   return  build_long_from( p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7] );
 }
 
-
 // Doubles, too!
 inline jdouble build_double_from( u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8 ) {
   jlong u = build_long_from( c1, c2, c3, c4, c5, c6, c7, c8 );
@@ -1228,7 +1134,6 @@ inline jdouble build_double_from( u1* p ) {
   jlong u = build_long_from( p );
   return  *(jdouble*)&u;
 }
-
 
 // Portable routines to go the other way:
 
@@ -1251,7 +1156,6 @@ inline void explode_int_to( u4 x, u1& c1, u1& c2, u1& c3, u1& c4 ) {
 inline void explode_int_to( u4 x, u1* p ) {
   explode_int_to( x, p[0], p[1], p[2], p[3]);
 }
-
 
 // Pack and extract shorts to/from ints:
 
@@ -1291,11 +1195,11 @@ template<class T> static void swap(T& a, T& b) {
 // behavior.  The use of an lvalue to reference cast is explicitly
 // permitted by Lvalues and rvalues [basic.lval].  [Section 3.10 Para
 // 15 in C++03]
-#define JAVA_INTEGER_OP(OP, NAME, TYPE, UNSIGNED_TYPE)  \
-inline TYPE NAME (TYPE in1, TYPE in2) {                 \
+#define JAVA_INTEGER_OP(OP, NAME, TYPE, UNSIGNED_TYPE) \
+inline TYPE NAME (TYPE in1, TYPE in2) { \
   UNSIGNED_TYPE ures = static_cast<UNSIGNED_TYPE>(in1); \
-  ures OP ## = static_cast<UNSIGNED_TYPE>(in2);         \
-  return reinterpret_cast<TYPE&>(ures);                 \
+  ures OP ## = static_cast<UNSIGNED_TYPE>(in2); \
+  return reinterpret_cast<TYPE&>(ures); \
 }
 
 JAVA_INTEGER_OP(+, java_add, jint, juint)
@@ -1322,4 +1226,4 @@ static inline void* dereference_vptr(const void* addr) {
 typedef const char* ccstr;
 typedef const char* ccstrlist;   // represents string arguments which accumulate
 
-#endif // SHARE_VM_UTILITIES_GLOBALDEFINITIONS_HPP
+#endif

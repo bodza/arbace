@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "jvmci/jvmciCodeInstaller.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
@@ -45,20 +22,6 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, Hand
 
 void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) {
   address pc = _instructions->start() + pc_offset;
-#ifdef ASSERT
-  {
-    NativeInstruction *insn = nativeInstruction_at(pc);
-    if (HotSpotObjectConstantImpl::compressed(constant)) {
-      // Mov narrow constant: movz n << 16, movk
-      assert(Instruction_aarch64::extract(insn->encoding(), 31, 21) == 0b11010010101 &&
-             nativeInstruction_at(pc+4)->is_movk(), "wrong insn in patch");
-    } else {
-      // Move wide constant: movz n, movk, movk.
-      assert(nativeInstruction_at(pc+4)->is_movk()
-             && nativeInstruction_at(pc+8)->is_movk(), "wrong insn in patch");
-    }
-  }
-#endif // ASSERT
   Handle obj(THREAD, HotSpotObjectConstantImpl::object(constant));
   jobject value = JNIHandles::make_local(obj());
   MacroAssembler::patch_oop(pc, (address)obj());
@@ -119,33 +82,26 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
 }
 
 void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &cbuf, Handle hotspot_method, jint pc_offset, TRAPS) {
-#ifdef ASSERT
-  Method* method = NULL;
-  // we need to check, this might also be an unresolved method
-  if (hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
-    method = getMethodFromHotSpotMethod(hotspot_method());
-  }
-#endif
   switch (_next_call_type) {
     case INLINE_INVOKE:
       break;
     case INVOKEVIRTUAL:
     case INVOKEINTERFACE: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokeinterface");
+      assert(method == NULL || !method->is_static(), "cannot call static method with invokeinterface");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), virtual_call_Relocation::spec(_invoke_mark_pc));
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_virtual_call_stub());
       break;
     }
     case INVOKESTATIC: {
-      assert(method == NULL || method->is_static(), "cannot call non-static method with invokestatic");
+      assert(method == NULL || method->is_static(), "cannot call non-static method with invokestatic");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), relocInfo::static_call_type);
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_static_call_stub());
       break;
     }
     case INVOKESPECIAL: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokespecial");
+      assert(method == NULL || !method->is_static(), "cannot call static method with invokespecial");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), relocInfo::opt_virtual_call_type);
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_opt_virtual_call_stub());

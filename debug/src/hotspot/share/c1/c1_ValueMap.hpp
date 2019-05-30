@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_C1_C1_VALUEMAP_HPP
 #define SHARE_VM_C1_C1_VALUEMAP_HPP
 
@@ -99,12 +75,6 @@ class ValueMap: public CompilationResourceObj {
   // helper functions
   void          increase_table_size();
 
-#ifndef PRODUCT
-  static int _number_of_finds;
-  static int _number_of_hits;
-  static int _number_of_kills;
-#endif // PRODUCT
-
  public:
   // creation
   ValueMap();                // empty value map
@@ -119,14 +89,6 @@ class ValueMap: public CompilationResourceObj {
   void kill_exception();
   void kill_map(ValueMap* map);
   void kill_all();
-
-#ifndef PRODUCT
-  // debugging/printing
-  void print();
-
-  static void reset_statistics();
-  static void print_statistics();
-#endif
 };
 
 typedef GrowableArray<ValueMap*> ValueMapArray;
@@ -209,11 +171,7 @@ class ValueNumberingVisitor: public InstructionVisitor {
   void do_RuntimeCall    (RuntimeCall*     x) { /* nothing to do */ };
   void do_MemBar         (MemBar*          x) { /* nothing to do */ };
   void do_RangeCheckPredicate(RangeCheckPredicate* x) { /* nothing to do */ };
-#ifdef ASSERT
-  void do_Assert         (Assert*          x) { /* nothing to do */ };
-#endif
 };
-
 
 class ValueNumberingEffects: public ValueNumberingVisitor {
  private:
@@ -228,7 +186,6 @@ class ValueNumberingEffects: public ValueNumberingVisitor {
   ValueNumberingEffects(ValueMap* map): _map(map) {}
 };
 
-
 class GlobalValueNumbering: public ValueNumberingVisitor {
  private:
   Compilation*  _compilation;     // compilation data
@@ -242,7 +199,9 @@ class GlobalValueNumbering: public ValueNumberingVisitor {
   Compilation*  compilation() const              { return _compilation; }
   ValueMap*     current_map()                    { return _current_map; }
   ValueMap*     value_map_of(BlockBegin* block)  { return _value_maps.at(block->linear_scan_number()); }
-  void          set_value_map_of(BlockBegin* block, ValueMap* map)   { assert(value_map_of(block) == NULL, ""); _value_maps.at_put(block->linear_scan_number(), map); }
+  void          set_value_map_of(BlockBegin* block, ValueMap* map)   {
+    assert(value_map_of(block) == NULL, "");
+    _value_maps.at_put(block->linear_scan_number(), map); }
 
   bool          is_processed(Value v)            { return _processed_values.contains(v); }
   void          set_processed(Value v)           { _processed_values.put(v); }
@@ -257,4 +216,4 @@ class GlobalValueNumbering: public ValueNumberingVisitor {
   void          substitute(Instruction* instr);  // substitute instruction if it is contained in current value map
 };
 
-#endif // SHARE_VM_C1_C1_VALUEMAP_HPP
+#endif

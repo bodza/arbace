@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/g1/g1Allocator.inline.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
@@ -213,7 +189,7 @@ public:
   }
   void do_object(oop o) {
     VerifyLivenessOopClosure isLive(_g1h, _vo);
-    assert(o != NULL, "Huh?");
+    assert(o != NULL, "Huh?");
     if (!_g1h->is_obj_dead_cond(o, _vo)) {
       // If the object is alive according to the full gc mark,
       // then verify that the marking information agrees.
@@ -252,7 +228,7 @@ public:
                 "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT,
                 p2i(p), p2i(obj));
     } else {
-      assert(_hr->is_closed_archive(), "should be closed archive region");
+      assert(_hr->is_closed_archive(), "should be closed archive region");
       guarantee(obj == NULL || G1ArchiveAllocator::is_closed_archive_object(obj),
                 "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT,
                 p2i(p), p2i(obj));
@@ -268,7 +244,7 @@ public:
   // Verify that all object pointers are to archive regions.
   void do_object(oop o) {
     VerifyArchiveOopClosure checkOop(_hr);
-    assert(o != NULL, "Should not be here for NULL oops");
+    assert(o != NULL, "Should not be here for NULL oops");
     o->oop_iterate(&checkOop);
   }
 };
@@ -417,8 +393,7 @@ void G1HeapVerifier::verify(VerifyOption vo) {
     log_info(gc, verify)("Skipping verification. Not at safepoint.");
   }
 
-  assert(Thread::current()->is_VM_thread(),
-         "Expected to be executed serially by the VM thread at this point");
+  assert(Thread::current()->is_VM_thread(), "Expected to be executed serially by the VM thread at this point");
 
   log_debug(gc, verify)("Roots");
   VerifyRootsClosure rootsCl(vo);
@@ -506,18 +481,18 @@ public:
     if (hr->is_young()) {
       // TODO
     } else if (hr->is_humongous()) {
-      assert(hr->containing_set() == _humongous_set, "Heap region %u is humongous but not in humongous set.", hr->hrm_index());
+      assert(hr->containing_set() == _humongous_set, "Heap region %u is humongous but not in humongous set.", hr->hrm_index());
       _humongous_count++;
     } else if (hr->is_empty()) {
-      assert(_hrm->is_free(hr), "Heap region %u is empty but not on the free list.", hr->hrm_index());
+      assert(_hrm->is_free(hr), "Heap region %u is empty but not on the free list.", hr->hrm_index());
       _free_count++;
     } else if (hr->is_old()) {
-      assert(hr->containing_set() == _old_set, "Heap region %u is old but not in the old set.", hr->hrm_index());
+      assert(hr->containing_set() == _old_set, "Heap region %u is old but not in the old set.", hr->hrm_index());
       _old_count++;
     } else {
       // There are no other valid region types. Check for one invalid
       // one we can identify: pinned without old or humongous set.
-      assert(!hr->is_pinned(), "Heap region %u is pinned but not old (archive) or humongous.", hr->hrm_index());
+      assert(!hr->is_pinned(), "Heap region %u is pinned but not old (archive) or humongous.", hr->hrm_index());
       ShouldNotReachHere();
     }
     return false;
@@ -577,207 +552,3 @@ void G1HeapVerifier::verify_after_gc(G1VerifyType type) {
     _g1h->g1_policy()->phase_times()->record_verify_after_time_ms(verify_time_ms);
   }
 }
-
-
-#ifndef PRODUCT
-class G1VerifyCardTableCleanup: public HeapRegionClosure {
-  G1HeapVerifier* _verifier;
-public:
-  G1VerifyCardTableCleanup(G1HeapVerifier* verifier)
-    : _verifier(verifier) { }
-  virtual bool do_heap_region(HeapRegion* r) {
-    if (r->is_survivor()) {
-      _verifier->verify_dirty_region(r);
-    } else {
-      _verifier->verify_not_dirty_region(r);
-    }
-    return false;
-  }
-};
-
-void G1HeapVerifier::verify_card_table_cleanup() {
-  if (G1VerifyCTCleanup || VerifyAfterGC) {
-    G1VerifyCardTableCleanup cleanup_verifier(this);
-    _g1h->heap_region_iterate(&cleanup_verifier);
-  }
-}
-
-void G1HeapVerifier::verify_not_dirty_region(HeapRegion* hr) {
-  // All of the region should be clean.
-  G1CardTable* ct = _g1h->card_table();
-  MemRegion mr(hr->bottom(), hr->end());
-  ct->verify_not_dirty_region(mr);
-}
-
-void G1HeapVerifier::verify_dirty_region(HeapRegion* hr) {
-  // We cannot guarantee that [bottom(),end()] is dirty.  Threads
-  // dirty allocated blocks as they allocate them. The thread that
-  // retires each region and replaces it with a new one will do a
-  // maximal allocation to fill in [pre_dummy_top(),end()] but will
-  // not dirty that area (one less thing to have to do while holding
-  // a lock). So we can only verify that [bottom(),pre_dummy_top()]
-  // is dirty.
-  G1CardTable* ct = _g1h->card_table();
-  MemRegion mr(hr->bottom(), hr->pre_dummy_top());
-  if (hr->is_young()) {
-    ct->verify_g1_young_region(mr);
-  } else {
-    ct->verify_dirty_region(mr);
-  }
-}
-
-class G1VerifyDirtyYoungListClosure : public HeapRegionClosure {
-private:
-  G1HeapVerifier* _verifier;
-public:
-  G1VerifyDirtyYoungListClosure(G1HeapVerifier* verifier) : HeapRegionClosure(), _verifier(verifier) { }
-  virtual bool do_heap_region(HeapRegion* r) {
-    _verifier->verify_dirty_region(r);
-    return false;
-  }
-};
-
-void G1HeapVerifier::verify_dirty_young_regions() {
-  G1VerifyDirtyYoungListClosure cl(this);
-  _g1h->collection_set()->iterate(&cl);
-}
-
-bool G1HeapVerifier::verify_no_bits_over_tams(const char* bitmap_name, const G1CMBitMap* const bitmap,
-                                               HeapWord* tams, HeapWord* end) {
-  guarantee(tams <= end,
-            "tams: " PTR_FORMAT " end: " PTR_FORMAT, p2i(tams), p2i(end));
-  HeapWord* result = bitmap->get_next_marked_addr(tams, end);
-  if (result < end) {
-    log_error(gc, verify)("## wrong marked address on %s bitmap: " PTR_FORMAT, bitmap_name, p2i(result));
-    log_error(gc, verify)("## %s tams: " PTR_FORMAT " end: " PTR_FORMAT, bitmap_name, p2i(tams), p2i(end));
-    return false;
-  }
-  return true;
-}
-
-bool G1HeapVerifier::verify_bitmaps(const char* caller, HeapRegion* hr) {
-  const G1CMBitMap* const prev_bitmap = _g1h->concurrent_mark()->prev_mark_bitmap();
-  const G1CMBitMap* const next_bitmap = _g1h->concurrent_mark()->next_mark_bitmap();
-
-  HeapWord* ptams  = hr->prev_top_at_mark_start();
-  HeapWord* ntams  = hr->next_top_at_mark_start();
-  HeapWord* end    = hr->end();
-
-  bool res_p = verify_no_bits_over_tams("prev", prev_bitmap, ptams, end);
-
-  bool res_n = true;
-  // We cannot verify the next bitmap while we are about to clear it.
-  if (!_g1h->collector_state()->clearing_next_bitmap()) {
-    res_n = verify_no_bits_over_tams("next", next_bitmap, ntams, end);
-  }
-  if (!res_p || !res_n) {
-    log_error(gc, verify)("#### Bitmap verification failed for " HR_FORMAT, HR_FORMAT_PARAMS(hr));
-    log_error(gc, verify)("#### Caller: %s", caller);
-    return false;
-  }
-  return true;
-}
-
-void G1HeapVerifier::check_bitmaps(const char* caller, HeapRegion* hr) {
-  if (!G1VerifyBitmaps) {
-    return;
-  }
-
-  guarantee(verify_bitmaps(caller, hr), "bitmap verification");
-}
-
-class G1VerifyBitmapClosure : public HeapRegionClosure {
-private:
-  const char* _caller;
-  G1HeapVerifier* _verifier;
-  bool _failures;
-
-public:
-  G1VerifyBitmapClosure(const char* caller, G1HeapVerifier* verifier) :
-    _caller(caller), _verifier(verifier), _failures(false) { }
-
-  bool failures() { return _failures; }
-
-  virtual bool do_heap_region(HeapRegion* hr) {
-    bool result = _verifier->verify_bitmaps(_caller, hr);
-    if (!result) {
-      _failures = true;
-    }
-    return false;
-  }
-};
-
-void G1HeapVerifier::check_bitmaps(const char* caller) {
-  if (!G1VerifyBitmaps) {
-    return;
-  }
-
-  G1VerifyBitmapClosure cl(caller, this);
-  _g1h->heap_region_iterate(&cl);
-  guarantee(!cl.failures(), "bitmap verification");
-}
-
-class G1CheckCSetFastTableClosure : public HeapRegionClosure {
- private:
-  bool _failures;
- public:
-  G1CheckCSetFastTableClosure() : HeapRegionClosure(), _failures(false) { }
-
-  virtual bool do_heap_region(HeapRegion* hr) {
-    uint i = hr->hrm_index();
-    InCSetState cset_state = (InCSetState) G1CollectedHeap::heap()->_in_cset_fast_test.get_by_index(i);
-    if (hr->is_humongous()) {
-      if (hr->in_collection_set()) {
-        log_error(gc, verify)("## humongous region %u in CSet", i);
-        _failures = true;
-        return true;
-      }
-      if (cset_state.is_in_cset()) {
-        log_error(gc, verify)("## inconsistent cset state " CSETSTATE_FORMAT " for humongous region %u", cset_state.value(), i);
-        _failures = true;
-        return true;
-      }
-      if (hr->is_continues_humongous() && cset_state.is_humongous()) {
-        log_error(gc, verify)("## inconsistent cset state " CSETSTATE_FORMAT " for continues humongous region %u", cset_state.value(), i);
-        _failures = true;
-        return true;
-      }
-    } else {
-      if (cset_state.is_humongous()) {
-        log_error(gc, verify)("## inconsistent cset state " CSETSTATE_FORMAT " for non-humongous region %u", cset_state.value(), i);
-        _failures = true;
-        return true;
-      }
-      if (hr->in_collection_set() != cset_state.is_in_cset()) {
-        log_error(gc, verify)("## in CSet %d / cset state " CSETSTATE_FORMAT " inconsistency for region %u",
-                             hr->in_collection_set(), cset_state.value(), i);
-        _failures = true;
-        return true;
-      }
-      if (cset_state.is_in_cset()) {
-        if (hr->is_young() != (cset_state.is_young())) {
-          log_error(gc, verify)("## is_young %d / cset state " CSETSTATE_FORMAT " inconsistency for region %u",
-                               hr->is_young(), cset_state.value(), i);
-          _failures = true;
-          return true;
-        }
-        if (hr->is_old() != (cset_state.is_old())) {
-          log_error(gc, verify)("## is_old %d / cset state " CSETSTATE_FORMAT " inconsistency for region %u",
-                               hr->is_old(), cset_state.value(), i);
-          _failures = true;
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool failures() const { return _failures; }
-};
-
-bool G1HeapVerifier::check_cset_fast_test() {
-  G1CheckCSetFastTableClosure cl;
-  _g1h->_hrm.iterate(&cl);
-  return !cl.failures();
-}
-#endif // PRODUCT

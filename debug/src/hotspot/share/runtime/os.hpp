@@ -1,41 +1,14 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_OS_HPP
 #define SHARE_VM_RUNTIME_OS_HPP
 
 #include "jvm.h"
-#include "jvmtifiles/jvmti.h"
 #include "metaprogramming/isRegisteredEnum.hpp"
 #include "metaprogramming/integralConstant.hpp"
 #include "runtime/extendedPC.hpp"
 #include "utilities/exceptions.hpp"
 #include "utilities/ostream.hpp"
 #include "utilities/macros.hpp"
-#ifndef _WINDOWS
 # include <setjmp.h>
-#endif
 #ifdef __APPLE__
 # include <mach/mach_time.h>
 #endif
@@ -176,7 +149,6 @@ class os: AllStatic {
 
   static jlong  javaTimeMillis();
   static jlong  javaTimeNanos();
-  static void   javaTimeNanos_info(jvmtiTimerInfo *info_ptr);
   static void   javaTimeSystemUTC(jlong &seconds, jlong &nanos);
   static void   run_periodic_checks();
   static bool   supports_monotonic_clock();
@@ -250,7 +222,7 @@ class os: AllStatic {
   // At startup the number of active CPUs this process is allowed to run on.
   // This value does not change dynamically. May be different from active_processor_count().
   static int initial_active_processor_count() {
-    assert(_initial_active_processor_count > 0, "Initial active processor count not set yet.");
+    assert(_initial_active_processor_count > 0, "Initial active processor count not set yet.");
     return _initial_active_processor_count;
   }
 
@@ -493,7 +465,7 @@ class os: AllStatic {
   // need special-case handling of the primordial thread if it attaches
   // to the VM.
   static bool is_primordial_thread(void)
-#if defined(_WINDOWS) || defined(BSD)
+#if defined(BSD)
     // No way to identify the primordial thread.
     { return false; }
 #else
@@ -535,7 +507,7 @@ class os: AllStatic {
   static address current_stack_base();
   static size_t current_stack_size();
 
-  static void verify_stack_alignment() PRODUCT_RETURN;
+  static void verify_stack_alignment() {};
 
   static bool message_box(const char* title, const char* message);
   static char* do_you_want_to_debug(const char* message);
@@ -776,13 +748,6 @@ class os: AllStatic {
   // Like strdup, but exit VM when strdup() returns NULL
   static char* strdup_check_oom(const char*, MEMFLAGS flags = mtInternal);
 
-#ifndef PRODUCT
-  static julong num_mallocs;         // # of calls to malloc/realloc
-  static julong alloc_bytes;         // # of bytes allocated
-  static julong num_frees;           // # of calls to free
-  static julong free_bytes;          // # of bytes freed
-#endif
-
   // SocketInterface (ex HPI SocketInterface )
   static int socket(int domain, int type, int protocol);
   static int socket_close(int fd);
@@ -841,12 +806,6 @@ class os: AllStatic {
   static jlong current_thread_cpu_time(bool user_sys_cpu_time);
   static jlong thread_cpu_time(Thread* t, bool user_sys_cpu_time);
 
-  // Return a bunch of info about the timers.
-  // Note that the returned info for these two functions may be different
-  // on some platforms
-  static void current_thread_cpu_time_info(jvmtiTimerInfo *info_ptr);
-  static void thread_cpu_time_info(jvmtiTimerInfo *info_ptr);
-
   static bool is_thread_cpu_time_supported();
 
   // System loadavg support.  Returns -1 if load average cannot be obtained.
@@ -870,9 +829,7 @@ class os: AllStatic {
   };
 
   // Platform dependent stuff
-#ifndef _WINDOWS
 # include "os_posix.hpp"
-#endif
 #include OS_CPU_HEADER(os)
 #include OS_HEADER(os)
 
@@ -941,7 +898,6 @@ class os: AllStatic {
     bool _done;
   };
 
-#ifndef _WINDOWS
   // Suspend/resume support
   // Protocol:
   //
@@ -1012,8 +968,6 @@ class os: AllStatic {
       return _state == SR_SUSPENDED;
     }
   };
-#endif // !WINDOWS
-
 
  protected:
   static volatile unsigned int _rand_seed;    // seed for random number generator
@@ -1026,12 +980,9 @@ class os: AllStatic {
                                 char fileSep,
                                 char pathSep);
   static bool set_boot_path(char fileSep, char pathSep);
-
 };
 
-#ifndef _WINDOWS
 template<> struct IsRegisteredEnum<os::SuspendResume::State> : public TrueType {};
-#endif // !_WINDOWS
 
 // Note that "PAUSE" is almost always used with synchronization
 // so arguably we should provide Atomic::SpinPause() instead
@@ -1040,4 +991,4 @@ template<> struct IsRegisteredEnum<os::SuspendResume::State> : public TrueType {
 
 extern "C" int SpinPause();
 
-#endif // SHARE_VM_RUNTIME_OS_HPP
+#endif

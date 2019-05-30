@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/sharedPathsMiscInfo.hpp"
@@ -56,7 +32,7 @@ void SharedPathsMiscInfo::add_path(const char* path, int type) {
 }
 
 void SharedPathsMiscInfo::ensure_size(size_t needed_bytes) {
-  assert(_allocated, "cannot modify buffer during validation.");
+  assert(_allocated, "cannot modify buffer during validation.");
   int used = get_used_bytes();
   int target = used + int(needed_bytes);
   if (target > _buf_size) {
@@ -145,23 +121,14 @@ char* skip_first_path_entry(const char* path) {
   size_t path_sep_len = strlen(os::path_separator());
   char* p = strstr((char*)path, os::path_separator());
   if (p != NULL) {
-    debug_only( {
-      size_t image_name_len = strlen(MODULES_IMAGE_NAME);
-      assert(strncmp(p - image_name_len, MODULES_IMAGE_NAME, image_name_len) == 0,
-             "first entry must be the modules image");
-    } );
     p += path_sep_len;
   } else {
-    debug_only( {
-      assert(ClassLoader::string_ends_with(path, MODULES_IMAGE_NAME),
-             "first entry must be the modules image");
-    } );
   }
   return p;
 }
 
 bool SharedPathsMiscInfo::check(jint type, const char* path) {
-  assert(UseSharedSpaces, "runtime only");
+  assert(UseSharedSpaces, "runtime only");
   switch (type) {
   case BOOT_PATH:
     {
@@ -231,7 +198,7 @@ bool SharedPathsMiscInfo::check(jint type, const char* path) {
     {
       size_t len = strlen(path);
       const char *appcp = Arguments::get_appclasspath();
-      assert(appcp != NULL, "NULL app classpath");
+      assert(appcp != NULL, "NULL app classpath");
       size_t appcp_len = strlen(appcp);
       if (appcp_len < len) {
         return fail("Run time APP classpath is shorter than the one at dump time: ", appcp);

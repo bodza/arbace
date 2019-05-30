@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_RESOURCEAREA_HPP
 #define SHARE_VM_MEMORY_RESOURCEAREA_HPP
 
@@ -45,16 +21,12 @@ class ResourceArea: public Arena {
   friend class ResourceMark;
   friend class DeoptResourceMark;
   friend class VMStructs;
-  debug_only(int _nesting;)             // current # of nested ResourceMarks
-  debug_only(static int _warned;)       // to suppress multiple warnings
 
 public:
   ResourceArea(MEMFLAGS flags = mtThread) : Arena(flags) {
-    debug_only(_nesting = 0;)
   }
 
   ResourceArea(size_t init_size, MEMFLAGS flags = mtThread) : Arena(flags, init_size) {
-    debug_only(_nesting = 0;);
   }
 
   char* allocate_bytes(size_t size, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
@@ -62,10 +34,7 @@ public:
   // Bias this resource area to specific memory type
   // (by default, ResourceArea is tagged as mtThread, per-thread general purpose storage)
   void bias_to(MEMFLAGS flags);
-
-  debug_only(int nesting() const { return _nesting; })
 };
-
 
 //------------------------------ResourceMark-----------------------------------
 // A resource mark releases all resources allocated after it was constructed
@@ -76,10 +45,6 @@ protected:
   Chunk *_chunk;                // saved arena chunk
   char *_hwm, *_max;
   size_t _size_in_bytes;
-#ifdef ASSERT
-  Thread* _thread;
-  ResourceMark* _previous_resource_mark;
-#endif //ASSERT
 
   void initialize(Thread *thread) {
     _area = thread->resource_area();
@@ -87,43 +52,21 @@ protected:
     _hwm = _area->_hwm;
     _max= _area->_max;
     _size_in_bytes = _area->size_in_bytes();
-    debug_only(_area->_nesting++;)
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
-#ifdef ASSERT
-    _thread = thread;
-    _previous_resource_mark = thread->current_resource_mark();
-    thread->set_current_resource_mark(this);
-#endif // ASSERT
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
  public:
 
-#ifndef ASSERT
   ResourceMark(Thread *thread) {
-    assert(thread == Thread::current(), "not the current thread");
+    assert(thread == Thread::current(), "not the current thread");
     initialize(thread);
   }
-#else
-  ResourceMark(Thread *thread);
-#endif // ASSERT
 
   ResourceMark()               { initialize(Thread::current()); }
 
   ResourceMark( ResourceArea *r ) :
     _area(r), _chunk(r->_chunk), _hwm(r->_hwm), _max(r->_max) {
     _size_in_bytes = r->_size_in_bytes;
-    debug_only(_area->_nesting++;)
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
-#ifdef ASSERT
-    Thread* thread = Thread::current_or_null();
-    if (thread != NULL) {
-      _thread = thread;
-      _previous_resource_mark = thread->current_resource_mark();
-      thread->set_current_resource_mark(this);
-    } else {
-      _thread = NULL;
-      _previous_resource_mark = NULL;
-    }
-#endif // ASSERT
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
   void reset_to_mark() {
@@ -132,11 +75,11 @@ protected:
     if( _chunk->next() ) {       // Delete later chunks
       // reset arena size before delete chunks. Otherwise, the total
       // arena size could exceed total chunk size
-      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
+      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
     } else {
-      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
+      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;
@@ -147,19 +90,12 @@ protected:
   }
 
   ~ResourceMark() {
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
-    debug_only(_area->_nesting--;)
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
     reset_to_mark();
-#ifdef ASSERT
-    if (_thread != NULL) {
-      _thread->set_current_resource_mark(_previous_resource_mark);
-    }
-#endif // ASSERT
   }
 
-
  private:
-  void free_malloced_objects()                                         PRODUCT_RETURN;
+  void free_malloced_objects()                                         {};
   size_t size_in_bytes() { return _size_in_bytes; }
 };
 
@@ -205,28 +141,22 @@ protected:
     _hwm = _area->_hwm;
     _max= _area->_max;
     _size_in_bytes = _area->size_in_bytes();
-    debug_only(_area->_nesting++;)
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
  public:
 
-#ifndef ASSERT
   DeoptResourceMark(Thread *thread) {
-    assert(thread == Thread::current(), "not the current thread");
+    assert(thread == Thread::current(), "not the current thread");
     initialize(thread);
   }
-#else
-  DeoptResourceMark(Thread *thread);
-#endif // ASSERT
 
   DeoptResourceMark()               { initialize(Thread::current()); }
 
   DeoptResourceMark( ResourceArea *r ) :
     _area(r), _chunk(r->_chunk), _hwm(r->_hwm), _max(r->_max) {
     _size_in_bytes = _area->size_in_bytes();
-    debug_only(_area->_nesting++;)
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
   void reset_to_mark() {
@@ -235,11 +165,11 @@ protected:
     if( _chunk->next() ) {        // Delete later chunks
       // reset arena size before delete chunks. Otherwise, the total
       // arena size could exceed total chunk size
-      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
+      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
     } else {
-      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
+      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;
@@ -250,15 +180,13 @@ protected:
   }
 
   ~DeoptResourceMark() {
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
-    debug_only(_area->_nesting--;)
+    assert( _area->_nesting > 0, "must stack allocate RMs" );
     reset_to_mark();
   }
 
-
  private:
-  void free_malloced_objects()                                         PRODUCT_RETURN;
+  void free_malloced_objects()                                         {};
   size_t size_in_bytes() { return _size_in_bytes; };
 };
 
-#endif // SHARE_VM_MEMORY_RESOURCEAREA_HPP
+#endif

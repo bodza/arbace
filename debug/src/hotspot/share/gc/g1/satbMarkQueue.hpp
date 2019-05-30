@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_SATBMARKQUEUE_HPP
 #define SHARE_VM_GC_G1_SATBMARKQUEUE_HPP
 
@@ -63,11 +39,6 @@ public:
   // definition for more information.
   virtual bool should_enqueue_buffer();
 
-#ifndef PRODUCT
-  // Helpful for debugging
-  void print(const char* name);
-#endif // PRODUCT
-
   // Compiler support.
   static ByteSize byte_offset_of_index() {
     return PtrQueue::byte_offset_of_index<SATBMarkQueue>();
@@ -83,16 +54,10 @@ public:
     return PtrQueue::byte_offset_of_active<SATBMarkQueue>();
   }
   using PtrQueue::byte_width_of_active;
-
 };
 
 class SATBMarkQueueSet: public PtrQueueSet {
   SATBMarkQueue _shared_satb_queue;
-
-#ifdef ASSERT
-  void dump_active_states(bool expected_active);
-  void verify_active_states(bool expected_active);
-#endif // ASSERT
 
 public:
   SATBMarkQueueSet();
@@ -118,15 +83,10 @@ public:
   // buffer; the leading entries may be excluded due to filtering.
   bool apply_closure_to_completed_buffer(SATBBufferClosure* cl);
 
-#ifndef PRODUCT
-  // Helpful for debugging
-  void print_all(const char* msg);
-#endif // PRODUCT
-
   SATBMarkQueue* shared_satb_queue() { return &_shared_satb_queue; }
 
   // If a marking is being abandoned, reset any unprocessed log buffers.
   void abandon_partial_marking();
 };
 
-#endif // SHARE_VM_GC_G1_SATBMARKQUEUE_HPP
+#endif

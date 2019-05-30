@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -45,7 +21,7 @@ MemoryManager::MemoryManager(const char* name) : _name(name) {
 
 int MemoryManager::add_pool(MemoryPool* pool) {
   int index = _num_pools;
-  assert(index < MemoryManager::max_num_pools, "_num_pools exceeds the max");
+  assert(index < MemoryManager::max_num_pools, "_num_pools exceeds the max");
   if (index < MemoryManager::max_num_pools) {
     _pools[index] = pool;
     _num_pools++;
@@ -173,7 +149,6 @@ void GCStatInfo::clear() {
   memset(_after_gc_usage_array, 0, len);
 }
 
-
 GCMemoryManager::GCMemoryManager(const char* name, const char* gc_end_message) :
   MemoryManager(name), _gc_end_message(gc_end_message) {
   _num_collections = 0;
@@ -201,7 +176,7 @@ void GCMemoryManager::add_pool(MemoryPool* pool, bool always_affected_by_gc) {
 }
 
 void GCMemoryManager::initialize_gc_stat_info() {
-  assert(MemoryService::num_memory_pools() > 0, "should have one or more memory pools");
+  assert(MemoryService::num_memory_pools() > 0, "should have one or more memory pools");
   _last_gc_stat = new(ResourceObj::C_HEAP, mtGC) GCStatInfo(MemoryService::num_memory_pools());
   _current_gc_stat = new(ResourceObj::C_HEAP, mtGC) GCStatInfo(MemoryService::num_memory_pools());
   // tracking concurrent collections we need two objects: one to update, and one to
@@ -210,7 +185,7 @@ void GCMemoryManager::initialize_gc_stat_info() {
 
 void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage,
                                bool recordAccumulatedGCTime) {
-  assert(_last_gc_stat != NULL && _current_gc_stat != NULL, "Just checking");
+  assert(_last_gc_stat != NULL && _current_gc_stat != NULL, "Just checking");
   if (recordAccumulatedGCTime) {
     _accumulated_timer.start();
   }
@@ -303,8 +278,7 @@ size_t GCMemoryManager::get_last_gc_stat(GCStatInfo* dest) {
     dest->set_index(_last_gc_stat->gc_index());
     dest->set_start_time(_last_gc_stat->start_time());
     dest->set_end_time(_last_gc_stat->end_time());
-    assert(dest->usage_array_size() == _last_gc_stat->usage_array_size(),
-           "Must have same array size");
+    assert(dest->usage_array_size() == _last_gc_stat->usage_array_size(), "Must have same array size");
     size_t len = dest->usage_array_size() * sizeof(MemoryUsage);
     memcpy(dest->before_gc_usage_array(), _last_gc_stat->before_gc_usage_array(), len);
     memcpy(dest->after_gc_usage_array(), _last_gc_stat->after_gc_usage_array(), len);

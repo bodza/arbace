@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_GUARDEDMEMORY_HPP
 #define SHARE_VM_MEMORY_GUARDEDMEMORY_HPP
 
@@ -177,7 +153,7 @@ protected:
    */
   GuardedMemory(void* userp) {
     u_char* user_ptr = (u_char*) userp;
-    assert((uintptr_t)user_ptr > (sizeof(GuardHeader) + 0x1000), "Invalid pointer");
+    assert((uintptr_t)user_ptr > (sizeof(GuardHeader) + 0x1000), "Invalid pointer");
     _base_addr = (user_ptr - sizeof(GuardHeader));
   }
 
@@ -193,14 +169,14 @@ protected:
    * @return user data pointer (inner pointer to supplied "base_ptr").
    */
   void* wrap_with_guards(void* base_ptr, size_t user_size, const void* tag = NULL) {
-    assert(base_ptr != NULL, "Attempt to wrap NULL with memory guard");
+    assert(base_ptr != NULL, "Attempt to wrap NULL with memory guard");
     _base_addr = (u_char*)base_ptr;
     get_head_guard()->build();
     get_head_guard()->set_user_size(user_size);
     get_tail_guard()->build();
     set_tag(tag);
     set_user_bytes(uninitBlockPad);
-    assert(verify_guards(), "Expected valid memory guards");
+    assert(verify_guards(), "Expected valid memory guards");
     return get_user_ptr();
   }
 
@@ -236,7 +212,7 @@ protected:
    * @return the size of the user data.
    */
   size_t get_user_size() const {
-    assert(_base_addr != NULL, "Not wrapping any memory");
+    assert(_base_addr != NULL, "Not wrapping any memory");
     return get_head_guard()->get_user_size();
   }
 
@@ -246,7 +222,7 @@ protected:
    * @return the user data pointer.
    */
   u_char* get_user_ptr() const {
-    assert(_base_addr != NULL, "Not wrapping any memory");
+    assert(_base_addr != NULL, "Not wrapping any memory");
     return _base_addr + sizeof(GuardHeader);
   }
 
@@ -290,7 +266,7 @@ protected:
    */
   static size_t get_total_size(size_t user_size) {
     size_t total_size = sizeof(GuardHeader) + user_size + sizeof(Guard);
-    assert(total_size > user_size, "Unexpected wrap-around");
+    assert(total_size > user_size, "Unexpected wrap-around");
     return total_size;
   }
 
@@ -320,4 +296,4 @@ protected:
 
 }; // GuardedMemory
 
-#endif // SHARE_VM_MEMORY_GUARDEDMEMORY_HPP
+#endif

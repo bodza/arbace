@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "runtime/arguments.hpp"
@@ -48,7 +24,6 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #endif
-
 
 // handle all synchronous program error signals which may happen during error
 // reporting. They must be unblocked, caught, handled.
@@ -135,7 +110,7 @@ static void crash_handler(int sig, siginfo_t* info, void* ucVoid) {
     handle_assert_poison_fault(ucVoid, info->si_addr);
     return;
   }
-#endif // CAN_SHOW_REGISTERS_ON_ASSERT
+#endif
 
   VMError::report_and_die(NULL, sig, pc, info, ucVoid);
 }
@@ -151,25 +126,9 @@ void VMError::reset_signal_handlers() {
     sigaddset(&newset, SIGNALS[i]);
   }
   os::Posix::unblock_thread_signal_mask(&newset);
-
 }
 
 // Write a hint to the stream in case siginfo relates to a segv/bus error
 // and the offending address points into CDS archive.
 void VMError::check_failing_cds_access(outputStream* st, const void* siginfo) {
-#if INCLUDE_CDS
-  if (siginfo && UseSharedSpaces) {
-    const siginfo_t* const si = (siginfo_t*)siginfo;
-    if (si->si_signo == SIGBUS || si->si_signo == SIGSEGV) {
-      const void* const fault_addr = si->si_addr;
-      if (fault_addr != NULL) {
-        if (MetaspaceShared::is_in_shared_metaspace(fault_addr)) {
-          st->print("Error accessing class data sharing archive. "
-            "Mapped file inaccessible during execution, possible disk/network problem.");
-        }
-      }
-    }
-  }
-#endif
 }
-

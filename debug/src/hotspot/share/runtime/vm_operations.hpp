@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_RUNTIME_VM_OPERATIONS_HPP
 #define SHARE_VM_RUNTIME_VM_OPERATIONS_HPP
 
@@ -39,84 +15,84 @@
 #define VM_OP_ENUM(type)   VMOp_##type,
 
 // Note: When new VM_XXX comes up, add 'XXX' to the template table.
-#define VM_OPS_DO(template)                       \
-  template(Dummy)                                 \
-  template(ThreadStop)                            \
-  template(ThreadDump)                            \
-  template(PrintThreads)                          \
-  template(FindDeadlocks)                         \
-  template(ClearICs)                              \
-  template(ForceSafepoint)                        \
-  template(ForceAsyncSafepoint)                   \
-  template(Deoptimize)                            \
-  template(DeoptimizeFrame)                       \
-  template(DeoptimizeAll)                         \
-  template(ZombieAll)                             \
-  template(UnlinkSymbols)                         \
-  template(Verify)                                \
-  template(PrintJNI)                              \
-  template(HeapDumper)                            \
-  template(DeoptimizeTheWorld)                    \
-  template(CollectForMetadataAllocation)          \
-  template(GC_HeapInspection)                     \
-  template(GenCollectFull)                        \
-  template(GenCollectFullConcurrent)              \
-  template(GenCollectForAllocation)               \
-  template(ParallelGCFailedAllocation)            \
-  template(ParallelGCSystemGC)                    \
-  template(CGC_Operation)                         \
-  template(CMS_Initial_Mark)                      \
-  template(CMS_Final_Remark)                      \
-  template(G1CollectForAllocation)                \
-  template(G1CollectFull)                         \
-  template(ZOperation)                            \
-  template(HandshakeOneThread)                    \
-  template(HandshakeAllThreads)                   \
-  template(HandshakeFallback)                     \
-  template(EnableBiasedLocking)                   \
-  template(RevokeBias)                            \
-  template(BulkRevokeBias)                        \
-  template(PopulateDumpSharedSpace)               \
-  template(JNIFunctionTableCopier)                \
-  template(RedefineClasses)                       \
-  template(UpdateForPopTopFrame)                  \
-  template(SetFramePop)                           \
-  template(GetOwnedMonitorInfo)                   \
-  template(GetObjectMonitorUsage)                 \
-  template(GetCurrentContendedMonitor)            \
-  template(GetStackTrace)                         \
-  template(GetMultipleStackTraces)                \
-  template(GetAllStackTraces)                     \
-  template(GetThreadListStackTraces)              \
-  template(GetFrameCount)                         \
-  template(GetFrameLocation)                      \
-  template(ChangeBreakpoints)                     \
-  template(GetOrSetLocal)                         \
-  template(GetCurrentLocation)                    \
-  template(EnterInterpOnlyMode)                   \
-  template(ChangeSingleStep)                      \
-  template(HeapWalkOperation)                     \
-  template(HeapIterateOperation)                  \
-  template(ReportJavaOutOfMemory)                 \
-  template(JFRCheckpoint)                         \
-  template(Exit)                                  \
-  template(LinuxDllLoad)                          \
-  template(RotateGCLog)                           \
-  template(WhiteBoxOperation)                     \
-  template(ClassLoaderStatsOperation)             \
-  template(ClassLoaderHierarchyOperation)         \
-  template(DumpHashtable)                         \
-  template(DumpTouchedMethods)                    \
-  template(MarkActiveNMethods)                    \
-  template(PrintCompileQueue)                     \
-  template(PrintClassHierarchy)                   \
-  template(ThreadSuspend)                         \
-  template(CTWThreshold)                          \
-  template(ThreadsSuspendJVMTI)                   \
-  template(ICBufferFull)                          \
-  template(ScavengeMonitors)                      \
-  template(PrintMetadata)                         \
-  template(GTestExecuteAtSafepoint)               \
+#define VM_OPS_DO(template) \
+  template(Dummy) \
+  template(ThreadStop) \
+  template(ThreadDump) \
+  template(PrintThreads) \
+  template(FindDeadlocks) \
+  template(ClearICs) \
+  template(ForceSafepoint) \
+  template(ForceAsyncSafepoint) \
+  template(Deoptimize) \
+  template(DeoptimizeFrame) \
+  template(DeoptimizeAll) \
+  template(ZombieAll) \
+  template(UnlinkSymbols) \
+  template(Verify) \
+  template(PrintJNI) \
+  template(HeapDumper) \
+  template(DeoptimizeTheWorld) \
+  template(CollectForMetadataAllocation) \
+  template(GC_HeapInspection) \
+  template(GenCollectFull) \
+  template(GenCollectFullConcurrent) \
+  template(GenCollectForAllocation) \
+  template(ParallelGCFailedAllocation) \
+  template(ParallelGCSystemGC) \
+  template(CGC_Operation) \
+  template(CMS_Initial_Mark) \
+  template(CMS_Final_Remark) \
+  template(G1CollectForAllocation) \
+  template(G1CollectFull) \
+  template(ZOperation) \
+  template(HandshakeOneThread) \
+  template(HandshakeAllThreads) \
+  template(HandshakeFallback) \
+  template(EnableBiasedLocking) \
+  template(RevokeBias) \
+  template(BulkRevokeBias) \
+  template(PopulateDumpSharedSpace) \
+  template(JNIFunctionTableCopier) \
+  template(RedefineClasses) \
+  template(UpdateForPopTopFrame) \
+  template(SetFramePop) \
+  template(GetOwnedMonitorInfo) \
+  template(GetObjectMonitorUsage) \
+  template(GetCurrentContendedMonitor) \
+  template(GetStackTrace) \
+  template(GetMultipleStackTraces) \
+  template(GetAllStackTraces) \
+  template(GetThreadListStackTraces) \
+  template(GetFrameCount) \
+  template(GetFrameLocation) \
+  template(ChangeBreakpoints) \
+  template(GetOrSetLocal) \
+  template(GetCurrentLocation) \
+  template(EnterInterpOnlyMode) \
+  template(ChangeSingleStep) \
+  template(HeapWalkOperation) \
+  template(HeapIterateOperation) \
+  template(ReportJavaOutOfMemory) \
+  template(JFRCheckpoint) \
+  template(Exit) \
+  template(LinuxDllLoad) \
+  template(RotateGCLog) \
+  template(WhiteBoxOperation) \
+  template(ClassLoaderStatsOperation) \
+  template(ClassLoaderHierarchyOperation) \
+  template(DumpHashtable) \
+  template(DumpTouchedMethods) \
+  template(MarkActiveNMethods) \
+  template(PrintCompileQueue) \
+  template(PrintClassHierarchy) \
+  template(ThreadSuspend) \
+  template(CTWThreshold) \
+  template(ThreadsSuspendJVMTI) \
+  template(ICBufferFull) \
+  template(ScavengeMonitors) \
+  template(PrintMetadata) \
+  template(GTestExecuteAtSafepoint) \
 
 class VM_Operation: public CHeapObj<mtInternal> {
  public:
@@ -206,12 +182,9 @@ class VM_Operation: public CHeapObj<mtInternal> {
   virtual void print_on_error(outputStream* st) const;
   const char* name() const { return _names[type()]; }
   static const char* name(int type) {
-    assert(type >= 0 && type < VMOp_Terminating, "invalid VM operation type");
+    assert(type >= 0 && type < VMOp_Terminating, "invalid VM operation type");
     return _names[type];
   }
-#ifndef PRODUCT
-  void print_on(outputStream* st) const { print_on_error(st); }
-#endif
 };
 
 class VM_ThreadStop: public VM_Operation {
@@ -266,12 +239,6 @@ class VM_ThreadSuspend: public VM_ForceSafepoint {
 class VM_CTWThreshold: public VM_ForceSafepoint {
  public:
   VMOp_Type type() const { return VMOp_CTWThreshold; }
-};
-
-// empty vm op, when forcing a safepoint to suspend threads from jvmti
-class VM_ThreadsSuspendJVMTI: public VM_ForceSafepoint {
- public:
-  VMOp_Type type() const { return VMOp_ThreadsSuspendJVMTI; }
 };
 
 // empty vm op, when forcing a safepoint due to inline cache buffers being full
@@ -332,27 +299,6 @@ class VM_DeoptimizeFrame: public VM_Operation {
   bool allow_nested_vm_operations() const        { return true;  }
 };
 
-#ifndef PRODUCT
-class VM_DeoptimizeAll: public VM_Operation {
- private:
-  Klass* _dependee;
- public:
-  VM_DeoptimizeAll() {}
-  VMOp_Type type() const                         { return VMOp_DeoptimizeAll; }
-  void doit();
-  bool allow_nested_vm_operations() const        { return true; }
-};
-
-
-class VM_ZombieAll: public VM_Operation {
- public:
-  VM_ZombieAll() {}
-  VMOp_Type type() const                         { return VMOp_ZombieAll; }
-  void doit();
-  bool allow_nested_vm_operations() const        { return true; }
-};
-#endif // PRODUCT
-
 class VM_UnlinkSymbols: public VM_Operation {
  public:
   VM_UnlinkSymbols() {}
@@ -366,7 +312,6 @@ class VM_Verify: public VM_Operation {
   VMOp_Type type() const { return VMOp_Verify; }
   void doit();
 };
-
 
 class VM_PrintThreads: public VM_Operation {
  private:
@@ -466,7 +411,6 @@ class VM_ThreadDump : public VM_Operation {
   void doit_epilogue();
 };
 
-
 class VM_Exit: public VM_Operation {
  private:
   int  _exit_code;
@@ -501,21 +445,4 @@ class VM_PrintCompileQueue: public VM_Operation {
   void doit();
 };
 
-#if INCLUDE_SERVICES
-class VM_PrintClassHierarchy: public VM_Operation {
- private:
-  outputStream* _out;
-  bool _print_interfaces;
-  bool _print_subclasses;
-  char* _classname;
-
- public:
-  VM_PrintClassHierarchy(outputStream* st, bool print_interfaces, bool print_subclasses, char* classname) :
-    _out(st), _print_interfaces(print_interfaces), _print_subclasses(print_subclasses),
-    _classname(classname) {}
-  VMOp_Type type() const { return VMOp_PrintClassHierarchy; }
-  void doit();
-};
-#endif // INCLUDE_SERVICES
-
-#endif // SHARE_VM_RUNTIME_VM_OPERATIONS_HPP
+#endif

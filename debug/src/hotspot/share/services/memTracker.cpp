@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 #include "jvm.h"
 
@@ -34,10 +11,6 @@
 #include "services/memTracker.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/vmError.hpp"
-
-#ifdef _WINDOWS
-#include <windows.h>
-#endif
 
 #ifdef SOLARIS
   volatile bool NMT_stack_walkable = false;
@@ -58,13 +31,7 @@ NMT_TrackingLevel MemTracker::init_tracking_level() {
   char nmt_env_variable[buffer_size];
   jio_snprintf(nmt_env_variable, sizeof(nmt_env_variable), "NMT_LEVEL_%d", os::current_process_id());
   const char* nmt_env_value;
-#ifdef _WINDOWS
-  // Read the NMT environment variable from the PEB instead of the CRT
-  char value[buffer_size];
-  nmt_env_value = GetEnvironmentVariable(nmt_env_variable, value, (DWORD)sizeof(value)) != 0 ? value : NULL;
-#else
   nmt_env_value = ::getenv(nmt_env_variable);
-#endif
   NMT_TrackingLevel level = NMT_off;
   if (nmt_env_value != NULL) {
     if (strcmp(nmt_env_value, "summary") == 0) {
@@ -147,7 +114,6 @@ void Tracker::record(address addr, size_t size) {
   }
 }
 
-
 // Shutdown can only be issued via JCmd, and NMT JCmd is serialized by lock
 void MemTracker::shutdown() {
   // We can only shutdown NMT to minimal tracking level if it is ever on.
@@ -159,7 +125,7 @@ void MemTracker::shutdown() {
 bool MemTracker::transition_to(NMT_TrackingLevel level) {
   NMT_TrackingLevel current_level = tracking_level();
 
-  assert(level != NMT_off || current_level == NMT_off, "Cannot transition NMT to off");
+  assert(level != NMT_off || current_level == NMT_off, "Cannot transition NMT to off");
 
   if (current_level == level) {
     return true;
@@ -179,7 +145,7 @@ bool MemTracker::transition_to(NMT_TrackingLevel level) {
 }
 
 void MemTracker::report(bool summary_only, outputStream* output) {
- assert(output != NULL, "No output stream");
+ assert(output != NULL, "No output stream");
   MemBaseline baseline;
   if (baseline.baseline(summary_only)) {
     if (summary_only) {
@@ -190,7 +156,7 @@ void MemTracker::report(bool summary_only, outputStream* output) {
       rpt.report();
       output->print("Metaspace:");
       // Metadata reporting requires a safepoint, so avoid it if VM is not in good state.
-      assert(!VMError::fatal_error_in_progress(), "Do not report metadata in error report");
+      assert(!VMError::fatal_error_in_progress(), "Do not report metadata in error report");
       VM_PrintMetadata vmop(output, K,
           MetaspaceUtils::rf_show_loaders |
           MetaspaceUtils::rf_break_down_by_spacetype);
@@ -320,7 +286,6 @@ class StatisticsWalker : public MallocSiteWalker {
   }
 };
 
-
 void MemTracker::tuning_statistics(outputStream* out) {
   // NMT statistics
   StatisticsWalker walker;
@@ -330,7 +295,6 @@ void MemTracker::tuning_statistics(outputStream* out) {
   out->print_cr("Native Memory Tracking Statistics:");
   out->print_cr("Malloc allocation site table size: %d", MallocSiteTable::hash_buckets());
   out->print_cr("             Tracking stack depth: %d", NMT_TrackingStackDepth);
-  NOT_PRODUCT(out->print_cr("Peak concurrent access: %d", MallocSiteTable::access_peak_count());)
   out->print_cr(" ");
   walker.report_statistics(out);
 }

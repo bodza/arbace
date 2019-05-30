@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/stackMapFrame.hpp"
 #include "classfile/verifier.hpp"
@@ -108,7 +84,7 @@ VerificationType StackMapFrame::set_locals_from_arg(
       Symbol* sig_copy =
         verifier()->create_temporary_symbol(sig, 0, sig->utf8_length(),
                                  CHECK_(VerificationType::bogus_type()));
-      assert(sig_copy == sig, "symbols don't match");
+      assert(sig_copy == sig, "symbols don't match");
       return VerificationType::reference_type(sig_copy);
     }
     case T_INT:     return VerificationType::integer_type();
@@ -240,8 +216,8 @@ VerificationType StackMapFrame::get_local(
 
 void StackMapFrame::get_local_2(
     int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
-  assert(type1.is_long() || type1.is_double(), "must be long/double");
-  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+  assert(type1.is_long() || type1.is_double(), "must be long/double");
+  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
   if (index >= _locals_size - 1) {
     verifier()->verify_error(
         ErrorContext::bad_local_index(_offset, index),
@@ -269,7 +245,7 @@ void StackMapFrame::get_local_2(
 }
 
 void StackMapFrame::set_local(int32_t index, VerificationType type, TRAPS) {
-  assert(!type.is_check(), "Must be a real type");
+  assert(!type.is_check(), "Must be a real type");
   if (index >= _max_locals) {
     verifier()->verify_error(
         ErrorContext::bad_local_index(_offset, index),
@@ -278,30 +254,24 @@ void StackMapFrame::set_local(int32_t index, VerificationType type, TRAPS) {
   }
   // If type at index is double or long, set the next location to be unusable
   if (_locals[index].is_double() || _locals[index].is_long()) {
-    assert((index + 1) < _locals_size, "Local variable table overflow");
+    assert((index + 1) < _locals_size, "Local variable table overflow");
     _locals[index + 1] = VerificationType::bogus_type();
   }
   // If type at index is double_2 or long_2, set the previous location to be unusable
   if (_locals[index].is_double2() || _locals[index].is_long2()) {
-    assert(index >= 1, "Local variable table underflow");
+    assert(index >= 1, "Local variable table underflow");
     _locals[index - 1] = VerificationType::bogus_type();
   }
   _locals[index] = type;
   if (index >= _locals_size) {
-#ifdef ASSERT
-    for (int i=_locals_size; i<index; i++) {
-      assert(_locals[i] == VerificationType::bogus_type(),
-             "holes must be bogus type");
-    }
-#endif
     _locals_size = index + 1;
   }
 }
 
 void StackMapFrame::set_local_2(
     int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
-  assert(type1.is_long() || type1.is_double(), "must be long/double");
-  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+  assert(type1.is_long() || type1.is_double(), "must be long/double");
+  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
   if (index >= _max_locals - 1) {
     verifier()->verify_error(
         ErrorContext::bad_local_index(_offset, index),
@@ -310,23 +280,17 @@ void StackMapFrame::set_local_2(
   }
   // If type at index+1 is double or long, set the next location to be unusable
   if (_locals[index+1].is_double() || _locals[index+1].is_long()) {
-    assert((index + 2) < _locals_size, "Local variable table overflow");
+    assert((index + 2) < _locals_size, "Local variable table overflow");
     _locals[index + 2] = VerificationType::bogus_type();
   }
   // If type at index is double_2 or long_2, set the previous location to be unusable
   if (_locals[index].is_double2() || _locals[index].is_long2()) {
-    assert(index >= 1, "Local variable table underflow");
+    assert(index >= 1, "Local variable table underflow");
     _locals[index - 1] = VerificationType::bogus_type();
   }
   _locals[index] = type1;
   _locals[index+1] = type2;
   if (index >= _locals_size - 1) {
-#ifdef ASSERT
-    for (int i=_locals_size; i<index; i++) {
-      assert(_locals[i] == VerificationType::bogus_type(),
-             "holes must be bogus type");
-    }
-#endif
     _locals_size = index + 2;
   }
 }

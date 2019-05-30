@@ -1,30 +1,6 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvm.h"
-#include "jimage.hpp"
+// #include "jimage.hpp"
 #include "classfile/classListParser.hpp"
 #include "classfile/classLoaderExt.hpp"
 #include "classfile/symbolTable.hpp"
@@ -44,7 +20,7 @@
 ClassListParser* ClassListParser::_instance = NULL;
 
 ClassListParser::ClassListParser(const char* file) {
-  assert(_instance == NULL, "must be singleton");
+  assert(_instance == NULL, "must be singleton");
   _instance = this;
   _classlist_file = file;
   _file = fopen(file, "r");
@@ -274,7 +250,7 @@ void ClassListParser::error(const char *msg, ...) {
 // This function is used for loading classes for customized class loaders
 // during archive dumping.
 InstanceKlass* ClassListParser::load_class_from_source(Symbol* class_name, TRAPS) {
-#if !(defined(_LP64) && (defined(LINUX)|| defined(SOLARIS)))
+#if !defined(LINUX)
   // The only supported platforms are: (1) Linux/64-bit and (2) Solaris/64-bit
   //
   // This #if condition should be in sync with the areCustomLoadersSupportedForCDS
@@ -359,7 +335,7 @@ Klass* ClassListParser::load_current_class(TRAPS) {
       // array classes are not supported in class list.
       THROW_NULL(vmSymbols::java_lang_ClassNotFoundException());
     }
-    assert(result.get_type() == T_OBJECT, "just checking");
+    assert(result.get_type() == T_OBJECT, "just checking");
     oop obj = (oop) result.get_jobject();
     if (!HAS_PENDING_EXCEPTION && (obj != NULL)) {
       klass = java_lang_Class::as_Klass(obj);
@@ -411,7 +387,6 @@ InstanceKlass* ClassListParser::lookup_class_by_id(int id) {
   return klass;
 }
 
-
 InstanceKlass* ClassListParser::lookup_super_for_current_class(Symbol* super_name) {
   if (!is_loading_from_source()) {
     return NULL;
@@ -453,4 +428,3 @@ InstanceKlass* ClassListParser::lookup_interface_for_current_class(Symbol* inter
   ShouldNotReachHere();
   return NULL;
 }
-

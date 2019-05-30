@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_CODECACHE_HPP
 #define SHARE_VM_CODE_CODECACHE_HPP
 
@@ -93,8 +69,8 @@ class CodeCache : AllStatic {
   static bool _needs_cache_clean;                       // True if inline caches of the nmethods needs to be flushed
   static nmethod* _scavenge_root_nmethods;              // linked via nm->scavenge_root_link()
 
-  static void mark_scavenge_root_nmethods() PRODUCT_RETURN;
-  static void verify_perm_nmethods(CodeBlobClosure* f_or_null) PRODUCT_RETURN;
+  static void mark_scavenge_root_nmethods() {};
+  static void verify_perm_nmethods(CodeBlobClosure* f_or_null) {};
 
   // CodeHeap management
   static void initialize_heaps();                             // Initializes the CodeHeaps
@@ -173,7 +149,7 @@ class CodeCache : AllStatic {
   // to "true" iff some code got unloaded.
   // "unloading_occurred" controls whether metadata should be cleaned because of class unloading.
   static void do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred);
-  static void asserted_non_scavengable_nmethods_do(CodeBlobClosure* f = NULL) PRODUCT_RETURN;
+  static void asserted_non_scavengable_nmethods_do(CodeBlobClosure* f = NULL) {};
 
   // Apply f to every live code blob in scavengable nmethods. Prune nmethods
   // from the list of scavengable nmethods if f->fix_relocations() and a nmethod
@@ -195,7 +171,7 @@ class CodeCache : AllStatic {
   static void print_internals();
   static void print_memory_overhead();
   static void verify();                          // verifies the code cache
-  static void print_trace(const char* event, CodeBlob* cb, int size = 0) PRODUCT_RETURN;
+  static void print_trace(const char* event, CodeBlob* cb, int size = 0) {};
   static void print_summary(outputStream* st, bool detailed = true); // Prints a summary of the code cache usage
   static void log_state(outputStream* st);
   static const char* get_code_heap_name(int code_blob_type)  { return (heap_available(code_blob_type) ? get_code_heap(code_blob_type)->name() : "Unused"); }
@@ -239,7 +215,6 @@ class CodeCache : AllStatic {
 
   static bool code_blob_type_accepts_compiled(int type) {
     bool result = type == CodeBlobType::All || type <= CodeBlobType::MethodProfiled;
-    AOT_ONLY( result = result || type == CodeBlobType::AOT; )
     return result;
   }
 
@@ -250,7 +225,6 @@ class CodeCache : AllStatic {
   static bool code_blob_type_accepts_allocable(int type) {
     return type <= CodeBlobType::All;
   }
-
 
   // Returns the CodeBlobType for the given compilation level
   static int get_code_blob_type(int comp_level) {
@@ -274,9 +248,6 @@ class CodeCache : AllStatic {
   // Deoptimization
  private:
   static int  mark_for_deoptimization(KlassDepChange& changes);
-#ifdef HOTSWAP
-  static int  mark_for_evol_deoptimization(InstanceKlass* dependee);
-#endif // HOTSWAP
 
  public:
   static void mark_all_nmethods_for_deoptimization();
@@ -285,10 +256,6 @@ class CodeCache : AllStatic {
 
   // Flushing and deoptimization
   static void flush_dependents_on(InstanceKlass* dependee);
-#ifdef HOTSWAP
-  // Flushing and deoptimization in case of evolution
-  static void flush_evol_dependents_on(InstanceKlass* dependee);
-#endif // HOTSWAP
   // Support for fullspeed debugging
   static void flush_dependents_on_method(const methodHandle& dependee);
 
@@ -312,7 +279,6 @@ class CodeCache : AllStatic {
   static void print_names(outputStream *out);
 };
 
-
 // Iterator to iterate over nmethods in the CodeCache.
 template <class T, class Filter> class CodeBlobIterator : public StackObj {
  private:
@@ -333,7 +299,7 @@ template <class T, class Filter> class CodeBlobIterator : public StackObj {
       while(!(*_heap)->contains_blob(_code_blob)) {
         ++_heap;
       }
-      assert((*_heap)->contains_blob(_code_blob), "match not found");
+      assert((*_heap)->contains_blob(_code_blob), "match not found");
     }
   }
 
@@ -391,20 +357,17 @@ private:
   }
 };
 
-
 struct CompiledMethodFilter {
   static bool apply(CodeBlob* cb) { return cb->is_compiled(); }
   static const GrowableArray<CodeHeap*>* heaps() { return CodeCache::compiled_heaps(); }
 };
-
 
 struct NMethodFilter {
   static bool apply(CodeBlob* cb) { return cb->is_nmethod(); }
   static const GrowableArray<CodeHeap*>* heaps() { return CodeCache::nmethod_heaps(); }
 };
 
-
 typedef CodeBlobIterator<CompiledMethod, CompiledMethodFilter> CompiledMethodIterator;
 typedef CodeBlobIterator<nmethod, NMethodFilter> NMethodIterator;
 
-#endif // SHARE_VM_CODE_CODECACHE_HPP
+#endif

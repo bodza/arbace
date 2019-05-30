@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_UTILITIES_GLOBALDEFINITIONS_SPARCWORKS_HPP
 #define SHARE_VM_UTILITIES_GLOBALDEFINITIONS_SPARCWORKS_HPP
 
@@ -30,7 +6,6 @@
 // This file holds compiler-dependent includes,
 // globally used constants & types, class (forward)
 // declarations and a few frequently used utility functions.
-
 
 # include <ctype.h>
 # include <string.h>
@@ -67,54 +42,10 @@
 
 #include <inttypes.h>
 
-// Solaris 8 doesn't provide definitions of these
-#ifdef SOLARIS
-#ifndef PRIdPTR
-#if defined(_LP64)
-#define PRIdPTR                 "ld"
-#define PRIuPTR                 "lu"
-#define PRIxPTR                 "lx"
-#else
-#define PRIdPTR                 "d"
-#define PRIuPTR                 "u"
-#define PRIxPTR                 "x"
-#endif
-#endif
-#endif
-
 #ifdef LINUX
 # include <signal.h>
 # include <ucontext.h>
 # include <sys/time.h>
-#endif
-
-
-// 4810578: varargs unsafe on 32-bit integer/64-bit pointer architectures
-// When __cplusplus is defined, NULL is defined as 0 (32-bit constant) in
-// system header files.  On 32-bit architectures, there is no problem.
-// On 64-bit architectures, defining NULL as a 32-bit constant can cause
-// problems with varargs functions: C++ integral promotion rules say for
-// varargs, we pass the argument 0 as an int.  So, if NULL was passed to a
-// varargs function it will remain 32-bits.  Depending on the calling
-// convention of the machine, if the argument is passed on the stack then
-// only 32-bits of the "NULL" pointer may be initialized to zero.  The
-// other 32-bits will be garbage.  If the varargs function is expecting a
-// pointer when it extracts the argument, then we have a problem.
-//
-// Solution: For 64-bit architectures, redefine NULL as 64-bit constant 0.
-//
-// Note: this fix doesn't work well on Linux because NULL will be overwritten
-// whenever a system header file is included. Linux handles NULL correctly
-// through a special type '__null'.
-#ifdef SOLARIS
-#ifdef _LP64
-#undef NULL
-#define NULL 0L
-#else
-#ifndef NULL
-#define NULL 0
-#endif
-#endif
 #endif
 
 // NULL vs NULL_WORD:
@@ -124,13 +55,7 @@
 // sizeof(void*), so here we want something which is integer type, but has the
 // same size as a pointer.
 #ifdef LINUX
-  #ifdef _LP64
-    #define NULL_WORD  0L
-  #else
-    // Cast 0 to intptr_t rather than int32_t since they are not the same type
-    // on some platforms.
-    #define NULL_WORD  ((intptr_t)0)
-  #endif
+  #define NULL_WORD  0L
 #else
   #define NULL_WORD  NULL
 #endif
@@ -159,11 +84,7 @@ typedef unsigned int            uintptr_t;
 // Everywhere else it's an actual value.
 #if UINTPTR_MAX - 1 == -1
 #undef UINTPTR_MAX
-#ifdef _LP64
 #define UINTPTR_MAX UINT64_MAX
-#else
-#define UINTPTR_MAX UINT32_MAX
-#endif /* ifdef _LP64 */
 #endif
 
 // Additional Java basic types
@@ -172,7 +93,6 @@ typedef unsigned char      jubyte;
 typedef unsigned short     jushort;
 typedef unsigned int       juint;
 typedef unsigned long long julong;
-
 
 #ifdef SOLARIS
 // ANSI C++ fixes
@@ -231,7 +151,6 @@ inline int g_isnan(double f) { return isnan(f); }
 inline int g_isfinite(jfloat  f)                 { return finite(f); }
 inline int g_isfinite(jdouble f)                 { return finite(f); }
 
-
 // Wide characters
 
 inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
@@ -242,11 +161,7 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 #define PRAGMA_IMPLEMENTATION_(arg)
 
 // Formatting.
-#ifdef _LP64
 #define FORMAT64_MODIFIER "l"
-#else // !_LP64
-#define FORMAT64_MODIFIER "ll"
-#endif // _LP64
 
 #define offset_of(klass,field) offsetof(klass,field)
 
@@ -261,4 +176,4 @@ inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 // Alignment
 #define ATTRIBUTE_ALIGNED(x) __attribute__((aligned(x)))
 
-#endif // SHARE_VM_UTILITIES_GLOBALDEFINITIONS_SPARCWORKS_HPP
+#endif

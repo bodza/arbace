@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #include "precompiled.hpp"
 
 #include "aot/aotCodeHeap.hpp"
@@ -58,11 +35,11 @@ static void metadata_oops_do(Metadata** metadata_begin, Metadata **metadata_end,
     } else {
       continue;
     }
-    assert(Metaspace::contains(m), "");
+    assert(Metaspace::contains(m), "");
     if (m->is_method()) {
       m = ((Method*)m)->method_holder();
     }
-    assert(m->is_klass(), "must be");
+    assert(m->is_klass(), "must be");
     oop o = ((Klass*)m)->klass_holder();
     if (o != NULL) {
       f->do_oop(&o);
@@ -113,7 +90,7 @@ Metadata* AOTCompiledMethod::metadata_at(int index) const {
   if (index == 0) { // 0 is reserved
     return NULL;
   }
-  assert(index - 1 < _metadata_size, "");
+  assert(index - 1 < _metadata_size, "");
   {
     Metadata** entry = _metadata_got + (index - 1);
     intptr_t meta = (intptr_t)*entry;
@@ -181,21 +158,13 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
     // Log the transition once
     log_state_change();
 
-#ifdef TIERED
-    // Remain non-entrant forever
-    if (new_state == not_entrant && method() != NULL) {
-        method()->set_aot_code(NULL);
-    }
-#endif
-
     // Remove AOTCompiledMethod from method.
     if (method() != NULL && (method()->code() == this ||
                              method()->from_compiled_entry() == verified_entry_point())) {
       HandleMark hm;
       method()->clear_code(false /* already owns Patching_lock */);
     }
-  } // leave critical region under Patching_lock
-
+  }
 
   if (TraceCreateZombies) {
     ResourceMark m;
@@ -207,8 +176,8 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
 }
 
 bool AOTCompiledMethod::make_entrant() {
-  assert(!method()->is_old(), "reviving evolved method!");
-  assert(*_state_adr != not_entrant, "%s", method()->has_aot_code() ? "has_aot_code() not cleared" : "caller didn't check has_aot_code()");
+  assert(!method()->is_old(), "reviving evolved method!");
+  assert(*_state_adr != not_entrant, "%s", method()->has_aot_code() ? "has_aot_code() not cleared" : "caller didn't check has_aot_code()");
 
   // Make sure the method is not flushed in case of a safepoint in code below.
   methodHandle the_method(method());
@@ -230,8 +199,7 @@ bool AOTCompiledMethod::make_entrant() {
 
     // Log the transition once
     log_state_change();
-  } // leave critical region under Patching_lock
-
+  }
 
   if (TraceCreateZombies) {
     ResourceMark m;
@@ -239,16 +207,6 @@ bool AOTCompiledMethod::make_entrant() {
   }
 
   return true;
-}
-
-// We don't have full dependencies for AOT methods, so flushing is
-// more conservative than for nmethods.
-void AOTCompiledMethod::flush_evol_dependents_on(InstanceKlass* dependee) {
-  if (is_java_method()) {
-    clear_inline_caches();
-    mark_for_deoptimization();
-    make_not_entrant();
-  }
 }
 
 // Iterate over metadata calling this function.   Used by RedefineClasses
@@ -264,9 +222,7 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
         // In this metadata, we must only follow those metadatas directly embedded in
         // the code.  Other metadatas (oop_index>0) are seen as part of
         // the metadata section below.
-        assert(1 == (r->metadata_is_immediate()) +
-               (r->metadata_addr() >= metadata_begin() && r->metadata_addr() < metadata_end()),
-               "metadata must be found in exactly one place");
+        assert(1 == (r->metadata_is_immediate()) + (r->metadata_addr() >= metadata_begin() && r->metadata_addr() < metadata_end()), "metadata must be found in exactly one place");
         if (r->metadata_is_immediate() && r->metadata_value() != NULL) {
           Metadata* md = r->metadata_value();
           if (md != _method) f(md);
@@ -308,7 +264,7 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
     } else {
       continue;
     }
-    assert(Metaspace::contains(m), "");
+    assert(Metaspace::contains(m), "");
     f(m);
   }
 
@@ -392,7 +348,6 @@ void AOTCompiledMethod::log_state_change() const {
   }
 }
 
-
 NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Relocation* r) const {
   return nativeLoadGot_at(_call->plt_load_got());
 }
@@ -400,12 +355,12 @@ NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Reloc
 void PltNativeCallWrapper::verify_resolve_call(address dest) const {
   CodeBlob* db = CodeCache::find_blob_unsafe(dest);
   if (db == NULL) {
-    assert(dest == _call->plt_resolve_call(), "sanity");
+    assert(dest == _call->plt_resolve_call(), "sanity");
   }
 }
 
 void PltNativeCallWrapper::set_to_interpreted(const methodHandle& method, CompiledICInfo& info) {
-  assert(!info.to_aot(), "only for nmethod");
+  assert(!info.to_aot(), "only for nmethod");
   CompiledPltStaticCall* csc = CompiledPltStaticCall::at(instruction_address());
   csc->set_to_interpreted(method, info.entry());
 }
@@ -440,7 +395,7 @@ bool AOTCompiledMethod::is_evol_dependent_on(Klass* dependee) {
 }
 
 void AOTCompiledMethod::clear_inline_caches() {
-  assert(SafepointSynchronize::is_at_safepoint(), "cleaning of IC's only allowed at safepoint");
+  assert(SafepointSynchronize::is_at_safepoint(), "cleaning of IC's only allowed at safepoint");
   if (is_zombie()) {
     return;
   }
@@ -451,7 +406,7 @@ void AOTCompiledMethod::clear_inline_caches() {
     iter.reloc()->clear_inline_cache();
     if (iter.type() == relocInfo::opt_virtual_call_type) {
       CompiledIC* cic = CompiledIC_at(&iter);
-      assert(cic->is_clean(), "!");
+      assert(cic->is_clean(), "!");
       nativePltCall_at(iter.addr())->set_stub_to_clean();
     }
   }

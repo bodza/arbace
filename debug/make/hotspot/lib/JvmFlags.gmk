@@ -38,7 +38,6 @@ JVM_SRC_DIRS += $(call uniq, $(wildcard $(foreach d, $(JVM_SRC_ROOTS), \
         $d/cpu/$(HOTSPOT_TARGET_CPU_ARCH) \
         $d/os_cpu/$(HOTSPOT_TARGET_OS)_$(HOTSPOT_TARGET_CPU_ARCH) \
     ))) \
-    $(JVM_VARIANT_OUTPUTDIR)/gensrc
     #
 
 JVM_CFLAGS_INCLUDES += \

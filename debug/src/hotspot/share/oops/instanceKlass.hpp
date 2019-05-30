@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_INSTANCEKLASS_HPP
 #define SHARE_VM_OOPS_INSTANCEKLASS_HPP
 
@@ -40,10 +16,6 @@
 #include "utilities/accessFlags.hpp"
 #include "utilities/align.hpp"
 #include "utilities/macros.hpp"
-#if INCLUDE_JFR
-#include "jfr/support/jfrKlassExtension.hpp"
-#endif
-
 
 // An InstanceKlass is the VM level representation of a Java class.
 // It contains all information needed for at class at execution runtime.
@@ -57,18 +29,13 @@
 //    [EMBEDDED host klass        ] only exist for an anonymous class (JSR 292 enabled)
 //    [EMBEDDED fingerprint       ] only if should_store_fingerprint()==true
 
-
 // forward declaration for class -- see below for definition
-#if INCLUDE_JVMTI
-class BreakpointInfo;
-#endif
 class ClassFileParser;
 class KlassDepChange;
 class DependencyContext;
 class fieldDescriptor;
 class jniIdMapBase;
 class JNIid;
-class JvmtiCachedClassFieldMap;
 class SuperTypeClosure;
 
 // This is used in iterators below.
@@ -76,18 +43,6 @@ class FieldClosure: public StackObj {
 public:
   virtual void do_field(fieldDescriptor* fd) = 0;
 };
-
-#ifndef PRODUCT
-// Print fields.
-// If "obj" argument to constructor is NULL, prints static fields, otherwise prints non-static fields.
-class FieldPrinter: public FieldClosure {
-   oop _obj;
-   outputStream* _st;
- public:
-   FieldPrinter(outputStream* st, oop obj = NULL) : _obj(obj), _st(st) {}
-   void do_field(fieldDescriptor* fd);
-};
-#endif  // !PRODUCT
 
 // Describes where oops are located in instances of this klass.
 class OopMapBlock {
@@ -111,8 +66,6 @@ class OopMapBlock {
   uint _count;
 };
 
-struct JvmtiCachedClassFileData;
-
 class InstanceKlass: public Klass {
   friend class VMStructs;
   friend class JVMCIVMStructs;
@@ -126,7 +79,8 @@ class InstanceKlass: public Klass {
   InstanceKlass(const ClassFileParser& parser, unsigned kind, KlassID id = ID);
 
  public:
-  InstanceKlass() { assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+  InstanceKlass() {
+    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
 
   // See "The Java Virtual Machine Specification" section 2.16.2-5 for a detailed description
   // of the class loading & initialization procedure, and the use of the states.
@@ -251,14 +205,6 @@ class InstanceKlass: public Klass {
   jmethodID*      volatile _methods_jmethod_ids;  // jmethodIDs corresponding to method_idnum, or NULL if none
   intptr_t        _dep_context;          // packed DependencyContext structure
   nmethod*        _osr_nmethods_head;    // Head of list of on-stack replacement nmethods for this class
-#if INCLUDE_JVMTI
-  BreakpointInfo* _breakpoints;          // bpt lists, managed by Method*
-  // Linked instanceKlasses of previous versions
-  InstanceKlass* _previous_versions;
-  // JVMTI fields can be moved to their own structure - see 6315920
-  // JVMTI: cached class file, before retransformable agent modified it in CFLH
-  JvmtiCachedClassFileData* _cached_class_file;
-#endif
 
   volatile u2     _idnum_allocated_count;         // JNI/JVMTI: increments with the addition of methods, old ids don't change
 
@@ -269,11 +215,6 @@ class InstanceKlass: public Klass {
   u1              _reference_type;                // reference type
 
   u2              _this_class_index;              // constant pool entry
-#if INCLUDE_JVMTI
-  JvmtiCachedClassFieldMap* _jvmti_cached_class_field_map;  // JVMTI: used during heap iteration
-#endif
-
-  NOT_PRODUCT(int _verify_count;)  // to avoid redundant verifies
 
   // Method array.
   Array<Method*>* _methods;
@@ -553,7 +494,7 @@ public:
   // reference type
   ReferenceType reference_type() const     { return (ReferenceType)_reference_type; }
   void set_reference_type(ReferenceType t) {
-    assert(t == (u1)t, "overflow");
+    assert(t == (u1)t, "overflow");
     _reference_type = (u1)t;
   }
 
@@ -653,18 +594,18 @@ public:
   InstanceKlass* host_klass() const              {
     InstanceKlass** hk = adr_host_klass();
     if (hk == NULL) {
-      assert(!is_anonymous(), "Anonymous classes have host klasses");
+      assert(!is_anonymous(), "Anonymous classes have host klasses");
       return NULL;
     } else {
-      assert(*hk != NULL, "host klass should always be set if the address is not null");
-      assert(is_anonymous(), "Only anonymous classes have host klasses");
+      assert(*hk != NULL, "host klass should always be set if the address is not null");
+      assert(is_anonymous(), "Only anonymous classes have host klasses");
       return *hk;
     }
   }
   void set_host_klass(const InstanceKlass* host) {
-    assert(is_anonymous(), "not anonymous");
+    assert(is_anonymous(), "not anonymous");
     const InstanceKlass** addr = (const InstanceKlass **)adr_host_klass();
-    assert(addr != NULL, "no reversed space");
+    assert(addr != NULL, "no reversed space");
     if (addr != NULL) {
       *addr = host;
     }
@@ -724,7 +665,9 @@ public:
 
   // symbol unloading support (refcount already added)
   Symbol* array_name()                     { return _array_name; }
-  void set_array_name(Symbol* name)        { assert(_array_name == NULL  || name == NULL, "name already created"); _array_name = name; }
+  void set_array_name(Symbol* name)        {
+    assert(_array_name == NULL  || name == NULL, "name already created");
+    _array_name = name; }
 
   // nonstatic oop-map blocks
   static int nonstatic_oop_map_size(unsigned int oop_map_count) {
@@ -738,19 +681,7 @@ public:
     _nonstatic_oop_map_size = words;
   }
 
-#if INCLUDE_JVMTI
-  // Redefinition locking.  Class can only be redefined by one thread at a time.
-  bool is_being_redefined() const          { return _is_being_redefined; }
-  void set_is_being_redefined(bool value)  { _is_being_redefined = value; }
-
-  // RedefineClasses() support for previous versions:
-  void add_previous_version(InstanceKlass* ik, int emcp_method_count);
-  void purge_previous_version_list();
-
-  InstanceKlass* previous_versions() const { return _previous_versions; }
-#else
   InstanceKlass* previous_versions() const { return NULL; }
-#endif
 
   InstanceKlass* get_klass_version(int version) {
     for (InstanceKlass* ik = this; ik != NULL; ik = ik->previous_versions()) {
@@ -804,7 +735,7 @@ public:
 private:
 
   void set_kind(unsigned kind) {
-    assert(kind <= _misc_kind_field_mask, "Invalid InstanceKlass kind");
+    assert(kind <= _misc_kind_field_mask, "Invalid InstanceKlass kind");
     unsigned fmask = _misc_kind_field_mask << _misc_kind_field_pos;
     unsigned flags = _misc_flags & ~fmask;
     _misc_flags = (flags | (kind << _misc_kind_field_pos));
@@ -823,57 +754,8 @@ public:
   bool is_mirror_instance_klass() const       { return is_kind(_misc_kind_mirror); }
   bool is_class_loader_instance_klass() const { return is_kind(_misc_kind_class_loader); }
 
-#if INCLUDE_JVMTI
-
-  void init_previous_versions() {
-    _previous_versions = NULL;
-  }
-
- private:
-  static bool  _has_previous_versions;
- public:
-  static void purge_previous_versions(InstanceKlass* ik) {
-    if (ik->has_been_redefined()) {
-      ik->purge_previous_version_list();
-    }
-  }
-
-  static bool has_previous_versions_and_reset();
-
-  // JVMTI: Support for caching a class file before it is modified by an agent that can do retransformation
-  void set_cached_class_file(JvmtiCachedClassFileData *data) {
-    _cached_class_file = data;
-  }
-  JvmtiCachedClassFileData * get_cached_class_file();
-  jint get_cached_class_file_len();
-  unsigned char * get_cached_class_file_bytes();
-
-  // JVMTI: Support for caching of field indices, types, and offsets
-  void set_jvmti_cached_class_field_map(JvmtiCachedClassFieldMap* descriptor) {
-    _jvmti_cached_class_field_map = descriptor;
-  }
-  JvmtiCachedClassFieldMap* jvmti_cached_class_field_map() const {
-    return _jvmti_cached_class_field_map;
-  }
-
-#if INCLUDE_CDS
-  void set_archived_class_data(JvmtiCachedClassFileData* data) {
-    _cached_class_file = data;
-  }
-
-  JvmtiCachedClassFileData * get_archived_class_data();
-#endif // INCLUDE_CDS
-#else // INCLUDE_JVMTI
-
   static void purge_previous_versions(InstanceKlass* ik) { return; };
   static bool has_previous_versions_and_reset() { return false; }
-
-  void set_cached_class_file(JvmtiCachedClassFileData *data) {
-    assert(data == NULL, "unexpected call with JVMTI disabled");
-  }
-  JvmtiCachedClassFileData * get_cached_class_file() { return (JvmtiCachedClassFileData *)NULL; }
-
-#endif // INCLUDE_JVMTI
 
   bool has_nonstatic_concrete_methods() const {
     return (_misc_flags & _misc_has_nonstatic_concrete_methods) != 0;
@@ -992,25 +874,13 @@ public:
   int mark_osr_nmethods(const Method* m);
   nmethod* lookup_osr_nmethod(const Method* m, int bci, int level, bool match_level) const;
 
-#if INCLUDE_JVMTI
-  // Breakpoint support (see methods on Method* for details)
-  BreakpointInfo* breakpoints() const       { return _breakpoints; };
-  void set_breakpoints(BreakpointInfo* bps) { _breakpoints = bps; };
-#endif
-
   // support for stub routines
   static ByteSize init_state_offset()  { return in_ByteSize(offset_of(InstanceKlass, _init_state)); }
-  JFR_ONLY(DEFINE_KLASS_TRACE_ID_OFFSET;)
   static ByteSize init_thread_offset() { return in_ByteSize(offset_of(InstanceKlass, _init_thread)); }
 
   // subclass/subinterface checks
   bool implements_interface(Klass* k) const;
   bool is_same_or_direct_interface(Klass* k) const;
-
-#ifdef ASSERT
-  // check whether this class or one of its superclasses was redefined
-  bool has_redefined_this_or_super() const;
-#endif
 
   // Access to the implementor of an interface.
   Klass* implementor() const;
@@ -1029,9 +899,6 @@ public:
   bool compute_is_subtype_of(Klass* k);
   bool can_be_primary_super_slow() const;
   int oop_size(oop obj)  const             { return size_helper(); }
-  // slow because it's a virtual call and used for verifying the layout_helper.
-  // Using the layout_helper bits, we can call is_instance_klass without a virtual call.
-  DEBUG_ONLY(bool is_instance_klass_slow() const      { return true; })
 
   // Iterators
   void do_local_static_fields(FieldClosure* cl);
@@ -1048,8 +915,8 @@ public:
   }
 
   static const InstanceKlass* cast(const Klass* k) {
-    assert(k != NULL, "k should not be null");
-    assert(k->is_instance_klass(), "cast to InstanceKlass");
+    assert(k != NULL, "k should not be null");
+    assert(k->is_instance_klass(), "cast to InstanceKlass");
     return static_cast<const InstanceKlass*>(k);
   }
 
@@ -1078,9 +945,6 @@ public:
                                                is_anonymous(),
                                                has_stored_fingerprint());
   }
-#if INCLUDE_SERVICES
-  virtual void collect_statistics(KlassSizeStats *sz) const;
-#endif
 
   intptr_t* start_of_itable()   const { return (intptr_t*)start_of_vtable() + vtable_length(); }
   intptr_t* end_of_itable()     const { return start_of_itable() + itable_length(); }
@@ -1156,10 +1020,6 @@ public:
   klassItable itable() const;        // return klassItable wrapper
   Method* method_at_itable(Klass* holder, int index, TRAPS);
 
-#if INCLUDE_JVMTI
-  void adjust_default_methods(InstanceKlass* holder, bool* trace_name_printed);
-#endif // INCLUDE_JVMTI
-
   void clean_weak_instanceklass_links();
  private:
   void clean_implementors_list();
@@ -1191,13 +1051,6 @@ public:
 
   // GC specific object visitors
   //
-#if INCLUDE_PARALLELGC
-  // Parallel Scavenge
-  void oop_ps_push_contents(  oop obj, PSPromotionManager* pm);
-  // Parallel Compact
-  void oop_pc_follow_contents(oop obj, ParCompactionManager* cm);
-  void oop_pc_update_pointers(oop obj, ParCompactionManager* cm);
-#endif
 
   // Oop fields (and metadata) iterators
   //
@@ -1217,7 +1070,6 @@ public:
   template <typename T, class OopClosureType>
   inline void oop_oop_iterate_oop_map(OopMapBlock* map, oop obj, OopClosureType* closure);
 
-
   // Reverse iteration
   // Iterate over all oop fields and metadata.
   template <typename T, class OopClosureType>
@@ -1231,7 +1083,6 @@ public:
   // Iterate over all oop fields in one oop map.
   template <typename T, class OopClosureType>
   inline void oop_oop_iterate_oop_map_reverse(OopMapBlock* map, oop obj, OopClosureType* closure);
-
 
   // Bounded range iteration
  public:
@@ -1248,24 +1099,19 @@ public:
   template <typename T, class OopClosureType>
   inline void oop_oop_iterate_oop_map_bounded(OopMapBlock* map, oop obj, OopClosureType* closure, MemRegion mr);
 
-
  public:
   u2 idnum_allocated_count() const      { return _idnum_allocated_count; }
 
 public:
   void set_in_error_state() {
-    assert(DumpSharedSpaces, "only call this when dumping archive");
+    assert(DumpSharedSpaces, "only call this when dumping archive");
     _init_state = initialization_error;
   }
   bool check_sharing_error_state();
 
 private:
   // initialization state
-#ifdef ASSERT
-  void set_init_state(ClassState state);
-#else
   void set_init_state(ClassState state) { _init_state = (u1)state; }
-#endif
   void set_rewritten()                  { _misc_flags |= _misc_rewritten; }
   void set_init_thread(Thread *thread)  { _init_thread = thread; }
 
@@ -1318,11 +1164,6 @@ private:
   // Free CHeap allocated fields.
   void release_C_heap_structures();
 
-#if INCLUDE_JVMTI
-  // RedefineClasses support
-  void link_previous_versions(InstanceKlass* pv) { _previous_versions = pv; }
-  void mark_newly_obsolete_methods(Array<Method*>* old_methods, int emcp_method_count);
-#endif
 public:
   // CDS support - remove and restore oops from metadata. Oops are not shared.
   virtual void remove_unshareable_info();
@@ -1333,26 +1174,13 @@ public:
   jint compute_modifier_flags(TRAPS) const;
 
 public:
-  // JVMTI support
-  jint jvmti_class_status() const;
-
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
 
  public:
   // Printing
-#ifndef PRODUCT
-  void print_on(outputStream* st) const;
-#endif
   void print_value_on(outputStream* st) const;
 
   void oop_print_value_on(oop obj, outputStream* st);
-
-#ifndef PRODUCT
-  void oop_print_on      (oop obj, outputStream* st);
-
-  void print_dependent_nmethods(bool verbose = false);
-  bool is_dependent_nmethod(nmethod* nm);
-#endif
 
   const char* internal_name() const;
 
@@ -1377,7 +1205,6 @@ inline u2 InstanceKlass::next_method_idnum() {
   }
 }
 
-
 /* JNIid class for jfieldIDs only */
 class JNIid: public CHeapObj<mtClass> {
   friend class VMStructs;
@@ -1385,9 +1212,6 @@ class JNIid: public CHeapObj<mtClass> {
   Klass*             _holder;
   JNIid*             _next;
   int                _offset;
-#ifdef ASSERT
-  bool               _is_static_field_id;
-#endif
 
  public:
   // Accessors
@@ -1405,10 +1229,6 @@ class JNIid: public CHeapObj<mtClass> {
 
   static void deallocate(JNIid* id);
   // Debugging
-#ifdef ASSERT
-  bool is_static_field_id() const { return _is_static_field_id; }
-  void set_is_static_field_id()   { _is_static_field_id = true; }
-#endif
   void verify(Klass* holder);
 };
 
@@ -1430,9 +1250,7 @@ class InnerClassesIterator : public StackObj {
       // attribute data, or it should be
       // n*inner_class_next_offset+enclosing_method_attribute_size
       // if it also contains the EnclosingMethod data.
-      assert((_length % InstanceKlass::inner_class_next_offset == 0 ||
-              _length % InstanceKlass::inner_class_next_offset == InstanceKlass::enclosing_method_attribute_size),
-             "just checking");
+      assert((_length % InstanceKlass::inner_class_next_offset == 0 || _length % InstanceKlass::inner_class_next_offset == InstanceKlass::enclosing_method_attribute_size), "just checking");
       // Remove the enclosing_method portion if exists.
       if (_length % InstanceKlass::inner_class_next_offset == InstanceKlass::enclosing_method_attribute_size) {
         _length -= InstanceKlass::enclosing_method_attribute_size;
@@ -1491,4 +1309,4 @@ class InnerClassesIterator : public StackObj {
   }
 };
 
-#endif // SHARE_VM_OOPS_INSTANCEKLASS_HPP
+#endif

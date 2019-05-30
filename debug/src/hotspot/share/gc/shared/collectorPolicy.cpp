@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/adaptiveSizePolicy.hpp"
 #include "gc/shared/cardTableRS.hpp"
@@ -52,34 +28,11 @@ CollectorPolicy::CollectorPolicy() :
     _min_heap_byte_size(Arguments::min_heap_size())
 {}
 
-#ifdef ASSERT
-void CollectorPolicy::assert_flags() {
-  assert(InitialHeapSize <= MaxHeapSize, "Ergonomics decided on incompatible initial and maximum heap sizes");
-  assert(InitialHeapSize % _heap_alignment == 0, "InitialHeapSize alignment");
-  assert(MaxHeapSize % _heap_alignment == 0, "MaxHeapSize alignment");
-}
-
-void CollectorPolicy::assert_size_info() {
-  assert(InitialHeapSize == _initial_heap_byte_size, "Discrepancy between InitialHeapSize flag and local storage");
-  assert(MaxHeapSize == _max_heap_byte_size, "Discrepancy between MaxHeapSize flag and local storage");
-  assert(_max_heap_byte_size >= _min_heap_byte_size, "Ergonomics decided on incompatible minimum and maximum heap sizes");
-  assert(_initial_heap_byte_size >= _min_heap_byte_size, "Ergonomics decided on incompatible initial and minimum heap sizes");
-  assert(_max_heap_byte_size >= _initial_heap_byte_size, "Ergonomics decided on incompatible initial and maximum heap sizes");
-  assert(_min_heap_byte_size % _heap_alignment == 0, "min_heap_byte_size alignment");
-  assert(_initial_heap_byte_size % _heap_alignment == 0, "initial_heap_byte_size alignment");
-  assert(_max_heap_byte_size % _heap_alignment == 0, "max_heap_byte_size alignment");
-}
-#endif // ASSERT
-
 void CollectorPolicy::initialize_flags() {
-  assert(_space_alignment != 0, "Space alignment not set up properly");
-  assert(_heap_alignment != 0, "Heap alignment not set up properly");
-  assert(_heap_alignment >= _space_alignment,
-         "heap_alignment: " SIZE_FORMAT " less than space_alignment: " SIZE_FORMAT,
-         _heap_alignment, _space_alignment);
-  assert(_heap_alignment % _space_alignment == 0,
-         "heap_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT,
-         _heap_alignment, _space_alignment);
+  assert(_space_alignment != 0, "Space alignment not set up properly");
+  assert(_heap_alignment != 0, "Heap alignment not set up properly");
+  assert(_heap_alignment >= _space_alignment, "heap_alignment: " SIZE_FORMAT " less than space_alignment: " SIZE_FORMAT, _heap_alignment, _space_alignment);
+  assert(_heap_alignment % _space_alignment == 0, "heap_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT, _heap_alignment, _space_alignment);
 
   if (FLAG_IS_CMDLINE(MaxHeapSize)) {
     if (FLAG_IS_CMDLINE(InitialHeapSize) && InitialHeapSize > MaxHeapSize) {
@@ -131,15 +84,11 @@ void CollectorPolicy::initialize_flags() {
   _max_heap_byte_size = MaxHeapSize;
 
   FLAG_SET_ERGO(size_t, MinHeapDeltaBytes, align_up(MinHeapDeltaBytes, _space_alignment));
-
-  DEBUG_ONLY(CollectorPolicy::assert_flags();)
 }
 
 void CollectorPolicy::initialize_size_info() {
   log_debug(gc, heap)("Minimum heap " SIZE_FORMAT "  Initial heap " SIZE_FORMAT "  Maximum heap " SIZE_FORMAT,
                       _min_heap_byte_size, _initial_heap_byte_size, _max_heap_byte_size);
-
-  DEBUG_ONLY(CollectorPolicy::assert_size_info();)
 }
 
 size_t CollectorPolicy::compute_heap_alignment() {
@@ -191,60 +140,13 @@ size_t GenCollectorPolicy::old_gen_size_lower_bound() {
   return align_up(_space_alignment, _gen_alignment);
 }
 
-#ifdef ASSERT
-void GenCollectorPolicy::assert_flags() {
-  CollectorPolicy::assert_flags();
-  assert(NewSize >= _min_young_size, "Ergonomics decided on a too small young gen size");
-  assert(NewSize <= MaxNewSize, "Ergonomics decided on incompatible initial and maximum young gen sizes");
-  assert(FLAG_IS_DEFAULT(MaxNewSize) || MaxNewSize < MaxHeapSize, "Ergonomics decided on incompatible maximum young gen and heap sizes");
-  assert(NewSize % _gen_alignment == 0, "NewSize alignment");
-  assert(FLAG_IS_DEFAULT(MaxNewSize) || MaxNewSize % _gen_alignment == 0, "MaxNewSize alignment");
-  assert(OldSize + NewSize <= MaxHeapSize, "Ergonomics decided on incompatible generation and heap sizes");
-  assert(OldSize % _gen_alignment == 0, "OldSize alignment");
-}
-
-void GenCollectorPolicy::assert_size_info() {
-  CollectorPolicy::assert_size_info();
-  // GenCollectorPolicy::initialize_size_info may update the MaxNewSize
-  assert(MaxNewSize < MaxHeapSize, "Ergonomics decided on incompatible maximum young and heap sizes");
-  assert(NewSize == _initial_young_size, "Discrepancy between NewSize flag and local storage");
-  assert(MaxNewSize == _max_young_size, "Discrepancy between MaxNewSize flag and local storage");
-  assert(OldSize == _initial_old_size, "Discrepancy between OldSize flag and local storage");
-  assert(_min_young_size <= _initial_young_size, "Ergonomics decided on incompatible minimum and initial young gen sizes");
-  assert(_initial_young_size <= _max_young_size, "Ergonomics decided on incompatible initial and maximum young gen sizes");
-  assert(_min_young_size % _gen_alignment == 0, "_min_young_size alignment");
-  assert(_initial_young_size % _gen_alignment == 0, "_initial_young_size alignment");
-  assert(_max_young_size % _gen_alignment == 0, "_max_young_size alignment");
-  assert(_min_young_size <= bound_minus_alignment(_min_young_size, _min_heap_byte_size),
-      "Ergonomics made minimum young generation larger than minimum heap");
-  assert(_initial_young_size <=  bound_minus_alignment(_initial_young_size, _initial_heap_byte_size),
-      "Ergonomics made initial young generation larger than initial heap");
-  assert(_max_young_size <= bound_minus_alignment(_max_young_size, _max_heap_byte_size),
-      "Ergonomics made maximum young generation lager than maximum heap");
-  assert(_min_old_size <= _initial_old_size, "Ergonomics decided on incompatible minimum and initial old gen sizes");
-  assert(_initial_old_size <= _max_old_size, "Ergonomics decided on incompatible initial and maximum old gen sizes");
-  assert(_max_old_size % _gen_alignment == 0, "_max_old_size alignment");
-  assert(_initial_old_size % _gen_alignment == 0, "_initial_old_size alignment");
-  assert(_max_heap_byte_size <= (_max_young_size + _max_old_size), "Total maximum heap sizes must be sum of generation maximum sizes");
-  assert(_min_young_size + _min_old_size <= _min_heap_byte_size, "Minimum generation sizes exceed minimum heap size");
-  assert(_initial_young_size + _initial_old_size == _initial_heap_byte_size, "Initial generation sizes should match initial heap size");
-  assert(_max_young_size + _max_old_size == _max_heap_byte_size, "Maximum generation sizes should match maximum heap size");
-}
-#endif // ASSERT
-
 void GenCollectorPolicy::initialize_flags() {
   CollectorPolicy::initialize_flags();
 
-  assert(_gen_alignment != 0, "Generation alignment not set up properly");
-  assert(_heap_alignment >= _gen_alignment,
-         "heap_alignment: " SIZE_FORMAT " less than gen_alignment: " SIZE_FORMAT,
-         _heap_alignment, _gen_alignment);
-  assert(_gen_alignment % _space_alignment == 0,
-         "gen_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT,
-         _gen_alignment, _space_alignment);
-  assert(_heap_alignment % _gen_alignment == 0,
-         "heap_alignment: " SIZE_FORMAT " not aligned by gen_alignment: " SIZE_FORMAT,
-         _heap_alignment, _gen_alignment);
+  assert(_gen_alignment != 0, "Generation alignment not set up properly");
+  assert(_heap_alignment >= _gen_alignment, "heap_alignment: " SIZE_FORMAT " less than gen_alignment: " SIZE_FORMAT, _heap_alignment, _gen_alignment);
+  assert(_gen_alignment % _space_alignment == 0, "gen_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT, _gen_alignment, _space_alignment);
+  assert(_heap_alignment % _gen_alignment == 0, "heap_alignment: " SIZE_FORMAT " not aligned by gen_alignment: " SIZE_FORMAT, _heap_alignment, _gen_alignment);
 
   // All generational heaps have a young gen; handle those flags here
 
@@ -330,7 +232,7 @@ void GenCollectorPolicy::initialize_flags() {
     // NewRatio will be used later to set the young generation size so we use
     // it to calculate how big the heap should be based on the requested OldSize
     // and NewRatio.
-    assert(NewRatio > 0, "NewRatio should have been set up earlier");
+    assert(NewRatio > 0, "NewRatio should have been set up earlier");
     size_t calculated_heapsize = (OldSize / NewRatio) * (NewRatio + 1);
 
     calculated_heapsize = align_up(calculated_heapsize, _heap_alignment);
@@ -377,8 +279,6 @@ void GenCollectorPolicy::initialize_flags() {
   }
 
   always_do_update_barrier = UseConcMarkSweepGC;
-
-  DEBUG_ONLY(GenCollectorPolicy::assert_flags();)
 }
 
 // Values set on the command line win over any ergonomically
@@ -533,8 +433,6 @@ void GenCollectorPolicy::initialize_size_info() {
 
   log_trace(gc, heap)("Minimum old " SIZE_FORMAT "  Initial old " SIZE_FORMAT "  Maximum old " SIZE_FORMAT,
                   _min_old_size, _initial_old_size, _max_old_size);
-
-  DEBUG_ONLY(GenCollectorPolicy::assert_size_info();)
 }
 
 //

@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_MEMORY_FREELIST_HPP
 #define SHARE_VM_MEMORY_FREELIST_HPP
 
@@ -50,14 +26,8 @@ class FreeList {
 
  protected:
 
-#ifdef ASSERT
-  Mutex*        _protecting_lock;
-  void assert_proper_lock_protection_work() const;
-#endif
-
   // Asserts false if the protecting lock (if any) is not held.
   void assert_proper_lock_protection() const {
-    DEBUG_ONLY(assert_proper_lock_protection_work());
   }
 
   void increment_count()    {
@@ -66,7 +36,7 @@ class FreeList {
 
   void decrement_count() {
     _count--;
-    assert(_count >= 0, "Count should not be negative");
+    assert(_count >= 0, "Count should not be negative");
   }
 
  public:
@@ -81,12 +51,6 @@ class FreeList {
   void reset();
 
   // Declare the current free list to be protected by the given lock.
-#ifdef ASSERT
-  Mutex* protecting_lock() const { return _protecting_lock; }
-  void set_protecting_lock(Mutex* v) {
-    _protecting_lock = v;
-  }
-#endif
 
   // Accessors.
   Chunk_t* head() const {
@@ -96,7 +60,7 @@ class FreeList {
   void set_head(Chunk_t* v) {
     assert_proper_lock_protection();
     _head = v;
-    assert(!_head || _head->size() == _size, "bad chunk size");
+    assert(!_head || _head->size() == _size, "bad chunk size");
   }
   // Set the head of the list and set the prev field of non-null
   // values to NULL.
@@ -109,7 +73,7 @@ class FreeList {
   void set_tail(Chunk_t* v) {
     assert_proper_lock_protection();
     _tail = v;
-    assert(!_tail || _tail->size() == _size, "bad chunk size");
+    assert(!_tail || _tail->size() == _size, "bad chunk size");
   }
   // Set the tail of the list and set the next field of non-null
   // values to NULL.
@@ -173,4 +137,4 @@ class FreeList {
   void print_on(outputStream* st, const char* c = NULL) const;
 };
 
-#endif // SHARE_VM_MEMORY_FREELIST_HPP
+#endif

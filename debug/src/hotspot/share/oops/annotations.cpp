@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/classLoaderData.hpp"
 #include "logging/log.hpp"
@@ -88,45 +64,3 @@ void Annotations::metaspace_pointers_do(MetaspaceClosure* it) {
 void Annotations::print_value_on(outputStream* st) const {
   st->print("Anotations(" INTPTR_FORMAT ")", p2i(this));
 }
-
-#if INCLUDE_SERVICES
-// Size Statistics
-
-julong Annotations::count_bytes(Array<AnnotationArray*>* p) {
-  julong bytes = 0;
-  if (p != NULL) {
-    for (int i = 0; i < p->length(); i++) {
-      bytes += KlassSizeStats::count_array(p->at(i));
-    }
-    bytes += KlassSizeStats::count_array(p);
-  }
-  return bytes;
-}
-
-void Annotations::collect_statistics(KlassSizeStats *sz) const {
-  sz->_annotations_bytes = sz->count(this);
-  sz->_class_annotations_bytes = sz->count(class_annotations());
-  sz->_class_type_annotations_bytes = sz->count(class_type_annotations());
-  sz->_fields_annotations_bytes = count_bytes(fields_annotations());
-  sz->_fields_type_annotations_bytes = count_bytes(fields_type_annotations());
-
-  sz->_annotations_bytes +=
-      sz->_class_annotations_bytes +
-      sz->_class_type_annotations_bytes +
-      sz->_fields_annotations_bytes +
-      sz->_fields_type_annotations_bytes;
-
-  sz->_ro_bytes += sz->_annotations_bytes;
-}
-#endif // INCLUDE_SERVICES
-
-#define BULLET  " - "
-
-#ifndef PRODUCT
-void Annotations::print_on(outputStream* st) const {
-  st->print(BULLET"class_annotations            "); class_annotations()->print_value_on(st);
-  st->print(BULLET"fields_annotations           "); fields_annotations()->print_value_on(st);
-  st->print(BULLET"class_type_annotations       "); class_type_annotations()->print_value_on(st);
-  st->print(BULLET"fields_type_annotations      "); fields_type_annotations()->print_value_on(st);
-}
-#endif // PRODUCT

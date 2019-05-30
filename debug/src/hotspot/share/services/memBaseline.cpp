@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 #include "precompiled.hpp"
 
 #include "classfile/classLoaderData.inline.hpp"
@@ -42,7 +19,6 @@ int compare_malloc_size(const MallocSite& s1, const MallocSite& s2) {
     return 1;
   }
 }
-
 
 int compare_virtual_memory_size(const VirtualMemoryAllocationSite& s1,
   const VirtualMemoryAllocationSite& s2) {
@@ -141,7 +117,6 @@ class VirtualMemoryAllocationWalker : public VirtualMemoryWalker {
   }
 };
 
-
 bool MemBaseline::baseline_summary() {
   MallocMemorySummary::snapshot(&_malloc_memory_snapshot);
   VirtualMemorySummary::snapshot(&_virtual_memory_snapshot);
@@ -229,7 +204,7 @@ bool MemBaseline::aggregate_virtual_memory_allocation_sites() {
 }
 
 MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
-  assert(!_malloc_sites.is_empty(), "Not detail baseline");
+  assert(!_malloc_sites.is_empty(), "Not detail baseline");
   switch(order) {
     case by_size:
       malloc_sites_to_size_order();
@@ -248,7 +223,7 @@ MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
 }
 
 VirtualMemorySiteIterator MemBaseline::virtual_memory_sites(SortingOrder order) {
-  assert(!_virtual_memory_sites.is_empty(), "Not detail baseline");
+  assert(!_virtual_memory_sites.is_empty(), "Not detail baseline");
   switch(order) {
     case by_size:
       virtual_memory_sites_to_size_order();
@@ -262,7 +237,6 @@ VirtualMemorySiteIterator MemBaseline::virtual_memory_sites(SortingOrder order) 
   }
   return VirtualMemorySiteIterator(_virtual_memory_sites.head());
 }
-
 
 // Sorting allocations sites in different orders
 void MemBaseline::malloc_sites_to_size_order() {
@@ -323,4 +297,3 @@ void MemBaseline::virtual_memory_sites_to_reservation_site_order() {
     _virtual_memory_sites_order = by_size;
   }
 }
-

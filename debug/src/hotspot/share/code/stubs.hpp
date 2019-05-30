@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CODE_STUBS_HPP
 #define SHARE_VM_CODE_STUBS_HPP
 
@@ -32,7 +8,6 @@
 // management of little pieces of machine code - or stubs -
 // created on the fly and frequently discarded. In this frame-
 // work stubs are stored in a queue.
-
 
 // Stub serves as abstract base class. A concrete stub
 // implementation is a subclass of Stub, implementing
@@ -56,7 +31,6 @@
 //               |________|    |
 //                          <--+
 
-
 class Stub {
  public:
   // Initialization/finalization
@@ -76,7 +50,6 @@ class Stub {
   void    verify()                               { ShouldNotCallThis(); }                // verifies the Stub
   void    print()                                { ShouldNotCallThis(); }                // prints some information about the stub
 };
-
 
 // A stub interface defines the interface between a stub queue
 // and the stubs it queues. In order to avoid a vtable and
@@ -111,35 +84,33 @@ class StubInterface: public CHeapObj<mtCode> {
   virtual void    print(Stub* self)                        = 0; // prints information about the stub
 };
 
-
 // DEF_STUB_INTERFACE is used to create a concrete stub interface
 // class, forwarding stub interface calls to the corresponding
 // stub calls.
 
-#define DEF_STUB_INTERFACE(stub)                           \
-  class stub##Interface: public StubInterface {            \
-   private:                                                \
-    static stub*    cast(Stub* self)                       { return (stub*)self; }                 \
-                                                           \
-   public:                                                 \
-    /* Initialization/finalization */                      \
-    virtual void    initialize(Stub* self, int size,       \
+#define DEF_STUB_INTERFACE(stub) \
+  class stub##Interface: public StubInterface { \
+   private: \
+    static stub*    cast(Stub* self)                       { return (stub*)self; } \
+ \
+   public: \
+    /* Initialization/finalization */ \
+    virtual void    initialize(Stub* self, int size, \
                                CodeStrings& strings)       { cast(self)->initialize(size, strings); } \
-    virtual void    finalize(Stub* self)                   { cast(self)->finalize(); }             \
-                                                           \
-    /* General info */                                     \
-    virtual int     size(Stub* self) const                 { return cast(self)->size(); }          \
+    virtual void    finalize(Stub* self)                   { cast(self)->finalize(); } \
+ \
+    /* General info */ \
+    virtual int     size(Stub* self) const                 { return cast(self)->size(); } \
     virtual int     code_size_to_size(int code_size) const { return stub::code_size_to_size(code_size); } \
-                                                           \
-    /* Code info */                                        \
-    virtual address code_begin(Stub* self) const           { return cast(self)->code_begin(); }    \
-    virtual address code_end(Stub* self) const             { return cast(self)->code_end(); }      \
-                                                           \
-    /* Debugging */                                        \
-    virtual void    verify(Stub* self)                     { cast(self)->verify(); }               \
-    virtual void    print(Stub* self)                      { cast(self)->print(); }                \
+ \
+    /* Code info */ \
+    virtual address code_begin(Stub* self) const           { return cast(self)->code_begin(); } \
+    virtual address code_end(Stub* self) const             { return cast(self)->code_end(); } \
+ \
+    /* Debugging */ \
+    virtual void    verify(Stub* self)                     { cast(self)->verify(); } \
+    virtual void    print(Stub* self)                      { cast(self)->print(); } \
   };
-
 
 // A StubQueue maintains a queue of stubs.
 // Note: All sizes (spaces) are given in bytes.
@@ -156,7 +127,8 @@ class StubQueue: public CHeapObj<mtCode> {
   int            _number_of_stubs;               // the number of buffered stubs
   Mutex* const   _mutex;                         // the lock used for a (request, commit) transaction
 
-  void  check_index(int i) const                 { assert(0 <= i && i < _buffer_limit && i % CodeEntryAlignment == 0, "illegal index"); }
+  void  check_index(int i) const                 {
+    assert(0 <= i && i < _buffer_limit && i % CodeEntryAlignment == 0, "illegal index"); }
   bool  is_contiguous() const                    { return _queue_begin <= _queue_end; }
   int   index_of(Stub* s) const                  { int i = (address)s - _stub_buffer; check_index(i); return i; }
   Stub* stub_at(int i) const                     { check_index(i); return (Stub*)(_stub_buffer + i); }
@@ -164,7 +136,9 @@ class StubQueue: public CHeapObj<mtCode> {
 
   // Stub functionality accessed via interface
   void  stub_initialize(Stub* s, int size,
-                        CodeStrings& strings)    { assert(size % CodeEntryAlignment == 0, "size not aligned"); _stub_interface->initialize(s, size, strings); }
+                        CodeStrings& strings)    {
+    assert(size % CodeEntryAlignment == 0, "size not aligned");
+    _stub_interface->initialize(s, size, strings); }
   void  stub_finalize(Stub* s)                   { _stub_interface->finalize(s); }
   int   stub_size(Stub* s) const                 { return _stub_interface->size(s); }
   bool  stub_contains(Stub* s, address pc) const { return _stub_interface->code_begin(s) <= pc && pc < _stub_interface->code_end(s); }
@@ -212,7 +186,6 @@ class StubQueue: public CHeapObj<mtCode> {
   // Debugging/printing
   void  verify();                                // verifies the stub queue
   void  print();                                 // prints information about the stub queue
-
 };
 
-#endif // SHARE_VM_CODE_STUBS_HPP
+#endif

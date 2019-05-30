@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2002, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_GCCAUSE_HPP
 #define SHARE_VM_GC_SHARED_GCCAUSE_HPP
 
@@ -45,7 +21,6 @@ class GCCause : public AllStatic {
     _full_gc_alot,
     _scavenge_alot,
     _allocation_profiler,
-    _jvmti_force_gc,
     _gc_locker,
     _heap_inspection,
     _heap_dump,
@@ -92,19 +67,14 @@ class GCCause : public AllStatic {
             cause == GCCause::_dcmd_gc_run);
   }
 
-  inline static bool is_serviceability_requested_gc(GCCause::Cause
-                                                             cause) {
-    return (cause == GCCause::_jvmti_force_gc ||
-            cause == GCCause::_heap_inspection ||
+  inline static bool is_serviceability_requested_gc(GCCause::Cause cause) {
+    return (cause == GCCause::_heap_inspection ||
             cause == GCCause::_heap_dump);
   }
 
   // Causes for collection of the tenured gernation
   inline static bool is_tenured_allocation_failure_gc(GCCause::Cause cause) {
-    assert(cause != GCCause::_old_generation_too_full_to_scavenge &&
-           cause != GCCause::_old_generation_expanded_on_last_scavenge,
-           "This GCCause may be correct but is not expected yet: %s",
-           to_string(cause));
+    assert(cause != GCCause::_old_generation_too_full_to_scavenge && cause != GCCause::_old_generation_expanded_on_last_scavenge, "This GCCause may be correct but is not expected yet: %s", to_string(cause));
     // _tenured_generation_full or _cms_generation_full for full tenured generations
     // _adaptive_size_policy for a full collection after a young GC
     // _allocation_failure is the generic cause a collection which could result
@@ -128,4 +98,4 @@ class GCCause : public AllStatic {
   static const char* to_string(GCCause::Cause cause);
 };
 
-#endif // SHARE_VM_GC_SHARED_GCCAUSE_HPP
+#endif

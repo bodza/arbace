@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_ASM_CODEBUFFER_HPP
 #define SHARE_VM_ASM_CODEBUFFER_HPP
 
@@ -111,8 +87,6 @@ class CodeSection {
     _locs_own      = false;
     _frozen        = false;
     _scratch_emit  = false;
-    debug_only(_index = (char)-1);
-    debug_only(_outer = (CodeBuffer*)badAddress);
   }
 
   void initialize_outer(CodeBuffer* outer, int index) {
@@ -121,7 +95,7 @@ class CodeSection {
   }
 
   void initialize(address start, csize_t size = 0) {
-    assert(_start == NULL, "only one init step, please");
+    assert(_start == NULL, "only one init step, please");
     _start         = start;
     _mark          = NULL;
     _end           = start;
@@ -149,7 +123,8 @@ class CodeSection {
   address     end() const           { return _end; }
   address     limit() const         { return _limit; }
   csize_t     size() const          { return (csize_t)(_end - _start); }
-  csize_t     mark_off() const      { assert(_mark != NULL, "not an offset");
+  csize_t     mark_off() const      {
+    assert(_mark != NULL, "not an offset");
                                       return (csize_t)(_mark - _start); }
   csize_t     capacity() const      { return (csize_t)(_limit - _start); }
   csize_t     remaining() const     { return (csize_t)(_limit - _end); }
@@ -181,21 +156,25 @@ class CodeSection {
   bool allocates(address pc) const  { return pc >= _start && pc <  _limit; }
   bool allocates2(address pc) const { return pc >= _start && pc <= _limit; }
 
-  void    set_end(address pc)       { assert(allocates2(pc), "not in CodeBuffer memory: " INTPTR_FORMAT " <= " INTPTR_FORMAT " <= " INTPTR_FORMAT, p2i(_start), p2i(pc), p2i(_limit)); _end = pc; }
-  void    set_mark(address pc)      { assert(contains2(pc), "not in codeBuffer");
+  void    set_end(address pc)       {
+    assert(allocates2(pc), "not in CodeBuffer memory: " INTPTR_FORMAT " <= " INTPTR_FORMAT " <= " INTPTR_FORMAT, p2i(_start), p2i(pc), p2i(_limit));
+    _end = pc; }
+  void    set_mark(address pc)      {
+    assert(contains2(pc), "not in codeBuffer");
                                       _mark = pc; }
-  void    set_mark_off(int offset)  { assert(contains2(offset+_start),"not in codeBuffer");
+  void    set_mark_off(int offset)  {
+    assert(contains2(offset+_start),"not in codeBuffer");
                                       _mark = offset + _start; }
   void    set_mark()                { _mark = _end; }
   void    clear_mark()              { _mark = NULL; }
 
   void    set_locs_end(relocInfo* p) {
-    assert(p <= locs_limit(), "locs data fits in allocated buffer");
+    assert(p <= locs_limit(), "locs data fits in allocated buffer");
     _locs_end = p;
   }
   void    set_locs_point(address pc) {
-    assert(pc >= locs_point(), "relocation addr may not decrease");
-    assert(allocates2(pc),     "relocation addr must be in this section");
+    assert(pc >= locs_point(), "relocation addr may not decrease");
+    assert(allocates2(pc),     "relocation addr must be in this section");
     _locs_point = pc;
   }
 
@@ -237,77 +216,40 @@ class CodeSection {
   // Ensure there's enough space left in the current section.
   // Return true if there was an expansion.
   bool maybe_expand_to_ensure_remaining(csize_t amount);
-
-#ifndef PRODUCT
-  void decode();
-  void dump();
-  void print(const char* name);
-#endif //PRODUCT
 };
 
 class CodeString;
 class CodeStrings {
 private:
-#ifndef PRODUCT
-  CodeString* _strings;
-#ifdef ASSERT
-  // Becomes true after copy-out, forbids further use.
-  bool _defunct; // Zero bit pattern is "valid", see memset call in decode_env::decode_env
-#endif
-  static const char* _prefix; // defaults to " ;; "
-#endif
-
   CodeString* find(intptr_t offset) const;
   CodeString* find_last(intptr_t offset) const;
 
   void set_null_and_invalidate() {
-#ifndef PRODUCT
-    _strings = NULL;
-#ifdef ASSERT
-    _defunct = true;
-#endif
-#endif
   }
 
 public:
   CodeStrings() {
-#ifndef PRODUCT
-    _strings = NULL;
-#ifdef ASSERT
-    _defunct = false;
-#endif
-#endif
   }
 
   bool is_null() {
-#ifdef ASSERT
-    return _strings == NULL;
-#else
     return true;
-#endif
   }
 
-  const char* add_string(const char * string) PRODUCT_RETURN_(return NULL;);
+  const char* add_string(const char * string) {return NULL;};
 
-  void add_comment(intptr_t offset, const char * comment) PRODUCT_RETURN;
-  void print_block_comment(outputStream* stream, intptr_t offset) const PRODUCT_RETURN;
+  void add_comment(intptr_t offset, const char * comment) {};
+  void print_block_comment(outputStream* stream, intptr_t offset) const {};
   // MOVE strings from other to this; invalidate other.
-  void assign(CodeStrings& other)  PRODUCT_RETURN;
+  void assign(CodeStrings& other)  {};
   // COPY strings from other to this; leave other valid.
-  void copy(CodeStrings& other)  PRODUCT_RETURN;
+  void copy(CodeStrings& other)  {};
   // FREE strings; invalidate this.
-  void free() PRODUCT_RETURN;
+  void free() {};
   // Guarantee that _strings are used at most once; assign and free invalidate a buffer.
   inline void check_valid() const {
-#ifdef ASSERT
-    assert(!_defunct, "Use of invalid CodeStrings");
-#endif
   }
 
   static void set_prefix(const char *prefix) {
-#ifndef PRODUCT
-    _prefix = prefix;
-#endif
   }
 };
 
@@ -383,16 +325,12 @@ class CodeBuffer: public StackObj {
 
   address      _last_insn;      // used to merge consecutive memory barriers, loads or stores.
 
-#if INCLUDE_AOT
-  bool         _immutable_PIC;
-#endif
-
   address      _decode_begin;   // start address for decode
   address      decode_begin();
 
   void initialize_misc(const char * name) {
     // all pointers other than code_start/end and those inside the sections
-    assert(name != NULL, "must have a name");
+    assert(name != NULL, "must have a name");
     _name            = name;
     _before_expand   = NULL;
     _blob            = NULL;
@@ -401,9 +339,6 @@ class CodeBuffer: public StackObj {
     _overflow_arena  = NULL;
     _code_strings    = CodeStrings();
     _last_insn       = NULL;
-#if INCLUDE_AOT
-    _immutable_PIC   = false;
-#endif
   }
 
   void initialize(address code_start, csize_t code_size) {
@@ -414,8 +349,8 @@ class CodeBuffer: public StackObj {
     _total_size  = code_size;
     // Initialize the main section:
     _insts.initialize(code_start, code_size);
-    assert(!_stubs.is_allocated(),  "no garbage here");
-    assert(!_consts.is_allocated(), "no garbage here");
+    assert(!_stubs.is_allocated(),  "no garbage here");
+    assert(!_consts.is_allocated(), "no garbage here");
     _oop_recorder = &_default_oop_recorder;
   }
 
@@ -452,7 +387,7 @@ class CodeBuffer: public StackObj {
  public:
   // (1) code buffer referring to pre-allocated instruction memory
   CodeBuffer(address code_start, csize_t code_size) {
-    assert(code_start != NULL, "sanity");
+    assert(code_start != NULL, "sanity");
     initialize_misc("static buffer");
     initialize(code_start, code_size);
     verify_section_allocation();
@@ -496,7 +431,7 @@ class CodeBuffer: public StackObj {
     // that the various members (_consts, _insts, _stubs, etc.) are
     // adjacent in the layout of CodeBuffer.
     CodeSection* cs = &_consts + n;
-    assert(cs->index() == n || !cs->is_allocated(), "sanity");
+    assert(cs->index() == n || !cs->is_allocated(), "sanity");
     return cs;
   }
   const CodeSection* code_section(int n) const {  // yucky const stuff
@@ -543,7 +478,8 @@ class CodeBuffer: public StackObj {
   csize_t insts_size() const             { return _insts.size(); }
 
   // same as insts_size(), except that it asserts there is no non-code here
-  csize_t pure_insts_size() const        { assert(is_pure(), "no non-code");
+  csize_t pure_insts_size() const        {
+    assert(is_pure(), "no non-code");
                                            return insts_size(); }
   // capacity in bytes of the insts sections
   csize_t insts_capacity() const         { return _insts.capacity(); }
@@ -618,7 +554,7 @@ class CodeBuffer: public StackObj {
 
   // NMethod generation
   void copy_code_and_locs_to(CodeBlob* blob) {
-    assert(blob != NULL, "sane");
+    assert(blob != NULL, "sane");
     copy_relocations_to(blob);
     copy_code_to(blob);
   }
@@ -631,35 +567,15 @@ class CodeBuffer: public StackObj {
   // Transform an address from the code in this code buffer to a specified code buffer
   address transform_address(const CodeBuffer &cb, address addr) const;
 
-  void block_comment(intptr_t offset, const char * comment) PRODUCT_RETURN;
-  const char* code_string(const char* str) PRODUCT_RETURN_(return NULL;);
+  void block_comment(intptr_t offset, const char * comment) {};
+  const char* code_string(const char* str) {return NULL;};
 
   // Log a little info about section usage in the CodeBuffer
   void log_section_sizes(const char* name);
 
-#if INCLUDE_AOT
-  // True if this is a code buffer used for immutable PIC, i.e. AOT
-  // compilation.
-  bool immutable_PIC() { return _immutable_PIC; }
-  void set_immutable_PIC(bool pic) { _immutable_PIC = pic; }
-#endif
-
-#ifndef PRODUCT
- public:
-  // Printing / Decoding
-  // decodes from decode_begin() to code_end() and sets decode_begin to end
-  void    decode();
-  void    decode_all();         // decodes all the code
-  void    skip_decode();        // sets decode_begin to code_end();
-  void    print();
-#endif
-
-
   // The following header contains architecture-specific implementations
 #include CPU_HEADER(codeBuffer)
-
 };
-
 
 inline void CodeSection::freeze() {
   _outer->freeze_section(this);
@@ -670,4 +586,4 @@ inline bool CodeSection::maybe_expand_to_ensure_remaining(csize_t amount) {
   return false;
 }
 
-#endif // SHARE_VM_ASM_CODEBUFFER_HPP
+#endif

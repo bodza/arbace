@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef SHARE_VM_AOT_AOTCODEHEAP_HPP
 #define SHARE_VM_AOT_AOTCODEHEAP_HPP
 
@@ -162,7 +139,6 @@ public:
   address load_symbol(const char *name);
 };
 
-
 class AOTCodeHeap : public CodeHeap {
   AOTLib* _lib;
   int _aot_id;
@@ -175,7 +151,6 @@ class AOTCodeHeap : public CodeHeap {
   address _code_space;
   address _code_segments;
   jlong*  _method_state;
-
 
   // Collect metaspace info: names -> address in .got section
   const char* _metaspace_names;
@@ -209,7 +184,7 @@ class AOTCodeHeap : public CodeHeap {
       _memory.set_high_boundary(high);
       _memory.set_high(high);
     }
-    assert(_method_count > 0, "methods count should be set already");
+    assert(_method_count > 0, "methods count should be set already");
   }
 
   void register_stubs();
@@ -222,7 +197,6 @@ class AOTCodeHeap : public CodeHeap {
   void link_global_lib_symbols();
   void link_primitive_array_klasses();
   void publish_aot(const methodHandle& mh, AOTMethodData* method_data, int code_id);
-
 
   AOTCompiledMethod* next_in_use_at(int index) const;
 
@@ -249,17 +223,9 @@ public:
     return _metaspace_names + offset;
   }
 
-
   void oops_do(OopClosure* f);
   void metadata_do(void f(Metadata*));
   void got_metadata_do(void f(Metadata*));
-
-#ifdef ASSERT
-  bool got_contains(Metadata **p) {
-    return (p >= &_metadata_got[0] && p < &_metadata_got[_metadata_got_size]) ||
-           (p >= &_klasses_got[0] && p < &_klasses_got[_klasses_got_size]);
-  }
-#endif
 
   int dso_id() const { return _lib->id(); }
   int aot_id() const { return _aot_id; }
@@ -269,7 +235,7 @@ public:
   AOTCompiledMethod* get_code_desc_at_index(int index) {
     if (index < _method_count && _code_to_aot[index]._state == in_use) {
         AOTCompiledMethod* m = _code_to_aot[index]._aot;
-        assert(m != NULL, "AOT method should be set");
+        assert(m != NULL, "AOT method should be set");
         if (!m->is_runtime_stub()) {
           return m;
         }
@@ -281,21 +247,7 @@ public:
 
   void cleanup_inline_caches();
 
-  DEBUG_ONLY( int verify_icholder_relocations(); )
-
-  void flush_evol_dependents_on(InstanceKlass* dependee);
-
   void alive_methods_do(void f(CompiledMethod* nm));
-
-#ifndef PRODUCT
-  static int klasses_seen;
-  static int aot_klasses_found;
-  static int aot_klasses_fp_miss;
-  static int aot_klasses_cl_miss;
-  static int aot_methods_found;
-
-  static void print_statistics();
-#endif
 
   bool reconcile_dynamic_invoke(AOTCompiledMethod* caller, InstanceKlass* holder, int index, Method* adapter_method, Klass *appendix_klass);
 
@@ -310,7 +262,6 @@ private:
   bool reconcile_dynamic_klass(AOTCompiledMethod *caller, InstanceKlass* holder, int index, Klass *dyno, const char *descriptor1, const char *descriptor2 = NULL);
 
   bool reconcile_dynamic_method(AOTCompiledMethod *caller, InstanceKlass* holder, int index, Method *adapter_method);
-
 };
 
-#endif // SHARE_VM_AOT_AOTCODEHEAP_HPP
+#endif

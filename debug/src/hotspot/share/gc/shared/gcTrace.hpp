@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_SHARED_GCTRACE_HPP
 #define SHARE_VM_GC_SHARED_GCTRACE_HPP
 
@@ -34,9 +10,7 @@
 #include "memory/referenceType.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ticks.hpp"
-#if INCLUDE_G1GC
 #include "gc/g1/g1YCTypes.hpp"
-#endif
 
 class EvacuationInfo;
 class GCHeapSummary;
@@ -97,8 +71,6 @@ class ParallelOldGCInfo {
   void* dense_prefix() const { return _dense_prefix; }
 };
 
-#if INCLUDE_G1GC
-
 class G1YoungGCInfo {
   G1YCType _type;
  public:
@@ -108,8 +80,6 @@ class G1YoungGCInfo {
   }
   G1YCType type() const { return _type; }
 };
-
-#endif // INCLUDE_G1GC
 
 class GCTracer : public ResourceObj {
  protected:
@@ -121,7 +91,7 @@ class GCTracer : public ResourceObj {
   void report_gc_heap_summary(GCWhen::Type when, const GCHeapSummary& heap_summary) const;
   void report_metaspace_summary(GCWhen::Type when, const MetaspaceSummary& metaspace_summary) const;
   void report_gc_reference_stats(const ReferenceProcessorStats& rp) const;
-  void report_object_count_after_gc(BoolObjectClosure* object_filter) NOT_SERVICES_RETURN;
+  void report_object_count_after_gc(BoolObjectClosure* object_filter) {};
 
  protected:
   GCTracer(GCName name) : _shared_gc_info(name) {}
@@ -232,7 +202,6 @@ class ParNewTracer : public YoungGCTracer {
   ParNewTracer() : YoungGCTracer(ParNew) {}
 };
 
-#if INCLUDE_G1GC
 class G1MMUTracer : public AllStatic {
   static void send_g1_mmu_event(double time_slice_ms, double gc_time_ms, double max_time_ms);
 
@@ -294,8 +263,6 @@ class G1FullGCTracer : public OldGCTracer {
   G1FullGCTracer() : OldGCTracer(G1Full) {}
 };
 
-#endif // INCLUDE_G1GC
-
 class CMSTracer : public OldGCTracer {
  public:
   CMSTracer() : OldGCTracer(ConcurrentMarkSweep) {}
@@ -309,4 +276,4 @@ class G1OldTracer : public OldGCTracer {
   void set_gc_cause(GCCause::Cause cause);
 };
 
-#endif // SHARE_VM_GC_SHARED_GCTRACE_HPP
+#endif

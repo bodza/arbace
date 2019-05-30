@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_CONSTANTPOOLOOP_HPP
 #define SHARE_VM_OOPS_CONSTANTPOOLOOP_HPP
 
@@ -88,7 +64,7 @@ public:
     return _name_index;
   }
   int resolved_klass_index() const {
-    assert(_resolved_klass_index != _temp_resolved_klass_index, "constant pool merging was incomplete");
+    assert(_resolved_klass_index != _temp_resolved_klass_index, "constant pool merging was incomplete");
     return _resolved_klass_index;
   }
 };
@@ -146,37 +122,38 @@ class ConstantPool : public Metadata {
   CPSlot slot_at(int which) const;
 
   void slot_at_put(int which, CPSlot s) const {
-    assert(is_within_bounds(which), "index out of bounds");
-    assert(s.value() != 0, "Caught something");
+    assert(is_within_bounds(which), "index out of bounds");
+    assert(s.value() != 0, "Caught something");
     *(intptr_t*)&base()[which] = s.value();
   }
   intptr_t* obj_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (intptr_t*) &base()[which];
   }
 
   jint* int_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (jint*) &base()[which];
   }
 
   jlong* long_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (jlong*) &base()[which];
   }
 
   jfloat* float_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (jfloat*) &base()[which];
   }
 
   jdouble* double_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (jdouble*) &base()[which];
   }
 
   ConstantPool(Array<u1>* tags);
-  ConstantPool() { assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+  ConstantPool() {
+    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
  public:
   static ConstantPool* allocate(ClassLoaderData* loader_data, int length, TRAPS);
 
@@ -187,7 +164,7 @@ class ConstantPool : public Metadata {
 
   bool has_preresolution() const            { return (_flags & _has_preresolution) != 0; }
   void set_has_preresolution() {
-    assert(!is_shared(), "should never be called on shared ConstantPools");
+    assert(!is_shared(), "should never be called on shared ConstantPools");
     _flags |= _has_preresolution;
   }
 
@@ -239,15 +216,18 @@ class ConstantPool : public Metadata {
   // The main reason is that byte swapping is sometimes done on normal indexes.
   // Finally, it is helpful for debugging to tell the two apart.
   static bool is_invokedynamic_index(int i) { return (i < 0); }
-  static int  decode_invokedynamic_index(int i) { assert(is_invokedynamic_index(i),  ""); return ~i; }
-  static int  encode_invokedynamic_index(int i) { assert(!is_invokedynamic_index(i), ""); return ~i; }
-
+  static int  decode_invokedynamic_index(int i) {
+    assert(is_invokedynamic_index(i),  "");
+    return ~i; }
+  static int  encode_invokedynamic_index(int i) {
+    assert(!is_invokedynamic_index(i), "");
+    return ~i; }
 
   // The invokedynamic points at a CP cache entry.  This entry points back
   // at the original CP entry (CONSTANT_InvokeDynamic) and also (via f2) at an entry
   // in the resolved_references array (which provides the appendix argument).
   int invokedynamic_cp_cache_index(int index) const {
-    assert (is_invokedynamic_index(index), "should be a invokedynamic index");
+    assert(is_invokedynamic_index(index), "should be a invokedynamic index");
     int cache_index = decode_invokedynamic_index(index);
     return cache_index;
   }
@@ -278,8 +258,8 @@ class ConstantPool : public Metadata {
   void unresolved_klass_at_put(int which, int name_index, int resolved_klass_index) {
     release_tag_at_put(which, JVM_CONSTANT_UnresolvedClass);
 
-    assert((name_index & 0xffff0000) == 0, "must be");
-    assert((resolved_klass_index & 0xffff0000) == 0, "must be");
+    assert((name_index & 0xffff0000) == 0, "must be");
+    assert((resolved_klass_index & 0xffff0000) == 0, "must be");
     *int_at_addr(which) =
       build_int_from_shorts((jushort)resolved_klass_index, (jushort)name_index);
   }
@@ -333,12 +313,12 @@ class ConstantPool : public Metadata {
   }
 
   Symbol** symbol_at_addr(int which) const {
-    assert(is_within_bounds(which), "index out of bounds");
+    assert(is_within_bounds(which), "index out of bounds");
     return (Symbol**) &base()[which];
   }
 
   void symbol_at_put(int which, Symbol* s) {
-    assert(s->refcount() != 0, "should have nonzero refcount");
+    assert(s->refcount() != 0, "should have nonzero refcount");
     tag_at_put(which, JVM_CONSTANT_Utf8);
     *symbol_at_addr(which) = s;
   }
@@ -389,8 +369,7 @@ class ConstantPool : public Metadata {
   }
 
   CPKlassSlot klass_slot_at(int which) const {
-    assert(tag_at(which).is_unresolved_klass() || tag_at(which).is_klass(),
-           "Corrupted constant pool");
+    assert(tag_at(which).is_unresolved_klass() || tag_at(which).is_klass(), "Corrupted constant pool");
     int value = *int_at_addr(which);
     int name_index = extract_high_short_from_int(value);
     int resolved_klass_index = extract_low_short_from_int(value);
@@ -413,30 +392,30 @@ class ConstantPool : public Metadata {
   }
 
   jint int_at(int which) {
-    assert(tag_at(which).is_int(), "Corrupted constant pool");
+    assert(tag_at(which).is_int(), "Corrupted constant pool");
     return *int_at_addr(which);
   }
 
   jlong long_at(int which) {
-    assert(tag_at(which).is_long(), "Corrupted constant pool");
+    assert(tag_at(which).is_long(), "Corrupted constant pool");
     // return *long_at_addr(which);
     u8 tmp = Bytes::get_native_u8((address)&base()[which]);
     return *((jlong*)&tmp);
   }
 
   jfloat float_at(int which) {
-    assert(tag_at(which).is_float(), "Corrupted constant pool");
+    assert(tag_at(which).is_float(), "Corrupted constant pool");
     return *float_at_addr(which);
   }
 
   jdouble double_at(int which) {
-    assert(tag_at(which).is_double(), "Corrupted constant pool");
+    assert(tag_at(which).is_double(), "Corrupted constant pool");
     u8 tmp = Bytes::get_native_u8((address)&base()[which]);
     return *((jdouble*)&tmp);
   }
 
   Symbol* symbol_at(int which) const {
-    assert(tag_at(which).is_utf8(), "Corrupted constant pool");
+    assert(tag_at(which).is_utf8(), "Corrupted constant pool");
     return *symbol_at_addr(which);
   }
 
@@ -466,7 +445,7 @@ class ConstantPool : public Metadata {
   oop pseudo_string_at(int which);
 
   void pseudo_string_at_put(int which, int obj_index, oop x) {
-    assert(tag_at(which).is_string(), "Corrupted constant pool");
+    assert(tag_at(which).is_string(), "Corrupted constant pool");
     Symbol* sym = unresolved_string_at(which);
     slot_at_put(which, CPSlot(sym, CPSlot::_pseudo_bit));
     string_at_put(which, obj_index, x);    // this works just fine
@@ -475,7 +454,7 @@ class ConstantPool : public Metadata {
   // only called when we are sure a string entry is already resolved (via an
   // earlier string_at call.
   oop resolved_string_at(int which) {
-    assert(tag_at(which).is_string(), "Corrupted constant pool");
+    assert(tag_at(which).is_string(), "Corrupted constant pool");
     // Must do an acquire here in case another thread resolved the klass
     // behind our back, lest we later load stale values thru the oop.
     // we might want a volatile_obj_at in ObjArrayKlass.
@@ -484,7 +463,7 @@ class ConstantPool : public Metadata {
   }
 
   Symbol* unresolved_string_at(int which) {
-    assert(tag_at(which).is_string(), "Corrupted constant pool");
+    assert(tag_at(which).is_string(), "Corrupted constant pool");
     Symbol* sym = slot_at(which).get_symbol();
     return sym;
   }
@@ -496,23 +475,20 @@ class ConstantPool : public Metadata {
   char* string_at_noresolve(int which);
 
   jint name_and_type_at(int which) {
-    assert(tag_at(which).is_name_and_type(), "Corrupted constant pool");
+    assert(tag_at(which).is_name_and_type(), "Corrupted constant pool");
     return *int_at_addr(which);
   }
 
   int method_handle_ref_kind_at(int which) {
-    assert(tag_at(which).is_method_handle() ||
-           tag_at(which).is_method_handle_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_method_handle() || tag_at(which).is_method_handle_in_error(), "Corrupted constant pool");
     return extract_low_short_from_int(*int_at_addr(which));  // mask out unwanted ref_index bits
   }
   int method_handle_index_at(int which) {
-    assert(tag_at(which).is_method_handle() ||
-           tag_at(which).is_method_handle_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_method_handle() || tag_at(which).is_method_handle_in_error(), "Corrupted constant pool");
     return extract_high_short_from_int(*int_at_addr(which));  // shift out unwanted ref_kind bits
   }
   int method_type_index_at(int which) {
-    assert(tag_at(which).is_method_type() ||
-           tag_at(which).is_method_type_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_method_type() || tag_at(which).is_method_type_in_error(), "Corrupted constant pool");
     return *int_at_addr(which);
   }
 
@@ -535,15 +511,11 @@ class ConstantPool : public Metadata {
   }
 
   int invoke_dynamic_name_and_type_ref_index_at(int which) {
-    assert(tag_at(which).is_invoke_dynamic() ||
-           tag_at(which).is_dynamic_constant() ||
-           tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_invoke_dynamic() || tag_at(which).is_dynamic_constant() || tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
     return extract_high_short_from_int(*int_at_addr(which));
   }
   int invoke_dynamic_bootstrap_specifier_index(int which) {
-    assert(tag_at(which).is_invoke_dynamic() ||
-           tag_at(which).is_dynamic_constant() ||
-           tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_invoke_dynamic() || tag_at(which).is_dynamic_constant() || tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
     return extract_low_short_from_int(*int_at_addr(which));
   }
   int invoke_dynamic_operand_base(int which) {
@@ -554,21 +526,19 @@ class ConstantPool : public Metadata {
   // Extract a 32-bit index value from the first part.
   static int operand_offset_at(Array<u2>* operands, int bootstrap_specifier_index) {
     int n = (bootstrap_specifier_index * 2);
-    assert(n >= 0 && n+2 <= operands->length(), "oob");
+    assert(n >= 0 && n+2 <= operands->length(), "oob");
     // The first 32-bit index points to the beginning of the second part
     // of the operands array.  Make sure this index is in the first part.
-    DEBUG_ONLY(int second_part = build_int_from_shorts(operands->at(0),
-                                                       operands->at(1)));
-    assert(second_part == 0 || n+2 <= second_part, "oob (2)");
+    assert(second_part == 0 || n+2 <= second_part, "oob (2)");
     int offset = build_int_from_shorts(operands->at(n+0),
                                        operands->at(n+1));
     // The offset itself must point into the second part of the array.
-    assert(offset == 0 || offset >= second_part && offset <= operands->length(), "oob (3)");
+    assert(offset == 0 || offset >= second_part && offset <= operands->length(), "oob (3)");
     return offset;
   }
   static void operand_offset_at_put(Array<u2>* operands, int bootstrap_specifier_index, int offset) {
     int n = bootstrap_specifier_index * 2;
-    assert(n >= 0 && n+2 <= operands->length(), "oob");
+    assert(n >= 0 && n+2 <= operands->length(), "oob");
     operands->at_put(n+0, extract_low_short_from_int(offset));
     operands->at_put(n+1, extract_high_short_from_int(offset));
   }
@@ -577,21 +547,6 @@ class ConstantPool : public Metadata {
     int second_part = operand_offset_at(operands, 0);
     return (second_part / 2);
   }
-
-#ifdef ASSERT
-  // operand tuples fit together exactly, end to end
-  static int operand_limit_at(Array<u2>* operands, int bootstrap_specifier_index) {
-    int nextidx = bootstrap_specifier_index + 1;
-    if (nextidx == operand_array_length(operands))
-      return operands->length();
-    else
-      return operand_offset_at(operands, nextidx);
-  }
-  int invoke_dynamic_operand_limit(int which) {
-    int bootstrap_specifier_index = invoke_dynamic_bootstrap_specifier_index(which);
-    return operand_limit_at(operands(), bootstrap_specifier_index);
-  }
-#endif //ASSERT
 
   // layout of InvokeDynamic and Dynamic bootstrap method specifier (in second part of operands array):
   enum {
@@ -603,9 +558,7 @@ class ConstantPool : public Metadata {
   // These functions are used in RedefineClasses for CP merge
 
   int operand_offset_at(int bootstrap_specifier_index) {
-    assert(0 <= bootstrap_specifier_index &&
-           bootstrap_specifier_index < operand_array_length(operands()),
-           "Corrupted CP operands");
+    assert(0 <= bootstrap_specifier_index && bootstrap_specifier_index < operand_array_length(operands()), "Corrupted CP operands");
     return operand_offset_at(operands(), bootstrap_specifier_index);
   }
   int operand_bootstrap_method_ref_index_at(int bootstrap_specifier_index) {
@@ -640,27 +593,20 @@ class ConstantPool : public Metadata {
   void shrink_operands(int new_len, TRAPS);
 
   int invoke_dynamic_bootstrap_method_ref_index_at(int which) {
-    assert(tag_at(which).is_invoke_dynamic() ||
-           tag_at(which).is_dynamic_constant() ||
-           tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_invoke_dynamic() || tag_at(which).is_dynamic_constant() || tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
     int op_base = invoke_dynamic_operand_base(which);
     return operands()->at(op_base + _indy_bsm_offset);
   }
   int invoke_dynamic_argument_count_at(int which) {
-    assert(tag_at(which).is_invoke_dynamic() ||
-           tag_at(which).is_dynamic_constant() ||
-           tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
+    assert(tag_at(which).is_invoke_dynamic() || tag_at(which).is_dynamic_constant() || tag_at(which).is_dynamic_constant_in_error(), "Corrupted constant pool");
     int op_base = invoke_dynamic_operand_base(which);
     int argc = operands()->at(op_base + _indy_argc_offset);
-    DEBUG_ONLY(int end_offset = op_base + _indy_argv_offset + argc;
-               int next_offset = invoke_dynamic_operand_limit(which));
-    assert(end_offset == next_offset, "matched ending");
+    assert(end_offset == next_offset, "matched ending");
     return argc;
   }
   int invoke_dynamic_argument_index_at(int which, int j) {
     int op_base = invoke_dynamic_operand_base(which);
-    DEBUG_ONLY(int argc = operands()->at(op_base + _indy_argc_offset));
-    assert((uint)j < (uint)argc, "oob");
+    assert((uint)j < (uint)argc, "oob");
     return operands()->at(op_base + _indy_argv_offset + j);
   }
 
@@ -705,8 +651,8 @@ class ConstantPool : public Metadata {
   }
 
   // CDS support
-  void archive_resolved_references(Thread *THREAD) NOT_CDS_JAVA_HEAP_RETURN;
-  void resolve_class_constants(TRAPS) NOT_CDS_JAVA_HEAP_RETURN;
+  void archive_resolved_references(Thread *THREAD) {};
+  void resolve_class_constants(TRAPS) {};
   void remove_unshareable_info();
   void restore_unshareable_info(TRAPS);
   // The ConstantPool vtable is restored by this call when the ConstantPool is
@@ -777,9 +723,6 @@ class ConstantPool : public Metadata {
   }
   static int size(int length)          { return align_metadata_size(header_size() + length); }
   int size() const                     { return size(length()); }
-#if INCLUDE_SERVICES
-  void collect_statistics(KlassSizeStats *sz) const;
-#endif
 
   // ConstantPools should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
@@ -813,13 +756,9 @@ class ConstantPool : public Metadata {
   int pre_resolve_shared_klasses(TRAPS);
 
   // Debugging
-  const char* printable_name_at(int which) PRODUCT_RETURN0;
+  const char* printable_name_at(int which) { return 0; };
 
-#ifdef ASSERT
-  enum { CPCACHE_INDEX_TAG = 0x10000 };  // helps keep CP cache indices distinct from CP indices
-#else
   enum { CPCACHE_INDEX_TAG = 0 };        // in product mode, this zero value is a no-op
-#endif //ASSERT
 
   static int decode_cpcache_index(int raw_index, bool invokedynamic_ok = false) {
     if (invokedynamic_ok && is_invokedynamic_index(raw_index))
@@ -846,12 +785,12 @@ class ConstantPool : public Metadata {
 
   // Used while constructing constant pool (only by ClassFileParser)
   jint klass_index_at(int which) {
-    assert(tag_at(which).is_klass_index(), "Corrupted constant pool");
+    assert(tag_at(which).is_klass_index(), "Corrupted constant pool");
     return *int_at_addr(which);
   }
 
   jint string_index_at(int which) {
-    assert(tag_at(which).is_string_index(), "Corrupted constant pool");
+    assert(tag_at(which).is_string_index(), "Corrupted constant pool");
     return *int_at_addr(which);
   }
 
@@ -912,9 +851,6 @@ class ConstantPool : public Metadata {
   void deallocate_contents(ClassLoaderData* loader_data);
   void release_C_heap_structures();
 
-  // JVMTI accesss - GetConstantPool, RetransformClasses, ...
-  friend class JvmtiConstantPoolReconstituter;
-
  private:
   jint cpool_entry_size(jint idx);
   jint hash_entries_to(SymbolHashMap *symmap, SymbolHashMap *classmap);
@@ -924,9 +860,7 @@ class ConstantPool : public Metadata {
   //  int > 0, count of the raw cpool bytes that have been copied
   //        0, OutOfMemory error
   //       -1, Internal error
-  int  copy_cpool_bytes(int cpool_size,
-                        SymbolHashMap* tbl,
-                        unsigned char *bytes);
+  int  copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned char *bytes);
 
  public:
   // Verify
@@ -938,11 +872,6 @@ class ConstantPool : public Metadata {
   void print_entry_on(int index, outputStream* st);
 
   const char* internal_name() const { return "{constant pool}"; }
-
-#ifndef PRODUCT
-  // Compile the world support
-  static void preload_and_initialize_all_classes(ConstantPool* constant_pool, TRAPS);
-#endif
 };
 
 class SymbolHashMapEntry : public CHeapObj<mtSymbol> {
@@ -970,7 +899,6 @@ class SymbolHashMapEntry : public CHeapObj<mtSymbol> {
 
 }; // End SymbolHashMapEntry class
 
-
 class SymbolHashMapBucket : public CHeapObj<mtSymbol> {
 
 private:
@@ -982,7 +910,6 @@ public:
   void clear()                              { _entry = NULL;  }
 
 }; // End SymbolHashMapBucket class
-
 
 class SymbolHashMap: public CHeapObj<mtSymbol> {
 
@@ -1029,4 +956,4 @@ class SymbolHashMap: public CHeapObj<mtSymbol> {
   ~SymbolHashMap();
 }; // End SymbolHashMap class
 
-#endif // SHARE_VM_OOPS_CONSTANTPOOLOOP_HPP
+#endif

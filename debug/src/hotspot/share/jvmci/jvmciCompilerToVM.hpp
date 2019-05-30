@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP
 #define SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP
 
@@ -36,7 +13,9 @@ class JVMCIKlassHandle : public StackObj {
   Thread*    _thread;
 
   Klass*        klass() const                     { return _klass; }
-  Klass*        non_null_klass() const            { assert(_klass != NULL, "resolving NULL _klass"); return _klass; }
+  Klass*        non_null_klass() const            {
+    assert(_klass != NULL, "resolving NULL _klass");
+    return _klass; }
 
  public:
   /* Constructors */
@@ -121,7 +100,7 @@ class CompilerToVM {
     static void initialize(TRAPS);
 
     static int max_oop_map_stack_offset() {
-      assert(_max_oop_map_stack_offset > 0, "must be initialized");
+      assert(_max_oop_map_stack_offset > 0, "must be initialized");
       return Data::_max_oop_map_stack_offset;
     }
   };
@@ -213,7 +192,7 @@ class JavaArgumentUnboxer : public SignatureIterator {
       _jca->push_oop(next_arg(T_OBJECT));
     }
     iterate();
-    assert(_index == args->length(), "arg count mismatch with signature");
+    assert(_index == args->length(), "arg count mismatch with signature");
   }
 
   inline void do_bool()   { if (!is_return_type()) _jca->push_int(next_arg(T_BOOLEAN)->bool_field(java_lang_boxing_object::value_offset_in_bytes(T_BOOLEAN))); }
@@ -242,4 +221,4 @@ class JNIHandleMark : public StackObj {
     static void pop_jni_handle_block();
 };
 
-#endif // SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP
+#endif

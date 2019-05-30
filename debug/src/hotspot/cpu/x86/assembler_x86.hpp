@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef CPU_X86_VM_ASSEMBLER_X86_HPP
 #define CPU_X86_VM_ASSEMBLER_X86_HPP
 
@@ -36,40 +12,15 @@ class BiasedLockingCounters;
 class Argument {
  public:
   enum {
-#ifdef _LP64
-#ifdef _WIN64
-    n_int_register_parameters_c   = 4, // rcx, rdx, r8, r9 (c_rarg0, c_rarg1, ...)
-    n_float_register_parameters_c = 4,  // xmm0 - xmm3 (c_farg0, c_farg1, ... )
-#else
     n_int_register_parameters_c   = 6, // rdi, rsi, rdx, rcx, r8, r9 (c_rarg0, c_rarg1, ...)
     n_float_register_parameters_c = 8,  // xmm0 - xmm7 (c_farg0, c_farg1, ... )
-#endif // _WIN64
     n_int_register_parameters_j   = 6, // j_rarg0, j_rarg1, ...
     n_float_register_parameters_j = 8  // j_farg0, j_farg1, ...
-#else
-    n_register_parameters = 0   // 0 registers used to pass arguments
-#endif // _LP64
   };
 };
 
-
-#ifdef _LP64
 // Symbolically name the register arguments used by the c calling convention.
 // Windows is different from linux/solaris. So much for standards...
-
-#ifdef _WIN64
-
-REGISTER_DECLARATION(Register, c_rarg0, rcx);
-REGISTER_DECLARATION(Register, c_rarg1, rdx);
-REGISTER_DECLARATION(Register, c_rarg2, r8);
-REGISTER_DECLARATION(Register, c_rarg3, r9);
-
-REGISTER_DECLARATION(XMMRegister, c_farg0, xmm0);
-REGISTER_DECLARATION(XMMRegister, c_farg1, xmm1);
-REGISTER_DECLARATION(XMMRegister, c_farg2, xmm2);
-REGISTER_DECLARATION(XMMRegister, c_farg3, xmm3);
-
-#else
 
 REGISTER_DECLARATION(Register, c_rarg0, rdi);
 REGISTER_DECLARATION(Register, c_rarg1, rsi);
@@ -86,8 +37,6 @@ REGISTER_DECLARATION(XMMRegister, c_farg4, xmm4);
 REGISTER_DECLARATION(XMMRegister, c_farg5, xmm5);
 REGISTER_DECLARATION(XMMRegister, c_farg6, xmm6);
 REGISTER_DECLARATION(XMMRegister, c_farg7, xmm7);
-
-#endif // _WIN64
 
 // Symbolically name the register arguments used by the Java calling convention.
 // We have control over the convention for java so we can do what we please.
@@ -108,14 +57,8 @@ REGISTER_DECLARATION(XMMRegister, c_farg7, xmm7);
 REGISTER_DECLARATION(Register, j_rarg0, c_rarg1);
 REGISTER_DECLARATION(Register, j_rarg1, c_rarg2);
 REGISTER_DECLARATION(Register, j_rarg2, c_rarg3);
-// Windows runs out of register args here
-#ifdef _WIN64
-REGISTER_DECLARATION(Register, j_rarg3, rdi);
-REGISTER_DECLARATION(Register, j_rarg4, rsi);
-#else
 REGISTER_DECLARATION(Register, j_rarg3, c_rarg4);
 REGISTER_DECLARATION(Register, j_rarg4, c_rarg5);
-#endif /* _WIN64 */
 REGISTER_DECLARATION(Register, j_rarg5, c_rarg0);
 
 REGISTER_DECLARATION(XMMRegister, j_farg0, xmm0);
@@ -132,15 +75,6 @@ REGISTER_DECLARATION(Register, rscratch2, r11);  // volatile
 
 REGISTER_DECLARATION(Register, r12_heapbase, r12); // callee-saved
 REGISTER_DECLARATION(Register, r15_thread, r15); // callee-saved
-
-#else
-// rscratch1 will apear in 32bit code that is dead but of course must compile
-// Using noreg ensures if the dead code is incorrectly live and executed it
-// will cause an assertion failure
-#define rscratch1 noreg
-#define rscratch2 noreg
-
-#endif // _LP64
 
 // JSR 292
 // On x86, the SP does not have to be saved when invoking method handle intrinsics
@@ -163,21 +97,18 @@ class Address {
     times_2  =  1,
     times_4  =  2,
     times_8  =  3,
-    times_ptr = LP64_ONLY(times_8) NOT_LP64(times_4)
+    times_ptr = times_8
   };
   static ScaleFactor times(int size) {
-    assert(size >= 1 && size <= 8 && is_power_of_2(size), "bad scale size");
+    assert(size >= 1 && size <= 8 && is_power_of_2(size), "bad scale size");
     if (size == 8)  return times_8;
     if (size == 4)  return times_4;
     if (size == 2)  return times_2;
     return times_1;
   }
   static int scale_size(ScaleFactor scale) {
-    assert(scale != no_scale, "");
-    assert(((1 << (int)times_1) == 1 &&
-            (1 << (int)times_2) == 2 &&
-            (1 << (int)times_4) == 4 &&
-            (1 << (int)times_8) == 8), "");
+    assert(scale != no_scale, "");
+    assert(((1 << (int)times_1) == 1 && (1 << (int)times_2) == 2 && (1 << (int)times_4) == 4 && (1 << (int)times_8) == 8), "");
     return (1 << (int)scale);
   }
 
@@ -191,8 +122,6 @@ class Address {
   RelocationHolder _rspec;
 
   // Easily misused constructors make them private
-  // %%% can we make these go away?
-  NOT_LP64(Address(address loc, RelocationHolder spec);)
   Address(int disp, address loc, relocInfo::relocType rtype);
   Address(int disp, address loc, RelocationHolder spec);
 
@@ -228,8 +157,7 @@ class Address {
       _scale(scale),
       _disp (disp),
       _isxmmindex(false) {
-    assert(!index->is_valid() == (scale == Address::no_scale),
-           "inconsistent address");
+    assert(!index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address(Register base, RegisterOrConstant index, ScaleFactor scale = times_1, int disp = 0)
@@ -240,8 +168,7 @@ class Address {
       _disp (disp + (index.constant_or_zero() * scale_size(scale))),
       _isxmmindex(false){
     if (!index.is_register())  scale = Address::no_scale;
-    assert(!_index->is_valid() == (scale == Address::no_scale),
-           "inconsistent address");
+    assert(!_index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address(Register base, XMMRegister index, ScaleFactor scale, int disp = 0)
@@ -251,8 +178,7 @@ class Address {
       _scale(scale),
       _disp(disp),
       _isxmmindex(true) {
-      assert(!index->is_valid() == (scale == Address::no_scale),
-             "inconsistent address");
+      assert(!index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address plus_disp(int disp) const {
@@ -264,7 +190,7 @@ class Address {
     Address a = (*this);
     a._disp += disp.constant_or_zero() * scale_size(scale);
     if (disp.is_register()) {
-      assert(!a.index()->is_valid(), "competing indexes");
+      assert(!a.index()->is_valid(), "competing indexes");
       a._index = disp.as_register();
       a._scale = scale;
     }
@@ -285,40 +211,6 @@ class Address {
   // arguments as in the optimized mode, both ByteSize and WordSize
   // are mapped to the same type and thus the compiler cannot make a
   // distinction anymore (=> compiler errors).
-
-#ifdef ASSERT
-  Address(Register base, ByteSize disp)
-    : _base(base),
-      _index(noreg),
-      _xmmindex(xnoreg),
-      _scale(no_scale),
-      _disp(in_bytes(disp)),
-      _isxmmindex(false){
-  }
-
-  Address(Register base, Register index, ScaleFactor scale, ByteSize disp)
-    : _base(base),
-      _index(index),
-      _xmmindex(xnoreg),
-      _scale(scale),
-      _disp(in_bytes(disp)),
-      _isxmmindex(false){
-    assert(!index->is_valid() == (scale == Address::no_scale),
-           "inconsistent address");
-  }
-  Address(Register base, RegisterOrConstant index, ScaleFactor scale, ByteSize disp)
-    : _base (base),
-      _index(index.register_or_noreg()),
-      _xmmindex(xnoreg),
-      _scale(scale),
-      _disp (in_bytes(disp) + (index.constant_or_zero() * scale_size(scale))),
-      _isxmmindex(false) {
-    if (!index.is_register())  scale = Address::no_scale;
-    assert(!_index->is_valid() == (scale == Address::no_scale),
-           "inconsistent address");
-  }
-
-#endif // ASSERT
 
   // accessors
   bool        uses(Register reg) const { return _base == reg || _index == reg; }
@@ -388,7 +280,6 @@ class AddressLiteral {
 
   public:
 
-
   AddressLiteral(address target, relocInfo::relocType rtype);
 
   AddressLiteral(address target, RelocationHolder const& rspec)
@@ -402,7 +293,6 @@ class AddressLiteral {
     ret._is_lval = true;
     return ret;
   }
-
 
  private:
 
@@ -424,7 +314,6 @@ class RuntimeAddress: public AddressLiteral {
   public:
 
   RuntimeAddress(address target) : AddressLiteral(target, relocInfo::runtime_call_type) {}
-
 };
 
 class ExternalAddress: public AddressLiteral {
@@ -440,7 +329,6 @@ class ExternalAddress: public AddressLiteral {
  public:
 
   ExternalAddress(address target) : AddressLiteral(target, reloc_for_target(target)) {}
-
 };
 
 class InternalAddress: public AddressLiteral {
@@ -448,7 +336,6 @@ class InternalAddress: public AddressLiteral {
   public:
 
   InternalAddress(address target) : AddressLiteral(target, relocInfo::internal_word_type) {}
-
 };
 
 // x86 can do array addressing as a single operation since disp can be an absolute
@@ -467,14 +354,13 @@ class ArrayAddress {
   ArrayAddress(AddressLiteral base, Address index): _base(base), _index(index) {};
   AddressLiteral base() { return _base; }
   Address index() { return _index; }
-
 };
 
 class InstructionAttr;
 
 // 64-bit refect the fxsave size which is 512 bytes and the new xsave area on EVEX which is another 2176 bytes
 // See fxsave and xsave(EVEX enabled) documentation for layout
-const int FPUStateSizeInWords = NOT_LP64(27) LP64_ONLY(2688 / wordSize);
+const int FPUStateSizeInWords = 2688 / wordSize;
 
 // The Intel x86/Amd64 Assembler: Pure assembler doing NO optimizations on the instruction
 // level (e.g. mov rax, 0 is not translated into xor rax, rax!); i.e., what you write
@@ -611,12 +497,8 @@ class Assembler : public AbstractAssembler  {
     imm_operand  = 0,            // embedded 32-bit|64-bit immediate operand
     disp32_operand = 1,          // embedded 32-bit displacement or address
     call32_operand = 2,          // embedded 32-bit self-relative displacement
-#ifndef _LP64
-    _WhichOperand_limit = 3
-#else
      narrow_oop_operand = 3,     // embedded 32-bit immediate narrow oop
     _WhichOperand_limit = 4
-#endif
   };
 
   enum ComparisonPredicate {
@@ -629,7 +511,6 @@ class Assembler : public AbstractAssembler  {
     nle = 6,
     _true = 7
   };
-
 
   // NOTE: The general philopsophy of the declarations here is that 64bit versions
   // of instructions are freely declared without the need for wrapping them an ifdef.
@@ -736,38 +617,22 @@ private:
   // workaround gcc (3.2.1-7) bug
   void emit_operand(Address adr, MMXRegister reg);
 
-
   // Immediate-to-memory forms
   void emit_arith_operand(int op1, Register rm, Address adr, int32_t imm32);
 
   void emit_farith(int b1, int b2, int i);
 
-
  protected:
-  #ifdef ASSERT
-  void check_relocation(RelocationHolder const& rspec, int format);
-  #endif
 
   void emit_data(jint data, relocInfo::relocType    rtype, int format);
   void emit_data(jint data, RelocationHolder const& rspec, int format);
   void emit_data64(jlong data, relocInfo::relocType rtype, int format = 0);
   void emit_data64(jlong data, RelocationHolder const& rspec, int format = 0);
 
-  bool reachable(AddressLiteral adr) NOT_LP64({ return true;});
+  bool reachable(AddressLiteral adr);
 
   // These are all easily abused and hence protected
 
-  // 32BIT ONLY SECTION
-#ifndef _LP64
-  // Make these disappear in 64bit mode since they would never be correct
-  void cmp_literal32(Register src1, int32_t imm32, RelocationHolder const& rspec);   // 32BIT ONLY
-  void cmp_literal32(Address src1, int32_t imm32, RelocationHolder const& rspec);    // 32BIT ONLY
-
-  void mov_literal32(Register dst, int32_t imm32, RelocationHolder const& rspec);    // 32BIT ONLY
-  void mov_literal32(Address dst, int32_t imm32, RelocationHolder const& rspec);     // 32BIT ONLY
-
-  void push_literal32(int32_t imm32, RelocationHolder const& rspec);                 // 32BIT ONLY
-#else
   // 64BIT ONLY SECTION
   void mov_literal64(Register dst, intptr_t imm64, RelocationHolder const& rspec);   // 64BIT ONLY
 
@@ -776,7 +641,6 @@ private:
 
   void mov_narrow_oop(Register dst, int32_t imm32, RelocationHolder const& rspec);
   void mov_narrow_oop(Address dst, int32_t imm32, RelocationHolder const& rspec);
-#endif // _LP64
 
   // These are unique in that we are ensured by the caller that the 32bit
   // relative in these instructions will always be able to reach the potentially
@@ -830,7 +694,6 @@ private:
 
   // End avoid using directly
 
-
   // Instruction prefixes
   void prefix(Prefix p);
 
@@ -846,7 +709,7 @@ private:
   static address locate_next_instruction(address inst);
 
   // Utilities
-  static bool is_polling_page_far() NOT_LP64({ return false;});
+  static bool is_polling_page_far();
   static bool query_compressed_disp_byte(int disp, bool is_evex_inst, int vector_len,
                                          int cur_tuple_type, int in_size_in_bits, int cur_encoding);
 
@@ -896,9 +759,7 @@ private:
   void rep_stos();
   void rep_stosb();
   void repne_scan();
-#ifdef _LP64
   void repne_scanl();
-#endif
 
   // Vanilla instructions in lexical order
 
@@ -927,13 +788,11 @@ private:
   void addq(Register dst, Address src);
   void addq(Register dst, Register src);
 
-#ifdef _LP64
  //Add Unsigned Integers with Carry Flag
   void adcxq(Register dst, Register src);
 
  //Add Unsigned Integers with Overflow Flag
   void adoxq(Register dst, Register src);
-#endif
 
   void addr_nop_4();
   void addr_nop_5();
@@ -994,10 +853,8 @@ private:
   void bsfl(Register dst, Register src);
   void bsrl(Register dst, Register src);
 
-#ifdef _LP64
   void bsfq(Register dst, Register src);
   void bsrq(Register dst, Register src);
-#endif
 
   void bswapl(Register reg);
 
@@ -1020,7 +877,6 @@ private:
 
   void cmovq(Condition cc, Register dst, Register src);
   void cmovq(Condition cc, Register dst, Address src);
-
 
   void cmpb(Address dst, int imm8);
 
@@ -1261,20 +1117,16 @@ private:
   void idivl(Register src);
   void divl(Register src); // Unsigned division
 
-#ifdef _LP64
   void idivq(Register src);
-#endif
 
   void imull(Register src);
   void imull(Register dst, Register src);
   void imull(Register dst, Register src, int value);
   void imull(Register dst, Address src);
 
-#ifdef _LP64
   void imulq(Register dst, Register src);
   void imulq(Register dst, Register src, int value);
   void imulq(Register dst, Address src);
-#endif
 
   // jcc is the generic conditional branch generator to run-
   // time routines, jcc is used for branches to labels. jcc
@@ -1324,9 +1176,7 @@ private:
 
   void lzcntl(Register dst, Register src);
 
-#ifdef _LP64
   void lzcntq(Register dst, Register src);
-#endif
 
   enum Membar_mask_bits {
     StoreStore = 1 << 3,
@@ -1465,22 +1315,18 @@ private:
   void movl(Address  dst, void* junk);
   void movl(Register dst, void* junk);
 
-#ifdef _LP64
   void movq(Register dst, Register src);
   void movq(Register dst, Address src);
   void movq(Address  dst, Register src);
-#endif
 
   void movq(Address     dst, MMXRegister src );
   void movq(MMXRegister dst, Address src );
 
-#ifdef _LP64
   // These dummies prevent using movq from converting a zero (like NULL) into Register
   // by giving the compiler two choices it can't resolve
 
   void movq(Address  dst, void* dummy);
   void movq(Register dst, void* dummy);
-#endif
 
   // Move Quadword
   void movq(Address     dst, XMMRegister src);
@@ -1489,7 +1335,6 @@ private:
   void movsbl(Register dst, Address src);
   void movsbl(Register dst, Register src);
 
-#ifdef _LP64
   void movsbq(Register dst, Address src);
   void movsbq(Register dst, Register src);
 
@@ -1500,15 +1345,12 @@ private:
   void movslq(Register dst, Address src);
   void movslq(Register dst, Register src);
   void movslq(Register dst, void* src); // Dummy declaration to cause NULL to be ambiguous
-#endif
 
   void movswl(Register dst, Address src);
   void movswl(Register dst, Register src);
 
-#ifdef _LP64
   void movswq(Register dst, Address src);
   void movswq(Register dst, Register src);
-#endif
 
   void movw(Address dst, int imm16);
   void movw(Register dst, Address src);
@@ -1517,28 +1359,22 @@ private:
   void movzbl(Register dst, Address src);
   void movzbl(Register dst, Register src);
 
-#ifdef _LP64
   void movzbq(Register dst, Address src);
   void movzbq(Register dst, Register src);
-#endif
 
   void movzwl(Register dst, Address src);
   void movzwl(Register dst, Register src);
 
-#ifdef _LP64
   void movzwq(Register dst, Address src);
   void movzwq(Register dst, Register src);
-#endif
 
   // Unsigned multiply with RAX destination register
   void mull(Address src);
   void mull(Register src);
 
-#ifdef _LP64
   void mulq(Address src);
   void mulq(Register src);
   void mulxq(Register dst1, Register dst2, Register src);
-#endif
 
   // Multiply Scalar Double-Precision Floating-Point Values
   void mulsd(XMMRegister dst, Address src);
@@ -1550,17 +1386,13 @@ private:
 
   void negl(Register dst);
 
-#ifdef _LP64
   void negq(Register dst);
-#endif
 
   void nop(int i = 1);
 
   void notl(Register dst);
 
-#ifdef _LP64
   void notq(Register dst);
-#endif
 
   void orl(Address dst, int32_t imm32);
   void orl(Register dst, int32_t imm32);
@@ -1662,23 +1494,15 @@ private:
 
   void evpmovdb(Address dst, XMMRegister src, int vector_len);
 
-#ifndef _LP64 // no 32bit push/pop on amd64
-  void popl(Address dst);
-#endif
-
-#ifdef _LP64
   void popq(Address dst);
-#endif
 
   void popcntl(Register dst, Address src);
   void popcntl(Register dst, Register src);
 
   void vpopcntd(XMMRegister dst, XMMRegister src, int vector_len);
 
-#ifdef _LP64
   void popcntq(Register dst, Address src);
   void popcntq(Register dst, Register src);
-#endif
 
   // Prefetches (SSE, SSE2, 3DNOW only)
 
@@ -1729,10 +1553,6 @@ private:
   // Interleave Low Quadwords
   void punpcklqdq(XMMRegister dst, XMMRegister src);
 
-#ifndef _LP64 // no 32bit push/pop on amd64
-  void pushl(Address src);
-#endif
-
   void pushq(Address src);
 
   void rcll(Register dst, int imm8);
@@ -1749,11 +1569,9 @@ private:
 
   void ret(int imm16);
 
-#ifdef _LP64
   void rorq(Register dst, int imm8);
   void rorxq(Register dst, Register src, int imm8);
   void rorxd(Register dst, Register src, int imm8);
-#endif
 
   void sahf();
 
@@ -2099,7 +1917,6 @@ private:
   void evpxorq(XMMRegister dst, XMMRegister nds, XMMRegister src, int vector_len);
   void evpxorq(XMMRegister dst, XMMRegister nds, Address src, int vector_len);
 
-
   // vinserti forms
   void vinserti128(XMMRegister dst, XMMRegister nds, XMMRegister src, uint8_t imm8);
   void vinserti128(XMMRegister dst, XMMRegister nds, Address src, uint8_t imm8);
@@ -2185,7 +2002,6 @@ private:
   void andps(XMMRegister dst, Address src);
   void xorpd(XMMRegister dst, Address src);
   void xorps(XMMRegister dst, Address src);
-
 };
 
 // The Intel x86/Amd64 Assembler attributes: All fields enclosed here are to guide encoding level decisions.
@@ -2293,7 +2109,6 @@ public:
   void set_embedded_opmask_register_specifier(KRegister mask) {
     _embedded_opmask_register_specifier = (*mask).encoding() & 0x7;
   }
-
 };
 
-#endif // CPU_X86_VM_ASSEMBLER_X86_HPP
+#endif

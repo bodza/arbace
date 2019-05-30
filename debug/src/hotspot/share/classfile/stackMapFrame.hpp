@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2003, 2016, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_CLASSFILE_STACKMAPFRAME_HPP
 #define SHARE_VM_CLASSFILE_STACKMAPFRAME_HPP
 
@@ -170,14 +146,6 @@ class StackMapFrame : public ResourceObj {
       const StackMapFrame* target, ErrorContext* ctx, TRAPS) const;
 
   inline void set_mark() {
-#ifdef ASSERT
-    // Put bogus type to indicate it's no longer valid.
-    if (_stack_mark != -1) {
-      for (int i = _stack_mark - 1; i >= _stack_size; --i) {
-        _stack[i] = VerificationType::bogus_type();
-      }
-    }
-#endif // def ASSERT
     _stack_mark = _stack_size;
   }
 
@@ -191,7 +159,7 @@ class StackMapFrame : public ResourceObj {
 
   // Push type into stack type array.
   inline void push_stack(VerificationType type, TRAPS) {
-    assert(!type.is_check(), "Must be a real type");
+    assert(!type.is_check(), "Must be a real type");
     if (_stack_size >= _max_stack) {
       verifier()->verify_error(
           ErrorContext::stack_overflow(_offset, this),
@@ -203,8 +171,8 @@ class StackMapFrame : public ResourceObj {
 
   inline void push_stack_2(
       VerificationType type1, VerificationType type2, TRAPS) {
-    assert(type1.is_long() || type1.is_double(), "must be long/double");
-    assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+    assert(type1.is_long() || type1.is_double(), "must be long/double");
+    assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
     if (_stack_size >= _max_stack - 1) {
       verifier()->verify_error(
           ErrorContext::stack_overflow(_offset, this),
@@ -244,8 +212,8 @@ class StackMapFrame : public ResourceObj {
 
   inline void pop_stack_2(
       VerificationType type1, VerificationType type2, TRAPS) {
-    assert(type1.is_long2() || type1.is_double2(), "must be long/double");
-    assert(type2.is_long() || type2.is_double(), "must be long/double_2");
+    assert(type1.is_long2() || type1.is_double2(), "must be long/double");
+    assert(type2.is_long() || type2.is_double(), "must be long/double_2");
     if (_stack_size >= 2) {
       VerificationType top1 = _stack[_stack_size - 1];
       bool subtype1 = type1.is_assignable_from(top1, verifier(), false, CHECK);
@@ -294,4 +262,4 @@ class StackMapFrame : public ResourceObj {
   void print_on(outputStream* str) const;
 };
 
-#endif // SHARE_VM_CLASSFILE_STACKMAPFRAME_HPP
+#endif

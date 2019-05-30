@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2001, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_GC_G1_G1COLLECTEDHEAP_HPP
 #define SHARE_VM_GC_G1_G1COLLECTEDHEAP_HPP
 
@@ -297,7 +273,7 @@ private:
   // frequent marking cycles and stress the cleanup / concurrent
   // cleanup code more (as all the regions that will be allocated by
   // this method will be found dead by the marking cycle).
-  void allocate_dummy_regions() PRODUCT_RETURN;
+  void allocate_dummy_regions() {};
 
   // If the HR printer is active, dump the state of the regions in the
   // heap after a compaction.
@@ -314,55 +290,43 @@ private:
   // These are macros so that, if the assert fires, we get the correct
   // line number, file, etc.
 
-#define heap_locking_asserts_params(_extra_message_)                          \
-  "%s : Heap_lock locked: %s, at safepoint: %s, is VM thread: %s",            \
-  (_extra_message_),                                                          \
-  BOOL_TO_STR(Heap_lock->owned_by_self()),                                    \
-  BOOL_TO_STR(SafepointSynchronize::is_at_safepoint()),                       \
+#define heap_locking_asserts_params(_extra_message_) \
+  "%s : Heap_lock locked: %s, at safepoint: %s, is VM thread: %s", \
+  (_extra_message_), \
+  BOOL_TO_STR(Heap_lock->owned_by_self()), \
+  BOOL_TO_STR(SafepointSynchronize::is_at_safepoint()), \
   BOOL_TO_STR(Thread::current()->is_VM_thread())
 
-#define assert_heap_locked()                                                  \
-  do {                                                                        \
-    assert(Heap_lock->owned_by_self(),                                        \
-           heap_locking_asserts_params("should be holding the Heap_lock"));   \
+#define assert_heap_locked() \
+  do { \
+    assert(Heap_lock->owned_by_self(), heap_locking_asserts_params("should be holding the Heap_lock")); \
   } while (0)
 
-#define assert_heap_locked_or_at_safepoint(_should_be_vm_thread_)             \
-  do {                                                                        \
-    assert(Heap_lock->owned_by_self() ||                                      \
-           (SafepointSynchronize::is_at_safepoint() &&                        \
-             ((_should_be_vm_thread_) == Thread::current()->is_VM_thread())), \
-           heap_locking_asserts_params("should be holding the Heap_lock or "  \
-                                        "should be at a safepoint"));         \
+#define assert_heap_locked_or_at_safepoint(_should_be_vm_thread_) \
+  do { \
+    assert(Heap_lock->owned_by_self() || (SafepointSynchronize::is_at_safepoint() && ((_should_be_vm_thread_) == Thread::current()->is_VM_thread())), heap_locking_asserts_params("should be holding the Heap_lock or " "should be at a safepoint")); \
   } while (0)
 
-#define assert_heap_locked_and_not_at_safepoint()                             \
-  do {                                                                        \
-    assert(Heap_lock->owned_by_self() &&                                      \
-                                    !SafepointSynchronize::is_at_safepoint(), \
-          heap_locking_asserts_params("should be holding the Heap_lock and "  \
-                                       "should not be at a safepoint"));      \
+#define assert_heap_locked_and_not_at_safepoint() \
+  do { \
+    assert(Heap_lock->owned_by_self() && !SafepointSynchronize::is_at_safepoint(), heap_locking_asserts_params("should be holding the Heap_lock and " "should not be at a safepoint")); \
   } while (0)
 
-#define assert_heap_not_locked()                                              \
-  do {                                                                        \
-    assert(!Heap_lock->owned_by_self(),                                       \
-        heap_locking_asserts_params("should not be holding the Heap_lock"));  \
+#define assert_heap_not_locked() \
+  do { \
+    assert(!Heap_lock->owned_by_self(), heap_locking_asserts_params("should not be holding the Heap_lock")); \
   } while (0)
 
-#define assert_heap_not_locked_and_not_at_safepoint()                         \
-  do {                                                                        \
-    assert(!Heap_lock->owned_by_self() &&                                     \
-                                    !SafepointSynchronize::is_at_safepoint(), \
-      heap_locking_asserts_params("should not be holding the Heap_lock and "  \
-                                   "should not be at a safepoint"));          \
+#define assert_heap_not_locked_and_not_at_safepoint() \
+  do { \
+    assert(!Heap_lock->owned_by_self() && !SafepointSynchronize::is_at_safepoint(), heap_locking_asserts_params("should not be holding the Heap_lock and " "should not be at a safepoint")); \
   } while (0)
 
-#define assert_at_safepoint_on_vm_thread()                                    \
-  do {                                                                        \
-    assert_at_safepoint();                                                    \
-    assert(Thread::current_or_null() != NULL, "no current thread");           \
-    assert(Thread::current()->is_VM_thread(), "current thread is not VM thread"); \
+#define assert_at_safepoint_on_vm_thread() \
+  do { \
+    assert_at_safepoint(); \
+    assert(Thread::current_or_null() != NULL, "no current thread"); \
+    assert(Thread::current()->is_VM_thread(), "current thread is not VM thread"); \
   } while (0)
 
   // The young region list.
@@ -537,7 +501,7 @@ public:
   }
 
   G1MonitoringSupport* g1mm() {
-    assert(_g1mm != NULL, "should have been initialized");
+    assert(_g1mm != NULL, "should have been initialized");
     return _g1mm;
   }
 
@@ -712,7 +676,7 @@ private:
   static void print_taskqueue_stats_hdr(outputStream* const st);
   void print_taskqueue_stats() const;
   void reset_taskqueue_stats();
-  #endif // TASKQUEUE_STATS
+  #endif
 
   // Schedule the VM operation that will do an evacuation pause to
   // satisfy an allocation request of word_size. *succeeded will
@@ -801,39 +765,6 @@ private:
   // Preserve the mark of "obj", if necessary, in preparation for its mark
   // word being overwritten with a self-forwarding-pointer.
   void preserve_mark_during_evac_failure(uint worker_id, oop obj, markOop m);
-
-#ifndef PRODUCT
-  // Support for forcing evacuation failures. Analogous to
-  // PromotionFailureALot for the other collectors.
-
-  // Records whether G1EvacuationFailureALot should be in effect
-  // for the current GC
-  bool _evacuation_failure_alot_for_current_gc;
-
-  // Used to record the GC number for interval checking when
-  // determining whether G1EvaucationFailureALot is in effect
-  // for the current GC.
-  size_t _evacuation_failure_alot_gc_number;
-
-  // Count of the number of evacuations between failures.
-  volatile size_t _evacuation_failure_alot_count;
-
-  // Set whether G1EvacuationFailureALot should be in effect
-  // for the current GC (based upon the type of GC and which
-  // command line flags are set);
-  inline bool evacuation_failure_alot_for_gc_type(bool for_young_gc,
-                                                  bool during_initial_mark,
-                                                  bool mark_or_rebuild_in_progress);
-
-  inline void set_evacuation_failure_alot_for_current_gc();
-
-  // Return true if it's time to cause an evacuation failure.
-  inline bool evacuation_should_fail();
-
-  // Reset the G1EvacuationFailureALot counters.  Should be called at
-  // the end of an evacuation pause in which an evacuation failure occurred.
-  inline void reset_evacuation_should_fail();
-#endif // !PRODUCT
 
   // ("Weak") Reference processing support.
   //
@@ -1040,12 +971,6 @@ public:
   // The number of regions that are not completely free.
   uint num_used_regions() const { return num_regions() - num_free_regions(); }
 
-#ifdef ASSERT
-  bool is_on_master_free_list(HeapRegion* hr) {
-    return _hrm.is_free(hr);
-  }
-#endif // ASSERT
-
   inline void old_set_add(HeapRegion* hr);
   inline void old_set_remove(HeapRegion* hr);
 
@@ -1070,11 +995,6 @@ public:
   void decrement_summary_bytes(size_t bytes);
 
   virtual bool is_in(const void* p) const;
-#ifdef ASSERT
-  // Returns whether p is in one of the available areas of the heap. Slow but
-  // extensive version.
-  bool is_in_exact(const void* p) const;
-#endif
 
   // Return "TRUE" iff the given object address is within the collection
   // set. Assumes that the reference points into the heap.
@@ -1225,7 +1145,6 @@ public:
 
   virtual jlong millis_since_last_gc();
 
-
   // Convenience function to be used in situations where the heap type can be
   // asserted to be this type.
   static G1CollectedHeap* heap();
@@ -1250,10 +1169,6 @@ public:
   uint old_regions_count() const { return _old_set.length(); }
 
   uint humongous_regions_count() const { return _humongous_set.length(); }
-
-#ifdef ASSERT
-  bool check_young_list_empty();
-#endif
 
   // *** Stuff related to concurrent marking.  It's not clear to me that so
   // many of these need to be public.
@@ -1401,8 +1316,8 @@ public:
   void print_tracing_info() const;
 
   // The following two methods are helpful for debugging RSet issues.
-  void print_cset_rsets() PRODUCT_RETURN;
-  void print_all_rsets() PRODUCT_RETURN;
+  void print_cset_rsets() {};
+  void print_all_rsets() {};
 
 public:
   size_t pending_card_num();
@@ -1447,4 +1362,4 @@ private:
   inline bool offer_termination();
 };
 
-#endif // SHARE_VM_GC_G1_G1COLLECTEDHEAP_HPP
+#endif

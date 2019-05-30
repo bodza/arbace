@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "classfile/javaClasses.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -42,7 +18,7 @@
 void BaseFrameStream::setup_magic_on_entry(objArrayHandle frames_array) {
   frames_array->obj_at_put(magic_pos, _thread->threadObj());
   _anchor = address_value();
-  assert(check_magic(frames_array), "invalid magic");
+  assert(check_magic(frames_array), "invalid magic");
 }
 
 bool BaseFrameStream::check_magic(objArrayHandle frames_array) {
@@ -77,7 +53,7 @@ void JavaFrameStream::next() { _vfst.next();}
 BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic,
                                                objArrayHandle frames_array)
 {
-  assert(thread != NULL && thread->is_Java_thread(), "");
+  assert(thread != NULL && thread->is_Java_thread(), "");
   oop m1 = frames_array->obj_at(magic_pos);
   if (!oopDesc::equals(m1, thread->threadObj())) return NULL;
   if (magic == 0L)                    return NULL;
@@ -111,8 +87,8 @@ int StackWalk::fill_in_frames(jlong mode, BaseFrameStream& stream,
                               int& end_index, TRAPS) {
   log_debug(stackwalk)("fill_in_frames limit=%d start=%d frames length=%d",
                        max_nframes, start_index, frames_array->length());
-  assert(max_nframes > 0, "invalid max_nframes");
-  assert(start_index + max_nframes <= frames_array->length(), "oob");
+  assert(max_nframes > 0, "invalid max_nframes");
+  assert(start_index + max_nframes <= frames_array->length(), "oob");
 
   int frames_decoded = 0;
   for (; !stream.at_end(); stream.next()) {
@@ -216,13 +192,8 @@ oop LiveFrameStream::create_primitive_slot_instance(StackValueCollection* values
 
     case T_CONFLICT:
       // put a non-null slot
-      #ifdef _LP64
-        args.push_long(0);
-        signature = vmSymbols::asPrimitive_long_signature();
-      #else
-        args.push_int(0);
-        signature = vmSymbols::asPrimitive_int_signature();
-      #endif
+      args.push_long(0);
+      signature = vmSymbols::asPrimitive_long_signature();
 
       break;
 
@@ -247,13 +218,11 @@ objArrayHandle LiveFrameStream::values_to_object_array(StackValueCollection* val
     StackValue* st = values->at(i);
     BasicType type = st->type();
     int index = i;
-#ifdef _LP64
     if (type != T_OBJECT && type != T_CONFLICT) {
         intptr_t ret = st->get_int(); // read full 64-bit slot
         type = T_LONG;                // treat as long
         index--;                      // undo +1 in StackValueCollection::long_at
     }
-#endif
     oop obj = create_primitive_slot_instance(values, index, type, CHECK_(empty));
     if (obj != NULL) {
       array_h->obj_at_put(i, obj);
@@ -341,7 +310,7 @@ oop StackWalk::walk(Handle stackStream, jlong mode,
 
   // Setup traversal onto my stack.
   if (live_frame_info(mode)) {
-    assert (use_frames_array(mode), "Bad mode for get live frame");
+    assert(use_frames_array(mode), "Bad mode for get live frame");
     RegisterMap regMap(jt, true);
     LiveFrameStream stream(jt, &regMap);
     return fetchFirstBatch(stream, stackStream, mode, skip_frames, frame_count,
@@ -470,7 +439,7 @@ jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic,
   }
 
   int count = frame_count + start_index;
-  assert (frames_array->length() >= count, "not enough space in buffers");
+  assert(frames_array->length() >= count, "not enough space in buffers");
 
   BaseFrameStream& stream = (*existing_stream);
   if (!stream.at_end()) {

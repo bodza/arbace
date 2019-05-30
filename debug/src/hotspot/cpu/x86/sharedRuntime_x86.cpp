@@ -1,38 +1,11 @@
-/*
- * Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "vmreg_x86.inline.hpp"
-#ifdef COMPILER1
 #include "c1/c1_Runtime1.hpp"
-#endif //COMPILER1
 
 #define __ masm->
 
-#ifdef COMPILER1
 // ---------------------------------------------------------------------------
 // Object.hashCode, System.identityHashCode can pull the hashCode from the
 // header word instead of doing a full VM transition once it's been computed.
@@ -69,23 +42,14 @@ void SharedRuntime::inline_check_hashcode_from_object_header(MacroAssembler* mas
   }
 
   // get hash
-#ifdef _LP64
   // Read the header and build a mask to get its hash field.
   // Depend on hash_mask being at most 32 bits and avoid the use of hash_mask_in_place
   // because it could be larger than 32 bits in a 64-bit vm. See markOop.hpp.
   __ shrptr(result, markOopDesc::hash_shift);
   __ andptr(result, markOopDesc::hash_mask);
-#else
-  __ andptr(result, markOopDesc::hash_mask_in_place);
-#endif //_LP64
 
   // test if hashCode exists
   __ jcc(Assembler::zero, slowCase);
-#ifndef _LP64
-  __ shrptr(result, markOopDesc::hash_shift);
-#endif
   __ ret(0);
   __ bind(slowCase);
 }
-#endif //COMPILER1
-

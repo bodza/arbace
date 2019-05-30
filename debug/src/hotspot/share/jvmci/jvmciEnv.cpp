@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "classfile/javaAssertions.hpp"
@@ -43,7 +19,6 @@
 #include "oops/methodData.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/init.hpp"
 #include "runtime/reflection.hpp"
@@ -59,11 +34,6 @@ JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter
   _failure_reason(NULL),
   _retryable(true)
 {
-  // Get Jvmti capabilities under lock to get consistent values.
-  MutexLocker mu(JvmtiThreadState_lock);
-  _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint();
-  _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables();
-  _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions();
 }
 
 // ------------------------------------------------------------------
@@ -238,7 +208,7 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
                                         int index) {
   JVMCI_EXCEPTION_CONTEXT;
 
-  assert(klass->is_linked(), "must be linked before using its constant-pool");
+  assert(klass->is_linked(), "must be linked before using its constant-pool");
 
   constantPoolHandle cpool(thread, klass->constants());
 
@@ -262,7 +232,6 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
     return;
   }
 
-
   // Perform the field lookup.
   Klass*  canonical_holder =
     InstanceKlass::cast(declared_holder)->find_field(name, signature, &field_desc);
@@ -270,7 +239,7 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
     return;
   }
 
-  assert(canonical_holder == field_desc.field_holder(), "just checking");
+  assert(canonical_holder == field_desc.field_holder(), "just checking");
 }
 
 // ------------------------------------------------------------------
@@ -290,7 +259,7 @@ methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor,
                                Bytecodes::Code bc,
                                constantTag   tag) {
   // Accessibility checks are performed in JVMCIEnv::get_method_by_index_impl().
-  assert(check_klass_accessibility(accessor, holder), "holder not accessible");
+  assert(check_klass_accessibility(accessor, holder), "holder not accessible");
 
   methodHandle dest_method;
   LinkInfo link_info(holder, name, sig, accessor, LinkInfo::needs_access_check, tag);
@@ -316,7 +285,6 @@ methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor,
 
   return dest_method;
 }
-
 
 // ------------------------------------------------------------------
 methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
@@ -396,7 +364,6 @@ InstanceKlass* JVMCIEnv::get_instance_klass_for_declared_method_holder(Klass* me
   return NULL;
 }
 
-
 // ------------------------------------------------------------------
 methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool,
                                      int index, Bytecodes::Code bc,
@@ -410,14 +377,6 @@ methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool,
 // class loads, evolution, breakpoints
 JVMCIEnv::CodeInstallResult JVMCIEnv::validate_compile_task_dependencies(Dependencies* dependencies, Handle compiled_code,
                                                                          JVMCIEnv* env, char** failure_detail) {
-  // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
-  if (env != NULL) {
-    if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
-      *failure_detail = (char*) "Hotswapping or breakpointing was enabled during compilation";
-      return JVMCIEnv::dependencies_failed;
-    }
-  }
-
   // Dependencies must be checked when the system dictionary changes
   // or if we don't know whether it has changed (i.e., env == NULL).
   bool counter_changed = env == NULL || env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
@@ -487,12 +446,6 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
         mdp->inc_decompile_count();
-#ifdef ASSERT
-        if (mdp->decompile_count() > (uint)PerMethodRecompilationCutoff) {
-          ResourceMark m;
-          tty->print_cr("WARN: endless recompilation of %s. Method was set to not compilable.", method()->name_and_sig_as_C_string());
-        }
-#endif
       }
 
       // All buffers in the CodeBuffer are allocated in the CodeCache.

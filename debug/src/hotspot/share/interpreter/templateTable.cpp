@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #include "precompiled.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "interpreter/interp_masm.hpp"
@@ -38,7 +14,6 @@ void templateTable_init() {
 //----------------------------------------------------------------------------------------------------
 // Implementation of Template
 
-
 void Template::initialize(int flags, TosState tos_in, TosState tos_out, generator gen, int arg) {
   _flags   = flags;
   _tos_in  = tos_in;
@@ -47,13 +22,11 @@ void Template::initialize(int flags, TosState tos_in, TosState tos_out, generato
   _arg     = arg;
 }
 
-
 Bytecodes::Code Template::bytecode() const {
   int i = this - TemplateTable::_template_table;
   if (i < 0 || i >= Bytecodes::number_of_codes) i = this - TemplateTable::_template_table_wide;
   return Bytecodes::cast(i);
 }
-
 
 void Template::generate(InterpreterMacroAssembler* masm) {
   // parameter passing
@@ -64,57 +37,48 @@ void Template::generate(InterpreterMacroAssembler* masm) {
   masm->flush();
 }
 
-
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Platform-independent helper routines
 
 void TemplateTable::call_VM(Register oop_result, address entry_point) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1, arg_2);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2, Register arg_3) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1, arg_2, arg_3);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1, arg_2);
 }
 
-
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
+  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1, arg_2, arg_3);
 }
-
 
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Platform-independent bytecodes
@@ -124,46 +88,38 @@ void TemplateTable::float_cmp(int unordered_result) {
   float_cmp(true, unordered_result);
 }
 
-
 void TemplateTable::double_cmp(int unordered_result) {
   transition(dtos, itos);
   float_cmp(false, unordered_result);
 }
-
 
 void TemplateTable::_goto() {
   transition(vtos, vtos);
   branch(false, false);
 }
 
-
 void TemplateTable::goto_w() {
   transition(vtos, vtos);
   branch(false, true);
 }
-
 
 void TemplateTable::jsr_w() {
   transition(vtos, vtos);       // result is not an oop, so do not transition to atos
   branch(true, true);
 }
 
-
 void TemplateTable::jsr() {
   transition(vtos, vtos);       // result is not an oop, so do not transition to atos
   branch(true, false);
 }
 
-
-
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Debugging
 
 void TemplateTable::transition(TosState tos_in, TosState tos_out) {
-  assert(_desc->tos_in()  == tos_in , "inconsistent tos_in  information");
-  assert(_desc->tos_out() == tos_out, "inconsistent tos_out information");
+  assert(_desc->tos_in()  == tos_in , "inconsistent tos_in  information");
+  assert(_desc->tos_out() == tos_out, "inconsistent tos_out information");
 }
-
 
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Initialization
@@ -176,12 +132,10 @@ Template*                  TemplateTable::_desc;
 InterpreterMacroAssembler* TemplateTable::_masm;
 BarrierSet*                TemplateTable::_bs;
 
-
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(), char filler) {
-  assert(filler == ' ', "just checkin'");
+  assert(filler == ' ', "just checkin'");
   def(code, flags, in, out, (Template::generator)gen, 0);
 }
-
 
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(int arg), int arg) {
   // should factor out these constants
@@ -195,28 +149,24 @@ void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState o
   // (since they are executed extremely rarely, it doesn't pay out to have an
   // extra set of 5 dispatch tables for the wide instructions - for simplicity
   // they all go with one table)
-  assert(in == vtos || !is_wide, "wide instructions have vtos entry point only");
+  assert(in == vtos || !is_wide, "wide instructions have vtos entry point only");
   Template* t = is_wide ? template_for_wide(code) : template_for(code);
   // setup entry
   t->initialize(flags, in, out, gen, arg);
-  assert(t->bytecode() == code, "just checkin'");
+  assert(t->bytecode() == code, "just checkin'");
 }
-
 
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(Operation op), Operation op) {
   def(code, flags, in, out, (Template::generator)gen, (int)op);
 }
 
-
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(bool arg    ), bool arg) {
   def(code, flags, in, out, (Template::generator)gen, (int)arg);
 }
 
-
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(TosState tos), TosState tos) {
   def(code, flags, in, out, (Template::generator)gen, (int)tos);
 }
-
 
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(Condition cc), Condition cc) {
   def(code, flags, in, out, (Template::generator)gen, (int)cc);
@@ -239,7 +189,7 @@ void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState o
   #define fstore TemplateTable::fstore
   #define dstore TemplateTable::dstore
   #define astore TemplateTable::astore
-#endif // TEMPLATE_TABLE_BUG
+#endif
 
 void TemplateTable::initialize() {
   if (_is_initialized) return;
@@ -541,15 +491,13 @@ void TemplateTable::initialize() {
   #undef fstore
   #undef dstore
   #undef astore
-#endif // TEMPLATE_TABLE_BUG
-
+#endif
 
 void templateTable_init() {
   TemplateTable::initialize();
 }
 
-
 void TemplateTable::unimplemented_bc() {
   _masm->unimplemented( Bytecodes::name(_desc->bytecode()));
 }
-#endif /* !CC_INTERP */
+#endif

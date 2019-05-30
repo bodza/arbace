@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
 #define SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
 
@@ -29,7 +6,7 @@
 #include "runtime/arguments.hpp"
 #include "runtime/deoptimization.hpp"
 
-#define JVMCI_ERROR(...)       \
+#define JVMCI_ERROR(...) \
   { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return; }
 
 #define JVMCI_ERROR_(ret, ...) \
@@ -74,7 +51,7 @@ class JVMCIRuntime: public AllStatic {
 
   static jobject get_HotSpotJVMCIRuntime_jobject(TRAPS) {
     initialize_JVMCI(CHECK_NULL);
-    assert(_HotSpotJVMCIRuntime_initialized, "must be");
+    assert(_HotSpotJVMCIRuntime_initialized, "must be");
     return _HotSpotJVMCIRuntime_instance;
   }
 
@@ -145,10 +122,8 @@ class JVMCIRuntime: public AllStatic {
   // printed as a string, otherwise the type of the object is printed
   // followed by its address.
   static void log_object(JavaThread* thread, oopDesc* object, bool as_string, bool newline);
-#if INCLUDE_G1GC
   static void write_barrier_pre(JavaThread* thread, oopDesc* obj);
   static void write_barrier_post(JavaThread* thread, void* card);
-#endif
   static jboolean validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child);
 
   // used to throw exceptions from compiled JVMCI code
@@ -178,4 +153,4 @@ class JVMCIRuntime: public AllStatic {
 #define TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4 && (tty->print("         JVMCITrace-4: "), true))) ; else tty->print_cr
 #define TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5 && (tty->print("            JVMCITrace-5: "), true))) ; else tty->print_cr
 
-#endif // SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
+#endif

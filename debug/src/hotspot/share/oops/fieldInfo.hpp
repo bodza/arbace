@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
-
 #ifndef SHARE_VM_OOPS_FIELDINFO_HPP
 #define SHARE_VM_OOPS_FIELDINFO_HPP
 
@@ -106,14 +82,6 @@ class FieldInfo {
     switch(lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_OFFSET:
         return build_int_from_shorts(_shorts[low_packed_offset], _shorts[high_packed_offset]) >> FIELDINFO_TAG_SIZE;
-#ifndef PRODUCT
-      case FIELDINFO_TAG_TYPE_PLAIN:
-        fatal("Asking offset for the plain type field");
-      case FIELDINFO_TAG_TYPE_CONTENDED:
-        fatal("Asking offset for the contended type field");
-      case FIELDINFO_TAG_BLANK:
-        fatal("Asking offset for the blank field");
-#endif
     }
     ShouldNotReachHere();
     return 0;
@@ -126,12 +94,6 @@ class FieldInfo {
         return false;
       case FIELDINFO_TAG_TYPE_CONTENDED:
         return true;
-#ifndef PRODUCT
-      case FIELDINFO_TAG_OFFSET:
-        fatal("Asking contended flag for the field with offset");
-      case FIELDINFO_TAG_BLANK:
-        fatal("Asking contended flag for the blank field");
-#endif
     }
     ShouldNotReachHere();
     return false;
@@ -144,12 +106,6 @@ class FieldInfo {
         return 0;
       case FIELDINFO_TAG_TYPE_CONTENDED:
         return _shorts[high_packed_offset];
-#ifndef PRODUCT
-      case FIELDINFO_TAG_OFFSET:
-        fatal("Asking the contended group for the field with offset");
-      case FIELDINFO_TAG_BLANK:
-        fatal("Asking the contended group for the blank field");
-#endif
     }
     ShouldNotReachHere();
     return 0;
@@ -161,12 +117,6 @@ class FieldInfo {
       case FIELDINFO_TAG_TYPE_PLAIN:
       case FIELDINFO_TAG_TYPE_CONTENDED:
         return (lo >> FIELDINFO_TAG_SIZE);
-#ifndef PRODUCT
-      case FIELDINFO_TAG_OFFSET:
-        fatal("Asking the field type for field with offset");
-      case FIELDINFO_TAG_BLANK:
-        fatal("Asking the field type for the blank field");
-#endif
     }
     ShouldNotReachHere();
     return 0;
@@ -207,12 +157,6 @@ class FieldInfo {
         _shorts[low_packed_offset] &= ~FIELDINFO_TAG_MASK;
         _shorts[low_packed_offset] |= FIELDINFO_TAG_TYPE_PLAIN;
         return;
-#ifndef PRODUCT
-      case FIELDINFO_TAG_TYPE_PLAIN:
-      case FIELDINFO_TAG_TYPE_CONTENDED:
-      case FIELDINFO_TAG_OFFSET:
-        fatal("Setting the field type with overwriting");
-#endif
     }
     ShouldNotReachHere();
   }
@@ -224,14 +168,6 @@ class FieldInfo {
         _shorts[low_packed_offset] |= FIELDINFO_TAG_TYPE_CONTENDED;
         _shorts[high_packed_offset] = val;
         return;
-#ifndef PRODUCT
-      case FIELDINFO_TAG_TYPE_CONTENDED:
-        fatal("Overwriting contended group");
-      case FIELDINFO_TAG_BLANK:
-        fatal("Setting contended group for the blank field");
-      case FIELDINFO_TAG_OFFSET:
-        fatal("Setting contended group for field with offset");
-#endif
     }
     ShouldNotReachHere();
   }
@@ -249,9 +185,9 @@ class FieldInfo {
   }
 
   Symbol* lookup_symbol(int symbol_index) const {
-    assert(is_internal(), "only internal fields");
+    assert(is_internal(), "only internal fields");
     return vmSymbols::symbol_at((vmSymbols::SID)symbol_index);
   }
 };
 
-#endif // SHARE_VM_OOPS_FIELDINFO_HPP
+#endif
