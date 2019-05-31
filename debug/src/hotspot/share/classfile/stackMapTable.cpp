@@ -16,15 +16,12 @@ StackMapTable::StackMapTable(StackMapReader* reader, StackMapFrame* init_frame,
                                                 StackMapFrame*, _frame_count);
     StackMapFrame* pre_frame = init_frame;
     for (int32_t i = 0; i < _frame_count; i++) {
-      StackMapFrame* frame = reader->next(
-        pre_frame, i == 0, max_locals, max_stack,
+      StackMapFrame* frame = reader->next(pre_frame, i == 0, max_locals, max_stack,
         CHECK_VERIFY(pre_frame->verifier()));
       _frame_array[i] = frame;
       int offset = frame->offset();
       if (offset >= code_len || code_data[offset] == 0) {
-        frame->verifier()->verify_error(
-            ErrorContext::bad_stackmap(i, frame),
-            "StackMapTable error: bad offset");
+        frame->verifier()->verify_error(ErrorContext::bad_stackmap(i, frame), "StackMapTable error: bad offset");
         return;
       }
       pre_frame = frame;
@@ -44,9 +41,7 @@ int StackMapTable::get_index_from_offset(int32_t offset) const {
   return i;  // frame with offset doesn't exist in the array
 }
 
-bool StackMapTable::match_stackmap(
-    StackMapFrame* frame, int32_t target,
-    bool match, bool update, ErrorContext* ctx, TRAPS) const {
+bool StackMapTable::match_stackmap(StackMapFrame* frame, int32_t target, bool match, bool update, ErrorContext* ctx, TRAPS) const {
   int index = get_index_from_offset(target);
   return match_stackmap(frame, target, index, match, update, ctx, THREAD);
 }
@@ -62,13 +57,10 @@ bool StackMapTable::match_stackmap(
 // unconditional branch:                                 false  true
 // linear bytecode verification not following an
 // unconditional branch:                                 true   true
-bool StackMapTable::match_stackmap(
-    StackMapFrame* frame, int32_t target, int32_t frame_index,
-    bool match, bool update, ErrorContext* ctx, TRAPS) const {
+bool StackMapTable::match_stackmap(StackMapFrame* frame, int32_t target, int32_t frame_index, bool match, bool update, ErrorContext* ctx, TRAPS) const {
   if (frame_index < 0 || frame_index >= _frame_count) {
     *ctx = ErrorContext::missing_stackmap(frame->offset());
-    frame->verifier()->verify_error(
-        *ctx, "Expecting a stackmap frame at branch target %d", target);
+    frame->verifier()->verify_error(*ctx, "Expecting a stackmap frame at branch target %d", target);
     return false;
   }
 
@@ -97,14 +89,11 @@ bool StackMapTable::match_stackmap(
   return result;
 }
 
-void StackMapTable::check_jump_target(
-    StackMapFrame* frame, int32_t target, TRAPS) const {
+void StackMapTable::check_jump_target(StackMapFrame* frame, int32_t target, TRAPS) const {
   ErrorContext ctx;
-  bool match = match_stackmap(
-    frame, target, true, false, &ctx, CHECK_VERIFY(frame->verifier()));
+  bool match = match_stackmap(frame, target, true, false, &ctx, CHECK_VERIFY(frame->verifier()));
   if (!match || (target < 0 || target >= _code_length)) {
-    frame->verifier()->verify_error(ctx,
-        "Inconsistent stackmap frames at branch target %d", target);
+    frame->verifier()->verify_error(ctx, "Inconsistent stackmap frames at branch target %d", target);
   }
 }
 
@@ -134,8 +123,7 @@ StackMapReader::StackMapReader(ClassVerifier* v, StackMapStream* stream, char* c
   }
 }
 
-int32_t StackMapReader::chop(
-    VerificationType* locals, int32_t length, int32_t chops) {
+int32_t StackMapReader::chop(VerificationType* locals, int32_t length, int32_t chops) {
   if (locals == NULL) return -1;
   int32_t pos = length - 1;
   for (int32_t i=0; i<chops; i++) {
@@ -157,9 +145,7 @@ VerificationType StackMapReader::parse_verification_type(u1* flags, TRAPS) {
   if (tag == ITEM_Object) {
     u2 class_index = _stream->get_u2(THREAD);
     int nconstants = _cp->length();
-    if ((class_index <= 0 || class_index >= nconstants) ||
-        (!_cp->tag_at(class_index).is_klass() &&
-         !_cp->tag_at(class_index).is_unresolved_klass())) {
+    if ((class_index <= 0 || class_index >= nconstants) || (!_cp->tag_at(class_index).is_klass() && !_cp->tag_at(class_index).is_unresolved_klass())) {
       _stream->stackmap_format_error("bad class index", THREAD);
       return VerificationType::bogus_type();
     }
@@ -173,10 +159,8 @@ VerificationType StackMapReader::parse_verification_type(u1* flags, TRAPS) {
   }
   if (tag == ITEM_Uninitialized) {
     u2 offset = _stream->get_u2(THREAD);
-    if (offset >= _code_length ||
-        _code_data[offset] != ClassVerifier::NEW_OFFSET) {
-      _verifier->class_format_error(
-        "StackMapTable format error: bad offset for Uninitialized");
+    if (offset >= _code_length || _code_data[offset] != ClassVerifier::NEW_OFFSET) {
+      _verifier->class_format_error("StackMapTable format error: bad offset for Uninitialized");
       return VerificationType::bogus_type();
     }
     return VerificationType::uninitialized_type(offset);
@@ -185,8 +169,7 @@ VerificationType StackMapReader::parse_verification_type(u1* flags, TRAPS) {
   return VerificationType::bogus_type();
 }
 
-StackMapFrame* StackMapReader::next(
-    StackMapFrame* pre_frame, bool first, u2 max_locals, u2 max_stack, TRAPS) {
+StackMapFrame* StackMapReader::next(StackMapFrame* pre_frame, bool first, u2 max_locals, u2 max_stack, TRAPS) {
   StackMapFrame* frame;
   int offset;
   VerificationType* locals = NULL;
@@ -197,16 +180,13 @@ StackMapFrame* StackMapReader::next(
       offset = frame_type;
       // Can't share the locals array since that is updated by the verifier.
       if (pre_frame->locals_size() > 0) {
-        locals = NEW_RESOURCE_ARRAY_IN_THREAD(
-          THREAD, VerificationType, pre_frame->locals_size());
+        locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, pre_frame->locals_size());
       }
     } else {
       offset = pre_frame->offset() + frame_type + 1;
       locals = pre_frame->locals();
     }
-    frame = new StackMapFrame(
-      offset, pre_frame->flags(), pre_frame->locals_size(), 0,
-      max_locals, max_stack, locals, NULL, _verifier);
+    frame = new StackMapFrame(offset, pre_frame->flags(), pre_frame->locals_size(), 0, max_locals, max_stack, locals, NULL, _verifier);
     if (first && locals != NULL) {
       frame->copy_locals(pre_frame);
     }
@@ -218,26 +198,21 @@ StackMapFrame* StackMapReader::next(
       offset = frame_type - 64;
       // Can't share the locals array since that is updated by the verifier.
       if (pre_frame->locals_size() > 0) {
-        locals = NEW_RESOURCE_ARRAY_IN_THREAD(
-          THREAD, VerificationType, pre_frame->locals_size());
+        locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, pre_frame->locals_size());
       }
     } else {
       offset = pre_frame->offset() + frame_type - 63;
       locals = pre_frame->locals();
     }
-    VerificationType* stack = NEW_RESOURCE_ARRAY_IN_THREAD(
-      THREAD, VerificationType, 2);
+    VerificationType* stack = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, 2);
     u2 stack_size = 1;
     stack[0] = parse_verification_type(NULL, CHECK_VERIFY_(_verifier, NULL));
     if (stack[0].is_category2()) {
       stack[1] = stack[0].to_category2_2nd();
       stack_size = 2;
     }
-    check_verification_type_array_size(
-      stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
-    frame = new StackMapFrame(
-      offset, pre_frame->flags(), pre_frame->locals_size(), stack_size,
-      max_locals, max_stack, locals, stack, _verifier);
+    check_verification_type_array_size(stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
+    frame = new StackMapFrame(offset, pre_frame->flags(), pre_frame->locals_size(), stack_size, max_locals, max_stack, locals, stack, _verifier);
     if (first && locals != NULL) {
       frame->copy_locals(pre_frame);
     }
@@ -248,8 +223,7 @@ StackMapFrame* StackMapReader::next(
 
   if (frame_type < SAME_LOCALS_1_STACK_ITEM_EXTENDED) {
     // reserved frame types
-    _stream->stackmap_format_error(
-      "reserved frame type", CHECK_VERIFY_(_verifier, NULL));
+    _stream->stackmap_format_error("reserved frame type", CHECK_VERIFY_(_verifier, NULL));
   }
 
   if (frame_type == SAME_LOCALS_1_STACK_ITEM_EXTENDED) {
@@ -258,26 +232,21 @@ StackMapFrame* StackMapReader::next(
       offset = offset_delta;
       // Can't share the locals array since that is updated by the verifier.
       if (pre_frame->locals_size() > 0) {
-        locals = NEW_RESOURCE_ARRAY_IN_THREAD(
-          THREAD, VerificationType, pre_frame->locals_size());
+        locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, pre_frame->locals_size());
       }
     } else {
       offset = pre_frame->offset() + offset_delta + 1;
       locals = pre_frame->locals();
     }
-    VerificationType* stack = NEW_RESOURCE_ARRAY_IN_THREAD(
-      THREAD, VerificationType, 2);
+    VerificationType* stack = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, 2);
     u2 stack_size = 1;
     stack[0] = parse_verification_type(NULL, CHECK_VERIFY_(_verifier, NULL));
     if (stack[0].is_category2()) {
       stack[1] = stack[0].to_category2_2nd();
       stack_size = 2;
     }
-    check_verification_type_array_size(
-      stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
-    frame = new StackMapFrame(
-      offset, pre_frame->flags(), pre_frame->locals_size(), stack_size,
-      max_locals, max_stack, locals, stack, _verifier);
+    check_verification_type_array_size(stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
+    frame = new StackMapFrame(offset, pre_frame->flags(), pre_frame->locals_size(), stack_size, max_locals, max_stack, locals, stack, _verifier);
     if (first && locals != NULL) {
       frame->copy_locals(pre_frame);
     }
@@ -293,8 +262,7 @@ StackMapFrame* StackMapReader::next(
     u1 flags = pre_frame->flags();
     if (chops != 0) {
       new_length = chop(locals, length, chops);
-      check_verification_type_array_size(
-        new_length, max_locals, CHECK_VERIFY_(_verifier, NULL));
+      check_verification_type_array_size(new_length, max_locals, CHECK_VERIFY_(_verifier, NULL));
       // Recompute flags since uninitializedThis could have been chopped.
       flags = 0;
       for (int i=0; i<new_length; i++) {
@@ -308,17 +276,14 @@ StackMapFrame* StackMapReader::next(
       offset = offset_delta;
       // Can't share the locals array since that is updated by the verifier.
       if (new_length > 0) {
-        locals = NEW_RESOURCE_ARRAY_IN_THREAD(
-          THREAD, VerificationType, new_length);
+        locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, new_length);
       } else {
         locals = NULL;
       }
     } else {
       offset = pre_frame->offset() + offset_delta + 1;
     }
-    frame = new StackMapFrame(
-      offset, flags, new_length, 0, max_locals, max_stack,
-      locals, NULL, _verifier);
+    frame = new StackMapFrame(offset, flags, new_length, 0, max_locals, max_stack, locals, NULL, _verifier);
     if (first && locals != NULL) {
       frame->copy_locals(pre_frame);
     }
@@ -343,16 +308,13 @@ StackMapFrame* StackMapReader::next(
       }
       ++real_length;
     }
-    check_verification_type_array_size(
-      real_length, max_locals, CHECK_VERIFY_(_verifier, NULL));
+    check_verification_type_array_size(real_length, max_locals, CHECK_VERIFY_(_verifier, NULL));
     if (first) {
       offset = offset_delta;
     } else {
       offset = pre_frame->offset() + offset_delta + 1;
     }
-    frame = new StackMapFrame(
-      offset, flags, real_length, 0, max_locals,
-      max_stack, locals, NULL, _verifier);
+    frame = new StackMapFrame(offset, flags, real_length, 0, max_locals, max_stack, locals, NULL, _verifier);
     return frame;
   }
   if (frame_type == FULL) {
@@ -361,27 +323,23 @@ StackMapFrame* StackMapReader::next(
     u2 locals_size = _stream->get_u2(THREAD);
     int real_locals_size = 0;
     if (locals_size > 0) {
-      locals = NEW_RESOURCE_ARRAY_IN_THREAD(
-        THREAD, VerificationType, locals_size*2);
+      locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, locals_size*2);
     }
     int i;
     for (i=0; i<locals_size; i++) {
       locals[real_locals_size] = parse_verification_type(&flags, THREAD);
       if (locals[real_locals_size].is_category2()) {
-        locals[real_locals_size + 1] =
-          locals[real_locals_size].to_category2_2nd();
+        locals[real_locals_size + 1] = locals[real_locals_size].to_category2_2nd();
         ++real_locals_size;
       }
       ++real_locals_size;
     }
-    check_verification_type_array_size(
-      real_locals_size, max_locals, CHECK_VERIFY_(_verifier, NULL));
+    check_verification_type_array_size(real_locals_size, max_locals, CHECK_VERIFY_(_verifier, NULL));
     u2 stack_size = _stream->get_u2(THREAD);
     int real_stack_size = 0;
     VerificationType* stack = NULL;
     if (stack_size > 0) {
-      stack = NEW_RESOURCE_ARRAY_IN_THREAD(
-        THREAD, VerificationType, stack_size*2);
+      stack = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, stack_size*2);
     }
     for (i=0; i<stack_size; i++) {
       stack[real_stack_size] = parse_verification_type(NULL, THREAD);
@@ -391,20 +349,16 @@ StackMapFrame* StackMapReader::next(
       }
       ++real_stack_size;
     }
-    check_verification_type_array_size(
-      real_stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
+    check_verification_type_array_size(real_stack_size, max_stack, CHECK_VERIFY_(_verifier, NULL));
     if (first) {
       offset = offset_delta;
     } else {
       offset = pre_frame->offset() + offset_delta + 1;
     }
-    frame = new StackMapFrame(
-      offset, flags, real_locals_size, real_stack_size,
-      max_locals, max_stack, locals, stack, _verifier);
+    frame = new StackMapFrame(offset, flags, real_locals_size, real_stack_size, max_locals, max_stack, locals, stack, _verifier);
     return frame;
   }
 
-  _stream->stackmap_format_error(
-    "reserved frame type", CHECK_VERIFY_(pre_frame->verifier(), NULL));
+  _stream->stackmap_format_error("reserved frame type", CHECK_VERIFY_(pre_frame->verifier(), NULL));
   return NULL;
 }

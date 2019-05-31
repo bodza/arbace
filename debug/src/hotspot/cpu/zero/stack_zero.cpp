@@ -14,9 +14,7 @@ ZeroStack::ZeroStack()
   }
 
 int ZeroStack::suggest_size(Thread *thread) const {
-  assert(needs_setup(), "already set up");
   int abi_available = abi_stack_available(thread);
-  assert(abi_available >= 0, "available abi stack must be >= 0");
   return align_down(abi_available / 2, wordSize);
 }
 
@@ -30,8 +28,7 @@ void ZeroStack::handle_overflow(TRAPS) {
     ZeroFrame *frame = thread->top_zero_frame();
     while (frame) {
       if (frame->is_interpreter_frame()) {
-        interpreterState istate =
-          frame->as_interpreter_frame()->interpreter_state();
+        interpreterState istate = frame->as_interpreter_frame()->interpreter_state();
         if (istate->self_link() == istate)
           break;
       }

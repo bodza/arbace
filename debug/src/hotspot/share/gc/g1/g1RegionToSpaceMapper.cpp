@@ -100,7 +100,6 @@ class G1RegionsSmallerThanCommitSizeMapper : public G1RegionToSpaceMapper {
     bool all_zero_filled = true;
 
     for (uint i = start_idx; i < start_idx + num_regions; i++) {
-      assert(!_commit_map.at(i), "Trying to commit storage at region %u that is already committed", i);
       size_t idx = region_idx_to_page_idx(i);
       uint old_refcount = _refcounts.get_by_index(idx);
 
@@ -127,10 +126,8 @@ class G1RegionsSmallerThanCommitSizeMapper : public G1RegionToSpaceMapper {
 
   virtual void uncommit_regions(uint start_idx, size_t num_regions) {
     for (uint i = start_idx; i < start_idx + num_regions; i++) {
-      assert(_commit_map.at(i), "Trying to uncommit storage at region %u that is not committed", i);
       size_t idx = region_idx_to_page_idx(i);
       uint old_refcount = _refcounts.get_by_index(idx);
-      assert(old_refcount > 0, "must be");
       if (old_refcount == 1) {
         _storage.uncommit(idx, 1);
       }

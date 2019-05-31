@@ -107,9 +107,9 @@ public:
 
   void print_threads_on(outputStream* st) const;
 
-  size_t green_zone() const      { return _green_zone;  }
+  size_t green_zone() const      { return _green_zone; }
   size_t yellow_zone() const     { return _yellow_zone; }
-  size_t red_zone() const        { return _red_zone;    }
+  size_t red_zone() const        { return _red_zone; }
 };
 
 #endif

@@ -193,8 +193,7 @@ void AOTLoader::universe_init() {
 
 void AOTLoader::set_narrow_oop_shift() {
   // This method is called from Universe::initialize_heap().
-  if (UseAOT && libraries_count() > 0 &&
-      UseCompressedOops && AOTLib::narrow_oop_shift_initialized()) {
+  if (UseAOT && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized()) {
     if (Universe::narrow_oop_shift() == 0) {
       // 0 is valid shift value for small heap but we can safely increase it
       // at this point when nobody used it yet.
@@ -205,9 +204,7 @@ void AOTLoader::set_narrow_oop_shift() {
 
 void AOTLoader::set_narrow_klass_shift() {
   // This method is called from Metaspace::set_narrow_klass_base_and_shift().
-  if (UseAOT && libraries_count() > 0 &&
-      UseCompressedOops && AOTLib::narrow_oop_shift_initialized() &&
-      UseCompressedClassPointers) {
+  if (UseAOT && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized() && UseCompressedClassPointers) {
     if (Universe::narrow_klass_shift() == 0) {
       Universe::set_narrow_klass_shift(AOTLib::narrow_klass_shift());
     }

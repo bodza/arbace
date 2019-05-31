@@ -47,10 +47,6 @@ static const char* get_string_from_cp_with_checks(const InstanceKlass* k, int cp
   const char* s = NULL;
   const ConstantPool* const cp = k->constants();
 
-  assert(cp != NULL, "No cp?");
-  assert(cp->is_within_bounds(cpi), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX" " (cpi %d out of bounds for [0..%d)).", k->external_name(), cpi, cp->length());
-  assert(cp->tag_at(cpi).is_utf8(), "Unexpected constant pool layout for \"%s\", child class of Generated{Method|Constructor}AccessorImplXXX" " (no UTF8 at cpi %d (%u)).", k->external_name(), cpi, cp->tag_at(cpi).value());
-
   // Be nice in release: lets not crash, just return NULL.
   if (cp != NULL && cp->is_within_bounds(cpi) && cp->tag_at(cpi).is_utf8()) {
     s = cp->symbol_at(cpi)->as_C_string();
@@ -72,22 +68,19 @@ static bool classname_matches_prefix(const Klass* k, const char* prefix) {
 
 // Returns true if k is of type jdk/internal/reflect/GeneratedMethodAccessorXXX.
 bool ReflectionAccessorImplKlassHelper::is_generated_method_accessor(const InstanceKlass* k) {
-  return k->super() == SystemDictionary::reflect_MethodAccessorImpl_klass() &&
-         classname_matches_prefix(k, "jdk.internal.reflect.GeneratedMethodAccessor");
+  return k->super() == SystemDictionary::reflect_MethodAccessorImpl_klass() && classname_matches_prefix(k, "jdk.internal.reflect.GeneratedMethodAccessor");
 }
 
 // Returns true if k is of type jdk/internal/reflect/GeneratedConstructorAccessorXXX.
 bool ReflectionAccessorImplKlassHelper::is_generated_constructor_accessor(const InstanceKlass* k) {
-  return k->super() == SystemDictionary::reflect_ConstructorAccessorImpl_klass() &&
-         classname_matches_prefix(k, "jdk.internal.reflect.GeneratedConstructorAccessor");
+  return k->super() == SystemDictionary::reflect_ConstructorAccessorImpl_klass() && classname_matches_prefix(k, "jdk.internal.reflect.GeneratedConstructorAccessor");
 }
 
 // Returns true if k is of type jdk/internal/reflect/GeneratedSerializationConstructorAccessorXXX.
 bool ReflectionAccessorImplKlassHelper::is_generated_method_serialization_constructor_accessor(const InstanceKlass* k) {
   // GeneratedSerializationConstructorAccessor is not a direct subclass of ConstructorAccessorImpl
   const Klass* sk = k->super();
-  if (sk != NULL && sk->super() == SystemDictionary::reflect_ConstructorAccessorImpl_klass() &&
-      classname_matches_prefix(k, "jdk.internal.reflect.GeneratedSerializationConstructorAccessor")) {
+  if (sk != NULL && sk->super() == SystemDictionary::reflect_ConstructorAccessorImpl_klass() && classname_matches_prefix(k, "jdk.internal.reflect.GeneratedSerializationConstructorAccessor")) {
     return true;
   }
   return false;
@@ -98,14 +91,12 @@ const char* ReflectionAccessorImplKlassHelper::get_target_class_name(const Insta
 }
 
 const char* ReflectionAccessorImplKlassHelper::get_target_method_name(const InstanceKlass* k) {
-  const int target_method_name_cpi =
-      is_generated_method_serialization_constructor_accessor(k) ? cpi_slot_target_method_name_sca : cpi_slot_target_method_name;
+  const int target_method_name_cpi = is_generated_method_serialization_constructor_accessor(k) ? cpi_slot_target_method_name_sca : cpi_slot_target_method_name;
   return get_string_from_cp_with_checks(k, target_method_name_cpi);
 }
 
 const char* ReflectionAccessorImplKlassHelper::get_target_method_signature(const InstanceKlass* k) {
-  const int target_method_name_cpi =
-      is_generated_method_serialization_constructor_accessor(k) ? cpi_slot_target_method_sig_sca : cpi_slot_target_method_sig;
+  const int target_method_name_cpi = is_generated_method_serialization_constructor_accessor(k) ? cpi_slot_target_method_sig_sca : cpi_slot_target_method_sig;
   return get_string_from_cp_with_checks(k, target_method_name_cpi);
 }
 
@@ -115,15 +106,12 @@ bool ReflectionAccessorImplKlassHelper::is_generated_accessor(const Klass* k) {
   if (k != NULL && k->is_instance_klass()) {
     const InstanceKlass* ik = InstanceKlass::cast(k);
     if (ik->is_initialized()) {
-      return is_generated_method_accessor(ik) ||
-             is_generated_constructor_accessor(ik) ||
-             is_generated_method_serialization_constructor_accessor(ik);
+      return is_generated_method_accessor(ik) || is_generated_constructor_accessor(ik) || is_generated_method_serialization_constructor_accessor(ik);
     }
   }
   return false;
 }
 void ReflectionAccessorImplKlassHelper::print_invocation_target(outputStream* out, Klass* k) {
-  assert(ReflectionAccessorImplKlassHelper::is_generated_accessor(k), "Invariant");
   InstanceKlass* ik = InstanceKlass::cast(k);
   ResourceMark rm;
   const char* target_class_name = ReflectionAccessorImplKlassHelper::get_target_class_name(ik);

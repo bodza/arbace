@@ -53,12 +53,10 @@ class G1ParScanThreadState : public CHeapObj<mtGC> {
 
 #define PADDING_ELEM_NUM (DEFAULT_CACHE_LINE_SIZE / sizeof(size_t))
 
-  DirtyCardQueue& dirty_card_queue()             { return _dcq;  }
+  DirtyCardQueue& dirty_card_queue()             { return _dcq; }
   G1CardTable* ct()                              { return _ct; }
 
   InCSetState dest(InCSetState original) const {
-    assert(original.is_valid(), "Original state invalid: " CSETSTATE_FORMAT, original.value());
-    assert(_dest[original.value()].is_valid_gen(), "Dest state is invalid: " CSETSTATE_FORMAT, _dest[original.value()].value());
     return _dest[original.value()];
   }
 
@@ -72,7 +70,6 @@ public:
   template <class T> void push_on_queue(T* ref);
 
   template <class T> void update_rs(HeapRegion* from, T* p, oop o) {
-    assert(!HeapRegion::is_in_same_region(p, o), "Caller should have filtered out cross-region references already.");
     // If the field originates from the to-space, we don't need to include it
     // in the remembered set updates. Also, if we are not tracking the remembered
     // set in the destination region, do not bother either.
@@ -111,7 +108,6 @@ private:
   // This allows the compiler to create optimized code when popping references from
   // the work queue.
   inline bool has_partial_array_mask(narrowOop* ref) const {
-    assert(((uintptr_t)ref & G1_PARTIAL_ARRAY_MASK) != G1_PARTIAL_ARRAY_MASK, "Partial array oop reference encoded as narrowOop*");
     return false;
   }
 
@@ -121,7 +117,6 @@ private:
   // This means that unintentional use of this method with narrowOops are caught
   // by the compiler.
   inline oop* set_partial_array_mask(oop obj) const {
-    assert(((uintptr_t)(void *)obj & G1_PARTIAL_ARRAY_MASK) == 0, "Information loss!");
     return (oop*) ((uintptr_t)(void *)obj | G1_PARTIAL_ARRAY_MASK);
   }
 

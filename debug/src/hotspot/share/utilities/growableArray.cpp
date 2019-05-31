@@ -5,7 +5,6 @@
 #include "utilities/growableArray.hpp"
 
 void* GenericGrowableArray::raw_allocate(int elementSize) {
-  assert(_max >= 0, "integer overflow");
   size_t byte_size = elementSize * (size_t) _max;
   if (on_stack()) {
     return (void*)resource_allocate_bytes(byte_size);

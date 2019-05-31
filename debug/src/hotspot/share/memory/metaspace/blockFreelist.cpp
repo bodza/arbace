@@ -8,7 +8,7 @@
 
 namespace metaspace {
 
-BlockFreelist::BlockFreelist() : _dictionary(new BlockTreeDictionary()), _small_blocks(NULL) {}
+BlockFreelist::BlockFreelist() : _dictionary(new BlockTreeDictionary()), _small_blocks(NULL) { }
 
 BlockFreelist::~BlockFreelist() {
   delete _dictionary;
@@ -18,7 +18,6 @@ BlockFreelist::~BlockFreelist() {
 }
 
 void BlockFreelist::return_block(MetaWord* p, size_t word_size) {
-  assert(word_size >= SmallBlocks::small_block_min_size(), "never return dark matter");
 
   Metablock* free_chunk = ::new (p) Metablock(word_size);
   if (word_size < SmallBlocks::small_block_max_size()) {
@@ -31,7 +30,6 @@ void BlockFreelist::return_block(MetaWord* p, size_t word_size) {
 }
 
 MetaWord* BlockFreelist::get_block(size_t word_size) {
-  assert(word_size >= SmallBlocks::small_block_min_size(), "never get dark matter");
 
   // Try small_blocks first.
   if (word_size < SmallBlocks::small_block_max_size()) {
@@ -62,7 +60,6 @@ MetaWord* BlockFreelist::get_block(size_t word_size) {
   }
 
   MetaWord* new_block = (MetaWord*)free_block;
-  assert(block_size >= word_size, "Incorrect size of block from freelist");
   const size_t unused = block_size - word_size;
   if (unused >= SmallBlocks::small_block_min_size()) {
     return_block(new_block + word_size, unused);

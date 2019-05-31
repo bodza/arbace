@@ -67,7 +67,7 @@ typedef uint64_t julong;
 
 // checking for nanness
 #ifdef AIX
-inline int g_isnan(float  f) { return isnan(f); }
+inline int g_isnan(float f) { return isnan(f); }
 inline int g_isnan(double f) { return isnan(f); }
 #else
 #error "missing platform-specific definition here"
@@ -75,8 +75,8 @@ inline int g_isnan(double f) { return isnan(f); }
 
 // Checking for finiteness
 
-inline int g_isfinite(jfloat  f)                 { return finite(f); }
-inline int g_isfinite(jdouble f)                 { return finite(f); }
+inline int g_isfinite(jfloat f) { return finite(f); }
+inline int g_isfinite(jdouble f) { return finite(f); }
 
 // Wide characters
 

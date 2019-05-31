@@ -34,8 +34,7 @@ void MacroAssembler::advance(int bytes) {
   code_section()->set_end(code_section()->end() + bytes);
 }
 
-RegisterOrConstant MacroAssembler::delayed_value_impl(
-  intptr_t* delayed_value_addr, Register tmpl, int offset) {
+RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_addr, Register tmpl, int offset) {
   ShouldNotCallThis();
   return RegisterOrConstant();
 }

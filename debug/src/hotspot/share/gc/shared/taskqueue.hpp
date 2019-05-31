@@ -157,7 +157,7 @@ protected:
   }
 
 public:
-  TaskQueueSuper() : _bottom(0), _age() {}
+  TaskQueueSuper() : _bottom(0), _age() { }
 
   // Return true if the TaskQueue contains/does not contain any tasks.
   bool peek()     const { return _bottom != _age.top(); }
@@ -280,7 +280,6 @@ private:
 
 template<class E, MEMFLAGS F, unsigned int N>
 GenericTaskQueue<E, F, N>::GenericTaskQueue() {
-  assert(sizeof(Age) == sizeof(size_t), "Depends on this.");
 }
 
 // OverflowTaskQueue is a TaskQueue that also includes an overflow stack for
@@ -295,8 +294,7 @@ GenericTaskQueue<E, F, N>::GenericTaskQueue() {
 // TaskQueue, and does not include the size of the overflow stack.  This
 // simplifies replacement of GenericTaskQueues with OverflowTaskQueues.
 template<class E, MEMFLAGS F, unsigned int N = TASKQUEUE_SIZE>
-class OverflowTaskQueue: public GenericTaskQueue<E, F, N>
-{
+class OverflowTaskQueue: public GenericTaskQueue<E, F, N> {
 public:
   typedef Stack<E, F>               overflow_t;
   typedef GenericTaskQueue<E, F, N> taskqueue_t;
@@ -366,7 +364,6 @@ public:
 
 template<class T, MEMFLAGS F> void
 GenericTaskQueueSet<T, F>::register_queue(uint i, T* q) {
-  assert(i < _n, "index out of range.");
   _queues[i] = q;
 }
 
@@ -468,11 +465,9 @@ class StarTask {
 
  public:
   StarTask(narrowOop* p) {
-    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
     _holder = (void *)((uintptr_t)p | COMPRESSED_OOP_MASK);
   }
   StarTask(oop* p)       {
-    assert(((uintptr_t)p & COMPRESSED_OOP_MASK) == 0, "Information loss!");
     _holder = (void*)p;
   }
   StarTask()             { _holder = NULL; }
@@ -495,12 +490,10 @@ class StarTask {
   }
 };
 
-class ObjArrayTask
-{
+class ObjArrayTask {
 public:
   ObjArrayTask(oop o = NULL, int idx = 0): _obj(o), _index(idx) { }
   ObjArrayTask(oop o, size_t idx): _obj(o), _index(int(idx)) {
-    assert(idx <= size_t(max_jint), "too big");
   }
   ObjArrayTask(const ObjArrayTask& t): _obj(t._obj), _index(t._index) { }
 

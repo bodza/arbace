@@ -160,8 +160,6 @@ void MacroAssembler::fast_cos(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   Label L_2TAG_PACKET_8_0_1, L_2TAG_PACKET_9_0_1, L_2TAG_PACKET_10_0_1, L_2TAG_PACKET_11_0_1;
   Label L_2TAG_PACKET_12_0_1, L_2TAG_PACKET_13_0_1, B1_2, B1_3, B1_4, B1_5, start;
 
-  assert_different_registers(r8, r9, r10, r11, eax, ecx, edx);
-
   address ONEHALF = StubRoutines::x86::_ONEHALF_addr();
   address P_2 = StubRoutines::x86::_P_2_addr();
   address SC_4 = StubRoutines::x86::_SC_4_addr();

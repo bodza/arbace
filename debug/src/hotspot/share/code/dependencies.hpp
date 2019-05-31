@@ -142,7 +142,7 @@ class Dependencies: public ResourceObj {
     TYPE_LIMIT
   };
   enum {
-    LG2_TYPE_LIMIT = 4,  // assert(TYPE_LIMIT <= (1<<LG2_TYPE_LIMIT))
+    LG2_TYPE_LIMIT = 4,
 
     // handy categorizations of dependency types:
     all_types           = ((1 << TYPE_LIMIT) - 1) & ((~0u) << FIRST_TYPE),
@@ -188,9 +188,8 @@ class Dependencies: public ResourceObj {
     int _id;
 
    public:
-    DepValue() : _id(0) {}
+    DepValue() : _id(0) { }
     DepValue(OopRecorder* rec, Metadata* metadata, DepValue* candidate = NULL) {
-      assert(candidate == NULL || candidate->is_metadata(), "oops");
       if (candidate != NULL && candidate->as_metadata(rec) == metadata) {
         _id = candidate->_id;
       } else {
@@ -198,7 +197,6 @@ class Dependencies: public ResourceObj {
       }
     }
     DepValue(OopRecorder* rec, jobject obj, DepValue* candidate = NULL) {
-      assert(candidate == NULL || candidate->is_object(), "oops");
       if (candidate != NULL && candidate->as_object(rec) == obj) {
         _id = candidate->_id;
       } else {
@@ -213,32 +211,23 @@ class Dependencies: public ResourceObj {
 
     bool is_valid() const             { return _id != 0; }
     int  index() const                {
-        assert(is_valid(), "oops");
         return _id < 0 ? -(_id + 1) : _id - 1; }
     bool is_metadata() const          {
-        assert(is_valid(), "oops");
         return _id > 0; }
     bool is_object() const            {
-        assert(is_valid(), "oops");
         return _id < 0; }
 
     Metadata*  as_metadata(OopRecorder* rec) const    {
-        assert(is_metadata(), "oops");
         return rec->metadata_at(index()); }
     Klass*     as_klass(OopRecorder* rec) const {
       Metadata* m = as_metadata(rec);
-      assert(m != NULL, "as_metadata returned NULL");
-      assert(m->is_klass(), "oops");
       return (Klass*) m;
     }
     Method*    as_method(OopRecorder* rec) const {
       Metadata* m = as_metadata(rec);
-      assert(m != NULL, "as_metadata returned NULL");
-      assert(m->is_method(), "oops");
       return (Method*) m;
     }
     jobject    as_object(OopRecorder* rec) const      {
-        assert(is_object(), "oops");
         return rec->oop_at(index()); }
   };
 
@@ -257,9 +246,7 @@ class Dependencies: public ResourceObj {
   }
 
   bool note_dep_seen(int dept, ciBaseObject* x) {
-    assert(dept < BitsPerInt, "oob");
     int x_id = x->ident();
-    assert(_dep_seen != NULL, "deps must be writable");
     int seen = _dep_seen->at_grow(x_id, 0);
     _dep_seen->at_put(x_id, seen | (1<<dept));
     // return true if we've already seen dept/x
@@ -267,10 +254,8 @@ class Dependencies: public ResourceObj {
   }
 
   bool note_dep_seen(int dept, DepValue x) {
-    assert(dept < BitsPerInt, "oops");
     // place metadata deps at even indexes, object deps at odd indexes
     int x_id = x.is_metadata() ? x.index() * 2 : (x.index() * 2) + 1;
-    assert(_dep_seen != NULL, "deps must be writable");
     int seen = _dep_seen->at_grow(x_id, 0);
     _dep_seen->at_put(x_id, seen | (1<<dept));
     // return true if we've already seen dept/x
@@ -308,14 +293,11 @@ class Dependencies: public ResourceObj {
   // Check for a valid context type.
   // Enforce the restriction against array types.
   static void check_ctxk(ciKlass* ctxk) {
-    assert(ctxk->is_instance_klass(), "java types only");
   }
   static void check_ctxk_concrete(ciKlass* ctxk) {
-    assert(is_concrete_klass(ctxk->as_instance_klass()), "must be concrete");
   }
   static void check_ctxk_abstract(ciKlass* ctxk) {
     check_ctxk(ctxk);
-    assert(!is_concrete_klass(ctxk->as_instance_klass()), "must be abstract");
   }
 
   void assert_common_1(DepType dept, ciBaseObject* x);
@@ -337,11 +319,9 @@ class Dependencies: public ResourceObj {
 
  private:
   static void check_ctxk(Klass* ctxk) {
-    assert(ctxk->is_instance_klass(), "java types only");
   }
   static void check_ctxk_abstract(Klass* ctxk) {
     check_ctxk(ctxk);
-    assert(ctxk->is_abstract(), "must be abstract");
   }
   void assert_common_1(DepType dept, DepValue x);
   void assert_common_2(DepType dept, DepValue x0, DepValue x1);
@@ -429,11 +409,9 @@ class Dependencies: public ResourceObj {
   void encode_content_bytes();
 
   address content_bytes() {
-    assert(_content_bytes != NULL, "encode it first");
     return _content_bytes;
   }
   size_t size_in_bytes() {
-    assert(_content_bytes != NULL, "encode it first");
     return _size_in_bytes;
   }
 
@@ -450,8 +428,7 @@ class Dependencies: public ResourceObj {
     ResourceMark rm;
     int argslen = args->length();
     write_dependency_to(log(), dept, args);
-    guarantee(argslen == args->length(),
-              "args array cannot grow inside nested ResoureMark scope");
+    guarantee(argslen == args->length(), "args array cannot grow inside nested ResoureMark scope");
   }
 
   void log_dependency(DepType dept,
@@ -462,9 +439,7 @@ class Dependencies: public ResourceObj {
       return;
     }
     ResourceMark rm;
-    GrowableArray<ciBaseObject*>* ciargs =
-                new GrowableArray<ciBaseObject*>(dep_args(dept));
-    assert(x0 != NULL, "no log x0");
+    GrowableArray<ciBaseObject*>* ciargs = new GrowableArray<ciBaseObject*>(dep_args(dept));
     ciargs->push(x0);
 
     if (x1 != NULL) {
@@ -473,7 +448,6 @@ class Dependencies: public ResourceObj {
     if (x2 != NULL) {
       ciargs->push(x2);
     }
-    assert(ciargs->length() == dep_args(dept), "");
     log_dependency(dept, ciargs);
   }
 
@@ -483,9 +457,9 @@ class Dependencies: public ResourceObj {
     bool  _valid;
     void* _value;
    public:
-    DepArgument() : _is_oop(false), _value(NULL), _valid(false) {}
-    DepArgument(oop v): _is_oop(true), _value(v), _valid(true) {}
-    DepArgument(Metadata* v): _is_oop(false), _value(v), _valid(true) {}
+    DepArgument() : _is_oop(false), _value(NULL), _valid(false) { }
+    DepArgument(oop v): _is_oop(true), _value(v), _valid(true) { }
+    DepArgument(Metadata* v): _is_oop(false), _value(v), _valid(true) { }
 
     bool is_null() const               { return _value == NULL; }
     bool is_oop() const                { return _is_oop; }
@@ -494,10 +468,8 @@ class Dependencies: public ResourceObj {
     bool is_method() const              { return is_metadata() && metadata_value()->is_method(); }
 
     oop oop_value() const              {
-        assert(_is_oop && _valid, "must be");
         return (oop) _value; }
     Metadata* metadata_value() const {
-        assert(!_is_oop && _valid, "must be");
         return (Metadata*) _value; }
   };
 
@@ -528,7 +500,6 @@ class Dependencies: public ResourceObj {
   // Works on new and old dependency sets.
   // Usage:
   //
-  // ;
   // Dependencies::DepType dept;
   // for (Dependencies::DepStream deps(nm); deps.next(); ) {
   //   ...
@@ -545,7 +516,7 @@ class Dependencies: public ResourceObj {
     DepType               _type;
     int                   _xi[max_arg_count+1];
 
-    void initial_asserts(size_t byte_limit) {};
+    void initial_asserts(size_t byte_limit) { };
 
     inline Metadata* recorded_metadata_at(int i);
     inline oop recorded_oop_at(int i);
@@ -579,7 +550,6 @@ class Dependencies: public ResourceObj {
 
     int argument_count()         { return dep_args(type()); }
     int argument_index(int i)    {
-        assert(0 <= i && i < argument_count(), "oob");
                                    return _xi[i]; }
     Metadata* argument(int i);     // => recorded_oop_at(argument_index(i))
     oop argument_oop(int i);         // => recorded_oop_at(argument_index(i))
@@ -589,12 +559,10 @@ class Dependencies: public ResourceObj {
 
     Method* method_argument(int i) {
       Metadata* x = argument(i);
-      assert(x->is_method(), "type");
       return (Method*) x;
     }
     Klass* type_argument(int i) {
       Metadata* x = argument(i);
-      assert(x->is_klass(), "type");
       return (Klass*) x;
     }
 
@@ -617,7 +585,7 @@ class Dependencies: public ResourceObj {
   };
   friend class Dependencies::DepStream;
 
-  static void print_statistics() {};
+  static void print_statistics() { };
 };
 
 class DependencySignature : public ResourceObj {
@@ -654,11 +622,9 @@ class DepChange : public StackObj {
 
   // Subclass casting with assertions.
   KlassDepChange*    as_klass_change() {
-    assert(is_klass_change(), "bad cast");
     return (KlassDepChange*) this;
   }
   CallSiteDepChange* as_call_site_change() {
-    assert(is_call_site_change(), "bad cast");
     return (CallSiteDepChange*) this;
   }
 
@@ -766,7 +732,7 @@ class CallSiteDepChange : public DepChange {
     nm->mark_for_deoptimization(/*inc_recompile_counts=*/false);
   }
 
-  oop call_site()     const { return _call_site();     }
+  oop call_site()     const { return _call_site(); }
   oop method_handle() const { return _method_handle(); }
 };
 

@@ -11,9 +11,9 @@
 class ModRefBarrierSetAssembler: public BarrierSetAssembler {
 protected:
   virtual void gen_write_ref_array_pre_barrier(MacroAssembler* masm, DecoratorSet decorators,
-                                               Register addr, Register count) {}
+                                               Register addr, Register count) { }
   virtual void gen_write_ref_array_post_barrier(MacroAssembler* masm, DecoratorSet decorators,
-                                                Register addr, Register count, Register tmp) {}
+                                                Register addr, Register count, Register tmp) { }
   virtual void oop_store_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type,
                             Address dst, Register val, Register tmp1, Register tmp2) = 0;
 public:

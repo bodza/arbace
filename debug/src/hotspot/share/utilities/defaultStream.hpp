@@ -51,9 +51,6 @@ class defaultStream : public xmlTextStream {
   virtual void write(const char* s, size_t len);
 
   void flush() {
-    // once we can determine whether we are in a signal handler, we
-    // should add the following assert here:
-    // assert(xxxxxx, "can not flush buffer inside signal handler");
     xmlTextStream::flush();
     fflush(output_stream());
     if (has_log_file()) _log_file->flush();

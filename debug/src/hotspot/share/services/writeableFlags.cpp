@@ -40,7 +40,7 @@ static void print_flag_error_message_if_needed(JVMFlag::Error error, const char*
     return;
   }
 
-  char buffer[TEMP_BUF_SIZE] = {'\0'};
+  char buffer[TEMP_BUF_SIZE] = { '\0' };
   if ((error != JVMFlag::MISSING_NAME) && (name != NULL)) {
     buffer_concat(buffer, name);
     buffer_concat(buffer, " error: ");

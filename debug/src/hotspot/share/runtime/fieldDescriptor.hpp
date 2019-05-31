@@ -105,9 +105,9 @@ class fieldDescriptor {
 
   // Print
   void print() { print_on(tty); }
-  void print_on(outputStream* st) const         {};
-  void print_on_for(outputStream* st, oop obj)  {};
-  void verify() const                           {};
+  void print_on(outputStream* st) const         { };
+  void print_on_for(outputStream* st, oop obj)  { };
+  void verify() const                           { };
 };
 
 #endif

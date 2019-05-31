@@ -23,7 +23,6 @@ class ReferenceProcessor;
 class G1FullGCSubjectToDiscoveryClosure: public BoolObjectClosure {
 public:
   bool do_object_b(oop p) {
-    assert(p != NULL, "must be");
     return true;
   }
 };

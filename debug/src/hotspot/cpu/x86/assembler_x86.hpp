@@ -100,15 +100,12 @@ class Address {
     times_ptr = times_8
   };
   static ScaleFactor times(int size) {
-    assert(size >= 1 && size <= 8 && is_power_of_2(size), "bad scale size");
     if (size == 8)  return times_8;
     if (size == 4)  return times_4;
     if (size == 2)  return times_2;
     return times_1;
   }
   static int scale_size(ScaleFactor scale) {
-    assert(scale != no_scale, "");
-    assert(((1 << (int)times_1) == 1 && (1 << (int)times_2) == 2 && (1 << (int)times_4) == 4 && (1 << (int)times_8) == 8), "");
     return (1 << (int)scale);
   }
 
@@ -135,7 +132,7 @@ class Address {
       _xmmindex(xnoreg),
       _scale(no_scale),
       _disp(0),
-      _isxmmindex(false){
+      _isxmmindex(false) {
   }
 
   // No default displacement otherwise Register can be implicitly
@@ -147,7 +144,7 @@ class Address {
       _xmmindex(xnoreg),
       _scale(no_scale),
       _disp(disp),
-      _isxmmindex(false){
+      _isxmmindex(false) {
   }
 
   Address(Register base, Register index, ScaleFactor scale, int disp = 0)
@@ -157,7 +154,6 @@ class Address {
       _scale(scale),
       _disp (disp),
       _isxmmindex(false) {
-    assert(!index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address(Register base, RegisterOrConstant index, ScaleFactor scale = times_1, int disp = 0)
@@ -166,9 +162,8 @@ class Address {
       _xmmindex(xnoreg),
       _scale(scale),
       _disp (disp + (index.constant_or_zero() * scale_size(scale))),
-      _isxmmindex(false){
+      _isxmmindex(false) {
     if (!index.is_register())  scale = Address::no_scale;
-    assert(!_index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address(Register base, XMMRegister index, ScaleFactor scale, int disp = 0)
@@ -178,7 +173,6 @@ class Address {
       _scale(scale),
       _disp(disp),
       _isxmmindex(true) {
-      assert(!index->is_valid() == (scale == Address::no_scale), "inconsistent address");
   }
 
   Address plus_disp(int disp) const {
@@ -190,7 +184,6 @@ class Address {
     Address a = (*this);
     a._disp += disp.constant_or_zero() * scale_size(scale);
     if (disp.is_register()) {
-      assert(!a.index()->is_valid(), "competing indexes");
       a._index = disp.as_register();
       a._scale = scale;
     }
@@ -214,11 +207,11 @@ class Address {
 
   // accessors
   bool        uses(Register reg) const { return _base == reg || _index == reg; }
-  Register    base()             const { return _base;  }
+  Register    base()             const { return _base; }
   Register    index()            const { return _index; }
   XMMRegister xmmindex()         const { return _xmmindex; }
   ScaleFactor scale()            const { return _scale; }
-  int         disp()             const { return _disp;  }
+  int         disp()             const { return _disp; }
   bool        isxmmindex()       const { return _isxmmindex; }
 
   // Convert the raw encoding form into the form expected by the constructor for
@@ -276,7 +269,7 @@ class AddressLiteral {
   AddressLiteral()
     : _is_lval(false),
       _target(NULL)
-  {}
+  { }
 
   public:
 
@@ -286,7 +279,7 @@ class AddressLiteral {
     : _rspec(rspec),
       _is_lval(false),
       _target(target)
-  {}
+  { }
 
   AddressLiteral addr() {
     AddressLiteral ret = *this;
@@ -313,7 +306,7 @@ class RuntimeAddress: public AddressLiteral {
 
   public:
 
-  RuntimeAddress(address target) : AddressLiteral(target, relocInfo::runtime_call_type) {}
+  RuntimeAddress(address target) : AddressLiteral(target, relocInfo::runtime_call_type) { }
 };
 
 class ExternalAddress: public AddressLiteral {
@@ -328,14 +321,14 @@ class ExternalAddress: public AddressLiteral {
 
  public:
 
-  ExternalAddress(address target) : AddressLiteral(target, reloc_for_target(target)) {}
+  ExternalAddress(address target) : AddressLiteral(target, reloc_for_target(target)) { }
 };
 
 class InternalAddress: public AddressLiteral {
 
   public:
 
-  InternalAddress(address target) : AddressLiteral(target, relocInfo::internal_word_type) {}
+  InternalAddress(address target) : AddressLiteral(target, relocInfo::internal_word_type) { }
 };
 
 // x86 can do array addressing as a single operation since disp can be an absolute
@@ -350,8 +343,8 @@ class ArrayAddress {
 
   public:
 
-  ArrayAddress() {};
-  ArrayAddress(AddressLiteral base, Address index): _base(base), _index(index) {};
+  ArrayAddress() { };
+  ArrayAddress(AddressLiteral base, Address index): _base(base), _index(index) { };
   AddressLiteral base() { return _base; }
   Address index() { return _index; }
 };
@@ -366,7 +359,7 @@ const int FPUStateSizeInWords = 2688 / wordSize;
 // level (e.g. mov rax, 0 is not translated into xor rax, rax!); i.e., what you write
 // is what you get. The Assembler is generating code into a CodeBuffer.
 
-class Assembler : public AbstractAssembler  {
+class Assembler : public AbstractAssembler {
   friend class AbstractAssembler; // for the non-virtual hack
   friend class LIR_Assembler; // as_Address()
   friend class StubGenerator;

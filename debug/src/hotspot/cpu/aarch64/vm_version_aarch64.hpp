@@ -81,11 +81,9 @@ public:
   static bool is_zva_enabled() {
     // Check the DZP bit (bit 4) of dczid_el0 is zero
     // and block size (bit 0~3) is not zero.
-    return ((_psr_info.dczid_el0 & 0x10) == 0 &&
-            (_psr_info.dczid_el0 & 0xf) != 0);
+    return ((_psr_info.dczid_el0 & 0x10) == 0 && (_psr_info.dczid_el0 & 0xf) != 0);
   }
   static int zva_length() {
-    assert(is_zva_enabled(), "ZVA not available");
     return 4 << (_psr_info.dczid_el0 & 0xf);
   }
   static int icache_line_size() {

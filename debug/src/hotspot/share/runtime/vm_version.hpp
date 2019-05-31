@@ -57,7 +57,7 @@ class Abstract_VM_Version: AllStatic {
   // Called to initialize VM variables needing initialization
   // after command line parsing. Platforms that need to specialize
   // this should define VM_Version::init_before_ergo().
-  static void init_before_ergo() {}
+  static void init_before_ergo() { }
 
   // Name
   static const char* vm_name();
@@ -102,10 +102,10 @@ class Abstract_VM_Version: AllStatic {
   }
   // does HW support atomic get-and-set or atomic get-and-add?  Used
   // to guide intrinsification decisions for Unsafe atomic ops
-  static bool supports_atomic_getset4()  {return _supports_atomic_getset4;}
-  static bool supports_atomic_getset8()  {return _supports_atomic_getset8;}
-  static bool supports_atomic_getadd4()  {return _supports_atomic_getadd4;}
-  static bool supports_atomic_getadd8()  {return _supports_atomic_getadd8;}
+  static bool supports_atomic_getset4()  { return _supports_atomic_getset4; }
+  static bool supports_atomic_getset8()  { return _supports_atomic_getset8; }
+  static bool supports_atomic_getadd4()  { return _supports_atomic_getadd4; }
+  static bool supports_atomic_getadd8()  { return _supports_atomic_getadd8; }
 
   static unsigned int logical_processors_per_package() {
     return _logical_processors_per_package;

@@ -32,7 +32,6 @@ class RegisterImpl: public AbstractRegisterImpl {
 
   // accessors
   int   encoding() const                         {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
@@ -115,7 +114,6 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
 
   // accessors
   int   encoding() const                          {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this; }
   int   encoding_nocheck() const                         { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
@@ -169,9 +167,7 @@ class ConcreteRegisterImpl : public AbstractRegisterImpl {
   // There is no requirement that any ordering here matches any ordering c2 gives
   // it's optoregs.
 
-    number_of_registers = (2 * RegisterImpl::number_of_registers +
-                           4 * FloatRegisterImpl::number_of_registers +
-                           1) // flags
+    number_of_registers = (2 * RegisterImpl::number_of_registers + 4 * FloatRegisterImpl::number_of_registers + 1) // flags
   };
 
   // added to make it compile

@@ -26,8 +26,7 @@ inline size_t ThreadLocalAllocBuffer::compute_size(size_t obj_size) {
   // Compute the size for the new TLAB.
   // The "last" tlab may be smaller to reduce fragmentation.
   // unsafe_max_tlab_alloc is just a hint.
-  const size_t available_size = Universe::heap()->unsafe_max_tlab_alloc(myThread()) /
-                                                  HeapWordSize;
+  const size_t available_size = Universe::heap()->unsafe_max_tlab_alloc(myThread()) / HeapWordSize;
   size_t new_tlab_size = MIN3(available_size, desired_size() + align_object_size(obj_size), max_size());
 
   // Make sure there's enough room for object and filler int[].

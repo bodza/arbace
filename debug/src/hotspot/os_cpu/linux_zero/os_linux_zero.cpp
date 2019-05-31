@@ -127,11 +127,11 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Linux::signal_handlers_are_installed) {
-    if (t != NULL ){
-      if(t->is_Java_thread()) {
+    if (t != NULL ) {
+      if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       }
-      else if(t->is_VM_thread()){
+      else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -174,29 +174,15 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
       }
     }
 
-    /*if (thread->thread_state() == _thread_in_Java) {
+    if (thread->thread_state() == _thread_in_vm && sig == SIGBUS && thread->doing_unsafe_access()) {
       ShouldNotCallThis();
     }
-    else*/ if (thread->thread_state() == _thread_in_vm &&
-               sig == SIGBUS && thread->doing_unsafe_access()) {
-      ShouldNotCallThis();
-    }
-
-    // jni_fast_Get<Primitive>Field can trap at certain pc's if a GC
-    // kicks in and the heap gets shrunk before the field access.
-    /*if (sig == SIGSEGV || sig == SIGBUS) {
-      address addr = JNI_FastGetField::find_slowcase_pc(pc);
-      if (addr != (address)-1) {
-        stub = addr;
-      }
-    }*/
 
     // Check to see if we caught the safepoint code in the process
     // of write protecting the memory serialization page.  It write
     // enables the page immediately after protecting it so we can
     // just return to retry the write.
-    if (sig == SIGSEGV &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
+    if (sig == SIGSEGV && os::is_memory_serialize_page(thread, (address) info->si_addr)) {
       // Block current thread until permission is restored.
       os::block_on_serialize_page_trap();
       return true;
@@ -277,7 +263,6 @@ static void current_stack_region(address *bottom, size_t *size) {
   // The block of memory returned by pthread_attr_getstack() includes
   // guard pages where present.  We need to trim these off.
   size_t page_bytes = os::Linux::page_size();
-  assert(((intptr_t) stack_bottom & (page_bytes - 1)) == 0, "unaligned stack");
 
   size_t guard_bytes;
   res = pthread_attr_getguardsize(&attr, &guard_bytes);
@@ -285,7 +270,6 @@ static void current_stack_region(address *bottom, size_t *size) {
     fatal("pthread_attr_getguardsize failed with errno = %d", res);
   }
   int guard_pages = align_up(guard_bytes, page_bytes) / page_bytes;
-  assert(guard_bytes == guard_pages * page_bytes, "unaligned guard");
 
 #ifdef IA64
   // IA64 has two stacks sharing the same area of memory, a normal
@@ -314,9 +298,6 @@ static void current_stack_region(address *bottom, size_t *size) {
 
     stack_bottom = stack_top - stack_bytes;
   }
-
-  assert(os::current_stack_pointer() >= stack_bottom, "should do");
-  assert(os::current_stack_pointer() < stack_top, "should do");
 
   *bottom = stack_bottom;
   *size = stack_top - stack_bottom;

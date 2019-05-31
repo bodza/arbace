@@ -6,9 +6,7 @@
 
 // ofs and limit are used for multi-block byte array.
 // int com.sun.security.provider.DigestBase.implCompressMultiBlock(byte[] b, int ofs, int limit)
-void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1, XMMRegister msg0,
-  XMMRegister msg1, XMMRegister msg2, XMMRegister msg3, XMMRegister shuf_mask,
-  Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block) {
+void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1, XMMRegister msg0, XMMRegister msg1, XMMRegister msg2, XMMRegister msg3, XMMRegister shuf_mask, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block) {
 
   Label start, done_hash, loop0;
 
@@ -210,10 +208,7 @@ void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1,
 // and state0 and state1 can never use xmm0 register.
 // ofs and limit are used for multi-block byte array.
 // int com.sun.security.provider.DigestBase.implCompressMultiBlock(byte[] b, int ofs, int limit)
-void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0,
-  XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4,
-  Register buf, Register state, Register ofs, Register limit, Register rsp,
-  bool multi_block, XMMRegister shuf_mask) {
+void MacroAssembler::fast_sha256(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0, XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block, XMMRegister shuf_mask) {
   Label start, done_hash, loop0;
 
   address K256 = StubRoutines::x86::k256_addr();
@@ -623,10 +618,7 @@ void MacroAssembler::addmq(int disp, Register r1, Register r2) {
   movq(Address(r1, disp), r2);
 }
 
-void MacroAssembler::sha256_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0,
-  XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4,
-  Register buf, Register state, Register ofs, Register limit, Register rsp,
-  bool multi_block, XMMRegister shuf_mask) {
+void MacroAssembler::sha256_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0, XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block, XMMRegister shuf_mask) {
 
   Label loop0, loop1, loop2, loop3,
         last_block_enter, do_last_block, only_one_block, done_hash,
@@ -952,9 +944,7 @@ bind(compute_size_end1);
   }
 }
 
-void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, Register b, Register c,
-                                                   Register d, Register e, Register f, Register g, Register h,
-                                                   int iteration)
+void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, Register b, Register c, Register d, Register e, Register f, Register g, Register h, int iteration)
 {
 
     const Register& y0 = r13;
@@ -1089,7 +1079,7 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
       //Calculate sigma1 for w[18] and w[19] for upper 128 bit lane
       vpsrlq(xmm8, xmm4, 6, AVX_256bit); //xmm8 = W[-2] >> 6 {DC--}
 
-    } else if (iteration % 4 == 3){
+    } else if (iteration % 4 == 3) {
       vpsrlq(xmm3, xmm4, 19, AVX_256bit); //xmm3 = W[-2] >> 19 {DC--}
       vpsllq(xmm1, xmm4, (64 - 19), AVX_256bit); //xmm1 = W[-2] << 19 {DC--}
       vpor(xmm3, xmm3, xmm1, AVX_256bit); //xmm3 = W[-2] ror 19 {DC--}
@@ -1145,11 +1135,7 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
     addq(h, y3); //h = t1 + S0 + MAJ; --
 }
 
-void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0,
-                                 XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4,
-                                 Register buf, Register state, Register ofs, Register limit, Register rsp,
-                                 bool multi_block, XMMRegister shuf_mask)
-{
+void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0, XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block, XMMRegister shuf_mask) {
 
     Label loop0, loop1, loop2, done_hash,
     compute_block_size, compute_size,

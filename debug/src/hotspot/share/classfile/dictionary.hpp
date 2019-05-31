@@ -66,7 +66,7 @@ public:
                              Handle protection_domain, TRAPS);
 
   // Sharing support
-  void reorder_dictionary_for_sharing() {};
+  void reorder_dictionary_for_sharing() { };
 
   void print_on(outputStream* st) const;
   void verify();

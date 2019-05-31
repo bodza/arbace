@@ -20,7 +20,6 @@ private:
   FreeList<Metablock> _small_lists[_small_block_max_size - _small_block_min_size];
 
   FreeList<Metablock>& list_at(size_t word_size) {
-    assert(word_size >= _small_block_min_size, "There are no metaspace objects less than %u words", _small_block_min_size);
     return _small_lists[word_size - _small_block_min_size];
   }
 
@@ -51,7 +50,6 @@ public:
   }
   void return_block(Metablock* free_chunk, size_t word_size) {
     list_at(word_size).return_chunk_at_head(free_chunk, false);
-    assert(list_at(word_size).count() > 0, "Should have a chunk");
   }
 
   void print_on(outputStream* st) const;

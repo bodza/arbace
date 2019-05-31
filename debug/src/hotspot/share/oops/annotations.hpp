@@ -46,7 +46,7 @@ class Annotations: public MetaspaceObj {
   Annotations() : _class_annotations(NULL),
                   _fields_annotations(NULL),
                   _class_type_annotations(NULL),
-                  _fields_type_annotations(NULL) {}
+                  _fields_type_annotations(NULL) { }
 
   AnnotationArray* class_annotations() const                       { return _class_annotations; }
   Array<AnnotationArray*>* fields_annotations() const              { return _fields_annotations; }

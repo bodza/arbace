@@ -40,7 +40,7 @@ static void loadAgentModule(TRAPS) {
                          THREAD);
 }
 
-void DCmdRegistrant::register_dcmds(){
+void DCmdRegistrant::register_dcmds() {
   // Registration of the diagnostic commands
   // First argument specifies which interfaces will export the command
   // Second argument specifies if the command is enabled
@@ -85,15 +85,14 @@ void DCmdRegistrant::register_dcmds(){
 }
 
 #ifndef HAVE_EXTRA_DCMD
-void DCmdRegistrant::register_dcmds_ext(){
+void DCmdRegistrant::register_dcmds_ext() {
    // Do nothing here
 }
 #endif
 
 HelpDCmd::HelpDCmd(outputStream* output, bool heap) : DCmdWithParser(output, heap),
   _all("-all", "Show help for all commands", "BOOLEAN", false, "false"),
-  _cmd("command name", "The name of the command for which we want help",
-        "STRING", false) {
+  _cmd("command name", "The name of the command for which we want help", "STRING", false) {
   _dcmdparser.add_dcmd_option(&_all);
   _dcmdparser.add_dcmd_argument(&_cmd);
 };
@@ -125,8 +124,8 @@ void HelpDCmd::execute(DCmdSource source, TRAPS) {
       output()->print_cr("%s", factory->description());
       output()->print_cr("\nImpact: %s", factory->impact());
       JavaPermission p = factory->permission();
-      if(p._class != NULL) {
-        if(p._action != NULL) {
+      if (p._class != NULL) {
+        if (p._action != NULL) {
           output()->print_cr("\nPermission: %s(%s, %s)",
                   p._class, p._name == NULL ? "null" : p._name, p._action);
         } else {
@@ -210,8 +209,7 @@ int PrintVMFlagsDCmd::num_arguments() {
 
 SetVMFlagDCmd::SetVMFlagDCmd(outputStream* output, bool heap) :
                                    DCmdWithParser(output, heap),
-  _flag("flag name", "The name of the flag we want to set",
-        "STRING", true),
+  _flag("flag name", "The name of the flag we want to set", "STRING", true),
   _value("string value", "The value we want to set", "STRING", false) {
   _dcmdparser.add_dcmd_argument(&_flag);
   _dcmdparser.add_dcmd_argument(&_value);
@@ -277,8 +275,6 @@ void PrintSystemPropertiesDCmd::execute(DCmdSource source, TRAPS) {
 
   // The result should be a [B
   oop res = (oop)result.get_jobject();
-  assert(res->is_typeArray(), "just checking");
-  assert(TypeArrayKlass::cast(res->klass())->element_type() == T_BYTE, "just checking");
 
   // copy the bytes to the output stream
   typeArrayOop ba = typeArrayOop(res);
@@ -337,8 +333,7 @@ void HeapInfoDCmd::execute(DCmdSource source, TRAPS) {
 void FinalizerInfoDCmd::execute(DCmdSource source, TRAPS) {
   ResourceMark rm;
 
-  Klass* k = SystemDictionary::resolve_or_fail(
-    vmSymbols::finalizer_histogram_klass(), true, CHECK);
+  Klass* k = SystemDictionary::resolve_or_fail(vmSymbols::finalizer_histogram_klass(), true, CHECK);
 
   JavaValue result(T_ARRAY);
 
@@ -360,13 +355,9 @@ void FinalizerInfoDCmd::execute(DCmdSource source, TRAPS) {
 
   fieldDescriptor count_fd, name_fd;
 
-  Klass* count_res = ik->find_field(
-    vmSymbols::finalizer_histogram_entry_count_field(), vmSymbols::int_signature(), &count_fd);
+  Klass* count_res = ik->find_field(vmSymbols::finalizer_histogram_entry_count_field(), vmSymbols::int_signature(), &count_fd);
 
-  Klass* name_res = ik->find_field(
-    vmSymbols::finalizer_histogram_entry_name_field(), vmSymbols::string_signature(), &name_fd);
-
-  assert(count_res != NULL && name_res != NULL, "Unexpected layout of FinalizerHistogramEntry");
+  Klass* name_res = ik->find_field(vmSymbols::finalizer_histogram_entry_name_field(), vmSymbols::string_signature(), &name_fd);
 
   output()->print_cr("Unreachable instances waiting for finalization");
   output()->print_cr("#instances  class name");
@@ -421,89 +412,68 @@ JMXStartRemoteDCmd::JMXStartRemoteDCmd(outputStream *output, bool heap_allocated
   DCmdWithParser(output, heap_allocated),
 
   _config_file
-  ("config.file",
-   "set com.sun.management.config.file", "STRING", false),
+  ("config.file", "set com.sun.management.config.file", "STRING", false),
 
   _jmxremote_host
-  ("jmxremote.host",
-   "set com.sun.management.jmxremote.host", "STRING", false),
+  ("jmxremote.host", "set com.sun.management.jmxremote.host", "STRING", false),
 
   _jmxremote_port
-  ("jmxremote.port",
-   "set com.sun.management.jmxremote.port", "STRING", false),
+  ("jmxremote.port", "set com.sun.management.jmxremote.port", "STRING", false),
 
   _jmxremote_rmi_port
-  ("jmxremote.rmi.port",
-   "set com.sun.management.jmxremote.rmi.port", "STRING", false),
+  ("jmxremote.rmi.port", "set com.sun.management.jmxremote.rmi.port", "STRING", false),
 
   _jmxremote_ssl
-  ("jmxremote.ssl",
-   "set com.sun.management.jmxremote.ssl", "STRING", false),
+  ("jmxremote.ssl", "set com.sun.management.jmxremote.ssl", "STRING", false),
 
   _jmxremote_registry_ssl
-  ("jmxremote.registry.ssl",
-   "set com.sun.management.jmxremote.registry.ssl", "STRING", false),
+  ("jmxremote.registry.ssl", "set com.sun.management.jmxremote.registry.ssl", "STRING", false),
 
   _jmxremote_authenticate
-  ("jmxremote.authenticate",
-   "set com.sun.management.jmxremote.authenticate", "STRING", false),
+  ("jmxremote.authenticate", "set com.sun.management.jmxremote.authenticate", "STRING", false),
 
   _jmxremote_password_file
-  ("jmxremote.password.file",
-   "set com.sun.management.jmxremote.password.file", "STRING", false),
+  ("jmxremote.password.file", "set com.sun.management.jmxremote.password.file", "STRING", false),
 
   _jmxremote_access_file
-  ("jmxremote.access.file",
-   "set com.sun.management.jmxremote.access.file", "STRING", false),
+  ("jmxremote.access.file", "set com.sun.management.jmxremote.access.file", "STRING", false),
 
   _jmxremote_login_config
-  ("jmxremote.login.config",
-   "set com.sun.management.jmxremote.login.config", "STRING", false),
+  ("jmxremote.login.config", "set com.sun.management.jmxremote.login.config", "STRING", false),
 
   _jmxremote_ssl_enabled_cipher_suites
-  ("jmxremote.ssl.enabled.cipher.suites",
-   "set com.sun.management.jmxremote.ssl.enabled.cipher.suite", "STRING", false),
+  ("jmxremote.ssl.enabled.cipher.suites", "set com.sun.management.jmxremote.ssl.enabled.cipher.suite", "STRING", false),
 
   _jmxremote_ssl_enabled_protocols
-  ("jmxremote.ssl.enabled.protocols",
-   "set com.sun.management.jmxremote.ssl.enabled.protocols", "STRING", false),
+  ("jmxremote.ssl.enabled.protocols", "set com.sun.management.jmxremote.ssl.enabled.protocols", "STRING", false),
 
   _jmxremote_ssl_need_client_auth
-  ("jmxremote.ssl.need.client.auth",
-   "set com.sun.management.jmxremote.need.client.auth", "STRING", false),
+  ("jmxremote.ssl.need.client.auth", "set com.sun.management.jmxremote.need.client.auth", "STRING", false),
 
   _jmxremote_ssl_config_file
-  ("jmxremote.ssl.config.file",
-   "set com.sun.management.jmxremote.ssl_config_file", "STRING", false),
+  ("jmxremote.ssl.config.file", "set com.sun.management.jmxremote.ssl_config_file", "STRING", false),
 
 // JDP Protocol support
   _jmxremote_autodiscovery
-  ("jmxremote.autodiscovery",
-   "set com.sun.management.jmxremote.autodiscovery", "STRING", false),
+  ("jmxremote.autodiscovery", "set com.sun.management.jmxremote.autodiscovery", "STRING", false),
 
    _jdp_port
-  ("jdp.port",
-   "set com.sun.management.jdp.port", "INT", false),
+  ("jdp.port", "set com.sun.management.jdp.port", "INT", false),
 
    _jdp_address
-  ("jdp.address",
-   "set com.sun.management.jdp.address", "STRING", false),
+  ("jdp.address", "set com.sun.management.jdp.address", "STRING", false),
 
    _jdp_source_addr
-  ("jdp.source_addr",
-   "set com.sun.management.jdp.source_addr", "STRING", false),
+  ("jdp.source_addr", "set com.sun.management.jdp.source_addr", "STRING", false),
 
    _jdp_ttl
-  ("jdp.ttl",
-   "set com.sun.management.jdp.ttl", "INT", false),
+  ("jdp.ttl", "set com.sun.management.jdp.ttl", "INT", false),
 
    _jdp_pause
-  ("jdp.pause",
-   "set com.sun.management.jdp.pause", "INT", false),
+  ("jdp.pause", "set com.sun.management.jdp.pause", "INT", false),
 
    _jdp_name
-  ("jdp.name",
-   "set com.sun.management.jdp.name", "STRING", false)
+  ("jdp.name", "set com.sun.management.jdp.name", "STRING", false)
 
   {
     _dcmdparser.add_dcmd_option(&_config_file);
@@ -560,7 +530,7 @@ void JMXStartRemoteDCmd::execute(DCmdSource source, TRAPS) {
 
     int len = 0;
     stringStream options;
-    char comma[2] = {0,0};
+    char comma[2] = { 0, 0 };
 
     // Leave default values on Agent.class side and pass only
     // agruments explicitly set by user. All arguments passed
@@ -569,8 +539,8 @@ void JMXStartRemoteDCmd::execute(DCmdSource source, TRAPS) {
     // file.
 #define PUT_OPTION(a) \
     do { \
-        if ( (a).is_set() ){ \
-            if ( *((a).type()) == 'I' ) { \
+        if ((a).is_set()) { \
+            if (*((a).type()) == 'I' ) { \
                 options.print("%scom.sun.management.%s=" JLONG_FORMAT, comma, (a).name(), (jlong)((a).value())); \
             } else { \
                 options.print("%scom.sun.management.%s=%s", comma, (a).name(), (char*)((a).value())); \
@@ -774,9 +744,8 @@ public:
   }
 };
 
-TouchedMethodsDCmd::TouchedMethodsDCmd(outputStream* output, bool heap) :
-                                       DCmdWithParser(output, heap)
-{}
+TouchedMethodsDCmd::TouchedMethodsDCmd(outputStream* output, bool heap) : DCmdWithParser(output, heap)
+{ }
 
 void TouchedMethodsDCmd::execute(DCmdSource source, TRAPS) {
   if (!LogTouchedMethods) {

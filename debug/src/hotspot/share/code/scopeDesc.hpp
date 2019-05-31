@@ -19,7 +19,6 @@ class SimpleScopeDesc : public StackObj {
  public:
   SimpleScopeDesc(CompiledMethod* code, address pc) {
     PcDesc* pc_desc = code->pc_desc_at(pc);
-    assert(pc_desc != NULL, "Must be able to find matching PcDesc");
     DebugInfoReadStream buffer(code, pc_desc->scope_decode_offset());
     int ignore_sender = buffer.read_int();
     _method           = buffer.read_method();
@@ -45,7 +44,7 @@ class ScopeDesc : public ResourceObj {
 
   // JVM state
   Method* method()      const { return _method; }
-  int          bci()      const { return _bci;    }
+  int          bci()      const { return _bci; }
   bool should_reexecute() const { return _reexecute; }
   bool rethrow_exception() const { return _rethrow_exception; }
   bool return_oop()       const { return _return_oop; }

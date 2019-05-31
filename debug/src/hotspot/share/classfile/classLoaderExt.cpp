@@ -30,7 +30,6 @@ bool ClassLoaderExt::_has_app_classes = false;
 bool ClassLoaderExt::_has_platform_classes = false;
 
 void ClassLoaderExt::setup_app_search_path() {
-  assert(DumpSharedSpaces, "this function is only used with -Xshare:dump");
   _app_class_paths_start_index = ClassLoader::num_boot_classpath_entries();
   char* app_class_path = os::strdup(Arguments::get_appclasspath());
 
@@ -60,9 +59,7 @@ void ClassLoaderExt::process_module_table(ModuleEntryTable* met, TRAPS) {
   }
 }
 void ClassLoaderExt::setup_module_paths(TRAPS) {
-  assert(DumpSharedSpaces, "this function is only used with -Xshare:dump");
-  _app_module_paths_start_index = ClassLoader::num_boot_classpath_entries() +
-                              ClassLoader::num_app_classpath_entries();
+  _app_module_paths_start_index = ClassLoader::num_boot_classpath_entries() + ClassLoader::num_app_classpath_entries();
   Handle system_class_loader (THREAD, SystemDictionary::java_system_loader());
   ModuleEntryTable* met = Modules::get_module_entry_table(system_class_loader);
   process_module_table(met, THREAD);
@@ -73,7 +70,6 @@ char* ClassLoaderExt::read_manifest(ClassPathEntry* entry, jint *manifest_size, 
   char* manifest;
   jint size;
 
-  assert(entry->is_jar_file(), "must be");
   manifest = (char*) ((ClassPathZipEntry*)entry )->open_entry(name, &size, true, CHECK_NULL);
 
   if (manifest == NULL) { // No Manifest
@@ -101,8 +97,6 @@ char* ClassLoaderExt::get_class_path_attr(const char* jar_path, char* manifest, 
   char* line_start = manifest;
   char* end = manifest + manifest_size;
 
-  assert(*end == 0, "must be nul-terminated");
-
   while (line_start < end) {
     char* line_end = strchr(line_start, '\n');
     if (line_end == NULL) {
@@ -119,7 +113,6 @@ char* ClassLoaderExt::get_class_path_attr(const char* jar_path, char* manifest, 
                       "manifest and in the META-INF/MANIFEST.MF entry in the jar file:\n%s\n", tag, jar_path);
       }
       found = line_start + tag_len;
-      assert(found <= line_end, "sanity");
       *line_end = '\0';
     }
     line_start = line_end + 1;
@@ -127,8 +120,7 @@ char* ClassLoaderExt::get_class_path_attr(const char* jar_path, char* manifest, 
   return found;
 }
 
-void ClassLoaderExt::process_jar_manifest(ClassPathEntry* entry,
-                                          bool check_for_duplicates) {
+void ClassLoaderExt::process_jar_manifest(ClassPathEntry* entry, bool check_for_duplicates) {
   Thread* THREAD = Thread::current();
   ResourceMark rm(THREAD);
   jint manifest_size;
@@ -192,10 +184,7 @@ void ClassLoaderExt::setup_search_paths() {
   ClassLoaderExt::setup_app_search_path();
 }
 
-void ClassLoaderExt::record_result(const s2 classpath_index,
-                                   InstanceKlass* result,
-                                   TRAPS) {
-  assert(DumpSharedSpaces, "Sanity");
+void ClassLoaderExt::record_result(const s2 classpath_index, InstanceKlass* result, TRAPS) {
 
   // We need to remember where the class comes from during dumping.
   oop loader = result->class_loader();
@@ -222,14 +211,11 @@ void ClassLoaderExt::finalize_shared_paths_misc_info() {
 // a JAR file.
 InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS) {
 
-  assert(name != NULL, "invariant");
-  assert(DumpSharedSpaces, "this function is only used with -Xshare:dump");
   ResourceMark rm(THREAD);
   const char* class_name = name->as_C_string();
 
   const char* file_name = file_name_for_class_name(class_name,
                                                    name->utf8_length());
-  assert(file_name != NULL, "invariant");
 
   // Lookup stream for parsing .class file
   ClassFileStream* stream = NULL;
@@ -249,7 +235,6 @@ InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS)
     return NULL;
   }
 
-  assert(stream != NULL, "invariant");
   stream->set_verify(true);
 
   ClassLoaderData* loader_data = ClassLoaderData::the_null_class_loader_data();
@@ -275,7 +260,6 @@ static GrowableArray<CachedClassPathEntry>* cached_path_entries = NULL;
 
 ClassPathEntry* ClassLoaderExt::find_classpath_entry_from_cache(const char* path, TRAPS) {
   // This is called from dump time so it's single threaded and there's no need for a lock.
-  assert(DumpSharedSpaces, "this function is only used with -Xshare:dump");
   if (cached_path_entries == NULL) {
     cached_path_entries = new (ResourceObj::C_HEAP, mtClass) GrowableArray<CachedClassPathEntry>(20, /*c heap*/ true);
   }

@@ -47,7 +47,6 @@ void ValueType::initialize(Arena* arena) {
 
 ValueType* ValueType::meet(ValueType* y) const {
   // incomplete & conservative solution for now - fix this!
-  assert(tag() == y->tag(), "types must match");
   return base();
 }
 
@@ -73,23 +72,20 @@ ciType* ClassConstant::exact_type() const {
 }
 
 jobject ObjectType::encoding() const {
-  assert(is_constant(), "must be");
   return constant_value()->constant_encoding();
 }
 
 bool ObjectType::is_loaded() const {
-  assert(is_constant(), "must be");
   return constant_value()->is_loaded();
 }
 
 bool MetadataType::is_loaded() const {
-  assert(is_constant(), "must be");
   return constant_value()->is_loaded();
 }
 
-ciObject* ObjectConstant::constant_value() const                   { return _value; }
-ciObject* ArrayConstant::constant_value() const                    { return _value; }
-ciObject* InstanceConstant::constant_value() const                 { return _value; }
+ciObject* ObjectConstant::constant_value() const { return _value; }
+ciObject* ArrayConstant::constant_value() const { return _value; }
+ciObject* InstanceConstant::constant_value() const { return _value; }
 
 ValueType* as_ValueType(BasicType type) {
   switch (type) {

@@ -23,7 +23,7 @@ void oopDesc::print_address_on(outputStream* st) const {
   st->print("{" INTPTR_FORMAT "}", p2i(this));
 }
 
-void oopDesc::print()         { print_on(tty);         }
+void oopDesc::print() { print_on(tty); }
 
 void oopDesc::print_address() { print_address_on(tty); }
 
@@ -121,14 +121,14 @@ template <class T> void VerifyOopClosure::do_oop_work(T* p) {
   guarantee(oopDesc::is_oop_or_null(obj), "invalid oop: " INTPTR_FORMAT, p2i((oopDesc*) obj));
 }
 
-void VerifyOopClosure::do_oop(oop* p)       { VerifyOopClosure::do_oop_work(p); }
+void VerifyOopClosure::do_oop(oop* p) { VerifyOopClosure::do_oop_work(p); }
 void VerifyOopClosure::do_oop(narrowOop* p) { VerifyOopClosure::do_oop_work(p); }
 
 // type test operations that doesn't require inclusion of oop.inline.hpp.
-bool oopDesc::is_instance_noinline()          const { return is_instance();            }
-bool oopDesc::is_array_noinline()             const { return is_array();               }
-bool oopDesc::is_objArray_noinline()          const { return is_objArray();            }
-bool oopDesc::is_typeArray_noinline()         const { return is_typeArray();           }
+bool oopDesc::is_instance_noinline() const { return is_instance(); }
+bool oopDesc::is_array_noinline() const { return is_array(); }
+bool oopDesc::is_objArray_noinline() const { return is_objArray(); }
+bool oopDesc::is_typeArray_noinline() const { return is_typeArray(); }
 
 bool oopDesc::has_klass_gap() {
   // Only has a klass gap when compressed class pointers are used.
@@ -136,8 +136,7 @@ bool oopDesc::has_klass_gap() {
 }
 
 oop oopDesc::decode_oop_raw(narrowOop narrow_oop) {
-  return (oop)(void*)( (uintptr_t)Universe::narrow_oop_base() +
-                      ((uintptr_t)narrow_oop << Universe::narrow_oop_shift()));
+  return (oop)(void*)( (uintptr_t)Universe::narrow_oop_base() + ((uintptr_t)narrow_oop << Universe::narrow_oop_shift()));
 }
 
 void* oopDesc::load_klass_raw(oop obj) {

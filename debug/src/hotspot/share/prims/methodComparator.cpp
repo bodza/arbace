@@ -57,8 +57,7 @@ bool MethodComparator::args_same(Bytecodes::Code c_old, Bytecodes::Code c_new) {
     u2 cpi_new = _s_new->get_index_u2();
     if ((_old_cp->klass_at_noresolve(cpi_old) != _new_cp->klass_at_noresolve(cpi_new)))
         return false;
-    if (c_old == Bytecodes::_multianewarray &&
-        *(jbyte*)(_s_old->bcp() + 3) != *(jbyte*)(_s_new->bcp() + 3))
+    if (c_old == Bytecodes::_multianewarray && *(jbyte*)(_s_old->bcp() + 3) != *(jbyte*)(_s_new->bcp() + 3))
       return false;
     break;
   }

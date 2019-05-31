@@ -121,7 +121,7 @@ class FieldStream : public KlassStream {
   }
   // missing: initval()
   int offset() const {
-    return _klass->field_offset( index() );
+    return _klass->field_offset( index());
   }
   // bridge to a heavier API:
   fieldDescriptor& field_descriptor() const {
@@ -131,7 +131,7 @@ class FieldStream : public KlassStream {
   }
 };
 
-class FilteredField : public CHeapObj<mtInternal>  {
+class FilteredField : public CHeapObj<mtInternal> {
  private:
   Klass* _klass;
   int    _field_offset;
@@ -152,8 +152,7 @@ class FilteredFieldsMap : AllStatic {
   static void initialize();
   static bool is_filtered_field(Klass* klass, int field_offset) {
     for (int i=0; i < _filtered_fields->length(); i++) {
-      if (klass == _filtered_fields->at(i)->klass() &&
-        field_offset == _filtered_fields->at(i)->field_offset()) {
+      if (klass == _filtered_fields->at(i)->klass() && field_offset == _filtered_fields->at(i)->field_offset()) {
         return true;
       }
     }

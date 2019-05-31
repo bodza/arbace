@@ -80,7 +80,7 @@ static getCPUIDBrandString_stub_t getCPUIDBrandString_stub = NULL;
 class VM_Version_Ext_StubGenerator: public StubCodeGenerator {
  public:
 
-  VM_Version_Ext_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) {}
+  VM_Version_Ext_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_getCPUIDBrandString(void) {
     // Flags to test CPU type.
@@ -382,8 +382,6 @@ const char* VM_Version_Ext::cpu_family_description(void) {
 }
 
 int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_TYPE_DESC_BUF_SIZE, "buffer len should at least be == CPU_TYPE_DESC_BUF_SIZE!");
 
   const char* cpu_type = NULL;
   const char* x64 = NULL;
@@ -416,9 +414,6 @@ int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
 }
 
 int VM_Version_Ext::cpu_extended_brand_string(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_EBS_MAX_LENGTH, "buffer len should at least be == CPU_EBS_MAX_LENGTH!");
-  assert(getCPUIDBrandString_stub != NULL, "not initialized");
 
   // invoke newly generated asm code to fetch CPU Brand String
   getCPUIDBrandString_stub(&_cpuid_info);
@@ -502,8 +497,6 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
  * feature set.
  */
 int VM_Version_Ext::cpu_detailed_description(char* const buf, size_t buf_len) {
-  assert(buf != NULL, "buffer is NULL!");
-  assert(buf_len >= CPU_DETAILED_DESC_BUF_SIZE, "buffer len should at least be == CPU_DETAILED_DESC_BUF_SIZE!");
 
   static const char* unknown = "<unknown>";
   char               vendor_id[VENDOR_LENGTH];

@@ -14,15 +14,13 @@ class Metabase {
   T*     _prev;
 
  protected:
-  Metabase(size_t word_size) : _word_size(word_size), _next(NULL), _prev(NULL) {}
+  Metabase(size_t word_size) : _word_size(word_size), _next(NULL), _prev(NULL) { }
 
  public:
   T* next() const         { return _next; }
   T* prev() const         { return _prev; }
-  void set_next(T* v)     { _next = v;
-  assert(v != this, "Boom");}
-  void set_prev(T* v)     { _prev = v;
-  assert(v != this, "Boom");}
+  void set_next(T* v)     { _next = v; }
+  void set_prev(T* v)     { _prev = v; }
   void clear_next()       { set_next(NULL); }
   void clear_prev()       { set_prev(NULL); }
 
@@ -44,7 +42,7 @@ class Metabase {
   bool verify_chunk_in_free_list(T* tc) const { return true; }
   bool verify_par_locked() { return true; }
 
-  void assert_is_mangled() const {/* Don't check "\*/}
+  void assert_is_mangled() const { }
 
   bool is_free()                 { return true; }
 };

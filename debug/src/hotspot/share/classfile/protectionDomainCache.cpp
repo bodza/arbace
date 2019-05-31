@@ -24,7 +24,6 @@ ProtectionDomainCacheTable::ProtectionDomainCacheTable(int table_size)
 }
 
 void ProtectionDomainCacheTable::unlink() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be");
   for (int i = 0; i < table_size(); ++i) {
     ProtectionDomainCacheEntry** p = bucket_addr(i);
     ProtectionDomainCacheEntry* entry = bucket(i);
@@ -110,10 +109,6 @@ ProtectionDomainCacheEntry* ProtectionDomainCacheTable::find_entry(int index, Ha
 }
 
 ProtectionDomainCacheEntry* ProtectionDomainCacheTable::add_entry(int index, unsigned int hash, Handle protection_domain) {
-  assert_locked_or_safepoint(SystemDictionary_lock);
-  assert(index == index_for(protection_domain), "incorrect index?");
-  assert(find_entry(index, protection_domain) == NULL, "no double entry");
-
   ClassLoaderWeakHandle w = ClassLoaderWeakHandle::create(protection_domain);
   ProtectionDomainCacheEntry* p = new_entry(hash, w);
   Hashtable<ClassLoaderWeakHandle, mtClass>::add_entry(index, p);

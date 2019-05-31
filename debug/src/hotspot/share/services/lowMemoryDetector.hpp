@@ -73,16 +73,12 @@ class ThresholdSupport : public CHeapObj<mtInternal> {
   }
 
   size_t      set_high_threshold(size_t new_threshold) {
-    assert(_support_high_threshold, "can only be set if supported");
-    assert(new_threshold >= _low_threshold, "new_threshold must be >= _low_threshold");
     size_t prev = _high_threshold;
     _high_threshold = new_threshold;
     return prev;
   }
 
   size_t      set_low_threshold(size_t new_threshold) {
-    assert(_support_low_threshold, "can only be set if supported");
-    assert(new_threshold <= _high_threshold, "new_threshold must be <= _high_threshold");
     size_t prev = _low_threshold;
     _low_threshold = new_threshold;
     return prev;
@@ -116,7 +112,6 @@ private:
 public:
   SensorInfo();
   void set_sensor(instanceOop sensor) {
-    assert(_sensor_obj == NULL, "Should be set only once");
     _sensor_obj = sensor;
   }
 
@@ -256,7 +251,6 @@ public:
   }
   ~LowMemoryDetectorDisabler()
   {
-    assert(LowMemoryDetector::temporary_disabled(), "should be disabled!");
     LowMemoryDetector::enable();
   }
 };

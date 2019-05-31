@@ -133,7 +133,6 @@ class VerificationType {
 
   // For reference types, store the actual Symbol
   static VerificationType reference_type(Symbol* sh) {
-      assert(((uintptr_t)sh & 0x3) == 0, "Symbols must be aligned");
       // If the above assert fails in the future because oop* isn't aligned,
       // then this type encoding system will have to change to have a tag value
       // to descriminate between oops and primitives.
@@ -167,7 +166,6 @@ class VerificationType {
     // allow this to return true, we can perform the test using only
     // 2 operations rather than 8 (3 masks, 3 compares and 2 logical 'ands').
     // Since noone should call this on a query type anyway, this is ok.
-    assert(!is_check(), "Must not be a check type (wrong value returned)");
     return ((_u._data & Category1) != Primitive);
     // should only return false if it's a primitive, and the category1 flag
     // is not set.
@@ -195,38 +193,26 @@ class VerificationType {
   bool is_double_array() const { return is_x_array('D'); }
   bool is_object_array() const { return is_x_array('L'); }
   bool is_array_array() const { return is_x_array('['); }
-  bool is_reference_array() const
-    { return is_object_array() || is_array_array(); }
-  bool is_object() const
-    { return (is_reference() && !is_null() && name()->utf8_length() >= 1 &&
-              name()->byte_at(0) != '['); }
-  bool is_array() const
-    { return (is_reference() && !is_null() && name()->utf8_length() >= 2 &&
-              name()->byte_at(0) == '['); }
-  bool is_uninitialized() const
-    { return ((_u._data & Uninitialized) == Uninitialized); }
-  bool is_uninitialized_this() const
-    { return is_uninitialized() && bci() == BciForThis; }
+  bool is_reference_array() const { return is_object_array() || is_array_array(); }
+  bool is_object() const { return (is_reference() && !is_null() && name()->utf8_length() >= 1 && name()->byte_at(0) != '['); }
+  bool is_array() const { return (is_reference() && !is_null() && name()->utf8_length() >= 2 && name()->byte_at(0) == '['); }
+  bool is_uninitialized() const { return ((_u._data & Uninitialized) == Uninitialized); }
+  bool is_uninitialized_this() const { return is_uninitialized() && bci() == BciForThis; }
 
   VerificationType to_category2_2nd() const {
-    assert(is_category2(), "Must be a double word");
     return VerificationType(is_long() ? Long_2nd : Double_2nd);
   }
 
   u2 bci() const {
-    assert(is_uninitialized(), "Must be uninitialized type");
     return ((_u._data & BciMask) >> 1 * BitsPerByte);
   }
 
   Symbol* name() const {
-    assert(is_reference() && !is_null(), "Must be a non-null reference");
     return _u._sym;
   }
 
   bool equals(const VerificationType& t) const {
-    return (_u._data == t._u._data ||
-      (is_reference() && t.is_reference() && !is_null() && !t.is_null() &&
-       name() == t.name()));
+    return (_u._data == t._u._data || (is_reference() && t.is_reference() && !is_null() && !t.is_null() && name() == t.name()));
   }
 
   bool operator ==(const VerificationType& t) const {
@@ -240,9 +226,7 @@ class VerificationType {
   // The whole point of this type system - check to see if one type
   // is assignable to another.  Returns true if one can assign 'from' to
   // this.
-  bool is_assignable_from(
-      const VerificationType& from, ClassVerifier* context,
-      bool from_field_is_protected, TRAPS) const {
+  bool is_assignable_from(const VerificationType& from, ClassVerifier* context, bool from_field_is_protected, TRAPS) const {
     if (equals(from) || is_bogus()) {
       return true;
     } else {
@@ -275,9 +259,7 @@ class VerificationType {
 
   // Check to see if one array component type is assignable to another.
   // Same as is_assignable_from() except int primitives must be identical.
-  bool is_component_assignable_from(
-      const VerificationType& from, ClassVerifier* context,
-      bool from_field_is_protected, TRAPS) const {
+  bool is_component_assignable_from(const VerificationType& from, ClassVerifier* context, bool from_field_is_protected, TRAPS) const {
     if (equals(from) || is_bogus()) {
       return true;
     } else {
@@ -296,7 +278,6 @@ class VerificationType {
   VerificationType get_component(ClassVerifier* context, TRAPS) const;
 
   int dimensions() const {
-    assert(is_array(), "Must be an array");
     int index = 0;
     while (name()->byte_at(index) == '[') index++;
     return index;
@@ -306,9 +287,7 @@ class VerificationType {
 
  private:
 
-  bool is_reference_assignable_from(
-    const VerificationType&, ClassVerifier*, bool from_field_is_protected,
-    TRAPS) const;
+  bool is_reference_assignable_from(const VerificationType&, ClassVerifier*, bool from_field_is_protected, TRAPS) const;
 
  public:
   static bool resolve_and_check_assignability(InstanceKlass* klass, Symbol* name,

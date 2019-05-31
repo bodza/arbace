@@ -56,7 +56,7 @@ private:
   void set_top(HeapWord* top)                    { _top = top; }
   void set_pf_top(HeapWord* pf_top)              { _pf_top = pf_top; }
   void set_desired_size(size_t desired_size)     { _desired_size = desired_size; }
-  void set_refill_waste_limit(size_t waste)      { _refill_waste_limit = waste;  }
+  void set_refill_waste_limit(size_t waste)      { _refill_waste_limit = waste; }
 
   size_t initial_refill_waste_limit()            { return desired_size() / TLABRefillWasteFraction; }
 
@@ -72,7 +72,7 @@ private:
   void resize();
 
   void invariants() const {
-    assert(top() >= start() && top() <= end(), "invalid tlab"); }
+    }
 
   void initialize(HeapWord* start, HeapWord* top, HeapWord* end);
 
@@ -98,7 +98,6 @@ public:
 
   static size_t min_size()                       { return align_object_size(MinTLABSize / HeapWordSize) + alignment_reserve(); }
   static size_t max_size()                       {
-    assert(_max_size != 0, "max_size not set up");
     return _max_size; }
   static size_t max_size_in_bytes()              { return max_size() * BytesPerWord; }
   static void set_max_size(size_t max_size)      { _max_size = max_size; }

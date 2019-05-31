@@ -44,7 +44,7 @@ class GCPolicyCounters: public CHeapObj<mtGC> {
 
     const char* name_space() const { return _name_space; }
 
-    virtual void update_counters() {}
+    virtual void update_counters() { }
 
     virtual GCPolicyCounters::Name kind() const {
       return GCPolicyCounters::GCPolicyCountersKind;

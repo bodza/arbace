@@ -56,7 +56,7 @@ class FileReader : public StackObj {
 protected:
   FILE* const _fd;
 public:
-  FileReader(FILE* const fd) : _fd(fd) {};
+  FileReader(FILE* const fd) : _fd(fd) { };
   bool read(void* buf, size_t size);
   int  read_buffer(void* buf, size_t size);
   bool set_position(long offset);
@@ -118,7 +118,6 @@ public:
   }
 
   bool same_elf_file(const char* filepath) const {
-    assert(filepath != NULL, "null file path");
     return (_filepath != NULL && !strcmp(filepath, _filepath));
   }
 

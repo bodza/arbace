@@ -48,7 +48,6 @@ HeapRegion* G1FullGCCompactionPoint::current_region() {
 
 HeapRegion* G1FullGCCompactionPoint::next_region() {
   HeapRegion* next = *(++_compaction_region_iterator);
-  assert(next != NULL, "Must return valid region");
   return next;
 }
 
@@ -70,7 +69,6 @@ void G1FullGCCompactionPoint::switch_region() {
 }
 
 void G1FullGCCompactionPoint::forward(oop object, size_t size) {
-  assert(_current_region != NULL, "Must have been initialized");
 
   // Ensure the object fit in the current region.
   while (!object_will_fit(size)) {
@@ -93,9 +91,7 @@ void G1FullGCCompactionPoint::forward(oop object, size_t size) {
       // Make sure object has the correct mark-word set or that it will be
       // fixed when restoring the preserved marks.
       // Correct mark // Will be restored by PreservedMarksSet // Will be restored by BiasedLocking
-      assert(object->mark_raw() == markOopDesc::prototype_for_object(object) || object->mark_raw()->must_be_preserved(object) || (UseBiasedLocking && object->has_bias_pattern_raw()), "should have correct prototype obj: " PTR_FORMAT " mark: " PTR_FORMAT " prototype: " PTR_FORMAT, p2i(object), p2i(object->mark_raw()), p2i(markOopDesc::prototype_for_object(object)));
     }
-    assert(object->forwardee() == NULL, "should be forwarded to NULL");
   }
 
   // Update compaction values.

@@ -47,9 +47,6 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   CodeBuffer      cb(s->entry_point(), stub_code_length);
   MacroAssembler* masm = new MacroAssembler(&cb);
 
-  // get receiver (need to skip return address on top of stack)
-  assert(VtableStub::receiver_location() == rcx->as_VMReg(), "receiver expected in rcx");
-
   // get receiver klass
   address npe_addr = __ pc();
   __ movptr(rax, Address(rcx, oopDesc::klass_offset_in_bytes()));
@@ -61,7 +58,6 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   __ lookup_virtual_method(rax, vtable_index, method);
   slop_delta  = 6 - (int)(__ pc() - start_pc);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "negative slop(%d) encountered, adjust code size estimate!", slop_delta);
 
   // rax: receiver klass
   // method (rbx): Method*
@@ -115,7 +111,6 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   Label L_no_such_interface;
 
   // get receiver klass (also an implicit null-check)
-  assert(VtableStub::receiver_location() ==  rcx->as_VMReg(), "receiver expected in  rcx");
   address npe_addr = __ pc();
   __ load_klass(recv_klass_reg, rcx);
 
@@ -151,7 +146,6 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   const ptrdiff_t codesize = typecheckSize + lookupSize + index_dependent_slop;
   slop_delta  = (int)(estimate - codesize);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "itable #%d: Code size estimate (%d) for lookup_interface_method too small, required: %d", itable_index, (int)estimate, (int)codesize);
 
   // method (rbx): Method*
   // rcx: receiver

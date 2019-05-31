@@ -7,15 +7,6 @@
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 
-#define ASSERT_REF_TYPE(ref_type) \
-    assert((ref_type) >= REF_SOFT && (ref_type) <= REF_PHANTOM, "Invariant (%d)", (int)ref_type)
-
-#define ASSERT_PHASE(phase) \
-    assert((phase) >= ReferenceProcessor::RefPhase1 && (phase) < ReferenceProcessor::RefPhaseMax,  "Invariant (%d)", (int)phase);
-
-#define ASSERT_SUB_PHASE(phase) \
-    assert((phase) >= ReferenceProcessor::SoftRefSubPhase1 && (phase) < ReferenceProcessor::RefSubPhaseMax, "Invariant (%d)", (int)phase);
-
 static const char* SubPhasesParWorkTitle[ReferenceProcessor::RefSubPhaseMax] = {
        "SoftRef (ms):",
        "SoftRef (ms):",
@@ -54,18 +45,15 @@ static const char* ReferenceTypeNames[REF_PHANTOM + 1] = {
 STATIC_ASSERT((REF_PHANTOM + 1) == ARRAY_SIZE(ReferenceTypeNames));
 
 static const char* phase_enum_2_phase_string(ReferenceProcessor::RefProcPhases phase) {
-  ASSERT_PHASE(phase);
   return PhaseNames[phase];
 }
 
 static const char* ref_type_2_string(ReferenceType ref_type) {
-  ASSERT_REF_TYPE(ref_type);
   return ReferenceTypeNames[ref_type];
 }
 
 RefProcWorkerTimeTracker::RefProcWorkerTimeTracker(WorkerDataArray<double>* worker_time, uint worker_id) :
   _worker_time(worker_time), _start_time(os::elapsedTime()), _worker_id(worker_id) {
-  assert(worker_time != NULL, "Invariant");
 }
 
 RefProcWorkerTimeTracker::~RefProcWorkerTimeTracker() {
@@ -86,7 +74,6 @@ RefProcPhaseTimeBaseTracker::RefProcPhaseTimeBaseTracker(const char* title,
                                                          ReferenceProcessor::RefProcPhases phase_number,
                                                          ReferenceProcessorPhaseTimes* phase_times) :
   _phase_times(phase_times), _start_ticks(), _end_ticks(), _phase_number(phase_number) {
-  assert(_phase_times != NULL, "Invariant");
 
   _start_ticks.stamp();
   if (_phase_times->gc_timer() != NULL) {
@@ -118,7 +105,7 @@ RefProcPhaseTimeBaseTracker::~RefProcPhaseTimeBaseTracker() {
 
 RefProcBalanceQueuesTimeTracker::RefProcBalanceQueuesTimeTracker(ReferenceProcessor::RefProcPhases phase_number,
                                                                  ReferenceProcessorPhaseTimes* phase_times) :
-  RefProcPhaseTimeBaseTracker("Balance queues", phase_number, phase_times) {}
+  RefProcPhaseTimeBaseTracker("Balance queues", phase_number, phase_times) { }
 
 RefProcBalanceQueuesTimeTracker::~RefProcBalanceQueuesTimeTracker() {
   double elapsed = elapsed_time();
@@ -162,18 +149,14 @@ inline int ref_type_2_index(ReferenceType ref_type) {
 }
 
 WorkerDataArray<double>* ReferenceProcessorPhaseTimes::sub_phase_worker_time_sec(ReferenceProcessor::RefProcSubPhases sub_phase) const {
-  ASSERT_SUB_PHASE(sub_phase);
   return _sub_phases_worker_time_sec[sub_phase];
 }
 
 double ReferenceProcessorPhaseTimes::phase_time_ms(ReferenceProcessor::RefProcPhases phase) const {
-  ASSERT_PHASE(phase);
   return _phases_time_ms[phase];
 }
 
-void ReferenceProcessorPhaseTimes::set_phase_time_ms(ReferenceProcessor::RefProcPhases phase,
-                                                     double phase_time_ms) {
-  ASSERT_PHASE(phase);
+void ReferenceProcessorPhaseTimes::set_phase_time_ms(ReferenceProcessor::RefProcPhases phase, double phase_time_ms) {
   _phases_time_ms[phase] = phase_time_ms;
 }
 
@@ -208,33 +191,26 @@ ReferenceProcessorPhaseTimes::~ReferenceProcessorPhaseTimes() {
 }
 
 double ReferenceProcessorPhaseTimes::sub_phase_total_time_ms(ReferenceProcessor::RefProcSubPhases sub_phase) const {
-  ASSERT_SUB_PHASE(sub_phase);
   return _sub_phases_total_time_ms[sub_phase];
 }
 
-void ReferenceProcessorPhaseTimes::set_sub_phase_total_phase_time_ms(ReferenceProcessor::RefProcSubPhases sub_phase,
-                                                                     double time_ms) {
-  ASSERT_SUB_PHASE(sub_phase);
+void ReferenceProcessorPhaseTimes::set_sub_phase_total_phase_time_ms(ReferenceProcessor::RefProcSubPhases sub_phase, double time_ms) {
   _sub_phases_total_time_ms[sub_phase] = time_ms;
 }
 
 void ReferenceProcessorPhaseTimes::add_ref_cleared(ReferenceType ref_type, size_t count) {
-  ASSERT_REF_TYPE(ref_type);
   Atomic::add(count, &_ref_cleared[ref_type_2_index(ref_type)]);
 }
 
 void ReferenceProcessorPhaseTimes::set_ref_discovered(ReferenceType ref_type, size_t count) {
-  ASSERT_REF_TYPE(ref_type);
   _ref_discovered[ref_type_2_index(ref_type)] = count;
 }
 
 double ReferenceProcessorPhaseTimes::balance_queues_time_ms(ReferenceProcessor::RefProcPhases phase) const {
-  ASSERT_PHASE(phase);
   return _balance_queues_time_ms[phase];
 }
 
 void ReferenceProcessorPhaseTimes::set_balance_queues_time_ms(ReferenceProcessor::RefProcPhases phase, double time_ms) {
-  ASSERT_PHASE(phase);
   _balance_queues_time_ms[phase] = time_ms;
 }
 
@@ -360,7 +336,4 @@ void ReferenceProcessorPhaseTimes::print_worker_time(LogStream* ls, WorkerDataAr
   }
 }
 
-#undef ASSERT_REF_TYPE
-#undef ASSERT_SUB_PHASE
-#undef ASSERT_PHASE
 #undef TIME_FORMAT

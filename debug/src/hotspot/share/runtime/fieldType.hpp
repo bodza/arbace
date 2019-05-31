@@ -19,7 +19,7 @@ class FieldArrayInfo : public StackObj {
   int       dimension()    { return _dimension; }
   Symbol*   object_key()   { return _object_key; }
   // basic constructor
-  FieldArrayInfo() : _dimension(0), _object_key(NULL) {}
+  FieldArrayInfo() : _dimension(0), _object_key(NULL) { }
   // destructor decrements object key's refcount if created
   ~FieldArrayInfo() { if (_object_key != NULL) _object_key->decrement_refcount(); }
 };
@@ -38,9 +38,7 @@ class FieldType: public AllStatic {
   static bool is_obj(Symbol* signature) {
      int sig_length = signature->utf8_length();
      // Must start with 'L' and end with ';'
-     return (sig_length >= 2 &&
-             (signature->byte_at(0) == 'L') &&
-             (signature->byte_at(sig_length - 1) == ';'));
+     return (sig_length >= 2 && (signature->byte_at(0) == 'L') && (signature->byte_at(sig_length - 1) == ';'));
   }
 
   // Parse field and extract array information. Works for T_ARRAY only.

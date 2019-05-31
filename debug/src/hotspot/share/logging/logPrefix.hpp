@@ -75,10 +75,6 @@ struct LogPrefix : public AllStatic {
 template <> struct LogPrefix<__VA_ARGS__> { \
   static size_t prefix(char* buf, size_t len) { \
     size_t ret = fn(buf, len); \
-    /* Either prefix did fit (strlen(buf) == ret && ret < len) */ \
-    /* or the prefix didn't fit in buffer (ret > len && strlen(buf) < len) */ \
-    assert(ret == 0 || strlen(buf) < len, "Buffer overrun by prefix function."); \
-    assert(ret == 0 || strlen(buf) == ret || ret >= len, "Prefix function should return length of prefix written," " or the intended length of prefix if the buffer was too small."); \
     return ret; \
   } \
 };

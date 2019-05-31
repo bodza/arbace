@@ -18,7 +18,7 @@ namespace metaspace {
 class Metablock : public Metabase<Metablock> {
   friend class VMStructs;
  public:
-  Metablock(size_t word_size) : Metabase<Metablock>(word_size) {}
+  Metablock(size_t word_size) : Metabase<Metablock>(word_size) { }
 };
 }
 

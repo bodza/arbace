@@ -8,7 +8,6 @@
 
 ElfSymbolTable::ElfSymbolTable(FILE* const file, Elf_Shdr& shdr) :
   _section(file, shdr), _fd(file), _next(NULL) {
-  assert(file != NULL, "null file handle");
   _status = _section.status();
 
   if (_section.section_header()->sh_size % sizeof(Elf_Sym) != 0) {
@@ -44,9 +43,6 @@ bool ElfSymbolTable::compare(const Elf_Sym* sym, address addr, int* stringtableI
 }
 
 bool ElfSymbolTable::lookup(address addr, int* stringtableIndex, int* posIndex, int* offset, ElfFuncDescTable* funcDescTable) {
-  assert(stringtableIndex, "null string table index pointer");
-  assert(posIndex, "null string table offset pointer");
-  assert(offset, "null offset pointer");
 
   if (NullDecoder::is_error(get_status())) {
     return false;

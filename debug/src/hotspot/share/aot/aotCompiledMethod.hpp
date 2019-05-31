@@ -117,8 +117,7 @@ private:
     _method_index(method_index),
     _aot_id(aot_id) {
 
-    _is_far_code = CodeCache::is_far_target(code) ||
-                   CodeCache::is_far_target(code + meta->code_size());
+    _is_far_code = CodeCache::is_far_target(code) || CodeCache::is_far_target(code + meta->code_size());
     _exception_cache = NULL;
 
     _scopes_data_begin = (address) _meta->scopes_data_begin();
@@ -147,8 +146,7 @@ private:
 
   virtual bool is_zombie() const { return state() == zombie; }
   virtual bool is_unloaded() const { return state() == unloaded; }
-  virtual bool is_not_entrant() const { return state() == not_entrant ||
-                                                 state() == not_used; }
+  virtual bool is_not_entrant() const { return state() == not_entrant || state() == not_used; }
   virtual bool is_alive() const { return _is_alive(); }
   virtual bool is_in_use() const { return state() == in_use; }
 
@@ -164,7 +162,7 @@ private:
 
   virtual void print_value_on(outputStream *stream) const;
   virtual void print_block_comment(outputStream *stream, address block_begin) const { }
-  virtual void verify() {}
+  virtual void verify() { }
 
   virtual int comp_level() const { return CompLevel_aot; }
   virtual address verified_entry_point() const { return _code + _meta->verified_entry_offset(); }
@@ -185,7 +183,7 @@ private:
 
   virtual void clear_inline_caches();
 
-  virtual void print_pcs() {}
+  virtual void print_pcs() { }
 
   virtual address scopes_data_end() const { return _meta->scopes_data_end(); }
 
@@ -230,7 +228,6 @@ private:
 
   // inlined and non-virtual for AOTCodeHeap::oops_do
   void do_oops(OopClosure* f) {
-    assert(_is_alive(), "");
     if (_oop != NULL) {
       f->do_oop(&_oop);
     }
@@ -241,7 +238,7 @@ private:
 
 protected:
   // AOT compiled methods are not flushed
-  void flush() {};
+  void flush() { };
 
   NativeCallWrapper* call_wrapper_at(address call) const;
   NativeCallWrapper* call_wrapper_before(address return_pc) const;
@@ -263,7 +260,7 @@ private:
   NativePltCall* _call;
 
 public:
-  PltNativeCallWrapper(NativePltCall* call) : _call(call) {}
+  PltNativeCallWrapper(NativePltCall* call) : _call(call) { }
 
   virtual address destination() const { return _call->destination(); }
   virtual address instruction_address() const { return _call->instruction_address(); }

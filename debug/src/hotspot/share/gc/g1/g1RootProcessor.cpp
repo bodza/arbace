@@ -23,7 +23,6 @@
 #include "utilities/macros.hpp"
 
 void G1RootProcessor::worker_has_discovered_all_strong_classes() {
-  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
 
   uint new_value = (uint)Atomic::add(1, &_n_workers_discovered_strong_classes);
   if (new_value == n_workers()) {
@@ -34,7 +33,6 @@ void G1RootProcessor::worker_has_discovered_all_strong_classes() {
 }
 
 void G1RootProcessor::wait_until_all_strong_classes_discovered() {
-  assert(ClassUnloadingWithConcurrentMark, "Currently only needed when doing G1 Class Unloading");
 
   if ((uint)_n_workers_discovered_strong_classes != n_workers()) {
     MonitorLockerEx ml(&_lock, Mutex::_no_safepoint_check_flag);
@@ -50,7 +48,7 @@ G1RootProcessor::G1RootProcessor(G1CollectedHeap* g1h, uint n_workers) :
     _srs(n_workers),
     _lock(Mutex::leaf, "G1 Root Scanning barrier lock", false, Monitor::_safepoint_check_never),
     _par_state_string(StringTable::weak_storage()),
-    _n_workers_discovered_strong_classes(0) {}
+    _n_workers_discovered_strong_classes(0) { }
 
 void G1RootProcessor::evacuate_roots(G1ParScanThreadState* pss, uint worker_i) {
   G1GCPhaseTimes* phase_times = _g1h->g1_policy()->phase_times();
@@ -91,12 +89,10 @@ void G1RootProcessor::evacuate_roots(G1ParScanThreadState* pss, uint worker_i) {
 
     // Now take the complement of the strong CLDs.
     G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::WeakCLDRoots, worker_i);
-    assert(closures->second_pass_weak_clds() != NULL, "Should be non-null if we are tracing metadata.");
     ClassLoaderDataGraph::roots_cld_do(NULL, closures->second_pass_weak_clds());
   } else {
     phase_times->record_time_secs(G1GCPhaseTimes::WaitForStrongCLD, worker_i, 0.0);
     phase_times->record_time_secs(G1GCPhaseTimes::WeakCLDRoots, worker_i, 0.0);
-    assert(closures->second_pass_weak_clds() == NULL, "Should be null if not tracing metadata.");
   }
 
   // During conc marking we have to filter the per-thread SATB buffers
@@ -119,7 +115,7 @@ class StrongRootsClosures : public G1RootClosures {
   CodeBlobClosure* _blobs;
 public:
   StrongRootsClosures(OopClosure* roots, CLDClosure* clds, CodeBlobClosure* blobs) :
-      _roots(roots), _clds(clds), _blobs(blobs) {}
+      _roots(roots), _clds(clds), _blobs(blobs) { }
 
   OopClosure* weak_oops()   { return NULL; }
   OopClosure* strong_oops() { return _roots; }
@@ -130,9 +126,7 @@ public:
   CodeBlobClosure* strong_codeblobs() { return _blobs; }
 };
 
-void G1RootProcessor::process_strong_roots(OopClosure* oops,
-                                           CLDClosure* clds,
-                                           CodeBlobClosure* blobs) {
+void G1RootProcessor::process_strong_roots(OopClosure* oops, CLDClosure* clds, CodeBlobClosure* blobs) {
   StrongRootsClosures closures(oops, clds, blobs);
 
   process_java_roots(&closures, NULL, 0);
@@ -147,7 +141,7 @@ class AllRootsClosures : public G1RootClosures {
   CLDClosure* _clds;
 public:
   AllRootsClosures(OopClosure* roots, CLDClosure* clds) :
-      _roots(roots), _clds(clds) {}
+      _roots(roots), _clds(clds) { }
 
   OopClosure* weak_oops() { return _roots; }
   OopClosure* strong_oops() { return _roots; }
@@ -163,10 +157,7 @@ public:
   CodeBlobClosure* strong_codeblobs() { return NULL; }
 };
 
-void G1RootProcessor::process_all_roots(OopClosure* oops,
-                                        CLDClosure* clds,
-                                        CodeBlobClosure* blobs,
-                                        bool process_string_table) {
+void G1RootProcessor::process_all_roots(OopClosure* oops, CLDClosure* clds, CodeBlobClosure* blobs, bool process_string_table) {
   AllRootsClosures closures(oops, clds);
 
   process_java_roots(&closures, NULL, 0);
@@ -180,22 +171,15 @@ void G1RootProcessor::process_all_roots(OopClosure* oops,
   _process_strong_tasks.all_tasks_completed(n_workers());
 }
 
-void G1RootProcessor::process_all_roots(OopClosure* oops,
-                                        CLDClosure* clds,
-                                        CodeBlobClosure* blobs) {
+void G1RootProcessor::process_all_roots(OopClosure* oops, CLDClosure* clds, CodeBlobClosure* blobs) {
   process_all_roots(oops, clds, blobs, true);
 }
 
-void G1RootProcessor::process_all_roots_no_string_table(OopClosure* oops,
-                                                        CLDClosure* clds,
-                                                        CodeBlobClosure* blobs) {
-  assert(!ClassUnloading, "Should only be used when class unloading is disabled");
+void G1RootProcessor::process_all_roots_no_string_table(OopClosure* oops, CLDClosure* clds, CodeBlobClosure* blobs) {
   process_all_roots(oops, clds, blobs, false);
 }
 
-void G1RootProcessor::process_java_roots(G1RootClosures* closures,
-                                         G1GCPhaseTimes* phase_times,
-                                         uint worker_i) {
+void G1RootProcessor::process_java_roots(G1RootClosures* closures, G1GCPhaseTimes* phase_times, uint worker_i) {
   // Iterating over the CLDG and the Threads are done early to allow us to
   // first process the strong CLDs and nmethods and then, after a barrier,
   // let the thread process the weak CLDs and nmethods.
@@ -215,9 +199,7 @@ void G1RootProcessor::process_java_roots(G1RootClosures* closures,
   }
 }
 
-void G1RootProcessor::process_vm_roots(G1RootClosures* closures,
-                                       G1GCPhaseTimes* phase_times,
-                                       uint worker_i) {
+void G1RootProcessor::process_vm_roots(G1RootClosures* closures, G1GCPhaseTimes* phase_times, uint worker_i) {
   OopClosure* strong_roots = closures->strong_oops();
 
   {
@@ -256,19 +238,14 @@ void G1RootProcessor::process_vm_roots(G1RootClosures* closures,
   }
 }
 
-void G1RootProcessor::process_string_table_roots(G1RootClosures* closures,
-                                                 G1GCPhaseTimes* phase_times,
-                                                 uint worker_i) {
-  assert(closures->weak_oops() != NULL, "Should only be called when all roots are processed");
+void G1RootProcessor::process_string_table_roots(G1RootClosures* closures, G1GCPhaseTimes* phase_times, uint worker_i) {
   G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::StringTableRoots, worker_i);
   // All threads execute the following. A specific chunk of buckets
   // from the StringTable are the individual tasks.
   StringTable::possibly_parallel_oops_do(&_par_state_string, closures->weak_oops());
 }
 
-void G1RootProcessor::process_code_cache_roots(CodeBlobClosure* code_closure,
-                                               G1GCPhaseTimes* phase_times,
-                                               uint worker_i) {
+void G1RootProcessor::process_code_cache_roots(CodeBlobClosure* code_closure, G1GCPhaseTimes* phase_times, uint worker_i) {
   if (!_process_strong_tasks.is_task_claimed(G1RP_PS_CodeCache_oops_do)) {
     CodeCache::blobs_do(code_closure);
   }

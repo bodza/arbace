@@ -31,7 +31,7 @@ static get_cpu_info_stub_t get_cpu_info_stub = NULL;
 class VM_Version_StubGenerator: public StubCodeGenerator {
  public:
 
-  VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) {}
+  VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_get_cpu_info() {
     // Flags to test CPU type.
@@ -598,7 +598,7 @@ void VM_Version::get_processor_features() {
     _features &= ~CPU_HT;
   }
 
-  if( is_intel() ) { // Intel cpus specific settings
+  if (is_intel()) { // Intel cpus specific settings
     if (is_knights_family()) {
       _features &= ~CPU_VZEROUPPER;
     }
@@ -699,7 +699,7 @@ void VM_Version::get_processor_features() {
           FLAG_SET_DEFAULT(UseAESCTRIntrinsics, false);
         }
       } else {
-        if(supports_sse4_1()) {
+        if (supports_sse4_1()) {
           if (FLAG_IS_DEFAULT(UseAESCTRIntrinsics)) {
             FLAG_SET_DEFAULT(UseAESCTRIntrinsics, true);
           }
@@ -986,38 +986,38 @@ void VM_Version::get_processor_features() {
     }
   }
 
-  if( is_amd() ) { // AMD cpus specific settings
-    if( supports_sse2() && FLAG_IS_DEFAULT(UseAddressNop) ) {
+  if (is_amd()) { // AMD cpus specific settings
+    if (supports_sse2() && FLAG_IS_DEFAULT(UseAddressNop)) {
       // Use it on new AMD cpus starting from Opteron.
       UseAddressNop = true;
     }
-    if( supports_sse2() && FLAG_IS_DEFAULT(UseNewLongLShift) ) {
+    if (supports_sse2() && FLAG_IS_DEFAULT(UseNewLongLShift)) {
       // Use it on new AMD cpus starting from Opteron.
       UseNewLongLShift = true;
     }
-    if( FLAG_IS_DEFAULT(UseXmmLoadAndClearUpper) ) {
+    if (FLAG_IS_DEFAULT(UseXmmLoadAndClearUpper)) {
       if (supports_sse4a()) {
         UseXmmLoadAndClearUpper = true; // use movsd only on '10h' Opteron
       } else {
         UseXmmLoadAndClearUpper = false;
       }
     }
-    if( FLAG_IS_DEFAULT(UseXmmRegToRegMoveAll) ) {
-      if( supports_sse4a() ) {
+    if (FLAG_IS_DEFAULT(UseXmmRegToRegMoveAll)) {
+      if (supports_sse4a()) {
         UseXmmRegToRegMoveAll = true; // use movaps, movapd only on '10h'
       } else {
         UseXmmRegToRegMoveAll = false;
       }
     }
-    if( FLAG_IS_DEFAULT(UseXmmI2F) ) {
-      if( supports_sse4a() ) {
+    if (FLAG_IS_DEFAULT(UseXmmI2F)) {
+      if (supports_sse4a()) {
         UseXmmI2F = true;
       } else {
         UseXmmI2F = false;
       }
     }
-    if( FLAG_IS_DEFAULT(UseXmmI2D) ) {
-      if( supports_sse4a() ) {
+    if (FLAG_IS_DEFAULT(UseXmmI2D)) {
+      if (supports_sse4a()) {
         UseXmmI2D = true;
       } else {
         UseXmmI2D = false;
@@ -1035,7 +1035,7 @@ void VM_Version::get_processor_features() {
     }
 
     // some defaults for AMD family 15h
-    if ( cpu_family() == 0x15 ) {
+    if (cpu_family() == 0x15 ) {
       // On family 15h processors default is no sw prefetch
       if (FLAG_IS_DEFAULT(AllocatePrefetchStyle)) {
         FLAG_SET_DEFAULT(AllocatePrefetchStyle, 0);
@@ -1054,7 +1054,7 @@ void VM_Version::get_processor_features() {
     }
 
     // Some defaults for AMD family 17h
-    if ( cpu_family() == 0x17 ) {
+    if (cpu_family() == 0x17 ) {
       // On family 17h processors use XMM and UnalignedLoadStores for Array Copy
       if (supports_sse2() && FLAG_IS_DEFAULT(UseXMMForArrayCopy)) {
         FLAG_SET_DEFAULT(UseXMMForArrayCopy, true);
@@ -1065,27 +1065,27 @@ void VM_Version::get_processor_features() {
     }
   }
 
-  if( is_intel() ) { // Intel cpus specific settings
-    if( FLAG_IS_DEFAULT(UseStoreImmI16) ) {
+  if (is_intel()) { // Intel cpus specific settings
+    if (FLAG_IS_DEFAULT(UseStoreImmI16)) {
       UseStoreImmI16 = false; // don't use it on Intel cpus
     }
-    if( cpu_family() == 6 || cpu_family() == 15 ) {
-      if( FLAG_IS_DEFAULT(UseAddressNop) ) {
+    if (cpu_family() == 6 || cpu_family() == 15 ) {
+      if (FLAG_IS_DEFAULT(UseAddressNop)) {
         // Use it on all Intel cpus starting from PentiumPro
         UseAddressNop = true;
       }
     }
-    if( FLAG_IS_DEFAULT(UseXmmLoadAndClearUpper) ) {
+    if (FLAG_IS_DEFAULT(UseXmmLoadAndClearUpper)) {
       UseXmmLoadAndClearUpper = true; // use movsd on all Intel cpus
     }
-    if( FLAG_IS_DEFAULT(UseXmmRegToRegMoveAll) ) {
-      if( supports_sse3() ) {
+    if (FLAG_IS_DEFAULT(UseXmmRegToRegMoveAll)) {
+      if (supports_sse3()) {
         UseXmmRegToRegMoveAll = true; // use movaps, movapd on new Intel cpus
       } else {
         UseXmmRegToRegMoveAll = false;
       }
     }
-    if( cpu_family() == 6 && supports_sse3() ) { // New Intel cpus
+    if (cpu_family() == 6 && supports_sse3()) { // New Intel cpus
       if (FLAG_IS_DEFAULT(UseXMMForArrayCopy)) {
         UseXMMForArrayCopy = true; // use SSE2 movq on new Intel cpus
       }
@@ -1115,7 +1115,7 @@ void VM_Version::get_processor_features() {
         FLAG_SET_DEFAULT(UseIncDec, false);
       }
     }
-    if(FLAG_IS_DEFAULT(AllocatePrefetchInstr) && supports_3dnow_prefetch()) {
+    if (FLAG_IS_DEFAULT(AllocatePrefetchInstr) && supports_3dnow_prefetch()) {
       FLAG_SET_DEFAULT(AllocatePrefetchInstr, 3);
     }
   }
@@ -1216,13 +1216,11 @@ void VM_Version::get_processor_features() {
 
   // Allocation prefetch settings
   intx cache_line_size = prefetch_data_size();
-  if (FLAG_IS_DEFAULT(AllocatePrefetchStepSize) &&
-      (cache_line_size > AllocatePrefetchStepSize)) {
+  if (FLAG_IS_DEFAULT(AllocatePrefetchStepSize) && (cache_line_size > AllocatePrefetchStepSize)) {
     FLAG_SET_DEFAULT(AllocatePrefetchStepSize, cache_line_size);
   }
 
   if ((AllocatePrefetchDistance == 0) && (AllocatePrefetchStyle != 0)) {
-    assert(!FLAG_IS_DEFAULT(AllocatePrefetchDistance), "default value should not be 0");
     if (!FLAG_IS_DEFAULT(AllocatePrefetchStyle)) {
       warning("AllocatePrefetchDistance is set to 0 which disable prefetching. Ignoring AllocatePrefetchStyle flag.");
     }
@@ -1235,8 +1233,7 @@ void VM_Version::get_processor_features() {
   }
 
   if (is_intel() && cpu_family() == 6 && supports_sse3()) {
-    if (FLAG_IS_DEFAULT(AllocatePrefetchLines) &&
-        supports_sse4_2() && supports_ht()) { // Nehalem based cpus
+    if (FLAG_IS_DEFAULT(AllocatePrefetchLines) && supports_sse4_2() && supports_ht()) { // Nehalem based cpus
       FLAG_SET_DEFAULT(AllocatePrefetchLines, 4);
     }
   }
@@ -1266,8 +1263,7 @@ void VM_Version::get_processor_features() {
     FLAG_SET_DEFAULT(PrefetchFieldsAhead, 1);
   }
 
-  if (FLAG_IS_DEFAULT(ContendedPaddingWidth) &&
-     (cache_line_size > ContendedPaddingWidth))
+  if (FLAG_IS_DEFAULT(ContendedPaddingWidth) && (cache_line_size > ContendedPaddingWidth))
      ContendedPaddingWidth = cache_line_size;
 
   // This machine allows unaligned memory accesses

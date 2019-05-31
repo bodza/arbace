@@ -40,25 +40,20 @@ public:
 
   int       count() const             { return _count; }
   int       receiver_count(int i)  {
-    assert(i < _limit, "out of Call Profile MorphismLimit");
     return _receiver_count[i];
   }
   float     receiver_prob(int i)  {
-    assert(i < _limit, "out of Call Profile MorphismLimit");
     return (float)_receiver_count[i]/(float)_count;
   }
   ciMethod* method(int i)          {
-    assert(i < _limit, "out of Call Profile MorphismLimit");
     return _method[i];
   }
   ciKlass*  receiver(int i)        {
-    assert(i < _limit, "out of Call Profile MorphismLimit");
     return _receiver[i];
   }
 
   // Rescale the current profile based on the incoming scale
   ciCallProfile rescale(double scale) {
-    assert(scale >= 0 && scale <= 1.0, "out of range");
     ciCallProfile call = *this;
     call._count = (int)(call._count * scale);
     for (int i = 0; i < _morphism; i++) {

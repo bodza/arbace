@@ -120,14 +120,12 @@ class Metaspace : public AllStatic {
   static metaspace::VirtualSpaceList* space_list()       { return _space_list; }
   static metaspace::VirtualSpaceList* class_space_list() { return _class_space_list; }
   static metaspace::VirtualSpaceList* get_space_list(MetadataType mdtype) {
-    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == ClassType ? class_space_list() : space_list();
   }
 
   static metaspace::ChunkManager* chunk_manager_metadata() { return _chunk_manager_metadata; }
   static metaspace::ChunkManager* chunk_manager_class()    { return _chunk_manager_class; }
   static metaspace::ChunkManager* get_chunk_manager(MetadataType mdtype) {
-    assert(mdtype != MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == ClassType ? chunk_manager_class() : chunk_manager_metadata();
   }
 
@@ -138,10 +136,8 @@ class Metaspace : public AllStatic {
 
   static const MetaspaceTracer* tracer() { return _tracer; }
   static void freeze() {
-    assert(DumpSharedSpaces, "sanity");
   }
   static void assert_not_frozen() {
-    assert(!_frozen, "sanity");
   }
   static void allocate_metaspace_compressed_klass_ptrs(char* requested_addr, address cds_base);
 
@@ -224,7 +220,6 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   metaspace::SpaceManager* vsm() const { return _vsm; }
   metaspace::SpaceManager* class_vsm() const { return _class_vsm; }
   metaspace::SpaceManager* get_space_manager(Metaspace::MetadataType mdtype) {
-    assert(mdtype != Metaspace::MetadataTypeCount, "MetadaTypeCount can't be used as mdtype");
     return mdtype == Metaspace::ClassType ? class_vsm() : vsm();
   }
 
@@ -276,9 +271,9 @@ class MetaspaceUtils : AllStatic {
   // Note: capacity = used + free + waste + overhead. Note that we do not
   // count free and waste. Their sum can be deduces from the three other values.
   // For more details, one should call print_report() from within a safe point.
-  static size_t _capacity_words [Metaspace:: MetadataTypeCount];
-  static size_t _overhead_words [Metaspace:: MetadataTypeCount];
-  static volatile size_t _used_words [Metaspace:: MetadataTypeCount];
+  static size_t _capacity_words [Metaspace::MetadataTypeCount];
+  static size_t _overhead_words [Metaspace::MetadataTypeCount];
+  static volatile size_t _used_words [Metaspace::MetadataTypeCount];
 
   // Atomically decrement or increment in-use statistic counters
   static void dec_capacity(Metaspace::MetadataType mdtype, size_t words);
@@ -317,8 +312,7 @@ public:
   static size_t free_chunks_total_bytes(Metaspace::MetadataType mdtype);
 
   static size_t capacity_words() {
-    return capacity_words(Metaspace::NonClassType) +
-           capacity_words(Metaspace::ClassType);
+    return capacity_words(Metaspace::NonClassType) + capacity_words(Metaspace::ClassType);
   }
   static size_t capacity_bytes(Metaspace::MetadataType mdtype) {
     return capacity_words(mdtype) * BytesPerWord;
@@ -328,8 +322,7 @@ public:
   }
 
   static size_t used_words() {
-    return used_words(Metaspace::NonClassType) +
-           used_words(Metaspace::ClassType);
+    return used_words(Metaspace::NonClassType) + used_words(Metaspace::ClassType);
   }
   static size_t used_bytes(Metaspace::MetadataType mdtype) {
     return used_words(mdtype) * BytesPerWord;
@@ -344,14 +337,12 @@ public:
 
   static size_t reserved_bytes(Metaspace::MetadataType mdtype);
   static size_t reserved_bytes() {
-    return reserved_bytes(Metaspace::ClassType) +
-           reserved_bytes(Metaspace::NonClassType);
+    return reserved_bytes(Metaspace::ClassType) + reserved_bytes(Metaspace::NonClassType);
   }
 
   static size_t committed_bytes(Metaspace::MetadataType mdtype);
   static size_t committed_bytes() {
-    return committed_bytes(Metaspace::ClassType) +
-           committed_bytes(Metaspace::NonClassType);
+    return committed_bytes(Metaspace::ClassType) + committed_bytes(Metaspace::NonClassType);
   }
 
   static size_t min_chunk_size_words();

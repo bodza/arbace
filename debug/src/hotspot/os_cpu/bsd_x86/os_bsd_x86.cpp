@@ -281,7 +281,7 @@ address os::Bsd::ucontext_get_pc(const ucontext_t * uc) {
 }
 
 void os::Bsd::ucontext_set_pc(ucontext_t * uc, address pc) {
-  uc->context_pc = (intptr_t)pc ;
+  uc->context_pc = (intptr_t)pc;
 }
 
 intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
@@ -300,10 +300,6 @@ intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
 // This method is also used for stack overflow signal handling.
 ExtendedPC os::Bsd::fetch_frame_from_ucontext(Thread* thread,
   const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
-
-  assert(thread != NULL, "just checking");
-  assert(ret_sp != NULL, "just checking");
-  assert(ret_fp != NULL, "just checking");
 
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
@@ -357,8 +353,6 @@ bool os::Bsd::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* u
       *fr = fr->java_sender();
     }
   } else {
-    // more complex code with compiled code
-    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -375,7 +369,6 @@ bool os::Bsd::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* u
       }
     }
   }
-  assert(fr->is_java_frame(), "Safety check");
   return true;
 }
 
@@ -458,11 +451,11 @@ JVM_handle_bsd_signal(int sig,
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Bsd::signal_handlers_are_installed) {
-    if (t != NULL ){
-      if(t->is_Java_thread()) {
+    if (t != NULL ) {
+      if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       }
-      else if(t->is_VM_thread()){
+      else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -473,7 +466,6 @@ JVM_handle_bsd_signal(int sig,
     // can't decode this kind of signal
     info = NULL;
   } else {
-    assert(sig == info->si_signo, "bad siginfo");
   }
 */
   // decide if this trap can be handled by a stub
@@ -502,13 +494,11 @@ JVM_handle_bsd_signal(int sig,
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Bsd::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                assert(fr.is_java_frame(), "Must be a Java frame");
                 frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
                   if (activation.is_interpreted_frame()) {
-                    thread->set_reserved_stack_activation((address)(
-                      activation.fp() + frame::interpreter_frame_initial_sp_offset));
+                    thread->set_reserved_stack_activation((address)(activation.fp() + frame::interpreter_frame_initial_sp_offset));
                   } else {
                     thread->set_reserved_stack_activation((address)activation.unextended_sp());
                   }
@@ -572,14 +562,8 @@ JVM_handle_bsd_signal(int sig,
       else
 
 #ifdef AMD64
-      if (sig == SIGFPE  &&
-          (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
-        stub =
-          SharedRuntime::
-          continuation_for_implicit_exception(thread,
-                                              pc,
-                                              SharedRuntime::
-                                              IMPLICIT_DIVIDE_BY_ZERO);
+      if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+        stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
 #ifdef __APPLE__
       } else if (sig == SIGFPE && info->si_code == FPE_NOOP) {
         int op = pc[0];
@@ -593,7 +577,7 @@ JVM_handle_bsd_signal(int sig,
 
         // Check for IDIV
         if (op == 0xF7) {
-          stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime:: IMPLICIT_DIVIDE_BY_ZERO);
+          stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
         } else {
           // TODO: handle more cases if we are using other x86 instructions
           //   that can generate SIGFPE signal.
@@ -607,17 +591,6 @@ JVM_handle_bsd_signal(int sig,
         // HACK: si_code does not work on bsd 2.2.12-20!!!
         int op = pc[0];
         if (op == 0xDB) {
-          // FIST
-          // TODO: The encoding of D2I in i486.ad can cause an exception
-          // prior to the fist instruction if there was an invalid operation
-          // pending. We want to dismiss that exception. From the win_32
-          // side it also seems that if it really was the fist causing
-          // the exception that we do the d2i by hand with different
-          // rounding. Seems kind of weird.
-          // NOTE: that we take the exception at the NEXT floating point instruction.
-          assert(pc[0] == 0xDB, "not a FIST opcode");
-          assert(pc[1] == 0x14, "not a FIST opcode");
-          assert(pc[2] == 0x24, "not a FIST opcode");
           return true;
         } else if (op == 0xF7) {
           // IDIV
@@ -629,8 +602,7 @@ JVM_handle_bsd_signal(int sig,
           fatal("please update this code.");
         }
 #endif
-      } else if ((sig == SIGSEGV || sig == SIGBUS) &&
-               !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
+      } else if ((sig == SIGSEGV || sig == SIGBUS) && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
@@ -654,8 +626,7 @@ JVM_handle_bsd_signal(int sig,
     // process of write protecting the memory serialization page.
     // It write enables the page immediately after protecting it
     // so we can just return to retry the write.
-    if ((sig == SIGSEGV || sig == SIGBUS) &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
+    if ((sig == SIGSEGV || sig == SIGBUS) && os::is_memory_serialize_page(thread, (address) info->si_addr)) {
       // Block current thread until the memory serialize page permission restored.
       os::block_on_serialize_page_trap();
       return true;
@@ -673,9 +644,7 @@ JVM_handle_bsd_signal(int sig,
   // this si_code is so generic that it is almost meaningless; and
   // the si_code for this condition may change in the future.
   // Furthermore, a false-positive should be harmless.
-  if (UnguardOnExecutionViolation > 0 &&
-      (sig == SIGSEGV || sig == SIGBUS) &&
-      uc->context_trapno == trap_page_fault) {
+  if (UnguardOnExecutionViolation > 0 && (sig == SIGSEGV || sig == SIGBUS) && uc->context_trapno == trap_page_fault) {
     int page_size = os::vm_page_size();
     address addr = (address) info->si_addr;
     address pc = os::Bsd::ucontext_get_pc(uc);
@@ -687,24 +656,18 @@ JVM_handle_bsd_signal(int sig,
     // different - we still want to unguard the 2nd page in this case.
     //
     // 15 bytes seems to be a (very) safe value for max instruction size.
-    bool pc_is_near_addr =
-      (pointer_delta((void*) addr, (void*) pc, sizeof(char)) < 15);
-    bool instr_spans_page_boundary =
-      (align_down((intptr_t) pc ^ (intptr_t) addr,
-                       (intptr_t) page_size) > 0);
+    bool pc_is_near_addr = (pointer_delta((void*) addr, (void*) pc, sizeof(char)) < 15);
+    bool instr_spans_page_boundary = (align_down((intptr_t) pc ^ (intptr_t) addr, (intptr_t) page_size) > 0);
 
     if (pc == addr || (pc_is_near_addr && instr_spans_page_boundary)) {
-      static volatile address last_addr =
-        (address) os::non_memory_address_word();
+      static volatile address last_addr = (address) os::non_memory_address_word();
 
       // In conservative mode, don't unguard unless the address is in the VM
-      if (addr != last_addr &&
-          (UnguardOnExecutionViolation > 1 || os::address_is_in_vm(addr))) {
+      if (addr != last_addr && (UnguardOnExecutionViolation > 1 || os::address_is_in_vm(addr))) {
 
         // Set memory to RWX and retry
         address page_start = align_down(addr, page_size);
-        bool res = os::protect_memory((char*) page_start, page_size,
-                                      os::MEM_PROT_RWX);
+        bool res = os::protect_memory((char*) page_start, page_size, os::MEM_PROT_RWX);
 
         log_debug(os)("Execution protection violation "
                       "at " INTPTR_FORMAT
@@ -817,7 +780,7 @@ size_t os::Posix::_vm_internal_thread_min_stack_allowed = 64 * K;
 
 #ifndef AMD64
 #ifdef __GNUC__
-#define GET_GS() ({int gs; __asm__ volatile("movw %%gs, %w0":"=q"(gs)); gs&0xffff;})
+#define GET_GS() ({ int gs; __asm__ volatile("movw %%gs, %w0":"=q"(gs)); gs&0xffff; })
 #endif
 #endif
 
@@ -915,14 +878,12 @@ static void current_stack_region(address * bottom, size_t * size) {
   if (rslt != 0)
     fatal("pthread_attr_get_np failed with error = %d", rslt);
 
-  if (pthread_attr_getstackaddr(&attr, (void **)bottom) != 0 ||
-    pthread_attr_getstacksize(&attr, size) != 0) {
+  if (pthread_attr_getstackaddr(&attr, (void **)bottom) != 0 || pthread_attr_getstacksize(&attr, size) != 0) {
     fatal("Can not locate current stack attributes!");
   }
 
   pthread_attr_destroy(&attr);
 #endif
-  assert(os::current_stack_pointer() >= *bottom && os::current_stack_pointer() < *bottom + *size, "just checking");
 }
 
 address os::current_stack_base() {

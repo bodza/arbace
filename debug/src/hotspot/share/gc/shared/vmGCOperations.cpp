@@ -26,8 +26,7 @@ VM_GC_Operation::~VM_GC_Operation() {
 // have to call it here, so it's only in one file.  Can't create new probes
 // for the other file anymore.   The dtrace probes have to remain stable.
 void VM_GC_Operation::notify_gc_begin(bool full) {
-  HOTSPOT_GC_BEGIN(
-                   full);
+  HOTSPOT_GC_BEGIN(full);
   HS_DTRACE_WORKAROUND_TAIL_CALL_BUG();
 }
 
@@ -48,20 +47,16 @@ bool VM_GC_Operation::skip_operation() const {
   }
   if (!skip && GCLocker::is_active_and_needs_gc()) {
     skip = Universe::heap()->is_maximal_no_gc();
-    assert(!(skip && (_gc_cause == GCCause::_gc_locker)), "GCLocker cannot be active when initiating GC");
   }
   return skip;
 }
 
 bool VM_GC_Operation::doit_prologue() {
-  assert(Thread::current()->is_Java_thread(), "just checking");
-  assert(((_gc_cause != GCCause::_no_gc) && (_gc_cause != GCCause::_no_cause_specified)), "Illegal GCCause");
 
   // To be able to handle a GC the VM initialization needs to be completed.
   if (!is_init_completed()) {
     vm_exit_during_initialization(
-      err_msg("GC triggered before VM initialization completed. Try increasing "
-              "NewSize, current value " SIZE_FORMAT "%s.",
+      err_msg("GC triggered before VM initialization completed. Try increasing NewSize, current value " SIZE_FORMAT "%s.",
               byte_size_in_proper_unit(NewSize),
               proper_unit_for_byte_size(NewSize)));
   }
@@ -81,7 +76,6 @@ bool VM_GC_Operation::doit_prologue() {
 }
 
 void VM_GC_Operation::doit_epilogue() {
-  assert(Thread::current()->is_Java_thread(), "just checking");
   // Clean up old interpreter OopMap entries that were replaced
   // during the GC thread root traversal.
   OopMapCache::cleanup_old_entries();
@@ -134,7 +128,6 @@ void VM_GenCollectForAllocation::doit() {
   GenCollectedHeap* gch = GenCollectedHeap::heap();
   GCCauseSetter gccs(gch, _gc_cause);
   _result = gch->satisfy_failed_allocation(_word_size, _tlab);
-  assert(gch->is_in_reserved_or_null(_result), "result not in heap");
 
   if (_result == NULL && GCLocker::is_active_and_needs_gc()) {
     set_gc_locked();
@@ -157,7 +150,6 @@ VM_CollectForMetadataAllocation::VM_CollectForMetadataAllocation(ClassLoaderData
                                                                  GCCause::Cause gc_cause)
     : VM_GC_Operation(gc_count_before, gc_cause, full_gc_count_before, true),
       _loader_data(loader_data), _size(size), _mdtype(mdtype), _result(NULL) {
-  assert(_size != 0, "An allocation should always be requested with this operation.");
   AllocTracer::send_allocation_requiring_gc_event(_size * HeapWordSize, GCId::peek());
 }
 

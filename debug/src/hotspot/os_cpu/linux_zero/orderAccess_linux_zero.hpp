@@ -48,14 +48,14 @@ typedef void (__kernel_dmb_t) (void);
 // Note: What is meant by LIGHT_MEM_BARRIER is a barrier which is sufficient
 // to provide TSO semantics, i.e. StoreStore | LoadLoad | LoadStore.
 
-inline void OrderAccess::loadload()   { LIGHT_MEM_BARRIER; }
+inline void OrderAccess::loadload() { LIGHT_MEM_BARRIER; }
 inline void OrderAccess::storestore() { LIGHT_MEM_BARRIER; }
-inline void OrderAccess::loadstore()  { LIGHT_MEM_BARRIER; }
-inline void OrderAccess::storeload()  { FULL_MEM_BARRIER;  }
+inline void OrderAccess::loadstore() { LIGHT_MEM_BARRIER; }
+inline void OrderAccess::storeload() { FULL_MEM_BARRIER; }
 
-inline void OrderAccess::acquire()    { LIGHT_MEM_BARRIER; }
-inline void OrderAccess::release()    { LIGHT_MEM_BARRIER; }
+inline void OrderAccess::acquire() { LIGHT_MEM_BARRIER; }
+inline void OrderAccess::release() { LIGHT_MEM_BARRIER; }
 
-inline void OrderAccess::fence()      { FULL_MEM_BARRIER;  }
+inline void OrderAccess::fence() { FULL_MEM_BARRIER; }
 
 #endif

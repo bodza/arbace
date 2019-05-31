@@ -24,5 +24,4 @@ void AccessFlags::atomic_clear_bits(jint bits) {
 }
 
 void accessFlags_init() {
-  assert(sizeof(AccessFlags) == sizeof(jint), "just checking size of flags");
 }

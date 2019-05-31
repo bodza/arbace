@@ -67,9 +67,9 @@ G1ConcurrentMarkThread::G1ConcurrentMarkThread(G1ConcurrentMark* cm) :
 class CMRemark : public VoidClosure {
   G1ConcurrentMark* _cm;
 public:
-  CMRemark(G1ConcurrentMark* cm) : _cm(cm) {}
+  CMRemark(G1ConcurrentMark* cm) : _cm(cm) { }
 
-  void do_void(){
+  void do_void() {
     _cm->remark();
   }
 };
@@ -77,9 +77,9 @@ public:
 class CMCleanup : public VoidClosure {
   G1ConcurrentMark* _cm;
 public:
-  CMCleanup(G1ConcurrentMark* cm) : _cm(cm) {}
+  CMCleanup(G1ConcurrentMark* cm) : _cm(cm) { }
 
-  void do_void(){
+  void do_void() {
     _cm->cleanup();
   }
 };
@@ -135,8 +135,7 @@ static const char* const concurrent_phase_names[] = {
   NULL                          // terminator
 };
 // Verify dense enum assumption.  +1 for terminator.
-STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT + 1 ==
-              ARRAY_SIZE(concurrent_phase_names));
+STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT + 1 == ARRAY_SIZE(concurrent_phase_names));
 
 // Returns the phase number for name, or a negative value if unknown.
 static int lookup_concurrent_phase(const char* name) {
@@ -159,10 +158,7 @@ static const char* lookup_concurrent_phase_title(int phase) {
   // Verify dense enum assumption.
   STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT == ARRAY_SIZE(titles));
 
-  assert(0 <= phase, "precondition");
-  assert((uint)phase < ARRAY_SIZE(titles), "precondition");
   const char* title = titles[phase];
-  assert(title != NULL, "precondition");
   return title;
 }
 
@@ -211,7 +207,6 @@ bool G1ConcurrentMarkThread::request_concurrent_phase(const char* phase_name) {
 
   while (!ConcurrentGCPhaseManager::wait_for_phase(phase,
                                                    phase_manager_stack())) {
-    assert(phase != G1ConcurrentPhase::ANY, "Wait for ANY phase must succeed");
     if ((phase != G1ConcurrentPhase::IDLE) && !during_cycle()) {
       // If idle and the goal is !idle, start a collection.
       G1CollectedHeap::heap()->collect(GCCause::_wb_conc_mark);
@@ -359,7 +354,6 @@ void G1ConcurrentMarkThread::run_service() {
         G1ConcPhase p(G1ConcurrentPhase::CLEANUP_FOR_NEXT_MARK, this);
         _cm->cleanup_for_next_mark();
       } else {
-        assert(!G1VerifyBitmaps || _cm->next_mark_bitmap_is_clear(), "Next mark bitmap must be clear");
       }
     }
 
@@ -385,10 +379,6 @@ void G1ConcurrentMarkThread::stop_service() {
 }
 
 void G1ConcurrentMarkThread::sleep_before_next_cycle() {
-  // We join here because we don't want to do the "shouldConcurrentMark()"
-  // below while the world is otherwise stopped.
-  assert(!in_progress(), "should have been cleared");
-
   MutexLockerEx x(CGC_lock, Mutex::_no_safepoint_check_flag);
   while (!started() && !should_terminate()) {
     CGC_lock->wait(Mutex::_no_safepoint_check_flag);

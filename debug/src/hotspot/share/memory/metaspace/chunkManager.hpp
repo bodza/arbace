@@ -132,12 +132,7 @@ class ChunkManager : public CHeapObj<mtInternal> {
   // Remove from a list by size.  Selects list based on size of chunk.
   Metachunk* free_chunks_get(size_t chunk_word_size);
 
-#define index_bounds_check(index) \
-  assert(is_valid_chunktype(index), "Bad index: %d", (int) index)
-
   size_t num_free_chunks(ChunkIndex index) const {
-    index_bounds_check(index);
-
     if (index == HumongousIndex) {
       return _humongous_dictionary.total_free_blocks();
     }
@@ -147,8 +142,6 @@ class ChunkManager : public CHeapObj<mtInternal> {
   }
 
   size_t size_free_chunks_in_bytes(ChunkIndex index) const {
-    index_bounds_check(index);
-
     size_t word_size = 0;
     if (index == HumongousIndex) {
       word_size = _humongous_dictionary.total_size();

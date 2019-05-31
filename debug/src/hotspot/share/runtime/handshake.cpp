@@ -25,7 +25,7 @@ class HandshakeThreadsOperation: public HandshakeOperation {
   ThreadClosure* _thread_cl;
 
 public:
-  HandshakeThreadsOperation(ThreadClosure* cl) : _thread_cl(cl) {}
+  HandshakeThreadsOperation(ThreadClosure* cl) : _thread_cl(cl) { }
   void do_handshake(JavaThread* thread);
   void cancel_handshake(JavaThread* thread) { _done.signal(); };
 
@@ -46,7 +46,7 @@ class VM_Handshake: public VM_Operation {
 
   VM_Handshake(HandshakeThreadsOperation* op) :
       _op(op),
-      _handshake_timeout(TimeHelper::millis_to_counter(HandshakeTimeout)) {}
+      _handshake_timeout(TimeHelper::millis_to_counter(HandshakeTimeout)) { }
 
   void set_handshake(JavaThread* target) {
     target->set_handshake_operation(_op);
@@ -86,7 +86,7 @@ class VM_HandshakeOneThread: public VM_Handshake {
   bool _thread_alive;
  public:
   VM_HandshakeOneThread(HandshakeThreadsOperation* op, JavaThread* target) :
-    VM_Handshake(op), _target(target), _thread_alive(false) {}
+    VM_Handshake(op), _target(target), _thread_alive(false) { }
 
   void doit() {
     TraceTime timer("Performing single-target operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
@@ -142,7 +142,7 @@ class VM_HandshakeOneThread: public VM_Handshake {
 
 class VM_HandshakeAllThreads: public VM_Handshake {
  public:
-  VM_HandshakeAllThreads(HandshakeThreadsOperation* op) : VM_Handshake(op) {}
+  VM_HandshakeAllThreads(HandshakeThreadsOperation* op) : VM_Handshake(op) { }
 
   void doit() {
     TraceTime timer("Performing operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
@@ -192,7 +192,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
       }
 
     } while (number_of_threads_issued > number_of_threads_completed);
-    assert(number_of_threads_issued == number_of_threads_completed, "Must be the same");
   }
 
   VMOp_Type type() const { return VMOp_HandshakeAllThreads; }
@@ -205,9 +204,9 @@ class VM_HandshakeFallbackOperation : public VM_Operation {
   bool _thread_alive;
 public:
   VM_HandshakeFallbackOperation(ThreadClosure* cl) :
-      _thread_cl(cl), _target_thread(NULL), _all_threads(true), _thread_alive(true) {}
+      _thread_cl(cl), _target_thread(NULL), _all_threads(true), _thread_alive(true) { }
   VM_HandshakeFallbackOperation(ThreadClosure* cl, Thread* target) :
-      _thread_cl(cl), _target_thread(target), _all_threads(false), _thread_alive(false) {}
+      _thread_cl(cl), _target_thread(target), _all_threads(false), _thread_alive(false) { }
 
   void doit() {
     for (JavaThreadIteratorWithHandle jtiwh; JavaThread *t = jtiwh.next(); ) {
@@ -259,7 +258,7 @@ bool Handshake::execute(ThreadClosure* thread_cl, JavaThread* target) {
   }
 }
 
-HandshakeState::HandshakeState() : _operation(NULL), _semaphore(1), _thread_in_process_handshake(false) {}
+HandshakeState::HandshakeState() : _operation(NULL), _semaphore(1), _thread_in_process_handshake(false) { }
 
 void HandshakeState::set_operation(JavaThread* target, HandshakeOperation* op) {
   _operation = op;
@@ -272,7 +271,6 @@ void HandshakeState::clear_handshake(JavaThread* target) {
 }
 
 void HandshakeState::process_self_inner(JavaThread* thread) {
-  assert(Thread::current() == thread, "should call from thread");
 
   if (thread->is_terminated()) {
     // If thread is not on threads list but armed, cancel.
@@ -295,8 +293,6 @@ void HandshakeState::process_self_inner(JavaThread* thread) {
 }
 
 void HandshakeState::cancel_inner(JavaThread* thread) {
-  assert(Thread::current() == thread, "should call from thread");
-  assert(thread->thread_state() == _thread_in_vm, "must be in vm state");
   HandshakeOperation* op = _operation;
   clear_handshake(thread);
   if (op != NULL) {
@@ -320,7 +316,6 @@ bool HandshakeState::claim_handshake_for_vmthread() {
 }
 
 void HandshakeState::process_by_vmthread(JavaThread* target) {
-  assert(Thread::current()->is_VM_thread(), "should call from vm thread");
 
   if (!has_operation()) {
     // JT has already cleared its handshake

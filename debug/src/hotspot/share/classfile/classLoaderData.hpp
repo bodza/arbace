@@ -127,7 +127,7 @@ class ClassLoaderDataGraph : public AllStatic {
   static bool has_metaspace_oom()           { return _metaspace_oom; }
   static void set_metaspace_oom(bool value) { _metaspace_oom = value; }
 
-  static void print_on(outputStream * const out) {};
+  static void print_on(outputStream * const out) { };
   static void print() { print_on(tty); }
   static void verify();
 
@@ -166,7 +166,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
     void oops_do_chunk(OopClosure* f, Chunk* c, const juint size);
 
    public:
-    ChunkedHandleList() : _head(NULL) {}
+    ChunkedHandleList() : _head(NULL) { }
     ~ChunkedHandleList();
 
     // Only one thread at a time can add, guarded by ClassLoaderData::metaspace_lock().
@@ -323,7 +323,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
 
   // Returns true if this class loader data is for a loader going away.
   bool is_unloading() const     {
-    assert(!(is_the_null_class_loader_data() && _unloading), "The null class loader can never be unloaded");
     return _unloading;
   }
 
@@ -343,7 +342,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   void set_jmethod_ids(JNIMethodBlock* new_block)  { _jmethod_ids = new_block; }
 
   void print()                                     { print_on(tty); }
-  void print_on(outputStream* out) const {};
+  void print_on(outputStream* out) const { };
   void print_value()                               { print_value_on(tty); }
   void print_value_on(outputStream* out) const;
   void verify();
@@ -402,7 +401,6 @@ class ClassLoaderDataGraphMetaspaceIterator : public StackObj {
   ~ClassLoaderDataGraphMetaspaceIterator();
   bool repeat() { return _data != NULL; }
   ClassLoaderMetaspace* get_next() {
-    assert(_data != NULL, "Should not be NULL in call to the iterator");
     ClassLoaderMetaspace* result = _data->metaspace_or_null();
     _data = _data->next();
     // This result might be NULL for class loaders without metaspace

@@ -81,7 +81,6 @@ private:
   static OopStorage* weak_storage() { return the_table()->_weak_handles; }
 
   static void create_table() {
-    assert(_the_table == NULL, "One string table allowed.");
     _the_table = new StringTable();
   }
 
@@ -117,12 +116,8 @@ private:
   static void oops_do(OopClosure* f);
 
   // Possibly parallel versions of the above
-  static void possibly_parallel_unlink(
-     OopStorage::ParState<false /* concurrent */, false /* const*/>* par_state_string,
-     BoolObjectClosure* cl, int* processed, int* removed);
-  static void possibly_parallel_oops_do(
-     OopStorage::ParState<false /* concurrent */, false /* const*/>* par_state_string,
-     OopClosure* f);
+  static void possibly_parallel_unlink(OopStorage::ParState<false /* concurrent */, false /* const*/>* par_state_string, BoolObjectClosure* cl, int* processed, int* removed);
+  static void possibly_parallel_oops_do(OopStorage::ParState<false /* concurrent */, false /* const*/>* par_state_string, OopClosure* f);
 
   // Probing
   static oop lookup(Symbol* symbol);
@@ -141,14 +136,14 @@ private:
   // Sharing
  private:
   oop lookup_shared(jchar* name, int len, unsigned int hash) { return NULL; };
-  static void copy_shared_string_table(CompactStringTableWriter* ch_table) {};
+  static void copy_shared_string_table(CompactStringTableWriter* ch_table) { };
  public:
   static oop create_archived_string(oop s, Thread* THREAD) { return NULL; };
   static void set_shared_string_mapped() { _shared_string_mapped = true; }
   static bool shared_string_mapped()     { return _shared_string_mapped; }
-  static void shared_oops_do(OopClosure* f) {};
-  static void write_to_archive() {};
-  static void serialize(SerializeClosure* soc) {};
+  static void shared_oops_do(OopClosure* f) { };
+  static void write_to_archive() { };
+  static void serialize(SerializeClosure* soc) { };
 
   // Jcmd
   static void dump(outputStream* st, bool verbose=false);

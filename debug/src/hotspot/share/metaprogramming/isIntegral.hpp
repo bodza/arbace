@@ -12,7 +12,7 @@
 template<typename T>
 struct IsIntegral
   : public IntegralConstant<bool, std::numeric_limits<typename RemoveCV<T>::type>::is_integer>
-{};
+{ };
 
 // This metafunction returns true iff the type T (irrespective of CV qualifiers)
 // is a signed integral type. Note that this is false for enums.
@@ -20,7 +20,7 @@ struct IsIntegral
 template<typename T>
 struct IsSignedIntegral
   : public IntegralConstant<bool, IsIntegral<T>::value && IsSigned<T>::value>
-{};
+{ };
 
 // This metafunction returns true iff the type T (irrespective of CV qualifiers)
 // is an unsigned integral type. Note that this is false for enums.
@@ -28,6 +28,6 @@ struct IsSignedIntegral
 template<typename T>
 struct IsUnsignedIntegral
   : public IntegralConstant<bool, IsIntegral<T>::value && !IsSigned<T>::value>
-{};
+{ };
 
 #endif

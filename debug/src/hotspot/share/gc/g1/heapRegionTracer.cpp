@@ -2,11 +2,7 @@
 #include "gc/g1/heapRegionTracer.hpp"
 // #include "jfr/jfrEvents.hpp"
 
-void HeapRegionTracer::send_region_type_change(uint index,
-                                               G1HeapRegionTraceType::Type from,
-                                               G1HeapRegionTraceType::Type to,
-                                               uintptr_t start,
-                                               size_t used) {
+void HeapRegionTracer::send_region_type_change(uint index, G1HeapRegionTraceType::Type from, G1HeapRegionTraceType::Type to, uintptr_t start, size_t used) {
   EventG1HeapRegionTypeChange e;
   if (e.should_commit()) {
     e.set_index(index);

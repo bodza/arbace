@@ -20,12 +20,10 @@ private:
   Bytecodes::Code next_wide_or_table(Bytecodes::Code); // Handle _wide & complicated inline table
 
   static Bytecodes::Code check_java(Bytecodes::Code c) {
-    assert(Bytecodes::is_java_code(c), "should not return _fast bytecodes");
     return c;
   }
 
   static Bytecodes::Code check_defined(Bytecodes::Code c) {
-    assert(Bytecodes::is_defined(c), "");
     return c;
   }
 
@@ -47,11 +45,6 @@ private:
   }
 
   void assert_wide(bool require_wide) const {
-    if (require_wide)
-         {
-            assert(is_wide(),  "must be a wide instruction"); }
-    else {
-        assert(!is_wide(), "must not be a wide instruction"); }
   }
 
   Bytecode bytecode() const { return Bytecode(this, _bc_start); }
@@ -109,7 +102,7 @@ public:
   //     while (iter.next() != ciBytecodeStream::EOBC()) { ... }
   Bytecodes::Code next() {
     _bc_start = _pc;                        // Capture start of bc
-    if( _pc >= _end ) return EOBC();        // End-Of-Bytecodes
+    if (_pc >= _end ) return EOBC();        // End-Of-Bytecodes
 
     // Fetch Java bytecode
     // All rewritten bytecodes maintain the size of original bytecode.
@@ -140,7 +133,6 @@ public:
   // Get a byte index following this bytecode.
   // If prefixed with a wide bytecode, get a wide index.
   int get_index() const {
-    assert(!has_cache_index(), "else use cpcache variant");
     return (_pc == _was_wide)   // was widened?
       ? get_index_u2(true)      // yes, return wide index
       : get_index_u1();         // no, return narrow index
@@ -174,7 +166,7 @@ public:
 
   // Get a byte signed constant for "iinc".  Invalid for other bytecodes.
   // If prefixed with a wide bytecode, get a wide constant
-  int get_iinc_con() const {return (_pc==_was_wide) ? (jshort) get_constant_u2(true) : (jbyte) get_constant_u1();}
+  int get_iinc_con() const { return (_pc==_was_wide) ? (jshort) get_constant_u2(true) : (jbyte) get_constant_u1(); }
 
   // 2-byte branch offset from current pc
   int get_dest() const {
@@ -183,7 +175,6 @@ public:
 
   // 2-byte branch offset from next pc
   int next_get_dest() const {
-    assert(_pc < _end, "");
     return next_bci() + next_bytecode().get_offset_s2(Bytecodes::_ifeq);
   }
 
@@ -292,7 +283,6 @@ public:
       while (!type()->is_klass()) {
         next();
       }
-      assert(!at_return_type(), "passed end of signature");
       sig_k = type()->as_klass();
       next();
     }
@@ -345,7 +335,6 @@ public:
                           ? exception_klass
                           : NULL);
     _bci = bci;
-    assert(_bci >= 0, "bci out of range");
     _is_exact = is_exact;
     next();
   }
@@ -386,8 +375,7 @@ public:
             // Final candidate.
             _end = _pos+1;
             return;
-          } else if (!_is_exact &&
-                     handler->catch_klass()->is_subtype_of(_exception_klass)) {
+          } else if (!_is_exact && handler->catch_klass()->is_subtype_of(_exception_klass)) {
             // This catch block may be reachable.
             return;
           }
@@ -408,7 +396,7 @@ public:
 };
 
 // Implementation for declarations in bytecode.hpp
-Bytecode::Bytecode(const ciBytecodeStream* stream, address bcp): _bcp(bcp != NULL ? bcp : stream->cur_bcp()), _code(Bytecodes::code_at(NULL, addr_at(0))) {}
+Bytecode::Bytecode(const ciBytecodeStream* stream, address bcp): _bcp(bcp != NULL ? bcp : stream->cur_bcp()), _code(Bytecodes::code_at(NULL, addr_at(0))) { }
 Bytecode_lookupswitch::Bytecode_lookupswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
 Bytecode_tableswitch::Bytecode_tableswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
 

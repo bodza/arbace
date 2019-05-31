@@ -45,15 +45,11 @@ void LinearScan::allocate_fpu_stack() {
         ResourceBitMap regs(FrameMap::nof_fpu_regs);
 
         iw.walk_to(id);   // walk after the first instruction (always a label) of the block
-        assert(iw.current_position() == id, "did not walk completely to id");
 
         // Only consider FPU values in registers
         Interval* interval = iw.active_first(fixedKind);
         while (interval != Interval::end()) {
           int reg = interval->assigned_reg();
-          assert(reg >= pd_first_fpu_reg && reg <= pd_last_fpu_reg, "no fpu register");
-          assert(interval->assigned_regHi() == -1, "must not have hi register (doubles stored in one register)");
-          assert(interval->from() <= id && id < interval->to(), "interval out of range");
 
           regs.set_bit(reg - pd_first_fpu_reg);
           interval = interval->next();
@@ -77,7 +73,7 @@ FpuStackAllocator::FpuStackAllocator(Compilation* compilation, LinearScan* alloc
   , _allocator(allocator)
   , _sim(compilation)
   , _temp_sim(compilation)
-{}
+{ }
 
 void FpuStackAllocator::allocate() {
   int num_blocks = allocator()->block_count();
@@ -86,7 +82,6 @@ void FpuStackAllocator::allocate() {
     BlockBegin* block = allocator()->block_at(i);
     intArray* fpu_stack_state = block->fpu_stack_state();
 
-    assert(fpu_stack_state != NULL || block->end()->as_Base() != NULL || block->is_set(BlockBegin::exception_entry_flag), "FPU stack state must be present due to linear-scan order for FPU stack allocation");
     // note: exception handler entries always start with an empty fpu stack
     //       because stack merging would be too complicated
 
@@ -123,7 +118,6 @@ void FpuStackAllocator::allocate_block(BlockBegin* block) {
         processed_merge = true;
         bool required_merge = merge_fpu_stack_with_successors(block);
 
-        assert(!required_merge || branch->cond() == lir_cond_always, "splitting of critical edges should prevent FPU stack mismatches at cond branches");
       }
 
     } else if (op1 != NULL) {
@@ -157,12 +151,10 @@ void FpuStackAllocator::compute_debug_information(LIR_Op* op) {
         allocate_exception_handler(xhandlers->handler_at(k));
       }
     } else {
-      assert(visitor.all_xhandler()->length() == 0, "missed exception handler");
     }
 
     // compute debug information
     int n = visitor.info_count();
-    assert(n > 0, "should not visit operation otherwise");
 
     for (int j = 0; j < n; j++) {
       CodeEmitInfo* info = visitor.info_at(j);
@@ -196,15 +188,11 @@ void FpuStackAllocator::allocate_exception_handler(XHandler* xhandler) {
 
       switch (op->code()) {
         case lir_move:
-          assert(op->as_Op1() != NULL, "must be LIR_Op1");
-          assert(pos() != insts->length() - 1, "must not be last operation");
 
           handle_op1((LIR_Op1*)op);
           break;
 
         case lir_branch:
-          assert(op->as_OpBranch()->cond() == lir_cond_always, "must be unconditional branch");
-          assert(pos() == insts->length() - 1, "must be last operation");
 
           // remove all remaining dead registers from FPU stack
           clear_fpu_stack(LIR_OprFact::illegalOpr);
@@ -225,7 +213,6 @@ void FpuStackAllocator::allocate_exception_handler(XHandler* xhandler) {
 }
 
 int FpuStackAllocator::fpu_num(LIR_Opr opr) {
-  assert(opr->is_fpu_register() && !opr->is_xmm_register(), "shouldn't call this otherwise");
   return opr->is_single_fpu() ? opr->fpu_regnr() : opr->fpu_regnrLo();
 }
 
@@ -234,26 +221,21 @@ int FpuStackAllocator::tos_offset(LIR_Opr opr) {
 }
 
 LIR_Opr FpuStackAllocator::to_fpu_stack(LIR_Opr opr) {
-  assert(opr->is_fpu_register() && !opr->is_xmm_register(), "shouldn't call this otherwise");
 
   int stack_offset = tos_offset(opr);
   if (opr->is_single_fpu()) {
     return LIR_OprFact::single_fpu(stack_offset)->make_fpu_stack_offset();
   } else {
-    assert(opr->is_double_fpu(), "shouldn't call this otherwise");
     return LIR_OprFact::double_fpu(stack_offset)->make_fpu_stack_offset();
   }
 }
 
 LIR_Opr FpuStackAllocator::to_fpu_stack_top(LIR_Opr opr, bool dont_check_offset) {
-  assert(opr->is_fpu_register() && !opr->is_xmm_register(), "shouldn't call this otherwise");
-  assert(dont_check_offset || tos_offset(opr) == 0, "operand is not on stack top");
 
   int stack_offset = 0;
   if (opr->is_single_fpu()) {
     return LIR_OprFact::single_fpu(stack_offset)->make_fpu_stack_offset();
   } else {
-    assert(opr->is_double_fpu(), "shouldn't call this otherwise");
     return LIR_OprFact::double_fpu(stack_offset)->make_fpu_stack_offset();
   }
 }
@@ -315,8 +297,6 @@ void FpuStackAllocator::do_push(LIR_Opr opr) {
 }
 
 void FpuStackAllocator::pop_if_last_use(LIR_Op* op, LIR_Opr opr) {
-  assert(op->fpu_pop_count() == 0, "fpu_pop_count alredy set");
-  assert(tos_offset(opr) == 0, "can only pop stack top");
 
   if (opr->is_last_use()) {
     op->set_fpu_pop_count(1);
@@ -325,8 +305,6 @@ void FpuStackAllocator::pop_if_last_use(LIR_Op* op, LIR_Opr opr) {
 }
 
 void FpuStackAllocator::pop_always(LIR_Op* op, LIR_Opr opr) {
-  assert(op->fpu_pop_count() == 0, "fpu_pop_count alredy set");
-  assert(tos_offset(opr) == 0, "can only pop stack top");
 
   op->set_fpu_pop_count(1);
   sim()->pop();
@@ -335,7 +313,6 @@ void FpuStackAllocator::pop_always(LIR_Op* op, LIR_Opr opr) {
 void FpuStackAllocator::clear_fpu_stack(LIR_Opr preserve) {
   int result_stack_size = (preserve->is_fpu_register() && !preserve->is_xmm_register() ? 1 : 0);
   while (sim()->stack_size() > result_stack_size) {
-    assert(!sim()->slot_is_empty(0), "not allowed");
 
     if (result_stack_size == 0 || sim()->get_slot(0) != fpu_num(preserve)) {
       insert_free(0);
@@ -434,8 +411,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
 
     case lir_neg: {
       if (in->is_fpu_register() && !in->is_xmm_register()) {
-        assert(res->is_fpu_register() && !res->is_xmm_register(), "must be");
-        assert(in->is_last_use(), "old value gets destroyed");
 
         insert_free_if_dead(res, in);
         insert_exchange(in);
@@ -452,8 +427,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
       switch (bc) {
         case Bytecodes::_d2f:
         case Bytecodes::_f2d:
-          assert(res->is_fpu_register(), "must be");
-          assert(in->is_fpu_register(), "must be");
 
           if (!in->is_xmm_register() && !res->is_xmm_register()) {
             // this is quite the same as a move from fpu-register to fpu-register
@@ -479,7 +452,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
         case Bytecodes::_l2f:
         case Bytecodes::_i2d:
         case Bytecodes::_l2d:
-          assert(res->is_fpu_register(), "must be");
           if (!res->is_xmm_register()) {
             insert_free_if_dead(res);
             do_push(res);
@@ -489,7 +461,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
 
         case Bytecodes::_f2i:
         case Bytecodes::_d2i:
-          assert(in->is_fpu_register(), "must be");
           if (!in->is_xmm_register()) {
             insert_exchange(in);
             new_in = to_fpu_stack_top(in);
@@ -500,7 +471,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
 
         case Bytecodes::_f2l:
         case Bytecodes::_d2l:
-          assert(in->is_fpu_register(), "must be");
           if (!in->is_xmm_register()) {
             insert_exchange(in);
             new_in = to_fpu_stack_top(in);
@@ -523,8 +493,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
     }
 
     case lir_roundfp: {
-      assert(in->is_fpu_register() && !in->is_xmm_register(), "input must be in register");
-      assert(res->is_stack(), "result must be on stack");
 
       insert_exchange(in);
       new_in = to_fpu_stack_top(in);
@@ -533,7 +501,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
     }
 
     default: {
-      assert(!in->is_float_kind() && !res->is_float_kind(), "missed a fpu-operation");
     }
   }
 
@@ -556,15 +523,11 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
   LIR_Opr new_right = right;
   LIR_Opr new_res   = res;
 
-  assert(!left->is_xmm_register() && !right->is_xmm_register() && !res->is_xmm_register(), "not for xmm registers");
-
   switch (op2->code()) {
     case lir_cmp:
     case lir_cmp_fd2i:
     case lir_ucmp_fd2i:
     case lir_assert: {
-      assert(left->is_fpu_register(), "invalid LIR");
-      assert(right->is_fpu_register(), "invalid LIR");
 
       // the left-hand side must be on top of stack.
       // the right-hand side is never popped, even if is_last_use is set
@@ -577,18 +540,13 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
 
     case lir_mul_strictfp:
     case lir_div_strictfp: {
-      assert(op2->tmp1_opr()->is_fpu_register(), "strict operations need temporary fpu stack slot");
       insert_free_if_dead(op2->tmp1_opr());
-      assert(sim()->stack_size() <= 7, "at least one stack slot must be free");
       // fall-through: continue with the normal handling of lir_mul and lir_div
     }
     case lir_add:
     case lir_sub:
     case lir_mul:
     case lir_div: {
-      assert(left->is_fpu_register(), "must be");
-      assert(res->is_fpu_register(), "must be");
-      assert(left->is_equal(res), "must be");
 
       // either the left-hand or the right-hand side must be on top of stack
       // (if right is not a register, left must be on top)
@@ -614,7 +572,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
           } else {
             // if left is on top of stack, the result is placed in the stack
             // slot of right, so a renaming from right to res is necessary
-            assert(tos_offset(left) == 0, "must be");
             sim()->pop();
             do_rename(right, res);
           }
@@ -626,10 +583,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
     }
 
     case lir_rem: {
-      assert(left->is_fpu_register(), "must be");
-      assert(right->is_fpu_register(), "must be");
-      assert(res->is_fpu_register(), "must be");
-      assert(left->is_equal(res), "must be");
 
       // Must bring both operands to top of stack with following operand ordering:
       // * fpu stack before rem: ... right left
@@ -639,8 +592,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
         insert_exchange(1);
       }
       insert_exchange(left);
-      assert(tos_offset(right) == 1, "check");
-      assert(tos_offset(left) == 0, "check");
 
       new_left = to_fpu_stack_top(left);
       new_right = to_fpu_stack(right);
@@ -655,12 +606,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
 
     case lir_abs:
     case lir_sqrt: {
-      // Right argument appears to be unused
-      assert(right->is_illegal(), "must be");
-      assert(left->is_fpu_register(), "must be");
-      assert(res->is_fpu_register(), "must be");
-      assert(left->is_last_use(), "old value gets destroyed");
-
       insert_free_if_dead(res, left);
       insert_exchange(left);
       do_rename(left, res);
@@ -673,7 +618,7 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
     }
 
     default: {
-      assert(false, "missed a fpu-operation");
+      ShouldNotReachHere();
     }
   }
 
@@ -688,7 +633,6 @@ void FpuStackAllocator::handle_opCall(LIR_OpCall* opCall) {
   // clear fpu-stack before call
   // it may contain dead values that could not have been remved by previous operations
   clear_fpu_stack(LIR_OprFact::illegalOpr);
-  assert(sim()->is_empty(), "fpu stack must be empty now");
 
   // compute debug information before (possible) fpu result is pushed
   compute_debug_information(opCall);
@@ -709,7 +653,6 @@ void FpuStackAllocator::merge_insert_add(LIR_List* instrs, FpuStackSim* cur_sim,
 }
 
 void FpuStackAllocator::merge_insert_xchg(LIR_List* instrs, FpuStackSim* cur_sim, int slot) {
-  assert(slot > 0, "no exchange necessary");
 
   LIR_Op1* fxch = new LIR_Op1(lir_fxch, LIR_OprFact::intConst(slot));
   instrs->instructions_list()->push(fxch);
@@ -750,7 +693,6 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
 
     int sux_slot = sux_sim->stack_size() - 1;
     while (size_diff < 0) {
-      assert(sux_slot >= 0, "slot out of bounds -> error in algorithm");
 
       int reg = sux_sim->get_slot(sux_slot);
       if (!cur_sim->contains(reg)) {
@@ -764,9 +706,6 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
      sux_slot--;
     }
   }
-
-  assert(cur_sim->stack_size() >= sux_sim->stack_size(), "stack size must be equal or greater now");
-  assert(size_diff == cur_sim->stack_size() - sux_sim->stack_size(), "must be");
 
   // stack merge algorithm:
   // 1) as long as the current stack top is not in the right location (that meens
@@ -785,12 +724,10 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
         merge_insert_xchg(instrs, cur_sim, sux_slot + size_diff);
 
       } else if (!merge_rename(cur_sim, sux_sim, finished_slot, 0)) {
-        assert(size_diff > 0, "must be");
 
         merge_insert_pop(instrs, cur_sim);
         size_diff--;
       }
-      assert(cur_sim->stack_size() == 0 || cur_sim->get_slot(0) != reg, "register must have been changed");
     }
 
     while (finished_slot >= 0 && cur_sim->get_slot(finished_slot) == sux_sim->get_slot(finished_slot)) {
@@ -801,13 +738,10 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
       int reg = cur_sim->get_slot(finished_slot);
 
       if (sux_sim->contains(reg) || !merge_rename(cur_sim, sux_sim, finished_slot, finished_slot)) {
-        assert(sux_sim->contains(reg) || size_diff > 0, "must be");
         merge_insert_xchg(instrs, cur_sim, finished_slot);
       }
-      assert(cur_sim->get_slot(finished_slot) != reg, "register must have been changed");
     }
   }
-  assert(cur_sim->stack_size() == sux_sim->stack_size(), "stack size must be equal now");
 }
 
 void FpuStackAllocator::merge_cleanup_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, BitMap& live_fpu_regs) {
@@ -853,7 +787,6 @@ bool FpuStackAllocator::merge_fpu_stack_with_successors(BlockBegin* block) {
       if (ComputeExactFPURegisterUsage) {
         FpuStackSim* cur_sim = sim();
         ResourceBitMap live_fpu_regs = block->sux_at(0)->fpu_register_usage();
-        assert(live_fpu_regs.size() == FrameMap::nof_fpu_regs, "missing register usage");
 
         merge_cleanup_fpu_stack(instrs, cur_sim, live_fpu_regs);
       }

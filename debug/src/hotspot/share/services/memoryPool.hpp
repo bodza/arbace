@@ -79,7 +79,6 @@ class MemoryPool : public CHeapObj<mtInternal> {
   }
 
   MemoryManager* get_memory_manager(int index) {
-    assert(index >= 0 && index < _num_managers, "Invalid index");
     return _managers[index];
   }
 
@@ -118,7 +117,7 @@ class MemoryPool : public CHeapObj<mtInternal> {
 class CollectedMemoryPool : public MemoryPool {
 public:
   CollectedMemoryPool(const char* name, size_t init_size, size_t max_size, bool support_usage_threshold) :
-    MemoryPool(name, MemoryPool::Heap, init_size, max_size, support_usage_threshold, true) {};
+    MemoryPool(name, MemoryPool::Heap, init_size, max_size, support_usage_threshold, true) { };
   bool is_collected_pool()            { return true; }
 };
 

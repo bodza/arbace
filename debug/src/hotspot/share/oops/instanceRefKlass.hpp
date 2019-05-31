@@ -28,11 +28,11 @@ class InstanceRefKlass: public InstanceKlass {
   static const KlassID ID = InstanceRefKlassID;
 
  private:
-  InstanceRefKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_reference, ID) {}
+  InstanceRefKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_reference, ID) { }
 
  public:
   InstanceRefKlass() {
-    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+    }
 
   // GC specific object visitors
   //
@@ -104,7 +104,7 @@ class InstanceRefKlass: public InstanceKlass {
   static void oop_oop_iterate_fields_except_referent(oop obj, OopClosureType* closure, Contains& contains);
 
   template <typename T>
-  static void trace_reference_gc(const char *s, oop obj) {};
+  static void trace_reference_gc(const char *s, oop obj) { };
 
  public:
   // Update non-static oop maps so 'referent', 'nextPending' and

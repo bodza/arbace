@@ -298,17 +298,12 @@ public:
   }
   static int make_trap_request(DeoptReason reason, DeoptAction action,
                                int index = -1) {
-    assert((1 << _reason_bits) >= Reason_LIMIT, "enough bits");
-    assert((1 << _action_bits) >= Action_LIMIT, "enough bits");
     int trap_request;
     if (index != -1)
       trap_request = index;
     else
       trap_request = (~(((reason) << _reason_shift)
                         + ((action) << _action_shift)));
-    assert(reason == trap_request_reason(trap_request), "valid reason");
-    assert(action == trap_request_action(trap_request), "valid action");
-    assert(index  == trap_request_index(trap_request),  "valid index");
     return trap_request;
   }
 
@@ -350,9 +345,7 @@ public:
   }
 
   static bool reason_is_speculate(int reason) {
-    if (reason == Reason_speculate_class_check ||
-        reason == Reason_speculate_null_check ||
-        reason == Reason_speculate_null_assert) {
+    if (reason == Reason_speculate_class_check || reason == Reason_speculate_null_check || reason == Reason_speculate_null_assert) {
       return true;
     }
     return false;

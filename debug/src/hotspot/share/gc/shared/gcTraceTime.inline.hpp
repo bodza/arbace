@@ -129,7 +129,7 @@ GCTraceTimeImplWrapper<level, T0, T1, T2, T3, T4, GuardTag>::GCTraceTimeImplWrap
 #undef INJECT_START_TAG
 
 template <LogLevelType Level, LogTagType T0, LogTagType T1, LogTagType T2, LogTagType T3, LogTagType T4, LogTagType GuardTag>
-GCTraceTimeImplWrapper<Level, T0, T1, T2, T3, T4, GuardTag>::~GCTraceTimeImplWrapper() {}
+GCTraceTimeImplWrapper<Level, T0, T1, T2, T3, T4, GuardTag>::~GCTraceTimeImplWrapper() { }
 
 #define GCTraceTime(Level, ...) GCTraceTimeImplWrapper<LogLevel::Level, LOG_TAGS(__VA_ARGS__)>
 #define GCTraceConcTime(Level, ...) GCTraceConcTimeImpl<LogLevel::Level, LOG_TAGS(__VA_ARGS__)>

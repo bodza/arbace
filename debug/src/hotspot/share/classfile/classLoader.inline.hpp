@@ -13,9 +13,7 @@ inline void ClassPathEntry::set_next(ClassPathEntry* next) {
 }
 
 inline ClassPathEntry* ClassLoader::classpath_entry(int n) {
-  assert(n >= 0, "sanity");
   if (n == 0) {
-    assert(has_jrt_entry(), "No class path entry at 0 for exploded module builds");
     return ClassLoader::_jrt_entry;
   } else {
     // The java runtime image is always the first entry
@@ -25,7 +23,6 @@ inline ClassPathEntry* ClassLoader::classpath_entry(int n) {
     // class path vs. the shared archive class path.
     ClassPathEntry* e = ClassLoader::_first_append_entry;
     while (--n >= 1) {
-      assert(e != NULL, "Not that many classpath entries.");
       e = e->next();
     }
     return e;

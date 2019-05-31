@@ -79,8 +79,6 @@ public:
   inline void copy_cards(SparsePRTEntry* e) const;
 
   inline CardIdx_t card(int i) const {
-    assert(i >= 0, "must be nonnegative");
-    assert(i < cards_num(), "range checking");
     return (CardIdx_t)_cards[i];
   }
 };
@@ -146,7 +144,7 @@ public:
   void clear();
 
   size_t capacity() const      { return _capacity; }
-  size_t capacity_mask() const { return _capacity_mask;  }
+  size_t capacity_mask() const { return _capacity_mask; }
   size_t occupied_entries() const { return _occupied_entries; }
   size_t occupied_cards() const   { return _occupied_cards; }
   size_t mem_size() const;
@@ -154,7 +152,6 @@ public:
   size_t num_entries() const { return _num_entries; }
 
   SparsePRTEntry* entry(int i) const {
-    assert(i >= 0 && (size_t)i < _num_entries, "precondition");
     return (SparsePRTEntry*)((char*)_entries + SparsePRTEntry::size() * i);
   }
 
@@ -187,7 +184,7 @@ public:
     _tbl_ind(RSHashTable::NullEntry), // So that first increment gets to 0.
     _bl_ind(RSHashTable::NullEntry),
     _card_ind((SparsePRTEntry::cards_num() - 1)),
-    _rsht(rsht) {}
+    _rsht(rsht) { }
 
   bool has_next(size_t& card_index);
 };
@@ -297,7 +294,7 @@ public:
 class SparsePRTIter: public RSHashTableIter {
 public:
   SparsePRTIter(const SparsePRT* sprt) :
-    RSHashTableIter(sprt->cur()) {}
+    RSHashTableIter(sprt->cur()) { }
 
   bool has_next(size_t& card_index) {
     return RSHashTableIter::has_next(card_index);

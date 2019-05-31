@@ -44,7 +44,6 @@ class Handle {
  protected:
   oop     obj() const                            { return _handle == NULL ? (oop)NULL : *_handle; }
   oop     non_null_obj() const                   {
-    assert(_handle != NULL, "resolving NULL handle");
     return *_handle; }
 
  public:
@@ -86,7 +85,7 @@ class Handle {
  \
    public: \
     /* Constructors */ \
-    type##Handle ()                              : Handle()                 {} \
+    type##Handle ()                              : Handle()                 { } \
     inline type##Handle (Thread* thread, type##Oop obj); \
  \
     /* Operators for ease of use */ \
@@ -114,13 +113,11 @@ DEF_HANDLE(typeArray        , is_typeArray_noinline        )
     Thread*   _thread; \
    protected: \
     type*        obj() const                     { return _value; } \
-    type*        non_null_obj() const            { \
-        assert(_value != NULL, "resolving NULL _value"); \
-        return _value; } \
+    type*        non_null_obj() const            { return _value; } \
  \
    public: \
     /* Constructors */ \
-    name##Handle () : _value(NULL), _thread(NULL) {} \
+    name##Handle () : _value(NULL), _thread(NULL) { } \
     name##Handle (type* obj); \
     name##Handle (Thread* thread, type* obj); \
  \
@@ -236,15 +233,15 @@ class HandleMark {
 
 class NoHandleMark: public StackObj {
  public:
-  NoHandleMark()  {}
-  ~NoHandleMark() {}
+  NoHandleMark()  { }
+  ~NoHandleMark() { }
 };
 
 class ResetNoHandleMark: public StackObj {
   int _no_handle_mark_nesting;
  public:
-  ResetNoHandleMark()  {}
-  ~ResetNoHandleMark() {}
+  ResetNoHandleMark()  { }
+  ~ResetNoHandleMark() { }
 };
 
 // The HandleMarkCleaner is a faster version of HandleMark.

@@ -10,18 +10,14 @@
 ciSymbol::ciSymbol(Symbol* s, vmSymbols::SID sid)
   : _symbol(s), _sid(sid)
 {
-  assert(_symbol != NULL, "adding null symbol");
   _symbol->increment_refcount();  // increment ref count
-  assert(sid_ok(), "must be in vmSymbols");
 }
 
 // Normal case for non-famous symbols.
 ciSymbol::ciSymbol(Symbol* s)
   : _symbol(s), _sid(vmSymbols::NO_SID)
 {
-  assert(_symbol != NULL, "adding null symbol");
   _symbol->increment_refcount();  // increment ref count
-  assert(sid_ok(), "must not be in vmSymbols");
 }
 
 // ciSymbol
@@ -62,7 +58,7 @@ bool ciSymbol::starts_with(const char* prefix, int len) const {
   GUARDED_VM_ENTRY(return get_symbol()->starts_with(prefix, len);)
 }
 
-bool ciSymbol::is_signature_polymorphic_name()  const {
+bool ciSymbol::is_signature_polymorphic_name() const {
   GUARDED_VM_ENTRY(return MethodHandles::is_signature_polymorphic_name(get_symbol());)
 }
 

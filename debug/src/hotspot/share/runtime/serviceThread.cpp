@@ -20,12 +20,7 @@ void ServiceThread::initialize() {
 
   // Initialize thread_oop to put it into the system threadGroup
   Handle thread_group (THREAD, Universe::system_thread_group());
-  Handle thread_oop = JavaCalls::construct_new_instance(
-                          SystemDictionary::Thread_klass(),
-                          vmSymbols::threadgroup_string_void_signature(),
-                          thread_group,
-                          string,
-                          CHECK);
+  Handle thread_oop = JavaCalls::construct_new_instance(SystemDictionary::Thread_klass(), vmSymbols::threadgroup_string_void_signature(), thread_group, string, CHECK);
 
   {
     MutexLocker mu(Threads_lock);
@@ -36,8 +31,7 @@ void ServiceThread::initialize() {
     // in that case. However, since this must work and we do not allow
     // exceptions anyway, check and abort if this fails.
     if (thread == NULL || thread->osthread() == NULL) {
-      vm_exit_during_initialization("java.lang.OutOfMemoryError",
-                                    os::native_thread_creation_failed_msg());
+      vm_exit_during_initialization("java.lang.OutOfMemoryError", os::native_thread_creation_failed_msg());
     }
 
     java_lang_Thread::set_thread(thread_oop(), thread);
@@ -88,11 +82,11 @@ void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
       LowMemoryDetector::process_sensor_changes(jt);
     }
 
-    if(has_gc_notification_event) {
+    if (has_gc_notification_event) {
         GCNotifier::sendNotification(CHECK);
     }
 
-    if(has_dcmd_notification_event) {
+    if (has_dcmd_notification_event) {
       DCmdFactory::send_notification(CHECK);
     }
   }

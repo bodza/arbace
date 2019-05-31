@@ -21,10 +21,10 @@ class HeapInspection : public StackObj {
   HeapInspection(bool csv_format, bool print_help,
                  bool print_class_stats, const char *columns) :
       _csv_format(csv_format), _print_help(print_help),
-      _print_class_stats(print_class_stats), _columns(columns) {}
-  void heap_inspection(outputStream* st) {};
+      _print_class_stats(print_class_stats), _columns(columns) { }
+  void heap_inspection(outputStream* st) { };
   size_t populate_table(KlassInfoTable* cit, BoolObjectClosure* filter = NULL) { return 0; };
-  static void find_instances_at_safepoint(Klass* k, GrowableArray<oop>* result) {};
+  static void find_instances_at_safepoint(Klass* k, GrowableArray<oop>* result) { };
  private:
   void iterate_over_heap(KlassInfoTable* cit, BoolObjectClosure* filter = NULL);
 };

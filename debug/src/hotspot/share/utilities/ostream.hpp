@@ -51,12 +51,12 @@ class outputStream : public ResourceObj {
    void inc(int n) { _indentation += n; };
    void dec(int n) { _indentation -= n; };
    int  indentation() const    { return _indentation; }
-   void set_indentation(int i) { _indentation = i;    }
+   void set_indentation(int i) { _indentation = i; }
    void fill_to(int col);
    void move_to(int col, int slop = 6, int min_space = 2);
 
    // sizing
-   int width()    const { return _width;    }
+   int width()    const { return _width; }
    int position() const { return _position; }
    int newlines() const { return _newlines; }
    julong count() const { return _precount + _position; }
@@ -71,7 +71,7 @@ class outputStream : public ResourceObj {
    void print_raw(const char* str)            { write(str, strlen(str)); }
    void print_raw(const char* str, int len)   { write(str,         len); }
    void print_raw_cr(const char* str)         { write(str, strlen(str)); cr(); }
-   void print_raw_cr(const char* str, int len){ write(str,         len); cr(); }
+   void print_raw_cr(const char* str, int len) { write(str,         len); cr(); }
    void print_data(void* data, size_t len, bool with_ascii);
    void put(char ch);
    void sp(int count = 1);
@@ -98,10 +98,10 @@ class outputStream : public ResourceObj {
    void print_julong(julong value);
 
    // flushing
-   virtual void flush() {}
+   virtual void flush() { }
    virtual void write(const char* str, size_t len) = 0;
-   virtual void rotate_log(bool force, outputStream* out = NULL) {} // GC log rotation
-   virtual ~outputStream() {}   // close properly on deletion
+   virtual void rotate_log(bool force, outputStream* out = NULL) { } // GC log rotation
+   virtual ~outputStream() { }   // close properly on deletion
 
    // Caller may specify their own scratch buffer to use for printing; otherwise,
    // an automatic buffer on the stack (with O_BUFLEN len) is used.
@@ -188,7 +188,7 @@ class fileStream : public outputStream {
   fileStream(FILE* file, bool need_close = false) { _file = file; _need_close = need_close; }
   ~fileStream();
   bool is_open() const { return _file != NULL; }
-  void set_need_close(bool b) { _need_close = b;}
+  void set_need_close(bool b) { _need_close = b; }
   virtual void write(const char* c, size_t len);
   size_t read(void *data, size_t size, size_t count) { return ::fread(data, size, count, _file); }
   char* readln(char *data, int count);
@@ -214,7 +214,7 @@ class fdStream : public outputStream {
   void set_fd(int fd) { _fd = fd; _need_close = false; }
   int fd() const { return _fd; }
   virtual void write(const char* c, size_t len);
-  void flush() {};
+  void flush() { };
 };
 
 void ostream_init();

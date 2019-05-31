@@ -17,7 +17,6 @@ ciType* ciType::_basic_types[T_CONFLICT+1];
 // ciType::ciType
 //
 ciType::ciType(BasicType basic_type) : ciMetadata() {
-  assert(basic_type >= T_BOOLEAN && basic_type <= T_CONFLICT, "range check");
   _basic_type = basic_type;
 }
 
@@ -43,7 +42,6 @@ const char* ciType::name() {
   if (is_primitive_type()) {
     return type2name(basic_type());
   } else {
-    assert(is_klass(), "must be");
     return as_klass()->name()->as_utf8();
   }
 }
@@ -96,9 +94,7 @@ ciKlass* ciType::box_klass() {
 ciType* ciType::make(BasicType t) {
   // short, etc.
   // Note: Bare T_ADDRESS means a raw pointer type, not a return_address.
-  assert((uint)t < T_CONFLICT+1, "range check");
   if (t == T_OBJECT)  return ciEnv::_Object_klass;  // java/lang/Object
-  assert(_basic_types[t] != NULL, "domain check");
   return _basic_types[t];
 }
 
@@ -111,7 +107,6 @@ ciType* ciType::make(BasicType t) {
 // ciReturnAddress::ciReturnAddress
 //
 ciReturnAddress::ciReturnAddress(int bci) : ciType(T_ADDRESS) {
-  assert(0 <= bci, "bci cannot be negative");
   _bci = bci;
 }
 

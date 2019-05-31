@@ -14,23 +14,19 @@
 const int EMPTY = -1;
 
 int FpuStackSim::regs_at(int i) const {
-  assert(i >= 0 && i < FrameMap::nof_fpu_regs, "out of bounds");
   return _regs[i];
 }
 
 void FpuStackSim::set_regs_at(int i, int val) {
-  assert(i >= 0 && i < FrameMap::nof_fpu_regs, "out of bounds");
   _regs[i] = val;
 }
 
 void FpuStackSim::dec_stack_size() {
   _stack_size--;
-  assert(_stack_size >= 0, "FPU stack underflow");
 }
 
 void FpuStackSim::inc_stack_size() {
   _stack_size++;
-  assert(_stack_size <= FrameMap::nof_fpu_regs, "FPU stack overflow");
 }
 
 FpuStackSim::FpuStackSim(Compilation* compilation)
@@ -50,14 +46,12 @@ void FpuStackSim::pop() {
 
 void FpuStackSim::pop(int rnr) {
   if (TraceFPUStack) { tty->print("FPU-pop %d", rnr); print(); tty->cr(); }
-  assert(regs_at(tos_index()) == rnr, "rnr is not on TOS");
   set_regs_at(tos_index(), EMPTY);
   dec_stack_size();
 }
 
 void FpuStackSim::push(int rnr) {
   if (TraceFPUStack) { tty->print("FPU-push %d", rnr); print(); tty->cr(); }
-  assert(regs_at(stack_size()) == EMPTY, "should be empty");
   set_regs_at(stack_size(), rnr);
   inc_stack_size();
 }
@@ -75,7 +69,7 @@ int FpuStackSim::offset_from_tos(int rnr) const {
       return tos_index() - i;
     }
   }
-  assert(false, "FpuStackSim: register not found");
+  ShouldNotReachHere();
   BAILOUT_("FpuStackSim: register not found", 0);
 }
 
@@ -93,13 +87,11 @@ void FpuStackSim::rename(int old_rnr, int new_rnr) {
     return;
   bool found = false;
   for (int i = 0; i < stack_size(); i++) {
-    assert(regs_at(i) != new_rnr, "should not see old occurrences of new_rnr on the stack");
     if (regs_at(i) == old_rnr) {
       set_regs_at(i, new_rnr);
       found = true;
     }
   }
-  assert(found, "should have found at least one instance of old_rnr");
 }
 
 bool FpuStackSim::contains(int rnr) {

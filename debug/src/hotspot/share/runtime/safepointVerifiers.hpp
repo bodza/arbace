@@ -18,8 +18,8 @@ class NoGCVerifier: public StackObj {
   unsigned int _old_invocations;
 
  public:
-  NoGCVerifier(bool verifygc = true) {}
-  ~NoGCVerifier() {}
+  NoGCVerifier(bool verifygc = true) { }
+  ~NoGCVerifier() { }
 };
 
 // A PauseNoGCVerifier is used to temporarily pause the behavior
@@ -32,8 +32,8 @@ class PauseNoGCVerifier: public StackObj {
   NoGCVerifier * _ngcv;
 
  public:
-  PauseNoGCVerifier(NoGCVerifier * ngcv) {}
-  ~PauseNoGCVerifier() {}
+  PauseNoGCVerifier(NoGCVerifier * ngcv) { }
+  ~PauseNoGCVerifier() { }
 };
 
 // A NoSafepointVerifier object will throw an assertion failure if
@@ -50,8 +50,8 @@ class NoSafepointVerifier : public NoGCVerifier {
   bool _activated;
   Thread *_thread;
  public:
-  NoSafepointVerifier(bool activated = true, bool verifygc = true) : NoGCVerifier(verifygc){}
-  ~NoSafepointVerifier() {}
+  NoSafepointVerifier(bool activated = true, bool verifygc = true) : NoGCVerifier(verifygc) { }
+  ~NoSafepointVerifier() { }
 };
 
 // A PauseNoSafepointVerifier is used to temporarily pause the
@@ -67,8 +67,8 @@ class PauseNoSafepointVerifier : public PauseNoGCVerifier {
 
  public:
   PauseNoSafepointVerifier(NoSafepointVerifier * nsv)
-    : PauseNoGCVerifier(nsv) {}
-  ~PauseNoSafepointVerifier() {}
+    : PauseNoGCVerifier(nsv) { }
+  ~PauseNoSafepointVerifier() { }
 };
 
 // A NoAllocVerifier object can be placed in methods where one assumes that
@@ -84,8 +84,8 @@ class NoAllocVerifier : public StackObj {
   bool  _activated;
 
  public:
-  NoAllocVerifier(bool activated = true) {}
-  ~NoAllocVerifier() {}
+  NoAllocVerifier(bool activated = true) { }
+  ~NoAllocVerifier() { }
 };
 
 #endif

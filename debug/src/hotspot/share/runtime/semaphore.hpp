@@ -22,8 +22,8 @@ class Semaphore : public CHeapObj<mtInternal> {
   Semaphore& operator=(const Semaphore&);
 
  public:
-  Semaphore(uint value = 0) : _impl(value) {}
-  ~Semaphore() {}
+  Semaphore(uint value = 0) : _impl(value) { }
+  ~Semaphore() { }
 
   void signal(uint count = 1) { _impl.signal(count); }
 

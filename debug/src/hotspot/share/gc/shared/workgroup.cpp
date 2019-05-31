@@ -13,7 +13,7 @@
 
 // The current implementation will exit if the allocation
 // of any worker fails.
-void  AbstractWorkGang::initialize_workers() {
+void AbstractWorkGang::initialize_workers() {
   log_develop_trace(gc, workgang)("Constructing work gang %s with %u threads", name(), total_workers());
   _workers = NEW_C_HEAP_ARRAY(AbstractGangWorker*, total_workers(), mtInternal);
   if (_workers == NULL) {
@@ -57,10 +57,7 @@ void AbstractWorkGang::add_workers(uint active_workers, bool initializing) {
 AbstractGangWorker* AbstractWorkGang::worker(uint i) const {
   // Array index bounds checking.
   AbstractGangWorker* result = NULL;
-  assert(_workers != NULL, "No workers for indexing");
-  assert(i < total_workers(), "Worker index out of bounds");
   result = _workers[i];
-  assert(result != NULL, "Indexing to null worker");
   return result;
 }
 
@@ -73,7 +70,6 @@ void AbstractWorkGang::print_worker_threads_on(outputStream* st) const {
 }
 
 void AbstractWorkGang::threads_do(ThreadClosure* tc) const {
-  assert(tc != NULL, "Null ThreadClosure");
   uint workers = created_workers();
   for (uint i = 0; i < workers; i++) {
     tc->do_thread(worker(i));
@@ -122,7 +118,6 @@ public:
     _end_semaphore->wait();
 
     // No workers are allowed to read the state variables after the coordinator has been signaled.
-    assert(_not_finished == 0, "%d not finished workers?", _not_finished);
     _task    = NULL;
     _started = 0;
   }
@@ -166,7 +161,7 @@ class MutexGangTaskDispatcher : public GangTaskDispatcher {
         _monitor(new Monitor(Monitor::leaf, "WorkGang dispatcher lock", false, Monitor::_safepoint_check_never)),
         _started(0),
         _finished(0),
-        _num_workers(0) {}
+        _num_workers(0) { }
 
   ~MutexGangTaskDispatcher() {
     delete _monitor;
@@ -227,10 +222,7 @@ static GangTaskDispatcher* create_dispatcher() {
   return new MutexGangTaskDispatcher();
 }
 
-WorkGang::WorkGang(const char* name,
-                   uint  workers,
-                   bool  are_GC_task_threads,
-                   bool  are_ConcurrentGC_threads) :
+WorkGang::WorkGang(const char* name, uint  workers, bool  are_GC_task_threads, bool  are_ConcurrentGC_threads) :
     AbstractWorkGang(name, workers, are_GC_task_threads, are_ConcurrentGC_threads),
     _dispatcher(create_dispatcher())
 { }
@@ -248,9 +240,7 @@ void WorkGang::run_task(AbstractGangTask* task) {
 }
 
 void WorkGang::run_task(AbstractGangTask* task, uint num_workers) {
-  guarantee(num_workers <= total_workers(),
-            "Trying to execute task %s with %u workers which is more than the amount of total workers %u.",
-            task->name(), num_workers, total_workers());
+  guarantee(num_workers <= total_workers(), "Trying to execute task %s with %u workers which is more than the amount of total workers %u.", task->name(), num_workers, total_workers());
   guarantee(num_workers > 0, "Trying to execute task %s with zero workers", task->name());
   uint old_num_workers = _active_workers;
   update_active_workers(num_workers);
@@ -271,12 +261,10 @@ void AbstractGangWorker::run() {
 
 void AbstractGangWorker::initialize() {
   this->initialize_named_thread();
-  assert(_gang != NULL, "No gang to run in");
   os::set_priority(this, NearMaxPriority);
   log_develop_trace(gc, workgang)("Running gang worker for gang %s id %u", gang()->name(), id());
   // The VM thread should not execute here because MutexLocker's are used
   // as (opposed to MutexLockerEx's).
-  assert(!Thread::current()->is_VM_thread(), "VM thread should not be part" " of a work gang");
 }
 
 bool AbstractGangWorker::is_GC_task_thread() const {
@@ -398,12 +386,10 @@ void SubTasksDone::clear() {
 }
 
 bool SubTasksDone::is_task_claimed(uint t) {
-  assert(t < _n_tasks, "bad task id.");
   uint old = _tasks[t];
   if (old == 0) {
     old = Atomic::cmpxchg(1u, &_tasks[t], 0u);
   }
-  assert(_tasks[t] == 1, "What else?");
   bool res = old != 0;
   return res;
 }

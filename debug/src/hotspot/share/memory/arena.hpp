@@ -46,11 +46,11 @@ class Chunk: CHeapObj<mtChunk> {
   static size_t aligned_overhead_size(void) { return ARENA_ALIGN(sizeof(Chunk)); }
   static size_t aligned_overhead_size(size_t byte_size) { return ARENA_ALIGN(byte_size); }
 
-  size_t length() const         { return _len;  }
-  Chunk* next() const           { return _next;  }
-  void set_next(Chunk* n)       { _next = n;  }
+  size_t length() const         { return _len; }
+  Chunk* next() const           { return _next; }
+  void set_next(Chunk* n)       { _next = n; }
   // Boundaries of data area (possibly unused)
-  char* bottom() const          { return ((char*) this) + aligned_overhead_size();  }
+  char* bottom() const          { return ((char*) this) + aligned_overhead_size(); }
   char* top()    const          { return bottom() + _len; }
   bool contains(char* p) const  { return bottom() <= p && p <= top(); }
 
@@ -111,7 +111,6 @@ protected:
 
   // Fast allocate in the arena.  Common case is: pointer test + increment.
   void* Amalloc(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert(is_power_of_2(ARENA_AMALLOC_ALIGNMENT) , "should be a power of 2");
     x = ARENA_ALIGN(x);
     if (!check_for_overflow(x, "Arena::Amalloc", alloc_failmode))
       return NULL;
@@ -125,7 +124,6 @@ protected:
   }
   // Further assume size is padded out to words
   void *Amalloc_4(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
     if (!check_for_overflow(x, "Arena::Amalloc_4", alloc_failmode))
       return NULL;
     if (_hwm + x > _max) {
@@ -140,7 +138,6 @@ protected:
   // Allocate with 'double' alignment. It is 8 bytes on sparc.
   // In other cases Amalloc_D() should be the same as Amalloc_4().
   void* Amalloc_D(size_t x, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM) {
-    assert( (x&(sizeof(char*)-1)) == 0, "misaligned size" );
     if (!check_for_overflow(x, "Arena::Amalloc_D", alloc_failmode))
       return NULL;
     if (_hwm + x > _max) {
@@ -173,8 +170,8 @@ protected:
   size_t size_in_bytes() const         {  return _size_in_bytes; };
   void set_size_in_bytes(size_t size);
 
-  static void free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2)  {};
-  static void free_all(char** start, char** end)                                     {};
+  static void free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2)  { };
+  static void free_all(char** start, char** end)                                     { };
 
 private:
   // Reset this Arena to empty, access will trigger grow if necessary
@@ -192,7 +189,7 @@ private:
 
 #define REALLOC_ARENA_ARRAY(arena, type, old, old_size, new_size) \
   (type*) (arena)->Arealloc((char*)(old), (old_size) * sizeof(type), \
-                            (new_size) * sizeof(type) )
+                            (new_size) * sizeof(type))
 
 #define FREE_ARENA_ARRAY(arena, type, old, size) \
   (arena)->Afree((char*)(old), (size) * sizeof(type))

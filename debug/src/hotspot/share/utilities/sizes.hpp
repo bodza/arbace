@@ -41,12 +41,12 @@
 //       folding in particular) is possible.
 
 typedef int ByteSize;
-inline ByteSize in_ByteSize(int size)                 { return size; }
-inline int      in_bytes   (ByteSize x)               { return x; }
+inline ByteSize in_ByteSize(int size) { return size; }
+inline int in_bytes (ByteSize x) { return x; }
 
 typedef int WordSize;
-inline WordSize in_WordSize(int size)                 { return size; }
-inline int      in_words   (WordSize x)               { return x; }
+inline WordSize in_WordSize(int size) { return size; }
+inline int in_words (WordSize x) { return x; }
 
 // Use the following #define to get C++ field member offsets
 

@@ -9,7 +9,7 @@ SpinYield::SpinYield(uint spin_limit, uint yield_limit) :
   _yields(0),
   _spin_limit(os::is_MP() ? spin_limit : 0),
   _yield_limit(yield_limit)
-{}
+{ }
 
 void SpinYield::yield_or_sleep() {
   if (_yields < _yield_limit) {

@@ -32,9 +32,9 @@ class UnhandledOopEntry : public CHeapObj<mtThread> {
   address _pc;
  public:
   oop* oop_ptr() { return _oop_ptr; }
-  UnhandledOopEntry() : _oop_ptr(NULL), _ok_for_gc(false), _pc(NULL) {}
+  UnhandledOopEntry() : _oop_ptr(NULL), _ok_for_gc(false), _pc(NULL) { }
   UnhandledOopEntry(oop* op, address pc) :
-                        _oop_ptr(op),   _ok_for_gc(false), _pc(pc) {}
+                        _oop_ptr(op),   _ok_for_gc(false), _pc(pc) { }
 };
 
 class UnhandledOops : public CHeapObj<mtThread> {

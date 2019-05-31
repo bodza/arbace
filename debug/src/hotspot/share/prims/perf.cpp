@@ -55,8 +55,7 @@ PERF_ENTRY(jobject, Perf_Attach(JNIEnv *env, jobject unused, jstring user, int v
     user_utf = user == NULL ? NULL : jstr_to_utf(env, user, CHECK_NULL);
   }
 
-  if (mode != PerfMemory::PERF_MODE_RO &&
-      mode != PerfMemory::PERF_MODE_RW) {
+  if (mode != PerfMemory::PERF_MODE_RO && mode != PerfMemory::PERF_MODE_RW) {
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
   }
 
@@ -163,8 +162,7 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
   }
 
   // check for valid variability classification
-  if (variability != PerfData::V_Constant &&
-      variability != PerfData::V_Variable) {
+  if (variability != PerfData::V_Constant && variability != PerfData::V_Variable) {
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
   }
 
@@ -207,7 +205,6 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
                                                     (char*)value_local,
                                                     CHECK_NULL);
 
-      assert(maxlength == value_length, "string constant length should be == maxlength");
       maxlength = value_length;
     }
     else {
@@ -218,7 +215,6 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
                                                     (char*)value_local,
                                                     CHECK_NULL);
 
-     assert(maxlength >= value_length,"string variable length should be <= maxlength");
     }
   }
 
@@ -265,12 +261,12 @@ PERF_END
 
 static JNINativeMethod perfmethods[] = {
 
-  {CC "attach",              CC "(" JLS "II)" BB, FN_PTR(Perf_Attach)},
-  {CC "detach",              CC "(" BB ")V",      FN_PTR(Perf_Detach)},
-  {CC "createLong",          CL_ARGS,             FN_PTR(Perf_CreateLong)},
-  {CC "createByteArray",     CBA_ARGS,            FN_PTR(Perf_CreateByteArray)},
-  {CC "highResCounter",      CC "()J",            FN_PTR(Perf_HighResCounter)},
-  {CC "highResFrequency",    CC "()J",            FN_PTR(Perf_HighResFrequency)}
+  { CC "attach",              CC "(" JLS "II)" BB, FN_PTR(Perf_Attach)},
+  { CC "detach",              CC "(" BB ")V",      FN_PTR(Perf_Detach)},
+  { CC "createLong",          CL_ARGS,             FN_PTR(Perf_CreateLong)},
+  { CC "createByteArray",     CBA_ARGS,            FN_PTR(Perf_CreateByteArray)},
+  { CC "highResCounter",      CC "()J",            FN_PTR(Perf_HighResCounter)},
+  { CC "highResFrequency",    CC "()J",            FN_PTR(Perf_HighResFrequency)}
 };
 
 #undef CBA_ARGS

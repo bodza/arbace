@@ -92,8 +92,8 @@
     _outbuf->print("%s", termString);
 #endif
 
-const char  blobTypeChar[] = {' ', 'C', 'N', 'I', 'X', 'Z', 'U', 'R', '?', 'D', 'T', 'E', 'S', 'A', 'M', 'B', 'L' };
-const char* blobTypeName[] = {"noType"
+const char  blobTypeChar[] = { ' ', 'C', 'N', 'I', 'X', 'Z', 'U', 'R', '?', 'D', 'T', 'E', 'S', 'A', 'M', 'B', 'L' };
+const char* blobTypeName[] = { "noType"
                              ,     "nMethod (under construction)"
                              ,          "nMethod (active)"
                              ,               "nMethod (inactive)"
@@ -735,7 +735,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
                       // That's necessary to keep the entry for the largest block at index 0.
                       // This move might cause the current minimum to be moved to another place
                       if (i == currMin_ix) {
-                        assert(TopSizeArray[i].len == currMin, "sort error");
                         currMin_ix = used_topSizeBlocks;
                       }
                       memcpy((void*)&TopSizeArray[used_topSizeBlocks], (void*)&TopSizeArray[i], sizeof(TopSizeBlk));
@@ -1253,10 +1252,10 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
           ast->print("%5d", nm->hotness_counter());
           //---<  name and signature  >---
           ast->fill_to(67+6);
-          if (nm->is_in_use())        {blob_name = nm->method()->name_and_sig_as_C_string(); }
-          if (nm->is_not_entrant())   {blob_name = nm->method()->name_and_sig_as_C_string(); }
-          if (nm->is_not_installed()) {ast->print("%s", " not (yet) installed method "); }
-          if (nm->is_zombie())        {ast->print("%s", " zombie method "); }
+          if (nm->is_in_use())        { blob_name = nm->method()->name_and_sig_as_C_string(); }
+          if (nm->is_not_entrant())   { blob_name = nm->method()->name_and_sig_as_C_string(); }
+          if (nm->is_not_installed()) { ast->print("%s", " not (yet) installed method "); }
+          if (nm->is_zombie())        { ast->print("%s", " zombie method "); }
           ast->print("%s", blob_name);
         } else {
           //---<  block size in hex  >---
@@ -2084,8 +2083,7 @@ void CodeHeapState::print_names(outputStream* out, CodeHeap* heap) {
       STRINGSTREAM_FLUSH_LOCKED("")
     }
     // Only check granule if it contains at least one blob.
-    unsigned int nBlobs  = StatArray[ix].t1_count   + StatArray[ix].t2_count + StatArray[ix].tx_count +
-                           StatArray[ix].stub_count + StatArray[ix].dead_count;
+    unsigned int nBlobs  = StatArray[ix].t1_count   + StatArray[ix].t2_count + StatArray[ix].tx_count + StatArray[ix].stub_count + StatArray[ix].dead_count;
     if (nBlobs > 0 ) {
     for (unsigned int is = 0; is < granule_size; is+=(unsigned int)seg_size) {
       // heap->find_start() is safe. Only working with _segmap. Returns NULL or void*. Returned CodeBlob may be uninitialized.
@@ -2302,7 +2300,6 @@ void CodeHeapState::print_line_delim(outputStream* out, outputStream* ast, char*
       ast->print("|");
     }
     ast->cr();
-    assert(out == ast, "must use the same stream!");
 
     ast->print(INTPTR_FORMAT, p2i(low_bound + ix*granule_size));
     ast->fill_to(19);
@@ -2311,7 +2308,6 @@ void CodeHeapState::print_line_delim(outputStream* out, outputStream* ast, char*
 }
 
 void CodeHeapState::print_line_delim(outputStream* out, bufferedStream* ast, char* low_bound, unsigned int ix, unsigned int gpl) {
-  assert(out != ast, "must not use the same stream!");
   if (ix % gpl == 0) {
     if (ix > 0) {
       ast->print("|");

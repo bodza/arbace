@@ -60,7 +60,6 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
                                        const char* format, va_list ap,
                                        bool add_cr,
                                        size_t& result_len) {
-  assert(buflen >= 2, "buffer too small");
 
   const char* result;
   if (add_cr)  buflen--;
@@ -76,7 +75,6 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
     if (add_cr && result_len >= buflen)  result_len = buflen-1;  // truncate
   } else {
     int written = os::vsnprintf(buffer, buflen, format, ap);
-    assert(written >= 0, "vsnprintf encoding error");
     result = buffer;
     if ((size_t)written < buflen) {
       result_len = written;
@@ -153,7 +151,6 @@ void outputStream::move_to(int col, int slop, int min_space) {
 }
 
 void outputStream::put(char ch) {
-  assert(ch != 0, "please fix call site");
   char buf[] = { ch, '\0' };
   write(buf, 1);
 }
@@ -197,9 +194,7 @@ void outputStream::stamp() {
   print_raw(buf);
 }
 
-void outputStream::stamp(bool guard,
-                         const char* prefix,
-                         const char* suffix) {
+void outputStream::stamp(bool guard, const char* prefix, const char* suffix) {
   if (!guard) {
     return;
   }
@@ -208,9 +203,7 @@ void outputStream::stamp(bool guard,
   print_raw(suffix);
 }
 
-void outputStream::date_stamp(bool guard,
-                              const char* prefix,
-                              const char* suffix) {
+void outputStream::date_stamp(bool guard, const char* prefix, const char* suffix) {
   if (!guard) {
     return;
   }
@@ -312,7 +305,6 @@ void stringStream::write(const char* s, size_t len) {
         end = buffer_length * 2;
       }
       char* oldbuf = buffer;
-      assert(rm == NULL || Thread::current()->current_resource_mark() == rm, "StringStream is re-allocated with a different ResourceMark. Current: " PTR_FORMAT " original: " PTR_FORMAT, p2i(Thread::current()->current_resource_mark()), p2i(rm));
       buffer = NEW_RESOURCE_ARRAY(char, end);
       if (buffer_pos > 0) {
         memcpy(buffer, oldbuf, buffer_pos);
@@ -341,7 +333,7 @@ char* stringStream::as_string() {
   return copy;
 }
 
-stringStream::~stringStream() {}
+stringStream::~stringStream() { }
 
 xmlStream*   xtty;
 outputStream* tty;
@@ -376,8 +368,7 @@ static const char* make_log_name_internal(const char* log_name, const char* forc
   // Compute buffer length
   size_t buffer_length;
   if (force_directory != NULL) {
-    buffer_length = strlen(force_directory) + strlen(os::file_separator()) +
-                    strlen(basename) + 1;
+    buffer_length = strlen(force_directory) + strlen(os::file_separator()) + strlen(basename) + 1;
   } else {
     buffer_length = strlen(log_name) + 1;
   }
@@ -635,10 +626,7 @@ void defaultStream::start_log() {
     jlong time_ms = os::javaTimeMillis() - tty->time_stamp().milliseconds();
     // %%% Should be: jlong time_ms = os::start_time_milliseconds(), if
     // we ever get round to introduce that method on the os class
-    xs->head("hotspot_log version='%d %d'"
-             " process='%d' time_ms='" INT64_FORMAT "'",
-             LOG_MAJOR_VERSION, LOG_MINOR_VERSION,
-             os::current_process_id(), (int64_t)time_ms);
+    xs->head("hotspot_log version='%d %d' process='%d' time_ms='" INT64_FORMAT "'", LOG_MAJOR_VERSION, LOG_MINOR_VERSION, os::current_process_id(), (int64_t)time_ms);
     // Write VM version header immediately.
     xs->head("vm_version");
     xs->head("name"); xs->text("%s", VM_Version::vm_name()); xs->cr();
@@ -674,13 +662,11 @@ void defaultStream::start_log() {
       // System properties don't generally contain newlines, so don't bother with unparsing.
       outputStream *text = xs->text();
       for (SystemProperty* p = Arguments::system_properties(); p != NULL; p = p->next()) {
-        assert(p->key() != NULL, "p->key() is NULL");
         if (p->is_readable()) {
           // Print in two stages to avoid problems with long
           // keys/values.
           text->print_raw(p->key());
           text->put('=');
-          assert(p->value() != NULL, "p->value() is NULL");
           text->print_raw_cr(p->value());
         }
       }
@@ -761,9 +747,7 @@ intx defaultStream::hold(intx writer_id) {
       VMError::is_error_reported() ||
 
       // safepoint == global lock (for VM only)
-      (SafepointSynchronize::is_synchronizing() &&
-       Thread::current()->is_VM_thread())
-      ) {
+      (SafepointSynchronize::is_synchronizing() && Thread::current()->is_VM_thread())) {
     // do not attempt to lock unless we know the thread and the VM is healthy
     return NO_WRITER;
   }
@@ -801,8 +785,7 @@ void defaultStream::write(const char* s, size_t len) {
   intx thread_id = os::current_thread_id();
   intx holder = hold(thread_id);
 
-  if (DisplayVMOutput &&
-      (_outer_xmlStream == NULL || !_outer_xmlStream->inside_attrs())) {
+  if (DisplayVMOutput && (_outer_xmlStream == NULL || !_outer_xmlStream->inside_attrs())) {
     // print to output stream. It can be redirected by a vfprintf hook
     jio_print(s, len);
   }
@@ -812,7 +795,7 @@ void defaultStream::write(const char* s, size_t len) {
     int nl0 = _newlines;
     xmlTextStream::write(s, len);
     // flush the log file too, if there were any newlines
-    if (nl0 != _newlines){
+    if (nl0 != _newlines) {
       flush();
     }
   } else {
@@ -845,8 +828,7 @@ bool ttyLocker::release_tty_if_locked() {
 }
 
 void ttyLocker::break_tty_lock_for_safepoint(intx holder) {
-  if (defaultStream::instance != NULL &&
-      defaultStream::instance->writer() == holder) {
+  if (defaultStream::instance != NULL && defaultStream::instance->writer() == holder) {
     if (xtty != NULL) {
       xtty->print_cr("<!-- safepoint while printing -->");
     }
@@ -923,7 +905,7 @@ bufferedStream::bufferedStream(char* fixed_buffer, size_t fixed_buffer_size, siz
 
 void bufferedStream::write(const char* s, size_t len) {
 
-  if(buffer_pos + len > buffer_max) {
+  if (buffer_pos + len > buffer_max) {
     flush();
   }
 

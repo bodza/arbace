@@ -213,7 +213,7 @@ private:
   SafeThreadsListPtr _list_ptr;
 
 public:
-  ThreadsListSetter() : _list_ptr(Thread::current(), /* acquire */ false) {}
+  ThreadsListSetter() : _list_ptr(Thread::current(), /* acquire */ false) { }
   ThreadsList* list() { return _list_ptr.list(); }
   void set() { _list_ptr.acquire_stable_list(); }
   bool is_set() { return _list_ptr._needs_release; }
@@ -264,7 +264,6 @@ class JavaThreadIterator : public StackObj {
 
 public:
   JavaThreadIterator(ThreadsList *list) : _list(list), _index(0) {
-    assert(list != NULL, "ThreadsList must not be NULL.");
   }
 
   JavaThread *first() {
@@ -301,7 +300,7 @@ class JavaThreadIteratorWithHandle : public StackObj {
   uint _index;
 
 public:
-  JavaThreadIteratorWithHandle() : _index(0) {}
+  JavaThreadIteratorWithHandle() : _index(0) { }
 
   uint length() const {
     return _tlh.length();

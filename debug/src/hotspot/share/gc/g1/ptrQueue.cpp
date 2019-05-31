@@ -16,10 +16,9 @@ PtrQueue::PtrQueue(PtrQueueSet* qset, bool permanent, bool active) :
   _capacity_in_bytes(0),
   _buf(NULL),
   _lock(NULL)
-{}
+{ }
 
 PtrQueue::~PtrQueue() {
-  assert(_permanent || (_buf == NULL), "queue must be flushed before delete");
 }
 
 void PtrQueue::flush_impl() {
@@ -41,15 +40,11 @@ void PtrQueue::enqueue_known_active(void* ptr) {
     handle_zero_index();
   }
 
-  assert(_buf != NULL, "postcondition");
-  assert(index() > 0, "postcondition");
-  assert(index() <= capacity(), "invariant");
   _index -= _element_size;
   _buf[index()] = ptr;
 }
 
 void PtrQueue::locking_enqueue_completed_buffer(BufferNode* node) {
-  assert(_lock->owned_by_self(), "Required.");
   qset()->enqueue_complete_buffer(node);
 }
 
@@ -84,15 +79,10 @@ PtrQueueSet::~PtrQueueSet() {
   // doing nothing here.
 }
 
-void PtrQueueSet::initialize(Monitor* cbl_mon,
-                             Mutex* fl_lock,
-                             int process_completed_threshold,
-                             int max_completed_queue,
-                             PtrQueueSet *fl_owner) {
+void PtrQueueSet::initialize(Monitor* cbl_mon, Mutex* fl_lock, int process_completed_threshold, int max_completed_queue, PtrQueueSet *fl_owner) {
   _max_completed_queue = max_completed_queue;
   _process_completed_threshold = process_completed_threshold;
   _completed_queue_padding = 0;
-  assert(cbl_mon != NULL && fl_lock != NULL, "Init order issue?");
   _cbl_mon = cbl_mon;
   _fl_lock = fl_lock;
   _fl_owner = (fl_owner != NULL) ? fl_owner : this;
@@ -126,12 +116,10 @@ void PtrQueueSet::deallocate_buffer(BufferNode* node) {
 }
 
 void PtrQueueSet::reduce_free_list() {
-  assert(_fl_owner == this, "Free list reduction is allowed only for the owner");
   // For now we'll adopt the strategy of deleting half.
   MutexLockerEx x(_fl_lock, Mutex::_no_safepoint_check_flag);
   size_t n = _buf_free_list_sz / 2;
   for (size_t i = 0; i < n; ++i) {
-    assert(_buf_free_list != NULL, "_buf_free_list_sz is wrong: " SIZE_FORMAT, _buf_free_list_sz);
     BufferNode* node = _buf_free_list;
     _buf_free_list = node->next();
     _buf_free_list_sz--;
@@ -140,30 +128,24 @@ void PtrQueueSet::reduce_free_list() {
 }
 
 void PtrQueue::handle_zero_index() {
-  assert(index() == 0, "precondition");
 
   // This thread records the full buffer and allocates a new one (while
   // holding the lock if there is one).
   if (_buf != NULL) {
     if (!should_enqueue_buffer()) {
-      assert(index() > 0, "the buffer can only be re-used if it's not full");
       return;
     }
 
     if (_lock) {
-      assert(_lock->owned_by_self(), "Required.");
 
       BufferNode* node = BufferNode::make_node_from_buffer(_buf, index());
       _buf = NULL;         // clear shared _buf field
 
       locking_enqueue_completed_buffer(node); // enqueue completed buffer
-      assert(_buf == NULL, "multiple enqueuers appear to be racing");
     } else {
       BufferNode* node = BufferNode::make_node_from_buffer(_buf, index());
       if (qset()->process_or_enqueue_complete_buffer(node)) {
         // Recycle the buffer. No allocation.
-        assert(_buf == BufferNode::make_buffer_from_node(node), "invariant");
-        assert(capacity() == qset()->buffer_size(), "invariant");
         reset();
         return;
       }
@@ -179,9 +161,7 @@ void PtrQueue::handle_zero_index() {
 bool PtrQueueSet::process_or_enqueue_complete_buffer(BufferNode* node) {
   if (Thread::current()->is_Java_thread()) {
     // We don't lock. It is fine to be epsilon-precise here.
-    if (_max_completed_queue == 0 ||
-        (_max_completed_queue > 0 &&
-          _n_completed_buffers >= _max_completed_queue + _completed_queue_padding)) {
+    if (_max_completed_queue == 0 || (_max_completed_queue > 0 && _n_completed_buffers >= _max_completed_queue + _completed_queue_padding)) {
       bool b = mut_process_buffer(node);
       if (b) {
         // True here means that the buffer hasn't been deallocated and the caller may reuse it.
@@ -198,7 +178,6 @@ void PtrQueueSet::enqueue_complete_buffer(BufferNode* cbn) {
   MutexLockerEx x(_cbl_mon, Mutex::_no_safepoint_check_flag);
   cbn->set_next(NULL);
   if (_completed_buffers_tail == NULL) {
-    assert(_completed_buffers_head == NULL, "Well-formedness");
     _completed_buffers_head = cbn;
     _completed_buffers_tail = cbn;
   } else {
@@ -207,8 +186,7 @@ void PtrQueueSet::enqueue_complete_buffer(BufferNode* cbn) {
   }
   _n_completed_buffers++;
 
-  if (!_process_completed && _process_completed_threshold >= 0 &&
-      _n_completed_buffers >= (size_t)_process_completed_threshold) {
+  if (!_process_completed && _process_completed_threshold >= 0 && _n_completed_buffers >= (size_t)_process_completed_threshold) {
     _process_completed = true;
     if (_notify_when_complete) {
       _cbl_mon->notify();
@@ -232,12 +210,10 @@ void PtrQueueSet::assert_completed_buffer_list_len_correct() {
 }
 
 void PtrQueueSet::assert_completed_buffer_list_len_correct_locked() {
-  guarantee(completed_buffers_list_length() ==  _n_completed_buffers,
-            "Completed buffer length is wrong.");
+  guarantee(completed_buffers_list_length() ==  _n_completed_buffers, "Completed buffer length is wrong.");
 }
 
 void PtrQueueSet::set_buffer_size(size_t sz) {
-  assert(_buffer_size == 0 && sz > 0, "Should be called only once.");
   _buffer_size = sz;
 }
 
@@ -245,14 +221,11 @@ void PtrQueueSet::set_buffer_size(size_t sz) {
 // The source queue is emptied as a result. The queues
 // must share the monitor.
 void PtrQueueSet::merge_bufferlists(PtrQueueSet *src) {
-  assert(_cbl_mon == src->_cbl_mon, "Should share the same lock");
   MutexLockerEx x(_cbl_mon, Mutex::_no_safepoint_check_flag);
   if (_completed_buffers_tail == NULL) {
-    assert(_completed_buffers_head == NULL, "Well-formedness");
     _completed_buffers_head = src->_completed_buffers_head;
     _completed_buffers_tail = src->_completed_buffers_tail;
   } else {
-    assert(_completed_buffers_head != NULL, "Well formedness");
     if (src->_completed_buffers_head != NULL) {
       _completed_buffers_tail->set_next(src->_completed_buffers_head);
       _completed_buffers_tail = src->_completed_buffers_tail;
@@ -264,12 +237,10 @@ void PtrQueueSet::merge_bufferlists(PtrQueueSet *src) {
   src->_completed_buffers_head = NULL;
   src->_completed_buffers_tail = NULL;
 
-  assert(_completed_buffers_head == NULL && _completed_buffers_tail == NULL || _completed_buffers_head != NULL && _completed_buffers_tail != NULL, "Sanity");
 }
 
 void PtrQueueSet::notify_if_necessary() {
   MutexLockerEx x(_cbl_mon, Mutex::_no_safepoint_check_flag);
-  assert(_process_completed_threshold >= 0, "_process_completed is negative");
   if (_n_completed_buffers >= (size_t)_process_completed_threshold || _max_completed_queue == 0) {
     _process_completed = true;
     if (_notify_when_complete)

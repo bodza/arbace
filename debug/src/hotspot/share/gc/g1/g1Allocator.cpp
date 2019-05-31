@@ -19,25 +19,20 @@ G1Allocator::G1Allocator(G1CollectedHeap* heap) :
 }
 
 void G1Allocator::init_mutator_alloc_region() {
-  assert(_mutator_alloc_region.get() == NULL, "pre-condition");
   _mutator_alloc_region.init();
 }
 
 void G1Allocator::release_mutator_alloc_region() {
   _mutator_alloc_region.release();
-  assert(_mutator_alloc_region.get() == NULL, "post-condition");
 }
 
 bool G1Allocator::is_retained_old_region(HeapRegion* hr) {
   return _retained_old_gc_alloc_region == hr;
 }
 
-void G1Allocator::reuse_retained_old_region(EvacuationInfo& evacuation_info,
-                                            OldGCAllocRegion* old,
-                                            HeapRegion** retained_old) {
+void G1Allocator::reuse_retained_old_region(EvacuationInfo& evacuation_info, OldGCAllocRegion* old, HeapRegion** retained_old) {
   HeapRegion* retained_region = *retained_old;
   *retained_old = NULL;
-  assert(retained_region == NULL || !retained_region->is_archive(), "Archive region should not be alloc region (index %u)", retained_region->hrm_index());
 
   // We will discard the current GC alloc region if:
   // a) it's in the collection set (it can happen!),
@@ -48,11 +43,7 @@ void G1Allocator::reuse_retained_old_region(EvacuationInfo& evacuation_info,
   // during a cleanup and was added to the free list, but
   // has been subsequently used to allocate a humongous
   // object that may be less than the region size).
-  if (retained_region != NULL &&
-      !retained_region->in_collection_set() &&
-      !(retained_region->top() == retained_region->end()) &&
-      !retained_region->is_empty() &&
-      !retained_region->is_humongous()) {
+  if (retained_region != NULL && !retained_region->in_collection_set() && !(retained_region->top() == retained_region->end()) && !retained_region->is_empty() && !retained_region->is_humongous()) {
     // The retained region was added to the old region set when it was
     // retired. We have to remove it now, since we don't allow regions
     // we allocate to in the region sets. We'll re-add it later, when
@@ -67,8 +58,6 @@ void G1Allocator::reuse_retained_old_region(EvacuationInfo& evacuation_info,
 }
 
 void G1Allocator::init_gc_alloc_regions(EvacuationInfo& evacuation_info) {
-  assert_at_safepoint_on_vm_thread();
-
   _survivor_is_full = false;
   _old_is_full = false;
 
@@ -80,8 +69,7 @@ void G1Allocator::init_gc_alloc_regions(EvacuationInfo& evacuation_info) {
 }
 
 void G1Allocator::release_gc_alloc_regions(EvacuationInfo& evacuation_info) {
-  evacuation_info.set_allocation_regions(survivor_gc_alloc_region()->count() +
-                                         old_gc_alloc_region()->count());
+  evacuation_info.set_allocation_regions(survivor_gc_alloc_region()->count() + old_gc_alloc_region()->count());
   survivor_gc_alloc_region()->release();
   // If we have an old GC alloc region to release, we'll save it in
   // _retained_old_gc_alloc_region. If we don't
@@ -92,8 +80,6 @@ void G1Allocator::release_gc_alloc_regions(EvacuationInfo& evacuation_info) {
 }
 
 void G1Allocator::abandon_gc_alloc_regions() {
-  assert(survivor_gc_alloc_region()->get() == NULL, "pre-condition");
-  assert(old_gc_alloc_region()->get() == NULL, "pre-condition");
   _retained_old_gc_alloc_region = NULL;
 }
 
@@ -131,7 +117,6 @@ size_t G1Allocator::unsafe_max_tlab_alloc() {
 }
 
 size_t G1Allocator::used_in_alloc_regions() {
-  assert(Heap_lock->owner() != NULL, "Should be owned on this thread's behalf.");
   return mutator_alloc_region()->used_in_alloc_regions();
 }
 
@@ -139,7 +124,6 @@ HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest,
                                               size_t word_size) {
   size_t temp = 0;
   HeapWord* result = par_allocate_during_gc(dest, word_size, word_size, &temp);
-  assert(result == NULL || temp == word_size, "Requested " SIZE_FORMAT " words, but got " SIZE_FORMAT " at " PTR_FORMAT, word_size, temp, p2i(result));
   return result;
 }
 
@@ -161,7 +145,6 @@ HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest,
 HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size,
                                                    size_t desired_word_size,
                                                    size_t* actual_word_size) {
-  assert(!_g1h->is_humongous(desired_word_size), "we should not be seeing humongous-size allocations in this path");
 
   HeapWord* result = survivor_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                     desired_word_size,
@@ -184,7 +167,6 @@ HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size,
 HeapWord* G1Allocator::old_attempt_allocation(size_t min_word_size,
                                               size_t desired_word_size,
                                               size_t* actual_word_size) {
-  assert(!_g1h->is_humongous(desired_word_size), "we should not be seeing humongous-size allocations in this path");
 
   HeapWord* result = old_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                desired_word_size,
@@ -202,13 +184,11 @@ HeapWord* G1Allocator::old_attempt_allocation(size_t min_word_size,
 }
 
 uint G1PLABAllocator::calc_survivor_alignment_bytes() {
-  assert(SurvivorAlignmentInBytes >= ObjectAlignmentInBytes, "sanity");
   if (SurvivorAlignmentInBytes == ObjectAlignmentInBytes) {
     // No need to align objects in the survivors differently, return 0
     // which means "survivor alignment is not used".
     return 0;
   } else {
-    assert(SurvivorAlignmentInBytes > 0, "sanity");
     return SurvivorAlignmentInBytes;
   }
 }
@@ -239,25 +219,18 @@ HeapWord* G1PLABAllocator::allocate_direct_or_new_plab(InCSetState dest,
 
   // Only get a new PLAB if the allocation fits and it would not waste more than
   // ParallelGCBufferWastePct in the existing buffer.
-  if ((required_in_plab <= plab_word_size) &&
-    may_throw_away_buffer(required_in_plab, plab_word_size)) {
+  if ((required_in_plab <= plab_word_size) && may_throw_away_buffer(required_in_plab, plab_word_size)) {
 
     PLAB* alloc_buf = alloc_buffer(dest);
     alloc_buf->retire();
 
     size_t actual_plab_size = 0;
-    HeapWord* buf = _allocator->par_allocate_during_gc(dest,
-                                                       required_in_plab,
-                                                       plab_word_size,
-                                                       &actual_plab_size);
-
-    assert(buf == NULL || ((actual_plab_size >= required_in_plab) && (actual_plab_size <= plab_word_size)), "Requested at minimum " SIZE_FORMAT ", desired " SIZE_FORMAT " words, but got " SIZE_FORMAT " at " PTR_FORMAT, required_in_plab, plab_word_size, actual_plab_size, p2i(buf));
+    HeapWord* buf = _allocator->par_allocate_during_gc(dest, required_in_plab, plab_word_size, &actual_plab_size);
 
     if (buf != NULL) {
       alloc_buf->set_buf(buf, actual_plab_size);
 
       HeapWord* const obj = alloc_buf->allocate(word_sz);
-      assert(obj != NULL, "PLAB should have been big enough, tried to allocate " SIZE_FORMAT " requiring " SIZE_FORMAT " PLAB size " SIZE_FORMAT, word_sz, required_in_plab, plab_word_size);
       return obj;
     }
     // Otherwise.
@@ -319,7 +292,6 @@ bool G1ArchiveAllocator::alloc_new_region() {
   if (hr == NULL) {
     return false;
   }
-  assert(hr->is_empty(), "expected empty region (index %u)", hr->hrm_index());
   if (_open) {
     hr->set_open_archive();
   } else {
@@ -345,16 +317,12 @@ bool G1ArchiveAllocator::alloc_new_region() {
 }
 
 HeapWord* G1ArchiveAllocator::archive_mem_allocate(size_t word_size) {
-  assert(word_size != 0, "size must not be zero");
   if (_allocation_region == NULL) {
     if (!alloc_new_region()) {
       return NULL;
     }
   }
   HeapWord* old_top = _allocation_region->top();
-  assert(_bottom >= _allocation_region->bottom(), "inconsistent allocation state: " PTR_FORMAT " < " PTR_FORMAT, p2i(_bottom), p2i(_allocation_region->bottom()));
-  assert(_max <= _allocation_region->end(), "inconsistent allocation state: " PTR_FORMAT " > " PTR_FORMAT, p2i(_max), p2i(_allocation_region->end()));
-  assert(_bottom <= old_top && old_top <= _max, "inconsistent allocation state: expected " PTR_FORMAT " <= " PTR_FORMAT " <= " PTR_FORMAT, p2i(_bottom), p2i(old_top), p2i(_max));
 
   // Allocate the next word_size words in the current allocation chunk.
   // If allocation would cross the _max boundary, insert a filler and begin
@@ -363,8 +331,7 @@ HeapWord* G1ArchiveAllocator::archive_mem_allocate(size_t word_size) {
   // small to fill.
   HeapWord* new_top = old_top + word_size;
   size_t remainder = pointer_delta(_max, new_top);
-  if ((new_top > _max) ||
-      ((new_top < _max) && (remainder < CollectedHeap::min_fill_size()))) {
+  if ((new_top > _max) || ((new_top < _max) && (remainder < CollectedHeap::min_fill_size()))) {
     if (old_top != _max) {
       size_t fill_size = pointer_delta(_max, old_top);
       CollectedHeap::fill_with_object(old_top, fill_size);
@@ -390,10 +357,7 @@ HeapWord* G1ArchiveAllocator::archive_mem_allocate(size_t word_size) {
   return old_top;
 }
 
-void G1ArchiveAllocator::complete_archive(GrowableArray<MemRegion>* ranges,
-                                          size_t end_alignment_in_bytes) {
-  assert((end_alignment_in_bytes >> LogHeapWordSize) < HeapRegion::min_region_size_in_words(), "alignment " SIZE_FORMAT " too large", end_alignment_in_bytes);
-  assert(is_aligned(end_alignment_in_bytes, HeapWordSize), "alignment " SIZE_FORMAT " is not HeapWord (%u) aligned", end_alignment_in_bytes, HeapWordSize);
+void G1ArchiveAllocator::complete_archive(GrowableArray<MemRegion>* ranges, size_t end_alignment_in_bytes) {
 
   // If we've allocated nothing, simply return.
   if (_allocation_region == NULL) {
@@ -425,7 +389,6 @@ void G1ArchiveAllocator::complete_archive(GrowableArray<MemRegion>* ranges,
   // the allocated address range, combining contiguous ranges. Add the
   // MemRegions to the GrowableArray provided by the caller.
   int index = _allocated_regions.length() - 1;
-  assert(_allocated_regions.at(index) == _allocation_region, "expected region %u at end of array, found %u", _allocation_region->hrm_index(), _allocated_regions.at(index)->hrm_index());
   HeapWord* base_address = _allocation_region->bottom();
   HeapWord* top = base_address;
 
@@ -441,7 +404,6 @@ void G1ArchiveAllocator::complete_archive(GrowableArray<MemRegion>* ranges,
     index = index - 1;
   }
 
-  assert(top != base_address, "zero-sized range, address " PTR_FORMAT, p2i(base_address));
   ranges->append(MemRegion(base_address, pointer_delta(top, base_address)));
   _allocated_regions.clear();
   _allocation_region = NULL;

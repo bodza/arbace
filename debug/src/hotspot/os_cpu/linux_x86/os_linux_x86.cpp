@@ -117,10 +117,6 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread,
   const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
-  assert(thread != NULL, "just checking");
-  assert(ret_sp != NULL, "just checking");
-  assert(ret_fp != NULL, "just checking");
-
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
@@ -173,8 +169,6 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
       *fr = fr->java_sender();
     }
   } else {
-    // more complex code with compiled code
-    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -187,13 +181,11 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
       intptr_t* sp = os::Linux::ucontext_get_sp(uc);
       *fr = frame(sp + 1, fp, (address)*sp);
       if (!fr->is_java_frame()) {
-        assert(!fr->is_first_frame(), "Safety check");
         // See java_sender() comment above.
         *fr = fr->java_sender();
       }
     }
   }
-  assert(fr->is_java_frame(), "Safety check");
   return true;
 }
 
@@ -286,11 +278,11 @@ JVM_handle_linux_signal(int sig,
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Linux::signal_handlers_are_installed) {
-    if (t != NULL ){
-      if(t->is_Java_thread()) {
+    if (t != NULL ) {
+      if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       }
-      else if(t->is_VM_thread()){
+      else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -301,7 +293,6 @@ JVM_handle_linux_signal(int sig,
     // can't decode this kind of signal
     info = NULL;
   } else {
-    assert(sig == info->si_signo, "bad siginfo");
   }
 */
   // decide if this trap can be handled by a stub
@@ -340,14 +331,11 @@ JVM_handle_linux_signal(int sig,
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Linux::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                assert(fr.is_java_frame(), "Must be a Java frame");
-                frame activation =
-                  SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
+                frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
                   if (activation.is_interpreted_frame()) {
-                    thread->set_reserved_stack_activation((address)(
-                      activation.fp() + frame::interpreter_frame_initial_sp_offset));
+                    thread->set_reserved_stack_activation((address)(activation.fp() + frame::interpreter_frame_initial_sp_offset));
                   } else {
                     thread->set_reserved_stack_activation((address)activation.unextended_sp());
                   }
@@ -418,30 +406,13 @@ JVM_handle_linux_signal(int sig,
       else
 
 #ifdef AMD64
-      if (sig == SIGFPE  &&
-          (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
-        stub =
-          SharedRuntime::
-          continuation_for_implicit_exception(thread,
-                                              pc,
-                                              SharedRuntime::
-                                              IMPLICIT_DIVIDE_BY_ZERO);
+      if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+        stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
 #else
       if (sig == SIGFPE /* && info->si_code == FPE_INTDIV */) {
         // HACK: si_code does not work on linux 2.2.12-20!!!
         int op = pc[0];
         if (op == 0xDB) {
-          // FIST
-          // TODO: The encoding of D2I in i486.ad can cause an exception
-          // prior to the fist instruction if there was an invalid operation
-          // pending. We want to dismiss that exception. From the win_32
-          // side it also seems that if it really was the fist causing
-          // the exception that we do the d2i by hand with different
-          // rounding. Seems kind of weird.
-          // NOTE: that we take the exception at the NEXT floating point instruction.
-          assert(pc[0] == 0xDB, "not a FIST opcode");
-          assert(pc[1] == 0x14, "not a FIST opcode");
-          assert(pc[2] == 0x24, "not a FIST opcode");
           return true;
         } else if (op == 0xF7) {
           // IDIV
@@ -453,8 +424,7 @@ JVM_handle_linux_signal(int sig,
           fatal("please update this code.");
         }
 #endif
-      } else if (sig == SIGSEGV &&
-               !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
+      } else if (sig == SIGSEGV && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
@@ -478,8 +448,7 @@ JVM_handle_linux_signal(int sig,
     // process of write protecting the memory serialization page.
     // It write enables the page immediately after protecting it
     // so we can just return to retry the write.
-    if ((sig == SIGSEGV) &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
+    if ((sig == SIGSEGV) && os::is_memory_serialize_page(thread, (address) info->si_addr)) {
       // Block current thread until the memory serialize page permission restored.
       os::block_on_serialize_page_trap();
       return true;
@@ -497,9 +466,7 @@ JVM_handle_linux_signal(int sig,
   // this si_code is so generic that it is almost meaningless; and
   // the si_code for this condition may change in the future.
   // Furthermore, a false-positive should be harmless.
-  if (UnguardOnExecutionViolation > 0 &&
-      (sig == SIGSEGV || sig == SIGBUS) &&
-      uc->uc_mcontext.gregs[REG_TRAPNO] == trap_page_fault) {
+  if (UnguardOnExecutionViolation > 0 && (sig == SIGSEGV || sig == SIGBUS) && uc->uc_mcontext.gregs[REG_TRAPNO] == trap_page_fault) {
     int page_size = os::vm_page_size();
     address addr = (address) info->si_addr;
     address pc = os::Linux::ucontext_get_pc(uc);
@@ -511,24 +478,18 @@ JVM_handle_linux_signal(int sig,
     // different - we still want to unguard the 2nd page in this case.
     //
     // 15 bytes seems to be a (very) safe value for max instruction size.
-    bool pc_is_near_addr =
-      (pointer_delta((void*) addr, (void*) pc, sizeof(char)) < 15);
-    bool instr_spans_page_boundary =
-      (align_down((intptr_t) pc ^ (intptr_t) addr,
-                       (intptr_t) page_size) > 0);
+    bool pc_is_near_addr = (pointer_delta((void*) addr, (void*) pc, sizeof(char)) < 15);
+    bool instr_spans_page_boundary = (align_down((intptr_t) pc ^ (intptr_t) addr, (intptr_t) page_size) > 0);
 
     if (pc == addr || (pc_is_near_addr && instr_spans_page_boundary)) {
-      static volatile address last_addr =
-        (address) os::non_memory_address_word();
+      static volatile address last_addr = (address) os::non_memory_address_word();
 
       // In conservative mode, don't unguard unless the address is in the VM
-      if (addr != last_addr &&
-          (UnguardOnExecutionViolation > 1 || os::address_is_in_vm(addr))) {
+      if (addr != last_addr && (UnguardOnExecutionViolation > 1 || os::address_is_in_vm(addr))) {
 
         // Set memory to RWX and retry
         address page_start = align_down(addr, page_size);
-        bool res = os::protect_memory((char*) page_start, page_size,
-                                      os::MEM_PROT_RWX);
+        bool res = os::protect_memory((char*) page_start, page_size, os::MEM_PROT_RWX);
 
         log_debug(os)("Execution protection violation "
                       "at " INTPTR_FORMAT
@@ -624,7 +585,7 @@ bool os::supports_sse() {
   return true;
 #else
   struct utsname uts;
-  if( uname(&uts) != 0 ) return false; // uname fails?
+  if (uname(&uts) != 0 ) return false; // uname fails?
   char *minor_string;
   int major = strtol(uts.release,&minor_string,10);
   int minor = strtol(minor_string+1,NULL,10);
@@ -817,8 +778,7 @@ void os::workaround_expand_exec_shield_cs_limit() {
   if (os::is_primordial_thread()) {
     address limit = Linux::initial_thread_stack_bottom();
     if (! DisablePrimordialThreadGuardPages) {
-      limit += JavaThread::stack_red_zone_size() +
-        JavaThread::stack_yellow_zone_size();
+      limit += JavaThread::stack_red_zone_size() + JavaThread::stack_yellow_zone_size();
     }
     os::Linux::expand_stack_to(limit);
   }
@@ -838,8 +798,7 @@ void os::workaround_expand_exec_shield_cs_limit() {
    * If we are embedded in an app other than launcher (initial != main stack),
    * we don't have much control or understanding of the address space, just let it slide.
    */
-  char* hint = (char*)(Linux::initial_thread_stack_bottom() -
-                       (JavaThread::stack_guard_zone_size() + page_size));
+  char* hint = (char*)(Linux::initial_thread_stack_bottom() - (JavaThread::stack_guard_zone_size() + page_size));
   char* codebuf = os::attempt_reserve_memory_at(page_size, hint);
 
   if (codebuf == NULL) {

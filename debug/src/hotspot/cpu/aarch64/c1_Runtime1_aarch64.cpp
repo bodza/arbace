@@ -21,10 +21,6 @@
 // Implementation of StubAssembler
 
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, int args_size) {
-  // setup registers
-  assert(!(oop_result1->is_valid() || metadata_result->is_valid()) || oop_result1 != metadata_result, "registers must be different");
-  assert(oop_result1 != rthread && metadata_result != rthread, "registers must be different");
-  assert(args_size >= 0, "illegal args_size");
   bool align_stack = false;
 
   mov(c_rarg0, rthread);
@@ -245,7 +241,7 @@ static void restore_live_registers(StubAssembler* sasm, bool restore_fpu_registe
   __ pop(RegSet::range(r0, r29), sp);
 }
 
-static void restore_live_registers_except_r0(StubAssembler* sasm, bool restore_fpu_registers = true)  {
+static void restore_live_registers_except_r0(StubAssembler* sasm, bool restore_fpu_registers = true) {
 
   if (restore_fpu_registers) {
     for (int i = 0; i < 32; i += 4)
@@ -263,8 +259,6 @@ void Runtime1::initialize_pd() {
   int i;
   int sp_offset = 0;
 
-  // all float registers are saved explicitly
-  assert(FrameMap::nof_fpu_regs == 32, "double registers not handled here");
   for (i = 0; i < FrameMap::nof_fpu_regs; i++) {
     fpu_reg_save_offsets[i] = sp_offset;
     sp_offset += 2;   // SP offsets are in halfwords
@@ -446,7 +440,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   // Note: This number affects also the RT-Call in generate_handle_exception because
   //       the oop-map is shared for all calls.
   DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-  assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
   OopMap* oop_map = save_live_registers(sasm);
 
@@ -575,20 +568,17 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         } else if (id == fast_new_instance_id) {
           __ set_info("fast new_instance", dont_gc_arguments);
         } else {
-          assert(id == fast_new_instance_init_check_id, "bad StubID");
           __ set_info("fast new_instance init check", dont_gc_arguments);
         }
 
         // If TLAB is disabled, see if there is support for inlining contiguous
         // allocations.
         // Otherwise, just go to the slow path.
-        if ((id == fast_new_instance_id || id == fast_new_instance_init_check_id) &&
-            !UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
+        if ((id == fast_new_instance_id || id == fast_new_instance_init_check_id) && !UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
           Label slow_path;
           Register obj_size = r2;
           Register t1       = r19;
           Register t2       = r4;
-          assert_different_registers(klass, obj, obj_size, t1, t2);
 
           __ stp(r19, zr, Address(__ pre(sp, -2 * wordSize)));
 
@@ -667,7 +657,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           Register t1       = r2;
           Register t2       = r5;
           Label slow_path;
-          assert_different_registers(length, klass, obj, arr_size, t1, t2);
 
           // check that array length is small enough for fast path.
           __ mov(rscratch1, C1_MacroAssembler::max_array_allocation_length);
@@ -690,8 +679,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
           __ initialize_header(obj, klass, length, t1, t2);
           __ ldrb(t1, Address(klass, in_bytes(Klass::layout_helper_offset()) + (Klass::_lh_header_size_shift / BitsPerByte)));
-          assert(Klass::_lh_header_size_shift % BitsPerByte == 0, "bytewise");
-          assert(Klass::_lh_header_size_mask <= 0xFF, "bytewise");
           __ andr(t1, t1, Klass::_lh_header_size_mask);
           __ sub(arr_size, arr_size, t1);  // body length
           __ add(t1, t1, obj);       // body start
@@ -886,7 +873,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps->add_gc_map(call_offset, oop_map);
         restore_live_registers(sasm);
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
         __ leave();
         __ far_jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }
@@ -973,7 +959,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         restore_live_registers(sasm);
         __ leave();
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
         __ far_jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }

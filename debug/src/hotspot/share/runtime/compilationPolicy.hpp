@@ -44,7 +44,7 @@ public:
 
   // Profiling
   elapsedTimer* accumulated_time() { return &_accumulated_time; }
-  void print_time() {};
+  void print_time() { };
   // Return initial compile level that is used with Xcomp
   virtual CompLevel initial_compile_level() = 0;
   virtual int compiler_count(CompLevel comp_level) = 0;

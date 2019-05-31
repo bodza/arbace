@@ -78,8 +78,8 @@ class AccessFlags {
   jint _flags;
 
  public:
-  AccessFlags() : _flags(0) {}
-  explicit AccessFlags(jint flags) : _flags(flags) {}
+  AccessFlags() : _flags(0) { }
+  explicit AccessFlags(jint flags) : _flags(flags) { }
 
   // Java access flags
   bool is_public      () const         { return (_flags & JVM_ACC_PUBLIC      ) != 0; }
@@ -147,7 +147,6 @@ class AccessFlags {
   // Initialization
   void add_promoted_flags(jint flags)   { _flags |= (flags & JVM_ACC_PROMOTED_FLAGS); }
   void set_field_flags(jint flags)      {
-    assert((flags & JVM_ACC_FIELD_FLAGS) == flags, "only recognized flags");
     _flags = (flags & JVM_ACC_FIELD_FLAGS);
   }
   void set_flags(jint flags)            { _flags = (flags & JVM_ACC_WRITTEN_FLAGS); }
@@ -167,34 +166,34 @@ class AccessFlags {
   // otherwise they are just changing a copy of the flags
 
   // attribute flags
-  void set_is_synthetic()              { atomic_set_bits(JVM_ACC_SYNTHETIC);               }
+  void set_is_synthetic()              { atomic_set_bits(JVM_ACC_SYNTHETIC); }
 
   // Method* flags
-  void set_monitor_matching()          { atomic_set_bits(JVM_ACC_MONITOR_MATCH);           }
-  void set_has_monitor_bytecodes()     { atomic_set_bits(JVM_ACC_HAS_MONITOR_BYTECODES);   }
-  void set_has_loops()                 { atomic_set_bits(JVM_ACC_HAS_LOOPS);               }
-  void set_loops_flag_init()           { atomic_set_bits(JVM_ACC_LOOPS_FLAG_INIT);         }
-  void set_not_c1_compilable()         { atomic_set_bits(JVM_ACC_NOT_C1_COMPILABLE);       }
-  void set_not_c2_compilable()         { atomic_set_bits(JVM_ACC_NOT_C2_COMPILABLE);       }
-  void set_not_c2_osr_compilable()     { atomic_set_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE);   }
-  void set_has_linenumber_table()      { atomic_set_bits(JVM_ACC_HAS_LINE_NUMBER_TABLE);   }
-  void set_has_checked_exceptions()    { atomic_set_bits(JVM_ACC_HAS_CHECKED_EXCEPTIONS);  }
-  void set_has_jsrs()                  { atomic_set_bits(JVM_ACC_HAS_JSRS);                }
-  void set_is_old()                    { atomic_set_bits(JVM_ACC_IS_OLD);                  }
-  void set_is_obsolete()               { atomic_set_bits(JVM_ACC_IS_OBSOLETE);             }
-  void set_is_deleted()                { atomic_set_bits(JVM_ACC_IS_DELETED);              }
-  void set_is_prefixed_native()        { atomic_set_bits(JVM_ACC_IS_PREFIXED_NATIVE);      }
+  void set_monitor_matching()          { atomic_set_bits(JVM_ACC_MONITOR_MATCH); }
+  void set_has_monitor_bytecodes()     { atomic_set_bits(JVM_ACC_HAS_MONITOR_BYTECODES); }
+  void set_has_loops()                 { atomic_set_bits(JVM_ACC_HAS_LOOPS); }
+  void set_loops_flag_init()           { atomic_set_bits(JVM_ACC_LOOPS_FLAG_INIT); }
+  void set_not_c1_compilable()         { atomic_set_bits(JVM_ACC_NOT_C1_COMPILABLE); }
+  void set_not_c2_compilable()         { atomic_set_bits(JVM_ACC_NOT_C2_COMPILABLE); }
+  void set_not_c2_osr_compilable()     { atomic_set_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE); }
+  void set_has_linenumber_table()      { atomic_set_bits(JVM_ACC_HAS_LINE_NUMBER_TABLE); }
+  void set_has_checked_exceptions()    { atomic_set_bits(JVM_ACC_HAS_CHECKED_EXCEPTIONS); }
+  void set_has_jsrs()                  { atomic_set_bits(JVM_ACC_HAS_JSRS); }
+  void set_is_old()                    { atomic_set_bits(JVM_ACC_IS_OLD); }
+  void set_is_obsolete()               { atomic_set_bits(JVM_ACC_IS_OBSOLETE); }
+  void set_is_deleted()                { atomic_set_bits(JVM_ACC_IS_DELETED); }
+  void set_is_prefixed_native()        { atomic_set_bits(JVM_ACC_IS_PREFIXED_NATIVE); }
 
-  void clear_not_c1_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C1_COMPILABLE);       }
-  void clear_not_c2_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C2_COMPILABLE);       }
-  void clear_not_c2_osr_compilable()   { atomic_clear_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE);   }
+  void clear_not_c1_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C1_COMPILABLE); }
+  void clear_not_c2_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C2_COMPILABLE); }
+  void clear_not_c2_osr_compilable()   { atomic_clear_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE); }
   // Klass* flags
   void set_has_vanilla_constructor()   { atomic_set_bits(JVM_ACC_HAS_VANILLA_CONSTRUCTOR); }
-  void set_has_finalizer()             { atomic_set_bits(JVM_ACC_HAS_FINALIZER);           }
-  void set_has_final_method()          { atomic_set_bits(JVM_ACC_HAS_FINAL_METHOD);        }
-  void set_is_cloneable_fast()         { atomic_set_bits(JVM_ACC_IS_CLONEABLE_FAST);       }
-  void set_has_miranda_methods()       { atomic_set_bits(JVM_ACC_HAS_MIRANDA_METHODS);     }
-  void set_is_shared_class()           { atomic_set_bits(JVM_ACC_IS_SHARED_CLASS);         }
+  void set_has_finalizer()             { atomic_set_bits(JVM_ACC_HAS_FINALIZER); }
+  void set_has_final_method()          { atomic_set_bits(JVM_ACC_HAS_FINAL_METHOD); }
+  void set_is_cloneable_fast()         { atomic_set_bits(JVM_ACC_IS_CLONEABLE_FAST); }
+  void set_has_miranda_methods()       { atomic_set_bits(JVM_ACC_HAS_MIRANDA_METHODS); }
+  void set_is_shared_class()           { atomic_set_bits(JVM_ACC_IS_SHARED_CLASS); }
 
  public:
   // field flags
@@ -243,7 +242,7 @@ class AccessFlags {
   inline friend AccessFlags accessFlags_from(jint flags);
 
   // Printing/debugging
-  void print_on(outputStream* st) const {};
+  void print_on(outputStream* st) const { };
 };
 
 inline AccessFlags accessFlags_from(jint flags) {

@@ -139,14 +139,14 @@ class frame {
 
  public:
 
-  intptr_t* addr_at(int index) const             { return &fp()[index];    }
+  intptr_t* addr_at(int index) const             { return &fp()[index]; }
   intptr_t  at(int index) const                  { return *addr_at(index); }
 
   // accessors for locals
-  oop obj_at(int offset) const                   { return *obj_at_addr(offset);  }
+  oop obj_at(int offset) const                   { return *obj_at_addr(offset); }
   void obj_at_put(int offset, oop value)         { *obj_at_addr(offset) = value; }
 
-  jint int_at(int offset) const                  { return *int_at_addr(offset);  }
+  jint int_at(int offset) const                  { return *int_at_addr(offset); }
   void int_at_put(int offset, jint value)        { *int_at_addr(offset) = value; }
 
   oop*      obj_at_addr(int offset) const        { return (oop*)     addr_at(offset); }
@@ -347,8 +347,6 @@ class frame {
   // Verification
   void verify(const RegisterMap* map);
   static bool verify_return_pc(address x);
-  // Usage:
-  // assert(frame::verify_return_pc(return_address), "must be a return pc");
 
 #include CPU_HEADER(frame)
 };

@@ -44,7 +44,6 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
   // Allocate a new chunk from the pool (might expand the pool)
   NOINLINE void* allocate(size_t bytes, AllocFailType alloc_failmode) {
-    assert(bytes == _size, "bad size");
     void* p = NULL;
     // No VM lock can be taken inside ThreadCritical lock, so os::malloc
     // should be done outside ThreadCritical lock due to NMT
@@ -61,7 +60,6 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
   // Return a chunk to the pool
   void free(Chunk* chunk) {
-    assert(chunk->length() + Chunk::aligned_overhead_size() == _size, "bad size");
     ThreadCritical tc;
     _num_used--;
 
@@ -90,7 +88,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
           // Free all remaining chunks while in ThreadCritical lock
           // so NMT adjustment is stable.
-          while(cur != NULL) {
+          while (cur != NULL) {
             next = cur->next();
             os::free(cur);
             _num_chunks--;
@@ -102,18 +100,10 @@ class ChunkPool: public CHeapObj<mtInternal> {
   }
 
   // Accessors to preallocated pool's
-  static ChunkPool* large_pool()  {
-    assert(_large_pool  != NULL, "must be initialized");
-    return _large_pool;  }
-  static ChunkPool* medium_pool() {
-    assert(_medium_pool != NULL, "must be initialized");
-    return _medium_pool; }
-  static ChunkPool* small_pool()  {
-    assert(_small_pool  != NULL, "must be initialized");
-    return _small_pool;  }
-  static ChunkPool* tiny_pool()   {
-    assert(_tiny_pool   != NULL, "must be initialized");
-    return _tiny_pool;   }
+  static ChunkPool* large_pool() { return _large_pool; }
+  static ChunkPool* medium_pool() { return _medium_pool; }
+  static ChunkPool* small_pool() { return _small_pool; }
+  static ChunkPool* tiny_pool() { return _tiny_pool; }
 
   static void initialize() {
     _large_pool  = new ChunkPool(Chunk::size        + Chunk::aligned_overhead_size());
@@ -153,7 +143,7 @@ class ChunkPoolCleaner : public PeriodicTask {
   enum { CleaningInterval = 5000 };      // cleaning interval in ms
 
  public:
-   ChunkPoolCleaner() : PeriodicTask(CleaningInterval) {}
+   ChunkPoolCleaner() : PeriodicTask(CleaningInterval) { }
    void task() {
      ChunkPool::clean();
    }
@@ -167,7 +157,6 @@ void* Chunk::operator new (size_t requested_size, AllocFailType alloc_failmode, 
   // allocations to come out aligned as expected the size must be aligned
   // to expected arena alignment.
   // expect requested_size but if sizeof(Chunk) doesn't match isn't proper size we must align it.
-  assert(ARENA_ALIGN(requested_size) == aligned_overhead_size(), "Bad alignment");
   size_t bytes = ARENA_ALIGN(requested_size) + length;
   switch (length) {
    case Chunk::size:        return ChunkPool::large_pool()->allocate(bytes, alloc_failmode);
@@ -203,7 +192,7 @@ Chunk::Chunk(size_t length) : _len(length) {
 
 void Chunk::chop() {
   Chunk *k = this;
-  while( k ) {
+  while ( k ) {
     Chunk *tmp = k->next();
     // clear out this chunk (to detect allocation bugs)
     if (ZapResourceArea) memset(k->bottom(), badResourceValue, k->length());
@@ -265,12 +254,12 @@ Arena::~Arena() {
 }
 
 void* Arena::operator new(size_t size) throw() {
-  assert(false, "Use dynamic memory type binding");
+  ShouldNotReachHere();
   return NULL;
 }
 
-void* Arena::operator new (size_t size, const std::nothrow_t&  nothrow_constant) throw() {
-  assert(false, "Use dynamic memory type binding");
+void* Arena::operator new (size_t size, const std::nothrow_t& nothrow_constant) throw() {
+  ShouldNotReachHere();
   return NULL;
 }
 
@@ -314,7 +303,7 @@ void Arena::set_size_in_bytes(size_t size) {
 size_t Arena::used() const {
   size_t sum = _chunk->length() - (_max-_hwm); // Size leftover in this Chunk
   register Chunk *k = _first;
-  while( k != _chunk) {         // Whilst have Chunks in a row
+  while ( k != _chunk) {         // Whilst have Chunks in a row
     sum += k->length();         // Total size of this Chunk
     k = k->next();              // Bump along to next Chunk
   }
@@ -352,8 +341,8 @@ void *Arena::Arealloc(void* old_ptr, size_t old_size, size_t new_size, AllocFail
   if (new_size == 0) return NULL;
   char *c_old = (char*)old_ptr; // Handy name
   // Stupid fast special case
-  if( new_size <= old_size ) {  // Shrink in-place
-    if( c_old+old_size == _hwm) // Attempt to free the excess bytes
+  if (new_size <= old_size ) {  // Shrink in-place
+    if (c_old+old_size == _hwm) // Attempt to free the excess bytes
       _hwm = c_old+new_size;    // Adjust hwm
     return c_old;
   }
@@ -362,8 +351,8 @@ void *Arena::Arealloc(void* old_ptr, size_t old_size, size_t new_size, AllocFail
   size_t corrected_new_size = ARENA_ALIGN(new_size);
 
   // See if we can resize in-place
-  if( (c_old+old_size == _hwm) &&       // Adjusting recent thing
-      (c_old+corrected_new_size <= _max) ) {      // Still fits where it sits
+  if ((c_old+old_size == _hwm) &&       // Adjusting recent thing
+      (c_old+corrected_new_size <= _max)) {      // Still fits where it sits
     _hwm = c_old+corrected_new_size;      // Adjust hwm
     return c_old;               // Return old pointer
   }
@@ -380,7 +369,7 @@ void *Arena::Arealloc(void* old_ptr, size_t old_size, size_t new_size, AllocFail
 
 // Determine if pointer belongs to this Arena or not.
 bool Arena::contains( const void *ptr ) const {
-  if( (void*)_chunk->bottom() <= ptr && ptr < (void*)_hwm )
+  if ((void*)_chunk->bottom() <= ptr && ptr < (void*)_hwm )
     return true;                // Check for in this chunk
   for (Chunk *c = _first; c; c = c->next()) {
     if (c == _chunk) continue;  // current chunk has been processed

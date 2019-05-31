@@ -9,7 +9,6 @@ inline void DataLayout::release_set_cell_at(int index, intptr_t value) {
 }
 
 inline void ProfileData::release_set_intptr_at(int index, intptr_t value) {
-  assert(0 <= index && index < cell_count(), "oob");
   data()->release_set_cell_at(index, value);
 }
 
@@ -22,7 +21,6 @@ inline void ProfileData::release_set_int_at(int index, int value) {
 }
 
 inline void RetData::release_set_bci(uint row, int bci) {
-  assert((uint)row < row_limit(), "oob");
   // 'release' when setting the bci acts as a valid flag for other
   // threads wrt bci_count and bci_displacement.
   release_set_int_at(bci0_offset + row * ret_row_cell_count, bci);

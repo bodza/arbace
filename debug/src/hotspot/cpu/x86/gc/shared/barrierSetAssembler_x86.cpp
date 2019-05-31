@@ -29,7 +29,6 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
         __ movptr(dst, src);
       }
     } else {
-      assert(in_native, "why else?");
       __ movptr(dst, src);
     }
     break;
@@ -41,15 +40,12 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
   case T_INT:     __ movl  (dst, src);              break;
   case T_ADDRESS: __ movptr(dst, src);              break;
   case T_FLOAT:
-    assert(dst == noreg, "only to ftos");
     __ load_float(src);
     break;
   case T_DOUBLE:
-    assert(dst == noreg, "only to dtos");
     __ load_double(src);
     break;
   case T_LONG:
-    assert(dst == noreg, "only to ltos");
     __ movq(rax, src);
     break;
   default: Unimplemented();
@@ -67,7 +63,6 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
   case T_ARRAY: {
     if (in_heap) {
       if (val == noreg) {
-        assert(!is_not_null, "inconsistent access");
         if (UseCompressedOops) {
           __ movl(dst, (int32_t)NULL_WORD);
         } else {
@@ -75,7 +70,6 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
         }
       } else {
         if (UseCompressedOops) {
-          assert(!dst.uses(val), "not enough registers");
           if (is_not_null) {
             __ encode_heap_oop_not_null(val);
           } else {
@@ -88,8 +82,6 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
         }
       }
     } else {
-      assert(in_native, "why else?");
-      assert(val != noreg, "not supported");
       __ movptr(dst, val);
     }
     break;
@@ -111,15 +103,12 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
     __ movl(dst, val);
     break;
   case T_LONG:
-    assert(val == noreg, "only tos");
     __ movq(dst, rax);
     break;
   case T_FLOAT:
-    assert(val == noreg, "only tos");
     __ store_float(dst);
     break;
   case T_DOUBLE:
-    assert(val == noreg, "only tos");
     __ store_double(dst);
     break;
   case T_ADDRESS:
@@ -142,15 +131,7 @@ void BarrierSetAssembler::try_resolve_jobject_in_native(MacroAssembler* masm, Re
   __ movptr(obj, Address(obj, 0));
 }
 
-void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm,
-                                        Register thread, Register obj,
-                                        Register var_size_in_bytes,
-                                        int con_size_in_bytes,
-                                        Register t1,
-                                        Register t2,
-                                        Label& slow_case) {
-  assert_different_registers(obj, t1, t2);
-  assert_different_registers(obj, var_size_in_bytes, t1);
+void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register thread, Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, Label& slow_case) {
   Register end = t2;
   if (!thread->is_valid()) {
     thread = r15_thread;
@@ -178,14 +159,7 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm,
 }
 
 // Defines obj, preserves var_size_in_bytes
-void BarrierSetAssembler::eden_allocate(MacroAssembler* masm,
-                                        Register thread, Register obj,
-                                        Register var_size_in_bytes,
-                                        int con_size_in_bytes,
-                                        Register t1,
-                                        Label& slow_case) {
-  assert(obj == rax, "obj must be in rax, for cmpxchg");
-  assert_different_registers(obj, var_size_in_bytes, t1);
+void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register thread, Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Label& slow_case) {
   if (!Universe::heap()->supports_inline_contig_alloc()) {
     __ jmp(slow_case);
   } else {

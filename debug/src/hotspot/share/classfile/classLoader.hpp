@@ -24,13 +24,13 @@ private:
   ClassPathEntry* volatile _next;
 public:
   ClassPathEntry* next() const;
-  virtual ~ClassPathEntry() {}
+  virtual ~ClassPathEntry() { }
   void set_next(ClassPathEntry* next);
   virtual bool is_modules_image() const = 0;
   virtual bool is_jar_file() const = 0;
   virtual const char* name() const = 0;
   // Constructor
-  ClassPathEntry() : _next(NULL) {}
+  ClassPathEntry() : _next(NULL) { }
   // Attempt to locate file_name through this class path entry.
   // Returns a class file parsing stream if successfull.
   virtual ClassFileStream* open_stream(const char* name, TRAPS) = 0;
@@ -41,10 +41,10 @@ class ClassPathDirEntry: public ClassPathEntry {
   const char* _dir;           // Name of directory
  public:
   bool is_modules_image() const { return false; }
-  bool is_jar_file() const { return false;  }
+  bool is_jar_file() const { return false; }
   const char* name() const { return _dir; }
   ClassPathDirEntry(const char* dir);
-  virtual ~ClassPathDirEntry() {}
+  virtual ~ClassPathDirEntry() { }
   ClassFileStream* open_stream(const char* name, TRAPS);
 };
 
@@ -75,7 +75,7 @@ class ClassPathZipEntry: public ClassPathEntry {
                              // It can have value of "_unknown", "_yes", or "_no"
  public:
   bool is_modules_image() const { return false; }
-  bool is_jar_file() const { return true;  }
+  bool is_jar_file() const { return true; }
   const char* name() const { return _zip_name; }
   ClassPathZipEntry(jzfile* zip, const char* zip_name, bool is_boot_append);
   virtual ~ClassPathZipEntry();
@@ -354,7 +354,7 @@ class ClassLoader: AllStatic {
   static bool is_modules_image(const char* name) { return string_ends_with(name, MODULES_IMAGE_NAME); }
 
   // Debugging
-  static void verify()              {};
+  static void verify()              { };
 
   // Force compilation of all methods in all classes in bootstrap class path (stress test)
 };

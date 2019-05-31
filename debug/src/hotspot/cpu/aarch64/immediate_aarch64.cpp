@@ -71,8 +71,7 @@ u_int64_t replicate(u_int64_t bits, int nbits, int count)
 // encoding must be treated as an UNALLOC instruction
 
 // construct a 32 bit immediate value for a logical immediate operation
-int expandLogicalImmediate(u_int32_t immN, u_int32_t immr,
-                            u_int32_t imms, u_int64_t &bimm)
+int expandLogicalImmediate(u_int32_t immN, u_int32_t immr, u_int32_t imms, u_int64_t &bimm)
 {
   int len;                  // ought to be <= 6
   u_int32_t levels;         // 6 bits

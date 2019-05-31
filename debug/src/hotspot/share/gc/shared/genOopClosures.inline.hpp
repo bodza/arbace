@@ -25,9 +25,7 @@ inline void OopsInGenClosure::set_generation(Generation* gen) {
 }
 
 template <class T> inline void OopsInGenClosure::do_barrier(T* p) {
-  assert(generation()->is_in_reserved(p), "expected ref in generation");
   T heap_oop = RawAccess<>::oop_load(p);
-  assert(!CompressedOops::is_null(heap_oop), "expected non-null oop");
   oop obj = CompressedOops::decode_not_null(heap_oop);
   // If p points to a younger generation, mark the card.
   if ((HeapWord*)obj < _gen_boundary) {
@@ -36,9 +34,7 @@ template <class T> inline void OopsInGenClosure::do_barrier(T* p) {
 }
 
 template <class T> inline void OopsInGenClosure::par_do_barrier(T* p) {
-  assert(generation()->is_in_reserved(p), "expected ref in generation");
   T heap_oop = RawAccess<>::oop_load(p);
-  assert(!CompressedOops::is_null(heap_oop), "expected non-null oop");
   oop obj = CompressedOops::decode_not_null(heap_oop);
   // If p points to a younger generation, mark the card.
   if ((HeapWord*)obj < gen_boundary()) {
@@ -50,7 +46,6 @@ inline BasicOopsInGenClosure::BasicOopsInGenClosure(Generation* gen) : OopsInGen
 }
 
 inline void OopsInClassLoaderDataOrGenClosure::do_cld_barrier() {
-  assert(_scanned_cld != NULL, "Must be");
   if (!_scanned_cld->has_modified_oops()) {
     _scanned_cld->record_modified_oops();
   }
@@ -66,7 +61,7 @@ template <class T> void FilteringClosure::do_oop_work(T* p) {
   }
 }
 
-inline void FilteringClosure::do_oop(oop* p)       { FilteringClosure::do_oop_work(p); }
+inline void FilteringClosure::do_oop(oop* p) { FilteringClosure::do_oop_work(p); }
 inline void FilteringClosure::do_oop(narrowOop* p) { FilteringClosure::do_oop_work(p); }
 
 #endif

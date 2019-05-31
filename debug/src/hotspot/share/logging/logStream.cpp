@@ -2,14 +2,11 @@
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 
-LogStream::LineBuffer::LineBuffer()
- : _buf(_smallbuf), _cap(sizeof(_smallbuf)), _pos(0)
-{
+LogStream::LineBuffer::LineBuffer() : _buf(_smallbuf), _cap(sizeof(_smallbuf)), _pos(0) {
   _buf[0] = '\0';
 }
 
 LogStream::LineBuffer::~LineBuffer() {
-  assert(_pos == 0, "still outstanding bytes in the line buffer");
   if (_buf != _smallbuf) {
     os::free(_buf);
   }
@@ -20,11 +17,9 @@ LogStream::LineBuffer::~LineBuffer() {
 // is larger than a reasonable max of 1 M. Caller must not assume
 // capacity without checking.
 void LogStream::LineBuffer::try_ensure_cap(size_t atleast) {
-  assert(_cap >= sizeof(_smallbuf), "sanity");
   if (_cap < atleast) {
     // Cap out at a reasonable max to prevent runaway leaks.
     const size_t reasonable_max = 1 * M;
-    assert(_cap <= reasonable_max, "sanity");
     if (_cap == reasonable_max) {
       return;
     }
@@ -50,12 +45,9 @@ void LogStream::LineBuffer::try_ensure_cap(size_t atleast) {
     _buf = newbuf;
     _cap = newcap;
   }
-  assert(_cap >= atleast, "sanity");
 }
 
 void LogStream::LineBuffer::append(const char* s, size_t len) {
-  assert(_buf[_pos] == '\0', "sanity");
-  assert(_pos < _cap, "sanity");
   const size_t minimum_capacity_needed = _pos + len + 1;
   try_ensure_cap(minimum_capacity_needed);
   // try_ensure_cap may not have enlarged the capacity to the full requested

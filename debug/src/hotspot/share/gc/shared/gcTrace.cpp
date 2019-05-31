@@ -57,7 +57,6 @@ void GCTracer::report_metaspace_summary(GCWhen::Type when, const MetaspaceSummar
 }
 
 void YoungGCTracer::report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions) {
-  assert(_tenuring_threshold != UNSET_TENURING_THRESHOLD, "Tenuring threshold has not been reported");
 
   GCTracer::report_gc_end_impl(timestamp, time_partitions);
   send_young_gc_event();
@@ -74,8 +73,7 @@ void YoungGCTracer::report_tenuring_threshold(const uint tenuring_threshold) {
 }
 
 bool YoungGCTracer::should_report_promotion_events() const {
-  return should_report_promotion_in_new_plab_event() ||
-          should_report_promotion_outside_plab_event();
+  return should_report_promotion_in_new_plab_event() || should_report_promotion_outside_plab_event();
 }
 
 bool YoungGCTracer::should_report_promotion_in_new_plab_event() const {
@@ -86,14 +84,11 @@ bool YoungGCTracer::should_report_promotion_outside_plab_event() const {
   return should_send_promotion_outside_plab_event();
 }
 
-void YoungGCTracer::report_promotion_in_new_plab_event(Klass* klass, size_t obj_size,
-                                                       uint age, bool tenured,
-                                                       size_t plab_size) const {
+void YoungGCTracer::report_promotion_in_new_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured, size_t plab_size) const {
   send_promotion_in_new_plab_event(klass, obj_size, age, tenured, plab_size);
 }
 
-void YoungGCTracer::report_promotion_outside_plab_event(Klass* klass, size_t obj_size,
-                                                        uint age, bool tenured) const {
+void YoungGCTracer::report_promotion_outside_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured) const {
   send_promotion_outside_plab_event(klass, obj_size, age, tenured);
 }
 
@@ -144,12 +139,7 @@ void G1NewTracer::report_evacuation_statistics(const G1EvacSummary& young_summar
   send_old_evacuation_statistics(old_summary);
 }
 
-void G1NewTracer::report_basic_ihop_statistics(size_t threshold,
-                                               size_t target_ccupancy,
-                                               size_t current_occupancy,
-                                               size_t last_allocation_size,
-                                               double last_allocation_duration,
-                                               double last_marking_length) {
+void G1NewTracer::report_basic_ihop_statistics(size_t threshold, size_t target_ccupancy, size_t current_occupancy, size_t last_allocation_size, double last_allocation_duration, double last_marking_length) {
   send_basic_ihop_statistics(threshold,
                              target_ccupancy,
                              current_occupancy,
@@ -158,13 +148,7 @@ void G1NewTracer::report_basic_ihop_statistics(size_t threshold,
                              last_marking_length);
 }
 
-void G1NewTracer::report_adaptive_ihop_statistics(size_t threshold,
-                                                  size_t internal_target_occupancy,
-                                                  size_t current_occupancy,
-                                                  size_t additional_buffer_size,
-                                                  double predicted_allocation_rate,
-                                                  double predicted_marking_length,
-                                                  bool prediction_active) {
+void G1NewTracer::report_adaptive_ihop_statistics(size_t threshold, size_t internal_target_occupancy, size_t current_occupancy, size_t additional_buffer_size, double predicted_allocation_rate, double predicted_marking_length, bool prediction_active) {
   send_adaptive_ihop_statistics(threshold,
                                 internal_target_occupancy,
                                 additional_buffer_size,

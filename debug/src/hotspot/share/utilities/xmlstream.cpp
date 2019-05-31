@@ -135,7 +135,6 @@ void xmlStream::va_begin_elem(const char* format, va_list ap) {
 // ------------------------------------------------------------------
 // Outputs "/>".
 void xmlStream::end_elem() {
-  assert(_markup_state == ELEM, "misplaced end_elem");
   print_raw("/>\n");
   _markup_state = BODY;
 }
@@ -184,7 +183,6 @@ void xmlStream::va_begin_head(const char* format, va_list ap) {
 // ------------------------------------------------------------------
 // Outputs ">".
 void xmlStream::end_head() {
-  assert(_markup_state == HEAD, "misplaced end_head");
   print_raw(">\n");
   _markup_state = BODY;
 }

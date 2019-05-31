@@ -16,8 +16,6 @@
 //
 CompactHashtableWriter::CompactHashtableWriter(int num_buckets,
                                                CompactHashtableStats* stats) {
-  assert(DumpSharedSpaces, "dump-time only");
-  assert(num_buckets > 0, "no buckets");
   _num_buckets = num_buckets;
   _num_entries = 0;
   _buckets = NEW_C_HEAP_ARRAY(GrowableArray<Entry>*, _num_buckets, mtSymbol);
@@ -62,8 +60,7 @@ void CompactHashtableWriter::allocate_table() {
   }
 
   if (entries_space & ~BUCKET_OFFSET_MASK) {
-    vm_exit_during_initialization("CompactHashtableWriter::allocate_table: Overflow! "
-                                  "Too many entries.");
+    vm_exit_during_initialization("CompactHashtableWriter::allocate_table: Overflow! Too many entries.");
   }
 
   _compact_buckets = MetaspaceShared::new_ro_array<u4>(_num_buckets + 1);
@@ -108,7 +105,6 @@ void CompactHashtableWriter::dump_table(NumberSeq* summary) {
 
   // Mark the end of the buckets
   _compact_buckets->at_put(_num_buckets, BUCKET_INFO(offset, TABLEEND_BUCKET_TYPE));
-  assert(offset == (u4)_compact_entries->length(), "sanity");
 }
 
 // Write the compact table
@@ -151,7 +147,6 @@ void CompactSymbolTableWriter::add(unsigned int hash, Symbol *symbol) {
   // When the symbols are stored into the archive, we already check that
   // they won't be more than MAX_SHARED_DELTA from the base address, or
   // else the dumping would have been aborted.
-  assert(deltax <= MAX_SHARED_DELTA, "must not be");
   u4 delta = u4(deltax);
 
   CompactHashtableWriter::add(hash, delta);
@@ -183,7 +178,6 @@ void SimpleCompactHashtable::serialize(SerializeClosure* soc) {
 }
 
 bool SimpleCompactHashtable::exists(u4 value) {
-  assert(!DumpSharedSpaces, "run-time only");
 
   if (_entry_count == 0) {
     return false;
@@ -238,7 +232,7 @@ template <class T, class N> void CompactHashtable<T, N>::serialize(SerializeClos
 class CompactHashtable_SymbolIterator {
   SymbolClosure* const _closure;
 public:
-  CompactHashtable_SymbolIterator(SymbolClosure *cl) : _closure(cl) {}
+  CompactHashtable_SymbolIterator(SymbolClosure *cl) : _closure(cl) { }
   inline void do_value(address base_address, u4 offset) const {
     Symbol* sym = (Symbol*)((void*)(base_address + offset));
     _closure->do_symbol(&sym);
@@ -253,7 +247,7 @@ template <class T, class N> void CompactHashtable<T, N>::symbols_do(SymbolClosur
 class CompactHashtable_OopIterator {
   OopClosure* const _closure;
 public:
-  CompactHashtable_OopIterator(OopClosure *cl) : _closure(cl) {}
+  CompactHashtable_OopIterator(OopClosure *cl) : _closure(cl) { }
   inline void do_value(address base_address, u4 offset) const {
     narrowOop o = (narrowOop)offset;
     _closure->do_oop(&o);
@@ -261,7 +255,6 @@ public:
 };
 
 template <class T, class N> void CompactHashtable<T, N>::oops_do(OopClosure* cl) {
-  assert(_type == _string_table || _bucket_count == 0, "sanity");
   CompactHashtable_OopIterator iterator(cl);
   iterate(iterator);
 }
@@ -312,9 +305,7 @@ void HashtableTextDump::quit(const char* err, const char* msg) {
 
 void HashtableTextDump::corrupted(const char *p, const char* msg) {
   char info[100];
-  jio_snprintf(info, sizeof(info),
-               "%s. Corrupted at line %d (file pos %d)",
-               msg, _line_no, (int)(p - _base));
+  jio_snprintf(info, sizeof(info), "%s. Corrupted at line %d (file pos %d)", msg, _line_no, (int)(p - _base));
   quit(info, _filename);
 }
 
@@ -460,7 +451,6 @@ void HashtableTextDump::get_utf8(char* utf8_buffer, int utf8_length) {
         {
           jchar value = unescape(from, end, 2);
           from += 2;
-          assert(value <= 0xff, "sanity");
           *to++ = (char)(value & 0xff);
         }
         break;

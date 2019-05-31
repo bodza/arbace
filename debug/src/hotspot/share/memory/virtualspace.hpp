@@ -38,13 +38,13 @@ class ReservedSpace {
   ReservedSpace(size_t size, size_t alignment, bool large, bool executable);
 
   // Accessors
-  char*  base()            const { return _base;      }
-  size_t size()            const { return _size;      }
+  char*  base()            const { return _base; }
+  size_t size()            const { return _size; }
   char*  end()             const { return _base + _size; }
   size_t alignment()       const { return _alignment; }
-  bool   special()         const { return _special;   }
-  bool   executable()      const { return _executable;   }
-  size_t noaccess_prefix() const { return _noaccess_prefix;   }
+  bool   special()         const { return _special; }
+  bool   executable()      const { return _executable; }
+  size_t noaccess_prefix() const { return _noaccess_prefix; }
   bool is_reserved()       const { return _base != NULL; }
   void release();
 
@@ -195,10 +195,10 @@ class VirtualSpace {
   void shrink_by(size_t bytes);
   void release();
 
-  void check_for_contiguity() {};
+  void check_for_contiguity() { };
 
   // Debugging
-  void print_on(outputStream* out) {};
+  void print_on(outputStream* out) { };
   void print();
 };
 

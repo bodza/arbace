@@ -3,7 +3,7 @@
 
 #include "runtime/prefetch.hpp"
 
-inline void Prefetch::read (void *loc, intx interval) {
+inline void Prefetch::read(void *loc, intx interval) {
 #ifdef AMD64
   __asm__ ("prefetcht0 (%0,%1,1)" : : "r" (loc), "r" (interval));
 #endif

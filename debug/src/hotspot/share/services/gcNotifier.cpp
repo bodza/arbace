@@ -31,7 +31,7 @@ void GCNotifier::pushNotification(GCMemoryManager *mgr, const char *action, cons
 
 void GCNotifier::addRequest(GCNotificationRequest *request) {
   MutexLockerEx ml(Service_lock, Mutex::_no_safepoint_check_flag);
-  if(first_request == NULL) {
+  if (first_request == NULL) {
     first_request = request;
   } else {
     last_request->next = request;
@@ -43,7 +43,7 @@ void GCNotifier::addRequest(GCNotificationRequest *request) {
 GCNotificationRequest *GCNotifier::getRequest() {
   MutexLockerEx ml(Service_lock, Mutex::_no_safepoint_check_flag);
   GCNotificationRequest *request = first_request;
-  if(first_request != NULL) {
+  if (first_request != NULL) {
     first_request = first_request->next;
   }
   return request;
@@ -112,11 +112,7 @@ static Handle createGcInfo(GCMemoryManager *gcManager, GCStatInfo *gcStatInfo,TR
 
   JavaCallArguments argsInt;
   argsInt.push_int(gcManager->num_gc_threads());
-  Handle extra_arg_val = JavaCalls::construct_new_instance(
-                            SystemDictionary::Integer_klass(),
-                            vmSymbols::int_void_signature(),
-                            &argsInt,
-                            CHECK_NH);
+  Handle extra_arg_val = JavaCalls::construct_new_instance(SystemDictionary::Integer_klass(), vmSymbols::int_void_signature(), &argsInt, CHECK_NH);
 
   extra_array->obj_at_put(0,extra_arg_val());
 
@@ -131,11 +127,7 @@ static Handle createGcInfo(GCMemoryManager *gcManager, GCStatInfo *gcStatInfo,TR
   constructor_args.push_oop(usage_after_gc_ah);
   constructor_args.push_oop(extra_array);
 
-  return JavaCalls::construct_new_instance(
-                          gcInfoklass,
-                          vmSymbols::com_sun_management_GcInfo_constructor_signature(),
-                          &constructor_args,
-                          CHECK_NH);
+  return JavaCalls::construct_new_instance(gcInfoklass, vmSymbols::com_sun_management_GcInfo_constructor_signature(), &constructor_args, CHECK_NH);
 }
 
 void GCNotifier::sendNotification(TRAPS) {
@@ -157,7 +149,6 @@ public:
     _request = r;
   }
   ~NotificationMark() {
-    assert(_request != NULL, "Sanity check");
     delete _request;
   }
 };
@@ -178,8 +169,7 @@ void GCNotifier::sendNotificationInternal(TRAPS) {
     instanceOop gc_mbean = request->gcManager->get_memory_manager_instance(THREAD);
     instanceHandle gc_mbean_h(THREAD, gc_mbean);
     if (!gc_mbean_h->is_a(gc_mbean_klass)) {
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                "This GCMemoryManager doesn't have a GarbageCollectorMXBean");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "This GCMemoryManager doesn't have a GarbageCollectorMXBean");
     }
 
     JavaValue result(T_VOID);

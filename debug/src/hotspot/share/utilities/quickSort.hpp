@@ -23,7 +23,6 @@ class QuickSort : AllStatic {
   // A side effect of this is that arrays of length <= 3 are sorted.
   template<class T, class C>
   static size_t find_pivot(T* array, size_t length, C comparator) {
-    assert(length > 1, "length of array must be > 0");
 
     size_t middle_index = length / 2;
     size_t last_index = length - 1;
@@ -50,10 +49,8 @@ class QuickSort : AllStatic {
 
     for ( ; true; ++left_index, --right_index) {
       for ( ; comparator(array[left_index], pivot_val) < 0; ++left_index) {
-        assert(left_index < length, "reached end of partition");
       }
       for ( ; comparator(array[right_index], pivot_val) > 0; --right_index) {
-        assert(right_index > 0, "reached start of partition");
       }
 
       if (left_index < right_index) {

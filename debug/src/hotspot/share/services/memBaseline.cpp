@@ -20,8 +20,7 @@ int compare_malloc_size(const MallocSite& s1, const MallocSite& s2) {
   }
 }
 
-int compare_virtual_memory_size(const VirtualMemoryAllocationSite& s1,
-  const VirtualMemoryAllocationSite& s2) {
+int compare_virtual_memory_size(const VirtualMemoryAllocationSite& s1, const VirtualMemoryAllocationSite& s2) {
   if (s1.reserved() == s2.reserved()) {
     return 0;
   } else if (s1.reserved() > s2.reserved()) {
@@ -46,8 +45,7 @@ int compare_malloc_site_and_type(const MallocSite& s1, const MallocSite& s2) {
   return res;
 }
 
-int compare_virtual_memory_site(const VirtualMemoryAllocationSite& s1,
-  const VirtualMemoryAllocationSite& s2) {
+int compare_virtual_memory_site(const VirtualMemoryAllocationSite& s1, const VirtualMemoryAllocationSite& s2) {
   return s1.call_stack()->compare(*s2.call_stack());
 }
 
@@ -166,8 +164,7 @@ bool MemBaseline::baseline(bool summaryOnly) {
   _baseline_type = Summary_baselined;
 
   // baseline details
-  if (!summaryOnly &&
-      MemTracker::tracking_level() == NMT_detail) {
+  if (!summaryOnly && MemTracker::tracking_level() == NMT_detail) {
     baseline_allocation_sites();
     _baseline_type = Detail_baselined;
   }
@@ -175,8 +172,7 @@ bool MemBaseline::baseline(bool summaryOnly) {
   return true;
 }
 
-int compare_allocation_site(const VirtualMemoryAllocationSite& s1,
-  const VirtualMemoryAllocationSite& s2) {
+int compare_allocation_site(const VirtualMemoryAllocationSite& s1, const VirtualMemoryAllocationSite& s2) {
   return s1.call_stack()->compare(*s2.call_stack());
 }
 
@@ -190,8 +186,7 @@ bool MemBaseline::aggregate_virtual_memory_allocation_sites() {
     VirtualMemoryAllocationSite tmp(*rgn->call_stack());
     site = allocation_sites.find(tmp);
     if (site == NULL) {
-      LinkedListNode<VirtualMemoryAllocationSite>* node =
-        allocation_sites.add(tmp);
+      LinkedListNode<VirtualMemoryAllocationSite>* node = allocation_sites.add(tmp);
       if (node == NULL) return false;
       site = node->data();
     }
@@ -204,7 +199,6 @@ bool MemBaseline::aggregate_virtual_memory_allocation_sites() {
 }
 
 MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
-  assert(!_malloc_sites.is_empty(), "Not detail baseline");
   switch(order) {
     case by_size:
       malloc_sites_to_size_order();
@@ -223,7 +217,6 @@ MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
 }
 
 VirtualMemorySiteIterator MemBaseline::virtual_memory_sites(SortingOrder order) {
-  assert(!_virtual_memory_sites.is_empty(), "Not detail baseline");
   switch(order) {
     case by_size:
       virtual_memory_sites_to_size_order();

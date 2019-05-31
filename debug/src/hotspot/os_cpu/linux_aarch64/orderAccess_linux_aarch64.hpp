@@ -7,10 +7,10 @@
 
 // Implementation of class OrderAccess.
 
-inline void OrderAccess::loadload()   { acquire(); }
+inline void OrderAccess::loadload() { acquire(); }
 inline void OrderAccess::storestore() { release(); }
-inline void OrderAccess::loadstore()  { acquire(); }
-inline void OrderAccess::storeload()  { fence(); }
+inline void OrderAccess::loadstore() { acquire(); }
+inline void OrderAccess::storeload() { fence(); }
 
 inline void OrderAccess::acquire() {
   READ_MEM_BARRIER;

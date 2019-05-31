@@ -64,7 +64,6 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
 
   __ lsr(roffset, c_rarg2, 2);                // offset
 
-  assert(count < LIST_CAPACITY, "LIST_CAPACITY too small");
   speculative_load_pclist[count] = __ pc();   // Used by the segfault handler
   switch (type) {
     case T_BOOLEAN: __ ldrb    (result, Address(robj, roffset)); break;

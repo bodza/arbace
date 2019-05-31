@@ -43,8 +43,6 @@ void CompiledPltStaticCall::set_to_interpreted(const methodHandle& callee, addre
 
   intptr_t data = method_loader->data();
   address destination = jump->destination();
-  assert(data == 0 || data == (intptr_t)callee(), "a) MT-unsafe modification of inline cache");
-  assert(destination == (address)-1 || destination == entry, "b) MT-unsafe modification of inline cache");
 
   // Update stub.
   method_loader->set_data((intptr_t)callee());
@@ -56,10 +54,8 @@ void CompiledPltStaticCall::set_to_interpreted(const methodHandle& callee, addre
 
 #ifdef NEVER_CALLED
 void CompiledPltStaticCall::set_stub_to_clean(static_stub_Relocation* static_stub) {
-  assert(CompiledIC_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "mt unsafe call");
   // Reset stub.
   address stub = static_stub->addr();
-  assert(stub != NULL, "stub not found");
   // Creation also verifies the object.
   NativeLoadGot* method_loader = nativeLoadGot_at(stub);
   NativeGotJump* jump          = nativeGotJump_at(method_loader->next_instruction_address());

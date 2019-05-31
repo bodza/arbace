@@ -7,13 +7,6 @@
 
 ElfFuncDescTable::ElfFuncDescTable(FILE* file, Elf_Shdr shdr, int index) :
   _file(file), _index(index), _section(file, shdr) {
-  assert(file, "null file handle");
-  // The actual function address (i.e. function entry point) is always the
-  // first value in the function descriptor (on IA64 and PPC64 they look as follows):
-  // PPC64: [function entry point, TOC pointer, environment pointer]
-  // IA64 : [function entry point, GP (global pointer) value]
-  // Unfortunately 'shdr.sh_entsize' doesn't always seem to contain this size (it's zero on PPC64) so we can't assert
-  // assert(IA64_ONLY(2) PPC64_ONLY(3) * sizeof(address) == shdr.sh_entsize, "Size mismatch for '.opd' section entries");
 
   _status = _section.status();
 }
@@ -38,9 +31,7 @@ address ElfFuncDescTable::lookup(Elf_Word index) {
   } else {
     MarkedFileReader mfd(_file);
     address addr;
-    if (!mfd.has_mark() ||
-        !mfd.set_position(shdr->sh_offset + index - shdr->sh_addr) ||
-        !mfd.read((void*)&addr, sizeof(addr))) {
+    if (!mfd.has_mark() || !mfd.set_position(shdr->sh_offset + index - shdr->sh_addr) || !mfd.read((void*)&addr, sizeof(addr))) {
       _status = NullDecoder::file_invalid;
       return NULL;
     }

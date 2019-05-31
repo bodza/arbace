@@ -20,8 +20,8 @@ class verification_type_info {
 
  protected:
   // No constructors  - should be 'private', but GCC issues a warning if it is
-  verification_type_info() {}
-  verification_type_info(const verification_type_info&) {}
+  verification_type_info() { }
+  verification_type_info(const verification_type_info&) { }
 
  public:
 
@@ -66,21 +66,17 @@ class verification_type_info {
   bool is_uninitialized() const { return tag() == ITEM_Uninitialized; }
 
   u2 cpool_index() const {
-    assert(is_object(), "This type has no cp_index");
     return Bytes::get_Java_u2(cpool_index_addr());
   }
   void set_cpool_index(u2 idx) {
-    assert(is_object(), "This type has no cp_index");
     Bytes::put_Java_u2(cpool_index_addr(), idx);
   }
 
   u2 bci() const {
-    assert(is_uninitialized(), "This type has no bci");
     return Bytes::get_Java_u2(bci_addr());
   }
 
   void set_bci(u2 bci) {
-    assert(is_uninitialized(), "This type has no bci");
     Bytes::put_Java_u2(bci_addr(), bci);
   }
 
@@ -105,10 +101,7 @@ class verification_type_info {
   // that we don't read past a particular memory limit.  It returns false
   // if any part of the data structure is outside the specified memory bounds.
   bool verify(address start, address end) {
-    return ((address)this >= start &&
-            (address)this < end &&
-            (bci_addr() + sizeof(u2) <= end ||
-             (!is_object() && !is_uninitialized())));
+    return ((address)this >= start && (address)this < end && (bci_addr() + sizeof(u2) <= end || (!is_object() && !is_uninitialized())));
   }
 
   void print_on(outputStream* st) {
@@ -149,8 +142,8 @@ class stack_map_frame {
   address frame_type_addr() const { return (address)this; }
 
   // No constructors  - should be 'private', but GCC issues a warning if it is
-  stack_map_frame() {}
-  stack_map_frame(const stack_map_frame&) {}
+  stack_map_frame() { }
+  stack_map_frame(const stack_map_frame&) { }
 
  public:
 
@@ -206,7 +199,6 @@ class same_frame : public stack_map_frame {
   }
 
   static same_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_frame*)addr;
   }
 
@@ -222,7 +214,6 @@ class same_frame : public stack_map_frame {
   int offset_delta() const { return frame_type_to_offset_delta(frame_type()); }
 
   void set_offset_delta(int offset_delta) {
-    assert(offset_delta <= 64, "Offset too large for same_frame");
     set_frame_type(offset_delta_to_frame_type(offset_delta));
   }
 
@@ -257,7 +248,6 @@ class same_frame_extended : public stack_map_frame {
   }
 
   static same_frame_extended* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame type");
     return (same_frame_extended*)addr;
   }
 
@@ -311,12 +301,10 @@ class same_locals_1_stack_item_frame : public stack_map_frame {
   }
 
   static same_locals_1_stack_item_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_locals_1_stack_item_frame*)addr;
   }
 
-  static same_locals_1_stack_item_frame* create_at(
-      address addr, int offset_delta, verification_type_info* vti) {
+  static same_locals_1_stack_item_frame* create_at(address addr, int offset_delta, verification_type_info* vti) {
     same_locals_1_stack_item_frame* sm = (same_locals_1_stack_item_frame*)addr;
     sm->set_offset_delta(offset_delta);
     if (vti != NULL) {
@@ -337,7 +325,6 @@ class same_locals_1_stack_item_frame : public stack_map_frame {
   int offset_delta() const { return frame_type_to_offset_delta(frame_type()); }
 
   void set_offset_delta(int offset_delta) {
-    assert(offset_delta > 0 && offset_delta <= 64, "Offset too large for this frame type");
     set_frame_type(offset_delta_to_frame_type(offset_delta));
   }
 
@@ -385,14 +372,11 @@ class same_locals_1_stack_item_extended : public stack_map_frame {
   }
 
   static same_locals_1_stack_item_extended* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (same_locals_1_stack_item_extended*)addr;
   }
 
-  static same_locals_1_stack_item_extended* create_at(
-      address addr, int offset_delta, verification_type_info* vti) {
-    same_locals_1_stack_item_extended* sm =
-       (same_locals_1_stack_item_extended*)addr;
+  static same_locals_1_stack_item_extended* create_at(address addr, int offset_delta, verification_type_info* vti) {
+    same_locals_1_stack_item_extended* sm = (same_locals_1_stack_item_extended*)addr;
     sm->set_frame_type(_frame_id);
     sm->set_offset_delta(offset_delta);
     if (vti != NULL) {
@@ -461,7 +445,6 @@ class chop_frame : public stack_map_frame {
   }
 
   static chop_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (chop_frame*)addr;
   }
 
@@ -486,11 +469,9 @@ class chop_frame : public stack_map_frame {
 
   int chops() const {
     int chops = frame_type_to_chops(frame_type());
-    assert(chops > 0 && chops < 4, "Invalid number of chops in frame");
     return chops;
   }
   void set_chops(int chops) {
-    assert(chops > 0 && chops <= 3, "Bad number of chops");
     set_frame_type(chops_to_frame_type(chops));
   }
 
@@ -522,7 +503,6 @@ class append_frame : public stack_map_frame {
   }
 
   static u1 appends_to_frame_type(int appends) {
-    assert(appends > 0 && appends < 4, "Invalid append amount");
     return 251 + appends;
   }
 
@@ -532,13 +512,10 @@ class append_frame : public stack_map_frame {
   }
 
   static append_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (append_frame*)addr;
   }
 
-  static append_frame* create_at(
-      address addr, int offset_delta, int appends,
-      verification_type_info* types) {
+  static append_frame* create_at(address addr, int offset_delta, int appends, verification_type_info* types) {
     append_frame* sm = (append_frame*)addr;
     sm->set_appends(appends);
     sm->set_offset_delta(offset_delta);
@@ -576,13 +553,11 @@ class append_frame : public stack_map_frame {
   }
 
   void set_appends(int appends) {
-    assert(appends > 0 && appends < 4, "Bad number of appends");
     set_frame_type(appends_to_frame_type(appends));
   }
 
   int number_of_types() const {
     int appends = frame_type_to_appends(frame_type());
-    assert(appends > 0 && appends < 4, "Invalid number of appends in frame");
     return appends;
   }
   verification_type_info* types() const {
@@ -642,14 +617,10 @@ class full_frame : public stack_map_frame {
   }
 
   static full_frame* at(address addr) {
-    assert(is_frame_type(*addr), "Wrong frame id");
     return (full_frame*)addr;
   }
 
-  static full_frame* create_at(
-      address addr, int offset_delta, int num_locals,
-      verification_type_info* locals,
-      int stack_slots, verification_type_info* stack) {
+  static full_frame* create_at(address addr, int offset_delta, int num_locals, verification_type_info* locals, int stack_slots, verification_type_info* stack) {
     full_frame* sm = (full_frame*)addr;
     sm->set_frame_type(_frame_id);
     sm->set_offset_delta(offset_delta);
@@ -673,9 +644,7 @@ class full_frame : public stack_map_frame {
     return sm;
   }
 
-  static size_t calculate_size(
-      int num_locals, verification_type_info* locals,
-      int stack_slots, verification_type_info* stack) {
+  static size_t calculate_size(int num_locals, verification_type_info* locals, int stack_slots, verification_type_info* stack) {
     size_t sz = sizeof(u1) + sizeof(u2) + sizeof(u2) + sizeof(u2);
     verification_type_info* vti = locals;
     for (int i = 0; i < num_locals; ++i) {
@@ -691,8 +660,7 @@ class full_frame : public stack_map_frame {
   }
 
   static size_t max_size(int locals, int stack) {
-    return sizeof(u1) + 3 * sizeof(u2) +
-        (locals + stack) * verification_type_info::max_size();
+    return sizeof(u1) + 3 * sizeof(u2) + (locals + stack) * verification_type_info::max_size();
   }
 
   size_t size() const {
@@ -818,8 +786,7 @@ int stack_map_frame::offset_delta() const {
 }
 
 void stack_map_frame::set_offset_delta(int offset_delta) {
-  FOR_EACH_STACKMAP_FRAME_TYPE(
-      VOID_VIRTUAL_DISPATCH, set_offset_delta, (offset_delta));
+  FOR_EACH_STACKMAP_FRAME_TYPE(VOID_VIRTUAL_DISPATCH, set_offset_delta, (offset_delta));
 }
 
 int stack_map_frame::number_of_types() const {
@@ -839,8 +806,7 @@ bool stack_map_frame::is_valid_offset(int offset) const {
 
 bool stack_map_frame::verify(address start, address end) const {
   if (frame_type_addr() >= start && frame_type_addr() < end) {
-    FOR_EACH_STACKMAP_FRAME_TYPE(
-       VIRTUAL_DISPATCH, verify_subtype, (start, end));
+    FOR_EACH_STACKMAP_FRAME_TYPE(VIRTUAL_DISPATCH, verify_subtype, (start, end));
   }
   return false;
 }
@@ -879,8 +845,8 @@ class stack_map_table {
 
  protected:
   // No constructors  - should be 'private', but GCC issues a warning if it is
-  stack_map_table() {}
-  stack_map_table(const stack_map_table&) {}
+  stack_map_table() { }
+  stack_map_table(const stack_map_table&) { }
 
  public:
 
@@ -911,8 +877,8 @@ class stack_map_table_attribute {
 
  protected:
   // No constructors  - should be 'private', but GCC issues a warning if it is
-  stack_map_table_attribute() {}
-  stack_map_table_attribute(const stack_map_table_attribute&) {}
+  stack_map_table_attribute() { }
+  stack_map_table_attribute(const stack_map_table_attribute&) { }
 
  public:
 

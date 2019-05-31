@@ -38,7 +38,7 @@ class BasicObjectLock {
 
  public:
   // Manipulation
-  oop      obj() const                                { return _obj;  }
+  oop      obj() const                                { return _obj; }
   void set_obj(oop obj)                               { _obj = obj; }
   BasicLock* lock()                                   { return &_lock; }
 
@@ -49,7 +49,7 @@ class BasicObjectLock {
   // GC support
   void oops_do(OopClosure* f) { f->do_oop(&_obj); }
 
-  static int obj_offset_in_bytes()                    { return offset_of(BasicObjectLock, _obj);  }
+  static int obj_offset_in_bytes()                    { return offset_of(BasicObjectLock, _obj); }
   static int lock_offset_in_bytes()                   { return offset_of(BasicObjectLock, _lock); }
 };
 

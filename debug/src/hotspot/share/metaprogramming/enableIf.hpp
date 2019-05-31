@@ -13,7 +13,7 @@
 // typename EnableIf<!IsPointer<T>::value>::type func(T not_ptr)
 
 template <bool B, typename T = void>
-struct EnableIf: AllStatic {};
+struct EnableIf: AllStatic { };
 
 template <typename T>
 struct EnableIf<true, T>: AllStatic {

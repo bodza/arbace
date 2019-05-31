@@ -11,7 +11,7 @@ private:
   ciType* class_to_citype(oop klass_oop) const;
 
 public:
-  ciMethodType(instanceHandle h_i) : ciInstance(h_i) {}
+  ciMethodType(instanceHandle h_i) : ciInstance(h_i) { }
 
   // What kind of ciObject is this?
   bool is_method_type() const { return true; }
@@ -19,7 +19,7 @@ public:
   ciType* rtype() const;
 
   int ptype_count() const;
-  int ptype_slot_count() const ;
+  int ptype_slot_count() const;
 
   ciType* ptype_at(int index) const;
 };

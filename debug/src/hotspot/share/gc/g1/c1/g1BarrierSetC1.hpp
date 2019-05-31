@@ -21,8 +21,6 @@ class G1PreBarrierStub: public CodeStub {
     _addr(addr), _pre_val(pre_val), _do_load(true),
     _patch_code(patch_code), _info(info)
   {
-    assert(_pre_val->is_register(), "should be temporary register");
-    assert(_addr->is_address(), "should be the address of the field");
   }
 
   // Version that _does not_ generate load of the previous value; the
@@ -31,7 +29,6 @@ class G1PreBarrierStub: public CodeStub {
     _addr(LIR_OprFact::illegalOpr), _pre_val(pre_val), _do_load(false),
     _patch_code(lir_patch_none), _info(NULL)
   {
-    assert(_pre_val->is_register(), "should be a register");
   }
 
   LIR_Opr addr() const { return _addr; }
@@ -97,7 +94,7 @@ class G1BarrierSetC1 : public ModRefBarrierSetC1 {
  public:
   G1BarrierSetC1()
     : _pre_barrier_c1_runtime_code_blob(NULL),
-      _post_barrier_c1_runtime_code_blob(NULL) {}
+      _post_barrier_c1_runtime_code_blob(NULL) { }
 
   CodeBlob* pre_barrier_c1_runtime_code_blob() { return _pre_barrier_c1_runtime_code_blob; }
   CodeBlob* post_barrier_c1_runtime_code_blob() { return _post_barrier_c1_runtime_code_blob; }

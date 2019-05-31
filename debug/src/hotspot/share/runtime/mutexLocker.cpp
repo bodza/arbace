@@ -117,7 +117,6 @@ static int _num_mutex;
 
 #define def(var, type, pri, vm_block, safepoint_check_allowed ) { \
   var = new type(Mutex::pri, #var, vm_block, safepoint_check_allowed); \
-  assert(_num_mutex < MAX_NUM_MUTEX, "increase MAX_NUM_MUTEX"); \
   _mutex_array[_num_mutex++] = var; \
 }
 

@@ -121,27 +121,22 @@ class ConstantPoolCacheEntry {
   void set_bytecode_2(Bytecodes::Code code);
   void set_f1(Metadata* f1) {
     Metadata* existing_f1 = _f1; // read once
-    assert(existing_f1 == NULL || existing_f1 == f1, "illegal field change");
     _f1 = f1;
   }
   void release_set_f1(Metadata* f1);
   void set_f2(intx f2) {
     intx existing_f2 = _f2; // read once
-    assert(existing_f2 == 0 || existing_f2 == f2, "illegal field change");
     _f2 = f2;
   }
   void set_f2_as_vfinal_method(Method* f2) {
-    assert(is_vfinal(), "flags must be set");
     set_f2((intx)f2);
   }
   int make_flags(TosState state, int option_bits, int field_index_or_method_params);
   void set_flags(intx flags)                     { _flags = flags; }
   void set_field_flags(TosState field_type, int option_bits, int field_index) {
-    assert((field_index & field_index_mask) == field_index, "field_index in range");
     set_flags(make_flags(field_type, option_bits | (1 << is_field_entry_shift), field_index));
   }
   void set_method_flags(TosState return_type, int option_bits, int method_params) {
-    assert((method_params & parameter_size_mask) == method_params, "method_params in range");
     set_flags(make_flags(return_type, option_bits, method_params));
   }
 
@@ -183,7 +178,6 @@ class ConstantPoolCacheEntry {
   // Initialization
   void initialize_entry(int original_index);     // initialize primary entry
   void initialize_resolved_reference_index(int ref_index) {
-    assert(_f2 == 0, "set once");  // note: ref_index might be zero also
     _f2 = ref_index;
   }
 
@@ -319,18 +313,14 @@ class ConstantPoolCacheEntry {
   // cache->main_entry_index().
   bool      is_f1_null() const;  // classifies a CPC entry as unbound
   int       f2_as_index() const                  {
-    assert(!is_vfinal(), "");
     return (int) _f2; }
   Method*   f2_as_vfinal_method() const          {
-    assert(is_vfinal(), "");
     return (Method*)_f2; }
   Method*   f2_as_interface_method() const;
   intx flags_ord() const;
   int  field_index() const                       {
-    assert(is_field_entry(),  "");
     return (_flags & field_index_mask); }
   int  parameter_size() const                    {
-    assert(is_method_entry(), "");
     return (_flags & parameter_size_mask); }
   bool is_volatile() const                       { return (_flags & (1 << is_volatile_shift))       != 0; }
   bool is_final() const                          { return (_flags & (1 << is_final_shift))          != 0; }
@@ -344,7 +334,6 @@ class ConstantPoolCacheEntry {
   bool is_long() const                           { return flag_state() == ltos; }
   bool is_double() const                         { return flag_state() == dtos; }
   TosState flag_state() const                    {
-    assert((uint)number_of_states <= (uint)tos_state_mask+1, "");
                                                    return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
   void set_indy_resolution_failed();
 
@@ -363,8 +352,6 @@ class ConstantPoolCacheEntry {
   void verify(outputStream* st) const;
 
   static void verify_tos_state_shift() {
-    // When shifting flags as a 32-bit int, make sure we don't need an extra mask for tos_state:
-    assert((((u4)-1 >> tos_state_shift) & ~tos_state_mask) == 0, "no need for tos_state mask");
   }
 
   void verify_just_initialized(bool f2_used);
@@ -413,7 +400,7 @@ class ConstantPoolCache: public MetaspaceObj {
   MetaspaceObj::Type type() const         { return ConstantPoolCacheType; }
 
   oop  archived_references() { return NULL; };
-  void set_archived_references(oop o) {};
+  void set_archived_references(oop o) { };
 
   inline oop resolved_references();
   void set_resolved_references(OopHandle s) { _resolved_references = s; }
@@ -450,7 +437,6 @@ class ConstantPoolCache: public MetaspaceObj {
   // Fetches the entry at the given index.
   // In either case the index must not be encoded or byte-swapped in any way.
   ConstantPoolCacheEntry* entry_at(int i) const {
-    assert(0 <= i && i < length(), "index out of bounds");
     return base() + i;
   }
 

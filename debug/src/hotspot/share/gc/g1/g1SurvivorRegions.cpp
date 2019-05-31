@@ -4,10 +4,9 @@
 #include "utilities/growableArray.hpp"
 #include "utilities/debug.hpp"
 
-G1SurvivorRegions::G1SurvivorRegions() : _regions(new (ResourceObj::C_HEAP, mtGC) GrowableArray<HeapRegion*>(8, true, mtGC)) {}
+G1SurvivorRegions::G1SurvivorRegions() : _regions(new (ResourceObj::C_HEAP, mtGC) GrowableArray<HeapRegion*>(8, true, mtGC)) { }
 
 void G1SurvivorRegions::add(HeapRegion* hr) {
-  assert(hr->is_survivor(), "should be flagged as survivor region");
   _regions->append(hr);
 }
 

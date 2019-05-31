@@ -13,15 +13,10 @@
 // Get the exception klass that this handler catches.
 ciInstanceKlass* ciExceptionHandler::catch_klass() {
   VM_ENTRY_MARK;
-  assert(!is_catch_all(), "bad index");
   if (_catch_klass == NULL) {
     bool will_link;
-    assert(_loading_klass->get_instanceKlass()->is_linked(), "must be linked before accessing constant pool");
     constantPoolHandle cpool(_loading_klass->get_instanceKlass()->constants());
-    ciKlass* k = CURRENT_ENV->get_klass_by_index(cpool,
-                                                 _catch_klass_index,
-                                                 will_link,
-                                                 _loading_klass);
+    ciKlass* k = CURRENT_ENV->get_klass_by_index(cpool, _catch_klass_index, will_link, _loading_klass);
     if (!will_link && k->is_loaded()) {
       GUARDED_VM_ENTRY(
         k = CURRENT_ENV->get_unloaded_klass(_loading_klass, k->name());

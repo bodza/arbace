@@ -72,9 +72,6 @@ void CompilationPolicy::compile_if_required(const methodHandle& selected_method,
   if (must_be_compiled(selected_method)) {
     // This path is unusual, mostly used by the '-Xcomp' stress test mode.
 
-    // Note: with several active threads, the must_be_compiled may be true
-    //       while can_be_compiled is false; remove assert
-    // assert(CompilationPolicy::can_be_compiled(selected_method), "cannot compile");
     if (!THREAD->can_call_java() || THREAD->is_Compiler_thread()) {
       // don't force compilation, resolve was on behalf of compiler
       return;
@@ -97,9 +94,6 @@ void CompilationPolicy::compile_if_required(const methodHandle& selected_method,
 
 // Returns true if m is allowed to be compiled
 bool CompilationPolicy::can_be_compiled(const methodHandle& m, int comp_level) {
-  // allow any levels for WhiteBox
-  assert(WhiteBoxAPI || comp_level == CompLevel_all || is_compile(comp_level), "illegal compilation level");
-
   if (m->is_abstract()) return false;
   if (DontCompileHugeMethods && m->code_size() > HugeMethodLimit) return false;
 
@@ -188,7 +182,6 @@ void NonTieredCompPolicy::initialize() {
 // - with COMPILER1 not defined it should return zero for c1 compilation levels.
 // - if neither is defined - always return zero.
 int NonTieredCompPolicy::compiler_count(CompLevel comp_level) {
-  assert(!TieredCompilation, "This policy should not be used with TieredCompilation");
   if (is_client_compilation_mode_vm() && is_c1_compile(comp_level)) {
     return _compiler_count;
   }
@@ -202,18 +195,15 @@ void NonTieredCompPolicy::reset_counter_for_invocation_event(const methodHandle&
   // BUT also make sure the method doesn't look like it was never executed.
   // Set carry bit and reduce counter's value to min(count, CompileThreshold/2).
   MethodCounters* mcs = m->method_counters();
-  assert(mcs != NULL, "MethodCounters cannot be NULL for profiling");
   mcs->invocation_counter()->set_carry();
   mcs->backedge_counter()->set_carry();
 
-  assert(!m->was_never_executed(), "don't reset to 0 -- could be mistaken for never-executed");
 }
 
 void NonTieredCompPolicy::reset_counter_for_back_branch_event(const methodHandle& m) {
   // Delay next back-branch event but pump up invocation counter to trigger
   // whole method compilation.
   MethodCounters* mcs = m->method_counters();
-  assert(mcs != NULL, "MethodCounters cannot be NULL for profiling");
   InvocationCounter* i = mcs->invocation_counter();
   InvocationCounter* b = mcs->backedge_counter();
 
@@ -254,10 +244,8 @@ void CounterDecay::decay() {
   // This operation is going to be performed only at the end of a safepoint
   // and hence GC's will not be going on, all Java mutators are suspended
   // at this point and hence SystemDictionary_lock is also not needed.
-  assert(SafepointSynchronize::is_at_safepoint(), "can only be executed at a safepoint");
   size_t nclasses = ClassLoaderDataGraph::num_instance_classes();
-  size_t classes_per_tick = nclasses * (CounterDecayMinIntervalLength * 1e-3 /
-                                        CounterHalfLifeTime);
+  size_t classes_per_tick = nclasses * (CounterDecayMinIntervalLength * 1e-3 / CounterHalfLifeTime);
   for (size_t i = 0; i < classes_per_tick; i++) {
     InstanceKlass* k = ClassLoaderDataGraph::try_get_next_class();
     if (k != NULL) {
@@ -268,7 +256,7 @@ void CounterDecay::decay() {
 
 // Called at the end of the safepoint
 void NonTieredCompPolicy::do_safepoint_work() {
-  if(UseCounterDecay && CounterDecay::is_decay_needed()) {
+  if (UseCounterDecay && CounterDecay::is_decay_needed()) {
     CounterDecay::decay();
   }
 }
@@ -321,7 +309,6 @@ CompileTask* NonTieredCompPolicy::select_task(CompileQueue* compile_queue) {
 
 bool NonTieredCompPolicy::is_mature(Method* method) {
   MethodData* mdo = method->method_data();
-  assert(mdo != NULL, "Should be");
   uint current = mdo->mileage_of(method);
   uint initial = mdo->creation_mileage();
   if (current < initial)
@@ -336,7 +323,6 @@ bool NonTieredCompPolicy::is_mature(Method* method) {
 
 nmethod* NonTieredCompPolicy::event(const methodHandle& method, const methodHandle& inlinee, int branch_bci,
                                     int bci, CompLevel comp_level, CompiledMethod* nm, JavaThread* thread) {
-  assert(comp_level == CompLevel_none, "This should be only called from the interpreter");
   if (CompileTheWorld || ReplayCompiles) {
     // Don't trigger other compiles in testing mode
     if (bci == InvocationEntryBci) {

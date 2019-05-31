@@ -94,13 +94,11 @@ private:
   static int object_size(int lh, int length) {
     int instance_header_size = Klass::layout_helper_header_size(lh);
     int element_shift = Klass::layout_helper_log2_element_size(lh);
-    assert(length <= arrayOopDesc::max_array_length(etype), "no overflow");
 
     julong size_in_bytes = (juint)length;
     size_in_bytes <<= element_shift;
     size_in_bytes += instance_header_size;
     julong size_in_words = ((size_in_bytes + (HeapWordSize-1)) >> LogHeapWordSize);
-    assert(size_in_words <= (julong)max_jint, "no overflow");
 
     return align_object_size((intptr_t)size_in_words);
   }

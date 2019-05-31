@@ -72,7 +72,6 @@ class G1StaticIHOPControl : public G1IHOPControl {
   }
 
   virtual void update_marking_length(double marking_length_s) {
-   assert(marking_length_s > 0.0, "Marking length must be larger than zero but is %.3f", marking_length_s);
     _last_marking_length_s = marking_length_s;
   }
 };

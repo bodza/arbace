@@ -27,7 +27,7 @@ class PcDesc {
   }
 
  public:
-  int pc_offset() const           { return _pc_offset;   }
+  int pc_offset() const           { return _pc_offset; }
   int scope_decode_offset() const { return _scope_decode_offset; }
   int obj_decode_offset() const   { return _obj_decode_offset; }
 
@@ -53,15 +53,13 @@ class PcDesc {
 
   // Does pd refer to the same information as pd?
   bool is_same_info(const PcDesc* pd) {
-    return _scope_decode_offset == pd->_scope_decode_offset &&
-      _obj_decode_offset == pd->_obj_decode_offset &&
-      _flags == pd->_flags;
+    return _scope_decode_offset == pd->_scope_decode_offset && _obj_decode_offset == pd->_obj_decode_offset && _flags == pd->_flags;
   }
 
-  bool     is_method_handle_invoke()       const { return (_flags & PCDESC_is_method_handle_invoke) != 0;     }
+  bool     is_method_handle_invoke()       const { return (_flags & PCDESC_is_method_handle_invoke) != 0; }
   void set_is_method_handle_invoke(bool z)       { set_flag(PCDESC_is_method_handle_invoke, z); }
 
-  bool     return_oop()                    const { return (_flags & PCDESC_return_oop) != 0;     }
+  bool     return_oop()                    const { return (_flags & PCDESC_return_oop) != 0; }
   void set_return_oop(bool z)                    { set_flag(PCDESC_return_oop, z); }
 
   // Returns the real pc

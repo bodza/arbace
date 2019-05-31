@@ -83,7 +83,7 @@ private:
   GrowableArray<ModuleEntry*>* _qualified_exports;
 
   // Initial size of a package entry's list of qualified exports.
-  enum {QUAL_EXP_SIZE = 43};
+  enum { QUAL_EXP_SIZE = 43 };
 
 public:
   void init() {
@@ -103,14 +103,10 @@ public:
 
   // package's export state
   bool is_exported() const { // qualifiedly or unqualifiedly exported
-    assert_locked_or_safepoint(Module_lock);
-    return module()->is_open() ||
-            ((_export_flags & PKG_EXP_UNQUALIFIED_OR_ALL_UNAMED) != 0) ||
-            has_qual_exports_list();
+    return module()->is_open() || ((_export_flags & PKG_EXP_UNQUALIFIED_OR_ALL_UNAMED) != 0) || has_qual_exports_list();
   }
   // Returns true if the package has any explicit qualified exports or is exported to all unnamed
   bool is_qual_exported() const {
-    assert_locked_or_safepoint(Module_lock);
     return (has_qual_exports_list() || is_exported_allUnnamed());
   }
   // Returns true if there are any explicit qualified exports.  Note that even
@@ -118,15 +114,12 @@ public:
   // on the list got gc-ed and deleted from the list) this method may still
   // return true.
   bool has_qual_exports_list() const {
-    assert_locked_or_safepoint(Module_lock);
     return (!is_unqual_exported() && _qualified_exports != NULL);
   }
   bool is_exported_allUnnamed() const {
-    assert_locked_or_safepoint(Module_lock);
     return (module()->is_open() || _export_flags == PKG_EXP_ALLUNNAMED);
   }
   bool is_unqual_exported() const {
-    assert_locked_or_safepoint(Module_lock);
     return (module()->is_open() || _export_flags == PKG_EXP_UNQUALIFIED);
   }
 
@@ -137,7 +130,6 @@ public:
         // No-op for open modules since all packages are unqualifiedly exported
         return;
     }
-    assert(Module_lock->owned_by_self(), "should have the Module_lock");
     _export_flags = PKG_EXP_UNQUALIFIED;
   }
 

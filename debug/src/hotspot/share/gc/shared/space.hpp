@@ -56,7 +56,7 @@ class Space: public CHeapObj<mtGC> {
  public:
   // Accessors
   HeapWord* bottom() const         { return _bottom; }
-  HeapWord* end() const            { return _end;    }
+  HeapWord* end() const            { return _end; }
   virtual void set_bottom(HeapWord* value) { _bottom = value; }
   virtual void set_end(HeapWord* value)    { _end = value; }
 
@@ -276,7 +276,7 @@ public:
   HeapWord* threshold;
 
   CompactPoint(Generation* g = NULL) :
-    gen(g), space(NULL), threshold(0) {}
+    gen(g), space(NULL), threshold(0) { }
 };
 
 // A space that supports compaction operations.  This is usually, but not
@@ -328,24 +328,23 @@ private:
   inline size_t obj_size(const HeapWord* addr) const;
 
   template <class SpaceType>
-  static inline void verify_up_to_first_dead(SpaceType* space) {};
+  static inline void verify_up_to_first_dead(SpaceType* space) { };
 
   template <class SpaceType>
   static inline void clear_empty_region(SpaceType* space);
 
 public:
   CompactibleSpace() :
-   _compaction_top(NULL), _next_compaction_space(NULL) {}
+   _compaction_top(NULL), _next_compaction_space(NULL) { }
 
   virtual void initialize(MemRegion mr, bool clear_space, bool mangle_space);
   virtual void clear(bool mangle_space);
 
   // Used temporarily during a compaction phase to hold the value
   // top should have when compaction is complete.
-  HeapWord* compaction_top() const { return _compaction_top;    }
+  HeapWord* compaction_top() const { return _compaction_top; }
 
   void set_compaction_top(HeapWord* value) {
-    assert(value == NULL || (value >= bottom() && value <= end()), "should point inside space");
     _compaction_top = value;
   }
 
@@ -471,10 +470,10 @@ class ContiguousSpace: public CompactibleSpace {
   virtual void clear(bool mangle_space);
 
   // Accessors
-  HeapWord* top() const            { return _top;    }
+  HeapWord* top() const            { return _top; }
   void set_top(HeapWord* value)    { _top = value; }
 
-  void set_saved_mark()            { _saved_mark_word = top();    }
+  void set_saved_mark()            { _saved_mark_word = top(); }
   void reset_saved_mark()          { _saved_mark_word = bottom(); }
 
   bool saved_mark_at_top() const { return saved_mark_word() == top(); }
@@ -483,21 +482,21 @@ class ContiguousSpace: public CompactibleSpace {
   // pattern) the unused part of a space.
 
   // Used to save the an address in a space for later use during mangling.
-  void set_top_for_allocations(HeapWord* v) {};
+  void set_top_for_allocations(HeapWord* v) { };
   // Used to save the space's current top for later use during mangling.
-  void set_top_for_allocations() {};
+  void set_top_for_allocations() { };
 
   // Mangle regions in the space from the current top up to the
   // previously mangled part of the space.
-  void mangle_unused_area() {};
+  void mangle_unused_area() { };
   // Mangle [top, end)
-  void mangle_unused_area_complete() {};
+  void mangle_unused_area_complete() { };
 
   // Do some sparse checking on the area that should have been mangled.
-  void check_mangled_unused_area(HeapWord* limit) {};
+  void check_mangled_unused_area(HeapWord* limit) { };
   // Check the complete area that should have been mangled.
   // This code may be NULL depending on the macro DEBUG_MANGLING.
-  void check_mangled_unused_area_complete() {};
+  void check_mangled_unused_area_complete() { };
 
   // Size computations: sizes in bytes.
   size_t capacity() const        { return byte_size(bottom(), end()); }
@@ -531,13 +530,11 @@ class ContiguousSpace: public CompactibleSpace {
   // signaled early termination.
   HeapWord* object_iterate_careful(ObjectClosureCareful* cl);
   HeapWord* concurrent_iteration_safe_limit() {
-    assert(_concurrent_iteration_safe_limit <= top(), "_concurrent_iteration_safe_limit update missed");
     return _concurrent_iteration_safe_limit;
   }
   // changes the safe limit, all objects from bottom() to the new
   // limit should be properly initialized
   void set_concurrent_iteration_safe_limit(HeapWord* new_limit) {
-    assert(new_limit <= top(), "uninitialized objects in the safe range");
     _concurrent_iteration_safe_limit = new_limit;
   }
 
@@ -547,7 +544,6 @@ class ContiguousSpace: public CompactibleSpace {
 
   // Compaction support
   virtual void reset_after_compaction() {
-    assert(compaction_top() >= bottom() && compaction_top() <= end(), "should point inside space");
     set_top(compaction_top());
     // set new iteration safe limit
     set_concurrent_iteration_safe_limit(compaction_top());
@@ -625,7 +621,7 @@ public:
   FilteringDCTOC(Space* sp, OopIterateClosure* cl,
                   CardTable::PrecisionStyle precision,
                   HeapWord* boundary) :
-    DirtyCardToOopClosure(sp, cl, precision, boundary) {}
+    DirtyCardToOopClosure(sp, cl, precision, boundary) { }
 };
 
 // A dirty card to oop closure for contiguous spaces
@@ -655,7 +651,7 @@ public:
                        CardTable::PrecisionStyle precision,
                        HeapWord* boundary) :
     FilteringDCTOC(sp, cl, precision, boundary)
-  {}
+  { }
 };
 
 // A ContigSpace that Supports an efficient "block_start" operation via
@@ -706,6 +702,6 @@ class TenuredSpace: public OffsetTableContigSpace {
   // Constructor
   TenuredSpace(BlockOffsetSharedArray* sharedOffsetArray,
                MemRegion mr) :
-    OffsetTableContigSpace(sharedOffsetArray, mr) {}
+    OffsetTableContigSpace(sharedOffsetArray, mr) { }
 };
 #endif

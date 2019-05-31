@@ -187,8 +187,7 @@ JVMFlag::Error CodeCacheSegmentSizeConstraintFunc(uintx value, bool verbose) {
 
 JVMFlag::Error CompilerThreadPriorityConstraintFunc(intx value, bool verbose) {
 #ifdef SOLARIS
-  if ((value < MinimumPriority || value > MaximumPriority) &&
-      (value != -1) && (value != -FXCriticalPriority)) {
+  if ((value < MinimumPriority || value > MaximumPriority) && (value != -1) && (value != -FXCriticalPriority)) {
     JVMFlag::printError(verbose,
                         "CompileThreadPriority (" INTX_FORMAT ") must be "
                         "between %d and %d inclusively or -1 (means no change) "

@@ -86,15 +86,11 @@ static void generate_all_subsets_of(LogTagType result[MaxSubsets][LogTag::MaxTag
                                     LogTagType subset[LogTag::MaxTags] = NULL,
                                     const size_t subset_size = 0,
                                     const size_t depth = 0) {
-  assert(subset_size <= LogTag::MaxTags, "subset must never have more than MaxTags tags");
-  assert(depth <= LogTag::MaxTags, "recursion depth overflow");
 
   if (subset == NULL) {
-    assert(*result_size == 0, "outer (non-recursive) call expects result_size to be 0");
     // Make subset the first element in the result array initially
     subset = result[0];
   }
-  assert((void*) subset >= &result[0] && (void*) subset <= &result[MaxSubsets - 1], "subset should always point to element in result");
 
   if (depth == LogTag::MaxTags || tags[depth] == LogTag::__NO_TAG) {
     if (subset_size == 0) {
@@ -104,7 +100,6 @@ static void generate_all_subsets_of(LogTagType result[MaxSubsets][LogTag::MaxTag
     if (subset_size != LogTag::MaxTags) {
       subset[subset_size] = LogTag::__NO_TAG;
     }
-    assert(*result_size < MaxSubsets, "subsets overflow");
     *result_size += 1;
 
     // Bump subset and copy over current state
@@ -263,8 +258,7 @@ void LogOutput::update_config_string(const size_t on_level[LogLevel::Count]) {
       }
 
       // Pick the selection with the best score, or in the case of a tie, the one with fewest tags
-      if (score > max_score ||
-          (score == max_score && selections[i].ntags() < best_selection->ntags())) {
+      if (score > max_score || (score == max_score && selections[i].ntags() < best_selection->ntags())) {
         max_score = score;
         best_selection = &selections[i];
       }
@@ -307,8 +301,6 @@ void LogOutput::update_config_string(const size_t on_level[LogLevel::Count]) {
       add_selections(&selections, &n_selections, &selections_cap, *deviates[d], deviates[d]->level_for(this));
     }
 
-    assert(n_deviates < deviating_tagsets, "deviating tag set array overflow");
-    assert(prev_deviates > n_deviates, "number of deviating tag sets must never grow");
   }
   FREE_C_HEAP_ARRAY(LogTagSet*, deviates);
   FREE_C_HEAP_ARRAY(Selection, selections);

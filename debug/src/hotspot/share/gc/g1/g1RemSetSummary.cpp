@@ -17,7 +17,6 @@ private:
 
 public:
   GetRSThreadVTimeClosure(G1RemSetSummary * summary) : ThreadClosure(), _summary(summary), _counter(0) {
-    assert(_summary != NULL, "just checking");
   }
 
   virtual void do_thread(Thread* t) {
@@ -45,14 +44,10 @@ void G1RemSetSummary::update() {
 }
 
 void G1RemSetSummary::set_rs_thread_vtime(uint thread, double value) {
-  assert(_rs_threads_vtimes != NULL, "just checking");
-  assert(thread < _num_vtimes, "just checking");
   _rs_threads_vtimes[thread] = value;
 }
 
 double G1RemSetSummary::rs_thread_vtime(uint thread) const {
-  assert(_rs_threads_vtimes != NULL, "just checking");
-  assert(thread < _num_vtimes, "just checking");
   return _rs_threads_vtimes[thread];
 }
 
@@ -88,8 +83,6 @@ G1RemSetSummary::~G1RemSetSummary() {
 }
 
 void G1RemSetSummary::set(G1RemSetSummary* other) {
-  assert(other != NULL, "just checking");
-  assert(_num_vtimes == other->_num_vtimes, "just checking");
 
   _num_conc_refined_cards = other->num_conc_refined_cards();
 
@@ -104,8 +97,6 @@ void G1RemSetSummary::set(G1RemSetSummary* other) {
 }
 
 void G1RemSetSummary::subtract_from(G1RemSetSummary* other) {
-  assert(other != NULL, "just checking");
-  assert(_num_vtimes == other->_num_vtimes, "just checking");
 
   _num_conc_refined_cards = other->num_conc_refined_cards() - _num_conc_refined_cards;
 
@@ -225,7 +216,7 @@ public:
   HRRSStatsIter() : _all("All"), _young("Young"), _humongous("Humongous"),
     _free("Free"), _old("Old"), _max_code_root_mem_sz_region(NULL), _max_rs_mem_sz_region(NULL),
     _max_rs_mem_sz(0), _max_code_root_mem_sz(0)
-  {}
+  { }
 
   bool do_heap_region(HeapRegion* r) {
     HeapRegionRemSet* hrrs = r->rem_set();

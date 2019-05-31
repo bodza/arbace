@@ -27,7 +27,7 @@
 
 // Efficient swapping of data bytes from Java byte
 // ordering to native byte ordering and vice versa.
-inline u2   Bytes::swap_u2(u2 x) {
+inline u2 Bytes::swap_u2(u2 x) {
 #ifdef AMD64
   return bswap_16(x);
 #else
@@ -44,7 +44,7 @@ inline u2   Bytes::swap_u2(u2 x) {
 #endif
 }
 
-inline u4   Bytes::swap_u4(u4 x) {
+inline u4 Bytes::swap_u4(u4 x) {
 #ifdef AMD64
   return bswap_32(x);
 #else
@@ -76,7 +76,7 @@ inline u8 Bytes::swap_u8(u8 x) {
 }
 #else
 // Helper function for swap_u8
-inline u8   Bytes::swap_u8_base(u4 x, u4 y) {
+inline u8 Bytes::swap_u8_base(u4 x, u4 y) {
   return (((u8)swap_u4(x))<<32) | swap_u4(y);
 }
 

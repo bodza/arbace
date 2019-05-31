@@ -59,7 +59,6 @@ ciObject::ciObject(Handle h) {
 // klass/method, if that makes sense.
 ciObject::ciObject(ciKlass* klass) {
   ASSERT_IN_VM;
-  assert(klass != NULL, "must supply klass");
   _handle = NULL;
   _klass = klass;
 }
@@ -92,7 +91,6 @@ ciKlass* ciObject::klass() {
       // When both _klass and _handle are NULL, we are dealing
       // with the distinguished instance of ciNullObject.
       // No one should ask it for its klass.
-      assert(is_null_object(), "must be null object");
       ShouldNotReachHere();
       return NULL;
     }
@@ -140,8 +138,6 @@ int ciObject::hash() {
 // This method should be changed to return an generified address
 // to discourage use of the JNI handle.
 jobject ciObject::constant_encoding() {
-  assert(is_null_object() || handle() != NULL, "cannot embed null pointer");
-  assert(can_be_constant(), "oop must be NULL or perm");
   return handle();
 }
 
@@ -167,9 +163,7 @@ bool ciObject::should_be_constant() {
     if (klass() == env->String_klass() || klass() == env->Class_klass()) {
       return true;
     }
-  if (klass()->is_subclass_of(env->MethodHandle_klass()) ||
-      klass()->is_subclass_of(env->CallSite_klass())) {
-    assert(ScavengeRootsInCode >= 1, "must be");
+  if (klass()->is_subclass_of(env->MethodHandle_klass()) || klass()->is_subclass_of(env->CallSite_klass())) {
     // We want to treat these aggressively.
     return true;
   }
@@ -182,7 +176,6 @@ bool ciObject::should_be_constant() {
 void ciObject::init_flags_from(oop x) {
   int flags = 0;
   if (x != NULL) {
-    assert(Universe::heap()->is_in_reserved(x), "must be");
     if (Universe::heap()->is_scavengable(x))
       flags |= SCAVENGABLE_FLAG;
   }

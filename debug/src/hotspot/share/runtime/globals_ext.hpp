@@ -38,7 +38,6 @@ inline bool JVMFlag::is_external_ext() const {
 }
 
 inline JVMFlag::MsgType JVMFlag::get_locked_message_ext(char* buf, int buflen) const {
-  assert(buf != NULL, "Buffer cannot be NULL");
   buf[0] = '\0';
   return JVMFlag::NONE;
 }

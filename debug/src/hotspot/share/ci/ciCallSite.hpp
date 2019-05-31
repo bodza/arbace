@@ -8,7 +8,7 @@
 // The class represents a java.lang.invoke.CallSite object.
 class ciCallSite : public ciInstance {
 public:
-  ciCallSite(instanceHandle h_i) : ciInstance(h_i) {}
+  ciCallSite(instanceHandle h_i) : ciInstance(h_i) { }
 
   // What kind of ciObject is this?
   bool is_call_site() const { return true; }

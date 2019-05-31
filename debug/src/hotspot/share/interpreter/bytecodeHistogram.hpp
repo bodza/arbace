@@ -13,7 +13,7 @@ class BytecodeCounter: AllStatic {
 
  public:
   // Initialization
-  static void reset()                      {};
+  static void reset()                      { };
 
   // Counter info (all info since last reset)
   static int    counter_value()            { return 0; };
@@ -21,7 +21,7 @@ class BytecodeCounter: AllStatic {
   static double frequency()                { return 0; }; // bytecodes/seconds
 
   // Counter printing
-  static void   print()                    {};
+  static void   print()                    { };
 };
 
 // BytecodeHistogram collects number of executions of bytecodes
@@ -33,10 +33,10 @@ class BytecodeHistogram: AllStatic {
 
  public:
   // Initialization
-  static void reset()                       {}; // reset counters
+  static void reset()                       { }; // reset counters
 
   // Profile printing
-  static void print(float cutoff = 0.01F)   {}; // cutoff in percent
+  static void print(float cutoff = 0.01F)   { }; // cutoff in percent
 };
 
 // BytecodePairHistogram collects number of executions of bytecode pairs.
@@ -55,10 +55,10 @@ class BytecodePairHistogram: AllStatic {
 
  public:
   // Initialization
-  static void reset()                       {};   // reset counters
+  static void reset()                       { };   // reset counters
 
   // Profile printing
-  static void print(float cutoff = 0.01F)   {};   // cutoff in percent
+  static void print(float cutoff = 0.01F)   { };   // cutoff in percent
 };
 
 #endif

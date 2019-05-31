@@ -116,7 +116,7 @@
   static bool is_caller_save_register (Register r) { return true; }
 
   static int nof_caller_save_cpu_regs() { return pd_nof_caller_save_cpu_regs_frame_map; }
-  static int last_cpu_reg()             { return pd_last_cpu_reg;  }
+  static int last_cpu_reg()             { return pd_last_cpu_reg; }
   static int last_byte_reg()            { return pd_last_byte_reg; }
 
 #endif

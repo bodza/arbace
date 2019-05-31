@@ -23,11 +23,9 @@ CompileTask* CompileTask::allocate() {
     task->set_next(NULL);
   } else {
     task = new CompileTask();
-    assert(WhiteBoxAPI || UseJVMCICompiler || _num_allocated_tasks < 10000, "Leaking compilation tasks?");
     task->set_next(NULL);
     task->set_is_free(true);
   }
-  assert(task->is_free(), "Task must be free.");
   task->set_is_free(false);
   return task;
 }
@@ -40,7 +38,6 @@ void CompileTask::free(CompileTask* task) {
  MutexLocker locker(CompileTaskAlloc_lock);
  if (!task->is_free()) {
    task->set_code(NULL);
-   assert(!task->lock()->is_locked(), "Should not be locked when freed");
    JNIHandles::destroy_global(task->_method_holder);
    JNIHandles::destroy_global(task->_hot_method_holder);
 
@@ -50,15 +47,7 @@ void CompileTask::free(CompileTask* task) {
  }
 }
 
-void CompileTask::initialize(int compile_id,
-                             const methodHandle& method,
-                             int osr_bci,
-                             int comp_level,
-                             const methodHandle& hot_method,
-                             int hot_count,
-                             CompileTask::CompileReason compile_reason,
-                             bool is_blocking) {
-  assert(!_lock->is_locked(), "bad locking");
+void CompileTask::initialize(int compile_id, const methodHandle& method, int osr_bci, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool is_blocking) {
 
   Thread* thread = Thread::current();
   _compile_id = compile_id;
@@ -169,9 +158,7 @@ void CompileTask::print_tty() {
 
 // ------------------------------------------------------------------
 // CompileTask::print_impl
-void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, int comp_level,
-                                         bool is_osr_method, int osr_bci, bool is_blocking,
-                                         const char* msg, bool short_form, bool cr) {
+void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, int comp_level, bool is_osr_method, int osr_bci, bool is_blocking, const char* msg, bool short_form, bool cr) {
   if (!short_form) {
     st->print("%7d ", (int) st->time_stamp().milliseconds());  // print timestamp
   }
@@ -285,7 +272,6 @@ void CompileTask::log_task_queued() {
 
   xtty->begin_elem("task_queued");
   log_task(xtty);
-  assert(_compile_reason > CompileTask::Reason_None && _compile_reason < CompileTask::Reason_Count, "Valid values");
   xtty->print(" comment='%s'", reason_name(_compile_reason));
 
   if (_hot_method != NULL) {
@@ -303,7 +289,7 @@ void CompileTask::log_task_queued() {
 
 // ------------------------------------------------------------------
 // CompileTask::log_task_start
-void CompileTask::log_task_start(CompileLog* log)   {
+void CompileTask::log_task_start(CompileLog* log) {
   log->begin_head("task");
   log_task(log);
   log->end_head();
@@ -397,7 +383,7 @@ void CompileTask::print_inlining_inner(outputStream* st, ciMethod* method, int i
   st->cr();
 }
 
-void CompileTask::print_ul(const char* msg){
+void CompileTask::print_ul(const char* msg) {
   LogTarget(Debug, jit, compilation) lt;
   if (lt.is_enabled()) {
     LogStream ls(lt);

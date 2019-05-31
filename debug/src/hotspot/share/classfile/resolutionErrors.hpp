@@ -58,7 +58,6 @@ public:
   // constant pool index.  It assumes it is being called with a cpCache index
   // (that is less than 0).
   static int encode_cpcache_index(int index) {
-    assert(index < 0, "Unexpected non-negative cpCache index");
     return index + CPCACHE_INDEX_MANGLE_VALUE;
   }
 };

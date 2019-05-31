@@ -12,5 +12,4 @@ void OrderAccess::StubRoutines_fence() {
     (*func)();
     return;
   }
-  assert(Threads::number_of_threads() == 0, "for bootstrap only");
 }

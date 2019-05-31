@@ -33,12 +33,8 @@ JVMFlag::Error ParallelGCThreadsConstraintFunc(uint value, bool verbose) {
 // we need constraint function.
 JVMFlag::Error ConcGCThreadsConstraintFunc(uint value, bool verbose) {
   // CMS and G1 GCs use ConcGCThreads.
-  if ((GCConfig::is_gc_selected(CollectedHeap::CMS) ||
-       GCConfig::is_gc_selected(CollectedHeap::G1)) && (value > ParallelGCThreads)) {
-    JVMFlag::printError(verbose,
-                        "ConcGCThreads (" UINT32_FORMAT ") must be "
-                        "less than or equal to ParallelGCThreads (" UINT32_FORMAT ")\n",
-                        value, ParallelGCThreads);
+  if ((GCConfig::is_gc_selected(CollectedHeap::CMS) || GCConfig::is_gc_selected(CollectedHeap::G1)) && (value > ParallelGCThreads)) {
+    JVMFlag::printError(verbose, "ConcGCThreads (" UINT32_FORMAT ") must be less than or equal to ParallelGCThreads (" UINT32_FORMAT ")\n", value, ParallelGCThreads);
     return JVMFlag::VIOLATES_CONSTRAINT;
   }
 
@@ -345,8 +341,7 @@ JVMFlag::Error TLABWasteIncrementConstraintFunc(uintx value, bool verbose) {
 }
 
 JVMFlag::Error SurvivorRatioConstraintFunc(uintx value, bool verbose) {
-  if (FLAG_IS_CMDLINE(SurvivorRatio) &&
-      (value > (MaxHeapSize / Universe::heap()->collector_policy()->space_alignment()))) {
+  if (FLAG_IS_CMDLINE(SurvivorRatio) && (value > (MaxHeapSize / Universe::heap()->collector_policy()->space_alignment()))) {
     JVMFlag::printError(verbose,
                         "SurvivorRatio (" UINTX_FORMAT ") must be "
                         "less than or equal to ergonomic SurvivorRatio maximum (" SIZE_FORMAT ")\n",

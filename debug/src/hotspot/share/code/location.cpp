@@ -4,7 +4,7 @@
 #include "runtime/handles.inline.hpp"
 
 void Location::print_on(outputStream* st) const {
-  if(type() == invalid) {
+  if (type() == invalid) {
     // product of Location::invalid_loc() or Location::Location().
     switch (where()) {
     case on_stack:     st->print("empty");    break;

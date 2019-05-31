@@ -119,9 +119,6 @@ inline void BitMap::par_clear_range(idx_t beg, idx_t end, RangeSizeHint hint) {
 
 inline BitMap::idx_t
 BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
-  assert(l_offset <= size(), "BitMap index out of bounds");
-  assert(r_offset <= size(), "BitMap index out of bounds");
-  assert(l_offset <= r_offset, "l_offset > r_offset ?");
 
   if (l_offset == r_offset) {
     return l_offset;
@@ -149,8 +146,6 @@ BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
       for (res_offset = bit_index(index); !(res & 1); res_offset++) {
         res = res >> 1;
       }
-      assert(res & 1, "tautology; see loop condition");
-      assert(res_offset >= l_offset, "just checking");
       return MIN2(res_offset, r_offset);
     }
   }
@@ -159,9 +154,6 @@ BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
 
 inline BitMap::idx_t
 BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
-  assert(l_offset <= size(), "BitMap index out of bounds");
-  assert(r_offset <= size(), "BitMap index out of bounds");
-  assert(l_offset <= r_offset, "l_offset > r_offset ?");
 
   if (l_offset == r_offset) {
     return l_offset;
@@ -179,7 +171,6 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
     for (; !(res & 1); res_offset++) {
       res = res >> 1;
     }
-    assert(res_offset >= l_offset, "just checking");
     return MIN2(res_offset, r_offset);
   }
   // skip over all word length 1-bit runs
@@ -191,8 +182,6 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
            res_offset++) {
         res = res >> 1;
       }
-      assert(!(res & 1), "tautology; see loop condition");
-      assert(res_offset >= l_offset, "just checking");
       return MIN2(res_offset, r_offset);
     }
   }
@@ -203,7 +192,6 @@ inline BitMap::idx_t
 BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const
 {
   verify_range(l_offset, r_offset);
-  assert(bit_in_word(r_offset) == 0, "r_offset not word-aligned");
 
   if (l_offset == r_offset) {
     return l_offset;
@@ -219,7 +207,6 @@ BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const
     for (; !(res & 1); res_offset++) {
       res = res >> 1;
     }
-    assert(res_offset >= l_offset && res_offset < r_offset, "just checking");
     return res_offset;
   }
   // skip over all word length 0-bit runs
@@ -230,8 +217,6 @@ BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const
       for (res_offset = bit_index(index); !(res & 1); res_offset++) {
         res = res >> 1;
       }
-      assert(res & 1, "tautology; see loop condition");
-      assert(res_offset >= l_offset && res_offset < r_offset, "just checking");
       return res_offset;
     }
   }
@@ -244,8 +229,6 @@ BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const
 // range.  Note:  end must not be 0.
 inline BitMap::bm_word_t
 BitMap::inverted_bit_mask_for_range(idx_t beg, idx_t end) const {
-  assert(end != 0, "does not work when end == 0");
-  assert(beg == end || word_index(beg) == word_index(end - 1), "must be a single-word range");
   bm_word_t mask = bit_mask(beg) - 1;   // low (right) bits
   if (bit_in_word(end) != 0) {
     mask |= ~(bit_mask(end) - 1);       // high (left) bits
@@ -254,12 +237,10 @@ BitMap::inverted_bit_mask_for_range(idx_t beg, idx_t end) const {
 }
 
 inline void BitMap::set_large_range_of_words(idx_t beg, idx_t end) {
-  assert(beg <= end, "underflow");
   memset(_map + beg, ~(unsigned char)0, (end - beg) * sizeof(bm_word_t));
 }
 
 inline void BitMap::clear_large_range_of_words(idx_t beg, idx_t end) {
-  assert(beg <= end, "underflow");
   memset(_map + beg, 0, (end - beg) * sizeof(bm_word_t));
 }
 

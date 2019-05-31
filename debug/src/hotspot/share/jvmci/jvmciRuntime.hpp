@@ -51,7 +51,6 @@ class JVMCIRuntime: public AllStatic {
 
   static jobject get_HotSpotJVMCIRuntime_jobject(TRAPS) {
     initialize_JVMCI(CHECK_NULL);
-    assert(_HotSpotJVMCIRuntime_initialized, "must be");
     return _HotSpotJVMCIRuntime_instance;
   }
 

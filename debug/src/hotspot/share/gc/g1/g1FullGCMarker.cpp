@@ -16,12 +16,9 @@ G1FullGCMarker::G1FullGCMarker(uint worker_id, PreservedMarks* preserved_stack, 
 }
 
 G1FullGCMarker::~G1FullGCMarker() {
-  assert(is_empty(), "Must be empty at this point");
 }
 
-void G1FullGCMarker::complete_marking(OopQueueSet* oop_stacks,
-                                      ObjArrayTaskQueueSet* array_stacks,
-                                      ParallelTaskTerminator* terminator) {
+void G1FullGCMarker::complete_marking(OopQueueSet* oop_stacks, ObjArrayTaskQueueSet* array_stacks, ParallelTaskTerminator* terminator) {
   int hash_seed = 17;
   do {
     drain_stack();

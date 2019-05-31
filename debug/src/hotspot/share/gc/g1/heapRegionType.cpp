@@ -19,7 +19,6 @@ bool HeapRegionType::is_valid(Tag tag) {
 }
 
 const char* HeapRegionType::get_str() const {
-  hrt_assert_is_valid(_tag);
   switch (_tag) {
     case FreeTag:               return "FREE";
     case EdenTag:               return "EDEN";
@@ -36,7 +35,6 @@ const char* HeapRegionType::get_str() const {
 }
 
 const char* HeapRegionType::get_short_str() const {
-  hrt_assert_is_valid(_tag);
   switch (_tag) {
     case FreeTag:               return "F";
     case EdenTag:               return "E";
@@ -53,7 +51,6 @@ const char* HeapRegionType::get_short_str() const {
 }
 
 G1HeapRegionTraceType::Type HeapRegionType::get_trace_type() {
-  hrt_assert_is_valid(_tag);
   switch (_tag) {
     case FreeTag:               return G1HeapRegionTraceType::Free;
     case EdenTag:               return G1HeapRegionTraceType::Eden;

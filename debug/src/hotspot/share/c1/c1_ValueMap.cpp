@@ -80,7 +80,6 @@ Value ValueMap::find_insert(Value x) {
             // otherwise it is possible that they are not evaluated
             f->pin(Instruction::PinGlobalValueNumbering);
           }
-          assert(x->type()->tag() == f->type()->tag(), "should have same type");
 
           return f;
         }
@@ -157,12 +156,10 @@ void ValueMap::kill_field(ciField* field, bool all_offsets) {
 }
 
 void ValueMap::kill_map(ValueMap* map) {
-  assert(is_global_value_numbering(), "only for global value numbering");
   _killed_values.set_union(&map->_killed_values);
 }
 
 void ValueMap::kill_all() {
-  assert(is_local_value_numbering(), "only for local value numbering");
   for (int i = size() - 1; i >= 0; i--) {
     _entries.at_put(i, NULL);
   }
@@ -185,13 +182,11 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
   void      kill_memory()                                 { _too_complicated_loop = true; }
   void      kill_field(ciField* field, bool all_offsets)  {
     current_map()->kill_field(field, all_offsets);
-    assert(field->type()->basic_type() >= 0 && field->type()->basic_type() <= T_ARRAY, "Invalid type");
     _has_field_store[field->type()->basic_type()] = true;
   }
   void      kill_array(ValueType* type)                   {
     current_map()->kill_array(type);
     BasicType basic_type = as_BasicType(type);
-    assert(basic_type >= 0 && basic_type <= T_ARRAY, "Invalid type");
     _has_indexed_store[basic_type] = true;
   }
 
@@ -201,26 +196,24 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
     , _loop_blocks(ValueMapMaxLoopSize)
     , _too_complicated_loop(false)
   {
-    for (int i=0; i<= T_ARRAY; i++){
+    for (int i=0; i<= T_ARRAY; i++) {
       _has_field_store[i] = false;
       _has_indexed_store[i] = false;
     }
   }
 
   bool has_field_store(BasicType type) {
-    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
     return _has_field_store[type];
   }
 
   bool has_indexed_store(BasicType type) {
-    assert(type >= 0 && type <= T_ARRAY, "Invalid type");
     return _has_indexed_store[type];
   }
 
   bool process(BlockBegin* loop_header);
 };
 
-class LoopInvariantCodeMotion : public StackObj  {
+class LoopInvariantCodeMotion : public StackObj {
  private:
   GlobalValueNumbering* _gvn;
   ShortLoopOptimizer*   _short_loop_optimizer;
@@ -248,7 +241,6 @@ LoopInvariantCodeMotion::LoopInvariantCodeMotion(ShortLoopOptimizer *slo, Global
     return;  // only the entry block does not have a predecessor
   }
 
-  assert(insertion_block->end()->as_Base() == NULL, "cannot insert into entry block");
   _insertion_point = insertion_block->end()->prev();
   _insert_is_pred = loop_header->is_predecessor(insertion_block);
 
@@ -258,12 +250,10 @@ LoopInvariantCodeMotion::LoopInvariantCodeMotion(ShortLoopOptimizer *slo, Global
   if (!_state) {
     // If, TableSwitch and LookupSwitch always have state_before when
     // loop invariant code motion happens..
-    assert(block_end->as_Goto(), "Block has to be goto");
     _state = block_end->state();
   }
 
   // the loop_blocks are filled by going backward from the loop header, so this processing order is best
-  assert(loop_blocks->at(0) == loop_header, "loop header must be first loop block");
   process_block(loop_header);
   for (int i = loop_blocks->length() - 1; i >= 1; i--) {
     process_block(loop_blocks->at(i));
@@ -285,7 +275,6 @@ void LoopInvariantCodeMotion::process_block(BlockBegin* block) {
     if (cur->as_Constant() != NULL) {
       cur_invariant = !cur->can_trap();
     } else if (cur->as_ArithmeticOp() != NULL || cur->as_LogicOp() != NULL || cur->as_ShiftOp() != NULL) {
-      assert(cur->as_Op2() != NULL, "must be Op2");
       Op2* op2 = (Op2*)cur;
       cur_invariant = !op2->can_trap() && is_invariant(op2->x()) && is_invariant(op2->y());
     } else if (cur->as_LoadField() != NULL) {
@@ -406,12 +395,9 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
   int num_blocks = blocks->length();
 
   BlockBegin* start_block = blocks->at(0);
-  assert(start_block == ir->start() && start_block->number_of_preds() == 0 && start_block->dominator() == NULL, "must be start block");
-  assert(start_block->next()->as_Base() != NULL && start_block->next()->next() == NULL, "start block must not have instructions");
 
   // method parameters are not linked in instructions list, so process them separateley
   for_each_state_value(start_block->state(), value,
-     assert(value->as_Local() != NULL, "only method parameters allowed");
      set_processed(value);
   );
 
@@ -423,17 +409,13 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
     TRACE_VALUE_NUMBERING(tty->print_cr("**** processing block B%d", block->block_id()));
 
     int num_preds = block->number_of_preds();
-    assert(num_preds > 0, "block must have predecessors");
 
     BlockBegin* dominator = block->dominator();
-    assert(dominator != NULL, "dominator must exist");
-    assert(value_map_of(dominator) != NULL, "value map of dominator must exist");
 
     // create new value map with increased nesting
     _current_map = new ValueMap(value_map_of(dominator));
 
     if (num_preds == 1 && !block->is_set(BlockBegin::exception_entry_flag)) {
-      assert(dominator == block->pred_at(0), "dominator must be equal to predecessor");
       // nothing to do here
 
     } else if (block->is_set(BlockBegin::linear_scan_loop_header_flag)) {
@@ -488,10 +470,8 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
 }
 
 void GlobalValueNumbering::substitute(Instruction* instr) {
-  assert(!instr->has_subst(), "substitution already set");
   Value subst = current_map()->find_insert(instr);
   if (subst != instr) {
-    assert(!subst->has_subst(), "can't have a substitution");
 
     TRACE_VALUE_NUMBERING(tty->print_cr("substitution for %d set to %d", instr->id(), subst->id()));
     instr->set_subst(subst);

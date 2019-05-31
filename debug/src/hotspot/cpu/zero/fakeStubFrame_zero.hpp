@@ -29,7 +29,7 @@ class FakeStubFrame : public ZeroFrame {
                      int   offset,
                      char* fieldbuf,
                      char* valuebuf,
-                     int   buflen) const {}
+                     int   buflen) const { }
 };
 
 #endif

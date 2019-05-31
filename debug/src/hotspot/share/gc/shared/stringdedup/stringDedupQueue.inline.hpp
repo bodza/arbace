@@ -6,8 +6,6 @@
 
 template <typename Q>
 void StringDedupQueue::create() {
-  assert(StringDedup::is_enabled(), "Must be enabled");
-  assert(_queue == NULL, "Can have only one queue");
   _queue = new Q;
 }
 

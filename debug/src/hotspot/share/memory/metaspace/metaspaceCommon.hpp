@@ -34,9 +34,6 @@ void print_human_readable_size(outputStream* st, size_t byte_size, size_t scale 
 // larger than 99% but not 100% are displayed as ">100%".
 void print_percentage(outputStream* st, size_t total, size_t part);
 
-#define assert_is_aligned(value, alignment) \
-  assert(is_aligned((value), (alignment)), SIZE_FORMAT_HEX " is not aligned to " SIZE_FORMAT, (size_t)(uintptr_t)value, (alignment))
-
 // ChunkIndex defines the type of chunk.
 // Chunk types differ by size: specialized < small < medium, chunks
 // larger than medium are humongous chunks of varying size.
@@ -61,8 +58,7 @@ const char* chunk_size_name(ChunkIndex index);
 
 // Verify chunk type.
 inline bool is_valid_chunktype(ChunkIndex index) {
-  return index == SpecializedIndex || index == SmallIndex ||
-         index == MediumIndex || index == HumongousIndex;
+  return index == SpecializedIndex || index == SmallIndex || index == MediumIndex || index == HumongousIndex;
 }
 
 inline bool is_valid_nonhumongous_chunktype(ChunkIndex index) {

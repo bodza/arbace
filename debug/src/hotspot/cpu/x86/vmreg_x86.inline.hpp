@@ -2,11 +2,11 @@
 #define CPU_X86_VM_VMREG_X86_INLINE_HPP
 
 inline VMReg RegisterImpl::as_VMReg() {
-  if( this==noreg ) return VMRegImpl::Bad();
+  if (this==noreg ) return VMRegImpl::Bad();
 #ifdef AMD64
   return VMRegImpl::as_VMReg(encoding() << 1 );
 #else
-  return VMRegImpl::as_VMReg(encoding() );
+  return VMRegImpl::as_VMReg(encoding());
 #endif
 }
 

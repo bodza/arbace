@@ -7,7 +7,6 @@
 uint GCId::_next_id = 0;
 
 NamedThread* currentNamedthread() {
-  assert(Thread::current()->is_Named_thread(), "This thread must be NamedThread");
   return (NamedThread*)Thread::current();
 }
 
@@ -21,7 +20,6 @@ uint GCId::peek() {
 
 uint GCId::current() {
   const uint gc_id = currentNamedthread()->gc_id();
-  assert(gc_id != undefined(), "Using undefined GC id.");
   return gc_id;
 }
 
@@ -35,7 +33,6 @@ size_t GCId::print_prefix(char* buf, size_t len) {
     uint gc_id = current_or_undefined();
     if (gc_id != undefined()) {
       int ret = jio_snprintf(buf, len, "GC(%u) ", gc_id);
-      assert(ret > 0, "Failed to print prefix. Log buffer too small?");
       return (size_t)ret;
     }
   }

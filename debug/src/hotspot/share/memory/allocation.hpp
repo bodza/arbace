@@ -293,7 +293,7 @@ extern void resource_free_bytes( char *old, size_t size );
 class ResourceObj ALLOCATION_SUPER_CLASS_SPEC {
  public:
   enum allocation_type { STACK_OR_EMBEDDED = 0, RESOURCE_AREA, C_HEAP, ARENA, allocation_mask = 0x3 };
-  static void set_allocation_type(address res, allocation_type type) {};
+  static void set_allocation_type(address res, allocation_type type) { };
 
  public:
   void* operator new(size_t size, allocation_type type, MEMFLAGS flags) throw();
@@ -410,8 +410,8 @@ class ResourceObj ALLOCATION_SUPER_CLASS_SPEC {
 // should check the ReallocMark.
 class ReallocMark: public StackObj {
 public:
-  ReallocMark()   {};
-  void check()    {};
+  ReallocMark()   { };
+  void check()    { };
 };
 
 // Helper class to allocate arrays that may become large.

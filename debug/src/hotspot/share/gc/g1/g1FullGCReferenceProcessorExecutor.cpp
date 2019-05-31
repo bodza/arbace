@@ -65,15 +65,9 @@ void G1FullGCReferenceProcessingExecutor::execute(STWGCTimer* timer, G1FullGCTra
 
   // Process discovered references, use this executor if multi-threaded
   // processing is enabled.
-  const ReferenceProcessorStats& stats =
-      _reference_processor->process_discovered_references(&is_alive,
-                                                          &keep_alive,
-                                                          marker->stack_closure(),
-                                                          executor,
-                                                          &pt);
+  const ReferenceProcessorStats& stats = _reference_processor->process_discovered_references(&is_alive, &keep_alive, marker->stack_closure(), executor, &pt);
 
   tracer->report_gc_reference_stats(stats);
   pt.print_all_references();
 
-  assert(marker->oop_stack()->is_empty(), "Should be no oops on the stack");
 }

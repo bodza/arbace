@@ -23,7 +23,7 @@ extern char* resource_allocate_bytes(Thread* thread, size_t size, AllocFailType 
   return thread->resource_area()->allocate_bytes(size, alloc_failmode);
 }
 
-extern char* resource_reallocate_bytes( char *old, size_t old_size, size_t new_size, AllocFailType alloc_failmode){
+extern char* resource_reallocate_bytes( char *old, size_t old_size, size_t new_size, AllocFailType alloc_failmode) {
   return (char*)Thread::current()->resource_area()->Arealloc(old, old_size, new_size, alloc_failmode);
 }
 

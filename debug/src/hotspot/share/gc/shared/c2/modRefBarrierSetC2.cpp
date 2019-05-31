@@ -23,7 +23,6 @@ Node* ModRefBarrierSetC2::store_at_resolved(C2Access& access, C2AccessValue& val
   }
 
   uint adr_idx = kit->C->get_alias_index(adr_type);
-  assert(adr_idx != Compile::AliasIdxTop, "use other store_to_memory factory" );
 
   pre_barrier(kit, true /* do_load */, kit->control(), access.base(), adr, adr_idx, val.node(),
               static_cast<const TypeOopPtr*>(val.type()), NULL /* pre_val */, access.type());

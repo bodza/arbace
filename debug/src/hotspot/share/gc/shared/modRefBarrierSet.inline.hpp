@@ -25,14 +25,12 @@ void ModRefBarrierSet::write_ref_array(HeapWord* start, size_t count) {
   HeapWord* aligned_start = align_down(start, HeapWordSize);
   HeapWord* aligned_end   = align_up  (end,   HeapWordSize);
   // If compressed oops were not being used, these should already be aligned
-  assert(UseCompressedOops || (aligned_start == start && aligned_end == end), "Expected heap word alignment of start and end");
   write_ref_array_work(MemRegion(aligned_start, aligned_end));
 }
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline void ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_store_in_heap(T* addr, oop value) {
+inline void ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_store_in_heap(T* addr, oop value) {
   BarrierSetT *bs = barrier_set_cast<BarrierSetT>(barrier_set());
   bs->template write_ref_field_pre<decorators>(addr);
   Raw::oop_store(addr, value);
@@ -41,8 +39,7 @@ oop_store_in_heap(T* addr, oop value) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline oop ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_atomic_cmpxchg_in_heap(oop new_value, T* addr, oop compare_value) {
+inline oop ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_atomic_cmpxchg_in_heap(oop new_value, T* addr, oop compare_value) {
   BarrierSetT *bs = barrier_set_cast<BarrierSetT>(barrier_set());
   bs->template write_ref_field_pre<decorators>(addr);
   oop result = Raw::oop_atomic_cmpxchg(new_value, addr, compare_value);
@@ -54,8 +51,7 @@ oop_atomic_cmpxchg_in_heap(oop new_value, T* addr, oop compare_value) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline oop ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_atomic_xchg_in_heap(oop new_value, T* addr) {
+inline oop ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_atomic_xchg_in_heap(oop new_value, T* addr) {
   BarrierSetT *bs = barrier_set_cast<BarrierSetT>(barrier_set());
   bs->template write_ref_field_pre<decorators>(addr);
   oop result = Raw::oop_atomic_xchg(new_value, addr);
@@ -65,10 +61,7 @@ oop_atomic_xchg_in_heap(oop new_value, T* addr) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline bool ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                      arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                      size_t length) {
+inline bool ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length) {
   BarrierSetT *bs = barrier_set_cast<BarrierSetT>(barrier_set());
 
   src_raw = arrayOopDesc::obj_offset_to_raw(src_obj, src_offset_in_bytes, src_raw);
@@ -76,12 +69,10 @@ oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
 
   if (!HasDecorator<decorators, ARRAYCOPY_CHECKCAST>::value) {
     // Optimized covariant case
-    bs->write_ref_array_pre(dst_raw, length,
-                            HasDecorator<decorators, IS_DEST_UNINITIALIZED>::value);
+    bs->write_ref_array_pre(dst_raw, length, HasDecorator<decorators, IS_DEST_UNINITIALIZED>::value);
     Raw::oop_arraycopy(NULL, 0, src_raw, NULL, 0, dst_raw, length);
     bs->write_ref_array((HeapWord*)dst_raw, length);
   } else {
-    assert(dst_obj != NULL, "better have an actual oop");
     Klass* bound = objArrayOop(dst_obj)->element_klass();
     T* from = const_cast<T*>(src_raw);
     T* end = from + length;
@@ -95,7 +86,6 @@ oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
         const size_t pd = pointer_delta(p, dst_raw, (size_t)heapOopSize);
         // pointer delta is scaled to number of elements (length field in
         // objArrayOop) which we assume is 32 bit.
-        assert(pd == (size_t)(int)pd, "length field overflow");
         bs->write_ref_array((HeapWord*)dst_raw, pd);
         return false;
       }
@@ -106,8 +96,7 @@ oop_arraycopy_in_heap(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
 }
 
 template <DecoratorSet decorators, typename BarrierSetT>
-inline void ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::
-clone_in_heap(oop src, oop dst, size_t size) {
+inline void ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT>::clone_in_heap(oop src, oop dst, size_t size) {
   Raw::clone(src, dst, size);
   BarrierSetT *bs = barrier_set_cast<BarrierSetT>(barrier_set());
   bs->write_region(MemRegion((HeapWord*)(void*)dst, size));

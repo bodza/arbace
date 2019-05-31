@@ -86,7 +86,6 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
       }
     }
     UseSharedSpaces = false;
-    assert(current_info() != NULL, "singleton must be registered");
     current_info()->close();
   }
   va_end(ap);
@@ -102,7 +101,6 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
 // the code that reads the CDS file will both use the same size buffer.  Hence, will
 // use identical truncation.  This is necessary for matching of truncated versions.
 template <int N> static void get_header_version(char (&header_version) [N]) {
-  assert(N == JVM_IDENT_MAX, "Bad header_version size");
 
   const char *vm_version = VM_Version::internal_vm_info_string();
   const int version_len = (int)strlen(vm_version);
@@ -125,7 +123,6 @@ template <int N> static void get_header_version(char (&header_version) [N]) {
 }
 
 FileMapInfo::FileMapInfo() {
-  assert(_current_info == NULL, "must be singleton"); // not thread safe
   _current_info = this;
   memset((void*)this, 0, sizeof(FileMapInfo));
   _file_offset = 0;
@@ -136,7 +133,6 @@ FileMapInfo::FileMapInfo() {
 }
 
 FileMapInfo::~FileMapInfo() {
-  assert(_current_info == this, "must be singleton"); // not thread safe
   _current_info = NULL;
 }
 
@@ -177,7 +173,6 @@ void FileMapInfo::FileMapHeader::populate(FileMapInfo* mapinfo, size_t alignment
 }
 
 void SharedClassPathEntry::init(const char* name, bool is_modules_image, TRAPS) {
-  assert(DumpSharedSpaces, "dump time only");
   _timestamp = 0;
   _filesize  = 0;
 
@@ -210,7 +205,6 @@ void SharedClassPathEntry::init(const char* name, bool is_modules_image, TRAPS) 
 }
 
 bool SharedClassPathEntry::validate(bool is_class_path) {
-  assert(UseSharedSpaces, "runtime only");
 
   struct stat st;
   const char* name;
@@ -239,16 +233,12 @@ bool SharedClassPathEntry::validate(bool is_class_path) {
       FileMapInfo::fail_continue("directory is not empty: %s", name);
       ok = false;
     }
-  } else if ((has_timestamp() && _timestamp != st.st_mtime) ||
-             _filesize != st.st_size) {
+  } else if ((has_timestamp() && _timestamp != st.st_mtime) || _filesize != st.st_size) {
     ok = false;
     if (PrintSharedArchiveAndExit) {
-      FileMapInfo::fail_continue(_timestamp != st.st_mtime ?
-                                 "Timestamp mismatch" :
-                                 "File size mismatch");
+      FileMapInfo::fail_continue(_timestamp != st.st_mtime ? "Timestamp mismatch" : "File size mismatch");
     } else {
-      FileMapInfo::fail_continue("A jar file is not the one used while building"
-                                 " the shared archive file: %s", name);
+      FileMapInfo::fail_continue("A jar file is not the one used while building the shared archive file: %s", name);
     }
   }
   return ok;
@@ -260,13 +250,10 @@ void SharedClassPathEntry::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 void FileMapInfo::allocate_shared_path_table() {
-  assert(DumpSharedSpaces, "Sanity");
 
   Thread* THREAD = Thread::current();
   ClassLoaderData* loader_data = ClassLoaderData::the_null_class_loader_data();
   ClassPathEntry* jrt = ClassLoader::get_jrt_entry();
-
-  assert(jrt != NULL, "No modular java runtime image present when allocating the CDS classpath entry table");
 
   size_t entry_size = sizeof(SharedClassPathEntry); // assert ( should be 8 byte aligned??)
   int num_boot_classpath_entries = ClassLoader::num_boot_classpath_entries();
@@ -295,7 +282,6 @@ void FileMapInfo::allocate_shared_path_table() {
     cpe = ClassLoader::get_next_boot_classpath_entry(cpe);
     i++;
   }
-  assert(i == num_boot_classpath_entries, "number of boot class path entry mismatch");
 
   // 2. app class path
   ClassPathEntry *acpe = ClassLoader::app_classpath_entries();
@@ -320,11 +306,9 @@ void FileMapInfo::allocate_shared_path_table() {
     mpe = mpe->next();
     i++;
   }
-  assert(i == num_entries, "number of shared path entry mismatch");
 }
 
 void FileMapInfo::check_nonempty_dir_in_shared_path_table() {
-  assert(DumpSharedSpaces, "dump time only");
 
   bool has_nonempty_dir = false;
 
@@ -383,7 +367,6 @@ class ManifestStream: public ResourceObj {
         *_current = '\0';
         u1* value = (u1*)strchr((char*)attr, ':');
         if (value != NULL) {
-          assert(*(value+1) == ' ', "Unrecognized format" );
           if (strstr((char*)attr, "-Digest") != NULL) {
             isSigned = true;
             break;
@@ -404,7 +387,6 @@ void FileMapInfo::update_shared_classpath(ClassPathEntry *cpe, SharedClassPathEn
   jint manifest_size;
 
   if (cpe->is_jar_file()) {
-    assert(ent->is_jar(), "the shared class path entry is not a JAR file");
     char* manifest = ClassLoaderExt::read_manifest(cpe, &manifest_size, CHECK);
     if (manifest != NULL) {
       ManifestStream* stream = new ManifestStream((u1*)manifest,
@@ -426,7 +408,6 @@ void FileMapInfo::update_shared_classpath(ClassPathEntry *cpe, SharedClassPathEn
 }
 
 bool FileMapInfo::validate_shared_path_table() {
-  assert(UseSharedSpaces, "runtime only");
 
   _validating_shared_path_table = true;
   _shared_path_table = _header->_shared_path_table;
@@ -493,8 +474,7 @@ bool FileMapInfo::init_from_file(int fd) {
   }
 
   size_t len = lseek(fd, 0, SEEK_END);
-  struct FileMapInfo::FileMapHeader::space_info* si =
-    &_header->_space[MetaspaceShared::last_valid_region];
+  struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[MetaspaceShared::last_valid_region];
   // The last space might be empty
   if (si->_file_offset > len || len - si->_file_offset < si->_used) {
     fail_continue("The shared archive file has been truncated.");
@@ -565,8 +545,7 @@ void FileMapInfo::write_header() {
 
 // Dump region to file.
 
-void FileMapInfo::write_region(int region, char* base, size_t size,
-                               bool read_only, bool allow_exec) {
+void FileMapInfo::write_region(int region, char* base, size_t size, bool read_only, bool allow_exec) {
   struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[region];
 
   if (_file_open) {
@@ -578,7 +557,6 @@ void FileMapInfo::write_region(int region, char* base, size_t size,
     si->_file_offset = _file_offset;
   }
   if (MetaspaceShared::is_heap_region(region)) {
-    assert((base - (char*)Universe::narrow_oop_base()) % HeapWordSize == 0, "Sanity");
     if (base != NULL) {
       si->_addr._offset = (intx)CompressedOops::encode_not_null((oop)base);
     } else {
@@ -629,10 +607,9 @@ void FileMapInfo::write_region(int region, char* base, size_t size,
 //             +-- gap
 size_t FileMapInfo::write_archive_heap_regions(GrowableArray<MemRegion> *heap_mem,
                                                int first_region_id, int max_num_regions) {
-  assert(max_num_regions <= 2, "Only support maximum 2 memory regions");
 
   int arr_len = heap_mem == NULL ? 0 : heap_mem->length();
-  if(arr_len > max_num_regions) {
+  if (arr_len > max_num_regions) {
     fail_stop("Unable to write archive heap memory regions: "
               "number of memory regions exceeds maximum due to fragmentation");
   }
@@ -767,7 +744,6 @@ static const char* shared_region_name[] = { "MiscData", "ReadWrite", "ReadOnly",
                                             "String1", "String2", "OpenArchive1", "OpenArchive2" };
 
 char* FileMapInfo::map_region(int i, char** top_ret) {
-  assert(!MetaspaceShared::is_heap_region(i), "sanity");
   struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[i];
   size_t used = si->_used;
   size_t alignment = os::vm_allocation_granularity();
@@ -797,7 +773,6 @@ static int num_string_ranges = 0;
 static int num_open_archive_heap_ranges = 0;
 
 bool FileMapInfo::verify_region_checksum(int i) {
-  assert(i >= 0 && i < MetaspaceShared::n_regions, "invalid region");
   if (!VerifySharedSpaces) {
     return true;
   }
@@ -807,10 +782,7 @@ bool FileMapInfo::verify_region_checksum(int i) {
   if (sz == 0) {
     return true; // no data
   }
-  if ((MetaspaceShared::is_string_region(i) &&
-       !StringTable::shared_string_mapped()) ||
-      (MetaspaceShared::is_open_archive_heap_region(i) &&
-       !MetaspaceShared::open_archive_heap_region_mapped())) {
+  if ((MetaspaceShared::is_string_region(i) && !StringTable::shared_string_mapped()) || (MetaspaceShared::is_open_archive_heap_region(i) && !MetaspaceShared::open_archive_heap_region_mapped())) {
     return true; // archived heap data is not mapped
   }
   const char* buf = _header->region_addr(i);
@@ -825,7 +797,6 @@ bool FileMapInfo::verify_region_checksum(int i) {
 // Unmap a memory region in the address space.
 
 void FileMapInfo::unmap_region(int i) {
-  assert(!MetaspaceShared::is_heap_region(i), "sanity");
   struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[i];
   size_t used = si->_used;
   size_t size = align_up(used, os::vm_allocation_granularity());
@@ -870,7 +841,6 @@ bool FileMapInfo::_validating_shared_path_table = false;
 // [2] validate_shared_path_table - this is done later, because the table is in the RW
 //     region of the archive, which is not mapped yet.
 bool FileMapInfo::initialize() {
-  assert(UseSharedSpaces, "UseSharedSpaces expected.");
 
   if (!open_for_read()) {
     return false;
@@ -956,9 +926,7 @@ bool FileMapInfo::FileMapHeader::validate() {
 
   // For backwards compatibility, we don't check the verification setting
   // if the archive only contains system classes.
-  if (_has_platform_or_app_classes &&
-      ((!_verify_local && BytecodeVerificationLocal) ||
-       (!_verify_remote && BytecodeVerificationRemote))) {
+  if (_has_platform_or_app_classes && ((!_verify_local && BytecodeVerificationLocal) || (!_verify_remote && BytecodeVerificationRemote))) {
     FileMapInfo::fail_continue("The shared archive file was created with less restrictive "
                   "verification setting than the current setting.");
     return false;
@@ -988,7 +956,6 @@ bool FileMapInfo::validate_header() {
 
 // Check if a given address is within one of the shared regions
 bool FileMapInfo::is_in_shared_region(const void* p, int idx) {
-  assert(idx == MetaspaceShared::ro || idx == MetaspaceShared::rw || idx == MetaspaceShared::mc || idx == MetaspaceShared::md, "invalid region index");
   char* base = _header->region_addr(idx);
   if (p >= base && p < base + _header->_space[idx]._used) {
     return true;

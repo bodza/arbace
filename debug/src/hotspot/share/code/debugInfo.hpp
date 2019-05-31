@@ -32,12 +32,10 @@ class ScopeValue: public ResourceObj {
   virtual bool equals(ScopeValue* other) const { return false; }
 
   ConstantOopReadValue* as_ConstantOopReadValue() {
-    assert(is_constant_oop(), "must be");
     return (ConstantOopReadValue*) this;
   }
 
   ObjectValue* as_ObjectValue() {
-    assert(is_object(), "must be");
     return (ObjectValue*)this;
   }
 
@@ -82,7 +80,6 @@ class ObjectValue: public ScopeValue {
      , _field_values()
      , _value()
      , _visited(false) {
-    assert(klass->is_constant_oop(), "should be constant java mirror oop");
   }
 
   ObjectValue(int id)
@@ -90,7 +87,7 @@ class ObjectValue: public ScopeValue {
      , _klass(NULL)
      , _field_values()
      , _value()
-     , _visited(false) {}
+     , _visited(false) { }
 
   // Accessors
   bool                        is_object() const         { return true; }
@@ -122,9 +119,9 @@ class ConstantIntValue: public ScopeValue {
   jint _value;
  public:
   ConstantIntValue(jint value)         { _value = value; }
-  jint value() const                   { return _value;  }
-  bool is_constant_int() const         { return true;    }
-  bool equals(ScopeValue* other) const { return false;   }
+  jint value() const                   { return _value; }
+  bool is_constant_int() const         { return true; }
+  bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
   ConstantIntValue(DebugInfoReadStream* stream);
@@ -139,9 +136,9 @@ class ConstantLongValue: public ScopeValue {
   jlong _value;
  public:
   ConstantLongValue(jlong value)       { _value = value; }
-  jlong value() const                  { return _value;  }
-  bool is_constant_long() const        { return true;    }
-  bool equals(ScopeValue* other) const { return false;   }
+  jlong value() const                  { return _value; }
+  bool is_constant_long() const        { return true; }
+  bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
   ConstantLongValue(DebugInfoReadStream* stream);
@@ -156,9 +153,9 @@ class ConstantDoubleValue: public ScopeValue {
   jdouble _value;
  public:
   ConstantDoubleValue(jdouble value)   { _value = value; }
-  jdouble value() const                { return _value;  }
-  bool is_constant_double() const      { return true;    }
-  bool equals(ScopeValue* other) const { return false;   }
+  jdouble value() const                { return _value; }
+  bool is_constant_double() const      { return true; }
+  bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
   ConstantDoubleValue(DebugInfoReadStream* stream);
@@ -176,9 +173,9 @@ class ConstantOopWriteValue: public ScopeValue {
   jobject _value;
  public:
   ConstantOopWriteValue(jobject value) { _value = value; }
-  jobject value() const                { return _value;  }
-  bool is_constant_oop() const         { return true;    }
-  bool equals(ScopeValue* other) const { return false;   }
+  jobject value() const                { return _value; }
+  bool is_constant_oop() const         { return true; }
+  bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
   void write_on(DebugInfoWriteStream* stream);
@@ -194,9 +191,9 @@ class ConstantOopReadValue: public ScopeValue {
  private:
   Handle _value;
  public:
-  Handle value() const                 { return _value;  }
-  bool is_constant_oop() const         { return true;    }
-  bool equals(ScopeValue* other) const { return false;   }
+  Handle value() const                 { return _value; }
+  bool is_constant_oop() const         { return true; }
+  bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
   ConstantOopReadValue(DebugInfoReadStream* stream);
@@ -219,7 +216,7 @@ class MonitorValue: public ResourceObj {
 
   // Accessors
   ScopeValue*  owner()      const { return _owner; }
-  Location     basic_lock() const { return _basic_lock;  }
+  Location     basic_lock() const { return _basic_lock; }
   bool         eliminated() const { return _eliminated; }
 
   // Serialization of debugging information
@@ -243,14 +240,12 @@ class DebugInfoReadStream : public CompressedReadStream {
     CompressedReadStream(code->scopes_data_begin(), offset) {
     _code = code;
     _obj_pool = obj_pool;
-
-  } ;
+  };
 
   oop read_oop();
   Method* read_method() {
     Method* o = (Method*)(code()->metadata_at(read_int()));
     // is_metadata() is a faster check than is_metaspace_object()
-    assert(o == NULL || o->is_metadata(), "meta data only");
     return o;
   }
   ScopeValue* read_object_value();

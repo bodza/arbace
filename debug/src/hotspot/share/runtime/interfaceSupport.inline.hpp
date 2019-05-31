@@ -58,16 +58,11 @@ class ThreadStateTransition : public StackObj {
  public:
   ThreadStateTransition(JavaThread *thread) {
     _thread = thread;
-    assert(thread != NULL && thread->is_Java_thread(), "must be Java thread");
   }
 
   // Change threadstate in a manner, so safepoint can detect changes.
   // Time-critical: called on exit from every runtime routine
   static inline void transition(JavaThread *thread, JavaThreadState from, JavaThreadState to) {
-    assert(from != _thread_in_Java, "use transition_from_java");
-    assert(from != _thread_in_native, "use transition_from_native");
-    assert((from & 1) == 0 && (to & 1) == 0, "odd numbers are transitions states");
-    assert(thread->thread_state() == from, "coming from wrong thread state");
     // Change to transition state
     thread->set_thread_state((JavaThreadState)(from + 1));
 
@@ -86,8 +81,6 @@ class ThreadStateTransition : public StackObj {
   // fault and we can't recover from it on Windows without a SEH in
   // place.
   static inline void transition_and_fence(JavaThread *thread, JavaThreadState from, JavaThreadState to) {
-    assert(thread->thread_state() == from, "coming from wrong thread state");
-    assert((from & 1) == 0 && (to & 1) == 0, "odd numbers are transitions states");
     // Change to transition state
     thread->set_thread_state((JavaThreadState)(from + 1));
 
@@ -103,13 +96,10 @@ class ThreadStateTransition : public StackObj {
   // never block on entry to the VM. This will break the code, since e.g. preserve arguments
   // have not been setup.
   static inline void transition_from_java(JavaThread *thread, JavaThreadState to) {
-    assert(thread->thread_state() == _thread_in_Java, "coming from wrong thread state");
     thread->set_thread_state(to);
   }
 
   static inline void transition_from_native(JavaThread *thread, JavaThreadState to) {
-    assert((to & 1) == 0, "odd numbers are transitions states");
-    assert(thread->thread_state() == _thread_in_native, "coming from wrong thread state");
     // Change to transition state
     thread->set_thread_state(_thread_in_native_trans);
 
@@ -138,14 +128,9 @@ class ThreadInVMForHandshake : public ThreadStateTransition {
   const JavaThreadState _original_state;
 
   void transition_back() {
-    // This can be invoked from transition states and must return to the original state properly
-    assert(_thread->thread_state() == _thread_in_vm, "should only call when leaving VM after handshake");
     _thread->set_thread_state(_thread_in_vm_trans);
-
     InterfaceSupport::serialize_thread_state(_thread);
-
     SafepointMechanism::block_if_requested(_thread);
-
     _thread->set_thread_state(_original_state);
   }
 
@@ -221,7 +206,6 @@ class ThreadToNativeFromVM : public ThreadStateTransition {
   ThreadToNativeFromVM(JavaThread *thread) : ThreadStateTransition(thread) {
     // We are leaving the VM at this point and going directly to native code.
     // Block, if we are in the middle of a safepoint synchronization.
-    assert(!thread->owns_locks(), "must release all locks when leaving VM");
     thread->frame_anchor()->make_walkable(thread);
     trans_and_fence(_thread_in_vm, _thread_in_native);
     // Check for pending. async. exceptions or suspends.
@@ -230,7 +214,6 @@ class ThreadToNativeFromVM : public ThreadStateTransition {
 
   ~ThreadToNativeFromVM() {
     trans_from_native(_thread_in_vm);
-    assert(!_thread->is_pending_jni_exception_check(), "Pending JNI Exception Check");
     // We don't need to clear_walkable because it will happen automagically when we return to java
   }
 };
@@ -289,8 +272,8 @@ class ThreadInVMfromJavaNoAsyncException : public ThreadStateTransition {
 class JRTLeafVerifier : public NoSafepointVerifier {
   static bool should_verify_GC();
  public:
-  JRTLeafVerifier() {}
-  ~JRTLeafVerifier() {}
+  JRTLeafVerifier() { }
+  ~JRTLeafVerifier() { }
 };
 
 #define TRACE_CALL(result_type, header) \
@@ -391,7 +374,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 extern "C" { \
   result_type JNICALL header { \
     JavaThread* thread=JavaThread::thread_from_jni_environment(env); \
-    assert( !VerifyJNIEnvThread || (thread == Thread::current()), "JNIEnv is only valid in same thread"); \
     ThreadInVMfromNative __tiv(thread); \
     VM_ENTRY_BASE(result_type, header, thread)
 
@@ -401,7 +383,6 @@ extern "C" { \
 extern "C" { \
   result_type JNICALL header { \
     JavaThread* thread=JavaThread::thread_from_jni_environment(env); \
-    assert( !VerifyJNIEnvThread || (thread == Thread::current()), "JNIEnv is only valid in same thread"); \
     ThreadInVMfromNative __tiv(thread); \
     VM_QUICK_ENTRY_BASE(result_type, header, thread)
 
@@ -409,7 +390,6 @@ extern "C" { \
 extern "C" { \
   result_type JNICALL header { \
     JavaThread* thread=JavaThread::thread_from_jni_environment(env); \
-    assert( !VerifyJNIEnvThread || (thread == Thread::current()), "JNIEnv is only valid in same thread"); \
     VM_LEAF_BASE(result_type, header)
 
 // Close the routine and the extern "C"

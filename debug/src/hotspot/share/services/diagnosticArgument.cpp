@@ -7,12 +7,11 @@
 
 StringArrayArgument::StringArrayArgument() {
   _array = new(ResourceObj::C_HEAP, mtInternal)GrowableArray<char *>(32, true);
-  assert(_array != NULL, "Sanity check");
 }
 
 StringArrayArgument::~StringArrayArgument() {
   for (int i=0; i<_array->length(); i++) {
-    if(_array->at(i) != NULL) { // Safety check
+    if (_array->at(i) != NULL) { // Safety check
       FREE_C_HEAP_ARRAY(char, _array->at(i));
     }
   }
@@ -37,8 +36,7 @@ void GenDCmdArgument::read_value(const char* str, size_t len, TRAPS) {
    */
 
   if (is_set() && !allow_multiple()) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-            "Duplicates in diagnostic command arguments\n");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Duplicates in diagnostic command arguments\n");
   }
   parse_value(str, len, CHECK);
   set_is_set(true);
@@ -85,20 +83,16 @@ void GenDCmdArgument::to_string(StringArrayArgument* f, char* buf, size_t len) c
   }
 }
 
-template <> void DCmdArgument<jlong>::parse_value(const char* str,
-                                                  size_t len, TRAPS) {
+template <> void DCmdArgument<jlong>::parse_value(const char* str, size_t len, TRAPS) {
   int scanned = -1;
-  if (str == NULL
-      || sscanf(str, JLONG_FORMAT "%n", &_value, &scanned) != 1
-      || (size_t)scanned != len)
+  if (str == NULL || sscanf(str, JLONG_FORMAT "%n", &_value, &scanned) != 1 || (size_t)scanned != len)
   {
     ResourceMark rm;
 
     char* buf = NEW_RESOURCE_ARRAY(char, len + 1);
     strncpy(buf, str, len);
     buf[len] = '\0';
-    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_IllegalArgumentException(),
-      "Integer parsing error in command argument '%s'. Could not parse: %s.\n", _name, buf);
+    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error in command argument '%s'. Could not parse: %s.\n", _name, buf);
   }
 }
 
@@ -131,8 +125,7 @@ template <> void DCmdArgument<bool>::parse_value(const char* str,
       char* buf = NEW_RESOURCE_ARRAY(char, len + 1);
       strncpy(buf, str, len);
       buf[len] = '\0';
-      Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_IllegalArgumentException(),
-        "Boolean parsing error in command argument '%s'. Could not parse: %s.\n", _name, buf);
+      Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_IllegalArgumentException(), "Boolean parsing error in command argument '%s'. Could not parse: %s.\n", _name, buf);
     }
   }
 }
@@ -182,32 +175,28 @@ template <> void DCmdArgument<char*>::destroy_value() {
 template <> void DCmdArgument<NanoTimeArgument>::parse_value(const char* str,
                                                  size_t len, TRAPS) {
   if (str == NULL) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Integer parsing error nanotime value: syntax error, value is null\n");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error nanotime value: syntax error, value is null\n");
   }
 
   int argc = sscanf(str, JLONG_FORMAT, &_value._time);
   if (argc != 1) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Integer parsing error nanotime value: syntax error\n");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error nanotime value: syntax error\n");
   }
   size_t idx = 0;
-  while(idx < len && isdigit(str[idx])) {
+  while (idx < len && isdigit(str[idx])) {
     idx++;
   }
   if (idx == len) {
     // only accept missing unit if the value is 0
     if (_value._time != 0) {
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                "Integer parsing error nanotime value: unit required\n");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error nanotime value: unit required\n");
     } else {
       _value._nanotime = 0;
       strcpy(_value._unit, "ns");
       return;
     }
-  } else if(len - idx > 2) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Integer parsing error nanotime value: illegal unit\n");
+  } else if (len - idx > 2) {
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error nanotime value: illegal unit\n");
   } else {
     strncpy(_value._unit, &str[idx], len - idx);
     /*Write an extra null termination. This is safe because _value._unit
@@ -233,8 +222,7 @@ template <> void DCmdArgument<NanoTimeArgument>::parse_value(const char* str,
   } else if (strcmp(_value._unit, "d") == 0) {
     _value._nanotime = _value._time * 24 * 60 * 60 * 1000 * 1000 * 1000;
   } else {
-     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-               "Integer parsing error nanotime value: illegal unit\n");
+     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Integer parsing error nanotime value: illegal unit\n");
   }
 }
 
@@ -279,12 +267,10 @@ template <> void DCmdArgument<StringArrayArgument*>::destroy_value() {
 template <> void DCmdArgument<MemorySizeArgument>::parse_value(const char* str,
                                                   size_t len, TRAPS) {
   if (str == NULL) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-               "Parsing error memory size value: syntax error, value is null\n");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Parsing error memory size value: syntax error, value is null\n");
   }
   if (*str == '-') {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-               "Parsing error memory size value: negative values not allowed\n");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Parsing error memory size value: negative values not allowed\n");
   }
   int res = sscanf(str, UINT64_FORMAT "%c", &_value._val, &_value._multiplier);
   if (res == 2) {
@@ -308,8 +294,7 @@ template <> void DCmdArgument<MemorySizeArgument>::parse_value(const char* str,
    } else if (res == 1) {
      _value._size = _value._val;
    } else {
-     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-               "Parsing error memory size value: invalid value\n");
+     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Parsing error memory size value: invalid value\n");
    }
 }
 

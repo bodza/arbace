@@ -117,14 +117,14 @@ class VM_GC_HeapInspection: public VM_GC_Operation {
     _columns = NULL;
   }
 
-  ~VM_GC_HeapInspection() {}
+  ~VM_GC_HeapInspection() { }
   virtual VMOp_Type type() const { return VMOp_GC_HeapInspection; }
   virtual bool skip_operation() const;
   virtual void doit();
-  void set_csv_format(bool value) {_csv_format = value;}
-  void set_print_help(bool value) {_print_help = value;}
-  void set_print_class_stats(bool value) {_print_class_stats = value;}
-  void set_columns(const char* value) {_columns = value;}
+  void set_csv_format(bool value) { _csv_format = value; }
+  void set_print_help(bool value) { _print_help = value; }
+  void set_print_class_stats(bool value) { _print_class_stats = value; }
+  void set_columns(const char* value) { _columns = value; }
  protected:
   bool collect();
 };
@@ -151,9 +151,8 @@ class VM_GenCollectForAllocation : public VM_CollectForAllocation {
                              uint gc_count_before)
     : VM_CollectForAllocation(word_size, gc_count_before, GCCause::_allocation_failure),
       _tlab(tlab) {
-    assert(word_size != 0, "An allocation should always be requested with this operation.");
   }
-  ~VM_GenCollectForAllocation()  {}
+  ~VM_GenCollectForAllocation()  { }
   virtual VMOp_Type type() const { return VMOp_GenCollectForAllocation; }
   virtual void doit();
 };
@@ -170,7 +169,7 @@ class VM_GenCollectFull: public VM_GC_Operation {
                     GenCollectedHeap::GenerationType max_generation)
     : VM_GC_Operation(gc_count_before, gc_cause, full_gc_count_before, true /* full */),
       _max_generation(max_generation) { }
-  ~VM_GenCollectFull() {}
+  ~VM_GenCollectFull() { }
   virtual VMOp_Type type() const { return VMOp_GenCollectFull; }
   virtual void doit();
 };

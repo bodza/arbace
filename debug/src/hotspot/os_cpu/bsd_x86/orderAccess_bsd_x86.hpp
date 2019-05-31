@@ -17,13 +17,13 @@ static inline void compiler_barrier() {
 
 // Implementation of class OrderAccess.
 
-inline void OrderAccess::loadload()   { compiler_barrier(); }
+inline void OrderAccess::loadload() { compiler_barrier(); }
 inline void OrderAccess::storestore() { compiler_barrier(); }
-inline void OrderAccess::loadstore()  { compiler_barrier(); }
-inline void OrderAccess::storeload()  { fence();            }
+inline void OrderAccess::loadstore() { compiler_barrier(); }
+inline void OrderAccess::storeload() { fence(); }
 
-inline void OrderAccess::acquire()    { compiler_barrier(); }
-inline void OrderAccess::release()    { compiler_barrier(); }
+inline void OrderAccess::acquire() { compiler_barrier(); }
+inline void OrderAccess::release() { compiler_barrier(); }
 
 inline void OrderAccess::fence() {
   // always use locked addl since mfence is sometimes expensive

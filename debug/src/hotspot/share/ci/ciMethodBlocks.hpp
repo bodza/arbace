@@ -27,7 +27,7 @@ public:
   ciBlock *make_block_at(int bci);
   ciBlock *split_block_at(int bci);
   bool is_block_start(int bci);
-  int num_blocks()  { return _num_blocks;}
+  int num_blocks()  { return _num_blocks; }
   void clear_processed();
 
   ciBlock *make_dummy_block(); // a block not associated with a bci
@@ -64,7 +64,7 @@ public:
   int index() const             { return _idx; }
   void set_start_bci(int bci)   { _start_bci = bci; }
   void set_limit_bci(int bci)   { _limit_bci = bci; }
-  void set_control_bci(int bci) { _control_bci = bci;}
+  void set_control_bci(int bci) { _control_bci = bci; }
   void set_exception_range(int start_bci, int limit_bci);
   int ex_start_bci() const      { return _ex_start_bci; }
   int ex_limit_bci() const      { return _ex_limit_bci; }

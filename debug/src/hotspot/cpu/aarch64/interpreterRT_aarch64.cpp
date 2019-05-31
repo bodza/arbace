@@ -19,8 +19,7 @@ Register InterpreterRuntime::SignatureHandlerGenerator::from() { return rlocals;
 Register InterpreterRuntime::SignatureHandlerGenerator::to()   { return sp; }
 Register InterpreterRuntime::SignatureHandlerGenerator::temp() { return rscratch1; }
 
-InterpreterRuntime::SignatureHandlerGenerator::SignatureHandlerGenerator(
-      const methodHandle& method, CodeBuffer* buffer) : NativeSignatureIterator(method) {
+InterpreterRuntime::SignatureHandlerGenerator::SignatureHandlerGenerator(const methodHandle& method, CodeBuffer* buffer) : NativeSignatureIterator(method) {
   _masm = new MacroAssembler(buffer);
   _num_int_args = (method->is_static() ? 1 : 0);
   _num_fp_args = 0;
@@ -139,7 +138,6 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_object() {
 
   switch (_num_int_args) {
   case 0:
-    assert(offset() == 0, "argument register 1 can only be (non-null) receiver");
     __ add(c_rarg1, from(), Interpreter::local_offset_in_bytes(offset()));
     _num_int_args++;
     break;
@@ -267,7 +265,7 @@ void InterpreterRuntime::SignatureHandlerGenerator::generate(uint64_t fingerprin
 
 // Implementation of SignatureHandlerLibrary
 
-void SignatureHandlerLibrary::pd_set_handler(address handler) {}
+void SignatureHandlerLibrary::pd_set_handler(address handler) { }
 
 class SlowSignatureHandler
   : public NativeSignatureIterator {
@@ -396,7 +394,6 @@ IRT_ENTRY(address,
                                                      intptr_t* from,
                                                      intptr_t* to))
   methodHandle m(thread, (Method*)method);
-  assert(m->is_native(), "sanity check");
 
   // handle arguments
   SlowSignatureHandler ssh(m, (address)from, to);

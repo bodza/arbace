@@ -38,7 +38,6 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   ciMetadata(h_m()),
   _holder(holder)
 {
-  assert(h_m() != NULL, "no null method");
 
   if (LogTouchedMethods) {
     h_m()->log_touched(Thread::current());
@@ -94,7 +93,7 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   if (ProfileInterpreter || TieredCompilation) {
     int invcnt = h_m()->interpreter_invocation_count();
     // if the value overflowed report it as max int
-    _interpreter_invocation_count = invcnt < 0 ? max_jint : invcnt ;
+    _interpreter_invocation_count = invcnt < 0 ? max_jint : invcnt;
     _interpreter_throwout_count   = h_m()->interpreter_throwout_count();
   } else {
     _interpreter_invocation_count = 0;
@@ -134,7 +133,6 @@ ciMethod::ciMethod(ciInstanceKlass* holder,
 // Load the bytecodes and exception handler table for this method.
 void ciMethod::load_code() {
   VM_ENTRY_MARK;
-  assert(is_loaded(), "only loaded methods have code");
 
   Method* me = get_Method();
   Arena* arena = CURRENT_THREAD_ENV->arena();
@@ -150,9 +148,7 @@ void ciMethod::load_code() {
   // last entry will be used to represent the possibility that
   // an exception escapes the method.  See ciExceptionHandlerStream
   // for details.
-  _exception_handlers =
-    (ciExceptionHandler**)arena->Amalloc(sizeof(ciExceptionHandler*)
-                                         * (_handler_count + 1));
+  _exception_handlers = (ciExceptionHandler**)arena->Amalloc(sizeof(ciExceptionHandler*) * (_handler_count + 1));
   if (_handler_count > 0) {
     for (int i=0; i<_handler_count; i++) {
       _exception_handlers[i] = new (arena) ciExceptionHandler(
@@ -166,8 +162,7 @@ void ciMethod::load_code() {
 
   // Put an entry at the end of our list to represent the possibility
   // of exceptional exit.
-  _exception_handlers[_handler_count] =
-    new (arena) ciExceptionHandler(holder(), 0, code_size(), -1, 0);
+  _exception_handlers[_handler_count] = new (arena) ciExceptionHandler(holder(), 0, code_size(), -1, 0);
 
   if (CIPrintMethodCodes) {
     print_codes();
@@ -178,7 +173,7 @@ void ciMethod::load_code() {
 // ciMethod::has_linenumber_table
 //
 // length unknown until decompression
-bool    ciMethod::has_linenumber_table() const {
+bool ciMethod::has_linenumber_table() const {
   check_is_loaded();
   VM_ENTRY_MARK;
   return get_Method()->has_linenumber_table();
@@ -206,7 +201,6 @@ int ciMethod::line_number_from_bci(int bci) const {
 // Get the position of this method's entry in the vtable, if any.
 int ciMethod::vtable_index() {
   check_is_loaded();
-  assert(holder()->is_linked(), "must be linked");
   VM_ENTRY_MARK;
   return get_Method()->vtable_index();
 }
@@ -217,11 +211,9 @@ int ciMethod::vtable_index() {
 // Get the address of this method's native code, if any.
 address ciMethod::native_entry() {
   check_is_loaded();
-  assert(flags().is_native(), "must be native method");
   VM_ENTRY_MARK;
   Method* method = get_Method();
   address entry = method->native_function();
-  assert(entry != NULL, "must be valid entry point");
   return entry;
 }
 
@@ -247,7 +239,6 @@ bool ciMethod::has_balanced_monitors() {
   // Analyze the method to see if monitors are used properly.
   VM_ENTRY_MARK;
   methodHandle method(THREAD, get_Method());
-  assert(method->has_monitor_bytecodes(), "should have checked this");
 
   // Check to see if a previous compilation computed the
   // monitor-matching analysis.
@@ -412,8 +403,7 @@ ciCallProfile ciMethod::call_profile_at_bci(int bci) {
         // The call site count is > 0 in the case of a polymorphic virtual call.
         if (morphism > 0 && morphism == result._limit) {
            // The morphism <= MorphismLimit.
-           if ((morphism <  ciCallProfile::MorphismLimit) ||
-               (morphism == ciCallProfile::MorphismLimit && count == 0)) {
+           if ((morphism <  ciCallProfile::MorphismLimit) || (morphism == ciCallProfile::MorphismLimit && count == 0)) {
              result._morphism = morphism;
            }
         }
@@ -449,11 +439,9 @@ void ciCallProfile::add_receiver(ciKlass* receiver, int receiver_count) {
 }
 
 void ciMethod::assert_virtual_call_type_ok(int bci) {
-  assert(java_code_at_bci(bci) == Bytecodes::_invokevirtual || java_code_at_bci(bci) == Bytecodes::_invokeinterface, "unexpected bytecode %s", Bytecodes::name(java_code_at_bci(bci)));
 }
 
 void ciMethod::assert_call_type_ok(int bci) {
-  assert(java_code_at_bci(bci) == Bytecodes::_invokestatic || java_code_at_bci(bci) == Bytecodes::_invokespecial || java_code_at_bci(bci) == Bytecodes::_invokedynamic, "unexpected bytecode %s", Bytecodes::name(java_code_at_bci(bci)));
 }
 
 /**
@@ -577,7 +565,6 @@ ciMethod* ciMethod::find_monomorphic_target(ciInstanceKlass* caller,
     // Something went wrong looking up the actual receiver method.
     return NULL;
   }
-  assert(!root_m->is_abstract(), "resolve_invoke promise");
 
   // Make certain quick checks even if UseCHA is false.
 
@@ -622,8 +609,7 @@ ciMethod* ciMethod::find_monomorphic_target(ciInstanceKlass* caller,
   if (target() == root_m->get_Method()) {
     return root_m;
   }
-  if (!root_m->is_public() &&
-      !root_m->is_protected()) {
+  if (!root_m->is_public() && !root_m->is_protected()) {
     // If we are going to reason about inheritance, it's easiest
     // if the method in question is public, protected, or private.
     // If the answer is not root_m, it is conservatively correct
@@ -656,9 +642,7 @@ ciMethod* ciMethod::resolve_invoke(ciKlass* caller, ciKlass* exact_receiver, boo
    methodHandle m;
    // Only do exact lookup if receiver klass has been linked.  Otherwise,
    // the vtable has not been setup, and the LinkResolver will fail.
-   if (recv->is_array_klass()
-        ||
-       (InstanceKlass::cast(recv)->is_linked() && !exact_receiver->is_interface())) {
+   if (recv->is_array_klass() || (InstanceKlass::cast(recv)->is_linked() && !exact_receiver->is_interface())) {
      if (holder()->is_interface()) {
        m = LinkResolver::resolve_interface_call_or_null(recv, link_info);
      } else {
@@ -696,9 +680,7 @@ int ciMethod::resolve_vtable_index(ciKlass* caller, ciKlass* receiver) {
    int vtable_index = Method::invalid_vtable_index;
    // Only do lookup if receiver klass has been linked.  Otherwise,
    // the vtable has not been setup, and the LinkResolver will fail.
-   if (!receiver->is_interface()
-       && (!receiver->is_instance_klass() ||
-           receiver->as_instance_klass()->is_linked())) {
+   if (!receiver->is_interface() && (!receiver->is_instance_klass() || receiver->as_instance_klass()->is_linked())) {
      VM_ENTRY_MARK;
 
      Klass* caller_klass = caller->get_Klass();
@@ -798,8 +780,7 @@ bool ciMethod::is_ignored_by_security_stack_walk() const {
 // signature-polymorphic MethodHandle methods, _invokeBasic, _linkToVirtual, etc.
 bool ciMethod::is_method_handle_intrinsic() const {
   vmIntrinsics::ID iid = _intrinsic_id;  // do not check if loaded
-  return (MethodHandles::is_signature_polymorphic(iid) &&
-          MethodHandles::is_signature_polymorphic_intrinsic(iid));
+  return (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::is_signature_polymorphic_intrinsic(iid));
 }
 
 // ------------------------------------------------------------------
@@ -826,8 +807,7 @@ bool ciMethod::is_object_initializer() const {
 // These are built by the JVM.
 bool ciMethod::has_member_arg() const {
   vmIntrinsics::ID iid = _intrinsic_id;  // do not check if loaded
-  return (MethodHandles::is_signature_polymorphic(iid) &&
-          MethodHandles::has_member_arg(iid));
+  return (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::has_member_arg(iid));
 }
 
 // ------------------------------------------------------------------
@@ -1018,13 +998,13 @@ int ciMethod::code_size_for_inlining() {
 int ciMethod::instructions_size() {
   if (_instructions_size == -1) {
     GUARDED_VM_ENTRY(
-                     CompiledMethod* code = get_Method()->code();
-                     if (code != NULL && (code->comp_level() == CompLevel_full_optimization)) {
-                       _instructions_size = code->insts_end() - code->verified_entry_point();
-                     } else {
-                       _instructions_size = 0;
-                     }
-                     );
+        CompiledMethod* code = get_Method()->code();
+        if (code != NULL && (code->comp_level() == CompLevel_full_optimization)) {
+        _instructions_size = code->insts_end() - code->verified_entry_point();
+        } else {
+        _instructions_size = 0;
+        }
+    );
   }
   return _instructions_size;
 }
@@ -1045,8 +1025,7 @@ void ciMethod::log_nmethod_identity(xmlStream* log) {
 bool ciMethod::is_not_reached(int bci) {
   check_is_loaded();
   VM_ENTRY_MARK;
-  return Interpreter::is_not_reached(
-               methodHandle(THREAD, get_Method()), bci);
+  return Interpreter::is_not_reached(methodHandle(THREAD, get_Method()), bci);
 }
 
 // ------------------------------------------------------------------
@@ -1064,7 +1043,7 @@ bool ciMethod::has_unloaded_classes_in_signature() {
     EXCEPTION_MARK;
     methodHandle m(THREAD, get_Method());
     bool has_unloaded = Method::has_unloaded_classes_in_signature(m, (JavaThread *)THREAD);
-    if( HAS_PENDING_EXCEPTION ) {
+    if (HAS_PENDING_EXCEPTION ) {
       CLEAR_PENDING_EXCEPTION;
       return true;     // Declare that we may have unloaded classes
     }
@@ -1108,8 +1087,7 @@ bool ciMethod::check_call(int refinfo_index, bool is_static) const {
 //
 // Should the method be compiled with an age counter?
 bool ciMethod::profile_aging() const {
-  return UseCodeAging && (!MethodCounters::is_nmethod_hot(nmethod_age()) &&
-                          !MethodCounters::is_nmethod_age_unset(nmethod_age()));
+  return UseCodeAging && (!MethodCounters::is_nmethod_hot(nmethod_age()) && !MethodCounters::is_nmethod_age_unset(nmethod_age()));
 }
 // ------------------------------------------------------------------
 // ciMethod::print_codes
@@ -1126,14 +1104,14 @@ void ciMethod::print_codes_on(outputStream* st) {
   return get_Method()->flag_accessor(); \
 }
 
-bool ciMethod::is_empty_method() const {         FETCH_FLAG_FROM_VM(is_empty_method); }
-bool ciMethod::is_vanilla_constructor() const {  FETCH_FLAG_FROM_VM(is_vanilla_constructor); }
-bool ciMethod::has_loops      () const {         FETCH_FLAG_FROM_VM(has_loops); }
-bool ciMethod::has_jsrs       () const {         FETCH_FLAG_FROM_VM(has_jsrs);  }
-bool ciMethod::is_getter      () const {         FETCH_FLAG_FROM_VM(is_getter); }
-bool ciMethod::is_setter      () const {         FETCH_FLAG_FROM_VM(is_setter); }
-bool ciMethod::is_accessor    () const {         FETCH_FLAG_FROM_VM(is_accessor); }
-bool ciMethod::is_initializer () const {         FETCH_FLAG_FROM_VM(is_initializer); }
+bool ciMethod::is_empty_method() const { FETCH_FLAG_FROM_VM(is_empty_method); }
+bool ciMethod::is_vanilla_constructor() const { FETCH_FLAG_FROM_VM(is_vanilla_constructor); }
+bool ciMethod::has_loops () const { FETCH_FLAG_FROM_VM(has_loops); }
+bool ciMethod::has_jsrs () const { FETCH_FLAG_FROM_VM(has_jsrs); }
+bool ciMethod::is_getter () const { FETCH_FLAG_FROM_VM(is_getter); }
+bool ciMethod::is_setter () const { FETCH_FLAG_FROM_VM(is_setter); }
+bool ciMethod::is_accessor () const { FETCH_FLAG_FROM_VM(is_accessor); }
+bool ciMethod::is_initializer () const { FETCH_FLAG_FROM_VM(is_initializer); }
 
 bool ciMethod::is_boxing_method() const {
   if (holder()->is_box_klass()) {
@@ -1178,7 +1156,7 @@ BCEscapeAnalyzer  *ciMethod::get_bcea() {
   return NULL;
 }
 
-ciMethodBlocks  *ciMethod::get_method_blocks() {
+ciMethodBlocks *ciMethod::get_method_blocks() {
   Arena *arena = CURRENT_ENV->arena();
   if (_method_blocks == NULL) {
     _method_blocks = new (arena) ciMethodBlocks(arena, this);
@@ -1281,8 +1259,7 @@ static bool basic_types_match(ciType* t1, ciType* t2) {
 }
 
 bool ciMethod::is_consistent_info(ciMethod* declared_method, ciMethod* resolved_method) {
-  bool invoke_through_mh_intrinsic = declared_method->is_method_handle_intrinsic() &&
-                                  !resolved_method->is_method_handle_intrinsic();
+  bool invoke_through_mh_intrinsic = declared_method->is_method_handle_intrinsic() && !resolved_method->is_method_handle_intrinsic();
 
   if (!invoke_through_mh_intrinsic) {
     // Method name & descriptor should stay the same.
@@ -1290,8 +1267,7 @@ bool ciMethod::is_consistent_info(ciMethod* declared_method, ciMethod* resolved_
     ciSymbol* declared_signature = declared_method->signature()->as_symbol();
     ciSymbol* resolved_signature = resolved_method->signature()->as_symbol();
 
-    return (declared_method->name()->equals(resolved_method->name())) &&
-           (declared_signature->equals(resolved_signature));
+    return (declared_method->name()->equals(resolved_method->name())) && (declared_signature->equals(resolved_signature));
   }
 
   ciMethod* linker = declared_method;
@@ -1342,7 +1318,6 @@ bool ciMethod::is_consistent_info(ciMethod* declared_method, ciMethod* resolved_
     default:
       break;
   }
-  assert(target_sig->count() - rbase == linker_sig->count() - sbase - has_appendix, "argument count mismatch");
   int arg_count = target_sig->count() - rbase;
   for (int i = 0; i < arg_count; i++) {
     if (!basic_types_match(linker_sig->type_at(sbase + i), target_sig->type_at(rbase + i))) {
@@ -1351,8 +1326,7 @@ bool ciMethod::is_consistent_info(ciMethod* declared_method, ciMethod* resolved_
   }
   // Only check the return type if the symbolic info has non-void return type.
   // I.e. the return value of the resolved method can be dropped.
-  if (!linker->return_type()->is_void() &&
-      !basic_types_match(linker->return_type(), target->return_type())) {
+  if (!linker->return_type()->is_void() && !basic_types_match(linker->return_type(), target->return_type())) {
     return false;
   }
   return true; // no mismatch found

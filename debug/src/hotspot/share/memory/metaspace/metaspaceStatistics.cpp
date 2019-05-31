@@ -13,7 +13,7 @@ namespace metaspace {
 
 FreeChunksStatistics::FreeChunksStatistics()
 : _num(0), _cap(0)
-{}
+{ }
 
 void FreeChunksStatistics::reset() {
   _num = 0; _cap = 0;
@@ -43,10 +43,7 @@ void ChunkManagerStatistics::reset() {
 }
 
 size_t ChunkManagerStatistics::total_capacity() const {
-  return _chunk_stats[SpecializedIndex].cap() +
-      _chunk_stats[SmallIndex].cap() +
-      _chunk_stats[MediumIndex].cap() +
-      _chunk_stats[HumongousIndex].cap();
+  return _chunk_stats[SpecializedIndex].cap() + _chunk_stats[SmallIndex].cap() + _chunk_stats[MediumIndex].cap() + _chunk_stats[HumongousIndex].cap();
 }
 
 void ChunkManagerStatistics::print_on(outputStream* st, size_t scale) const {
@@ -72,7 +69,7 @@ void ChunkManagerStatistics::print_on(outputStream* st, size_t scale) const {
 
 UsedChunksStatistics::UsedChunksStatistics()
 : _num(0), _cap(0), _used(0), _free(0), _waste(0), _overhead(0)
-{}
+{ }
 
 void UsedChunksStatistics::reset() {
   _num = 0;
@@ -148,7 +145,7 @@ UsedChunksStatistics SpaceManagerStatistics::totals() const {
   return stat;
 }
 
-void SpaceManagerStatistics::print_on(outputStream* st, size_t scale,  bool detailed) const {
+void SpaceManagerStatistics::print_on(outputStream* st, size_t scale, bool detailed) const {
   streamIndentor sti(st);
   if (detailed) {
     st->cr_indent();

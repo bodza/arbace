@@ -9,7 +9,7 @@
 
 class InterpreterMacroAssembler : public MacroAssembler {
  public:
-  InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) {}
+  InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) { }
 
  public:
   RegisterOrConstant delayed_value_impl(intptr_t* delayed_value_addr,

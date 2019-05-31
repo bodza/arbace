@@ -169,14 +169,10 @@ class JavaCallArguments : public StackObj {
 
   // receiver
   Handle receiver() {
-    assert(_size > 0, "must at least be one argument");
-    assert(_value_state[0] == value_state_handle, "first argument must be an oop");
-    assert(_value[0] != 0, "receiver must be not-null");
     return Handle((oop*)_value[0], false);
   }
 
   void set_receiver(Handle h) {
-    assert(_start_at_zero == false, "can only be called once");
     _start_at_zero = true;
     _value_state--;
     _value--;
@@ -186,7 +182,7 @@ class JavaCallArguments : public StackObj {
   }
 
   // Converts all Handles to oops, and returns a reference to parameter vector
-  intptr_t* parameters() ;
+  intptr_t* parameters();
   int   size_of_parameters() const { return _size; }
 
   // Verify that pushed arguments fits a given method

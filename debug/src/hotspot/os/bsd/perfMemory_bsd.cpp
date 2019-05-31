@@ -69,12 +69,10 @@ static void delete_standard_memory(char* addr, size_t size) {
 static void save_memory_to_file(char* addr, size_t size) {
 
  const char* destfile = PerfMemory::get_perfdata_file_path();
- assert(destfile[0] != '\0', "invalid PerfData file path");
 
   int result;
 
-  RESTARTABLE(::open(destfile, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE),
-              result);;
+  RESTARTABLE(::open(destfile, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE), result);
   if (result == OS_ERR) {
     if (PrintMiscellaneous && Verbose) {
       warning("Could not create Perfdata save file: %s: %s\n",
@@ -255,8 +253,7 @@ static bool is_same_fsobject(int fd1, int fd2) {
     return false;
   }
 
-  if ((statbuf1.st_ino == statbuf2.st_ino) &&
-      (statbuf1.st_dev == statbuf2.st_dev)) {
+  if ((statbuf1.st_ino == statbuf2.st_ino) && (statbuf1.st_dev == statbuf2.st_dev)) {
     return true;
   } else {
     return false;
@@ -581,7 +578,7 @@ static char* get_user_name_slow(int vmid, TRAPS) {
   os::closedir(tmpdirp);
   FREE_C_HEAP_ARRAY(char, tdbuf);
 
-  return(oldest_user);
+  return (oldest_user);
 }
 
 // return the name of the user that owns the JVM indicated by the given vmid.
@@ -688,8 +685,7 @@ static void cleanup_sharedmem_resources(const char* dirname) {
     // be stale and are removed because the resources for such a
     // process should be in a different user specific directory.
     //
-    if ((pid == os::current_process_id()) ||
-        (kill(pid, 0) == OS_ERR && (errno == ESRCH || errno == EPERM))) {
+    if ((pid == os::current_process_id()) || (kill(pid, 0) == OS_ERR && (errno == ESRCH || errno == EPERM))) {
 
         unlink(entry->d_name);
     }
@@ -849,16 +845,13 @@ static int open_sharedmem_file(const char* filename, int oflags, TRAPS) {
   RESTARTABLE(::open(filename, oflags), result);
   if (result == OS_ERR) {
     if (errno == ENOENT) {
-      THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-                 "Process not found", OS_ERR);
+      THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Process not found", OS_ERR);
     }
     else if (errno == EACCES) {
-      THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-                 "Permission denied", OS_ERR);
+      THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Permission denied", OS_ERR);
     }
     else {
-      THROW_MSG_(vmSymbols::java_io_IOException(),
-                 os::strerror(errno), OS_ERR);
+      THROW_MSG_(vmSymbols::java_io_IOException(), os::strerror(errno), OS_ERR);
     }
   }
   int fd = result;
@@ -912,8 +905,6 @@ static char* mmap_create_shared(size_t size) {
   // cleanup any stale shared memory files
   cleanup_sharedmem_resources(dirname);
 
-  assert(((size > 0) && (size % os::vm_page_size() == 0)), "unexpected PerfMemory region size");
-
   fd = create_sharedmem_resources(dirname, short_filename, size);
 
   FREE_C_HEAP_ARRAY(char, user_name);
@@ -927,7 +918,6 @@ static char* mmap_create_shared(size_t size) {
   mapAddress = (char*)::mmap((char*)0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
   result = ::close(fd);
-  assert(result != OS_ERR, "could not close file");
 
   if (mapAddress == MAP_FAILED) {
     if (PrintMiscellaneous && Verbose) {
@@ -973,8 +963,6 @@ static void delete_shared_memory(char* addr, size_t size) {
   // not performed. The memory will be reclaimed by the OS upon termination of
   // the process. The backing store file is deleted from the file system.
 
-  assert(!PerfDisableSharedMem, "shouldn't be here");
-
   if (backing_store_file_name != NULL) {
     remove_file(backing_store_file_name);
     // Don't.. Free heap memory could deadlock os::abort() if it is called
@@ -997,14 +985,11 @@ static size_t sharedmem_filesize(int fd, TRAPS) {
     if (PrintMiscellaneous && Verbose) {
       warning("fstat failed: %s\n", os::strerror(errno));
     }
-    THROW_MSG_0(vmSymbols::java_io_IOException(),
-                "Could not determine PerfMemory size");
+    THROW_MSG_0(vmSymbols::java_io_IOException(), "Could not determine PerfMemory size");
   }
 
-  if ((statbuf.st_size == 0) ||
-     ((size_t)statbuf.st_size % os::vm_page_size() != 0)) {
-    THROW_MSG_0(vmSymbols::java_lang_Exception(),
-                "Invalid PerfMemory size");
+  if ((statbuf.st_size == 0) || ((size_t)statbuf.st_size % os::vm_page_size() != 0)) {
+    THROW_MSG_0(vmSymbols::java_lang_Exception(), "Invalid PerfMemory size");
   }
 
   return (size_t)statbuf.st_size;
@@ -1087,7 +1072,6 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
 
   // open the shared memory file for the give vmid
   fd = open_sharedmem_file(rfilename, file_flags, CHECK);
-  assert(fd != OS_ERR, "unexpected value");
 
   if (*sizep == 0) {
     size = sharedmem_filesize(fd, CHECK);
@@ -1095,14 +1079,11 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
     size = *sizep;
   }
 
-  assert(size > 0, "unexpected size <= 0");
-
   mapAddress = (char*)::mmap((char*)0, size, mmap_prot, MAP_SHARED, fd, 0);
 
   // attempt to close the file - restart if it gets interrupted,
   // but ignore other failures
   result = ::close(fd);
-  assert(result != OS_ERR, "could not close file");
 
   if (mapAddress == MAP_FAILED) {
     if (PrintMiscellaneous && Verbose) {
@@ -1159,8 +1140,6 @@ void PerfMemory::create_memory_region(size_t size) {
 // tuple will be inaccessible after a call to this method.
 //
 void PerfMemory::delete_memory_region() {
-
-  assert((start() != NULL && capacity() > 0), "verify proper state");
 
   // If user specifies PerfDataSaveFile, it will save the performance data
   // to the specified file name no matter whether PerfDataSaveToFile is specified
@@ -1221,9 +1200,6 @@ void PerfMemory::attach(const char* user, int vmid, PerfMemoryMode mode, char** 
 // process's address space.
 //
 void PerfMemory::detach(char* addr, size_t bytes, TRAPS) {
-
-  assert(addr != 0, "address sanity check");
-  assert(bytes > 0, "capacity sanity check");
 
   if (PerfMemory::contains(addr) || PerfMemory::contains(addr + bytes - 1)) {
     // prevent accidental detachment of this process's PerfMemory region

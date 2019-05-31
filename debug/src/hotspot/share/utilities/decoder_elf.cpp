@@ -12,8 +12,6 @@ ElfDecoder::~ElfDecoder() {
 }
 
 bool ElfDecoder::decode(address addr, char *buf, int buflen, int* offset, const char* filepath, bool demangle_name) {
-  assert(filepath, "null file path");
-  assert(buf != NULL && buflen > 0, "Invalid buffer");
   if (has_error()) return false;
   ElfFile* file = get_elf_file(filepath);
   if (file == NULL) {

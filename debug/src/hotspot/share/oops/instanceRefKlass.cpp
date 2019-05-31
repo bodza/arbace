@@ -10,10 +10,6 @@ void InstanceRefKlass::update_nonstatic_oop_maps(Klass* k) {
   // garbage collector.
   InstanceKlass* ik = InstanceKlass::cast(k);
 
-  // Check that we have the right class
-  assert(k == SystemDictionary::Reference_klass() && first_time, "Invalid update of maps");
-  assert(ik->nonstatic_oop_map_count() == 1, "just checking");
-
   OopMapBlock* map = ik->start_of_nonstatic_oop_maps();
 
   // Updated map starts at "queue", covers "queue" and "next".
@@ -22,11 +18,7 @@ void InstanceRefKlass::update_nonstatic_oop_maps(Klass* k) {
 
   // Verify existing map is as expected, and update if needed.
   if (UseSharedSpaces) {
-    assert(map->offset() == new_offset, "just checking");
-    assert(map->count() == new_count, "just checking");
   } else {
-    assert(map->offset() == referent_offset, "just checking");
-    assert(map->count() == count, "just checking");
     map->set_offset(new_offset);
     map->set_count(new_count);
   }

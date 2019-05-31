@@ -31,7 +31,6 @@ LIR_Opr LIR_OprFact::value_type(ValueType* type) {
       return LIR_OprFact::metadataConst(c->value()->constant_encoding());
     } else {
       MethodConstant* m = type->as_MethodConstant();
-      assert(m != NULL, "not a class or a method?");
       return LIR_OprFact::metadataConst(m->value()->constant_encoding());
     }
   }
@@ -108,7 +107,6 @@ bool LIR_OprDesc::is_oop() const {
     return pointer()->is_oop_pointer();
   } else {
     OprType t= type_field();
-    assert(t != unknown_type, "not set");
     return t == object_type;
   }
 }
@@ -148,15 +146,12 @@ LIR_OpBranch::LIR_OpBranch(LIR_Condition cond, BasicType type, BlockBegin* block
 }
 
 void LIR_OpBranch::change_block(BlockBegin* b) {
-  assert(_block != NULL, "must have old block");
-  assert(_block->label() == label(), "must be equal");
 
   _block = b;
   _label = b->label();
 }
 
 void LIR_OpBranch::change_ublock(BlockBegin* b) {
-  assert(_ublock != NULL, "must have old block");
   _ublock = b;
 }
 
@@ -193,9 +188,7 @@ LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr result, LIR_Opr object, 
   , _should_profile(false)
 {
   if (code == lir_checkcast) {
-    assert(info_for_exception != NULL, "checkcast throws exceptions");
   } else if (code == lir_instanceof) {
-    assert(info_for_exception == NULL, "instanceof throws no exceptions");
   } else {
     ShouldNotReachHere();
   }
@@ -219,7 +212,6 @@ LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr object, LIR_Opr array, L
 {
   if (code == lir_store_check) {
     _stub = new ArrayStoreExceptionStub(object, info_for_exception);
-    assert(info_for_exception != NULL, "store_check throws exceptions");
   } else {
     ShouldNotReachHere();
   }
@@ -250,13 +242,10 @@ LIR_OpUpdateCRC32::LIR_OpUpdateCRC32(LIR_Opr crc, LIR_Opr val, LIR_Opr res)
 void LIR_Op1::verify() const {
   switch(code()) {
   case lir_move:
-    assert(in_opr()->is_valid() && result_opr()->is_valid(), "must be");
     break;
   case lir_null_check:
-    assert(in_opr()->is_register(), "must be");
     break;
   case lir_return:
-    assert(in_opr()->is_register() || in_opr()->is_illegal(), "must be");
     break;
   default:
     break;
@@ -264,7 +253,6 @@ void LIR_Op1::verify() const {
 }
 
 void LIR_OpRTCall::verify() const {
-  assert(strcmp(Runtime1::name_for_address(addr()), "<unknown function>") != 0, "unknown function");
 }
 
 //-------------------visits--------------------------
@@ -297,9 +285,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_membar_storeload:         // result and info always invalid
     case lir_on_spin_wait:
     {
-      assert(op->as_Op0() != NULL, "must be");
-      assert(op->_info == NULL, "info not used by this instruction");
-      assert(op->_result->is_illegal(), "not used");
       break;
     }
 
@@ -308,7 +293,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_osr_entry:                // may have result, info always invalid
     case lir_get_thread:               // may have result, info always invalid
     {
-      assert(op->as_Op0() != NULL, "must be");
       if (op->_info != NULL)           do_info(op->_info);
       if (op->_result->is_valid())     do_output(op->_result);
       break;
@@ -317,9 +301,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 // LIR_OpLabel
     case lir_label:                    // result and info always invalid
     {
-      assert(op->as_OpLabel() != NULL, "must be");
-      assert(op->_info == NULL, "info not used by this instruction");
-      assert(op->_result->is_illegal(), "not used");
       break;
     }
 
@@ -337,7 +318,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_pack64:         // input and result always valid
     case lir_unpack64:       // input and result always valid
     {
-      assert(op->as_Op1() != NULL, "must be");
       LIR_Op1* op1 = (LIR_Op1*)op;
 
       if (op1->_info)                  do_info(op1->_info);
@@ -349,13 +329,10 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
     case lir_safepoint:
     {
-      assert(op->as_Op1() != NULL, "must be");
       LIR_Op1* op1 = (LIR_Op1*)op;
 
-      assert(op1->_info != NULL, "");
       do_info(op1->_info);
       if (op1->_opr->is_valid())       do_temp(op1->_opr); // safepoints on SPARC need temporary register
-      assert(op1->_result->is_illegal(), "safepoint does not produce value");
 
       break;
     }
@@ -363,10 +340,8 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 // LIR_OpConvert;
     case lir_convert:        // input and result always valid, info always invalid
     {
-      assert(op->as_OpConvert() != NULL, "must be");
       LIR_OpConvert* opConvert = (LIR_OpConvert*)op;
 
-      assert(opConvert->_info == NULL, "must be");
       if (opConvert->_opr->is_valid())       do_input(opConvert->_opr);
       if (opConvert->_result->is_valid())    do_output(opConvert->_result);
 #ifdef PPC32
@@ -382,11 +357,9 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_branch:                   // may have info, input and result register always invalid
     case lir_cond_float_branch:        // may have info, input and result register always invalid
     {
-      assert(op->as_OpBranch() != NULL, "must be");
       LIR_OpBranch* opBranch = (LIR_OpBranch*)op;
 
       if (opBranch->_info != NULL)     do_info(opBranch->_info);
-      assert(opBranch->_result->is_illegal(), "not used");
       if (opBranch->_stub != NULL)     opBranch->stub()->visit(this);
 
       break;
@@ -395,7 +368,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 // LIR_OpAllocObj
     case lir_alloc_object:
     {
-      assert(op->as_OpAllocObj() != NULL, "must be");
       LIR_OpAllocObj* opAllocObj = (LIR_OpAllocObj*)op;
 
       if (opAllocObj->_info)                     do_info(opAllocObj->_info);
@@ -413,11 +385,8 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpRoundFP;
     case lir_roundfp: {
-      assert(op->as_OpRoundFP() != NULL, "must be");
       LIR_OpRoundFP* opRoundFP = (LIR_OpRoundFP*)op;
 
-      assert(op->_info == NULL, "info not used by this instruction");
-      assert(opRoundFP->_tmp->is_illegal(), "not used");
       do_input(opRoundFP->_opr);
       do_output(opRoundFP->_result);
 
@@ -447,9 +416,7 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_xchg:
     case lir_assert:
     {
-      assert(op->as_Op2() != NULL, "must be");
       LIR_Op2* op2 = (LIR_Op2*)op;
-      assert(op2->_tmp2->is_illegal() && op2->_tmp3->is_illegal() && op2->_tmp4->is_illegal() && op2->_tmp5->is_illegal(), "not used");
 
       if (op2->_info)                     do_info(op2->_info);
       if (op2->_opr1->is_valid())         do_input(op2->_opr1);
@@ -471,11 +438,7 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     // to the result operand, otherwise the backend fails
     case lir_cmove:
     {
-      assert(op->as_Op2() != NULL, "must be");
       LIR_Op2* op2 = (LIR_Op2*)op;
-
-      assert(op2->_info == NULL && op2->_tmp1->is_illegal() && op2->_tmp2->is_illegal() && op2->_tmp3->is_illegal() && op2->_tmp4->is_illegal() && op2->_tmp5->is_illegal(), "not used");
-      assert(op2->_opr1->is_valid() && op2->_opr2->is_valid() && op2->_result->is_valid(), "used");
 
       do_input(op2->_opr1);
       do_input(op2->_opr2);
@@ -491,14 +454,8 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_mul_strictfp:
     case lir_div_strictfp:
     {
-      assert(op->as_Op2() != NULL, "must be");
       LIR_Op2* op2 = (LIR_Op2*)op;
 
-      assert(op2->_info == NULL, "not used");
-      assert(op2->_opr1->is_valid(), "used");
-      assert(op2->_opr2->is_valid(), "used");
-      assert(op2->_result->is_valid(), "used");
-      assert(op2->_tmp2->is_illegal() && op2->_tmp3->is_illegal() && op2->_tmp4->is_illegal() && op2->_tmp5->is_illegal(), "not used");
 
       do_input(op2->_opr1); do_temp(op2->_opr1);
       do_input(op2->_opr2); do_temp(op2->_opr2);
@@ -509,25 +466,19 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     }
 
     case lir_throw: {
-      assert(op->as_Op2() != NULL, "must be");
       LIR_Op2* op2 = (LIR_Op2*)op;
 
       if (op2->_info)                     do_info(op2->_info);
       if (op2->_opr1->is_valid())         do_temp(op2->_opr1);
       if (op2->_opr2->is_valid())         do_input(op2->_opr2); // exception object is input parameter
-      assert(op2->_result->is_illegal(), "no result");
-      assert(op2->_tmp2->is_illegal() && op2->_tmp3->is_illegal() && op2->_tmp4->is_illegal() && op2->_tmp5->is_illegal(), "not used");
 
       break;
     }
 
     case lir_unwind: {
-      assert(op->as_Op1() != NULL, "must be");
       LIR_Op1* op1 = (LIR_Op1*)op;
 
-      assert(op1->_info == NULL, "no info");
-      assert(op1->_opr->is_valid(), "exception oop");         do_input(op1->_opr);
-      assert(op1->_result->is_illegal(), "no result");
+      do_input(op1->_opr);
 
       break;
     }
@@ -535,7 +486,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 // LIR_Op3
     case lir_idiv:
     case lir_irem: {
-      assert(op->as_Op3() != NULL, "must be");
       LIR_Op3* op3= (LIR_Op3*)op;
 
       if (op3->_info)                     do_info(op3->_info);
@@ -554,9 +504,7 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
     case lir_fmad:
     case lir_fmaf: {
-      assert(op->as_Op3() != NULL, "must be");
       LIR_Op3* op3= (LIR_Op3*)op;
-      assert(op3->_info == NULL, "no info");
       do_input(op3->_opr1);
       do_input(op3->_opr2);
       do_input(op3->_opr3);
@@ -571,7 +519,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_virtual_call:
     case lir_dynamic_call: {
       LIR_OpJavaCall* opJavaCall = op->as_OpJavaCall();
-      assert(opJavaCall != NULL, "must be");
 
       if (opJavaCall->_receiver->is_valid())     do_input(opJavaCall->_receiver);
 
@@ -584,8 +531,7 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
       }
 
       if (opJavaCall->_info)                     do_info(opJavaCall->_info);
-      if (FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr &&
-          opJavaCall->is_method_handle_invoke()) {
+      if (FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr && opJavaCall->is_method_handle_invoke()) {
         opJavaCall->_method_handle_invoke_SP_save_opr = FrameMap::method_handle_invoke_SP_save_opr();
         do_temp(opJavaCall->_method_handle_invoke_SP_save_opr);
       }
@@ -597,7 +543,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpRTCall
     case lir_rtcall: {
-      assert(op->as_OpRTCall() != NULL, "must be");
       LIR_OpRTCall* opRTCall = (LIR_OpRTCall*)op;
 
       // only visit register parameters
@@ -617,16 +562,14 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpArrayCopy
     case lir_arraycopy: {
-      assert(op->as_OpArrayCopy() != NULL, "must be");
       LIR_OpArrayCopy* opArrayCopy = (LIR_OpArrayCopy*)op;
 
-      assert(opArrayCopy->_result->is_illegal(), "unused");
-      assert(opArrayCopy->_src->is_valid(), "used");          do_input(opArrayCopy->_src);     do_temp(opArrayCopy->_src);
-      assert(opArrayCopy->_src_pos->is_valid(), "used");      do_input(opArrayCopy->_src_pos); do_temp(opArrayCopy->_src_pos);
-      assert(opArrayCopy->_dst->is_valid(), "used");          do_input(opArrayCopy->_dst);     do_temp(opArrayCopy->_dst);
-      assert(opArrayCopy->_dst_pos->is_valid(), "used");      do_input(opArrayCopy->_dst_pos); do_temp(opArrayCopy->_dst_pos);
-      assert(opArrayCopy->_length->is_valid(), "used");       do_input(opArrayCopy->_length);  do_temp(opArrayCopy->_length);
-      assert(opArrayCopy->_tmp->is_valid(), "used");          do_temp(opArrayCopy->_tmp);
+      do_input(opArrayCopy->_src);     do_temp(opArrayCopy->_src);
+      do_input(opArrayCopy->_src_pos); do_temp(opArrayCopy->_src_pos);
+      do_input(opArrayCopy->_dst);     do_temp(opArrayCopy->_dst);
+      do_input(opArrayCopy->_dst_pos); do_temp(opArrayCopy->_dst_pos);
+      do_input(opArrayCopy->_length);  do_temp(opArrayCopy->_length);
+      do_temp(opArrayCopy->_tmp);
       if (opArrayCopy->_info)                     do_info(opArrayCopy->_info);
 
       // the implementation of arraycopy always has a call into the runtime
@@ -637,13 +580,11 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpUpdateCRC32
     case lir_updatecrc32: {
-      assert(op->as_OpUpdateCRC32() != NULL, "must be");
       LIR_OpUpdateCRC32* opUp = (LIR_OpUpdateCRC32*)op;
 
-      assert(opUp->_crc->is_valid(), "used");          do_input(opUp->_crc);     do_temp(opUp->_crc);
-      assert(opUp->_val->is_valid(), "used");          do_input(opUp->_val);     do_temp(opUp->_val);
-      assert(opUp->_result->is_valid(), "used");       do_output(opUp->_result);
-      assert(opUp->_info == NULL, "no info for LIR_OpUpdateCRC32");
+      do_input(opUp->_crc);     do_temp(opUp->_crc);
+      do_input(opUp->_val);     do_temp(opUp->_val);
+      do_output(opUp->_result);
 
       break;
     }
@@ -651,22 +592,17 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 // LIR_OpLock
     case lir_lock:
     case lir_unlock: {
-      assert(op->as_OpLock() != NULL, "must be");
       LIR_OpLock* opLock = (LIR_OpLock*)op;
 
       if (opLock->_info)                          do_info(opLock->_info);
 
       // TODO: check if these operands really have to be temp
       // (or if input is sufficient). This may have influence on the oop map!
-      assert(opLock->_lock->is_valid(), "used");
       do_temp(opLock->_lock);
-      assert(opLock->_hdr->is_valid(),  "used");
       do_temp(opLock->_hdr);
-      assert(opLock->_obj->is_valid(),  "used");
       do_temp(opLock->_obj);
 
       if (opLock->_scratch->is_valid())           do_temp(opLock->_scratch);
-      assert(opLock->_result->is_illegal(), "unused");
 
       do_stub(opLock->_stub);
 
@@ -675,7 +611,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpDelay
     case lir_delay_slot: {
-      assert(op->as_OpDelay() != NULL, "must be");
       LIR_OpDelay* opDelay = (LIR_OpDelay*)op;
 
       visit(opDelay->delay_op());
@@ -686,7 +621,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_instanceof:
     case lir_checkcast:
     case lir_store_check: {
-      assert(op->as_OpTypeCheck() != NULL, "must be");
       LIR_OpTypeCheck* opTypeCheck = (LIR_OpTypeCheck*)op;
 
       if (opTypeCheck->_info_for_exception)       do_info(opTypeCheck->_info_for_exception);
@@ -708,12 +642,8 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_cas_long:
     case lir_cas_obj:
     case lir_cas_int: {
-      assert(op->as_OpCompareAndSwap() != NULL, "must be");
       LIR_OpCompareAndSwap* opCompareAndSwap = (LIR_OpCompareAndSwap*)op;
 
-      assert(opCompareAndSwap->_addr->is_valid(),      "used");
-      assert(opCompareAndSwap->_cmp_value->is_valid(), "used");
-      assert(opCompareAndSwap->_new_value->is_valid(), "used");
       if (opCompareAndSwap->_info)                    do_info(opCompareAndSwap->_info);
                                                       do_input(opCompareAndSwap->_addr);
                                                       do_temp(opCompareAndSwap->_addr);
@@ -730,7 +660,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpAllocArray;
     case lir_alloc_array: {
-      assert(op->as_OpAllocArray() != NULL, "must be");
       LIR_OpAllocArray* opAllocArray = (LIR_OpAllocArray*)op;
 
       if (opAllocArray->_info)                        do_info(opAllocArray->_info);
@@ -747,20 +676,16 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
 // LIR_OpProfileCall:
     case lir_profile_call: {
-      assert(op->as_OpProfileCall() != NULL, "must be");
       LIR_OpProfileCall* opProfileCall = (LIR_OpProfileCall*)op;
 
       if (opProfileCall->_recv->is_valid())              do_temp(opProfileCall->_recv);
-      assert(opProfileCall->_mdo->is_valid(), "used");
       do_temp(opProfileCall->_mdo);
-      assert(opProfileCall->_tmp1->is_valid(), "used");
       do_temp(opProfileCall->_tmp1);
       break;
     }
 
 // LIR_OpProfileType:
     case lir_profile_type: {
-      assert(op->as_OpProfileType() != NULL, "must be");
       LIR_OpProfileType* opProfileType = (LIR_OpProfileType*)op;
 
       do_input(opProfileType->_mdp); do_temp(opProfileType->_mdp);
@@ -903,7 +828,6 @@ LIR_List::LIR_List(Compilation* compilation, BlockBegin* block)
 { }
 
 void LIR_List::append(LIR_InsertionBuffer* buffer) {
-  assert(this == buffer->lir_list(), "wrong lir list");
   const int n = _operations.length();
 
   if (buffer->number_of_ops() > 0) {
@@ -931,236 +855,99 @@ void LIR_List::append(LIR_InsertionBuffer* buffer) {
 }
 
 void LIR_List::oop2reg_patch(jobject o, LIR_Opr reg, CodeEmitInfo* info) {
-  assert(reg->type() == T_OBJECT, "bad reg");
   append(new LIR_Op1(lir_move, LIR_OprFact::oopConst(o),  reg, T_OBJECT, lir_patch_normal, info));
 }
 
 void LIR_List::klass2reg_patch(Metadata* o, LIR_Opr reg, CodeEmitInfo* info) {
-  assert(reg->type() == T_METADATA, "bad reg");
   append(new LIR_Op1(lir_move, LIR_OprFact::metadataConst(o), reg, T_METADATA, lir_patch_normal, info));
 }
 
 void LIR_List::load(LIR_Address* addr, LIR_Opr src, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            LIR_OprFact::address(addr),
-            src,
-            addr->type(),
-            patch_code,
-            info));
+  append(new LIR_Op1(lir_move, LIR_OprFact::address(addr), src, addr->type(), patch_code, info));
 }
 
 void LIR_List::volatile_load_mem_reg(LIR_Address* address, LIR_Opr dst, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            LIR_OprFact::address(address),
-            dst,
-            address->type(),
-            patch_code,
-            info, lir_move_volatile));
+  append(new LIR_Op1(lir_move, LIR_OprFact::address(address), dst, address->type(), patch_code, info, lir_move_volatile));
 }
 
 void LIR_List::volatile_load_unsafe_reg(LIR_Opr base, LIR_Opr offset, LIR_Opr dst, BasicType type, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            LIR_OprFact::address(new LIR_Address(base, offset, type)),
-            dst,
-            type,
-            patch_code,
-            info, lir_move_volatile));
+  append(new LIR_Op1(lir_move, LIR_OprFact::address(new LIR_Address(base, offset, type)), dst, type, patch_code, info, lir_move_volatile));
 }
 
 void LIR_List::store_mem_int(jint v, LIR_Opr base, int offset_in_bytes, BasicType type, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            LIR_OprFact::intConst(v),
-            LIR_OprFact::address(new LIR_Address(base, offset_in_bytes, type)),
-            type,
-            patch_code,
-            info));
+  append(new LIR_Op1(lir_move, LIR_OprFact::intConst(v), LIR_OprFact::address(new LIR_Address(base, offset_in_bytes, type)), type, patch_code, info));
 }
 
 void LIR_List::store_mem_oop(jobject o, LIR_Opr base, int offset_in_bytes, BasicType type, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            LIR_OprFact::oopConst(o),
-            LIR_OprFact::address(new LIR_Address(base, offset_in_bytes, type)),
-            type,
-            patch_code,
-            info));
+  append(new LIR_Op1(lir_move, LIR_OprFact::oopConst(o), LIR_OprFact::address(new LIR_Address(base, offset_in_bytes, type)), type, patch_code, info));
 }
 
 void LIR_List::store(LIR_Opr src, LIR_Address* addr, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            src,
-            LIR_OprFact::address(addr),
-            addr->type(),
-            patch_code,
-            info));
+  append(new LIR_Op1(lir_move, src, LIR_OprFact::address(addr), addr->type(), patch_code, info));
 }
 
 void LIR_List::volatile_store_mem_reg(LIR_Opr src, LIR_Address* addr, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            src,
-            LIR_OprFact::address(addr),
-            addr->type(),
-            patch_code,
-            info,
-            lir_move_volatile));
+  append(new LIR_Op1(lir_move, src, LIR_OprFact::address(addr), addr->type(), patch_code, info, lir_move_volatile));
 }
 
 void LIR_List::volatile_store_unsafe_reg(LIR_Opr src, LIR_Opr base, LIR_Opr offset, BasicType type, CodeEmitInfo* info, LIR_PatchCode patch_code) {
-  append(new LIR_Op1(
-            lir_move,
-            src,
-            LIR_OprFact::address(new LIR_Address(base, offset, type)),
-            type,
-            patch_code,
-            info, lir_move_volatile));
+  append(new LIR_Op1(lir_move, src, LIR_OprFact::address(new LIR_Address(base, offset, type)), type, patch_code, info, lir_move_volatile));
 }
 
 void LIR_List::idiv(LIR_Opr left, LIR_Opr right, LIR_Opr res, LIR_Opr tmp, CodeEmitInfo* info) {
-  append(new LIR_Op3(
-                    lir_idiv,
-                    left,
-                    right,
-                    tmp,
-                    res,
-                    info));
+  append(new LIR_Op3(lir_idiv, left, right, tmp, res, info));
 }
 
 void LIR_List::idiv(LIR_Opr left, int right, LIR_Opr res, LIR_Opr tmp, CodeEmitInfo* info) {
-  append(new LIR_Op3(
-                    lir_idiv,
-                    left,
-                    LIR_OprFact::intConst(right),
-                    tmp,
-                    res,
-                    info));
+  append(new LIR_Op3(lir_idiv, left, LIR_OprFact::intConst(right), tmp, res, info));
 }
 
 void LIR_List::irem(LIR_Opr left, LIR_Opr right, LIR_Opr res, LIR_Opr tmp, CodeEmitInfo* info) {
-  append(new LIR_Op3(
-                    lir_irem,
-                    left,
-                    right,
-                    tmp,
-                    res,
-                    info));
+  append(new LIR_Op3(lir_irem, left, right, tmp, res, info));
 }
 
 void LIR_List::irem(LIR_Opr left, int right, LIR_Opr res, LIR_Opr tmp, CodeEmitInfo* info) {
-  append(new LIR_Op3(
-                    lir_irem,
-                    left,
-                    LIR_OprFact::intConst(right),
-                    tmp,
-                    res,
-                    info));
+  append(new LIR_Op3(lir_irem, left, LIR_OprFact::intConst(right), tmp, res, info));
 }
 
 void LIR_List::cmp_mem_int(LIR_Condition condition, LIR_Opr base, int disp, int c, CodeEmitInfo* info) {
-  append(new LIR_Op2(
-                    lir_cmp,
-                    condition,
-                    LIR_OprFact::address(new LIR_Address(base, disp, T_INT)),
-                    LIR_OprFact::intConst(c),
-                    info));
+  append(new LIR_Op2(lir_cmp, condition, LIR_OprFact::address(new LIR_Address(base, disp, T_INT)), LIR_OprFact::intConst(c), info));
 }
 
 void LIR_List::cmp_reg_mem(LIR_Condition condition, LIR_Opr reg, LIR_Address* addr, CodeEmitInfo* info) {
-  append(new LIR_Op2(
-                    lir_cmp,
-                    condition,
-                    reg,
-                    LIR_OprFact::address(addr),
-                    info));
+  append(new LIR_Op2(lir_cmp, condition, reg, LIR_OprFact::address(addr), info));
 }
 
-void LIR_List::allocate_object(LIR_Opr dst, LIR_Opr t1, LIR_Opr t2, LIR_Opr t3, LIR_Opr t4,
-                               int header_size, int object_size, LIR_Opr klass, bool init_check, CodeStub* stub) {
-  append(new LIR_OpAllocObj(
-                           klass,
-                           dst,
-                           t1,
-                           t2,
-                           t3,
-                           t4,
-                           header_size,
-                           object_size,
-                           init_check,
-                           stub));
+void LIR_List::allocate_object(LIR_Opr dst, LIR_Opr t1, LIR_Opr t2, LIR_Opr t3, LIR_Opr t4, int header_size, int object_size, LIR_Opr klass, bool init_check, CodeStub* stub) {
+  append(new LIR_OpAllocObj(klass, dst, t1, t2, t3, t4, header_size, object_size, init_check, stub));
 }
 
 void LIR_List::allocate_array(LIR_Opr dst, LIR_Opr len, LIR_Opr t1,LIR_Opr t2, LIR_Opr t3,LIR_Opr t4, BasicType type, LIR_Opr klass, CodeStub* stub) {
-  append(new LIR_OpAllocArray(
-                           klass,
-                           len,
-                           dst,
-                           t1,
-                           t2,
-                           t3,
-                           t4,
-                           type,
-                           stub));
+  append(new LIR_OpAllocArray(klass, len, dst, t1, t2, t3, t4, type, stub));
 }
 
 void LIR_List::shift_left(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp) {
- append(new LIR_Op2(
-                    lir_shl,
-                    value,
-                    count,
-                    dst,
-                    tmp));
+ append(new LIR_Op2(lir_shl, value, count, dst, tmp));
 }
 
 void LIR_List::shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp) {
- append(new LIR_Op2(
-                    lir_shr,
-                    value,
-                    count,
-                    dst,
-                    tmp));
+ append(new LIR_Op2(lir_shr, value, count, dst, tmp));
 }
 
 void LIR_List::unsigned_shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp) {
- append(new LIR_Op2(
-                    lir_ushr,
-                    value,
-                    count,
-                    dst,
-                    tmp));
+ append(new LIR_Op2(lir_ushr, value, count, dst, tmp));
 }
 
 void LIR_List::fcmp2int(LIR_Opr left, LIR_Opr right, LIR_Opr dst, bool is_unordered_less) {
-  append(new LIR_Op2(is_unordered_less ? lir_ucmp_fd2i : lir_cmp_fd2i,
-                     left,
-                     right,
-                     dst));
+  append(new LIR_Op2(is_unordered_less ? lir_ucmp_fd2i : lir_cmp_fd2i, left, right, dst));
 }
 
 void LIR_List::lock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub, CodeEmitInfo* info) {
-  append(new LIR_OpLock(
-                    lir_lock,
-                    hdr,
-                    obj,
-                    lock,
-                    scratch,
-                    stub,
-                    info));
+  append(new LIR_OpLock(lir_lock, hdr, obj, lock, scratch, stub, info));
 }
 
 void LIR_List::unlock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub) {
-  append(new LIR_OpLock(
-                    lir_unlock,
-                    hdr,
-                    obj,
-                    lock,
-                    scratch,
-                    stub,
-                    NULL));
+  append(new LIR_OpLock(lir_unlock, hdr, obj, lock, scratch, stub, NULL));
 }
 
 void check_LIR() {
@@ -1168,10 +955,7 @@ void check_LIR() {
   // guarantee(sizeof(LIR_OprDesc) == wordSize, "may not have a v-table");
 }
 
-void LIR_List::checkcast (LIR_Opr result, LIR_Opr object, ciKlass* klass,
-                          LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check,
-                          CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub,
-                          ciMethod* profiled_method, int profiled_bci) {
+void LIR_List::checkcast(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub, ciMethod* profiled_method, int profiled_bci) {
   LIR_OpTypeCheck* c = new LIR_OpTypeCheck(lir_checkcast, result, object, klass,
                                            tmp1, tmp2, tmp3, fast_check, info_for_exception, info_for_patch, stub);
   if (profiled_method != NULL) {
@@ -1192,8 +976,7 @@ void LIR_List::instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Op
   append(c);
 }
 
-void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3,
-                           CodeEmitInfo* info_for_exception, ciMethod* profiled_method, int profiled_bci) {
+void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception, ciMethod* profiled_method, int profiled_bci) {
   LIR_OpTypeCheck* c = new LIR_OpTypeCheck(lir_store_check, object, array, tmp1, tmp2, tmp3, info_for_exception);
   if (profiled_method != NULL) {
     c->set_profiled_method(profiled_method);
@@ -1215,18 +998,15 @@ void LIR_List::null_check(LIR_Opr opr, CodeEmitInfo* info, bool deoptimize_on_nu
   }
 }
 
-void LIR_List::cas_long(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-                        LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
+void LIR_List::cas_long(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
   append(new LIR_OpCompareAndSwap(lir_cas_long, addr, cmp_value, new_value, t1, t2, result));
 }
 
-void LIR_List::cas_obj(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-                       LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
+void LIR_List::cas_obj(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
   append(new LIR_OpCompareAndSwap(lir_cas_obj, addr, cmp_value, new_value, t1, t2, result));
 }
 
-void LIR_List::cas_int(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-                       LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
+void LIR_List::cas_int(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {
   append(new LIR_OpCompareAndSwap(lir_cas_int, addr, cmp_value, new_value, t1, t2, result));
 }
 
@@ -1236,14 +1016,11 @@ void print_LIR(BlockList* blocks) {
 // Implementation of LIR_InsertionBuffer
 
 void LIR_InsertionBuffer::append(int index, LIR_Op* op) {
-  assert(_index_and_count.length() % 2 == 0, "must have a count for each index");
 
   int i = number_of_insertion_points() - 1;
   if (i < 0 || index_at(i) < index) {
     append_new(index, 1);
   } else {
-    assert(index_at(i) == index, "can append LIR_Ops in ascending order only");
-    assert(count_at(i) > 0, "check");
     set_count_at(i, count_at(i) + 1);
   }
   _ops.push(op);

@@ -8,6 +8,6 @@
 template<typename T>
 struct IsSigned
   : public IntegralConstant<bool, std::numeric_limits<typename RemoveCV<T>::type>::is_signed>
-{};
+{ };
 
 #endif

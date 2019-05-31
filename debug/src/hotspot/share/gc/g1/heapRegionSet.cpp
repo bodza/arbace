@@ -12,15 +12,12 @@ void HeapRegionSetBase::verify() {
   // verification might fail and send us on a wild goose chase.
   check_mt_safety();
 
-  guarantee_heap_region_set(( is_empty() && length() == 0) ||
-                            (!is_empty() && length() > 0),
-                            "invariant");
+  guarantee_heap_region_set(( is_empty() && length() == 0) || (!is_empty() && length() > 0), "invariant");
 }
 
 void HeapRegionSetBase::verify_start() {
   // See comment in verify() about MT safety and verification.
   check_mt_safety();
-  assert_heap_region_set(!_verify_in_progress, "verification should not be in progress");
 
   // Do the basic verification first before we do the checks over the regions.
   HeapRegionSetBase::verify();
@@ -31,7 +28,6 @@ void HeapRegionSetBase::verify_start() {
 void HeapRegionSetBase::verify_end() {
   // See comment in verify() about MT safety and verification.
   check_mt_safety();
-  assert_heap_region_set(_verify_in_progress, "verification should be in progress");
 
   _verify_in_progress = false;
 }
@@ -88,7 +84,6 @@ void FreeRegionList::add_ordered(FreeRegionList* from_list) {
   }
 
   if (is_empty()) {
-    assert_free_region_list(length() == 0 && _tail == NULL, "invariant");
     _head = from_list->_head;
     _tail = from_list->_tail;
   } else {
@@ -135,8 +130,6 @@ void FreeRegionList::add_ordered(FreeRegionList* from_list) {
 
 void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
   check_mt_safety();
-  assert_free_region_list(num_regions >= 1, "pre-condition");
-  assert_free_region_list(!is_empty(), "pre-condition");
 
   verify_optional();
 
@@ -147,20 +140,14 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
     HeapRegion* next = curr->next();
     HeapRegion* prev = curr->prev();
 
-    assert(count < num_regions, "[%s] should not come across more regions pending for removal than num_regions: %u", name(), num_regions);
-
     if (prev == NULL) {
-      assert_free_region_list(_head == curr, "invariant");
       _head = next;
     } else {
-      assert_free_region_list(_head != curr, "invariant");
       prev->set_next(next);
     }
     if (next == NULL) {
-      assert_free_region_list(_tail == curr, "invariant");
       _tail = prev;
     } else {
-      assert_free_region_list(_tail != curr, "invariant");
       next->set_prev(prev);
     }
     if (_last == curr) {
@@ -174,9 +161,6 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
     count++;
     curr = next;
   }
-
-  assert(count == num_regions, "[%s] count: %u should be == num_regions: %u", name(), count, num_regions);
-  assert(length() + num_regions == old_length, "[%s] new length should be consistent new length: %u old length: %u num_regions: %u", name(), length(), old_length, num_regions);
 
   verify_optional();
 }
@@ -214,9 +198,7 @@ void FreeRegionList::verify_list() {
     verify_region(curr);
 
     count++;
-    guarantee(count < _unrealistically_long_length,
-              "[%s] the calculated length: %u seems very long, is there maybe a cycle? curr: " PTR_FORMAT " prev0: " PTR_FORMAT " " "prev1: " PTR_FORMAT " length: %u",
-              name(), count, p2i(curr), p2i(prev0), p2i(prev1), length());
+    guarantee(count < _unrealistically_long_length, "[%s] the calculated length: %u seems very long, is there maybe a cycle? curr: " PTR_FORMAT " prev0: " PTR_FORMAT " prev1: " PTR_FORMAT " length: %u", name(), count, p2i(curr), p2i(prev0), p2i(prev1), length());
 
     if (curr->next() != NULL) {
       guarantee(curr->next()->prev() == curr, "Next or prev pointers messed up");
@@ -257,8 +239,7 @@ void MasterFreeRegionListMtSafeChecker::check() {
   // list should be invoked while holding the Heap_lock.
 
   if (SafepointSynchronize::is_at_safepoint()) {
-    guarantee(Thread::current()->is_VM_thread() ||
-              FreeList_lock->owned_by_self(), "master free list MT safety protocol at a safepoint");
+    guarantee(Thread::current()->is_VM_thread() || FreeList_lock->owned_by_self(), "master free list MT safety protocol at a safepoint");
   } else {
     guarantee(Heap_lock->owned_by_self(), "master free list MT safety protocol outside a safepoint");
   }
@@ -279,9 +260,7 @@ void OldRegionSetMtSafeChecker::check() {
   // should be invoked while holding the Heap_lock.
 
   if (SafepointSynchronize::is_at_safepoint()) {
-    guarantee(Thread::current()->is_VM_thread()
-        || FreeList_lock->owned_by_self() || OldSets_lock->owned_by_self(),
-        "master old set MT safety protocol at a safepoint");
+    guarantee(Thread::current()->is_VM_thread() || FreeList_lock->owned_by_self() || OldSets_lock->owned_by_self(), "master old set MT safety protocol at a safepoint");
   } else {
     guarantee(Heap_lock->owned_by_self(), "master old set MT safety protocol outside a safepoint");
   }
@@ -297,11 +276,8 @@ void HumongousRegionSetMtSafeChecker::check() {
   // humongous set should be invoked while holding the Heap_lock.
 
   if (SafepointSynchronize::is_at_safepoint()) {
-    guarantee(Thread::current()->is_VM_thread() ||
-              OldSets_lock->owned_by_self(),
-              "master humongous set MT safety protocol at a safepoint");
+    guarantee(Thread::current()->is_VM_thread() || OldSets_lock->owned_by_self(), "master humongous set MT safety protocol at a safepoint");
   } else {
-    guarantee(Heap_lock->owned_by_self(),
-              "master humongous set MT safety protocol outside a safepoint");
+    guarantee(Heap_lock->owned_by_self(), "master humongous set MT safety protocol outside a safepoint");
   }
 }

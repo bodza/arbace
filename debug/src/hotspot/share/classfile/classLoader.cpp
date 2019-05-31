@@ -214,11 +214,9 @@ ClassPathDirEntry::ClassPathDirEntry(const char* dir) : ClassPathEntry() {
 
 ClassFileStream* ClassPathDirEntry::open_stream(const char* name, TRAPS) {
   // construct full path name
-  assert((_dir != NULL) && (name != NULL), "sanity");
   size_t path_len = strlen(_dir) + strlen(name) + strlen(os::file_separator()) + 1;
   char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
   int len = jio_snprintf(path, path_len, "%s%s%s", _dir, os::file_separator(), name);
-  assert(len == (int)(path_len - 1), "sanity");
   // check if file exists
   struct stat st;
   if (os::stat(path, &st) == 0) {
@@ -399,7 +397,6 @@ void ClassLoader::setup_patch_mod_entries() {
   for (int i = 0; i < num_of_entries; i++) {
     const char* module_name = (patch_mod_args->at(i))->module_name();
     Symbol* const module_sym = SymbolTable::lookup(module_name, (int)strlen(module_name), CHECK);
-    assert(module_sym != NULL, "Failed to obtain Symbol for module name");
     ModuleClassPathList* module_cpl = new ModuleClassPathList(module_sym);
 
     char* class_path = (patch_mod_args->at(i))->path_string();
@@ -475,7 +472,6 @@ void ClassLoader::setup_boot_search_path(const char *class_path) {
       // The first time through the bootstrap_search setup, it must be determined
       // what the base or core piece of the boot loader search is.  Either a java runtime
       // image is present or this is an exploded module build situation.
-      assert(string_ends_with(path, MODULES_IMAGE_NAME) || string_ends_with(path, JAVA_BASE_NAME), "Incorrect boot loader search path, no java runtime image or " JAVA_BASE_NAME " exploded build");
       struct stat st;
       if (os::stat(path, &st) == 0) {
         // Directory found
@@ -483,8 +479,6 @@ void ClassLoader::setup_boot_search_path(const char *class_path) {
 
         // Check for a jimage
         if (Arguments::has_jimage()) {
-          assert(_jrt_entry == NULL, "should not setup bootstrap class search path twice");
-          assert(new_entry != NULL && new_entry->is_modules_image(), "No java runtime image present");
           _jrt_entry = new_entry;
         }
       } else {
@@ -507,8 +501,6 @@ void ClassLoader::setup_boot_search_path(const char *class_path) {
 // During an exploded modules build, each module defined to the boot loader
 // will be added to the ClassLoader::_exploded_entries array.
 void ClassLoader::add_to_exploded_build_list(Symbol* module_sym, TRAPS) {
-  assert(!ClassLoader::has_jrt_entry(), "Exploded build not applicable");
-  assert(_exploded_entries != NULL, "_exploded_entries was not initialized");
 
   // Find the module's symbol
   ResourceMark rm(THREAD);
@@ -573,11 +565,11 @@ ClassPathEntry* ClassLoader::create_class_path_entry(const char *path, const str
       } else {
         char *msg;
         if (error_msg == NULL) {
-          msg = NEW_RESOURCE_ARRAY_IN_THREAD(thread, char, strlen(path) + 128); ;
+          msg = NEW_RESOURCE_ARRAY_IN_THREAD(thread, char, strlen(path) + 128);
           jio_snprintf(msg, strlen(path) + 127, "error in opening JAR file %s", path);
         } else {
           int len = (int)(strlen(path) + strlen(error_msg) + 128);
-          msg = NEW_RESOURCE_ARRAY_IN_THREAD(thread, char, len); ;
+          msg = NEW_RESOURCE_ARRAY_IN_THREAD(thread, char, len);
           jio_snprintf(msg, len - 1, "error in opening JAR file <%s> %s", error_msg, path);
         }
         // Don't complain about bad jar files added via -Xbootclasspath/a:.
@@ -642,7 +634,6 @@ bool ClassLoader::contains_append_entry(const char* name) {
 void ClassLoader::add_to_boot_append_entries(ClassPathEntry *new_entry) {
   if (new_entry != NULL) {
     if (_last_append_entry == NULL) {
-      assert(_first_append_entry == NULL, "boot loader's append class path entry list not empty");
       _first_append_entry = _last_append_entry = new_entry;
     } else {
       _last_append_entry->set_next(new_entry);
@@ -657,16 +648,11 @@ void ClassLoader::add_to_boot_append_entries(ClassPathEntry *new_entry) {
 // Note that at dump time, ClassLoader::_app_classpath_entries are NOT used for
 // loading app classes. Instead, the app class are loaded by the
 // jdk/internal/loader/ClassLoaders$AppClassLoader instance.
-void ClassLoader::add_to_app_classpath_entries(const char* path,
-                                               ClassPathEntry* entry,
-                                               bool check_for_duplicates) {
+void ClassLoader::add_to_app_classpath_entries(const char* path, ClassPathEntry* entry, bool check_for_duplicates) {
 }
 
 // Returns true IFF the file/dir exists and the entry was successfully created.
-bool ClassLoader::update_class_path_entry_list(const char *path,
-                                               bool check_for_duplicates,
-                                               bool is_boot_append,
-                                               bool throw_exception) {
+bool ClassLoader::update_class_path_entry_list(const char *path, bool check_for_duplicates, bool is_boot_append, bool throw_exception) {
   struct stat st;
   if (os::stat(path, &st) == 0) {
     // File or directory found
@@ -739,7 +725,6 @@ void ClassLoader::print_bootclasspath() {
 }
 
 void ClassLoader::load_zip_library() {
-  assert(ZipOpen == NULL, "should not load zip library twice");
   // First make sure native library is loaded
   os::native_java_library();
   // Load zip library
@@ -762,8 +747,7 @@ void ClassLoader::load_zip_library() {
   Crc32        = CAST_TO_FN_PTR(Crc32_t, os::dll_lookup(handle, "ZIP_CRC32"));
 
   // ZIP_Close is not exported on Windows in JDK5.0 so don't abort if ZIP_Close is NULL
-  if (ZipOpen == NULL || FindEntry == NULL || ReadEntry == NULL ||
-      GetNextEntry == NULL || Crc32 == NULL) {
+  if (ZipOpen == NULL || FindEntry == NULL || ReadEntry == NULL || GetNextEntry == NULL || Crc32 == NULL) {
     vm_exit_during_initialization("Corrupted ZIP library", path);
   }
 
@@ -782,7 +766,6 @@ jboolean ClassLoader::decompress(void *in, u8 inSize, void *out, u8 outSize, cha
 }
 
 int ClassLoader::crc32(int crc, const char* buf, int len) {
-  assert(Crc32 != NULL, "ZIP_CRC32 is not found");
   return (*Crc32)(crc, (const jbyte*)buf, len);
 }
 
@@ -796,7 +779,6 @@ int ClassLoader::crc32(int crc, const char* buf, int len) {
 // classes are loaded by the boot loader) that at least one of the package's
 // classes has been loaded.
 bool ClassLoader::add_package(const char *fullq_class_name, s2 classpath_index, TRAPS) {
-  assert(fullq_class_name != NULL, "just checking");
 
   // Get package name from fully qualified class name.
   ResourceMark rm;
@@ -806,7 +788,6 @@ bool ClassLoader::add_package(const char *fullq_class_name, s2 classpath_index, 
     TempNewSymbol pkg_symbol = SymbolTable::new_symbol(cp, CHECK_false);
     PackageEntry* pkg_entry = pkg_entry_tbl->lookup_only(pkg_symbol);
     if (pkg_entry != NULL) {
-      assert(classpath_index != -1, "Unexpected classpath_index");
       pkg_entry->set_classpath_index(classpath_index);
     } else {
       return false;
@@ -820,8 +801,7 @@ oop ClassLoader::get_system_package(const char* name, TRAPS) {
   if (name != NULL) {
     TempNewSymbol package_sym = SymbolTable::new_symbol(name, (int)strlen(name), CHECK_NULL);
     // Look for the package entry in the boot loader's package entry table.
-    PackageEntry* package =
-      ClassLoaderData::the_null_class_loader_data()->packages()->lookup_only(package_sym);
+    PackageEntry* package = ClassLoaderData::the_null_class_loader_data()->packages()->lookup_only(package_sym);
 
     // Return NULL if package does not exist or if no classes in that package
     // have been loaded.
@@ -829,13 +809,11 @@ oop ClassLoader::get_system_package(const char* name, TRAPS) {
       ModuleEntry* module = package->module();
       if (module->location() != NULL) {
         ResourceMark rm(THREAD);
-        Handle ml = java_lang_String::create_from_str(
-          module->location()->as_C_string(), THREAD);
+        Handle ml = java_lang_String::create_from_str(module->location()->as_C_string(), THREAD);
         return ml();
       }
       // Return entry on boot loader class path.
-      Handle cph = java_lang_String::create_from_str(
-        ClassLoader::classpath_entry(package->classpath_index())->name(), THREAD);
+      Handle cph = java_lang_String::create_from_str(ClassLoader::classpath_entry(package->classpath_index())->name(), THREAD);
       return cph();
     }
   }
@@ -849,8 +827,7 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
   {
     MutexLocker ml(Module_lock, THREAD);
 
-    PackageEntryTable* pe_table =
-      ClassLoaderData::the_null_class_loader_data()->packages();
+    PackageEntryTable* pe_table = ClassLoaderData::the_null_class_loader_data()->packages();
 
     // Collect the packages that have at least one loaded class.
     for (int x = 0; x < pe_table->table_size(); x++) {
@@ -879,14 +856,10 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
 // caller needs ResourceMark
 const char* ClassLoader::file_name_for_class_name(const char* class_name,
                                                   int class_name_len) {
-  assert(class_name != NULL, "invariant");
-  assert((int)strlen(class_name) == class_name_len, "invariant");
 
   static const char class_suffix[] = ".class";
 
-  char* const file_name = NEW_RESOURCE_ARRAY(char,
-                                             class_name_len +
-                                             sizeof(class_suffix)); // includes term NULL
+  char* const file_name = NEW_RESOURCE_ARRAY(char, class_name_len + sizeof(class_suffix)); // includes term NULL
 
   strncpy(file_name, class_name, class_name_len);
   strncpy(&file_name[class_name_len], class_suffix, sizeof(class_suffix));
@@ -928,9 +901,7 @@ ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleCl
   // When java.base is eventually defined by the module system,
   // all packages of classes that have been previously loaded
   // are verified in ModuleEntryTable::verify_javabase_packages().
-  if (!Universe::is_module_initialized() &&
-      !ModuleEntryTable::javabase_defined() &&
-      mod_entry == NULL) {
+  if (!Universe::is_module_initialized() && !ModuleEntryTable::javabase_defined() && mod_entry == NULL) {
     mod_entry = ModuleEntryTable::javabase_moduleEntry();
   }
 
@@ -940,7 +911,6 @@ ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleCl
     if (module_list == _exploded_entries) {
       // The exploded build entries can be added to at any time so a lock is
       // needed when searching them.
-      assert(!ClassLoader::has_jrt_entry(), "Must be exploded build");
       MutexLocker ml(Module_lock, THREAD);
       e = find_first_module_cpe(mod_entry, module_list);
     } else {
@@ -966,8 +936,6 @@ ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleCl
 
 // Called by the boot classloader to load classes
 InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TRAPS) {
-  assert(name != NULL, "invariant");
-  assert(THREAD->is_Java_thread(), "must be a JavaThread");
 
   ResourceMark rm(THREAD);
   HandleMark hm(THREAD);
@@ -978,7 +946,6 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
 
   const char* const file_name = file_name_for_class_name(class_name,
                                                          name->utf8_length());
-  assert(file_name != NULL, "invariant");
 
   // Lookup stream for parsing .class file
   ClassFileStream* stream = NULL;
@@ -1020,7 +987,6 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
       stream = _jrt_entry->open_stream(file_name, CHECK_NULL);
     } else {
       // Exploded build - attempt to locate class in its defining module's location.
-      assert(_exploded_entries != NULL, "No exploded build entries present");
       stream = search_module_entries(_exploded_entries, class_name, file_name, CHECK_NULL);
     }
   }
@@ -1030,7 +996,6 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
     // For the boot loader append path search, the starting classpath_index
     // for the appended piece is always 1 to account for either the
     // _jrt_entry or the _exploded_entries.
-    assert(classpath_index == 0, "The classpath_index has been incremented incorrectly");
     classpath_index = 1;
 
     e = _first_append_entry;
@@ -1107,23 +1072,16 @@ void ClassLoader::initialize() {
     // of the bug fix of 6365597. They are mainly focused on finding out
     // the behavior of system & user-defined classloader lock, whether
     // ClassLoader.loadClass/findClass is being called synchronized or not.
-    NEWPERFEVENTCOUNTER(_sync_systemLoaderLockContentionRate, SUN_CLS,
-                        "systemLoaderLockContentionRate");
-    NEWPERFEVENTCOUNTER(_sync_nonSystemLoaderLockContentionRate, SUN_CLS,
-                        "nonSystemLoaderLockContentionRate");
-    NEWPERFEVENTCOUNTER(_sync_JVMFindLoadedClassLockFreeCounter, SUN_CLS,
-                        "jvmFindLoadedClassNoLockCalls");
-    NEWPERFEVENTCOUNTER(_sync_JVMDefineClassLockFreeCounter, SUN_CLS,
-                        "jvmDefineClassNoLockCalls");
+    NEWPERFEVENTCOUNTER(_sync_systemLoaderLockContentionRate, SUN_CLS, "systemLoaderLockContentionRate");
+    NEWPERFEVENTCOUNTER(_sync_nonSystemLoaderLockContentionRate, SUN_CLS, "nonSystemLoaderLockContentionRate");
+    NEWPERFEVENTCOUNTER(_sync_JVMFindLoadedClassLockFreeCounter, SUN_CLS, "jvmFindLoadedClassNoLockCalls");
+    NEWPERFEVENTCOUNTER(_sync_JVMDefineClassLockFreeCounter, SUN_CLS, "jvmDefineClassNoLockCalls");
 
-    NEWPERFEVENTCOUNTER(_sync_JNIDefineClassLockFreeCounter, SUN_CLS,
-                        "jniDefineClassNoLockCalls");
+    NEWPERFEVENTCOUNTER(_sync_JNIDefineClassLockFreeCounter, SUN_CLS, "jniDefineClassNoLockCalls");
 
-    NEWPERFEVENTCOUNTER(_unsafe_defineClassCallCounter, SUN_CLS,
-                        "unsafeDefineClassCalls");
+    NEWPERFEVENTCOUNTER(_unsafe_defineClassCallCounter, SUN_CLS, "unsafeDefineClassCalls");
 
-    NEWPERFEVENTCOUNTER(_load_instance_class_failCounter, SUN_CLS,
-                        "loadInstanceClassFailRate");
+    NEWPERFEVENTCOUNTER(_load_instance_class_failCounter, SUN_CLS, "loadInstanceClassFailRate");
   }
 
   // lookup zip library entry points
@@ -1188,20 +1146,15 @@ void ClassLoader::classLoader_init2(TRAPS) {
   // As more modules are defined during module system initialization, more
   // entries will be added to the exploded build array.
   if (!has_jrt_entry()) {
-    assert(!DumpSharedSpaces, "DumpSharedSpaces not supported with exploded module builds");
-    assert(!UseSharedSpaces, "UsedSharedSpaces not supported with exploded module builds");
     // Set up the boot loader's _exploded_entries list.  Note that this gets
     // done before loading any classes, by the same thread that will
     // subsequently do the first class load. So, no lock is needed for this.
-    assert(_exploded_entries == NULL, "Should only get initialized once");
-    _exploded_entries = new (ResourceObj::C_HEAP, mtModule)
-      GrowableArray<ModuleClassPathList*>(EXPLODED_ENTRY_SIZE, true);
+    _exploded_entries = new (ResourceObj::C_HEAP, mtModule) GrowableArray<ModuleClassPathList*>(EXPLODED_ENTRY_SIZE, true);
     add_to_exploded_build_list(vmSymbols::java_base(), CHECK);
   }
 }
 
 bool ClassLoader::get_canonical_path(const char* orig, char* out, int len) {
-  assert(orig != NULL && out != NULL && len > 0, "bad arguments");
   if (CanonicalizeEntry != NULL) {
     JavaThread* THREAD = JavaThread::current();
     JNIEnv* env = THREAD->jni_environment();
@@ -1259,7 +1212,6 @@ void PerfClassTraceTime::initialize() {
   _prev_active_event = -1;
   for (int i=0; i < EVENT_TYPE_COUNT; i++) {
      if (_timers[i].is_active()) {
-       assert(_prev_active_event == -1, "should have only one active timer");
        _prev_active_event = i;
        _timers[i].stop();
      }

@@ -154,12 +154,10 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
     else if (istate->msg() == BytecodeInterpreter::return_from_method) {
       // Copy the result into the caller's frame
       result_slots = type2size[method->result_type()];
-      assert(result_slots >= 0 && result_slots <= 2, "what?");
       result = istate->stack() + result_slots;
       break;
     }
     else if (istate->msg() == BytecodeInterpreter::throwing_exception) {
-      assert(HAS_PENDING_EXCEPTION, "should do");
       break;
     }
     else if (istate->msg() == BytecodeInterpreter::do_osr) {
@@ -171,8 +169,7 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
       stack->set_sp(stack->sp() + extra_locals);
 
       // Jump into the OSR method
-      Interpreter::invoke_osr(
-        method, istate->osr_entry(), istate->osr_buf(), THREAD);
+      Interpreter::invoke_osr(method, istate->osr_entry(), istate->osr_buf(), THREAD);
       return;
     }
     else {
@@ -205,9 +202,6 @@ void CppInterpreter::main_loop(int recurse, TRAPS) {
 }
 
 int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
-  // Make sure method is native and not abstract
-  assert(method->is_native() && !method->is_abstract(), "should be");
-
   JavaThread *thread = (JavaThread *) THREAD;
   ZeroStack *stack = thread->zero_stack();
 
@@ -228,8 +222,7 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
     InvocationCounter *counter = mcs->invocation_counter();
     counter->increment();
     if (counter->reached_InvocationLimit(mcs->backedge_counter())) {
-      CALL_VM_NOCHECK(
-        InterpreterRuntime::frequency_counter_overflow(thread, NULL));
+      CALL_VM_NOCHECK(InterpreterRuntime::frequency_counter_overflow(thread, NULL));
       if (HAS_PENDING_EXCEPTION)
         goto unwind_and_return;
     }
@@ -265,11 +258,9 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
         goto unlock_unwind_and_return;
 
       handlerAddr = method->signature_handler();
-      assert(handlerAddr != NULL, "eh?");
     }
     if (handlerAddr == (address) InterpreterRuntime::slow_signature_handler) {
-      CALL_VM_NOCHECK(handlerAddr =
-        InterpreterRuntime::slow_signature_handler(thread, method, NULL,NULL));
+      CALL_VM_NOCHECK(handlerAddr = InterpreterRuntime::slow_signature_handler(thread, method, NULL,NULL));
       if (HAS_PENDING_EXCEPTION)
         goto unlock_unwind_and_return;
     }
@@ -280,7 +271,6 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
   // Get the native function entry point
   address function;
   function = method->native_function();
-  assert(function != NULL, "should be set if signature handler is");
 
   // Build the argument list
   stack->overflow_check(handler->argument_count() * 2, THREAD);
@@ -289,16 +279,14 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
 
   void **arguments;
   void *mirror; {
-    arguments =
-      (void **) stack->alloc(handler->argument_count() * sizeof(void **));
+    arguments = (void **) stack->alloc(handler->argument_count() * sizeof(void **));
     void **dst = arguments;
 
     void *env = thread->jni_environment();
     *(dst++) = &env;
 
     if (method->is_static()) {
-      istate->set_oop_temp(
-        method->constants()->pool_holder()->java_mirror());
+      istate->set_oop_temp(method->constants()->pool_holder()->java_mirror());
       mirror = istate->oop_temp_addr();
       *(dst++) = &mirror;
     }
@@ -350,8 +338,7 @@ int CppInterpreter::native_entry(Method* method, intptr_t UNUSED, TRAPS) {
 
   // Handle safepoint operations, pending suspend requests,
   // and pending asynchronous exceptions.
-  if (SafepointMechanism::poll(thread) ||
-      thread->has_special_condition_for_native_trans()) {
+  if (SafepointMechanism::poll(thread) || thread->has_special_condition_for_native_trans()) {
     JavaThread::check_special_condition_for_native_trans(thread);
     CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops());
   }
@@ -501,7 +488,6 @@ int CppInterpreter::accessor_entry(Method* method, intptr_t UNUSED, TRAPS) {
   //  4:  ireturn/areturn/freturn/lreturn/dreturn
   // NB this is not raw bytecode: index is in machine order
   u1 *code = method->code_base();
-  assert(code[0] == Bytecodes::_aload_0 && code[1] == Bytecodes::_getfield && (code[4] == Bytecodes::_ireturn || code[4] == Bytecodes::_freturn || code[4] == Bytecodes::_lreturn || code[4] == Bytecodes::_dreturn || code[4] == Bytecodes::_areturn), "should do");
   u2 index = Bytes::get_native_u2(&code[2]);
 
   // Get the entry from the constant pool cache, and drop into
@@ -685,8 +671,7 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
   if (method->is_synchronized()) {
     monitor_words = frame::interpreter_frame_monitor_size();
   }
-  stack->overflow_check(
-    extra_locals + header_words + monitor_words + stack_words, CHECK_NULL);
+  stack->overflow_check(extra_locals + header_words + monitor_words + stack_words, CHECK_NULL);
 
   // Adjust the caller's stack frame to accomodate any additional
   // local variables we have contiguously with our parameters.
@@ -701,14 +686,10 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(INTERPRETER_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
 
-  interpreterState istate =
-    (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
-  assert(fp - stack->sp() == istate_off, "should be");
+  interpreterState istate = (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
 
   istate->set_locals(locals);
   istate->set_method(method);
@@ -725,8 +706,7 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
 
   istate->set_monitor_base((BasicObjectLock *) stack->sp());
   if (method->is_synchronized()) {
-    BasicObjectLock *monitor =
-      (BasicObjectLock *) stack->alloc(monitor_words * wordSize);
+    BasicObjectLock *monitor = (BasicObjectLock *) stack->alloc(monitor_words * wordSize);
     oop object;
     if (method->is_static())
       object = method->constants()->pool_holder()->java_mirror();
@@ -748,20 +728,14 @@ InterpreterFrame *InterpreterFrame::build(int size, TRAPS) {
   ZeroStack *stack = ((JavaThread *) THREAD)->zero_stack();
 
   int size_in_words = size >> LogBytesPerWord;
-  assert(size_in_words * wordSize == size, "unaligned");
-  assert(size_in_words >= header_words, "too small");
   stack->overflow_check(size_in_words, CHECK_NULL);
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(INTERPRETER_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
 
-  interpreterState istate =
-    (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
-  assert(fp - stack->sp() == istate_off, "should be");
+  interpreterState istate = (interpreterState) stack->alloc(sizeof(BytecodeInterpreter));
   istate->set_self_link(NULL); // mark invalid
 
   stack->alloc((size_in_words - header_words) * wordSize);

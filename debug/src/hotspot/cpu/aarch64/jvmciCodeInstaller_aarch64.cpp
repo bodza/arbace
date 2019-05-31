@@ -47,8 +47,7 @@ void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle constant, T
 void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset, TRAPS) {
   address pc = _instructions->start() + pc_offset;
   NativeInstruction* inst = nativeInstruction_at(pc);
-  if (inst->is_adr_aligned() || inst->is_ldr_literal()
-      || (NativeInstruction::maybe_cpool_ref(pc))) {
+  if (inst->is_adr_aligned() || inst->is_ldr_literal() || (NativeInstruction::maybe_cpool_ref(pc))) {
     address dest = _constants->start() + data_offset;
     _instructions->relocate(pc, section_word_Relocation::spec((address) dest, CodeBuffer::SECT_CONSTS));
     TRACE_jvmci_3("relocating at " PTR_FORMAT " (+%d) with destination at %d", p2i(pc), pc_offset, data_offset);
@@ -87,21 +86,18 @@ void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &cbuf, Handle hotspot_meth
       break;
     case INVOKEVIRTUAL:
     case INVOKEINTERFACE: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokeinterface");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), virtual_call_Relocation::spec(_invoke_mark_pc));
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_virtual_call_stub());
       break;
     }
     case INVOKESTATIC: {
-      assert(method == NULL || method->is_static(), "cannot call non-static method with invokestatic");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), relocInfo::static_call_type);
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_static_call_stub());
       break;
     }
     case INVOKESPECIAL: {
-      assert(method == NULL || !method->is_static(), "cannot call static method with invokespecial");
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       _instructions->relocate(call->instruction_address(), relocInfo::opt_virtual_call_type);
       call->trampoline_jump(cbuf, SharedRuntime::get_resolve_opt_virtual_call_stub());

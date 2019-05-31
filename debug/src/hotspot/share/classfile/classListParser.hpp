@@ -95,11 +95,9 @@ public:
     return _interfaces->length() > 0;
   }
   int id() {
-    assert(is_id_specified(), "do not query unspecified id");
     return _id;
   }
   int super() {
-    assert(is_super_specified(), "do not query unspecified super");
     return _super;
   }
   void check_already_loaded(const char* which, int id) {

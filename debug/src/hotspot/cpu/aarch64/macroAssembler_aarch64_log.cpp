@@ -159,68 +159,6 @@ __attribute__ ((aligned(64))) juint _L_tbl[] =
     0x80000000UL
 };
 
-// BEGIN dlog PSEUDO CODE:
-//  double dlog(double X) {
-//    // p(r) polynomial coefficients initialized from _L_tbl table
-//    double C1_0 = _L_tbl[0];
-//    double C1_1 = _L_tbl[1];
-//    double C2_0 = _L_tbl[2];
-//    double C2_1 = _L_tbl[3];
-//    double C3_0 = _L_tbl[4];
-//    double C3_1 = _L_tbl[5];
-//    double C4_0 = _L_tbl[6];
-//    double C4_1 = _L_tbl[7];
-//    // NOTE: operations with coefficients above are mostly vectorized in assembly
-//    // Check corner cases first
-//    if (X == 1.0d || AS_LONG_BITS(X) + 0x0010000000000000 <= 0x0010000000000000) {
-//      // NOTE: AS_LONG_BITS(X) + 0x0010000000000000 <= 0x0010000000000000 means
-//      //    that X < 0 or X >= 0x7FF0000000000000 (0x7FF* is NaN or INF)
-//      if (X < 0 || X is NaN) return NaN;
-//      if (X == 1.0d) return 0.0d;
-//      if (X == 0.0d) return -INFINITY;
-//      if (X is INFINITY) return INFINITY;
-//    }
-//    // double representation is 2^exponent * mantissa
-//    // split X into two multipliers: 2^exponent and 1.0 * mantissa
-//    // pseudo function: zeroExponent(X) return value of X with exponent == 0
-//    float vtmp5 = 1/(float)(zeroExponent(X)); // reciprocal estimate
-//    // pseudo function: HI16(X) returns high 16 bits of double value
-//    int hiWord = HI16(X);
-//    double vtmp1 = (double) 0x77F0 << 48 | mantissa(X);
-//    hiWord -= 16;
-//    if (AS_LONG_BITS(hiWord) > 0x8000) {
-//      // SMALL_VALUE branch
-//      vtmp0 = vtmp1 = vtmp0 * AS_DOUBLE_BITS(0x47F0000000000000);
-//      hiWord = HI16(vtmp1);
-//      vtmp0 = AS_DOUBLE_BITS(AS_LONG_BITS(vtmp0) |= 0x3FF0000000000000);
-//      vtmp5 = (double) (1/(float)vtmp0);
-//      vtmp1 <<= 12;
-//      vtmp1 >>= 12;
-//    }
-//    // MAIN branch
-//    double vtmp3 = AS_LONG_BITS(vtmp1) & 0xffffe00000000000; // hi part
-//    int intB0 = AS_INT_BITS(vtmp5) + 0x8000;
-//    double vtmp0 = AS_DOUBLE_BITS(0xffffe00000000000 & (intB0<<29));
-//    int index = (intB0 >> 16) && 0xFF;
-//    double hiTableValue = _L_tbl[8+index]; // vtmp2[0]
-//    double lowTableValue = _L_tbl[16+index]; // vtmp2[1]
-//    vtmp5 = AS_DOUBLE_BITS(hiWord & 0x7FF0 - 0x3FE0); // 0x3FE = 1023 << 4
-//    vtmp1 -= vtmp3; // low part
-//    vtmp3 = vtmp3*vtmp0 - 1.0;
-//    hiTableValue += C4_0 * vtmp5;
-//    lowTableValue += C4_1 * vtmp5;
-//    double r = vtmp1 * vtmp0 + vtmp3; // r = B*mx-1.0, computed in hi and low parts
-//    vtmp0 = hiTableValue + r;
-//    hiTableValue -= vtmp0;
-//    double r2 = r*r;
-//    double r3 = r2*r;
-//    double p7 = C3_0*r2 + C2_0*r3 + C1_0*r2*r2 + C3_1*r3*r2 + C2_1*r3*r3
-//              + C1_1*r3*r2*r2; // degree 7 polynomial
-//    return p7 + (vtmp0 + ((r + hiTableValue) + lowTableValue));
-//  }
-//
-// END dlog PSEUDO CODE
-
 // Generate log(X). X passed in register v0. Return log(X) into v0.
 // Generator parameters: 10 temporary FPU registers and  temporary general
 // purpose registers

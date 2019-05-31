@@ -11,14 +11,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
     // Stack or register value
     Location loc = ((LocationValue *)sv)->location();
 
-#ifdef SPARC
-    // %%%%% Callee-save floats will NOT be working on a Sparc until we
-    // handle the case of a 2 floats in a single double register.
-    assert( !(loc.is_register() && loc.type() == Location::float_in_dbl), "Sparc does not handle callee-save floats yet" );
-#endif
-
     // First find address of value
-
     address value_addr = loc.is_register()
       // Value was in a callee-save register
       ? reg_map->location(VMRegImpl::as_VMReg(loc.register_number()))
@@ -37,13 +30,12 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
     // a stack slot (jlong/jdouble) that we capture the proper part
     // of the value for the stack slot in question.
     //
-    switch( loc.type() ) {
+    switch( loc.type()) {
     case Location::float_in_dbl: { // Holds a float in a double register?
       // The callee has no clue whether the register holds a float,
       // double or is unused.  He always saves a double.  Here we know
       // a double was saved, but we only want a float back.  Narrow the
       // saved double to the float that the JVM wants.
-      assert( loc.is_register(), "floats always saved to stack in 1 word" );
       union { intptr_t p; jfloat jf; } value;
       value.p = (intptr_t) CONST64(0xDEADDEAFDEADDEAF);
       value.jf = (jfloat) *(jdouble*) value_addr;
@@ -54,8 +46,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
       // long or is unused.  He always saves a long.  Here we know
       // a long was saved, but we only want an int back.  Narrow the
       // saved long to the int that the JVM wants.
-      assert( loc.is_register(), "ints always saved to stack in 1 word" );
-      union { intptr_t p; jint ji;} value;
+      union { intptr_t p; jint ji; } value;
       value.p = (intptr_t) CONST64(0xDEADDEAFDEADDEAF);
       value.ji = (jint) *(jlong*) value_addr;
       return new StackValue(value.p); // 64-bit high half is stack junk
@@ -67,7 +58,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
       // Long   value in an aligned adjacent pair
       return new StackValue(*(intptr_t*)value_addr);
     case Location::narrowoop: {
-      union { intptr_t p; narrowOop noop;} value;
+      union { intptr_t p; narrowOop noop; } value;
       value.p = (intptr_t) CONST64(0xDEADDEAFDEADDEAF);
       if (loc.is_register()) {
         // The callee has no clue whether the register holds an int,
@@ -100,7 +91,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
     }
     case Location::normal: {
       // Just copy all other bits straight through
-      union { intptr_t p; jint ji;} value;
+      union { intptr_t p; jint ji; } value;
       value.p = (intptr_t) CONST64(0xDEADDEAFDEADDEAF);
       value.ji = *(jint*)value_addr;
       return new StackValue(value.p);
@@ -113,7 +104,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
 
   } else if (sv->is_constant_int()) {
     // Constant int: treat same as register int.
-    union { intptr_t p; jint ji;} value;
+    union { intptr_t p; jint ji; } value;
     value.p = (intptr_t) CONST64(0xDEADDEAFDEADDEAF);
     value.ji = (jint)((ConstantIntValue*)sv)->value();
     return new StackValue(value.p);
@@ -143,7 +134,6 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
 }
 
 BasicLock* StackValue::resolve_monitor_lock(const frame* fr, Location location) {
-  assert(location.is_stack(), "for now we only look at the stack");
   int word_offset = location.stack_offset() / wordSize;
   // (stack picture)
   // high: [     ]  word_offset + 1

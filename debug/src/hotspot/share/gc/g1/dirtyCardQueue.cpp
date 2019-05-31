@@ -87,7 +87,6 @@ uint FreeIdSet::claim_par_id() {
 
 void FreeIdSet::release_par_id(uint id) {
   MutexLockerEx x(_mon, Mutex::_no_safepoint_check_flag);
-  assert(_ids[id] == claimed, "Precondition.");
   _ids[id] = _hd;
   _hd = id;
   _claimed--;
@@ -122,13 +121,7 @@ uint DirtyCardQueueSet::num_par_ids() {
   return (uint)os::initial_active_processor_count();
 }
 
-void DirtyCardQueueSet::initialize(Monitor* cbl_mon,
-                                   Mutex* fl_lock,
-                                   int process_completed_threshold,
-                                   int max_completed_queue,
-                                   Mutex* lock,
-                                   DirtyCardQueueSet* fl_owner,
-                                   bool init_free_ids) {
+void DirtyCardQueueSet::initialize(Monitor* cbl_mon, Mutex* fl_lock, int process_completed_threshold, int max_completed_queue, Mutex* lock, DirtyCardQueueSet* fl_owner, bool init_free_ids) {
   PtrQueueSet::initialize(cbl_mon,
                           fl_lock,
                           process_completed_threshold,
@@ -145,10 +138,7 @@ void DirtyCardQueueSet::handle_zero_index_for_thread(JavaThread* t) {
   G1ThreadLocalData::dirty_card_queue(t).handle_zero_index();
 }
 
-bool DirtyCardQueueSet::apply_closure_to_buffer(CardTableEntryClosure* cl,
-                                                BufferNode* node,
-                                                bool consume,
-                                                uint worker_i) {
+bool DirtyCardQueueSet::apply_closure_to_buffer(CardTableEntryClosure* cl, BufferNode* node, bool consume, uint worker_i) {
   if (cl == NULL) return true;
   bool result = true;
   void** buf = BufferNode::make_buffer_from_node(node);
@@ -156,14 +146,12 @@ bool DirtyCardQueueSet::apply_closure_to_buffer(CardTableEntryClosure* cl,
   size_t limit = buffer_size();
   for ( ; i < limit; ++i) {
     jbyte* card_ptr = static_cast<jbyte*>(buf[i]);
-    assert(card_ptr != NULL, "invariant");
     if (!cl->do_card_ptr(card_ptr, worker_i)) {
       result = false;           // Incomplete processing.
       break;
     }
   }
   if (consume) {
-    assert(i <= buffer_size(), "invariant");
     node->set_index(i);
   }
   return result;
@@ -197,11 +185,9 @@ BufferNode* DirtyCardQueueSet::get_completed_buffer(size_t stop_at) {
 
   if (_completed_buffers_head != NULL) {
     nd = _completed_buffers_head;
-    assert(_n_completed_buffers > 0, "Invariant");
     _completed_buffers_head = nd->next();
     _n_completed_buffers--;
     if (_completed_buffers_head == NULL) {
-      assert(_n_completed_buffers == 0, "Invariant");
       _completed_buffers_tail = NULL;
     }
   }
@@ -214,15 +200,10 @@ bool DirtyCardQueueSet::refine_completed_buffer_concurrently(uint worker_i, size
 }
 
 bool DirtyCardQueueSet::apply_closure_during_gc(CardTableEntryClosure* cl, uint worker_i) {
-  assert_at_safepoint();
   return apply_closure_to_completed_buffer(cl, worker_i, 0, true);
 }
 
-bool DirtyCardQueueSet::apply_closure_to_completed_buffer(CardTableEntryClosure* cl,
-                                                          uint worker_i,
-                                                          size_t stop_at,
-                                                          bool during_pause) {
-  assert(!during_pause || stop_at == 0, "Should not leave any completed buffers during a pause");
+bool DirtyCardQueueSet::apply_closure_to_completed_buffer(CardTableEntryClosure* cl, uint worker_i, size_t stop_at, bool during_pause) {
   BufferNode* nd = get_completed_buffer(stop_at);
   if (nd == NULL) {
     return false;
@@ -278,7 +259,6 @@ void DirtyCardQueueSet::clear() {
 }
 
 void DirtyCardQueueSet::abandon_logs() {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   clear();
   // Since abandon is done only at safepoints, we can safely manipulate
   // these queues.
@@ -300,7 +280,6 @@ void DirtyCardQueueSet::concatenate_logs() {
   // of outstanding buffers.
   int save_max_completed_queue = _max_completed_queue;
   _max_completed_queue = max_jint;
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *t = jtiwh.next(); ) {
     concatenate_log(G1ThreadLocalData::dirty_card_queue(t));
   }

@@ -21,7 +21,7 @@ class ClassFileStream: public ResourceObj {
   const char* const _source;     // Source of stream (directory name, ZIP/JAR archive name)
   bool _need_verify;             // True if verification is on for the class file
 
-  void truncated_file_error(TRAPS) const ;
+  void truncated_file_error(TRAPS) const;
 
  protected:
   const u1* clone_buffer() const;
@@ -43,7 +43,6 @@ class ClassFileStream: public ResourceObj {
   int length() const { return _buffer_end - _buffer_start; }
   const u1* current() const { return _current; }
   void set_current(const u1* pos) const {
-    assert(pos >= _buffer_start && pos <= _buffer_end, "invariant");
     _current = pos;
   }
 

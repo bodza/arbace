@@ -28,8 +28,7 @@ address* Relocation::pd_address_in_code() {
   return (address *) addr();
 }
 
-void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src,
-                                                CodeBuffer*       dst) {
+void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffer* dst) {
   ShouldNotCallThis();
 }
 

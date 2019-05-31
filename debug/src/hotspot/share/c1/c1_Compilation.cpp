@@ -145,7 +145,6 @@ void Compilation::build_hir() {
     PhaseTraceTime timeit(_t_gvn);
     int instructions = Instruction::number_of_instructions();
     GlobalValueNumbering gvn(_hir);
-    assert(instructions == Instruction::number_of_instructions(), "shouldn't have created an instructions");
   }
 
   _hir->verify();
@@ -252,9 +251,7 @@ bool Compilation::setup_code_buffer(CodeBuffer* code, int call_stub_estimate) {
                                         locs_buffer_size / sizeof(relocInfo));
   code->initialize_consts_size(Compilation::desired_max_constant_size());
   // Call stubs + two deopt handlers (regular and MH) + exception handler
-  int stub_size = (call_stub_estimate * LIR_Assembler::call_stub_size()) +
-                   LIR_Assembler::exception_handler_size() +
-                   (2 * LIR_Assembler::deopt_handler_size());
+  int stub_size = (call_stub_estimate * LIR_Assembler::call_stub_size()) + LIR_Assembler::exception_handler_size() + (2 * LIR_Assembler::deopt_handler_size());
   if (stub_size >= code->insts_capacity()) return false;
   code->initialize_stubs_size(stub_size);
   return true;
@@ -284,7 +281,6 @@ int Compilation::emit_code_body() {
 }
 
 int Compilation::compile_java_method() {
-  assert(!method()->is_native(), "should not reach here");
 
   if (BailoutOnExceptionHandlers) {
     if (method()->has_exception_handlers()) {
@@ -322,8 +318,6 @@ int Compilation::compile_java_method() {
 
 void Compilation::install_code(int frame_size) {
   // frame_size is in 32-bit words so adjust it intptr_t words
-  assert(frame_size == frame_map()->framesize(), "must match");
-  assert(in_bytes(frame_map()->framesize_in_bytes()) % sizeof(intptr_t) == 0, "must be at least pointer aligned");
   _env->register_method(
     method(),
     osr_bci(),
@@ -405,8 +399,6 @@ void Compilation::generate_exception_handler_table() {
     int prev_scope = 0;
     for (int i = 0; i < handlers->length(); i++) {
       XHandler* handler = handlers->handler_at(i);
-      assert(handler->entry_pco() != -1, "must have been generated");
-      assert(handler->scope_count() >= prev_scope, "handlers should be sorted by scope");
 
       if (handler->scope_count() == prev_scope) {
         int e = bcis->find_from_end(handler->handler_bci());
@@ -432,7 +424,6 @@ void Compilation::generate_exception_handler_table() {
 
       // stop processing once we hit a catch any
       if (handler->is_catch_all()) {
-        assert(i == handlers->length() - 1, "catch all must be last handler");
       }
       prev_scope = handler->scope_count();
     }
@@ -503,7 +494,6 @@ void Compilation::notice_inlined_method(ciMethod* method) {
 }
 
 void Compilation::bailout(const char* msg) {
-  assert(msg != NULL, "bailout message must exist");
   if (!bailed_out()) {
     // keep first bailout message
     if (PrintCompilation || PrintBailouts) tty->print_cr("compilation bailout: %s", msg);
@@ -514,7 +504,6 @@ void Compilation::bailout(const char* msg) {
 ciKlass* Compilation::cha_exact_type(ciType* type) {
   if (type != NULL && type->is_loaded() && type->is_instance_klass()) {
     ciInstanceKlass* ik = type->as_instance_klass();
-    assert(ik->exact_klass() == NULL, "no cha for final klass");
     if (DeoptC1 && UseCHA && !(ik->has_subklass() || ik->is_interface())) {
       dependency_recorder()->assert_leaf_type(ik);
       return ik;

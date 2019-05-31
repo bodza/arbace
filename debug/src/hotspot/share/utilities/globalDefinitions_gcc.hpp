@@ -136,16 +136,16 @@ extern "C" {
 // checking for nanness
 #ifdef SOLARIS
 #ifdef SPARC
-inline int g_isnan(float  f) { return isnanf(f); }
+inline int g_isnan(float f) { return isnanf(f); }
 #else
 // isnanf() broken on Intel Solaris use isnand()
-inline int g_isnan(float  f) { return isnand(f); }
+inline int g_isnan(float f) { return isnand(f); }
 #endif
 inline int g_isnan(double f) { return isnand(f); }
 #elif defined(__APPLE__)
 inline int g_isnan(double f) { return isnan(f); }
 #elif defined(LINUX) || defined(_ALLBSD_SOURCE)
-inline int g_isnan(float  f) { return isnanf(f); }
+inline int g_isnan(float f) { return isnanf(f); }
 inline int g_isnan(double f) { return isnan(f); }
 #else
 #error "missing platform-specific definition here"
@@ -158,8 +158,8 @@ inline int g_isnan(double f) { return isnan(f); }
 
 // Checking for finiteness
 
-inline int g_isfinite(jfloat  f)                 { return finite(f); }
-inline int g_isfinite(jdouble f)                 { return finite(f); }
+inline int g_isfinite(jfloat f) { return finite(f); }
+inline int g_isfinite(jdouble f) { return finite(f); }
 
 // Wide characters
 

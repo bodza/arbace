@@ -27,13 +27,9 @@ GCPolicyCounters::GCPolicyCounters(const char* name, int collectors,
                                      MaxTenuringThreshold, CHECK);
 
     cname = PerfDataManager::counter_name(_name_space, "tenuringThreshold");
-    _tenuring_threshold =
-        PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None,
-                                         MaxTenuringThreshold, CHECK);
+    _tenuring_threshold = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, MaxTenuringThreshold, CHECK);
 
     cname = PerfDataManager::counter_name(_name_space, "desiredSurvivorSize");
-    _desired_survivor_size =
-        PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes,
-                                         CHECK);
+    _desired_survivor_size = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
   }
 }

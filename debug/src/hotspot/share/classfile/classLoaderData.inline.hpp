@@ -8,8 +8,6 @@
 #include "oops/weakHandle.inline.hpp"
 
 inline oop ClassLoaderData::class_loader() const {
-  assert(!_unloading, "This oop is not available to unloading class loader data");
-  assert(_holder.is_null() || _holder.peek() != NULL , "This class loader data holder must be alive");
   return _class_loader.resolve();
 }
 
@@ -26,7 +24,6 @@ inline ClassLoaderData* ClassLoaderData::class_loader_data_or_null(oop loader) {
 
 inline ClassLoaderData* ClassLoaderData::class_loader_data(oop loader) {
   ClassLoaderData* loader_data = class_loader_data_or_null(loader);
-  assert(loader_data != NULL, "Must be");
   return loader_data;
 }
 
@@ -54,7 +51,6 @@ void ClassLoaderDataGraph::inc_instance_classes(size_t count) {
 }
 
 void ClassLoaderDataGraph::dec_instance_classes(size_t count) {
-  assert(count <= _num_instance_classes, "Sanity");
   Atomic::sub(count, &_num_instance_classes);
 }
 
@@ -63,7 +59,6 @@ void ClassLoaderDataGraph::inc_array_classes(size_t count) {
 }
 
 void ClassLoaderDataGraph::dec_array_classes(size_t count) {
-  assert(count <= _num_array_classes, "Sanity");
   Atomic::sub(count, &_num_array_classes);
 }
 

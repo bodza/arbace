@@ -29,7 +29,6 @@ void DirectivesParser::clean_tmp() {
     delete tmp;
     tmp = pop_tmp();
   }
-  assert(_tmp_depth == 0, "Consistency");
 }
 
 int DirectivesParser::parse_string(const char* text, outputStream* st) {
@@ -53,7 +52,6 @@ bool DirectivesParser::parse_from_flag() {
 }
 
 bool DirectivesParser::parse_from_file(const char* filename, outputStream* st) {
-  assert(filename != NULL, "Test before calling this");
   if (!parse_from_file_inner(filename, st)) {
     st->print_cr("Could not load file: %s", filename);
     return false;
@@ -114,8 +112,6 @@ DirectivesParser::DirectivesParser(const char* text, outputStream* st, bool sile
 }
 
 DirectivesParser::~DirectivesParser() {
-  assert(_tmp_top == NULL, "Consistency");
-  assert(_tmp_depth == 0, "Consistency");
 }
 
 const DirectivesParser::key DirectivesParser::keys[] = {
@@ -175,17 +171,13 @@ bool DirectivesParser::push_key(const char* str, size_t len) {
 }
 
 bool DirectivesParser::push_key(const key* k) {
-  assert(k->allowedmask != 0, "not allowed anywhere?");
 
   // Exceeding the stack should not be possible with a valid compiler directive,
   // and an invalid should abort before this happens
-  assert(depth < MAX_DEPTH, "exceeded stack depth");
   if (depth >= MAX_DEPTH) {
     error(INTERNAL_ERROR, "Stack depth exceeded.");
     return false;
   }
-
-  assert(stack[depth] == NULL, "element not nulled, something is wrong");
 
   if (depth == 0 && !(k->allowedmask & 1)) {
     error(KEY_ERROR, "Key '%s' not allowed at top level.", k->name);
@@ -206,7 +198,6 @@ bool DirectivesParser::push_key(const key* k) {
 }
 
 const DirectivesParser::key* DirectivesParser::current_key() {
-  assert(depth > 0, "getting key from empty stack");
   if (depth == 0) {
     return NULL;
   }
@@ -214,7 +205,6 @@ const DirectivesParser::key* DirectivesParser::current_key() {
 }
 
 const DirectivesParser::key* DirectivesParser::pop_key() {
-  assert(depth > 0, "popping empty stack");
   if (depth == 0) {
     error(INTERNAL_ERROR, "Popping empty stack.");
     return NULL;
@@ -291,7 +281,7 @@ bool DirectivesParser::set_option_flag(JSON_TYPE t, JSON_VAL* v, const key* opti
       break;
 
     default:
-      assert(0, "Should not reach here.");
+      ShouldNotReachHere();
     }
   return true;
 }
@@ -317,7 +307,6 @@ bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
   case type_flag:
   {
     if (current_directiveset == NULL) {
-      assert(depth == 2, "Must not have active directive set");
 
       if (!set_option_flag(t, v, option_key, current_directive->_c1_store)) {
         return false;
@@ -326,7 +315,6 @@ bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
         return false;
       }
     } else {
-      assert(depth > 2, "Must have active current directive set");
       if (!set_option_flag(t, v, option_key, current_directiveset)) {
         return false;
       }
@@ -350,7 +338,6 @@ bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
 
       const char* error_msg = NULL;
       if (!current_directive->add_match(s, error_msg)) {
-        assert(error_msg != NULL, "Must have valid error message");
         error(VALUE_ERROR, "Method pattern error: %s", error_msg);
       }
       FREE_C_HEAP_ARRAY(char, s);
@@ -372,16 +359,13 @@ bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
       if (current_directiveset == NULL) {
         if (current_directive->_c1_store->parse_and_add_inline(s, error_msg)) {
           if (!current_directive->_c2_store->parse_and_add_inline(s, error_msg)) {
-            assert(error_msg != NULL, "Must have valid error message");
             error(VALUE_ERROR, "Method pattern error: %s", error_msg);
           }
         } else {
-          assert(error_msg != NULL, "Must have valid error message");
           error(VALUE_ERROR, "Method pattern error: %s", error_msg);
         }
       } else {
         if (!current_directiveset->parse_and_add_inline(s, error_msg)) {
-          assert(error_msg != NULL, "Must have valid error message");
           error(VALUE_ERROR, "Method pattern error: %s", error_msg);
         }
       }
@@ -423,7 +407,6 @@ bool DirectivesParser::callback(JSON_TYPE t, JSON_VAL* v, uint rlimit) {
       case JSON_OBJECT_BEGIN:
         // push synthetic dir_array
         push_key(&dir_array_key);
-        assert(depth == 1, "Make sure the stack are aligned with the directives");
         break;
 
       default:
@@ -513,7 +496,6 @@ bool DirectivesParser::callback(JSON_TYPE t, JSON_VAL* v, uint rlimit) {
 
     case JSON_ARRAY_END:
       k = pop_key(); // Pop multi value marker
-      assert(k->type == value_array_key.type, "array end for level != 0 should terminate multi value");
       k = pop_key(); // Pop key for option that was set
       return true;
 

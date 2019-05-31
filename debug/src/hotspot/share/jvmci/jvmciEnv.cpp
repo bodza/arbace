@@ -32,8 +32,7 @@ JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter
   _task(task),
   _system_dictionary_modification_counter(system_dictionary_modification_counter),
   _failure_reason(NULL),
-  _retryable(true)
-{
+  _retryable(true) {
 }
 
 // ------------------------------------------------------------------
@@ -52,8 +51,7 @@ bool JVMCIEnv::check_klass_accessibility(Klass* accessing_klass, Klass* resolved
     resolved_klass = ObjArrayKlass::cast(resolved_klass)->bottom_klass();
   }
   if (resolved_klass->is_instance_klass()) {
-    Reflection::VerifyClassAccessResults result =
-      Reflection::verify_class_access(accessing_klass, InstanceKlass::cast(resolved_klass), true);
+    Reflection::VerifyClassAccessResults result = Reflection::verify_class_access(accessing_klass, InstanceKlass::cast(resolved_klass), true);
     return result == Reflection::ACCESS_OK;
   }
   return true;
@@ -67,13 +65,10 @@ Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass,
   JVMCI_EXCEPTION_CONTEXT;
 
   // Now we need to check the SystemDictionary
-  if (sym->byte_at(0) == 'L' &&
-    sym->byte_at(sym->utf8_length()-1) == ';') {
+  if (sym->byte_at(0) == 'L' && sym->byte_at(sym->utf8_length()-1) == ';') {
     // This is a name from a signature.  Strip off the trimmings.
     // Call recursive to keep scope of strippedsym.
-    TempNewSymbol strippedsym = SymbolTable::new_symbol(sym->as_utf8()+1,
-                    sym->utf8_length()-2,
-                    CHECK_NULL);
+    TempNewSymbol strippedsym = SymbolTable::new_symbol(sym->as_utf8()+1, sym->utf8_length()-2, CHECK_NULL);
     return get_klass_by_name_impl(accessing_klass, cpool, strippedsym, require_local);
   }
 
@@ -101,20 +96,13 @@ Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass,
   // we must build an array type around it.  The CI requires array klasses
   // to be loaded if their element klasses are loaded, except when memory
   // is exhausted.
-  if (sym->byte_at(0) == '[' &&
-      (sym->byte_at(1) == '[' || sym->byte_at(1) == 'L')) {
+  if (sym->byte_at(0) == '[' && (sym->byte_at(1) == '[' || sym->byte_at(1) == 'L')) {
     // We have an unloaded array.
     // Build it on the fly if the element class exists.
-    TempNewSymbol elem_sym = SymbolTable::new_symbol(sym->as_utf8()+1,
-                                                 sym->utf8_length()-1,
-                                                 CHECK_NULL);
+    TempNewSymbol elem_sym = SymbolTable::new_symbol(sym->as_utf8()+1, sym->utf8_length()-1, CHECK_NULL);
 
     // Get element Klass recursively.
-    Klass* elem_klass =
-      get_klass_by_name_impl(accessing_klass,
-                             cpool,
-                             elem_sym,
-                             require_local);
+    Klass* elem_klass = get_klass_by_name_impl(accessing_klass, cpool, elem_sym, require_local);
     if (elem_klass != NULL) {
       // Now make an array for it
       return elem_klass->array_klass(CHECK_NULL);
@@ -170,8 +158,7 @@ Klass* JVMCIEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
     // Calculate accessibility the hard way.
     if (k == NULL) {
       is_accessible = false;
-    } else if (k->class_loader() != accessor->class_loader() &&
-               get_klass_by_name_impl(accessor, cpool, k->name(), true) == NULL) {
+    } else if (k->class_loader() != accessor->class_loader() && get_klass_by_name_impl(accessor, cpool, k->name(), true) == NULL) {
       // Loaded only remotely.  Not linked yet.
       is_accessible = false;
     } else {
@@ -204,11 +191,8 @@ Klass* JVMCIEnv::get_klass_by_index(const constantPoolHandle& cpool,
 //
 // Implementation note: the results of field lookups are cached
 // in the accessor klass.
-void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& field_desc,
-                                        int index) {
+void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& field_desc, int index) {
   JVMCI_EXCEPTION_CONTEXT;
-
-  assert(klass->is_linked(), "must be linked before using its constant-pool");
 
   constantPoolHandle cpool(thread, klass->constants());
 
@@ -233,13 +217,11 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
   }
 
   // Perform the field lookup.
-  Klass*  canonical_holder =
-    InstanceKlass::cast(declared_holder)->find_field(name, signature, &field_desc);
+  Klass*  canonical_holder = InstanceKlass::cast(declared_holder)->find_field(name, signature, &field_desc);
   if (canonical_holder == NULL) {
     return;
   }
 
-  assert(canonical_holder == field_desc.field_holder(), "just checking");
 }
 
 // ------------------------------------------------------------------
@@ -252,33 +234,21 @@ void JVMCIEnv::get_field_by_index(InstanceKlass* accessor, fieldDescriptor& fd, 
 // ------------------------------------------------------------------
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
-methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor,
-                               Klass*         holder,
-                               Symbol*        name,
-                               Symbol*        sig,
-                               Bytecodes::Code bc,
-                               constantTag   tag) {
-  // Accessibility checks are performed in JVMCIEnv::get_method_by_index_impl().
-  assert(check_klass_accessibility(accessor, holder), "holder not accessible");
-
+methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor, Klass*         holder, Symbol*        name, Symbol*        sig, Bytecodes::Code bc, constantTag   tag) {
   methodHandle dest_method;
   LinkInfo link_info(holder, name, sig, accessor, LinkInfo::needs_access_check, tag);
   switch (bc) {
   case Bytecodes::_invokestatic:
-    dest_method =
-      LinkResolver::resolve_static_call_or_null(link_info);
+    dest_method = LinkResolver::resolve_static_call_or_null(link_info);
     break;
   case Bytecodes::_invokespecial:
-    dest_method =
-      LinkResolver::resolve_special_call_or_null(link_info);
+    dest_method = LinkResolver::resolve_special_call_or_null(link_info);
     break;
   case Bytecodes::_invokeinterface:
-    dest_method =
-      LinkResolver::linktime_resolve_interface_method_or_null(link_info);
+    dest_method = LinkResolver::linktime_resolve_interface_method_or_null(link_info);
     break;
   case Bytecodes::_invokevirtual:
-    dest_method =
-      LinkResolver::linktime_resolve_virtual_method_or_null(link_info);
+    dest_method = LinkResolver::linktime_resolve_virtual_method_or_null(link_info);
     break;
   default: ShouldNotReachHere();
   }
@@ -287,9 +257,7 @@ methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor,
 }
 
 // ------------------------------------------------------------------
-methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
-                                          int index, Bytecodes::Code bc,
-                                          InstanceKlass* accessor) {
+methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool, int index, Bytecodes::Code bc, InstanceKlass* accessor) {
   if (bc == Bytecodes::_invokedynamic) {
     ConstantPoolCacheEntry* cpce = cpool->invokedynamic_cp_cache_entry_at(index);
     bool is_resolved = !cpce->is_f1_null();
@@ -311,9 +279,7 @@ methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
   Symbol* name_sym = cpool->name_ref_at(index);
   Symbol* sig_sym  = cpool->signature_ref_at(index);
 
-  if (cpool->has_preresolution()
-      || ((holder == SystemDictionary::MethodHandle_klass() || holder == SystemDictionary::VarHandle_klass()) &&
-          MethodHandles::is_signature_polymorphic_name(holder, name_sym))) {
+  if (cpool->has_preresolution() || ((holder == SystemDictionary::MethodHandle_klass() || holder == SystemDictionary::VarHandle_klass()) && MethodHandles::is_signature_polymorphic_name(holder, name_sym))) {
     // Short-circuit lookups for JSR 292-related call sites.
     // That is, do not rely only on name-based lookups, because they may fail
     // if the names are not resolvable in the boot class loader (7056328).

@@ -64,14 +64,13 @@ void TemplateInterpreterGenerator::generate_all() {
   { CodeletMark cm(_masm, "invoke return entry points");
     // These states are in order specified in TosState, except btos/ztos/ctos/stos are
     // really the same as itos since there is no top of stack optimization for these types
-    const TosState states[] = {itos, itos, itos, itos, itos, ltos, ftos, dtos, atos, vtos, ilgl};
+    const TosState states[] = { itos, itos, itos, itos, itos, ltos, ftos, dtos, atos, vtos, ilgl };
     const int invoke_length = Bytecodes::length_for(Bytecodes::_invokestatic);
     const int invokeinterface_length = Bytecodes::length_for(Bytecodes::_invokeinterface);
     const int invokedynamic_length = Bytecodes::length_for(Bytecodes::_invokedynamic);
 
     for (int i = 0; i < Interpreter::number_of_return_addrs; i++) {
       TosState state = states[i];
-      assert(state != ilgl, "states array is wrong above");
       Interpreter::_invoke_return_entry[i] = generate_return_entry_for(state, invoke_length, sizeof(u2));
       Interpreter::_invokeinterface_return_entry[i] = generate_return_entry_for(state, invokeinterface_length, sizeof(u2));
       Interpreter::_invokedynamic_return_entry[i] = generate_return_entry_for(state, invokedynamic_length, sizeof(u4));
@@ -237,8 +236,6 @@ void TemplateInterpreterGenerator::set_unimplemented(int i) {
 void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
   CodeletMark cm(_masm, Bytecodes::name(code), code);
   // initialize entry points
-  assert(_unimplemented_bytecode    != NULL, "should have been generated before");
-  assert(_illegal_bytecode_sequence != NULL, "should have been generated before");
   address bep = _illegal_bytecode_sequence;
   address zep = _illegal_bytecode_sequence;
   address cep = _illegal_bytecode_sequence;
@@ -253,12 +250,10 @@ void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
   // code for short & wide version of bytecode
   if (Bytecodes::is_defined(code)) {
     Template* t = TemplateTable::template_for(code);
-    assert(t->is_valid(), "just checking");
     set_short_entry_points(t, bep, cep, sep, aep, iep, lep, fep, dep, vep);
   }
   if (Bytecodes::wide_is_defined(code)) {
     Template* t = TemplateTable::template_for_wide(code);
-    assert(t->is_valid(), "just checking");
     set_wide_entry_point(t, wep);
   }
   // set entry points
@@ -268,13 +263,10 @@ void TemplateInterpreterGenerator::set_entry_points(Bytecodes::Code code) {
 }
 
 void TemplateInterpreterGenerator::set_wide_entry_point(Template* t, address& wep) {
-  assert(t->is_valid(), "template must exist");
-  assert(t->tos_in() == vtos, "only vtos tos_in supported for wide instructions");
   wep = __ pc(); generate_and_dispatch(t);
 }
 
 void TemplateInterpreterGenerator::set_short_entry_points(Template* t, address& bep, address& cep, address& sep, address& aep, address& iep, address& lep, address& fep, address& dep, address& vep) {
-  assert(t->is_valid(), "template must exist");
   switch (t->tos_in()) {
     case btos:
     case ztos:
@@ -300,11 +292,8 @@ void TemplateInterpreterGenerator::generate_and_dispatch(Template* t, TosState t
   if (!t->does_dispatch()) {
     step = t->is_wide() ? Bytecodes::wide_length_for(t->bytecode()) : Bytecodes::length_for(t->bytecode());
     if (tos_out == ilgl) tos_out = t->tos_out();
-    // compute bytecode size
-    assert(step > 0, "just checkin'");
     // setup stuff for dispatching next bytecode
-    if (ProfileInterpreter && VerifyDataPointer
-        && MethodData::bytecode_has_profile(t->bytecode())) {
+    if (ProfileInterpreter && VerifyDataPointer && MethodData::bytecode_has_profile(t->bytecode())) {
       __ verify_method_data_pointer();
     }
     __ dispatch_prolog(tos_out, step);
@@ -320,8 +309,7 @@ void TemplateInterpreterGenerator::generate_and_dispatch(Template* t, TosState t
 }
 
 // Generate method entries
-address TemplateInterpreterGenerator::generate_method_entry(
-                                        AbstractInterpreter::MethodKind kind) {
+address TemplateInterpreterGenerator::generate_method_entry(AbstractInterpreter::MethodKind kind) {
   // determine code generation flags
   bool native = false;
   bool synchronized = false;

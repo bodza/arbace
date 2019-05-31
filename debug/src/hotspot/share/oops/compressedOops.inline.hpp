@@ -20,11 +20,9 @@ namespace CompressedOops {
   inline bool is_null(narrowOop obj) { return obj == 0; }
 
   inline oop decode_not_null(narrowOop v) {
-    assert(!is_null(v), "narrow oop value can never be zero");
     address base = Universe::narrow_oop_base();
     int    shift = Universe::narrow_oop_shift();
     oop result = (oop)(void*)((uintptr_t)base + ((uintptr_t)v << shift));
-    assert(check_obj_alignment(result), "address not aligned: " INTPTR_FORMAT, p2i((void*) result));
     return result;
   }
 
@@ -33,16 +31,10 @@ namespace CompressedOops {
   }
 
   inline narrowOop encode_not_null(oop v) {
-    assert(!is_null(v), "oop value can never be zero");
-    assert(check_obj_alignment(v), "Address not aligned");
-    assert(Universe::heap()->is_in_reserved(v), "Address not in heap");
     address base = Universe::narrow_oop_base();
     int    shift = Universe::narrow_oop_shift();
     uint64_t  pd = (uint64_t)(pointer_delta((void*)v, (void*)base, 1));
-    assert(OopEncodingHeapMax > pd, "change encoding max if new encoding");
     uint64_t result = pd >> shift;
-    assert((result & CONST64(0xffffffff00000000)) == 0, "narrow oop overflow");
-    assert(decode(result) == v, "reversibility");
     return (narrowOop)result;
   }
 

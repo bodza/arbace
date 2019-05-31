@@ -20,8 +20,7 @@ const char               PERFDATA_NAME[] = "hsperfdata";
 
 // Add 1 for the '_' character between PERFDATA_NAME and pid. The '\0' terminating
 // character will be included in the sizeof(PERFDATA_NAME) operation.
-static const size_t PERFDATA_FILENAME_LEN = sizeof(PERFDATA_NAME) +
-                                            UINT_CHARS + 1;
+static const size_t PERFDATA_FILENAME_LEN = sizeof(PERFDATA_NAME) + UINT_CHARS + 1;
 
 char*                    PerfMemory::_start = NULL;
 char*                    PerfMemory::_end = NULL;
@@ -112,8 +111,6 @@ void PerfMemory::initialize() {
     _top = _start + sizeof(PerfDataPrologue);
   }
 
-  assert(_prologue != NULL, "prologue pointer must be initialized");
-
 #ifdef VM_LITTLE_ENDIAN
   _prologue->magic = (jint)0xc0c0feca;
   _prologue->byte_order = PERFDATA_LITTLE_ENDIAN;
@@ -186,8 +183,6 @@ char* PerfMemory::alloc(size_t size) {
 
   MutexLocker ml(PerfDataMemAlloc_lock);
 
-  assert(is_usable(), "called before init or after destroy");
-
   // check that there is enough memory for this request
   if ((_top + size) >= _end) {
 
@@ -200,8 +195,6 @@ char* PerfMemory::alloc(size_t size) {
 
   _top += size;
 
-  assert(contains(result), "PerfData memory pointer out of range");
-
   _prologue->used = (jint)used();
   _prologue->num_entries = _prologue->num_entries + 1;
 
@@ -210,8 +203,6 @@ char* PerfMemory::alloc(size_t size) {
 
 void PerfMemory::mark_updated() {
   if (!UsePerfData) return;
-
-  assert(is_usable(), "called before init or after destroy");
 
   _prologue->mod_time_stamp = os::elapsed_counter();
 }
@@ -225,7 +216,7 @@ char* PerfMemory::get_perfdata_file_path() {
     // dest_file_name stores the validated file name if file_name
     // contains %p which will be replaced by pid.
     dest_file = NEW_C_HEAP_ARRAY(char, JVM_MAXPATHLEN, mtInternal);
-    if(!Arguments::copy_expand_pid(PerfDataSaveFile, strlen(PerfDataSaveFile),
+    if (!Arguments::copy_expand_pid(PerfDataSaveFile, strlen(PerfDataSaveFile),
                                    dest_file, JVM_MAXPATHLEN)) {
       FREE_C_HEAP_ARRAY(char, dest_file);
       if (PrintMiscellaneous && Verbose) {

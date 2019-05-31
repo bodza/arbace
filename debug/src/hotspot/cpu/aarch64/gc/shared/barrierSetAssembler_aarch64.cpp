@@ -28,7 +28,6 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
         __ ldr(dst, src);
       }
     } else {
-      assert(in_native, "why else?");
       __ ldr(dst, src);
     }
     break;
@@ -55,7 +54,6 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
     val = val == noreg ? zr : val;
     if (in_heap) {
       if (UseCompressedOops) {
-        assert(!dst.uses(val), "not enough registers");
         if (val != zr) {
           __ encode_heap_oop(val);
         }
@@ -64,7 +62,6 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
         __ str(val, dst);
       }
     } else {
-      assert(in_native, "why else?");
       __ str(val, dst);
     }
     break;
@@ -97,14 +94,7 @@ void BarrierSetAssembler::try_resolve_jobject_in_native(MacroAssembler* masm, Re
 }
 
 // Defines obj, preserves var_size_in_bytes, okay for t2 == var_size_in_bytes.
-void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj,
-                                        Register var_size_in_bytes,
-                                        int con_size_in_bytes,
-                                        Register t1,
-                                        Register t2,
-                                        Label& slow_case) {
-  assert_different_registers(obj, t2);
-  assert_different_registers(obj, var_size_in_bytes);
+void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, Label& slow_case) {
   Register end = t2;
 
   // verify_tlab();
@@ -130,12 +120,7 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj,
 }
 
 // Defines obj, preserves var_size_in_bytes
-void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj,
-                                        Register var_size_in_bytes,
-                                        int con_size_in_bytes,
-                                        Register t1,
-                                        Label& slow_case) {
-  assert_different_registers(obj, var_size_in_bytes, t1);
+void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Label& slow_case) {
   if (!Universe::heap()->supports_inline_contig_alloc()) {
     __ b(slow_case);
   } else {
@@ -187,7 +172,6 @@ void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj,
 }
 
 void BarrierSetAssembler::incr_allocated_bytes(MacroAssembler* masm, Register var_size_in_bytes, int con_size_in_bytes, Register t1) {
-  assert(t1->is_valid(), "need temp reg");
 
   __ ldr(t1, Address(rthread, in_bytes(JavaThread::allocated_bytes_offset())));
   if (var_size_in_bytes->is_valid()) {

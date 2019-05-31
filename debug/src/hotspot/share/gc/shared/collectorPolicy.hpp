@@ -113,7 +113,7 @@ class MarkSweepPolicy : public GenCollectorPolicy {
   void initialize_alignments();
 
  public:
-  MarkSweepPolicy() {}
+  MarkSweepPolicy() { }
 };
 
 #endif

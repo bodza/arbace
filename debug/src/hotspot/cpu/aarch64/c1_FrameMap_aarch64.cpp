@@ -18,7 +18,6 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
     Register reg = r_1->as_Register();
     if (r_2->is_Register() && (type == T_LONG || type == T_DOUBLE)) {
       Register reg2 = r_2->as_Register();
-      assert(reg2 == reg, "must be same register");
       opr = as_long_opr(reg);
     } else if (type == T_OBJECT || type == T_ARRAY) {
       opr = as_oop_opr(reg);
@@ -28,7 +27,6 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
       opr = as_opr(reg);
     }
   } else if (r_1->is_FloatRegister()) {
-    assert(type == T_DOUBLE || type == T_FLOAT, "wrong type");
     int num = r_1->as_FloatRegister()->encoding();
     if (type == T_FLOAT) {
       opr = LIR_OprFact::single_fpu(num);
@@ -135,7 +133,6 @@ LIR_Opr FrameMap::_caller_save_fpu_regs[] = { 0, };
 //--------------------------------------------------------
 
 void FrameMap::initialize() {
-  assert(!_init_done, "once");
 
   int i=0;
   map_register(i, r0); r0_opr = LIR_OprFact::single_cpu(i); i++;

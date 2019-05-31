@@ -80,7 +80,7 @@ int32_t cmpkey(const void *key1, const void *key2);
 //------------------------------Iteration--------------------------------------
 // The class of dictionary iterators.  Fails in the presences of modifications
 // to the dictionary during iteration (including searches).
-// Usage:  for( DictI i(dict); i.test(); ++i ) { body = i.key; body = i.value;}
+// Usage:  for( DictI i(dict); i.test(); ++i ) { body = i.key; body = i.value; }
 class DictI {
  private:
   const Dict *_d;               // Dictionary being iterated over
@@ -88,10 +88,10 @@ class DictI {
   uint _j;                      // Counter inside each bin
  public:
   const void *_key, *_value;    // Easy access to the key-value pair
-  DictI( const Dict *d ) {reset(d);}; // Create a new iterator
+  DictI( const Dict *d ) { reset(d); }; // Create a new iterator
   void reset( const Dict *dict );     // Reset existing iterator
   void operator ++(void);             // Increment iterator
-  int test(void) { return _i<_d->_size;} // Test for end of iteration
+  int test(void) { return _i<_d->_size; } // Test for end of iteration
 };
 
 #endif

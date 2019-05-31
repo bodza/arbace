@@ -23,13 +23,10 @@ class StubCodeDesc: public CHeapObj<mtCode> {
   address              _end;                   // points to the first byte after the stub code (excluded)
 
   void set_end(address end) {
-    assert(_begin <= end, "begin & end not properly ordered");
     _end = end;
   }
 
   void set_begin(address begin) {
-    assert(begin >= _begin, "begin may not decrease");
-    assert(_end == NULL || begin <= _end, "begin & end not properly ordered");
     _begin = begin;
   }
 
@@ -44,8 +41,6 @@ class StubCodeDesc: public CHeapObj<mtCode> {
   static const char*   name_for(address pc);     // returns the name of the code containing pc or NULL
 
   StubCodeDesc(const char* group, const char* name, address begin, address end = NULL) {
-    assert(!_frozen, "no modifications allowed");
-    assert(name != NULL, "no name specified");
     _next           = _list;
     _group          = group;
     _name           = name;

@@ -41,42 +41,34 @@ void Template::generate(InterpreterMacroAssembler* masm) {
 // Implementation of TemplateTable: Platform-independent helper routines
 
 void TemplateTable::call_VM(Register oop_result, address entry_point) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point);
 }
 
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1);
 }
 
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1, arg_2);
 }
 
 void TemplateTable::call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2, Register arg_3) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, entry_point, arg_1, arg_2, arg_3);
 }
 
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point);
 }
 
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1);
 }
 
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1, arg_2);
 }
 
 void TemplateTable::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3) {
-  assert(_desc->calls_vm(), "inconsistent calls_vm information");
   _masm->call_VM(oop_result, last_java_sp, entry_point, arg_1, arg_2, arg_3);
 }
 
@@ -117,8 +109,6 @@ void TemplateTable::jsr() {
 // Implementation of TemplateTable: Debugging
 
 void TemplateTable::transition(TosState tos_in, TosState tos_out) {
-  assert(_desc->tos_in()  == tos_in , "inconsistent tos_in  information");
-  assert(_desc->tos_out() == tos_out, "inconsistent tos_out information");
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -133,7 +123,6 @@ InterpreterMacroAssembler* TemplateTable::_masm;
 BarrierSet*                TemplateTable::_bs;
 
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(), char filler) {
-  assert(filler == ' ', "just checkin'");
   def(code, flags, in, out, (Template::generator)gen, 0);
 }
 
@@ -145,22 +134,16 @@ void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState o
   const int iswd = 1 << Template::wide_bit;
   // determine which table to use
   bool is_wide = (flags & iswd) != 0;
-  // make sure that wide instructions have a vtos entry point
-  // (since they are executed extremely rarely, it doesn't pay out to have an
-  // extra set of 5 dispatch tables for the wide instructions - for simplicity
-  // they all go with one table)
-  assert(in == vtos || !is_wide, "wide instructions have vtos entry point only");
   Template* t = is_wide ? template_for_wide(code) : template_for(code);
   // setup entry
   t->initialize(flags, in, out, gen, arg);
-  assert(t->bytecode() == code, "just checkin'");
 }
 
 void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(Operation op), Operation op) {
   def(code, flags, in, out, (Template::generator)gen, (int)op);
 }
 
-void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(bool arg    ), bool arg) {
+void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState out, void (*gen)(bool arg ), bool arg) {
   def(code, flags, in, out, (Template::generator)gen, (int)arg);
 }
 
@@ -175,9 +158,7 @@ void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState o
 #if defined(TEMPLATE_TABLE_BUG)
 //
 // It appears that gcc (version 2.91) generates bad code for the template
-// table init if this macro is not defined.  My symptom was an assertion
-// assert(Universe::heap()->is_in(obj), "sanity check") in handles.cpp line 24.
-// when called from interpreterRuntime.resolve_invoke().
+// table init if this macro is not defined.
 //
   #define iload  TemplateTable::iload
   #define lload  TemplateTable::lload

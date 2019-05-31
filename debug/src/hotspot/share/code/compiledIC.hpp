@@ -49,11 +49,8 @@ class CompiledICInfo : public StackObj {
  public:
   address entry() const        { return _entry; }
   Metadata*    cached_metadata() const         {
-    assert(!_is_icholder, "");
     return (Metadata*)_cached_value; }
   CompiledICHolder*    claim_cached_icholder() {
-    assert(_is_icholder, "");
-    assert(_cached_value != NULL, "must be non-NULL");
     _release_icholder = false;
     CompiledICHolder* icholder = (CompiledICHolder*)_cached_value;
     icholder->claim();
@@ -110,7 +107,6 @@ class CompiledICInfo : public StackObj {
     // In rare cases the info is computed but not used, so release any
     // CompiledICHolder* that was created
     if (_release_icholder) {
-      assert(_is_icholder, "must be");
       CompiledICHolder* icholder = (CompiledICHolder*)_cached_value;
       icholder->claim();
       delete icholder;
@@ -162,7 +158,6 @@ class CompiledIC: public ResourceObj {
   void internal_set_ic_destination(address entry_point, bool is_icstub, void* cache, bool is_icholder);
   void set_ic_destination(ICStub* stub);
   void set_ic_destination(address entry_point) {
-    assert(_is_optimized, "use set_ic_destination_and_value instead");
     internal_set_ic_destination(entry_point, false, NULL, false);
   }
   // This only for use by ICStubs where the type of the value isn't known
@@ -198,11 +193,9 @@ class CompiledIC: public ResourceObj {
   // to a transition stub, it will read the values from the transition stub.
   void* cached_value() const;
   CompiledICHolder* cached_icholder() const {
-    assert(is_icholder_call(), "must be");
     return (CompiledICHolder*) cached_value();
   }
   Metadata* cached_metadata() const {
-    assert(!is_icholder_call(), "must be");
     return (Metadata*) cached_value();
   }
 
@@ -252,9 +245,9 @@ class CompiledIC: public ResourceObj {
   address instruction_address() const { return _call->instruction_address(); }
 
   // Misc
-  void print()             {};
-  void print_compiled_ic() {};
-  void verify()            {};
+  void print()             { };
+  void print_compiled_ic() { };
+  void verify()            { };
 };
 
 inline CompiledIC* CompiledIC_before(CompiledMethod* nm, address return_addr) {
@@ -270,14 +263,12 @@ inline CompiledIC* CompiledIC_at(CompiledMethod* nm, address call_site) {
 }
 
 inline CompiledIC* CompiledIC_at(Relocation* call_site) {
-  assert(call_site->type() == relocInfo::virtual_call_type || call_site->type() == relocInfo::opt_virtual_call_type, "wrong reloc. info");
   CompiledIC* c_ic = new CompiledIC(call_site->code(), nativeCall_at(call_site->addr()));
   c_ic->verify();
   return c_ic;
 }
 
 inline CompiledIC* CompiledIC_at(RelocIterator* reloc_iter) {
-  assert(reloc_iter->type() == relocInfo::virtual_call_type || reloc_iter->type() == relocInfo::opt_virtual_call_type, "wrong reloc. info");
   CompiledIC* c_ic = new CompiledIC(reloc_iter);
   c_ic->verify();
   return c_ic;
@@ -311,7 +302,7 @@ class StaticCallInfo {
   friend class CompiledDirectStaticCall;
   friend class CompiledPltStaticCall;
  public:
-  address      entry() const    { return _entry;  }
+  address      entry() const    { return _entry; }
   methodHandle callee() const   { return _callee; }
 };
 
@@ -368,7 +359,7 @@ private:
 
   NativeCall* _call;
 
-  CompiledDirectStaticCall(NativeCall* call) : _call(call) {}
+  CompiledDirectStaticCall(NativeCall* call) : _call(call) { }
 
  public:
   static inline CompiledDirectStaticCall* before(address return_addr) {
@@ -400,8 +391,8 @@ private:
   static void set_stub_to_clean(static_stub_Relocation* static_stub);
 
   // Misc.
-  void print()  {};
-  void verify() {};
+  void print()  { };
+  void verify() { };
 
  protected:
   virtual address resolve_call_stub() const;

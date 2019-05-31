@@ -55,9 +55,7 @@ static void save_signal(int idx, int sig)
   struct sigaction sa;
   sigaction(sig, NULL, &sa);
   resettedSigflags[idx]   = sa.sa_flags;
-  resettedSighandler[idx] = (sa.sa_flags & SA_SIGINFO)
-                              ? CAST_FROM_FN_PTR(address, sa.sa_sigaction)
-                              : CAST_FROM_FN_PTR(address, sa.sa_handler);
+  resettedSighandler[idx] = (sa.sa_flags & SA_SIGINFO) ? CAST_FROM_FN_PTR(address, sa.sa_sigaction) : CAST_FROM_FN_PTR(address, sa.sa_handler);
 }
 
 int VMError::get_resetted_sigflags(int sig) {

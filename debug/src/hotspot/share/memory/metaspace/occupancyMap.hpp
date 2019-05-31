@@ -45,18 +45,14 @@ class OccupancyMap : public CHeapObj<mtInternal> {
 
   // Returns true if bit at position pos at bit-layer layer is set.
   bool get_bit_at_position(unsigned pos, unsigned layer) const {
-    assert(layer == 0 || layer == 1, "Invalid layer %d", layer);
     const unsigned byteoffset = pos / 8;
-    assert(byteoffset < _map_size, "invalid byte offset (%u), map size is " SIZE_FORMAT ".", byteoffset, _map_size);
     const unsigned mask = 1 << (pos % 8);
     return (_map[layer][byteoffset] & mask) > 0;
   }
 
   // Changes bit at position pos at bit-layer layer to value v.
   void set_bit_at_position(unsigned pos, unsigned layer, bool v) {
-    assert(layer == 0 || layer == 1, "Invalid layer %d", layer);
     const unsigned byteoffset = pos / 8;
-    assert(byteoffset < _map_size, "invalid byte offset (%u), map size is " SIZE_FORMAT ".", byteoffset, _map_size);
     const unsigned mask = 1 << (pos % 8);
     if (v) {
       _map[layer][byteoffset] |= mask;
@@ -73,12 +69,7 @@ class OccupancyMap : public CHeapObj<mtInternal> {
   // chunks are chunk-size aligned.
   template <typename T>
   bool is_any_bit_set_in_region_3264(unsigned pos, unsigned num_bits, unsigned layer) const {
-    assert(_map_size > 0, "not initialized");
-    assert(layer == 0 || layer == 1, "Invalid layer %d.", layer);
-    assert(pos % (sizeof(T) * 8) == 0, "Bit position must be aligned (%u).", pos);
-    assert(num_bits == (sizeof(T) * 8), "Number of bits incorrect (%u).", num_bits);
     const size_t byteoffset = pos / 8;
-    assert(byteoffset <= (_map_size - sizeof(T)), "Invalid byte offset (" SIZE_FORMAT "), map size is " SIZE_FORMAT ".", byteoffset, _map_size);
     const T w = *(T*)(_map[layer] + byteoffset);
     return w > 0 ? true : false;
   }
@@ -101,7 +92,6 @@ class OccupancyMap : public CHeapObj<mtInternal> {
 
   // Returns true if any bit in region [p, p+word_size) is set in bit-layer layer.
   bool is_any_bit_set_in_region(MetaWord* p, size_t word_size, unsigned layer) const {
-    assert(word_size % _smallest_chunk_word_size == 0, "Region size " SIZE_FORMAT " not a multiple of smallest chunk size.", word_size);
     const unsigned pos = get_bitpos_for_address(p);
     const unsigned num_bits = (unsigned) (word_size / _smallest_chunk_word_size);
     return is_any_bit_set_in_region(pos, num_bits, layer);
@@ -115,18 +105,13 @@ class OccupancyMap : public CHeapObj<mtInternal> {
   // because chunks are chunk-size aligned.
   template <typename T>
   void set_bits_of_region_T(unsigned pos, unsigned num_bits, unsigned layer, bool v) {
-    assert(pos % (sizeof(T) * 8) == 0, "Bit position must be aligned to %u (%u).", (unsigned)(sizeof(T) * 8), pos);
-    assert(num_bits == (sizeof(T) * 8), "Number of bits incorrect (%u), expected %u.", num_bits, (unsigned)(sizeof(T) * 8));
     const size_t byteoffset = pos / 8;
-    assert(byteoffset <= (_map_size - sizeof(T)), "invalid byte offset (" SIZE_FORMAT "), map size is " SIZE_FORMAT ".", byteoffset, _map_size);
     T* const pw = (T*)(_map[layer] + byteoffset);
     *pw = v ? all_ones<T>::value : (T) 0;
   }
 
   // Set all bits in a region starting at pos to a value.
   void set_bits_of_region(unsigned pos, unsigned num_bits, unsigned layer, bool v) {
-    assert(_map_size > 0, "not initialized");
-    assert(layer == 0 || layer == 1, "Invalid layer %d.", layer);
     if (pos % 32 == 0 && num_bits == 32) {
       set_bits_of_region_T<uint32_t>(pos, num_bits, layer, v);
     } else if (pos % 64 == 0 && num_bits == 64) {
@@ -140,7 +125,6 @@ class OccupancyMap : public CHeapObj<mtInternal> {
 
   // Helper: sets all bits in a region [p, p+word_size).
   void set_bits_of_region(MetaWord* p, size_t word_size, unsigned layer, bool v) {
-    assert(word_size % _smallest_chunk_word_size == 0, "Region size " SIZE_FORMAT " not a multiple of smallest chunk size.", word_size);
     const unsigned pos = get_bitpos_for_address(p);
     const unsigned num_bits = (unsigned) (word_size / _smallest_chunk_word_size);
     set_bits_of_region(pos, num_bits, layer, v);
@@ -148,11 +132,7 @@ class OccupancyMap : public CHeapObj<mtInternal> {
 
   // Helper: given an address, return the bit position representing that address.
   unsigned get_bitpos_for_address(const MetaWord* p) const {
-    assert(_reference_address != NULL, "not initialized");
-    assert(p >= _reference_address && p < _reference_address + _word_size, "Address %p out of range for occupancy map [%p..%p).", p, _reference_address, _reference_address + _word_size);
-    assert(is_aligned(p, _smallest_chunk_word_size * sizeof(MetaWord)), "Address not aligned (%p).", p);
     const ptrdiff_t d = (p - _reference_address) / _smallest_chunk_word_size;
-    assert(d >= 0 && (size_t)d < _map_size * 8, "Sanity.");
     return (unsigned) d;
   }
 

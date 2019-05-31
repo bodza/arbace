@@ -21,8 +21,6 @@ jlong TimeHelper::millis_to_counter(jlong millis) {
 elapsedTimer::elapsedTimer(jlong time, jlong timeUnitsPerSecond) {
   _active = false;
   jlong osTimeUnitsPerSecond = os::elapsed_frequency();
-  assert(osTimeUnitsPerSecond % 1000 == 0, "must be");
-  assert(timeUnitsPerSecond % 1000 == 0, "must be");
   while (osTimeUnitsPerSecond < timeUnitsPerSecond) {
     timeUnitsPerSecond /= 1000;
     time *= 1000;
@@ -71,7 +69,6 @@ jlong elapsedTimer::active_ticks() const {
 void TimeStamp::update_to(jlong ticks) {
   _counter = ticks;
   if (_counter == 0)  _counter = 1;
-  assert(is_updated(), "must not look clear");
 }
 
 void TimeStamp::update() {
@@ -79,19 +76,16 @@ void TimeStamp::update() {
 }
 
 double TimeStamp::seconds() const {
-  assert(is_updated(), "must not be clear");
   jlong new_count = os::elapsed_counter();
   return TimeHelper::counter_to_seconds(new_count - _counter);
 }
 
 jlong TimeStamp::milliseconds() const {
-  assert(is_updated(), "must not be clear");
   jlong new_count = os::elapsed_counter();
   return (jlong)TimeHelper::counter_to_millis(new_count - _counter);
 }
 
 jlong TimeStamp::ticks_since_update() const {
-  assert(is_updated(), "must not be clear");
   return os::elapsed_counter() - _counter;
 }
 

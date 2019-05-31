@@ -126,14 +126,13 @@ class vframeArray: public CHeapObj<mtCompiler> {
   bool is_within_bounds(int index) const        { return 0 <= index && index < frames(); }
 
   // Accessories for instance variable
-  int frames() const                            { return _frames;   }
+  int frames() const                            { return _frames; }
 
   static vframeArray* allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk,
                                RegisterMap* reg_map, frame sender, frame caller, frame self,
                                bool realloc_failures);
 
   vframeArrayElement* element(int index)        {
-    assert(is_within_bounds(index), "Bad index");
     return &_elements[index]; }
 
   // Allocates a new vframe in the array and fills the array with vframe information in chunk
@@ -176,8 +175,8 @@ class vframeArray: public CHeapObj<mtCompiler> {
   // Accessor for register map
   address register_location(int i) const;
 
-  void print_on_2(outputStream* st) {};
-  void print_value_on(outputStream* st) const {};
+  void print_on_2(outputStream* st) { };
+  void print_value_on(outputStream* st) const { };
 };
 
 #endif

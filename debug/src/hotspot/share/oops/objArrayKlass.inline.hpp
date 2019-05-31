@@ -22,8 +22,7 @@ void ObjArrayKlass::oop_oop_iterate_elements(objArrayOop a, OopClosureType* clos
 }
 
 template <typename T, class OopClosureType>
-void ObjArrayKlass::oop_oop_iterate_elements_bounded(
-    objArrayOop a, OopClosureType* closure, void* low, void* high) {
+void ObjArrayKlass::oop_oop_iterate_elements_bounded(objArrayOop a, OopClosureType* closure, void* low, void* high) {
 
   T* const l = (T*)low;
   T* const h = (T*)high;
@@ -45,7 +44,6 @@ void ObjArrayKlass::oop_oop_iterate_elements_bounded(
 
 template <typename T, typename OopClosureType>
 void ObjArrayKlass::oop_oop_iterate(oop obj, OopClosureType* closure) {
-  assert(obj->is_array(), "obj must be array");
   objArrayOop a = objArrayOop(obj);
 
   if (Devirtualizer::do_metadata(closure)) {
@@ -63,7 +61,6 @@ void ObjArrayKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closure) {
 
 template <typename T, typename OopClosureType>
 void ObjArrayKlass::oop_oop_iterate_bounded(oop obj, OopClosureType* closure, MemRegion mr) {
-  assert(obj->is_array(), "obj must be array");
   objArrayOop a  = objArrayOop(obj);
 
   if (Devirtualizer::do_metadata(closure)) {

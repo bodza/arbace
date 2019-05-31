@@ -48,7 +48,7 @@ class xmlStream : public outputStream {
   xmlTextStream _text_init;
 
   // for subclasses
-  xmlStream() {}
+  xmlStream() { }
   void initialize(outputStream* out);
 
   // protect this from public use:
@@ -56,8 +56,8 @@ class xmlStream : public outputStream {
 
   // helpers for writing XML elements
   void          va_tag(bool push, const char* format, va_list ap) ATTRIBUTE_PRINTF(3, 0);
-  virtual void see_tag(const char* tag, bool push) {};
-  virtual void pop_tag(const char* tag) {};
+  virtual void see_tag(const char* tag, bool push) { };
+  virtual void pop_tag(const char* tag) { };
 
  public:
   // creation

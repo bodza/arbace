@@ -59,7 +59,7 @@ class TreeList : public FreeList_t {
     if (tl != NULL)
       tl->set_parent(this);
   }
-  void set_parent(TreeList<Chunk_t, FreeList_t>* tl)  { _parent = tl;   }
+  void set_parent(TreeList<Chunk_t, FreeList_t>* tl)  { _parent = tl; }
 
   void clear_left()               { _left = NULL;   }
   void clear_right()              { _right = NULL;  }
@@ -85,8 +85,7 @@ class TreeList : public FreeList_t {
   // use with caution!
   TreeChunk<Chunk_t, FreeList_t>* largest_address();
 
-  TreeList<Chunk_t, FreeList_t>* get_better_list(
-    BinaryTreeDictionary<Chunk_t, FreeList_t>* dictionary);
+  TreeList<Chunk_t, FreeList_t>* get_better_list(BinaryTreeDictionary<Chunk_t, FreeList_t>* dictionary);
 
   // remove_chunk_replace_if_needed() removes the given "tc" from the TreeList.
   // If "tc" is the first chunk in the list, it is also the
@@ -212,7 +211,7 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
  public:
   // Constructor
   BinaryTreeDictionary() :
-    _total_size(0), _total_free_blocks(0), _root(0) {}
+    _total_size(0), _total_free_blocks(0), _root(0) { }
 
   BinaryTreeDictionary(MemRegion mr);
 
@@ -232,7 +231,6 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   Chunk_t* get_chunk(size_t size) {
     verify_par_locked();
     Chunk_t* res = get_chunk_from_tree(size);
-    assert(res == NULL || res->is_free(), "Should be returning a free chunk");
     return res;
   }
 
@@ -244,7 +242,6 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   void remove_chunk(Chunk_t* chunk) {
     verify_par_locked();
     remove_chunk_from_tree((TreeChunk<Chunk_t, FreeList_t>*)chunk);
-    assert(chunk->is_free(), "Should still be a free chunk");
   }
 
   size_t     max_chunk_size() const;
@@ -269,7 +266,7 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   // all lists in the tree.
   size_t     sum_dict_returned_bytes()     { return 0; };
   // Sets the _returned_bytes for all the lists in the tree to zero.
-  void       initialize_dict_returned_bytes()      {};
+  void       initialize_dict_returned_bytes()      { };
   // For debugging.  Return the total number of chunks in the dictionary.
   size_t     total_count()       { return 0; };
 
@@ -278,8 +275,8 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   void       verify() const;
 
   Mutex*     par_lock()                const { return 0; };
-  void       set_par_lock(Mutex* lock)       {};
-  void       verify_par_locked()       const {};
+  void       set_par_lock(Mutex* lock)       { };
+  void       verify_par_locked()       const { };
 };
 
 // Closures for walking the binary tree.

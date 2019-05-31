@@ -27,12 +27,9 @@ G1BarrierSet::G1BarrierSet(G1CardTable* card_table) :
                       make_barrier_set_c1<G1BarrierSetC1>(),
                       make_barrier_set_c2<G1BarrierSetC2>(),
                       card_table,
-                      BarrierSet::FakeRtti(BarrierSet::G1BarrierSet)) {}
+                      BarrierSet::FakeRtti(BarrierSet::G1BarrierSet)) { }
 
 void G1BarrierSet::enqueue(oop pre_val) {
-  // Nulls should have been already filtered.
-  assert(oopDesc::is_oop(pre_val, true), "Error");
-
   if (!_satb_mark_queue_set.is_active()) return;
   Thread* thr = Thread::current();
   if (thr->is_Java_thread()) {
@@ -69,7 +66,6 @@ void G1BarrierSet::write_ref_array_pre(narrowOop* dst, size_t count, bool dest_u
 
 void G1BarrierSet::write_ref_field_post_slow(volatile jbyte* byte) {
   // In the slow path, we know a card is not young
-  assert(*byte != G1CardTable::g1_young_card_val(), "slow path invoked without filtering");
   OrderAccess::storeload();
   if (*byte != G1CardTable::dirty_card_val()) {
     *byte = G1CardTable::dirty_card_val();
@@ -151,10 +147,6 @@ void G1BarrierSet::on_thread_attach(JavaThread* thread) {
   // might happen between the JavaThread constructor being called and the
   // thread being added to the Java thread list (an example of this is
   // when the structure for the DestroyJavaVM thread is created).
-  assert(!SafepointSynchronize::is_at_safepoint(), "We should not be at a safepoint");
-  assert(!G1ThreadLocalData::satb_mark_queue(thread).is_active(), "SATB queue should not be active");
-  assert(G1ThreadLocalData::satb_mark_queue(thread).is_empty(), "SATB queue should be empty");
-  assert(G1ThreadLocalData::dirty_card_queue(thread).is_active(), "Dirty card queue should be active");
 
   // If we are creating the thread during a marking cycle, we should
   // set the active field of the SATB queue to true.

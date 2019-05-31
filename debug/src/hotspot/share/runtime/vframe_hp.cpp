@@ -42,15 +42,12 @@ void compiledVFrame::set_locals(StackValueCollection* values) const {
 }
 
 void compiledVFrame::update_local(BasicType type, int index, jvalue value) {
-  assert(index >= 0 && index < method()->max_locals(), "out of bounds");
 }
 
 void compiledVFrame::update_stack(BasicType type, int index, jvalue value) {
-  assert(index >= 0 && index < method()->max_stack(), "out of bounds");
 }
 
 void compiledVFrame::update_monitor(int index, MonitorInfo* val) {
-  assert(index >= 0, "out of bounds");
 }
 
 StackValueCollection* compiledVFrame::expressions() const {
@@ -87,7 +84,6 @@ GrowableArray<MonitorInfo*>* compiledVFrame::monitors() const {
   if (scope() == NULL) {
     CompiledMethod* nm = code();
     Method* method = nm->method();
-    assert(method->is_native() || nm->is_aot(), "Expect a native method or precompiled method");
     if (!method->is_synchronized()) {
       return new GrowableArray<MonitorInfo*>(0);
     }
@@ -97,8 +93,7 @@ GrowableArray<MonitorInfo*>* compiledVFrame::monitors() const {
     GrowableArray<MonitorInfo*> *monitors = new GrowableArray<MonitorInfo*>(1);
     // Casting away const
     frame& fr = (frame&) _fr;
-    MonitorInfo* info = new MonitorInfo(
-        fr.get_native_receiver(), fr.get_native_monitor(), false, false);
+    MonitorInfo* info = new MonitorInfo(fr.get_native_receiver(), fr.get_native_monitor(), false, false);
     monitors->push(info);
     return monitors;
   }
@@ -112,12 +107,9 @@ GrowableArray<MonitorInfo*>* compiledVFrame::monitors() const {
     ScopeValue*   ov = mv->owner();
     StackValue *owner_sv = create_stack_value(ov); // it is an oop
     if (ov->is_object() && owner_sv->obj_is_scalar_replaced()) { // The owner object was scalar replaced
-      assert(mv->eliminated(), "monitor should be eliminated for scalar replaced object");
       // Put klass for scalar replaced object.
       ScopeValue* kv = ((ObjectValue *)ov)->klass();
-      assert(kv->is_constant_oop(), "klass should be oop constant for scalar replaced object");
       Handle k(Thread::current(), ((ConstantOopReadValue*)kv)->value()());
-      assert(java_lang_Class::is_instance(k()), "must be");
       result->push(new MonitorInfo(k(), resolve_monitor_lock(mv->basic_lock()), mv->eliminated(), true));
     } else {
       result->push(new MonitorInfo(owner_sv->get_obj()(), resolve_monitor_lock(mv->basic_lock()), mv->eliminated(), false));
@@ -159,7 +151,6 @@ Method* compiledVFrame::method() const {
   if (scope() == NULL) {
     // native nmethods have no scope the method is implied
     nmethod* nm = code()->as_nmethod();
-    assert(nm->is_native_method(), "must be native");
     return nm->method();
   }
   return scope()->method();
@@ -174,7 +165,6 @@ int compiledVFrame::raw_bci() const {
   if (scope() == NULL) {
     // native nmethods have no scope the method/bci is implied
     nmethod* nm = code()->as_nmethod();
-    assert(nm->is_native_method(), "must be native");
     return 0;
   }
   return scope()->bci();
@@ -184,7 +174,6 @@ bool compiledVFrame::should_reexecute() const {
   if (scope() == NULL) {
     // native nmethods have no scope the method/bci is implied
     nmethod* nm = code()->as_nmethod();
-    assert(nm->is_native_method(), "must be native");
     return false;
   }
   return scope()->should_reexecute();
@@ -195,7 +184,6 @@ vframe* compiledVFrame::sender() const {
   if (scope() == NULL) {
     // native nmethods have no scope the method/bci is implied
     nmethod* nm = code()->as_nmethod();
-    assert(nm->is_native_method(), "must be native");
     return vframe::sender();
   } else {
     return scope()->is_top()

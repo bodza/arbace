@@ -188,8 +188,6 @@ void OSContainer::init() {
   char *p;
   jlong mem_limit;
 
-  assert(!_is_initialized, "Initializing OSContainer more than once");
-
   _is_initialized = true;
   _is_containerized = false;
 
@@ -223,9 +221,7 @@ void OSContainer::init() {
     char fstype[MAXPATHLEN+1];
     fstype[0] = '\0';
     char *s =  strstr(p, " - ");
-    if (s != NULL &&
-        sscanf(s, " - %s", fstype) == 1 &&
-        strcmp(fstype, "cgroup") == 0) {
+    if (s != NULL && sscanf(s, " - %s", fstype) == 1 && strcmp(fstype, "cgroup") == 0) {
 
       if (strstr(p, "memory") != NULL) {
         int matched = sscanf(p, "%d %d %d:%d %s %s",

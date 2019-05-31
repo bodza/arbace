@@ -39,17 +39,14 @@ class vframe: public ResourceObj {
   static vframe* new_vframe(const frame* f, const RegisterMap *reg_map, JavaThread* thread);
 
   // Accessors
-  frame              fr()           const { return _fr;       }
-  CodeBlob*          cb()         const { return _fr.cb();  }
-  CompiledMethod*   nm()         const {
-      assert( cb() != NULL && cb()->is_compiled(), "usage");
-      return (CompiledMethod*) cb();
-  }
+  frame              fr()           const { return _fr; }
+  CodeBlob*          cb()         const { return _fr.cb(); }
+  CompiledMethod*   nm()         const { return (CompiledMethod*) cb(); }
 
 // ???? Does this need to be a copy?
-  frame*             frame_pointer() { return &_fr;       }
+  frame*             frame_pointer() { return &_fr; }
   const RegisterMap* register_map() const { return &_reg_map; }
-  JavaThread*        thread()       const { return _thread;   }
+  JavaThread*        thread()       const { return _thread; }
 
   // Returns the sender vframe
   virtual vframe* sender() const;
@@ -90,13 +87,12 @@ class javaVFrame: public vframe {
   bool is_java_frame() const { return true; }
 
  protected:
-  javaVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : vframe(fr, reg_map, thread) {}
-  javaVFrame(const frame* fr, JavaThread* thread) : vframe(fr, thread) {}
+  javaVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : vframe(fr, reg_map, thread) { }
+  javaVFrame(const frame* fr, JavaThread* thread) : vframe(fr, thread) { }
 
  public:
   // casting
   static javaVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_java_frame(), "must be java frame");
     return (javaVFrame*) vf;
   }
 
@@ -126,7 +122,7 @@ class interpretedVFrame: public javaVFrame {
   bool is_interpreted_frame() const { return true; }
 
  protected:
-  interpretedVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : javaVFrame(fr, reg_map, thread) {};
+  interpretedVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : javaVFrame(fr, reg_map, thread) { };
 
  public:
   // Accessors for Byte Code Pointer
@@ -135,7 +131,6 @@ class interpretedVFrame: public javaVFrame {
 
   // casting
   static interpretedVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_interpreted_frame(), "must be interpreted frame");
     return (interpretedVFrame*) vf;
   }
 
@@ -151,7 +146,7 @@ class interpretedVFrame: public javaVFrame {
 
 class externalVFrame: public vframe {
  protected:
-  externalVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : vframe(fr, reg_map, thread) {}
+  externalVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : vframe(fr, reg_map, thread) { }
 
   friend class vframe;
 };
@@ -166,7 +161,6 @@ class entryVFrame: public externalVFrame {
  public:
   // casting
   static entryVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_entry_frame(), "must be entry frame");
     return (entryVFrame*) vf;
   }
 
@@ -190,7 +184,6 @@ class MonitorInfo : public ResourceObj {
       _owner = owner;
       _owner_klass = NULL;
     } else {
-      assert(eliminated, "monitor should be eliminated for scalar replaced object");
       _owner = NULL;
       _owner_klass = owner;
     }
@@ -200,14 +193,12 @@ class MonitorInfo : public ResourceObj {
   }
   // Accessors
   oop        owner() const {
-    assert(!_owner_is_scalar_replaced, "should not be called for scalar replaced object");
     return _owner;
   }
   oop   owner_klass() const {
-    assert(_owner_is_scalar_replaced, "should not be called for not scalar replaced object");
     return _owner_klass;
   }
-  BasicLock* lock()  const { return _lock;  }
+  BasicLock* lock()  const { return _lock; }
   bool eliminated()  const { return _eliminated; }
   bool owner_is_scalar_replaced()  const { return _owner_is_scalar_replaced; }
 };
@@ -249,11 +240,8 @@ class vframeStreamCommon : StackObj {
   inline intptr_t* frame_id() const;
   address frame_pc() const { return _frame.pc(); }
 
-  CodeBlob*          cb()         const { return _frame.cb();  }
-  CompiledMethod*   nm()         const {
-      assert( cb() != NULL && cb()->is_compiled(), "usage");
-      return (CompiledMethod*) cb();
-  }
+  CodeBlob*          cb()         const { return _frame.cb(); }
+  CompiledMethod*   nm()         const { return (CompiledMethod*) cb(); }
 
   // Frame type
   inline bool is_interpreted_frame() const;

@@ -26,7 +26,7 @@ void print_scaled_words_and_percentage(outputStream* st, size_t word_size, size_
 // scale: one of 1 (byte-wise printing), sizeof(word) (word-size printing), K, M, G (scaled by KB, MB, GB respectively,
 //         or 0, which means the best scale is choosen dynamically.
 // width: printing width.
-void print_human_readable_size(outputStream* st, size_t byte_size, size_t scale, int width)  {
+void print_human_readable_size(outputStream* st, size_t byte_size, size_t scale, int width) {
   if (scale == 0) {
     // Dynamic mode. Choose scale for this value.
     if (byte_size == 0) {
@@ -87,7 +87,7 @@ void print_percentage(outputStream* st, size_t total, size_t part) {
     float p = ((float)part / total) * 100.0f;
     if (p < 1.0f) {
       st->print(" <1%%");
-    } else if (p > 99.0f){
+    } else if (p > 99.0f) {
       st->print(">99%%");
     } else {
       st->print("%3.0f%%", p);
@@ -97,7 +97,6 @@ void print_percentage(outputStream* st, size_t total, size_t part) {
 
 // Returns size of this chunk type.
 size_t get_size_for_nonhumongous_chunktype(ChunkIndex chunktype, bool is_class) {
-  assert(is_valid_nonhumongous_chunktype(chunktype), "invalid chunk type.");
   size_t size = 0;
   if (is_class) {
     switch(chunktype) {
@@ -129,7 +128,6 @@ ChunkIndex get_chunk_type_by_size(size_t size, bool is_class) {
       return MediumIndex;
     } else if (size > ClassMediumChunk) {
       // A valid humongous chunk size is a multiple of the smallest chunk size.
-      assert(is_aligned(size, ClassSpecializedChunk), "Invalid chunk size");
       return HumongousIndex;
     }
   } else {
@@ -141,7 +139,6 @@ ChunkIndex get_chunk_type_by_size(size_t size, bool is_class) {
       return MediumIndex;
     } else if (size > MediumChunk) {
       // A valid humongous chunk size is a multiple of the smallest chunk size.
-      assert(is_aligned(size, SpecializedChunk), "Invalid chunk size");
       return HumongousIndex;
     }
   }
@@ -150,12 +147,10 @@ ChunkIndex get_chunk_type_by_size(size_t size, bool is_class) {
 }
 
 ChunkIndex next_chunk_index(ChunkIndex i) {
-  assert(i < NumberOfInUseLists, "Out of bound");
   return (ChunkIndex) (i+1);
 }
 
 ChunkIndex prev_chunk_index(ChunkIndex i) {
-  assert(i > ZeroIndex, "Out of bound");
   return (ChunkIndex) (i-1);
 }
 }

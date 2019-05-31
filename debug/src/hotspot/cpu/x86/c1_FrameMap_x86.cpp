@@ -20,7 +20,6 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
     Register reg = r_1->as_Register();
     if (r_2->is_Register() && (type == T_LONG || type == T_DOUBLE)) {
       Register reg2 = r_2->as_Register();
-      assert(reg2 == reg, "must be same register");
       opr = as_long_opr(reg);
     } else if (type == T_OBJECT || type == T_ARRAY) {
       opr = as_oop_opr(reg);
@@ -30,7 +29,6 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
       opr = as_opr(reg);
     }
   } else if (r_1->is_FloatRegister()) {
-    assert(type == T_DOUBLE || type == T_FLOAT, "wrong type");
     int num = r_1->as_FloatRegister()->encoding();
     if (type == T_FLOAT) {
       opr = LIR_OprFact::single_fpu(num);
@@ -38,7 +36,6 @@ LIR_Opr FrameMap::map_to_opr(BasicType type, VMRegPair* reg, bool) {
       opr = LIR_OprFact::double_fpu(num);
     }
   } else if (r_1->is_XMMRegister()) {
-    assert(type == T_DOUBLE || type == T_FLOAT, "wrong type");
     int num = r_1->as_XMMRegister()->encoding();
     if (type == T_FLOAT) {
       opr = LIR_OprFact::single_xmm(num);
@@ -115,7 +112,6 @@ LIR_Opr FrameMap::_caller_save_xmm_regs[] = { 0, };
 XMMRegister FrameMap::_xmm_regs [] = { 0, };
 
 XMMRegister FrameMap::nr2xmmreg(int rnr) {
-  assert(_init_done, "tables not initialized");
   return _xmm_regs[rnr];
 }
 
@@ -124,9 +120,7 @@ XMMRegister FrameMap::nr2xmmreg(int rnr) {
 //--------------------------------------------------------
 
 void FrameMap::initialize() {
-  assert(!_init_done, "once");
 
-  assert(nof_cpu_regs == 16, "wrong number of CPU registers");
   map_register(0, rsi);  rsi_opr = LIR_OprFact::single_cpu(0);
   map_register(1, rdi);  rdi_opr = LIR_OprFact::single_cpu(1);
   map_register(2, rbx);  rbx_opr = LIR_OprFact::single_cpu(2);

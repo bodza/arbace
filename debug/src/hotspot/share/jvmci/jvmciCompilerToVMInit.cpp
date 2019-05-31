@@ -92,8 +92,6 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   _max_oop_map_stack_offset = (OopMapValue::register_mask - VMRegImpl::stack2reg(0)->value()) * VMRegImpl::stack_slot_size;
   int max_oop_map_stack_index = _max_oop_map_stack_offset / VMRegImpl::stack_slot_size;
-  assert(OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index)), "should be valid");
-  assert(!OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index + 1)), "should be invalid");
 
   symbol_init = (address) vmSymbols::object_initializer_name();
   symbol_clinit = (address) vmSymbols::class_initializer_name();
@@ -101,7 +99,6 @@ void CompilerToVM::Data::initialize(TRAPS) {
   BarrierSet* bs = BarrierSet::barrier_set();
   if (bs->is_a(BarrierSet::CardTableBarrierSet)) {
     jbyte* base = ci_card_table_address();
-    assert(base != NULL, "unexpected byte_map_base");
     cardtable_start_address = base;
     cardtable_shift = CardTable::card_shift;
   } else {
@@ -158,7 +155,6 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   VM_INTRINSICS_DO(VM_INTRINSIC_INFO, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE)
 #undef VM_SYMBOL_TO_STRING
 #undef VM_INTRINSIC_INFO
-  assert(index == vmIntrinsics::ID_LIMIT - 1, "must be");
 
   return vmIntrinsics;
 }
@@ -227,7 +223,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(VerifyOops) \
 
 #define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
-#define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL);} while(0)
+#define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); } while(0)
 #define BOXED_LONG(name, value) \
   oop name; \
   do { \
@@ -296,8 +292,7 @@ jobjectArray readConfiguration0(JNIEnv *env, TRAPS) {
       if (strcmp(vmField.typeString, "bool") == 0) {
         BOXED_BOOLEAN(box, *(jbyte*) vmField.address);
         VMField::set_value(vmFieldObj, box);
-      } else if (strcmp(vmField.typeString, "int") == 0 ||
-                 strcmp(vmField.typeString, "jint") == 0) {
+      } else if (strcmp(vmField.typeString, "int") == 0 || strcmp(vmField.typeString, "jint") == 0) {
         BOXED_LONG(box, *(jint*) vmField.address);
         VMField::set_value(vmFieldObj, box);
       } else if (strcmp(vmField.typeString, "uint64_t") == 0) {
@@ -338,7 +333,6 @@ jobjectArray readConfiguration0(JNIEnv *env, TRAPS) {
     vmConstants->obj_at_put(insert++, name());
     vmConstants->obj_at_put(insert++, value);
   }
-  assert(insert == len * 2, "must be");
 
   len = JVMCIVMStructs::localHotSpotVMAddresses_count();
   objArrayHandle vmAddresses = oopFactory::new_objArray_handle(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);

@@ -24,15 +24,7 @@ Node* CardTableBarrierSetC2::byte_map_base_node(GraphKit* kit) const {
 // vanilla/CMS post barrier
 // Insert a write-barrier store.  This is to let generational GC work; we have
 // to flag all oop-stores before the next GC point.
-void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
-                                         Node* ctl,
-                                         Node* oop_store,
-                                         Node* obj,
-                                         Node* adr,
-                                         uint  adr_idx,
-                                         Node* val,
-                                         BasicType bt,
-                                         bool use_precise) const {
+void CardTableBarrierSetC2::post_barrier(GraphKit* kit, Node* ctl, Node* oop_store, Node* obj, Node* adr, uint adr_idx, Node* val, BasicType bt, bool use_precise) const {
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(BarrierSet::barrier_set());
   CardTable* ct = ctbs->card_table();
   // No store check needed if we're storing a NULL or an old object
@@ -47,8 +39,7 @@ void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
       return;
   }
 
-  if (use_ReduceInitialCardMarks()
-      && obj == kit->just_allocated_object(kit->control())) {
+  if (use_ReduceInitialCardMarks() && obj == kit->just_allocated_object(kit->control())) {
     // We can skip marks on a freshly-allocated object in Eden.
     // Keep this code in sync with new_deferred_store_barrier() in runtime.cpp.
     // That routine informs GC to take appropriate compensating steps,
@@ -61,8 +52,6 @@ void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
     // All card marks for a (non-array) instance are in one place:
     adr = obj;
   }
-  // (Else it's an array (or unknown), and we want more precise card marks.)
-  assert(adr != NULL, "");
 
   IdealKit ideal(kit, true);
 
@@ -70,7 +59,7 @@ void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
   Node* cast = __ CastPX(__ ctrl(), adr);
 
   // Divide by card size
-  Node* card_offset = __ URShiftX( cast, __ ConI(CardTable::card_shift) );
+  Node* card_offset = __ URShiftX( cast, __ ConI(CardTable::card_shift));
 
   // Combine card table base and card offset
   Node* card_adr = __ AddP(__ top(), byte_map_base_node(kit), card_offset );
@@ -96,7 +85,7 @@ void CardTableBarrierSetC2::post_barrier(GraphKit* kit,
   }
 
   // Smash zero into card
-  if(!ct->scanned_concurrently()) {
+  if (!ct->scanned_concurrently()) {
     __ store(__ ctrl(), card_adr, zero, T_BYTE, adr_type, MemNode::unordered);
   } else {
     // Specialized path for CM store barrier
@@ -118,7 +107,6 @@ void CardTableBarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* siz
   // If necessary, emit some card marks afterwards.  (Non-arrays only.)
   bool card_mark = !is_array && !use_ReduceInitialCardMarks();
   if (card_mark) {
-    assert(!is_array, "");
     // Put in store barrier for any and all oops we are sticking
     // into this object.  (We could avoid this if we could prove
     // that the object type contains no oop fields at all.)
@@ -145,19 +133,16 @@ bool CardTableBarrierSetC2::is_gc_barrier_node(Node* node) const {
 }
 
 void CardTableBarrierSetC2::eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) const {
-  assert(node->Opcode() == Op_CastP2X, "ConvP2XNode required");
   Node *shift = node->unique_out();
   Node *addp = shift->unique_out();
   for (DUIterator_Last jmin, j = addp->last_outs(jmin); j >= jmin; --j) {
     Node *mem = addp->last_out(j);
     if (UseCondCardMark && mem->is_Load()) {
-      assert(mem->Opcode() == Op_LoadB, "unexpected code shape");
       // The load is checking if the card has been written so
       // replace it with zero to fold the test.
       macro->replace_node(mem, macro->intcon(0));
       continue;
     }
-    assert(mem->is_Store(), "store required");
     macro->replace_node(mem, mem->in(MemNode::Memory));
   }
 }

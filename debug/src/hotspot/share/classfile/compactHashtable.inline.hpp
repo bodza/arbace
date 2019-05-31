@@ -12,7 +12,6 @@ inline Symbol* CompactHashtable<T, N>::decode_entry(CompactHashtable<Symbol*, ch
                                                     u4 offset, const char* name, int len) {
   Symbol* sym = (Symbol*)(_base_address + offset);
   if (sym->equals(name, len)) {
-    assert(sym->refcount() == -1, "must be shared");
     return sym;
   }
 

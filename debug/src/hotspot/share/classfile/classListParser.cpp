@@ -20,7 +20,6 @@
 ClassListParser* ClassListParser::_instance = NULL;
 
 ClassListParser::ClassListParser(const char* file) {
-  assert(_instance == NULL, "must be singleton");
   _instance = this;
   _classlist_file = file;
   _file = fopen(file, "r");
@@ -219,9 +218,7 @@ void ClassListParser::error(const char *msg, ...) {
     error_index = 0;
   }
 
-  jio_fprintf(defaultStream::error_stream(),
-              "An error has occurred while processing class list file %s %d:%d.\n",
-              _classlist_file, _line_no, (error_index + 1));
+  jio_fprintf(defaultStream::error_stream(), "An error has occurred while processing class list file %s %d:%d.\n", _classlist_file, _line_no, (error_index + 1));
   jio_vfprintf(defaultStream::error_stream(), msg, ap);
 
   if (_line_len <= 0) {
@@ -335,7 +332,6 @@ Klass* ClassListParser::load_current_class(TRAPS) {
       // array classes are not supported in class list.
       THROW_NULL(vmSymbols::java_lang_ClassNotFoundException());
     }
-    assert(result.get_type() == T_OBJECT, "just checking");
     oop obj = (oop) result.get_jobject();
     if (!HAS_PENDING_EXCEPTION && (obj != NULL)) {
       klass = java_lang_Class::as_Klass(obj);

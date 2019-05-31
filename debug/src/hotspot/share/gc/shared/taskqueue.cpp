@@ -19,17 +19,14 @@ const char * const TaskQueueStats::_names[last_stat_id] = {
   "qpush", "qpop", "qpop-s", "qattempt", "qsteal", "opush", "omax"
 };
 
-TaskQueueStats & TaskQueueStats::operator +=(const TaskQueueStats & addend)
-{
+TaskQueueStats & TaskQueueStats::operator +=(const TaskQueueStats & addend) {
   for (unsigned int i = 0; i < last_stat_id; ++i) {
     _stats[i] += addend._stats[i];
   }
   return *this;
 }
 
-void TaskQueueStats::print_header(unsigned int line, outputStream* const stream,
-                                  unsigned int width)
-{
+void TaskQueueStats::print_header(unsigned int line, outputStream* const stream, unsigned int width) {
   // Use a width w: 1 <= w <= max_width
   const unsigned int max_width = 40;
   const unsigned int w = MAX2(MIN2(width, max_width), 1U);
@@ -53,8 +50,7 @@ void TaskQueueStats::print_header(unsigned int line, outputStream* const stream,
   }
 }
 
-void TaskQueueStats::print(outputStream* stream, unsigned int width) const
-{
+void TaskQueueStats::print(outputStream* stream, unsigned int width) const {
   #define FMT SIZE_FORMAT_W(*)
   stream->print(FMT, width, _stats[0]);
   for (unsigned int i = 1; i < last_stat_id; ++i) {
@@ -70,7 +66,6 @@ int TaskQueueSetSuper::randomParkAndMiller(int *seed0) {
   const int m = 2147483647;
   const int q =     127773;  /* m div a */
   const int r =       2836;  /* m mod a */
-  assert(sizeof(int) == 4, "I think this relies on that");
   int seed = *seed0;
   int hi   = seed / q;
   int lo   = seed % q;
@@ -83,30 +78,25 @@ int TaskQueueSetSuper::randomParkAndMiller(int *seed0) {
   return seed;
 }
 
-ParallelTaskTerminator::
-ParallelTaskTerminator(uint n_threads, TaskQueueSetSuper* queue_set) :
+ParallelTaskTerminator::ParallelTaskTerminator(uint n_threads, TaskQueueSetSuper* queue_set) :
   _n_threads(n_threads),
   _queue_set(queue_set),
-  _offered_termination(0) {}
+  _offered_termination(0) { }
 
 bool ParallelTaskTerminator::peek_in_queue_set() {
   return _queue_set->peek();
 }
 
 void ParallelTaskTerminator::yield() {
-  assert(_offered_termination <= _n_threads, "Invariant");
   os::naked_yield();
 }
 
 void ParallelTaskTerminator::sleep(uint millis) {
-  assert(_offered_termination <= _n_threads, "Invariant");
   os::sleep(Thread::current(), millis, false);
 }
 
 bool
 ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
-  assert(_n_threads > 0, "Initialization is incorrect");
-  assert(_offered_termination < _n_threads, "Invariant");
   Atomic::inc(&_offered_termination);
 
   uint yield_count = 0;
@@ -130,7 +120,6 @@ ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
   // Loop waiting for all threads to offer termination or
   // more work.
   while (true) {
-    assert(_offered_termination <= _n_threads, "Invariant");
     // Are all threads offering termination?
     if (_offered_termination == _n_threads) {
       return true;
@@ -180,10 +169,8 @@ ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
 #ifdef TRACESPINNING
       _total_peeks++;
 #endif
-      if (peek_in_queue_set() ||
-          (terminator != NULL && terminator->should_exit_termination())) {
+      if (peek_in_queue_set() || (terminator != NULL && terminator->should_exit_termination())) {
         Atomic::dec(&_offered_termination);
-        assert(_offered_termination < _n_threads, "Invariant");
         return false;
       }
     }
@@ -192,17 +179,12 @@ ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
 
 #ifdef TRACESPINNING
 void ParallelTaskTerminator::print_termination_counts() {
-  log_trace(gc, task)("ParallelTaskTerminator Total yields: %u"
-    " Total spins: %u Total peeks: %u",
-    total_yields(),
-    total_spins(),
-    total_peeks());
+  log_trace(gc, task)("ParallelTaskTerminator Total yields: %u Total spins: %u Total peeks: %u", total_yields(), total_spins(), total_peeks());
 }
 #endif
 
 void ParallelTaskTerminator::reset_for_reuse() {
   if (_offered_termination != 0) {
-    assert(_offered_termination == _n_threads, "Terminator may still be in use");
     _offered_termination = 0;
   }
 }

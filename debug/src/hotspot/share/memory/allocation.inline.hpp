@@ -52,7 +52,6 @@ E* MmapArrayAllocator<E>::allocate(size_t length, MEMFLAGS flags) {
 template <class E>
 void MmapArrayAllocator<E>::free(E* addr, size_t length) {
   bool result = os::release_memory((char*)addr, size_for(length));
-  assert(result, "Failed to release memory");
 }
 
 template <class E>

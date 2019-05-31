@@ -24,7 +24,6 @@ bool AbstractCompiler::should_perform_shutdown() {
   // decrementing '_num_compiler_threads' and the following operations.
   MutexLocker only_one(CompileThread_lock);
   _num_compiler_threads--;
-  assert(CompileBroker::is_compilation_disabled_forever(), "Must be set, otherwise thread waits forever");
 
   // Only the last thread will perform shutdown operations
   if (_num_compiler_threads == 0) {

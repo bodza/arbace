@@ -45,14 +45,11 @@ class Disassembler {
  public:
   static bool can_decode() {
     ttyLocker tl;
-    return (_decode_instructions_virtual != NULL) ||
-           (_decode_instructions != NULL) ||
-           load_library();
+    return (_decode_instructions_virtual != NULL) || (_decode_instructions != NULL) || load_library();
   }
   static void decode(CodeBlob *cb,               outputStream* st = NULL);
   static void decode(nmethod* nm,                outputStream* st = NULL);
-  static void decode(address begin, address end, outputStream* st = NULL,
-                     CodeStrings c = CodeStrings(), ptrdiff_t offset = 0);
+  static void decode(address begin, address end, outputStream* st = NULL, CodeStrings c = CodeStrings(), ptrdiff_t offset = 0);
 };
 
 #endif

@@ -53,8 +53,6 @@ void FreeList<Chunk>::initialize() {
 template <class Chunk_t>
 Chunk_t* FreeList<Chunk_t>::get_chunk_at_head() {
   assert_proper_lock_protection();
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
   Chunk_t* fc = head();
   if (fc != NULL) {
     Chunk_t* nextFC = fc->next();
@@ -68,15 +66,12 @@ Chunk_t* FreeList<Chunk_t>::get_chunk_at_head() {
     link_head(nextFC);
     decrement_count();
   }
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
   return fc;
 }
 
 template <class Chunk>
 void FreeList<Chunk>::getFirstNChunksFromList(size_t n, FreeList<Chunk>* fl) {
   assert_proper_lock_protection();
-  assert(fl->count() == 0, "Precondition");
   if (count() > 0) {
     int k = 1;
     fl->set_head(head()); n--;
@@ -84,7 +79,6 @@ void FreeList<Chunk>::getFirstNChunksFromList(size_t n, FreeList<Chunk>* fl) {
     while (tl->next() != NULL && n > 0) {
       tl = tl->next(); n--; k++;
     }
-    assert(tl != NULL, "Loop Inv.");
 
     // First, fix up the list we took from.
     Chunk* new_head = tl->next();
@@ -107,11 +101,6 @@ void FreeList<Chunk>::getFirstNChunksFromList(size_t n, FreeList<Chunk>* fl) {
 template <class Chunk>
 void FreeList<Chunk>::remove_chunk(Chunk*fc) {
    assert_proper_lock_protection();
-   assert(head() != NULL, "Remove from empty list");
-   assert(fc != NULL, "Remove a NULL chunk");
-   assert(size() == fc->size(), "Wrong list");
-   assert(head() == NULL || head()->prev() == NULL, "list invariant");
-   assert(tail() == NULL || tail()->next() == NULL, "list invariant");
 
    Chunk* prevFC = fc->prev();
    Chunk* nextFC = fc->next();
@@ -124,42 +113,24 @@ void FreeList<Chunk>::remove_chunk(Chunk*fc) {
    }
    if (prevFC == NULL) { // removed head of list
      link_head(nextFC);
-     assert(nextFC == NULL || nextFC->prev() == NULL, "Prev of head should be NULL");
    } else {
      prevFC->link_next(nextFC);
-     assert(tail() != prevFC || prevFC->next() == NULL, "Next of tail should be NULL");
    }
    decrement_count();
-   assert(((head() == NULL) + (tail() == NULL) + (count() == 0)) % 3 == 0, "H/T/C Inconsistency");
-   assert(fc->is_free(), "Should still be a free chunk");
-   assert(head() == NULL || head()->prev() == NULL, "list invariant");
-   assert(tail() == NULL || tail()->next() == NULL, "list invariant");
-   assert(head() == NULL || head()->size() == size(), "wrong item on list");
-   assert(tail() == NULL || tail()->size() == size(), "wrong item on list");
 }
 
 // Add this chunk at the head of the list.
 template <class Chunk>
 void FreeList<Chunk>::return_chunk_at_head(Chunk* chunk, bool record_return) {
   assert_proper_lock_protection();
-  assert(chunk != NULL, "insert a NULL chunk");
-  assert(size() == chunk->size(), "Wrong size");
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
 
   Chunk* oldHead = head();
-  assert(chunk != oldHead, "double insertion");
   chunk->link_after(oldHead);
   link_head(chunk);
   if (oldHead == NULL) { // only chunk in list
-    assert(tail() == NULL, "inconsistent FreeList");
     link_tail(chunk);
   }
   increment_count(); // of # of chunks in list
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
-  assert(head() == NULL || head()->size() == size(), "wrong item on list");
-  assert(tail() == NULL || tail()->size() == size(), "wrong item on list");
 }
 
 template <class Chunk>
@@ -172,25 +143,15 @@ void FreeList<Chunk>::return_chunk_at_head(Chunk* chunk) {
 template <class Chunk>
 void FreeList<Chunk>::return_chunk_at_tail(Chunk* chunk, bool record_return) {
   assert_proper_lock_protection();
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
-  assert(chunk != NULL, "insert a NULL chunk");
-  assert(size() == chunk->size(), "wrong size");
 
   Chunk* oldTail = tail();
-  assert(chunk != oldTail, "double insertion");
   if (oldTail != NULL) {
     oldTail->link_after(chunk);
   } else { // only chunk in list
-    assert(head() == NULL, "inconsistent FreeList");
     link_head(chunk);
   }
   link_tail(chunk);
   increment_count();  // of # of chunks in list
-  assert(head() == NULL || head()->prev() == NULL, "list invariant");
-  assert(tail() == NULL || tail()->next() == NULL, "list invariant");
-  assert(head() == NULL || head()->size() == size(), "wrong item on list");
-  assert(tail() == NULL || tail()->size() == size(), "wrong item on list");
 }
 
 template <class Chunk>
@@ -210,7 +171,6 @@ void FreeList<Chunk>::prepend(FreeList<Chunk>* fl) {
       // Both are non-empty.
       Chunk* fl_tail = fl->tail();
       Chunk* this_head = head();
-      assert(fl_tail->next() == NULL, "Well-formedness of fl");
       fl_tail->link_next(this_head);
       this_head->link_prev(fl_tail);
       set_head(fl->head());

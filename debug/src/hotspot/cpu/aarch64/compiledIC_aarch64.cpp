@@ -36,7 +36,6 @@ address CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) 
   __ movptr(rscratch1, 0);
   __ br(rscratch1);
 
-  assert((__ offset() - offset) <= (int)to_interp_stub_size(), "stub too big");
   __ end_a_stub();
   return base;
 }
@@ -80,10 +79,8 @@ void CompiledDirectStaticCall::set_to_interpreted(const methodHandle& callee, ad
 }
 
 void CompiledDirectStaticCall::set_stub_to_clean(static_stub_Relocation* static_stub) {
-  assert(CompiledIC_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "mt unsafe call");
   // Reset stub.
   address stub = static_stub->addr();
-  assert(stub != NULL, "stub not found");
   // Creation also verifies the object.
   NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);
   method_holder->set_data(0);

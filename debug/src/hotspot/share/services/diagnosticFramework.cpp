@@ -10,10 +10,7 @@
 #include "services/diagnosticFramework.hpp"
 #include "services/management.hpp"
 
-CmdLine::CmdLine(const char* line, size_t len, bool no_command_name)
-  : _cmd(line), _cmd_len(0), _args(NULL), _args_len(0)
-{
-  assert(line != NULL, "Command line string should not be NULL");
+CmdLine::CmdLine(const char* line, size_t len, bool no_command_name) : _cmd(line), _cmd_len(0), _args(NULL), _args_len(0) {
   const char* line_end;
   const char* cmd_end;
 
@@ -70,8 +67,7 @@ bool DCmdArgIter::next(TRAPS) {
         }
       }
       if (_buffer[_cursor] != quote) {
-        THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-                "Format error in diagnostic command arguments", false);
+        THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Format error in diagnostic command arguments", false);
       }
       break;
     }
@@ -101,8 +97,7 @@ bool DCmdArgIter::next(TRAPS) {
           }
         }
         if (_buffer[_cursor] != quote) {
-          THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-                  "Format error in diagnostic command arguments", false);
+          THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Format error in diagnostic command arguments", false);
         }
         break;
       }
@@ -126,7 +121,6 @@ bool DCmdInfo::by_name(void* cmd_name, DCmdInfo* info) {
 }
 
 void DCmdParser::add_dcmd_option(GenDCmdArgument* arg) {
-  assert(arg != NULL, "Sanity");
   if (_options == NULL) {
     _options = arg;
   } else {
@@ -145,7 +139,6 @@ void DCmdParser::add_dcmd_option(GenDCmdArgument* arg) {
 }
 
 void DCmdParser::add_dcmd_argument(GenDCmdArgument* arg) {
-  assert(arg != NULL, "Sanity");
   if (_arguments_list == NULL) {
     _arguments_list = arg;
   } else {
@@ -199,8 +192,7 @@ void DCmdParser::parse(CmdLine* line, char delim, TRAPS) {
 GenDCmdArgument* DCmdParser::lookup_dcmd_option(const char* name, size_t len) {
   GenDCmdArgument* arg = _options;
   while (arg != NULL) {
-    if (strlen(arg->name()) == len &&
-      strncmp(name, arg->name(), len) == 0) {
+    if (strlen(arg->name()) == len && strncmp(name, arg->name(), len) == 0) {
       return arg;
     }
     arg = arg->next();
@@ -357,20 +349,18 @@ GrowableArray<DCmdArgumentInfo*>* DCmdParser::argument_info_array() const {
 DCmdFactory* DCmdFactory::_DCmdFactoryList = NULL;
 bool DCmdFactory::_has_pending_jmx_notification = false;
 
-void DCmd::parse_and_execute(DCmdSource source, outputStream* out,
-                             const char* cmdline, char delim, TRAPS) {
+void DCmd::parse_and_execute(DCmdSource source, outputStream* out, const char* cmdline, char delim, TRAPS) {
 
   if (cmdline == NULL) return; // Nothing to do!
   DCmdIter iter(cmdline, '\n');
 
   int count = 0;
   while (iter.has_next()) {
-    if(source == DCmd_Source_MBean && count > 0) {
+    if (source == DCmd_Source_MBean && count > 0) {
       // When diagnostic commands are invoked via JMX, each command line
       // must contains one and only one command because of the Permission
       // checks performed by the DiagnosticCommandMBean
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Invalid syntax");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Invalid syntax");
     }
     CmdLine line = iter.next();
     if (line.is_stop()) {
@@ -379,7 +369,6 @@ void DCmd::parse_and_execute(DCmdSource source, outputStream* out,
     if (line.is_executable()) {
       ResourceMark rm;
       DCmd* command = DCmdFactory::create_local_DCmd(source, line, out, CHECK);
-      assert(command != NULL, "command error must be handled before this line");
       DCmdMark mark(command);
       command->parse(&line, delim, CHECK);
       command->execute(source, CHECK);
@@ -451,8 +440,7 @@ void DCmdFactory::send_notification_internal(TRAPS) {
     instanceHandle dcmd_mbean_h(THREAD, m);
 
     if (!dcmd_mbean_h->is_a(k)) {
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "DiagnosticCommandImpl.getDiagnosticCommandMBean didn't return a DiagnosticCommandMBean instance");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "DiagnosticCommandImpl.getDiagnosticCommandMBean didn't return a DiagnosticCommandMBean instance");
     }
 
     JavaValue result2(T_VOID);
@@ -474,9 +462,8 @@ DCmdFactory* DCmdFactory::factory(DCmdSource source, const char* name, size_t le
   MutexLockerEx ml(_dcmdFactory_lock, Mutex::_no_safepoint_check_flag);
   DCmdFactory* factory = _DCmdFactoryList;
   while (factory != NULL) {
-    if (strlen(factory->name()) == len &&
-        strncmp(name, factory->name(), len) == 0) {
-      if(factory->export_flags() & source) {
+    if (strlen(factory->name()) == len && strncmp(name, factory->name(), len) == 0) {
+      if (factory->export_flags() & source) {
         return factory;
       } else {
         return NULL;
@@ -491,8 +478,7 @@ int DCmdFactory::register_DCmdFactory(DCmdFactory* factory) {
   MutexLockerEx ml(_dcmdFactory_lock, Mutex::_no_safepoint_check_flag);
   factory->_next = _DCmdFactoryList;
   _DCmdFactoryList = factory;
-  if (_send_jmx_notification && !factory->_hidden
-      && (factory->_export_flags & DCmd_Source_MBean)) {
+  if (_send_jmx_notification && !factory->_hidden && (factory->_export_flags & DCmd_Source_MBean)) {
     DCmdFactory::push_jmx_notification_request();
   }
   return 0; // Actually, there's no checks for duplicates
@@ -508,8 +494,7 @@ DCmd* DCmdFactory::create_local_DCmd(DCmdSource source, CmdLine &line,
     }
     return f->create_resource_instance(out);
   }
-  THROW_MSG_NULL(vmSymbols::java_lang_IllegalArgumentException(),
-             "Unknown diagnostic command");
+  THROW_MSG_NULL(vmSymbols::java_lang_IllegalArgumentException(), "Unknown diagnostic command");
 }
 
 GrowableArray<const char*>* DCmdFactory::DCmd_list(DCmdSource source) {

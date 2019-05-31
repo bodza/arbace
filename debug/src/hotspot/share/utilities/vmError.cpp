@@ -94,8 +94,7 @@ static void print_bug_submit_message(outputStream *out, Thread *thread) {
   out->print_raw_cr(Arguments::java_vendor_url_bug());
   // If the crash is in native code, encourage user to submit a bug to the
   // provider of that code.
-  if (thread && thread->is_Java_thread() &&
-      !thread->is_hidden_from_external_view()) {
+  if (thread && thread->is_Java_thread() && !thread->is_hidden_from_external_view()) {
     JavaThread* jt = (JavaThread*)thread;
     if (jt->thread_state() == _thread_in_native) {
       out->print_cr("# The crash happened outside the Java Virtual Machine in native code.\n# See problematic frame for where to report the bug.");
@@ -119,38 +118,27 @@ char* VMError::error_string(char* buf, int buflen) {
   const char *signame = os::exception_name(_id, signame_buf, sizeof(signame_buf));
 
   if (signame) {
-    jio_snprintf(buf, buflen,
-                 "%s (0x%x) at pc=" PTR_FORMAT ", pid=%d, tid=" UINTX_FORMAT,
-                 signame, _id, _pc,
-                 os::current_process_id(), os::current_thread_id());
+    jio_snprintf(buf, buflen, "%s (0x%x) at pc=" PTR_FORMAT ", pid=%d, tid=" UINTX_FORMAT, signame, _id, _pc, os::current_process_id(), os::current_thread_id());
   } else if (_filename != NULL && _lineno > 0) {
     // skip directory names
     char separator = os::file_separator()[0];
     const char *p = strrchr(_filename, separator);
-    int n = jio_snprintf(buf, buflen,
-                         "Internal Error at %s:%d, pid=%d, tid=" UINTX_FORMAT,
-                         p ? p + 1 : _filename, _lineno,
-                         os::current_process_id(), os::current_thread_id());
+    int n = jio_snprintf(buf, buflen, "Internal Error at %s:%d, pid=%d, tid=" UINTX_FORMAT, p ? p + 1 : _filename, _lineno, os::current_process_id(), os::current_thread_id());
     if (n >= 0 && n < buflen && _message) {
       if (strlen(_detail_msg) > 0) {
-        jio_snprintf(buf + n, buflen - n, "%s%s: %s",
-        os::line_separator(), _message, _detail_msg);
+        jio_snprintf(buf + n, buflen - n, "%s%s: %s", os::line_separator(), _message, _detail_msg);
       } else {
-        jio_snprintf(buf + n, buflen - n, "%sError: %s",
-                     os::line_separator(), _message);
+        jio_snprintf(buf + n, buflen - n, "%sError: %s", os::line_separator(), _message);
       }
     }
   } else {
-    jio_snprintf(buf, buflen,
-                 "Internal Error (0x%x), pid=%d, tid=" UINTX_FORMAT,
-                 _id, os::current_process_id(), os::current_thread_id());
+    jio_snprintf(buf, buflen, "Internal Error (0x%x), pid=%d, tid=" UINTX_FORMAT, _id, os::current_process_id(), os::current_thread_id());
   }
 
   return buf;
 }
 
-void VMError::print_stack_trace(outputStream* st, JavaThread* jt,
-                                char* buf, int buflen, bool verbose) {
+void VMError::print_stack_trace(outputStream* st, JavaThread* jt, char* buf, int buflen, bool verbose) {
 #ifdef ZERO
   if (jt->zero_stack()->sp() && jt->top_zero_frame()) {
     // StackFrameStream uses the frame anchor, which may not have
@@ -165,7 +153,7 @@ void VMError::print_stack_trace(outputStream* st, JavaThread* jt,
 
     // Print the frames
     StackFrameStream sfs(jt);
-    for(int i = 0; !sfs.is_done(); sfs.next(), i++) {
+    for (int i = 0; !sfs.is_done(); sfs.next(), i++) {
       sfs.current()->zero_print_on_error(i, st, buf, buflen);
       st->cr();
     }
@@ -177,7 +165,7 @@ void VMError::print_stack_trace(outputStream* st, JavaThread* jt,
 #else
   if (jt->has_last_Java_frame()) {
     st->print_cr("Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)");
-    for(StackFrameStream sfs(jt); !sfs.is_done(); sfs.next()) {
+    for (StackFrameStream sfs(jt); !sfs.is_done(); sfs.next()) {
       sfs.current()->print_on_error(st, buf, buflen, verbose);
       st->cr();
     }
@@ -381,8 +369,7 @@ void VMError::report(outputStream* st, bool _verbose) {
     if (should_report_bug(_id)) {
       st->print_cr("# A fatal error has been detected by the Java Runtime Environment:");
     } else {
-      st->print_cr("# There is insufficient memory for the Java "
-                   "Runtime Environment to continue.");
+      st->print_cr("# There is insufficient memory for the Java Runtime Environment to continue.");
     }
 
   STEP("printing type of error")
@@ -392,8 +379,7 @@ void VMError::report(outputStream* st, bool _verbose) {
        case OOM_MMAP_ERROR:
          if (_size) {
            st->print("# Native memory allocation ");
-           st->print((_id == (int)OOM_MALLOC_ERROR) ? "(malloc) failed to allocate " :
-                                                 "(mmap) failed to map ");
+           st->print((_id == (int)OOM_MALLOC_ERROR) ? "(malloc) failed to allocate " : "(mmap) failed to map ");
            jio_snprintf(buf, sizeof(buf), SIZE_FORMAT, _size);
            st->print("%s", buf);
            st->print(" bytes");
@@ -858,7 +844,7 @@ void VMError::report(outputStream* st, bool _verbose) {
      }
 
   STEP("printing log configuration")
-    if (_verbose){
+    if (_verbose) {
       st->print_cr("Logging:");
       LogConfiguration::describe_current_configuration(st);
       st->cr();
@@ -1160,8 +1146,7 @@ const char* VMError::_filename;
 int         VMError::_lineno;
 size_t      VMError::_size;
 
-void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo,
-                             void* context, const char* detail_fmt, ...)
+void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context, const char* detail_fmt, ...)
 {
   va_list detail_args;
   va_start(detail_args, detail_fmt);
@@ -1187,20 +1172,16 @@ void VMError::report_and_die(const char* message)
   report_and_die(message, "%s", "");
 }
 
-void VMError::report_and_die(Thread* thread, void* context, const char* filename, int lineno, const char* message,
-                             const char* detail_fmt, va_list detail_args)
+void VMError::report_and_die(Thread* thread, void* context, const char* filename, int lineno, const char* message, const char* detail_fmt, va_list detail_args)
 {
   report_and_die(INTERNAL_ERROR, message, detail_fmt, detail_args, thread, NULL, NULL, context, filename, lineno, 0);
 }
 
-void VMError::report_and_die(Thread* thread, const char* filename, int lineno, size_t size,
-                             VMErrorType vm_err_type, const char* detail_fmt, va_list detail_args) {
+void VMError::report_and_die(Thread* thread, const char* filename, int lineno, size_t size, VMErrorType vm_err_type, const char* detail_fmt, va_list detail_args) {
   report_and_die(vm_err_type, NULL, detail_fmt, detail_args, thread, NULL, NULL, NULL, filename, lineno, size);
 }
 
-void VMError::report_and_die(int id, const char* message, const char* detail_fmt, va_list detail_args,
-                             Thread* thread, address pc, void* siginfo, void* context, const char* filename,
-                             int lineno, size_t size)
+void VMError::report_and_die(int id, const char* message, const char* detail_fmt, va_list detail_args, Thread* thread, address pc, void* siginfo, void* context, const char* filename, int lineno, size_t size)
 {
   // Don't allocate large buffer on stack
   static char buffer[O_BUFLEN];
@@ -1220,8 +1201,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
       os::abort(CreateCoredumpOnCrash);
   }
   intptr_t mytid = os::current_thread_id();
-  if (first_error_tid == -1 &&
-      Atomic::cmpxchg(mytid, &first_error_tid, (intptr_t)-1) == -1) {
+  if (first_error_tid == -1 && Atomic::cmpxchg(mytid, &first_error_tid, (intptr_t)-1) == -1) {
 
     // Initialize time stamps to use the same base.
     out.time_stamp().update_to(1);
@@ -1274,9 +1254,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     // or in the same thread during error reporting.
     if (first_error_tid != mytid) {
       char msgbuf[64];
-      jio_snprintf(msgbuf, sizeof(msgbuf),
-                   "[thread " INTX_FORMAT " also had an error]",
-                   mytid);
+      jio_snprintf(msgbuf, sizeof(msgbuf), "[thread " INTX_FORMAT " also had an error]", mytid);
       out.print_raw_cr(msgbuf);
 
       // error reporting is not MT-safe, block current thread
@@ -1434,7 +1412,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
 
     char* cmd;
     const char* ptr = OnError;
-    while ((cmd = next_OnError_command(buffer, sizeof(buffer), &ptr)) != NULL){
+    while ((cmd = next_OnError_command(buffer, sizeof(buffer), &ptr)) != NULL) {
       out.print_raw   ("#   Executing ");
 #if defined(LINUX) || defined(_ALLBSD_SOURCE)
       out.print_raw   ("/bin/sh -c ");
@@ -1493,7 +1471,7 @@ void VM_ReportJavaOutOfMemory::doit() {
 
   char* cmd;
   const char* ptr = OnOutOfMemoryError;
-  while ((cmd = next_OnError_command(buffer, sizeof(buffer), &ptr)) != NULL){
+  while ((cmd = next_OnError_command(buffer, sizeof(buffer), &ptr)) != NULL) {
     tty->print("#   Executing ");
 #if defined(LINUX)
     tty->print  ("/bin/sh -c ");
@@ -1534,9 +1512,7 @@ bool VMError::check_timeout() {
 
   // Do not check for timeouts if we still have a message box to show to the
   // user or if there are OnError handlers to be run.
-  if (ShowMessageBoxOnError
-      || (OnError != NULL && OnError[0] != '\0')
-      || Arguments::abort_hook() != NULL) {
+  if (ShowMessageBoxOnError || (OnError != NULL && OnError[0] != '\0') || Arguments::abort_hook() != NULL) {
     return false;
   }
 

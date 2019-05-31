@@ -42,8 +42,7 @@ public:
   }
   static const char* impact() { return "Low"; }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.util.PropertyPermission",
-                        "java.vm.version", "read"};
+    JavaPermission p = {"java.util.PropertyPermission", "java.vm.version", "read"};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -59,8 +58,7 @@ public:
   }
   static const char* impact() { return "Low"; }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -81,8 +79,7 @@ public:
       return "Low";
     }
     static const JavaPermission permission() {
-      JavaPermission p = {"java.util.PropertyPermission",
-                          "*", "read"};
+      JavaPermission p = {"java.util.PropertyPermission", "*", "read"};
       return p;
     }
     static int num_arguments() { return 0; }
@@ -103,8 +100,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -126,8 +122,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "control", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "control", NULL};
     return p;
   }
   static int num_arguments();
@@ -147,8 +142,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() {
@@ -182,8 +176,7 @@ public:
   }
   static const char* impact() { return "Low"; }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -230,8 +223,7 @@ public:
   }
   static int num_arguments() { return 0; }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-      "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
       return p;
   }
 
@@ -250,8 +242,7 @@ public:
   }
   static int num_arguments() { return 0; }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-      "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
       return p;
   }
 
@@ -274,8 +265,7 @@ public:
     return "High: Depends on Java heap size and content.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -322,8 +312,7 @@ public:
       return "Medium: Depends on number of loaded classes.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -361,8 +350,7 @@ public:
     return "Medium: Depends on the number of threads.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -470,8 +458,7 @@ public:
   }
 
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
 
@@ -480,7 +467,7 @@ public:
 
 class CompileQueueDCmd : public DCmd {
 public:
-  CompileQueueDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CompileQueueDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.queue";
   }
@@ -491,8 +478,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -501,7 +487,7 @@ public:
 
 class CodeListDCmd : public DCmd {
 public:
-  CodeListDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CodeListDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.codelist";
   }
@@ -512,8 +498,7 @@ public:
     return "Medium";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -522,7 +507,7 @@ public:
 
 class CodeCacheDCmd : public DCmd {
 public:
-  CodeCacheDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CodeCacheDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.codecache";
   }
@@ -533,8 +518,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -559,8 +543,7 @@ public:
            "Holds CodeCache_lock during analysis step, usually sub-second duration.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -570,7 +553,7 @@ public:
 
 class CompilerDirectivesPrintDCmd : public DCmd {
 public:
-  CompilerDirectivesPrintDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CompilerDirectivesPrintDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.directives_print";
   }
@@ -581,8 +564,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -591,7 +573,7 @@ public:
 
 class CompilerDirectivesRemoveDCmd : public DCmd {
 public:
-  CompilerDirectivesRemoveDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CompilerDirectivesRemoveDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.directives_remove";
   }
@@ -602,8 +584,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -625,8 +606,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -635,7 +615,7 @@ public:
 
 class CompilerDirectivesClearDCmd : public DCmd {
 public:
-  CompilerDirectivesClearDCmd(outputStream* output, bool heap) : DCmd(output, heap) {}
+  CompilerDirectivesClearDCmd(outputStream* output, bool heap) : DCmd(output, heap) { }
   static const char* name() {
     return "Compiler.directives_clear";
   }
@@ -646,8 +626,7 @@ public:
     return "Low";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments() { return 0; }
@@ -712,8 +691,7 @@ public:
     return "Medium: Depends on Java content.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -735,8 +713,7 @@ public:
     return "Medium: Depends on Java content.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();
@@ -758,8 +735,7 @@ public:
       return "Medium: Depends on Java content.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();

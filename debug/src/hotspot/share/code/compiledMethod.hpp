@@ -28,12 +28,10 @@ class ExceptionCache : public CHeapObj<mtCode> {
 
   inline address pc_at(int index);
   void set_pc_at(int index, address a)      {
-    assert(index >= 0 && index < cache_size,"");
     _pc[index] = a; }
 
   inline address handler_at(int index);
   void set_handler_at(int index, address a) {
-    assert(index >= 0 && index < cache_size,"");
     _handler[index] = a; }
 
   inline int count();
@@ -49,9 +47,9 @@ class ExceptionCache : public CHeapObj<mtCode> {
   void      set_next(ExceptionCache *ec)    { _next = ec; }
 
   address match(Handle exception, address pc);
-  bool    match_exception_with_space(Handle exception) ;
+  bool    match_exception_with_space(Handle exception);
   address test_address(address addr);
-  bool    add_address_and_handler(address addr, address handler) ;
+  bool    add_address_and_handler(address addr, address handler);
 };
 
 class nmethod;
@@ -68,7 +66,7 @@ class PcDescCache {
   typedef PcDesc* PcDescPtr;
   volatile PcDescPtr _pc_descs[cache_size]; // last cache_size pc_descs found
  public:
-  PcDescCache() {}
+  PcDescCache() { }
   void    reset_to(PcDesc* initial_pc_desc);
   PcDesc* find_pc_desc(int pc_offset, bool approximate);
   void    add_pc_desc(PcDesc* pc_desc);
@@ -95,7 +93,7 @@ class PcDescContainer {
 private:
   PcDescCache _pc_desc_cache;
 public:
-  PcDescContainer() {}
+  PcDescContainer() { }
 
   PcDesc* find_pc_desc_internal(address pc, bool approximate, const PcDescSearch& search);
   void    reset_to(PcDesc* initial_pc_desc) { _pc_desc_cache.reset_to(initial_pc_desc); }

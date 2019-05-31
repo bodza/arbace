@@ -30,7 +30,6 @@ class AgeTable {
   inline void add(oop p, size_t oop_size);
 
   void add(uint age, size_t oop_size) {
-    assert(age > 0 && age < table_size, "invalid age of object");
     sizes[age] += oop_size;
   }
 

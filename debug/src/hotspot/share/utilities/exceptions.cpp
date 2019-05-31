@@ -25,7 +25,6 @@ void check_ThreadShadow() {
 }
 
 void ThreadShadow::set_pending_exception(oop exception, const char* file, int line) {
-  assert(exception != NULL && oopDesc::is_oop(exception), "invalid exception oop");
   _pending_exception = exception;
   _exception_file    = file;
   _exception_line    = line;
@@ -52,8 +51,7 @@ bool Exceptions::special_exception(Thread* thread, const char* file, int line, H
    ShouldNotReachHere();
   }
 
-  if (thread->is_VM_thread()
-      || !thread->can_call_java()) {
+  if (thread->is_VM_thread() || !thread->can_call_java()) {
     // We do not care what kind of exception we get for the vm-thread or a thread which
     // is compiling.  We just install a dummy exception object
     thread->set_pending_exception(Universe::vm_exception(), file, line);
@@ -75,8 +73,7 @@ bool Exceptions::special_exception(Thread* thread, const char* file, int line, S
     ShouldNotReachHere();
   }
 
-  if (thread->is_VM_thread()
-      || !thread->can_call_java()) {
+  if (thread->is_VM_thread() || !thread->can_call_java()) {
     // We do not care what kind of exception we get for the vm-thread or a thread which
     // is compiling.  We just install a dummy exception object
     thread->set_pending_exception(Universe::vm_exception(), file, line);
@@ -88,18 +85,15 @@ bool Exceptions::special_exception(Thread* thread, const char* file, int line, S
 // This method should only be called from generated code,
 // therefore the exception oop should be in the oopmap.
 void Exceptions::_throw_oop(Thread* thread, const char* file, int line, oop exception) {
-  assert(exception != NULL, "exception should not be NULL");
   Handle h_exception(thread, exception);
   _throw(thread, file, line, h_exception);
 }
 
 void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exception, const char* message) {
   ResourceMark rm;
-  assert(h_exception() != NULL, "exception should not be NULL");
 
   // tracing (do this up front - so it works during boot strapping)
-  log_info(exceptions)("Exception <%s%s%s> (" INTPTR_FORMAT ") \n"
-                       "thrown [%s, line %d]\nfor thread " INTPTR_FORMAT,
+  log_info(exceptions)("Exception <%s%s%s> (" INTPTR_FORMAT ") \nthrown [%s, line %d]\nfor thread " INTPTR_FORMAT,
                        h_exception->print_value_string(),
                        message ? ": " : "", message ? message : "",
                        p2i(h_exception()), file, line, p2i(thread));
@@ -119,21 +113,18 @@ void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exc
     Atomic::inc(&_linkage_errors);
   }
 
-  assert(h_exception->is_a(SystemDictionary::Throwable_klass()), "exception is not a subclass of java/lang/Throwable");
-
   // set the pending exception
   thread->set_pending_exception(h_exception(), file, line);
 
   // vm log
-  if (LogEvents){
+  if (LogEvents) {
     Events::log_exception(thread, "Exception <%s%s%s> (" INTPTR_FORMAT ") thrown at [%s, line %d]",
                           h_exception->print_value_string(), message ? ": " : "", message ? message : "",
                           p2i(h_exception()), file, line);
   }
 }
 
-void Exceptions::_throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message,
-                            Handle h_loader, Handle h_protection_domain) {
+void Exceptions::_throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_loader, Handle h_protection_domain) {
   // Check for special boot-strapping/vm-thread handling
   if (special_exception(thread, file, line, name, message)) return;
   // Create and throw exception
@@ -142,8 +133,7 @@ void Exceptions::_throw_msg(Thread* thread, const char* file, int line, Symbol* 
   _throw(thread, file, line, h_exception, message);
 }
 
-void Exceptions::_throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause,
-                                  Handle h_loader, Handle h_protection_domain) {
+void Exceptions::_throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause, Handle h_loader, Handle h_protection_domain) {
   // Check for special boot-strapping/vm-thread handling
   if (special_exception(thread, file, line, name, message)) return;
   // Create and throw exception and init cause
@@ -151,8 +141,7 @@ void Exceptions::_throw_msg_cause(Thread* thread, const char* file, int line, Sy
   _throw(thread, file, line, h_exception, message);
 }
 
-void Exceptions::_throw_cause(Thread* thread, const char* file, int line, Symbol* name, Handle h_cause,
-                              Handle h_loader, Handle h_protection_domain) {
+void Exceptions::_throw_cause(Thread* thread, const char* file, int line, Symbol* name, Handle h_cause, Handle h_loader, Handle h_protection_domain) {
   // Check for special boot-strapping/vm-thread handling
   if (special_exception(thread, file, line, h_cause)) return;
   // Create and throw exception
@@ -188,7 +177,6 @@ void Exceptions::throw_stack_overflow_exception(Thread* THREAD, const char* file
     InstanceKlass* k = SystemDictionary::StackOverflowError_klass();
     oop e = k->allocate_instance(CHECK);
     exception = Handle(THREAD, e);  // fill_in_stack trace does gc
-    assert(k->is_initialized(), "need to increase java_thread_min_stack_allowed calculation");
     if (StackTraceInThrowable) {
       java_lang_Throwable::fill_in_stack_trace(exception, method());
     }
@@ -216,9 +204,6 @@ void Exceptions::fthrow(Thread* thread, const char* file, int line, Symbol* h_na
 Handle Exceptions::new_exception(Thread *thread, Symbol* name,
                                  Symbol* signature, JavaCallArguments *args,
                                  Handle h_loader, Handle h_protection_domain) {
-  assert(Universe::is_fully_initialized(), "cannot be called during initialization");
-  assert(thread->is_Java_thread(), "can only be called by a Java thread");
-  assert(!thread->has_pending_exception(), "already has exception");
 
   Handle h_exception;
 
@@ -226,7 +211,6 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
   Klass* klass = SystemDictionary::resolve_or_fail(name, h_loader, h_protection_domain, true, thread);
 
   if (!thread->has_pending_exception()) {
-    assert(klass != NULL, "klass must exist");
     h_exception = JavaCalls::construct_new_instance(InstanceKlass::cast(klass),
                                 signature,
                                 args,
@@ -252,7 +236,6 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
 
   // Future: object initializer should take a cause argument
   if (h_cause.not_null()) {
-    assert(h_cause->is_a(SystemDictionary::Throwable_klass()), "exception cause is not a subclass of java/lang/Throwable");
     JavaValue result1(T_OBJECT);
     JavaCallArguments args1;
     args1.set_receiver(h_exception);
@@ -410,8 +393,7 @@ void print_oom_count(outputStream* st, const char *err, int count) {
 }
 
 bool Exceptions::has_exception_counts() {
-  return (_stack_overflow_errors + _out_of_memory_error_java_heap_errors +
-         _out_of_memory_error_metaspace_errors + _out_of_memory_error_class_metaspace_errors) > 0;
+  return (_stack_overflow_errors + _out_of_memory_error_java_heap_errors + _out_of_memory_error_metaspace_errors + _out_of_memory_error_class_metaspace_errors) > 0;
 }
 
 void Exceptions::print_exception_counts_on_error(outputStream* st) {
@@ -456,10 +438,8 @@ ExceptionMark::~ExceptionMark() {
 
 // caller frees value_string if necessary
 void Exceptions::debug_check_abort(const char *value_string, const char* message) {
-  if (AbortVMOnException != NULL && value_string != NULL &&
-      strstr(value_string, AbortVMOnException)) {
-    if (AbortVMOnExceptionMessage == NULL || (message != NULL &&
-        strstr(message, AbortVMOnExceptionMessage))) {
+  if (AbortVMOnException != NULL && value_string != NULL && strstr(value_string, AbortVMOnException)) {
+    if (AbortVMOnExceptionMessage == NULL || (message != NULL && strstr(message, AbortVMOnExceptionMessage))) {
       fatal("Saw %s, aborting", value_string);
     }
   }

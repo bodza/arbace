@@ -10,11 +10,11 @@
   // Since there is none, we just return NULL.
   // See registerMap_sparc.hpp for an example of grabbing registers
   // from register save areas of a standard layout.
-   address pd_location(VMReg reg) const {return NULL;}
+   address pd_location(VMReg reg) const { return NULL; }
 
   // no PD state to clear or copy:
-  void pd_clear() {}
-  void pd_initialize() {}
-  void pd_initialize_from(const RegisterMap* map) {}
+  void pd_clear() { }
+  void pd_initialize() { }
+  void pd_initialize_from(const RegisterMap* map) { }
 
 #endif

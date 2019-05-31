@@ -70,7 +70,7 @@ class NativeInstruction {
  public:
 
   // unit test stuff
-  static void test() {}                 // override for testing
+  static void test() { }                 // override for testing
 
   inline friend NativeInstruction* nativeInstruction_at(address address);
 };
@@ -150,7 +150,7 @@ class NativeCall: public NativeInstruction {
   void  set_destination_mt_safe(address dest);
 
   void  verify_alignment() {
-    assert((intptr_t)addr_at(displacement_offset) % BytesPerInt == 0, "must be aligned"); }
+    }
   void  verify();
   void  print();
 
@@ -167,8 +167,7 @@ class NativeCall: public NativeInstruction {
   }
 
   static bool is_call_to(address instr, address target) {
-    return nativeInstruction_at(instr)->is_call() &&
-      nativeCall_at(instr)->destination() == target;
+    return nativeInstruction_at(instr)->is_call() && nativeCall_at(instr)->destination() == target;
   }
 
   // MT-safe patching of a call instruction.
@@ -234,7 +233,7 @@ class NativeMovConstReg: public NativeInstruction {
   void  print();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 
   // Creation
   inline friend NativeMovConstReg* nativeMovConstReg_at(address address);
@@ -267,7 +266,7 @@ class NativeMovConstRegPatching: public NativeMovConstReg {
 //      fld_d  [reg+offset]
 //      fstp_s [reg + offset]
 //      fstp_d [reg + offset]
-//      mov_literal64  scratch,<pointer> ; mov[b/w/l/q] 0(scratch),reg | mov[b/w/l/q] reg,0(scratch)
+//      mov_literal64  scratch,<pointer>; mov[b/w/l/q] 0(scratch),reg | mov[b/w/l/q] reg,0(scratch)
 //
 // Warning: These routines must be able to handle any instruction sequences
 // that are generated as a result of the load/store byte,word,long
@@ -325,19 +324,19 @@ class NativeMovRegMem: public NativeInstruction {
 
   void  set_offset(int x);
 
-  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset ) ); }
+  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
 
   void verify();
   void print ();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 
  private:
   inline friend NativeMovRegMem* nativeMovRegMem_at (address address);
 };
 
-inline NativeMovRegMem* nativeMovRegMem_at (address address) {
+inline NativeMovRegMem* nativeMovRegMem_at(address address) {
   NativeMovRegMem* test = (NativeMovRegMem*)(address - NativeMovRegMem::instruction_offset);
   return test;
 }
@@ -365,7 +364,7 @@ class NativeLoadAddress: public NativeMovRegMem {
   void print ();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 
  private:
   friend NativeLoadAddress* nativeLoadAddress_at (address address) {
@@ -448,7 +447,6 @@ class NativeJump: public NativeInstruction {
       val = -5; // jump to self
     }
 #ifdef AMD64
-    assert((labs(val)  & 0xFFFFFFFF00000000) == 0 || dest == (address)-1, "must be 32bit offset or -1");
 #endif
     set_int_at(data_offset, (jint)val);
   }
@@ -459,7 +457,7 @@ class NativeJump: public NativeInstruction {
   void verify();
 
   // Unit testing stuff
-  static void test() {}
+  static void test() { }
 
   // Insertion of native jump instruction
   static void insert(address code_pos, address entry);
@@ -484,7 +482,7 @@ class NativeFarJump: public NativeInstruction {
   void verify();
 
   // Unit testing stuff
-  static void test() {}
+  static void test() { }
 };
 
 inline NativeFarJump* nativeFarJump_at(address address) {
@@ -615,8 +613,8 @@ class NativeTstRegMem: public NativeInstruction {
   };
 };
 
-inline bool NativeInstruction::is_illegal()      { return (short)int_at(0) == (short)NativeIllegalInstruction::instruction_code; }
-inline bool NativeInstruction::is_call()         { return ubyte_at(0) == NativeCall::instruction_code; }
+inline bool NativeInstruction::is_illegal() { return (short)int_at(0) == (short)NativeIllegalInstruction::instruction_code; }
+inline bool NativeInstruction::is_call() { return ubyte_at(0) == NativeCall::instruction_code; }
 inline bool NativeInstruction::is_call_reg()     { return ubyte_at(0) == NativeCallReg::instruction_code ||
                                                           (ubyte_at(1) == NativeCallReg::instruction_code &&
                                                            (ubyte_at(0) == Assembler::REX || ubyte_at(0) == Assembler::REX_B)); }
@@ -624,12 +622,12 @@ inline bool NativeInstruction::is_return()       { return ubyte_at(0) == NativeR
                                                           ubyte_at(0) == NativeReturnX::instruction_code; }
 inline bool NativeInstruction::is_jump()         { return ubyte_at(0) == NativeJump::instruction_code ||
                                                           ubyte_at(0) == 0xEB; /* short jump */ }
-inline bool NativeInstruction::is_jump_reg()     {
+inline bool NativeInstruction::is_jump_reg() {
   int pos = 0;
   if (ubyte_at(0) == Assembler::REX_B) pos = 1;
   return ubyte_at(pos) == 0xFF && (ubyte_at(pos + 1) & 0xF0) == 0xE0;
 }
-inline bool NativeInstruction::is_far_jump()     { return is_mov_literal64(); }
+inline bool NativeInstruction::is_far_jump() { return is_mov_literal64(); }
 inline bool NativeInstruction::is_cond_jump()    { return (int_at(0) & 0xF0FF) == 0x800F /* long jump */ ||
                                                           (ubyte_at(0) & 0xF0) == 0x70;  /* short jump */ }
 inline bool NativeInstruction::is_safepoint_poll() {

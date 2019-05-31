@@ -54,7 +54,6 @@ void klassVtable::compute_vtable_size_and_num_mirandas(
   // go thru each method in the methods table to see if it needs a new entry
   int len = methods->length();
   for (int i = 0; i < len; i++) {
-    assert(methods->at(i)->is_method(), "must be a Method*");
     methodHandle mh(THREAD, methods->at(i));
 
     if (needs_new_vtable_entry(mh, super, classloader, classname, class_flags, major_version, THREAD)) {
@@ -95,14 +94,11 @@ void klassVtable::compute_vtable_size_and_num_mirandas(
       vtable_length = Universe::base_vtable_size();
     }
   }
-  assert(vtable_length % vtableEntry::size() == 0, "bad vtable length");
-  assert(vtable_length >= Universe::base_vtable_size(), "vtable too small");
 
   *vtable_length_ret = vtable_length;
 }
 
 int klassVtable::index_of(Method* m, int len) const {
-  assert(m->has_vtable_index(), "do not ask this of non-vtable methods");
   return m->vtable_index();
 }
 
@@ -121,7 +117,6 @@ int klassVtable::initialize_from_super(Klass* super) {
   } else {
     // copy methods from superKlass
     klassVtable superVtable = super->vtable();
-    assert(superVtable.length() <= _length, "vtable too short");
     superVtable.copy_vtable_to(table());
     if (log_develop_is_enabled(Trace, vtables)) {
       ResourceMark rm;
@@ -149,7 +144,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
   }
 
   if (Universe::is_bootstrapping()) {
-    assert(!is_shared, "sanity");
     // just clear everything
     for (int i = 0; i < _length; i++) table()[i].clear();
     return;
@@ -157,9 +151,7 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
 
   int super_vtable_len = initialize_from_super(super);
   if (_klass->is_array_klass()) {
-    assert(super_vtable_len == _length, "arrays shouldn't introduce new methods");
   } else {
-    assert(_klass->is_instance_klass(), "must be InstanceKlass");
 
     Array<Method*>* methods = ik()->methods();
     int len = methods->length();
@@ -170,7 +162,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
     for (int i = 0; i < len; i++) {
       // update_inherited_vtable can stop for gc - ensure using handles
       HandleMark hm(THREAD);
-      assert(methods->at(i)->is_method(), "must be a Method*");
       methodHandle mh(THREAD, methods->at(i));
 
       bool needs_new_entry = update_inherited_vtable(ik(), mh, super_vtable_len, -1, checkconstraints, CHECK);
@@ -189,16 +180,12 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
       if (len > 0) {
         Array<int>* def_vtable_indices = NULL;
         if ((def_vtable_indices = ik()->default_vtable_indices()) == NULL) {
-          assert(!is_shared, "shared class def_vtable_indices does not exist");
           def_vtable_indices = ik()->create_new_default_vtable_indices(len, CHECK);
         } else {
-          assert(def_vtable_indices->length() == len, "reinit vtable len?");
         }
         for (int i = 0; i < len; i++) {
           HandleMark hm(THREAD);
-          assert(default_methods->at(i)->is_method(), "must be a Method*");
           methodHandle mh(THREAD, default_methods->at(i));
-          assert(!mh->is_private(), "private interface method in the default method list");
           bool needs_new_entry = update_inherited_vtable(ik(), mh, super_vtable_len, i, checkconstraints, CHECK);
 
           // needs new entry
@@ -208,7 +195,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
               // At runtime initialize_vtable is rerun for a shared class
               // (loaded by the non-boot loader) as part of link_class_impl().
               // The dumptime vtable index should be the same as the runtime index.
-              assert(def_vtable_indices->at(i) == initialized, "dump time vtable index is different from runtime index");
             } else {
               def_vtable_indices->at_put(i, initialized); //set vtable index
             }
@@ -230,10 +216,8 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
     // calculation, for classfile versions for which we do not do transitive override
     // calculations.
     if (ik()->major_version() >= VTABLE_TRANSITIVE_OVERRIDE_VERSION) {
-      assert(initialized == _length, "vtable initialization failed");
     } else {
-      assert(initialized <= _length, "vtable initialization failed");
-      for(;initialized < _length; initialized++) {
+      for (;initialized < _length; initialized++) {
         table()[initialized].clear();
       }
     }
@@ -301,12 +285,9 @@ static void log_vtables(int i, bool overrides, const methodHandle& target_method
 // OR return true if a new vtable entry is required.
 // Only called for InstanceKlass's, i.e. not for arrays
 // If that changed, could not use _klass as handle for klass
-bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHandle& target_method,
-                                          int super_vtable_len, int default_index,
-                                          bool checkconstraints, TRAPS) {
+bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHandle& target_method, int super_vtable_len, int default_index, bool checkconstraints, TRAPS) {
   ResourceMark rm;
   bool allocate_new = true;
-  assert(klass->is_instance_klass(), "must be InstanceKlass");
 
   Array<int>* def_vtable_indices = NULL;
   bool is_default = false;
@@ -319,11 +300,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
   if (default_index >= 0 ) {
     is_default = true;
     def_vtable_indices = klass->default_vtable_indices();
-    assert(!target_method()->is_private(), "private interface method flagged as default");
-    assert(def_vtable_indices != NULL, "def vtable alloc?");
-    assert(default_index <= def_vtable_indices->length(), "def vtable len?");
   } else {
-    assert(klass == target_method()->method_holder(), "caller resp.");
     // Initialize the method's vtable index to "nonvirtual".
     // If we allocate a vtable entry, we will update it to a non-negative number.
     target_method()->set_vtable_index(Method::nonvirtual_vtable_index);
@@ -388,7 +365,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
   Handle target_loader(THREAD, target_klass->class_loader());
 
   Symbol* target_classname = target_klass->name();
-  for(int i = 0; i < super_vtable_len; i++) {
+  for (int i = 0; i < super_vtable_len; i++) {
     Method* super_method;
     if (is_preinitialized_vtable()) {
       // If this is a shared class, the vtable is already in the final state (fully
@@ -402,9 +379,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
     // matching method is a non-public java.lang.Object method.  (See JVMS 5.4.3.4)
     // This is safe because the method at this slot should never get invoked.
     // (TBD: put in a method to throw NoSuchMethodError if this slot is ever used.)
-    if (super_method->name() == name && super_method->signature() == signature &&
-        (!_klass->is_interface() ||
-         !SystemDictionary::is_nonpublic_Object_method(super_method))) {
+    if (super_method->name() == name && super_method->signature() == signature && (!_klass->is_interface() || !SystemDictionary::is_nonpublic_Object_method(super_method))) {
 
       // get super_klass for method_holder for the found method
       InstanceKlass* super_klass =  super_method->method_holder();
@@ -417,10 +392,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
           (is_default
           || ((super_klass->is_override(super_method, target_loader, target_classname, THREAD))
           || ((klass->major_version() >= VTABLE_TRANSITIVE_OVERRIDE_VERSION)
-          && ((super_klass = find_transitive_override(super_klass,
-                             target_method, i, target_loader,
-                             target_classname, THREAD))
-                             != (InstanceKlass*)NULL)))))
+          && ((super_klass = find_transitive_override(super_klass, target_method, i, target_loader, target_classname, THREAD)) != (InstanceKlass*)NULL)))))
         {
         // Package private methods always need a new entry to root their own
         // overriding. They may also override other methods.
@@ -441,10 +413,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
 
           if (!oopDesc::equals(target_loader(), super_loader())) {
             ResourceMark rm(THREAD);
-            Symbol* failed_type_symbol =
-              SystemDictionary::check_signature_loaders(signature, target_loader,
-                                                        super_loader, true,
-                                                        CHECK_(false));
+            Symbol* failed_type_symbol = SystemDictionary::check_signature_loaders(signature, target_loader, super_loader, true, CHECK_(false));
             if (failed_type_symbol != NULL) {
               const char* msg = "loader constraint violation for class %s: when selecting "
                 "overriding method %s the class loader %s of the "
@@ -457,12 +426,9 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
               const char* loader2 = java_lang_ClassLoader::describe_external(super_loader());
               const char* super_class = super_klass->external_name();
               const char* failed_type_name = failed_type_symbol->as_klass_external_name();
-              size_t buflen = strlen(msg) + strlen(curr_class) + strlen(method) +
-                strlen(loader1) + strlen(sel_class) + strlen(loader2) +
-                strlen(super_class) + strlen(failed_type_name);
+              size_t buflen = strlen(msg) + strlen(curr_class) + strlen(method) + strlen(loader1) + strlen(sel_class) + strlen(loader2) + strlen(super_class) + strlen(failed_type_name);
               char* buf = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, buflen);
-              jio_snprintf(buf, buflen, msg, curr_class, method, loader1, sel_class, loader2,
-                           super_class, failed_type_name);
+              jio_snprintf(buf, buflen, msg, curr_class, method, loader1, sel_class, loader2, super_class, failed_type_name);
               THROW_MSG_(vmSymbols::java_lang_LinkageError(), buf, false);
             }
           }
@@ -478,12 +444,10 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
               // At runtime initialize_vtable is rerun as part of link_class_impl()
               // for a shared class loaded by the non-boot loader.
               // The dumptime vtable index should be the same as the runtime index.
-              assert(def_vtable_indices->at(default_index) == i, "dump time vtable index is different from runtime index");
             } else {
               def_vtable_indices->at_put(default_index, i);
             }
           }
-          assert(super_method->is_default_method() || super_method->is_overpass() || super_method->is_abstract(), "default override error");
         }
       } else {
         overrides = false;
@@ -500,7 +464,6 @@ void klassVtable::put_method_at(Method* m, int index) {
     // for shared class loaded by the non-boot loader to obtain the loader
     // constraints based on the runtime classloaders' context. The dumptime
     // method at the vtable index should be the same as the runtime method.
-    assert(table()[index].method() == m, "archived method is different from the runtime method");
   } else {
     if (log_develop_is_enabled(Trace, vtables)) {
       ResourceMark rm;
@@ -526,13 +489,7 @@ void klassVtable::put_method_at(Method* m, int index) {
 // superclass has been loaded.
 // However, the vtable entries are filled in at link time, and therefore
 // the superclass' vtable may not yet have been filled in.
-bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method,
-                                         const Klass* super,
-                                         Handle classloader,
-                                         Symbol* classname,
-                                         AccessFlags class_flags,
-                                         u2 major_version,
-                                         TRAPS) {
+bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method, const Klass* super, Handle classloader, Symbol* classname, AccessFlags class_flags, u2 major_version, TRAPS) {
   if (class_flags.is_interface()) {
     // Interfaces do not use vtables, except for java.lang.Object methods,
     // so there is no point to assigning
@@ -555,10 +512,7 @@ bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method,
 
   // Concrete interface methods do not need new entries, they override
   // abstract method entries using default inheritance rules
-  if (target_method()->method_holder() != NULL &&
-      target_method()->method_holder()->is_interface()  &&
-      !target_method()->is_abstract()) {
-    assert(target_method()->is_default_method() || target_method()->is_private(), "unexpected interface method type");
+  if (target_method()->method_holder() != NULL && target_method()->method_holder()->is_interface()  && !target_method()->is_abstract()) {
     return false;
   }
 
@@ -603,8 +557,7 @@ bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method,
     // ignore private, c.m pub does override a.m pub
     // For classes that were not javac'd together, we also do transitive overriding around
     // methods that have less accessibility
-    if ((!super_method->is_static()) &&
-       (!super_method->is_private())) {
+    if ((!super_method->is_static()) && (!super_method->is_private())) {
       if (superk->is_override(super_method, classloader, classname, THREAD)) {
         return false;
       // else keep looking for transitive overrides
@@ -639,8 +592,7 @@ int klassVtable::index_of_miranda(Symbol* name, Symbol* signature) {
   // search from the bottom, might be faster
   for (int i = (length() - 1); i >= 0; i--) {
     Method* m = table()[i].method();
-    if (is_miranda_entry_at(i) &&
-        m->name() == name && m->signature() == signature) {
+    if (is_miranda_entry_at(i) && m->name() == name && m->signature() == signature) {
       return i;
     }
   }
@@ -656,8 +608,6 @@ bool klassVtable::is_miranda_entry_at(int i) {
 
   // miranda methods are public abstract instance interface methods in a class's vtable
   if (mhk->is_interface()) {
-    assert(m->is_public(), "should be public");
-    assert(ik()->implements_interface(method_holder) , "this class should implement the interface");
     if (is_miranda(m, ik()->methods(), ik()->default_methods(), ik()->super(), klass()->is_interface())) {
       return true;
     }
@@ -719,9 +669,7 @@ bool klassVtable::is_miranda_entry_at(int i) {
 //
 // Part of the Miranda Rights in the US mean that if you do not have
 // an attorney one will be appointed for you.
-bool klassVtable::is_miranda(Method* m, Array<Method*>* class_methods,
-                             Array<Method*>* default_methods, const Klass* super,
-                             bool is_interface) {
+bool klassVtable::is_miranda(Method* m, Array<Method*>* class_methods, Array<Method*>* default_methods, const Klass* super, bool is_interface) {
   if (m->is_static() || m->is_private() || m->is_overpass()) {
     return false;
   }
@@ -729,15 +677,13 @@ bool klassVtable::is_miranda(Method* m, Array<Method*>* class_methods,
   Symbol* signature = m->signature();
 
   // First look in local methods to see if already covered
-  if (InstanceKlass::find_local_method(class_methods, name, signature,
-              Klass::find_overpass, Klass::skip_static, Klass::skip_private) != NULL)
+  if (InstanceKlass::find_local_method(class_methods, name, signature, Klass::find_overpass, Klass::skip_static, Klass::skip_private) != NULL)
   {
     return false;
   }
 
   // Check local default methods
-  if ((default_methods != NULL) &&
-    (InstanceKlass::find_method(default_methods, name, signature) != NULL))
+  if ((default_methods != NULL) && (InstanceKlass::find_method(default_methods, name, signature) != NULL))
    {
      return false;
    }
@@ -752,8 +698,7 @@ bool klassVtable::is_miranda(Method* m, Array<Method*>* class_methods,
      Method* found_mth = InstanceKlass::cast(cursuper)->find_local_method(name, signature,
        Klass::find_overpass, Klass::skip_static, Klass::skip_private);
      // Ignore non-public methods in java.lang.Object if klass is an interface.
-     if (found_mth != NULL && (!is_interface ||
-         !SystemDictionary::is_nonpublic_Object_method(found_mth))) {
+     if (found_mth != NULL && (!is_interface || !SystemDictionary::is_nonpublic_Object_method(found_mth))) {
        return false;
      }
   }
@@ -783,8 +728,7 @@ void klassVtable::add_new_mirandas_to_lists(
     // check for duplicate mirandas in different interfaces we implement
     for (int j = 0; j < num_of_current_mirandas; j++) {
       Method* miranda = new_mirandas->at(j);
-      if ((im->name() == miranda->name()) &&
-          (im->signature() == miranda->signature())) {
+      if ((im->name() == miranda->name()) && (im->signature() == miranda->signature())) {
         is_duplicate = true;
         break;
       }
@@ -805,14 +749,7 @@ void klassVtable::add_new_mirandas_to_lists(
   }
 }
 
-void klassVtable::get_mirandas(GrowableArray<Method*>* new_mirandas,
-                               GrowableArray<Method*>* all_mirandas,
-                               const Klass* super,
-                               Array<Method*>* class_methods,
-                               Array<Method*>* default_methods,
-                               Array<Klass*>* local_interfaces,
-                               bool is_interface) {
-  assert((new_mirandas->length() == 0) , "current mirandas must be 0");
+void klassVtable::get_mirandas(GrowableArray<Method*>* new_mirandas, GrowableArray<Method*>* all_mirandas, const Klass* super, Array<Method*>* class_methods, Array<Method*>* default_methods, Array<Klass*>* local_interfaces, bool is_interface) {
 
   // iterate thru the local interfaces looking for a miranda
   int num_local_ifs = local_interfaces->length();
@@ -901,7 +838,6 @@ klassItable::klassItable(InstanceKlass* klass) {
       _table_offset      = (intptr_t*)offset_entry - (intptr_t*)klass;
       _size_offset_table = (method_entry - ((intptr_t*)offset_entry)) / itableOffsetEntry::size();
       _size_method_table = (end - method_entry)                  / itableMethodEntry::size();
-      assert(_table_offset >= 0 && _size_offset_table >= 0 && _size_method_table >= 0, "wrong computation");
       return;
     }
   }
@@ -924,9 +860,7 @@ void klassItable::initialize_itable(bool checkconstraints, TRAPS) {
 
   // Cannot be setup doing bootstrapping, interfaces don't have
   // itables, and klass with only ones entry have empty itables
-  if (Universe::is_bootstrapping() ||
-      _klass->is_interface() ||
-      _klass->itable_length() == itableOffsetEntry::size()) return;
+  if (Universe::is_bootstrapping() || _klass->is_interface() || _klass->itable_length() == itableOffsetEntry::size()) return;
 
   // There's alway an extra itable entry so we can null-terminate it.
   guarantee(size_offset_table() >= 1, "too small");
@@ -937,11 +871,10 @@ void klassItable::initialize_itable(bool checkconstraints, TRAPS) {
 
     // Iterate through all interfaces
     int i;
-    for(i = 0; i < num_interfaces; i++) {
+    for (i = 0; i < num_interfaces; i++) {
       itableOffsetEntry* ioe = offset_entry(i);
       HandleMark hm(THREAD);
       Klass* interf = ioe->interface_klass();
-      assert(interf != NULL && ioe->offset() != 0, "bad offset entry in itable");
       initialize_itable_for_interface(ioe->offset(), interf, checkconstraints, CHECK);
     }
   }
@@ -971,13 +904,11 @@ int klassItable::assign_itable_indices_for_interface(Klass* klass) {
   for (int i = 0; i < nof_methods; i++) {
     Method* m = methods->at(i);
     if (interface_method_needs_itable_index(m)) {
-      assert(!m->is_final_method(), "no final interface methods");
       // If m is already assigned a vtable index, do not disturb it.
       if (log_develop_is_enabled(Trace, itables)) {
         ResourceMark rm;
         LogTarget(Trace, itables) lt;
         LogStream ls(lt);
-        assert(m != NULL, "methods can never be null");
         const char* sig = m->name_and_sig_as_C_string();
         if (m->has_vtable_index()) {
           ls.print("vtable index %d for method: %s, flags: ", m->vtable_index(), sig);
@@ -988,22 +919,17 @@ int klassItable::assign_itable_indices_for_interface(Klass* klass) {
         ls.cr();
       }
       if (!m->has_vtable_index()) {
-        // A shared method could have an initialized itable_index that
-        // is < 0.
-        assert(m->vtable_index() == Method::pending_itable_index || m->is_shared(), "set by initialize_vtable");
+        // A shared method could have an initialized itable_index that is < 0.
         m->set_itable_index(ime_num);
         // Progress to next itable entry
         ime_num++;
       }
     }
   }
-  assert(ime_num == method_count_for_interface(klass), "proper sizing");
   return ime_num;
 }
 
 int klassItable::method_count_for_interface(Klass* interf) {
-  assert(interf->is_instance_klass(), "must be");
-  assert(interf->is_interface(), "must be");
   Array<Method*>* methods = InstanceKlass::cast(interf)->methods();
   int nof_methods = methods->length();
   int length = 0;
@@ -1041,7 +967,6 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
                                                                Klass::skip_private, CHECK);
     }
     if (target == NULL || !target->is_public() || target->is_abstract() || target->is_overpass()) {
-      assert(target == NULL || !target->is_overpass() || target->is_public(), "Non-public overpass method!");
       // Entry does not resolve. Leave it empty for AbstractMethodError or other error.
       if (!(target == NULL) && !target->is_public()) {
         // Stuff an IllegalAccessError throwing method in there instead.
@@ -1055,11 +980,7 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
         Handle method_holder_loader (THREAD, target->method_holder()->class_loader());
         if (!oopDesc::equals(method_holder_loader(), interface_loader())) {
           ResourceMark rm(THREAD);
-          Symbol* failed_type_symbol =
-            SystemDictionary::check_signature_loaders(m->signature(),
-                                                      method_holder_loader,
-                                                      interface_loader,
-                                                      true, CHECK);
+          Symbol* failed_type_symbol = SystemDictionary::check_signature_loaders(m->signature(), method_holder_loader, interface_loader, true, CHECK);
           if (failed_type_symbol != NULL) {
             const char* msg = "loader constraint violation in interface itable"
               " initialization for class %s: when selecting method %s the"
@@ -1073,12 +994,9 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
             const char* loader2 = java_lang_ClassLoader::describe_external(method_holder_loader());
             const char* mclass = target()->method_holder()->external_name();
             const char* failed_type_name = failed_type_symbol->as_klass_external_name();
-            size_t buflen = strlen(msg) + strlen(current) + strlen(sig) +
-              strlen(loader1) + strlen(iface) + strlen(loader2) + strlen(mclass) +
-              strlen(failed_type_name);
+            size_t buflen = strlen(msg) + strlen(current) + strlen(sig) + strlen(loader1) + strlen(iface) + strlen(loader2) + strlen(mclass) + strlen(failed_type_name);
             char* buf = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, buflen);
-            jio_snprintf(buf, buflen, msg, current, sig, loader1, iface,
-                         loader2, mclass, failed_type_name);
+            jio_snprintf(buf, buflen, msg, current, sig, loader1, iface, loader2, mclass, failed_type_name);
             THROW_MSG(vmSymbols::java_lang_LinkageError(), buf);
           }
         }
@@ -1086,7 +1004,6 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
 
       // ime may have moved during GC so recalculate address
       int ime_num = m->itable_index();
-      assert(ime_num < ime_count, "oob");
       itableOffsetEntry::method_entry(_klass, method_table_offset)[ime_num].initialize(target());
       if (log_develop_is_enabled(Trace, itables)) {
         ResourceMark rm(THREAD);
@@ -1115,9 +1032,8 @@ class InterfaceVisiterClosure : public StackObj {
 // Visit all interfaces with at least one itable method
 void visit_all_interfaces(Array<Klass*>* transitive_intf, InterfaceVisiterClosure *blk) {
   // Handle array argument
-  for(int i = 0; i < transitive_intf->length(); i++) {
+  for (int i = 0; i < transitive_intf->length(); i++) {
     Klass* intf = transitive_intf->at(i);
-    assert(intf->is_interface(), "sanity check");
 
     // Find no. of itable methods
     int method_count = 0;
@@ -1153,7 +1069,7 @@ class CountInterfacesClosure : public InterfaceVisiterClosure {
    void doit(Klass* intf, int method_count) { _nof_methods += method_count; _nof_interfaces++; }
 };
 
-class SetupItableClosure : public InterfaceVisiterClosure  {
+class SetupItableClosure : public InterfaceVisiterClosure {
  private:
   itableOffsetEntry* _offset_entry;
   itableMethodEntry* _method_entry;
@@ -1192,7 +1108,6 @@ int klassItable::compute_itable_size(Array<Klass*>* transitive_interfaces) {
 // Fill out offset table and interface klasses into the itable space
 void klassItable::setup_itable_offset_table(InstanceKlass* klass) {
   if (klass->itable_length() == 0) return;
-  assert(!klass->is_interface(), "Should have zero length itable");
 
   // Count no of interfaces and total number of interface methods
   CountInterfacesClosure cic;
@@ -1203,14 +1118,10 @@ void klassItable::setup_itable_offset_table(InstanceKlass* klass) {
   // Add one extra entry so we can null-terminate the table
   nof_interfaces++;
 
-  assert(compute_itable_size(klass->transitive_interfaces()) == calc_itable_size(nof_interfaces, nof_methods), "mismatch calculation of itable size");
-
   // Fill-out offset table
   itableOffsetEntry* ioe = (itableOffsetEntry*)klass->start_of_itable();
   itableMethodEntry* ime = (itableMethodEntry*)(ioe + nof_interfaces);
   intptr_t* end               = klass->end_of_itable();
-  assert((oop*)(ime + nof_methods) <= (oop*)klass->start_of_nonstatic_oop_maps(), "wrong offset calculation (1)");
-  assert((oop*)(end) == (oop*)(ime + nof_methods),                      "wrong offset calculation (2)");
 
   // Visit all interfaces and initialize itable offset table
   SetupItableClosure sic((address)klass, ioe, ime);
@@ -1219,8 +1130,6 @@ void klassItable::setup_itable_offset_table(InstanceKlass* klass) {
 
 // inverse to itable_index
 Method* klassItable::method_for_itable_index(Klass* intf, int itable_index) {
-  assert(InstanceKlass::cast(intf)->is_interface(), "sanity check");
-  assert(intf->verify_itable_index(itable_index), "");
   Array<Method*>* methods = InstanceKlass::cast(intf)->methods();
 
   if (itable_index < 0 || itable_index >= method_count_for_interface(intf))
@@ -1229,14 +1138,11 @@ Method* klassItable::method_for_itable_index(Klass* intf, int itable_index) {
   int index = itable_index;
   Method* m = methods->at(index);
   int index2 = -1;
-  while (!m->has_itable_index() ||
-         (index2 = m->itable_index()) != itable_index) {
-    assert(index2 < itable_index, "monotonic");
+  while (!m->has_itable_index() || (index2 = m->itable_index()) != itable_index) {
     if (++index == methods->length())
       return NULL;
     m = methods->at(index);
   }
-  assert(m->itable_index() == itable_index, "correct inverse");
 
   return m;
 }
@@ -1247,8 +1153,7 @@ void klassVtable::verify(outputStream* st, bool forced) {
   oop* end_of_obj = (oop*)_klass + _klass->size();
   oop* end_of_vtable = (oop *)&table()[_length];
   if (end_of_vtable > end_of_obj) {
-    fatal("klass %s: klass object too short (vtable extends beyond end)",
-          _klass->internal_name());
+    fatal("klass %s: klass object too short (vtable extends beyond end)", _klass->internal_name());
   }
 
   for (int i = 0; i < _length; i++) table()[i].verify(this, st);
@@ -1273,9 +1178,7 @@ void klassVtable::verify_against(outputStream* st, klassVtable* vt, int index) {
 
 void vtableEntry::verify(klassVtable* vt, outputStream* st) {
   Klass* vtklass = vt->klass();
-  if (vtklass->is_instance_klass() &&
-     (InstanceKlass::cast(vtklass)->major_version() >= klassVtable::VTABLE_TRANSITIVE_OVERRIDE_VERSION)) {
-    assert(method() != NULL, "must have set method");
+  if (vtklass->is_instance_klass() && (InstanceKlass::cast(vtklass)->major_version() >= klassVtable::VTABLE_TRANSITIVE_OVERRIDE_VERSION)) {
   }
   if (method() != NULL) {
     method()->verify();

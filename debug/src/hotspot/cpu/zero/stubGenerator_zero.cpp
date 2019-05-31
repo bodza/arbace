@@ -47,9 +47,6 @@ class StubGenerator: public StubCodeGenerator {
     JavaThread *thread = (JavaThread *) THREAD;
     ZeroStack *stack = thread->zero_stack();
 
-    // Make sure we have no pending exceptions
-    assert(!HAS_PENDING_EXCEPTION, "call_stub called with pending exception");
-
     // Set up the stack if necessary
     bool stack_needs_teardown = false;
     if (stack->needs_setup()) {
@@ -59,8 +56,7 @@ class StubGenerator: public StubCodeGenerator {
     }
 
     // Allocate and initialize our frame
-    EntryFrame *frame =
-      EntryFrame::build(parameters, parameter_words, call_wrapper, THREAD);
+    EntryFrame *frame = EntryFrame::build(parameters, parameter_words, call_wrapper, THREAD);
 
     if (!HAS_PENDING_EXCEPTION) {
       // Push the frame
@@ -105,7 +101,6 @@ class StubGenerator: public StubCodeGenerator {
   // I'll write them properly when they're called from
   // something that's actually doing something.
   static void fake_arraycopy_stub(address src, address dst, int count) {
-    assert(count == 0, "huh?");
   }
 
   void generate_arraycopy_stubs() {
@@ -133,30 +128,20 @@ class StubGenerator: public StubCodeGenerator {
 
     // We don't generate specialized code for HeapWord-aligned source
     // arrays, so just use the code we've already generated
-    StubRoutines::_arrayof_jbyte_disjoint_arraycopy =
-      StubRoutines::_jbyte_disjoint_arraycopy;
-    StubRoutines::_arrayof_jbyte_arraycopy =
-      StubRoutines::_jbyte_arraycopy;
+    StubRoutines::_arrayof_jbyte_disjoint_arraycopy = StubRoutines::_jbyte_disjoint_arraycopy;
+    StubRoutines::_arrayof_jbyte_arraycopy = StubRoutines::_jbyte_arraycopy;
 
-    StubRoutines::_arrayof_jshort_disjoint_arraycopy =
-      StubRoutines::_jshort_disjoint_arraycopy;
-    StubRoutines::_arrayof_jshort_arraycopy =
-      StubRoutines::_jshort_arraycopy;
+    StubRoutines::_arrayof_jshort_disjoint_arraycopy = StubRoutines::_jshort_disjoint_arraycopy;
+    StubRoutines::_arrayof_jshort_arraycopy = StubRoutines::_jshort_arraycopy;
 
-    StubRoutines::_arrayof_jint_disjoint_arraycopy =
-      StubRoutines::_jint_disjoint_arraycopy;
-    StubRoutines::_arrayof_jint_arraycopy =
-      StubRoutines::_jint_arraycopy;
+    StubRoutines::_arrayof_jint_disjoint_arraycopy = StubRoutines::_jint_disjoint_arraycopy;
+    StubRoutines::_arrayof_jint_arraycopy = StubRoutines::_jint_arraycopy;
 
-    StubRoutines::_arrayof_jlong_disjoint_arraycopy =
-      StubRoutines::_jlong_disjoint_arraycopy;
-    StubRoutines::_arrayof_jlong_arraycopy =
-      StubRoutines::_jlong_arraycopy;
+    StubRoutines::_arrayof_jlong_disjoint_arraycopy = StubRoutines::_jlong_disjoint_arraycopy;
+    StubRoutines::_arrayof_jlong_arraycopy = StubRoutines::_jlong_arraycopy;
 
-    StubRoutines::_arrayof_oop_disjoint_arraycopy =
-      StubRoutines::_oop_disjoint_arraycopy;
-    StubRoutines::_arrayof_oop_arraycopy =
-      StubRoutines::_oop_arraycopy;
+    StubRoutines::_arrayof_oop_disjoint_arraycopy = StubRoutines::_oop_disjoint_arraycopy;
+    StubRoutines::_arrayof_oop_arraycopy = StubRoutines::_oop_arraycopy;
   }
 
   static int SafeFetch32(int *adr, int errValue) {
@@ -239,18 +224,14 @@ class StubGenerator: public StubCodeGenerator {
     // These entry points require SharedInfo::stack0 to be set up in
     // non-core builds and need to be relocatable, so they each
     // fabricate a RuntimeStub internally.
-    StubRoutines::_throw_AbstractMethodError_entry =
-      ShouldNotCallThisStub();
+    StubRoutines::_throw_AbstractMethodError_entry = ShouldNotCallThisStub();
 
-    StubRoutines::_throw_NullPointerException_at_call_entry =
-      ShouldNotCallThisStub();
+    StubRoutines::_throw_NullPointerException_at_call_entry = ShouldNotCallThisStub();
 
-    StubRoutines::_throw_StackOverflowError_entry =
-      ShouldNotCallThisStub();
+    StubRoutines::_throw_StackOverflowError_entry = ShouldNotCallThisStub();
 
     // support for verify_oop (must happen after universe_init)
-    StubRoutines::_verify_oop_subroutine_entry =
-      ShouldNotCallThisStub();
+    StubRoutines::_verify_oop_subroutine_entry = ShouldNotCallThisStub();
 
     // arraycopy stubs used by compilers
     generate_arraycopy_stubs();
@@ -290,13 +271,10 @@ EntryFrame *EntryFrame::build(const intptr_t*  parameters,
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();
-  assert(fp - stack->sp() == next_frame_off, "should be");
 
   stack->push(ENTRY_FRAME);
-  assert(fp - stack->sp() == frame_type_off, "should be");
 
   stack->push((intptr_t) call_wrapper);
-  assert(fp - stack->sp() == call_wrapper_off, "should be");
 
   for (int i = 0; i < parameter_words; i++)
     stack->push(parameters[i]);

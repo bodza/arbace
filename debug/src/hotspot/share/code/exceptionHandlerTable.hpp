@@ -24,8 +24,6 @@ class HandlerTableEntry {
 
  public:
   HandlerTableEntry(int bci, int pco, int scope_depth) {
-    assert( 0 <= pco, "pco must be positive");
-    assert( 0 <= scope_depth, "scope_depth must be positive");
     _bci = bci;
     _pco = pco;
     _scope_depth = scope_depth;

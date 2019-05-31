@@ -119,7 +119,7 @@ private:
     }
 
   public:
-    ObjectRef(T** mpp) : _mpp(mpp) {}
+    ObjectRef(T** mpp) : _mpp(mpp) { }
 
     virtual bool is_read_only_by_default() const { return T::is_read_only_by_default(); }
     virtual bool not_null()                const { return dereference() != NULL; }
@@ -146,11 +146,11 @@ private:
     }
 
   public:
-    PrimitiveArrayRef(Array<T>** mpp) : _mpp(mpp) {}
+    PrimitiveArrayRef(Array<T>** mpp) : _mpp(mpp) { }
 
     // all Arrays are read-only by default
     virtual bool is_read_only_by_default() const { return true; }
-    virtual bool not_null()                const { return dereference() != NULL;  }
+    virtual bool not_null()                const { return dereference() != NULL; }
     virtual int size()                     const { return dereference()->size(); }
     virtual MetaspaceObj::Type msotype()   const { return MetaspaceObj::array_type(sizeof(T)); }
 
@@ -176,7 +176,7 @@ private:
     }
 
   public:
-    PointerArrayRef(Array<T*>** mpp) : _mpp(mpp) {}
+    PointerArrayRef(Array<T*>** mpp) : _mpp(mpp) { }
 
     // all Arrays are read-only by default
     virtual bool is_read_only_by_default() const { return true; }

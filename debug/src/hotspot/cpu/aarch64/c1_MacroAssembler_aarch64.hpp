@@ -24,9 +24,7 @@ using MacroAssembler::null_check;
   void initialize_header(Register obj, Register klass, Register len, Register t1, Register t2);
   void initialize_body(Register obj, Register len_in_bytes, int hdr_size_in_bytes, Register t1);
 
-  void float_cmp(bool is_float, int unordered_result,
-                 FloatRegister f0, FloatRegister f1,
-                 Register result);
+  void float_cmp(bool is_float, int unordered_result, FloatRegister f0, FloatRegister f1, Register result);
 
   // locking
   // hdr     : must be r0, contents destroyed
@@ -78,7 +76,7 @@ using MacroAssembler::null_check;
   int  rsp_offset() const { return _rsp_offset; }
   void set_rsp_offset(int n) { _rsp_offset = n; }
 
-  void invalidate_registers(bool inv_r0, bool inv_r19, bool inv_r2, bool inv_r3, bool inv_r4, bool inv_r5) {};
+  void invalidate_registers(bool inv_r0, bool inv_r19, bool inv_r2, bool inv_r3, bool inv_r4, bool inv_r5) { };
 
   // This platform only uses signal-based null checks. The Label is not needed.
   void null_check(Register r, Label *Lnull = NULL) { MacroAssembler::null_check(r); }

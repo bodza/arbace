@@ -32,7 +32,6 @@ protected:
 
   Klass* get_Klass() const {
     Klass* k = (Klass*)_metadata;
-    assert(k != NULL, "illegal use of unloaded klass");
     return k;
   }
 

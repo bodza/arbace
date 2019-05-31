@@ -150,7 +150,7 @@ extern "C" void setup_arm_sim(void *sp, u_int64_t calltype)
     }
   }
   AArch64Simulator::status_t return_status = sim->run();
-  if (return_status != AArch64Simulator::STATUS_RETURN){
+  if (return_status != AArch64Simulator::STATUS_RETURN) {
     sim->simPrint0();
     fatal("invalid status returned from simulator.run()\n");
   }

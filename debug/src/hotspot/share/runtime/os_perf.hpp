@@ -183,12 +183,9 @@ class NetworkInterface : public ResourceObj {
   _bytes_in(bytes_in),
   _bytes_out(bytes_out),
   _next(next) {
-    assert(name != NULL, "invariant");
     const size_t length = strlen(name);
-    assert(allocated_on_res_area(), "invariant");
     _name = NEW_RESOURCE_ARRAY(char, length + 1);
     strncpy(_name, name, length + 1);
-    assert(strncmp(_name, name, length) == 0, "invariant");
   }
 
   NetworkInterface* next() const {

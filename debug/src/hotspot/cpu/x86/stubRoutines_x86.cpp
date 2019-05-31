@@ -226,8 +226,7 @@ void StubRoutines::x86::generate_CRC32C_table(bool is_pclmulqdq_table_supported)
   pow_n[3] = crc32c_f_pow_n(CRC32C_MIDDLE * 8 * 2);
 
   pow_n[4] = crc32c_f_pow_n(CRC32C_LOW * 8);
-  pow_n[CRC32C_NUM_PRECOMPUTED_CONSTANTS - 1] =
-            crc32c_f_pow_n(CRC32C_LOW * 8 * 2);
+  pow_n[CRC32C_NUM_PRECOMPUTED_CONSTANTS - 1] = crc32c_f_pow_n(CRC32C_LOW * 8 * 2);
 
   if (is_pclmulqdq_table_supported) {
     _crc32c_table = pow_n;

@@ -19,7 +19,7 @@ class MetaspaceGCThresholdUpdater : public AllStatic {
       case ExpandAndAllocate:
         return "expand_and_allocate";
       default:
-        assert(false, "Got bad updater: %d", (int) updater);
+        ShouldNotReachHere();
         return NULL;
     };
   }

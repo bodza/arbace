@@ -26,9 +26,7 @@ VM_G1CollectForAllocation::VM_G1CollectForAllocation(size_t         word_size,
     _target_pause_time_ms(target_pause_time_ms),
     _should_retry_gc(false),
     _old_marking_cycles_completed_before(0) {
-  guarantee(target_pause_time_ms > 0.0,
-            "target_pause_time_ms = %1.6lf should be positive",
-            target_pause_time_ms);
+  guarantee(target_pause_time_ms > 0.0, "target_pause_time_ms = %1.6lf should be positive", target_pause_time_ms);
   _gc_cause = gc_cause;
 }
 
@@ -50,7 +48,6 @@ bool VM_G1CollectForAllocation::doit_prologue() {
 
 void VM_G1CollectForAllocation::doit() {
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  assert(!_should_initiate_conc_mark || g1h->should_do_concurrent_full_gc(_gc_cause), "only a GC locker, a System.gc(), stats update, whitebox, or a hum allocation induced GC should start a cycle");
 
   if (_word_size > 0) {
     // An allocation has been requested. So, try to do that first.
@@ -95,7 +92,6 @@ void VM_G1CollectForAllocation::doit() {
     // just started marking cycle is complete - which may be a while. So
     // we do NOT retry the GC.
     if (!res) {
-      assert(_word_size == 0, "Concurrent Full GC/Humongous Object IM shouldn't be allocating");
       if (_gc_cause != GCCause::_g1_humongous_allocation) {
         _should_retry_gc = true;
       }
@@ -112,8 +108,7 @@ void VM_G1CollectForAllocation::doit() {
       // kind of GC.
       _result = g1h->satisfy_failed_allocation(_word_size, &_pause_succeeded);
     } else {
-      bool should_upgrade_to_full = !g1h->should_do_concurrent_full_gc(_gc_cause) &&
-                                    !g1h->has_regions_left_for_allocation();
+      bool should_upgrade_to_full = !g1h->should_do_concurrent_full_gc(_gc_cause) && !g1h->has_regions_left_for_allocation();
       if (should_upgrade_to_full) {
         // There has been a request to perform a GC to free some space. We have no
         // information on how much memory has been asked for. In case there are
@@ -125,7 +120,6 @@ void VM_G1CollectForAllocation::doit() {
     }
     guarantee(_pause_succeeded, "Elevated collections during the safepoint must always succeed.");
   } else {
-    assert(_result == NULL, "invariant");
     // The only reason for the pause to not be successful is that, the GC locker is
     // active (or has become active since the prologue was executed). In this case
     // we should retry the pause after waiting for the GC locker to become inactive.
@@ -140,9 +134,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
   // +ExplicitGCInvokesConcurrent, we have to wait here for the cycle
   // that just started (or maybe one that was already in progress) to
   // finish.
-  if (GCCause::is_user_requested_gc(_gc_cause) &&
-      _should_initiate_conc_mark) {
-    assert(ExplicitGCInvokesConcurrent, "the only way to be here is if ExplicitGCInvokesConcurrent is set");
+  if (GCCause::is_user_requested_gc(_gc_cause) && _should_initiate_conc_mark) {
 
     G1CollectedHeap* g1h = G1CollectedHeap::heap();
 
@@ -160,7 +152,6 @@ void VM_G1CollectForAllocation::doit_epilogue() {
       // The following is largely copied from CMS
 
       Thread* thr = Thread::current();
-      assert(thr->is_Java_thread(), "invariant");
       JavaThread* jt = (JavaThread*)thr;
       ThreadToNativeFromVM native(jt);
 

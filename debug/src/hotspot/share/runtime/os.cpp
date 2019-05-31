@@ -93,30 +93,28 @@ char* os::iso8601_time(char* buffer, size_t buffer_length, bool utc) {
 
   // Sanity check the arguments
   if (buffer == NULL) {
-    assert(false, "NULL buffer");
+    ShouldNotReachHere();
     return NULL;
   }
   if (buffer_length < needed_buffer) {
-    assert(false, "buffer_length too small");
+    ShouldNotReachHere();
     return NULL;
   }
   // Get the current time
   jlong milliseconds_since_19700101 = javaTimeMillis();
   const int milliseconds_per_microsecond = 1000;
-  const time_t seconds_since_19700101 =
-    milliseconds_since_19700101 / milliseconds_per_microsecond;
-  const int milliseconds_after_second =
-    milliseconds_since_19700101 % milliseconds_per_microsecond;
+  const time_t seconds_since_19700101 = milliseconds_since_19700101 / milliseconds_per_microsecond;
+  const int milliseconds_after_second = milliseconds_since_19700101 % milliseconds_per_microsecond;
   // Convert the time value to a tm and timezone variable
   struct tm time_struct;
   if (utc) {
     if (gmtime_pd(&seconds_since_19700101, &time_struct) == NULL) {
-      assert(false, "Failed gmtime_pd");
+      ShouldNotReachHere();
       return NULL;
     }
   } else {
     if (localtime_pd(&seconds_since_19700101, &time_struct) == NULL) {
-      assert(false, "Failed localtime_pd");
+      ShouldNotReachHere();
       return NULL;
     }
   }
@@ -152,8 +150,7 @@ char* os::iso8601_time(char* buffer, size_t buffer_length, bool utc) {
   }
   // Convert time zone offset seconds to hours and minutes.
   const time_t zone_hours = (abs_local_to_UTC / seconds_per_hour);
-  const time_t zone_min =
-    ((abs_local_to_UTC % seconds_per_hour) / seconds_per_minute);
+  const time_t zone_min = ((abs_local_to_UTC % seconds_per_hour) / seconds_per_minute);
 
   // Print an ISO 8601 date and time stamp into the buffer
   const int year = 1900 + time_struct.tm_year;
@@ -171,7 +168,7 @@ char* os::iso8601_time(char* buffer, size_t buffer_length, bool utc) {
                                    zone_hours,
                                    zone_min);
   if (printed == 0) {
-    assert(false, "Failed jio_printf");
+    ShouldNotReachHere();
     return NULL;
   }
   return buffer;
@@ -179,12 +176,11 @@ char* os::iso8601_time(char* buffer, size_t buffer_length, bool utc) {
 
 OSReturn os::set_priority(Thread* thread, ThreadPriority p) {
 
-  if ((p >= MinPriority && p <= MaxPriority) ||
-      (p == CriticalPriority && thread->is_ConcurrentGC_thread())) {
+  if ((p >= MinPriority && p <= MaxPriority) || (p == CriticalPriority && thread->is_ConcurrentGC_thread())) {
     int priority = java_to_os_priority[p];
     return set_native_priority(thread, priority);
   } else {
-    assert(false, "Should not happen");
+    ShouldNotReachHere();
     return OS_ERR;
   }
 }
@@ -199,10 +195,10 @@ OSReturn os::get_priority(const Thread* const thread, ThreadPriority& priority) 
   if (ret != OS_OK) return ret;
 
   if (java_to_os_priority[MaxPriority] > java_to_os_priority[MinPriority]) {
-    for (p = MaxPriority; p > MinPriority && java_to_os_priority[p] > os_prio; p--) ;
+    for (p = MaxPriority; p > MinPriority && java_to_os_priority[p] > os_prio; p--);
   } else {
     // niceness values are in reverse order
-    for (p = MaxPriority; p > MinPriority && java_to_os_priority[p] < os_prio; p--) ;
+    for (p = MaxPriority; p > MinPriority && java_to_os_priority[p] < os_prio; p--);
   }
   priority = (ThreadPriority)p;
   return OS_OK;
@@ -239,8 +235,7 @@ static bool conc_path_file_and_check(char *buffer, char *printbuffer, size_t pri
   return false;
 }
 
-bool os::dll_locate_lib(char *buffer, size_t buflen,
-                        const char* pname, const char* fname) {
+bool os::dll_locate_lib(char *buffer, size_t buflen, const char* pname, const char* fname) {
   bool retval = false;
 
   size_t fullfnamelen = strlen(JNI_LIB_PREFIX) + strlen(fname) + strlen(JNI_LIB_SUFFIX);
@@ -348,14 +343,7 @@ static void signal_thread_entry(JavaThread* thread, TRAPS) {
           JavaValue result(T_VOID);
           JavaCallArguments args;
           args.push_int(sig);
-          JavaCalls::call_static(
-            &result,
-            klass,
-            vmSymbols::dispatch_name(),
-            vmSymbols::int_void_signature(),
-            &args,
-            THREAD
-          );
+          JavaCalls::call_static(&result, klass, vmSymbols::dispatch_name(), vmSymbols::int_void_signature(), &args, THREAD);
         }
         if (HAS_PENDING_EXCEPTION) {
           // tty is initialized early so we don't expect it to be null, but
@@ -365,13 +353,10 @@ static void signal_thread_entry(JavaThread* thread, TRAPS) {
             char klass_name[256];
             char tmp_sig_name[16];
             const char* sig_name = "UNKNOWN";
-            InstanceKlass::cast(PENDING_EXCEPTION->klass())->
-              name()->as_klass_external_name(klass_name, 256);
+            InstanceKlass::cast(PENDING_EXCEPTION->klass())->name()->as_klass_external_name(klass_name, 256);
             if (os::exception_name(sig, tmp_sig_name, 16) != NULL)
               sig_name = tmp_sig_name;
-            warning("Exception %s occurred dispatching signal %s to handler"
-                    "- the VM may need to be forcibly terminated",
-                    klass_name, sig_name );
+            warning("Exception %s occurred dispatching signal %s to handler - the VM may need to be forcibly terminated", klass_name, sig_name );
           }
           CLEAR_PENDING_EXCEPTION;
         }
@@ -505,7 +490,6 @@ void* os::native_java_library() {
  */
 void* os::find_agent_function(AgentLibrary *agent_lib, bool check_lib,
                               const char *syms[], size_t syms_len) {
-  assert(agent_lib != NULL, "sanity check");
   const char *lib_name;
   void *handle = agent_lib->os_lib();
   void *entryName = NULL;
@@ -530,13 +514,11 @@ void* os::find_agent_function(AgentLibrary *agent_lib, bool check_lib,
 }
 
 // See if the passed in agent is statically linked into the VM image.
-bool os::find_builtin_agent(AgentLibrary *agent_lib, const char *syms[],
-                            size_t syms_len) {
+bool os::find_builtin_agent(AgentLibrary *agent_lib, const char *syms[], size_t syms_len) {
   void *ret;
   void *proc_handle;
   void *save_handle;
 
-  assert(agent_lib != NULL, "sanity check");
   if (agent_lib->name() == NULL) {
     return false;
   }
@@ -597,10 +579,6 @@ void* os::malloc(size_t size, MEMFLAGS flags) {
 }
 
 void* os::malloc(size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
-  // Since os::malloc can be called when the libjvm.{dll,so} is
-  // first loaded and we don't have a thread yet we must accept NULL also here.
-  assert(!os::ThreadCrashProtection::is_crash_protected(Thread::current_or_null()), "malloc() not allowed when crash protection is set");
-
   if (size == 0) {
     // return a valid pointer if size is zero
     // if NULL is returned the calling functions assume out of memory.
@@ -655,7 +633,7 @@ void* os::realloc(void *memblock, size_t size, MEMFLAGS memflags, const NativeCa
   return MemTracker::record_malloc(ptr, size, memflags, stack, level);
 }
 
-void  os::free(void *memblock) {
+void os::free(void *memblock) {
   void* membase = MemTracker::record_free(memblock);
   ::free(membase);
 }
@@ -676,9 +654,7 @@ static int random_helper(unsigned int rand_seed) {
   const unsigned int a = 16807;
   const unsigned int m = 2147483647;
   const int q = m / a;
-  assert(q == 127773, "weird math");
   const int r = m % a;
-  assert(r == 2836, "weird math");
 
   // compute az=2^31p+q
   unsigned int lo = a * (rand_seed & 0xFFFF);
@@ -738,7 +714,6 @@ void os::abort(bool dump_core) {
 // Helper functions for fatal error handler
 
 void os::print_hex_dump(outputStream* st, address start, address end, int unitsize) {
-  assert(unitsize == 1 || unitsize == 2 || unitsize == 4 || unitsize == 8, "just checking");
 
   start = align_down(start, unitsize);
 
@@ -950,8 +925,7 @@ void os::print_location(outputStream* st, intptr_t x, bool verbose) {
   // Check if addr belongs to a Java thread.
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *thread = jtiwh.next(); ) {
     // Check for privilege stack
-    if (thread->privileged_stack_top() != NULL &&
-        thread->privileged_stack_top()->contains(addr)) {
+    if (thread->privileged_stack_top() != NULL && thread->privileged_stack_top()->contains(addr)) {
       st->print_cr(INTPTR_FORMAT " is pointing into the privilege stack "
                    "for thread: " INTPTR_FORMAT, p2i(addr), p2i(thread));
       if (verbose) thread->print_on(st);
@@ -1062,7 +1036,6 @@ char* os::format_boot_path(const char* format_string,
                            int home_len,
                            char fileSep,
                            char pathSep) {
-    assert((fileSep == '/' && pathSep == ':') || (fileSep == '\\' && pathSep == ';'), "unexpected separator chars");
 
     // Scan the format string to determine the length of the actual
     // boot classpath, and handle platform dependencies as well.
@@ -1099,7 +1072,6 @@ char* os::format_boot_path(const char* format_string,
     }
     *q = '\0';
 
-    assert((q - formatted_path) == formatted_path_len, "formatted_path size botched");
     return formatted_path;
 }
 
@@ -1109,7 +1081,6 @@ char* os::format_boot_path(const char* format_string,
 // closing of the file on exec.
 FILE* os::fopen(const char* path, const char* mode) {
   char modified_mode[20];
-  assert(strlen(mode) + 1 < sizeof(modified_mode), "mode chars plus one extra must fit in buffer");
   sprintf(modified_mode, "%s" LINUX_ONLY("e") BSD_ONLY("e"), mode);
   FILE* file = ::fopen(path, modified_mode);
 
@@ -1219,7 +1190,6 @@ void os::set_memory_serialize_page(address page) {
   _mem_serialize_page = (volatile int32_t *)page;
   // We initialize the serialization page shift count here
   // We assume a cache line size of 64 bytes
-  assert(SerializePageShiftCount == count, "JavaThread size changed; " "SerializePageShiftCount constant should be %d", count);
   set_serialize_page_mask((uintptr_t)(vm_page_size() - sizeof(int32_t)));
 }
 
@@ -1265,17 +1235,14 @@ bool os::stack_shadow_pages_available(Thread *thread, const methodHandle& method
   // the handler for stack overflow.  'instanceof' in the stack overflow
   // handler or a println uses at least 8k stack of VM and native code
   // respectively.
-  const int framesize_in_bytes =
-    Interpreter::size_top_interpreter_activation(method()) * wordSize;
+  const int framesize_in_bytes = Interpreter::size_top_interpreter_activation(method()) * wordSize;
 
-  address limit = ((JavaThread*)thread)->stack_end() +
-                  (JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size());
+  address limit = ((JavaThread*)thread)->stack_end() + (JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size());
 
   return sp > (limit + framesize_in_bytes);
 }
 
 size_t os::page_size_for_region(size_t region_size, size_t min_pages, bool must_be_aligned) {
-  assert(min_pages > 0, "sanity");
   if (UseLargePages) {
     const size_t max_page_size = region_size / min_pages;
 
@@ -1300,7 +1267,7 @@ size_t os::page_size_for_region_unaligned(size_t region_size, size_t min_pages) 
   return page_size_for_region(region_size, min_pages, false);
 }
 
-static const char* errno_to_string (int e, bool short_text) {
+static const char* errno_to_string(int e, bool short_text) {
   #define ALL_SHARED_ENUMS(X) \
     X(E2BIG, "Argument list too long") \
     X(EACCES, "Permission denied") \
@@ -1438,12 +1405,7 @@ void os::trace_page_sizes(const char* str, const size_t* page_sizes, int count) 
 
 #define trace_page_size_params(size) byte_size_in_exact_unit(size), exact_unit_for_byte_size(size)
 
-void os::trace_page_sizes(const char* str,
-                          const size_t region_min_size,
-                          const size_t region_max_size,
-                          const size_t page_size,
-                          const char* base,
-                          const size_t size) {
+void os::trace_page_sizes(const char* str, const size_t region_min_size, const size_t region_max_size, const size_t page_size, const char* base, const size_t size) {
 
   log_info(pagesize)("%s: "
                      " min=" SIZE_FORMAT "%s"
@@ -1459,12 +1421,7 @@ void os::trace_page_sizes(const char* str,
                      trace_page_size_params(size));
 }
 
-void os::trace_page_sizes_for_requested_size(const char* str,
-                                             const size_t requested_size,
-                                             const size_t page_size,
-                                             const size_t alignment,
-                                             const char* base,
-                                             const size_t size) {
+void os::trace_page_sizes_for_requested_size(const char* str, const size_t requested_size, const size_t page_size, const size_t alignment, const char* base, const size_t size) {
 
   log_info(pagesize)("%s:"
                      " req_size=" SIZE_FORMAT "%s"
@@ -1510,13 +1467,10 @@ bool os::is_server_class_machine() {
   const julong missing_memory   = 256UL * M;
 
   /* Is this a server class machine? */
-  if ((os::active_processor_count() >= (int)server_processors) &&
-      (os::physical_memory() >= (server_memory - missing_memory))) {
-    const unsigned int logical_processors =
-      VM_Version::logical_processors_per_package();
+  if ((os::active_processor_count() >= (int)server_processors) && (os::physical_memory() >= (server_memory - missing_memory))) {
+    const unsigned int logical_processors = VM_Version::logical_processors_per_package();
     if (logical_processors > 1) {
-      const unsigned int physical_packages =
-        os::active_processor_count() / logical_processors;
+      const unsigned int physical_packages = os::active_processor_count() / logical_processors;
       if (physical_packages >= server_processors) {
         result = true;
       }
@@ -1528,7 +1482,6 @@ bool os::is_server_class_machine() {
 }
 
 void os::initialize_initial_active_processor_count() {
-  assert(_initial_active_processor_count == 0, "Initial active processor count already set.");
   _initial_active_processor_count = active_processor_count();
   log_debug(os)("Initial active processor count set to %d" , _initial_active_processor_count);
 }
@@ -1589,8 +1542,7 @@ char* os::attempt_reserve_memory_at(size_t bytes, char* addr, int file_desc) {
   return result;
 }
 
-void os::split_reserved_memory(char *base, size_t size,
-                                 size_t split, bool realloc) {
+void os::split_reserved_memory(char *base, size_t size, size_t split, bool realloc) {
   pd_split_reserved_memory(base, size, split, realloc);
 }
 
@@ -1602,8 +1554,7 @@ bool os::commit_memory(char* addr, size_t bytes, bool executable) {
   return res;
 }
 
-bool os::commit_memory(char* addr, size_t size, size_t alignment_hint,
-                              bool executable) {
+bool os::commit_memory(char* addr, size_t size, size_t alignment_hint, bool executable) {
   bool res = os::pd_commit_memory(addr, size, alignment_hint, executable);
   if (res) {
     MemTracker::record_virtual_memory_commit((address)addr, size, CALLER_PC);
@@ -1611,14 +1562,12 @@ bool os::commit_memory(char* addr, size_t size, size_t alignment_hint,
   return res;
 }
 
-void os::commit_memory_or_exit(char* addr, size_t bytes, bool executable,
-                               const char* mesg) {
+void os::commit_memory_or_exit(char* addr, size_t bytes, bool executable, const char* mesg) {
   pd_commit_memory_or_exit(addr, bytes, executable, mesg);
   MemTracker::record_virtual_memory_commit((address)addr, bytes, CALLER_PC);
 }
 
-void os::commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint,
-                               bool executable, const char* mesg) {
+void os::commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint, bool executable, const char* mesg) {
   os::pd_commit_memory_or_exit(addr, size, alignment_hint, executable, mesg);
   MemTracker::record_virtual_memory_commit((address)addr, size, CALLER_PC);
 }

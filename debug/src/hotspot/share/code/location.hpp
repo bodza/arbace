@@ -50,9 +50,6 @@ class Location {
   // Create a bit-packed Location
   Location(Where where_, Type type_, unsigned offset_) {
     set(where_, type_, offset_);
-    assert( where () == where_ , "" );
-    assert( type  () == type_  , "" );
-    assert( offset() == offset_, "" );
   }
 
   inline void set(Where where_, Type type_, unsigned offset_) {
@@ -71,23 +68,20 @@ class Location {
   Location() { set(on_stack,invalid,0); }
 
   // Bit field accessors
-  Where where()  const { return (Where)       ((_value & WHERE_MASK)  >> WHERE_SHIFT);}
+  Where where()  const { return (Where)       ((_value & WHERE_MASK)  >> WHERE_SHIFT); }
   Type  type()   const { return (Type)        ((_value & TYPE_MASK)   >> TYPE_SHIFT); }
   unsigned offset() const { return (unsigned) ((_value & OFFSET_MASK) >> OFFSET_SHIFT); }
 
   // Accessors
   bool is_register() const    { return where() == in_register; }
-  bool is_stack() const       { return where() == on_stack;    }
+  bool is_stack() const       { return where() == on_stack; }
 
   int stack_offset() const    {
-    assert(where() == on_stack,    "wrong Where");
     return offset()<<LogBytesPerInt; }
   int register_number() const {
-    assert(where() == in_register, "wrong Where");
     return offset()   ; }
 
   VMReg reg() const {
-    assert(where() == in_register, "wrong Where");
     return VMRegImpl::as_VMReg(offset())   ; }
 
   // Printing

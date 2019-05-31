@@ -3,7 +3,7 @@
 
 #include "runtime/prefetch.hpp"
 
-inline void Prefetch::read (void *loc, intx interval) {
+inline void Prefetch::read(void *loc, intx interval) {
 #ifndef BUILTIN_SIM
   if (interval >= 0)
     asm("prfm PLDL1KEEP, [%0, %1]" : : "r"(loc), "r"(interval));

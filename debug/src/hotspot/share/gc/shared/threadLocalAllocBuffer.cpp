@@ -79,7 +79,6 @@ void ThreadLocalAllocBuffer::accumulate_statistics() {
     global_stats()->update_fast_refill_waste(_fast_refill_waste);
 
   } else {
-    assert(_number_of_refills == 0 && _fast_refill_waste == 0 && _slow_refill_waste == 0 && _gc_waste          == 0, "tlab stats == 0");
   }
   global_stats()->update_slow_allocations(_slow_allocations);
 }
@@ -106,7 +105,6 @@ void ThreadLocalAllocBuffer::make_parsable(bool retire, bool zap) {
       set_allocation_end(NULL);
     }
   }
-  assert(!(retire || ZeroTLAB)  || (start() == NULL && end() == NULL && top() == NULL && _allocation_end == NULL), "TLAB must be reset");
 }
 
 void ThreadLocalAllocBuffer::resize_all_tlabs() {
@@ -119,9 +117,7 @@ void ThreadLocalAllocBuffer::resize_all_tlabs() {
 
 void ThreadLocalAllocBuffer::resize() {
   // Compute the next tlab size using expected allocation amount
-  assert(ResizeTLAB, "Should not call this otherwise");
-  size_t alloc = (size_t)(_allocation_fraction.average() *
-                          (Universe::heap()->tlab_capacity(myThread()) / HeapWordSize));
+  size_t alloc = (size_t)(_allocation_fraction.average() * (Universe::heap()->tlab_capacity(myThread()) / HeapWordSize));
   size_t new_size = alloc / _target_refills;
 
   new_size = MIN2(MAX2(new_size, min_size()), max_size());
@@ -146,13 +142,10 @@ void ThreadLocalAllocBuffer::initialize_statistics() {
   _allocated_size    = 0;
 }
 
-void ThreadLocalAllocBuffer::fill(HeapWord* start,
-                                  HeapWord* top,
-                                  size_t    new_size) {
+void ThreadLocalAllocBuffer::fill(HeapWord* start, HeapWord* top, size_t new_size) {
   _number_of_refills++;
   _allocated_size += new_size;
   print_stats("fill");
-  assert(top <= start + new_size - alignment_reserve(), "size too small");
 
   initialize(start, top, start + new_size - alignment_reserve());
 
@@ -160,9 +153,7 @@ void ThreadLocalAllocBuffer::fill(HeapWord* start,
   set_refill_waste_limit(initial_refill_waste_limit());
 }
 
-void ThreadLocalAllocBuffer::initialize(HeapWord* start,
-                                        HeapWord* top,
-                                        HeapWord* end) {
+void ThreadLocalAllocBuffer::initialize(HeapWord* start, HeapWord* top, HeapWord* end) {
   set_start(start);
   set_top(top);
   set_pf_top(top);
@@ -219,8 +210,7 @@ size_t ThreadLocalAllocBuffer::initial_desired_size() {
     // Initial size is a function of the average number of allocating threads.
     unsigned nof_threads = global_stats()->allocating_threads_avg();
 
-    init_sz  = (Universe::heap()->tlab_capacity(myThread()) / HeapWordSize) /
-                      (nof_threads * target_refills());
+    init_sz  = (Universe::heap()->tlab_capacity(myThread()) / HeapWordSize) / (nof_threads * target_refills());
     init_sz = align_object_size(init_sz);
   }
   init_sz = MIN2(MAX2(init_sz, min_size()), max_size());
@@ -280,9 +270,7 @@ void ThreadLocalAllocBuffer::set_sample_end() {
 }
 
 Thread* ThreadLocalAllocBuffer::myThread() {
-  return (Thread*)(((char *)this) +
-                   in_bytes(start_offset()) -
-                   in_bytes(Thread::tlab_start_offset()));
+  return (Thread*)(((char *)this) + in_bytes(start_offset()) - in_bytes(Thread::tlab_start_offset()));
 }
 
 void ThreadLocalAllocBuffer::set_back_allocation_end() {
@@ -306,52 +294,40 @@ GlobalTLABStats::GlobalTLABStats() :
     ResourceMark rm;
 
     char* cname = PerfDataManager::counter_name("tlab", "allocThreads");
-    _perf_allocating_threads =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
+    _perf_allocating_threads = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "fills");
-    _perf_total_refills =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
+    _perf_total_refills = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "maxFills");
-    _perf_max_refills =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
+    _perf_max_refills = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "alloc");
-    _perf_allocation =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_allocation = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "gcWaste");
-    _perf_gc_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_gc_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "maxGcWaste");
-    _perf_max_gc_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_max_gc_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "slowWaste");
-    _perf_slow_refill_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_slow_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "maxSlowWaste");
-    _perf_max_slow_refill_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_max_slow_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "fastWaste");
-    _perf_fast_refill_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_fast_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "maxFastWaste");
-    _perf_max_fast_refill_waste =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
+    _perf_max_fast_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "slowAlloc");
-    _perf_slow_allocations =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
+    _perf_slow_allocations = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
 
     cname = PerfDataManager::counter_name("tlab", "maxSlowAlloc");
-    _perf_max_slow_allocations =
-      PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
+    _perf_max_slow_allocations = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
   }
 }
 

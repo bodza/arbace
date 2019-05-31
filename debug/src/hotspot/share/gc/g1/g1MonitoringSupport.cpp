@@ -40,14 +40,12 @@ G1OldGenerationCounters::G1OldGenerationCounters(G1MonitoringSupport* g1mm,
 }
 
 void G1YoungGenerationCounters::update_all() {
-  size_t committed =
-            G1MonitoringSupport::pad_capacity(_g1mm->young_gen_committed(), 3);
+  size_t committed = G1MonitoringSupport::pad_capacity(_g1mm->young_gen_committed(), 3);
   _current_size->set_value(committed);
 }
 
 void G1OldGenerationCounters::update_all() {
-  size_t committed =
-            G1MonitoringSupport::pad_capacity(_g1mm->old_gen_committed());
+  size_t committed = G1MonitoringSupport::pad_capacity(_g1mm->old_gen_committed());
   _current_size->set_value(committed);
 }
 
@@ -78,16 +76,13 @@ G1MonitoringSupport::G1MonitoringSupport(G1CollectedHeap* g1h) :
   //
   //  name "collector.0".  In a generational collector this would be the
   // young generation collection.
-  _incremental_collection_counters =
-    new CollectorCounters("G1 incremental collections", 0);
+  _incremental_collection_counters = new CollectorCounters("G1 incremental collections", 0);
   //   name "collector.1".  In a generational collector this would be the
   // old generation collection.
-  _full_collection_counters =
-    new CollectorCounters("G1 stop-the-world full collections", 1);
+  _full_collection_counters = new CollectorCounters("G1 stop-the-world full collections", 1);
   //   name "collector.2".  In a generational collector this would be the
   // STW phases in concurrent collection.
-  _conc_collection_counters =
-    new CollectorCounters("G1 stop-the-world phases", 2);
+  _conc_collection_counters = new CollectorCounters("G1 stop-the-world phases", 2);
 
   // timer sampling for all counters supporting sampling only update the
   // used value.  See the take_sample() method.  G1 requires both used and
@@ -163,12 +158,10 @@ void G1MonitoringSupport::recalculate_sizes() {
 
   uint young_list_length = _g1h->young_regions_count();
   uint survivor_list_length = _g1h->survivor_regions_count();
-  assert(young_list_length >= survivor_list_length, "invariant");
   uint eden_list_length = young_list_length - survivor_list_length;
   // Max length includes any potential extensions to the young gen
   // we'll do when the GC locker is active.
   uint young_list_max_length = _g1h->g1_policy()->young_list_max_length();
-  assert(young_list_max_length >= survivor_list_length, "invariant");
   uint eden_list_max_length = young_list_max_length - survivor_list_length;
 
   _overall_used = _g1h->used_unlocked();
@@ -187,7 +180,6 @@ void G1MonitoringSupport::recalculate_sizes() {
 
   // Remove the committed size we have calculated so far (for the
   // survivor and old space).
-  assert(committed >= (_survivor_committed + _old_committed), "sanity");
   committed -= _survivor_committed + _old_committed;
 
   // Next, calculate and remove the committed size for the eden.
@@ -202,15 +194,12 @@ void G1MonitoringSupport::recalculate_sizes() {
   // ..and calculate the young gen committed.
   _young_gen_committed = _eden_committed + _survivor_committed;
 
-  assert(_overall_committed == (_eden_committed + _survivor_committed + _old_committed), "the committed sizes should add up");
   // Somewhat defensive: cap the eden used size to make sure it
   // never exceeds the committed size.
   _eden_used = MIN2(_eden_used, _eden_committed);
   // _survivor_committed and _old_committed are calculated in terms of
   // the corresponding _*_used value, so the next two conditions
   // should hold.
-  assert(_survivor_used <= _survivor_committed, "post-condition");
-  assert(_old_used <= _old_committed, "post-condition");
 }
 
 void G1MonitoringSupport::recalculate_eden_size() {

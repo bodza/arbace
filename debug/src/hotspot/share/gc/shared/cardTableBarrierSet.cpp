@@ -30,7 +30,7 @@ CardTableBarrierSet::CardTableBarrierSet(BarrierSetAssembler* barrier_set_assemb
                    fake_rtti.add_tag(BarrierSet::CardTableBarrierSet)),
   _defer_initial_card_mark(false),
   _card_table(card_table)
-{}
+{ }
 
 CardTableBarrierSet::CardTableBarrierSet(CardTable* card_table) :
   ModRefBarrierSet(make_barrier_set_assembler<CardTableBarrierSetAssembler>(),
@@ -39,7 +39,7 @@ CardTableBarrierSet::CardTableBarrierSet(CardTable* card_table) :
                    BarrierSet::FakeRtti(BarrierSet::CardTableBarrierSet)),
   _defer_initial_card_mark(false),
   _card_table(card_table)
-{}
+{ }
 
 void CardTableBarrierSet::initialize() {
   initialize_deferred_card_mark_barriers();
@@ -113,10 +113,8 @@ void CardTableBarrierSet::on_slowpath_allocation_exit(JavaThread* thread, oop ne
     // Arrays of non-references don't need a post-barrier.
     // The deferred_card_mark region should be empty
     // following the flush above.
-    assert(thread->deferred_card_mark().is_empty(), "Error");
   } else {
     MemRegion mr((HeapWord*)new_obj, new_obj->size());
-    assert(!mr.is_empty(), "Error");
     if (_defer_initial_card_mark) {
       // Defer the card mark
       thread->set_deferred_card_mark(mr);
@@ -130,25 +128,16 @@ void CardTableBarrierSet::on_slowpath_allocation_exit(JavaThread* thread, oop ne
 void CardTableBarrierSet::initialize_deferred_card_mark_barriers() {
   // Used for ReduceInitialCardMarks (when COMPILER2 or JVMCI is used);
   // otherwise remains unused.
-  _defer_initial_card_mark = is_server_compilation_mode_vm() && ReduceInitialCardMarks
-                             && (DeferInitialCardMark || card_mark_must_follow_store());
+  _defer_initial_card_mark = is_server_compilation_mode_vm() && ReduceInitialCardMarks && (DeferInitialCardMark || card_mark_must_follow_store());
 }
 
 void CardTableBarrierSet::flush_deferred_card_mark_barrier(JavaThread* thread) {
   MemRegion deferred = thread->deferred_card_mark();
   if (!deferred.is_empty()) {
-    assert(_defer_initial_card_mark, "Otherwise should be empty");
-    {
-      // Verify that the storage points to a parsable object in heap
-      assert(!_card_table->is_in_young(old_obj), "Else should have been filtered in on_slowpath_allocation_exit()");
-      assert(oopDesc::is_oop(old_obj, true), "Not an oop");
-      assert(deferred.word_size() == (size_t)(old_obj->size()), "Mismatch: multiple objects?");
-    }
     write_region(deferred);
     // "Clear" the deferred_card_mark field
     thread->set_deferred_card_mark(MemRegion());
   }
-  assert(thread->deferred_card_mark().is_empty(), "invariant");
 }
 
 void CardTableBarrierSet::on_thread_detach(JavaThread* thread) {

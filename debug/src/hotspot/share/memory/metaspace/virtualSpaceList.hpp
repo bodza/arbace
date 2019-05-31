@@ -105,7 +105,7 @@ class VirtualSpaceList : public CHeapObj<mtClass> {
     VirtualSpaceNode* _virtual_spaces;
    public:
     VirtualSpaceListIterator(VirtualSpaceNode* virtual_spaces) :
-      _virtual_spaces(virtual_spaces) {}
+      _virtual_spaces(virtual_spaces) { }
 
     bool repeat() {
       return _virtual_spaces != NULL;

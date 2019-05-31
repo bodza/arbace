@@ -92,7 +92,7 @@ class ChangeSwitchPad : public ChangeItem {
    bool handle_code_change(Relocator *r) { return r->handle_switch_pad(bci(), _padding, _is_lookup_switch); };
 
    bool is_switch_pad()        { return true; }
-   int  padding()              { return _padding;  }
+   int  padding()              { return _padding; }
    bool is_lookup_switch()     { return _is_lookup_switch; }
 
    void print()                { tty->print_cr("ChangeSwitchPad. bci: %d   Padding: %d  IsLookupSwitch: %d", bci(), _padding, _is_lookup_switch); }
@@ -154,7 +154,6 @@ methodHandle Relocator::insert_space_at(int bci, int size, u_char inst_buffer[],
 }
 
 bool Relocator::handle_code_changes() {
-  assert(_changes != NULL, "changes vector must be initialized");
 
   while (!_changes->is_empty()) {
     // Inv: everything is aligned.
@@ -262,8 +261,7 @@ void Relocator::change_jump(int bci, int offset, bool is_short, int break_bci, i
   int bci_delta = (is_short) ? short_at(offset) : int_at(offset);
   int targ = bci + bci_delta;
 
-  if ((bci <= break_bci && targ >  break_bci) ||
-      (bci >  break_bci && targ <= break_bci)) {
+  if ((bci <= break_bci && targ >  break_bci) || (bci >  break_bci && targ <= break_bci)) {
     int new_delta;
     if (bci_delta > 0)
       new_delta = bci_delta + delta;
@@ -423,8 +421,7 @@ void Relocator::adjust_local_var_table(int bci, int delta) {
 static Array<u1>* insert_hole_at(ClassLoaderData* loader_data,
     size_t where, int hole_sz, Array<u1>* src) {
   Thread* THREAD = Thread::current();
-  Array<u1>* dst =
-      MetadataFactory::new_array<u1>(loader_data, src->length() + hole_sz, 0, CHECK_NULL);
+  Array<u1>* dst = MetadataFactory::new_array<u1>(loader_data, src->length() + hole_sz, 0, CHECK_NULL);
 
   address src_addr = (address)src->adr_at(0);
   address dst_addr = (address)dst->adr_at(0);
@@ -441,8 +438,7 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
   if (method()->has_stackmap_table()) {
     Array<u1>* data = method()->stackmap_data();
     // The data in the array is a classfile representation of the stackmap table
-    stack_map_table* sm_table =
-        stack_map_table::at((address)data->adr_at(0));
+    stack_map_table* sm_table = stack_map_table::at((address)data->adr_at(0));
 
     int count = sm_table->number_of_entries();
     stack_map_frame* frame = sm_table->entries();
@@ -459,7 +455,6 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
         if (frame->is_valid_offset(new_offset_delta)) {
           frame->set_offset_delta(new_offset_delta);
         } else {
-          assert(frame->is_same_frame() || frame->is_same_locals_1_stack_item_frame(), "Frame must be one of the compressed forms");
           // The new delta exceeds the capacity of the 'same_frame' or
           // 'same_frame_1_stack_item_frame' frame types.  We need to
           // convert these frames to the extended versions, but the extended
@@ -488,8 +483,7 @@ void Relocator::adjust_stack_map_table(int bci, int delta) {
           if (frame->is_same_frame()) {
             same_frame_extended::create_at(frame_addr, new_offset_delta);
           } else {
-            same_locals_1_stack_item_extended::create_at(
-              frame_addr, new_offset_delta, NULL);
+            same_locals_1_stack_item_extended::create_at(frame_addr, new_offset_delta, NULL);
             // the verification_info_type should already be at the right spot
           }
         }
@@ -570,15 +564,12 @@ bool Relocator::relocate_code(int bci, int ilen, int delta) {
     }
   }
 
-  // We require 4-byte alignment of code arrays.
-  assert(((intptr_t)code_array() & 3) == 0, "check code alignment");
   // Change jumps before doing the copying; this routine requires aligned switches.
   change_jumps(bci, delta);
 
   // In case we have shrunken a tableswitch/lookupswitch statement, we store the last
   // bytes that get overwritten. We have to copy the bytes after the change_jumps method
   // has been called, since it is likely to update last offset in a tableswitch/lookupswitch
-  assert(delta >= -3, "We cannot overwrite more than 3 bytes.");
   if (delta < 0 && delta >= -3) {
     memcpy(_overwrite, addr_at(bci + ilen + delta), -delta);
   }
@@ -614,7 +605,7 @@ bool Relocator::handle_widen(int bci, int new_ilen, u_char inst_buffer[]) {
     return false;
 
   // Insert new bytecode(s)
-  for(int k = 0; k < new_ilen; k++) {
+  for (int k = 0; k < new_ilen; k++) {
     code_at_put(bci + k, (Bytecodes::Code)inst_buffer[k]);
   }
 
@@ -645,11 +636,6 @@ bool Relocator::handle_jump_widen(int bci, int delta) {
     case Bytecodes::_ifnonnull: {
       const int goto_length   = Bytecodes::length_for(Bytecodes::_goto);
 
-      // If 'if' points to the next bytecode after goto, it's already handled.
-      // it shouldn't be.
-      assert(short_at(bci+1) != ilen+goto_length, "if relocation already handled");
-      assert(ilen == 3, "check length");
-
       // Convert to 0 if <cond> goto 6
       //            3 _goto 11
       //            6 _goto_w <wide delta offset>
@@ -679,7 +665,6 @@ bool Relocator::handle_jump_widen(int bci, int delta) {
       }
     case Bytecodes::_goto:
     case Bytecodes::_jsr:
-      assert(ilen == 3, "check length");
 
       if (!relocate_code(bci, 3, 2)) return false;
       if (bc == Bytecodes::_goto)
@@ -731,7 +716,6 @@ bool Relocator::handle_switch_pad(int bci, int old_pad, bool is_lookup_switch) {
       memmove(addr_at(bci + 1 + new_pad + len*4 + pad_delta),
               _overwrite, -pad_delta);
     } else {
-      assert(pad_delta > 0, "check");
       // Move the expanded instruction up.
       memmove(addr_at(bci +1 + new_pad),
               addr_at(bci +1 + old_pad),

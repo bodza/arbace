@@ -4,12 +4,6 @@
 inline bool LinearScan::is_processed_reg_num(int reg_num) {
   // rsp and rbp, r10, r15 (numbers [12,15]) are ignored
   // r12 (number 11) is conditional on compressed oops.
-  assert(FrameMap::r12_opr->cpu_regnr() == 11, "wrong assumption below");
-  assert(FrameMap::r10_opr->cpu_regnr() == 12, "wrong assumption below");
-  assert(FrameMap::r15_opr->cpu_regnr() == 13, "wrong assumption below");
-  assert(FrameMap::rsp_opr->cpu_regnrLo() == 14, "wrong assumption below");
-  assert(FrameMap::rbp_opr->cpu_regnrLo() == 15, "wrong assumption below");
-  assert(reg_num >= 0, "invalid reg_num");
   return reg_num <= FrameMap::last_cpu_reg() || reg_num >= pd_nof_cpu_regs_frame_map;
 }
 
@@ -24,7 +18,6 @@ inline bool LinearScan::requires_adjacent_regs(BasicType type) {
 }
 
 inline bool LinearScan::is_caller_save(int assigned_reg) {
-  assert(assigned_reg >= 0 && assigned_reg < nof_regs, "should call this only for registers");
   return true; // no callee-saved registers on Intel
 }
 
@@ -63,7 +56,6 @@ inline bool LinearScanWalker::pd_init_regs_for_alloc(Interval* cur) {
     last_xmm_reg = pd_first_xmm_reg + (pd_nof_xmm_regs_frame_map / 2) - 1;
   }
   if (allocator()->gen()->is_vreg_flag_set(cur->reg_num(), LIRGenerator::byte_reg)) {
-    assert(cur->type() != T_FLOAT && cur->type() != T_DOUBLE, "cpu regs only");
     _first_reg = pd_first_byte_reg;
     _last_reg = FrameMap::last_byte_reg();
     return true;

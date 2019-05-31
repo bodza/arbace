@@ -26,7 +26,6 @@ public:
           _bitmap->clear(obj);
           obj->init_mark_raw();
         } else {
-          assert(current->is_empty(), "Should have been cleared in phase 2.");
         }
       }
       current->reset_during_compaction();
@@ -45,16 +44,13 @@ size_t G1FullGCCompactTask::G1CompactRegionClosure::apply(oop obj) {
 
   // copy object and reinit its mark
   HeapWord* obj_addr = (HeapWord*) obj;
-  assert(obj_addr != destination, "everything in this pass should be moving");
   Copy::aligned_conjoint_words(obj_addr, destination, size);
   oop(destination)->init_mark_raw();
-  assert(oop(destination)->klass() != NULL, "should have a class");
 
   return size;
 }
 
 void G1FullGCCompactTask::compact_region(HeapRegion* hr) {
-  assert(!hr->is_humongous(), "Should be no humongous regions in compaction queue");
   G1CompactRegionClosure compact(collector()->mark_bitmap());
   hr->apply_to_marked_objects(collector()->mark_bitmap(), &compact);
   // Once all objects have been moved the liveness information

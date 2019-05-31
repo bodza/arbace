@@ -76,10 +76,7 @@ void G1FullGCAdjustTask::work(uint worker_id) {
   _root_processor.process_full_gc_weak_roots(&_adjust);
 
   // Needs to be last, process_all_roots calls all_tasks_completed(...).
-  _root_processor.process_all_roots(
-      &_adjust,
-      &adjust_cld,
-      &adjust_code);
+  _root_processor.process_all_roots(&_adjust, &adjust_cld, &adjust_code);
 
   // Adjust string dedup if enabled.
   if (G1StringDedup::is_enabled()) {

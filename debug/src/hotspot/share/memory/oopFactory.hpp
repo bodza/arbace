@@ -28,9 +28,7 @@ class oopFactory: AllStatic {
 
   // create java.lang.Object[]
   static objArrayOop     new_objectArray(int length, TRAPS)  {
-    assert(Universe::objectArrayKlassObj() != NULL, "Too early?");
-    return ObjArrayKlass::
-      cast(Universe::objectArrayKlassObj())->allocate(length, THREAD);
+    return ObjArrayKlass::cast(Universe::objectArrayKlassObj())->allocate(length, THREAD);
   }
 
   static typeArrayOop    new_charArray           (const char* utf8_str,  TRAPS);

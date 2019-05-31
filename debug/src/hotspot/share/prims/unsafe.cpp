@@ -33,7 +33,7 @@
 
 #define MAX_OBJECT_SIZE \
   ( arrayOopDesc::header_size(T_DOUBLE) * HeapWordSize \
-    + ((julong)max_jint * sizeof(double)) )
+    + ((julong)max_jint * sizeof(double)))
 
 #define UNSAFE_ENTRY(result_type, header) \
   JVM_ENTRY(static result_type, header)
@@ -44,15 +44,10 @@
 #define UNSAFE_END JVM_END
 
 static inline void* addr_from_java(jlong addr) {
-  // This assert fails in a variety of ways on 32-bit systems.
-  // It is impossible to predict whether native code that converts
-  // pointers to longs will sign-extend or zero-extend the addresses.
-  //assert(addr == (uintptr_t)addr, "must not be odd high bits");
   return (void*)(uintptr_t)addr;
 }
 
 static inline jlong addr_to_java(void* p) {
-  assert(p == (void*)(uintptr_t)p, "must not be odd high bits");
   return (uintptr_t)p;
 }
 
@@ -409,8 +404,6 @@ UNSAFE_LEAF(jint, Unsafe_PageSize()) {
 } UNSAFE_END
 
 static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
-  assert(clazz != NULL, "clazz must not be NULL");
-  assert(name != NULL, "name must not be NULL");
 
   ResourceMark rm(THREAD);
   char *utf_name = java_lang_String::as_utf8_string(JNIHandles::resolve_non_null(name));
@@ -432,7 +425,6 @@ static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
 }
 
 static jlong find_field_offset(jobject field, int must_be_static, TRAPS) {
-  assert(field != NULL, "field must not be NULL");
 
   oop reflected   = JNIHandles::resolve_non_null(field);
   oop mirror      = java_lang_reflect_Field::clazz(reflected);
@@ -464,7 +456,6 @@ UNSAFE_ENTRY(jlong, Unsafe_StaticFieldOffset0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobject field)) {
-  assert(field != NULL, "field must not be NULL");
 
   // Note:  In this VM implementation, a field address is always a short
   // offset from the base of a a klass metaobject.  Thus, the full dynamic
@@ -486,7 +477,6 @@ UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
 
@@ -499,7 +489,6 @@ UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, j
 UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* klass = java_lang_Class::as_Klass(mirror);
@@ -513,7 +502,6 @@ UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, 
 UNSAFE_END
 
 static void getBaseAndScale(int& base, int& scale, jclass clazz, TRAPS) {
-  assert(clazz != NULL, "clazz must not be NULL");
 
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* k = java_lang_Class::as_Klass(mirror);
@@ -526,7 +514,6 @@ static void getBaseAndScale(int& base, int& scale, jclass clazz, TRAPS) {
   } else if (k->is_typeArray_klass()) {
     TypeArrayKlass* tak = TypeArrayKlass::cast(k);
     base  = tak->array_header_in_bytes();
-    assert(base == arrayOopDesc::base_offset_in_bytes(tak->element_type()), "array_header_size semantics ok");
     scale = (1 << tak->log2_element_size());
   } else {
     ShouldNotReachHere();
@@ -579,9 +566,6 @@ static jclass Unsafe_DefineClass_impl(JNIEnv *env, jstring name, jbyteArray data
   char *utfName = NULL;
   jclass result = 0;
   char buf[128];
-
-  assert(data != NULL, "Class bytes must not be NULL");
-  assert(length >= 0, "length must not be negative: %d", length);
 
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();
@@ -694,15 +678,12 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
                                  jclass host_class, jbyteArray data, jobjectArray cp_patches_jh,
                                  u1** temp_alloc,
                                  TRAPS) {
-  assert(host_class != NULL, "host_class must not be NULL");
-  assert(data != NULL, "data must not be NULL");
 
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();
   }
 
   jint length = typeArrayOop(JNIHandles::resolve_non_null(data))->length();
-  assert(length >= 0, "class_bytes_length must not be negative: %d", length);
 
   int class_bytes_length = (int) length;
 
@@ -720,15 +701,13 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
   objArrayHandle cp_patches_h;
   if (cp_patches_jh != NULL) {
     oop p = JNIHandles::resolve_non_null(cp_patches_jh);
-    assert(p->is_objArray(), "cp_patches must be an object[]");
     cp_patches_h = objArrayHandle(THREAD, (objArrayOop)p);
   }
 
   const Klass* host_klass = java_lang_Class::as_Klass(JNIHandles::resolve_non_null(host_class));
 
   // Make sure it's the real host class, not another anonymous class.
-  while (host_klass != NULL && host_klass->is_instance_klass() &&
-         InstanceKlass::cast(host_klass)->is_anonymous()) {
+  while (host_klass != NULL && host_klass->is_instance_klass() && InstanceKlass::cast(host_klass)->is_anonymous()) {
     host_klass = InstanceKlass::cast(host_klass)->host_klass();
   }
 
@@ -736,8 +715,6 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
   if (host_klass == NULL) {
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "Host class is null");
   }
-
-  assert(host_klass->is_instance_klass(), "Host class must be an instance class");
 
   const char* host_source = host_klass->external_name();
   Handle      host_loader(THREAD, host_klass->class_loader());
@@ -877,8 +854,6 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetLong(JNIEnv *env, jobject unsafe, job
 } UNSAFE_END
 
 static void post_thread_park_event(EventThreadPark* event, const oop obj, jlong timeout_nanos, jlong until_epoch_millis) {
-  assert(event != NULL, "invariant");
-  assert(event->should_commit(), "invariant");
   event->set_parkedClass((obj != NULL) ? obj->klass() : NULL);
   event->set_timeout(timeout_nanos);
   event->set_until(until_epoch_millis);
@@ -950,7 +925,6 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
   jint ret;
 
   typeArrayOop a = typeArrayOop(JNIHandles::resolve_non_null(loadavg));
-  assert(a->is_typeArray(), "must be type array");
 
   ret = os::loadavg(la, nelem);
   if (ret == -1) {
@@ -958,7 +932,6 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
   }
 
   // if successful, ret is the number of samples actually retrieved.
-  assert(ret >= 0 && ret <= max_nelem, "Unexpected loadavg return value");
   switch(ret) {
     case 3: a->double_at_put(2, (jdouble)la[2]); // fall through
     case 2: a->double_at_put(1, (jdouble)la[1]); // fall through
@@ -986,18 +959,18 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &f)
 
 #define DECLARE_GETPUTOOP(Type, Desc) \
-    {CC "get" #Type,      CC "(" OBJ "J)" #Desc,       FN_PTR(Unsafe_Get##Type)}, \
-    {CC "put" #Type,      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type)}, \
-    {CC "get" #Type "Volatile",      CC "(" OBJ "J)" #Desc,       FN_PTR(Unsafe_Get##Type##Volatile)}, \
-    {CC "put" #Type "Volatile",      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type##Volatile)}
+    { CC "get" #Type,      CC "(" OBJ "J)" #Desc,       FN_PTR(Unsafe_Get##Type)}, \
+    { CC "put" #Type,      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type)}, \
+    { CC "get" #Type "Volatile",      CC "(" OBJ "J)" #Desc,       FN_PTR(Unsafe_Get##Type##Volatile)}, \
+    { CC "put" #Type "Volatile",      CC "(" OBJ "J" #Desc ")V",   FN_PTR(Unsafe_Put##Type##Volatile)}
 
 static JNINativeMethod jdk_internal_misc_Unsafe_methods[] = {
-    {CC "getObject",        CC "(" OBJ "J)" OBJ "",   FN_PTR(Unsafe_GetObject)},
-    {CC "putObject",        CC "(" OBJ "J" OBJ ")V",  FN_PTR(Unsafe_PutObject)},
-    {CC "getObjectVolatile",CC "(" OBJ "J)" OBJ "",   FN_PTR(Unsafe_GetObjectVolatile)},
-    {CC "putObjectVolatile",CC "(" OBJ "J" OBJ ")V",  FN_PTR(Unsafe_PutObjectVolatile)},
+    { CC "getObject",        CC "(" OBJ "J)" OBJ "",   FN_PTR(Unsafe_GetObject)},
+    { CC "putObject",        CC "(" OBJ "J" OBJ ")V",  FN_PTR(Unsafe_PutObject)},
+    { CC "getObjectVolatile",CC "(" OBJ "J)" OBJ "",   FN_PTR(Unsafe_GetObjectVolatile)},
+    { CC "putObjectVolatile",CC "(" OBJ "J" OBJ ")V",  FN_PTR(Unsafe_PutObjectVolatile)},
 
-    {CC "getUncompressedObject", CC "(" ADR ")" OBJ,  FN_PTR(Unsafe_GetUncompressedObject)},
+    { CC "getUncompressedObject", CC "(" ADR ")" OBJ,  FN_PTR(Unsafe_GetUncompressedObject)},
 
     DECLARE_GETPUTOOP(Boolean, Z),
     DECLARE_GETPUTOOP(Byte, B),
@@ -1008,49 +981,49 @@ static JNINativeMethod jdk_internal_misc_Unsafe_methods[] = {
     DECLARE_GETPUTOOP(Float, F),
     DECLARE_GETPUTOOP(Double, D),
 
-    {CC "allocateMemory0",    CC "(J)" ADR,              FN_PTR(Unsafe_AllocateMemory0)},
-    {CC "reallocateMemory0",  CC "(" ADR "J)" ADR,       FN_PTR(Unsafe_ReallocateMemory0)},
-    {CC "freeMemory0",        CC "(" ADR ")V",           FN_PTR(Unsafe_FreeMemory0)},
+    { CC "allocateMemory0",    CC "(J)" ADR,              FN_PTR(Unsafe_AllocateMemory0)},
+    { CC "reallocateMemory0",  CC "(" ADR "J)" ADR,       FN_PTR(Unsafe_ReallocateMemory0)},
+    { CC "freeMemory0",        CC "(" ADR ")V",           FN_PTR(Unsafe_FreeMemory0)},
 
-    {CC "objectFieldOffset0", CC "(" FLD ")J",           FN_PTR(Unsafe_ObjectFieldOffset0)},
-    {CC "objectFieldOffset1", CC "(" CLS LANG "String;)J", FN_PTR(Unsafe_ObjectFieldOffset1)},
-    {CC "staticFieldOffset0", CC "(" FLD ")J",           FN_PTR(Unsafe_StaticFieldOffset0)},
-    {CC "staticFieldBase0",   CC "(" FLD ")" OBJ,        FN_PTR(Unsafe_StaticFieldBase0)},
-    {CC "ensureClassInitialized0", CC "(" CLS ")V",      FN_PTR(Unsafe_EnsureClassInitialized0)},
-    {CC "arrayBaseOffset0",   CC "(" CLS ")I",           FN_PTR(Unsafe_ArrayBaseOffset0)},
-    {CC "arrayIndexScale0",   CC "(" CLS ")I",           FN_PTR(Unsafe_ArrayIndexScale0)},
-    {CC "addressSize0",       CC "()I",                  FN_PTR(Unsafe_AddressSize0)},
-    {CC "pageSize",           CC "()I",                  FN_PTR(Unsafe_PageSize)},
+    { CC "objectFieldOffset0", CC "(" FLD ")J",           FN_PTR(Unsafe_ObjectFieldOffset0)},
+    { CC "objectFieldOffset1", CC "(" CLS LANG "String;)J", FN_PTR(Unsafe_ObjectFieldOffset1)},
+    { CC "staticFieldOffset0", CC "(" FLD ")J",           FN_PTR(Unsafe_StaticFieldOffset0)},
+    { CC "staticFieldBase0",   CC "(" FLD ")" OBJ,        FN_PTR(Unsafe_StaticFieldBase0)},
+    { CC "ensureClassInitialized0", CC "(" CLS ")V",      FN_PTR(Unsafe_EnsureClassInitialized0)},
+    { CC "arrayBaseOffset0",   CC "(" CLS ")I",           FN_PTR(Unsafe_ArrayBaseOffset0)},
+    { CC "arrayIndexScale0",   CC "(" CLS ")I",           FN_PTR(Unsafe_ArrayIndexScale0)},
+    { CC "addressSize0",       CC "()I",                  FN_PTR(Unsafe_AddressSize0)},
+    { CC "pageSize",           CC "()I",                  FN_PTR(Unsafe_PageSize)},
 
-    {CC "defineClass0",       CC "(" DC_Args ")" CLS,    FN_PTR(Unsafe_DefineClass0)},
-    {CC "allocateInstance",   CC "(" CLS ")" OBJ,        FN_PTR(Unsafe_AllocateInstance)},
-    {CC "throwException",     CC "(" THR ")V",           FN_PTR(Unsafe_ThrowException)},
-    {CC "compareAndSetObject",CC "(" OBJ "J" OBJ "" OBJ ")Z", FN_PTR(Unsafe_CompareAndSetObject)},
-    {CC "compareAndSetInt",   CC "(" OBJ "J""I""I"")Z",  FN_PTR(Unsafe_CompareAndSetInt)},
-    {CC "compareAndSetLong",  CC "(" OBJ "J""J""J"")Z",  FN_PTR(Unsafe_CompareAndSetLong)},
-    {CC "compareAndExchangeObject", CC "(" OBJ "J" OBJ "" OBJ ")" OBJ, FN_PTR(Unsafe_CompareAndExchangeObject)},
-    {CC "compareAndExchangeInt",  CC "(" OBJ "J""I""I"")I", FN_PTR(Unsafe_CompareAndExchangeInt)},
-    {CC "compareAndExchangeLong", CC "(" OBJ "J""J""J"")J", FN_PTR(Unsafe_CompareAndExchangeLong)},
+    { CC "defineClass0",       CC "(" DC_Args ")" CLS,    FN_PTR(Unsafe_DefineClass0)},
+    { CC "allocateInstance",   CC "(" CLS ")" OBJ,        FN_PTR(Unsafe_AllocateInstance)},
+    { CC "throwException",     CC "(" THR ")V",           FN_PTR(Unsafe_ThrowException)},
+    { CC "compareAndSetObject",CC "(" OBJ "J" OBJ "" OBJ ")Z", FN_PTR(Unsafe_CompareAndSetObject)},
+    { CC "compareAndSetInt",   CC "(" OBJ "J""I""I"")Z",  FN_PTR(Unsafe_CompareAndSetInt)},
+    { CC "compareAndSetLong",  CC "(" OBJ "J""J""J"")Z",  FN_PTR(Unsafe_CompareAndSetLong)},
+    { CC "compareAndExchangeObject", CC "(" OBJ "J" OBJ "" OBJ ")" OBJ, FN_PTR(Unsafe_CompareAndExchangeObject)},
+    { CC "compareAndExchangeInt",  CC "(" OBJ "J""I""I"")I", FN_PTR(Unsafe_CompareAndExchangeInt)},
+    { CC "compareAndExchangeLong", CC "(" OBJ "J""J""J"")J", FN_PTR(Unsafe_CompareAndExchangeLong)},
 
-    {CC "park",               CC "(ZJ)V",                FN_PTR(Unsafe_Park)},
-    {CC "unpark",             CC "(" OBJ ")V",           FN_PTR(Unsafe_Unpark)},
+    { CC "park",               CC "(ZJ)V",                FN_PTR(Unsafe_Park)},
+    { CC "unpark",             CC "(" OBJ ")V",           FN_PTR(Unsafe_Unpark)},
 
-    {CC "getLoadAverage0",    CC "([DI)I",               FN_PTR(Unsafe_GetLoadAverage0)},
+    { CC "getLoadAverage0",    CC "([DI)I",               FN_PTR(Unsafe_GetLoadAverage0)},
 
-    {CC "copyMemory0",        CC "(" OBJ "J" OBJ "JJ)V", FN_PTR(Unsafe_CopyMemory0)},
-    {CC "copySwapMemory0",    CC "(" OBJ "J" OBJ "JJJ)V", FN_PTR(Unsafe_CopySwapMemory0)},
-    {CC "setMemory0",         CC "(" OBJ "JJB)V",        FN_PTR(Unsafe_SetMemory0)},
+    { CC "copyMemory0",        CC "(" OBJ "J" OBJ "JJ)V", FN_PTR(Unsafe_CopyMemory0)},
+    { CC "copySwapMemory0",    CC "(" OBJ "J" OBJ "JJJ)V", FN_PTR(Unsafe_CopySwapMemory0)},
+    { CC "setMemory0",         CC "(" OBJ "JJB)V",        FN_PTR(Unsafe_SetMemory0)},
 
-    {CC "defineAnonymousClass0", CC "(" DAC_Args ")" CLS, FN_PTR(Unsafe_DefineAnonymousClass0)},
+    { CC "defineAnonymousClass0", CC "(" DAC_Args ")" CLS, FN_PTR(Unsafe_DefineAnonymousClass0)},
 
-    {CC "shouldBeInitialized0", CC "(" CLS ")Z",         FN_PTR(Unsafe_ShouldBeInitialized0)},
+    { CC "shouldBeInitialized0", CC "(" CLS ")Z",         FN_PTR(Unsafe_ShouldBeInitialized0)},
 
-    {CC "loadFence",          CC "()V",                  FN_PTR(Unsafe_LoadFence)},
-    {CC "storeFence",         CC "()V",                  FN_PTR(Unsafe_StoreFence)},
-    {CC "fullFence",          CC "()V",                  FN_PTR(Unsafe_FullFence)},
+    { CC "loadFence",          CC "()V",                  FN_PTR(Unsafe_LoadFence)},
+    { CC "storeFence",         CC "()V",                  FN_PTR(Unsafe_StoreFence)},
+    { CC "fullFence",          CC "()V",                  FN_PTR(Unsafe_FullFence)},
 
-    {CC "isBigEndian0",       CC "()Z",                  FN_PTR(Unsafe_isBigEndian0)},
-    {CC "unalignedAccess0",   CC "()Z",                  FN_PTR(Unsafe_unalignedAccess0)}
+    { CC "isBigEndian0",       CC "()Z",                  FN_PTR(Unsafe_isBigEndian0)},
+    { CC "unalignedAccess0",   CC "()Z",                  FN_PTR(Unsafe_unalignedAccess0)}
 };
 
 #undef CC

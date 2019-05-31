@@ -56,8 +56,7 @@ void MetaspaceDCmd::execute(DCmdSource source, TRAPS) {
     }
   }
   if (_basic.value() == true) {
-    if (_show_loaders.value() || _by_chunktype.value() || _by_spacetype.value() ||
-        _show_vslist.value() || _show_vsmap.value()) {
+    if (_show_loaders.value() || _by_chunktype.value() || _by_spacetype.value() || _show_vslist.value() || _show_vsmap.value()) {
       // Basic mode. Just print essentials. Does not need to be at a safepoint.
       output()->print_cr("In basic mode, additional arguments are ignored.");
     }

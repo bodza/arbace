@@ -52,7 +52,6 @@ public:
   // present in the tag set.
   FakeRttiSupport add_tag(TagType tag) const {
     uintx tbit = tag_bit(tag);
-    assert((_tag_set & tbit) == 0, "Tag " UINTX_FORMAT " is already present in tag set: " UINTX_FORMAT, (uintx)tag, _tag_set);
     return FakeRttiSupport(_concrete_tag, _tag_set | tbit);
   }
 
@@ -65,8 +64,6 @@ private:
   }
 
   static TagType validate_tag(TagType tag) {
-    assert(0 <= tag, "Tag " INTX_FORMAT " is negative", (intx)tag);
-    assert(tag < BitsPerWord, "Tag " UINTX_FORMAT " is too large", (uintx)tag);
     return tag;
   }
 };

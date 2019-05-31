@@ -14,7 +14,7 @@ class OopsInGenClosure;
 class CLDRemSet {
   bool _accumulate_modified_oops;
  public:
-  CLDRemSet() : _accumulate_modified_oops(false) {}
+  CLDRemSet() : _accumulate_modified_oops(false) { }
   void set_accumulate_modified_oops(bool value) { _accumulate_modified_oops = value; }
   bool accumulate_modified_oops() { return _accumulate_modified_oops; }
   bool mod_union_is_clear();
@@ -44,8 +44,7 @@ class CardTableRS: public CardTable {
     youngergenP1_card  = CT_MR_BS_last_reserved + 2,
     youngergenP2_card  = CT_MR_BS_last_reserved + 3,
     youngergenP3_card  = CT_MR_BS_last_reserved + 4,
-    cur_youngergen_and_prev_nonclean_card =
-      CT_MR_BS_last_reserved + 5
+    cur_youngergen_and_prev_nonclean_card = CT_MR_BS_last_reserved + 5
   };
 
   // An array that contains, for each generation, the card table value last
@@ -66,10 +65,7 @@ class CardTableRS: public CardTable {
     _cur_youngergen_card_val = v;
   }
   bool is_prev_youngergen_card_val(jbyte v) {
-    return
-      youngergen_card <= v &&
-      v < cur_youngergen_and_prev_nonclean_card &&
-      v != _cur_youngergen_card_val;
+    return youngergen_card <= v && v < cur_youngergen_and_prev_nonclean_card && v != _cur_youngergen_card_val;
   }
   // Return a youngergen_card_value that is not currently in use.
   jbyte find_unused_youngergenP_card_value();
@@ -82,7 +78,7 @@ public:
 
   void younger_refs_in_space_iterate(Space* sp, OopsInGenClosure* cl, uint n_threads);
 
-  virtual void verify_used_region_at_save_marks(Space* sp) const {};
+  virtual void verify_used_region_at_save_marks(Space* sp) const { };
 
   // Override.
   void prepare_for_younger_refs_iterate(bool parallel);
@@ -117,10 +113,7 @@ public:
   void invalidate_or_clear(Generation* old_gen);
 
   bool is_prev_nonclean_card_val(jbyte v) {
-    return
-      youngergen_card <= v &&
-      v <= cur_youngergen_and_prev_nonclean_card &&
-      v != _cur_youngergen_card_val;
+    return youngergen_card <= v && v <= cur_youngergen_and_prev_nonclean_card && v != _cur_youngergen_card_val;
   }
 
   static bool youngergen_may_have_been_dirty(jbyte cv) {

@@ -25,11 +25,11 @@ class CodeStub: public CompilationResourceObj {
   Label _continuation;                           // label where stub continues, if any
 
  public:
-  CodeStub() {}
+  CodeStub() { }
 
   // code generation
   void assert_no_unbound_labels()                {
-    assert(!_entry.is_unbound() && !_continuation.is_unbound(), "unbound label"); }
+    }
   virtual void emit_code(LIR_Assembler* e) = 0;
   virtual CodeEmitInfo* info() const             { return NULL; }
   virtual bool is_exception_throw_stub() const   { return false; }
@@ -47,7 +47,7 @@ class CodeStub: public CompilationResourceObj {
 
 class CodeStubList: public GrowableArray<CodeStub*> {
  public:
-  CodeStubList(): GrowableArray<CodeStub*>() {}
+  CodeStubList(): GrowableArray<CodeStub*>() { }
 
   void append(CodeStub* stub) {
     if (!contains(stub)) {
@@ -210,7 +210,6 @@ class NewTypeArrayStub: public CodeStub {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
     visitor->do_input(_length);
-    assert(_result->is_valid(), "must be valid");
     visitor->do_output(_result);
   }
 };
@@ -230,7 +229,6 @@ class NewObjectArrayStub: public CodeStub {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
     visitor->do_input(_length);
-    assert(_result->is_valid(), "must be valid");
     visitor->do_output(_result);
   }
 };
@@ -274,7 +272,6 @@ class MonitorExitStub: public MonitorAccessStub {
       _compute_lock(compute_lock), _monitor_ix(monitor_ix) { }
   virtual void emit_code(LIR_Assembler* e);
   virtual void visit(LIR_OpVisitState* visitor) {
-    assert(_obj_reg->is_illegal(), "unused");
     if (_compute_lock) {
       visitor->do_temp(_lock_reg);
     } else {
@@ -343,11 +340,9 @@ class PatchingStub: public CodeStub {
       NativeMovRegMem* n_move = nativeMovRegMem_at(pc_start());
       n_move->set_offset(field_offset);
     } else if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
-      assert(_obj != noreg, "must have register object for load_klass/load_mirror");
     } else {
       ShouldNotReachHere();
     }
-    assert(_bytes_to_copy <= (masm->pc() - pc_start()), "not enough bytes");
   }
 
   address pc_start() const                       { return _pc_start; }
@@ -370,7 +365,7 @@ private:
 
 public:
   DeoptimizeStub(CodeEmitInfo* info, Deoptimization::DeoptReason reason, Deoptimization::DeoptAction action) :
-    _info(new CodeEmitInfo(info)), _trap_request(Deoptimization::make_trap_request(reason, action)) {}
+    _info(new CodeEmitInfo(info)), _trap_request(Deoptimization::make_trap_request(reason, action)) { }
 
   virtual void emit_code(LIR_Assembler* e);
   virtual CodeEmitInfo* info() const           { return _info; }
@@ -410,7 +405,7 @@ class ArrayStoreExceptionStub: public SimpleExceptionStub {
   CodeEmitInfo* _info;
 
  public:
-  ArrayStoreExceptionStub(LIR_Opr obj, CodeEmitInfo* info): SimpleExceptionStub(Runtime1::throw_array_store_exception_id, obj, info) {}
+  ArrayStoreExceptionStub(LIR_Opr obj, CodeEmitInfo* info): SimpleExceptionStub(Runtime1::throw_array_store_exception_id, obj, info) { }
 };
 
 class ArrayCopyStub: public CodeStub {

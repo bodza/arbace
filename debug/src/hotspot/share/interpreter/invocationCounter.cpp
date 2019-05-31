@@ -29,7 +29,6 @@ void InvocationCounter::set_carry() {
 }
 
 void InvocationCounter::set_state(State state) {
-  assert(0 <= state && state < number_of_states, "illegal state");
   int init = _init[state];
   // prevent from going to zero, to distinguish from never-executed methods
   if (init == 0 && count() > 0)  init = 1;
@@ -79,7 +78,6 @@ const char* InvocationCounter::state_as_short_string(State state) {
 static address do_nothing(const methodHandle& method, TRAPS) {
   // dummy action for inactive invocation counters
   MethodCounters* mcs = method->method_counters();
-  assert(mcs != NULL, "");
   mcs->invocation_counter()->set_carry();
   mcs->invocation_counter()->set_state(InvocationCounter::wait_for_nothing);
   return NULL;
@@ -88,14 +86,11 @@ static address do_nothing(const methodHandle& method, TRAPS) {
 static address do_decay(const methodHandle& method, TRAPS) {
   // decay invocation counters so compilation gets delayed
   MethodCounters* mcs = method->method_counters();
-  assert(mcs != NULL, "");
   mcs->invocation_counter()->decay();
   return NULL;
 }
 
 void InvocationCounter::def(State state, int init, Action action) {
-  assert(0 <= state && state < number_of_states, "illegal state");
-  assert(0 <= init  && init  < count_limit, "initial value out of range");
   _init  [state] = init;
   _action[state] = action;
 }
@@ -128,8 +123,6 @@ void InvocationCounter::reinitialize(bool delay_overflow) {
     InterpreterBackwardBranchLimit = ((CompileThreshold * OnStackReplacePercentage) / 100) << number_of_noncount_bits;
   }
 
-  assert(0 <= InterpreterBackwardBranchLimit, "OSR threshold should be non-negative");
-  assert(0 <= InterpreterProfileLimit && InterpreterProfileLimit <= InterpreterInvocationLimit, "profile threshold should be less than the compilation threshold " "and non-negative");
 }
 
 void invocationCounter_init() {

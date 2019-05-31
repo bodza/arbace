@@ -423,7 +423,6 @@ DumpWriter::DumpWriter(const char* path) {
       _size = _size >> 1;
     }
   } while (_buffer == NULL && _size > 0);
-  assert((_size > 0 && _buffer != NULL) || (_size == 0 && _buffer == NULL), "sanity check");
   _pos = 0;
   _error = NULL;
   _bytes_written = 0L;
@@ -464,7 +463,6 @@ julong DumpWriter::current_record_length() {
   if (is_open()) {
     // calculate the size of the dump record
     julong dump_end = bytes_written() + bytes_unwritten();
-    assert(dump_end == (size_t)current_offset(), "checking");
     julong dump_len = dump_end - dump_start() - 4;
     return dump_len;
   }
@@ -526,7 +524,6 @@ jlong DumpWriter::current_offset() {
   if (is_open()) {
     // the offset is the file offset plus whatever we have buffered
     jlong offset = os::current_file_offset(file_descriptor());
-    assert(offset >= 0, "lseek failed");
     return offset + position();
   } else {
     return (jlong)-1;
@@ -534,7 +531,6 @@ jlong DumpWriter::current_offset() {
 }
 
 void DumpWriter::seek_to_offset(jlong off) {
-  assert(off >= 0, "bad offset");
 
   // need to flush before seeking
   flush();
@@ -542,7 +538,6 @@ void DumpWriter::seek_to_offset(jlong off) {
   // may be closed due to I/O error
   if (is_open()) {
     jlong n = os::seek_to_file_offset(file_descriptor(), off);
-    assert(n >= 0, "lseek failed");
   }
 }
 
@@ -641,7 +636,7 @@ class DumperSupport : AllStatic {
 };
 
 // write a header of the given type
-void DumperSupport:: write_header(DumpWriter* writer, hprofTag tag, u4 len) {
+void DumperSupport::write_header(DumpWriter* writer, hprofTag tag, u4 len) {
   writer->write_u1((u1)tag);
   writer->write_u4(0);                  // current ticks
   writer->write_u4(len);
@@ -713,7 +708,6 @@ void DumperSupport::dump_field_value(DumpWriter* writer, char type, oop obj, int
     case JVM_SIGNATURE_CLASS :
     case JVM_SIGNATURE_ARRAY : {
       oop o = obj->obj_field_access<ON_UNKNOWN_OOP_REF>(offset);
-      assert(oopDesc::is_oop_or_null(o), "Expected an oop or NULL at " PTR_FORMAT, p2i(o));
       writer->write_objectID(o);
       break;
     }
@@ -919,7 +913,7 @@ void DumperSupport::dump_instance(DumpWriter* writer, oop o) {
   writer->write_classID(k);
 
   // number of bytes that follow
-  writer->write_u4(instance_size(k) );
+  writer->write_u4(instance_size(k));
 
   // field values
   dump_instance_fields(writer, o);
@@ -975,7 +969,6 @@ void DumperSupport::dump_class_and_array_classes(DumpWriter* writer, Klass* k) {
   k = k->array_klass_or_null();
   while (k != NULL) {
     Klass* klass = k;
-    assert(klass->is_objArray_klass(), "not an ObjArrayKlass");
 
     writer->write_u1(HPROF_GC_CLASS_DUMP);
     writer->write_classID(klass);
@@ -983,7 +976,6 @@ void DumperSupport::dump_class_and_array_classes(DumpWriter* writer, Klass* k) {
 
     // super class of array classes is java.lang.Object
     java_super = klass->java_super();
-    assert(java_super != NULL, "checking");
     writer->write_classID(java_super);
 
     writer->write_objectID(ik->class_loader());
@@ -1015,7 +1007,6 @@ void DumperSupport::dump_basic_type_array_class(DumpWriter* writer, Klass* k) {
 
     // super class of array classes is java.lang.Object
     Klass* java_super = klass->java_super();
-    assert(java_super != NULL, "checking");
     writer->write_classID(java_super);
 
     writer->write_objectID(oop(NULL));    // loader
@@ -1038,7 +1029,6 @@ void DumperSupport::dump_basic_type_array_class(DumpWriter* writer, Klass* k) {
 // which means we need to truncate arrays that are too long.
 int DumperSupport::calculate_array_max_length(DumpWriter* writer, arrayOop array, short header_size) {
   BasicType type = ArrayKlass::cast(array->klass())->element_type();
-  assert(type >= T_BOOLEAN && type <= T_OBJECT, "invalid array element type");
 
   int length = array->length();
 
@@ -1053,8 +1043,7 @@ int DumperSupport::calculate_array_max_length(DumpWriter* writer, arrayOop array
 
   // Create a new record if the current record is non-empty and the array can't fit.
   julong current_record_length = writer->current_record_length();
-  if (current_record_length > 0 &&
-      (current_record_length + header_size + length_in_bytes) > max_juint) {
+  if (current_record_length > 0 && (current_record_length + header_size + length_in_bytes) > max_juint) {
     write_current_dump_record_length(writer);
     write_dump_header(writer);
 
@@ -1193,11 +1182,7 @@ void DumperSupport::dump_prim_array(DumpWriter* writer, typeArrayOop array) {
 }
 
 // create a HPROF_FRAME record of the given Method* and bci
-void DumperSupport::dump_stack_frame(DumpWriter* writer,
-                                     int frame_serial_num,
-                                     int class_serial_num,
-                                     Method* m,
-                                     int bci) {
+void DumperSupport::dump_stack_frame(DumpWriter* writer, int frame_serial_num, int class_serial_num, Method* m, int bci) {
   int line_number;
   if (m->is_native()) {
     line_number = -3;  // native frame
@@ -1210,7 +1195,6 @@ void DumperSupport::dump_stack_frame(DumpWriter* writer,
   writer->write_symbolID(m->name());                // method's name
   writer->write_symbolID(m->signature());           // method's signature
 
-  assert(m->method_holder()->is_instance_klass(), "not InstanceKlass");
   writer->write_symbolID(m->method_holder()->source_file_name());  // source file name
   writer->write_u4(class_serial_num);               // class serial number
   writer->write_u4((u4) line_number);               // line number
@@ -1398,17 +1382,13 @@ class VM_HeapDumper : public VM_GC_Operation {
 
   // accessors and setters
   static VM_HeapDumper* dumper()         {
-    assert(_global_dumper != NULL, "Error");
   return _global_dumper; }
   static DumpWriter* writer()            {
-    assert(_global_writer != NULL, "Error");
   return _global_writer; }
   void set_global_dumper() {
-    assert(_global_dumper == NULL, "Error");
     _global_dumper = this;
   }
   void set_global_writer() {
-    assert(_global_writer == NULL, "Error");
     _global_writer = _local_writer;
   }
   void clear_global_dumper() { _global_dumper = NULL; }
@@ -1450,7 +1430,6 @@ class VM_HeapDumper : public VM_GC_Operation {
     _stack_traces = NULL;
     _num_threads = 0;
     if (oome) {
-      assert(!Thread::current()->is_VM_thread(), "Dump from OutOfMemoryError cannot be called by the VMThread");
       // get OutOfMemoryError zero-parameter constructor
       InstanceKlass* oome_ik = SystemDictionary::OutOfMemoryError_klass();
       _oome_constructor = oome_ik->find_method(vmSymbols::object_initializer_name(),
@@ -1509,7 +1488,6 @@ void DumperSupport::write_current_dump_record_length(DumpWriter* writer) {
     }
 
     // seek to the dump start and fix-up the length
-    assert(writer->dump_start() >= 0, "no dump start recorded");
     writer->seek_to_offset(writer->dump_start());
     writer->write_u4((u4)dump_len);
 
@@ -1608,7 +1586,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
   JNILocalsDumper blk(writer(), thread_serial_num);
 
   oop threadObj = java_thread->threadObj();
-  assert(threadObj != NULL, "sanity check");
 
   int stack_depth = 0;
   if (java_thread->has_last_Java_frame()) {
@@ -1648,7 +1625,7 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
             }
           }
           StackValueCollection *exprs = jvf->expressions();
-          for(int index = 0; index < exprs->size(); index++) {
+          for (int index = 0; index < exprs->size(); index++) {
             if (exprs->at(index)->type() == T_OBJECT) {
                oop o = exprs->obj_at(index)();
                if (o != NULL) {
@@ -1667,7 +1644,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
           } else {
             if (last_entry_frame != NULL) {
               // JNI locals for the entry frame
-              assert(last_entry_frame->is_entry_frame(), "checking");
               last_entry_frame->entry_frame_call_wrapper()->handles()->oops_do(&blk);
             }
           }
@@ -1680,7 +1656,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
         // externalVFrame - if it's an entry frame then report any JNI locals
         // as roots when we find the corresponding native javaVFrame
         frame* fr = vf->frame_pointer();
-        assert(fr != NULL, "sanity check");
         if (fr->is_entry_frame()) {
           last_entry_frame = fr;
         }
@@ -1707,7 +1682,6 @@ void VM_HeapDumper::do_threads() {
     writer()->write_u4(thread_serial_num);  // thread number
     writer()->write_u4(stack_serial_num);   // stack trace serial number
     int num_frames = do_thread(thread, thread_serial_num);
-    assert(num_frames == _stack_traces[i]->get_stack_depth(), "total number of Java frames not matched");
   }
 }
 
@@ -1851,9 +1825,7 @@ void VM_HeapDumper::dump_stack_traces() {
       if (thread == _oome_thread && _oome_constructor != NULL) {
         int oome_serial_num = _klass_map->find(_oome_constructor->method_holder());
         // the class serial number starts from 1
-        assert(oome_serial_num > 0, "OutOfMemoryError class not found");
-        DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, oome_serial_num,
-                                        _oome_constructor, 0);
+        DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, oome_serial_num, _oome_constructor, 0);
         extra_frames++;
       }
       for (int j=0; j < depth; j++) {
@@ -1861,7 +1833,6 @@ void VM_HeapDumper::dump_stack_traces() {
         Method* m = frame->method();
         int class_serial_num = _klass_map->find(m->method_holder());
         // the class serial number starts from 1
-        assert(class_serial_num > 0, "class not found");
         DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, class_serial_num, m, frame->bci());
       }
       depth += extra_frames;
@@ -1881,7 +1852,6 @@ void VM_HeapDumper::dump_stack_traces() {
 
 // dump the heap to given path.
 int HeapDumper::dump(const char* path) {
-  assert(path != NULL && strlen(path) > 0, "path missing");
 
   // print message in interactive case
   if (print_to_tty()) {
@@ -1903,7 +1873,6 @@ int HeapDumper::dump(const char* path) {
   // generate the dump
   VM_HeapDumper dumper(&writer, _gc_before_heap_dump, _oome);
   if (Thread::current()->is_VM_thread()) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Expected to be called at a safepoint");
     dumper.doit();
   } else {
     VMThread::execute(&dumper);
@@ -1955,7 +1924,6 @@ void HeapDumper::set_error(char* error) {
     _error = NULL;
   } else {
     _error = os::strdup(error);
-    assert(_error != NULL, "allocation failure");
   }
 }
 
@@ -1975,7 +1943,7 @@ void HeapDumper::dump_heap() {
 }
 
 void HeapDumper::dump_heap(bool oome) {
-  static char base_path[JVM_MAXPATHLEN] = {'\0'};
+  static char base_path[JVM_MAXPATHLEN] = { '\0' };
   static uint dump_file_seq = 0;
   char* my_path;
   const int max_digit_chars = 20;
@@ -1989,10 +1957,7 @@ void HeapDumper::dump_heap(bool oome) {
   if (dump_file_seq == 0) { // first time in, we initialize base_path
     // Calculate potentially longest base path and check if we have enough
     // allocated statically.
-    const size_t total_length =
-                      (HeapDumpPath == NULL ? 0 : strlen(HeapDumpPath)) +
-                      strlen(os::file_separator()) + max_digit_chars +
-                      strlen(dump_file_name) + strlen(dump_file_ext) + 1;
+    const size_t total_length = (HeapDumpPath == NULL ? 0 : strlen(HeapDumpPath)) + strlen(os::file_separator()) + max_digit_chars + strlen(dump_file_name) + strlen(dump_file_ext) + 1;
     if (total_length > sizeof(base_path)) {
       warning("Cannot create heap dump file.  HeapDumpPath is too long.");
       return;

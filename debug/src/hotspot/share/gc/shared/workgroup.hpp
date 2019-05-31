@@ -38,7 +38,7 @@ class AbstractGangTask {
   explicit AbstractGangTask(const char* name) :
     _name(name),
     _gc_id(GCId::current_or_undefined())
-  {}
+  { }
 
   // The abstract work method.
   // The argument tells you which member of the gang you are.
@@ -52,14 +52,14 @@ class AbstractGangTask {
 struct WorkData {
   AbstractGangTask* _task;
   uint              _worker_id;
-  WorkData(AbstractGangTask* task, uint worker_id) : _task(task), _worker_id(worker_id) {}
+  WorkData(AbstractGangTask* task, uint worker_id) : _task(task), _worker_id(worker_id) { }
 };
 
 // Interface to handle the synchronization between the coordinator thread and the worker threads,
 // when a task is dispatched out to the worker threads.
 class GangTaskDispatcher : public CHeapObj<mtGC> {
  public:
-  virtual ~GangTaskDispatcher() {}
+  virtual ~GangTaskDispatcher() { }
 
   // Coordinator API.
 
@@ -93,7 +93,7 @@ class AbstractWorkGang : public CHeapObj<mtInternal> {
   // Printing support.
   const char* _name;
 
-  ~AbstractWorkGang() {}
+  ~AbstractWorkGang() { }
 
  private:
   // Initialize only instance data.
@@ -127,16 +127,12 @@ class AbstractWorkGang : public CHeapObj<mtInternal> {
   }
 
   virtual uint active_workers() const {
-    assert(_active_workers <= _total_workers, "_active_workers: %u > _total_workers: %u", _active_workers, _total_workers);
-    assert(UseDynamicNumberOfGCThreads || _active_workers == _total_workers, "Unless dynamic should use total workers");
     return _active_workers;
   }
 
   uint update_active_workers(uint v) {
-    assert(v <= _total_workers, "Trying to set more workers active than there are");
     _active_workers = MIN2(v, _total_workers);
     add_workers(false /* exit_on_failure */);
-    assert(v != 0, "Trying to set active workers to 0");
     log_trace(gc, task)("%s: using %d out of %d workers", name(), _active_workers, _total_workers);
     return _active_workers;
   }
@@ -226,7 +222,7 @@ protected:
 
 class GangWorker: public AbstractGangWorker {
 public:
-  GangWorker(WorkGang* gang, uint id) : AbstractGangWorker(gang, id) {}
+  GangWorker(WorkGang* gang, uint id) : AbstractGangWorker(gang, id) { }
 
 protected:
   virtual void loop();
@@ -341,7 +337,7 @@ public:
   SequentialSubTasksDone() {
     clear();
   }
-  ~SequentialSubTasksDone() {}
+  ~SequentialSubTasksDone() { }
 
   // True iff the object is in a valid state.
   bool valid();

@@ -42,7 +42,7 @@ StubQueue::StubQueue(StubInterface* stub_interface, int buffer_size,
                      Mutex* lock, const char* name) : _mutex(lock) {
   intptr_t size = align_up(buffer_size, 2*BytesPerWord);
   BufferBlob* blob = BufferBlob::create(name, size);
-  if( blob == NULL) {
+  if (blob == NULL) {
     vm_exit_out_of_memory(size, OOM_MALLOC_ERROR, "CodeCache: no room for %s", name);
   }
   _stub_interface  = stub_interface;
@@ -87,7 +87,6 @@ Stub* StubQueue::request_committed(int code_size) {
 }
 
 Stub* StubQueue::request(int requested_code_size) {
-  assert(requested_code_size > 0, "requested_code_size must be > 0");
   if (_mutex != NULL) _mutex->lock();
   Stub* s = current_stub();
   int requested_size = align_up(stub_code_size_to_size(requested_code_size), CodeEntryAlignment);
@@ -95,7 +94,6 @@ Stub* StubQueue::request(int requested_code_size) {
     if (is_contiguous()) {
       // Queue: |...|XXXXXXX|.............|
       //        ^0  ^begin  ^end          ^size = limit
-      assert(_buffer_limit == _buffer_size, "buffer must be fully usable");
       if (_queue_end + requested_size <= _buffer_size) {
         // code fits in at the end => nothing to do
         CodeStrings strings;
@@ -104,15 +102,12 @@ Stub* StubQueue::request(int requested_code_size) {
       } else {
         // stub doesn't fit in at the queue end
         // => reduce buffer limit & wrap around
-        assert(!is_empty(), "just checkin'");
         _buffer_limit = _queue_end;
         _queue_end = 0;
       }
     }
   }
   if (requested_size <= available_space()) {
-    assert(!is_contiguous(), "just checkin'");
-    assert(_buffer_limit <= _buffer_size, "queue invariant broken");
     // Queue: |XXX|.......|XXXXXXX|.......|
     //        ^0  ^end    ^begin  ^limit  ^size
     s = current_stub();
@@ -126,10 +121,8 @@ Stub* StubQueue::request(int requested_code_size) {
 }
 
 void StubQueue::commit(int committed_code_size, CodeStrings& strings) {
-  assert(committed_code_size > 0, "committed_code_size must be > 0");
   int committed_size = align_up(stub_code_size_to_size(committed_code_size), CodeEntryAlignment);
   Stub* s = current_stub();
-  assert(committed_size <= stub_size(s), "committed size must not exceed requested size");
   stub_initialize(s, committed_size, strings);
   _queue_end += committed_size;
   _number_of_stubs++;
@@ -141,7 +134,6 @@ void StubQueue::remove_first() {
   Stub* s = first();
   stub_finalize(s);
   _queue_begin += stub_size(s);
-  assert(_queue_begin <= _buffer_limit, "sanity check");
   if (_queue_begin == _queue_end) {
     // buffer empty
     // => reset queue indices
@@ -162,9 +154,8 @@ void StubQueue::remove_first(int n) {
   while (i-- > 0) remove_first();
 }
 
-void StubQueue::remove_all(){
+void StubQueue::remove_all() {
   remove_first(number_of_stubs());
-  assert(number_of_stubs() == 0, "sanity check");
 }
 
 void StubQueue::verify() {

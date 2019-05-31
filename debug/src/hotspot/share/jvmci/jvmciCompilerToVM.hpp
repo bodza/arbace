@@ -14,15 +14,14 @@ class JVMCIKlassHandle : public StackObj {
 
   Klass*        klass() const                     { return _klass; }
   Klass*        non_null_klass() const            {
-    assert(_klass != NULL, "resolving NULL _klass");
     return _klass; }
 
  public:
   /* Constructors */
-  JVMCIKlassHandle (Thread* thread) : _klass(NULL), _thread(thread) {}
+  JVMCIKlassHandle (Thread* thread) : _klass(NULL), _thread(thread) { }
   JVMCIKlassHandle (Thread* thread, Klass* klass);
 
-  JVMCIKlassHandle (const JVMCIKlassHandle &h): _klass(h._klass), _holder(h._holder), _thread(h._thread) {}
+  JVMCIKlassHandle (const JVMCIKlassHandle &h): _klass(h._klass), _holder(h._holder), _thread(h._thread) { }
   JVMCIKlassHandle& operator=(const JVMCIKlassHandle &s);
   JVMCIKlassHandle& operator=(Klass* klass);
 
@@ -100,7 +99,6 @@ class CompilerToVM {
     static void initialize(TRAPS);
 
     static int max_oop_map_stack_offset() {
-      assert(_max_oop_map_stack_offset > 0, "must be initialized");
       return Data::_max_oop_map_stack_offset;
     }
   };
@@ -192,7 +190,6 @@ class JavaArgumentUnboxer : public SignatureIterator {
       _jca->push_oop(next_arg(T_OBJECT));
     }
     iterate();
-    assert(_index == args->length(), "arg count mismatch with signature");
   }
 
   inline void do_bool()   { if (!is_return_type()) _jca->push_int(next_arg(T_BOOLEAN)->bool_field(java_lang_boxing_object::value_offset_in_bytes(T_BOOLEAN))); }

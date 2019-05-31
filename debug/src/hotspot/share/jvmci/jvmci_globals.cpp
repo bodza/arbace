@@ -41,8 +41,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 
   if (UseJVMCICompiler) {
     if (!FLAG_IS_DEFAULT(EnableJVMCI) && !EnableJVMCI) {
-      jio_fprintf(defaultStream::error_stream(),
-          "Improperly specified VM option UseJVMCICompiler: EnableJVMCI cannot be disabled\n");
+      jio_fprintf(defaultStream::error_stream(), "Improperly specified VM option UseJVMCICompiler: EnableJVMCI cannot be disabled\n");
       return false;
     }
     FLAG_SET_DEFAULT(EnableJVMCI, true);

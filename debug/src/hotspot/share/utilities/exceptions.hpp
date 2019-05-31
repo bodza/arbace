@@ -65,7 +65,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
   void clear_pending_exception();
 
   ThreadShadow() : _pending_exception(NULL),
-                   _exception_file(NULL), _exception_line(0) {}
+                   _exception_file(NULL), _exception_line(0) { }
 };
 
 // Exceptions is a helper class that encapsulates all operations
@@ -210,22 +210,22 @@ class Exceptions {
 #define THREAD_AND_LOCATION                      THREAD, __FILE__, __LINE__
 
 #define THROW_OOP(e) \
-  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                             return;  }
+  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                             return; }
 
 #define THROW_HANDLE(e) \
-  { Exceptions::_throw(THREAD_AND_LOCATION, e);                             return;  }
+  { Exceptions::_throw(THREAD_AND_LOCATION, e);                             return; }
 
 #define THROW(name) \
-  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return;  }
+  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return; }
 
 #define THROW_MSG(name, message) \
-  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message); return;  }
+  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message); return; }
 
 #define THROW_CAUSE(name, cause) \
   { Exceptions::_throw_cause(THREAD_AND_LOCATION, name, cause); return; }
 
 #define THROW_MSG_LOADER(name, message, loader, protection_domain) \
-  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message, loader, protection_domain); return;  }
+  { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message, loader, protection_domain); return; }
 
 #define THROW_ARG(name, signature, args) \
   { Exceptions::_throw_args(THREAD_AND_LOCATION, name, signature, args);   return; }

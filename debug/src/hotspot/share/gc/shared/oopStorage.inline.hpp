@@ -79,7 +79,6 @@ inline OopStorage::Block** OopStorage::ActiveArray::block_ptr(size_t index) {
 }
 
 inline OopStorage::Block* OopStorage::ActiveArray::at(size_t index) const {
-  assert(index < _block_count, "precondition");
   return *block_ptr(index);
 }
 
@@ -208,7 +207,7 @@ inline const OopStorage::Block* OopStorage::AllocateList::next(const Block& bloc
 template<typename Closure>
 class OopStorage::OopFn {
 public:
-  explicit OopFn(Closure* cl) : _cl(cl) {}
+  explicit OopFn(Closure* cl) : _cl(cl) { }
 
   template<typename OopPtr>     // [const] oop*
   bool operator()(OopPtr ptr) const {
@@ -228,7 +227,7 @@ inline OopStorage::OopFn<Closure> OopStorage::oop_fn(Closure* cl) {
 template<typename IsAlive, typename F>
 class OopStorage::IfAliveFn {
 public:
-  IfAliveFn(IsAlive* is_alive, F f) : _is_alive(is_alive), _f(f) {}
+  IfAliveFn(IsAlive* is_alive, F f) : _is_alive(is_alive), _f(f) { }
 
   bool operator()(oop* ptr) const {
     bool result = true;
@@ -256,7 +255,7 @@ inline OopStorage::IfAliveFn<IsAlive, F> OopStorage::if_alive_fn(IsAlive* is_ali
 template<typename F>
 class OopStorage::SkipNullFn {
 public:
-  SkipNullFn(F f) : _f(f) {}
+  SkipNullFn(F f) : _f(f) { }
 
   template<typename OopPtr>     // [const] oop*
   bool operator()(OopPtr ptr) const {
@@ -279,7 +278,6 @@ inline const OopStorage::AllocateEntry& OopStorage::Block::allocate_entry() cons
 }
 
 inline void OopStorage::Block::check_index(unsigned index) const {
-  assert(index < ARRAY_SIZE(_data), "Index out of bounds: %u", index);
 }
 
 inline oop* OopStorage::Block::get_pointer(unsigned index) {
@@ -333,7 +331,6 @@ inline bool OopStorage::Block::iterate(F f) const {
 // const OopStorage* or OopStorage*, respectively.
 template<typename F, typename Storage> // Storage := [const] OopStorage
 inline bool OopStorage::iterate_impl(F f, Storage* storage) {
-  assert_at_safepoint();
   // Propagate const/non-const iteration to the block layer, by using
   // const or non-const blocks as corresponding to Storage.
   typedef typename Conditional<IsConst<Storage>::value, const Block*, Block*>::type BlockPtr;

@@ -123,7 +123,7 @@ public:
   ~CompilerDirectives();
 
   CompilerDirectives* next();
-  void set_next(CompilerDirectives* next) {_next = next; }
+  void set_next(CompilerDirectives* next) { _next = next; }
 
   bool match(const methodHandle& method);
   BasicMatcher* match() { return _match; }

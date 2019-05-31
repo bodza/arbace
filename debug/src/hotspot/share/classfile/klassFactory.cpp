@@ -12,11 +12,7 @@
 #include "utilities/macros.hpp"
 
 // called during initial loading of a shared class
-InstanceKlass* KlassFactory::check_shared_class_file_load_hook(
-                                          InstanceKlass* ik,
-                                          Symbol* class_name,
-                                          Handle class_loader,
-                                          Handle protection_domain, TRAPS) {
+InstanceKlass* KlassFactory::check_shared_class_file_load_hook(InstanceKlass* ik, Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS) {
 
   return NULL;
 }
@@ -28,9 +24,6 @@ InstanceKlass* KlassFactory::create_from_stream(ClassFileStream* stream,
                                                 const InstanceKlass* host_klass,
                                                 GrowableArray<Handle>* cp_patches,
                                                 TRAPS) {
-  assert(stream != NULL, "invariant");
-  assert(loader_data != NULL, "invariant");
-  assert(THREAD->is_Java_thread(), "must be a JavaThread");
 
   ResourceMark rm;
   HandleMark hm;
@@ -50,7 +43,6 @@ InstanceKlass* KlassFactory::create_from_stream(ClassFileStream* stream,
                          CHECK_NULL);
 
   InstanceKlass* result = parser.create_instance_klass(old_stream != stream, CHECK_NULL);
-  assert(result == parser.create_instance_klass(old_stream != stream, THREAD), "invariant");
 
   if (result == NULL) {
     return NULL;

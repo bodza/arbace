@@ -95,7 +95,6 @@ class CodeSection {
   }
 
   void initialize(address start, csize_t size = 0) {
-    assert(_start == NULL, "only one init step, please");
     _start         = start;
     _mark          = NULL;
     _end           = start;
@@ -124,7 +123,6 @@ class CodeSection {
   address     limit() const         { return _limit; }
   csize_t     size() const          { return (csize_t)(_end - _start); }
   csize_t     mark_off() const      {
-    assert(_mark != NULL, "not an offset");
                                       return (csize_t)(_mark - _start); }
   csize_t     capacity() const      { return (csize_t)(_limit - _start); }
   csize_t     remaining() const     { return (csize_t)(_limit - _end); }
@@ -157,24 +155,18 @@ class CodeSection {
   bool allocates2(address pc) const { return pc >= _start && pc <= _limit; }
 
   void    set_end(address pc)       {
-    assert(allocates2(pc), "not in CodeBuffer memory: " INTPTR_FORMAT " <= " INTPTR_FORMAT " <= " INTPTR_FORMAT, p2i(_start), p2i(pc), p2i(_limit));
     _end = pc; }
   void    set_mark(address pc)      {
-    assert(contains2(pc), "not in codeBuffer");
                                       _mark = pc; }
   void    set_mark_off(int offset)  {
-    assert(contains2(offset+_start),"not in codeBuffer");
                                       _mark = offset + _start; }
   void    set_mark()                { _mark = _end; }
   void    clear_mark()              { _mark = NULL; }
 
   void    set_locs_end(relocInfo* p) {
-    assert(p <= locs_limit(), "locs data fits in allocated buffer");
     _locs_end = p;
   }
   void    set_locs_point(address pc) {
-    assert(pc >= locs_point(), "relocation addr may not decrease");
-    assert(allocates2(pc),     "relocation addr must be in this section");
     _locs_point = pc;
   }
 
@@ -235,16 +227,16 @@ public:
     return true;
   }
 
-  const char* add_string(const char * string) {return NULL;};
+  const char* add_string(const char * string) { return NULL; };
 
-  void add_comment(intptr_t offset, const char * comment) {};
-  void print_block_comment(outputStream* stream, intptr_t offset) const {};
+  void add_comment(intptr_t offset, const char * comment) { };
+  void print_block_comment(outputStream* stream, intptr_t offset) const { };
   // MOVE strings from other to this; invalidate other.
-  void assign(CodeStrings& other)  {};
+  void assign(CodeStrings& other)  { };
   // COPY strings from other to this; leave other valid.
-  void copy(CodeStrings& other)  {};
+  void copy(CodeStrings& other)  { };
   // FREE strings; invalidate this.
-  void free() {};
+  void free() { };
   // Guarantee that _strings are used at most once; assign and free invalidate a buffer.
   inline void check_valid() const {
   }
@@ -330,7 +322,6 @@ class CodeBuffer: public StackObj {
 
   void initialize_misc(const char * name) {
     // all pointers other than code_start/end and those inside the sections
-    assert(name != NULL, "must have a name");
     _name            = name;
     _before_expand   = NULL;
     _blob            = NULL;
@@ -349,8 +340,6 @@ class CodeBuffer: public StackObj {
     _total_size  = code_size;
     // Initialize the main section:
     _insts.initialize(code_start, code_size);
-    assert(!_stubs.is_allocated(),  "no garbage here");
-    assert(!_consts.is_allocated(), "no garbage here");
     _oop_recorder = &_default_oop_recorder;
   }
 
@@ -387,7 +376,6 @@ class CodeBuffer: public StackObj {
  public:
   // (1) code buffer referring to pre-allocated instruction memory
   CodeBuffer(address code_start, csize_t code_size) {
-    assert(code_start != NULL, "sanity");
     initialize_misc("static buffer");
     initialize(code_start, code_size);
     verify_section_allocation();
@@ -431,7 +419,6 @@ class CodeBuffer: public StackObj {
     // that the various members (_consts, _insts, _stubs, etc.) are
     // adjacent in the layout of CodeBuffer.
     CodeSection* cs = &_consts + n;
-    assert(cs->index() == n || !cs->is_allocated(), "sanity");
     return cs;
   }
   const CodeSection* code_section(int n) const {  // yucky const stuff
@@ -479,7 +466,6 @@ class CodeBuffer: public StackObj {
 
   // same as insts_size(), except that it asserts there is no non-code here
   csize_t pure_insts_size() const        {
-    assert(is_pure(), "no non-code");
                                            return insts_size(); }
   // capacity in bytes of the insts sections
   csize_t insts_capacity() const         { return _insts.capacity(); }
@@ -554,7 +540,6 @@ class CodeBuffer: public StackObj {
 
   // NMethod generation
   void copy_code_and_locs_to(CodeBlob* blob) {
-    assert(blob != NULL, "sane");
     copy_relocations_to(blob);
     copy_code_to(blob);
   }
@@ -567,8 +552,8 @@ class CodeBuffer: public StackObj {
   // Transform an address from the code in this code buffer to a specified code buffer
   address transform_address(const CodeBuffer &cb, address addr) const;
 
-  void block_comment(intptr_t offset, const char * comment) {};
-  const char* code_string(const char* str) {return NULL;};
+  void block_comment(intptr_t offset, const char * comment) { };
+  const char* code_string(const char* str) { return NULL; };
 
   // Log a little info about section usage in the CodeBuffer
   void log_section_sizes(const char* name);

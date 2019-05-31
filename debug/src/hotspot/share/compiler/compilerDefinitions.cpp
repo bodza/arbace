@@ -73,8 +73,7 @@ void CompilerConfig::set_tiered_flags() {
     FLAG_SET_DEFAULT(CompilationPolicyChoice, 2);
   }
   if (CompilationPolicyChoice < 2) {
-    vm_exit_during_initialization(
-      "Incompatible compilation policy selected", NULL);
+    vm_exit_during_initialization("Incompatible compilation policy selected", NULL);
   }
   // Increase the code cache size - tiered compiles a lot more.
   if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
@@ -162,25 +161,17 @@ bool CompilerConfig::check_args_consistency(bool status) {
   // Template Interpreter code is approximately 3X larger in debug builds.
   uint min_code_cache_size = CodeCacheMinimumUseSpace;
   if (ReservedCodeCacheSize < InitialCodeCacheSize) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Invalid ReservedCodeCacheSize: %dK. Must be at least InitialCodeCacheSize=%dK.\n",
-                ReservedCodeCacheSize/K, InitialCodeCacheSize/K);
+    jio_fprintf(defaultStream::error_stream(), "Invalid ReservedCodeCacheSize: %dK. Must be at least InitialCodeCacheSize=%dK.\n", ReservedCodeCacheSize/K, InitialCodeCacheSize/K);
     status = false;
   } else if (ReservedCodeCacheSize < min_code_cache_size) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Invalid ReservedCodeCacheSize=%dK. Must be at least %uK.\n", ReservedCodeCacheSize/K,
-                min_code_cache_size/K);
+    jio_fprintf(defaultStream::error_stream(), "Invalid ReservedCodeCacheSize=%dK. Must be at least %uK.\n", ReservedCodeCacheSize/K, min_code_cache_size/K);
     status = false;
   } else if (ReservedCodeCacheSize > CODE_CACHE_SIZE_LIMIT) {
     // Code cache size larger than CODE_CACHE_SIZE_LIMIT is not supported.
-    jio_fprintf(defaultStream::error_stream(),
-                "Invalid ReservedCodeCacheSize=%dM. Must be at most %uM.\n", ReservedCodeCacheSize/M,
-                CODE_CACHE_SIZE_LIMIT/M);
+    jio_fprintf(defaultStream::error_stream(), "Invalid ReservedCodeCacheSize=%dM. Must be at most %uM.\n", ReservedCodeCacheSize/M, CODE_CACHE_SIZE_LIMIT/M);
     status = false;
   } else if (NonNMethodCodeHeapSize < min_code_cache_size) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Invalid NonNMethodCodeHeapSize=%dK. Must be at least %uK.\n", NonNMethodCodeHeapSize/K,
-                min_code_cache_size/K);
+    jio_fprintf(defaultStream::error_stream(), "Invalid NonNMethodCodeHeapSize=%dK. Must be at least %uK.\n", NonNMethodCodeHeapSize/K, min_code_cache_size/K);
     status = false;
   }
 
@@ -243,8 +234,7 @@ void CompilerConfig::ergo_initialize() {
     int max_compilation_policy_choice = 1;
     // Check if the policy is valid.
     if (CompilationPolicyChoice >= max_compilation_policy_choice) {
-      vm_exit_during_initialization(
-        "Incompatible compilation policy selected", NULL);
+      vm_exit_during_initialization("Incompatible compilation policy selected", NULL);
     }
     // Scale CompileThreshold
     // CompileThresholdScaling == 0.0 is equivalent to -Xint and leaves CompileThreshold unchanged.

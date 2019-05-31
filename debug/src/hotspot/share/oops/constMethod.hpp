@@ -126,12 +126,12 @@ class InlineTableSizes : StackObj {
       INLINE_TABLES_DO(INLINE_TABLE_PARAM)
       int end) :
       INLINE_TABLES_DO(INLINE_TABLE_INIT)
-      _end(end) {}
+      _end(end) { }
 
   // Default constructor for no inlined tables
   InlineTableSizes() :
       INLINE_TABLES_DO(INLINE_TABLE_NULL)
-      _end(0) {}
+      _end(0) { }
 
   // Accessors
   INLINE_TABLES_DO(INLINE_TABLE_ACCESSOR)
@@ -264,18 +264,13 @@ public:
 
   // adapter
   void set_adapter_entry(AdapterHandlerEntry* adapter) {
-    assert(!is_shared(), "shared methods have fixed adapter_trampoline");
     _adapter = adapter;
   }
   void set_adapter_trampoline(AdapterHandlerEntry** trampoline) {
-    assert(DumpSharedSpaces, "must be");
-    assert(*trampoline == NULL, "must be NULL during dump time, to be initialized at run time");
     _adapter_trampoline = trampoline;
   }
   void update_adapter_trampoline(AdapterHandlerEntry* adapter) {
-    assert(is_shared(), "must be");
     *_adapter_trampoline = adapter;
-    assert(this->adapter() == adapter, "must be");
   }
   AdapterHandlerEntry* adapter() {
     if (is_shared()) {
@@ -303,8 +298,6 @@ public:
 
   uint64_t set_fingerprint(uint64_t new_fingerprint) {
     _fingerprint = new_fingerprint;
-    assert(oldfp == 0L || new_fingerprint == oldfp, "fingerprint cannot change");
-    assert(((new_fingerprint >> 32) != 0x80000000) && (int)new_fingerprint !=0, "fingerprint should call init to set initial value");
     return new_fingerprint;
   }
 
@@ -325,7 +318,6 @@ public:
     }
   }
   void set_generic_signature_index(u2 index)    {
-    assert(has_generic_signature(), "");
     u2* addr = generic_signature_index_addr();
     *addr = index;
   }
@@ -338,7 +330,7 @@ public:
   // Size needed
   static int size(int code_size, InlineTableSizes* sizes);
 
-  int size() const                    { return _constMethod_size;}
+  int size() const                    { return _constMethod_size; }
   void set_constMethod_size(int size)     { _constMethod_size = size; }
 
   // ConstMethods should be stored in the read-only region of CDS archive.
@@ -347,8 +339,6 @@ public:
   // code size
   int code_size() const                          { return _code_size; }
   void set_code_size(int size) {
-    assert(max_method_code_size < (1 << 16), "u2 is too small to hold method code size in general");
-    assert(0 <= size && size <= max_method_code_size, "invalid code size");
     _code_size = size;
   }
 
@@ -427,18 +417,10 @@ public:
     *(default_annotations_addr()) = anno;
   }
 
-  int method_annotations_length() const {
-    return has_method_annotations() ? method_annotations()->length() : 0;
-  }
-  int parameter_annotations_length() const {
-    return has_parameter_annotations() ? parameter_annotations()->length() : 0;
-  }
-  int type_annotations_length() const {
-    return has_type_annotations() ? type_annotations()->length() : 0;
-  }
-  int default_annotations_length() const {
-    return has_default_annotations() ? default_annotations()->length() : 0;
-  }
+  int method_annotations_length() const { return has_method_annotations() ? method_annotations()->length() : 0; }
+  int parameter_annotations_length() const { return has_parameter_annotations() ? parameter_annotations()->length() : 0; }
+  int type_annotations_length() const { return has_type_annotations() ? type_annotations()->length() : 0; }
+  int default_annotations_length() const { return has_default_annotations() ? default_annotations()->length() : 0; }
 
   // Copy annotations from other ConstMethod
   void copy_annotations_from(ClassLoaderData* loader_data, ConstMethod* cm, TRAPS);
@@ -451,24 +433,17 @@ public:
   }
   address code_base() const            { return (address) (this+1); }
   address code_end() const             { return code_base() + code_size(); }
-  bool    contains(address bcp) const  { return code_base() <= bcp
-                                                     && bcp < code_end(); }
+  bool    contains(address bcp) const  { return code_base() <= bcp && bcp < code_end(); }
   // Offset to bytecodes
-  static ByteSize codes_offset()
-                            { return in_ByteSize(sizeof(ConstMethod)); }
+  static ByteSize codes_offset() { return in_ByteSize(sizeof(ConstMethod)); }
 
-  static ByteSize constants_offset()
-                            { return byte_offset_of(ConstMethod, _constants); }
+  static ByteSize constants_offset() { return byte_offset_of(ConstMethod, _constants); }
 
-  static ByteSize max_stack_offset()
-                            { return byte_offset_of(ConstMethod, _max_stack); }
-  static ByteSize size_of_locals_offset()
-                            { return byte_offset_of(ConstMethod, _max_locals); }
-  static ByteSize size_of_parameters_offset()
-                            { return byte_offset_of(ConstMethod, _size_of_parameters); }
+  static ByteSize max_stack_offset() { return byte_offset_of(ConstMethod, _max_stack); }
+  static ByteSize size_of_locals_offset() { return byte_offset_of(ConstMethod, _max_locals); }
+  static ByteSize size_of_parameters_offset() { return byte_offset_of(ConstMethod, _size_of_parameters); }
 
-  static ByteSize result_type_offset()
-                            { return byte_offset_of(ConstMethod, _result_type); }
+  static ByteSize result_type_offset() { return byte_offset_of(ConstMethod, _result_type); }
 
   // Unique id for the method
   static const u2 MAX_IDNUM;
@@ -492,7 +467,6 @@ public:
   void set_size_of_parameters(int size)          { _size_of_parameters = size; }
 
   void set_result_type(BasicType rt)             {
-    assert(rt < 16, "result type too large");
                                                    _result_type = (u1)rt; }
   // Deallocation for RedefineClasses
   void deallocate_contents(ClassLoaderData* loader_data);

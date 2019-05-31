@@ -63,12 +63,6 @@ CodeBlob::CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& la
   _content_begin(layout.content_begin()),
   _type(type)
 {
-  assert(is_aligned(layout.size(),            oopSize), "unaligned size");
-  assert(is_aligned(layout.header_size(),     oopSize), "unaligned size");
-  assert(is_aligned(layout.relocation_size(), oopSize), "unaligned size");
-  assert(layout.code_end() == layout.content_end(), "must be the same - see code_end()");
-  // probably wrong for tiered
-  assert(_frame_size >= -1, "must use frame size or -1 for runtime stubs");
 }
 
 CodeBlob::CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& layout, CodeBuffer* cb, int frame_complete_offset, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments) :
@@ -88,21 +82,14 @@ CodeBlob::CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& la
   _content_begin(layout.content_begin()),
   _type(type)
 {
-  assert(is_aligned(_size,        oopSize), "unaligned size");
-  assert(is_aligned(_header_size, oopSize), "unaligned size");
-  assert(_data_offset <= _size, "codeBlob is too small");
-  assert(layout.code_end() == layout.content_end(), "must be the same - see code_end()");
 
   set_oop_maps(oop_maps);
-  // probably wrong for tiered
-  assert(_frame_size >= -1, "must use frame size or -1 for runtime stubs");
 }
 
 // Creates a simple CodeBlob. Sets up the size of the different regions.
 RuntimeBlob::RuntimeBlob(const char* name, int header_size, int size, int frame_complete, int locs_size)
   : CodeBlob(name, compiler_none, CodeBlobLayout((address) this, size, header_size, locs_size, size), frame_complete, 0, NULL, false /* caller_must_gc_arguments */)
 {
-  assert(is_aligned(locs_size, oopSize), "unaligned size");
 }
 
 // Creates a RuntimeBlob from a CodeBuffer
@@ -139,12 +126,8 @@ void CodeBlob::set_oop_maps(OopMapSet* p) {
 }
 
 void RuntimeBlob::trace_new_stub(RuntimeBlob* stub, const char* name1, const char* name2) {
-  // Do not hold the CodeCache lock during name formatting.
-  assert(!CodeCache_lock->owned_by_self(), "release CodeCache before registering the stub");
-
   if (stub != NULL) {
     char stub_id[256];
-    assert(strlen(name1) + strlen(name2) < sizeof(stub_id), "");
     jio_snprintf(stub_id, sizeof(stub_id), "%s%s", name1, name2);
     if (PrintStubCode) {
       ttyLocker ttyl;
@@ -160,7 +143,6 @@ void RuntimeBlob::trace_new_stub(RuntimeBlob* stub, const char* name1, const cha
 }
 
 const ImmutableOopMap* CodeBlob::oop_map_for_return_address(address return_address) {
-  assert(_oop_maps != NULL, "nope");
   return _oop_maps->find_map_at_offset((intptr_t) return_address - (intptr_t) code_begin());
 }
 
@@ -174,7 +156,7 @@ void CodeBlob::print_code() {
 
 BufferBlob::BufferBlob(const char* name, int size)
 : RuntimeBlob(name, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, /*locs_size:*/ 0)
-{}
+{ }
 
 BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
@@ -184,7 +166,6 @@ BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
   // align the size to CodeEntryAlignment
   size = CodeBlob::align_code_offset(size);
   size += align_up(buffer_size, oopSize);
-  assert(name != NULL, "must provide a name");
   {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) BufferBlob(name, size);
@@ -197,14 +178,13 @@ BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
 
 BufferBlob::BufferBlob(const char* name, int size, CodeBuffer* cb)
   : RuntimeBlob(name, cb, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, 0, NULL)
-{}
+{ }
 
 BufferBlob* BufferBlob::create(const char* name, CodeBuffer* cb) {
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
 
   BufferBlob* blob = NULL;
   unsigned int size = CodeBlob::allocation_size(cb, sizeof(BufferBlob));
-  assert(name != NULL, "must provide a name");
   {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) BufferBlob(name, size, cb);
@@ -265,7 +245,6 @@ VtableBlob* VtableBlob::create(const char* name, int buffer_size) {
   // align the size to CodeEntryAlignment
   size = align_code_offset(size);
   size += align_up(buffer_size, oopSize);
-  assert(name != NULL, "must provide a name");
   {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) VtableBlob(name, size);
@@ -412,7 +391,7 @@ SafepointBlob::SafepointBlob(
   int         frame_size
 )
 : SingletonBlob("SafepointBlob", cb, sizeof(SafepointBlob), size, frame_size, oop_maps)
-{}
+{ }
 
 SafepointBlob* SafepointBlob::create(
   CodeBuffer* cb,
@@ -454,8 +433,7 @@ void CodeBlob::dump_for_addr(address addr, outputStream* st, bool verbose) const
       return;
     }
     if (Interpreter::contains(addr)) {
-      st->print_cr(INTPTR_FORMAT " is pointing into interpreter code"
-                   " (not bytecode specific)", p2i(addr));
+      st->print_cr(INTPTR_FORMAT " is pointing into interpreter code (not bytecode specific)", p2i(addr));
       return;
     }
     //
@@ -491,8 +469,7 @@ void CodeBlob::dump_for_addr(address addr, outputStream* st, bool verbose) const
   if (is_nmethod()) {
     nmethod* nm = (nmethod*)this;
     ResourceMark rm;
-    st->print(INTPTR_FORMAT " is at entry_point+%d in (nmethod*)" INTPTR_FORMAT,
-              p2i(addr), (int)(addr - nm->entry_point()), p2i(nm));
+    st->print(INTPTR_FORMAT " is at entry_point+%d in (nmethod*)" INTPTR_FORMAT, p2i(addr), (int)(addr - nm->entry_point()), p2i(nm));
     if (verbose) {
       st->print(" for ");
       nm->method()->print_value_on(st);

@@ -24,7 +24,6 @@ StringDedupThread::~StringDedupThread() {
 }
 
 StringDedupThread* StringDedupThread::thread() {
-  assert(_thread != NULL, "String deduplication thread not created");
   return _thread;
 }
 
@@ -33,7 +32,7 @@ class StringDedupSharedClosure: public OopClosure {
   StringDedupStat* _stat;
 
  public:
-  StringDedupSharedClosure(StringDedupStat* stat) : _stat(stat) {}
+  StringDedupSharedClosure(StringDedupStat* stat) : _stat(stat) { }
 
   virtual void do_oop(oop* p) { ShouldNotReachHere(); }
   virtual void do_oop(narrowOop* p) {

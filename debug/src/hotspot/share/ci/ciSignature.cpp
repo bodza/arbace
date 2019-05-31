@@ -89,7 +89,6 @@ ciType* ciSignature::return_type() const {
 // What is the type of the index'th element of this
 // signature?
 ciType* ciSignature::type_at(int index) const {
-  assert(index < _count, "out of bounds");
   // The first _klasses element holds the return klass.
   return _types->at(index);
 }

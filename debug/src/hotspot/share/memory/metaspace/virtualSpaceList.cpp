@@ -29,37 +29,30 @@ VirtualSpaceList::~VirtualSpaceList() {
 }
 
 void VirtualSpaceList::inc_reserved_words(size_t v) {
-  assert_lock_strong(MetaspaceExpand_lock);
   _reserved_words = _reserved_words + v;
 }
 void VirtualSpaceList::dec_reserved_words(size_t v) {
-  assert_lock_strong(MetaspaceExpand_lock);
   _reserved_words = _reserved_words - v;
 }
 
 #define assert_committed_below_limit() \
-  assert(MetaspaceUtils::committed_bytes() <= MaxMetaspaceSize, "Too much committed memory. Committed: " SIZE_FORMAT " limit (MaxMetaspaceSize): " SIZE_FORMAT, MetaspaceUtils::committed_bytes(), MaxMetaspaceSize);
 
 void VirtualSpaceList::inc_committed_words(size_t v) {
-  assert_lock_strong(MetaspaceExpand_lock);
   _committed_words = _committed_words + v;
 
   assert_committed_below_limit();
 }
 void VirtualSpaceList::dec_committed_words(size_t v) {
-  assert_lock_strong(MetaspaceExpand_lock);
   _committed_words = _committed_words - v;
 
   assert_committed_below_limit();
 }
 
 void VirtualSpaceList::inc_virtual_space_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
   _virtual_space_count++;
 }
 
 void VirtualSpaceList::dec_virtual_space_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
   _virtual_space_count--;
 }
 
@@ -67,8 +60,6 @@ void VirtualSpaceList::dec_virtual_space_count() {
 // nodes with a 0 container_count.  Remove Metachunks in
 // the node from their respective freelists.
 void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be called at safepoint for contains to work");
-  assert_lock_strong(MetaspaceExpand_lock);
   // Don't use a VirtualSpaceListIterator because this
   // list is being changed and a straightforward use of an iterator is not safe.
   VirtualSpaceNode* purged_vsl = NULL;
@@ -80,12 +71,10 @@ void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
     // Don't free the current virtual space since it will likely
     // be needed soon.
     if (vsl->container_count() == 0 && vsl != current_virtual_space()) {
-      log_trace(gc, metaspace, freelist)("Purging VirtualSpaceNode " PTR_FORMAT " (capacity: " SIZE_FORMAT
-                                         ", used: " SIZE_FORMAT ").", p2i(vsl), vsl->capacity_words_in_vs(), vsl->used_words_in_vs());
+      log_trace(gc, metaspace, freelist)("Purging VirtualSpaceNode " PTR_FORMAT " (capacity: " SIZE_FORMAT ", used: " SIZE_FORMAT ").", p2i(vsl), vsl->capacity_words_in_vs(), vsl->used_words_in_vs());
       // Unlink it from the list
       if (prev_vsl == vsl) {
         // This is the case of the current node being the first node.
-        assert(vsl == virtual_space_list(), "Expected to be the first node");
         set_virtual_space_list(vsl->next());
       } else {
         prev_vsl->set_next(vsl->next());
@@ -120,12 +109,9 @@ VirtualSpaceNode* VirtualSpaceList::find_enclosing_space(const void* ptr) {
 }
 
 void VirtualSpaceList::retire_current_virtual_space() {
-  assert_lock_strong(MetaspaceExpand_lock);
-
   VirtualSpaceNode* vsn = current_virtual_space();
 
-  ChunkManager* cm = is_class() ? Metaspace::chunk_manager_class() :
-                                  Metaspace::chunk_manager_metadata();
+  ChunkManager* cm = is_class() ? Metaspace::chunk_manager_class() : Metaspace::chunk_manager_metadata();
 
   vsn->retire(cm);
 }
@@ -137,8 +123,7 @@ VirtualSpaceList::VirtualSpaceList(size_t word_size) :
                                    _reserved_words(0),
                                    _committed_words(0),
                                    _virtual_space_count(0) {
-  MutexLockerEx cl(MetaspaceExpand_lock,
-                   Mutex::_no_safepoint_check_flag);
+  MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
   create_new_virtual_space(word_size);
 }
 
@@ -149,8 +134,7 @@ VirtualSpaceList::VirtualSpaceList(ReservedSpace rs) :
                                    _reserved_words(0),
                                    _committed_words(0),
                                    _virtual_space_count(0) {
-  MutexLockerEx cl(MetaspaceExpand_lock,
-                   Mutex::_no_safepoint_check_flag);
+  MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
   VirtualSpaceNode* class_entry = new VirtualSpaceNode(is_class(), rs);
   bool succeeded = class_entry->initialize();
   if (succeeded) {
@@ -164,21 +148,18 @@ size_t VirtualSpaceList::free_bytes() {
 
 // Allocate another meta virtual space and add it to the list.
 bool VirtualSpaceList::create_new_virtual_space(size_t vs_word_size) {
-  assert_lock_strong(MetaspaceExpand_lock);
-
   if (is_class()) {
-    assert(false, "We currently don't support more than one VirtualSpace for" " the compressed class space. The initialization of the" " CCS uses another code path and should not hit this path.");
+    ShouldNotReachHere();
     return false;
   }
 
   if (vs_word_size == 0) {
-    assert(false, "vs_word_size should always be at least _reserve_alignment large.");
+    ShouldNotReachHere();
     return false;
   }
 
   // Reserve the space
   size_t vs_byte_size = vs_word_size * BytesPerWord;
-  assert_is_aligned(vs_byte_size, Metaspace::reserve_alignment());
 
   // Allocate the meta virtual space and initialize it.
   VirtualSpaceNode* new_entry = new VirtualSpaceNode(is_class(), vs_byte_size);
@@ -186,7 +167,6 @@ bool VirtualSpaceList::create_new_virtual_space(size_t vs_word_size) {
     delete new_entry;
     return false;
   } else {
-    assert(new_entry->reserved_words() == vs_word_size, "Reserved memory size differs from requested memory size");
     // ensure lock-free iteration sees fully initialized node
     OrderAccess::storestore();
     link_vs(new_entry);
@@ -213,55 +193,40 @@ void VirtualSpaceList::link_vs(VirtualSpaceNode* new_entry) {
   }
 }
 
-bool VirtualSpaceList::expand_node_by(VirtualSpaceNode* node,
-                                      size_t min_words,
-                                      size_t preferred_words) {
+bool VirtualSpaceList::expand_node_by(VirtualSpaceNode* node, size_t min_words, size_t preferred_words) {
   size_t before = node->committed_words();
-
   bool result = node->expand_by(min_words, preferred_words);
-
   size_t after = node->committed_words();
 
   // after and before can be the same if the memory was pre-committed.
-  assert(after >= before, "Inconsistency");
   inc_committed_words(after - before);
 
   return result;
 }
 
 bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
-  assert_is_aligned(min_words,       Metaspace::commit_alignment_words());
-  assert_is_aligned(preferred_words, Metaspace::commit_alignment_words());
-  assert(min_words <= preferred_words, "Invalid arguments");
-
   const char* const class_or_not = (is_class() ? "class" : "non-class");
 
   if (!MetaspaceGC::can_expand(min_words, this->is_class())) {
-    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list.",
-              class_or_not);
+    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list.", class_or_not);
     return  false;
   }
 
   size_t allowed_expansion_words = MetaspaceGC::allowed_expansion();
   if (allowed_expansion_words < min_words) {
-    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list (must try gc first).",
-              class_or_not);
+    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list (must try gc first).", class_or_not);
     return false;
   }
 
   size_t max_expansion_words = MIN2(preferred_words, allowed_expansion_words);
 
   // Commit more memory from the the current virtual space.
-  bool vs_expanded = expand_node_by(current_virtual_space(),
-                                    min_words,
-                                    max_expansion_words);
+  bool vs_expanded = expand_node_by(current_virtual_space(), min_words, max_expansion_words);
   if (vs_expanded) {
-     log_trace(gc, metaspace, freelist)("Expanded %s virtual space list.",
-               class_or_not);
+     log_trace(gc, metaspace, freelist)("Expanded %s virtual space list.", class_or_not);
      return true;
   }
-  log_trace(gc, metaspace, freelist)("%s virtual space list: retire current node.",
-            class_or_not);
+  log_trace(gc, metaspace, freelist)("%s virtual space list: retire current node.", class_or_not);
   retire_current_virtual_space();
 
   // Get another virtual space.
@@ -271,13 +236,10 @@ bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   if (create_new_virtual_space(grow_vs_words)) {
     if (current_virtual_space()->is_pre_committed()) {
       // The memory was pre-committed, so we are done here.
-      assert(min_words <= current_virtual_space()->committed_words(), "The new VirtualSpace was pre-committed, so it should be large enough to fit the alloc request.");
       return true;
     }
 
-    return expand_node_by(current_virtual_space(),
-                          min_words,
-                          max_expansion_words);
+    return expand_node_by(current_virtual_space(), min_words, max_expansion_words);
   }
 
   return false;
@@ -326,7 +288,6 @@ Metachunk* VirtualSpaceList::get_new_chunk(size_t chunk_word_size, size_t sugges
   bool expanded = expand_by(min_word_size, preferred_word_size);
   if (expanded) {
     next = current_virtual_space()->get_chunk_vs(chunk_word_size);
-    assert(next != NULL, "The allocation was expected to succeed after the expansion");
   }
 
    return next;

@@ -25,13 +25,11 @@ void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
 
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index, LIR_Opr array)
   : _throw_index_out_of_bounds_exception(false), _index(index), _array(array) {
-  assert(info != NULL, "must have info");
   _info = new CodeEmitInfo(info);
 }
 
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index)
   : _throw_index_out_of_bounds_exception(true), _index(index), _array(NULL) {
-  assert(info != NULL, "must have info");
   _info = new CodeEmitInfo(info);
 }
 
@@ -54,7 +52,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   if (_throw_index_out_of_bounds_exception) {
     stub_id = Runtime1::throw_index_exception_id;
   } else {
-    assert(_array != NULL, "sanity");
     __ mov(rscratch2, _array->as_pointer_register());
     stub_id = Runtime1::throw_range_check_failed_id;
   }
@@ -93,18 +90,15 @@ NewInstanceStub::NewInstanceStub(LIR_Opr klass_reg, LIR_Opr result, ciInstanceKl
   _klass = klass;
   _klass_reg = klass_reg;
   _info = new CodeEmitInfo(info);
-  assert(stub_id == Runtime1::new_instance_id                 || stub_id == Runtime1::fast_new_instance_id            || stub_id == Runtime1::fast_new_instance_init_check_id, "need new_instance id");
   _stub_id   = stub_id;
 }
 
 void NewInstanceStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
   __ mov(r3, _klass_reg->as_register());
   __ far_call(RuntimeAddress(Runtime1::entry_for(_stub_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == r0, "result must in r0,");
   __ b(_continuation);
 }
 
@@ -120,14 +114,10 @@ NewTypeArrayStub::NewTypeArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Opr re
 }
 
 void NewTypeArrayStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
-  assert(_length->as_register() == r19, "length must in r19,");
-  assert(_klass_reg->as_register() == r3, "klass_reg must in r3");
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_type_array_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == r0, "result must in r0");
   __ b(_continuation);
 }
 
@@ -141,14 +131,10 @@ NewObjectArrayStub::NewObjectArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Op
 }
 
 void NewObjectArrayStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
-  assert(_length->as_register() == r19, "length must in r19,");
-  assert(_klass_reg->as_register() == r3, "klass_reg must in r3");
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_object_array_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == r0, "result must in r0");
   __ b(_continuation);
 }
 // Implementation of MonitorAccessStubs
@@ -160,7 +146,6 @@ MonitorEnterStub::MonitorEnterStub(LIR_Opr obj_reg, LIR_Opr lock_reg, CodeEmitIn
 }
 
 void MonitorEnterStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
   ce->store_parameter(_obj_reg->as_register(),  1);
   ce->store_parameter(_lock_reg->as_register(), 0);
@@ -208,7 +193,7 @@ void PatchingStub::align_patch_site(MacroAssembler* masm) {
 }
 
 void PatchingStub::emit_code(LIR_Assembler* ce) {
-  assert(false, "AArch64 should not use C1 runtime patching");
+  ShouldNotReachHere();
 }
 
 void DeoptimizeStub::emit_code(LIR_Assembler* ce) {
@@ -235,7 +220,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
 
   __ bind(_entry);
   // pass the object in a scratch register because all other registers
@@ -274,7 +258,6 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
       int st_off = r_1->reg2stack() * wordSize;
       __ str (r[i], Address(sp, st_off));
     } else {
-      assert(r[i] == args[i].first()->as_Register(), "Wrong register for arg ");
     }
   }
 

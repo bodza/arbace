@@ -27,9 +27,7 @@ void ICStub::finalize() {
   if (!is_empty()) {
     ResourceMark rm;
     CompiledIC *ic = CompiledIC_at(CodeCache::find_compiled(ic_site()), ic_site());
-    assert(CodeCache::find_compiled(ic->instruction_address()) != NULL, "inline cache in non-compiled?");
 
-    assert(this == ICStub_from_destination_address(ic->stub_address()), "wrong owner of ic buffer");
     ic->set_ic_destination_and_value(destination(), cached_value());
   }
 }
@@ -50,8 +48,6 @@ void ICStub::set_stub(CompiledIC *ic, void* cached_val, address dest_addr) {
 
   // Assemble new stub
   InlineCacheBuffer::assemble_ic_buffer_code(code_begin(), cached_val, dest_addr);
-  assert(destination() == dest_addr,   "can recover destination");
-  assert(cached_value() == cached_val, "can recover destination");
 }
 
 void ICStub::clear() {
@@ -66,14 +62,12 @@ void ICStub::clear() {
 
 void InlineCacheBuffer::init_next_stub() {
   ICStub* ic_stub = (ICStub*)buffer()->request_committed (ic_stub_code_size());
-  assert(ic_stub != NULL, "no room for a single stub");
   set_next_stub(ic_stub);
 }
 
 void InlineCacheBuffer::initialize() {
   if (_buffer != NULL) return; // already initialized
   _buffer = new StubQueue(new ICStubInterface, 10*K, InlineCacheBuffer_lock, "InlineCacheBuffer");
-  assert(_buffer != NULL, "cannot allocate InlineCacheBuffer");
   init_next_stub();
 }
 
@@ -125,8 +119,6 @@ void InlineCacheBuffer_init() {
 }
 
 void InlineCacheBuffer::create_transition_stub(CompiledIC *ic, void* cached_value, address entry) {
-  assert(!SafepointSynchronize::is_at_safepoint(), "should not be called during a safepoint");
-  assert(CompiledIC_lock->is_locked(), "");
   if (TraceICBuffer) {
     tty->print_cr("  create transition stub for " INTPTR_FORMAT " destination " INTPTR_FORMAT " cached value " INTPTR_FORMAT,
                   p2i(ic->instruction_address()), p2i(entry), p2i(cached_value));
@@ -160,7 +152,6 @@ void* InlineCacheBuffer::cached_value_for(CompiledIC *ic) {
 
 // Free CompiledICHolder*s that are no longer in use
 void InlineCacheBuffer::release_pending_icholders() {
-  assert(SafepointSynchronize::is_at_safepoint(), "should only be called during a safepoint");
   CompiledICHolder* holder = _pending_released;
   _pending_released = NULL;
   while (holder != NULL) {
@@ -169,7 +160,6 @@ void InlineCacheBuffer::release_pending_icholders() {
     holder = next;
     _pending_count--;
   }
-  assert(_pending_count == 0, "wrong count");
 }
 
 // Enqueue this icholder for release during the next safepoint.  It's

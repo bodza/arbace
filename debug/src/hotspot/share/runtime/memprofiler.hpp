@@ -11,11 +11,11 @@ class MemProfiler : AllStatic {
   static MemProfilerTask* _task;
   static FILE* _log_fp;
   // Do trace (callback from MemProfilerTask and from disengage)
-  static void do_trace()      {};
+  static void do_trace()      { };
  public:
   // Start/stop the profiler
-  static void engage()        {};
-  static void disengage()     {};
+  static void engage()        { };
+  static void disengage()     { };
   // Tester
   static bool is_active()     { return 0; };
 };

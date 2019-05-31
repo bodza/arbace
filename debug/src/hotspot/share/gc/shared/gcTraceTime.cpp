@@ -7,12 +7,9 @@ GCTraceCPUTime::GCTraceCPUTime() :
   _active(log_is_enabled(Info, gc, cpu)),
   _starting_user_time(0.0),
   _starting_system_time(0.0),
-  _starting_real_time(0.0)
-{
+  _starting_real_time(0.0) {
   if (_active) {
-    bool valid = os::getTimesSecs(&_starting_real_time,
-                               &_starting_user_time,
-                               &_starting_system_time);
+    bool valid = os::getTimesSecs(&_starting_real_time, &_starting_user_time, &_starting_system_time);
     if (!valid) {
       log_warning(gc, cpu)("TraceCPUTime: os::getTimesSecs() returned invalid result");
       _active = false;

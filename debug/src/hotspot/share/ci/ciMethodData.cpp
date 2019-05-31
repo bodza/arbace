@@ -14,7 +14,6 @@
 // ciMethodData::ciMethodData
 //
 ciMethodData::ciMethodData(MethodData* md) : ciMetadata(md) {
-  assert(md != NULL, "no null method data");
   Copy::zero_to_words((HeapWord*) &_orig, sizeof(_orig) / sizeof(HeapWord));
   _data = NULL;
   _data_size = 0;
@@ -64,8 +63,6 @@ void ciMethodData::load_extra_data() {
   DataLayout* end_src = mdo->args_data_limit();
   DataLayout* dp_dst  = extra_data_base();
   for (;; dp_src = MethodData::next_extra(dp_src), dp_dst = MethodData::next_extra(dp_dst)) {
-    assert(dp_src < end_src, "moved past end of extra data");
-    assert(((intptr_t)dp_dst) - ((intptr_t)extra_data_base()) == ((intptr_t)dp_src) - ((intptr_t)mdo->extra_data_base()), "source and destination don't match");
 
     // New traps in the MDO may have been added since we copied the
     // data (concurrent deoptimizations before we acquired
@@ -293,8 +290,7 @@ ciProfileData* ciMethodData::bci_to_data(int bci, ciMethod* m) {
 // Conservatively decode the trap_state of a ciProfileData.
 int ciMethodData::has_trap_at(ciProfileData* data, int reason) {
   typedef Deoptimization::DeoptReason DR_t;
-  int per_bc_reason
-    = Deoptimization::reason_recorded_per_bytecode_if_any((DR_t) reason);
+  int per_bc_reason = Deoptimization::reason_recorded_per_bytecode_if_any((DR_t) reason);
   if (trap_count(reason) == 0) {
     // Impossible for this trap to have occurred, regardless of trap_state.
     // Note:  This happens if the MDO is empty.
@@ -342,7 +338,7 @@ void ciMethodData::clear_escape_info() {
 void ciMethodData::update_escape_info() {
   VM_ENTRY_MARK;
   MethodData* mdo = get_MethodData();
-  if ( mdo != NULL) {
+  if (mdo != NULL) {
     mdo->set_eflags(_eflags);
     mdo->set_arg_local(_arg_local);
     mdo->set_arg_stack(_arg_stack);
@@ -380,7 +376,6 @@ void ciMethodData::set_argument_type(int bci, int i, ciKlass* k) {
       if (data->is_CallTypeData()) {
         data->as_CallTypeData()->set_argument_type(i, k->get_Klass());
       } else {
-        assert(data->is_VirtualCallTypeData(), "no arguments!");
         data->as_VirtualCallTypeData()->set_argument_type(i, k->get_Klass());
       }
     }
@@ -404,7 +399,6 @@ void ciMethodData::set_return_type(int bci, ciKlass* k) {
       if (data->is_CallTypeData()) {
         data->as_CallTypeData()->set_return_type(k->get_Klass());
       } else {
-        assert(data->is_VirtualCallTypeData(), "no arguments!");
         data->as_VirtualCallTypeData()->set_return_type(k->get_Klass());
       }
     }
@@ -443,7 +437,6 @@ void ciMethodData::set_arg_modified(int arg, uint val) {
   ArgInfoData *aid = arg_info();
   if (aid == NULL)
     return;
-  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
   aid->set_arg_modified(arg, val);
 }
 
@@ -463,7 +456,6 @@ uint ciMethodData::arg_modified(int arg) const {
   ArgInfoData *aid = arg_info();
   if (aid == NULL)
     return 0;
-  assert(arg >= 0 && arg < aid->number_of_args(), "valid argument number");
   return aid->arg_modified(arg);
 }
 

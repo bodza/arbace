@@ -3,9 +3,6 @@
 
 #include "gc/g1/g1HeapRegionTraceType.hpp"
 
-#define hrt_assert_is_valid(tag) \
-  assert(is_valid((tag)), "invalid HR type: %u", (uint) (tag))
-
 class HeapRegionType {
 friend class VMStructs;
 
@@ -71,14 +68,11 @@ private:
   static bool is_valid(Tag tag);
 
   Tag get() const {
-    hrt_assert_is_valid(_tag);
     return _tag;
   }
 
   // Sets the type to 'tag'.
   void set(Tag tag) {
-    hrt_assert_is_valid(tag);
-    hrt_assert_is_valid(_tag);
     _tag = tag;
   }
 
@@ -86,10 +80,6 @@ private:
   // is available for when we want to add sanity checking to the type
   // transition.
   void set_from(Tag tag, Tag before) {
-    hrt_assert_is_valid(tag);
-    hrt_assert_is_valid(before);
-    hrt_assert_is_valid(_tag);
-    assert(_tag == before, "HR tag: %u, expected: %u new tag; %u", _tag, before, tag);
     _tag = tag;
   }
 
@@ -99,11 +89,11 @@ public:
   bool is_free() const { return get() == FreeTag; }
 
   bool is_young()    const { return (get() & YoungMask) != 0; }
-  bool is_eden()     const { return get() == EdenTag;  }
-  bool is_survivor() const { return get() == SurvTag;  }
+  bool is_eden()     const { return get() == EdenTag; }
+  bool is_survivor() const { return get() == SurvTag; }
 
-  bool is_humongous()           const { return (get() & HumongousMask) != 0;   }
-  bool is_starts_humongous()    const { return get() == StartsHumongousTag;    }
+  bool is_humongous()           const { return (get() & HumongousMask) != 0; }
+  bool is_starts_humongous()    const { return get() == StartsHumongousTag; }
   bool is_continues_humongous() const { return get() == ContinuesHumongousTag; }
 
   bool is_archive()        const { return (get() & ArchiveMask) != 0; }
@@ -134,8 +124,6 @@ public:
   // Change the current region type to be of an old region type if not already done so.
   // Returns whether the region type has been changed or not.
   bool relabel_as_old() {
-    //assert(!is_free(), "Should not try to move Free region");
-    assert(!is_humongous(), "Should not try to move Humongous region");
     if (is_old()) {
       return false;
     }
@@ -159,7 +147,7 @@ public:
   const char* get_short_str() const;
   G1HeapRegionTraceType::Type get_trace_type();
 
-  HeapRegionType() : _tag(FreeTag) { hrt_assert_is_valid(_tag); }
+  HeapRegionType() : _tag(FreeTag) { }
 };
 
 #endif

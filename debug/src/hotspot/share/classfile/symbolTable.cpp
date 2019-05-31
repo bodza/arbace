@@ -29,7 +29,6 @@ bool SymbolTable::_lookup_shared_first = false;
 CompactHashtable<Symbol*, char> SymbolTable::_shared_table;
 
 Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS) {
-  assert(len <= Symbol::max_length(), "should be checked by caller");
 
   Symbol* sym;
 
@@ -39,7 +38,6 @@ Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS
   if (c_heap) {
     // refcount starts as 1
     sym = new (len, THREAD) Symbol(name, len, 1);
-    assert(sym != NULL, "new should call vm_exit_out_of_memory if C_HEAP is exhausted");
   } else {
     // Allocate to global arena
     sym = new (len, arena(), THREAD) Symbol(name, len, PERM_REFCOUNT);
@@ -73,7 +71,6 @@ void SymbolTable::symbols_do(SymbolClosure *cl) {
 }
 
 void SymbolTable::metaspace_pointers_do(MetaspaceClosure* it) {
-  assert(DumpSharedSpaces, "called only during dump time");
   const int n = the_table()->table_size();
   for (int i = 0; i < n; i++) {
     for (HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i);
@@ -102,10 +99,8 @@ void SymbolTable::buckets_unlink(int start_idx, int end_idx, BucketUnlinkContext
       }
       Symbol* s = entry->literal();
       context->_num_processed++;
-      assert(s != NULL, "just checking");
       // If reference count is zero, remove.
       if (s->refcount() == 0) {
-        assert(!entry->is_shared(), "shared entries should be kept live");
         delete s;
         *p = entry->next();
         context->free_entry(entry);
@@ -163,7 +158,6 @@ void SymbolTable::rehash_table() {
     return;
   }
 
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   // This should never happen with -Xshare:dump but it might in testing mode.
   if (DumpSharedSpaces) return;
   // Create a new symbol table
@@ -236,15 +230,12 @@ Symbol* SymbolTable::lookup(int index, const char* name,
 }
 
 u4 SymbolTable::encode_shared(Symbol* sym) {
-  assert(DumpSharedSpaces, "called only during dump time");
   uintx base_address = uintx(MetaspaceShared::shared_rs()->base());
   uintx offset = uintx(sym) - base_address;
-  assert(offset < 0x7fffffff, "sanity");
   return u4(offset);
 }
 
 Symbol* SymbolTable::decode_shared(u4 offset) {
-  assert(!DumpSharedSpaces, "called only during runtime");
   uintx base_address = _shared_table.base_address();
   Symbol* sym = (Symbol*)(base_address + offset);
 
@@ -334,7 +325,7 @@ Symbol* SymbolTable::lookup_only(const char* name, int len,
 // Look up the address of the literal in the SymbolTable for this Symbol*
 // Do not create any new symbols
 // Do not increment the reference count to keep this alive
-Symbol** SymbolTable::lookup_symbol_addr(Symbol* sym){
+Symbol** SymbolTable::lookup_symbol_addr(Symbol* sym) {
   unsigned int hash = hash_symbol((char*)sym->bytes(), sym->utf8_length());
   int index = the_table()->hash_to_index(hash);
 
@@ -361,7 +352,7 @@ Symbol* SymbolTable::lookup_unicode(const jchar* name, int utf16_length, TRAPS) 
     return lookup(chars, utf8_length, THREAD);
   } else {
     ResourceMark rm(THREAD);
-    char* chars = NEW_RESOURCE_ARRAY(char, utf8_length + 1);;
+    char* chars = NEW_RESOURCE_ARRAY(char, utf8_length + 1);
     UNICODE::convert_to_utf8(name, utf16_length, chars);
     return lookup(chars, utf8_length, THREAD);
   }
@@ -377,16 +368,13 @@ Symbol* SymbolTable::lookup_only_unicode(const jchar* name, int utf16_length,
     return lookup_only(chars, utf8_length, hash);
   } else {
     ResourceMark rm;
-    char* chars = NEW_RESOURCE_ARRAY(char, utf8_length + 1);;
+    char* chars = NEW_RESOURCE_ARRAY(char, utf8_length + 1);
     UNICODE::convert_to_utf8(name, utf16_length, chars);
     return lookup_only(chars, utf8_length, hash);
   }
 }
 
-void SymbolTable::add(ClassLoaderData* loader_data, const constantPoolHandle& cp,
-                      int names_count,
-                      const char** names, int* lengths, int* cp_indices,
-                      unsigned int* hashValues, TRAPS) {
+void SymbolTable::add(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** names, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS) {
   // Grab SymbolTable_lock first.
   MutexLocker ml(SymbolTable_lock, THREAD);
 
@@ -420,12 +408,10 @@ Symbol* SymbolTable::new_permanent_symbol(const char* name, TRAPS) {
 
 Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len,
                                unsigned int hashValue_arg, bool c_heap, TRAPS) {
-  assert(!Universe::heap()->is_in_reserved(name), "proposed name of symbol must be stable");
 
   // Don't allow symbols to be created which cannot fit in a Symbol*.
   if (len > Symbol::max_length()) {
-    THROW_MSG_0(vmSymbols::java_lang_InternalError(),
-                "name is too long to represent");
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), "name is too long to represent");
   }
 
   // Cannot hit a safepoint in this function because the "this" pointer can move.
@@ -448,13 +434,11 @@ Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len,
   Symbol* test = lookup(index, (char*)name, len, hashValue);
   if (test != NULL) {
     // A race occurred and another thread introduced the symbol.
-    assert(test->refcount() != 0, "lookup should have incremented the count");
     return test;
   }
 
   // Create a new symbol.
   Symbol* sym = allocate_symbol(name, len, c_heap, CHECK_NULL);
-  assert(sym->equals((char*)name, len), "symbol must be properly initialized");
 
   HashtableEntry<Symbol*, mtSymbol>* entry = new_entry(hashValue, sym);
   add_entry(index, entry);
@@ -463,17 +447,12 @@ Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len,
 
 // This version of basic_add adds symbols in batch from the constant pool
 // parsing.
-bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHandle& cp,
-                            int names_count,
-                            const char** names, int* lengths,
-                            int* cp_indices, unsigned int* hashValues,
-                            TRAPS) {
+bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** names, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS) {
 
   // Check symbol names are not too long.  If any are too long, don't add any.
   for (int i = 0; i< names_count; i++) {
     if (lengths[i] > Symbol::max_length()) {
-      THROW_MSG_0(vmSymbols::java_lang_InternalError(),
-                  "name is too long to represent");
+      THROW_MSG_0(vmSymbols::java_lang_InternalError(), "name is too long to represent");
     }
   }
 
@@ -497,13 +476,11 @@ bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHand
       // A race occurred and another thread introduced the symbol, this one
       // will be dropped and collected. Use test instead.
       cp->symbol_at_put(cp_indices[i], test);
-      assert(test->refcount() != 0, "lookup should have incremented the count");
     } else {
       // Create a new symbol.  The null class loader is never unloaded so these
       // are allocated specially in a permanent arena.
       bool c_heap = !loader_data->is_the_null_class_loader_data();
       Symbol* sym = allocate_symbol((const u1*)names[i], lengths[i], c_heap, CHECK_(false));
-      assert(sym->equals(names[i], lengths[i]), "symbol must be properly initialized");  // why wouldn't it be???
       HashtableEntry<Symbol*, mtSymbol>* entry = new_entry(hashValue, sym);
       add_entry(index, entry);
       cp->symbol_at_put(cp_indices[i], sym);
@@ -520,8 +497,7 @@ void SymbolTable::verify() {
       guarantee(s != NULL, "symbol is NULL");
       unsigned int h = hash_symbol((char*)s->bytes(), s->utf8_length());
       guarantee(p->hash() == h, "broken hash in symbol table entry");
-      guarantee(the_table()->hash_to_index(h) == i,
-                "wrong index in symbol table");
+      guarantee(the_table()->hash_to_index(h) == i, "wrong index in symbol table");
     }
   }
 }
@@ -554,8 +530,7 @@ void SymbolTable::serialize(SerializeClosure* soc) {
 // Utility for dumping symbols
 SymboltableDCmd::SymboltableDCmd(outputStream* output, bool heap) :
                                  DCmdWithParser(output, heap),
-  _verbose("-verbose", "Dump the content of each symbol in the table",
-           "BOOLEAN", false, "false") {
+  _verbose("-verbose", "Dump the content of each symbol in the table", "BOOLEAN", false, "false") {
   _dcmdparser.add_dcmd_option(&_verbose);
 }
 

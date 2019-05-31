@@ -52,8 +52,8 @@ public:
     u4 _value;
 
   public:
-    Entry() {}
-    Entry(unsigned int hash, u4 val) : _hash(hash), _value(val) {}
+    Entry() { }
+    Entry(unsigned int hash, u4 val) : _hash(hash), _value(val) { }
 
     u4 value() {
       return _value;
@@ -100,7 +100,7 @@ public:
 class CompactSymbolTableWriter: public CompactHashtableWriter {
 public:
   CompactSymbolTableWriter(int num_buckets, CompactHashtableStats* stats) :
-    CompactHashtableWriter(num_buckets, stats) {}
+    CompactHashtableWriter(num_buckets, stats) { }
   void add(unsigned int hash, Symbol *symbol);
   void dump(CompactHashtable<Symbol*, char> *cht);
 };
@@ -108,7 +108,7 @@ public:
 class CompactStringTableWriter: public CompactHashtableWriter {
 public:
   CompactStringTableWriter(int num_entries, CompactHashtableStats* stats) :
-    CompactHashtableWriter(num_entries, stats) {}
+    CompactHashtableWriter(num_entries, stats) { }
   void add(unsigned int hash, oop string);
   void dump(CompactHashtable<oop, char> *cht);
 };
@@ -227,7 +227,7 @@ private:
   inline oop decode_entry(CompactHashtable<oop, char>* const t,
                           u4 offset, const char* name, int len);
 public:
-  CompactHashtable() : SimpleCompactHashtable() {}
+  CompactHashtable() : SimpleCompactHashtable() { }
 
   void set_type(CompactHashtableType type) {
     _type = (u4)type;
@@ -313,7 +313,7 @@ public:
         return;
       } else {
         // Not [0-9], not 'delim'
-        corrupted(_p, "Unrecognized format");;
+        corrupted(_p, "Unrecognized format");
       }
     }
 

@@ -24,19 +24,16 @@ LogFileOutput::LogFileOutput(const char* name)
       _file_name(NULL), _archive_name(NULL), _archive_name_len(0),
       _rotate_size(DefaultFileSize), _file_count(DefaultFileCount),
       _current_size(0), _current_file(0), _rotation_semaphore(1) {
-  assert(strstr(name, Prefix) == name, "invalid output name '%s': missing prefix: %s", name, Prefix);
   _file_name = make_file_name(name + strlen(Prefix), _pid_str, _vm_start_time_str);
 }
 
 void LogFileOutput::set_file_name_parameters(jlong vm_start_time) {
   int res = jio_snprintf(_pid_str, sizeof(_pid_str), "%d", os::current_process_id());
-  assert(res > 0, "PID buffer too small");
 
   struct tm local_time;
   time_t utc_time = vm_start_time / 1000;
   os::localtime_pd(&utc_time, &local_time);
   res = (int)strftime(_vm_start_time_str, sizeof(_vm_start_time_str), TimestampFormat, &local_time);
-  assert(res > 0, "VM start time buffer too small.");
 }
 
 LogFileOutput::~LogFileOutput() {
@@ -95,14 +92,12 @@ static uint next_file_number(const char* filename,
   for (uint i = 0; i < filecount; i++) {
     int ret = jio_snprintf(archive_name, len, "%s.%0*u",
                            filename, number_of_digits, i);
-    assert(ret > 0 && static_cast<size_t>(ret) == len - 1, "incorrect buffer length calculation");
 
     if (file_exists(archive_name) && !is_regular_file(archive_name)) {
       // We've encountered something that's not a regular file among the
       // possible file rotation targets. Fail immediately to prevent
       // problems later.
-      errstream->print_cr("Possible rotation target file '%s' already exists "
-                          "but is not a regular file.", archive_name);
+      errstream->print_cr("Possible rotation target file '%s' already exists but is not a regular file.", archive_name);
       next_num = UINT_MAX;
       break;
     }
@@ -115,8 +110,7 @@ static uint next_file_number(const char* filename,
     }
 
     // Keep track of oldest existing log file
-    if (!found
-        || os::compare_file_modified_times(oldest_name, archive_name) > 0) {
+    if (!found || os::compare_file_modified_times(oldest_name, archive_name) > 0) {
       strcpy(oldest_name, archive_name);
       next_num = i;
       found = true;
@@ -197,34 +191,25 @@ bool LogFileOutput::initialize(const char* options, outputStream* errstream) {
     _archive_name = NEW_C_HEAP_ARRAY(char, _archive_name_len, mtLogging);
   }
 
-  log_trace(logging)("Initializing logging to file '%s' (filecount: %u"
-                     ", filesize: " SIZE_FORMAT " KiB).",
-                     _file_name, _file_count, _rotate_size / K);
+  log_trace(logging)("Initializing logging to file '%s' (filecount: %u, filesize: " SIZE_FORMAT " KiB).", _file_name, _file_count, _rotate_size / K);
 
   if (_file_count > 0 && file_exists(_file_name)) {
     if (!is_regular_file(_file_name)) {
-      errstream->print_cr("Unable to log to file %s with log file rotation: "
-                          "%s is not a regular file",
-                          _file_name, _file_name);
+      errstream->print_cr("Unable to log to file %s with log file rotation: %s is not a regular file", _file_name, _file_name);
       return false;
     }
-    _current_file = next_file_number(_file_name,
-                                     _file_count_max_digits,
-                                     _file_count,
-                                     errstream);
+    _current_file = next_file_number(_file_name, _file_count_max_digits, _file_count, errstream);
     if (_current_file == UINT_MAX) {
       return false;
     }
-    log_trace(logging)("Existing log file found, saving it as '%s.%0*u'",
-                       _file_name, _file_count_max_digits, _current_file);
+    log_trace(logging)("Existing log file found, saving it as '%s.%0*u'", _file_name, _file_count_max_digits, _current_file);
     archive();
     increment_file_count();
   }
 
   _stream = os::fopen(_file_name, FileOpenMode);
   if (_stream == NULL) {
-    errstream->print_cr("Error opening log file '%s': %s",
-                        _file_name, strerror(errno));
+    errstream->print_cr("Error opening log file '%s': %s", _file_name, strerror(errno));
     return false;
   }
 
@@ -273,10 +258,8 @@ int LogFileOutput::write(LogMessageBuffer::Iterator msg_iterator) {
 }
 
 void LogFileOutput::archive() {
-  assert(_archive_name != NULL && _archive_name_len > 0, "Rotation must be configured before using this function.");
   int ret = jio_snprintf(_archive_name, _archive_name_len, "%s.%0*u",
                          _file_name, _file_count_max_digits, _current_file);
-  assert(ret >= 0, "Buffer should always be large enough");
 
   // Attempt to remove possibly existing archived log file before we rename.
   // Don't care if it fails, we really only care about the rename that follows.

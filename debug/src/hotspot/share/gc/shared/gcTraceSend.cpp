@@ -38,8 +38,7 @@ void GCTracer::send_reference_stats_event(ReferenceType type, size_t count) cons
   }
 }
 
-void GCTracer::send_metaspace_chunk_free_list_summary(GCWhen::Type when, Metaspace::MetadataType mdtype,
-                                                      const MetaspaceChunkFreeListSummary& summary) const {
+void GCTracer::send_metaspace_chunk_free_list_summary(GCWhen::Type when, Metaspace::MetadataType mdtype, const MetaspaceChunkFreeListSummary& summary) const {
   EventMetaspaceChunkFreeListSummary e;
   if (e.should_commit()) {
     e.set_gcId(GCId::current());
@@ -92,9 +91,7 @@ bool YoungGCTracer::should_send_promotion_outside_plab_event() const {
   return EventPromoteObjectOutsidePLAB::is_enabled();
 }
 
-void YoungGCTracer::send_promotion_in_new_plab_event(Klass* klass, size_t obj_size,
-                                                     uint age, bool tenured,
-                                                     size_t plab_size) const {
+void YoungGCTracer::send_promotion_in_new_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured, size_t plab_size) const {
 
   EventPromoteObjectInNewPLAB event;
   if (event.should_commit()) {
@@ -108,8 +105,7 @@ void YoungGCTracer::send_promotion_in_new_plab_event(Klass* klass, size_t obj_si
   }
 }
 
-void YoungGCTracer::send_promotion_outside_plab_event(Klass* klass, size_t obj_size,
-                                                      uint age, bool tenured) const {
+void YoungGCTracer::send_promotion_outside_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured) const {
 
   EventPromoteObjectOutsidePLAB event;
   if (event.should_commit()) {
@@ -239,12 +235,7 @@ void G1NewTracer::send_old_evacuation_statistics(const G1EvacSummary& summary) c
   }
 }
 
-void G1NewTracer::send_basic_ihop_statistics(size_t threshold,
-                                             size_t target_occupancy,
-                                             size_t current_occupancy,
-                                             size_t last_allocation_size,
-                                             double last_allocation_duration,
-                                             double last_marking_length) {
+void G1NewTracer::send_basic_ihop_statistics(size_t threshold, size_t target_occupancy, size_t current_occupancy, size_t last_allocation_size, double last_allocation_duration, double last_marking_length) {
   EventG1BasicIHOP evt;
   if (evt.should_commit()) {
     evt.set_gcId(GCId::current());
@@ -260,13 +251,7 @@ void G1NewTracer::send_basic_ihop_statistics(size_t threshold,
   }
 }
 
-void G1NewTracer::send_adaptive_ihop_statistics(size_t threshold,
-                                                size_t internal_target_occupancy,
-                                                size_t current_occupancy,
-                                                size_t additional_buffer_size,
-                                                double predicted_allocation_rate,
-                                                double predicted_marking_length,
-                                                bool prediction_active) {
+void G1NewTracer::send_adaptive_ihop_statistics(size_t threshold, size_t internal_target_occupancy, size_t current_occupancy, size_t additional_buffer_size, double predicted_allocation_rate, double predicted_marking_length, bool prediction_active) {
   EventG1AdaptiveIHOP evt;
   if (evt.should_commit()) {
     evt.set_gcId(GCId::current());
@@ -304,7 +289,7 @@ static JfrStructObjectSpace to_struct(const SpaceSummary& summary) {
 class GCHeapSummaryEventSender : public GCHeapSummaryVisitor {
   GCWhen::Type _when;
  public:
-  GCHeapSummaryEventSender(GCWhen::Type when) : _when(when) {}
+  GCHeapSummaryEventSender(GCWhen::Type when) : _when(when) { }
 
   void visit(const GCHeapSummary* heap_summary) const {
     const VirtualSpaceSummary& heap_space = heap_summary->heap();
@@ -390,7 +375,6 @@ void GCTracer::send_meta_space_summary_event(GCWhen::Type when, const MetaspaceS
 
 class PhaseSender : public PhaseVisitor {
   void visit_pause(GCPhase* phase) {
-    assert(phase->level() < PhasesStack::PHASE_LEVELS, "Need more event types for PausePhase");
 
     switch (phase->level()) {
       case 0: send_phase<EventGCPhasePause>(phase); break;
@@ -403,7 +387,6 @@ class PhaseSender : public PhaseVisitor {
   }
 
   void visit_concurrent(GCPhase* phase) {
-    assert(phase->level() < 1, "There is only one level for ConcurrentPhase");
 
     switch (phase->level()) {
       case 0: send_phase<EventGCPhaseConcurrent>(phase); break;
@@ -428,7 +411,6 @@ class PhaseSender : public PhaseVisitor {
     if (phase->type() == GCPhase::PausePhaseType) {
       visit_pause(phase);
     } else {
-      assert(phase->type() == GCPhase::ConcurrentPhaseType, "Should be ConcurrentPhaseType");
       visit_concurrent(phase);
     }
   }

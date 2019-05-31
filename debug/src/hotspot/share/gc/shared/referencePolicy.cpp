@@ -12,18 +12,15 @@ LRUCurrentHeapPolicy::LRUCurrentHeapPolicy() {
 // Capture state (of-the-VM) information needed to evaluate the policy
 void LRUCurrentHeapPolicy::setup() {
   _max_interval = (Universe::get_heap_free_at_last_gc() / M) * SoftRefLRUPolicyMSPerMB;
-  assert(_max_interval >= 0,"Sanity check");
 }
 
 // The oop passed in is the SoftReference object, and not
 // the object the SoftReference points to.
-bool LRUCurrentHeapPolicy::should_clear_reference(oop p,
-                                                  jlong timestamp_clock) {
+bool LRUCurrentHeapPolicy::should_clear_reference(oop p, jlong timestamp_clock) {
   jlong interval = timestamp_clock - java_lang_ref_SoftReference::timestamp(p);
-  assert(interval >= 0, "Sanity check");
 
   // The interval will be zero if the ref was accessed since the last scavenge/gc.
-  if(interval <= _max_interval) {
+  if (interval <= _max_interval) {
     return false;
   }
 
@@ -43,18 +40,15 @@ void LRUMaxHeapPolicy::setup() {
   max_heap /= M;
 
   _max_interval = max_heap * SoftRefLRUPolicyMSPerMB;
-  assert(_max_interval >= 0,"Sanity check");
 }
 
 // The oop passed in is the SoftReference object, and not
 // the object the SoftReference points to.
-bool LRUMaxHeapPolicy::should_clear_reference(oop p,
-                                             jlong timestamp_clock) {
+bool LRUMaxHeapPolicy::should_clear_reference(oop p, jlong timestamp_clock) {
   jlong interval = timestamp_clock - java_lang_ref_SoftReference::timestamp(p);
-  assert(interval >= 0, "Sanity check");
 
   // The interval will be zero if the ref was accessed since the last scavenge/gc.
-  if(interval <= _max_interval) {
+  if (interval <= _max_interval) {
     return false;
   }
 

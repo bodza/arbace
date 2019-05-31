@@ -37,7 +37,6 @@ void LogMessageBuffer::reset() {
 }
 
 void LogMessageBuffer::initialize_buffers() {
-  assert(!_allocated, "buffer already initialized/allocated");
   _allocated = true;
   _message_buffer = NEW_C_HEAP_ARRAY(char, InitialMessageBufferCapacity, mtLogging);
   _lines = NEW_C_HEAP_ARRAY(LogLine, InitialLineCapacity, mtLogging);
@@ -90,7 +89,6 @@ void LogMessageBuffer::vwrite(LogLevelType level, const char* fmt, va_list args)
     written += (size_t)os::vsnprintf(current_buffer_position, remaining_buffer_length, fmt, copy) + 1;
     va_end(copy);
     if (written > _message_buffer_capacity - _message_buffer_size) {
-      assert(attempts == 0, "Second attempt should always have a sufficiently large buffer (resized to fit).");
       grow(_message_buffer, _message_buffer_capacity, _message_buffer_size + written);
       continue;
     }

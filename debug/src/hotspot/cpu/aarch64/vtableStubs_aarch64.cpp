@@ -35,9 +35,6 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   CodeBuffer      cb(s->entry_point(), stub_code_length);
   MacroAssembler* masm = new MacroAssembler(&cb);
 
-  // get receiver (need to skip return address on top of stack)
-  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
-
   // get receiver klass
   address npe_addr = __ pc();
   __ load_klass(r16, j_rarg0);
@@ -46,7 +43,6 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   __ lookup_virtual_method(r16, vtable_index, rmethod);
   slop_delta  = 8 - (int)(__ pc() - start_pc);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "negative slop(%d) encountered, adjust code size estimate!", slop_delta);
 
   // r0: receiver klass
   // rmethod: Method*
@@ -79,9 +75,6 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   ResourceMark    rm;
   CodeBuffer      cb(s->entry_point(), stub_code_length);
   MacroAssembler* masm = new MacroAssembler(&cb);
-
-  // get receiver (need to skip return address on top of stack)
-  assert(VtableStub::receiver_location() == j_rarg0->as_VMReg(), "receiver expected in j_rarg0");
 
   // Entry arguments:
   //  rscratch2: CompiledICHolder
@@ -132,7 +125,6 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   const ptrdiff_t codesize = typecheckSize + lookupSize;
   slop_delta  = (int)(estimate - codesize);
   slop_bytes += slop_delta;
-  assert(slop_delta >= 0, "itable #%d: Code size estimate (%d) for lookup_interface_method too small, required: %d", itable_index, (int)estimate, (int)codesize);
 
   // rmethod: Method*
   // j_rarg0: receiver
@@ -146,7 +138,6 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   // We force resolving of the call site by jumping to the "handle
   // wrong method" stub, and so let the interpreter runtime do all the
   // dirty work.
-  assert(SharedRuntime::get_handle_wrong_method_stub() != NULL, "check initialization order");
   __ far_jump(RuntimeAddress(SharedRuntime::get_handle_wrong_method_stub()));
 
   masm->flush();

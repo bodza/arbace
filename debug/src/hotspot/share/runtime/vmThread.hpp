@@ -56,7 +56,7 @@ class VMOperationQueue : public CHeapObj<mtInternal> {
   // GC support
   void oops_do(OopClosure* f);
 
-  void verify_queue(int prio) {};
+  void verify_queue(int prio) { };
 };
 
 //

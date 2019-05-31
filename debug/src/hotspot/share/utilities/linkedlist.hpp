@@ -119,7 +119,6 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
   }
 
   virtual void add(LinkedListNode<E>* node) {
-    assert(node != NULL, "NULL pointer");
     node->set_next(this->head());
     this->set_head(node);
   }
@@ -127,7 +126,6 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
   // Move a linked list to this linked list, both have to be allocated on the same
   // storage type.
   virtual void move(LinkedList<E>* list) {
-    assert(list->storage_type() == this->storage_type(), "Different storage type");
     LinkedListNode<E>* node = this->head();
     while (node != NULL && node->next() != NULL) {
       node = node->next();
@@ -177,7 +175,6 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
       while (p != NULL && p->next() != ref_node) {
         p = p->next();
       }
-      assert(p != NULL, "ref_node not in the list");
       node->set_next(ref_node);
       p->set_next(node);
     }
@@ -248,7 +245,6 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
   }
 
   virtual bool remove_before(LinkedListNode<E>* ref) {
-    assert(ref != NULL, "NULL pointer");
     LinkedListNode<E>* p = this->head();
     LinkedListNode<E>* to_delete = NULL; // to be deleted
     LinkedListNode<E>* prev = NULL;      // node before the node to be deleted
@@ -258,10 +254,7 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
       p = p->next();
     }
     if (p == NULL || to_delete == NULL) return false;
-    assert(to_delete->next() == ref, "Wrong node to delete");
-    assert(prev == NULL || prev->next() == to_delete, "Sanity check");
     if (prev == NULL) {
-      assert(to_delete == this->head(), "Must be head");
       this->set_head(to_delete->next());
     } else {
       prev->set_next(to_delete->next());
@@ -275,7 +268,6 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
   LinkedListNode<E>* new_node(const E& e) const {
      switch(T) {
        case ResourceObj::ARENA: {
-         assert(_arena != NULL, "Arena not set");
          return new(_arena) LinkedListNode<E>(e);
        }
        case ResourceObj::RESOURCE_AREA:
@@ -315,16 +307,13 @@ template <class E, int (*FUNC)(const E&, const E&),
   }
 
   virtual void move(LinkedList<E>* list) {
-    assert(list->storage_type() == this->storage_type(), "Different storage type");
     LinkedListNode<E>* node;
     while ((node = list->unlink_head()) != NULL) {
       this->add(node);
     }
-    assert(list->is_empty(), "All entries are moved");
   }
 
   virtual void add(LinkedListNode<E>* node) {
-    assert(node != NULL, "NULL pointer");
     LinkedListNode<E>* tmp = this->head();
     LinkedListNode<E>* prev = NULL;
 

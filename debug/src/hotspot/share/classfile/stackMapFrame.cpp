@@ -15,10 +15,10 @@ StackMapFrame::StackMapFrame(u2 max_locals, u2 max_stack, ClassVerifier* v) :
   _locals = NEW_RESOURCE_ARRAY_IN_THREAD(thr, VerificationType, max_locals);
   _stack = NEW_RESOURCE_ARRAY_IN_THREAD(thr, VerificationType, max_stack);
   int32_t i;
-  for(i = 0; i < max_locals; i++) {
+  for (i = 0; i < max_locals; i++) {
     _locals[i] = VerificationType::bogus_type();
   }
-  for(i = 0; i < max_stack; i++) {
+  for (i = 0; i < max_stack; i++) {
     _stack[i] = VerificationType::bogus_type();
   }
 }
@@ -30,8 +30,7 @@ StackMapFrame* StackMapFrame::frame_in_exception_handler(u1 flags) {
   return frame;
 }
 
-void StackMapFrame::initialize_object(
-    VerificationType old_object, VerificationType new_object) {
+void StackMapFrame::initialize_object(VerificationType old_object, VerificationType new_object) {
   int32_t i;
   for (i = 0; i < _max_locals; i++) {
     if (_locals[i].equals(old_object)) {
@@ -49,15 +48,13 @@ void StackMapFrame::initialize_object(
   }
 }
 
-VerificationType StackMapFrame::set_locals_from_arg(
-    const methodHandle& m, VerificationType thisKlass, TRAPS) {
+VerificationType StackMapFrame::set_locals_from_arg(const methodHandle& m, VerificationType thisKlass, TRAPS) {
   SignatureStream ss(m->signature());
   int init_local_num = 0;
   if (!m->is_static()) {
     init_local_num++;
     // add one extra argument for instance method
-    if (m->name() == vmSymbols::object_initializer_name() &&
-       thisKlass.name() != vmSymbols::java_lang_Object()) {
+    if (m->name() == vmSymbols::object_initializer_name() && thisKlass.name() != vmSymbols::java_lang_Object()) {
       _locals[0] = VerificationType::uninitialized_this_type();
       _flags |= FLAG_THIS_UNINIT;
     } else {
@@ -66,10 +63,8 @@ VerificationType StackMapFrame::set_locals_from_arg(
   }
 
   // local num may be greater than size of parameters because long/double occupies two slots
-  while(!ss.at_return_type()) {
-    init_local_num += _verifier->change_sig_to_verificationType(
-      &ss, &_locals[init_local_num],
-      CHECK_VERIFY_(verifier(), VerificationType::bogus_type()));
+  while (!ss.at_return_type()) {
+    init_local_num += _verifier->change_sig_to_verificationType(&ss, &_locals[init_local_num], CHECK_VERIFY_(verifier(), VerificationType::bogus_type()));
     ss.next();
   }
   _locals_size = init_local_num;
@@ -81,10 +76,7 @@ VerificationType StackMapFrame::set_locals_from_arg(
       Symbol* sig = ss.as_symbol(CHECK_(VerificationType::bogus_type()));
       // Create another symbol to save as signature stream unreferences
       // this symbol.
-      Symbol* sig_copy =
-        verifier()->create_temporary_symbol(sig, 0, sig->utf8_length(),
-                                 CHECK_(VerificationType::bogus_type()));
-      assert(sig_copy == sig, "symbols don't match");
+      Symbol* sig_copy = verifier()->create_temporary_symbol(sig, 0, sig->utf8_length(), CHECK_(VerificationType::bogus_type()));
       return VerificationType::reference_type(sig_copy);
     }
     case T_INT:     return VerificationType::integer_type();
@@ -120,8 +112,7 @@ void StackMapFrame::copy_stack(const StackMapFrame* src) {
 
 // Returns the location of the first mismatch, or 'len' if there are no
 // mismatches
-int StackMapFrame::is_assignable_to(
-    VerificationType* from, VerificationType* to, int32_t len, TRAPS) const {
+int StackMapFrame::is_assignable_to(VerificationType* from, VerificationType* to, int32_t len, TRAPS) const {
   int32_t i = 0;
   for (i = 0; i < len; i++) {
     if (!to[i].is_assignable_from(from[i], verifier(), false, THREAD)) {
@@ -131,24 +122,20 @@ int StackMapFrame::is_assignable_to(
   return i;
 }
 
-bool StackMapFrame::is_assignable_to(
-    const StackMapFrame* target, ErrorContext* ctx, TRAPS) const {
+bool StackMapFrame::is_assignable_to(const StackMapFrame* target, ErrorContext* ctx, TRAPS) const {
   if (_max_locals != target->max_locals()) {
-    *ctx = ErrorContext::locals_size_mismatch(
-        _offset, (StackMapFrame*)this, (StackMapFrame*)target);
+    *ctx = ErrorContext::locals_size_mismatch(_offset, (StackMapFrame*)this, (StackMapFrame*)target);
     return false;
   }
   if (_stack_size != target->stack_size()) {
-    *ctx = ErrorContext::stack_size_mismatch(
-        _offset, (StackMapFrame*)this, (StackMapFrame*)target);
+    *ctx = ErrorContext::stack_size_mismatch(_offset, (StackMapFrame*)this, (StackMapFrame*)target);
     return false;
   }
   // Only need to compare type elements up to target->locals() or target->stack().
   // The remaining type elements in this state can be ignored because they are
   // assignable to bogus type.
   int mismatch_loc;
-  mismatch_loc = is_assignable_to(
-    _locals, target->locals(), target->locals_size(), THREAD);
+  mismatch_loc = is_assignable_to(_locals, target->locals(), target->locals_size(), THREAD);
   if (mismatch_loc != target->locals_size()) {
     *ctx = ErrorContext::bad_type(target->offset(),
         TypeOrigin::local(mismatch_loc, (StackMapFrame*)this),
@@ -174,92 +161,63 @@ bool StackMapFrame::is_assignable_to(
 
 VerificationType StackMapFrame::pop_stack_ex(VerificationType type, TRAPS) {
   if (_stack_size <= 0) {
-    verifier()->verify_error(
-        ErrorContext::stack_underflow(_offset, this),
-        "Operand stack underflow");
+    verifier()->verify_error(ErrorContext::stack_underflow(_offset, this), "Operand stack underflow");
     return VerificationType::bogus_type();
   }
   VerificationType top = _stack[--_stack_size];
-  bool subtype = type.is_assignable_from(
-    top, verifier(), false, CHECK_(VerificationType::bogus_type()));
+  bool subtype = type.is_assignable_from(top, verifier(), false, CHECK_(VerificationType::bogus_type()));
   if (!subtype) {
-    verifier()->verify_error(
-        ErrorContext::bad_type(_offset, stack_top_ctx(),
-            TypeOrigin::implicit(type)),
-        "Bad type on operand stack");
+    verifier()->verify_error(ErrorContext::bad_type(_offset, stack_top_ctx(), TypeOrigin::implicit(type)), "Bad type on operand stack");
     return VerificationType::bogus_type();
   }
   return top;
 }
 
-VerificationType StackMapFrame::get_local(
-    int32_t index, VerificationType type, TRAPS) {
+VerificationType StackMapFrame::get_local(int32_t index, VerificationType type, TRAPS) {
   if (index >= _max_locals) {
-    verifier()->verify_error(
-        ErrorContext::bad_local_index(_offset, index),
-        "Local variable table overflow");
+    verifier()->verify_error(ErrorContext::bad_local_index(_offset, index), "Local variable table overflow");
     return VerificationType::bogus_type();
   }
   bool subtype = type.is_assignable_from(_locals[index],
     verifier(), false, CHECK_(VerificationType::bogus_type()));
   if (!subtype) {
-    verifier()->verify_error(
-        ErrorContext::bad_type(_offset,
-          TypeOrigin::local(index, this),
-          TypeOrigin::implicit(type)),
-        "Bad local variable type");
+    verifier()->verify_error(ErrorContext::bad_type(_offset, TypeOrigin::local(index, this), TypeOrigin::implicit(type)), "Bad local variable type");
     return VerificationType::bogus_type();
   }
-  if(index >= _locals_size) { _locals_size = index + 1; }
+  if (index >= _locals_size) { _locals_size = index + 1; }
   return _locals[index];
 }
 
-void StackMapFrame::get_local_2(
-    int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
-  assert(type1.is_long() || type1.is_double(), "must be long/double");
-  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+void StackMapFrame::get_local_2(int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
   if (index >= _locals_size - 1) {
-    verifier()->verify_error(
-        ErrorContext::bad_local_index(_offset, index),
-        "get long/double overflows locals");
+    verifier()->verify_error(ErrorContext::bad_local_index(_offset, index), "get long/double overflows locals");
     return;
   }
   bool subtype = type1.is_assignable_from(_locals[index], verifier(), false, CHECK);
   if (!subtype) {
-    verifier()->verify_error(
-        ErrorContext::bad_type(_offset,
-            TypeOrigin::local(index, this), TypeOrigin::implicit(type1)),
-        "Bad local variable type");
+    verifier()->verify_error(ErrorContext::bad_type(_offset, TypeOrigin::local(index, this), TypeOrigin::implicit(type1)), "Bad local variable type");
   } else {
     subtype = type2.is_assignable_from(_locals[index + 1], verifier(), false, CHECK);
     if (!subtype) {
       /* Unreachable? All local store routines convert a split long or double
        * into a TOP during the store.  So we should never end up seeing an
        * orphaned half.  */
-      verifier()->verify_error(
-          ErrorContext::bad_type(_offset,
-              TypeOrigin::local(index + 1, this), TypeOrigin::implicit(type2)),
-          "Bad local variable type");
+      verifier()->verify_error(ErrorContext::bad_type(_offset, TypeOrigin::local(index + 1, this), TypeOrigin::implicit(type2)), "Bad local variable type");
     }
   }
 }
 
 void StackMapFrame::set_local(int32_t index, VerificationType type, TRAPS) {
-  assert(!type.is_check(), "Must be a real type");
   if (index >= _max_locals) {
-    verifier()->verify_error(
-        ErrorContext::bad_local_index(_offset, index),
-        "Local variable table overflow");
+    verifier()->verify_error(ErrorContext::bad_local_index(_offset, index), "Local variable table overflow");
     return;
   }
   // If type at index is double or long, set the next location to be unusable
   if (_locals[index].is_double() || _locals[index].is_long()) {
-    assert((index + 1) < _locals_size, "Local variable table overflow");
     _locals[index + 1] = VerificationType::bogus_type();
   }
   // If type at index is double_2 or long_2, set the previous location to be unusable
   if (_locals[index].is_double2() || _locals[index].is_long2()) {
-    assert(index >= 1, "Local variable table underflow");
     _locals[index - 1] = VerificationType::bogus_type();
   }
   _locals[index] = type;
@@ -268,24 +226,17 @@ void StackMapFrame::set_local(int32_t index, VerificationType type, TRAPS) {
   }
 }
 
-void StackMapFrame::set_local_2(
-    int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
-  assert(type1.is_long() || type1.is_double(), "must be long/double");
-  assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+void StackMapFrame::set_local_2(int32_t index, VerificationType type1, VerificationType type2, TRAPS) {
   if (index >= _max_locals - 1) {
-    verifier()->verify_error(
-        ErrorContext::bad_local_index(_offset, index),
-        "Local variable table overflow");
+    verifier()->verify_error(ErrorContext::bad_local_index(_offset, index), "Local variable table overflow");
     return;
   }
   // If type at index+1 is double or long, set the next location to be unusable
   if (_locals[index+1].is_double() || _locals[index+1].is_long()) {
-    assert((index + 2) < _locals_size, "Local variable table overflow");
     _locals[index + 2] = VerificationType::bogus_type();
   }
   // If type at index is double_2 or long_2, set the previous location to be unusable
   if (_locals[index].is_double2() || _locals[index].is_long2()) {
-    assert(index >= 1, "Local variable table underflow");
     _locals[index - 1] = VerificationType::bogus_type();
   }
   _locals[index] = type1;

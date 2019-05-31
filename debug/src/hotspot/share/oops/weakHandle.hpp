@@ -23,10 +23,10 @@ class WeakHandle {
  private:
   oop* _obj;
 
-  WeakHandle(oop* w) : _obj(w) {}
+  WeakHandle(oop* w) : _obj(w) { }
   static OopStorage* get_storage();
  public:
-  WeakHandle() : _obj(NULL) {} // needed for init
+  WeakHandle() : _obj(NULL) { } // needed for init
 
   static WeakHandle create(Handle obj);
   inline oop resolve() const;

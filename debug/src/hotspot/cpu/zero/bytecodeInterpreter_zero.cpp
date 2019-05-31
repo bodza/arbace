@@ -18,7 +18,7 @@
 #ifdef CC_INTERP
 
 const char *BytecodeInterpreter::name_of_field_at_address(address addr) {
-#define DO(member) {if (addr == (address) &(member)) return XSTR(member);}
+#define DO(member) { if (addr == (address) &(member)) return XSTR(member); }
   DO(_thread);
   DO(_bcp);
   DO(_locals);
@@ -41,16 +41,7 @@ const char *BytecodeInterpreter::name_of_field_at_address(address addr) {
   return NULL;
 }
 
-void BytecodeInterpreter::layout_interpreterState(interpreterState istate,
-                                                  frame*    caller,
-                                                  frame*    current,
-                                                  Method* method,
-                                                  intptr_t* locals,
-                                                  intptr_t* stack,
-                                                  intptr_t* stack_base,
-                                                  intptr_t* monitor_base,
-                                                  intptr_t* frame_bottom,
-                                                  bool      is_top_frame) {
+void BytecodeInterpreter::layout_interpreterState(interpreterState istate, frame* caller, frame* current, Method* method, intptr_t* locals, intptr_t* stack, intptr_t* stack_base, intptr_t* monitor_base, intptr_t* frame_bottom, bool is_top_frame) {
   istate->set_locals(locals);
   istate->set_method(method);
   istate->set_mirror(method->method_holder()->java_mirror());

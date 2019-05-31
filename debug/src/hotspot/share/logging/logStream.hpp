@@ -42,7 +42,7 @@ public:
   // LogStreamBase(log) stream;
   template <LogLevelType level, LogTagType T0, LogTagType T1, LogTagType T2, LogTagType T3, LogTagType T4, LogTagType GuardTag>
   LogStream(const LogTargetImpl<level, T0, T1, T2, T3, T4, GuardTag>& type_carrier) :
-      _log_handle(level, &LogTagSetMapping<T0, T1, T2, T3, T4>::tagset()) {}
+      _log_handle(level, &LogTagSetMapping<T0, T1, T2, T3, T4>::tagset()) { }
 
   // Constructor to support creation from typed (likely NULL) pointer. Mostly used by the logging framework.
   //
@@ -51,7 +51,7 @@ public:
   // LogStreamBase stream((LogTargetImpl<level, T0, T1, T2, T3, T4, GuardTag>*)NULL);
   template <LogLevelType level, LogTagType T0, LogTagType T1, LogTagType T2, LogTagType T3, LogTagType T4, LogTagType GuardTag>
   LogStream(const LogTargetImpl<level, T0, T1, T2, T3, T4, GuardTag>* type_carrier) :
-      _log_handle(level, &LogTagSetMapping<T0, T1, T2, T3, T4>::tagset()) {}
+      _log_handle(level, &LogTagSetMapping<T0, T1, T2, T3, T4>::tagset()) { }
 
   // Destructor writes any unfinished output left in the line buffer.
   ~LogStream();
@@ -61,12 +61,12 @@ public:
   // LogTarget(Debug, gc) log;
   // LogTargetHandle(log) handle;
   // LogStreamBase stream(handle);
-  LogStream(LogTargetHandle handle) : _log_handle(handle) {}
+  LogStream(LogTargetHandle handle) : _log_handle(handle) { }
 
   // Constructor to support creation from a log level and tagset.
   //
   // LogStreamBase(level, tageset);
-  LogStream(LogLevelType level, LogTagSet* tagset) : _log_handle(level, tagset) {}
+  LogStream(LogLevelType level, LogTagSet* tagset) : _log_handle(level, tagset) { }
 
   void write(const char* s, size_t len);
 };
@@ -77,7 +77,7 @@ public:
 template <LogLevelType level, LogTagType T0, LogTagType T1, LogTagType T2, LogTagType T3, LogTagType T4, LogTagType GuardTag>
 class LogStreamTemplate : public LogStream {
 public:
-  LogStreamTemplate() : LogStream((LogTargetImpl<level, T0, T1, T2, T3, T4, GuardTag>*)NULL) {}
+  LogStreamTemplate() : LogStream((LogTargetImpl<level, T0, T1, T2, T3, T4, GuardTag>*)NULL) { }
 };
 
 #endif

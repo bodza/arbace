@@ -24,18 +24,13 @@ static uint64_t next_random(uint64_t rnd) {
   const uint64_t PrngAdd = 0xB;
   const uint64_t PrngModPower = 48;
   const uint64_t PrngModMask = ((uint64_t)1 << PrngModPower) - 1;
-  //assert(IS_SAFE_SIZE_MUL(PrngMult, rnd), "Overflow on multiplication.");
-  //assert(IS_SAFE_SIZE_ADD(PrngMult * rnd, PrngAdd), "Overflow on addition.");
   return (PrngMult * rnd + PrngAdd) & PrngModMask;
 }
 
 static double fast_log2(const double & d) {
-  assert(d>0, "bad value passed to assert");
   uint64_t x = 0;
-  assert(sizeof(d) == sizeof(x), "double and uint64_t do not have the same size");
   x = *reinterpret_cast<const uint64_t*>(&d);
   const uint32_t x_high = x >> 32;
-  assert(FastLogNumBits <= 20, "FastLogNumBits should be less than 20.");
   const uint32_t y = x_high >> (20 - FastLogNumBits) & FastLogMask;
   const int32_t exponent = ((x_high >> 20) & 0x7FF) - 1023;
   return exponent + log_table[y];
@@ -70,9 +65,7 @@ void ThreadHeapSampler::pick_next_geometric_sample() {
   // for inaccuracies in FastLog2 which otherwise result in a
   // negative answer.
   double log_val = (fast_log2(q) - 26);
-  double result =
-      (0.0 < log_val ? 0.0 : log_val) * (-log(2.0) * (get_sampling_interval())) + 1;
-  assert(result > 0 && result < SIZE_MAX, "Result is not in an acceptable range.");
+  double result = (0.0 < log_val ? 0.0 : log_val) * (-log(2.0) * (get_sampling_interval())) + 1;
   size_t interval = static_cast<size_t>(result);
   _bytes_until_sample = interval;
 }
@@ -148,7 +141,6 @@ bool ThreadHeapSampler::sampling_collector_present() const {
 }
 
 bool ThreadHeapSampler::remove_sampling_collector() {
-  assert(_collectors_present > 0, "Problem with collector counter.");
   _collectors_present--;
   return true;
 }

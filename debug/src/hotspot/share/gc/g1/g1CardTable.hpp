@@ -60,7 +60,7 @@ public:
 
   inline void set_card_claimed(size_t card_index);
 
-  void verify_g1_young_region(MemRegion mr) {};
+  void verify_g1_young_region(MemRegion mr) { };
   void g1_mark_as_young(const MemRegion& mr);
 
   bool mark_card_deferred(size_t card_index);
@@ -78,7 +78,7 @@ public:
   // Returns how many bytes of the heap a single byte of the Card Table corresponds to.
   static size_t heap_map_factor() { return card_size; }
 
-  void initialize() {}
+  void initialize() { }
   void initialize(G1RegionToSpaceMapper* mapper);
 
   virtual void resize_covered_region(MemRegion new_region) { ShouldNotReachHere(); }

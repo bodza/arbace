@@ -17,12 +17,11 @@ class LIRAddressOpr: public StackObj {
   LIRItem* _item;
   LIR_Opr  _opr;
 public:
-  LIRAddressOpr(LIRItem& item) : _item(&item), _opr(NULL) {}
-  LIRAddressOpr(LIR_Opr opr) : _item(NULL), _opr(opr) {}
-  LIRAddressOpr(const LIRAddressOpr& other) : _item(other._item), _opr(other._opr) {}
+  LIRAddressOpr(LIRItem& item) : _item(&item), _opr(NULL) { }
+  LIRAddressOpr(LIR_Opr opr) : _item(NULL), _opr(opr) { }
+  LIRAddressOpr(const LIRAddressOpr& other) : _item(other._item), _opr(other._opr) { }
 
   LIRItem& item() const {
-    assert(_item != NULL, "sanity");
     return *_item;
   }
 
@@ -58,7 +57,7 @@ public:
     _type(type),
     _resolved_addr(NULL),
     _patch_emit_info(patch_emit_info),
-    _access_emit_info(access_emit_info) {}
+    _access_emit_info(access_emit_info) { }
 
   void load_base()   { _base.item().load_item(); }
   void load_offset() { _offset.item().load_nonconstant(); }
@@ -109,7 +108,7 @@ public:
   virtual LIR_Opr atomic_xchg_at(LIRAccess& access, LIRItem& value);
   virtual LIR_Opr atomic_add_at(LIRAccess& access, LIRItem& value);
 
-  virtual void generate_c1_runtime_stubs(BufferBlob* buffer_blob) {}
+  virtual void generate_c1_runtime_stubs(BufferBlob* buffer_blob) { }
 };
 
 #endif

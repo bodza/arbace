@@ -55,7 +55,6 @@ size_t MetaspaceCounters::max_capacity() {
 
 void MetaspaceCounters::initialize_performance_counters() {
   if (UsePerfData) {
-    assert(_perf_counters == NULL, "Should only be initialized once");
 
     size_t min_capacity = 0;
     _perf_counters = new MetaspacePerfCounters("metaspace", min_capacity,
@@ -65,7 +64,6 @@ void MetaspaceCounters::initialize_performance_counters() {
 
 void MetaspaceCounters::update_performance_counters() {
   if (UsePerfData) {
-    assert(_perf_counters != NULL, "Should be initialized");
 
     _perf_counters->update(capacity(), max_capacity(), used());
   }
@@ -87,7 +85,6 @@ size_t CompressedClassSpaceCounters::max_capacity() {
 
 void CompressedClassSpaceCounters::update_performance_counters() {
   if (UsePerfData && UseCompressedClassPointers) {
-    assert(_perf_counters != NULL, "Should be initialized");
 
     _perf_counters->update(capacity(), max_capacity(), used());
   }
@@ -95,7 +92,6 @@ void CompressedClassSpaceCounters::update_performance_counters() {
 
 void CompressedClassSpaceCounters::initialize_performance_counters() {
   if (UsePerfData) {
-    assert(_perf_counters == NULL, "Should only be initialized once");
     const char* ns = "compressedclassspace";
 
     if (UseCompressedClassPointers) {

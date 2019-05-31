@@ -75,7 +75,7 @@ protected:
     _fake_rtti(fake_rtti),
     _barrier_set_assembler(barrier_set_assembler),
     _barrier_set_c1(barrier_set_c1),
-    _barrier_set_c2(barrier_set_c2) {}
+    _barrier_set_c2(barrier_set_c2) { }
   ~BarrierSet() { }
 
   template <class BarrierSetAssemblerT>
@@ -99,12 +99,12 @@ public:
   // The allocation is safe to use iff it returns true. If not, the slow-path allocation
   // is redone until it succeeds. This can e.g. prevent allocations from the slow path
   // to be in old.
-  virtual void on_slowpath_allocation_exit(JavaThread* thread, oop new_obj) {}
-  virtual void on_thread_create(Thread* thread) {}
-  virtual void on_thread_destroy(Thread* thread) {}
-  virtual void on_thread_attach(JavaThread* thread) {}
-  virtual void on_thread_detach(JavaThread* thread) {}
-  virtual void make_parsable(JavaThread* thread) {}
+  virtual void on_slowpath_allocation_exit(JavaThread* thread, oop new_obj) { }
+  virtual void on_thread_create(Thread* thread) { }
+  virtual void on_thread_destroy(Thread* thread) { }
+  virtual void on_thread_attach(JavaThread* thread) { }
+  virtual void on_thread_detach(JavaThread* thread) { }
+  virtual void make_parsable(JavaThread* thread) { }
 
 public:
   // Print a description of the memory for the barrier set
@@ -114,17 +114,14 @@ public:
   static void set_barrier_set(BarrierSet* barrier_set);
 
   BarrierSetAssembler* barrier_set_assembler() {
-    assert(_barrier_set_assembler != NULL, "should be set");
     return _barrier_set_assembler;
   }
 
   BarrierSetC1* barrier_set_c1() {
-    assert(_barrier_set_c1 != NULL, "should be set");
     return _barrier_set_c1;
   }
 
   BarrierSetC2* barrier_set_c2() {
-    assert(_barrier_set_c2 != NULL, "should be set");
     return _barrier_set_c2;
   }
 
@@ -281,7 +278,6 @@ public:
 
 template<typename T>
 inline T* barrier_set_cast(BarrierSet* bs) {
-  assert(bs->is_a(BarrierSet::GetName<T>::value), "wrong type of barrier set");
   return static_cast<T*>(bs);
 }
 

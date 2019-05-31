@@ -148,6 +148,5 @@ bool is_init_completed() {
 }
 
 void set_init_completed() {
-  assert(Universe::is_fully_initialized(), "Should have completed initialization");
   _init_completed = true;
 }

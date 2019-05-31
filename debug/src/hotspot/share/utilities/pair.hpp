@@ -9,8 +9,8 @@ class Pair : public ALLOC_BASE {
   T first;
   V second;
 
-  Pair() {}
-  Pair(T t, V v) : first(t), second(v) {}
+  Pair() { }
+  Pair(T t, V v) : first(t), second(v) { }
 };
 
 #endif

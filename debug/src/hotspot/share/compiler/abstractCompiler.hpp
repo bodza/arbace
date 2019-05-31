@@ -17,7 +17,7 @@ class CompilerStatistics {
     elapsedTimer _time;  // time spent compiling
     int _bytes;          // number of bytecodes compiled, including inlined bytecodes
     int _count;          // number of compilations
-    Data() : _bytes(0), _count(0) {}
+    Data() : _bytes(0), _count(0) { }
     void update(elapsedTimer time, int bytes) {
       _time.add(time);
       _bytes += bytes;
@@ -41,7 +41,7 @@ class CompilerStatistics {
     double seconds = _standard._time.seconds() + _osr._time.seconds();
     return seconds == 0.0 ? 0 : (int) (bytes / seconds);
   }
-  CompilerStatistics() : _nmethods_size(0), _nmethods_code_size(0) {}
+  CompilerStatistics() : _nmethods_size(0), _nmethods_code_size(0) { }
 };
 
 class AbstractCompiler : public CHeapObj<mtCompiler> {
@@ -63,7 +63,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   CompilerStatistics _stats;
 
  public:
-  AbstractCompiler(CompilerType type) : _type(type), _compiler_state(uninitialized), _num_compiler_threads(0) {}
+  AbstractCompiler(CompilerType type) : _type(type), _compiler_state(uninitialized), _num_compiler_threads(0) { }
 
   // This function determines the compiler thread that will perform the
   // shutdown of the corresponding compiler runtime.
@@ -103,9 +103,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   // for more details.
 
   virtual bool is_intrinsic_available(const methodHandle& method, DirectiveSet* directive) {
-    return is_intrinsic_supported(method) &&
-           !directive->is_intrinsic_disabled(method) &&
-           !vmIntrinsics::is_disabled_by_flags(method);
+    return is_intrinsic_supported(method) && !directive->is_intrinsic_disabled(method) && !vmIntrinsics::is_disabled_by_flags(method);
   }
 
   // Determines if an intrinsic is supported by the compiler, that is,
@@ -132,12 +130,12 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   // Customization
   virtual void initialize () = 0;
 
-  void set_num_compiler_threads(int num) { _num_compiler_threads = num;  }
+  void set_num_compiler_threads(int num) { _num_compiler_threads = num; }
   int num_compiler_threads()             { return _num_compiler_threads; }
 
   // Get/set state of compiler objects
   bool is_initialized()           { return _compiler_state == initialized; }
-  bool is_failed     ()           { return _compiler_state == failed;}
+  bool is_failed     ()           { return _compiler_state == failed; }
   void set_state     (int state);
   void set_shut_down ()           { set_state(shut_down); }
   // Compilation entry point for methods

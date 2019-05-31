@@ -31,7 +31,6 @@ void InlineCacheBuffer::assemble_ic_buffer_code(address code_begin, void* cached
   // because
   // (1) the value is old (i.e., doesn't matter for scavenges)
   // (2) these ICStubs are removed *before* a GC happens, so the roots disappear
-  // assert(cached_value == NULL || cached_oop->is_perm(), "must be perm oop");
   masm->lea(rax, AddressLiteral((address) cached_value, relocInfo::metadata_type));
   masm->jump(ExternalAddress(entry_point));
 }
@@ -44,7 +43,6 @@ address InlineCacheBuffer::ic_buffer_entry_point(address code_begin) {
     NativeJump*        jump = nativeJump_at(jmp);
     return jump->jump_destination();
   } else {
-    assert(ni->is_far_jump(), "unexpected instruction");
     NativeFarJump*     jump = nativeFarJump_at(jmp);
     return jump->jump_destination();
   }
@@ -59,7 +57,6 @@ void* InlineCacheBuffer::ic_buffer_cached_value(address code_begin) {
   if (ni->is_jump()) {
     NativeJump*        jump = nativeJump_at(jmp);
   } else {
-    assert(ni->is_far_jump(), "unexpected instruction");
     NativeFarJump*     jump = nativeFarJump_at(jmp);
   }
   void* o = (void*)move->data();

@@ -14,7 +14,6 @@ inline bool LinearScan::requires_adjacent_regs(BasicType type) {
 }
 
 inline bool LinearScan::is_caller_save(int assigned_reg) {
-  assert(assigned_reg >= 0 && assigned_reg < nof_regs, "should call this only for registers");
   if (assigned_reg < pd_first_callee_saved_reg)
     return true;
   if (assigned_reg > pd_last_callee_saved_reg && assigned_reg < pd_first_callee_saved_fpu_reg)
@@ -32,7 +31,6 @@ inline void LinearScan::pd_add_temps(LIR_Op* op) {
 
 inline bool LinearScanWalker::pd_init_regs_for_alloc(Interval* cur) {
   if (allocator()->gen()->is_vreg_flag_set(cur->reg_num(), LIRGenerator::callee_saved)) {
-    assert(cur->type() != T_FLOAT && cur->type() != T_DOUBLE, "cpu regs only");
     _first_reg = pd_first_callee_saved_reg;
     _last_reg = pd_last_callee_saved_reg;
     return true;

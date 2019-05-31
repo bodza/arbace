@@ -29,7 +29,6 @@ class MonitorChunk: public CHeapObj<mtInternal> {
 
   // Returns the index'th monitor
   BasicObjectLock* at(int index)            {
-    assert(index >= 0 && index < number_of_monitors(), "out of bounds check");
     return &monitors()[index]; }
 
   // Memory management

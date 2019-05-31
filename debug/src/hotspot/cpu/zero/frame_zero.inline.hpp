@@ -13,7 +13,7 @@ inline frame::frame() {
   _deopt_state = unknown;
 }
 
-inline address  frame::sender_pc()           const { ShouldNotCallThis(); return NULL; }
+inline address frame::sender_pc() const { ShouldNotCallThis(); return NULL; }
 
 inline frame::frame(ZeroFrame* zf, intptr_t* sp) {
   _zeroframe = zf;

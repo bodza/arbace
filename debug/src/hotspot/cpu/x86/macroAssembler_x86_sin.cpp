@@ -358,7 +358,6 @@ void MacroAssembler::fast_sin(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   Label L_2TAG_PACKET_13_0_1, L_2TAG_PACKET_14_0_1;
   Label L_2TAG_PACKET_12_0_1, B1_1, B1_2, B1_4, start;
 
-  assert_different_registers(tmp1, tmp2, tmp3, tmp4, eax, ebx, ecx, edx);
   address ONEHALF = StubRoutines::x86::_ONEHALF_addr();
   address P_2 = StubRoutines::x86::_P_2_addr();
   address SC_4 = StubRoutines::x86::_SC_4_addr();

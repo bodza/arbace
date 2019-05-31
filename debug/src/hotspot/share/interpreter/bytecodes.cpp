@@ -14,7 +14,6 @@ Bytecodes::Code Bytecodes::_java_code     [Bytecodes::number_of_codes];
 unsigned short  Bytecodes::_flags         [(1<<BitsPerByte)*2];
 
 bool Bytecodes::check_must_rewrite(Bytecodes::Code code) {
-  assert(can_rewrite(code), "post-check only");
 
   // Some codes are conditionally rewriting.  Look closely at them.
   switch (code) {
@@ -42,8 +41,6 @@ Bytecodes::Code Bytecodes::code_at(Method* method, int bci) {
 }
 
 Bytecodes::Code Bytecodes::non_breakpoint_code_at(const Method* method, address bcp) {
-  assert(method != NULL, "must have the method for breakpoint conversion");
-  assert(method->contains(bcp), "must be valid bcp in method");
   return 0;
 }
 
@@ -112,7 +109,6 @@ void Bytecodes::def(Code code, const char* name, const char* format, const char*
 }
 
 void Bytecodes::def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap, Code java_code) {
-  assert(wide_format == NULL || format != NULL, "short form must exist if there's a wide form");
   int len  = (format      != NULL ? (int) strlen(format)      : 0);
   int wlen = (wide_format != NULL ? (int) strlen(wide_format) : 0);
   _name          [code] = name;
@@ -125,10 +121,6 @@ void Bytecodes::def(Code code, const char* name, const char* format, const char*
   if (java_code != code)  bc_flags |= _bc_can_rewrite;
   _flags[(u1)code+0*(1<<BitsPerByte)] = compute_flags(format,      bc_flags);
   _flags[(u1)code+1*(1<<BitsPerByte)] = compute_flags(wide_format, bc_flags);
-  assert(is_defined(code)      == (format != NULL),      "");
-  assert(wide_is_defined(code) == (wide_format != NULL), "");
-  assert(length_for(code)      == len, "");
-  assert(wide_length_for(code) == wlen, "");
 }
 
 // Format strings interpretation:
@@ -175,7 +167,6 @@ int Bytecodes::compute_flags(const char* format, int more_flags) {
     char fc = *fp++;
     switch (fc) {
     case '\0':  // end of string
-      assert(flags == (jchar)flags, "change _format_flags");
       return flags;
 
     case '_': continue;         // ignore these
@@ -223,7 +214,6 @@ int Bytecodes::compute_flags(const char* format, int more_flags) {
 
 void Bytecodes::initialize() {
   if (_is_initialized) return;
-  assert(number_of_codes <= 256, "too many bytecodes");
 
   // initialize bytecode tables - didn't use static array initializers
   // (such as {}) so we can do additional consistency checks and init-

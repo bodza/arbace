@@ -82,7 +82,6 @@ GrowableArray<ScopeValue*>* ScopeDesc::decode_object_values(int decode_offset) {
     // object's fields could reference it (OBJECT_ID_CODE).
     (void)ScopeValue::read_from(stream);
   }
-  assert(result->length() == length, "inconsistent debug information");
   return result;
 }
 

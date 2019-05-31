@@ -16,8 +16,6 @@ void PrivilegedElement::initialize(vframeStream* vfst, oop context, PrivilegedEl
 #endif
   _frame_id             = vfst->frame_id();
   _next                 = next;
-  assert(oopDesc::is_oop_or_null(_privileged_context), "must be an oop");
-  assert(oopDesc::is_oop_or_null(protection_domain()), "must be an oop");
 }
 
 void PrivilegedElement::oops_do(OopClosure* f) {

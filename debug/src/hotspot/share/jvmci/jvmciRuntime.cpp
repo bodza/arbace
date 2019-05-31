@@ -64,25 +64,22 @@ static bool caller_is_deopted() {
   RegisterMap reg_map(thread, false);
   frame runtime_frame = thread->last_frame();
   frame caller_frame = runtime_frame.sender(&reg_map);
-  assert(caller_frame.is_compiled_frame(), "must be compiled");
   return caller_frame.is_deoptimized_frame();
 }
 
 // Stress deoptimization
 static void deopt_caller() {
-  if ( !caller_is_deopted()) {
+  if (!caller_is_deopted()) {
     JavaThread* thread = JavaThread::current();
     RegisterMap reg_map(thread, false);
     frame runtime_frame = thread->last_frame();
     frame caller_frame = runtime_frame.sender(&reg_map);
     Deoptimization::deoptimize_frame(thread, caller_frame.id(), Deoptimization::Reason_constraint);
-    assert(caller_is_deopted(), "Must be deoptimized");
   }
 }
 
 JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klass))
   JRT_BLOCK;
-  assert(klass->is_klass(), "not a class");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
   InstanceKlass* ik = InstanceKlass::cast(klass);
   ik->check_valid_for_instantiation(true, CHECK);
@@ -100,7 +97,6 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
   // Note: no handle for klass needed since they are not used
   //       anymore after new_objArray() and no GC can happen before.
   //       (This may have to change if this code changes!)
-  assert(array_klass->is_klass(), "not a class");
   oop obj;
   if (array_klass->is_typeArray_klass()) {
     BasicType elt_type = TypeArrayKlass::cast(array_klass)->element_type();
@@ -128,8 +124,6 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims))
-  assert(klass->is_klass(), "not a class");
-  assert(rank >= 1, "rank must be nonzero");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
   oop obj = ArrayKlass::cast(klass)->multi_allocate(rank, dims, CHECK);
   thread->set_vm_result(obj);
@@ -182,13 +176,11 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
 
   Handle exception(thread, ex);
   cm = CodeCache::find_compiled(pc);
-  assert(cm != NULL, "this is not a compiled method");
   // Adjust the pc as needed/
   if (cm->is_deopt_pc(pc)) {
     RegisterMap map(thread, false);
     frame exception_frame = thread->last_frame().sender(&map);
     // if the frame isn't deopted then pc must not correspond to the caller of last_frame
-    assert(exception_frame.is_deoptimized_frame(), "must be deopted");
     pc = exception_frame.pc();
   }
 
@@ -222,9 +214,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     if (log_is_enabled(Info, exceptions)) {
       ResourceMark rm;
       stringStream tempst;
-      tempst.print("compiled method <%s>\n"
-                   " at PC" INTPTR_FORMAT " for thread " INTPTR_FORMAT,
-                   cm->method()->print_value_string(), p2i(pc), p2i(thread));
+      tempst.print("compiled method <%s>\n at PC" INTPTR_FORMAT " for thread " INTPTR_FORMAT, cm->method()->print_value_string(), p2i(pc), p2i(thread));
       Exceptions::log_exception(exception, tempst);
     }
 
@@ -255,9 +245,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
 
   if (log_is_enabled(Info, exceptions)) {
     ResourceMark rm;
-    log_info(exceptions)("Thread " PTR_FORMAT " continuing at PC " PTR_FORMAT
-                         " for exception thrown at PC " PTR_FORMAT,
-                         p2i(thread), p2i(continuation), p2i(pc));
+    log_info(exceptions)("Thread " PTR_FORMAT " continuing at PC " PTR_FORMAT " for exception thrown at PC " PTR_FORMAT, p2i(thread), p2i(continuation), p2i(pc));
   }
 
   return continuation;
@@ -287,7 +275,6 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
     continuation = SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
   }
 
-  assert(continuation != NULL, "no handler found");
   return continuation;
 }
 
@@ -315,8 +302,6 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
-  assert(thread == JavaThread::current(), "threads must correspond");
-  assert(thread->last_Java_sp(), "last_Java_sp must be set");
   // monitorexit is non-blocking (leaf routine) => no exceptions can be thrown
   EXCEPTION_MARK;
 
@@ -328,7 +313,7 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
       tty->print_cr("ERROR in monitorexit in method %s wrong obj " INTPTR_FORMAT, method->name(), p2i(obj));
     }
     thread->print_stack_on(tty);
-    assert(false, "invalid lock object pointer dected");
+    ShouldNotReachHere();
   }
 #endif
 
@@ -364,7 +349,7 @@ JRT_END
 // Object.notifyAll() fast path, caller does slow path
 JRT_LEAF(jboolean, JVMCIRuntime::object_notifyAll(JavaThread *thread, oopDesc* obj))
 
-  if (!SafepointSynchronize::is_synchronizing() ) {
+  if (!SafepointSynchronize::is_synchronizing()) {
     if (ObjectSynchronizer::quick_notify(obj, thread, true)) {
       return true;
     }
@@ -404,7 +389,6 @@ JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool a
     }
   } else {
     ResourceMark rm;
-    assert(obj != NULL && java_lang_String::is_instance(obj), "must be");
     char *buf = java_lang_String::as_utf8_string(obj);
     tty->print_raw(buf);
   }
@@ -423,12 +407,12 @@ JRT_END
 
 JRT_LEAF(jboolean, JVMCIRuntime::validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child))
   bool ret = true;
-  if(!Universe::heap()->is_in_closed_subset(parent)) {
+  if (!Universe::heap()->is_in_closed_subset(parent)) {
     tty->print_cr("Parent Object " INTPTR_FORMAT " not in heap", p2i(parent));
     parent->print();
     ret=false;
   }
-  if(!Universe::heap()->is_in_closed_subset(child)) {
+  if (!Universe::heap()->is_in_closed_subset(child)) {
     tty->print_cr("Child Object " INTPTR_FORMAT " not in heap", p2i(child));
     child->print();
     ret=false;
@@ -453,7 +437,6 @@ JRT_END
 
 JRT_LEAF(oopDesc*, JVMCIRuntime::load_and_clear_exception(JavaThread* thread))
   oop exception = thread->exception_oop();
-  assert(exception != NULL, "npe");
   thread->set_exception_oop(NULL);
   thread->set_exception_pc(0);
   return exception;
@@ -503,8 +486,6 @@ JRT_LEAF(void, JVMCIRuntime::vm_message(jboolean vmError, jlong format, jlong v1
   } else if (buf != NULL) {
     tty->print(buf, v1, v2, v3);
   } else {
-    assert(v2 == 0, "v2 != 0");
-    assert(v3 == 0, "v3 != 0");
     decipher(v1, false);
   }
 JRT_END
@@ -527,7 +508,7 @@ JRT_LEAF(void, JVMCIRuntime::log_primitive(JavaThread* thread, jchar typeChar, j
     case 'J': tty->print(JLONG_FORMAT, value); break;
     case 'D': tty->print("%lf", uu.d); break;
     default:
-    assert(false, "unknown typeChar");
+    ShouldNotReachHere();
     break;
   }
   if (newline) {
@@ -604,14 +585,10 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
   JVMCIRuntime::initialize_well_known_classes(CHECK);
   // This should only be called in the context of the JVMCI class being initialized
   InstanceKlass* klass = SystemDictionary::JVMCI_klass();
-  guarantee(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
-         "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
+  guarantee(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD), "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 
-  Handle result = callStatic("jdk/vm/ci/hotspot/HotSpotJVMCIRuntime",
-                             "runtime",
-                             "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
+  Handle result = callStatic("jdk/vm/ci/hotspot/HotSpotJVMCIRuntime", "runtime", "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
   int adjustment = HotSpotJVMCIRuntime::compilationLevelAdjustment(result);
-  assert(adjustment >= JVMCIRuntime::none && adjustment <= JVMCIRuntime::by_full_signature, "compilation level adjustment out of bounds");
   _comp_level_adjustment = (CompLevelAdjustment) adjustment;
   _HotSpotJVMCIRuntime_initialized = true;
   _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result);
@@ -619,11 +596,8 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
 
 void JVMCIRuntime::initialize_JVMCI(TRAPS) {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
-    callStatic("jdk/vm/ci/runtime/JVMCI",
-               "getRuntime",
-               "()Ljdk/vm/ci/runtime/JVMCIRuntime;", NULL, CHECK);
+    callStatic("jdk/vm/ci/runtime/JVMCI", "getRuntime", "()Ljdk/vm/ci/runtime/JVMCIRuntime;", NULL, CHECK);
   }
-  assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
 
 bool JVMCIRuntime::can_initialize_JVMCI() {
@@ -634,7 +608,6 @@ bool JVMCIRuntime::can_initialize_JVMCI() {
   if (SystemDictionary::java_system_loader() == NULL) {
     return false;
   }
-  assert(Universe::is_module_initialized(), "must be");
   return true;
 }
 
@@ -653,12 +626,8 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   // the SystemDictionary well known classes should ensure the other
   // classes have already been loaded, so make sure their order in the
   // table enforces that.
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotResolvedJavaMethodImpl) < SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotConstantPool) < SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotResolvedObjectTypeImpl) < SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
 
-  if (HotSpotJVMCIMetaAccessContext::klass() == NULL ||
-      !HotSpotJVMCIMetaAccessContext::klass()->is_linked()) {
+  if (HotSpotJVMCIMetaAccessContext::klass() == NULL || !HotSpotJVMCIMetaAccessContext::klass()->is_linked()) {
     // Nothing could be registered yet
     return;
   }
@@ -668,11 +637,6 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   if (allContexts == NULL) {
     return;
   }
-
-  // These must be loaded at this point but the linking state doesn't matter.
-  assert(SystemDictionary::HotSpotResolvedJavaMethodImpl_klass() != NULL, "must be loaded");
-  assert(SystemDictionary::HotSpotConstantPool_klass() != NULL, "must be loaded");
-  assert(SystemDictionary::HotSpotResolvedObjectTypeImpl_klass() != NULL, "must be loaded");
 
   for (int i = 0; i < allContexts->length(); i++) {
     oop ref = allContexts->obj_at(i);
@@ -706,7 +670,6 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
             }
           }
           metadataRoots = (objArrayOop)metadataRoots->obj_at(metadataRoots->length() - 1);
-          assert(metadataRoots == NULL || metadataRoots->is_objArray(), "wrong type");
         }
       }
     }
@@ -804,7 +767,7 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(const methodHandle& method, bool
 
   int comp_level = result.get_jint();
   if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
-    assert(false, "compilation level out of bounds");
+    ShouldNotReachHere();
     return level;
   }
   return (CompLevel) comp_level;

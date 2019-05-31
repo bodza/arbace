@@ -55,7 +55,7 @@ InstanceKlass* Management::_memoryUsage_klass = NULL;
 InstanceKlass* Management::_sensor_klass = NULL;
 InstanceKlass* Management::_threadInfo_klass = NULL;
 
-jmmOptionalSupport Management::_optional_support = {0};
+jmmOptionalSupport Management::_optional_support = { 0 };
 TimeStamp Management::_stamp;
 
 void management_init() {
@@ -71,8 +71,7 @@ static void validate_thread_id_array(typeArrayHandle ids_ah, TRAPS) {
     jlong tid = ids_ah->long_at(i);
     if (tid <= 0) {
       // throw exception if invalid thread id.
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                "Invalid thread ID entry");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Invalid thread ID entry");
     }
   }
 }
@@ -102,9 +101,7 @@ JVM_ENTRY(void, jmm_GetThreadAllocatedMemory(JNIEnv *env, jlongArray ids,
   // sizeArray must be of the same length as the given array of thread IDs
   int num_threads = ids_ah->length();
   if (num_threads != sizeArray_h->length()) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "The length of the given long array does not match the length of "
-              "the given array of thread IDs");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "The length of the given long array does not match the length of the given array of thread IDs");
   }
 
   ThreadsListHandle tlh;
@@ -127,8 +124,7 @@ JVM_ENTRY(jlong, jmm_GetThreadCpuTimeWithKind(JNIEnv *env, jlong thread_id, jboo
   }
 
   if (thread_id < 0) {
-    THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
-               "Invalid thread ID", -1);
+    THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Invalid thread ID", -1);
   }
 
   JavaThread* java_thread = NULL;
@@ -152,9 +148,7 @@ JVM_END
 // If user_sys_cpu_time = true, the sum of user level and system CPU time
 // for the given thread is returned; otherwise, only user level CPU time
 // is returned.
-JVM_ENTRY(void, jmm_GetThreadCpuTimesWithKind(JNIEnv *env, jlongArray ids,
-                                              jlongArray timeArray,
-                                              jboolean user_sys_cpu_time))
+JVM_ENTRY(void, jmm_GetThreadCpuTimesWithKind(JNIEnv *env, jlongArray ids, jlongArray timeArray, jboolean user_sys_cpu_time))
   // Check if threads is null
   if (ids == NULL || timeArray == NULL) {
     THROW(vmSymbols::java_lang_NullPointerException());
@@ -173,17 +167,14 @@ JVM_ENTRY(void, jmm_GetThreadCpuTimesWithKind(JNIEnv *env, jlongArray ids,
   // timeArray must be of the same length as the given array of thread IDs
   int num_threads = ids_ah->length();
   if (num_threads != timeArray_h->length()) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "The length of the given long array does not match the length of "
-              "the given array of thread IDs");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "The length of the given long array does not match the length of the given array of thread IDs");
   }
 
   ThreadsListHandle tlh;
   for (int i = 0; i < num_threads; i++) {
     JavaThread* java_thread = tlh.list()->find_JavaThread_from_java_tid(ids_ah->long_at(i));
     if (java_thread != NULL) {
-      timeArray_h->long_at_put(i, os::thread_cpu_time((Thread*)java_thread,
-                                                      user_sys_cpu_time != 0));
+      timeArray_h->long_at_put(i, os::thread_cpu_time((Thread*)java_thread, user_sys_cpu_time != 0));
     }
   }
 JVM_END

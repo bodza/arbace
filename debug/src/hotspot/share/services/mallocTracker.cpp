@@ -36,7 +36,6 @@ void MallocMemorySnapshot::make_adjustment() {
 }
 
 void MallocMemorySummary::initialize() {
-  assert(sizeof(_snapshot) >= sizeof(MallocMemorySnapshot), "Sanity Check");
   // Uses placement new operator to initialize static area.
   ::new ((void*)_snapshot)MallocMemorySnapshot();
 }
@@ -52,8 +51,7 @@ void MallocHeader::release() const {
   }
 }
 
-bool MallocHeader::record_malloc_site(const NativeCallStack& stack, size_t size,
-  size_t* bucket_idx, size_t* pos_idx, MEMFLAGS flags) const {
+bool MallocHeader::record_malloc_site(const NativeCallStack& stack, size_t size, size_t* bucket_idx, size_t* pos_idx, MEMFLAGS flags) const {
   bool ret = MallocSiteTable::allocation_at(stack, size, bucket_idx, pos_idx, flags);
 
   // Something went wrong, could be OOM or overflow malloc site table.
@@ -81,12 +79,8 @@ bool MallocTracker::initialize(NMT_TrackingLevel level) {
 }
 
 bool MallocTracker::transition(NMT_TrackingLevel from, NMT_TrackingLevel to) {
-  assert(from != NMT_off, "Can not transition from off state");
-  assert(to != NMT_off, "Can not transition to off state");
-  assert(from != NMT_minimal, "cannot transition from minimal state");
 
   if (from == NMT_detail) {
-    assert(to == NMT_minimal || to == NMT_summary, "Just check");
     MallocSiteTable::shutdown();
   }
   return true;
@@ -111,17 +105,12 @@ void* MallocTracker::record_malloc(void* malloc_base, size_t size, MEMFLAGS flag
   header = ::new (malloc_base)MallocHeader(size, flags, stack, level);
   memblock = (void*)((char*)malloc_base + sizeof(MallocHeader));
 
-  // The alignment check: 8 bytes alignment for 32 bit systems.
-  //                      16 bytes alignment for 64-bit systems.
-  assert(((size_t)memblock & (sizeof(size_t) * 2 - 1)) == 0, "Alignment check");
-
   return memblock;
 }
 
 void* MallocTracker::record_free(void* memblock) {
   // Never turned on
-  if (MemTracker::tracking_level() == NMT_off ||
-      memblock == NULL) {
+  if (MemTracker::tracking_level() == NMT_off || memblock == NULL) {
     return memblock;
   }
   MallocHeader* header = malloc_header(memblock);

@@ -14,12 +14,12 @@ class MethodLivenessResult : public ResourceBitMap {
   MethodLivenessResult()
     : ResourceBitMap()
     , _is_valid(false)
-  {}
+  { }
 
   MethodLivenessResult(idx_t size_in_bits)
     : ResourceBitMap(size_in_bits)
     , _is_valid(false)
-  {}
+  { }
 
   void set_is_valid() { _is_valid = true; }
   bool is_valid() { return _is_valid; }
@@ -139,7 +139,7 @@ class MethodLiveness : public ResourceObj {
 
     // -- Debugging.
 
-    void print_on(outputStream *os) const {};
+    void print_on(outputStream *os) const { };
 
   }; // End of MethodLiveness::BasicBlock
 
@@ -217,7 +217,7 @@ class MethodLiveness : public ResourceObj {
 
   const BitMap& get_bci_block_start() const { return _bci_block_start; }
 
-  static void print_times() {};
+  static void print_times() { };
 };
 
 #endif

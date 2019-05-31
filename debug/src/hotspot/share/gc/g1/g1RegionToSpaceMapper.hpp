@@ -40,7 +40,7 @@ class G1RegionToSpaceMapper : public CHeapObj<mtGC> {
 
   void set_mapping_changed_listener(G1MappingChangedListener* listener) { _listener = listener; }
 
-  virtual ~G1RegionToSpaceMapper() {}
+  virtual ~G1RegionToSpaceMapper() { }
 
   bool is_committed(uintptr_t idx) const {
     return _commit_map.at(idx);

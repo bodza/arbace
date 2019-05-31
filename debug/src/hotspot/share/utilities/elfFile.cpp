@@ -44,9 +44,7 @@ NullDecoder::decoder_status ElfSection::load_section(FILE* const fd, const Elf_S
   if (_section_data == NULL) return NullDecoder::no_error;
 
   MarkedFileReader mfd(fd);
-  if (mfd.has_mark() &&
-      mfd.set_position(shdr.sh_offset) &&
-      mfd.read(_section_data, shdr.sh_size)) {
+  if (mfd.has_mark() && mfd.set_position(shdr.sh_offset) && mfd.read(_section_data, shdr.sh_size)) {
     return NullDecoder::no_error;
   } else {
     os::free(_section_data);
@@ -56,14 +54,10 @@ NullDecoder::decoder_status ElfSection::load_section(FILE* const fd, const Elf_S
 }
 
 bool FileReader::read(void* buf, size_t size) {
-  assert(buf != NULL, "no buffer");
-  assert(size > 0, "no space");
   return fread(buf, size, 1, _fd) == 1;
 }
 
 int FileReader::read_buffer(void* buf, size_t size) {
-  assert(buf != NULL, "no buffer");
-  assert(size > 0, "no space");
   return fread(buf, 1, size, _fd);
 }
 
@@ -142,7 +136,6 @@ void ElfFile::cleanup_tables() {
 }
 
 NullDecoder::decoder_status ElfFile::parse_elf(const char* filepath) {
-  assert(filepath, "null file path");
 
   _file = fopen(filepath, "r");
   if (_file != NULL) {
@@ -154,17 +147,10 @@ NullDecoder::decoder_status ElfFile::parse_elf(const char* filepath) {
 
 //Check elf header to ensure the file is valid.
 bool ElfFile::is_elf_file(Elf_Ehdr& hdr) {
-  return (ELFMAG0 == hdr.e_ident[EI_MAG0] &&
-      ELFMAG1 == hdr.e_ident[EI_MAG1] &&
-      ELFMAG2 == hdr.e_ident[EI_MAG2] &&
-      ELFMAG3 == hdr.e_ident[EI_MAG3] &&
-      ELFCLASSNONE != hdr.e_ident[EI_CLASS] &&
-      ELFDATANONE != hdr.e_ident[EI_DATA]);
+  return (ELFMAG0 == hdr.e_ident[EI_MAG0] && ELFMAG1 == hdr.e_ident[EI_MAG1] && ELFMAG2 == hdr.e_ident[EI_MAG2] && ELFMAG3 == hdr.e_ident[EI_MAG3] && ELFCLASSNONE != hdr.e_ident[EI_CLASS] && ELFDATANONE != hdr.e_ident[EI_DATA]);
 }
 
 NullDecoder::decoder_status ElfFile::load_tables() {
-  assert(_file, "file not open");
-  assert(!NullDecoder::is_error(_status), "already in error");
 
   FileReader freader(fd());
   // read elf file header
@@ -195,7 +181,6 @@ NullDecoder::decoder_status ElfFile::load_tables() {
         return NullDecoder::out_of_memory;
       }
       if (index == _elfHdr.e_shstrndx) {
-        assert(_shdr_string_table == NULL, "Only set once");
         _shdr_string_table = table;
       } else {
         add_string_table(table);
@@ -235,7 +220,6 @@ NullDecoder::decoder_status ElfFile::load_tables() {
 }
 
 int ElfFile::section_by_name(const char* name, Elf_Shdr& hdr) {
-  assert(name != NULL, "No section name");
   size_t len = strlen(name) + 1;
   ResourceMark rm;
   char* buf = NEW_RESOURCE_ARRAY(char, len);
@@ -243,7 +227,6 @@ int ElfFile::section_by_name(const char* name, Elf_Shdr& hdr) {
     return -1;
   }
 
-  assert(_shdr_string_table != NULL, "Section header string table should be loaded");
   ElfStringTable* const table = _shdr_string_table;
   MarkedFileReader mfd(fd());
   if (!mfd.has_mark() || !mfd.set_position(_elfHdr.e_shoff)) return -1;

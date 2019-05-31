@@ -29,7 +29,6 @@ void OSXSemaphore::signal(uint count) {
   for (uint i = 0; i < count; i++) {
     kern_return_t ret = semaphore_signal(_semaphore);
 
-    assert(ret == KERN_SUCCESS, "Failed to signal semaphore");
   }
 }
 
@@ -38,7 +37,6 @@ void OSXSemaphore::wait() {
   while ((ret = semaphore_wait(_semaphore)) == KERN_ABORTED) {
     // Semaphore was interrupted. Retry.
   }
-  assert(ret == KERN_SUCCESS, "Failed to wait on semaphore");
 }
 
 int64_t OSXSemaphore::currenttime() {

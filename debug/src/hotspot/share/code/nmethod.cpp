@@ -44,9 +44,6 @@
 //---------------------------------------------------------------------------------
 
 ExceptionCache::ExceptionCache(Handle exception, address pc, address handler) {
-  assert(pc != NULL, "Must be non null");
-  assert(exception.not_null(), "Must be non null");
-  assert(handler != NULL, "Must be non null");
 
   _count = 0;
   _exception_type = exception->klass();
@@ -56,8 +53,6 @@ ExceptionCache::ExceptionCache(Handle exception, address pc, address handler) {
 }
 
 address ExceptionCache::match(Handle exception, address pc) {
-  assert(pc != NULL,"Must be non null");
-  assert(exception.not_null(),"Must be non null");
   if (exception->klass() == exception_type()) {
     return (test_address(pc));
   }
@@ -66,7 +61,6 @@ address ExceptionCache::match(Handle exception, address pc) {
 }
 
 bool ExceptionCache::match_exception_with_space(Handle exception) {
-  assert(exception.not_null(),"Must be non null");
   if (exception->klass() == exception_type() && count() < cache_size) {
     return true;
   }
@@ -112,7 +106,6 @@ void PcDescCache::reset_to(PcDesc* initial_pc_desc) {
     return;
   }
   // reset the cache by filling it with benign (non-null) values
-  assert(initial_pc_desc->pc_offset() < 0, "must be sentinel");
   for (int i = 0; i < cache_size; i++)
     _pc_descs[i] = initial_pc_desc;
 }
@@ -165,7 +158,6 @@ static int adjust_pcs_size(int pcs_size) {
   if ((nsize % sizeof(PcDesc)) != 0) {
     nsize = pcs_size + sizeof(PcDesc);
   }
-  assert((nsize % oopSize) == 0, "correct alignment");
   return nsize;
 }
 
@@ -262,13 +254,11 @@ nmethod* nmethod::new_nmethod(const methodHandle& method,
   jweak speculationLog
 )
 {
-  assert(debug_info->oop_recorder() == code_buffer->oop_recorder(), "shared OR");
   code_buffer->finalize_oop_references(method);
   // create nmethod
   nmethod* nm = NULL;
   { MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    int nmethod_size =
-      CodeBlob::allocation_size(code_buffer, sizeof(nmethod))
+    int nmethod_size = CodeBlob::allocation_size(code_buffer, sizeof(nmethod))
       + adjust_pcs_size(debug_info->pcs_size())
       + align_up((int)dependencies->size_in_bytes(), oopSize)
       + align_up(handler_table->size_in_bytes()    , oopSize)
@@ -340,8 +330,6 @@ nmethod::nmethod(
     int scopes_data_offset = 0;
     int deoptimize_offset       = 0;
     int deoptimize_mh_offset    = 0;
-
-    assert_locked_or_safepoint(CodeCache_lock);
 
     init_defaults();
     _entry_bci               = InvocationEntryBci;
@@ -438,10 +426,7 @@ nmethod::nmethod(
   _native_receiver_sp_offset(in_ByteSize(-1)),
   _native_basic_lock_sp_offset(in_ByteSize(-1))
 {
-  assert(debug_info->oop_recorder() == code_buffer->oop_recorder(), "shared OR");
   {
-    assert_locked_or_safepoint(CodeCache_lock);
-
     _deopt_handler_begin = (address) this;
     _deopt_mh_handler_begin = (address) this;
 
@@ -484,17 +469,13 @@ nmethod::nmethod(
         _deopt_mh_handler_begin = NULL;
       }
     } else {
-    // Exception handler and deopt handler are in the stub section
-    assert(offsets->value(CodeOffsets::Exceptions) != -1, "must be set");
-    assert(offsets->value(CodeOffsets::Deopt     ) != -1, "must be set");
-
-    _exception_offset       = _stub_offset          + offsets->value(CodeOffsets::Exceptions);
-    _deopt_handler_begin    = (address) this + _stub_offset          + offsets->value(CodeOffsets::Deopt);
-    if (offsets->value(CodeOffsets::DeoptMH) != -1) {
-      _deopt_mh_handler_begin  = (address) this + _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
-    } else {
-      _deopt_mh_handler_begin  = NULL;
-    }
+      _exception_offset       = _stub_offset          + offsets->value(CodeOffsets::Exceptions);
+      _deopt_handler_begin    = (address) this + _stub_offset          + offsets->value(CodeOffsets::Deopt);
+      if (offsets->value(CodeOffsets::DeoptMH) != -1) {
+        _deopt_mh_handler_begin  = (address) this + _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
+      } else {
+        _deopt_mh_handler_begin  = NULL;
+      }
     }
     if (offsets->value(CodeOffsets::UnwindHandler) != -1) {
       _unwind_handler_offset = code_offset()         + offsets->value(CodeOffsets::UnwindHandler);
@@ -534,10 +515,6 @@ nmethod::nmethod(
     // Copy contents of ExceptionHandlerTable to nmethod
     handler_table->copy_to(this);
     nul_chk_table->copy_to(this);
-
-    // we use the information of entry points to find out if a method is
-    // static or non static
-    assert(compiler->is_c2() || compiler->is_jvmci() || _method->is_static() == (entry_point() == _verified_entry_point), " entry points must be same for static methods and vice versa");
   }
 }
 
@@ -660,7 +637,6 @@ inline void nmethod::initialize_immediate_oop(oop* dest, jobject handle) {
 // Have to have the same name because it's called by a template
 void nmethod::copy_values(GrowableArray<jobject>* array) {
   int length = array->length();
-  assert((address)(oops_begin() + length) <= (address)oops_end(), "oops big enough");
   oop* dest = oops_begin();
   for (int index = 0 ; index < length; index++) {
     initialize_immediate_oop(&dest[index], array->at(index));
@@ -676,7 +652,6 @@ void nmethod::copy_values(GrowableArray<jobject>* array) {
 
 void nmethod::copy_values(GrowableArray<Metadata*>* array) {
   int length = array->length();
-  assert((address)(metadata_begin() + length) <= (address)metadata_end(), "big enough");
   Metadata** dest = metadata_begin();
   for (int index = 0 ; index < length; index++) {
     dest[index] = array->at(index);
@@ -703,23 +678,19 @@ void nmethod::fix_oop_relocations(address begin, address end, bool initialize_im
 }
 
 void nmethod::verify_clean_inline_caches() {
-  assert_locked_or_safepoint(CompiledIC_lock);
-
   ResourceMark rm;
   RelocIterator iter(this, oops_reloc_begin());
-  while(iter.next()) {
+  while (iter.next()) {
     switch(iter.type()) {
       case relocInfo::virtual_call_type:
       case relocInfo::opt_virtual_call_type: {
         CompiledIC *ic = CompiledIC_at(&iter);
         // Ok, to lookup references to zombies here
         CodeBlob *cb = CodeCache::find_blob_unsafe(ic->ic_destination());
-        assert(cb != NULL, "destination not in CodeBlob?");
         nmethod* nm = cb->as_nmethod_or_null();
-        if( nm != NULL ) {
+        if (nm != NULL ) {
           // Verify that inline caches pointing to both zombie and not_entrant methods are clean
           if (!nm->is_in_use() || (nm->method()->code() != nm)) {
-            assert(ic->is_clean(), "IC should be clean");
           }
         }
         break;
@@ -727,12 +698,10 @@ void nmethod::verify_clean_inline_caches() {
       case relocInfo::static_call_type: {
         CompiledStaticCall *csc = compiledStaticCall_at(iter.reloc());
         CodeBlob *cb = CodeCache::find_blob_unsafe(csc->destination());
-        assert(cb != NULL, "destination not in CodeBlob?");
         nmethod* nm = cb->as_nmethod_or_null();
-        if( nm != NULL ) {
+        if (nm != NULL ) {
           // Verify that inline caches pointing to both zombie and not_entrant methods are clean
           if (!nm->is_in_use() || (nm->method()->code() != nm)) {
-            assert(csc->is_clean(), "IC should be clean");
           }
         }
         break;
@@ -745,7 +714,6 @@ void nmethod::verify_clean_inline_caches() {
 
 // This is a private interface with the sweeper.
 void nmethod::mark_as_seen_on_stack() {
-  assert(is_alive(), "Must be an alive method");
   // Set the traversal mark to ensure that the sweeper does 2
   // cleaning passes before moving to zombie.
   set_stack_traversal_mark(NMethodSweeper::traversal_count());
@@ -755,13 +723,11 @@ void nmethod::mark_as_seen_on_stack() {
 // there are no activations on the stack, not in use by the VM,
 // and not in use by the ServiceThread)
 bool nmethod::can_convert_to_zombie() {
-  assert(is_not_entrant(), "must be a non-entrant method");
 
   // Since the nmethod sweeper only does partial sweep the sweeper's traversal
   // count can be greater than the stack traversal count before it hits the
   // nmethod for the second time.
-  return stack_traversal_mark()+1 < NMethodSweeper::traversal_count() &&
-         !is_locked_by_vm();
+  return stack_traversal_mark()+1 < NMethodSweeper::traversal_count() && !is_locked_by_vm();
 }
 
 void nmethod::inc_decompile_count() {
@@ -783,17 +749,13 @@ void nmethod::make_unloaded(oop cause) {
   // recorded in instanceKlasses get flushed.
   // Since this work is being done during a GC, defer deleting dependencies from the
   // InstanceKlass.
-  assert(Universe::heap()->is_gc_active(), "should only be called during gc");
   flush_dependencies(/*delete_immediately*/false);
 
   // Break cycle between nmethod & method
   LogTarget(Trace, class, unload, nmethod) lt;
   if (lt.is_enabled()) {
     LogStream ls(lt);
-    ls.print("making nmethod " INTPTR_FORMAT
-             " unloadable, Method*(" INTPTR_FORMAT
-             "), cause(" INTPTR_FORMAT ") ",
-             p2i(this), p2i(_method), p2i(cause));
+    ls.print("making nmethod " INTPTR_FORMAT " unloadable, Method*(" INTPTR_FORMAT "), cause(" INTPTR_FORMAT ") ", p2i(this), p2i(_method), p2i(cause));
      if (cause != NULL) {
        cause->print_value_on(&ls);
      }
@@ -821,7 +783,6 @@ void nmethod::make_unloaded(oop cause) {
   }
 
   // Make the class unloaded - i.e., change state and notify sweeper
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   if (is_in_use()) {
     // Transitioning directly from live to unloaded -- so
     // we need to force a cache clean-up; remember this
@@ -842,15 +803,11 @@ void nmethod::make_unloaded(oop cause) {
   // reference to the dead object.
   maybe_invalidate_installed_code();
 
-  // The Method* is gone at this point
-  assert(_method == NULL, "Tautology");
-
   set_osr_link(NULL);
   NMethodSweeper::report_state_change(this);
 }
 
 void nmethod::invalidate_osr_method() {
-  assert(_entry_bci != InvocationEntryBci, "wrong kind of nmethod");
   // Remove from list of active nmethods
   if (method() != NULL) {
     method()->method_holder()->remove_osr_nmethod(this);
@@ -886,8 +843,6 @@ void nmethod::log_state_change() const {
  * Common functionality for both make_not_entrant and make_zombie
  */
 bool nmethod::make_not_entrant_or_zombie(int state) {
-  assert(state == zombie || state == not_entrant, "must be zombie or not_entrant");
-  assert(!is_zombie(), "should not already be a zombie");
 
   if (_state == state) {
     // Avoid taking the lock if already in required state.
@@ -974,8 +929,7 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
     // If the vep() points to the zombie nmethod, the memory for the nmethod
     // could be flushed and the compiler and vtable stubs could still call
     // through it.
-    if (method() != NULL && (method()->code() == this ||
-                             method()->from_compiled_entry() == verified_entry_point())) {
+    if (method() != NULL && (method()->code() == this || method()->from_compiled_entry() == verified_entry_point())) {
       HandleMark hm;
       method()->clear_code(false /* already owns Patching_lock */);
     }
@@ -1008,7 +962,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
      // nmethod is in zombie state
     set_method(NULL);
   } else {
-    assert(state == not_entrant, "other cases may need to be handled differently");
   }
 
   if (TraceCreateZombies) {
@@ -1021,12 +974,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
 }
 
 void nmethod::flush() {
-  // Note that there are no valid oops in the nmethod anymore.
-  assert(!is_osr_method() || is_unloaded() || is_zombie(), "osr nmethod must be unloaded or zombie before flushing");
-  assert(is_zombie() || is_osr_method(), "must be a zombie method");
-  assert(!is_locked_by_vm(), "locked methods shouldn't be flushed");
-  assert_locked_or_safepoint(CodeCache_lock);
-
   // completely deallocate this method
   Events::log(JavaThread::current(), "flushing nmethod " INTPTR_FORMAT, p2i(this));
   if (PrintMethodFlushing) {
@@ -1041,7 +988,7 @@ void nmethod::flush() {
   // better be thread safe if we're disposing of it!
   ExceptionCache* ec = exception_cache();
   set_exception_cache(NULL);
-  while(ec != NULL) {
+  while (ec != NULL) {
     ExceptionCache* next = ec->next();
     delete ec;
     ec = next;
@@ -1050,9 +997,6 @@ void nmethod::flush() {
   if (on_scavenge_root_list()) {
     CodeCache::drop_scavenge_root_nmethod(this);
   }
-
-  assert(_jvmci_installed_code == NULL, "should have been nulled out when transitioned to zombie");
-  assert(_speculation_log == NULL, "should have been nulled out when transitioned to zombie");
 
   CodeBlob::flush();
   CodeCache::free(this);
@@ -1073,8 +1017,6 @@ void nmethod::flush() {
 // notifies instanceKlasses that are reachable
 
 void nmethod::flush_dependencies(bool delete_immediately) {
-  assert_locked_or_safepoint(CodeCache_lock);
-  assert(Universe::heap()->is_gc_active() != delete_immediately, "delete_immediately is false if and only if we are called during GC");
   if (!has_flushed_dependencies()) {
     set_has_flushed_dependencies();
     for (Dependencies::DepStream deps(this); deps.next(); ) {
@@ -1102,7 +1044,6 @@ void nmethod::flush_dependencies(bool delete_immediately) {
 
 // If this oop is not live, the nmethod can be unloaded.
 bool nmethod::can_unload(BoolObjectClosure* is_alive, oop* root) {
-  assert(root != NULL, "just checking");
   oop obj = *root;
   if (obj == NULL || is_alive->do_object_b(obj)) {
       return false;
@@ -1147,7 +1088,6 @@ void nmethod::post_compiled_method_unload() {
     return;
   }
 
-  assert(_method != NULL && !is_unloaded(), "just checking");
   DTRACE_METHOD_UNLOAD_PROBE(method());
 
   // The JVMTI CompiledMethodUnload event can be enabled or disabled at
@@ -1159,16 +1099,14 @@ void nmethod::post_compiled_method_unload() {
 }
 
 bool nmethod::unload_if_dead_at(RelocIterator* iter_at_oop, BoolObjectClosure *is_alive) {
-  assert(iter_at_oop->type() == relocInfo::oop_type, "Wrong relocation type");
 
   oop_Relocation* r = iter_at_oop->oop_reloc();
   // Traverse those oops directly embedded in the code.
   // Other oops (oop_index>0) are seen as part of scopes_oops.
-  assert(1 == (r->oop_is_immediate()) + (r->oop_addr() >= oops_begin() && r->oop_addr() < oops_end()), "oop must be found in exactly one place");
   if (r->oop_is_immediate() && r->oop_value() != NULL) {
     // Unload this nmethod if the oop is dead.
     if (can_unload(is_alive, r->oop_addr())) {
-      return true;;
+      return true;
     }
   }
 
@@ -1230,7 +1168,6 @@ void nmethod::metadata_do(void f(Metadata*)) {
         // In this metadata, we must only follow those metadatas directly embedded in
         // the code.  Other metadatas (oop_index>0) are seen as part of
         // the metadata section below.
-        assert(1 == (r->metadata_is_immediate()) + (r->metadata_addr() >= metadata_begin() && r->metadata_addr() < metadata_end()), "metadata must be found in exactly one place");
         if (r->metadata_is_immediate() && r->metadata_value() != NULL) {
           Metadata* md = r->metadata_value();
           if (md != _method) f(md);
@@ -1264,10 +1201,6 @@ void nmethod::metadata_do(void f(Metadata*)) {
 }
 
 void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
-  // make sure the oops ready to receive visitors
-  assert(allow_zombie || !is_zombie(), "should not call follow on zombie nmethod");
-  assert(!is_unloaded(), "should not call follow on unloaded nmethod");
-
   // Prevent extra code cache walk for platforms that don't have immediate oops.
   if (relocInfo::mustIterateImmediateOopsInCode()) {
     RelocIterator iter(this, oops_reloc_begin());
@@ -1277,7 +1210,6 @@ void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
         oop_Relocation* r = iter.oop_reloc();
         // In this loop, we must only follow those oops directly embedded in
         // the code.  Other oops (oop_index>0) are seen as part of scopes_oops.
-        assert(1 == (r->oop_is_immediate()) + (r->oop_addr() >= oops_begin() && r->oop_addr() < oops_end()), "oop must be found in exactly one place");
         if (r->oop_is_immediate() && r->oop_value() != NULL) {
           f->do_oop(r->oop_addr());
         }
@@ -1302,7 +1234,6 @@ nmethod* volatile nmethod::_oops_do_mark_nmethods;
 // as long as it is on the list.
 // This code must be MP safe, because it is used from parallel GC passes.
 bool nmethod::test_set_oops_do_mark() {
-  assert(nmethod::oops_do_marking_is_active(), "oops_do_marking_prologue must be called");
   if (_oops_do_mark_link == NULL) {
     // Claim this nmethod for this thread to mark.
     if (Atomic::replace_if_null(NMETHOD_SENTINEL, &_oops_do_mark_link)) {
@@ -1311,8 +1242,7 @@ bool nmethod::test_set_oops_do_mark() {
       for (;;) {
         nmethod* required_mark_nmethods = observed_mark_nmethods;
         _oops_do_mark_link = required_mark_nmethods;
-        observed_mark_nmethods =
-          Atomic::cmpxchg(this, &_oops_do_mark_nmethods, required_mark_nmethods);
+        observed_mark_nmethods = Atomic::cmpxchg(this, &_oops_do_mark_nmethods, required_mark_nmethods);
         if (observed_mark_nmethods == required_mark_nmethods)
           break;
       }
@@ -1331,7 +1261,6 @@ bool nmethod::test_set_oops_do_mark() {
 
 void nmethod::oops_do_marking_prologue() {
   log_trace(gc, nmethod)("oops_do_marking_prologue");
-  assert(_oops_do_mark_nmethods == NULL, "must not call oops_do_marking_prologue twice in a row");
   // We use cmpxchg instead of regular assignment here because the user
   // may fork a bunch of threads, and we need them all to see the same state.
   nmethod* observed = Atomic::cmpxchg(NMETHOD_SENTINEL, &_oops_do_mark_nmethods, (nmethod*)NULL);
@@ -1339,10 +1268,8 @@ void nmethod::oops_do_marking_prologue() {
 }
 
 void nmethod::oops_do_marking_epilogue() {
-  assert(_oops_do_mark_nmethods != NULL, "must not call oops_do_marking_epilogue twice in a row");
   nmethod* cur = _oops_do_mark_nmethods;
   while (cur != NMETHOD_SENTINEL) {
-    assert(cur != NULL, "not NULL-terminated");
     nmethod* next = cur->_oops_do_mark_link;
     cur->_oops_do_mark_link = NULL;
 
@@ -1363,7 +1290,7 @@ class DetectScavengeRoot: public OopClosure {
   bool     _detected_scavenge_root;
   nmethod* _print_nm;
 public:
-  DetectScavengeRoot(nmethod* nm) : _detected_scavenge_root(false), _print_nm(nm) {}
+  DetectScavengeRoot(nmethod* nm) : _detected_scavenge_root(false), _print_nm(nm) { }
 
   bool detected_scavenge_root() { return _detected_scavenge_root; }
   virtual void do_oop(oop* p) {
@@ -1385,7 +1312,6 @@ inline bool includes(void* p, void* from, void* to) {
 }
 
 void nmethod::copy_scopes_pcs(PcDesc* pcs, int count) {
-  assert(count >= 2, "must be sentinel values, at least");
 
   // Search for MethodHandle invokes and tag the nmethod.
   for (int i = 0; i < count; i++) {
@@ -1394,37 +1320,27 @@ void nmethod::copy_scopes_pcs(PcDesc* pcs, int count) {
       break;
     }
   }
-  assert(has_method_handle_invokes() == (_deopt_mh_handler_begin != NULL), "must have deopt mh handler");
 
   int size = count * sizeof(PcDesc);
-  assert(scopes_pcs_size() >= size, "oob");
   memcpy(scopes_pcs_begin(), pcs, size);
 
   // Adjust the final sentinel downward.
   PcDesc* last_pc = &scopes_pcs_begin()[count-1];
-  assert(last_pc->pc_offset() == PcDesc::upper_offset_limit, "sanity");
   last_pc->set_pc_offset(content_size() + 1);
   for (; last_pc + 1 < scopes_pcs_end(); last_pc += 1) {
     // Fill any rounding gaps with copies of the last record.
     last_pc[1] = last_pc[0];
   }
-  // The following assert could fail if sizeof(PcDesc) is not
-  // an integral multiple of oopSize (the rounding term).
-  // If it fails, change the logic to always allocate a multiple
-  // of sizeof(PcDesc), and fill unused words with copies of *last_pc.
-  assert(last_pc + 1 == scopes_pcs_end(), "must match exactly");
 }
 
 void nmethod::copy_scopes_data(u_char* buffer, int size) {
-  assert(scopes_data_size() >= size, "oob");
   memcpy(scopes_data_begin(), buffer, size);
 }
 
 // Finds a PcDesc with real-pc equal to "pc"
 PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, const PcDescSearch& search) {
   address base_address = search.code_begin();
-  if ((pc < base_address) ||
-      (pc - base_address) >= (ptrdiff_t) PcDesc::upper_offset_limit) {
+  if ((pc < base_address) || (pc - base_address) >= (ptrdiff_t) PcDesc::upper_offset_limit) {
     return NULL;  // PC is wildly out of range
   }
   int pc_offset = (int) (pc - base_address);
@@ -1433,7 +1349,6 @@ PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, con
   // (This as an almost 100% hit rate.)
   PcDesc* res = _pc_desc_cache.find_pc_desc(pc_offset, approximate);
   if (res != NULL) {
-    assert(res == linear_search(search, pc_offset, approximate), "cache ok");
     return res;
   }
 
@@ -1445,12 +1360,6 @@ PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, con
   PcDesc* upper = search.scopes_pcs_end();
   upper -= 1; // exclude final sentinel
   if (lower >= upper)  return NULL;  // native method; no PcDescs at all
-
-#define assert_LU_OK \
-  /* invariant on lower..upper during the following search: */ \
-  assert(lower->pc_offset() <  pc_offset, "sanity"); \
-  assert(upper->pc_offset() >= pc_offset, "sanity")
-  assert_LU_OK;
 
   // Use the last successful return as a split point.
   PcDesc* mid = _pc_desc_cache.last_pc_desc();
@@ -1465,7 +1374,6 @@ PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, con
   const int RADIX = (1 << LOG2_RADIX);
   for (int step = (1 << (LOG2_RADIX*3)); step > 1; step >>= LOG2_RADIX) {
     while ((mid = lower + step) < upper) {
-      assert_LU_OK;
       if (mid->pc_offset() < pc_offset) {
         lower = mid;
       } else {
@@ -1473,12 +1381,10 @@ PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, con
         break;
       }
     }
-    assert_LU_OK;
   }
 
   // Sneak up on the value with a linear search of length ~16.
   while (true) {
-    assert_LU_OK;
     mid = lower + 1;
     if (mid->pc_offset() < pc_offset) {
       lower = mid;
@@ -1487,14 +1393,11 @@ PcDesc* PcDescContainer::find_pc_desc_internal(address pc, bool approximate, con
       break;
     }
   }
-#undef assert_LU_OK
 
   if (match_desc(upper, pc_offset, approximate)) {
-    assert(upper == linear_search(search, pc_offset, approximate), "search ok");
     _pc_desc_cache.add_pc_desc(upper);
     return upper;
   } else {
-    assert(NULL == linear_search(search, pc_offset, approximate), "search ok");
     return NULL;
   }
 }
@@ -1511,7 +1414,7 @@ void nmethod::check_all_dependencies(DepChange& changes) {
   // Iterate over live nmethods and check dependencies of all nmethods that are not
   // marked for deoptimization. A particular dependency is only checked once.
   NMethodIterator iter;
-  while(iter.next()) {
+  while (iter.next()) {
     nmethod* nm = iter.method();
     // Only notify for live nmethods
     if (nm->is_alive() && !nm->is_marked_for_deoptimization()) {
@@ -1530,7 +1433,7 @@ void nmethod::check_all_dependencies(DepChange& changes) {
             changes.print();
             nm->print();
             nm->print_dependencies();
-            assert(false, "Should have been marked for deoptimization");
+            ShouldNotReachHere();
           }
         }
       }
@@ -1595,7 +1498,6 @@ bool nmethod::is_dependent_on_method(Method* dependee) {
 }
 
 bool nmethod::is_patchable_at(address instr_addr) {
-  assert(insts_contains(instr_addr), "wrong nmethod used");
   if (is_zombie()) {
     // a zombie may never be patched
     return false;
@@ -1616,8 +1518,6 @@ address nmethod::continuation_for_implicit_exception(address pc) {
 }
 
 void nmethod_init() {
-  // make sure you didn't forget to adjust the filler fields
-  assert(sizeof(nmethod) % oopSize == 0, "nmethod size must be multiple of a word");
 }
 
 //-------------------------------------------------------------------------------------------
@@ -1637,7 +1537,6 @@ void nmethodLocker::lock_nmethod(CompiledMethod* cm, bool zombie_ok) {
   if (cm->is_aot()) return;  // FIXME: Revisit once _lock_count is added to aot_method
   nmethod* nm = cm->as_nmethod();
   Atomic::inc(&nm->_lock_count);
-  assert(zombie_ok || !nm->is_zombie(), "cannot lock a zombie method");
 }
 
 void nmethodLocker::unlock_nmethod(CompiledMethod* cm) {
@@ -1645,7 +1544,6 @@ void nmethodLocker::unlock_nmethod(CompiledMethod* cm) {
   if (cm->is_aot()) return;  // FIXME: Revisit once _lock_count is added to aot_method
   nmethod* nm = cm->as_nmethod();
   Atomic::dec(&nm->_lock_count);
-  assert(nm->_lock_count >= 0, "unmatched nmethod lock/unlock");
 }
 
 // -----------------------------------------------------------------------------
@@ -1680,15 +1578,13 @@ void nmethod::verify() {
   // Make sure all the entry points are correctly aligned for patching.
   NativeJump::check_verified_entry_alignment(entry_point(), verified_entry_point());
 
-  // assert(oopDesc::is_oop(method()), "must be valid");
-
   ResourceMark rm;
 
   if (!CodeCache::contains(this)) {
     fatal("nmethod at " INTPTR_FORMAT " not in zone", p2i(this));
   }
 
-  if(is_native_method() )
+  if (is_native_method())
     return;
 
   nmethod* nm = CodeCache::find_nmethod(verified_entry_point());
@@ -1704,7 +1600,6 @@ void nmethod::verify() {
 
   VerifyOopsClosure voc(this);
   oops_do(&voc);
-  assert(voc.ok(), "embedded oops must be OK");
   Universe::heap()->verify_nmethod(this);
 
   verify_scopes();
@@ -1714,9 +1609,7 @@ void nmethod::verify_interrupt_point(address call_site) {
   // Verify IC only when nmethod installation is finished.
   if (!is_not_installed()) {
     Thread *cur = Thread::current();
-    if (CompiledIC_lock->owner() == cur ||
-        ((cur->is_VM_thread() || cur->is_ConcurrentGC_thread()) &&
-         SafepointSynchronize::is_at_safepoint())) {
+    if (CompiledIC_lock->owner() == cur || ((cur->is_VM_thread() || cur->is_ConcurrentGC_thread()) && SafepointSynchronize::is_at_safepoint())) {
       CompiledIC_at(this, call_site);
       CHECK_UNHANDLED_OOPS_ONLY(Thread::current()->clear_unhandled_oops());
     } else {
@@ -1726,7 +1619,6 @@ void nmethod::verify_interrupt_point(address call_site) {
   }
 
   PcDesc* pd = pc_desc_at(nativeCall_at(call_site)->return_address());
-  assert(pd != NULL, "PcDesc must exist");
   for (ScopeDesc* sd = new ScopeDesc(this, pd->scope_decode_offset(),
                                      pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(),
                                      pd->return_oop());
@@ -1736,7 +1628,7 @@ void nmethod::verify_interrupt_point(address call_site) {
 }
 
 void nmethod::verify_scopes() {
-  if( !method() ) return;       // Runtime stubs have no scope
+  if (!method()) return;       // Runtime stubs have no scope
   if (method()->is_native()) return; // Ignore stub methods.
   // iterate through all interrupt point
   // and verify the debug information is valid.
@@ -1766,7 +1658,6 @@ void nmethod::verify_scopes() {
       default:
         break;
     }
-    assert(stub == NULL || stub_contains(stub), "static call stub outside stub section");
   }
 }
 
@@ -1904,7 +1795,6 @@ const char* nmethod::reloc_string_for(u_char* begin, u_char* end) {
           virtual_call_Relocation* r = iter.virtual_call_reloc();
           Method* m = r->method_value();
           if (m != NULL) {
-            assert(m->is_method(), "");
             m->print_short_name(&st);
           }
           return st.as_string();
@@ -1915,7 +1805,6 @@ const char* nmethod::reloc_string_for(u_char* begin, u_char* end) {
           opt_virtual_call_Relocation* r = iter.opt_virtual_call_reloc();
           Method* m = r->method_value();
           if (m != NULL) {
-            assert(m->is_method(), "");
             m->print_short_name(&st);
           }
           return st.as_string();
@@ -1926,7 +1815,6 @@ const char* nmethod::reloc_string_for(u_char* begin, u_char* end) {
           static_call_Relocation* r = iter.static_call_reloc();
           Method* m = r->method_value();
           if (m != NULL) {
-            assert(m->is_method(), "");
             m->print_short_name(&st);
           }
           return st.as_string();
@@ -1991,10 +1879,8 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
           if (type2size[t] == 2) {
             sig_bt[sig_index++] = T_VOID;
           } else {
-            assert(type2size[t] == 1, "size is 1 or 2");
           }
         }
-        assert(sig_index == sizeargs, "");
       }
       const char* spname = "sp"; // make arch-specific?
       intptr_t out_preserve = SharedRuntime::java_calling_convention(sig_bt, regs, sizeargs, false);
@@ -2007,7 +1893,6 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
         bool at_this = (arg_index == -1);
         bool at_old_sp = false;
         BasicType t = (at_this ? T_OBJECT : ss.type());
-        assert(t == sig_bt[sig_index], "sigs in sync");
         if (at_this)
           stream->print("  # this: ");
         else
@@ -2181,7 +2066,7 @@ private:
   NativeCall* _call;
 
 public:
-  DirectNativeCallWrapper(NativeCall* call) : _call(call) {}
+  DirectNativeCallWrapper(NativeCall* call) : _call(call) { }
 
   virtual address destination() const { return _call->destination(); }
   virtual address instruction_address() const { return _call->instruction_address(); }
@@ -2216,7 +2101,6 @@ public:
 
   virtual void verify_resolve_call(address dest) const {
     CodeBlob* db = CodeCache::find_blob_unsafe(dest);
-    assert(db != NULL && !db->is_adapter_blob(), "must use stub!");
   }
 
   virtual bool is_call_to_interpreted(address dest) const {
@@ -2268,7 +2152,6 @@ CompiledStaticCall* nmethod::compiledStaticCall_before(address return_addr) cons
 }
 
 void nmethod::clear_jvmci_installed_code() {
-  assert_locked_or_safepoint(Patching_lock);
   if (_jvmci_installed_code != NULL) {
     JNIHandles::destroy_weak_global(_jvmci_installed_code);
     _jvmci_installed_code = NULL;
@@ -2276,7 +2159,6 @@ void nmethod::clear_jvmci_installed_code() {
 }
 
 void nmethod::clear_speculation_log() {
-  assert_locked_or_safepoint(Patching_lock);
   if (_speculation_log != NULL) {
     JNIHandles::destroy_weak_global(_speculation_log);
     _speculation_log = NULL;
@@ -2284,7 +2166,6 @@ void nmethod::clear_speculation_log() {
 }
 
 void nmethod::maybe_invalidate_installed_code() {
-  assert(Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "should be performed under a lock for consistency");
   oop installed_code = JNIHandles::resolve(_jvmci_installed_code);
   if (installed_code != NULL) {
     // Update the values in the InstalledCode instance if it still refers to this nmethod

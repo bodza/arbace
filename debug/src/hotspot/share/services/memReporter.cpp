@@ -71,10 +71,8 @@ void MemReporterBase::print_virtual_memory_region(const char* type, address base
 void MemSummaryReporter::report() {
   const char* scale = current_scale();
   outputStream* out = output();
-  size_t total_reserved_amount = _malloc_snapshot->total() +
-    _vm_snapshot->total_reserved();
-  size_t total_committed_amount = _malloc_snapshot->total() +
-    _vm_snapshot->total_committed();
+  size_t total_reserved_amount = _malloc_snapshot->total() + _vm_snapshot->total_reserved();
+  size_t total_committed_amount = _malloc_snapshot->total() + _vm_snapshot->total_committed();
 
   // Overall total
   out->print_cr("\nNative Memory Tracking:\n");
@@ -94,16 +92,14 @@ void MemSummaryReporter::report() {
   }
 }
 
-void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag,
-  MallocMemory*  malloc_memory, VirtualMemory* virtual_memory) {
+void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag, MallocMemory* malloc_memory, VirtualMemory* virtual_memory) {
 
   size_t reserved_amount  = reserved_total (malloc_memory, virtual_memory);
   size_t committed_amount = committed_total(malloc_memory, virtual_memory);
 
   // Count thread's native stack in "Thread" category
   if (flag == mtThread) {
-    const VirtualMemory* thread_stack_usage =
-      (const VirtualMemory*)_vm_snapshot->by_type(mtThreadStack);
+    const VirtualMemory* thread_stack_usage = (const VirtualMemory*)_vm_snapshot->by_type(mtThreadStack);
     reserved_amount  += thread_stack_usage->reserved();
     committed_amount += thread_stack_usage->committed();
   } else if (flag == mtNMT) {
@@ -121,15 +117,12 @@ void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag,
 
     if (flag == mtClass) {
       // report class count
-      out->print_cr("%27s (classes #" SIZE_FORMAT ")",
-        " ", (_instance_class_count + _array_class_count));
-      out->print_cr("%27s (  instance classes #" SIZE_FORMAT ", array classes #" SIZE_FORMAT ")",
-        " ", _instance_class_count, _array_class_count);
+      out->print_cr("%27s (classes #" SIZE_FORMAT ")", " ", (_instance_class_count + _array_class_count));
+      out->print_cr("%27s (  instance classes #" SIZE_FORMAT ", array classes #" SIZE_FORMAT ")", " ", _instance_class_count, _array_class_count);
     } else if (flag == mtThread) {
       // report thread count
       out->print_cr("%27s (thread #" SIZE_FORMAT ")", " ", _malloc_snapshot->thread_count());
-      const VirtualMemory* thread_stack_usage =
-       _vm_snapshot->by_type(mtThreadStack);
+      const VirtualMemory* thread_stack_usage = _vm_snapshot->by_type(mtThreadStack);
       out->print("%27s (stack: ", " ");
       print_total(thread_stack_usage->reserved(), thread_stack_usage->committed());
       out->print_cr(")");
@@ -150,8 +143,7 @@ void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag,
       print_arena_line(malloc_memory->arena_size(), malloc_memory->arena_count());
     }
 
-    if (flag == mtNMT &&
-      amount_in_current_scale(_malloc_snapshot->malloc_overhead()->size()) > 0) {
+    if (flag == mtNMT && amount_in_current_scale(_malloc_snapshot->malloc_overhead()->size()) > 0) {
       out->print_cr("%27s (tracking overhead=" SIZE_FORMAT "%s)", " ",
         amount_in_current_scale(_malloc_snapshot->malloc_overhead()->size()), scale);
     } else if (flag == mtClass) {
@@ -166,9 +158,7 @@ void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag,
 }
 
 void MemSummaryReporter::report_metadata(Metaspace::MetadataType type) const {
-  assert(type == Metaspace::NonClassType || type == Metaspace::ClassType, "Invalid metadata type");
-  const char* name = (type == Metaspace::NonClassType) ?
-    "Metadata:   " : "Class space:";
+  const char* name = (type == Metaspace::NonClassType) ? "Metadata:   " : "Class space:";
 
   outputStream* out = output();
   const char* scale = current_scale();
@@ -178,7 +168,6 @@ void MemSummaryReporter::report_metadata(Metaspace::MetadataType type) const {
               + MetaspaceUtils::free_chunks_total_bytes(type)
               + MetaspaceUtils::free_in_vs_bytes(type);
 
-  assert(committed >= used + free, "Sanity");
   size_t waste = committed - (used + free);
 
   out->print_cr("%27s (  %s)", " ", name);
@@ -216,15 +205,13 @@ void MemDetailReporter::report_malloc_sites() {
     stack->print_on(out);
     out->print("%29s", " ");
     MEMFLAGS flag = malloc_site->flags();
-    assert((flag >= 0 && flag < (int)mt_number_of_types) && flag != mtNone, "Must have a valid memory type");
     print_malloc(malloc_site->size(), malloc_site->count(),flag);
     out->print_cr("\n");
   }
 }
 
-void MemDetailReporter::report_virtual_memory_allocation_sites()  {
-  VirtualMemorySiteIterator  virtual_memory_itr =
-    _baseline.virtual_memory_sites(MemBaseline::by_size);
+void MemDetailReporter::report_virtual_memory_allocation_sites() {
+  VirtualMemorySiteIterator  virtual_memory_itr = _baseline.virtual_memory_sites(MemBaseline::by_size);
 
   if (virtual_memory_itr.is_empty()) return;
 
@@ -256,7 +243,6 @@ void MemDetailReporter::report_virtual_memory_map() {
 }
 
 void MemDetailReporter::report_virtual_memory_region(const ReservedMemoryRegion* reserved_rgn) {
-  assert(reserved_rgn != NULL, "NULL pointer");
 
   // Don't report if size is too small
   if (amount_in_current_scale(reserved_rgn->size()) == 0) return;
@@ -283,7 +269,6 @@ void MemDetailReporter::report_virtual_memory_region(const ReservedMemoryRegion*
       // One region spanning the entire reserved region, with the same stack trace.
       // Don't print this regions because the "reserved and committed" line above
       // already indicates that the region is comitted.
-      assert(itr.next() == NULL, "Unexpectedly more than one regions");
       return;
     }
   }
@@ -333,8 +318,7 @@ void MemSummaryDiffReporter::report_diff() {
   }
 }
 
-void MemSummaryDiffReporter::print_malloc_diff(size_t current_amount, size_t current_count,
-    size_t early_amount, size_t early_count, MEMFLAGS flags) const {
+void MemSummaryDiffReporter::print_malloc_diff(size_t current_amount, size_t current_count, size_t early_amount, size_t early_count, MEMFLAGS flags) const {
   const char* scale = current_scale();
   outputStream* out = output();
 
@@ -356,8 +340,7 @@ void MemSummaryDiffReporter::print_malloc_diff(size_t current_amount, size_t cur
   }
 }
 
-void MemSummaryDiffReporter::print_arena_diff(size_t current_amount, size_t current_count,
-  size_t early_amount, size_t early_count) const {
+void MemSummaryDiffReporter::print_arena_diff(size_t current_amount, size_t current_count, size_t early_amount, size_t early_count) const {
   const char* scale = current_scale();
   outputStream* out = output();
   out->print("arena=" SIZE_FORMAT "%s", amount_in_current_scale(current_amount), scale);
@@ -371,8 +354,7 @@ void MemSummaryDiffReporter::print_arena_diff(size_t current_amount, size_t curr
   }
 }
 
-void MemSummaryDiffReporter::print_virtual_memory_diff(size_t current_reserved, size_t current_committed,
-    size_t early_reserved, size_t early_committed) const {
+void MemSummaryDiffReporter::print_virtual_memory_diff(size_t current_reserved, size_t current_committed, size_t early_reserved, size_t early_committed) const {
   const char* scale = current_scale();
   outputStream* out = output();
   out->print("reserved=" SIZE_FORMAT "%s", amount_in_current_scale(current_reserved), scale);
@@ -388,11 +370,7 @@ void MemSummaryDiffReporter::print_virtual_memory_diff(size_t current_reserved, 
   }
 }
 
-void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
-  const MallocMemory* early_malloc, const VirtualMemory* early_vm,
-  const MetaspaceSnapshot* early_ms,
-  const MallocMemory* current_malloc, const VirtualMemory* current_vm,
-  const MetaspaceSnapshot* current_ms) const {
+void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag, const MallocMemory* early_malloc, const VirtualMemory* early_vm, const MetaspaceSnapshot* early_ms, const MallocMemory* current_malloc, const VirtualMemory* current_vm, const MetaspaceSnapshot* current_ms) const {
 
   outputStream* out = output();
   const char* scale = current_scale();
@@ -407,10 +385,8 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
 
   // Adjust virtual memory total
   if (flag == mtThread) {
-    const VirtualMemory* early_thread_stack_usage =
-      _early_baseline.virtual_memory(mtThreadStack);
-    const VirtualMemory* current_thread_stack_usage =
-      _current_baseline.virtual_memory(mtThreadStack);
+    const VirtualMemory* early_thread_stack_usage = _early_baseline.virtual_memory(mtThreadStack);
+    const VirtualMemory* current_thread_stack_usage = _current_baseline.virtual_memory(mtThreadStack);
 
     early_reserved_amount  += early_thread_stack_usage->reserved();
     early_committed_amount += early_thread_stack_usage->committed();
@@ -425,8 +401,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     current_committed_amount += _current_baseline.malloc_tracking_overhead();
   }
 
-  if (amount_in_current_scale(current_reserved_amount) > 0 ||
-      diff_in_current_scale(current_reserved_amount, early_reserved_amount) != 0) {
+  if (amount_in_current_scale(current_reserved_amount) > 0 || diff_in_current_scale(current_reserved_amount, early_reserved_amount) != 0) {
 
     // print summary line
     out->print("-%26s (", NMTUtil::flag_to_name(flag));
@@ -438,8 +413,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     if (flag == mtClass) {
       // report class count
       out->print("%27s (classes #" SIZE_FORMAT "", " ", _current_baseline.class_count());
-      int class_count_diff = (int)(_current_baseline.class_count() -
-        _early_baseline.class_count());
+      int class_count_diff = (int)(_current_baseline.class_count() - _early_baseline.class_count());
       if (_current_baseline.class_count() != _early_baseline.class_count()) {
         out->print(" %+d", (int)(_current_baseline.class_count() - _early_baseline.class_count()));
       }
@@ -458,18 +432,15 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     } else if (flag == mtThread) {
       // report thread count
       out->print("%27s (thread #" SIZE_FORMAT "", " ", _current_baseline.thread_count());
-      int thread_count_diff = (int)(_current_baseline.thread_count() -
-          _early_baseline.thread_count());
+      int thread_count_diff = (int)(_current_baseline.thread_count() - _early_baseline.thread_count());
       if (thread_count_diff != 0) {
         out->print(" %+d", thread_count_diff);
       }
       out->print_cr(")");
 
       // report thread stack
-      const VirtualMemory* current_thread_stack =
-          _current_baseline.virtual_memory(mtThreadStack);
-      const VirtualMemory* early_thread_stack =
-        _early_baseline.virtual_memory(mtThreadStack);
+      const VirtualMemory* current_thread_stack = _current_baseline.virtual_memory(mtThreadStack);
+      const VirtualMemory* early_thread_stack = _early_baseline.virtual_memory(mtThreadStack);
 
       out->print("%27s (stack: ", " ");
       print_virtual_memory_diff(current_thread_stack->reserved(), current_thread_stack->committed(),
@@ -480,8 +451,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     // Report malloc'd memory
     size_t current_malloc_amount = current_malloc->malloc_size();
     size_t early_malloc_amount   = early_malloc->malloc_size();
-    if (amount_in_current_scale(current_malloc_amount) > 0 ||
-        diff_in_current_scale(current_malloc_amount, early_malloc_amount) != 0) {
+    if (amount_in_current_scale(current_malloc_amount) > 0 || diff_in_current_scale(current_malloc_amount, early_malloc_amount) != 0) {
       out->print("%28s(", " ");
       print_malloc_diff(current_malloc_amount, (flag == mtChunk) ? 0 : current_malloc->malloc_count(),
         early_malloc_amount, early_malloc->malloc_count(), mtNone);
@@ -489,8 +459,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     }
 
     // Report virtual memory
-    if (amount_in_current_scale(current_vm->reserved()) > 0 ||
-        diff_in_current_scale(current_vm->reserved(), early_vm->reserved()) != 0) {
+    if (amount_in_current_scale(current_vm->reserved()) > 0 || diff_in_current_scale(current_vm->reserved(), early_vm->reserved()) != 0) {
       out->print("%27s (mmap: ", " ");
       print_virtual_memory_diff(current_vm->reserved(), current_vm->committed(),
         early_vm->reserved(), early_vm->committed());
@@ -498,8 +467,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
     }
 
     // Report arena memory
-    if (amount_in_current_scale(current_malloc->arena_size()) > 0 ||
-        diff_in_current_scale(current_malloc->arena_size(), early_malloc->arena_size()) != 0) {
+    if (amount_in_current_scale(current_malloc->arena_size()) > 0 || diff_in_current_scale(current_malloc->arena_size(), early_malloc->arena_size()) != 0) {
       out->print("%28s(", " ");
       print_arena_diff(current_malloc->arena_size(), current_malloc->arena_count(),
         early_malloc->arena_size(), early_malloc->arena_count());
@@ -521,26 +489,21 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag,
       }
       out->print_cr(")");
     } else if (flag == mtClass) {
-      assert(current_ms != NULL && early_ms != NULL, "Sanity");
       print_metaspace_diff(current_ms, early_ms);
     }
     out->print_cr(" ");
   }
 }
 
-void MemSummaryDiffReporter::print_metaspace_diff(const MetaspaceSnapshot* current_ms,
-                                                  const MetaspaceSnapshot* early_ms) const {
+void MemSummaryDiffReporter::print_metaspace_diff(const MetaspaceSnapshot* current_ms, const MetaspaceSnapshot* early_ms) const {
   print_metaspace_diff(Metaspace::NonClassType, current_ms, early_ms);
   if (Metaspace::using_class_space()) {
     print_metaspace_diff(Metaspace::ClassType, current_ms, early_ms);
   }
 }
 
-void MemSummaryDiffReporter::print_metaspace_diff(Metaspace::MetadataType type,
-                                                  const MetaspaceSnapshot* current_ms,
-                                                  const MetaspaceSnapshot* early_ms) const {
-  const char* name = (type == Metaspace::NonClassType) ?
-    "Metadata:   " : "Class space:";
+void MemSummaryDiffReporter::print_metaspace_diff(Metaspace::MetadataType type, const MetaspaceSnapshot* current_ms, const MetaspaceSnapshot* early_ms) const {
+  const char* name = (type == Metaspace::NonClassType) ? "Metadata:   " : "Class space:";
 
   outputStream* out = output();
   const char* scale = current_scale();
@@ -668,8 +631,7 @@ void MemDetailDiffReporter::old_malloc_site(const MallocSite* malloc_site) const
     malloc_site->count(), malloc_site->flags());
 }
 
-void MemDetailDiffReporter::diff_malloc_site(const MallocSite* early,
-  const MallocSite* current)  const {
+void MemDetailDiffReporter::diff_malloc_site(const MallocSite* early, const MallocSite* current) const {
   if (early->flags() != current->flags()) {
     // If malloc site type changed, treat it as deallocation of old type and
     // allocation of new type.
@@ -681,11 +643,8 @@ void MemDetailDiffReporter::diff_malloc_site(const MallocSite* early,
   }
 }
 
-void MemDetailDiffReporter::diff_malloc_site(const NativeCallStack* stack, size_t current_size,
-  size_t current_count, size_t early_size, size_t early_count, MEMFLAGS flags) const {
+void MemDetailDiffReporter::diff_malloc_site(const NativeCallStack* stack, size_t current_size, size_t current_count, size_t early_size, size_t early_count, MEMFLAGS flags) const {
   outputStream* out = output();
-
-  assert(stack != NULL, "NULL stack");
 
   if (diff_in_current_scale(current_size, early_size) == 0) {
       return;
@@ -707,19 +666,16 @@ void MemDetailDiffReporter::old_virtual_memory_site(const VirtualMemoryAllocatio
   diff_virtual_memory_site(site->call_stack(), 0, 0, site->reserved(), site->committed());
 }
 
-void MemDetailDiffReporter::diff_virtual_memory_site(const VirtualMemoryAllocationSite* early,
-  const VirtualMemoryAllocationSite* current) const {
+void MemDetailDiffReporter::diff_virtual_memory_site(const VirtualMemoryAllocationSite* early, const VirtualMemoryAllocationSite* current) const {
   diff_virtual_memory_site(current->call_stack(), current->reserved(), current->committed(),
     early->reserved(), early->committed());
 }
 
-void MemDetailDiffReporter::diff_virtual_memory_site(const NativeCallStack* stack, size_t current_reserved,
-  size_t current_committed, size_t early_reserved, size_t early_committed) const  {
+void MemDetailDiffReporter::diff_virtual_memory_site(const NativeCallStack* stack, size_t current_reserved, size_t current_committed, size_t early_reserved, size_t early_committed) const {
   outputStream* out = output();
 
   // no change
-  if (diff_in_current_scale(current_reserved, early_reserved) == 0 &&
-      diff_in_current_scale(current_committed, early_committed) == 0) {
+  if (diff_in_current_scale(current_reserved, early_reserved) == 0 && diff_in_current_scale(current_committed, early_committed) == 0) {
     return;
   }
 

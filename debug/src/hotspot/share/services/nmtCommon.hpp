@@ -26,7 +26,6 @@ class NMTUtil : AllStatic {
   // Map memory type to index
   static inline int flag_to_index(MEMFLAGS flag) {
     const int index = flag & 0xff;
-    assert(index >= 0 && index < (int)mt_number_of_types, "Index out of bounds");
     return index;
   }
 
@@ -37,7 +36,6 @@ class NMTUtil : AllStatic {
 
   // Map an index to memory type
   static MEMFLAGS index_to_flag(int index) {
-    assert(index >= 0 && index < (int) mt_number_of_types, "Index out of bounds");
     return (MEMFLAGS)index;
   }
 

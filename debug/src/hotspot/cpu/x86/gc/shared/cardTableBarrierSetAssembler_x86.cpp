@@ -17,12 +17,10 @@ void CardTableBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssembl
   BarrierSet *bs = BarrierSet::barrier_set();
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
   CardTable* ct = ctbs->card_table();
-  assert(sizeof(*ct->byte_map_base()) == sizeof(jbyte), "adjust this code");
   intptr_t disp = (intptr_t) ct->byte_map_base();
 
   Label L_loop, L_done;
   const Register end = count;
-  assert_different_registers(addr, end);
 
   __ testl(count, count);
   __ jcc(Assembler::zero, L_done); // zero count - nothing to do
@@ -50,7 +48,6 @@ void CardTableBarrierSetAssembler::store_check(MacroAssembler* masm, Register ob
 
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
   CardTable* ct = ctbs->card_table();
-  assert(sizeof(*ct->byte_map_base()) == sizeof(jbyte), "adjust this code");
 
   __ shrptr(obj, CardTable::card_shift);
 

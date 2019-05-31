@@ -23,7 +23,7 @@ protected:
   decoder_status  _decoder_status;
 
 public:
-  virtual ~AbstractDecoder() {}
+  virtual ~AbstractDecoder() { }
 
   // decode an pc address to corresponding function name and an offset from the beginning of
   // the function
@@ -58,7 +58,7 @@ public:
     _decoder_status = not_available;
   }
 
-  virtual ~NullDecoder() {};
+  virtual ~NullDecoder() { };
 
   virtual bool decode(address pc, char* buf, int buflen, int* offset,
                       const char* modulepath, bool demangle) {

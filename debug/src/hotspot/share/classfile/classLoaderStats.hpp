@@ -33,8 +33,7 @@ public:
   }
 
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
 };

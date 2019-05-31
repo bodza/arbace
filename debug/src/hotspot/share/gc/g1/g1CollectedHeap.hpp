@@ -74,7 +74,7 @@ class G1EvacSummary;
 typedef OverflowTaskQueue<StarTask, mtGC>         RefToScanQueue;
 typedef GenericTaskQueueSet<RefToScanQueue, mtGC> RefToScanQueueSet;
 
-typedef int RegionIdx_t;   // needs to hold [ 0..max_regions() )
+typedef int RegionIdx_t;   // needs to hold [ 0..max_regions())
 typedef int CardIdx_t;     // needs to hold [ 0..CardsPerRegion )
 
 // The G1 STW is alive closure.
@@ -85,14 +85,14 @@ typedef int CardIdx_t;     // needs to hold [ 0..CardsPerRegion )
 class G1STWIsAliveClosure : public BoolObjectClosure {
   G1CollectedHeap* _g1h;
 public:
-  G1STWIsAliveClosure(G1CollectedHeap* g1h) : _g1h(g1h) {}
+  G1STWIsAliveClosure(G1CollectedHeap* g1h) : _g1h(g1h) { }
   bool do_object_b(oop p);
 };
 
 class G1STWSubjectToDiscoveryClosure : public BoolObjectClosure {
   G1CollectedHeap* _g1h;
 public:
-  G1STWSubjectToDiscoveryClosure(G1CollectedHeap* g1h) : _g1h(g1h) {}
+  G1STWSubjectToDiscoveryClosure(G1CollectedHeap* g1h) : _g1h(g1h) { }
   bool do_object_b(oop p);
 };
 
@@ -273,7 +273,7 @@ private:
   // frequent marking cycles and stress the cleanup / concurrent
   // cleanup code more (as all the regions that will be allocated by
   // this method will be found dead by the marking cycle).
-  void allocate_dummy_regions() {};
+  void allocate_dummy_regions() { };
 
   // If the HR printer is active, dump the state of the regions in the
   // heap after a compaction.
@@ -296,38 +296,6 @@ private:
   BOOL_TO_STR(Heap_lock->owned_by_self()), \
   BOOL_TO_STR(SafepointSynchronize::is_at_safepoint()), \
   BOOL_TO_STR(Thread::current()->is_VM_thread())
-
-#define assert_heap_locked() \
-  do { \
-    assert(Heap_lock->owned_by_self(), heap_locking_asserts_params("should be holding the Heap_lock")); \
-  } while (0)
-
-#define assert_heap_locked_or_at_safepoint(_should_be_vm_thread_) \
-  do { \
-    assert(Heap_lock->owned_by_self() || (SafepointSynchronize::is_at_safepoint() && ((_should_be_vm_thread_) == Thread::current()->is_VM_thread())), heap_locking_asserts_params("should be holding the Heap_lock or " "should be at a safepoint")); \
-  } while (0)
-
-#define assert_heap_locked_and_not_at_safepoint() \
-  do { \
-    assert(Heap_lock->owned_by_self() && !SafepointSynchronize::is_at_safepoint(), heap_locking_asserts_params("should be holding the Heap_lock and " "should not be at a safepoint")); \
-  } while (0)
-
-#define assert_heap_not_locked() \
-  do { \
-    assert(!Heap_lock->owned_by_self(), heap_locking_asserts_params("should not be holding the Heap_lock")); \
-  } while (0)
-
-#define assert_heap_not_locked_and_not_at_safepoint() \
-  do { \
-    assert(!Heap_lock->owned_by_self() && !SafepointSynchronize::is_at_safepoint(), heap_locking_asserts_params("should not be holding the Heap_lock and " "should not be at a safepoint")); \
-  } while (0)
-
-#define assert_at_safepoint_on_vm_thread() \
-  do { \
-    assert_at_safepoint(); \
-    assert(Thread::current_or_null() != NULL, "no current thread"); \
-    assert(Thread::current()->is_VM_thread(), "current thread is not VM thread"); \
-  } while (0)
 
   // The young region list.
   G1EdenRegions _eden;
@@ -501,7 +469,6 @@ public:
   }
 
   G1MonitoringSupport* g1mm() {
-    assert(_g1mm != NULL, "should have been initialized");
     return _g1mm;
   }
 
@@ -1187,19 +1154,14 @@ public:
   // iff a) it was not allocated since the last mark, b) it
   // is not marked, and c) it is not in an archive region.
   bool is_obj_dead(const oop obj, const HeapRegion* hr) const {
-    return
-      hr->is_obj_dead(obj, _cm->prev_mark_bitmap()) &&
-      !hr->is_archive();
+    return hr->is_obj_dead(obj, _cm->prev_mark_bitmap()) && !hr->is_archive();
   }
 
   // This function returns true when an object has been
   // around since the previous marking and hasn't yet
   // been marked during this marking, and is not in an archive region.
   bool is_obj_ill(const oop obj, const HeapRegion* hr) const {
-    return
-      !hr->obj_allocated_since_next_marking(obj) &&
-      !is_marked_next(obj) &&
-      !hr->is_archive();
+    return !hr->obj_allocated_since_next_marking(obj) && !is_marked_next(obj) && !hr->is_archive();
   }
 
   // Determine if an object is dead, given only the object itself.
@@ -1316,8 +1278,8 @@ public:
   void print_tracing_info() const;
 
   // The following two methods are helpful for debugging RSet issues.
-  void print_cset_rsets() {};
-  void print_all_rsets() {};
+  void print_cset_rsets() { };
+  void print_all_rsets() { };
 
 public:
   size_t pending_card_num();
@@ -1351,7 +1313,7 @@ public:
                                 ParallelTaskTerminator* terminator)
     : _g1h(g1h), _par_scan_state(par_scan_state),
       _queues(queues), _terminator(terminator),
-      _start_term(0.0), _term_time(0.0), _term_attempts(0) {}
+      _start_term(0.0), _term_time(0.0), _term_attempts(0) { }
 
   void do_void();
 

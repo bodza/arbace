@@ -38,7 +38,6 @@ class RetTableEntry : public ResourceObj {
   int target_bci() const                      { return _target_bci; }
   int nof_jsrs() const                        { return _jsrs->length(); }
   int jsrs(int i) const                       {
-    assert(i>=0 && i<nof_jsrs(), "Index out of bounds");
     return _jsrs->at(i); }
 
   // Update entry
@@ -116,8 +115,6 @@ class CellTypeState {
   static CellTypeState make_any(int state) {
     CellTypeState s;
     s._state = state;
-    // Causes SS10 warning.
-    // assert(s.is_valid_state(), "check to see if CellTypeState is valid");
     return s;
   }
 
@@ -130,24 +127,18 @@ class CellTypeState {
   }
 
   static CellTypeState make_addr(int bci) {
-    assert((bci >= 0) && (bci < info_data_mask), "check to see if ret addr is valid");
     return make_any(addr_bit | not_bottom_info_bit | (bci & info_data_mask));
   }
 
   static CellTypeState make_slot_ref(int slot_num) {
-    assert(slot_num >= 0 && slot_num < ref_data_mask, "slot out of range");
-    return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit | ref_slot_bit |
-                    (slot_num & ref_data_mask));
+    return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit | ref_slot_bit | (slot_num & ref_data_mask));
   }
 
   static CellTypeState make_line_ref(int bci) {
-    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
-    return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit |
-                    (bci & ref_data_mask));
+    return make_any(ref_bit | not_bottom_info_bit | ref_not_lock_bit | (bci & ref_data_mask));
   }
 
   static CellTypeState make_lock_ref(int bci) {
-    assert(bci >= 0 && bci < ref_data_mask, "line out of range");
     return make_any(ref_bit | not_bottom_info_bit | (bci & ref_data_mask));
   }
 
@@ -183,7 +174,6 @@ class CellTypeState {
   bool is_info_bottom() const           { return ((_state & not_bottom_info_bit) == 0); }
   bool is_info_top() const              { return ((_state & top_info_bit) != 0); }
   int  get_info() const {
-    assert((!is_info_top() && !is_info_bottom()), "check to make sure top/bottom info is not used");
     return (_state & info_data_mask);
   }
 
@@ -253,7 +243,6 @@ class BasicBlock: ResourceObj {
   bool is_dead() const                      { return _stack_top == _dead_basic_block; }
   bool is_alive() const                     { return _stack_top != _dead_basic_block; }
   void mark_as_alive()                      {
-    assert(is_dead(), "must be dead");
     _stack_top = _unreached; }
 };
 
@@ -466,8 +455,8 @@ class GenerateOopMap {
   //
   // All virtual method must be implemented in subclasses
   virtual bool allow_rewrites             () const                        { return false; }
-  virtual bool report_results             () const                        { return true;  }
-  virtual bool report_init_vars           () const                        { return true;  }
+  virtual bool report_results             () const                        { return true; }
+  virtual bool report_init_vars           () const                        { return true; }
   virtual bool possible_gc_point          (BytecodeStream *bcs)           { ShouldNotReachHere(); return false; }
   virtual void fill_stackmap_prolog       (int nof_gc_points)             { ShouldNotReachHere(); }
   virtual void fill_stackmap_epilog       ()                              { ShouldNotReachHere(); }
@@ -475,7 +464,7 @@ class GenerateOopMap {
                                            CellTypeState* vars,
                                            CellTypeState* stack,
                                            int stackTop)                  { ShouldNotReachHere(); }
-  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { ShouldNotReachHere();; }
+  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { ShouldNotReachHere(); }
 };
 
 //
@@ -488,15 +477,15 @@ class ResolveOopMapConflicts: public GenerateOopMap {
   bool _must_clear_locals;
 
   virtual bool report_results() const     { return false; }
-  virtual bool report_init_vars() const   { return true;  }
-  virtual bool allow_rewrites() const     { return true;  }
+  virtual bool report_init_vars() const   { return true; }
+  virtual bool allow_rewrites() const     { return true; }
   virtual bool possible_gc_point          (BytecodeStream *bcs)           { return false; }
-  virtual void fill_stackmap_prolog       (int nof_gc_points)             {}
-  virtual void fill_stackmap_epilog       ()                              {}
+  virtual void fill_stackmap_prolog       (int nof_gc_points)             { }
+  virtual void fill_stackmap_epilog       ()                              { }
   virtual void fill_stackmap_for_opcodes  (BytecodeStream *bcs,
                                            CellTypeState* vars,
                                            CellTypeState* stack,
-                                           int stack_top)                 {}
+                                           int stack_top)                 { }
   virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { _must_clear_locals = init_vars->length() > 0; }
 
  public:
@@ -514,17 +503,17 @@ class GeneratePairingInfo: public GenerateOopMap {
 
   virtual bool report_results() const     { return false; }
   virtual bool report_init_vars() const   { return false; }
-  virtual bool allow_rewrites() const     { return false;  }
+  virtual bool allow_rewrites() const     { return false; }
   virtual bool possible_gc_point          (BytecodeStream *bcs)           { return false; }
-  virtual void fill_stackmap_prolog       (int nof_gc_points)             {}
-  virtual void fill_stackmap_epilog       ()                              {}
+  virtual void fill_stackmap_prolog       (int nof_gc_points)             { }
+  virtual void fill_stackmap_epilog       ()                              { }
   virtual void fill_stackmap_for_opcodes  (BytecodeStream *bcs,
                                            CellTypeState* vars,
                                            CellTypeState* stack,
-                                           int stack_top)                 {}
-  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) {}
+                                           int stack_top)                 { }
+  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { }
  public:
-  GeneratePairingInfo(const methodHandle& method) : GenerateOopMap(method)       {};
+  GeneratePairingInfo(const methodHandle& method) : GenerateOopMap(method)       { };
 
   // Call compute_map(CHECK) to generate info.
 };

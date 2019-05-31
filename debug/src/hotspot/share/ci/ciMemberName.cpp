@@ -15,6 +15,6 @@ ciMethod* ciMemberName::get_vmtarget() const {
   if (vmtarget->is_method())
     return CURRENT_ENV->get_method((Method*) vmtarget);
   // FIXME: What if the vmtarget is a Klass?
-  assert(false, "");
+  ShouldNotReachHere();
   return NULL;
 }

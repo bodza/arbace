@@ -3,7 +3,7 @@
 
 #include "metaprogramming/integralConstant.hpp"
 
-template <typename T> struct IsConst: public FalseType {};
-template <typename T> struct IsConst<const T>: public TrueType {};
+template <typename T> struct IsConst: public FalseType { };
+template <typename T> struct IsConst<const T>: public TrueType { };
 
 #endif

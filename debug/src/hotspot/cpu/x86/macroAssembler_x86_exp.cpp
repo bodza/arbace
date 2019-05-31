@@ -168,7 +168,6 @@ void MacroAssembler::fast_exp(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   Label L_2TAG_PACKET_8_0_2, L_2TAG_PACKET_9_0_2, L_2TAG_PACKET_10_0_2, L_2TAG_PACKET_11_0_2;
   Label L_2TAG_PACKET_12_0_2, B1_3, B1_5, start;
 
-  assert_different_registers(tmp, eax, ecx, edx);
   jmp(start);
   address cv = (address)_cv;
   address Shifter = (address)_shifter;

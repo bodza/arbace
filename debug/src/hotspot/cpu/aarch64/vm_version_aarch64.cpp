@@ -59,7 +59,7 @@ static getPsrInfo_stub_t getPsrInfo_stub = NULL;
 class VM_Version_StubGenerator: public StubCodeGenerator {
  public:
 
-  VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) {}
+  VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_getPsrInfo() {
     StubCodeMark mark(this, "VM_Version", "getPsrInfo_stub");
@@ -113,8 +113,7 @@ void VM_Version::get_processor_features() {
   if (FLAG_IS_DEFAULT(SoftwarePrefetchHintDistance))
     FLAG_SET_DEFAULT(SoftwarePrefetchHintDistance, 3*dcache_line);
 
-  if (PrefetchCopyIntervalInBytes != -1 &&
-       ((PrefetchCopyIntervalInBytes & 7) || (PrefetchCopyIntervalInBytes >= 32768))) {
+  if (PrefetchCopyIntervalInBytes != -1 && ((PrefetchCopyIntervalInBytes & 7) || (PrefetchCopyIntervalInBytes >= 32768))) {
     warning("PrefetchCopyIntervalInBytes must be -1, or a multiple of 8 and < 32768");
     PrefetchCopyIntervalInBytes &= ~7;
     if (PrefetchCopyIntervalInBytes >= 32768)
@@ -131,8 +130,7 @@ void VM_Version::get_processor_features() {
     AllocatePrefetchStepSize &= ~7;
   }
 
-  if (SoftwarePrefetchHintDistance != -1 &&
-       (SoftwarePrefetchHintDistance & 7)) {
+  if (SoftwarePrefetchHintDistance != -1 && (SoftwarePrefetchHintDistance & 7)) {
     warning("SoftwarePrefetchHintDistance must be -1, or a multiple of 8");
     SoftwarePrefetchHintDistance &= ~7;
   }
@@ -258,8 +256,7 @@ void VM_Version::get_processor_features() {
 
   if (auxv & HWCAP_AES) {
     UseAES = UseAES || FLAG_IS_DEFAULT(UseAES);
-    UseAESIntrinsics =
-        UseAESIntrinsics || (UseAES && FLAG_IS_DEFAULT(UseAESIntrinsics));
+    UseAESIntrinsics = UseAESIntrinsics || (UseAES && FLAG_IS_DEFAULT(UseAESIntrinsics));
     if (UseAESIntrinsics && !UseAES) {
       warning("UseAESIntrinsics enabled, but UseAES not, enabling");
       UseAES = true;

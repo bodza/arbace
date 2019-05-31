@@ -22,7 +22,6 @@ address VtableStub::_chunk_end         = NULL;
 VMReg   VtableStub::_receiver_location = VMRegImpl::Bad();
 
 void* VtableStub::operator new(size_t size, int code_size) throw() {
-  assert(size == sizeof(VtableStub), "mismatched size");
   // compute real VtableStub size (rounded to nearest word)
   const int real_size = align_up(code_size + (int)sizeof(VtableStub), wordSize);
   // malloc them in chunks to minimize header overhead
@@ -41,7 +40,6 @@ void* VtableStub::operator new(size_t size, int code_size) throw() {
     Forte::register_stub("vtable stub", _chunk, _chunk_end);
     align_chunk();
   }
-  assert(_chunk + real_size <= _chunk_end, "bad allocation");
   void* res = _chunk;
   _chunk += real_size;
   align_chunk();
@@ -73,8 +71,6 @@ void VtableStubs::initialize() {
   VtableStub::_receiver_location = SharedRuntime::name_for_receiver();
   {
     MutexLocker ml(VtableStubs_lock);
-    assert(_number_of_vtable_stubs == 0, "potential performance bug: VtableStubs initialized more than once");
-    assert(is_power_of_2(N), "N must be a power of 2");
     for (int i = 0; i < N; i++) {
       _table[i] = NULL;
     }
@@ -89,41 +85,36 @@ int VtableStubs::code_size_limit(bool is_vtable_stub) {
   }
 }   // code_size_limit
 
-void VtableStubs::check_and_set_size_limit(bool is_vtable_stub,
-                                           int  code_size,
-                                           int  padding) {
+void VtableStubs::check_and_set_size_limit(bool is_vtable_stub, int code_size, int padding) {
   const char* name = is_vtable_stub ? "vtable" : "itable";
 
-  guarantee(code_size <= code_size_limit(is_vtable_stub),
-            "buffer overflow in %s stub, code_size is %d, limit is %d", name, code_size, code_size_limit(is_vtable_stub));
+  guarantee(code_size <= code_size_limit(is_vtable_stub), "buffer overflow in %s stub, code_size is %d, limit is %d", name, code_size, code_size_limit(is_vtable_stub));
 
   if (is_vtable_stub) {
     if (log_is_enabled(Trace, vtablestubs)) {
-      if ( (_vtab_stub_size > 0) && ((code_size + padding) > _vtab_stub_size) ) {
+      if ((_vtab_stub_size > 0) && ((code_size + padding) > _vtab_stub_size)) {
         log_trace(vtablestubs)("%s size estimate needed adjustment from %d to %d bytes",
                                name, _vtab_stub_size, code_size + padding);
       }
     }
-    if ( (code_size + padding) > _vtab_stub_size ) {
+    if ((code_size + padding) > _vtab_stub_size ) {
       _vtab_stub_size = code_size + padding;
     }
   } else {  // itable stub
     if (log_is_enabled(Trace, vtablestubs)) {
-      if ( (_itab_stub_size > 0) && ((code_size + padding) > _itab_stub_size) ) {
+      if ((_itab_stub_size > 0) && ((code_size + padding) > _itab_stub_size)) {
         log_trace(vtablestubs)("%s size estimate needed adjustment from %d to %d bytes",
                                name, _itab_stub_size, code_size + padding);
       }
     }
-    if ( (code_size + padding) > _itab_stub_size ) {
+    if ((code_size + padding) > _itab_stub_size ) {
       _itab_stub_size = code_size + padding;
     }
   }
   return;
 }   // check_and_set_size_limit
 
-void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStub* s,
-                              address npe_addr, address ame_addr,   bool is_vtable_stub,
-                              int     index,    int     slop_bytes, int  index_dependent_slop) {
+void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStub* s, address npe_addr, address ame_addr, bool is_vtable_stub, int index, int slop_bytes, int index_dependent_slop) {
   const char* name        = is_vtable_stub ? "vtable" : "itable";
   const int   stub_length = code_size_limit(is_vtable_stub);
 
@@ -138,7 +129,6 @@ void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStu
                                          name, index, stub_length,
                                          (int)(masm->pc() - s->code_begin()),
                                          (int)(masm->pc() - s->code_end()));
-  assert((masm->pc() + index_dependent_slop) <= s->code_end(), "%s #%d: spare space for 32-bit offset: required = %d, available = %d", name, index, index_dependent_slop, (int)(s->code_end() - masm->pc()));
 
   // After the first vtable/itable stub is generated, we have a much
   // better estimate for the stub size. Remember/update this
@@ -148,7 +138,6 @@ void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStu
 }
 
 address VtableStubs::find_stub(bool is_vtable_stub, int vtable_index) {
-  assert(vtable_index >= 0, "must be positive");
 
   VtableStub* s = ShareVtableStubs ? lookup(is_vtable_stub, vtable_index) : NULL;
   if (s == NULL) {
@@ -173,7 +162,7 @@ address VtableStubs::find_stub(bool is_vtable_stub, int vtable_index) {
   return s->entry_point();
 }
 
-inline uint VtableStubs::hash(bool is_vtable_stub, int vtable_index){
+inline uint VtableStubs::hash(bool is_vtable_stub, int vtable_index) {
   // Assumption: receiver_location < 4 in most cases.
   int hash = ((vtable_index << 2) ^ VtableStub::receiver_location()->value()) + vtable_index;
   return (is_vtable_stub ? ~hash : hash)  & mask;
@@ -183,13 +172,12 @@ VtableStub* VtableStubs::lookup(bool is_vtable_stub, int vtable_index) {
   MutexLocker ml(VtableStubs_lock);
   unsigned hash = VtableStubs::hash(is_vtable_stub, vtable_index);
   VtableStub* s = _table[hash];
-  while( s && !s->matches(is_vtable_stub, vtable_index)) s = s->next();
+  while ( s && !s->matches(is_vtable_stub, vtable_index)) s = s->next();
   return s;
 }
 
 void VtableStubs::enter(bool is_vtable_stub, int vtable_index, VtableStub* s) {
   MutexLocker ml(VtableStubs_lock);
-  assert(s->matches(is_vtable_stub, vtable_index), "bad vtable stub");
   unsigned int h = VtableStubs::hash(is_vtable_stub, vtable_index);
   // enter s at the beginning of the corresponding list
   s->set_next(_table[h]);
@@ -202,7 +190,7 @@ VtableStub* VtableStubs::entry_point(address pc) {
   VtableStub* stub = (VtableStub*)(pc - VtableStub::entry_offset());
   uint hash = VtableStubs::hash(stub->is_vtable_stub(), stub->index());
   VtableStub* s;
-  for (s = _table[hash]; s != NULL && s != stub; s = s->next()) {}
+  for (s = _table[hash]; s != NULL && s != stub; s = s->next()) { }
   return (s == stub) ? s : NULL;
 }
 

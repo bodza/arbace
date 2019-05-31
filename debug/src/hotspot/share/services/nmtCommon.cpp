@@ -35,7 +35,6 @@ const char* NMTUtil::scale_name(size_t scale) {
 }
 
 size_t NMTUtil::scale_from_name(const char* scale) {
-  assert(scale != NULL, "Null pointer check");
   if (strcasecmp(scale, "1") == 0 || strcasecmp(scale, "b") == 0) {
     return 1;
   } else if (strcasecmp(scale, "kb") == 0 || strcasecmp(scale, "k") == 0) {

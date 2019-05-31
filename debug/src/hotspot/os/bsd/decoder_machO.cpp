@@ -25,8 +25,7 @@ bool MachODecoder::demangle(const char* symbol, char *buf, int buflen) {
   return false;
 }
 
-bool MachODecoder::decode(address addr, char *buf,
-      int buflen, int *offset, const void *mach_base) {
+bool MachODecoder::decode(address addr, char *buf, int buflen, int *offset, const void *mach_base) {
   struct symtab_command * symt = (struct symtab_command *)
     mach_find_command((struct mach_header_64 *)mach_base, LC_SYMTAB);
   if (symt == NULL) {

@@ -120,7 +120,7 @@ class VM_Operation: public CHeapObj<mtInternal> {
 
  public:
   VM_Operation()  { _calling_thread = NULL; _next = NULL; _prev = NULL; }
-  virtual ~VM_Operation() {}
+  virtual ~VM_Operation() { }
 
   // VM operation support (used by VM thread)
   Thread* calling_thread() const                 { return _calling_thread; }
@@ -142,7 +142,7 @@ class VM_Operation: public CHeapObj<mtInternal> {
   // completes. If doit_prologue() returns false the VM operation is cancelled.
   virtual void doit()                            = 0;
   virtual bool doit_prologue()                   { return true; };
-  virtual void doit_epilogue()                   {}; // Note: Not called if mode is: _concurrent
+  virtual void doit_epilogue()                   { }; // Note: Not called if mode is: _concurrent
 
   // Type test
   virtual bool is_methodCompiler() const         { return false; }
@@ -168,12 +168,10 @@ class VM_Operation: public CHeapObj<mtInternal> {
   // stopped. In other words, taking locks is verboten, and if there
   // are any races in evaluating the conditions, they'd better be benign.
   virtual bool evaluate_at_safepoint() const {
-    return evaluation_mode() == _safepoint  ||
-           evaluation_mode() == _async_safepoint;
+    return evaluation_mode() == _safepoint  || evaluation_mode() == _async_safepoint;
   }
   virtual bool evaluate_concurrently() const {
-    return evaluation_mode() == _concurrent ||
-           evaluation_mode() == _async_safepoint;
+    return evaluation_mode() == _concurrent || evaluation_mode() == _async_safepoint;
   }
 
   static const char* mode_to_string(Mode mode);
@@ -182,7 +180,6 @@ class VM_Operation: public CHeapObj<mtInternal> {
   virtual void print_on_error(outputStream* st) const;
   const char* name() const { return _names[type()]; }
   static const char* name(int type) {
-    assert(type >= 0 && type < VMOp_Terminating, "invalid VM operation type");
     return _names[type];
   }
 };
@@ -200,7 +197,7 @@ class VM_ThreadStop: public VM_Operation {
   }
   VMOp_Type type() const                         { return VMOp_ThreadStop; }
   oop target_thread() const                      { return _thread; }
-  oop throwable() const                          { return _throwable;}
+  oop throwable() const                          { return _throwable; }
   void doit();
   // We deoptimize if top-most frame is compiled - this might require a C2I adapter to be generated
   bool allow_nested_vm_operations() const        { return true; }
@@ -225,7 +222,7 @@ class VM_ClearICs: public VM_Operation {
 // empty vm op, evaluated just to force a safepoint
 class VM_ForceSafepoint: public VM_Operation {
  public:
-  void doit()         {}
+  void doit()         { }
   VMOp_Type type() const { return VMOp_ForceSafepoint; }
 };
 
@@ -263,12 +260,12 @@ class VM_GTestExecuteAtSafepoint: public VM_Operation {
   VMOp_Type type() const                         { return VMOp_GTestExecuteAtSafepoint; }
 
  protected:
-  VM_GTestExecuteAtSafepoint() {}
+  VM_GTestExecuteAtSafepoint() { }
 };
 
 class VM_Deoptimize: public VM_Operation {
  public:
-  VM_Deoptimize() {}
+  VM_Deoptimize() { }
   VMOp_Type type() const                        { return VMOp_Deoptimize; }
   void doit();
   bool allow_nested_vm_operations() const        { return true; }
@@ -276,7 +273,7 @@ class VM_Deoptimize: public VM_Operation {
 
 class VM_MarkActiveNMethods: public VM_Operation {
  public:
-  VM_MarkActiveNMethods() {}
+  VM_MarkActiveNMethods() { }
   VMOp_Type type() const                         { return VMOp_MarkActiveNMethods; }
   void doit();
   bool allow_nested_vm_operations() const        { return true; }
@@ -296,12 +293,12 @@ class VM_DeoptimizeFrame: public VM_Operation {
  public:
   VMOp_Type type() const                         { return VMOp_DeoptimizeFrame; }
   void doit();
-  bool allow_nested_vm_operations() const        { return true;  }
+  bool allow_nested_vm_operations() const        { return true; }
 };
 
 class VM_UnlinkSymbols: public VM_Operation {
  public:
-  VM_UnlinkSymbols() {}
+  VM_UnlinkSymbols() { }
   VMOp_Type type() const                         { return VMOp_UnlinkSymbols; }
   void doit();
   bool allow_nested_vm_operations() const        { return true; }
@@ -321,10 +318,10 @@ class VM_PrintThreads: public VM_Operation {
  public:
   VM_PrintThreads()
     : _out(tty), _print_concurrent_locks(PrintConcurrentLocks), _print_extended_info(false)
-  {}
+  { }
   VM_PrintThreads(outputStream* out, bool print_concurrent_locks, bool print_extended_info)
     : _out(out), _print_concurrent_locks(print_concurrent_locks), _print_extended_info(print_extended_info)
-  {}
+  { }
   VMOp_Type type() const {
     return VMOp_PrintThreads;
   }
@@ -352,7 +349,7 @@ class VM_PrintMetadata : public VM_Operation {
  public:
   VM_PrintMetadata(outputStream* out, size_t scale, int flags)
     : _out(out), _scale(scale), _flags(flags)
-  {};
+  { };
 
   VMOp_Type type() const  { return VMOp_PrintMetadata; }
   void doit();
@@ -368,8 +365,8 @@ class VM_FindDeadlocks: public VM_Operation {
                               // which protects the JavaThreads in _deadlocks.
 
  public:
-  VM_FindDeadlocks(bool concurrent_locks) :  _concurrent_locks(concurrent_locks), _out(NULL), _deadlocks(NULL), _setter() {};
-  VM_FindDeadlocks(outputStream* st) : _concurrent_locks(true), _out(st), _deadlocks(NULL) {};
+  VM_FindDeadlocks(bool concurrent_locks) :  _concurrent_locks(concurrent_locks), _out(NULL), _deadlocks(NULL), _setter() { };
+  VM_FindDeadlocks(outputStream* st) : _concurrent_locks(true), _out(st), _deadlocks(NULL) { };
   ~VM_FindDeadlocks();
 
   DeadlockCycle* result()      { return _deadlocks; };
@@ -439,7 +436,7 @@ class VM_PrintCompileQueue: public VM_Operation {
   outputStream* _out;
 
  public:
-  VM_PrintCompileQueue(outputStream* st) : _out(st) {}
+  VM_PrintCompileQueue(outputStream* st) : _out(st) { }
   VMOp_Type type() const { return VMOp_PrintCompileQueue; }
   Mode evaluation_mode() const { return _safepoint; }
   void doit();

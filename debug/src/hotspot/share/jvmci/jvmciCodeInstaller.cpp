@@ -35,7 +35,6 @@ ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_
 LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtCompiler) LocationValue(Location());
 
 Method* getMethodFromHotSpotMethod(oop hotspot_method) {
-  assert(hotspot_method != NULL && hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass()), "sanity");
   return CompilerToVM::asMethod(hotspot_method);
 }
 
@@ -61,16 +60,8 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
     if (offset % 4 == 0) {
       VMReg vmReg = VMRegImpl::stack2reg(offset / 4);
       if (!OopMapValue::legal_vm_reg_name(vmReg)) {
-        // This restriction only applies to VMRegs that are used in OopMap but
-        // since that's the only use of VMRegs it's simplest to put this test
-        // here.  This test should also be equivalent legal_vm_reg_name but JVMCI
-        // clients can use max_oop_map_stack_stack_offset to detect this problem
-        // directly.  The asserts just ensure that the tests are in agreement.
-        assert(offset > CompilerToVM::Data::max_oop_map_stack_offset(), "illegal VMReg");
-        JVMCI_ERROR_NULL("stack offset %d is too large to be encoded in OopMap (max %d)",
-                         offset, CompilerToVM::Data::max_oop_map_stack_offset());
+        JVMCI_ERROR_NULL("stack offset %d is too large to be encoded in OopMap (max %d)", offset, CompilerToVM::Data::max_oop_map_stack_offset());
       }
-      assert(OopMapValue::legal_vm_reg_name(vmReg), "illegal VMReg");
       return vmReg;
     } else {
       JVMCI_ERROR_NULL("unaligned stack offset %d in oop map", offset);
@@ -196,8 +187,7 @@ int AOTOopRecorder::find_index(Metadata* h) {
 
   JVMCIKlassHandle klass(THREAD);
   oop result = NULL;
-  guarantee(h != NULL,
-            "If DebugInformationRecorder::describe_scope passes NULL oldCount == newCount must hold.");
+  guarantee(h != NULL, "If DebugInformationRecorder::describe_scope passes NULL oldCount == newCount must hold.");
   if (h->is_klass()) {
     klass = (Klass*) h;
     result = CompilerToVM::get_jvmci_type(klass, CATCH);
@@ -222,10 +212,8 @@ int AOTOopRecorder::find_index(jobject h) {
 }
 
 void AOTOopRecorder::record_meta_ref(jobject o, int index) {
-  assert(index > 0, "must be 1..n");
   index -= 1; // reduce by one to convert to array index
 
-  assert(index == _meta_refs->length(), "must be last");
   _meta_refs->append(o);
 }
 
@@ -239,14 +227,12 @@ void* CodeInstaller::record_metadata_reference(CodeSection* section, address des
   oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
   if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
-    assert(!HotSpotMetaspaceConstantImpl::compressed(constant), "unexpected compressed klass pointer %s @ " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass));
     int index = _oop_recorder->find_index(klass);
     section->relocate(dest, metadata_Relocation::spec(index));
     TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), klass->name()->as_C_string());
     return klass;
   } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
-    assert(!HotSpotMetaspaceConstantImpl::compressed(constant), "unexpected compressed method pointer %s @ " INTPTR_FORMAT, method->name()->as_C_string(), p2i(method));
     int index = _oop_recorder->find_index(method);
     section->relocate(dest, metadata_Relocation::spec(index));
     TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), method->name()->as_C_string());
@@ -258,7 +244,6 @@ void* CodeInstaller::record_metadata_reference(CodeSection* section, address des
 
 narrowKlass CodeInstaller::record_narrow_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS) {
   oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
-  assert(HotSpotMetaspaceConstantImpl::compressed(constant), "unexpected uncompressed pointer");
 
   if (!obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     JVMCI_ERROR_0("unexpected compressed pointer of type %s", obj->klass()->signature_name());
@@ -440,7 +425,6 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
     if (cur_second != NULL) {
       sv->field_values()->append(cur_second);
     }
-    assert(value != NULL, "missing value");
     sv->field_values()->append(value);
   }
 }
@@ -456,12 +440,9 @@ MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<Scope
   ScopeValue* second = NULL;
   Handle stack_lock_owner(THREAD, StackLockValue::owner(value));
   ScopeValue* owner_value = get_scope_value(stack_lock_owner, T_OBJECT, objects, second, CHECK_NULL);
-  assert(second == NULL, "monitor cannot occupy two stack slots");
 
   Handle stack_lock_slot(THREAD, StackLockValue::slot(value));
   ScopeValue* lock_data_value = get_scope_value(stack_lock_slot, T_LONG, objects, second, CHECK_NULL);
-  assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
-  assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
 
   bool eliminated = false;
@@ -474,7 +455,6 @@ MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<Scope
 
 void CodeInstaller::initialize_dependencies(oop compiled_code, OopRecorder* recorder, TRAPS) {
   JavaThread* thread = JavaThread::current();
-  assert(THREAD == thread, "");
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = recorder;
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
@@ -516,13 +496,10 @@ address RelocBuffer::begin() const {
 }
 
 void RelocBuffer::set_size(size_t bytes) {
-  assert(bytes <= _size, "can't grow in size!");
   _size = bytes;
 }
 
 void RelocBuffer::ensure_size(size_t bytes) {
-  assert(_buffer == NULL, "can only be used once");
-  assert(_size == 0, "can only be used once");
   if (bytes >= RelocBuffer::stack_size) {
     _buffer = NEW_C_HEAP_ARRAY(char, bytes, mtInternal);
   }
@@ -548,8 +525,6 @@ JVMCIEnv::CodeInstallResult CodeInstaller::gather_metadata(Handle target, Handle
   }
 
   _debug_recorder->pcs_size(); // create the sentinel record
-
-  assert(_debug_recorder->pcs_length() >= 2, "must be at least 2");
 
   metadata.set_pc_desc(_debug_recorder->pcs(), _debug_recorder->pcs_length());
   metadata.set_scopes(_debug_recorder->stream()->buffer(), _debug_recorder->data_size());
@@ -861,7 +836,6 @@ void CodeInstaller::assumption_ConcreteSubtype(Thread* thread, Handle assumption
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
   Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
 
-  assert(context->is_abstract(), "");
   _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
 }
 
@@ -1130,8 +1104,6 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
   }
 
   Handle debug_info (THREAD, site_Call::debugInfo(site));
-
-  assert(hotspot_method.not_null() ^ foreign_call.not_null(), "Call site needs exactly one type");
 
   NativeInstruction* inst = nativeInstruction_at(_instructions->start() + pc_offset);
   jint next_pc_offset = CodeInstaller::pd_next_offset(inst, pc_offset, hotspot_method, CHECK);

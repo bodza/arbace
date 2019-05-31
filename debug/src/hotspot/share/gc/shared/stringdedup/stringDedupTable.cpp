@@ -125,8 +125,6 @@ StringDedupEntry* StringDedupEntryCache::alloc() {
 }
 
 void StringDedupEntryCache::free(StringDedupEntry* entry, uint worker_id) {
-  assert(entry->obj() != NULL, "Double free");
-  assert(worker_id < _nlists, "Invalid worker id");
 
   entry->set_obj(NULL);
   entry->set_hash(0);
@@ -204,7 +202,6 @@ StringDedupTable::StringDedupTable(size_t size, jint hash_seed) :
   _shrink_threshold((uintx)(size * _shrink_load_factor)),
   _rehash_needed(false),
   _hash_seed(hash_seed) {
-  assert(is_power_of_2(size), "Table size must be a power of 2");
   _buckets = NEW_C_HEAP_ARRAY(StringDedupEntry*, _size, mtGC);
   memset(_buckets, 0, _size * sizeof(StringDedupEntry*));
 }
@@ -214,7 +211,6 @@ StringDedupTable::~StringDedupTable() {
 }
 
 void StringDedupTable::create() {
-  assert(_table == NULL, "One string deduplication table allowed");
   _entry_cache = new StringDedupEntryCache(_min_size * _max_cache_factor);
   _table = new StringDedupTable(_min_size);
 }
@@ -246,11 +242,7 @@ void StringDedupTable::transfer(StringDedupEntry** pentry, StringDedupTable* des
 }
 
 bool StringDedupTable::equals(typeArrayOop value1, typeArrayOop value2) {
-  return (oopDesc::equals(value1, value2) ||
-          (value1->length() == value2->length() &&
-          (!memcmp(value1->base(T_BYTE),
-                    value2->base(T_BYTE),
-                    value1->length() * sizeof(jbyte)))));
+  return (oopDesc::equals(value1, value2) || (value1->length() == value2->length() && (!memcmp(value1->base(T_BYTE), value2->base(T_BYTE), value1->length() * sizeof(jbyte)))));
 }
 
 typeArrayOop StringDedupTable::lookup(typeArrayOop value, bool latin1, unsigned int hash,
@@ -319,7 +311,6 @@ unsigned int StringDedupTable::hash_code(typeArrayOop value, bool latin1) {
 }
 
 void StringDedupTable::deduplicate(oop java_string, StringDedupStat* stat) {
-  assert(java_lang_String::is_instance(java_string), "Must be a string");
   NoSafepointVerifier nsv;
 
   stat->inc_inspected();
@@ -418,7 +409,6 @@ StringDedupTable* StringDedupTable::prepare_resize() {
 }
 
 void StringDedupTable::finish_resize(StringDedupTable* resized_table) {
-  assert(resized_table != NULL, "Invalid table");
 
   resized_table->_entries = _table->_entries;
 
@@ -445,7 +435,6 @@ void StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl, u
 
   // Let each partition be one page worth of buckets
   size_t partition_size = MIN2(table_half, os::vm_page_size() / sizeof(StringDedupEntry*));
-  assert(table_half % partition_size == 0, "Invalid partition size");
 
   // Number of entries removed during the scan
   uintx removed = 0;
@@ -514,7 +503,6 @@ uintx StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl,
 }
 
 void StringDedupTable::gc_prologue(bool resize_and_rehash_table) {
-  assert(!is_resizing() && !is_rehashing(), "Already in progress?");
 
   _claimed_index = 0;
   if (resize_and_rehash_table) {
@@ -528,8 +516,6 @@ void StringDedupTable::gc_prologue(bool resize_and_rehash_table) {
 }
 
 void StringDedupTable::gc_epilogue() {
-  assert(!is_resizing() || !is_rehashing(), "Can not both resize and rehash");
-  assert(_claimed_index >= _table->_size / 2 || _claimed_index == 0, "All or nothing");
 
   if (is_resizing()) {
     StringDedupTable::finish_resize(_resized_table);
@@ -557,7 +543,6 @@ StringDedupTable* StringDedupTable::prepare_rehash() {
 }
 
 void StringDedupTable::finish_rehash(StringDedupTable* rehashed_table) {
-  assert(rehashed_table != NULL, "Invalid table");
 
   // Move all newly rehashed entries into the correct buckets in the new table
   for (size_t bucket = 0; bucket < _table->_size; bucket++) {

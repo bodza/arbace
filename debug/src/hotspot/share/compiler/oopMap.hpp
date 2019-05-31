@@ -58,7 +58,7 @@ public:
   // Archiving
   void write_on(CompressedWriteStream* stream) {
     stream->write_int(value());
-    if(is_callee_saved() || is_derived_oop()) {
+    if (is_callee_saved() || is_derived_oop()) {
       stream->write_int(content_reg()->value());
     }
   }
@@ -90,8 +90,6 @@ public:
 
   void set_reg_type(VMReg p, oop_types t) {
     set_value((p->value() << register_shift) | t);
-    assert(reg() == p, "sanity check" );
-    assert(type() == t, "sanity check" );
   }
 
   VMReg content_reg() const       { return VMRegImpl::as_VMReg(_content_reg, true); }
@@ -103,7 +101,6 @@ public:
 
   // Returns offset from sp.
   int stack_offset() {
-    assert(is_stack_loc(), "must be stack location");
     return reg()->reg2stack();
   }
 
@@ -183,7 +180,6 @@ class OopMapSet : public ResourceObj {
   void set_om_data(OopMap** value)  { _om_data = value; }
   void grow_om_data();
   void set(int index,OopMap* value) {
-    assert((index == 0) || ((index > 0) && (index < om_size())),"bad index");
     _om_data[index] = value; }
 
  public:
@@ -193,7 +189,6 @@ class OopMapSet : public ResourceObj {
   int size() const            { return _om_count; }
   // returns the OopMap at a given index
   OopMap* at(int index) const {
-    assert((index >= 0) && (index <= om_count()),"bad index");
     return _om_data[index]; }
 
   // Collect OopMaps.
@@ -259,7 +254,6 @@ private:
   int _oopmap_offset; // offset in the data in the ImmutableOopMapSet where the ImmutableOopMap is located
 public:
   ImmutableOopMapPair(int pc_offset, int oopmap_offset) : _pc_offset(pc_offset), _oopmap_offset(oopmap_offset) {
-    assert(pc_offset >= 0 && oopmap_offset >= 0, "check");
   }
   const ImmutableOopMap* get_from(const ImmutableOopMapSet* set) const;
 
@@ -276,10 +270,9 @@ private:
   address data() const { return (address) this + sizeof(*this) + sizeof(ImmutableOopMapPair) * _count; }
 
 public:
-  ImmutableOopMapSet(const OopMapSet* oopmap_set, int size) : _count(oopmap_set->size()), _size(size) {}
+  ImmutableOopMapSet(const OopMapSet* oopmap_set, int size) : _count(oopmap_set->size()), _size(size) { }
 
   ImmutableOopMap* oopmap_at_offset(int offset) const {
-    assert(offset >= 0 && offset < _size, "must be within boundaries");
     address addr = data() + offset;
     return (ImmutableOopMap*) addr;
   }
@@ -291,7 +284,6 @@ public:
   const ImmutableOopMap* find_map_at_offset(int pc_offset) const;
 
   const ImmutableOopMapPair* pair_at(int index) const {
-    assert(index >= 0 && index < _count, "check");
     return &get_pairs()[index]; }
 
   int count() const { return _count; }
@@ -345,7 +337,7 @@ private:
     const OopMap* _map;
     const OopMap* _other;
 
-    Mapping() : _kind(OOPMAP_UNKNOWN), _offset(-1), _size(-1), _map(NULL) {}
+    Mapping() : _kind(OOPMAP_UNKNOWN), _offset(-1), _size(-1), _map(NULL) { }
 
     void set(kind_t kind, int offset, int size, const OopMap* map = 0, const OopMap* other = 0) {
       _kind = kind;
@@ -417,7 +409,6 @@ class DerivedPointerTableDeactivate: public StackObj {
   }
 
   ~DerivedPointerTableDeactivate() {
-    assert(!DerivedPointerTable::is_active(), "Inconsistency: not MT-safe");
     if (_active) {
       DerivedPointerTable::set_active(true);
     }

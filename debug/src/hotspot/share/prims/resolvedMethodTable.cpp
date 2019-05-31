@@ -65,8 +65,6 @@ oop ResolvedMethodTable::lookup(Method* method) {
 }
 
 oop ResolvedMethodTable::basic_add(Method* method, Handle rmethod_name) {
-  assert_locked_or_safepoint(ResolvedMethodTable_lock);
-
   unsigned int hash = compute_hash(method);
   int index = hash_to_index(hash);
 
@@ -98,7 +96,6 @@ oop ResolvedMethodTable::add_method(Handle resolved_method_name) {
   // Check if method has been redefined while taking out ResolvedMethodTable_lock, if so
   // use new method.
   Method* method = (Method*)java_lang_invoke_ResolvedMethodName::vmtarget(resolved_method_name());
-  assert(method->is_method(), "must be method");
   if (method->is_old()) {
     // Replace method with redefined version
     InstanceKlass* holder = method->method_holder();

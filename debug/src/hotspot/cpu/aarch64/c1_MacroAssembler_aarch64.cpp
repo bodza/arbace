@@ -12,9 +12,7 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 
-void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result,
-                                  FloatRegister f0, FloatRegister f1,
-                                  Register result)
+void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result, FloatRegister f0, FloatRegister f1, Register result)
 {
   Label done;
   if (is_float) {
@@ -38,7 +36,6 @@ void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result,
 int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr, Register scratch, Label& slow_case) {
   const int aligned_mask = BytesPerWord -1;
   const int hdr_offset = oopDesc::mark_offset_in_bytes();
-  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done, fail;
   int null_check_offset = -1;
 
@@ -48,7 +45,6 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   str(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
 
   if (UseBiasedLocking) {
-    assert(scratch != noreg, "should have scratch register at this point");
     null_check_offset = biased_locking_enter(disp_hdr, obj, hdr, scratch, false, done, &slow_case);
   } else {
     null_check_offset = offset();
@@ -99,7 +95,6 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
 void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_hdr, Label& slow_case) {
   const int aligned_mask = BytesPerWord -1;
   const int hdr_offset = oopDesc::mark_offset_in_bytes();
-  assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
 
   if (UseBiasedLocking) {
@@ -143,9 +138,7 @@ void C1_MacroAssembler::try_allocate(Register obj, Register var_size_in_bytes, i
 }
 
 void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register len, Register t1, Register t2) {
-  assert_different_registers(obj, klass, len);
   if (UseBiasedLocking && !len->is_valid()) {
-    assert_different_registers(obj, klass, len, t1, t2);
     ldr(t1, Address(klass, Klass::prototype_header_offset()));
   } else {
     // This assumes that all prototype bits fit in an int32_t
@@ -169,7 +162,6 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
 
 // preserves obj, destroys len_in_bytes
 void C1_MacroAssembler::initialize_body(Register obj, Register len_in_bytes, int hdr_size_in_bytes, Register t1) {
-  assert(hdr_size_in_bytes >= 0, "header size must be positive or 0");
   Label done;
 
   // len_in_bytes is positive and ptr sized
@@ -187,16 +179,12 @@ void C1_MacroAssembler::initialize_body(Register obj, Register len_in_bytes, int
 }
 
 void C1_MacroAssembler::allocate_object(Register obj, Register t1, Register t2, int header_size, int object_size, Register klass, Label& slow_case) {
-  assert_different_registers(obj, t1, t2); // XXX really?
-  assert(header_size >= 0 && object_size >= header_size, "illegal sizes");
-
   try_allocate(obj, noreg, object_size * BytesPerWord, t1, t2, slow_case);
 
   initialize_object(obj, klass, noreg, object_size * HeapWordSize, t1, t2, UseTLAB);
 }
 
 void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, bool is_tlab_allocated) {
-  assert((con_size_in_bytes & MinObjAlignmentInBytesMask) == 0, "con_size_in_bytes is not multiple of alignment");
   const int hdr_size_in_bytes = instanceOopDesc::header_size() * HeapWordSize;
 
   initialize_header(obj, klass, noreg, t1, t2);
@@ -248,18 +236,12 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
   membar(StoreStore);
 
   if (CURRENT_ENV->dtrace_alloc_probes()) {
-    assert(obj == r0, "must be");
     far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
   }
 
   verify_oop(obj);
 }
 void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, Register t2, int header_size, int f, Register klass, Label& slow_case) {
-  assert_different_registers(obj, len, t1, t2, klass);
-
-  // determine alignment mask
-  assert(!(BytesPerWord & 1), "must be a multiple of 2 for masking code to work");
-
   // check for negative or excessive length
   mov(rscratch1, (int32_t)max_array_allocation_length);
   cmp(len, rscratch1);
@@ -282,7 +264,6 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   membar(StoreStore);
 
   if (CURRENT_ENV->dtrace_alloc_probes()) {
-    assert(obj == r0, "must be");
     far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
   }
 
@@ -291,9 +272,6 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
 
 void C1_MacroAssembler::inline_cache_check(Register receiver, Register iCache) {
   verify_oop(receiver);
-  // explicit NULL check not needed since load from [klass_offset] causes a trap
-  // check against inline cache
-  assert(!MacroAssembler::needs_explicit_null_check(oopDesc::klass_offset_in_bytes()), "must add explicit null check");
 
   cmp_klass(receiver, iCache, rscratch1);
 }
@@ -304,7 +282,6 @@ void C1_MacroAssembler::build_frame(int framesize, int bang_size_in_bytes) {
   // must ensure that this first instruction is a B, BL, NOP, BKPT,
   // SVC, HVC, or SMC.  Make it a NOP.
   nop();
-  assert(bang_size_in_bytes >= framesize, "stack bang size incorrect");
   // Make sure there is enough stack space for this method's activation.
   // Note that we do this before doing an enter().
   generate_stack_overflow_check(bang_size_in_bytes);

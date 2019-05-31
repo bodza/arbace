@@ -86,7 +86,6 @@ public:
 
 bool MemAllocator::Allocation::check_out_of_memory() {
   Thread* THREAD = _thread;
-  assert(!HAS_PENDING_EXCEPTION, "Unexpected exception, will result in uninitialized storage");
 
   if (obj() != NULL) {
     return false;
@@ -110,8 +109,6 @@ void MemAllocator::Allocation::verify_before() {
   // not take out a lock if from tlab, so clear here.
   Thread* THREAD = _thread;
   CHECK_UNHANDLED_OOPS_ONLY(THREAD->clear_unhandled_oops();)
-  assert(!HAS_PENDING_EXCEPTION, "Should not allocate with exception pending");
-  assert(!Universe::heap()->is_gc_active(), "Allocation during gc not allowed");
 }
 
 void MemAllocator::Allocation::verify_after() {
@@ -123,7 +120,6 @@ void MemAllocator::Allocation::check_for_bad_heap_word_value() const {
   size_t size = obj_range.word_size();
   if (CheckMemoryInitialization && ZapUnusedHeapArea) {
     for (size_t slot = 0; slot < size; slot += 1) {
-      assert((*(intptr_t*) (addr + slot)) != ((intptr_t) badHeapWordVal), "Found badHeapWordValue in post-allocation check");
     }
   }
 }
@@ -139,9 +135,6 @@ void MemAllocator::Allocation::notify_allocation_jvmti_sampler() {
     // or expands it due to taking a sampler induced slow path.
     return;
   }
-
-  assert(JavaThread::current()->heap_sampler().add_sampling_collector(), "Should never return false.");
-  assert(JavaThread::current()->heap_sampler().remove_sampling_collector(), "Should never return false.");
 
   if (_tlab_end_reset_for_sample || _allocated_tlab_size != 0) {
     _thread->tlab().set_sample_end();
@@ -197,7 +190,6 @@ HeapWord* MemAllocator::allocate_outside_tlab(Allocation& allocation) const {
 }
 
 HeapWord* MemAllocator::allocate_inside_tlab(Allocation& allocation) const {
-  assert(UseTLAB, "should use UseTLAB");
 
   // Try allocating from an existing TLAB.
   HeapWord* mem = _thread->tlab().allocate(_word_size);
@@ -246,10 +238,8 @@ HeapWord* MemAllocator::allocate_inside_tlab_slow(Allocation& allocation) const 
   size_t min_tlab_size = ThreadLocalAllocBuffer::compute_min_size(_word_size);
   mem = _heap->allocate_new_tlab(min_tlab_size, new_tlab_size, &allocation._allocated_tlab_size);
   if (mem == NULL) {
-    assert(allocation._allocated_tlab_size == 0, "Allocation failed, but actual size was updated. min: " SIZE_FORMAT ", desired: " SIZE_FORMAT ", actual: " SIZE_FORMAT, min_tlab_size, new_tlab_size, allocation._allocated_tlab_size);
     return NULL;
   }
-  assert(allocation._allocated_tlab_size != 0, "Allocation succeeded but actual size not updated. mem at: " PTR_FORMAT " min: " SIZE_FORMAT ", desired: " SIZE_FORMAT, p2i(mem), min_tlab_size, new_tlab_size);
 
   if (ZeroTLAB) {
     // ..and clear it.
@@ -286,15 +276,12 @@ oop MemAllocator::allocate() const {
 }
 
 void MemAllocator::mem_clear(HeapWord* mem) const {
-  assert(mem != NULL, "cannot initialize NULL object");
   const size_t hs = oopDesc::header_size();
-  assert(_word_size >= hs, "unexpected object size");
   oopDesc::set_klass_gap(mem, 0);
   Copy::fill_to_aligned_words(mem + hs, _word_size - hs);
 }
 
 oop MemAllocator::finish(HeapWord* mem) const {
-  assert(mem != NULL, "NULL object pointer");
   if (UseBiasedLocking) {
     oopDesc::set_mark_raw(mem, _klass->prototype_header());
   } else {
@@ -326,7 +313,6 @@ oop ObjArrayAllocator::initialize(HeapWord* mem) const {
   // Set array length before setting the _klass field because a
   // non-NULL klass field indicates that the object is parsable by
   // concurrent GC.
-  assert(_length >= 0, "length should be non-negative");
   if (_do_zero) {
     mem_clear(mem);
   }
@@ -338,7 +324,6 @@ oop ClassAllocator::initialize(HeapWord* mem) const {
   // Set oop_size field before setting the _klass field because a
   // non-NULL _klass field indicates that the object is parsable by
   // concurrent GC.
-  assert(_word_size > 0, "oop_size must be positive.");
   mem_clear(mem);
   java_lang_Class::set_oop_size(mem, (int)_word_size);
   return finish(mem);

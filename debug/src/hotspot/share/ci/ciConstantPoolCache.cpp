@@ -12,8 +12,7 @@
 // ciConstantPoolCache::ciConstantPoolCache
 ciConstantPoolCache::ciConstantPoolCache(Arena* arena,
                                  int expected_size) {
-  _elements =
-    new (arena) GrowableArray<void*>(arena, expected_size, 0, 0);
+  _elements = new (arena) GrowableArray<void*>(arena, expected_size, 0, 0);
   _keys = new (arena) GrowableArray<int>(arena, expected_size, 0, 0);
 }
 
@@ -45,7 +44,6 @@ void* ciConstantPoolCache::get(int index) {
 void ciConstantPoolCache::insert(int index, void* elem) {
   bool found = false;
   int pos = _keys->find_sorted<int, ciConstantPoolCache::key_compare>(index, found);
-  assert(!found, "duplicate");
   _keys->insert_before(pos, index);
   _elements->insert_before(pos, elem);
 }

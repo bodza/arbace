@@ -137,7 +137,7 @@ int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserL
   long jvm_system_nanos = absolutetime_info->total_system;
 
   long total_cpu_nanos;
-  if(!now_in_nanos(&total_cpu_nanos)) {
+  if (!now_in_nanos(&total_cpu_nanos)) {
     return OS_ERR;
   }
 
@@ -185,7 +185,7 @@ int CPUPerformanceInterface::CPUPerformance::context_switch_rate(double* rate) {
   long jvm_context_switches = ((task_events_info_t)task_info_data)->csw;
 
   long total_csr_nanos;
-  if(!now_in_nanos(&total_csr_nanos)) {
+  if (!now_in_nanos(&total_csr_nanos)) {
     return OS_ERR;
   }
   double delta_in_sec = (double)(total_csr_nanos - _total_csr_nanos) / NANOS_PER_SEC;
@@ -259,8 +259,6 @@ bool SystemProcessInterface::SystemProcesses::initialize() {
 SystemProcessInterface::SystemProcesses::~SystemProcesses() {
 }
 int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const {
-  assert(system_processes != NULL, "system_processes pointer is NULL!");
-  assert(no_of_sys_processes != NULL, "system_processes counter pointer is NULL!");
 #ifdef __APPLE__
   pid_t* pids = NULL;
   int pid_count = 0;
@@ -408,7 +406,7 @@ NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
 
 int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const {
   size_t len;
-  int mib[] = {CTL_NET, PF_ROUTE, /* protocol number */ 0, /* address family */ 0, NET_RT_IFLIST2, /* NET_RT_FLAGS mask*/ 0};
+  int mib[] = { CTL_NET, PF_ROUTE, /* protocol number */ 0, /* address family */ 0, NET_RT_IFLIST2, /* NET_RT_FLAGS mask*/ 0 };
   if (sysctl(mib, sizeof(mib) / sizeof(mib[0]), NULL, &len, NULL, 0) != 0) {
     return OS_ERR;
   }

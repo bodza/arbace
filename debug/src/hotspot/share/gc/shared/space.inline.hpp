@@ -61,7 +61,6 @@ template <typename OopClosureType>
 void ContiguousSpace::oop_since_save_marks_iterate(OopClosureType* blk) {
   HeapWord* t;
   HeapWord* p = saved_mark_word();
-  assert(p != NULL, "expected saved mark");
 
   const intx interval = PrefetchScanIntervalInBytes;
   do {
@@ -81,7 +80,6 @@ void ContiguousSpace::par_oop_iterate(MemRegion mr, OopClosureType* blk) {
   HeapWord* obj_addr = mr.start();
   HeapWord* limit = mr.end();
   while (obj_addr < limit) {
-    assert(oopDesc::is_oop(oop(obj_addr)), "Should be an oop");
     obj_addr += oop(obj_addr)->oop_iterate_size(blk);
   }
 }

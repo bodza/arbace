@@ -6,7 +6,6 @@ int StringUtils::replace_no_expand(char* string, const char* from, const char* t
   int replace_count = 0;
   size_t from_len = strlen(from);
   size_t to_len = strlen(to);
-  assert(from_len >= to_len, "must not expand input");
 
   for (char* dst = string; *dst && (dst = strstr(dst, from)) != NULL;) {
     char* left_over = dst + from_len;
@@ -20,7 +19,6 @@ int StringUtils::replace_no_expand(char* string, const char* from, const char* t
 }
 
 double StringUtils::similarity(const char* str1, size_t len1, const char* str2, size_t len2) {
-  assert(str1 != NULL && str2 != NULL, "sanity");
 
   // filter out zero-length strings else we will underflow on len-1 below
   if (len1 == 0 || len2 == 0) {

@@ -7,7 +7,6 @@
 BarrierSet* BarrierSet::_barrier_set = NULL;
 
 void BarrierSet::set_barrier_set(BarrierSet* barrier_set) {
-  assert(_barrier_set == NULL, "Already initialized");
   _barrier_set = barrier_set;
 
   // The barrier set was not initialized when the this thread (the main thread)

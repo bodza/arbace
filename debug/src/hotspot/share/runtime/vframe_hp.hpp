@@ -23,7 +23,6 @@ class compiledVFrame: public javaVFrame {
 
   // Casting
   static compiledVFrame* cast(vframe* vf) {
-    assert(vf == NULL || vf->is_compiled_frame(), "must be compiled frame");
     return (compiledVFrame*) vf;
   }
 

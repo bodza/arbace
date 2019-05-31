@@ -8,11 +8,11 @@ inline vframeStreamCommon::vframeStreamCommon(JavaThread* thread) : _reg_map(thr
   _thread = thread;
 }
 
-inline intptr_t* vframeStreamCommon::frame_id() const        { return _frame.id(); }
+inline intptr_t* vframeStreamCommon::frame_id() const { return _frame.id(); }
 
 inline bool vframeStreamCommon::is_interpreted_frame() const { return _frame.is_interpreted_frame(); }
 
-inline bool vframeStreamCommon::is_entry_frame() const       { return _frame.is_entry_frame(); }
+inline bool vframeStreamCommon::is_entry_frame() const { return _frame.is_entry_frame(); }
 
 inline void vframeStreamCommon::next() {
   // handle frames with inlining
@@ -51,9 +51,7 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _mode = compiled_mode;
 
   // Range check to detect ridiculous offsets.
-  if (decode_offset == DebugInformationRecorder::serialized_null ||
-      decode_offset < 0 ||
-      decode_offset >= nm()->scopes_data_size()) {
+  if (decode_offset == DebugInformationRecorder::serialized_null || decode_offset < 0 || decode_offset >= nm()->scopes_data_size()) {
     // 6379830 AsyncGetCallTrace sometimes feeds us wild frames.
     // If we read nmethod::scopes_data at serialized_null (== 0)
     // or if read some at other invalid offset, invalid values will be decoded.
@@ -72,7 +70,6 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _method               = buffer.read_method();
   _bci                  = buffer.read_bci();
 
-  assert(_method->is_method(), "checking type of decoded method");
 }
 
 // The native frames are handled specially. We do not rely on ScopeDesc info

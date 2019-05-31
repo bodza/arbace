@@ -7,12 +7,9 @@ const int ConcreteRegisterImpl::max_gpr = RegisterImpl::number_of_registers;
 const int ConcreteRegisterImpl::max_gpr = RegisterImpl::number_of_registers << 1;
 #endif
 
-const int ConcreteRegisterImpl::max_fpr = ConcreteRegisterImpl::max_gpr +
-    2 * FloatRegisterImpl::number_of_registers;
-const int ConcreteRegisterImpl::max_xmm = ConcreteRegisterImpl::max_fpr +
-    XMMRegisterImpl::max_slots_per_register * XMMRegisterImpl::number_of_registers;
-const int ConcreteRegisterImpl::max_kpr = ConcreteRegisterImpl::max_xmm +
-    KRegisterImpl::max_slots_per_register * KRegisterImpl::number_of_registers;
+const int ConcreteRegisterImpl::max_fpr = ConcreteRegisterImpl::max_gpr + 2 * FloatRegisterImpl::number_of_registers;
+const int ConcreteRegisterImpl::max_xmm = ConcreteRegisterImpl::max_fpr + XMMRegisterImpl::max_slots_per_register * XMMRegisterImpl::number_of_registers;
+const int ConcreteRegisterImpl::max_kpr = ConcreteRegisterImpl::max_xmm + KRegisterImpl::max_slots_per_register * KRegisterImpl::number_of_registers;
 
 const char* RegisterImpl::name() const {
   const char* names[number_of_registers] = {
@@ -66,7 +63,6 @@ const char* XMMRegisterImpl::sub_word_name(int i) const {
       "xmm15:0", "xmm15:1", "xmm15:2", "xmm15:3", "xmm15:4", "xmm15:5", "xmm15:6", "xmm15:7",
 #endif
   };
-  assert(i >= 0 && i < 8, "offset too large");
   return is_valid() ? names[encoding() * 8 + i] : "xnoreg";
 }
 

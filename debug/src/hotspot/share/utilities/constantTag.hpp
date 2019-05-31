@@ -73,16 +73,13 @@ class constantTag {
   bool is_invoke_dynamic() const    { return _tag == JVM_CONSTANT_InvokeDynamic; }
 
   bool is_loadable_constant() const {
-    return ((_tag >= JVM_CONSTANT_Integer && _tag <= JVM_CONSTANT_String) ||
-            is_method_type() || is_method_handle() || is_dynamic_constant() ||
-            is_unresolved_klass());
+    return ((_tag >= JVM_CONSTANT_Integer && _tag <= JVM_CONSTANT_String) || is_method_type() || is_method_handle() || is_dynamic_constant() || is_unresolved_klass());
   }
 
   constantTag() {
     _tag = JVM_CONSTANT_Invalid;
   }
   constantTag(jbyte tag) {
-    assert((tag >= 0 && tag <= JVM_CONSTANT_NameAndType) || (tag >= JVM_CONSTANT_MethodHandle && tag <= JVM_CONSTANT_InvokeDynamic) || (tag >= JVM_CONSTANT_InternalMin && tag <= JVM_CONSTANT_InternalMax), "Invalid constant tag");
     _tag = tag;
   }
 
@@ -96,7 +93,7 @@ class constantTag {
       case T_DOUBLE: return constantTag(JVM_CONSTANT_Double);
       default:       break;
     }
-    assert(false, "bad basic type for tag");
+    ShouldNotReachHere();
     return constantTag();
   }
 
@@ -108,7 +105,7 @@ class constantTag {
 
   const char* internal_name() const;  // for error reporting
 
-  void print_on(outputStream* st) const {};
+  void print_on(outputStream* st) const { };
 };
 
 #endif

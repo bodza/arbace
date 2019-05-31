@@ -8,7 +8,6 @@
 
 // Should this header be preserved during GC (when biased locking is enabled)?
 inline bool markOopDesc::must_be_preserved_with_bias(oop obj_containing_mark) const {
-  assert(UseBiasedLocking, "unexpected");
   if (has_bias_pattern()) {
     // Will reset bias at end of collection
     // Mark words of biased and currently locked objects are preserved separately
@@ -33,7 +32,6 @@ inline bool markOopDesc::must_be_preserved(oop obj_containing_mark) const {
 // Should this header be preserved in the case of a promotion failure
 // during scavenge (when biased locking is enabled)?
 inline bool markOopDesc::must_be_preserved_with_bias_for_promotion_failure(oop obj_containing_mark) const {
-  assert(UseBiasedLocking, "unexpected");
   // We don't explicitly save off the mark words of biased and
   // currently-locked objects during scavenges, so if during a
   // promotion failure we encounter either a biased mark word or a
@@ -43,8 +41,7 @@ inline bool markOopDesc::must_be_preserved_with_bias_for_promotion_failure(oop o
   // the scavengers to call new variants of
   // BiasedLocking::preserve_marks() / restore_marks() in the middle
   // of a scavenge when a promotion failure has first been detected.
-  if (has_bias_pattern() ||
-      prototype_for_object(obj_containing_mark)->has_bias_pattern()) {
+  if (has_bias_pattern() || prototype_for_object(obj_containing_mark)->has_bias_pattern()) {
     return true;
   }
   return (!is_unlocked() || !has_no_hash());
@@ -61,10 +58,8 @@ inline bool markOopDesc::must_be_preserved_for_promotion_failure(oop obj_contain
 // Same as must_be_preserved_with_bias_for_promotion_failure() except that
 // it takes a Klass* argument, instead of the object of which this is the mark word.
 inline bool markOopDesc::must_be_preserved_with_bias_for_cms_scavenge(Klass* klass_of_obj_containing_mark) const {
-  assert(UseBiasedLocking, "unexpected");
   // CMS scavenges preserve mark words in similar fashion to promotion failures; see above
-  if (has_bias_pattern() ||
-      klass_of_obj_containing_mark->prototype_header()->has_bias_pattern()) {
+  if (has_bias_pattern() || klass_of_obj_containing_mark->prototype_header()->has_bias_pattern()) {
     return true;
   }
   return (!is_unlocked() || !has_no_hash());

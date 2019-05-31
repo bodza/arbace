@@ -23,7 +23,6 @@ public:
 
   // Record initial mark pause end, starting the time tracking.
   void record_initial_mark_end(double end_time) {
-    assert(!_active, "Initial mark out of order.");
     _initial_mark_end_time = end_time;
     _active = true;
   }
@@ -37,7 +36,6 @@ public:
   }
 
   double last_marking_time() {
-    assert(has_result(), "Do not have all measurements yet.");
     double result = (_mixed_start_time - _initial_mark_end_time) - _total_pause_time;
     reset();
     return result;

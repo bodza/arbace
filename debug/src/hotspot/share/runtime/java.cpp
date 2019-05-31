@@ -61,8 +61,7 @@ int compare_methods(Method** a, Method** b) {
 void collect_profiled_methods(Method* m) {
   Thread* thread = Thread::current();
   methodHandle mh(thread, m);
-  if ((m->method_data() != NULL) &&
-      (PrintMethodData || CompilerOracle::should_print(mh))) {
+  if ((m->method_data() != NULL) && (PrintMethodData || CompilerOracle::should_print(mh))) {
     collected_profiled_methods->push(m);
   }
 }
@@ -162,7 +161,6 @@ void before_exit(JavaThread* thread) {
       while (_before_exit_status == BEFORE_EXIT_RUNNING) {
         BeforeExit_lock->wait();
       }
-      assert(_before_exit_status == BEFORE_EXIT_DONE, "invalid state");
       return;
     case BEFORE_EXIT_DONE:
       // need block to avoid SS compiler bug
@@ -250,8 +248,7 @@ void before_exit(JavaThread* thread) {
 }
 
 void vm_exit(int code) {
-  Thread* thread =
-      ThreadLocalStorage::is_initialized() ? Thread::current_or_null() : NULL;
+  Thread* thread = ThreadLocalStorage::is_initialized() ? Thread::current_or_null() : NULL;
   if (thread == NULL) {
     // very early initialization failure -- just exit
     vm_direct_exit(code);
@@ -385,13 +382,9 @@ const char* JDK_Version::_runtime_version;
 
 void JDK_Version::initialize() {
   jdk_version_info info;
-  assert(!_current.is_valid(), "Don't initialize twice");
 
   void *lib_handle = os::native_java_library();
-  jdk_version_info_fn_t func = CAST_TO_FN_PTR(jdk_version_info_fn_t,
-     os::dll_lookup(lib_handle, "JDK_GetVersionInfo0"));
-
-  assert(func != NULL, "Support for JDK 1.5 or older has been removed after JEP-223");
+  jdk_version_info_fn_t func = CAST_TO_FN_PTR(jdk_version_info_fn_t, os::dll_lookup(lib_handle, "JDK_GetVersionInfo0"));
 
   (*func)(&info, sizeof(info));
 
@@ -402,12 +395,9 @@ void JDK_Version::initialize() {
 
   // Incompatible with pre-4243978 JDK.
   if (info.pending_list_uses_discovered_field == 0) {
-    vm_exit_during_initialization(
-      "Incompatible JDK is not using Reference.discovered field for pending list");
+    vm_exit_during_initialization("Incompatible JDK is not using Reference.discovered field for pending list");
   }
-  _current = JDK_Version(major, minor, security, info.patch_version, build,
-                         info.thread_park_blocker == 1,
-                         info.post_vm_init_hook_enabled == 1);
+  _current = JDK_Version(major, minor, security, info.patch_version, build, info.thread_park_blocker == 1, info.post_vm_init_hook_enabled == 1);
 }
 
 void JDK_Version_init() {
@@ -424,21 +414,18 @@ static int64_t encode_jdk_version(const JDK_Version& v) {
 }
 
 int JDK_Version::compare(const JDK_Version& other) const {
-  assert(is_valid() && other.is_valid(), "Invalid version (uninitialized?)");
   uint64_t e = encode_jdk_version(*this);
   uint64_t o = encode_jdk_version(other);
   return (e > o) ? 1 : ((e == o) ? 0 : -1);
 }
 
 void JDK_Version::to_string(char* buffer, size_t buflen) const {
-  assert(buffer && buflen > 0, "call with useful buffer");
   size_t index = 0;
 
   if (!is_valid()) {
     jio_snprintf(buffer, buflen, "%s", "(uninitialized)");
   } else {
-    int rc = jio_snprintf(
-        &buffer[index], buflen - index, "%d.%d", _major, _minor);
+    int rc = jio_snprintf(&buffer[index], buflen - index, "%d.%d", _major, _minor);
     if (rc == -1) return;
     index += rc;
     if (_security > 0) {

@@ -7,8 +7,6 @@
 #include "utilities/bitMap.inline.hpp"
 
 inline bool G1CMBitMap::iterate(G1CMBitMapClosure* cl, MemRegion mr) {
-  assert(!mr.is_empty(), "Does not support empty memregion to iterate over");
-  assert(_covered.contains(mr), "Given MemRegion from " PTR_FORMAT " to " PTR_FORMAT " not contained in heap area", p2i(mr.start()), p2i(mr.end()));
 
   BitMap::idx_t const end_offset = addr_to_offset(mr.end());
   BitMap::idx_t offset = _bm.get_next_one_offset(addr_to_offset(mr.start()), end_offset);
@@ -26,7 +24,6 @@ inline bool G1CMBitMap::iterate(G1CMBitMapClosure* cl, MemRegion mr) {
 
 inline HeapWord* G1CMBitMap::get_next_marked_addr(const HeapWord* addr,
                                                   const HeapWord* limit) const {
-  assert(limit != NULL, "limit must not be NULL");
   // Round addr up to a possible object boundary to be safe.
   size_t const addr_offset = addr_to_offset(align_up(addr, HeapWordSize << _shifter));
   size_t const limit_offset = addr_to_offset(limit);

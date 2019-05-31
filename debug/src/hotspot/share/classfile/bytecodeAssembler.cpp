@@ -25,9 +25,7 @@ ConstantPool* BytecodeConstantPool::create_constant_pool(TRAPS) const {
     return _orig;
   }
 
-  ConstantPool* cp = ConstantPool::allocate(
-      _orig->pool_holder()->class_loader_data(),
-      _orig->length() + _entries.length(), CHECK_NULL);
+  ConstantPool* cp = ConstantPool::allocate(_orig->pool_holder()->class_loader_data(), _orig->length() + _entries.length(), CHECK_NULL);
 
   cp->set_pool_holder(_orig->pool_holder());
   _orig->copy_cp_to(1, _orig->length() - 1, cp, 1, CHECK_NULL);
@@ -46,12 +44,10 @@ ConstantPool* BytecodeConstantPool::create_constant_pool(TRAPS) const {
         cp->symbol_at_put(idx, entry._u.utf8);
         break;
       case BytecodeCPEntry::KLASS:
-        cp->klass_index_at_put(
-            idx, entry._u.klass);
+        cp->klass_index_at_put(idx, entry._u.klass);
         break;
       case BytecodeCPEntry::STRING:
-        cp->unresolved_string_at_put(
-            idx, cp->symbol_at(entry._u.string));
+        cp->unresolved_string_at_put(idx, cp->symbol_at(entry._u.string));
         break;
       case BytecodeCPEntry::NAME_AND_TYPE:
         cp->name_and_type_at_put(idx,

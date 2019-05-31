@@ -33,7 +33,7 @@ bool SafepointMechanism::poll(Thread* thread) {
 
 void SafepointMechanism::block_if_requested_local_poll(JavaThread *thread) {
   bool armed = local_poll_armed(thread); // load acquire, polling page -> op / global state
-  if(armed) {
+  if (armed) {
     // We could be armed for either a handshake operation or a safepoint
     if (global_poll()) {
       SafepointSynchronize::block(thread);

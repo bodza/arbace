@@ -31,8 +31,8 @@ class LogMessageBuffer : public StackObj {
 
  private:
   // Forbid copy assignment and copy constructor.
-  void operator=(const LogMessageBuffer& ref) {}
-  LogMessageBuffer(const LogMessageBuffer& ref) {}
+  void operator=(const LogMessageBuffer& ref) { }
+  LogMessageBuffer(const LogMessageBuffer& ref) { }
 
  public:
   LogMessageBuffer();

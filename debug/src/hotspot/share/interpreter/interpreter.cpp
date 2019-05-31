@@ -58,8 +58,6 @@ CodeletMark::CodeletMark(InterpreterMacroAssembler*& masm,
                          Bytecodes::Code bytecode) :
   _clet((InterpreterCodelet*)AbstractInterpreter::code()->request(codelet_size())),
   _cb(_clet->code_begin(), _clet->code_size()) {
-  // Request all space (add some slack for Codelet data).
-  assert(_clet != NULL, "we checked not enough space already");
 
   // Initialize Codelet attributes.
   _clet->initialize(description, bytecode);
@@ -87,9 +85,5 @@ void interpreter_init() {
   Interpreter::initialize();
   // need to hit every safepoint in order to call zapping routine
   // register the interpreter
-  Forte::register_stub(
-    "Interpreter",
-    AbstractInterpreter::code()->code_start(),
-    AbstractInterpreter::code()->code_end()
-  );
+  Forte::register_stub("Interpreter", AbstractInterpreter::code()->code_start(), AbstractInterpreter::code()->code_end());
 }

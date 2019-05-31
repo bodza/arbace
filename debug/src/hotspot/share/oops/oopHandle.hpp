@@ -16,8 +16,8 @@ private:
   oop* _obj;
 
 public:
-  OopHandle() : _obj(NULL) {}
-  OopHandle(oop* w) : _obj(w) {}
+  OopHandle() : _obj(NULL) { }
+  OopHandle(oop* w) : _obj(w) { }
 
   inline oop resolve() const;
 

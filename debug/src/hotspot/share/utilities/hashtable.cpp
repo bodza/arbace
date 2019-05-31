@@ -39,7 +39,6 @@ template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry(unsig
       int block_size = MIN2(512, MAX2((int)_table_size / 2, (int)_number_of_entries));
       int len = _entry_size * block_size;
       len = 1 << log2_int(len); // round down to power of 2
-      assert(len >= _entry_size, "");
       _first_free_entry = NEW_C_HEAP_ARRAY2(char, len, F, CURRENT_PC);
       _end_block = _first_free_entry + len;
     }
@@ -47,7 +46,6 @@ template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry(unsig
     _first_free_entry += _entry_size;
   }
 
-  assert(_entry_size % HeapWordSize == 0, "");
   entry->set_hash(hashValue);
   return entry;
 }
@@ -78,7 +76,6 @@ template <class T, MEMFLAGS F> HashtableEntry<T, F>* Hashtable<T, F>::allocate_n
 // rehash_count which is currently 100, there's probably something wrong.
 
 template <class T, MEMFLAGS F> bool RehashableHashtable<T, F>::check_rehash_table(int count) {
-  assert(this->table_size() != 0, "underflow");
   if (count > (((double)this->number_of_entries()/(double)this->table_size())*rehash_multiple)) {
     // Set a flag for the next safepoint, which should be at some guaranteed
     // safepoint interval.
@@ -95,7 +92,6 @@ template <class T, MEMFLAGS F> void RehashableHashtable<T, F>::move_to(Rehashabl
 
   // Initialize the global seed for hashing.
   _seed = AltHashing::compute_seed();
-  assert(seed() != 0, "shouldn't be zero");
 
   int saved_entry_count = this->number_of_entries();
 
@@ -154,7 +150,6 @@ template <MEMFLAGS F> void BasicHashtable<F>::BucketUnlinkContext::free_entry(Ba
 
 template <MEMFLAGS F> void BasicHashtable<F>::bulk_free_entries(BucketUnlinkContext* context) {
   if (context->_num_removed == 0) {
-    assert(context->_removed_head == NULL && context->_removed_tail == NULL, "Zero entries in the unlink context, but elements linked from " PTR_FORMAT " to " PTR_FORMAT, p2i(context->_removed_head), p2i(context->_removed_tail));
     return;
   }
 
@@ -188,7 +183,6 @@ template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_table() {
 
 // Dump the hash table entries (into CDS archive)
 template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
-  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
   intptr_t *plen = (intptr_t*)(top);
   top += sizeof(*plen);
 
@@ -202,7 +196,6 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
     }
   }
   *plen = (char*)(top) - (char*)plen - sizeof(*plen);
-  assert(top == end, "count_bytes_for_table is wrong");
   // Set the shared bit.
 
   for (i = 0; i < _table_size; ++i) {
@@ -214,8 +207,8 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
 
 // For oops and Strings the size of the literal is interesting. For other types, nobody cares.
 static int literal_size(ConstantPool*) { return 0; }
-static int literal_size(Klass*)        { return 0; }
-static int literal_size(nmethod*)      { return 0; }
+static int literal_size(Klass*) { return 0; }
+static int literal_size(nmethod*) { return 0; }
 
 static int literal_size(Symbol *symbol) {
   return symbol->size() * HeapWordSize;
@@ -239,7 +232,6 @@ static int literal_size(ClassLoaderWeakHandle v) {
 }
 
 template <MEMFLAGS F> bool BasicHashtable<F>::resize(int new_size) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
 
   // Allocate new buckets
   HashtableBucket<F>* buckets_new = NEW_C_HEAP_ARRAY2_RETURN_NULL(HashtableBucket<F>, new_size, F, CURRENT_PC);
@@ -343,7 +335,6 @@ template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_buckets() {
 
 // Dump the buckets (into CDS archive)
 template <MEMFLAGS F> void BasicHashtable<F>::copy_buckets(char* top, char* end) {
-  assert(is_aligned(top, sizeof(intptr_t)), "bad alignment");
   intptr_t len = _table_size * sizeof(HashtableBucket<F>);
   *(intptr_t*)(top) = len;
   top += sizeof(intptr_t);
@@ -354,7 +345,6 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_buckets(char* top, char* end)
   _buckets = (HashtableBucket<F>*)memcpy(top, (void*)_buckets, len);
   top += len;
 
-  assert(top == end, "count_bytes_for_buckets is wrong");
 }
 
 // Explicitly instantiate these types

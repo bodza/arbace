@@ -39,7 +39,6 @@ class RegisterImpl: public AbstractRegisterImpl {
 
   // accessors
   int   encoding() const                         {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
@@ -95,7 +94,6 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
 
   // accessors
   int   encoding() const                          {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
@@ -142,7 +140,6 @@ class XMMRegisterImpl: public AbstractRegisterImpl {
 
   // accessors
   int   encoding() const                          {
-    assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this );
     return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
@@ -227,7 +224,6 @@ public:
 
   // accessors
   int   encoding() const                          {
-    assert(is_valid(), "invalid register (%d)", (int)(intptr_t)this);
     return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;

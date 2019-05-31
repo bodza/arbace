@@ -35,11 +35,9 @@ static void metadata_oops_do(Metadata** metadata_begin, Metadata **metadata_end,
     } else {
       continue;
     }
-    assert(Metaspace::contains(m), "");
     if (m->is_method()) {
       m = ((Method*)m)->method_holder();
     }
-    assert(m->is_klass(), "must be");
     oop o = ((Klass*)m)->klass_holder();
     if (o != NULL) {
       f->do_oop(&o);
@@ -90,7 +88,6 @@ Metadata* AOTCompiledMethod::metadata_at(int index) const {
   if (index == 0) { // 0 is reserved
     return NULL;
   }
-  assert(index - 1 < _metadata_size, "");
   {
     Metadata** entry = _metadata_got + (index - 1);
     intptr_t meta = (intptr_t)*entry;
@@ -159,8 +156,7 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
     log_state_change();
 
     // Remove AOTCompiledMethod from method.
-    if (method() != NULL && (method()->code() == this ||
-                             method()->from_compiled_entry() == verified_entry_point())) {
+    if (method() != NULL && (method()->code() == this || method()->from_compiled_entry() == verified_entry_point())) {
       HandleMark hm;
       method()->clear_code(false /* already owns Patching_lock */);
     }
@@ -176,8 +172,6 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
 }
 
 bool AOTCompiledMethod::make_entrant() {
-  assert(!method()->is_old(), "reviving evolved method!");
-  assert(*_state_adr != not_entrant, "%s", method()->has_aot_code() ? "has_aot_code() not cleared" : "caller didn't check has_aot_code()");
 
   // Make sure the method is not flushed in case of a safepoint in code below.
   methodHandle the_method(method());
@@ -222,7 +216,6 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
         // In this metadata, we must only follow those metadatas directly embedded in
         // the code.  Other metadatas (oop_index>0) are seen as part of
         // the metadata section below.
-        assert(1 == (r->metadata_is_immediate()) + (r->metadata_addr() >= metadata_begin() && r->metadata_addr() < metadata_end()), "metadata must be found in exactly one place");
         if (r->metadata_is_immediate() && r->metadata_value() != NULL) {
           Metadata* md = r->metadata_value();
           if (md != _method) f(md);
@@ -242,8 +235,7 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
             f(ic_oop);
           }
         }
-      } else if (iter.type() == relocInfo::static_call_type ||
-                 iter.type() == relocInfo::opt_virtual_call_type){
+      } else if (iter.type() == relocInfo::static_call_type || iter.type() == relocInfo::opt_virtual_call_type) {
         // Check Method* in AOT c2i stub for other calls.
         Metadata* meta = (Metadata*)nativeLoadGot_at(nativePltCall_at(iter.addr())->plt_c2i_stub())->data();
         if (meta != NULL) {
@@ -264,7 +256,6 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
     } else {
       continue;
     }
-    assert(Metaspace::contains(m), "");
     f(m);
   }
 
@@ -355,12 +346,10 @@ NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Reloc
 void PltNativeCallWrapper::verify_resolve_call(address dest) const {
   CodeBlob* db = CodeCache::find_blob_unsafe(dest);
   if (db == NULL) {
-    assert(dest == _call->plt_resolve_call(), "sanity");
   }
 }
 
 void PltNativeCallWrapper::set_to_interpreted(const methodHandle& method, CompiledICInfo& info) {
-  assert(!info.to_aot(), "only for nmethod");
   CompiledPltStaticCall* csc = CompiledPltStaticCall::at(instruction_address());
   csc->set_to_interpreted(method, info.entry());
 }
@@ -395,7 +384,6 @@ bool AOTCompiledMethod::is_evol_dependent_on(Klass* dependee) {
 }
 
 void AOTCompiledMethod::clear_inline_caches() {
-  assert(SafepointSynchronize::is_at_safepoint(), "cleaning of IC's only allowed at safepoint");
   if (is_zombie()) {
     return;
   }
@@ -406,7 +394,6 @@ void AOTCompiledMethod::clear_inline_caches() {
     iter.reloc()->clear_inline_cache();
     if (iter.type() == relocInfo::opt_virtual_call_type) {
       CompiledIC* cic = CompiledIC_at(&iter);
-      assert(cic->is_clean(), "!");
       nativePltCall_at(iter.addr())->set_stub_to_clean();
     }
   }

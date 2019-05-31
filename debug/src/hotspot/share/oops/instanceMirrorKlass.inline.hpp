@@ -38,16 +38,6 @@ void InstanceMirrorKlass::oop_oop_iterate(oop obj, OopClosureType* closure) {
       } else {
         Devirtualizer::do_klass(closure, klass);
       }
-    } else {
-      // We would like to assert here (as below) that if klass has been NULL, then
-      // this has been a mirror for a primitive type that we do not need to follow
-      // as they are always strong roots.
-      // However, we might get across a klass that just changed during CMS concurrent
-      // marking if allocation occurred in the old generation.
-      // This is benign here, as we keep alive all CLDs that were loaded during the
-      // CMS concurrent phase in the class loading, i.e. they will be iterated over
-      // and kept alive during remark.
-      // assert(java_lang_Class::is_primitive(obj), "Sanity check");
     }
   }
 
@@ -62,15 +52,12 @@ void InstanceMirrorKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closu
 }
 
 template <typename T, class OopClosureType>
-void InstanceMirrorKlass::oop_oop_iterate_statics_bounded(oop obj,
-                                                          OopClosureType* closure,
-                                                          MemRegion mr) {
+void InstanceMirrorKlass::oop_oop_iterate_statics_bounded(oop obj, OopClosureType* closure, MemRegion mr) {
   T* p   = (T*)start_of_static_fields(obj);
   T* end = p + java_lang_Class::static_oop_field_count(obj);
 
   T* const l   = (T*)mr.start();
   T* const h   = (T*)mr.end();
-  assert(mask_bits((intptr_t)l, sizeof(T)-1) == 0 && mask_bits((intptr_t)h, sizeof(T)-1) == 0, "bounded region must be properly aligned");
 
   if (p < l) {
     p = l;

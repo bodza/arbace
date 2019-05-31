@@ -222,7 +222,6 @@ class os: AllStatic {
   // At startup the number of active CPUs this process is allowed to run on.
   // This value does not change dynamically. May be different from active_processor_count().
   static int initial_active_processor_count() {
-    assert(_initial_active_processor_count > 0, "Initial active processor count not set yet.");
     return _initial_active_processor_count;
   }
 
@@ -487,7 +486,7 @@ class os: AllStatic {
   // ms = 0, will sleep for the least amount of time allowed by the OS.
   static void naked_short_sleep(jlong ms);
   static void infinite_sleep(); // never returns, use with CAUTION
-  static void naked_yield () ;
+  static void naked_yield ();
   static OSReturn set_priority(Thread* thread, ThreadPriority priority);
   static OSReturn get_priority(const Thread* const thread, ThreadPriority& priority);
 
@@ -507,7 +506,7 @@ class os: AllStatic {
   static address current_stack_base();
   static size_t current_stack_size();
 
-  static void verify_stack_alignment() {};
+  static void verify_stack_alignment() { };
 
   static bool message_box(const char* title, const char* message);
   static char* do_you_want_to_debug(const char* message);
@@ -876,7 +875,7 @@ class os: AllStatic {
 
   class SuspendedThreadTaskContext {
   public:
-    SuspendedThreadTaskContext(Thread* thread, void *ucontext) : _thread(thread), _ucontext(ucontext) {}
+    SuspendedThreadTaskContext(Thread* thread, void *ucontext) : _thread(thread), _ucontext(ucontext) { }
     Thread* thread() const { return _thread; }
     void* ucontext() const { return _ucontext; }
   private:
@@ -886,12 +885,12 @@ class os: AllStatic {
 
   class SuspendedThreadTask {
   public:
-    SuspendedThreadTask(Thread* thread) : _thread(thread), _done(false) {}
+    SuspendedThreadTask(Thread* thread) : _thread(thread), _done(false) { }
     void run();
     bool is_done() { return _done; }
     virtual void do_task(const SuspendedThreadTaskContext& context) = 0;
   protected:
-    ~SuspendedThreadTask() {}
+    ~SuspendedThreadTask() { }
   private:
     void internal_do_task();
     Thread* _thread;
@@ -982,7 +981,7 @@ class os: AllStatic {
   static bool set_boot_path(char fileSep, char pathSep);
 };
 
-template<> struct IsRegisteredEnum<os::SuspendResume::State> : public TrueType {};
+template<> struct IsRegisteredEnum<os::SuspendResume::State> : public TrueType { };
 
 // Note that "PAUSE" is almost always used with synchronization
 // so arguably we should provide Atomic::SpinPause() instead

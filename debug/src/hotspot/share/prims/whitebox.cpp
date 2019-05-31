@@ -61,7 +61,7 @@
     JavaThread* THREAD = JavaThread::thread_from_jni_environment(env); \
     THREAD->clear_pending_jni_exception_check(); \
     if (HAS_PENDING_EXCEPTION) { \
-      return(value); \
+      return (value); \
     } \
   } while (0)
 
@@ -108,7 +108,7 @@ class WBIsKlassAliveClosure : public KlassClosure {
     Symbol* _name;
     bool _found;
 public:
-    WBIsKlassAliveClosure(Symbol* name) : _name(name), _found(false) {}
+    WBIsKlassAliveClosure(Symbol* name) : _name(name), _found(false) { }
 
     void do_klass(Klass* k) {
       if (_found) return;
@@ -167,9 +167,7 @@ WB_ENTRY(void, WB_ReadFromNoaccessArea(JNIEnv* env, jobject o))
   vs.initialize(rhs, 50 * granularity);
 
   // Check if constraints are complied
-  if (!( UseCompressedOops && rhs.base() != NULL &&
-         Universe::narrow_oop_base() != NULL &&
-         Universe::narrow_oop_use_implicit_null_checks() )) {
+  if (!( UseCompressedOops && rhs.base() != NULL && Universe::narrow_oop_base() != NULL && Universe::narrow_oop_use_implicit_null_checks())) {
     tty->print_cr("WB_ReadFromNoaccessArea method is useless:\n "
                   "\tUseCompressedOops is %d\n"
                   "\trhs.base() is " PTR_FORMAT "\n"
@@ -224,11 +222,8 @@ static jint wb_stress_virtual_space_resize(size_t reserved_space_size,
   return 0;
 }
 
-WB_ENTRY(jint, WB_StressVirtualSpaceResize(JNIEnv* env, jobject o,
-        jlong reserved_space_size, jlong magnitude, jlong iterations))
-  tty->print_cr("reservedSpaceSize=" JLONG_FORMAT ", magnitude=" JLONG_FORMAT ", "
-                "iterations=" JLONG_FORMAT "\n", reserved_space_size, magnitude,
-                iterations);
+WB_ENTRY(jint, WB_StressVirtualSpaceResize(JNIEnv* env, jobject o, jlong reserved_space_size, jlong magnitude, jlong iterations))
+  tty->print_cr("reservedSpaceSize=" JLONG_FORMAT ", magnitude=" JLONG_FORMAT ", " "iterations=" JLONG_FORMAT "\n", reserved_space_size, magnitude, iterations);
   if (reserved_space_size < 0 || magnitude < 0 || iterations < 0) {
     tty->print_cr("One of variables printed above is negative. Can't proceed.\n");
     return 1;
@@ -238,8 +233,7 @@ WB_ENTRY(jint, WB_StressVirtualSpaceResize(JNIEnv* env, jobject o,
   // always 8 byte. That's why we should avoid overflow in case of 32bit platform.
   if (sizeof(size_t) < sizeof(jlong)) {
     jlong size_t_max_value = (jlong) SIZE_T_MAX_VALUE;
-    if (reserved_space_size > size_t_max_value || magnitude > size_t_max_value
-        || iterations > size_t_max_value) {
+    if (reserved_space_size > size_t_max_value || magnitude > size_t_max_value || iterations > size_t_max_value) {
       tty->print_cr("One of variables printed above overflows size_t. Can't proceed.\n");
       return 2;
     }
@@ -297,7 +291,7 @@ WB_END
 WB_ENTRY(jobjectArray, WB_GetConcurrentGCPhases(JNIEnv* env, jobject o))
   const char* const* phases = Universe::heap()->concurrent_phases();
   jint nphases = 0;
-  for ( ; phases[nphases] != NULL; ++nphases) ;
+  for ( ; phases[nphases] != NULL; ++nphases);
 
   ResourceMark rm(thread);
   ThreadToNativeFromVM ttn(thread);
@@ -470,7 +464,6 @@ WB_ENTRY(jlongArray, WB_G1GetMixedGCInfo(JNIEnv* env, jobject o, jint liveness))
 WB_END
 
 static jmethodID reflected_method_to_jmid(JavaThread* thread, JNIEnv* env, jobject method) {
-  assert(method != NULL, "method should not be null");
   ThreadToNativeFromVM ttn(thread);
   return env->FromReflectedMethod(method);
 }
@@ -495,7 +488,6 @@ class VM_WhiteBoxDeoptimizeFrames : public VM_WhiteBoxOperation {
             Deoptimization::deoptimize(t, *f, reg_map);
             if (_make_not_entrant) {
                 CompiledMethod* cm = CodeCache::find_compiled(f->pc());
-                assert(cm != NULL, "sanity check");
                 cm->make_not_entrant();
             }
             ++_result;
@@ -585,7 +577,6 @@ WB_ENTRY(jboolean, WB_IsIntrinsicAvailable(JNIEnv* env, jobject o, jobject metho
 
   DirectiveSet* directive;
   AbstractCompiler* comp = CompileBroker::compiler((int)compLevel);
-  assert(comp != NULL, "compiler not available");
   if (compilation_context != NULL) {
     compilation_context_id = reflected_method_to_jmid(thread, env, compilation_context);
     CHECK_JNI_EXCEPTION_(env, JNI_FALSE);
@@ -638,8 +629,7 @@ WB_END
 
 WB_ENTRY(jint, WB_GetCompileQueueSize(JNIEnv* env, jobject o, jint comp_level))
   if (comp_level == CompLevel_any) {
-    return CompileBroker::queue_size(CompLevel_full_optimization) /* C2 */ +
-        CompileBroker::queue_size(CompLevel_full_profile) /* C1 */;
+    return CompileBroker::queue_size(CompLevel_full_optimization) /* C2 */ + CompileBroker::queue_size(CompLevel_full_profile) /* C1 */;
   } else {
     return CompileBroker::queue_size(comp_level);
   }
@@ -727,7 +717,6 @@ WB_ENTRY(jint, WB_MatchesInline(JNIEnv* env, jobject o, jobject method, jstring 
   InlineMatcher* m = InlineMatcher::parse_inline_pattern(method_str, error_msg);
 
   if (m == NULL) {
-    assert(error_msg != NULL, "Always have an error message");
     tty->print_cr("Got error: %s", error_msg);
     return -1; // Pattern failed
   }
@@ -758,7 +747,6 @@ WB_ENTRY(jint, WB_MatchesMethod(JNIEnv* env, jobject o, jobject method, jstring 
 
   BasicMatcher* m = BasicMatcher::parse_method_pattern(method_str, error_msg);
   if (m == NULL) {
-    assert(error_msg != NULL, "Must have error_msg");
     tty->print_cr("Got error: %s", error_msg);
     return -1;
   }
@@ -766,7 +754,6 @@ WB_ENTRY(jint, WB_MatchesMethod(JNIEnv* env, jobject o, jobject method, jstring 
   // Pattern works - now check if it matches
   int result = m->matches(mh);
   delete m;
-  assert(result == 0 || result == 1, "Result out of range");
   return result;
 WB_END
 
@@ -1198,8 +1185,7 @@ CodeBlob* WhiteBox::allocate_code_blob(int size, int blob_type) {
 
 WB_ENTRY(jlong, WB_AllocateCodeBlob(JNIEnv* env, jobject o, jint size, jint blob_type))
   if (size < 0) {
-    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
-      err_msg("WB_AllocateCodeBlob: size is negative: " INT32_FORMAT, size));
+    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), err_msg("WB_AllocateCodeBlob: size is negative: " INT32_FORMAT, size));
   }
   return (jlong) WhiteBox::allocate_code_blob(size, blob_type);
 WB_END
@@ -1257,8 +1243,7 @@ WB_END
 
 WB_ENTRY(jobjectArray, WB_GetCodeBlob(JNIEnv* env, jobject o, jlong addr))
   if (addr == 0) {
-    THROW_MSG_NULL(vmSymbols::java_lang_NullPointerException(),
-      "WB_GetCodeBlob: addr is null");
+    THROW_MSG_NULL(vmSymbols::java_lang_NullPointerException(), "WB_GetCodeBlob: addr is null");
   }
   ThreadToNativeFromVM ttn(thread);
   CodeBlobStub stub((CodeBlob*) addr);
@@ -1380,9 +1365,7 @@ WB_ENTRY(jlong, WB_IncMetaspaceCapacityUntilGC(JNIEnv* env, jobject wb, jlong in
   size_t aligned_inc = align_down((size_t) inc, Metaspace::commit_alignment());
   bool success = MetaspaceGC::inc_capacity_until_GC(aligned_inc, &new_cap_until_GC);
   if (!success) {
-    THROW_MSG_0(vmSymbols::java_lang_IllegalStateException(),
-                "WB_IncMetaspaceCapacityUntilGC: could not increase capacity until GC "
-                "due to contention with another thread");
+    THROW_MSG_0(vmSymbols::java_lang_IllegalStateException(), "WB_IncMetaspaceCapacityUntilGC: could not increase capacity until GC due to contention with another thread");
   }
   return (jlong) new_cap_until_GC;
 WB_END
@@ -1461,7 +1444,6 @@ WB_END
 
 template <typename T>
 static bool GetMethodOption(JavaThread* thread, JNIEnv* env, jobject method, jstring name, T* value) {
-  assert(value != NULL, "sanity");
   if (method == NULL || name == NULL) {
     return false;
   }
@@ -1575,7 +1557,6 @@ WB_ENTRY(jint, WB_HandshakeWalkStack(JNIEnv* env, jobject wb, jobject thread_han
     jint _num_threads_completed;
 
     void do_thread(Thread* th) {
-      assert(th->is_Java_thread(), "sanity");
       JavaThread* jt = (JavaThread*)th;
       ResourceMark rm;
 
@@ -1586,7 +1567,7 @@ WB_ENTRY(jint, WB_HandshakeWalkStack(JNIEnv* env, jobject wb, jobject thread_han
     }
 
   public:
-    TraceSelfClosure() : _num_threads_completed(0) {}
+    TraceSelfClosure() : _num_threads_completed(0) { }
 
     jint num_threads_completed() const { return _num_threads_completed; }
   };
@@ -1605,9 +1586,7 @@ WB_ENTRY(jint, WB_HandshakeWalkStack(JNIEnv* env, jobject wb, jobject thread_han
 WB_END
 
 //Some convenience methods to deal with objects from java
-int WhiteBox::offset_for_field(const char* field_name, oop object,
-    Symbol* signature_symbol) {
-  assert(field_name != NULL && strlen(field_name) > 0, "Field name not valid");
+int WhiteBox::offset_for_field(const char* field_name, oop object, Symbol* signature_symbol) {
   Thread* THREAD = Thread::current();
 
   //Get the class of our object
@@ -1647,8 +1626,7 @@ const char* WhiteBox::lookup_jstring(const char* field_name, oop object) {
 }
 
 bool WhiteBox::lookup_bool(const char* field_name, oop object) {
-  int offset =
-      offset_for_field(field_name, object, vmSymbols::bool_signature());
+  int offset = offset_for_field(field_name, object, vmSymbols::bool_signature());
   bool ret = (object->bool_field(offset) == JNI_TRUE);
   return ret;
 }
@@ -1739,202 +1717,202 @@ WB_END
 #define CC (char*)
 
 static JNINativeMethod methods[] = {
-  {CC"getObjectAddress0",                CC"(Ljava/lang/Object;)J", (void*)&WB_GetObjectAddress  },
-  {CC"getObjectSize0",                   CC"(Ljava/lang/Object;)J", (void*)&WB_GetObjectSize     },
-  {CC"isObjectInOldGen0",                CC"(Ljava/lang/Object;)Z", (void*)&WB_isObjectInOldGen  },
-  {CC"getHeapOopSize",                   CC"()I",                   (void*)&WB_GetHeapOopSize    },
-  {CC"getVMPageSize",                    CC"()I",                   (void*)&WB_GetVMPageSize     },
-  {CC"getVMAllocationGranularity",       CC"()J",                   (void*)&WB_GetVMAllocationGranularity },
-  {CC"getVMLargePageSize",               CC"()J",                   (void*)&WB_GetVMLargePageSize},
-  {CC"getHeapSpaceAlignment",            CC"()J",                   (void*)&WB_GetHeapSpaceAlignment},
-  {CC"getHeapAlignment",                 CC"()J",                   (void*)&WB_GetHeapAlignment},
-  {CC"isClassAlive0",                    CC"(Ljava/lang/String;)Z", (void*)&WB_IsClassAlive      },
-  {CC"parseCommandLine0",
+  { CC"getObjectAddress0",                CC"(Ljava/lang/Object;)J", (void*)&WB_GetObjectAddress },
+  { CC"getObjectSize0",                   CC"(Ljava/lang/Object;)J", (void*)&WB_GetObjectSize },
+  { CC"isObjectInOldGen0",                CC"(Ljava/lang/Object;)Z", (void*)&WB_isObjectInOldGen },
+  { CC"getHeapOopSize",                   CC"()I",                   (void*)&WB_GetHeapOopSize },
+  { CC"getVMPageSize",                    CC"()I",                   (void*)&WB_GetVMPageSize },
+  { CC"getVMAllocationGranularity",       CC"()J",                   (void*)&WB_GetVMAllocationGranularity },
+  { CC"getVMLargePageSize",               CC"()J",                   (void*)&WB_GetVMLargePageSize},
+  { CC"getHeapSpaceAlignment",            CC"()J",                   (void*)&WB_GetHeapSpaceAlignment},
+  { CC"getHeapAlignment",                 CC"()J",                   (void*)&WB_GetHeapAlignment},
+  { CC"isClassAlive0",                    CC"(Ljava/lang/String;)Z", (void*)&WB_IsClassAlive },
+  { CC"parseCommandLine0",
       CC"(Ljava/lang/String;C[Lsun/hotspot/parser/DiagnosticCommand;)[Ljava/lang/Object;",
       (void*) &WB_ParseCommandLine
   },
-  {CC"addToBootstrapClassLoaderSearch0", CC"(Ljava/lang/String;)V",
+  { CC"addToBootstrapClassLoaderSearch0", CC"(Ljava/lang/String;)V",
                                                       (void*)&WB_AddToBootstrapClassLoaderSearch},
-  {CC"addToSystemClassLoaderSearch0",    CC"(Ljava/lang/String;)V",
+  { CC"addToSystemClassLoaderSearch0",    CC"(Ljava/lang/String;)V",
                                                       (void*)&WB_AddToSystemClassLoaderSearch},
-  {CC"getCompressedOopsMaxHeapSize", CC"()J",
+  { CC"getCompressedOopsMaxHeapSize", CC"()J",
       (void*)&WB_GetCompressedOopsMaxHeapSize},
-  {CC"printHeapSizes",     CC"()V",                   (void*)&WB_PrintHeapSizes    },
-  {CC"runMemoryUnitTests", CC"()V",                   (void*)&WB_RunMemoryUnitTests},
-  {CC"readFromNoaccessArea",CC"()V",                  (void*)&WB_ReadFromNoaccessArea},
-  {CC"stressVirtualSpaceResize",CC"(JJJ)I",           (void*)&WB_StressVirtualSpaceResize},
-  {CC"g1InConcurrentMark", CC"()Z",                   (void*)&WB_G1InConcurrentMark},
-  {CC"g1IsHumongous0",      CC"(Ljava/lang/Object;)Z", (void*)&WB_G1IsHumongous     },
-  {CC"g1BelongsToHumongousRegion0", CC"(J)Z",         (void*)&WB_G1BelongsToHumongousRegion},
-  {CC"g1BelongsToFreeRegion0", CC"(J)Z",              (void*)&WB_G1BelongsToFreeRegion},
-  {CC"g1NumMaxRegions",    CC"()J",                   (void*)&WB_G1NumMaxRegions  },
-  {CC"g1NumFreeRegions",   CC"()J",                   (void*)&WB_G1NumFreeRegions  },
-  {CC"g1RegionSize",       CC"()I",                   (void*)&WB_G1RegionSize      },
-  {CC"g1StartConcMarkCycle",       CC"()Z",           (void*)&WB_G1StartMarkCycle  },
-  {CC"g1AuxiliaryMemoryUsage", CC"()Ljava/lang/management/MemoryUsage;",
-                                                      (void*)&WB_G1AuxiliaryMemoryUsage  },
-  {CC"g1GetMixedGCInfo",   CC"(I)[J",                 (void*)&WB_G1GetMixedGCInfo },
-  {CC"deoptimizeFrames",   CC"(Z)I",                  (void*)&WB_DeoptimizeFrames  },
-  {CC"deoptimizeAll",      CC"()V",                   (void*)&WB_DeoptimizeAll     },
-  {CC"deoptimizeMethod0",   CC"(Ljava/lang/reflect/Executable;Z)I",
-                                                      (void*)&WB_DeoptimizeMethod  },
-  {CC"isMethodCompiled0",   CC"(Ljava/lang/reflect/Executable;Z)Z",
-                                                      (void*)&WB_IsMethodCompiled  },
-  {CC"isMethodCompilable0", CC"(Ljava/lang/reflect/Executable;IZ)Z",
+  { CC"printHeapSizes",     CC"()V",                   (void*)&WB_PrintHeapSizes },
+  { CC"runMemoryUnitTests", CC"()V",                   (void*)&WB_RunMemoryUnitTests},
+  { CC"readFromNoaccessArea",CC"()V",                  (void*)&WB_ReadFromNoaccessArea},
+  { CC"stressVirtualSpaceResize",CC"(JJJ)I",           (void*)&WB_StressVirtualSpaceResize},
+  { CC"g1InConcurrentMark", CC"()Z",                   (void*)&WB_G1InConcurrentMark},
+  { CC"g1IsHumongous0",      CC"(Ljava/lang/Object;)Z", (void*)&WB_G1IsHumongous },
+  { CC"g1BelongsToHumongousRegion0", CC"(J)Z",         (void*)&WB_G1BelongsToHumongousRegion},
+  { CC"g1BelongsToFreeRegion0", CC"(J)Z",              (void*)&WB_G1BelongsToFreeRegion},
+  { CC"g1NumMaxRegions",    CC"()J",                   (void*)&WB_G1NumMaxRegions },
+  { CC"g1NumFreeRegions",   CC"()J",                   (void*)&WB_G1NumFreeRegions },
+  { CC"g1RegionSize",       CC"()I",                   (void*)&WB_G1RegionSize },
+  { CC"g1StartConcMarkCycle",       CC"()Z",           (void*)&WB_G1StartMarkCycle },
+  { CC"g1AuxiliaryMemoryUsage", CC"()Ljava/lang/management/MemoryUsage;",
+                                                      (void*)&WB_G1AuxiliaryMemoryUsage },
+  { CC"g1GetMixedGCInfo",   CC"(I)[J",                 (void*)&WB_G1GetMixedGCInfo },
+  { CC"deoptimizeFrames",   CC"(Z)I",                  (void*)&WB_DeoptimizeFrames },
+  { CC"deoptimizeAll",      CC"()V",                   (void*)&WB_DeoptimizeAll },
+  { CC"deoptimizeMethod0",   CC"(Ljava/lang/reflect/Executable;Z)I",
+                                                      (void*)&WB_DeoptimizeMethod },
+  { CC"isMethodCompiled0",   CC"(Ljava/lang/reflect/Executable;Z)Z",
+                                                      (void*)&WB_IsMethodCompiled },
+  { CC"isMethodCompilable0", CC"(Ljava/lang/reflect/Executable;IZ)Z",
                                                       (void*)&WB_IsMethodCompilable},
-  {CC"isMethodQueuedForCompilation0",
+  { CC"isMethodQueuedForCompilation0",
       CC"(Ljava/lang/reflect/Executable;)Z",          (void*)&WB_IsMethodQueuedForCompilation},
-  {CC"isIntrinsicAvailable0",
+  { CC"isIntrinsicAvailable0",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/reflect/Executable;I)Z",
                                                       (void*)&WB_IsIntrinsicAvailable},
-  {CC"makeMethodNotCompilable0",
+  { CC"makeMethodNotCompilable0",
       CC"(Ljava/lang/reflect/Executable;IZ)V",        (void*)&WB_MakeMethodNotCompilable},
-  {CC"testSetDontInlineMethod0",
+  { CC"testSetDontInlineMethod0",
       CC"(Ljava/lang/reflect/Executable;Z)Z",         (void*)&WB_TestSetDontInlineMethod},
-  {CC"getMethodCompilationLevel0",
+  { CC"getMethodCompilationLevel0",
       CC"(Ljava/lang/reflect/Executable;Z)I",         (void*)&WB_GetMethodCompilationLevel},
-  {CC"getMethodEntryBci0",
+  { CC"getMethodEntryBci0",
       CC"(Ljava/lang/reflect/Executable;)I",          (void*)&WB_GetMethodEntryBci},
-  {CC"getCompileQueueSize",
+  { CC"getCompileQueueSize",
       CC"(I)I",                                       (void*)&WB_GetCompileQueueSize},
-  {CC"testSetForceInlineMethod0",
+  { CC"testSetForceInlineMethod0",
       CC"(Ljava/lang/reflect/Executable;Z)Z",         (void*)&WB_TestSetForceInlineMethod},
-  {CC"enqueueMethodForCompilation0",
+  { CC"enqueueMethodForCompilation0",
       CC"(Ljava/lang/reflect/Executable;II)Z",        (void*)&WB_EnqueueMethodForCompilation},
-  {CC"enqueueInitializerForCompilation0",
+  { CC"enqueueInitializerForCompilation0",
       CC"(Ljava/lang/Class;I)Z",                      (void*)&WB_EnqueueInitializerForCompilation},
-  {CC"clearMethodState0",
+  { CC"clearMethodState0",
       CC"(Ljava/lang/reflect/Executable;)V",          (void*)&WB_ClearMethodState},
-  {CC"lockCompilation",    CC"()V",                   (void*)&WB_LockCompilation},
-  {CC"unlockCompilation",  CC"()V",                   (void*)&WB_UnlockCompilation},
-  {CC"matchesMethod",
+  { CC"lockCompilation",    CC"()V",                   (void*)&WB_LockCompilation},
+  { CC"unlockCompilation",  CC"()V",                   (void*)&WB_UnlockCompilation},
+  { CC"matchesMethod",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)I",
                                                       (void*)&WB_MatchesMethod},
-  {CC"matchesInline",
+  { CC"matchesInline",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)I",
                                                       (void*)&WB_MatchesInline},
-  {CC"shouldPrintAssembly",
+  { CC"shouldPrintAssembly",
         CC"(Ljava/lang/reflect/Executable;I)Z",
                                                         (void*)&WB_ShouldPrintAssembly},
 
-  {CC"isConstantVMFlag",   CC"(Ljava/lang/String;)Z", (void*)&WB_IsConstantVMFlag},
-  {CC"isLockedVMFlag",     CC"(Ljava/lang/String;)Z", (void*)&WB_IsLockedVMFlag},
-  {CC"setBooleanVMFlag",   CC"(Ljava/lang/String;Z)V",(void*)&WB_SetBooleanVMFlag},
-  {CC"setIntVMFlag",       CC"(Ljava/lang/String;J)V",(void*)&WB_SetIntVMFlag},
-  {CC"setUintVMFlag",      CC"(Ljava/lang/String;J)V",(void*)&WB_SetUintVMFlag},
-  {CC"setIntxVMFlag",      CC"(Ljava/lang/String;J)V",(void*)&WB_SetIntxVMFlag},
-  {CC"setUintxVMFlag",     CC"(Ljava/lang/String;J)V",(void*)&WB_SetUintxVMFlag},
-  {CC"setUint64VMFlag",    CC"(Ljava/lang/String;J)V",(void*)&WB_SetUint64VMFlag},
-  {CC"setSizeTVMFlag",     CC"(Ljava/lang/String;J)V",(void*)&WB_SetSizeTVMFlag},
-  {CC"setDoubleVMFlag",    CC"(Ljava/lang/String;D)V",(void*)&WB_SetDoubleVMFlag},
-  {CC"setStringVMFlag",    CC"(Ljava/lang/String;Ljava/lang/String;)V",
+  { CC"isConstantVMFlag",   CC"(Ljava/lang/String;)Z", (void*)&WB_IsConstantVMFlag},
+  { CC"isLockedVMFlag",     CC"(Ljava/lang/String;)Z", (void*)&WB_IsLockedVMFlag},
+  { CC"setBooleanVMFlag",   CC"(Ljava/lang/String;Z)V",(void*)&WB_SetBooleanVMFlag},
+  { CC"setIntVMFlag",       CC"(Ljava/lang/String;J)V",(void*)&WB_SetIntVMFlag},
+  { CC"setUintVMFlag",      CC"(Ljava/lang/String;J)V",(void*)&WB_SetUintVMFlag},
+  { CC"setIntxVMFlag",      CC"(Ljava/lang/String;J)V",(void*)&WB_SetIntxVMFlag},
+  { CC"setUintxVMFlag",     CC"(Ljava/lang/String;J)V",(void*)&WB_SetUintxVMFlag},
+  { CC"setUint64VMFlag",    CC"(Ljava/lang/String;J)V",(void*)&WB_SetUint64VMFlag},
+  { CC"setSizeTVMFlag",     CC"(Ljava/lang/String;J)V",(void*)&WB_SetSizeTVMFlag},
+  { CC"setDoubleVMFlag",    CC"(Ljava/lang/String;D)V",(void*)&WB_SetDoubleVMFlag},
+  { CC"setStringVMFlag",    CC"(Ljava/lang/String;Ljava/lang/String;)V",
                                                       (void*)&WB_SetStringVMFlag},
-  {CC"getBooleanVMFlag",   CC"(Ljava/lang/String;)Ljava/lang/Boolean;",
+  { CC"getBooleanVMFlag",   CC"(Ljava/lang/String;)Ljava/lang/Boolean;",
                                                       (void*)&WB_GetBooleanVMFlag},
-  {CC"getIntVMFlag",       CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getIntVMFlag",       CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetIntVMFlag},
-  {CC"getUintVMFlag",      CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getUintVMFlag",      CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetUintVMFlag},
-  {CC"getIntxVMFlag",      CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getIntxVMFlag",      CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetIntxVMFlag},
-  {CC"getUintxVMFlag",     CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getUintxVMFlag",     CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetUintxVMFlag},
-  {CC"getUint64VMFlag",    CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getUint64VMFlag",    CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetUint64VMFlag},
-  {CC"getSizeTVMFlag",     CC"(Ljava/lang/String;)Ljava/lang/Long;",
+  { CC"getSizeTVMFlag",     CC"(Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetSizeTVMFlag},
-  {CC"getDoubleVMFlag",    CC"(Ljava/lang/String;)Ljava/lang/Double;",
+  { CC"getDoubleVMFlag",    CC"(Ljava/lang/String;)Ljava/lang/Double;",
                                                       (void*)&WB_GetDoubleVMFlag},
-  {CC"getStringVMFlag",    CC"(Ljava/lang/String;)Ljava/lang/String;",
+  { CC"getStringVMFlag",    CC"(Ljava/lang/String;)Ljava/lang/String;",
                                                       (void*)&WB_GetStringVMFlag},
-  {CC"isInStringTable",    CC"(Ljava/lang/String;)Z", (void*)&WB_IsInStringTable  },
-  {CC"fullGC",   CC"()V",                             (void*)&WB_FullGC },
-  {CC"youngGC",  CC"()V",                             (void*)&WB_YoungGC },
-  {CC"readReservedMemory", CC"()V",                   (void*)&WB_ReadReservedMemory },
-  {CC"allocateMetaspace",
+  { CC"isInStringTable",    CC"(Ljava/lang/String;)Z", (void*)&WB_IsInStringTable },
+  { CC"fullGC",   CC"()V",                             (void*)&WB_FullGC },
+  { CC"youngGC",  CC"()V",                             (void*)&WB_YoungGC },
+  { CC"readReservedMemory", CC"()V",                   (void*)&WB_ReadReservedMemory },
+  { CC"allocateMetaspace",
      CC"(Ljava/lang/ClassLoader;J)J",                 (void*)&WB_AllocateMetaspace },
-  {CC"freeMetaspace",
+  { CC"freeMetaspace",
      CC"(Ljava/lang/ClassLoader;JJ)V",                (void*)&WB_FreeMetaspace },
-  {CC"incMetaspaceCapacityUntilGC", CC"(J)J",         (void*)&WB_IncMetaspaceCapacityUntilGC },
-  {CC"metaspaceCapacityUntilGC", CC"()J",             (void*)&WB_MetaspaceCapacityUntilGC },
-  {CC"metaspaceShouldConcurrentCollect", CC"()Z",     (void*)&WB_MetaspaceShouldConcurrentCollect },
-  {CC"metaspaceReserveAlignment", CC"()J",            (void*)&WB_MetaspaceReserveAlignment },
-  {CC"getCPUFeatures",     CC"()Ljava/lang/String;",  (void*)&WB_GetCPUFeatures     },
-  {CC"getNMethod0",         CC"(Ljava/lang/reflect/Executable;Z)[Ljava/lang/Object;",
-                                                      (void*)&WB_GetNMethod         },
-  {CC"forceNMethodSweep",  CC"()V",                   (void*)&WB_ForceNMethodSweep  },
-  {CC"allocateCodeBlob",   CC"(II)J",                 (void*)&WB_AllocateCodeBlob   },
-  {CC"freeCodeBlob",       CC"(J)V",                  (void*)&WB_FreeCodeBlob       },
-  {CC"getCodeHeapEntries", CC"(I)[Ljava/lang/Object;",(void*)&WB_GetCodeHeapEntries },
-  {CC"getCompilationActivityMode",
+  { CC"incMetaspaceCapacityUntilGC", CC"(J)J",         (void*)&WB_IncMetaspaceCapacityUntilGC },
+  { CC"metaspaceCapacityUntilGC", CC"()J",             (void*)&WB_MetaspaceCapacityUntilGC },
+  { CC"metaspaceShouldConcurrentCollect", CC"()Z",     (void*)&WB_MetaspaceShouldConcurrentCollect },
+  { CC"metaspaceReserveAlignment", CC"()J",            (void*)&WB_MetaspaceReserveAlignment },
+  { CC"getCPUFeatures",     CC"()Ljava/lang/String;",  (void*)&WB_GetCPUFeatures },
+  { CC"getNMethod0",         CC"(Ljava/lang/reflect/Executable;Z)[Ljava/lang/Object;",
+                                                      (void*)&WB_GetNMethod },
+  { CC"forceNMethodSweep",  CC"()V",                   (void*)&WB_ForceNMethodSweep },
+  { CC"allocateCodeBlob",   CC"(II)J",                 (void*)&WB_AllocateCodeBlob },
+  { CC"freeCodeBlob",       CC"(J)V",                  (void*)&WB_FreeCodeBlob },
+  { CC"getCodeHeapEntries", CC"(I)[Ljava/lang/Object;",(void*)&WB_GetCodeHeapEntries },
+  { CC"getCompilationActivityMode",
                            CC"()I",                   (void*)&WB_GetCompilationActivityMode},
-  {CC"getMethodData0",     CC"(Ljava/lang/reflect/Executable;)J",
-                                                      (void*)&WB_GetMethodData      },
-  {CC"getCodeBlob",        CC"(J)[Ljava/lang/Object;",(void*)&WB_GetCodeBlob        },
-  {CC"getThreadStackSize", CC"()J",                   (void*)&WB_GetThreadStackSize },
-  {CC"getThreadRemainingStackSize", CC"()J",          (void*)&WB_GetThreadRemainingStackSize },
-  {CC"DefineModule",       CC"(Ljava/lang/Object;ZLjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V",
+  { CC"getMethodData0",     CC"(Ljava/lang/reflect/Executable;)J",
+                                                      (void*)&WB_GetMethodData },
+  { CC"getCodeBlob",        CC"(J)[Ljava/lang/Object;",(void*)&WB_GetCodeBlob },
+  { CC"getThreadStackSize", CC"()J",                   (void*)&WB_GetThreadStackSize },
+  { CC"getThreadRemainingStackSize", CC"()J",          (void*)&WB_GetThreadRemainingStackSize },
+  { CC"DefineModule",       CC"(Ljava/lang/Object;ZLjava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V",
                                                       (void*)&WB_DefineModule },
-  {CC"AddModuleExports",   CC"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V",
+  { CC"AddModuleExports",   CC"(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V",
                                                       (void*)&WB_AddModuleExports },
-  {CC"AddReadsModule",     CC"(Ljava/lang/Object;Ljava/lang/Object;)V",
+  { CC"AddReadsModule",     CC"(Ljava/lang/Object;Ljava/lang/Object;)V",
                                                       (void*)&WB_AddReadsModule },
-  {CC"AddModuleExportsToAllUnnamed", CC"(Ljava/lang/Object;Ljava/lang/String;)V",
+  { CC"AddModuleExportsToAllUnnamed", CC"(Ljava/lang/Object;Ljava/lang/String;)V",
                                                       (void*)&WB_AddModuleExportsToAllUnnamed },
-  {CC"AddModuleExportsToAll", CC"(Ljava/lang/Object;Ljava/lang/String;)V",
+  { CC"AddModuleExportsToAll", CC"(Ljava/lang/Object;Ljava/lang/String;)V",
                                                       (void*)&WB_AddModuleExportsToAll },
-  {CC"assertMatchingSafepointCalls", CC"(ZZ)V",       (void*)&WB_AssertMatchingSafepointCalls },
-  {CC"isMonitorInflated0", CC"(Ljava/lang/Object;)Z", (void*)&WB_IsMonitorInflated  },
-  {CC"forceSafepoint",     CC"()V",                   (void*)&WB_ForceSafepoint     },
-  {CC"getConstantPool0",   CC"(Ljava/lang/Class;)J",  (void*)&WB_GetConstantPool    },
-  {CC"getConstantPoolCacheIndexTag0", CC"()I",  (void*)&WB_GetConstantPoolCacheIndexTag},
-  {CC"getConstantPoolCacheLength0", CC"(Ljava/lang/Class;)I",  (void*)&WB_GetConstantPoolCacheLength},
-  {CC"remapInstructionOperandFromCPCache0",
+  { CC"assertMatchingSafepointCalls", CC"(ZZ)V",       (void*)&WB_AssertMatchingSafepointCalls },
+  { CC"isMonitorInflated0", CC"(Ljava/lang/Object;)Z", (void*)&WB_IsMonitorInflated },
+  { CC"forceSafepoint",     CC"()V",                   (void*)&WB_ForceSafepoint },
+  { CC"getConstantPool0",   CC"(Ljava/lang/Class;)J",  (void*)&WB_GetConstantPool },
+  { CC"getConstantPoolCacheIndexTag0", CC"()I",  (void*)&WB_GetConstantPoolCacheIndexTag},
+  { CC"getConstantPoolCacheLength0", CC"(Ljava/lang/Class;)I",  (void*)&WB_GetConstantPoolCacheLength},
+  { CC"remapInstructionOperandFromCPCache0",
       CC"(Ljava/lang/Class;I)I",                      (void*)&WB_ConstantPoolRemapInstructionOperandFromCache},
-  {CC"encodeConstantPoolIndyIndex0",
+  { CC"encodeConstantPoolIndyIndex0",
       CC"(I)I",                      (void*)&WB_ConstantPoolEncodeIndyIndex},
-  {CC"getMethodBooleanOption",
+  { CC"getMethodBooleanOption",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)Ljava/lang/Boolean;",
                                                       (void*)&WB_GetMethodBooleaneOption},
-  {CC"getMethodIntxOption",
+  { CC"getMethodIntxOption",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetMethodIntxOption},
-  {CC"getMethodUintxOption",
+  { CC"getMethodUintxOption",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)Ljava/lang/Long;",
                                                       (void*)&WB_GetMethodUintxOption},
-  {CC"getMethodDoubleOption",
+  { CC"getMethodDoubleOption",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)Ljava/lang/Double;",
                                                       (void*)&WB_GetMethodDoubleOption},
-  {CC"getMethodStringOption",
+  { CC"getMethodStringOption",
       CC"(Ljava/lang/reflect/Executable;Ljava/lang/String;)Ljava/lang/String;",
                                                       (void*)&WB_GetMethodStringOption},
-  {CC"isShared",           CC"(Ljava/lang/Object;)Z", (void*)&WB_IsShared },
-  {CC"isSharedClass",      CC"(Ljava/lang/Class;)Z",  (void*)&WB_IsSharedClass },
-  {CC"areSharedStringsIgnored",           CC"()Z",    (void*)&WB_AreSharedStringsIgnored },
-  {CC"getResolvedReferences", CC"(Ljava/lang/Class;)Ljava/lang/Object;", (void*)&WB_GetResolvedReferences},
-  {CC"areOpenArchiveHeapObjectsMapped",   CC"()Z",    (void*)&WB_AreOpenArchiveHeapObjectsMapped},
-  {CC"isCDSIncludedInVmBuild",            CC"()Z",    (void*)&WB_IsCDSIncludedInVmBuild },
-  {CC"isJFRIncludedInVmBuild",            CC"()Z",    (void*)&WB_IsJFRIncludedInVmBuild },
-  {CC"isJavaHeapArchiveSupported",      CC"()Z",      (void*)&WB_IsJavaHeapArchiveSupported },
+  { CC"isShared",           CC"(Ljava/lang/Object;)Z", (void*)&WB_IsShared },
+  { CC"isSharedClass",      CC"(Ljava/lang/Class;)Z",  (void*)&WB_IsSharedClass },
+  { CC"areSharedStringsIgnored",           CC"()Z",    (void*)&WB_AreSharedStringsIgnored },
+  { CC"getResolvedReferences", CC"(Ljava/lang/Class;)Ljava/lang/Object;", (void*)&WB_GetResolvedReferences},
+  { CC"areOpenArchiveHeapObjectsMapped",   CC"()Z",    (void*)&WB_AreOpenArchiveHeapObjectsMapped},
+  { CC"isCDSIncludedInVmBuild",            CC"()Z",    (void*)&WB_IsCDSIncludedInVmBuild },
+  { CC"isJFRIncludedInVmBuild",            CC"()Z",    (void*)&WB_IsJFRIncludedInVmBuild },
+  { CC"isJavaHeapArchiveSupported",      CC"()Z",      (void*)&WB_IsJavaHeapArchiveSupported },
 
-  {CC"clearInlineCaches0",  CC"(Z)V",                 (void*)&WB_ClearInlineCaches },
-  {CC"handshakeWalkStack", CC"(Ljava/lang/Thread;Z)I", (void*)&WB_HandshakeWalkStack },
-  {CC"addCompilerDirective",    CC"(Ljava/lang/String;)I",
+  { CC"clearInlineCaches0",  CC"(Z)V",                 (void*)&WB_ClearInlineCaches },
+  { CC"handshakeWalkStack", CC"(Ljava/lang/Thread;Z)I", (void*)&WB_HandshakeWalkStack },
+  { CC"addCompilerDirective",    CC"(Ljava/lang/String;)I",
                                                       (void*)&WB_AddCompilerDirective },
-  {CC"removeCompilerDirective",   CC"(I)V",           (void*)&WB_RemoveCompilerDirective },
-  {CC"isGCSupported",             CC"(I)Z",           (void*)&WB_IsGCSupported},
-  {CC"isGCSelected",              CC"(I)Z",           (void*)&WB_IsGCSelected},
-  {CC"isGCSelectedErgonomically", CC"()Z",            (void*)&WB_IsGCSelectedErgonomically},
-  {CC"supportsConcurrentGCPhaseControl", CC"()Z",     (void*)&WB_SupportsConcurrentGCPhaseControl},
-  {CC"getConcurrentGCPhases",     CC"()[Ljava/lang/String;",
+  { CC"removeCompilerDirective",   CC"(I)V",           (void*)&WB_RemoveCompilerDirective },
+  { CC"isGCSupported",             CC"(I)Z",           (void*)&WB_IsGCSupported},
+  { CC"isGCSelected",              CC"(I)Z",           (void*)&WB_IsGCSelected},
+  { CC"isGCSelectedErgonomically", CC"()Z",            (void*)&WB_IsGCSelectedErgonomically},
+  { CC"supportsConcurrentGCPhaseControl", CC"()Z",     (void*)&WB_SupportsConcurrentGCPhaseControl},
+  { CC"getConcurrentGCPhases",     CC"()[Ljava/lang/String;",
                                                       (void*)&WB_GetConcurrentGCPhases},
-  {CC"requestConcurrentGCPhase0", CC"(Ljava/lang/String;)Z",
+  { CC"requestConcurrentGCPhase0", CC"(Ljava/lang/String;)Z",
                                                       (void*)&WB_RequestConcurrentGCPhase},
-  {CC"checkLibSpecifiesNoexecstack", CC"(Ljava/lang/String;)Z",
+  { CC"checkLibSpecifiesNoexecstack", CC"(Ljava/lang/String;)Z",
                                                       (void*)&WB_CheckLibSpecifiesNoexecstack},
-  {CC"isContainerized",           CC"()Z",            (void*)&WB_IsContainerized },
-  {CC"printOsInfo",               CC"()V",            (void*)&WB_PrintOsInfo },
-  {CC"disableElfSectionCache",    CC"()V",            (void*)&WB_DisableElfSectionCache },
+  { CC"isContainerized",           CC"()Z",            (void*)&WB_IsContainerized },
+  { CC"printOsInfo",               CC"()V",            (void*)&WB_PrintOsInfo },
+  { CC"disableElfSectionCache",    CC"()V",            (void*)&WB_DisableElfSectionCache },
 };
 
 #undef CC

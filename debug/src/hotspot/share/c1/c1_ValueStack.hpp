@@ -26,12 +26,10 @@ class ValueStack: public CompilationResourceObj {
   Values   _locks;                               // the monitor stack (holding the locked values)
 
   Value check(ValueTag tag, Value t) {
-    assert(tag == t->type()->tag() || tag == objectTag && t->type()->tag() == addressTag, "types must correspond");
     return t;
   }
 
   Value check(ValueTag tag, Value t, Value h) {
-    assert(h == NULL, "hi-word of doubleword value must be NULL");
     return check(tag, t);
   }
 
@@ -50,7 +48,6 @@ class ValueStack: public CompilationResourceObj {
   ValueStack* copy_for_parsing()                 { return new ValueStack(this, Parsing, -99); }
 
   void set_caller_state(ValueStack* s)           {
-    assert(kind() == EmptyExceptionState, "only EmptyExceptionStates can be modified");
     _caller_state = s;
   }
 
@@ -73,13 +70,11 @@ class ValueStack: public CompilationResourceObj {
   void clear_locals();                           // sets all locals to NULL;
 
   void invalidate_local(int i) {
-    assert(!_locals.at(i)->type()->is_double_word() || _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     _locals.at_put(i, NULL);
   }
 
   Value local_at(int i) const {
     Value x = _locals.at(i);
-    assert(x == NULL || !x->type()->is_double_word() || _locals.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     return x;
   }
 
@@ -103,7 +98,6 @@ class ValueStack: public CompilationResourceObj {
   // stack access
   Value stack_at(int i) const {
     Value x = _stack.at(i);
-    assert(!x->type()->is_double_word() || _stack.at(i + 1) == NULL, "hi-word of doubleword value must be NULL");
     return x;
   }
 
@@ -179,8 +173,8 @@ class ValueStack: public CompilationResourceObj {
   void setup_phi_for_local(BlockBegin* b, int index);
 
   // debugging
-  void print()  {};
-  void verify() {};
+  void print()  { };
+  void verify() { };
 };
 
 // Macro definitions for simple iteration of stack and local values of a ValueStack

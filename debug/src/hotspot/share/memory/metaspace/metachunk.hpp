@@ -47,11 +47,7 @@ enum ChunkOrigin {
 };
 
 inline bool is_valid_chunkorigin(ChunkOrigin origin) {
-  return origin == origin_normal ||
-    origin == origin_pad ||
-    origin == origin_leftover ||
-    origin == origin_merge ||
-    origin == origin_split;
+  return origin == origin_normal || origin == origin_pad || origin == origin_leftover || origin == origin_merge || origin == origin_split;
 }
 
 class Metachunk : public Metabase<Metachunk> {

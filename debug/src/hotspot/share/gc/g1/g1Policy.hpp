@@ -101,7 +101,6 @@ public:
   }
 
   void set_region_survivor(HeapRegion* hr) {
-    assert(hr->is_survivor(), "pre-condition");
     hr->install_surv_rate_group(_survivor_surv_rate_group);
   }
 

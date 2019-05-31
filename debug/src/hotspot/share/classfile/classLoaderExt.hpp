@@ -20,8 +20,8 @@ public:
     return false;
   }
 
-  static void setup_search_paths() {};
-  static void setup_module_paths(TRAPS) {};
+  static void setup_search_paths() { };
+  static void setup_module_paths(TRAPS) { };
 };
 
 #endif

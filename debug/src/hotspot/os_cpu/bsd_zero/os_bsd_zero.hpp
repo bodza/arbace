@@ -1,7 +1,7 @@
 #ifndef OS_CPU_BSD_ZERO_VM_OS_BSD_ZERO_HPP
 #define OS_CPU_BSD_ZERO_VM_OS_BSD_ZERO_HPP
 
-  static void setup_fpu() {}
+  static void setup_fpu() { }
 
   static bool is_allocatable(size_t bytes);
 

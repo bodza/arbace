@@ -35,7 +35,6 @@ private:
 public:
 
   static VMReg  as_VMReg(int val, bool bad_ok = false) {
-    assert(val > BAD_REG || bad_ok, "invalid");
     return (VMReg) (intptr_t) val; }
 
   const char*  name() {
@@ -67,19 +66,16 @@ public:
   // we don't try and get the VMReg number of a physical register that doesn't
   // have an expressible part. That would be pd specific code
   VMReg next() {
-    assert((is_reg() && value() < stack0->value() - 1) || is_stack(), "must be");
     return (VMReg)(intptr_t)(value() + 1);
   }
   VMReg next(int i) {
-    assert((is_reg() && value() < stack0->value() - i) || is_stack(), "must be");
     return (VMReg)(intptr_t)(value() + i);
   }
   VMReg prev() {
-    assert((is_stack() && value() > stack0->value()) || (is_reg() && value() != 0), "must be");
     return (VMReg)(intptr_t)(value() - 1);
   }
 
-  intptr_t value() const         {return (intptr_t) this; }
+  intptr_t value() const         { return (intptr_t) this; }
 
   void print_on(outputStream* st) const;
   void print() const { print_on(tty); }
@@ -90,10 +86,8 @@ public:
   // and the result must be also.
 
   VMReg bias(int offset) {
-    assert(is_stack(), "must be");
     // VMReg res = VMRegImpl::as_VMReg(value() + offset);
     VMReg res = stack2reg(reg2stack() + offset);
-    assert(res->is_stack(), "must be");
     return res;
   }
 
@@ -103,7 +97,6 @@ public:
   }
 
   uintptr_t reg2stack() {
-    assert( is_stack(), "Not a stack-based register" );
     return value() - stack0->value();
   }
 

@@ -42,18 +42,15 @@ class PtrQueue {
 
   // Get the capacity, in bytes.  The capacity must have been set.
   size_t capacity_in_bytes() const {
-    assert(_capacity_in_bytes > 0, "capacity not set");
     return _capacity_in_bytes;
   }
 
   void set_capacity(size_t entries) {
     size_t byte_capacity = index_to_byte_index(entries);
-    assert(_capacity_in_bytes == 0 || _capacity_in_bytes == byte_capacity, "changing capacity " SIZE_FORMAT " -> " SIZE_FORMAT, _capacity_in_bytes, byte_capacity);
     _capacity_in_bytes = byte_capacity;
   }
 
   static size_t byte_index_to_index(size_t ind) {
-    assert(is_aligned(ind, _element_size), "precondition");
     return ind / _element_size;
   }
 
@@ -71,7 +68,6 @@ protected:
 
   void set_index(size_t new_index) {
     size_t byte_index = index_to_byte_index(new_index);
-    assert(byte_index <= capacity_in_bytes(), "precondition");
     _index = byte_index;
   }
 
@@ -134,7 +130,6 @@ public:
   size_t size() const {
     size_t result = 0;
     if (_buf != NULL) {
-      assert(_index <= capacity_in_bytes(), "Invariant");
       result = byte_index_to_index(capacity_in_bytes() - _index);
     }
     return result;
@@ -152,7 +147,6 @@ public:
     if (!b && _buf != NULL) {
       reset();
     } else if (b && _buf != NULL) {
-      assert(index() == capacity(), "invariant: queues are empty when activated.");
     }
   }
 
@@ -196,8 +190,8 @@ class BufferNode {
   }
 
 public:
-  BufferNode* next() const     { return _next;  }
-  void set_next(BufferNode* n) { _next = n;     }
+  BufferNode* next() const     { return _next; }
+  void set_next(BufferNode* n) { _next = n; }
   size_t index() const         { return _index; }
   void set_index(size_t i)     { _index = i; }
 
@@ -209,8 +203,7 @@ public:
 
   // Return the BufferNode containing the buffer, after setting its index.
   static BufferNode* make_node_from_buffer(void** buffer, size_t index) {
-    BufferNode* node =
-      reinterpret_cast<BufferNode*>(
+    BufferNode* node = reinterpret_cast<BufferNode*>(
         reinterpret_cast<char*>(buffer) - buffer_offset());
     node->set_index(index);
     return node;
@@ -315,7 +308,6 @@ public:
 
   // Get the buffer size.  Must have been set.
   size_t buffer_size() const {
-    assert(_buffer_size > 0, "buffer size not set");
     return _buffer_size;
   }
 

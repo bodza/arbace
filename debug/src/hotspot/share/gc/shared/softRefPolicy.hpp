@@ -38,7 +38,7 @@ class ClearedAllSoftRefs : public StackObj {
  public:
   ClearedAllSoftRefs(bool clear_all_soft_refs, SoftRefPolicy* soft_ref_policy) :
     _clear_all_soft_refs(clear_all_soft_refs),
-    _soft_ref_policy(soft_ref_policy) {}
+    _soft_ref_policy(soft_ref_policy) { }
 
   ~ClearedAllSoftRefs() {
     if (_clear_all_soft_refs) {

@@ -12,8 +12,7 @@ int Metadebug::_allocation_fail_alot_count = 0;
 
 void Metadebug::init_allocation_fail_alot_count() {
   if (MetadataAllocationFailALot) {
-    _allocation_fail_alot_count =
-      1+(long)((double)MetadataAllocationFailALotInterval*os::random()/(max_jint+1.0));
+    _allocation_fail_alot_count = 1+(long)((double)MetadataAllocationFailALotInterval*os::random()/(max_jint+1.0));
   }
 }
 }

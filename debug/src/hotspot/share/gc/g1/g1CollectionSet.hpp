@@ -84,7 +84,7 @@ class G1CollectionSet {
 
   double predict_region_elapsed_time_ms(HeapRegion* hr);
 
-  void verify_young_cset_indices() const {};
+  void verify_young_cset_indices() const { };
 public:
   G1CollectionSet(G1CollectedHeap* g1h, G1Policy* policy);
   ~G1CollectionSet();
@@ -99,14 +99,12 @@ public:
 
   void set_recorded_rs_lengths(size_t rs_lengths);
 
-  uint region_length() const       { return young_region_length() +
-                                            old_region_length(); }
-  uint young_region_length() const { return eden_region_length() +
-                                            survivor_region_length(); }
+  uint region_length() const       { return young_region_length() + old_region_length(); }
+  uint young_region_length() const { return eden_region_length() + survivor_region_length(); }
 
-  uint eden_region_length() const     { return _eden_region_length;     }
+  uint eden_region_length() const     { return _eden_region_length; }
   uint survivor_region_length() const { return _survivor_region_length; }
-  uint old_region_length() const      { return _old_region_length;      }
+  uint old_region_length() const      { return _old_region_length; }
 
   // Incremental collection set support
 

@@ -148,7 +148,7 @@ protected:
   // Constructor
   Klass(KlassID id);
   Klass() : _id(KlassID(-1)) {
-    assert(DumpSharedSpaces || UseSharedSpaces, "only for cds"); }
+    }
 
   void* operator new(size_t size, ClassLoaderData* loader_data, size_t word_size, TRAPS) throw();
 
@@ -190,9 +190,7 @@ protected:
   // Return the element of the _super chain of the given depth.
   // If there is no such element, return either NULL or this.
   Klass* primary_super_of_depth(juint i) const {
-    assert(i < primary_super_limit(), "oob");
     Klass* super = _primary_supers[i];
-    assert(super == NULL || super->super_depth() == i, "correct display");
     return super;
   }
 
@@ -210,8 +208,6 @@ protected:
       return primary_super_limit();
     } else {
       juint d = (super_check_offset() - in_bytes(primary_supers_offset())) / sizeof(Klass*);
-      assert(d < primary_super_limit(), "oob");
-      assert(_primary_supers[d] == this, "proper init");
       return d;
     }
   }
@@ -221,7 +217,7 @@ protected:
   void set_java_mirror(Handle m);
 
   oop archived_java_mirror_raw() { return NULL; }; // no GC barrier
-  void set_archived_java_mirror_raw(oop m) {}; // no GC barrier
+  void set_archived_java_mirror_raw(oop m) { }; // no GC barrier
 
   // Temporary mirror switch used by RedefineClasses
   // Both mirrors are on the ClassLoaderData::_handles list already so no
@@ -310,11 +306,9 @@ protected:
   static const unsigned int _lh_array_tag_type_value = 0Xffffffff; // ~0x00,  // 0xC0000000 >> 30
 
   static int layout_helper_size_in_bytes(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
     return (int) lh & ~_lh_instance_slow_path_bit;
   }
   static bool layout_helper_needs_slow_path(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
     return (lh & _lh_instance_slow_path_bit) != 0;
   }
   static bool layout_helper_is_instance(jint lh) {
@@ -332,15 +326,11 @@ protected:
     return (jint)lh < (jint)(_lh_array_tag_type_value << _lh_array_tag_shift);
   }
   static int layout_helper_header_size(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
     int hsize = (lh >> _lh_header_size_shift) & _lh_header_size_mask;
-    assert(hsize > 0 && hsize < (int)sizeof(oopDesc)*3, "sanity");
     return hsize;
   }
   static BasicType layout_helper_element_type(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
     int btvalue = (lh >> _lh_element_type_shift) & _lh_element_type_mask;
-    assert(btvalue >= T_BOOLEAN && btvalue <= T_OBJECT, "sanity");
     return (BasicType) btvalue;
   }
 
@@ -349,19 +339,15 @@ protected:
   static int layout_helper_boolean_diffbit() {
     jint zlh = array_layout_helper(T_BOOLEAN);
     jint blh = array_layout_helper(T_BYTE);
-    assert(zlh != blh, "array layout helpers must differ");
     int diffbit = 1;
     while ((diffbit & (zlh ^ blh)) == 0 && (diffbit & zlh) == 0) {
       diffbit <<= 1;
-      assert(diffbit != 0, "make sure T_BOOLEAN has a different bit than T_BYTE");
     }
     return diffbit;
   }
 
   static int layout_helper_log2_element_size(jint lh) {
-    assert(lh < (jint)_lh_neutral_value, "must be array");
     int l2esz = (lh >> _lh_log2_element_size_shift) & _lh_log2_element_size_mask;
-    assert(l2esz <= LogBytesPerLong, "sanity. l2esz: 0x%x for lh: 0x%x", (uint)l2esz, (uint)lh);
     return l2esz;
   }
   static jint array_layout_helper(jint tag, int hsize, BasicType etype, int log2_esize) {
@@ -375,7 +361,6 @@ protected:
       |    (slow_path_flag ? _lh_instance_slow_path_bit : 0);
   }
   static int layout_helper_to_size_helper(jint lh) {
-    assert(lh > (jint)_lh_neutral_value, "must be instance");
     // Note that the following expression discards _lh_instance_slow_path_bit.
     return lh >> LogBytesPerWord;
   }
@@ -508,22 +493,14 @@ protected:
 
   // Fast non-virtual versions
   #define assert_same_query(xval, xcheck) xval
-  inline  bool is_instance_klass()            const { return assert_same_query(
-                                                      layout_helper_is_instance(layout_helper()),
-                                                      is_instance_klass_slow()); }
-  inline  bool is_array_klass()               const { return assert_same_query(
-                                                    layout_helper_is_array(layout_helper()),
-                                                    is_array_klass_slow()); }
-  inline  bool is_objArray_klass()            const { return assert_same_query(
-                                                    layout_helper_is_objArray(layout_helper()),
-                                                    is_objArray_klass_slow()); }
-  inline  bool is_typeArray_klass()           const { return assert_same_query(
-                                                    layout_helper_is_typeArray(layout_helper()),
-                                                    is_typeArray_klass_slow()); }
+  inline  bool is_instance_klass()            const { return assert_same_query(layout_helper_is_instance(layout_helper()), is_instance_klass_slow()); }
+  inline  bool is_array_klass()               const { return assert_same_query(layout_helper_is_array(layout_helper()), is_array_klass_slow()); }
+  inline  bool is_objArray_klass()            const { return assert_same_query(layout_helper_is_objArray(layout_helper()), is_objArray_klass_slow()); }
+  inline  bool is_typeArray_klass()           const { return assert_same_query(layout_helper_is_typeArray(layout_helper()), is_typeArray_klass_slow()); }
   #undef assert_same_query
 
   // Access flags
-  AccessFlags access_flags() const         { return _access_flags;  }
+  AccessFlags access_flags() const         { return _access_flags; }
   void set_access_flags(AccessFlags flags) { _access_flags = flags; }
 
   bool is_public() const                { return _access_flags.is_public(); }
@@ -590,7 +567,7 @@ protected:
   // GC specific object visitors
   //
 
-  virtual void array_klasses_do(void f(Klass* k)) {}
+  virtual void array_klasses_do(void f(Klass* k)) { }
 
   // Return self, except for abstract classes with exactly 1
   // implementor.  Then return the 1 concrete implementation.

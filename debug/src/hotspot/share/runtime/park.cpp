@@ -25,12 +25,12 @@
 // for a thread would allocate and associate a ParkEvent and return
 // immediately.
 
-volatile int ParkEvent::ListLock = 0 ;
-ParkEvent * volatile ParkEvent::FreeList = NULL ;
+volatile int ParkEvent::ListLock = 0;
+ParkEvent* volatile ParkEvent::FreeList = NULL;
 
-ParkEvent * ParkEvent::Allocate (Thread * t) {
+ParkEvent* ParkEvent::Allocate (Thread* t) {
   // In rare cases -- JVM_RawMonitor* operations -- we can find t == null.
-  ParkEvent * ev ;
+  ParkEvent* ev;
 
   // Start by trying to recycle an existing but unassociated
   // ParkEvent from the global free list.
@@ -47,22 +47,22 @@ ParkEvent * ParkEvent::Allocate (Thread * t) {
   Thread::SpinRelease(&ListLock);
 
   if (ev != NULL) {
-    guarantee (ev->AssociatedWith == NULL, "invariant") ;
+    guarantee (ev->AssociatedWith == NULL, "invariant");
   } else {
     // Do this the hard way -- materialize a new ParkEvent.
-    ev = new ParkEvent () ;
-    guarantee ((intptr_t(ev) & 0xFF) == 0, "invariant") ;
+    ev = new ParkEvent();
+    guarantee ((intptr_t(ev) & 0xFF) == 0, "invariant");
   }
   ev->reset() ;                     // courtesy to caller
-  ev->AssociatedWith = t ;          // Associate ev with t
-  ev->FreeNext       = NULL ;
-  return ev ;
+  ev->AssociatedWith = t;          // Associate ev with t
+  ev->FreeNext       = NULL;
+  return ev;
 }
 
-void ParkEvent::Release (ParkEvent * ev) {
-  if (ev == NULL) return ;
-  guarantee (ev->FreeNext == NULL      , "invariant") ;
-  ev->AssociatedWith = NULL ;
+void ParkEvent::Release(ParkEvent* ev) {
+  if (ev == NULL) return;
+  guarantee (ev->FreeNext == NULL      , "invariant");
+  ev->AssociatedWith = NULL;
   // Note that if we didn't have the TSM/immortal constraint, then
   // when reattaching we could trim the list.
   Thread::SpinAcquire(&ListLock, "ParkEventFreeListRelease");
@@ -80,8 +80,8 @@ void ParkEvent::Release (ParkEvent * ev) {
 // well as bank access imbalance on Niagara-like platforms,
 // although Niagara's hash function should help.
 
-void * ParkEvent::operator new (size_t sz) throw() {
-  return (void *) ((intptr_t (AllocateHeap(sz + 256, mtInternal, CALLER_PC)) + 256) & -256) ;
+void* ParkEvent::operator new (size_t sz) throw() {
+  return (void *) ((intptr_t (AllocateHeap(sz + 256, mtInternal, CALLER_PC)) + 256) & -256);
 }
 
 void ParkEvent::operator delete (void * a) {
@@ -94,12 +94,12 @@ void ParkEvent::operator delete (void * a) {
 // will eventually be removed as we consolidate and shift over to ParkEvents
 // for both builtin synchronization and JSR166 operations.
 
-volatile int Parker::ListLock = 0 ;
-Parker * volatile Parker::FreeList = NULL ;
+volatile int Parker::ListLock = 0;
+Parker* volatile Parker::FreeList = NULL;
 
-Parker * Parker::Allocate (JavaThread * t) {
-  guarantee (t != NULL, "invariant") ;
-  Parker * p ;
+Parker* Parker::Allocate (JavaThread* t) {
+  guarantee (t != NULL, "invariant");
+  Parker* p;
 
   // Start by trying to recycle an existing but unassociated
   // Parker from the global free list.
@@ -115,21 +115,21 @@ Parker * Parker::Allocate (JavaThread * t) {
   Thread::SpinRelease(&ListLock);
 
   if (p != NULL) {
-    guarantee (p->AssociatedWith == NULL, "invariant") ;
+    guarantee (p->AssociatedWith == NULL, "invariant");
   } else {
     // Do this the hard way -- materialize a new Parker..
-    p = new Parker() ;
+    p = new Parker();
   }
-  p->AssociatedWith = t ;          // Associate p with t
-  p->FreeNext       = NULL ;
-  return p ;
+  p->AssociatedWith = t;          // Associate p with t
+  p->FreeNext       = NULL;
+  return p;
 }
 
-void Parker::Release (Parker * p) {
-  if (p == NULL) return ;
-  guarantee (p->AssociatedWith != NULL, "invariant") ;
-  guarantee (p->FreeNext == NULL      , "invariant") ;
-  p->AssociatedWith = NULL ;
+void Parker::Release(Parker* p) {
+  if (p == NULL) return;
+  guarantee (p->AssociatedWith != NULL, "invariant");
+  guarantee (p->FreeNext == NULL      , "invariant");
+  p->AssociatedWith = NULL;
 
   Thread::SpinAcquire(&ListLock, "ParkerFreeListRelease");
   {

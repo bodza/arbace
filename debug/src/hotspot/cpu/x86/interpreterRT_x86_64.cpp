@@ -122,7 +122,6 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_object() {
 
   switch (_num_int_args) {
   case 0:
-    assert(offset() == 0, "argument register 1 can only be (non-null) receiver");
     __ lea(c_rarg1, src);
     _num_int_args++;
     break;
@@ -178,7 +177,7 @@ void InterpreterRuntime::SignatureHandlerGenerator::generate(uint64_t fingerprin
 
 // Implementation of SignatureHandlerLibrary
 
-void SignatureHandlerLibrary::pd_set_handler(address handler) {}
+void SignatureHandlerLibrary::pd_set_handler(address handler) { }
 
 class SlowSignatureHandler
   : public NativeSignatureIterator {
@@ -279,7 +278,6 @@ IRT_ENTRY(address,
                                                      intptr_t* from,
                                                      intptr_t* to))
   methodHandle m(thread, (Method*)method);
-  assert(m->is_native(), "sanity check");
 
   // handle arguments
   SlowSignatureHandler(m, (address)from, to + 1).iterate((uint64_t)CONST64(-1));

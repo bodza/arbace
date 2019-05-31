@@ -22,8 +22,7 @@ Generation::Generation(ReservedSpace rs, size_t initial_size) :
   _ref_processor(NULL),
   _gc_manager(NULL) {
   if (!_virtual_space.initialize(rs, initial_size)) {
-    vm_exit_during_initialization("Could not reserve enough space for "
-                    "object heap");
+    vm_exit_during_initialization("Could not reserve enough space for object heap");
   }
   // Mangle all of the the initial generation.
   if (ZapUnusedHeapArea) {
@@ -50,8 +49,6 @@ size_t Generation::max_capacity() const {
 // By default we get a single threaded default reference processor;
 // generations needing multi-threaded refs processing or discovery override this method.
 void Generation::ref_processor_init() {
-  assert(_ref_processor == NULL, "a reference processor already exists");
-  assert(!_reserved.is_empty(), "empty generation?");
   _span_based_discoverer.set_span(_reserved);
   _ref_processor = new ReferenceProcessor(&_span_based_discoverer);    // a vanilla reference processor
   if (_ref_processor == NULL) {
@@ -61,7 +58,7 @@ void Generation::ref_processor_init() {
 
 void Generation::print() const { print_on(tty); }
 
-void Generation::print_on(outputStream* st)  const {
+void Generation::print_on(outputStream* st) const {
   st->print(" %-20s", name());
   st->print(" total " SIZE_FORMAT "K, used " SIZE_FORMAT "K",
              capacity()/K, used()/K);
@@ -93,7 +90,7 @@ class GenerationIsInReservedClosure : public SpaceClosure {
       if (s->is_in_reserved(_p)) sp = s;
     }
   }
-  GenerationIsInReservedClosure(const void* p) : _p(p), sp(NULL) {}
+  GenerationIsInReservedClosure(const void* p) : _p(p), sp(NULL) { }
 };
 
 class GenerationIsInClosure : public SpaceClosure {
@@ -105,7 +102,7 @@ class GenerationIsInClosure : public SpaceClosure {
       if (s->is_in(_p)) sp = s;
     }
   }
-  GenerationIsInClosure(const void* p) : _p(p), sp(NULL) {}
+  GenerationIsInClosure(const void* p) : _p(p), sp(NULL) { }
 };
 
 bool Generation::is_in(const void* p) const {
@@ -134,7 +131,6 @@ bool Generation::promotion_attempt_is_safe(size_t max_promotion_in_bytes) const 
 
 // Ignores "ref" and calls allocate().
 oop Generation::promote(oop obj, size_t obj_size) {
-  assert(obj_size == (size_t)obj->size(), "bad obj_size passed in");
 
   HeapWord* result = allocate(obj_size, false);
   if (result != NULL) {
@@ -198,7 +194,6 @@ size_t Generation::block_size(const HeapWord* p) const {
   GenerationBlockSizeClosure blk(p);
   // Cast away const
   ((Generation*)this)->space_iterate(&blk);
-  assert(blk.size > 0, "seems reasonable");
   return blk.size;
 }
 
@@ -228,7 +223,7 @@ class GenerationOopIterateClosure : public SpaceClosure {
     s->oop_iterate(_cl);
   }
   GenerationOopIterateClosure(OopIterateClosure* cl) :
-    _cl(cl) {}
+    _cl(cl) { }
 };
 
 void Generation::oop_iterate(OopIterateClosure* cl) {
@@ -236,9 +231,7 @@ void Generation::oop_iterate(OopIterateClosure* cl) {
   space_iterate(&blk);
 }
 
-void Generation::younger_refs_in_space_iterate(Space* sp,
-                                               OopsInGenClosure* cl,
-                                               uint n_threads) {
+void Generation::younger_refs_in_space_iterate(Space* sp, OopsInGenClosure* cl, uint n_threads) {
   CardTableRS* rs = GenCollectedHeap::heap()->rem_set();
   rs->younger_refs_in_space_iterate(sp, cl, n_threads);
 }
@@ -250,7 +243,7 @@ class GenerationObjIterateClosure : public SpaceClosure {
   virtual void do_space(Space* s) {
     s->object_iterate(_cl);
   }
-  GenerationObjIterateClosure(ObjectClosure* cl) : _cl(cl) {}
+  GenerationObjIterateClosure(ObjectClosure* cl) : _cl(cl) { }
 };
 
 void Generation::object_iterate(ObjectClosure* cl) {
@@ -265,7 +258,7 @@ class GenerationSafeObjIterateClosure : public SpaceClosure {
   virtual void do_space(Space* s) {
     s->safe_object_iterate(_cl);
   }
-  GenerationSafeObjIterateClosure(ObjectClosure* cl) : _cl(cl) {}
+  GenerationSafeObjIterateClosure(ObjectClosure* cl) : _cl(cl) { }
 };
 
 void Generation::safe_object_iterate(ObjectClosure* cl) {

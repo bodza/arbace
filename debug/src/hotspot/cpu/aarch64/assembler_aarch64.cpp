@@ -33,19 +33,8 @@ short Assembler::SIMD_Size_in_bytes[] = {
 
 void entry(CodeBuffer *cb) {
 
-  // {
-  //   for (int i = 0; i < 256; i+=16)
-  //     {
-  //    printf("\"%20.20g\", ", unpack(i));
-  //    printf("\"%20.20g\", ", unpack(i+1));
-  //     }
-  //   printf("\n");
-  // }
-
   Assembler _masm(cb);
   address entry = __ pc();
-
-  // Smoke test for assembler
 }
 
 #undef __
@@ -60,7 +49,6 @@ void Assembler::emit_data64(jlong data, relocInfo::relocType rtype, int format) 
 
 void Assembler::emit_data64(jlong data, RelocationHolder const& rspec, int format) {
 
-  assert(inst_mark() != NULL, "must be inside InstructionMark");
   // Do not use AbstractAssembler::relocate, which is not intended for
   // embedded words.  Instead, relocate to the enclosing instruction.
   code_section()->relocate(inst_mark(), rspec, format);
@@ -81,9 +69,6 @@ extern "C" {
     das(insn, 1);
   }
 }
-
-#define gas_assert(ARG1) \
-    assert(ARG1, #ARG1)
 
 #define __ as->
 
@@ -147,7 +132,7 @@ void Assembler::adrp(Register reg1, const Address &dest, unsigned long &byte_off
 
 #undef starti
 
-Address::Address(address target, relocInfo::relocType rtype) : _mode(literal){
+Address::Address(address target, relocInfo::relocType rtype) : _mode(literal) {
   _is_lval = false;
   _target = target;
   switch (rtype) {
@@ -264,9 +249,7 @@ void Assembler::add_sub_immediate(Register Rd, Register Rn, unsigned uimm, int o
     imm = -imm;
     op = negated_op;
   }
-  assert(Rd != sp || imm % 16 == 0, "misaligned stack");
-  if (imm >= (1 << 11)
-      && ((imm >> 12) << 12 == imm)) {
+  if (imm >= (1 << 11) && ((imm >> 12) << 12 == imm)) {
     imm >>= 12;
     shift = true;
   }
@@ -287,8 +270,7 @@ bool Assembler::operand_valid_for_add_sub_immediate(long imm) {
   unsigned long uimm = uabs(imm);
   if (uimm < (1 << 12))
     return true;
-  if (uimm < (1 << 24)
-      && ((uimm >> 12) << 12 == uimm)) {
+  if (uimm < (1 << 24) && ((uimm >> 12) << 12 == uimm)) {
     return true;
   }
   return false;

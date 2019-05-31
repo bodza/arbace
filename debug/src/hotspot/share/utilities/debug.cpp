@@ -82,8 +82,7 @@ void report_vm_error(const char* file, int line, const char* error_msg, const ch
   va_end(detail_args);
 }
 
-void report_vm_status_error(const char* file, int line, const char* error_msg,
-                            int status, const char* detail) {
+void report_vm_status_error(const char* file, int line, const char* error_msg, int status, const char* detail) {
   report_vm_error(file, line, error_msg, "error %s(%d), %s", os::errno_name(status), status, detail);
 }
 
@@ -102,8 +101,7 @@ void report_fatal(const char* file, int line, const char* detail_fmt, ...)
   va_end(detail_args);
 }
 
-void report_vm_out_of_memory(const char* file, int line, size_t size,
-                             VMErrorType vm_err_type, const char* detail_fmt, ...) {
+void report_vm_out_of_memory(const char* file, int line, size_t size, VMErrorType vm_err_type, const char* detail_fmt, ...) {
   if (Debugging) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);
@@ -239,8 +237,7 @@ static ucontext_t g_stored_assertion_context;
 void initialize_assert_poison() {
   char* page = os::reserve_memory(os::vm_page_size());
   if (page) {
-    if (os::commit_memory(page, os::vm_page_size(), false) &&
-        os::protect_memory(page, os::vm_page_size(), os::MEM_PROT_NONE)) {
+    if (os::commit_memory(page, os::vm_page_size(), false) && os::protect_memory(page, os::vm_page_size(), os::MEM_PROT_NONE)) {
       g_assert_poison = page;
     }
   }

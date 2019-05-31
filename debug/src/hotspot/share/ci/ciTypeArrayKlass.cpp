@@ -10,8 +10,6 @@
 // ------------------------------------------------------------------
 // ciTypeArrayKlass::ciTypeArrayKlass
 ciTypeArrayKlass::ciTypeArrayKlass(Klass* k) : ciArrayKlass(k) {
-  assert(get_Klass()->is_typeArray_klass(), "wrong type");
-  assert(element_type() == get_TypeArrayKlass()->element_type(), "");
 }
 
 // ------------------------------------------------------------------

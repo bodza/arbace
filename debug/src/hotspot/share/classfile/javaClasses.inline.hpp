@@ -7,56 +7,40 @@
 #include "oops/oopsHierarchy.hpp"
 
 void java_lang_String::set_coder(oop string, jbyte coder) {
-  assert(initialized && (coder_offset > 0), "Must be initialized");
   string->byte_field_put(coder_offset, coder);
 }
 
 void java_lang_String::set_value_raw(oop string, typeArrayOop buffer) {
-  assert(initialized, "Must be initialized");
   string->obj_field_put_raw(value_offset, buffer);
 }
 void java_lang_String::set_value(oop string, typeArrayOop buffer) {
-  assert(initialized && (value_offset > 0), "Must be initialized");
   string->obj_field_put(value_offset, (oop)buffer);
 }
 void java_lang_String::set_hash(oop string, unsigned int hash) {
-  assert(initialized && (hash_offset > 0), "Must be initialized");
   string->int_field_put(hash_offset, hash);
 }
 
 // Accessors
 typeArrayOop java_lang_String::value(oop java_string) {
-  assert(initialized && (value_offset > 0), "Must be initialized");
-  assert(is_instance(java_string), "must be java_string");
   return (typeArrayOop) java_string->obj_field(value_offset);
 }
 typeArrayOop java_lang_String::value_no_keepalive(oop java_string) {
-  assert(initialized && (value_offset > 0), "Must be initialized");
-  assert(is_instance(java_string), "must be java_string");
   return (typeArrayOop) java_string->obj_field_access<AS_NO_KEEPALIVE>(value_offset);
 }
 unsigned int java_lang_String::hash(oop java_string) {
-  assert(initialized && (hash_offset > 0), "Must be initialized");
-  assert(is_instance(java_string), "must be java_string");
   return java_string->int_field(hash_offset);
 }
 bool java_lang_String::is_latin1(oop java_string) {
-  assert(initialized && (coder_offset > 0), "Must be initialized");
-  assert(is_instance(java_string), "must be java_string");
   jbyte coder = java_string->byte_field(coder_offset);
-  assert(CompactStrings || coder == CODER_UTF16, "Must be UTF16 without CompactStrings");
   return coder == CODER_LATIN1;
 }
 int java_lang_String::length(oop java_string) {
-  assert(initialized, "Must be initialized");
-  assert(is_instance(java_string), "must be java_string");
   typeArrayOop value = java_lang_String::value_no_keepalive(java_string);
   if (value == NULL) {
     return 0;
   }
   int arr_length = value->length();
   if (!is_latin1(java_string)) {
-    assert((arr_length & 1) == 0, "should be even for UTF16 string");
     arr_length >>= 1; // convert number of bytes to number of elements
   }
   return arr_length;
@@ -111,7 +95,7 @@ inline void java_lang_invoke_CallSite::set_target_volatile(oop site, oop target)
   site->obj_field_put_volatile(_target_offset, target);
 }
 
-inline oop  java_lang_invoke_CallSite::target(oop site) {
+inline oop java_lang_invoke_CallSite::target(oop site) {
   return site->obj_field(_target_offset);
 }
 
@@ -158,14 +142,11 @@ inline bool java_lang_Module::is_instance(oop obj) {
 inline int Backtrace::merge_bci_and_version(int bci, int version) {
   // only store u2 for version, checking for overflow.
   if (version > USHRT_MAX || version < 0) version = USHRT_MAX;
-  assert((jushort)bci == bci, "bci should be short");
   return build_int_from_shorts(version, bci);
 }
 
 inline int Backtrace::merge_mid_and_cpref(int mid, int cpref) {
   // only store u2 for mid and cpref, checking for overflow.
-  assert((jushort)mid == mid, "mid should be short");
-  assert((jushort)cpref == cpref, "cpref should be short");
   return build_int_from_shorts(cpref, mid);
 }
 

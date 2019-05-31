@@ -58,18 +58,14 @@ PhiResolver::PhiResolver(LIRGenerator* gen, int max_vregs)
 }
 
 void PhiResolver::emit_move(LIR_Opr src, LIR_Opr dest) {
-  assert(src->is_valid(), "");
-  assert(dest->is_valid(), "");
   __ move(src, dest);
 }
 
 void PhiResolver::move_temp_to(LIR_Opr dest) {
-  assert(_temp->is_valid(), "");
   emit_move(_temp, dest);
 }
 
 void PhiResolver::move_to_temp(LIR_Opr src) {
-  assert(_temp->is_illegal(), "");
   _temp = _gen->new_register(src->type());
   emit_move(src, _temp);
 }
@@ -89,7 +85,6 @@ void PhiResolver::move(ResolveNode* src, ResolveNode* dest) {
     }
   } else if (!dest->start_node()) {
     // cylce in graph detected
-    assert(_loop == NULL, "only one loop valid!");
     _loop = dest;
     move_to_temp(src->operand());
     return;
@@ -115,7 +110,6 @@ PhiResolver::~PhiResolver() {
       _loop = NULL;
       move(NULL, node);
       node->set_start_node();
-      assert(_temp->is_illegal(), "move_temp_to() call missing");
     }
   }
 
@@ -133,7 +127,6 @@ ResolveNode* PhiResolver::create_node(LIR_Opr opr, bool source) {
   if (opr->is_virtual()) {
     int vreg_num = opr->vreg_number();
     node = vreg_table().at_grow(vreg_num, NULL);
-    assert(node == NULL || node->operand() == opr, "");
     if (node == NULL) {
       node = new ResolveNode(opr);
       vreg_table().at_put(vreg_num, node);
@@ -144,7 +137,6 @@ ResolveNode* PhiResolver::create_node(LIR_Opr opr, bool source) {
       virtual_operands().append(node);
     }
   } else {
-    assert(source, "");
     node = new ResolveNode(opr);
     other_operands().append(node);
   }
@@ -152,10 +144,6 @@ ResolveNode* PhiResolver::create_node(LIR_Opr opr, bool source) {
 }
 
 void PhiResolver::move(LIR_Opr src, LIR_Opr dest) {
-  assert(dest->is_virtual(), "");
-  // tty->print("move "); src->print(); tty->print(" to "); dest->print(); tty->cr();
-  assert(src->is_valid(), "");
-  assert(dest->is_valid(), "");
   ResolveNode* source = source_node(src);
   source->append(destination_node(dest));
 }
@@ -164,7 +152,6 @@ void PhiResolver::move(LIR_Opr src, LIR_Opr dest) {
 // LIRItem
 
 void LIRItem::set_result(LIR_Opr opr) {
-  assert(value()->operand()->is_illegal() || value()->operand()->is_constant(), "operand should never change");
   value()->set_operand(opr);
 
   if (opr->is_virtual()) {
@@ -226,32 +213,22 @@ ciObject* LIRItem::get_jobject_constant() const {
 }
 
 jint LIRItem::get_jint_constant() const {
-  assert(is_constant() && value() != NULL, "");
-  assert(type()->as_IntConstant() != NULL, "type check");
   return type()->as_IntConstant()->value();
 }
 
 jint LIRItem::get_address_constant() const {
-  assert(is_constant() && value() != NULL, "");
-  assert(type()->as_AddressConstant() != NULL, "type check");
   return type()->as_AddressConstant()->value();
 }
 
 jfloat LIRItem::get_jfloat_constant() const {
-  assert(is_constant() && value() != NULL, "");
-  assert(type()->as_FloatConstant() != NULL, "type check");
   return type()->as_FloatConstant()->value();
 }
 
 jdouble LIRItem::get_jdouble_constant() const {
-  assert(is_constant() && value() != NULL, "");
-  assert(type()->as_DoubleConstant() != NULL, "type check");
   return type()->as_DoubleConstant()->value();
 }
 
 jlong LIRItem::get_jlong_constant() const {
-  assert(is_constant() && value() != NULL, "");
-  assert(type()->as_LongConstant() != NULL, "type check");
   return type()->as_LongConstant()->value();
 }
 
@@ -260,16 +237,12 @@ jlong LIRItem::get_jlong_constant() const {
 void LIRGenerator::block_do_prolog(BlockBegin* block) {
 
   // set up the list of LIR instructions
-  assert(block->lir() == NULL, "LIR list already computed for this block");
   _lir = new LIR_List(compilation(), block);
   block->set_lir(_lir);
 
   __ branch_destination(block->label());
 
-  if (LIRTraceExecution &&
-      Compilation::current()->hir()->start()->block_id() != block->block_id() &&
-      !block->is_set(BlockBegin::exception_entry_flag)) {
-    assert(block->lir()->instructions_list()->length() == 1, "should come right after br_dst");
+  if (LIRTraceExecution && Compilation::current()->hir()->start()->block_id() != block->block_id() && !block->is_set(BlockBegin::exception_entry_flag)) {
     trace_block_entry(block);
   }
 }
@@ -310,12 +283,8 @@ void LIRGenerator::do_root(Value instr) {
 
   InstructionMark im(compilation(), instr);
 
-  assert(instr->is_pinned(), "use only with roots");
-  assert(instr->subst() == instr, "shouldn't have missed substitution");
-
   instr->visit(this);
 
-  assert(!instr->has_uses() || instr->operand()->is_valid() || instr->as_Constant() != NULL || bailed_out(), "invalid item set");
 }
 
 // This is called for each node in tree; the walk stops if a root is reached
@@ -323,31 +292,24 @@ void LIRGenerator::walk(Value instr) {
   InstructionMark im(compilation(), instr);
   //stop walk when encounter a root
   if ((instr->is_pinned() && instr->as_Phi() == NULL) || instr->operand()->is_valid()) {
-    assert(instr->operand() != LIR_OprFact::illegalOpr || instr->as_Constant() != NULL, "this root has not yet been visited");
   } else {
-    assert(instr->subst() == instr, "shouldn't have missed substitution");
     instr->visit(this);
-    // assert(instr->use_count() > 0 || instr->as_Phi() != NULL, "leaf instruction must have a use");
   }
 }
 
 CodeEmitInfo* LIRGenerator::state_for(Instruction* x, ValueStack* state, bool ignore_xhandler) {
-  assert(state != NULL, "state must be defined");
 
   ValueStack* s = state;
   for_each_state(s) {
     if (s->kind() == ValueStack::EmptyExceptionState) {
-      assert(s->stack_size() == 0 && s->locals_size() == 0 && (s->locks_size() == 0 || s->locks_size() == 1), "state must be empty");
       continue;
     }
 
     int index;
     Value value;
     for_each_stack_value(s, index, value) {
-      assert(value->subst() == value, "missed substitution");
       if (!value->is_pinned() && value->as_Constant() == NULL && value->as_Local() == NULL) {
         walk(value);
-        assert(value->operand()->is_valid(), "must be evaluated now");
       }
     }
 
@@ -361,20 +323,16 @@ CodeEmitInfo* LIRGenerator::state_for(Instruction* x, ValueStack* state, bool ig
         // all locals are dead on exit from the synthetic unlocker
         liveness.clear();
       } else {
-        assert(x->as_MonitorEnter() || x->as_ProfileInvoke(), "only other cases are MonitorEnter and ProfileInvoke");
       }
     }
     if (!liveness.is_valid()) {
       // Degenerate or breakpointed method.
       bailout("Degenerate or breakpointed method");
     } else {
-      assert((int)liveness.size() == s->locals_size(), "error in use of liveness");
       for_each_local_value(s, index, value) {
-        assert(value->subst() == value, "missed substition");
         if (liveness.at(index) && !value->type()->is_illegal()) {
           if (!value->is_pinned() && value->as_Constant() == NULL && value->as_Local() == NULL) {
             walk(value);
-            assert(value->operand()->is_valid(), "must be evaluated now");
           }
         } else {
           // NULL out this local so that linear scan can assume that all non-NULL values are live.
@@ -396,7 +354,6 @@ void LIRGenerator::klass2reg_with_patching(LIR_Opr r, ciMetadata* obj, CodeEmitI
    * is active and the class hasn't yet been resolved we need to emit a patch that resolves
    * the class. */
   if ((TieredCompilation && need_resolve) || !obj->is_loaded() || PatchALot) {
-    assert(info != NULL, "info must be set if class is not loaded");
     __ klass2reg_patch(NULL, r, info);
   } else {
     // no patching needed
@@ -404,8 +361,7 @@ void LIRGenerator::klass2reg_with_patching(LIR_Opr r, ciMetadata* obj, CodeEmitI
   }
 }
 
-void LIRGenerator::array_range_check(LIR_Opr array, LIR_Opr index,
-                                    CodeEmitInfo* null_check_info, CodeEmitInfo* range_check_info) {
+void LIRGenerator::array_range_check(LIR_Opr array, LIR_Opr index, CodeEmitInfo* null_check_info, CodeEmitInfo* range_check_info) {
   CodeStub* stub = new RangeCheckStub(range_check_info, index, array);
   if (index->is_constant()) {
     cmp_mem_int(lir_cond_belowEqual, array, arrayOopDesc::length_offset_in_bytes(),
@@ -437,7 +393,6 @@ void LIRGenerator::arithmetic_op(Bytecodes::Code code, LIR_Opr result, LIR_Opr l
   LIR_Opr right_op  = right;
 
   if (TwoOperandLIRForm && left_op != result_op) {
-    assert(right_op != result_op, "malformed");
     __ move(left_op, result_op);
     left_op = result_op;
   }
@@ -523,12 +478,10 @@ void LIRGenerator::shift_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr val
   if (TwoOperandLIRForm && value != result_op
       // Only 32bit right shifts require two operand form on S390.
       S390_ONLY(&& (code == Bytecodes::_ishr || code == Bytecodes::_iushr))) {
-    assert(count != result_op, "malformed");
     __ move(value, result_op);
     value = result_op;
   }
 
-  assert(count->is_constant() || count->is_register(), "must be");
   switch(code) {
   case Bytecodes::_ishl:
   case Bytecodes::_lshl: __ shift_left(value, count, result_op, tmp); break;
@@ -540,9 +493,8 @@ void LIRGenerator::shift_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr val
   }
 }
 
-void LIRGenerator::logic_op (Bytecodes::Code code, LIR_Opr result_op, LIR_Opr left_op, LIR_Opr right_op) {
+void LIRGenerator::logic_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr left_op, LIR_Opr right_op) {
   if (TwoOperandLIRForm && left_op != result_op) {
-    assert(right_op != result_op, "malformed");
     __ move(left_op, result_op);
     left_op = result_op;
   }
@@ -583,19 +535,14 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
 void LIRGenerator::new_instance(LIR_Opr dst, ciInstanceKlass* klass, bool is_unresolved, LIR_Opr scratch1, LIR_Opr scratch2, LIR_Opr scratch3, LIR_Opr scratch4, LIR_Opr klass_reg, CodeEmitInfo* info) {
   klass2reg_with_patching(klass_reg, klass, info, is_unresolved);
   // If klass is not loaded we do not know if the klass has finalizers:
-  if (UseFastNewInstance && klass->is_loaded()
-      && !Klass::layout_helper_needs_slow_path(klass->layout_helper())) {
-
+  if (UseFastNewInstance && klass->is_loaded() && !Klass::layout_helper_needs_slow_path(klass->layout_helper())) {
     Runtime1::StubID stub_id = klass->is_initialized() ? Runtime1::fast_new_instance_id : Runtime1::fast_new_instance_init_check_id;
 
     CodeStub* slow_path = new NewInstanceStub(klass_reg, dst, klass, info, stub_id);
 
-    assert(klass->is_loaded(), "must be loaded");
     // allocate space for instance
-    assert(klass->size_helper() >= 0, "illegal instance size");
     const int instance_size = align_object_size(klass->size_helper());
-    __ allocate_object(dst, scratch1, scratch2, scratch3, scratch4,
-                       oopDesc::header_size(), instance_size, klass_reg, !klass->is_initialized(), slow_path);
+    __ allocate_object(dst, scratch1, scratch2, scratch3, scratch4, oopDesc::header_size(), instance_size, klass_reg, !klass->is_initialized(), slow_path);
   } else {
     CodeStub* slow_path = new NewInstanceStub(klass_reg, dst, klass, info, Runtime1::new_instance_id);
     __ branch(lir_cond_always, T_ILLEGAL, slow_path);
@@ -632,7 +579,7 @@ static ciType* phi_declared_type(Phi* phi) {
   if (t == NULL) {
     return NULL;
   }
-  for(int i = 1; i < phi->operand_count(); i++) {
+  for (int i = 1; i < phi->operand_count(); i++) {
     if (t != phi->operand_at(i)->declared_type()) {
       return NULL;
     }
@@ -712,9 +659,7 @@ void LIRGenerator::arraycopy_helper(Intrinsic* x, int* flagsp, ciArrayKlass** ex
     if (ifop != NULL) {
       // look for expressions like min(v, a.length) which ends up as
       //   x > y ? y : x  or  x >= y ? y : x
-      if ((ifop->cond() == If::gtr || ifop->cond() == If::geq) &&
-          ifop->x() == ifop->fval() &&
-          ifop->y() == ifop->tval()) {
+      if ((ifop->cond() == If::gtr || ifop->cond() == If::geq) && ifop->x() == ifop->fval() && ifop->y() == ifop->tval()) {
         length_limit = ifop->y();
       }
     }
@@ -723,9 +668,7 @@ void LIRGenerator::arraycopy_helper(Intrinsic* x, int* flagsp, ciArrayKlass** ex
     NewArray* src_array = src->as_NewArray();
     if (src_array != NULL) {
       flags &= ~LIR_OpArrayCopy::src_null_check;
-      if (length_limit != NULL &&
-          src_array->length() == length_limit &&
-          is_constant_zero(src_pos)) {
+      if (length_limit != NULL && src_array->length() == length_limit && is_constant_zero(src_pos)) {
         flags &= ~LIR_OpArrayCopy::src_range_check;
       }
     }
@@ -733,9 +676,7 @@ void LIRGenerator::arraycopy_helper(Intrinsic* x, int* flagsp, ciArrayKlass** ex
     NewArray* dst_array = dst->as_NewArray();
     if (dst_array != NULL) {
       flags &= ~LIR_OpArrayCopy::dst_null_check;
-      if (length_limit != NULL &&
-          dst_array->length() == length_limit &&
-          is_constant_zero(dst_pos)) {
+      if (length_limit != NULL && dst_array->length() == length_limit && is_constant_zero(dst_pos)) {
         flags &= ~LIR_OpArrayCopy::dst_range_check;
       }
     }
@@ -805,13 +746,10 @@ void LIRGenerator::arraycopy_helper(Intrinsic* x, int* flagsp, ciArrayKlass** ex
 }
 
 LIR_Opr LIRGenerator::round_item(LIR_Opr opr) {
-  assert(opr->is_register(), "why spill if item is not register?");
 
   if (RoundFPResults && UseSSE < 1 && opr->is_single_fpu()) {
     LIR_Opr result = new_register(T_FLOAT);
     set_vreg_flag(result, must_start_in_memory);
-    assert(opr->is_register(), "only a register can be spilled");
-    assert(opr->value_type()->is_float(), "rounding only for floats available");
     __ roundfp(opr, LIR_OprFact::illegalOpr, result);
     return result;
   }
@@ -819,7 +757,6 @@ LIR_Opr LIRGenerator::round_item(LIR_Opr opr) {
 }
 
 LIR_Opr LIRGenerator::force_to_spill(LIR_Opr value, BasicType t) {
-  assert(type2size[t] == type2size[value->type()], "size mismatch: t=%s, value->type()=%s", type2name(t), type2name(value->type()));
   if (!value->is_register()) {
     // force into a register
     LIR_Opr r = new_register(value->type());
@@ -839,12 +776,8 @@ LIR_Opr LIRGenerator::force_to_spill(LIR_Opr value, BasicType t) {
 void LIRGenerator::profile_branch(If* if_instr, If::Condition cond) {
   if (if_instr->should_profile()) {
     ciMethod* method = if_instr->profiled_method();
-    assert(method != NULL, "method should be set if branch is profiled");
     ciMethodData* md = method->method_data_or_null();
-    assert(md != NULL, "Sanity");
     ciProfileData* data = md->bci_to_data(if_instr->profiled_bci());
-    assert(data != NULL, "must have profiling data");
-    assert(data->is_BranchData(), "need BranchData for two-way branches");
     int taken_count_offset     = md->byte_offset_of_slot(data, BranchData::taken_offset());
     int not_taken_count_offset = md->byte_offset_of_slot(data, BranchData::not_taken_offset());
     if (if_instr->is_swapped()) {
@@ -904,7 +837,6 @@ void LIRGenerator::move_to_phi(PhiResolver* resolver, Value cur_val, Value sux_v
     }
     LIR_Opr operand = cur_val->operand();
     if (operand->is_illegal()) {
-      assert(cur_val->as_Constant() != NULL || cur_val->as_Local() != NULL, "these can be produced lazily");
       operand = operand_for_instruction(cur_val);
     }
     resolver->move(operand, operand_for_instruction(phi));
@@ -916,7 +848,6 @@ void LIRGenerator::move_to_phi(ValueStack* cur_state) {
   BlockBegin* bb = block();
   if (bb->number_of_sux() == 1) {
     BlockBegin* sux = bb->sux_at(0);
-    assert(sux->number_of_preds() > 0, "invalid CFG");
 
     // a block with only one predecessor never has phi functions
     if (sux->number_of_preds() > 1) {
@@ -927,10 +858,6 @@ void LIRGenerator::move_to_phi(ValueStack* cur_state) {
       Value sux_value;
       int index;
 
-      assert(cur_state->scope() == sux_state->scope(), "not matching");
-      assert(cur_state->locals_size() == sux_state->locals_size(), "not matching");
-      assert(cur_state->stack_size() == sux_state->stack_size(), "not matching");
-
       for_each_stack_value(sux_state, index, sux_value) {
         move_to_phi(&resolver, cur_state->stack_at(index), sux_value);
       }
@@ -939,7 +866,6 @@ void LIRGenerator::move_to_phi(ValueStack* cur_state) {
         move_to_phi(&resolver, cur_state->local_at(index), sux_value);
       }
 
-      assert(cur_state->caller_state() == sux_state->caller_state(), "caller states must be equal");
     }
   }
 }
@@ -1000,8 +926,6 @@ ciObject* LIRGenerator::get_jobject_constant(Value value) {
 }
 
 void LIRGenerator::do_ExceptionObject(ExceptionObject* x) {
-  assert(block()->is_set(BlockBegin::exception_entry_flag), "ExceptionObject only allowed in exception handler block");
-  assert(block()->next() == x, "ExceptionObject must be first instruction of block");
 
   // no moves are created for phi functions at the begin of exception
   // handlers, so assign operands manually here
@@ -1109,8 +1033,6 @@ void LIRGenerator::do_Reference_get(Intrinsic* x) {
   const int referent_offset = java_lang_ref_Reference::referent_offset;
   guarantee(referent_offset > 0, "referent offset not initialized");
 
-  assert(x->number_of_arguments() == 1, "wrong type");
-
   LIRItem reference(x->argument_at(0), this);
   reference.load_item();
 
@@ -1127,7 +1049,6 @@ void LIRGenerator::do_Reference_get(Intrinsic* x) {
 
 // Example: clazz.isInstance(object)
 void LIRGenerator::do_isInstance(Intrinsic* x) {
-  assert(x->number_of_arguments() == 2, "wrong type");
 
   // TODO could try to substitute this node with an equivalent InstanceOf
   // if clazz is known to be a constant Class. This will pick up newly found
@@ -1157,7 +1078,6 @@ void LIRGenerator::do_isInstance(Intrinsic* x) {
 
 // Example: object.getClass ()
 void LIRGenerator::do_getClass(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1, "wrong type");
 
   LIRItem rcvr(x->argument_at(0), this);
   rcvr.load_item();
@@ -1180,7 +1100,6 @@ void LIRGenerator::do_getClass(Intrinsic* x) {
 
 // java.lang.Class::isPrimitive()
 void LIRGenerator::do_isPrimitive(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1, "wrong type");
 
   LIRItem rcvr(x->argument_at(0), this);
   rcvr.load_item();
@@ -1199,13 +1118,11 @@ void LIRGenerator::do_isPrimitive(Intrinsic* x) {
 
 // Example: Thread.currentThread()
 void LIRGenerator::do_currentThread(Intrinsic* x) {
-  assert(x->number_of_arguments() == 0, "wrong type");
   LIR_Opr reg = rlock_result(x);
   __ move_wide(new LIR_Address(getThreadPointer(), in_bytes(JavaThread::threadObj_offset()), T_OBJECT), reg);
 }
 
 void LIRGenerator::do_RegisterFinalizer(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1, "wrong type");
   LIRItem receiver(x->argument_at(0), this);
 
   receiver.load_item();
@@ -1229,7 +1146,6 @@ LIR_Opr LIRGenerator::operand_for_instruction(Instruction* x) {
     if (c != NULL) {
       x->set_operand(LIR_OprFact::value_type(c->type()));
     } else {
-      assert(x->as_Phi() || x->as_Local() != NULL, "only for Phi and Local");
       // allocate a virtual register for this local or phi
       x->set_operand(rlock(x));
       _instruction_for_operand.at_put_grow(x->operand()->vreg_number(), x, NULL);
@@ -1274,7 +1190,6 @@ bool LIRGenerator::is_vreg_flag_set(int vreg_num, VregFlag f) {
 // up referring to their registers.
 
 LIR_Opr LIRGenerator::load_constant(Constant* x) {
-  assert(!x->is_pinned(), "only for unpinned constants");
   _unpinned_constants.append(x);
   return load_constant(LIR_OprFact::value_type(x->type())->as_constant_ptr());
 }
@@ -1314,21 +1229,12 @@ LIR_Opr LIRGenerator::load_constant(LIR_Const* c) {
 //------------------------field access--------------------------------------
 
 void LIRGenerator::do_CompareAndSwap(Intrinsic* x, ValueType* type) {
-  assert(x->number_of_arguments() == 4, "wrong type");
   LIRItem obj   (x->argument_at(0), this);  // object
   LIRItem offset(x->argument_at(1), this);  // offset of field
   LIRItem cmp   (x->argument_at(2), this);  // value to compare with field
   LIRItem val   (x->argument_at(3), this);  // replace field with val if matches cmp
-  assert(obj.type()->tag() == objectTag, "invalid type");
 
-  // In 64bit the type can be long, sparc doesn't have this assert
-  // assert(offset.type()->tag() == intTag, "invalid type");
-
-  assert(cmp.type()->tag() == type->tag(), "invalid type");
-  assert(val.type()->tag() == type->tag(), "invalid type");
-
-  LIR_Opr result = access_atomic_cmpxchg_at(IN_HEAP, as_BasicType(type),
-                                            obj, offset, cmp, val);
+  LIR_Opr result = access_atomic_cmpxchg_at(IN_HEAP, as_BasicType(type), obj, offset, cmp, val);
   set_result(x, result);
 }
 
@@ -1366,7 +1272,6 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
   CodeEmitInfo* info = NULL;
   if (needs_patching) {
-    assert(x->explicit_null_check() == NULL, "can't fold null check into patching field access");
     info = state_for(x, x->state_before());
   } else if (x->needs_null_check()) {
     NullCheck* nc = x->explicit_null_check();
@@ -1398,9 +1303,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
   set_no_result(x);
 
-  if (x->needs_null_check() &&
-      (needs_patching ||
-       MacroAssembler::needs_explicit_null_check(x->offset()))) {
+  if (x->needs_null_check() && (needs_patching || MacroAssembler::needs_explicit_null_check(x->offset()))) {
     // Emit an explicit null check because the offset is too large.
     // If the class is not loaded and the object is NULL, we need to deoptimize to throw a
     // NoClassDefFoundError in the interpreter instead of an implicit NPE from compiled code.
@@ -1420,13 +1323,10 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 }
 
 void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
-  assert(x->is_pinned(),"");
   bool needs_range_check = x->compute_needs_range_check();
   bool use_length = x->length() != NULL;
   bool obj_store = x->elt_type() == T_ARRAY || x->elt_type() == T_OBJECT;
-  bool needs_store_check = obj_store && (x->value()->as_Constant() == NULL ||
-                                         !get_jobject_constant(x->value())->is_null_object() ||
-                                         x->should_profile());
+  bool needs_store_check = obj_store && (x->value()->as_Constant() == NULL || !get_jobject_constant(x->value())->is_null_object() || x->should_profile());
 
   LIRItem array(x->array(), this);
   LIRItem index(x->index(), this);
@@ -1482,9 +1382,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
                   NULL, null_check_info);
 }
 
-void LIRGenerator::access_load_at(DecoratorSet decorators, BasicType type,
-                                  LIRItem& base, LIR_Opr offset, LIR_Opr result,
-                                  CodeEmitInfo* patch_info, CodeEmitInfo* load_emit_info) {
+void LIRGenerator::access_load_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIR_Opr offset, LIR_Opr result, CodeEmitInfo* patch_info, CodeEmitInfo* load_emit_info) {
   decorators |= C1_READ_ACCESS;
   LIRAccess access(this, decorators, base, offset, type, patch_info, load_emit_info);
   if (access.is_raw()) {
@@ -1494,9 +1392,7 @@ void LIRGenerator::access_load_at(DecoratorSet decorators, BasicType type,
   }
 }
 
-void LIRGenerator::access_store_at(DecoratorSet decorators, BasicType type,
-                                   LIRItem& base, LIR_Opr offset, LIR_Opr value,
-                                   CodeEmitInfo* patch_info, CodeEmitInfo* store_emit_info) {
+void LIRGenerator::access_store_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIR_Opr offset, LIR_Opr value, CodeEmitInfo* patch_info, CodeEmitInfo* store_emit_info) {
   decorators |= C1_WRITE_ACCESS;
   LIRAccess access(this, decorators, base, offset, type, patch_info, store_emit_info);
   if (access.is_raw()) {
@@ -1555,7 +1451,6 @@ void LIRGenerator::do_LoadField(LoadField* x) {
 
   CodeEmitInfo* info = NULL;
   if (needs_patching) {
-    assert(x->explicit_null_check() == NULL, "can't fold null check into patching field access");
     info = state_for(x, x->state_before());
   } else if (x->needs_null_check()) {
     NullCheck* nc = x->explicit_null_check();
@@ -1571,10 +1466,7 @@ void LIRGenerator::do_LoadField(LoadField* x) {
   object.load_item();
 
   bool stress_deopt = StressLoopInvariantCodeMotion && info && info->deoptimize_on_exception();
-  if (x->needs_null_check() &&
-      (needs_patching ||
-       MacroAssembler::needs_explicit_null_check(x->offset()) ||
-       stress_deopt)) {
+  if (x->needs_null_check() && (needs_patching || MacroAssembler::needs_explicit_null_check(x->offset()) || stress_deopt)) {
     LIR_Opr obj = object.result();
     if (stress_deopt) {
       obj = new_register(T_OBJECT);
@@ -1607,7 +1499,6 @@ void LIRGenerator::do_NIOCheckIndex(Intrinsic* x) {
   // NOTE: by the time we are in checkIndex() we are guaranteed that
   // the buffer is non-null (because checkIndex is package-private and
   // only called from within other methods in the buffer).
-  assert(x->number_of_arguments() == 2, "wrong type");
   LIRItem buf  (x->argument_at(0), this);
   LIRItem index(x->argument_at(1), this);
   buf.load_item();
@@ -1780,8 +1671,6 @@ void LIRGenerator::do_RoundFP(RoundFP* x) {
   LIRItem input(x->input(), this);
   input.load_item();
   LIR_Opr input_opr = input.result();
-  assert(input_opr->is_register(), "why round if value is not in a register?");
-  assert(input_opr->is_single_fpu() || input_opr->is_double_fpu(), "input should be floating-point value");
   if (input_opr->is_single_fpu()) {
     set_result(x, round_item(input_opr)); // This code path not currently taken
   } else {
@@ -1811,8 +1700,6 @@ void LIRGenerator::do_UnsafeGetRaw(UnsafeGetRaw* x) {
     log2_scale = x->log2_scale();
   }
 
-  assert(!x->has_index() || idx.value() == x->index(), "should match");
-
   LIR_Opr base_op = base.result();
   LIR_Opr index_op = idx.result();
   if (x->has_index()) {
@@ -1822,7 +1709,6 @@ void LIRGenerator::do_UnsafeGetRaw(UnsafeGetRaw* x) {
         __ convert(Bytecodes::_i2l, idx.result(), index_op);
       }
     } else {
-      assert(index_op->type() == T_LONG, "must be");
       if (index_op->is_constant()) {
         index_op = new_register(T_LONG);
         __ move(idx.result(), index_op);
@@ -1834,15 +1720,11 @@ void LIRGenerator::do_UnsafeGetRaw(UnsafeGetRaw* x) {
   // We allow the constant to stay an int because that would allow us a more compact encoding by
   // embedding an immediate offset in the address expression. If we have a long constant, we have to
   // move it into a register first.
-  assert(base_op->type() == T_LONG && !base_op->is_constant(), "base must be a long non-constant");
-  assert(!x->has_index() || (index_op->type() == T_INT && index_op->is_constant()) || (index_op->type() == T_LONG && !index_op->is_constant()), "unexpected index type");
 
   BasicType dst_type = x->basic_type();
 
   LIR_Address* addr;
   if (index_op->is_constant()) {
-    assert(log2_scale == 0, "must not have a scale");
-    assert(index_op->type() == T_INT, "only int constants supported");
     addr = new LIR_Address(base_op, index_op->as_jint(), dst_type);
   } else {
 #ifdef X86
@@ -1909,9 +1791,6 @@ void LIRGenerator::do_UnsafePutRaw(UnsafePutRaw* x) {
       __ convert(Bytecodes::_i2l, idx.result(), index_op);
     }
   }
-  // At this point base and index are long and non-constant
-  assert(base_op->type() == T_LONG && !base_op->is_constant(), "base must be a non-constant long");
-  assert(!x->has_index() || (index_op->type() == T_LONG && !index_op->is_constant()), "index must be a non-constant long");
 
   if (log2_scale != 0) {
     // temporary fix (platform dependent code without shift on Intel would be better)
@@ -2103,16 +1982,12 @@ void LIRGenerator::do_TableSwitch(TableSwitch* x) {
 
   int lo_key = x->lo_key();
   int len = x->length();
-  assert(lo_key <= (lo_key + (len - 1)), "integer overflow");
   LIR_Opr value = tag.result();
 
   if (compilation()->env()->comp_level() == CompLevel_full_profile && UseSwitchProfiling) {
     ciMethod* method = x->state()->scope()->method();
     ciMethodData* md = method->method_data_or_null();
-    assert(md != NULL, "Sanity");
     ciProfileData* data = md->bci_to_data(x->state()->bci());
-    assert(data != NULL, "must have profiling data");
-    assert(data->is_MultiBranchData(), "bad profile data?");
     int default_count_offset = md->byte_offset_of_slot(data, MultiBranchData::default_count_offset());
     LIR_Opr md_reg = new_register(T_METADATA);
     __ metadata2reg(md->constant_encoding(), md_reg);
@@ -2166,10 +2041,7 @@ void LIRGenerator::do_LookupSwitch(LookupSwitch* x) {
   if (compilation()->env()->comp_level() == CompLevel_full_profile && UseSwitchProfiling) {
     ciMethod* method = x->state()->scope()->method();
     ciMethodData* md = method->method_data_or_null();
-    assert(md != NULL, "Sanity");
     ciProfileData* data = md->bci_to_data(x->state()->bci());
-    assert(data != NULL, "must have profiling data");
-    assert(data->is_MultiBranchData(), "bad profile data?");
     int default_count_offset = md->byte_offset_of_slot(data, MultiBranchData::default_count_offset());
     LIR_Opr md_reg = new_register(T_METADATA);
     __ metadata2reg(md->constant_encoding(), md_reg);
@@ -2233,20 +2105,14 @@ void LIRGenerator::do_Goto(Goto* x) {
   // Gotos can be folded Ifs, handle this case.
   if (x->should_profile()) {
     ciMethod* method = x->profiled_method();
-    assert(method != NULL, "method should be set if branch is profiled");
     ciMethodData* md = method->method_data_or_null();
-    assert(md != NULL, "Sanity");
     ciProfileData* data = md->bci_to_data(x->profiled_bci());
-    assert(data != NULL, "must have profiling data");
     int offset;
     if (x->direction() == Goto::taken) {
-      assert(data->is_BranchData(), "need BranchData for two-way branches");
       offset = md->byte_offset_of_slot(data, BranchData::taken_offset());
     } else if (x->direction() == Goto::not_taken) {
-      assert(data->is_BranchData(), "need BranchData for two-way branches");
       offset = md->byte_offset_of_slot(data, BranchData::not_taken_offset());
     } else {
-      assert(data->is_JumpData(), "need JumpData for branches");
       offset = md->byte_offset_of_slot(data, JumpData::taken_offset());
     }
     LIR_Opr md_reg = new_register(T_METADATA);
@@ -2300,7 +2166,6 @@ ciKlass* LIRGenerator::profile_type(ciMethodData* md, int md_base_offset, int md
       type = obj->declared_type();
       type = comp->cha_exact_type(type);
     }
-    assert(type == NULL || type->is_klass(), "type should be class");
     exact_klass = (type != NULL && type->is_loaded()) ? (ciKlass*)type : NULL;
 
     do_update = exact_klass == NULL || ciTypeEntries::valid_ciklass(profiled_k) != exact_klass;
@@ -2330,8 +2195,7 @@ ciKlass* LIRGenerator::profile_type(ciMethodData* md, int md_base_offset, int md
       // the compiler has
       exact_klass = exact_signature_k;
     }
-    if (callee_signature_k != NULL &&
-        callee_signature_k != signature_at_call_k) {
+    if (callee_signature_k != NULL && callee_signature_k != signature_at_call_k) {
       ciKlass* improved_klass = callee_signature_k->exact_klass();
       if (improved_klass == NULL) {
         improved_klass = comp->cha_exact_type(callee_signature_k);
@@ -2368,7 +2232,6 @@ void LIRGenerator::profile_parameters(Base* x) {
   if (compilation()->profile_parameters()) {
     CallingConvention* args = compilation()->frame_map()->incoming_arguments();
     ciMethodData* md = scope()->method()->method_data_or_null();
-    assert(md != NULL, "Sanity");
 
     if (md->parameters_type_data() != NULL) {
       ciParametersTypeData* parameters_type_data = md->parameters_type_data();
@@ -2376,7 +2239,6 @@ void LIRGenerator::profile_parameters(Base* x) {
       LIR_Opr mdp = LIR_OprFact::illegalOpr;
       for (int java_index = 0, i = 0, j = 0; j < parameters_type_data->number_of_parameters(); i++) {
         LIR_Opr src = args->at(i);
-        assert(!src->is_illegal(), "check");
         BasicType t = src->type();
         if (t == T_OBJECT || t == T_ARRAY) {
           intptr_t profiled_k = parameters->type(j);
@@ -2404,7 +2266,6 @@ void LIRGenerator::do_Base(Base* x) {
   int java_index = 0;
   for (int i = 0; i < args->length(); i++) {
     LIR_Opr src = args->at(i);
-    assert(!src->is_illegal(), "check");
     BasicType t = src->type();
 
     // Types which are smaller than int are passed as int, so
@@ -2425,11 +2286,6 @@ void LIRGenerator::do_Base(Base* x) {
 
     // Assign new location to Local instruction for this local
     Local* local = x->state()->local_at(java_index)->as_Local();
-    assert(local != NULL, "Locals for incoming arguments must have been created");
-#ifndef __SOFTFP__
-    // The java calling convention passes double as long and float as int.
-    assert(as_ValueType(t)->tag() == local->type()->tag(), "check");
-#endif
     local->set_operand(dest);
     _instruction_for_operand.at_put_grow(dest->vreg_number(), local, NULL);
     java_index += type2size[t];
@@ -2454,10 +2310,8 @@ void LIRGenerator::do_Base(Base* x) {
       __ oop2reg(method()->holder()->java_mirror()->constant_encoding(), obj);
     } else {
       Local* receiver = x->state()->local_at(0)->as_Local();
-      assert(receiver != NULL, "must already exist");
       obj = receiver->operand();
     }
-    assert(obj->is_valid(), "must be valid");
 
     if (method()->is_synchronized() && GenerateSynchronizationCode) {
       LIR_Opr lock = syncLockOpr();
@@ -2495,7 +2349,6 @@ void LIRGenerator::do_OsrEntry(OsrEntry* x) {
 }
 
 void LIRGenerator::invoke_load_arguments(Invoke* x, LIRItemList* args, const LIR_OprList* arg_list) {
-  assert(args->length() == arg_list->length(), "args=%d, arg_list=%d", args->length(), arg_list->length());
   for (int i = x->has_receiver() ? 1 : 0; i < args->length(); i++) {
     LIRItem* param = args->at(i);
     LIR_Opr loc = arg_list->at(i);
@@ -2521,7 +2374,6 @@ void LIRGenerator::invoke_load_arguments(Invoke* x, LIRItemList* args, const LIR
     if (loc->is_register()) {
       receiver->load_item_force(loc);
     } else {
-      assert(loc->is_address(), "just checking");
       receiver->load_for_store(T_OBJECT);
       __ move_wide(receiver->result(), loc->as_address_ptr());
     }
@@ -2588,27 +2440,20 @@ void LIRGenerator::do_Invoke(Invoke* x) {
     receiver = args->at(0)->result();
   }
 
-  // emit invoke code
-  assert(receiver->is_illegal() || receiver->is_equal(LIR_Assembler::receiverOpr()), "must match");
-
   // JSR 292
   // Preserve the SP over MethodHandle call sites, if needed.
   ciMethod* target = x->target();
-  bool is_method_handle_invoke = (// %%% FIXME: Are both of these relevant?
-                                  target->is_method_handle_intrinsic() ||
-                                  target->is_compiled_lambda_form());
+  bool is_method_handle_invoke = (target->is_method_handle_intrinsic() || target->is_compiled_lambda_form());
   if (is_method_handle_invoke) {
     info->set_is_method_handle_invoke(true);
-    if(FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr) {
+    if (FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr) {
         __ move(FrameMap::stack_pointer(), FrameMap::method_handle_invoke_SP_save_opr());
     }
   }
 
   switch (x->code()) {
     case Bytecodes::_invokestatic:
-      __ call_static(target, result_register,
-                     SharedRuntime::get_resolve_static_call_stub(),
-                     arg_list, info);
+      __ call_static(target, result_register, SharedRuntime::get_resolve_static_call_stub(), arg_list, info);
       break;
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokevirtual:
@@ -2616,13 +2461,9 @@ void LIRGenerator::do_Invoke(Invoke* x) {
       // for loaded and final (method or class) target we still produce an inline cache,
       // in order to be able to call mixed mode
       if (x->code() == Bytecodes::_invokespecial || x->target_is_final()) {
-        __ call_opt_virtual(target, receiver, result_register,
-                            SharedRuntime::get_resolve_opt_virtual_call_stub(),
-                            arg_list, info);
+        __ call_opt_virtual(target, receiver, result_register, SharedRuntime::get_resolve_opt_virtual_call_stub(), arg_list, info);
       } else if (x->vtable_index() < 0) {
-        __ call_icvirtual(target, receiver, result_register,
-                          SharedRuntime::get_resolve_virtual_call_stub(),
-                          arg_list, info);
+        __ call_icvirtual(target, receiver, result_register, SharedRuntime::get_resolve_virtual_call_stub(), arg_list, info);
       } else {
         int entry_offset = in_bytes(Klass::vtable_start_offset()) + x->vtable_index() * vtableEntry::size_in_bytes();
         int vtable_offset = entry_offset + vtableEntry::method_offset_in_bytes();
@@ -2630,9 +2471,7 @@ void LIRGenerator::do_Invoke(Invoke* x) {
       }
       break;
     case Bytecodes::_invokedynamic: {
-      __ call_dynamic(target, receiver, result_register,
-                      SharedRuntime::get_resolve_static_call_stub(),
-                      arg_list, info);
+      __ call_dynamic(target, receiver, result_register, SharedRuntime::get_resolve_static_call_stub(), arg_list, info);
       break;
     }
     default:
@@ -2642,8 +2481,7 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 
   // JSR 292
   // Restore the SP after MethodHandle call sites, if needed.
-  if (is_method_handle_invoke
-      && FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr) {
+  if (is_method_handle_invoke && FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr) {
     __ move(FrameMap::method_handle_invoke_SP_save_opr(), FrameMap::stack_pointer());
   }
 
@@ -2665,7 +2503,6 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 }
 
 void LIRGenerator::do_FPIntrinsics(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1, "wrong type");
   LIRItem value       (x->argument_at(0), this);
   LIR_Opr reg = rlock_result(x);
   value.load_item();
@@ -2696,7 +2533,6 @@ void LIRGenerator::do_IfOp(IfOp* x) {
 }
 
 void LIRGenerator::do_RuntimeCall(address routine, Intrinsic* x) {
-  assert(x->number_of_arguments() == 0, "wrong type");
   // Enforce computation of _reserved_argument_area_size which is required on some platforms.
   BasicTypeList signature;
   CallingConvention* cc = frame_map()->c_calling_convention(&signature);
@@ -2797,11 +2633,9 @@ void LIRGenerator::profile_arguments(ProfileCall* x) {
   if (compilation()->profile_arguments()) {
     int bci = x->bci_of_invoke();
     ciMethodData* md = x->method()->method_data_or_null();
-    assert(md != NULL, "Sanity");
     ciProfileData* data = md->bci_to_data(bci);
     if (data != NULL) {
-      if ((data->is_CallTypeData() && data->as_CallTypeData()->has_arguments()) ||
-          (data->is_VirtualCallTypeData() && data->as_VirtualCallTypeData()->has_arguments())) {
+      if ((data->is_CallTypeData() && data->as_CallTypeData()->has_arguments()) || (data->is_VirtualCallTypeData() && data->as_VirtualCallTypeData()->has_arguments())) {
         ByteSize extra = data->is_CallTypeData() ? CallTypeData::args_data_offset() : VirtualCallTypeData::args_data_offset();
         int base_offset = md->byte_offset_of_slot(data, extra);
         LIR_Opr mdp = LIR_OprFact::illegalOpr;
@@ -2812,7 +2646,6 @@ void LIRGenerator::profile_arguments(ProfileCall* x) {
         int stop = data->is_CallTypeData() ? ((ciCallTypeData*)data)->number_of_arguments() : ((ciVirtualCallTypeData*)data)->number_of_arguments();
         if (x->callee()->is_loaded() && x->callee()->is_static() && Bytecodes::has_receiver(bc)) {
           // first argument is not profiled at call (method handle invoke)
-          assert(x->method()->raw_code_at_bci(bci) == Bytecodes::_invokehandle, "invokehandle expected");
           start = 1;
         }
         ciSignature* callee_signature = x->callee()->signature();
@@ -2918,10 +2751,8 @@ void LIRGenerator::do_ProfileCall(ProfileCall* x) {
 void LIRGenerator::do_ProfileReturnType(ProfileReturnType* x) {
   int bci = x->bci_of_invoke();
   ciMethodData* md = x->method()->method_data_or_null();
-  assert(md != NULL, "Sanity");
   ciProfileData* data = md->bci_to_data(bci);
   if (data != NULL) {
-    assert(data->is_CallTypeData() || data->is_VirtualCallTypeData(), "wrong profile data type");
     ciReturnTypeEntry* ret = data->is_CallTypeData() ? ((ciCallTypeData*)data)->ret() : ((ciVirtualCallTypeData*)data)->ret();
     LIR_Opr mdp = LIR_OprFact::illegalOpr;
 
@@ -3010,12 +2841,8 @@ void LIRGenerator::decrement_age(CodeEmitInfo* info) {
   }
 }
 
-void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info,
-                                                ciMethod *method, LIR_Opr step, int frequency,
-                                                int bci, bool backedge, bool notify) {
-  assert(frequency == 0 || is_power_of_2(frequency + 1), "Frequency must be x^2 - 1 or 0");
+void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info, ciMethod *method, LIR_Opr step, int frequency, int bci, bool backedge, bool notify) {
   int level = _compilation->env()->comp_level();
-  assert(level > CompLevel_simple, "Shouldn't be here");
 
   int offset = -1;
   LIR_Opr counter_holder = NULL;
@@ -3034,7 +2861,6 @@ void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info,
     offset = in_bytes(backedge ? MethodData::backedge_counter_offset() :
                                  MethodData::invocation_counter_offset());
     ciMethodData* md = method->method_data_or_null();
-    assert(md != NULL, "Sanity");
     __ metadata2reg(md->constant_encoding(), counter_holder);
   } else {
     ShouldNotReachHere();
@@ -3101,7 +2927,6 @@ void LIRGenerator::do_RangeCheckPredicate(RangeCheckPredicate *x) {
   Instruction *a = x->x();
   Instruction *b = x->y();
   if (!a || StressRangeCheckElimination) {
-    assert(!b || StressRangeCheckElimination, "B must also be null");
 
     CodeEmitInfo *info = state_for(x, x->state());
     CodeStub* stub = new PredicateFailedStub(info);
@@ -3140,8 +2965,6 @@ void LIRGenerator::do_RangeCheckPredicate(RangeCheckPredicate *x) {
     LIRItem yitem(x->y(), this);
     LIRItem* xin = &xitem;
     LIRItem* yin = &yitem;
-
-    assert(tag == intTag, "Only integer deoptimizations are valid!");
 
     xin->load_item();
     yin->dont_load_item();
@@ -3193,7 +3016,6 @@ LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIR_OprList* args,
 
   // move the arguments into the correct location
   CallingConvention* cc = frame_map()->c_calling_convention(signature);
-  assert(cc->length() == args->length(), "argument mismatch");
   for (int i = 0; i < args->length(); i++) {
     LIR_Opr arg = args->at(i);
     LIR_Opr loc = cc->at(i);
@@ -3201,11 +3023,6 @@ LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIR_OprList* args,
       __ move(arg, loc);
     } else {
       LIR_Address* addr = loc->as_address_ptr();
-//           if (!can_store_as_constant(arg)) {
-//             LIR_Opr tmp = new_register(arg->type());
-//             __ move(arg, tmp);
-//             arg = tmp;
-//           }
       if (addr->type() == T_LONG || addr->type() == T_DOUBLE) {
         __ unaligned_move(arg, addr);
       } else {
@@ -3238,7 +3055,6 @@ LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIRItemList* args,
   // move the arguments into the correct location
   CallingConvention* cc = frame_map()->c_calling_convention(signature);
 
-  assert(cc->length() == args->length(), "argument mismatch");
   for (int i = 0; i < args->length(); i++) {
     LIRItem* arg = args->at(i);
     LIR_Opr loc = cc->at(i);

@@ -43,7 +43,7 @@ private:
 public:
   // the "name" argument must be a string literal
   JVMFlagConstraint(const char* name, ConstraintType type) { _name=name; _validate_type=type; };
-  ~JVMFlagConstraint() {};
+  ~JVMFlagConstraint() { };
   const char* name() const { return _name; }
   ConstraintType type() const { return _validate_type; }
   virtual JVMFlag::Error apply(bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; };

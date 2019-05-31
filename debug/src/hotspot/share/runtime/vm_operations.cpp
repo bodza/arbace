@@ -26,7 +26,6 @@ const char* VM_Operation::_names[VM_Operation::VMOp_Terminating] = \
 
 void VM_Operation::set_calling_thread(Thread* thread, ThreadPriority priority) {
   _calling_thread = thread;
-  assert(MinPriority <= priority && priority <= MaxPriority, "sanity check");
   _priority = priority;
 }
 
@@ -71,7 +70,6 @@ void VM_Operation::print_on_error(outputStream* st) const {
 }
 
 void VM_ThreadStop::doit() {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at a safepoint");
   ThreadsListHandle tlh;
   JavaThread* target = java_lang_Thread::thread(target_thread());
   // Note that this now allows multiple ThreadDeath exceptions to be
@@ -113,13 +111,11 @@ VM_DeoptimizeFrame::VM_DeoptimizeFrame(JavaThread* thread, intptr_t* id, int rea
 }
 
 void VM_DeoptimizeFrame::doit() {
-  assert(_reason > Deoptimization::Reason_none && _reason < Deoptimization::Reason_LIMIT, "invalid deopt reason");
   Deoptimization::deoptimize_frame_internal(_thread, _id, (Deoptimization::DeoptReason)_reason);
 }
 
 void VM_UnlinkSymbols::doit() {
   JavaThread *thread = (JavaThread *)calling_thread();
-  assert(thread->is_Java_thread(), "must be a Java thread");
   SymbolTable::unlink();
 }
 
@@ -255,8 +251,7 @@ void VM_ThreadDump::doit() {
 
     for (uint i = 0; i < _result->t_list()->length(); i++) {
       JavaThread* jt = _result->t_list()->thread_at(i);
-      if (jt->is_exiting() ||
-          jt->is_hidden_from_external_view())  {
+      if (jt->is_exiting() || jt->is_hidden_from_external_view())  {
         // skip terminating threads and hidden threads
         continue;
       }
@@ -320,8 +315,6 @@ int VM_Exit::set_vm_exited() {
 
   Thread * thr_cur = Thread::current();
 
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
-
   int num_active = 0;
 
   _shutdown_thread = thr_cur;
@@ -339,11 +332,9 @@ int VM_Exit::set_vm_exited() {
 int VM_Exit::wait_for_threads_in_native_to_block() {
   // VM exits at safepoint. This function must be called at the final safepoint
   // to wait for threads in _thread_in_native state to be quiescent.
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint already");
 
   Thread * thr_cur = Thread::current();
-  Monitor timer(Mutex::leaf, "VM_Exit timer", true,
-                Monitor::_safepoint_check_never);
+  Monitor timer(Mutex::leaf, "VM_Exit timer", true, Monitor::_safepoint_check_never);
 
   // Compiler threads need longer wait because they can access VM data directly
   // while in native. If they are active and some structures being used are
@@ -418,8 +409,7 @@ void VM_Exit::doit() {
 }
 
 void VM_Exit::wait_if_vm_exited() {
-  if (_vm_exited &&
-      Thread::current_or_null() != _shutdown_thread) {
+  if (_vm_exited && Thread::current_or_null() != _shutdown_thread) {
     // _vm_exited is set at safepoint, and the Threads_lock is never released
     // we will block here until the process dies
     Threads_lock->lock_without_safepoint_check();

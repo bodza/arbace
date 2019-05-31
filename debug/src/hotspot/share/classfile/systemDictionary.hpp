@@ -348,7 +348,7 @@ public:
 
 public:
   // Sharing support.
-  static void reorder_dictionary_for_sharing() {};
+  static void reorder_dictionary_for_sharing() { };
   static void combine_shared_dictionaries();
   static size_t count_bytes_for_buckets();
   static size_t count_bytes_for_table();
@@ -365,9 +365,9 @@ public:
   // Monotonically increasing counter which grows as classes are
   // loaded or modifications such as hot-swapping or setting/removing
   // of breakpoints are performed
-  static inline int number_of_modifications()     { assert_locked_or_safepoint(Compile_lock); return _number_of_modifications; }
+  static inline int number_of_modifications()     { return _number_of_modifications; }
   // Needed by evolution and breakpoint code
-  static inline void notice_modification()        { assert_locked_or_safepoint(Compile_lock); ++_number_of_modifications;      }
+  static inline void notice_modification()        { ++_number_of_modifications; }
 
   // Verification
   static void verify();
@@ -377,7 +377,6 @@ public:
 
   // Checked fast access to commonly used classes - mostly preloaded
   static InstanceKlass* check_klass(InstanceKlass* k) {
-    assert(k != NULL, "klass not loaded");
     return k;
   }
 
@@ -403,12 +402,10 @@ public:
   #undef WK_KLASS_DECLARE
 
   static InstanceKlass* well_known_klass(WKID id) {
-    assert(id >= (int)FIRST_WKID && id < (int)WKID_LIMIT, "oob");
     return _well_known_klasses[id];
   }
 
   static InstanceKlass** well_known_klass_addr(WKID id) {
-    assert(id >= (int)FIRST_WKID && id < (int)WKID_LIMIT, "oob");
     return &_well_known_klasses[id];
   }
   static void well_known_klasses_do(MetaspaceClosure* it);
@@ -417,7 +414,6 @@ public:
   #define WK_KLASS(name) _well_known_klasses[SystemDictionary::WK_KLASS_ENUM_NAME(name)]
 
   static InstanceKlass* box_klass(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check");
     return check_klass(_box_klasses[t]);
   }
   static BasicType box_klass_type(Klass* k);  // inverse of box_klass
@@ -453,7 +449,6 @@ public:
 protected:
   // Mirrors for primitive classes (created eagerly)
   static oop check_mirror(oop m) {
-    assert(m != NULL, "mirror not initialized");
     return m;
   }
 
@@ -638,7 +633,6 @@ public:
 
   // Returns TRUE if the method is a non-public member of class java.lang.Object.
   static bool is_nonpublic_Object_method(Method* m) {
-    assert(m != NULL, "Unexpected NULL Method*");
     return !m->is_public() && m->method_holder() == SystemDictionary::Object_klass();
   }
 

@@ -36,7 +36,6 @@ class FreeList {
 
   void decrement_count() {
     _count--;
-    assert(_count >= 0, "Count should not be negative");
   }
 
  public:
@@ -60,7 +59,6 @@ class FreeList {
   void set_head(Chunk_t* v) {
     assert_proper_lock_protection();
     _head = v;
-    assert(!_head || _head->size() == _size, "bad chunk size");
   }
   // Set the head of the list and set the prev field of non-null
   // values to NULL.
@@ -73,7 +71,6 @@ class FreeList {
   void set_tail(Chunk_t* v) {
     assert_proper_lock_protection();
     _tail = v;
-    assert(!_tail || _tail->size() == _size, "bad chunk size");
   }
   // Set the tail of the list and set the next field of non-null
   // values to NULL.
@@ -96,13 +93,13 @@ class FreeList {
     _size = v;
   }
   ssize_t count() const { return _count; }
-  void set_count(ssize_t v) { _count = v;}
+  void set_count(ssize_t v) { _count = v; }
 
   size_t get_better_size() { return size(); }
 
   size_t returned_bytes() const { ShouldNotReachHere(); return 0; }
-  void set_returned_bytes(size_t v) {}
-  void increment_returned_bytes_by(size_t v) {}
+  void set_returned_bytes(size_t v) { }
+  void increment_returned_bytes_by(size_t v) { }
 
   // Unlink head of list and return it.  Returns NULL if
   // the list is empty.

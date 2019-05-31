@@ -29,9 +29,7 @@ void relocInfo::initialize(CodeSection* dest, Relocation* reloc) {
 }
 
 relocInfo* relocInfo::finish_prefix(short* prefix_limit) {
-  assert(sizeof(relocInfo) == sizeof(short), "change this code");
   short* p = (short*)(this+1);
-  assert(prefix_limit >= p, "must be a valid span of data");
   int plen = prefix_limit - p;
   if (plen == 0) {
     return this;                         // no data: remove self completely
@@ -42,7 +40,6 @@ relocInfo* relocInfo::finish_prefix(short* prefix_limit) {
   }
   // cannot compact, so just update the count and return the limit pointer
   (*this) = prefix_relocInfo(plen);   // write new datalen
-  assert(data() + datalen() == prefix_limit, "pointers must line up");
   return (relocInfo*)prefix_limit;
 }
 
@@ -50,9 +47,6 @@ void relocInfo::set_type(relocType t) {
   int old_offset = addr_offset();
   int old_format = format();
   (*this) = relocInfo(t, old_offset, old_format);
-  assert(type()==(int)t, "sanity check");
-  assert(addr_offset()==old_offset, "sanity check");
-  assert(format()==old_format, "sanity check");
 }
 
 nmethod* RelocIterator::code_as_nmethod() const {
@@ -61,21 +55,17 @@ nmethod* RelocIterator::code_as_nmethod() const {
 
 void relocInfo::set_format(int f) {
   int old_offset = addr_offset();
-  assert((f & format_mask) == f, "wrong format");
   _value = (_value & ~(format_mask << offset_width)) | (f << offset_width);
-  assert(addr_offset()==old_offset, "sanity check");
 }
 
 void relocInfo::change_reloc_info_for_address(RelocIterator *itr, address pc, relocType old_type, relocType new_type) {
   bool found = false;
   while (itr->next() && !found) {
     if (itr->addr() == pc) {
-      assert(itr->type()==old_type, "wrong relocInfo type found");
       itr->current()->set_type(new_type);
       found=true;
     }
   }
-  assert(found, "no relocInfo found for pc");
 }
 
 void relocInfo::remove_reloc_info_for_address(RelocIterator *itr, address pc, relocType old_type) {
@@ -102,16 +92,13 @@ void RelocIterator::initialize(CompiledMethod* nm, address begin, address limit)
 
   // Initialize code sections.
   _section_start[CodeBuffer::SECT_CONSTS] = nm->consts_begin();
-  _section_start[CodeBuffer::SECT_INSTS ] = nm->insts_begin() ;
-  _section_start[CodeBuffer::SECT_STUBS ] = nm->stub_begin()  ;
+  _section_start[CodeBuffer::SECT_INSTS ] = nm->insts_begin();
+  _section_start[CodeBuffer::SECT_STUBS ] = nm->stub_begin();
 
-  _section_end  [CodeBuffer::SECT_CONSTS] = nm->consts_end()  ;
-  _section_end  [CodeBuffer::SECT_INSTS ] = nm->insts_end()   ;
-  _section_end  [CodeBuffer::SECT_STUBS ] = nm->stub_end()    ;
+  _section_end  [CodeBuffer::SECT_CONSTS] = nm->consts_end();
+  _section_end  [CodeBuffer::SECT_INSTS ] = nm->insts_end();
+  _section_end  [CodeBuffer::SECT_STUBS ] = nm->stub_end();
 
-  assert(!has_current(), "just checking");
-  assert(begin == NULL || begin >= nm->code_begin(), "in bounds");
-  assert(limit == NULL || limit <= nm->code_end(),   "in bounds");
   set_limits(begin, limit);
 }
 
@@ -124,17 +111,12 @@ RelocIterator::RelocIterator(CodeSection* cs, address begin, address limit) {
   _code    = NULL; // Not cb->blob();
 
   CodeBuffer* cb = cs->outer();
-  assert((int) SECT_LIMIT == CodeBuffer::SECT_LIMIT, "my copy must be equal");
   for (int n = (int) CodeBuffer::SECT_FIRST; n < (int) CodeBuffer::SECT_LIMIT; n++) {
     CodeSection* cs = cb->code_section(n);
     _section_start[n] = cs->start();
     _section_end  [n] = cs->end();
   }
 
-  assert(!has_current(), "just checking");
-
-  assert(begin == NULL || begin >= cs->start(), "in bounds");
-  assert(limit == NULL || limit <= cs->end(),   "in bounds");
   set_limits(begin, limit);
 }
 
@@ -172,7 +154,6 @@ void RelocIterator::set_limits(address begin, address limit) {
 
 void RelocIterator::set_limit(address limit) {
   address code_end = (address)code() + code()->size();
-  assert(limit == NULL || limit <= code_end, "in bounds");
   _limit = limit;
 }
 
@@ -206,14 +187,13 @@ void RelocIterator::initialize_misc() {
 Relocation* RelocIterator::reloc() {
   // (take the "switch" out-of-line)
   relocInfo::relocType t = type();
-  if (false) {}
+  if (false) { }
   #define EACH_TYPE(name) \
   else if (t == relocInfo::name##_type) { \
     return name##_reloc(); \
   }
   APPLY_TO_RELOCATIONS(EACH_TYPE);
   #undef EACH_TYPE
-  assert(t == relocInfo::none, "must be padding");
   return new(_rh) Relocation();
 }
 
@@ -309,7 +289,6 @@ void Relocation::normalize_address(address& addr, const CodeSection* dest, bool 
   if (addr0 == NULL || dest->allocates2(addr0))  return;
   CodeBuffer* cb = dest->outer();
   addr = new_addr_for(addr0, cb, cb);
-  assert(allow_other_sections || dest->contains2(addr), "addr must be in required section");
 }
 
 void CallRelocation::set_destination(address x) {
@@ -417,7 +396,7 @@ void external_word_Relocation::pack_data_to(CodeSection* dest) {
 void external_word_Relocation::unpack_data() {
   jint lo, hi;
   unpack_2_ints(lo, hi);
-  jlong t = jlong_from(hi, lo);;
+  jlong t = jlong_from(hi, lo);
   _target = (address) t;
 }
 
@@ -428,12 +407,10 @@ void internal_word_Relocation::pack_data_to(CodeSection* dest) {
   // Check whether my target address is valid within this section.
   // If not, strengthen the relocation type to point to another section.
   int sindex = _section;
-  if (sindex == CodeBuffer::SECT_NONE && _target != NULL
-      && (!dest->allocates(_target) || _target == dest->locs_point())) {
+  if (sindex == CodeBuffer::SECT_NONE && _target != NULL && (!dest->allocates(_target) || _target == dest->locs_point())) {
     sindex = dest->outer()->section_index_of(_target);
     guarantee(sindex != CodeBuffer::SECT_NONE, "must belong somewhere");
     relocInfo* base = dest->locs_end() - 1;
-    assert(base->type() == this->type(), "sanity");
     // Change the written type, to be section_word_type instead.
     base->set_type(relocInfo::section_word_type);
   }
@@ -443,19 +420,14 @@ void internal_word_Relocation::pack_data_to(CodeSection* dest) {
   // in the code stream.  We use a section_word relocation for such cases.
 
   if (sindex == CodeBuffer::SECT_NONE) {
-    assert(type() == relocInfo::internal_word_type, "must be base class");
     guarantee(_target == NULL || dest->allocates2(_target), "must be within the given code section");
     jint x0 = scaled_offset_null_special(_target, dest->locs_point());
-    assert(!(x0 == 0 && _target != NULL), "correct encoding of null target");
     p = pack_1_int_to(p, x0);
   } else {
-    assert(_target != NULL, "sanity");
     CodeSection* sect = dest->outer()->code_section(sindex);
     guarantee(sect->allocates2(_target), "must be in correct section");
     address base = sect->start();
     jint offset = scaled_offset(_target, base);
-    assert((uint)sindex < (uint)CodeBuffer::SECT_LIMIT, "sanity");
-    assert(CodeBuffer::SECT_LIMIT <= (1 << section_width), "section_width++");
     p = pack_1_int_to(p, (offset << section_width) | sindex);
   }
 
@@ -545,7 +517,6 @@ void metadata_Relocation::verify_metadata_relocation() {
 }
 
 address virtual_call_Relocation::cached_value() {
-  assert(_cached_value != NULL && _cached_value < addr(), "must precede ic_call");
   return _cached_value;
 }
 
@@ -553,8 +524,6 @@ Method* virtual_call_Relocation::method_value() {
   CompiledMethod* cm = code();
   if (cm == NULL) return (Method*)NULL;
   Metadata* m = cm->metadata_at(_method_index);
-  assert(m != NULL || _method_index == 0, "should be non-null for non-zero index");
-  assert(m == NULL || m->is_method(), "not a method");
   return (Method*)m;
 }
 
@@ -580,8 +549,6 @@ Method* opt_virtual_call_Relocation::method_value() {
   CompiledMethod* cm = code();
   if (cm == NULL) return (Method*)NULL;
   Metadata* m = cm->metadata_at(_method_index);
-  assert(m != NULL || _method_index == 0, "should be non-null for non-zero index");
-  assert(m == NULL || m->is_method(), "not a method");
   return (Method*)m;
 }
 
@@ -612,8 +579,6 @@ Method* static_call_Relocation::method_value() {
   CompiledMethod* cm = code();
   if (cm == NULL) return (Method*)NULL;
   Metadata* m = cm->metadata_at(_method_index);
-  assert(m != NULL || _method_index == 0, "should be non-null for non-zero index");
-  assert(m == NULL || m->is_method(), "not a method");
   return (Method*)m;
 }
 
@@ -683,7 +648,6 @@ void external_word_Relocation::fix_relocation_after_move(const CodeBuffer* src, 
   }
   // Probably this reference is absolute, not relative, so the
   // following is probably a no-op.
-  assert(src->section_index_of(target) == CodeBuffer::SECT_NONE, "sanity");
   set_value(target);
 }
 

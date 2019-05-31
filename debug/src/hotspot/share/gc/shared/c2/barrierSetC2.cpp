@@ -51,7 +51,6 @@ Node* BarrierSetC2::store_at_resolved(C2Access& access, C2AccessValue& val) cons
   bool requires_atomic_access = (decorators & MO_UNORDERED) == 0;
 
   bool in_native = (decorators & IN_NATIVE) != 0;
-  assert(!in_native, "not supported yet");
 
   if (access.type() == T_DOUBLE) {
     Node* new_val = kit->dstore_rounding(val.node());
@@ -80,7 +79,6 @@ Node* BarrierSetC2::load_at_resolved(C2Access& access, const Type* val_type) con
   bool pinned = (decorators & C2_PINNED_LOAD) != 0;
 
   bool in_native = (decorators & IN_NATIVE) != 0;
-  assert(!in_native, "not supported yet");
 
   MemNode::MemOrd mo = access.mem_node_mo();
   LoadNode::ControlDependency dep = pinned ? LoadNode::Pinned : LoadNode::DependsOnlyOnTest;
@@ -209,7 +207,6 @@ MemNode::MemOrd C2Access::mem_node_mo() const {
     } else if (is_write) {
       return MemNode::release;
     } else {
-      assert(is_read, "what else?");
       return MemNode::acquire;
     }
   } else if ((_decorators & MO_RELEASE) != 0) {
@@ -251,7 +248,6 @@ void C2Access::fixup_decorators() {
     const TypePtr* adr_type = _addr.type();
     Node* adr = _addr.node();
     if (!needs_cpu_membar() && adr_type->isa_instptr()) {
-      assert(adr_type->meet(TypePtr::NULL_PTR) != adr_type->remove_speculative(), "should be not null");
       intptr_t offset = Type::OffsetBot;
       AddPNode::Ideal_base_and_offset(adr, &_kit->gvn(), offset);
       if (offset >= 0) {
@@ -277,7 +273,6 @@ static void pin_atomic_op(C2AtomicAccess& access) {
   // when their results aren't used.
   GraphKit* kit = access.kit();
   Node* load_store = access.raw_access();
-  assert(load_store != NULL, "must pin atomic op");
   Node* proj = kit->gvn().transform(new SCMemProjNode(load_store));
   kit->set_memory(proj, access.alias_idx());
 }
@@ -522,7 +517,6 @@ void BarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* size, bool i
   // 12 - 64-bit VM, compressed klass
   // 16 - 64-bit VM, normal klass
   if (base_off % BytesPerLong != 0) {
-    assert(UseCompressedClassPointers, "");
     if (is_array) {
       // Exclude length to copy by 8 bytes words.
       base_off += sizeof(int);
@@ -530,7 +524,6 @@ void BarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* size, bool i
       // Include klass to copy by 8 bytes words.
       base_off = instanceOopDesc::klass_offset_in_bytes();
     }
-    assert(base_off % BytesPerLong == 0, "expect 8 bytes alignment");
   }
   Node* src_base  = kit->basic_plus_adr(src,  base_off);
   Node* dst_base = kit->basic_plus_adr(dst, base_off);
@@ -538,7 +531,7 @@ void BarrierSetC2::clone(GraphKit* kit, Node* src, Node* dst, Node* size, bool i
   // Compute the length also, if needed:
   Node* countx = size;
   countx = kit->gvn().transform(new SubXNode(countx, kit->MakeConX(base_off)));
-  countx = kit->gvn().transform(new URShiftXNode(countx, kit->intcon(LogBytesPerLong) ));
+  countx = kit->gvn().transform(new URShiftXNode(countx, kit->intcon(LogBytesPerLong)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
 

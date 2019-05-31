@@ -57,7 +57,7 @@ class VM_CGC_Operation: public VM_Operation {
 
 public:
   VM_CGC_Operation(VoidClosure* cl, const char *printGCMsg)
-    : _cl(cl), _printGCMessage(printGCMsg), _gc_id(GCId::current()) {}
+    : _cl(cl), _printGCMessage(printGCMsg), _gc_id(GCId::current()) { }
   virtual VMOp_Type type() const { return VMOp_CGC_Operation; }
   virtual void doit();
   virtual bool doit_prologue();

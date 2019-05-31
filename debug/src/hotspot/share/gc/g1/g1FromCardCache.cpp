@@ -23,11 +23,8 @@ void G1FromCardCache::initialize(uint num_par_rem_sets, uint max_num_regions) {
 }
 
 void G1FromCardCache::invalidate(uint start_idx, size_t new_num_regions) {
-  guarantee((size_t)start_idx + new_num_regions <= max_uintx,
-            "Trying to invalidate beyond maximum region, from %u size " SIZE_FORMAT,
-            start_idx, new_num_regions);
+  guarantee((size_t)start_idx + new_num_regions <= max_uintx, "Trying to invalidate beyond maximum region, from %u size " SIZE_FORMAT, start_idx, new_num_regions);
   uint end_idx = (start_idx + (uint)new_num_regions);
-  assert(end_idx <= _max_regions, "Must be within max.");
 
   for (uint i = 0; i < G1RemSet::num_par_rem_sets(); i++) {
     for (uint j = start_idx; j < end_idx; j++) {

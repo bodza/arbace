@@ -87,7 +87,6 @@ void LogTagSet::write(LogLevelType level, const char* fmt, ...) {
 const size_t vwrite_buffer_size = 512;
 
 void LogTagSet::vwrite(LogLevelType level, const char* fmt, va_list args) {
-  assert(level >= LogLevel::First && level <= LogLevel::Last, "Log level:%d is incorrect", level);
   char buf[vwrite_buffer_size];
   va_list saved_args;           // For re-format on buf overflow.
   va_copy(saved_args, args);
@@ -100,13 +99,11 @@ void LogTagSet::vwrite(LogLevelType level, const char* fmt, va_list args) {
     // Buffer too small. Just call printf to find out the length for realloc below.
     ret = os::vsnprintf(buf, sizeof(buf), fmt, args);
   }
-  assert(ret >= 0, "Log message buffer issue");
   if ((size_t)ret >= sizeof(buf)) {
     size_t newbuf_len = prefix_len + ret + 1;
     char* newbuf = NEW_C_HEAP_ARRAY(char, newbuf_len, mtLogging);
     prefix_len = _write_prefix(newbuf, newbuf_len);
     ret = os::vsnprintf(newbuf + prefix_len, newbuf_len - prefix_len, fmt, saved_args);
-    assert(ret >= 0, "Log message buffer issue");
     log(level, newbuf);
     FREE_C_HEAP_ARRAY(char, newbuf);
   } else {
@@ -140,7 +137,6 @@ void LogTagSet::list_all_tagsets(outputStream* out) {
     ts->label(buf, sizeof(buf), "+");
     tagset_labels[idx++] = os::strdup_check_oom(buf, mtLogging);
   }
-  assert(idx == _ntagsets, "_ntagsets and list of tagsets not in sync");
 
   // Sort them lexicographically
   qsort(tagset_labels, _ntagsets, sizeof(*tagset_labels), qsort_strcmp);

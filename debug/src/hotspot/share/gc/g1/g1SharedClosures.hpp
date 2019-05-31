@@ -19,5 +19,5 @@ public:
     _oops(g1h, pss),
     _oops_in_cld(g1h, pss),
     _clds(&_oops_in_cld, process_only_dirty, must_claim_cld),
-    _codeblobs(&_oops) {}
+    _codeblobs(&_oops) { }
 };

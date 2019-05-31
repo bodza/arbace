@@ -77,17 +77,15 @@ class FrameMap : public CompilationResourceObj {
   intArray*           _argument_locations;
 
   void check_spill_index   (int spill_index)   const {
-    assert(spill_index   >= 0, "bad index"); }
+    }
   void check_monitor_index (int monitor_index) const {
-    assert(monitor_index >= 0 && monitor_index < _num_monitors, "bad index"); }
+    }
 
   static Register cpu_rnr2reg (int rnr) {
-    assert(_init_done, "tables not initialized");
     return _cpu_rnr2reg[rnr];
   }
 
   static int cpu_reg2rnr (Register reg) {
-    assert(_init_done, "tables not initialized");
     return _cpu_reg2rnr[reg->encoding()];
   }
 
@@ -97,7 +95,6 @@ class FrameMap : public CompilationResourceObj {
   }
 
   void update_reserved_argument_area_size (int size) {
-    assert(size >= 0, "check");
     _reserved_argument_area_size = MAX2(_reserved_argument_area_size, size);
   }
 
@@ -155,15 +152,12 @@ class FrameMap : public CompilationResourceObj {
 
   int   reserved_argument_area_size () const     { return _reserved_argument_area_size; }
   int   framesize                   () const     {
-    assert(_framesize != -1, "hasn't been calculated");
     return _framesize; }
   ByteSize framesize_in_bytes       () const     { return in_ByteSize(framesize() * 4); }
   int   num_monitors                () const     { return _num_monitors; }
   int   num_spills                  () const     {
-    assert(_num_spills >= 0, "not set");
     return _num_spills; }
   int   argcount              () const     {
-    assert(_argcount >= 0, "not set");
     return _argcount; }
 
   int oop_map_arg_count() const { return _oop_map_arg_count; }
@@ -209,12 +203,10 @@ class FrameMap : public CompilationResourceObj {
   VMReg regname(LIR_Opr opr) const;
 
   static LIR_Opr caller_save_cpu_reg_at(int i) {
-    assert(i >= 0 && i < max_nof_caller_save_cpu_regs, "out of bounds");
     return _caller_save_cpu_regs[i];
   }
 
   static LIR_Opr caller_save_fpu_reg_at(int i) {
-    assert(i >= 0 && i < nof_caller_save_fpu_regs, "out of bounds");
     return _caller_save_fpu_regs[i];
   }
 
@@ -232,7 +224,7 @@ class CallingConvention: public ResourceObj {
  public:
   CallingConvention (LIR_OprList* args, int reserved_stack_slots)
     : _args(args)
-    , _reserved_stack_slots(reserved_stack_slots)  {}
+    , _reserved_stack_slots(reserved_stack_slots)  { }
 
   LIR_OprList* args()       { return _args; }
 

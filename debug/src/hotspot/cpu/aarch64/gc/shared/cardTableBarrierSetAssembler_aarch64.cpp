@@ -11,15 +11,11 @@
 void CardTableBarrierSetAssembler::store_check(MacroAssembler* masm, Register obj, Address dst) {
 
   BarrierSet* bs = BarrierSet::barrier_set();
-  assert(bs->kind() == BarrierSet::CardTableBarrierSet, "Wrong barrier set kind");
 
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
   CardTable* ct = ctbs->card_table();
-  assert(sizeof(*ct->byte_map_base()) == sizeof(jbyte), "adjust this code");
 
   __ lsr(obj, obj, CardTable::card_shift);
-
-  assert(CardTable::dirty_card_val() == 0, "must be");
 
   __ load_byte_map_base(rscratch1);
 
@@ -42,7 +38,6 @@ void CardTableBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssembl
   BarrierSet* bs = BarrierSet::barrier_set();
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
   CardTable* ct = ctbs->card_table();
-  assert(sizeof(*ct->byte_map_base()) == sizeof(jbyte), "adjust this code");
 
   Label L_loop;
 

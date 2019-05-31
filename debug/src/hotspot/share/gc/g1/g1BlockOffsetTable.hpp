@@ -31,7 +31,6 @@ private:
   u_char* _offset_array;          // byte array keeping backwards offsets
 
   void check_offset(size_t offset, const char* msg) const {
-    assert(offset <= BOTConstants::N_words, "%s - offset: " SIZE_FORMAT ", N_words: %u", msg, offset, BOTConstants::N_words);
   }
 
   // Bounds checking accessors:
@@ -50,7 +49,7 @@ private:
 
   bool is_card_boundary(HeapWord* p) const;
 
-  void check_index(size_t index, const char* msg) const {};
+  void check_index(size_t index, const char* msg) const { };
 
 public:
 
@@ -198,9 +197,9 @@ public:
   }
 
   void set_for_starts_humongous(HeapWord* obj_top, size_t fill_size);
-  void set_object_can_span(bool can_span) {};
+  void set_object_can_span(bool can_span) { };
 
-  void print_on(outputStream* out) {};
+  void print_on(outputStream* out) { };
 };
 
 #endif

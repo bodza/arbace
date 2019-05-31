@@ -23,8 +23,8 @@
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
 
-#define DTRACE_MONITOR_WAIT_PROBE(obj, thread, millis, mon)    {;}
-#define DTRACE_MONITOR_PROBE(probe, obj, thread, mon)          {;}
+#define DTRACE_MONITOR_WAIT_PROBE(obj, thread, millis, mon)    { }
+#define DTRACE_MONITOR_PROBE(probe, obj, thread, mon)          { }
 
 // Tunables ...
 // The knob* variables are effectively final.  Once set they should
@@ -197,9 +197,6 @@ void ObjectMonitor::enter(TRAPS) {
 
   void * cur = Atomic::cmpxchg(Self, &_owner, (void*)NULL);
   if (cur == NULL) {
-    // Either ASSERT _recursions == 0 or explicitly set _recursions = 0.
-    assert(_recursions == 0, "invariant");
-    assert(_owner == Self, "invariant");
     return;
   }
 
@@ -210,7 +207,6 @@ void ObjectMonitor::enter(TRAPS) {
   }
 
   if (Self->is_lock_owned ((address)cur)) {
-    assert(_recursions == 0, "internal state error");
     _recursions = 1;
     // Commute owner from a thread-specific on-stack BasicLockObject address to
     // a full-fledged "Thread *".
@@ -219,7 +215,6 @@ void ObjectMonitor::enter(TRAPS) {
   }
 
   // We've encountered genuine contention.
-  assert(Self->_Stalled == 0, "invariant");
   Self->_Stalled = intptr_t(this);
 
   // Try one round of spinning *before* enqueueing Self
@@ -228,21 +223,11 @@ void ObjectMonitor::enter(TRAPS) {
   // Note that if we acquire the monitor from an initial spin
   // we forgo posting JVMTI events and firing DTRACE probes.
   if (Knob_SpinEarly && TrySpin (Self) > 0) {
-    assert(_owner == Self, "invariant");
-    assert(_recursions == 0, "invariant");
-    assert(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
     Self->_Stalled = 0;
     return;
   }
 
-  assert(_owner != Self, "invariant");
-  assert(_succ != Self, "invariant");
-  assert(Self->is_Java_thread(), "invariant");
   JavaThread * jt = (JavaThread *) Self;
-  assert(!SafepointSynchronize::is_at_safepoint(), "invariant");
-  assert(jt->thread_state() != _thread_blocked, "invariant");
-  assert(this->object() != NULL, "invariant");
-  assert(_count >= 0, "invariant");
 
   // Prevent deflation at STW-time.  See deflate_idle_monitors() and is_busy().
   // Ensure the object-monitor relationship remains stable while there's contention.
@@ -298,14 +283,7 @@ void ObjectMonitor::enter(TRAPS) {
   }
 
   Atomic::dec(&_count);
-  assert(_count >= 0, "invariant");
   Self->_Stalled = 0;
-
-  // Must either set _recursions = 0 or ASSERT _recursions == 0.
-  assert(_recursions == 0, "invariant");
-  assert(_owner == Self, "invariant");
-  assert(_succ != Self, "invariant");
-  assert(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
 
   // The thread -- now the owner -- is back in vm mode.
   // Report the glorious news via TI,DTrace and jvmstat.
@@ -335,9 +313,6 @@ int ObjectMonitor::TryLock(Thread * Self) {
   void * own = _owner;
   if (own != NULL) return 0;
   if (Atomic::replace_if_null(Self, &_owner)) {
-    // Either guarantee _recursions == 0 or set _recursions = 0.
-    assert(_recursions == 0, "invariant");
-    assert(_owner == Self, "invariant");
     return 1;
   }
   // The lock had been free momentarily, but we lost the race to the lock.
@@ -351,14 +326,9 @@ int ObjectMonitor::TryLock(Thread * Self) {
 
 void ObjectMonitor::EnterI(TRAPS) {
   Thread * const Self = THREAD;
-  assert(Self->is_Java_thread(), "invariant");
-  assert(((JavaThread *) Self)->thread_state() == _thread_blocked, "invariant");
 
   // Try the lock - TATAS
   if (TryLock (Self) > 0) {
-    assert(_succ != Self, "invariant");
-    assert(_owner == Self, "invariant");
-    assert(_Responsible != Self, "invariant");
     return;
   }
 
@@ -372,16 +342,8 @@ void ObjectMonitor::EnterI(TRAPS) {
   // effects.
 
   if (TrySpin (Self) > 0) {
-    assert(_owner == Self, "invariant");
-    assert(_succ != Self, "invariant");
-    assert(_Responsible != Self, "invariant");
     return;
   }
-
-  // The Spin failed -- Enqueue and park the thread ...
-  assert(_succ != Self, "invariant");
-  assert(_owner != Self, "invariant");
-  assert(_Responsible != Self, "invariant");
 
   // Enqueue "Self" on ObjectMonitor's _cxq.
   //
@@ -409,9 +371,6 @@ void ObjectMonitor::EnterI(TRAPS) {
     // Interference - the CAS failed because _cxq changed.  Just retry.
     // As an optional optimization we retry the lock.
     if (TryLock (Self) > 0) {
-      assert(_succ != Self, "invariant");
-      assert(_owner == Self, "invariant");
-      assert(_Responsible != Self, "invariant");
       return;
     }
   }
@@ -463,7 +422,6 @@ void ObjectMonitor::EnterI(TRAPS) {
   for (;;) {
 
     if (TryLock(Self) > 0) break;
-    assert(_owner != Self, "invariant");
 
     if ((SyncFlags & 2) && _Responsible == NULL) {
       Atomic::replace_if_null(Self, &_Responsible);
@@ -528,16 +486,13 @@ void ObjectMonitor::EnterI(TRAPS) {
   // The head of cxq is volatile but the interior is stable.
   // In addition, Self.TState is stable.
 
-  assert(_owner == Self, "invariant");
-  assert(object() != NULL, "invariant");
   // I'd like to write:
-  //   guarantee (((oop)(object()))->mark() == markOopDesc::encode(this), "invariant") ;
+  //   guarantee (((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
   // but as we're at a safepoint that's not safe.
 
   UnlinkAfterAcquire(Self, &node);
   if (_succ == Self) _succ = NULL;
 
-  assert(_succ != Self, "invariant");
   if (_Responsible == Self) {
     _Responsible = NULL;
     OrderAccess::fence(); // Dekker pivot-point
@@ -600,19 +555,12 @@ void ObjectMonitor::EnterI(TRAPS) {
 // loop accordingly.
 
 void ObjectMonitor::ReenterI(Thread * Self, ObjectWaiter * SelfNode) {
-  assert(Self != NULL, "invariant");
-  assert(SelfNode != NULL, "invariant");
-  assert(SelfNode->_thread == Self, "invariant");
-  assert(_waiters > 0, "invariant");
-  assert(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
-  assert(((JavaThread *)Self)->thread_state() != _thread_blocked, "invariant");
   JavaThread * jt = (JavaThread *) Self;
 
   int nWakeups = 0;
   for (;;) {
     ObjectWaiter::TStates v = SelfNode->TState;
     guarantee(v == ObjectWaiter::TS_ENTER || v == ObjectWaiter::TS_CXQ, "invariant");
-    assert(_owner != Self, "invariant");
 
     if (TryLock(Self) > 0) break;
     if (TrySpin(Self) > 0) break;
@@ -678,11 +626,8 @@ void ObjectMonitor::ReenterI(Thread * Self, ObjectWaiter * SelfNode) {
   // The head of cxq is volatile but the interior is stable.
   // In addition, Self.TState is stable.
 
-  assert(_owner == Self, "invariant");
-  assert(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
   UnlinkAfterAcquire(Self, SelfNode);
   if (_succ == Self) _succ = NULL;
-  assert(_succ != Self, "invariant");
   SelfNode->TState = ObjectWaiter::TS_RUN;
   OrderAccess::fence();      // see comments at the end of EnterI()
 }
@@ -692,8 +637,6 @@ void ObjectMonitor::ReenterI(Thread * Self, ObjectWaiter * SelfNode) {
 // unlinking the thread until ::exit()-time.
 
 void ObjectMonitor::UnlinkAfterAcquire(Thread *Self, ObjectWaiter *SelfNode) {
-  assert(_owner == Self, "invariant");
-  assert(SelfNode->_thread == Self, "invariant");
 
   if (SelfNode->TState == ObjectWaiter::TS_ENTER) {
     // Normal case: remove Self from the DLL EntryList .
@@ -703,11 +646,8 @@ void ObjectMonitor::UnlinkAfterAcquire(Thread *Self, ObjectWaiter *SelfNode) {
     if (nxt != NULL) nxt->_prev = prv;
     if (prv != NULL) prv->_next = nxt;
     if (SelfNode == _EntryList) _EntryList = nxt;
-    assert(nxt == NULL || nxt->TState == ObjectWaiter::TS_ENTER, "invariant");
-    assert(prv == NULL || prv->TState == ObjectWaiter::TS_ENTER, "invariant");
     TEVENT(Unlink from EntryList);
   } else {
-    assert(SelfNode->TState == ObjectWaiter::TS_CXQ, "invariant");
     // Inopportune interleaving -- Self is still on the cxq.
     // This usually means the enqueue of self raced an exiting thread.
     // Normally we'll find Self near the front of the cxq, so
@@ -722,26 +662,18 @@ void ObjectMonitor::UnlinkAfterAcquire(Thread *Self, ObjectWaiter *SelfNode) {
     // so it might as well be now.
 
     ObjectWaiter * v = _cxq;
-    assert(v != NULL, "invariant");
     if (v != SelfNode || Atomic::cmpxchg(SelfNode->_next, &_cxq, v) != v) {
       // The CAS above can fail from interference IFF a "RAT" arrived.
       // In that case Self must be in the interior and can no longer be
       // at the head of cxq.
       if (v == SelfNode) {
-        assert(_cxq != v, "invariant");
         v = _cxq;          // CAS above failed - start scan at head of list
       }
       ObjectWaiter * p;
       ObjectWaiter * q = NULL;
       for (p = v; p != NULL && p != SelfNode; p = p->_next) {
         q = p;
-        assert(p->TState == ObjectWaiter::TS_CXQ, "invariant");
       }
-      assert(v != SelfNode, "invariant");
-      assert(p == SelfNode, "Node not found on cxq");
-      assert(p != _cxq, "invariant");
-      assert(q != NULL, "invariant");
-      assert(q->_next == p, "invariant");
       q->_next = p->_next;
     }
     TEVENT(Unlink from cxq);
@@ -759,7 +691,7 @@ void ObjectMonitor::UnlinkAfterAcquire(Thread *Self, ObjectWaiter *SelfNode) {
 // This inhibits GC, which in turn inhibits asynchronous (and
 // inopportune) reclamation of "this".
 //
-// We'd like to assert that: (THREAD->thread_state() != _thread_blocked) ;
+// We'd like to assert that: (THREAD->thread_state() != _thread_blocked);
 // There's one exception to the claim above, however.  EnterI() can call
 // exit() to drop a lock if the acquirer has been externally suspended.
 // In that case exit() is called with _thread_state as _thread_blocked,
@@ -813,7 +745,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // We don't need to hold _mutex for this transition.
       // Non-null to Non-null is safe as long as all readers can
       // tolerate either flavor.
-      assert(_recursions == 0, "invariant");
       _owner = THREAD;
       _recursions = 0;
     } else {
@@ -827,7 +758,7 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // unbalanced JNI locking. TODO: CheckJNICalls.
       // See also: CR4414101
       TEVENT(Exit - Throw IMSX);
-      assert(false, "Non-balanced monitor enter/exit! Likely JNI locking");
+      ShouldNotReachHere();
       return;
     }
   }
@@ -845,7 +776,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
   }
 
   for (;;) {
-    assert(THREAD == _owner, "invariant");
 
     if (Knob_ExitPolicy == 0) {
       // release semantics: prior loads and stores from within the critical section
@@ -950,8 +880,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // Try to directly wake a successor from the cxq.
       // If successful, the successor will need to unlink itself from cxq.
       w = _cxq;
-      assert(w != NULL, "invariant");
-      assert(w->TState == ObjectWaiter::TS_CXQ, "Invariant");
       ExitEpilog(Self, w);
       return;
     }
@@ -964,12 +892,10 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // The following loop is tantamount to: w = swap(&cxq, NULL)
       w = _cxq;
       for (;;) {
-        assert(w != NULL, "Invariant");
         ObjectWaiter * u = Atomic::cmpxchg((ObjectWaiter*)NULL, &_cxq, w);
         if (u == w) break;
         w = u;
       }
-      assert(w != NULL, "invariant");
 
       ObjectWaiter * q = NULL;
       ObjectWaiter * p;
@@ -1005,12 +931,10 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // The following loop is tantamount to: w = swap(&cxq, NULL)
       w = _cxq;
       for (;;) {
-        assert(w != NULL, "Invariant");
         ObjectWaiter * u = Atomic::cmpxchg((ObjectWaiter*)NULL, &_cxq, w);
         if (u == w) break;
         w = u;
       }
-      assert(w != NULL, "invariant");
 
       ObjectWaiter * q = NULL;
       ObjectWaiter * p;
@@ -1044,7 +968,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // reacquires the lock and then finds itself on the EntryList.
       // Given all that, we have to tolerate the circumstance where "w" is
       // associated with Self.
-      assert(w->TState == ObjectWaiter::TS_ENTER, "invariant");
       ExitEpilog(Self, w);
       return;
     }
@@ -1058,15 +981,11 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
     // First, detach _cxq.
     // The following loop is tantamount to: w = swap(&cxq, NULL)
     for (;;) {
-      assert(w != NULL, "Invariant");
       ObjectWaiter * u = Atomic::cmpxchg((ObjectWaiter*)NULL, &_cxq, w);
       if (u == w) break;
       w = u;
     }
     TEVENT(Inflated exit - drain cxq into EntryList);
-
-    assert(w != NULL, "invariant");
-    assert(_EntryList == NULL, "invariant");
 
     // Convert the LIFO SLL anchored by _cxq into a DLL.
     // The list reorganization step operates in O(LENGTH(w)) time.
@@ -1093,7 +1012,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
         t = u;
       }
       _EntryList  = s;
-      assert(s != NULL, "invariant");
     } else {
       // QMode == 0 or QMode == 2
       _EntryList = w;
@@ -1161,7 +1079,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
 bool ObjectMonitor::ExitSuspendEquivalent(JavaThread * jSelf) {
   const int Mode = Knob_FastHSSEC;
   if (Mode && !jSelf->is_external_suspend()) {
-    assert(jSelf->is_suspend_equivalent(), "invariant");
     jSelf->clear_suspend_equivalent();
     if (2 == Mode) OrderAccess::storeload();
     if (!jSelf->is_external_suspend()) return false;
@@ -1173,7 +1090,6 @@ bool ObjectMonitor::ExitSuspendEquivalent(JavaThread * jSelf) {
 }
 
 void ObjectMonitor::ExitEpilog(Thread * Self, ObjectWaiter * Wakee) {
-  assert(_owner == Self, "invariant");
 
   // Exit protocol:
   // 1. ST _succ = wakee
@@ -1215,14 +1131,12 @@ void ObjectMonitor::ExitEpilog(Thread * Self, ObjectWaiter * Wakee) {
 // thread due to contention.
 intptr_t ObjectMonitor::complete_exit(TRAPS) {
   Thread * const Self = THREAD;
-  assert(Self->is_Java_thread(), "Must be Java thread!");
   JavaThread *jt = (JavaThread *)THREAD;
 
   DeferredInitialize();
 
   if (THREAD != _owner) {
     if (THREAD->is_lock_owned ((address)_owner)) {
-      assert(_recursions == 0, "internal state error");
       _owner = THREAD;   // Convert from basiclock addr to Thread addr
       _recursions = 0;
     }
@@ -1240,7 +1154,6 @@ intptr_t ObjectMonitor::complete_exit(TRAPS) {
 // complete_exit/reenter operate as a wait without waiting
 void ObjectMonitor::reenter(intptr_t recursions, TRAPS) {
   Thread * const Self = THREAD;
-  assert(Self->is_Java_thread(), "Must be Java thread!");
   JavaThread *jt = (JavaThread *)THREAD;
 
   guarantee(_owner != Self, "reenter already owner");
@@ -1274,7 +1187,6 @@ void ObjectMonitor::reenter(intptr_t recursions, TRAPS) {
 
 void ObjectMonitor::check_slow(TRAPS) {
   TEVENT(check_slow - throw IMSX);
-  assert(THREAD != _owner && !THREAD->is_lock_owned((address) _owner), "must not be owner");
   THROW_MSG(vmSymbols::java_lang_IllegalMonitorStateException(), "current thread not owner");
 }
 
@@ -1289,8 +1201,6 @@ static void post_monitor_wait_event(EventJavaMonitorWait* event,
                                     jlong notifier_tid,
                                     jlong timeout,
                                     bool timedout) {
-  assert(event != NULL, "invariant");
-  assert(monitor != NULL, "invariant");
   event->set_monitorClass(((oop)monitor->object())->klass());
   event->set_timeout(timeout);
   event->set_address((uintptr_t)monitor->object_addr());
@@ -1306,7 +1216,6 @@ static void post_monitor_wait_event(EventJavaMonitorWait* event,
 // will need to be replicated in complete_exit
 void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
   Thread * const Self = THREAD;
-  assert(Self->is_Java_thread(), "Must be Java thread!");
   JavaThread *jt = (JavaThread *)THREAD;
 
   DeferredInitialize();
@@ -1328,7 +1237,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
 
   TEVENT(Wait);
 
-  assert(Self->_Stalled == 0, "invariant");
   Self->_Stalled = intptr_t(this);
   jt->set_current_waiting_monitor(this);
 
@@ -1414,7 +1322,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       Thread::SpinAcquire(&_WaitSetLock, "WaitSet - unlink");
       if (node.TState == ObjectWaiter::TS_WAIT) {
         DequeueSpecificWaiter(&node);       // unlink from WaitSet
-        assert(node._notified == 0, "invariant");
         node.TState = ObjectWaiter::TS_RUN;
       }
       Thread::SpinRelease(&_WaitSetLock);
@@ -1442,10 +1349,8 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
 
     OrderAccess::fence();
 
-    assert(Self->_Stalled != 0, "invariant");
     Self->_Stalled = 0;
 
-    assert(_owner != Self, "invariant");
     ObjectWaiter::TStates v = node.TState;
     if (v == ObjectWaiter::TS_RUN) {
       enter(Self);
@@ -1460,8 +1365,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     // Node is about to go out-of-scope, but even if it were immortal we wouldn't
     // want residual elements associated with this thread left on any lists.
     guarantee(node.TState == ObjectWaiter::TS_RUN, "invariant");
-    assert(_owner == Self, "invariant");
-    assert(_succ != Self, "invariant");
   }
 
   jt->set_current_waiting_monitor(NULL);
@@ -1469,11 +1372,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
   guarantee(_recursions == 0, "invariant");
   _recursions = save;     // restore the old recursion count
   _waiters--;             // decrement the number of waiters
-
-  // Verify a few postconditions
-  assert(_owner == Self, "invariant");
-  assert(_succ != Self, "invariant");
-  assert(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
 
   if (SyncFlags & 32) {
     OrderAccess::fence();
@@ -1520,9 +1418,6 @@ void ObjectMonitor::INotify(Thread * Self) {
 
     ObjectWaiter * list = _EntryList;
     if (list != NULL) {
-      assert(list->_prev == NULL, "invariant");
-      assert(list->TState == ObjectWaiter::TS_ENTER, "invariant");
-      assert(list != iterator, "invariant");
     }
 
     if (policy == 0) {       // prepend to EntryList
@@ -1544,8 +1439,7 @@ void ObjectMonitor::INotify(Thread * Self) {
         // the EntryList.  We can make tail access constant-time by converting to
         // a CDLL instead of using our current DLL.
         ObjectWaiter * tail;
-        for (tail = list; tail->_next != NULL; tail = tail->_next) {}
-        assert(tail != NULL && tail->_next == NULL, "invariant");
+        for (tail = list; tail->_next != NULL; tail = tail->_next) { }
         tail->_next = iterator;
         iterator->_prev = tail;
         iterator->_next = NULL;
@@ -1899,7 +1793,7 @@ int ObjectMonitor::TrySpin(Thread * Self) {
     // Abort the spin if the owner is not executing.
     // The owner must be executing in order to drop the lock.
     // Spinning while the owner is OFFPROC is idiocy.
-    // Consider: ctr -= RunnablePenalty ;
+    // Consider: ctr -= RunnablePenalty;
     if (Knob_OState && NotRunnable (Self, ox)) {
       TEVENT(Spin abort - notrunnable);
       goto Abort;
@@ -1992,8 +1886,7 @@ int ObjectMonitor::NotRunnable(Thread * Self, Thread * ox) {
     return BlockedOn != intptr_t(this) && _owner == ox;
   }
 
-  assert(sizeof(((JavaThread *)ox)->_thread_state == sizeof(int)), "invariant");
-  int jst = SafeFetch32((int *) &((JavaThread *) ox)->_thread_state, -1);;
+  int jst = SafeFetch32((int *) &((JavaThread *) ox)->_thread_state, -1);
   // consider also: jst != _thread_in_Java -- but that's overspecific.
   return jst == _thread_blocked || jst == _thread_in_native;
 }
@@ -2010,7 +1903,6 @@ ObjectWaiter::ObjectWaiter(Thread* thread) {
   _thread   = thread;
   _event    = thread->_ParkEvent;
   _active   = false;
-  assert(_event != NULL, "invariant");
 }
 
 void ObjectWaiter::wait_reenter_begin(ObjectMonitor * const mon) {
@@ -2024,9 +1916,6 @@ void ObjectWaiter::wait_reenter_end(ObjectMonitor * const mon) {
 }
 
 inline void ObjectMonitor::AddWaiter(ObjectWaiter* node) {
-  assert(node != NULL, "should not add NULL node");
-  assert(node->_prev == NULL, "node already in list");
-  assert(node->_next == NULL, "node already in list");
   // put node at end of queue (circular doubly linked list)
   if (_WaitSet == NULL) {
     _WaitSet = node;
@@ -2035,7 +1924,6 @@ inline void ObjectMonitor::AddWaiter(ObjectWaiter* node) {
   } else {
     ObjectWaiter* head = _WaitSet;
     ObjectWaiter* tail = head->_prev;
-    assert(tail->_next == head, "invariant check");
     tail->_next = node;
     head->_prev = node;
     node->_next = head;
@@ -2053,20 +1941,14 @@ inline ObjectWaiter* ObjectMonitor::DequeueWaiter() {
 }
 
 inline void ObjectMonitor::DequeueSpecificWaiter(ObjectWaiter* node) {
-  assert(node != NULL, "should not dequeue NULL node");
-  assert(node->_prev != NULL, "node already removed from list");
-  assert(node->_next != NULL, "node already removed from list");
   // when the waiter has woken up because of interrupt,
   // timeout or other spurious wake-up, dequeue the
   // waiter from waiting list
   ObjectWaiter* next = node->_next;
   if (next == node) {
-    assert(node->_prev == node, "invariant check");
     _WaitSet = NULL;
   } else {
     ObjectWaiter* prev = node->_prev;
-    assert(prev->_next == node, "invariant check");
-    assert(next->_prev == node, "invariant check");
     next->_prev = prev;
     prev->_next = next;
     if (_WaitSet == node) {
@@ -2094,7 +1976,6 @@ PerfLongVariable * ObjectMonitor::_sync_MonExtant              = NULL;
 
 void ObjectMonitor::Initialize() {
   static int InitializationCompleted = 0;
-  assert(InitializationCompleted == 0, "invariant");
   InitializationCompleted = 1;
   if (UsePerfData) {
     EXCEPTION_MARK;
@@ -2137,7 +2018,7 @@ static int kvGetInt(char * kvList, const char * Key, int Default) {
   char * v = kvGet(kvList, Key);
   int rslt = v ? ::strtol(v, NULL, 0) : Default;
   if (Knob_ReportSettings && v != NULL) {
-    tty->print_cr("INFO: SyncKnob: %s %d(%d)", Key, rslt, Default) ;
+    tty->print_cr("INFO: SyncKnob: %s %d(%d)", Key, rslt, Default);
     tty->flush();
   }
   return rslt;

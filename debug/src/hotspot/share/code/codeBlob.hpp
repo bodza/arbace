@@ -121,11 +121,9 @@ public:
   // Casting
   nmethod* as_nmethod_or_null()                { return is_nmethod() ? (nmethod*) this : NULL; }
   nmethod* as_nmethod()                        {
-    assert(is_nmethod(), "must be nmethod");
     return (nmethod*) this; }
   CompiledMethod* as_compiled_method_or_null() { return is_compiled() ? (CompiledMethod*) this : NULL; }
   CompiledMethod* as_compiled_method()         {
-    assert(is_compiled(), "must be compiled");
     return (CompiledMethod*) this; }
   CodeBlob* as_codeblob_or_null() const        { return (CodeBlob*) this; }
 
@@ -135,9 +133,9 @@ public:
   relocInfo* relocation_end() const   { return (relocInfo*) _relocation_end; }
   address content_begin() const       { return _content_begin; }
   address content_end() const         { return _code_end; } // _code_end == _content_end is true for all types of blobs for now, it is also checked in the constructor
-  address code_begin() const          { return _code_begin;    }
+  address code_begin() const          { return _code_begin; }
   address code_end() const            { return _code_end; }
-  address data_end() const            { return _data_end;      }
+  address data_end() const            { return _data_end; }
 
   // This field holds the beginning of the const section in the old code buffer.
   // It is needed to fix relocations of pc-relative loads when resizing the
@@ -149,8 +147,8 @@ public:
   int size() const                               { return _size; }
   int header_size() const                        { return _header_size; }
   int relocation_size() const                    { return (address) relocation_end() - (address) relocation_begin(); }
-  int content_size() const                       { return           content_end()    -           content_begin();    }
-  int code_size() const                          { return           code_end()       -           code_begin();       }
+  int content_size() const                       { return           content_end()    -           content_begin(); }
+  int code_size() const                          { return           code_end()       -           code_begin(); }
   // Only used from CodeCache::free_unused_tail() after the Interpreter blob was trimmed
   void adjust_size(size_t used) {
     _size = (int)used;
@@ -160,11 +158,10 @@ public:
   }
 
   // Containment
-  bool blob_contains(address addr) const         { return header_begin()       <= addr && addr < data_end();       }
-  bool code_contains(address addr) const         { return code_begin()         <= addr && addr < code_end();       }
-  bool contains(address addr) const              { return content_begin()      <= addr && addr < content_end();    }
-  bool is_frame_complete_at(address addr) const  { return _frame_complete_offset != CodeOffsets::frame_never_safe &&
-                                                          code_contains(addr) && addr >= code_begin() + _frame_complete_offset; }
+  bool blob_contains(address addr) const         { return header_begin()       <= addr && addr < data_end(); }
+  bool code_contains(address addr) const         { return code_begin()         <= addr && addr < code_end(); }
+  bool contains(address addr) const              { return content_begin()      <= addr && addr < content_end(); }
+  bool is_frame_complete_at(address addr) const  { return _frame_complete_offset != CodeOffsets::frame_never_safe && code_contains(addr) && addr >= code_begin() + _frame_complete_offset; }
 
   // CodeCache support: really only used by the nmethods, but in order to get
   // asserts and certain bookkeeping to work in the CodeCache they are defined
@@ -211,7 +208,6 @@ public:
 
   // Transfer ownership of comments to this CodeBlob
   void set_strings(CodeStrings& strings) {
-    assert(!is_aot(), "invalid on aot");
     _strings.assign(strings);
   }
 
@@ -266,7 +262,6 @@ public:
     _code_offset(_content_offset),
     _data_offset(data_offset)
   {
-    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
 
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
@@ -287,7 +282,6 @@ public:
     _code_offset(_content_offset + cb->total_offset_of(cb->insts())),
     _data_offset(_content_offset + align_up(cb->total_content_size(), oopSize))
   {
-    assert(is_aligned(_relocation_size, oopSize), "unaligned size");
 
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
@@ -424,7 +418,7 @@ public:
 
 class MethodHandlesAdapterBlob: public BufferBlob {
 private:
-  MethodHandlesAdapterBlob(int size)                 : BufferBlob("MethodHandles adapters", size) {}
+  MethodHandlesAdapterBlob(int size)                 : BufferBlob("MethodHandles adapters", size) { }
 
 public:
   // Creation
@@ -497,7 +491,7 @@ class SingletonBlob: public RuntimeBlob {
      OopMapSet*  oop_maps
    )
    : RuntimeBlob(name, cb, header_size, size, CodeOffsets::frame_never_safe, frame_size, oop_maps)
-  {};
+  { };
 
   address entry_point()                          { return code_begin(); }
 
@@ -562,8 +556,8 @@ class DeoptimizationBlob: public SingletonBlob {
   // Printing
   void print_value_on(outputStream* st) const;
 
-  address unpack() const                         { return code_begin() + _unpack_offset;           }
-  address unpack_with_exception() const          { return code_begin() + _unpack_with_exception;   }
+  address unpack() const                         { return code_begin() + _unpack_offset; }
+  address unpack_with_exception() const          { return code_begin() + _unpack_with_exception; }
   address unpack_with_reexecution() const        { return code_begin() + _unpack_with_reexecution; }
 
   // Alternate entry point for C1 where the exception and issuing pc
@@ -573,20 +567,17 @@ class DeoptimizationBlob: public SingletonBlob {
   // there may be live values in those registers during deopt.
   void set_unpack_with_exception_in_tls_offset(int offset) {
     _unpack_with_exception_in_tls = offset;
-    assert(code_contains(code_begin() + _unpack_with_exception_in_tls), "must be PC inside codeblob");
   }
   address unpack_with_exception_in_tls() const   { return code_begin() + _unpack_with_exception_in_tls; }
 
   // Offsets when JVMCI calls uncommon_trap.
   void set_uncommon_trap_offset(int offset) {
     _uncommon_trap_offset = offset;
-    assert(contains(code_begin() + _uncommon_trap_offset), "must be PC inside codeblob");
   }
   address uncommon_trap() const                  { return code_begin() + _uncommon_trap_offset; }
 
   void set_implicit_exception_uncommon_trap_offset(int offset) {
     _implicit_exception_uncommon_trap_offset = offset;
-    assert(contains(code_begin() + _implicit_exception_uncommon_trap_offset), "must be PC inside codeblob");
   }
   address implicit_exception_uncommon_trap() const { return code_begin() + _implicit_exception_uncommon_trap_offset; }
 };

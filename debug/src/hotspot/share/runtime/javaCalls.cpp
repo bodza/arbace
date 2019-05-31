@@ -31,7 +31,6 @@ JavaCallWrapper::JavaCallWrapper(const methodHandle& callee_method, Handle recei
   bool clear_pending_exception = true;
 
   guarantee(thread->is_Java_thread(), "crucial check - the VM thread cannot and must not escape to Java code");
-  assert(!thread->owns_locks(), "must release all locks when leaving VM");
   guarantee(thread->can_call_java(), "cannot make java calls from the native compiler");
   _result   = result;
 
@@ -75,10 +74,8 @@ JavaCallWrapper::JavaCallWrapper(const methodHandle& callee_method, Handle recei
 
   _thread->set_active_handles(new_handles);     // install new handle block and reset Java frame linkage
 
-  assert(_thread->thread_state() != _thread_in_native, "cannot set native pc to NULL");
-
   // clear any pending exception in thread (native calls start with no exception pending)
-  if(clear_pending_exception) {
+  if (clear_pending_exception) {
     _thread->clear_pending_exception();
   }
 
@@ -88,7 +85,6 @@ JavaCallWrapper::JavaCallWrapper(const methodHandle& callee_method, Handle recei
 }
 
 JavaCallWrapper::~JavaCallWrapper() {
-  assert(_thread == JavaThread::current(), "must still be the same thread");
 
   // restore previous handle block & Java frame linkage
   JNIHandleBlock *_old_handles = _thread->active_handles();
@@ -148,10 +144,8 @@ void JavaCalls::call_virtual(JavaValue* result, Klass* spec_klass, Symbol* name,
   Handle receiver = args->receiver();
   Klass* recvrKlass = receiver.is_null() ? (Klass*)NULL : receiver->klass();
   LinkInfo link_info(spec_klass, name, signature);
-  LinkResolver::resolve_virtual_call(
-          callinfo, receiver, recvrKlass, link_info, true, CHECK);
+  LinkResolver::resolve_virtual_call(callinfo, receiver, recvrKlass, link_info, true, CHECK);
   methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
 
   // Invoke the method
   JavaCalls::call(result, method, args, CHECK);
@@ -182,7 +176,6 @@ void JavaCalls::call_special(JavaValue* result, Klass* klass, Symbol* name, Symb
   LinkInfo link_info(klass, name, signature);
   LinkResolver::resolve_special_call(callinfo, args->receiver(), link_info, CHECK);
   methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
 
   // Invoke the method
   JavaCalls::call(result, method, args, CHECK);
@@ -213,7 +206,6 @@ void JavaCalls::call_static(JavaValue* result, Klass* klass, Symbol* name, Symbo
   LinkInfo link_info(klass, name, signature);
   LinkResolver::resolve_static_call(callinfo, link_info, true, CHECK);
   methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
 
   // Invoke the method
   JavaCalls::call(result, method, args, CHECK);
@@ -279,9 +271,6 @@ Handle JavaCalls::construct_new_instance(InstanceKlass* klass, Symbol* construct
 // Implementation of JavaCalls (low level)
 
 void JavaCalls::call(JavaValue* result, const methodHandle& method, JavaCallArguments* args, TRAPS) {
-  // Check if we need to wrap a potential OS exception handler around thread
-  // This is used for e.g. Win32 structured exception handlers
-  assert(THREAD->is_Java_thread(), "only JavaThreads can make JavaCalls");
   // Need to wrap each and every time, since there might be native code down the
   // stack that has installed its own exception handlers
   os::os_exception_wrapper(call_helper, result, method, args, THREAD);
@@ -290,10 +279,6 @@ void JavaCalls::call(JavaValue* result, const methodHandle& method, JavaCallArgu
 void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaCallArguments* args, TRAPS) {
 
   JavaThread* thread = (JavaThread*)THREAD;
-  assert(thread->is_Java_thread(), "must be called by a java thread");
-  assert(method.not_null(), "must have a method to call");
-  assert(!SafepointSynchronize::is_at_safepoint(), "call to Java code during VM operation");
-  assert(!thread->handle_area()->no_handle_mark_active(), "cannot call out to Java here");
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
@@ -378,10 +363,6 @@ void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaC
     }
   } // Exit JavaCallWrapper (can block - potential return oop must be preserved)
 
-  // Check if a thread stop or suspend should be executed
-  // The following assert was not realistic.  Thread.stop can set that bit at any moment.
-  //assert(!thread->has_special_runtime_exit_condition(), "no async. exceptions should be installed");
-
   // Restore possible oop return
   if (oop_result_flag) {
     result->set_jobject((jobject)thread->vm_result());
@@ -393,8 +374,6 @@ void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaC
 // Implementation of JavaCallArguments
 
 inline bool is_value_state_indirect_oop(uint state) {
-  assert(state != JavaCallArguments::value_state_oop, "Checking for handles after removal");
-  assert(state < JavaCallArguments::value_state_limit, "Invalid value state %u", state);
   return state != JavaCallArguments::value_state_primitive;
 }
 
@@ -420,9 +399,8 @@ inline oop resolve_indirect_oop(intptr_t value, uint state) {
 
 intptr_t* JavaCallArguments::parameters() {
   // First convert all handles to oops
-  for(int i = 0; i < _size; i++) {
+  for (int i = 0; i < _size; i++) {
     uint state = _value_state[i];
-    assert(state != value_state_oop, "Multiple handle conversions");
     if (is_value_state_indirect_oop(state)) {
       oop obj = resolve_indirect_oop(_value[i], state);
       _value[i] = cast_from_oop<intptr_t>(obj);
@@ -463,13 +441,9 @@ class SignatureChekker : public SignatureIterator {
   void check_value(bool type) {
     uint state = _value_state[_pos++];
     if (type) {
-      guarantee(is_value_state_indirect_oop(state),
-                "signature does not match pushed arguments: %u at %d",
-                state, _pos - 1);
+      guarantee(is_value_state_indirect_oop(state), "signature does not match pushed arguments: %u at %d", state, _pos - 1);
     } else {
-      guarantee(state == JavaCallArguments::value_state_primitive,
-                "signature does not match pushed arguments: %u at %d",
-                state, _pos - 1);
+      guarantee(state == JavaCallArguments::value_state_primitive, "signature does not match pushed arguments: %u at %d", state, _pos - 1);
     }
   }
 
@@ -509,29 +483,26 @@ class SignatureChekker : public SignatureIterator {
     if (v != 0) {
       // v is a "handle" referring to an oop, cast to integral type.
       // There shouldn't be any handles in very low memory.
-      guarantee((size_t)v >= (size_t)os::vm_page_size(),
-                "Bad JNI oop argument %d: " PTR_FORMAT, _pos, v);
+      guarantee((size_t)v >= (size_t)os::vm_page_size(), "Bad JNI oop argument %d: " PTR_FORMAT, _pos, v);
       // Verify the pointee.
       oop vv = resolve_indirect_oop(v, _value_state[_pos]);
-      guarantee(oopDesc::is_oop_or_null(vv, true),
-                "Bad JNI oop argument %d: " PTR_FORMAT " -> " PTR_FORMAT,
-                _pos, v, p2i(vv));
+      guarantee(oopDesc::is_oop_or_null(vv, true), "Bad JNI oop argument %d: " PTR_FORMAT " -> " PTR_FORMAT, _pos, v, p2i(vv));
     }
 
     check_value(true);          // Verify value state.
   }
 
-  void do_bool()                       { check_int(T_BOOLEAN);       }
-  void do_char()                       { check_int(T_CHAR);          }
-  void do_float()                      { check_int(T_FLOAT);         }
-  void do_double()                     { check_double(T_DOUBLE);     }
-  void do_byte()                       { check_int(T_BYTE);          }
-  void do_short()                      { check_int(T_SHORT);         }
-  void do_int()                        { check_int(T_INT);           }
-  void do_long()                       { check_long(T_LONG);         }
-  void do_void()                       { check_return_type(T_VOID);  }
-  void do_object(int begin, int end)   { check_obj(T_OBJECT);        }
-  void do_array(int begin, int end)    { check_obj(T_OBJECT);        }
+  void do_bool()                       { check_int(T_BOOLEAN); }
+  void do_char()                       { check_int(T_CHAR); }
+  void do_float()                      { check_int(T_FLOAT); }
+  void do_double()                     { check_double(T_DOUBLE); }
+  void do_byte()                       { check_int(T_BYTE); }
+  void do_short()                      { check_int(T_SHORT); }
+  void do_int()                        { check_int(T_INT); }
+  void do_long()                       { check_long(T_LONG); }
+  void do_void()                       { check_return_type(T_VOID); }
+  void do_object(int begin, int end)   { check_obj(T_OBJECT); }
+  void do_array(int begin, int end)    { check_obj(T_OBJECT); }
 };
 
 void JavaCallArguments::verify(const methodHandle& method, BasicType return_type) {

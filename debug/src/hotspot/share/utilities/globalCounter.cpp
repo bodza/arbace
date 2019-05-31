@@ -12,11 +12,11 @@ class GlobalCounter::CounterThreadCheck : public ThreadClosure {
  private:
   uintx _gbl_cnt;
  public:
-  CounterThreadCheck(uintx gbl_cnt) : _gbl_cnt(gbl_cnt) {}
+  CounterThreadCheck(uintx gbl_cnt) : _gbl_cnt(gbl_cnt) { }
   void do_thread(Thread* thread) {
     SpinYield yield;
     // Loops on this thread until it has exited the critical read section.
-    while(true) {
+    while (true) {
       uintx cnt = OrderAccess::load_acquire(thread->get_rcu_counter());
       // This checks if the thread's counter is active. And if so is the counter
       // for a pre-existing reader (belongs to this grace period). A pre-existing
@@ -33,7 +33,6 @@ class GlobalCounter::CounterThreadCheck : public ThreadClosure {
 };
 
 void GlobalCounter::write_synchronize() {
-  assert((*Thread::current()->get_rcu_counter() & COUNTER_ACTIVE) == 0x0, "must be outside a critcal section");
   // Atomic::add must provide fence since we have storeload dependency.
   volatile uintx gbl_cnt = Atomic::add((uintx)COUNTER_INCREMENT, &_global_counter._counter,
                                        memory_order_conservative);

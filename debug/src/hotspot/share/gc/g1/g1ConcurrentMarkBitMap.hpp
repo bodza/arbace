@@ -26,7 +26,7 @@ public:
 class G1CMBitMapMappingChangedListener : public G1MappingChangedListener {
   G1CMBitMap* _bm;
 public:
-  G1CMBitMapMappingChangedListener() : _bm(NULL) {}
+  G1CMBitMapMappingChangedListener() : _bm(NULL) { }
 
   void set_bitmap(G1CMBitMap* bm) { _bm = bm; }
 
@@ -44,7 +44,7 @@ class G1CMBitMap {
 
   G1CMBitMapMappingChangedListener _listener;
 
-  inline void check_mark(HeapWord* addr) {};
+  inline void check_mark(HeapWord* addr) { };
 
   // Convert from bit offset to address.
   HeapWord* offset_to_addr(size_t offset) const {
@@ -72,7 +72,6 @@ public:
   // Read marks
   bool is_marked(oop obj) const;
   bool is_marked(HeapWord* addr) const {
-    assert(_covered.contains(addr), "Address " PTR_FORMAT " is outside underlying space from " PTR_FORMAT " to " PTR_FORMAT, p2i(addr), p2i(_covered.start()), p2i(_covered.end()));
     return _bm.at(addr_to_offset(addr));
   }
 

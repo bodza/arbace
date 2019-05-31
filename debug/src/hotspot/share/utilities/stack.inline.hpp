@@ -12,13 +12,10 @@ template <MEMFLAGS F> StackBase<F>::StackBase(size_t segment_size, size_t max_ca
   _max_cache_size(max_cache_size),
   _max_size(adjust_max_size(max_size, segment_size))
 {
-  assert(_max_size % _seg_size == 0, "not a multiple");
 }
 
 template <MEMFLAGS F> size_t StackBase<F>::adjust_max_size(size_t max_size, size_t seg_size)
 {
-  assert(seg_size > 0, "cannot be 0");
-  assert(max_size >= seg_size || max_size == 0, "max_size too small");
   const size_t limit = max_uintx - (seg_size - 1);
   if (max_size == 0 || max_size > limit) {
     max_size = limit;
@@ -36,7 +33,6 @@ Stack<E, F>::Stack(size_t segment_size, size_t max_cache_size, size_t max_size):
 template <class E, MEMFLAGS F>
 void Stack<E, F>::push(E item)
 {
-  assert(!is_full(), "pushing onto a full stack");
   if (this->_cur_seg_size == this->_seg_size) {
     push_segment();
   }
@@ -47,7 +43,6 @@ void Stack<E, F>::push(E item)
 template <class E, MEMFLAGS F>
 E Stack<E, F>::pop()
 {
-  assert(!is_empty(), "popping from an empty stack");
   if (this->_cur_seg_size == 1) {
     E tmp = _cur_seg[--this->_cur_seg_size];
     pop_segment();
@@ -69,7 +64,6 @@ size_t Stack<E, F>::adjust_segment_size(size_t seg_size)
 {
   const size_t elem_sz = sizeof(E);
   const size_t ptr_sz = sizeof(E*);
-  assert(elem_sz % ptr_sz == 0 || ptr_sz % elem_sz == 0, "bad element size");
   if (elem_sz < ptr_sz) {
     return align_up(seg_size * elem_sz, ptr_sz) / elem_sz;
   }
@@ -127,7 +121,6 @@ void Stack<E, F>::free(E* addr, size_t bytes)
 template <class E, MEMFLAGS F>
 NOINLINE void Stack<E, F>::push_segment()
 {
-  assert(this->_cur_seg_size == this->_seg_size, "current segment is not full");
   E* next;
   if (this->_cache_size > 0) {
     // Use a cached segment.
@@ -146,7 +139,6 @@ NOINLINE void Stack<E, F>::push_segment()
 template <class E, MEMFLAGS F>
 void Stack<E, F>::pop_segment()
 {
-  assert(this->_cur_seg_size == 0, "current segment is not empty");
   E* const prev = get_link(_cur_seg);
   if (this->_cache_size < this->_max_cache_size) {
     // Add the current segment to the cache.
@@ -207,7 +199,6 @@ void StackIterator<E, F>::sync()
 template <class E, MEMFLAGS F>
 E* StackIterator<E, F>::next_addr()
 {
-  assert(!is_empty(), "no items left");
   if (_cur_seg_size == 1) {
     E* addr = _cur_seg;
     _cur_seg = _stack.get_link(_cur_seg);

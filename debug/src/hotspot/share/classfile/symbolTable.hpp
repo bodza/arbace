@@ -36,11 +36,11 @@ class TempNewSymbol : public StackObj {
   Symbol* _temp;
 
  public:
-  TempNewSymbol() : _temp(NULL) {}
+  TempNewSymbol() : _temp(NULL) { }
 
   // Conversion from a Symbol* to a TempNewSymbol.
   // Does not increment the current reference count.
-  TempNewSymbol(Symbol *s) : _temp(s) {}
+  TempNewSymbol(Symbol *s) : _temp(s) { }
 
   // Copy constructor increments reference count.
   TempNewSymbol(const TempNewSymbol& rhs) : _temp(rhs._temp) {
@@ -116,11 +116,11 @@ private:
   Symbol* lookup(int index, const char* name, int len, unsigned int hash);
 
   SymbolTable()
-    : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>)) {}
+    : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>)) { }
 
   SymbolTable(HashtableBucket<mtSymbol>* t, int number_of_entries)
     : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>), t,
-                number_of_entries) {}
+                number_of_entries) { }
 
   // Arena for permanent symbols (null class loader) that are never unloaded
   static Arena*  _arena;
@@ -149,7 +149,6 @@ public:
   static uint bucket_size() { return sizeof(HashtableBucket<mtSymbol>); }
 
   static void create_table() {
-    assert(_the_table == NULL, "One symbol table allowed.");
     _the_table = new SymbolTable();
     initialize_symbols(symbol_alloc_arena_size);
   }
@@ -193,14 +192,12 @@ public:
 
   // Symbol creation
   static Symbol* new_symbol(const char* utf8_buffer, int length, TRAPS) {
-    assert(utf8_buffer != NULL, "just checking");
     return lookup(utf8_buffer, length, THREAD);
   }
   static Symbol*       new_symbol(const char* name, TRAPS) {
     return new_symbol(name, (int)strlen(name), THREAD);
   }
   static Symbol*       new_symbol(const Symbol* sym, int begin, int end, TRAPS) {
-    assert(begin <= end && end <= sym->utf8_length(), "just checking");
     return lookup(sym, begin, end, THREAD);
   }
 
@@ -223,8 +220,8 @@ public:
   }
 
   // Histogram
-  static void print_histogram()     {};
-  static void print()     {};
+  static void print_histogram()     { };
+  static void print()     { };
 
   // Debugging
   static void verify();

@@ -8,8 +8,8 @@ int VM_Version_Ext::_no_of_threads = 0;
 int VM_Version_Ext::_no_of_cores = 0;
 int VM_Version_Ext::_no_of_sockets = 0;
 bool VM_Version_Ext::_initialized = false;
-char VM_Version_Ext::_cpu_name[CPU_TYPE_DESC_BUF_SIZE] = {0};
-char VM_Version_Ext::_cpu_desc[CPU_DETAILED_DESC_BUF_SIZE] = {0};
+char VM_Version_Ext::_cpu_name[CPU_TYPE_DESC_BUF_SIZE] = { 0 };
+char VM_Version_Ext::_cpu_desc[CPU_DETAILED_DESC_BUF_SIZE] = { 0 };
 
 void VM_Version_Ext::initialize_cpu_information(void) {
   // do nothing if cpu info has been initialized

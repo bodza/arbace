@@ -28,7 +28,6 @@ void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_
 #define NONZERO(x) (x)
 
 void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp, bool for_compiler_entry) {
-  assert(method == rbx, "interpreter calling convention");
 
    Label L_no_such_method;
    __ testptr(rbx, rbx);
@@ -43,17 +42,8 @@ void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register meth
   __ jump(RuntimeAddress(StubRoutines::throw_AbstractMethodError_entry()));
 }
 
-void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
-                                        Register recv, Register method_temp,
-                                        Register temp2,
-                                        bool for_compiler_entry) {
+void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Register method_temp, Register temp2, bool for_compiler_entry) {
   BLOCK_COMMENT("jump_to_lambda_form {");
-  // This is the initial entry point of a lazy method handle.
-  // After type checking, it picks up the invoker from the LambdaForm.
-  assert_different_registers(recv, method_temp, temp2);
-  assert(recv != noreg, "required register");
-  assert(method_temp == rbx, "required register for loading method");
-
   // Load the invoker, as MH -> MH.form -> LF.vmentry
   __ verify_oop(recv);
   __ load_heap_oop(method_temp, Address(recv, NONZERO(java_lang_invoke_MethodHandle::form_offset_in_bytes())), temp2);
@@ -62,17 +52,12 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
   __ verify_oop(method_temp);
   __ load_heap_oop(method_temp, Address(method_temp, NONZERO(java_lang_invoke_MemberName::method_offset_in_bytes())), temp2);
   __ verify_oop(method_temp);
-  __ access_load_at(T_ADDRESS, IN_HEAP, method_temp,
-                    Address(method_temp, NONZERO(java_lang_invoke_ResolvedMethodName::vmtarget_offset_in_bytes())),
-                    noreg, noreg);
+  __ access_load_at(T_ADDRESS, IN_HEAP, method_temp, Address(method_temp, NONZERO(java_lang_invoke_ResolvedMethodName::vmtarget_offset_in_bytes())), noreg, noreg);
 
   if (VerifyMethodHandles && !for_compiler_entry) {
     // make sure recv is already on stack
     __ movptr(temp2, Address(method_temp, Method::const_offset()));
-    __ load_sized_value(temp2,
-                        Address(temp2, ConstMethod::size_of_parameters_offset()),
-                        sizeof(u2), /*is_signed*/ false);
-    // assert(sizeof(u2) == sizeof(Method::_size_of_parameters), "");
+    __ load_sized_value(temp2, Address(temp2, ConstMethod::size_of_parameters_offset()), sizeof(u2), /*is_signed*/ false);
     Label L;
     __ cmpoop(recv, __ argument_address(temp2, -1));
     __ jcc(Assembler::equal, L);
@@ -88,9 +73,7 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm,
 // Code generation
 address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid) {
   const bool not_for_compiler_entry = false;  // this is the interpreter entry
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
-  if (iid == vmIntrinsics::_invokeGeneric ||
-      iid == vmIntrinsics::_compiledLambdaForm) {
+  if (iid == vmIntrinsics::_invokeGeneric || iid == vmIntrinsics::_compiledLambdaForm) {
     // Perhaps surprisingly, the symbolic references visible to Java are not directly used.
     // They are linked to Java-generated adapters via MethodHandleNatives.linkMethod.
     // They all allow an appendix argument.
@@ -113,14 +96,12 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   address entry_point = __ pc();
 
   if (VerifyMethodHandles) {
-    assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
 
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
     __ cmpw(Address(rbx_method, Method::intrinsic_id_offset_in_bytes()), (int) iid);
     __ jcc(Assembler::equal, L);
-    if (iid == vmIntrinsics::_linkToVirtual ||
-        iid == vmIntrinsics::_linkToSpecial) {
+    if (iid == vmIntrinsics::_linkToVirtual || iid == vmIntrinsics::_linkToSpecial) {
       // could do this for all kinds, but would explode assembly code size
       trace_method_handle(_masm, "bad Method*::intrinsic_id");
     }
@@ -132,13 +113,11 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   // First task:  Find out how big the argument list is.
   Address rdx_first_arg_addr;
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
-  assert(ref_kind != 0 || iid == vmIntrinsics::_invokeBasic, "must be _invokeBasic or a linkTo intrinsic");
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
     __ movptr(rdx_argp, Address(rbx_method, Method::const_offset()));
     __ load_sized_value(rdx_argp,
                         Address(rdx_argp, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
-    // assert(sizeof(u2) == sizeof(Method::_size_of_parameters), "");
     rdx_first_arg_addr = __ argument_address(rdx_argp, -1);
   } else {
   }
@@ -171,28 +150,12 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   return entry_point;
 }
 
-void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
-                                                    vmIntrinsics::ID iid,
-                                                    Register receiver_reg,
-                                                    Register member_reg,
-                                                    bool for_compiler_entry) {
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
+void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmIntrinsics::ID iid, Register receiver_reg, Register member_reg, bool for_compiler_entry) {
   Register rbx_method = rbx;   // eventual target of this invocation
   // temps used in this code are not used in *either* compiled or interpreted calling sequences
   Register temp1 = rscratch1;
   Register temp2 = rscratch2;
   Register temp3 = rax;
-  if (for_compiler_entry) {
-    assert(receiver_reg == (iid == vmIntrinsics::_linkToStatic ? noreg : j_rarg0), "only valid assignment");
-    assert_different_registers(temp1,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5);
-    assert_different_registers(temp2,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5);
-    assert_different_registers(temp3,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5);
-  }
-  else {
-    assert_different_registers(temp1, temp2, temp3, saved_last_sp_register());  // don't trash lastSP
-  }
-  assert_different_registers(temp1, temp2, temp3, receiver_reg);
-  assert_different_registers(temp1, temp2, temp3, member_reg);
 
   if (iid == vmIntrinsics::_invokeBasic) {
     // indirect through MH.form.vmentry.vmtarget

@@ -57,7 +57,6 @@ LIR_Opr LIRGenerator::result_register_for(ValueType* type, bool callee) {
     default: ShouldNotReachHere(); return LIR_OprFact::illegalOpr;
   }
 
-  assert(opr->type_field() == as_OprType(as_BasicType(type)), "type mismatch");
   return opr;
 }
 
@@ -101,7 +100,6 @@ LIR_Opr LIRGenerator::safepoint_poll_register() {
 }
 
 LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index, int shift, int disp, BasicType type) {
-  assert(base->is_register(), "must be");
   intx large_disp = disp;
 
   // accumulate fixed displacements
@@ -110,7 +108,6 @@ LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index, int shi
     if (constant->type() == T_INT) {
       large_disp += index->as_jint() << shift;
     } else {
-      assert(constant->type() == T_LONG, "should be");
       jlong c = index->as_jlong() << shift;
       if ((jlong)((jint)c) == c) {
         large_disp += c;
@@ -154,7 +151,6 @@ LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index, int shi
   if (large_disp == 0) {
     return new LIR_Address(base, index, type);
   } else {
-    assert(Address::offset_ok_for_immed(large_disp, 0), "must be");
     return new LIR_Address(base, large_disp, type);
   }
 }
@@ -261,7 +257,7 @@ bool LIRGenerator::strength_reduce_multiply(LIR_Opr left, int c, LIR_Opr result,
   }
 }
 
-void LIRGenerator::store_stack_parameter (LIR_Opr item, ByteSize offset_from_sp) {
+void LIRGenerator::store_stack_parameter(LIR_Opr item, ByteSize offset_from_sp) {
   BasicType type = item->type();
   __ store(item, new LIR_Address(FrameMap::sp_opr, in_bytes(offset_from_sp), type));
 }
@@ -278,7 +274,6 @@ void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo*
 //----------------------------------------------------------------------
 
 void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
-  assert(x->is_pinned(),"");
   LIRItem obj(x->obj(), this);
   obj.load_item();
 
@@ -304,7 +299,6 @@ void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
 }
 
 void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-  assert(x->is_pinned(),"");
 
   LIRItem obj(x->obj(), this);
   obj.dont_load_item();
@@ -419,16 +413,12 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
     }
 
   } else {
-    assert(x->op() == Bytecodes::_lmul || x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub, "expect lmul, ladd or lsub");
     // add, sub, mul
     left.load_item();
     if (! right.is_register()) {
-      if (x->op() == Bytecodes::_lmul
-          || ! right.is_constant()
-          || ! Assembler::operand_valid_for_add_sub_immediate(right.get_jlong_constant())) {
+      if (x->op() == Bytecodes::_lmul || ! right.is_constant() || ! Assembler::operand_valid_for_add_sub_immediate(right.get_jlong_constant())) {
         right.load_item();
       } else { // add, sub
-        assert(x->op() == Bytecodes::_ladd || x->op() == Bytecodes::_lsub, "expect ladd or lsub");
         // don't load constants to save register
         right.load_nonconstant();
       }
@@ -473,8 +463,7 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
     }
 
   } else if (x->op() == Bytecodes::_iadd || x->op() == Bytecodes::_isub) {
-    if (right.is_constant()
-        && Assembler::operand_valid_for_add_sub_immediate(right.get_jint_constant())) {
+    if (right.is_constant() && Assembler::operand_valid_for_add_sub_immediate(right.get_jint_constant())) {
       right.load_nonconstant();
     } else {
       right.load_item();
@@ -482,7 +471,6 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
     rlock_result(x);
     arithmetic_op_int(x->op(), x->operand(), left_arg->result(), right_arg->result(), LIR_OprFact::illegalOpr);
   } else {
-    assert(x->op() == Bytecodes::_imul, "expect imul");
     if (right.is_constant()) {
       jint c = right.get_jint_constant();
       if (c > 0 && c < max_jint && (is_power_of_2(c) || is_power_of_2(c - 1) || is_power_of_2(c + 1))) {
@@ -507,7 +495,6 @@ void LIRGenerator::do_ArithmeticOp(ArithmeticOp* x) {
   }
 
   ValueTag tag = x->type()->tag();
-  assert(x->x()->type()->tag() == tag && x->y()->type()->tag() == tag, "wrong parameters");
   switch (tag) {
     case floatTag:
     case doubleTag:  do_ArithmeticOp_FPU(x);  return;
@@ -612,11 +599,8 @@ void LIRGenerator::do_LogicOp(LogicOp* x) {
   left.load_item();
 
   rlock_result(x);
-  if (right.is_constant()
-      && ((right.type()->tag() == intTag
-           && Assembler::operand_valid_for_logical_immediate(true, right.get_jint_constant()))
-          || (right.type()->tag() == longTag
-              && Assembler::operand_valid_for_logical_immediate(false, right.get_jlong_constant()))))  {
+  if (right.is_constant() && ((right.type()->tag() == intTag && Assembler::operand_valid_for_logical_immediate(true, right.get_jint_constant()))
+          || (right.type()->tag() == longTag && Assembler::operand_valid_for_logical_immediate(false, right.get_jlong_constant()))))  {
     right.dont_load_item();
   } else {
     right.load_item();
@@ -680,7 +664,6 @@ LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) 
   bool is_oop = type == T_OBJECT || type == T_ARRAY;
   LIR_Opr result = new_register(type);
   value.load_item();
-  assert(type == T_INT || is_oop  || type == T_LONG , "unexpected type");
   LIR_Opr tmp = new_register(T_INT);
   __ xchg(addr, value.result(), result, tmp);
   return result;
@@ -689,14 +672,12 @@ LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) 
 LIR_Opr LIRGenerator::atomic_add(BasicType type, LIR_Opr addr, LIRItem& value) {
   LIR_Opr result = new_register(type);
   value.load_item();
-  assert(type == T_INT  || type == T_LONG , "unexpected type");
   LIR_Opr tmp = new_register(T_INT);
   __ xadd(addr, value.result(), result, tmp);
   return result;
 }
 
 void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1 || (x->number_of_arguments() == 2 && x->id() == vmIntrinsics::_dpow), "wrong type");
   if (x->id() == vmIntrinsics::_dexp || x->id() == vmIntrinsics::_dlog ||
       x->id() == vmIntrinsics::_dpow || x->id() == vmIntrinsics::_dcos ||
       x->id() == vmIntrinsics::_dsin || x->id() == vmIntrinsics::_dtan ||
@@ -707,7 +688,6 @@ void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
   switch (x->id()) {
     case vmIntrinsics::_dabs:
     case vmIntrinsics::_dsqrt: {
-      assert(x->number_of_arguments() == 1, "wrong type");
       LIRItem value(x->argument_at(0), this);
       value.load_item();
       LIR_Opr dst = rlock_result(x);
@@ -810,7 +790,6 @@ void LIRGenerator::do_LibmIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
-  assert(x->number_of_arguments() == 5, "wrong type");
 
   // Make all state_for calls early since they can emit code
   CodeEmitInfo* info = state_for(x, x->state());
@@ -851,7 +830,6 @@ void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
 }
 
 void LIRGenerator::do_update_CRC32(Intrinsic* x) {
-  assert(UseCRC32Intrinsics, "why are we here?");
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
   int flags = 0;
@@ -879,7 +857,7 @@ void LIRGenerator::do_update_CRC32(Intrinsic* x) {
 
       LIR_Opr index = off.result();
       int offset = is_updateBytes ? arrayOopDesc::base_offset_in_bytes(T_BYTE) : 0;
-      if(off.result()->is_constant()) {
+      if (off.result()->is_constant()) {
         index = LIR_OprFact::illegalOpr;
        offset += off.result()->as_jint();
       }
@@ -928,7 +906,6 @@ void LIRGenerator::do_update_CRC32(Intrinsic* x) {
 }
 
 void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
-  assert(UseCRC32CIntrinsics, "why are we here?");
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
   int flags = 0;
@@ -957,7 +934,7 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
       len = tmpA;
 
       LIR_Opr index = off.result();
-      if(off.result()->is_constant()) {
+      if (off.result()->is_constant()) {
         index = LIR_OprFact::illegalOpr;
         offset += off.result()->as_jint();
       }
@@ -1006,8 +983,6 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
 }
 
 void LIRGenerator::do_FmaIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 3, "wrong type");
-  assert(UseFMA, "Needs FMA instructions support.");
   LIRItem value(x->argument_at(0), this);
   LIRItem value1(x->argument_at(1), this);
   LIRItem value2(x->argument_at(2), this);
@@ -1047,7 +1022,6 @@ void LIRGenerator::do_Convert(Convert* x) {
 
   __ convert(x->op(), conv_input, conv_result);
 
-  assert(result->is_virtual(), "result must be virtual register");
   set_result(x, result);
 }
 
@@ -1187,16 +1161,12 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   obj.load_item();
 
   // info for exceptions
-  CodeEmitInfo* info_for_exception =
-      (x->needs_exception_state() ? state_for(x) :
-                                    state_for(x, x->state_before(), true /*ignore_xhandler*/));
+  CodeEmitInfo* info_for_exception = (x->needs_exception_state() ? state_for(x) : state_for(x, x->state_before(), true /*ignore_xhandler*/));
 
   CodeStub* stub;
   if (x->is_incompatible_class_change_check()) {
-    assert(patching_info == NULL, "can't patch this");
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    assert(patching_info == NULL, "can't patch this");
     stub = new DeoptimizeStub(info_for_exception,
                               Deoptimization::Reason_class_check,
                               Deoptimization::Action_none);
@@ -1235,7 +1205,6 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
 }
 
 void LIRGenerator::do_If(If* x) {
-  assert(x->number_of_sux() == 2, "inconsistency");
   ValueTag tag = x->x()->type()->tag();
   bool is_safepoint = x->is_safepoint();
 
@@ -1259,15 +1228,13 @@ void LIRGenerator::do_If(If* x) {
   xin->load_item();
 
   if (tag == longTag) {
-    if (yin->is_constant()
-        && Assembler::operand_valid_for_add_sub_immediate(yin->get_jlong_constant())) {
+    if (yin->is_constant() && Assembler::operand_valid_for_add_sub_immediate(yin->get_jlong_constant())) {
       yin->dont_load_item();
     } else {
       yin->load_item();
     }
   } else if (tag == intTag) {
-    if (yin->is_constant()
-        && Assembler::operand_valid_for_add_sub_immediate(yin->get_jint_constant()))  {
+    if (yin->is_constant() && Assembler::operand_valid_for_add_sub_immediate(yin->get_jint_constant()))  {
       yin->dont_load_item();
     } else {
       yin->load_item();
@@ -1298,7 +1265,6 @@ void LIRGenerator::do_If(If* x) {
   } else {
     __ branch(lir_cond(cond), right->type(), x->tsux());
   }
-  assert(x->default_sux() == x->fsux(), "wrong destination above");
   __ jump(x->default_sux());
 }
 

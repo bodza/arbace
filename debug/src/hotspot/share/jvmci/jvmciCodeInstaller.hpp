@@ -8,7 +8,7 @@
 class RelocBuffer : public StackObj {
   enum { stack_size = 1024 };
 public:
-  RelocBuffer() : _size(0), _buffer(0) {}
+  RelocBuffer() : _size(0), _buffer(0) { }
   ~RelocBuffer();
   void ensure_size(size_t bytes);
   void set_size(size_t bytes);
@@ -37,7 +37,7 @@ private:
 
 class CodeMetadata {
 public:
-  CodeMetadata() {}
+  CodeMetadata() { }
 
   CodeBlob* get_code_blob() const { return _cb; }
 
@@ -171,7 +171,7 @@ private:
 
 public:
 
-  CodeInstaller(bool immutable_pic_compilation) : _arena(mtCompiler), _immutable_pic_compilation(immutable_pic_compilation) {}
+  CodeInstaller(bool immutable_pic_compilation) : _arena(mtCompiler), _immutable_pic_compilation(immutable_pic_compilation) { }
 
   JVMCIEnv::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);
   JVMCIEnv::CodeInstallResult install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS);

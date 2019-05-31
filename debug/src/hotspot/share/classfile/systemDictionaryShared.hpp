@@ -129,7 +129,7 @@ public:
          Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object);
   int finalize_verification_constraints();
   void check_verification_constraints(InstanceKlass* klass, TRAPS);
-  void metaspace_pointers_do(MetaspaceClosure* it) {};
+  void metaspace_pointers_do(MetaspaceClosure* it) { };
 };
 
 class SharedDictionary : public Dictionary {
@@ -172,10 +172,7 @@ private:
   static objArrayOop _shared_jar_urls;
   static objArrayOop _shared_jar_manifests;
 
-  static InstanceKlass* load_shared_class_for_builtin_loader(
-                                               Symbol* class_name,
-                                               Handle class_loader,
-                                               TRAPS);
+  static InstanceKlass* load_shared_class_for_builtin_loader(Symbol* class_name, Handle class_loader, TRAPS);
   static Handle get_package_name(Symbol*  class_name, TRAPS);
 
   // Package handling:
@@ -250,17 +247,11 @@ private:
     atomic_set_array_index(_shared_jar_manifests, index, man);
   }
   static void allocate_shared_jar_manifest_array(int size, TRAPS);
-  static InstanceKlass* acquire_class_for_current_thread(
-                                 InstanceKlass *ik,
-                                 Handle class_loader,
-                                 Handle protection_domain,
-                                 TRAPS);
+  static InstanceKlass* acquire_class_for_current_thread(InstanceKlass *ik, Handle class_loader, Handle protection_domain, TRAPS);
 
 public:
   // Called by PLATFORM/APP loader only
-  static InstanceKlass* find_or_load_shared_class(Symbol* class_name,
-                                               Handle class_loader,
-                                               TRAPS);
+  static InstanceKlass* find_or_load_shared_class(Symbol* class_name, Handle class_loader, TRAPS);
 
   static void allocate_shared_data_arrays(int size, TRAPS);
   static void oops_do(OopClosure* f);
@@ -270,15 +261,8 @@ public:
 
   // Check if sharing is supported for the class loader.
   static bool is_sharing_possible(ClassLoaderData* loader_data);
-  static bool is_shared_class_visible_for_classloader(InstanceKlass* ik,
-                                                      Handle class_loader,
-                                                      const char* pkg_string,
-                                                      Symbol* pkg_name,
-                                                      PackageEntry* pkg_entry,
-                                                      ModuleEntry* mod_entry,
-                                                      TRAPS);
-  static PackageEntry* get_package_entry(Symbol* pkg,
-                                         ClassLoaderData *loader_data) {
+  static bool is_shared_class_visible_for_classloader(InstanceKlass* ik, Handle class_loader, const char* pkg_string, Symbol* pkg_name, PackageEntry* pkg_entry, ModuleEntry* mod_entry, TRAPS);
+  static PackageEntry* get_package_entry(Symbol* pkg, ClassLoaderData *loader_data) {
     if (loader_data != NULL) {
       PackageEntryTable* pkgEntryTable = loader_data->packages();
       return pkgEntryTable->lookup_only(pkg);
@@ -286,19 +270,13 @@ public:
     return NULL;
   }
 
-  static bool add_non_builtin_klass(Symbol* class_name, ClassLoaderData* loader_data,
-                                    InstanceKlass* k, TRAPS);
-  static Klass* dump_time_resolve_super_or_fail(Symbol* child_name,
-                                                Symbol* class_name,
-                                                Handle class_loader,
-                                                Handle protection_domain,
-                                                bool is_superclass,
-                                                TRAPS);
+  static bool add_non_builtin_klass(Symbol* class_name, ClassLoaderData* loader_data, InstanceKlass* k, TRAPS);
+  static Klass* dump_time_resolve_super_or_fail(Symbol* child_name, Symbol* class_name, Handle class_loader, Handle protection_domain, bool is_superclass, TRAPS);
 
   static size_t dictionary_entry_size() {
     return (DumpSharedSpaces) ? sizeof(SharedDictionaryEntry) : sizeof(DictionaryEntry);
   }
-  static void init_shared_dictionary_entry(Klass* k, DictionaryEntry* entry) {};
+  static void init_shared_dictionary_entry(Klass* k, DictionaryEntry* entry) { };
   static bool is_builtin(DictionaryEntry* ent) {
     // Can't use virtual function is_builtin because DictionaryEntry doesn't initialize
     // vtable because it's not constructed properly.
@@ -308,7 +286,6 @@ public:
 
   // For convenient access to the SharedDictionaryEntry's of the archived classes.
   static SharedDictionary* shared_dictionary() {
-    assert(!DumpSharedSpaces, "not for dumping");
     return (SharedDictionary*)SystemDictionary::shared_dictionary();
   }
 
@@ -317,8 +294,6 @@ public:
   }
 
   static void update_shared_entry(Klass* klass, int id) {
-    assert(DumpSharedSpaces, "sanity");
-    assert((SharedDictionary*)(klass->class_loader_data()->dictionary()) != NULL, "sanity");
     ((SharedDictionary*)(klass->class_loader_data()->dictionary()))->update_entry(klass, id);
   }
 
@@ -341,9 +316,9 @@ public:
   static bool add_verification_constraint(Klass* k, Symbol* name,
                   Symbol* from_name, bool from_field_is_protected,
                   bool from_is_array, bool from_is_object) { return false; };
-  static void finalize_verification_constraints() {};
+  static void finalize_verification_constraints() { };
   static void check_verification_constraints(InstanceKlass* klass,
-                                              TRAPS) {};
+                                              TRAPS) { };
 };
 
 #endif

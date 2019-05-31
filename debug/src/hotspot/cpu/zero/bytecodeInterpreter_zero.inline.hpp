@@ -27,7 +27,7 @@ inline jfloat BytecodeInterpreter::VMfloatNeg(jfloat op) {
   return -op;
 }
 
-inline int32_t BytecodeInterpreter::VMfloatCompare(jfloat  op1, jfloat  op2, int32_t direction) {
+inline int32_t BytecodeInterpreter::VMfloatCompare(jfloat op1, jfloat op2, int32_t direction) {
   return ( op1 < op2 ? -1 :
                op1 > op2 ? 1 :
                    op1 == op2 ? 0 :

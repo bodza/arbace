@@ -92,8 +92,7 @@ void InterpreterRuntime::SignatureHandlerGeneratorBase::push(BasicType type) {
 // and pd_set_handler is called on it.  We have this two stage thing
 // to accomodate this.
 
-void InterpreterRuntime::SignatureHandlerGeneratorBase::generate(
-  uint64_t fingerprint) {
+void InterpreterRuntime::SignatureHandlerGeneratorBase::generate(uint64_t fingerprint) {
 
   // Build the argument types list
   pass_object();
@@ -108,7 +107,6 @@ void InterpreterRuntime::SignatureHandlerGeneratorBase::generate(
 void InterpreterRuntime::SignatureHandler::finalize() {
   ffi_status status = ffi_prep_cif(cif(), FFI_DEFAULT_ABI, argument_count(), result_type(), argument_types());
 
-  assert(status == FFI_OK, "should be");
 }
 
 IRT_ENTRY(address,
@@ -118,9 +116,7 @@ IRT_ENTRY(address,
                                                      intptr_t*   unused2))
   ZeroStack *stack = thread->zero_stack();
 
-  int required_words =
-    (align_up(sizeof(ffi_cif), wordSize) >> LogBytesPerWord) +
-    (method->is_static() ? 2 : 1) + method->size_of_parameters() + 1;
+  int required_words = (align_up(sizeof(ffi_cif), wordSize) >> LogBytesPerWord) + (method->is_static() ? 2 : 1) + method->size_of_parameters() + 1;
 
   stack->overflow_check(required_words, CHECK_NULL);
 
@@ -135,8 +131,7 @@ IRT_ENTRY(address,
 IRT_END
 
 void SignatureHandlerLibrary::pd_set_handler(address handlerAddr) {
-  InterpreterRuntime::SignatureHandler *handler =
-    InterpreterRuntime::SignatureHandler::from_handlerAddr(handlerAddr);
+  InterpreterRuntime::SignatureHandler *handler = InterpreterRuntime::SignatureHandler::from_handlerAddr(handlerAddr);
 
   handler->finalize();
 }

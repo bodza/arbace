@@ -28,7 +28,6 @@ void ConcurrentGCThread::initialize_in_thread() {
   this->initialize_named_thread();
   this->set_active_handles(JNIHandleBlock::allocate_block());
   // From this time Thread::current() should be working.
-  assert(this == Thread::current(), "just checking");
 }
 
 void ConcurrentGCThread::wait_for_universe_init() {
@@ -39,7 +38,6 @@ void ConcurrentGCThread::wait_for_universe_init() {
 }
 
 void ConcurrentGCThread::terminate() {
-  assert(_should_terminate, "Should only be called on terminate request.");
   // Signal that it is terminated
   {
     MutexLockerEx mu(Terminator_lock,
@@ -62,8 +60,6 @@ void ConcurrentGCThread::stop() {
   // it is ok to take late safepoints here, if needed
   {
     MutexLockerEx mu(Terminator_lock);
-    assert(!_has_terminated,   "stop should only be called once");
-    assert(!_should_terminate, "stop should only be called once");
     _should_terminate = true;
   }
 

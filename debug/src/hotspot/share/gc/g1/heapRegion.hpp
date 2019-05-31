@@ -119,13 +119,12 @@ class G1ContiguousSpace: public CompactibleSpace {
   void object_iterate(ObjectClosure* blk);
   void safe_object_iterate(ObjectClosure* blk);
 
-  void mangle_unused_area() {};
-  void mangle_unused_area_complete() {};
+  void mangle_unused_area() { };
+  void mangle_unused_area_complete() { };
 
   // See the comment above in the declaration of _pre_dummy_top for an
   // explanation of what it is.
   void set_pre_dummy_top(HeapWord* pre_dummy_top) {
-    assert(is_in(pre_dummy_top) && pre_dummy_top <= top(), "pre-condition");
     _pre_dummy_top = pre_dummy_top;
   }
   HeapWord* pre_dummy_top() {
@@ -239,7 +238,6 @@ class HeapRegion: public G1ContiguousSpace {
   // of that pause.
 
   void init_top_at_mark_start() {
-    assert(_prev_marked_bytes == 0 && _next_marked_bytes == 0, "Must be called after zero_marked_bytes.");
     HeapWord* bot = bottom();
     _prev_top_at_mark_start = bot;
     _next_top_at_mark_start = bot;
@@ -293,8 +291,6 @@ class HeapRegion: public G1ContiguousSpace {
   // Returns whether a field is in the same region as the obj it points to.
   template <typename T>
   static bool is_in_same_region(T* p, oop obj) {
-    assert(p != NULL, "p can't be NULL");
-    assert(obj != NULL, "obj can't be NULL");
     return (((uintptr_t) p ^ cast_from_oop<uintptr_t>(obj)) >> LogOfHRGrainBytes) == 0;
   }
 
@@ -352,8 +348,7 @@ class HeapRegion: public G1ContiguousSpace {
 
   // A lower bound on the amount of garbage bytes in the region.
   size_t garbage_bytes() {
-    size_t used_at_mark_start_bytes =
-      (prev_top_at_mark_start() - bottom()) * HeapWordSize;
+    size_t used_at_mark_start_bytes = (prev_top_at_mark_start() - bottom()) * HeapWordSize;
     return used_at_mark_start_bytes - marked_bytes();
   }
 
@@ -363,7 +358,6 @@ class HeapRegion: public G1ContiguousSpace {
   // since it will also be reclaimed if we collect the region.
   size_t reclaimable_bytes() {
     size_t known_live_bytes = live_bytes();
-    assert(known_live_bytes <= capacity(), "sanity");
     return capacity() - known_live_bytes;
   }
 
@@ -384,13 +378,13 @@ class HeapRegion: public G1ContiguousSpace {
 
   bool is_free() const { return _type.is_free(); }
 
-  bool is_young()    const { return _type.is_young();    }
-  bool is_eden()     const { return _type.is_eden();     }
+  bool is_young()    const { return _type.is_young(); }
+  bool is_eden()     const { return _type.is_eden(); }
   bool is_survivor() const { return _type.is_survivor(); }
 
   bool is_humongous() const { return _type.is_humongous(); }
   bool is_starts_humongous() const { return _type.is_starts_humongous(); }
-  bool is_continues_humongous() const { return _type.is_continues_humongous();   }
+  bool is_continues_humongous() const { return _type.is_continues_humongous(); }
 
   bool is_old() const { return _type.is_old(); }
 
@@ -497,30 +491,24 @@ class HeapRegion: public G1ContiguousSpace {
   void note_self_forwarding_removal_end(size_t marked_bytes);
 
   void reset_during_compaction() {
-    assert(is_humongous(), "should only be called for humongous regions");
 
     zero_marked_bytes();
     init_top_at_mark_start();
   }
 
   void calc_gc_efficiency(void);
-  double gc_efficiency() { return _gc_efficiency;}
+  double gc_efficiency() { return _gc_efficiency; }
 
   int  young_index_in_cset() const { return _young_index_in_cset; }
   void set_young_index_in_cset(int index) {
-    assert( (index == -1) || is_young(), "pre-condition" );
     _young_index_in_cset = index;
   }
 
   int age_in_surv_rate_group() {
-    assert( _surv_rate_group != NULL, "pre-condition" );
-    assert( _age_index > -1, "pre-condition" );
     return _surv_rate_group->age_in_group(_age_index);
   }
 
   void record_surv_words_in_group(size_t words_survived) {
-    assert( _surv_rate_group != NULL, "pre-condition" );
-    assert( _age_index > -1, "pre-condition" );
     int age_in_group = age_in_surv_rate_group();
     _surv_rate_group->record_surviving_words(age_in_group, words_survived);
   }
@@ -537,9 +525,6 @@ class HeapRegion: public G1ContiguousSpace {
   }
 
   void install_surv_rate_group(SurvRateGroup* surv_rate_group) {
-    assert( surv_rate_group != NULL, "pre-condition" );
-    assert( _surv_rate_group == NULL, "pre-condition" );
-    assert( is_young(), "pre-condition" );
 
     _surv_rate_group = surv_rate_group;
     _age_index = surv_rate_group->next_age_index();
@@ -547,13 +532,10 @@ class HeapRegion: public G1ContiguousSpace {
 
   void uninstall_surv_rate_group() {
     if (_surv_rate_group != NULL) {
-      assert( _age_index > -1, "pre-condition" );
-      assert( is_young(), "pre-condition" );
 
       _surv_rate_group = NULL;
       _age_index = -1;
     } else {
-      assert( _age_index == -1, "pre-condition" );
     }
   }
 
@@ -665,7 +647,7 @@ class HeapRegionClosure : public StackObj {
   void set_incomplete() { _is_complete = false; }
 
  public:
-  HeapRegionClosure(): _is_complete(true) {}
+  HeapRegionClosure(): _is_complete(true) { }
 
   // Typically called on each region until it returns true.
   virtual bool do_heap_region(HeapRegion* r) = 0;

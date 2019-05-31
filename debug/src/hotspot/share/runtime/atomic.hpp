@@ -576,18 +576,12 @@ inline void Atomic::store(T store_value, volatile D* dest) {
 }
 
 template<typename I, typename D>
-inline D Atomic::add(I add_value, D volatile* dest,
-                     atomic_memory_order order) {
+inline D Atomic::add(I add_value, D volatile* dest, atomic_memory_order order) {
   return AddImpl<I, D>()(add_value, dest, order);
 }
 
 template<typename I, typename D>
-struct Atomic::AddImpl<
-  I, D,
-  typename EnableIf<IsIntegral<I>::value &&
-                    IsIntegral<D>::value &&
-                    (sizeof(I) <= sizeof(D)) &&
-                    (IsSigned<I>::value == IsSigned<D>::value)>::type>
+struct Atomic::AddImpl<I, D, typename EnableIf<IsIntegral<I>::value && IsIntegral<D>::value && (sizeof(I) <= sizeof(D)) && (IsSigned<I>::value == IsSigned<D>::value)>::type>
 {
   D operator()(I add_value, D volatile* dest, atomic_memory_order order) const {
     D addend = add_value;
@@ -624,10 +618,8 @@ template<>
 struct Atomic::AddImpl<short, short> {
   short operator()(short add_value, short volatile* dest, atomic_memory_order order) const {
 #ifdef VM_LITTLE_ENDIAN
-    assert((intx(dest) & 0x03) == 0x02, "wrong alignment");
     int new_value = Atomic::add(add_value << 16, (volatile int*)(dest-1), order);
 #else
-    assert((intx(dest) & 0x03) == 0x00, "wrong alignment");
     int new_value = Atomic::add(add_value << 16, (volatile int*)(dest), order);
 #endif
     return (short)(new_value >> 16); // preserves sign
@@ -660,22 +652,16 @@ inline D Atomic::AddAndFetch<Derived>::operator()(I add_value, D volatile* dest,
 
 template<typename Type, typename Fn, typename I, typename D>
 inline D Atomic::add_using_helper(Fn fn, I add_value, D volatile* dest) {
-  return PrimitiveConversions::cast<D>(
-    fn(PrimitiveConversions::cast<Type>(add_value),
-       reinterpret_cast<Type volatile*>(dest)));
+  return PrimitiveConversions::cast<D>(fn(PrimitiveConversions::cast<Type>(add_value), reinterpret_cast<Type volatile*>(dest)));
 }
 
 template<typename T, typename D, typename U>
-inline D Atomic::cmpxchg(T exchange_value,
-                         D volatile* dest,
-                         U compare_value,
-                         atomic_memory_order order) {
+inline D Atomic::cmpxchg(T exchange_value, D volatile* dest, U compare_value, atomic_memory_order order) {
   return CmpxchgImpl<T, D, U>()(exchange_value, dest, compare_value, order);
 }
 
 template<typename T, typename D>
-inline bool Atomic::replace_if_null(T* value, D* volatile* dest,
-                                    atomic_memory_order order) {
+inline bool Atomic::replace_if_null(T* value, D* volatile* dest, atomic_memory_order order) {
   // Presently using a trivial implementation in terms of cmpxchg.
   // Consider adding platform support, to permit the use of compiler
   // intrinsics like gcc's __sync_bool_compare_and_swap.
@@ -711,14 +697,9 @@ struct Atomic::CmpxchgImpl<
 // destination's type; it must be type-correct to store the
 // exchange_value in the destination.
 template<typename T, typename D, typename U>
-struct Atomic::CmpxchgImpl<
-  T*, D*, U*,
-  typename EnableIf<Atomic::IsPointerConvertible<T*, D*>::value &&
-                    IsSame<typename RemoveCV<D>::type,
-                           typename RemoveCV<U>::type>::value>::type>
+struct Atomic::CmpxchgImpl<T*, D*, U*, typename EnableIf<Atomic::IsPointerConvertible<T*, D*>::value && IsSame<typename RemoveCV<D>::type, typename RemoveCV<U>::type>::value>::type>
 {
-  D* operator()(T* exchange_value, D* volatile* dest, U* compare_value,
-               atomic_memory_order order) const {
+  D* operator()(T* exchange_value, D* volatile* dest, U* compare_value, atomic_memory_order order) const {
     // Allow derived to base conversion, and adding cv-qualifiers.
     D* new_value = exchange_value;
     // Don't care what the CV qualifiers for compare_value are,
@@ -740,41 +721,26 @@ struct Atomic::CmpxchgImpl<
   T, T, T,
   typename EnableIf<PrimitiveConversions::Translate<T>::value>::type>
 {
-  T operator()(T exchange_value, T volatile* dest, T compare_value,
-               atomic_memory_order order) const {
+  T operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
     STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
-    return Translator::recover(
-      cmpxchg(Translator::decay(exchange_value),
-              reinterpret_cast<Decayed volatile*>(dest),
-              Translator::decay(compare_value),
-              order));
+    return Translator::recover(cmpxchg(Translator::decay(exchange_value), reinterpret_cast<Decayed volatile*>(dest), Translator::decay(compare_value), order));
   }
 };
 
 template<typename Type, typename Fn, typename T>
-inline T Atomic::cmpxchg_using_helper(Fn fn,
-                                      T exchange_value,
-                                      T volatile* dest,
-                                      T compare_value) {
+inline T Atomic::cmpxchg_using_helper(Fn fn, T exchange_value, T volatile* dest, T compare_value) {
   STATIC_ASSERT(sizeof(Type) == sizeof(T));
-  return PrimitiveConversions::cast<T>(
-    fn(PrimitiveConversions::cast<Type>(exchange_value),
-       reinterpret_cast<Type volatile*>(dest),
-       PrimitiveConversions::cast<Type>(compare_value)));
+  return PrimitiveConversions::cast<T>(fn(PrimitiveConversions::cast<Type>(exchange_value), reinterpret_cast<Type volatile*>(dest), PrimitiveConversions::cast<Type>(compare_value)));
 }
 
 template<typename T>
-inline T Atomic::CmpxchgByteUsingInt::operator()(T exchange_value,
-                                                 T volatile* dest,
-                                                 T compare_value,
-                                                 atomic_memory_order order) const {
+inline T Atomic::CmpxchgByteUsingInt::operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
   STATIC_ASSERT(sizeof(T) == sizeof(uint8_t));
   uint8_t canon_exchange_value = exchange_value;
   uint8_t canon_compare_value = compare_value;
-  volatile uint32_t* aligned_dest
-    = reinterpret_cast<volatile uint32_t*>(align_down(dest, sizeof(uint32_t)));
+  volatile uint32_t* aligned_dest = reinterpret_cast<volatile uint32_t*>(align_down(dest, sizeof(uint32_t)));
   size_t offset = pointer_delta(dest, aligned_dest, 1);
   uint32_t cur = *aligned_dest;
   uint8_t* cur_as_bytes = reinterpret_cast<uint8_t*>(&cur);
@@ -850,21 +816,14 @@ struct Atomic::XchgImpl<
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
     STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
-    return Translator::recover(
-      xchg(Translator::decay(exchange_value),
-           reinterpret_cast<Decayed volatile*>(dest),
-           order));
+    return Translator::recover(xchg(Translator::decay(exchange_value), reinterpret_cast<Decayed volatile*>(dest), order));
   }
 };
 
 template<typename Type, typename Fn, typename T>
-inline T Atomic::xchg_using_helper(Fn fn,
-                                   T exchange_value,
-                                   T volatile* dest) {
+inline T Atomic::xchg_using_helper(Fn fn, T exchange_value, T volatile* dest) {
   STATIC_ASSERT(sizeof(Type) == sizeof(T));
-  return PrimitiveConversions::cast<T>(
-    fn(PrimitiveConversions::cast<Type>(exchange_value),
-       reinterpret_cast<Type volatile*>(dest)));
+  return PrimitiveConversions::cast<T>(fn(PrimitiveConversions::cast<Type>(exchange_value), reinterpret_cast<Type volatile*>(dest)));
 }
 
 template<typename T, typename D>

@@ -27,10 +27,10 @@ public:
   static double last_application_time_sec()    { return _app_timer.seconds(); }
 
   // callbacks
-  static void record_safepoint_begin() {};
-  static void record_safepoint_synchronized() {};
-  static void record_safepoint_end() {};
-  static void record_application_start() {};
+  static void record_safepoint_begin() { };
+  static void record_safepoint_synchronized() { };
+  static void record_safepoint_end() { };
+  static void record_application_start() { };
 };
 
 #endif

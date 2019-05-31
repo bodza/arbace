@@ -70,8 +70,8 @@ class GenericGrowableArray : public ResourceObj {
 
   // Where are we going to allocate memory?
   bool on_C_heap() { return _arena == (Arena*)1; }
-  bool on_stack () { return _arena == NULL;      }
-  bool on_arena () { return _arena >  (Arena*)1;  }
+  bool on_stack () { return _arena == NULL; }
+  bool on_arena () { return _arena >  (Arena*)1; }
 
   // This GA will use the resource stack for storage if c_heap==false,
   // Else it will use the C heap.  Use clear_and_deallocate to avoid leaks.
@@ -80,14 +80,8 @@ class GenericGrowableArray : public ResourceObj {
     _max = initial_size;
     _memflags = flags;
 
-    // memory type has to be specified for C heap allocation
-    assert(!(c_heap && flags == mtNone), "memory type not specified for C heap object");
-
-    assert(_len >= 0 && _len <= _max, "initial_len too big");
     _arena = (c_heap ? (Arena*)1 : NULL);
     set_nesting();
-    assert(!on_C_heap() || allocated_on_C_heap(), "growable array must be on C heap if elements are");
-    assert(!on_stack() || (allocated_on_res_area() || allocated_on_stack()), "growable array must be on stack if elements are not on arena and not on C heap");
   }
 
   // This GA will use the given arena for storage.
@@ -95,21 +89,14 @@ class GenericGrowableArray : public ResourceObj {
   GenericGrowableArray(Arena* arena, int initial_size, int initial_len) {
     _len = initial_len;
     _max = initial_size;
-    assert(_len >= 0 && _len <= _max, "initial_len too big");
     _arena = arena;
     _memflags = mtNone;
-
-    assert(on_arena(), "arena has taken on reserved value 0 or 1");
-    // Relax next assert to allow object allocation on resource area,
-    // on stack or embedded into an other object.
-    assert(allocated_on_arena() || allocated_on_stack(), "growable array must be on arena or on stack if elements are on arena");
   }
 
   void* raw_allocate(int elementSize);
 
   // some uses pass the Thread explicitly for speed (4990299 tuning)
   void* raw_allocate(Thread* thread, int elementSize) {
-    assert(on_stack(), "fast ResourceObj path only");
     return (void*)resource_allocate_bytes(thread, elementSize * _max);
   }
 
@@ -172,7 +159,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   int   length() const          { return _len; }
   int   max_length() const      { return _max; }
   void  trunc_to(int l)         {
-    assert(l <= _len,"cannot increase length");
     _len = l; }
   bool  is_empty() const        { return _len == 0; }
   bool  is_nonempty() const     { return _len != 0; }
@@ -205,27 +191,22 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   }
 
   E& at(int i) {
-    assert(0 <= i && i < _len, "illegal index");
     return _data[i];
   }
 
   E const& at(int i) const {
-    assert(0 <= i && i < _len, "illegal index");
     return _data[i];
   }
 
   E* adr_at(int i) const {
-    assert(0 <= i && i < _len, "illegal index");
     return &_data[i];
   }
 
   E first() const {
-    assert(_len > 0, "empty list");
     return _data[0];
   }
 
   E top() const {
-    assert(_len > 0, "empty list");
     return _data[_len-1];
   }
 
@@ -244,17 +225,14 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   void push(const E& elem) { append(elem); }
 
   E pop() {
-    assert(_len > 0, "empty list");
     return _data[--_len];
   }
 
   void at_put(int i, const E& elem) {
-    assert(0 <= i && i < _len, "illegal index");
     _data[i] = elem;
   }
 
   E at_grow(int i, const E& fill = E()) {
-    assert(0 <= i, "negative index");
     check_nesting();
     if (i >= _len) {
       if (i >= _max) grow(i);
@@ -266,7 +244,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   }
 
   void at_put_grow(int i, const E& elem, const E& fill = E()) {
-    assert(0 <= i, "negative index");
     check_nesting();
     raw_at_put_grow(i, elem, fill);
   }
@@ -320,14 +297,12 @@ template<class E> class GrowableArray : public GenericGrowableArray {
 
   // The order is preserved.
   void remove_at(int index) {
-    assert(0 <= index && index < _len, "illegal index");
     for (int j = index + 1; j < _len; j++) _data[j-1] = _data[j];
     _len--;
   }
 
   // The order is changed.
   void delete_at(int index) {
-    assert(0 <= index && index < _len, "illegal index");
     if (index < --_len) {
       // Replace removed element with last one.
       _data[index] = _data[_len];
@@ -336,7 +311,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
 
   // inserts the given element before the element at index i
   void insert_before(const int idx, const E& elem) {
-    assert(0 <= idx && idx <= _len, "illegal index");
     check_nesting();
     if (_len == _max) grow(_len);
     for (int j = _len - 1; j >= idx; j--) {
@@ -347,7 +321,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   }
 
   void insert_before(const int idx, const GrowableArray<E>* array) {
-    assert(0 <= idx && idx <= _len, "illegal index");
     check_nesting();
     int array_len = array->length();
     int new_len = _len + array_len;
@@ -450,7 +423,6 @@ template<class E> void GrowableArray<E>::raw_at_put_grow(int i, const E& p, cons
 // has been allocated on the C heap.  It's not public - called by the
 // destructor.
 template<class E> void GrowableArray<E>::clear_and_deallocate() {
-    assert(on_C_heap(), "clear_and_deallocate should only be called when on C heap");
     clear();
     if (_data != NULL) {
       for (int i = 0; i < _max; i++) _data[i].~E();
@@ -478,7 +450,6 @@ template<class E> class GrowableArrayIterator : public StackObj {
 
   // Private constructor used in GrowableArray::begin() and GrowableArray::end()
   GrowableArrayIterator(const GrowableArray<E>* array, int position) : _array(array), _position(position) {
-    assert(0 <= position && position <= _array->length(), "illegal position");
   }
 
  public:
@@ -487,12 +458,10 @@ template<class E> class GrowableArrayIterator : public StackObj {
   E operator*()                           { return _array->at(_position); }
 
   bool operator==(const GrowableArrayIterator<E>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position == rhs._position;
   }
 
   bool operator!=(const GrowableArrayIterator<E>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position != rhs._position;
   }
 };
@@ -510,7 +479,7 @@ template<class E, class UnaryPredicate> class GrowableArrayFilterIterator : publ
   GrowableArrayFilterIterator(const GrowableArrayIterator<E>& begin, UnaryPredicate filter_predicate)
    : _array(begin._array), _position(begin._position), _predicate(filter_predicate) {
     // Advance to first element satisfying the predicate
-    while(_position != _array->length() && !_predicate(_array->at(_position))) {
+    while (_position != _array->length() && !_predicate(_array->at(_position))) {
       ++_position;
     }
   }
@@ -526,22 +495,18 @@ template<class E, class UnaryPredicate> class GrowableArrayFilterIterator : publ
   E operator*()   { return _array->at(_position); }
 
   bool operator==(const GrowableArrayIterator<E>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position == rhs._position;
   }
 
   bool operator!=(const GrowableArrayIterator<E>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position != rhs._position;
   }
 
   bool operator==(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position == rhs._position;
   }
 
   bool operator!=(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  {
-    assert(_array == rhs._array, "iterator belongs to different array");
     return _position != rhs._position;
   }
 };

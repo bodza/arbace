@@ -207,7 +207,6 @@ class AdaptiveSizePolicy : public CHeapObj<mtGC> {
   // cost stays non-negative.
   virtual double gc_cost() const {
     double result = MIN2(1.0, minor_gc_cost() + major_gc_cost());
-    assert(result >= 0.0, "Both minor and major costs are non-negative");
     return result;
   }
 
@@ -241,13 +240,11 @@ class AdaptiveSizePolicy : public CHeapObj<mtGC> {
   // GC cost.
   double adjusted_mutator_cost() const {
     double result = 1.0 - decaying_gc_cost();
-    assert(result >= 0.0, "adjusted mutator cost calculation is incorrect");
     return result;
   }
 
   virtual double mutator_cost() const {
     double result = 1.0 - gc_cost();
-    assert(result >= 0.0, "mutator cost calculation is incorrect");
     return result;
   }
 
@@ -394,8 +391,8 @@ class AdaptiveSizePolicy : public CHeapObj<mtGC> {
     return _minor_pause_young_estimator->slope();
   }
 
-  float minor_collection_slope() { return _minor_collection_estimator->slope();}
-  float major_collection_slope() { return _major_collection_estimator->slope();}
+  float minor_collection_slope() { return _minor_collection_estimator->slope(); }
+  float major_collection_slope() { return _major_collection_estimator->slope(); }
 
   float minor_pause_old_slope() {
     return _minor_pause_old_estimator->slope();
@@ -456,24 +453,14 @@ class AdaptiveSizePolicy : public CHeapObj<mtGC> {
 
   // Check the conditions for an out-of-memory due to excessive GC time.
   // Set _gc_overhead_limit_exceeded if all the conditions have been met.
-  void check_gc_overhead_limit(size_t young_live,
-                               size_t eden_live,
-                               size_t max_old_gen_size,
-                               size_t max_eden_size,
-                               bool   is_full_gc,
-                               GCCause::Cause gc_cause,
-                               SoftRefPolicy* soft_ref_policy);
+  void check_gc_overhead_limit(size_t young_live, size_t eden_live, size_t max_old_gen_size, size_t max_eden_size, bool   is_full_gc, GCCause::Cause gc_cause, SoftRefPolicy* soft_ref_policy);
 
   static bool should_update_promo_stats(GCCause::Cause cause) {
-    return ((GCCause::is_user_requested_gc(cause)  &&
-               UseAdaptiveSizePolicyWithSystemGC) ||
-            GCCause::is_tenured_allocation_failure_gc(cause));
+    return ((GCCause::is_user_requested_gc(cause)  && UseAdaptiveSizePolicyWithSystemGC) || GCCause::is_tenured_allocation_failure_gc(cause));
   }
 
   static bool should_update_eden_stats(GCCause::Cause cause) {
-    return ((GCCause::is_user_requested_gc(cause)  &&
-               UseAdaptiveSizePolicyWithSystemGC) ||
-            GCCause::is_allocation_failure_gc(cause));
+    return ((GCCause::is_user_requested_gc(cause)  && UseAdaptiveSizePolicyWithSystemGC) || GCCause::is_allocation_failure_gc(cause));
   }
 
   // Printing support

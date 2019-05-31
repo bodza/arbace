@@ -74,7 +74,7 @@ class NativeInstruction {
  public:
 
   // unit test stuff
-  static void test() {}                 // override for testing
+  static void test() { }                 // override for testing
 
   inline friend NativeInstruction* nativeInstruction_at(address address);
 
@@ -103,15 +103,12 @@ class NativeInstruction {
 
   bool is_Membar() {
     unsigned int insn = uint_at(0);
-    return Instruction_aarch64::extract(insn, 31, 12) == 0b11010101000000110011 &&
-      Instruction_aarch64::extract(insn, 7, 0) == 0b10111111;
+    return Instruction_aarch64::extract(insn, 31, 12) == 0b11010101000000110011 && Instruction_aarch64::extract(insn, 7, 0) == 0b10111111;
   }
 
   bool is_Imm_LdSt() {
     unsigned int insn = uint_at(0);
-    return Instruction_aarch64::extract(insn, 29, 27) == 0b111 &&
-      Instruction_aarch64::extract(insn, 23, 23) == 0b0 &&
-      Instruction_aarch64::extract(insn, 26, 25) == 0b00;
+    return Instruction_aarch64::extract(insn, 29, 27) == 0b111 && Instruction_aarch64::extract(insn, 23, 23) == 0b0 && Instruction_aarch64::extract(insn, 26, 25) == 0b00;
   }
 };
 
@@ -185,7 +182,6 @@ class NativeCall: public NativeInstruction {
   void set_destination(address dest)        {
     int offset = dest - instruction_address();
     unsigned int insn = 0b100101 << 26;
-    assert((offset & 3) == 0, "should be");
     offset >>= 2;
     offset &= (1 << 26) - 1; // mask off insn part
     insn |= offset;
@@ -256,8 +252,8 @@ class NativeMovConstReg: public NativeInstruction {
     else if (is_adrp_at(instruction_address()))
       return addr_at(2*4);
     else if (is_ldr_literal_at(instruction_address()))
-      return(addr_at(4));
-    assert(false, "Unknown instruction in NativeMovConstReg");
+      return (addr_at(4));
+    ShouldNotReachHere();
     return NULL;
   }
 
@@ -274,7 +270,7 @@ class NativeMovConstReg: public NativeInstruction {
   void  print();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 
   // Creation
   inline friend NativeMovConstReg* nativeMovConstReg_at(address address);
@@ -335,26 +331,26 @@ class NativeMovRegMem: public NativeInstruction {
 
   void  set_offset(int x);
 
-  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset ) ); }
+  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
 
   void verify();
   void print ();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 
  private:
   inline friend NativeMovRegMem* nativeMovRegMem_at (address address);
 };
 
-inline NativeMovRegMem* nativeMovRegMem_at (address address) {
+inline NativeMovRegMem* nativeMovRegMem_at(address address) {
   NativeMovRegMem* test = (NativeMovRegMem*)(address - NativeMovRegMem::instruction_offset);
   return test;
 }
 
 class NativeMovRegMemPatching: public NativeMovRegMem {
  private:
-  friend NativeMovRegMemPatching* nativeMovRegMemPatching_at (address address) {Unimplemented(); return 0;  }
+  friend NativeMovRegMemPatching* nativeMovRegMemPatching_at (address address) { Unimplemented(); return 0; }
 };
 
 // An interface for accessing/manipulating native leal instruction of form:
@@ -373,7 +369,7 @@ class NativeLoadAddress: public NativeInstruction {
   void print ();
 
   // unit test stuff
-  static void test() {}
+  static void test() { }
 };
 
 //   adrp    x16, #page
@@ -426,7 +422,7 @@ class NativeJump: public NativeInstruction {
   void verify();
 
   // Unit testing stuff
-  static void test() {}
+  static void test() { }
 
   // Insertion of native jump instruction
   static void insert(address code_pos, address entry);
@@ -514,7 +510,7 @@ class NativeTstRegMem: public NativeInstruction {
  public:
 };
 
-inline bool NativeInstruction::is_nop()         {
+inline bool NativeInstruction::is_nop() {
   uint32_t insn = *(uint32_t*)addr_at(0);
   return insn == 0xd503201f;
 }
@@ -568,7 +564,6 @@ inline bool is_NativeCallTrampolineStub_at(address addr) {
 }
 
 inline NativeCallTrampolineStub* nativeCallTrampolineStub_at(address addr) {
-  assert(is_NativeCallTrampolineStub_at(addr), "no call trampoline found");
   return (NativeCallTrampolineStub*)addr;
 }
 
@@ -579,7 +574,6 @@ public:
 };
 
 inline NativeMembar *NativeMembar_at(address addr) {
-  assert(nativeInstruction_at(addr)->is_Membar(), "no membar found");
   return (NativeMembar*)addr;
 }
 
@@ -593,8 +587,7 @@ private:
       Instruction_aarch64::extract(uint_at(0), 11, 10) == 0b00;
   }
   bool is_ldst_unsigned_offset() {
-    return Instruction_aarch64::extract(uint_at(0), 29, 22) == 0b11100101 ||
-      Instruction_aarch64::extract(uint_at(0), 29, 22) == 0b11100100;
+    return Instruction_aarch64::extract(uint_at(0), 29, 22) == 0b11100101 || Instruction_aarch64::extract(uint_at(0), 29, 22) == 0b11100100;
   }
 public:
   Register target() {
@@ -619,19 +612,16 @@ public:
   size_t size_in_bytes() { return 1 << size(); }
   bool is_not_pre_post_index() { return (is_ldst_ur() || is_ldst_unsigned_offset()); }
   bool is_load() {
-    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 || Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
 
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01;
   }
   bool is_store() {
-    assert(Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01 || Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00, "must be ldr or str");
 
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00;
   }
 };
 
 inline NativeLdSt *NativeLdSt_at(address addr) {
-  assert(nativeInstruction_at(addr)->is_Imm_LdSt(), "no immediate load/store found");
   return (NativeLdSt*)addr;
 }
 #endif

@@ -526,7 +526,7 @@ protected:
           result |= CPU_VAES;
       }
     }
-    if(_cpuid_info.sef_cpuid7_ebx.bits.bmi1 != 0)
+    if (_cpuid_info.sef_cpuid7_ebx.bits.bmi1 != 0)
       result |= CPU_BMI1;
     if (_cpuid_info.std_cpuid1_edx.bits.tsc != 0)
       result |= CPU_TSC;
@@ -540,9 +540,9 @@ protected:
       result |= CPU_CLMUL;
     if (_cpuid_info.sef_cpuid7_ebx.bits.rtm != 0)
       result |= CPU_RTM;
-    if(_cpuid_info.sef_cpuid7_ebx.bits.adx != 0)
+    if (_cpuid_info.sef_cpuid7_ebx.bits.adx != 0)
        result |= CPU_ADX;
-    if(_cpuid_info.sef_cpuid7_ebx.bits.bmi2 != 0)
+    if (_cpuid_info.sef_cpuid7_ebx.bits.bmi2 != 0)
       result |= CPU_BMI2;
     if (_cpuid_info.sef_cpuid7_ebx.bits.sha != 0)
       result |= CPU_SHA;
@@ -551,8 +551,7 @@ protected:
 
     // AMD features.
     if (is_amd()) {
-      if ((_cpuid_info.ext_cpuid1_edx.bits.tdnow != 0) ||
-          (_cpuid_info.ext_cpuid1_ecx.bits.prefetchw != 0))
+      if ((_cpuid_info.ext_cpuid1_edx.bits.tdnow != 0) || (_cpuid_info.ext_cpuid1_ecx.bits.prefetchw != 0))
         result |= CPU_3DNOW_PREFETCH;
       if (_cpuid_info.ext_cpuid1_ecx.bits.lzcnt != 0)
         result |= CPU_LZCNT;
@@ -560,8 +559,8 @@ protected:
         result |= CPU_SSE4A;
     }
     // Intel features.
-    if(is_intel()) {
-      if(_cpuid_info.ext_cpuid1_ecx.bits.lzcnt_intel != 0)
+    if (is_intel()) {
+      if (_cpuid_info.ext_cpuid1_ecx.bits.lzcnt_intel != 0)
         result |= CPU_LZCNT;
       // for Intel, ecx.bits.misalignsse bit (bit 8) indicates support for prefetchw
       if (_cpuid_info.ext_cpuid1_ecx.bits.misalignsse != 0) {
@@ -664,7 +663,6 @@ public:
 
   // Asserts
   static void assert_is_initialized() {
-    assert(_cpuid_info.std_cpuid1_eax.bits.family != 0, "VM_Version not initialized");
   }
 
   //
@@ -682,7 +680,7 @@ public:
   //       processors.  Use the feature test functions below to
   //       determine whether a particular instruction is supported.
   //
-  static int  cpu_family()        { return _cpu;}
+  static int  cpu_family()        { return _cpu; }
   static bool is_P6()             { return cpu_family() >= 6; }
   static bool is_amd()            { assert_is_initialized(); return _cpuid_info.std_vendor_name_0 == 0x68747541; } // 'htuA'
   static bool is_intel()          { assert_is_initialized(); return _cpuid_info.std_vendor_name_0 == 0x756e6547; } // 'uneG'
@@ -733,8 +731,7 @@ public:
       if (cpu_family() >= 0x17) {
         result = _cpuid_info.ext_cpuid1E_ebx.bits.threads_per_core + 1;
       } else {
-        result = _cpuid_info.std_cpuid1_ebx.bits.threads_per_cpu /
-                 cores_per_cpu();
+        result = _cpuid_info.std_cpuid1_ebx.bits.threads_per_cpu / cores_per_cpu();
       }
     }
     return (result == 0 ? 1 : result);
@@ -793,8 +790,7 @@ public:
   static bool supports_avx512vl() { return (_features & CPU_AVX512VL) != 0; }
   static bool supports_avx512vlbw() { return (supports_evex() && supports_avx512bw() && supports_avx512vl()); }
   static bool supports_avx512vldq() { return (supports_evex() && supports_avx512dq() && supports_avx512vl()); }
-  static bool supports_avx512vlbwdq() { return (supports_evex() && supports_avx512vl() &&
-                                                supports_avx512bw() && supports_avx512dq()); }
+  static bool supports_avx512vlbwdq() { return (supports_evex() && supports_avx512vl() && supports_avx512bw() && supports_avx512dq()); }
   static bool supports_avx512novl() { return (supports_evex() && !supports_avx512vl()); }
   static bool supports_avx512nobw() { return (supports_evex() && !supports_avx512bw()); }
   static bool supports_avx256only() { return (supports_avx2() && !supports_evex()); }
@@ -807,8 +803,7 @@ public:
   static bool supports_vaes()       { return (_features & CPU_VAES) != 0; }
 
   // Intel features
-  static bool is_intel_family_core() { return is_intel() &&
-                                       extended_cpu_family() == CPU_FAMILY_INTEL_CORE; }
+  static bool is_intel_family_core() { return is_intel() && extended_cpu_family() == CPU_FAMILY_INTEL_CORE; }
 
   static bool is_intel_tsc_synched_at_init()  {
     if (is_intel_family_core()) {
@@ -834,22 +829,18 @@ public:
   static bool supports_lzcnt()    { return (_features & CPU_LZCNT) != 0; }
   static bool supports_sse4a()    { return (_features & CPU_SSE4A) != 0; }
 
-  static bool is_amd_Barcelona()  { return is_amd() &&
-                                           extended_cpu_family() == CPU_FAMILY_AMD_11H; }
+  static bool is_amd_Barcelona()  { return is_amd() && extended_cpu_family() == CPU_FAMILY_AMD_11H; }
 
   // Intel and AMD newer cores support fast timestamps well
   static bool supports_tscinv_bit() {
     return (_features & CPU_TSCINV) != 0;
   }
   static bool supports_tscinv() {
-    return supports_tscinv_bit() &&
-           ( (is_amd() && !is_amd_Barcelona()) ||
-             is_intel_tsc_synched_at_init() );
+    return supports_tscinv_bit() && ( (is_amd() && !is_amd_Barcelona()) || is_intel_tsc_synched_at_init());
   }
 
   // Intel Core and newer cpus have fast IDIV instruction (excluding Atom).
-  static bool has_fast_idiv()     { return is_intel() && cpu_family() == 6 &&
-                                           supports_sse3() && _model != 0x1C; }
+  static bool has_fast_idiv()     { return is_intel() && cpu_family() == 6 && supports_sse3() && _model != 0x1C; }
 
   static bool supports_compare_and_exchange() { return true; }
 

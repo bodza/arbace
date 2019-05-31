@@ -10,9 +10,7 @@ inline bool CompiledMethod::is_deopt_pc(address pc) { return is_deopt_entry(pc) 
 
 // When using JVMCI the address might be off by the size of a call instruction.
 inline bool CompiledMethod::is_deopt_entry(address pc) {
-  return pc == deopt_handler_begin()
-    || (is_compiled_by_jvmci() && pc == (deopt_handler_begin() + NativeCall::instruction_size))
-    ;
+  return pc == deopt_handler_begin() || (is_compiled_by_jvmci() && pc == (deopt_handler_begin() + NativeCall::instruction_size));
 }
 
 inline void CompiledMethod::release_set_exception_cache(ExceptionCache *ec) {
@@ -41,12 +39,10 @@ inline address CompiledMethod::get_deopt_original_pc(const frame* fr) {
 inline int ExceptionCache::count() { return OrderAccess::load_acquire(&_count); }
 
 address ExceptionCache::pc_at(int index) {
-  assert(index >= 0 && index < count(),"");
   return _pc[index];
 }
 
 address ExceptionCache::handler_at(int index) {
-  assert(index >= 0 && index < count(),"");
   return _handler[index];
 }
 

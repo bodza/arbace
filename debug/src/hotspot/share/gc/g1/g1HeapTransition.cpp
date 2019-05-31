@@ -28,7 +28,7 @@ struct DetailedUsage : public StackObj {
 
   DetailedUsage() :
     _eden_used(0), _survivor_used(0), _old_used(0), _humongous_used(0),
-    _eden_region_count(0), _survivor_region_count(0), _old_region_count(0), _humongous_region_count(0) {}
+    _eden_region_count(0), _survivor_region_count(0), _old_region_count(0), _humongous_region_count(0) { }
 };
 
 class DetailedUsageClosure: public HeapRegionClosure {
@@ -48,7 +48,6 @@ public:
       _usage._humongous_used += r->used();
       _usage._humongous_region_count++;
     } else {
-      assert(r->used() == 0, "Expected used to be 0 but it was " SIZE_FORMAT, r->used());
     }
     return false;
   }
@@ -65,10 +64,6 @@ void G1HeapTransition::print() {
     DetailedUsageClosure blk;
     _g1_heap->heap_region_iterate(&blk);
     usage = blk._usage;
-    assert(usage._eden_region_count == 0, "Expected no eden regions, but got " SIZE_FORMAT, usage._eden_region_count);
-    assert(usage._survivor_region_count == after._survivor_length, "Expected survivors to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._survivor_length, usage._survivor_region_count);
-    assert(usage._old_region_count == after._old_length, "Expected old to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._old_length, usage._old_region_count);
-    assert(usage._humongous_region_count == after._humongous_length, "Expected humongous to be " SIZE_FORMAT " but was " SIZE_FORMAT, after._humongous_length, usage._humongous_region_count);
   }
 
   log_info(gc, heap)("Eden regions: " SIZE_FORMAT "->" SIZE_FORMAT "("  SIZE_FORMAT ")",

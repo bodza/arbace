@@ -12,7 +12,7 @@ class ServiceThread : public JavaThread {
   static ServiceThread* _instance;
 
   static void service_thread_entry(JavaThread* thread, TRAPS);
-  ServiceThread(ThreadFunction entry_point) : JavaThread(entry_point) {};
+  ServiceThread(ThreadFunction entry_point) : JavaThread(entry_point) { };
 
  public:
   static void initialize();

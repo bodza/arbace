@@ -114,7 +114,7 @@ class BCEscapeAnalyzer : public ResourceObj {
 
   // Tracking of argument modification
 
-  enum {OFFSET_ANY = -1};
+  enum { OFFSET_ANY = -1 };
   bool is_arg_modified(int arg, int offset, int size_in_bytes);
   void set_arg_modified(int arg, int offset, int size_in_bytes);
   bool has_non_arg_side_affects()    { return _unknown_modified; }

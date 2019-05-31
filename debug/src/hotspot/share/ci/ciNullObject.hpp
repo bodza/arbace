@@ -11,7 +11,7 @@ class ciNullObject : public ciObject {
   CI_PACKAGE_ACCESS
 
 private:
-  ciNullObject() : ciObject() {}
+  ciNullObject() : ciObject() { }
 
   const char* type_string() { return "ciNullObject"; }
 

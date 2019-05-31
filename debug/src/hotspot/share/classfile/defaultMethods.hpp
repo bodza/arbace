@@ -18,7 +18,6 @@ class DefaultMethods : AllStatic {
   // "overpass" method that is an instance method that redirects to the
   // default method.  Overpass methods are added to the methods lists for
   // the class.
-  static void generate_default_methods(
-      InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS);
+  static void generate_default_methods(InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS);
 };
 #endif

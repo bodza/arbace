@@ -12,7 +12,7 @@ class CopyFailedInfo : public CHeapObj<mtGC> {
   uint      _count;
 
  public:
-  CopyFailedInfo() : _first_size(0), _smallest_size(0), _total_size(0), _count(0) {}
+  CopyFailedInfo() : _first_size(0), _smallest_size(0), _total_size(0), _count(0) { }
 
   virtual void register_copy_failure(size_t size) {
     if (_first_size == 0) {
@@ -43,14 +43,13 @@ class PromotionFailedInfo : public CopyFailedInfo {
   traceid _thread_trace_id;
 
  public:
-  PromotionFailedInfo() : CopyFailedInfo(), _thread_trace_id(0) {}
+  PromotionFailedInfo() : CopyFailedInfo(), _thread_trace_id(0) { }
 
   void register_copy_failure(size_t size) {
     CopyFailedInfo::register_copy_failure(size);
     if (_thread_trace_id == 0) {
       _thread_trace_id = JFR_THREAD_ID(Thread::current());
     } else {
-      assert(JFR_THREAD_ID(Thread::current()) == _thread_trace_id, "The PromotionFailedInfo should be thread local.");
     }
   }
 
@@ -62,6 +61,6 @@ class PromotionFailedInfo : public CopyFailedInfo {
   traceid thread_trace_id() const { return _thread_trace_id; }
 };
 
-class EvacuationFailedInfo : public CopyFailedInfo {};
+class EvacuationFailedInfo : public CopyFailedInfo { };
 
 #endif

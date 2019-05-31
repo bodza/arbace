@@ -8,7 +8,7 @@
 
 class Assembler : public AbstractAssembler {
  public:
-  Assembler(CodeBuffer* code) : AbstractAssembler(code) {}
+  Assembler(CodeBuffer* code) : AbstractAssembler(code) { }
 
  public:
   void pd_patch_instruction(address branch, address target);
@@ -16,7 +16,7 @@ class Assembler : public AbstractAssembler {
 
 class MacroAssembler : public Assembler {
  public:
-  MacroAssembler(CodeBuffer* code) : Assembler(code) {}
+  MacroAssembler(CodeBuffer* code) : Assembler(code) { }
 
  public:
   void align(int modulus);

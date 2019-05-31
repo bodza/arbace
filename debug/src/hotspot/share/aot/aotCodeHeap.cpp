@@ -56,7 +56,6 @@ Klass* AOTCodeHeap::get_klass_from_got(const char* klass_name, int klass_len, co
 
 Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method, Thread* thread) {
   ResourceMark rm(thread);
-  assert(method != NULL, "incorrect call parameter");
   methodHandle caller(thread, (Method*)method);
 
   // Use class loader of aot method.
@@ -65,7 +64,6 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
 
   // Ignore wrapping L and ;
   if (name[0] == 'L') {
-    assert(len > 2, "small name %s", name);
     name++;
     len -= 2;
   }
@@ -75,7 +73,6 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
     return NULL;
   }
   Klass* k = SystemDictionary::find_instance_or_array_klass(sym, loader, protection_domain, thread);
-  assert(!thread->has_pending_exception(), "should not throw");
 
   if (k != NULL) {
     log_info(aot, class, resolve)("%s %s (lookup)", caller->method_holder()->external_name(), k->external_name());
@@ -206,7 +203,6 @@ AOTLib::AOTLib(void* handle, const char* name, int dso_id) : _valid(true), _dl_h
 
 AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
     CodeHeap("CodeHeap 'AOT'", CodeBlobType::AOT), _lib(lib), _classes(NULL), _code_to_aot(NULL) {
-  assert(_lib->is_valid(), "invalid library");
 
   _lib_symbols_initialized = false;
   _aot_id = 0;
@@ -291,7 +287,6 @@ void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data
   jlong* state_adr = &_method_state[code_id];
   address metadata_table = method_data->_metadata_table;
   int metadata_size = method_data->_metadata_size;
-  assert(code_id < _method_count, "sanity");
   _aot_id++;
 
   // Check one more time.
@@ -299,7 +294,6 @@ void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data
     return;
   }
   AOTCompiledMethod *aot = new AOTCompiledMethod(code, mh(), meta, metadata_table, metadata_size, state_adr, this, name, code_id, _aot_id);
-  assert(_code_to_aot[code_id]._aot == NULL, "should be not initialized");
   _code_to_aot[code_id]._aot = aot; // Should set this first
   if (Atomic::cmpxchg(in_use, &_code_to_aot[code_id]._state, not_set) != not_set) {
     _code_to_aot[code_id]._aot = NULL; // Clean
@@ -345,7 +339,6 @@ void AOTCodeHeap::register_stubs() {
     address metadata_table = (address)_metadata_got + stub_offsets[i]._metadata_got_offset;
     int metadata_size = stub_offsets[i]._metadata_got_size;
     int code_id = stub_offsets[i]._code_id;
-    assert(code_id < _method_count, "sanity");
     jlong* state_adr = &_method_state[code_id];
     int len = build_u2_from((address)stub_name);
     stub_name += 2;
@@ -358,7 +351,6 @@ void AOTCodeHeap::register_stubs() {
     full_name[len+4] = 0;
     guarantee(_code_to_aot[code_id]._state != invalid, "stub %s can't be invalidated", full_name);
     AOTCompiledMethod* aot = new AOTCompiledMethod(entry, NULL, meta, metadata_table, metadata_size, state_adr, this, full_name, code_id, i);
-    assert(_code_to_aot[code_id]._aot  == NULL, "should be not initialized");
     _code_to_aot[code_id]._aot  = aot;
     if (Atomic::cmpxchg(in_use, &_code_to_aot[code_id]._state, not_set) != not_set) {
       fatal("stab '%s' code state is %d", full_name, _code_to_aot[code_id]._state);
@@ -379,7 +371,7 @@ void AOTCodeHeap::register_stubs() {
     *adr = (AOTSYMTYPE) VMSYMVAL; \
   }
 
-void AOTCodeHeap::link_graal_runtime_symbols()  {
+void AOTCodeHeap::link_graal_runtime_symbols() {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_monitorenter", address, JVMCIRuntime::monitorenter);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_monitorexit", address, JVMCIRuntime::monitorexit);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_jvmci_runtime_log_object", address, JVMCIRuntime::log_object);
@@ -547,8 +539,7 @@ Method* AOTCodeHeap::find_method(Klass* klass, Thread* thread, const char* metho
   Method* m;
   if (name == NULL || signature == NULL) {
     m = NULL;
-  } else if (name == vmSymbols::object_initializer_name() ||
-             name == vmSymbols::class_initializer_name()) {
+  } else if (name == vmSymbols::object_initializer_name() || name == vmSymbols::class_initializer_name()) {
     // Never search superclasses for constructors
     if (klass->is_instance_klass()) {
       m = InstanceKlass::cast(klass)->find_method(name, signature);
@@ -624,7 +615,6 @@ void AOTCodeHeap::sweep_dependent_methods(int* indexes, int methods_cnt) {
     if (Atomic::cmpxchg(invalid, &_code_to_aot[code_id]._state, not_set) != not_set) {
       if (_code_to_aot[code_id]._state == in_use) {
         AOTCompiledMethod* aot = _code_to_aot[code_id]._aot;
-        assert(aot != NULL, "aot should be set");
         if (!aot->is_runtime_stub()) { // Something is wrong - should not invalidate stubs.
           aot->mark_for_deoptimization(false);
           marked++;
@@ -656,7 +646,7 @@ void AOTCodeHeap::sweep_dependent_methods(InstanceKlass* ik) {
 }
 
 void AOTCodeHeap::sweep_method(AOTCompiledMethod *aot) {
-  int indexes[] = {aot->method_index()};
+  int indexes[] = { aot->method_index() };
   sweep_dependent_methods(indexes, 1);
   vmassert(aot->method()->code() != aot && aot->method()->aot_code() == NULL, "method still active");
 }
@@ -685,7 +675,6 @@ bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
     return false;
   }
 
-  assert(klass_data->_class_id < _class_count, "invalid class id");
   AOTClass* aot_class = &_classes[klass_data->_class_id];
   if (aot_class->_classloader != NULL && aot_class->_classloader != ik->class_loader_data()) {
     log_trace(aot, class, load)("class  %s  in  %s already loaded for classloader %p vs %p tid=" INTPTR_FORMAT,
@@ -763,7 +752,6 @@ void* AOTCodeHeap::first() const {
 void* AOTCodeHeap::next(void* p) const {
   AOTCompiledMethod *aot = (AOTCompiledMethod *)p;
   int next_index = aot->method_index() + 1;
-  assert(next_index <= _method_count, "");
   if (next_index == _method_count) {
     return NULL;
   }
@@ -786,12 +774,10 @@ void* AOTCodeHeap::find_start(void* p) const {
   int code_offset = (int)seg_idx * _lib->config()->_codeSegmentSize;
   int aot_index = *(int*)(_code_space + code_offset);
   AOTCompiledMethod* aot = _code_to_aot[aot_index]._aot;
-  assert(aot != NULL, "should find registered aot method");
   return aot;
 }
 
 AOTCompiledMethod* AOTCodeHeap::find_aot(address p) const {
-  assert(contains(p), "should be here");
   return (AOTCompiledMethod *)find_start(p);
 }
 
@@ -856,7 +842,7 @@ void AOTCodeHeap::metadata_do(void f(Metadata*)) {
 }
 
 bool AOTCodeHeap::reconcile_dynamic_klass(AOTCompiledMethod *caller, InstanceKlass* holder, int index, Klass *dyno_klass, const char *descriptor1, const char *descriptor2) {
-  const char * const descriptors[2] = {descriptor1, descriptor2};
+  const char * const descriptors[2] = { descriptor1, descriptor2 };
   JavaThread *thread = JavaThread::current();
   ResourceMark rm(thread);
 

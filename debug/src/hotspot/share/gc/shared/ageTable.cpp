@@ -21,7 +21,7 @@ AgeTable::AgeTable(bool global) {
     const char* agetable_ns = "generation.0.agetable";
     const char* bytes_ns = PerfDataManager::name_space(agetable_ns, "bytes");
 
-    for(int age = 0; age < table_size; age ++) {
+    for (int age = 0; age < table_size; age ++) {
       char age_name[10];
       jio_snprintf(age_name, sizeof(age_name), "%2.2d", age);
       const char* cname = PerfDataManager::counter_name(bytes_ns, age_name);
@@ -52,12 +52,10 @@ uint AgeTable::compute_tenuring_threshold(size_t desired_survivor_size) {
   uint result;
 
   if (AlwaysTenure || NeverTenure) {
-    assert(MaxTenuringThreshold == 0 || MaxTenuringThreshold == markOopDesc::max_age + 1, "MaxTenuringThreshold should be 0 or markOopDesc::max_age + 1, but is " UINTX_FORMAT, MaxTenuringThreshold);
     result = MaxTenuringThreshold;
   } else {
     size_t total = 0;
     uint age = 1;
-    assert(sizes[0] == 0, "no objects with age zero should be recorded");
     while (age < table_size) {
       total += sizes[age];
       // check if including objects of age 'age' made us pass the desired

@@ -22,10 +22,8 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::resolve_string_by_symbol(JavaThread *thre
       name += 2;
       TempNewSymbol sym = SymbolTable::new_symbol(name, len, CHECK);
       str = StringTable::intern(sym, CHECK);
-      assert(java_lang_String::is_instance(str), "must be string");
       *(oop*)string_result = str; // Store result
     }
-    assert(str != NULL, "Should be allocated!");
     thread->set_vm_result(str);
   JRT_BLOCK_END
 JRT_END
@@ -47,7 +45,6 @@ Klass* CompilerRuntime::resolve_klass_helper(JavaThread *thread, const char* nam
 
   // Ignore wrapping L and ;
   if (name[0] == 'L') {
-    assert(len > 2, "small name %s", name);
     name++;
     len -= 2;
   }
@@ -73,7 +70,6 @@ JRT_BLOCK_ENTRY(Klass*, CompilerRuntime::resolve_klass_by_symbol(JavaThread *thr
       *klass_result = k; // Store result
     }
   JRT_BLOCK_END
-  assert(k != NULL, " Should be loaded!");
   return k;
 JRT_END
 
@@ -83,8 +79,7 @@ Method* CompilerRuntime::resolve_method_helper(Klass* klass, const char* method_
   TempNewSymbol name_symbol = SymbolTable::probe(method_name, method_name_len);
   TempNewSymbol signature_symbol = SymbolTable::probe(signature_name, signature_name_len);
   if (name_symbol != NULL && signature_symbol != NULL) {
-    if (name_symbol == vmSymbols::object_initializer_name() ||
-        name_symbol == vmSymbols::class_initializer_name()) {
+    if (name_symbol == vmSymbols::object_initializer_name() || name_symbol == vmSymbols::class_initializer_name()) {
       // Never search superclasses for constructors
       if (klass->is_instance_klass()) {
         m = InstanceKlass::cast(klass)->find_method(name_symbol, signature_symbol);
@@ -104,7 +99,6 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::resolve_dynamic_invoke(JavaThread *thread
   {
     ResourceMark rm(THREAD);
     vframeStream vfst(thread, true);  // Do not skip and javaCalls
-    assert(!vfst.at_end(), "Java frame must exist");
     methodHandle caller(THREAD, vfst.method());
     InstanceKlass* holder = caller->method_holder();
     int bci = vfst.bci();
@@ -170,9 +164,7 @@ JRT_BLOCK_ENTRY(MethodCounters*, CompilerRuntime::resolve_method_by_symbol_and_l
        data += sizeof(u2);
        const char* signature_name = data;
 
-       assert(klass != NULL, "Klass parameter must not be null");
        Method* m = resolve_method_helper(klass, method_name, method_name_len, signature_name, signature_name_len);
-       assert(m != NULL, "Method must resolve successfully");
 
        // Create method counters immediately to avoid check at runtime.
        c = m->get_method_counters(thread);
@@ -213,7 +205,6 @@ JRT_BLOCK_ENTRY(Klass*, CompilerRuntime::initialize_klass_by_symbol(JavaThread *
       }
     }
   JRT_BLOCK_END
-  assert(k != NULL, " Should be loaded!");
   return k;
 JRT_END
 
@@ -229,12 +220,9 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::invocation_event(JavaThread *thread, Meth
     // Compute the enclosing method
     frame fr = thread->last_frame().sender(&map);
     CompiledMethod* cm = fr.cb()->as_compiled_method_or_null();
-    assert(cm != NULL && cm->is_compiled(), "Sanity check");
     methodHandle emh(THREAD, cm->method());
 
-    assert(!HAS_PENDING_EXCEPTION, "Should not have any exceptions pending");
     CompilationPolicy::policy()->event(emh, mh, InvocationEntryBci, InvocationEntryBci, CompLevel_aot, cm, thread);
-    assert(!HAS_PENDING_EXCEPTION, "Event handler should not throw any exceptions");
   JRT_BLOCK_END
 JRT_END
 
@@ -243,8 +231,6 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::backedge_event(JavaThread *thread, Method
     // Ignore the event if tiered is off
     return;
   }
-  assert(branch_bci != InvocationEntryBci && target_bci != InvocationEntryBci, "Wrong bci");
-  assert(target_bci <= branch_bci, "Expected a back edge");
   JRT_BLOCK
     methodHandle mh(THREAD, counters->method());
     RegisterMap map(thread, false);
@@ -252,11 +238,8 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::backedge_event(JavaThread *thread, Method
     // Compute the enclosing method
     frame fr = thread->last_frame().sender(&map);
     CompiledMethod* cm = fr.cb()->as_compiled_method_or_null();
-    assert(cm != NULL && cm->is_compiled(), "Sanity check");
     methodHandle emh(THREAD, cm->method());
-    assert(!HAS_PENDING_EXCEPTION, "Should not have any exceptions pending");
     nmethod* osr_nm = CompilationPolicy::policy()->event(emh, mh, branch_bci, target_bci, CompLevel_aot, cm, thread);
-    assert(!HAS_PENDING_EXCEPTION, "Event handler should not throw any exceptions");
     if (osr_nm != NULL) {
       Deoptimization::deoptimize_frame(thread, fr.id());
     }

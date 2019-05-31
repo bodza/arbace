@@ -174,7 +174,7 @@ public:
              size_t min_word_size = 0,
              size_t desired_word_size = 0,
              size_t actual_word_size = 0,
-             HeapWord* result = NULL) {};
+             HeapWord* result = NULL) { };
 };
 
 class MutatorAllocRegion : public G1AllocRegion {
@@ -234,7 +234,6 @@ protected:
 
   G1GCAllocRegion(const char* name, bool bot_updates, G1EvacStats* stats, InCSetState::in_cset_state_t purpose)
   : G1AllocRegion(name, bot_updates), _stats(stats), _purpose(purpose) {
-    assert(stats != NULL, "Must pass non-NULL PLAB statistics");
   }
 };
 

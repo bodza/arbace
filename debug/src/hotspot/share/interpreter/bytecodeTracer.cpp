@@ -266,7 +266,6 @@ bool BytecodePrinter::check_obj_index(int i, int& cp_index, outputStream* st) {
 
 bool BytecodePrinter::check_invokedynamic_index(int i, int& cp_index, outputStream* st) {
   ConstantPool* constants = method()->constants();
-  assert(ConstantPool::is_invokedynamic_index(i), "not secondary index?");
   i = ConstantPool::decode_invokedynamic_index(i) + ConstantPool::CPCACHE_INDEX_TAG;
 
   return check_cp_cache_index(i, cp_index, st);
@@ -410,7 +409,7 @@ void BytecodePrinter::print_attributes(int bci, outputStream* st) {
         BasicType atype = (BasicType)get_index_u1();
         const char* str = type2name(atype);
         if (str == NULL || atype == T_OBJECT || atype == T_ARRAY) {
-          assert(false, "Unidentified basic type");
+          ShouldNotReachHere();
         }
         st->print_cr(" %s", str);
       }

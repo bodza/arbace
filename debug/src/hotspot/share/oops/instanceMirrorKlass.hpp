@@ -25,15 +25,14 @@ class InstanceMirrorKlass: public InstanceKlass {
  private:
   static int _offset_of_static_fields;
 
-  InstanceMirrorKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_mirror, ID) {}
+  InstanceMirrorKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_mirror, ID) { }
 
  public:
   InstanceMirrorKlass() {
-    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+    }
 
   // Casting from Klass*
   static InstanceMirrorKlass* cast(Klass* k) {
-    assert(InstanceKlass::cast(k)->is_mirror_instance_klass(), "cast to InstanceMirrorKlass");
     return static_cast<InstanceMirrorKlass*>(k);
   }
 
@@ -48,7 +47,6 @@ class InstanceMirrorKlass: public InstanceKlass {
 
   static void init_offset_of_static_fields() {
     // Cache the offset of the static fields in the Class instance
-    assert(_offset_of_static_fields == 0, "once");
     _offset_of_static_fields = InstanceMirrorKlass::cast(SystemDictionary::Class_klass())->size_helper() << LogHeapWordSize;
   }
 

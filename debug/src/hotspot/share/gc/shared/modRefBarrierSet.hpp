@@ -20,10 +20,10 @@ protected:
 
 public:
   template <DecoratorSet decorators, typename T>
-  inline void write_ref_field_pre(T* addr) {}
+  inline void write_ref_field_pre(T* addr) { }
 
   template <DecoratorSet decorators, typename T>
-  inline void write_ref_field_post(T *addr, oop new_value) {}
+  inline void write_ref_field_post(T *addr, oop new_value) { }
 
   // Causes all refs in "mr" to be assumed to be modified.
   virtual void invalidate(MemRegion mr) = 0;
@@ -34,9 +34,9 @@ public:
 
   // Below length is the # array elements being written
   virtual void write_ref_array_pre(oop* dst, size_t length,
-                                   bool dest_uninitialized = false) {}
+                                   bool dest_uninitialized = false) { }
   virtual void write_ref_array_pre(narrowOop* dst, size_t length,
-                                   bool dest_uninitialized = false) {}
+                                   bool dest_uninitialized = false) { }
   // Below count is the # array elements being written, starting
   // at the address "start", which may not necessarily be HeapWord-aligned
   inline void write_ref_array(HeapWord* start, size_t count);

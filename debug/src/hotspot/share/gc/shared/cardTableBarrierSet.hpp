@@ -83,7 +83,7 @@ class CardTableBarrierSet: public ModRefBarrierSet {
   virtual void print_on(outputStream* st) const;
 
   template <DecoratorSet decorators, typename BarrierSetT = CardTableBarrierSet>
-  class AccessBarrier: public ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT> {};
+  class AccessBarrier: public ModRefBarrierSet::AccessBarrier<decorators, BarrierSetT> { };
 };
 
 template<>

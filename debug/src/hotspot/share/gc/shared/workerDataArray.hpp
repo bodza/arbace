@@ -7,7 +7,7 @@
 class outputStream;
 
 template <class T>
-class WorkerDataArray  : public CHeapObj<mtGC> {
+class WorkerDataArray : public CHeapObj<mtGC> {
   friend class WDAPrinter;
 public:
   static const uint MaxThreadWorkItems = 3;
@@ -26,7 +26,6 @@ private:
   void set_thread_work_item(uint worker_i, size_t value, uint index = 0);
   void add_thread_work_item(uint worker_i, size_t value, uint index = 0);
   WorkerDataArray<size_t>* thread_work_items(uint index = 0) const {
-    assert(index < MaxThreadWorkItems, "Tried to access thread work item %u max %u", index, MaxThreadWorkItems);
     return _thread_work_items[index];
   }
 

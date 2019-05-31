@@ -24,7 +24,6 @@ MemRegion MemRegion::_union(const MemRegion mr2) const {
   if (mr2.is_empty()) return MemRegion(start(), end());
 
   // Otherwise, regions must overlap or be adjacent
-  assert(((start() <= mr2.start()) && (end() >= mr2.start())) || ((mr2.start() <= start()) && (mr2.end() >= start())), "non-adjacent or overlapping regions");
   MemRegion res;
   HeapWord* res_start = MIN2(start(), mr2.start());
   HeapWord* res_end   = MAX2(end(),   mr2.end());
@@ -85,10 +84,10 @@ void* MemRegion::operator new [](size_t size) throw() {
   return (address)AllocateHeap(size, mtGC, CURRENT_PC,
     AllocFailStrategy::RETURN_NULL);
 }
-void  MemRegion::operator delete(void* p) {
+void MemRegion::operator delete(void* p) {
   FreeHeap(p);
 }
 
-void  MemRegion::operator delete [](void* p) {
+void MemRegion::operator delete [](void* p) {
   FreeHeap(p);
 }

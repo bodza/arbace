@@ -119,10 +119,10 @@ struct PrimitiveConversions::Translate<oop> : public TrueType {
    class type##OopDesc; \
    class type##Oop : public oop { \
      public: \
-       type##Oop() : oop() {} \
-       type##Oop(const oop& o) : oop(o) {} \
-       type##Oop(const volatile oop& o) : oop(o) {} \
-       type##Oop(const void* p) : oop(p) {} \
+       type##Oop() : oop() { } \
+       type##Oop(const oop& o) : oop(o) { } \
+       type##Oop(const volatile oop& o) : oop(o) { } \
+       type##Oop(const void* p) : oop(p) { } \
        operator type##OopDesc* () const { return (type##OopDesc*)obj(); } \
        type##OopDesc* operator->() const { \
             return (type##OopDesc*)obj(); \

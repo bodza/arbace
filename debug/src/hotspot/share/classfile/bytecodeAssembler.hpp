@@ -22,7 +22,7 @@
 
 class BytecodeBuffer : public GrowableArray<u1> {
  public:
-  BytecodeBuffer() : GrowableArray<u1>(20) {}
+  BytecodeBuffer() : GrowableArray<u1>(20) { }
 };
 
 // Entries in a yet-to-be-created constant pool.  Limited types for now.
@@ -110,7 +110,7 @@ class BytecodeConstantPool : ResourceObj {
 
  public:
 
-  BytecodeConstantPool(ConstantPool* orig) : _orig(orig) {}
+  BytecodeConstantPool(ConstantPool* orig) : _orig(orig) { }
 
   BytecodeCPEntry const& at(u2 index) const { return _entries.at(index); }
 
@@ -135,8 +135,7 @@ class BytecodeConstantPool : ResourceObj {
   }
 
   u2 methodref(Symbol* class_name, Symbol* name, Symbol* sig) {
-    return find_or_add(BytecodeCPEntry::methodref(
-        klass(class_name), name_and_type(name, sig)));
+    return find_or_add(BytecodeCPEntry::methodref(klass(class_name), name_and_type(name, sig)));
   }
 
   ConstantPool* create_constant_pool(TRAPS) const;
@@ -157,7 +156,7 @@ class BytecodeAssembler : StackObj {
 
  public:
   BytecodeAssembler(BytecodeBuffer* buffer, BytecodeConstantPool* cp)
-    : _code(buffer), _cp(cp) {}
+    : _code(buffer), _cp(cp) { }
 
   void aload(u4 index);
   void areturn();

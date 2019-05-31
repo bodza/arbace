@@ -32,7 +32,6 @@ void SharedPathsMiscInfo::add_path(const char* path, int type) {
 }
 
 void SharedPathsMiscInfo::ensure_size(size_t needed_bytes) {
-  assert(_allocated, "cannot modify buffer during validation.");
   int used = get_used_bytes();
   int target = used + int(needed_bytes);
   if (target > _buf_size) {
@@ -128,7 +127,6 @@ char* skip_first_path_entry(const char* path) {
 }
 
 bool SharedPathsMiscInfo::check(jint type, const char* path) {
-  assert(UseSharedSpaces, "runtime only");
   switch (type) {
   case BOOT_PATH:
     {
@@ -198,7 +196,6 @@ bool SharedPathsMiscInfo::check(jint type, const char* path) {
     {
       size_t len = strlen(path);
       const char *appcp = Arguments::get_appclasspath();
-      assert(appcp != NULL, "NULL app classpath");
       size_t appcp_len = strlen(appcp);
       if (appcp_len < len) {
         return fail("Run time APP classpath is shorter than the one at dump time: ", appcp);

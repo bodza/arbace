@@ -43,7 +43,6 @@ class LogLevel : public AllStatic {
   };
 
   static const char *name(LogLevel::type level) {
-    assert(level >= 0 && level < LogLevel::Count, "Invalid level (enum value %d).", level);
     return _name[level];
   }
 

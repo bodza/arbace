@@ -18,7 +18,6 @@
 
 inline unsigned count_trailing_zeros(uintx x) {
   STATIC_ASSERT(sizeof(unsigned long) == sizeof(uintx));
-  assert(x != 0, "precondition");
   return __builtin_ctzl(x);
 }
 
@@ -32,7 +31,6 @@ inline unsigned count_trailing_zeros(uintx x) {
 #pragma intrinsic(_BitScanForward64)
 
 inline unsigned count_trailing_zeros(uintx x) {
-  assert(x != 0, "precondition");
   unsigned long index;
   _BitScanForward64(&index, x);
   return index;
@@ -46,7 +44,6 @@ inline unsigned count_trailing_zeros(uintx x) {
 #include <builtins.h>
 
 inline unsigned count_trailing_zeros(uintx x) {
-  assert(x != 0, "precondition");
   return __cnttz8(x);
 }
 

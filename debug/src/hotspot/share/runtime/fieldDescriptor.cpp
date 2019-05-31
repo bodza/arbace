@@ -29,7 +29,7 @@ Symbol* fieldDescriptor::generic_signature() const {
       idx ++;
     }
   }
-  assert(false, "should never happen");
+  ShouldNotReachHere();
   return NULL;
 }
 
@@ -76,11 +76,8 @@ oop fieldDescriptor::string_initial_value(TRAPS) const {
 void fieldDescriptor::reinitialize(InstanceKlass* ik, int index) {
   if (_cp.is_null() || field_holder() != ik) {
     _cp = constantPoolHandle(Thread::current(), ik->constants());
-    // _cp should now reference ik's constant pool; i.e., ik is now field_holder.
-    assert(field_holder() == ik, "must be already initialized to this class");
   }
   FieldInfo* f = ik->field(index);
-  assert(!f->is_internal(), "regular Java fields only");
 
   _access_flags = accessFlags_from(f->access_flags());
   guarantee(f->name_index() != 0 && f->signature_index() != 0, "bad constant pool index for fieldDescriptor");

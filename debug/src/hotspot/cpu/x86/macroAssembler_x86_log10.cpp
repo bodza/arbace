@@ -173,8 +173,6 @@ void MacroAssembler::fast_log10(XMMRegister xmm0, XMMRegister xmm1, XMMRegister 
   Label L_2TAG_PACKET_4_0_2, L_2TAG_PACKET_5_0_2, L_2TAG_PACKET_6_0_2, L_2TAG_PACKET_7_0_2;
   Label L_2TAG_PACKET_8_0_2, L_2TAG_PACKET_9_0_2, B1_2, B1_3, B1_4, B1_5, start;
 
-  assert_different_registers(r11, eax, ecx, edx);
-
   address HIGHSIGMASK = (address)_HIGHSIGMASK_log10;
   address LOG10_E = (address)_LOG10_E;
   address L_tbl = (address)_L_tbl_log10;

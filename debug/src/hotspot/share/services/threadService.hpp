@@ -190,7 +190,7 @@ private:
 public:
   // Dummy snapshot
   ThreadSnapshot() : _thread(NULL), _threadObj(NULL), _stack_trace(NULL), _concurrent_locks(NULL), _next(NULL),
-                     _blocker_object(NULL), _blocker_object_owner(NULL) {};
+                     _blocker_object(NULL), _blocker_object_owner(NULL) { };
   ThreadSnapshot(ThreadsList * t_list, JavaThread* thread);
   ~ThreadSnapshot();
 
@@ -317,10 +317,8 @@ class ConcurrentLocksDump : public StackObj {
 
  public:
   ConcurrentLocksDump(bool retain_map_on_free) : _map(NULL), _last(NULL), _retain_map_on_free(retain_map_on_free) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
   };
   ConcurrentLocksDump() : _map(NULL), _last(NULL), _retain_map_on_free(false) {
-    assert(SafepointSynchronize::is_at_safepoint(), "Must be constructed at a safepoint.");
   };
   ~ConcurrentLocksDump();
 
@@ -516,7 +514,6 @@ class JavaThreadBlockedOnMonitorEnterState : public JavaThreadStatusChanger {
   // java_thread is waiting thread being blocked on monitor reenter.
   // Current thread is the notifying thread which holds the monitor.
   static bool wait_reenter_begin(JavaThread *java_thread, ObjectMonitor *obj_m) {
-    assert((java_thread != NULL), "Java thread should not be null here");
     bool active = false;
     if (is_alive(java_thread)) {
       active = contended_enter_begin(java_thread);
@@ -533,7 +530,6 @@ class JavaThreadBlockedOnMonitorEnterState : public JavaThreadStatusChanger {
 
   JavaThreadBlockedOnMonitorEnterState(JavaThread *java_thread, ObjectMonitor *obj_m) :
     _stat(NULL), _active(false), JavaThreadStatusChanger(java_thread) {
-    assert((java_thread != NULL), "Java thread should not be null here");
     // Change thread status and collect contended enter stats for monitor contended
     // enter done for external java world objects and it is contended. All other cases
     // like for vm internal objects and for external objects which are not contended

@@ -32,7 +32,7 @@ public:
 
   EpsilonHeap(EpsilonCollectorPolicy* p) :
           _policy(p),
-          _memory_manager("Epsilon Heap", "") {};
+          _memory_manager("Epsilon Heap", "") { };
 
   virtual Name kind() const {
     return CollectedHeap::Epsilon;
@@ -57,7 +57,7 @@ public:
   virtual GrowableArray<GCMemoryManager*> memory_managers();
   virtual GrowableArray<MemoryPool*> memory_pools();
 
-  virtual size_t max_capacity() const { return _virtual_space.reserved_size();  }
+  virtual size_t max_capacity() const { return _virtual_space.reserved_size(); }
   virtual size_t capacity()     const { return _virtual_space.committed_size(); }
   virtual size_t used()         const { return _space->used(); }
 
@@ -83,9 +83,9 @@ public:
                                       size_t* actual_size);
 
   // TLAB allocation
-  virtual bool supports_tlab_allocation()           const { return true;           }
-  virtual size_t tlab_capacity(Thread* thr)         const { return capacity();     }
-  virtual size_t tlab_used(Thread* thr)             const { return used();         }
+  virtual bool supports_tlab_allocation()           const { return true; }
+  virtual size_t tlab_capacity(Thread* thr)         const { return capacity(); }
+  virtual size_t tlab_used(Thread* thr)             const { return used(); }
   virtual size_t max_tlab_size()                    const { return _max_tlab_size; }
   virtual size_t unsafe_max_tlab_alloc(Thread* thr) const;
 
@@ -104,17 +104,17 @@ public:
   virtual void unpin_object(JavaThread* thread, oop obj) { }
 
   // No support for block parsing.
-  virtual HeapWord* block_start(const void* addr) const { return NULL;  }
-  virtual size_t block_size(const HeapWord* addr) const { return 0;     }
+  virtual HeapWord* block_start(const void* addr) const { return NULL; }
+  virtual size_t block_size(const HeapWord* addr) const { return 0; }
   virtual bool block_is_obj(const HeapWord* addr) const { return false; }
 
   // No GC threads
-  virtual void print_gc_threads_on(outputStream* st) const {}
-  virtual void gc_threads_do(ThreadClosure* tc) const {}
+  virtual void print_gc_threads_on(outputStream* st) const { }
+  virtual void gc_threads_do(ThreadClosure* tc) const { }
 
   // No heap verification
-  virtual void prepare_for_verify() {}
-  virtual void verify(VerifyOption option) {}
+  virtual void prepare_for_verify() { }
+  virtual void verify(VerifyOption option) { }
 
   virtual jlong millis_since_last_gc() {
     // Report time since the VM start

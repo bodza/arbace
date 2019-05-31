@@ -85,7 +85,6 @@ class jfieldIDWorkaround: AllStatic {
     {
       verify_instance_jfieldID(k, result);
     }
-    assert(raw_instance_offset(result) == (offset & large_offset_mask), "extract right offset");
     return result;
   }
 
@@ -99,16 +98,12 @@ class jfieldIDWorkaround: AllStatic {
   }
 
   static jfieldID to_static_jfieldID(JNIid* id) {
-    assert(id->is_static_field_id(), "from_JNIid, but not static field id");
     jfieldID result = (jfieldID) id;
-    assert(from_static_jfieldID(result) == id, "must produce the same static id");
     return result;
   }
 
   static JNIid* from_static_jfieldID(jfieldID id) {
-    assert(jfieldIDWorkaround::is_static_jfieldID(id), "to_JNIid, but not static jfieldID");
     JNIid* result = (JNIid*) id;
-    assert(result->is_static_field_id(), "to_JNIid, but not static field id");
     return result;
   }
 

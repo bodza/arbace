@@ -25,7 +25,6 @@ bool GCLocker::is_at_safepoint() {
 }
 
 bool GCLocker::check_active_before_gc() {
-  assert(SafepointSynchronize::is_at_safepoint(), "only read at safepoint");
   if (is_active() && !_needs_gc) {
     verify_critical_count();
     _needs_gc = true;
@@ -35,7 +34,6 @@ bool GCLocker::check_active_before_gc() {
 }
 
 void GCLocker::stall_until_clear() {
-  assert(!JavaThread::current()->in_critical(), "Would deadlock");
   MutexLocker   ml(JNICritical_lock);
 
   if (needs_gc()) {
@@ -49,7 +47,6 @@ void GCLocker::stall_until_clear() {
 }
 
 void GCLocker::jni_lock(JavaThread* thread) {
-  assert(!thread->in_critical(), "shouldn't currently be in a critical region");
   MutexLocker mu(JNICritical_lock);
   // Block entering threads if we know at least one thread is in a
   // JNI critical region and we need a GC.
@@ -65,7 +62,6 @@ void GCLocker::jni_lock(JavaThread* thread) {
 }
 
 void GCLocker::jni_unlock(JavaThread* thread) {
-  assert(thread->in_last_critical(), "should be exiting critical region");
   MutexLocker mu(JNICritical_lock);
   _jni_lock_count--;
   decrement_debug_jni_lock_count();

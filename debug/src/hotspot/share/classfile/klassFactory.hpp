@@ -52,11 +52,7 @@ class KlassFactory : AllStatic {
                                            GrowableArray<Handle>* cp_patches,
                                            TRAPS);
  public:
-  static InstanceKlass* check_shared_class_file_load_hook(
-                                          InstanceKlass* ik,
-                                          Symbol* class_name,
-                                          Handle class_loader,
-                                          Handle protection_domain, TRAPS);
+  static InstanceKlass* check_shared_class_file_load_hook(InstanceKlass* ik, Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS);
 };
 
 #endif

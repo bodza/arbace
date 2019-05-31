@@ -46,7 +46,7 @@ private:
   bool _must_walk_reads;               // walk module's reads list at GC safepoints to purge out dead modules
   bool _is_open;                       // whether the packages in the module are all unqualifiedly exported
   bool _is_patched;                    // whether the module is patched via --patch-module
-  enum {MODULE_READS_SIZE = 101};      // Initial size of list of modules that the module can read.
+  enum { MODULE_READS_SIZE = 101 };      // Initial size of list of modules that the module can read.
 
 public:
   void init() {
@@ -80,7 +80,6 @@ public:
   ClassLoaderData* loader_data() const                 { return _loader_data; }
 
   void set_loader_data(ClassLoaderData* cld) {
-    assert(!cld->is_anonymous(), "Unexpected anonymous class loader data");
     _loader_data = cld;
   }
 
@@ -102,7 +101,6 @@ public:
   bool             is_named() const                    { return (name() != NULL); }
 
   bool can_read_all_unnamed() const {
-    assert(is_named() || _can_read_all_unnamed == true, "unnamed modules can always read all unnamed modules");
     return _can_read_all_unnamed;
   }
 
@@ -209,8 +207,7 @@ public:
   static ModuleEntry* javabase_moduleEntry()                   { return _javabase_module; }
   static void set_javabase_moduleEntry(ModuleEntry* java_base) { _javabase_module = java_base; }
 
-  static bool javabase_defined() { return ((_javabase_module != NULL) &&
-                                           (_javabase_module->module() != NULL)); }
+  static bool javabase_defined() { return ((_javabase_module != NULL) && (_javabase_module->module() != NULL)); }
   static void finalize_javabase(Handle module_handle, Symbol* version, Symbol* location);
   static void patch_javabase_entries(Handle module_handle);
 

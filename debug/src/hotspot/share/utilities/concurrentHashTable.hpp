@@ -21,7 +21,6 @@ class ConcurrentHashTable : public CHeapObj<F> {
    public:
     Node(const VALUE& value, Node* next = NULL)
       : _next(next), _value(value) {
-      assert((((uintptr_t)this) & ((uintptr_t)0x3)) == 0, "Must 16 bit aligned.");
     }
 
     Node* next() const;
@@ -39,8 +38,8 @@ class ConcurrentHashTable : public CHeapObj<F> {
       CONFIG::free_node((void*)node, node->_value);
     }
 
-    void print_on(outputStream* st) const {};
-    void print_value_on(outputStream* st) const {};
+    void print_on(outputStream* st) const { };
+    void print_value_on(outputStream* st) const { };
   };
 
   // Only constructed with placement new[] from an array allocated with MEMFLAGS
@@ -89,7 +88,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
 
    public:
     // A bucket is only one pointer with the embedded state.
-    Bucket() : _first(NULL) {};
+    Bucket() : _first(NULL) { };
 
     // Get the first pointer unmasked.
     Node* first() const;
@@ -161,9 +160,9 @@ class ConcurrentHashTable : public CHeapObj<F> {
 
   // Used as default functor when no functor supplied for some methods.
   struct NoOp {
-    void operator()(VALUE*) {}
-    const VALUE& operator()() {}
-    void operator()(bool, VALUE*) {}
+    void operator()(VALUE*) { }
+    const VALUE& operator()() { }
+    void operator()(bool, VALUE*) { }
   } noOp;
 
   // For materializing a supplied value.
@@ -171,7 +170,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
    private:
     const VALUE& _val;
    public:
-    LazyValueRetrieve(const VALUE& val) : _val(val) {}
+    LazyValueRetrieve(const VALUE& val) : _val(val) { }
     const VALUE& operator()() { return _val; }
   };
 
@@ -483,7 +482,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
   class MultiGetHandle : private ScopedCS {
    public:
     MultiGetHandle(Thread* thread, ConcurrentHashTable<VALUE, CONFIG, F>* cht)
-      : ScopedCS(thread, cht) {}
+      : ScopedCS(thread, cht) { }
     // In the MultiGetHandle scope you can lookup items matching LOOKUP_FUNC.
     // The VALUEs are safe as long as you never save the VALUEs outside the
     // scope, e.g. after ~MultiGetHandle().

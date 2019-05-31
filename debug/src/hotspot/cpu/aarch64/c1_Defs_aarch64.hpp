@@ -27,8 +27,7 @@ enum {
 
   pd_last_allocatable_cpu_reg = 16,
 
-  pd_nof_cpu_regs_reg_alloc
-    = pd_last_allocatable_cpu_reg + 1,  // number of registers that are visible to register allocator
+  pd_nof_cpu_regs_reg_alloc = pd_last_allocatable_cpu_reg + 1,  // number of registers that are visible to register allocator
   pd_nof_fpu_regs_reg_alloc = 8,  // number of registers that are visible to register allocator
 
   pd_nof_cpu_regs_linearscan = 32, // number of registers visible to linear scan

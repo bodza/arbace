@@ -11,6 +11,6 @@
 // manual approach is being taken for those enum types we need to
 // distinguish.
 template<typename T>
-struct IsRegisteredEnum : public FalseType {};
+struct IsRegisteredEnum : public FalseType { };
 
 #endif

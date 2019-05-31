@@ -69,8 +69,8 @@ class CodeCache : AllStatic {
   static bool _needs_cache_clean;                       // True if inline caches of the nmethods needs to be flushed
   static nmethod* _scavenge_root_nmethods;              // linked via nm->scavenge_root_link()
 
-  static void mark_scavenge_root_nmethods() {};
-  static void verify_perm_nmethods(CodeBlobClosure* f_or_null) {};
+  static void mark_scavenge_root_nmethods() { };
+  static void verify_perm_nmethods(CodeBlobClosure* f_or_null) { };
 
   // CodeHeap management
   static void initialize_heaps();                             // Initializes the CodeHeaps
@@ -149,7 +149,7 @@ class CodeCache : AllStatic {
   // to "true" iff some code got unloaded.
   // "unloading_occurred" controls whether metadata should be cleaned because of class unloading.
   static void do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred);
-  static void asserted_non_scavengable_nmethods_do(CodeBlobClosure* f = NULL) {};
+  static void asserted_non_scavengable_nmethods_do(CodeBlobClosure* f = NULL) { };
 
   // Apply f to every live code blob in scavengable nmethods. Prune nmethods
   // from the list of scavengable nmethods if f->fix_relocations() and a nmethod
@@ -171,7 +171,7 @@ class CodeCache : AllStatic {
   static void print_internals();
   static void print_memory_overhead();
   static void verify();                          // verifies the code cache
-  static void print_trace(const char* event, CodeBlob* cb, int size = 0) {};
+  static void print_trace(const char* event, CodeBlob* cb, int size = 0) { };
   static void print_summary(outputStream* st, bool detailed = true); // Prints a summary of the code cache usage
   static void log_state(outputStream* st);
   static const char* get_code_heap_name(int code_blob_type)  { return (heap_available(code_blob_type) ? get_code_heap(code_blob_type)->name() : "Unused"); }
@@ -199,7 +199,7 @@ class CodeCache : AllStatic {
   static double reverse_free_ratio(int code_blob_type);
 
   static bool needs_cache_clean()                     { return _needs_cache_clean; }
-  static void set_needs_cache_clean(bool v)           { _needs_cache_clean = v;    }
+  static void set_needs_cache_clean(bool v)           { _needs_cache_clean = v; }
 
   static void clear_inline_caches();                  // clear all inline caches
   static void cleanup_inline_caches();                // clean unloaded/zombie nmethods from inline caches
@@ -228,13 +228,10 @@ class CodeCache : AllStatic {
 
   // Returns the CodeBlobType for the given compilation level
   static int get_code_blob_type(int comp_level) {
-    if (comp_level == CompLevel_none ||
-        comp_level == CompLevel_simple ||
-        comp_level == CompLevel_full_optimization) {
+    if (comp_level == CompLevel_none || comp_level == CompLevel_simple || comp_level == CompLevel_full_optimization) {
       // Non profiled methods
       return CodeBlobType::MethodNonProfiled;
-    } else if (comp_level == CompLevel_limited_profile ||
-               comp_level == CompLevel_full_profile) {
+    } else if (comp_level == CompLevel_limited_profile || comp_level == CompLevel_full_profile) {
       // Profiled methods
       return CodeBlobType::MethodProfiled;
     }
@@ -296,17 +293,14 @@ template <class T, class Filter> class CodeBlobIterator : public StackObj {
     // If set to NULL, initialized by first call to next()
     _code_blob = (CodeBlob*)nm;
     if (nm != NULL) {
-      while(!(*_heap)->contains_blob(_code_blob)) {
+      while (!(*_heap)->contains_blob(_code_blob)) {
         ++_heap;
       }
-      assert((*_heap)->contains_blob(_code_blob), "match not found");
     }
   }
 
   // Advance iterator to next blob
   bool next() {
-    assert_locked_or_safepoint(CodeCache_lock);
-
     bool result = next_blob();
     while (!result && _heap != _end) {
       // Advance to next code heap of segmented code cache
@@ -322,7 +316,7 @@ template <class T, class Filter> class CodeBlobIterator : public StackObj {
   // Advance iterator to next alive blob
   bool next_alive() {
     bool result = next();
-    while(result && !_code_blob->is_alive()) {
+    while (result && !_code_blob->is_alive()) {
       result = next();
     }
     return result;

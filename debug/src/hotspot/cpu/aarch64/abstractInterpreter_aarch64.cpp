@@ -23,7 +23,6 @@ int AbstractInterpreter::BasicType_as_index(BasicType type) {
     case T_ARRAY  : i = 9; break;
     default       : ShouldNotReachHere();
   }
-  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers, "index out of bounds");
   return i;
 }
 
@@ -34,12 +33,10 @@ int AbstractInterpreter::size_top_interpreter_activation(Method* method) {
   // total overhead size: entry_size + (saved rfp thru expr stack
   // bottom).  be sure to change this if you add/subtract anything
   // to/from the overhead area
-  const int overhead_size =
-    -(frame::interpreter_frame_initial_sp_offset) + entry_size;
+  const int overhead_size = -(frame::interpreter_frame_initial_sp_offset) + entry_size;
 
   const int stub_code = frame::entry_frame_after_call_words;
-  const int method_stack = (method->max_locals() + method->max_stack()) *
-                           Interpreter::stackElementWords;
+  const int method_stack = (method->max_locals() + method->max_stack()) * Interpreter::stackElementWords;
   return (overhead_size + method_stack + stub_code);
 }
 
@@ -49,15 +46,12 @@ int AbstractInterpreter::size_activation(int max_stack, int temps, int extra_arg
   // in TemplateInterpreterGenerator::generate_method_entry.
 
   // fixed size of an interpreter frame:
-  int overhead = frame::sender_sp_offset -
-                 frame::interpreter_frame_initial_sp_offset;
+  int overhead = frame::sender_sp_offset - frame::interpreter_frame_initial_sp_offset;
   // Our locals were accounted for by the caller (or last_frame_adjust
   // on the transistion) Since the callee parameters already account
   // for the callee's params we only need to account for the extra
   // locals.
-  int size = overhead +
-         (callee_locals - callee_params) +
-         monitors * frame::interpreter_frame_monitor_size() +
+  int size = overhead + (callee_locals - callee_params) + monitors * frame::interpreter_frame_monitor_size() +
          // On the top frame, at all times SP <= ESP, and SP is
          // 16-aligned.  We ensure this by adjusting SP on method
          // entry and re-entry to allow room for the maximum size of
@@ -73,17 +67,7 @@ int AbstractInterpreter::size_activation(int max_stack, int temps, int extra_arg
   return size;
 }
 
-void AbstractInterpreter::layout_activation(Method* method,
-                                            int tempcount,
-                                            int popframe_extra_args,
-                                            int moncount,
-                                            int caller_actual_parameters,
-                                            int callee_param_count,
-                                            int callee_locals,
-                                            frame* caller,
-                                            frame* interpreter_frame,
-                                            bool is_top_frame,
-                                            bool is_bottom_frame) {
+void AbstractInterpreter::layout_activation(Method* method, int tempcount, int popframe_extra_args, int moncount, int caller_actual_parameters, int callee_param_count, int callee_locals, frame* caller, frame* interpreter_frame, bool is_top_frame, bool is_bottom_frame) {
   // The frame interpreter_frame is guaranteed to be the right size,
   // as determined by a previous call to the size_activation() method.
   // It is also guaranteed to be walkable even though it is in a
@@ -106,22 +90,15 @@ void AbstractInterpreter::layout_activation(Method* method,
   interpreter_frame->interpreter_frame_set_monitor_end(monbot);
 
   // Set last_sp
-  intptr_t*  esp = (intptr_t*) monbot -
-    tempcount*Interpreter::stackElementWords -
-    popframe_extra_args;
+  intptr_t*  esp = (intptr_t*) monbot - tempcount*Interpreter::stackElementWords - popframe_extra_args;
   interpreter_frame->interpreter_frame_set_last_sp(esp);
 
   // All frames but the initial (oldest) interpreter frame we fill in have
   // a value for sender_sp that allows walking the stack but isn't
   // truly correct. Correct the value here.
-  if (extra_locals != 0 &&
-      interpreter_frame->sender_sp() ==
-      interpreter_frame->interpreter_frame_sender_sp()) {
-    interpreter_frame->set_interpreter_frame_sender_sp(caller->sp() +
-                                                       extra_locals);
+  if (extra_locals != 0 && interpreter_frame->sender_sp() == interpreter_frame->interpreter_frame_sender_sp()) {
+    interpreter_frame->set_interpreter_frame_sender_sp(caller->sp() + extra_locals);
   }
-  *interpreter_frame->interpreter_frame_cache_addr() =
-    method->constants()->cache();
-  *interpreter_frame->interpreter_frame_mirror_addr() =
-    method->method_holder()->java_mirror();
+  *interpreter_frame->interpreter_frame_cache_addr() = method->constants()->cache();
+  *interpreter_frame->interpreter_frame_mirror_addr() = method->method_holder()->java_mirror();
 }

@@ -22,13 +22,11 @@ private:
 
 public:
   UpdateRSetDeferred(DirtyCardQueue* dcq) :
-    _g1h(G1CollectedHeap::heap()), _ct(_g1h->card_table()), _dcq(dcq) {}
+    _g1h(G1CollectedHeap::heap()), _ct(_g1h->card_table()), _dcq(dcq) { }
 
   virtual void do_oop(narrowOop* p) { do_oop_work(p); }
   virtual void do_oop(      oop* p) { do_oop_work(p); }
   template <class T> void do_oop_work(T* p) {
-    assert(_g1h->heap_region_containing(p)->is_in_reserved(p), "paranoia");
-    assert(!_g1h->heap_region_containing(p)->is_survivor(), "Unexpected evac failure in survivor region");
 
     T const o = RawAccess<>::oop_load(p);
     if (CompressedOops::is_null(o)) {
@@ -79,7 +77,6 @@ public:
   // dead too) already.
   void do_object(oop obj) {
     HeapWord* obj_addr = (HeapWord*) obj;
-    assert(_hr->is_in(obj_addr), "sanity");
 
     if (obj->is_forwarded() && obj->forwardee() == obj) {
       // The object failed to move.
@@ -191,8 +188,6 @@ public:
   }
 
   bool do_heap_region(HeapRegion *hr) {
-    assert(!hr->is_pinned(), "Unexpected pinned region at index %u", hr->hrm_index());
-    assert(hr->in_collection_set(), "bad CS");
 
     if (_hrclaimer->claim_region(hr->hrm_index())) {
       if (hr->evacuation_failed()) {

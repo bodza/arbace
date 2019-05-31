@@ -39,14 +39,14 @@ public:
   static jlong ticks_to_ms(jlong ticks) { return 0L; };
   static jlong timestamp() { return 0L; };
 
-  static void  oops_do(OopClosure* f) {};
+  static void  oops_do(OopClosure* f) { };
   static void* get_jmm_interface(int version);
   static void  get_optional_support(jmmOptionalSupport* support);
 
   static void get_loaded_classes(JavaThread* cur_thread, GrowableArray<Klass*>* klass_array);
 
   static void  record_vm_startup_time(jlong begin, jlong duration)
-      {};
+      { };
   static void  record_vm_init_completed() {
     // Initialize the timestamp to get the current time
     _vm_init_done_time->set_value(os::javaTimeMillis());
@@ -87,8 +87,8 @@ private:
   jlong     _begin_time;
 
 public:
-  TraceVmCreationTime() {}
-  ~TraceVmCreationTime() {}
+  TraceVmCreationTime() { }
+  ~TraceVmCreationTime() { }
 
   void start()
   { _timer.update_to(0); _begin_time = os::javaTimeMillis(); }

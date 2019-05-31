@@ -54,10 +54,8 @@ bool GenericTaskQueue<E, F, N>::push_slow(E t, uint dirty_n_elems) {
 template<class E, MEMFLAGS F, unsigned int N> inline bool
 GenericTaskQueue<E, F, N>::push(E t) {
   uint localBot = _bottom;
-  assert(localBot < N, "_bottom out of range.");
   idx_t top = _age.top();
   uint dirty_n_elems = dirty_size(localBot, top);
-  assert(dirty_n_elems < N, "n_elems out of range.");
   if (dirty_n_elems < max_elems()) {
     // g++ complains if the volatile result of the assignment is
     // unused, so we cast the volatile away.  We cannot cast directly
@@ -74,8 +72,7 @@ GenericTaskQueue<E, F, N>::push(E t) {
 }
 
 template <class E, MEMFLAGS F, unsigned int N>
-inline bool OverflowTaskQueue<E, F, N>::push(E t)
-{
+inline bool OverflowTaskQueue<E, F, N>::push(E t) {
   if (!taskqueue_t::push(t)) {
     overflow_stack()->push(t);
     TASKQUEUE_STATS_ONLY(stats.record_overflow(overflow_stack()->size()));
@@ -114,7 +111,6 @@ bool GenericTaskQueue<E, F, N>::pop_local_slow(uint localBot, Age oldAge) {
     Age tempAge = _age.cmpxchg(newAge, oldAge);
     if (tempAge == oldAge) {
       // We win.
-      assert(dirty_size(localBot, _age.top()) != N - 1, "sanity");
       TASKQUEUE_STATS_ONLY(stats.record_pop_slow());
       return true;
     }
@@ -123,7 +119,6 @@ bool GenericTaskQueue<E, F, N>::pop_local_slow(uint localBot, Age oldAge) {
   // and top is greater than bottom.  Fix this representation of the empty queue
   // to become the canonical one.
   _age.set(newAge);
-  assert(dirty_size(localBot, _age.top()) != N - 1, "sanity");
   return false;
 }
 
@@ -135,7 +130,6 @@ GenericTaskQueue<E, F, N>::pop_local(volatile E& t, uint threshold) {
   // resets the size to 0 before the next call (which is sequential,
   // since this is pop_local.)
   uint dirty_n_elems = dirty_size(localBot, _age.top());
-  assert(dirty_n_elems != N - 1, "Shouldn't be possible...");
   if (dirty_n_elems <= threshold) return false;
   localBot = decrement_index(localBot);
   _bottom = localBot;
@@ -154,7 +148,6 @@ GenericTaskQueue<E, F, N>::pop_local(volatile E& t, uint threshold) {
   // a "pop_global" operation, and we're done.
   idx_t tp = _age.top();    // XXX
   if (size(localBot, tp) > 0) {
-    assert(dirty_size(localBot, tp) != N - 1, "sanity");
     TASKQUEUE_STATS_ONLY(stats.record_pop());
     return true;
   } else {
@@ -165,8 +158,7 @@ GenericTaskQueue<E, F, N>::pop_local(volatile E& t, uint threshold) {
 }
 
 template <class E, MEMFLAGS F, unsigned int N>
-bool OverflowTaskQueue<E, F, N>::pop_overflow(E& t)
-{
+bool OverflowTaskQueue<E, F, N>::pop_overflow(E& t) {
   if (overflow_empty()) return false;
   t = overflow_stack()->pop();
   return true;
@@ -199,7 +191,6 @@ bool GenericTaskQueue<E, F, N>::pop_global(volatile E& t) {
 
   // Note that using "_bottom" here might fail, since a pop_local might
   // have decremented it.
-  assert(dirty_size(localBot, newAge.top()) != N - 1, "sanity");
   return resAge == oldAge;
 }
 
@@ -220,7 +211,6 @@ GenericTaskQueueSet<T, F>::steal_best_of_2(uint queue_num, int* seed, E& t) {
     uint k = (queue_num + 1) % 2;
     return _queues[k]->pop_global(t);
   } else {
-    assert(_n == 1, "can't be zero.");
     return false;
   }
 }

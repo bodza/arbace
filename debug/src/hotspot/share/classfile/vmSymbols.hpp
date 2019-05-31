@@ -1478,16 +1478,12 @@ class vmSymbols: AllStatic {
   static void serialize(SerializeClosure* soc);
 
   static Symbol* type_signature(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check");
-    assert(_type_signatures[t] != NULL, "domain check");
     return _type_signatures[t];
   }
   // inverse of type_signature; returns T_OBJECT if s is not recognized
   static BasicType signature_type(const Symbol* s);
 
   static Symbol* symbol_at(SID id) {
-    assert(id >= FIRST_SID && id < SID_LIMIT, "oob");
-    assert(_symbols[id] != NULL, "init");
     return _symbols[id];
   }
 
@@ -1538,7 +1534,6 @@ class vmIntrinsics: AllStatic {
 
 public:
   static ID ID_from(int raw_id) {
-    assert(raw_id >= (int)_none && raw_id < (int)ID_LIMIT, "must be a valid intrinsic ID");
     return (ID)raw_id;
   }
 
@@ -1557,13 +1552,10 @@ public:
                     vmSymbols::SID sig,
                     jshort flags) {
     ID id = find_id_impl(holder, name, sig, flags);
-    assert(    class_for(id) == holder, "correct id");
-    assert(     name_for(id) == name,   "correct id");
-    assert(signature_for(id) == sig,    "correct id");
     return id;
   }
 
-  static void verify_method(ID actual_id, Method* m) {};
+  static void verify_method(ID actual_id, Method* m) { };
 
   // Find out the symbols behind an intrinsic:
   static vmSymbols::SID     class_for(ID id);

@@ -132,7 +132,6 @@ class StubGenerator: public StubCodeGenerator {
   };
 
   address generate_call_stub(address& return_address) {
-    assert((int)frame::entry_frame_after_call_words == -(int)rsp_after_call_off + 1 && (int)frame::entry_frame_call_wrapper_offset == (int)call_wrapper_off, "adjust this code");
     StubCodeMark mark(this, "StubRoutines", "call_stub");
     address start = __ pc();
 
@@ -305,7 +304,6 @@ class StubGenerator: public StubCodeGenerator {
     __ movl(Address(r15_thread, Thread::exception_line_offset()), (int)  __LINE__);
 
     // complete return to VM
-    assert(StubRoutines::_call_stub_return_address != NULL, "_call_stub_return_address must have been generated before");
     __ jump(RuntimeAddress(StubRoutines::_call_stub_return_address));
 
     return start;
@@ -403,7 +401,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if ( compare_value == *dest ) {
+  //    if (compare_value == *dest ) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -413,7 +411,7 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     __ movl(rax, c_rarg2);
-   if ( os::is_MP() ) __ lock();
+   if (os::is_MP()) __ lock();
     __ cmpxchgl(c_rarg0, Address(c_rarg1, 0));
     __ ret(0);
 
@@ -429,7 +427,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if ( compare_value == *dest ) {
+  //    if (compare_value == *dest ) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -439,7 +437,7 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     __ movsbq(rax, c_rarg2);
-   if ( os::is_MP() ) __ lock();
+   if (os::is_MP()) __ lock();
     __ cmpxchgb(c_rarg0, Address(c_rarg1, 0));
     __ ret(0);
 
@@ -455,7 +453,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if ( compare_value == *dest ) {
+  //    if (compare_value == *dest ) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -465,7 +463,7 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     __ movq(rax, c_rarg2);
-   if ( os::is_MP() ) __ lock();
+   if (os::is_MP()) __ lock();
     __ cmpxchgq(c_rarg0, Address(c_rarg1, 0));
     __ ret(0);
 
@@ -486,7 +484,7 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     __ movl(rax, c_rarg0);
-   if ( os::is_MP() ) __ lock();
+   if (os::is_MP()) __ lock();
     __ xaddl(Address(c_rarg1, 0), c_rarg0);
     __ addl(rax, c_rarg0);
     __ ret(0);
@@ -508,7 +506,7 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     __ movptr(rax, c_rarg0); // Copy to eax we need a return value anyhow
-   if ( os::is_MP() ) __ lock();
+   if (os::is_MP()) __ lock();
     __ xaddptr(Address(c_rarg1, 0), c_rarg0);
     __ addptr(rax, c_rarg0);
     __ ret(0);
@@ -920,7 +918,6 @@ class StubGenerator: public StubCodeGenerator {
   //     rax   - &from[element count - 1]
   //
   void array_overlap_test(address no_overlap_target, Address::ScaleFactor sf) {
-    assert(no_overlap_target != NULL, "must be generated");
     array_overlap_test(no_overlap_target, NULL, sf);
   }
   void array_overlap_test(Label& L_no_overlap, Address::ScaleFactor sf) {
@@ -960,8 +957,6 @@ class StubGenerator: public StubCodeGenerator {
   void setup_arg_regs(int nargs = 3) {
     const Register saved_rdi = r9;
     const Register saved_rsi = r10;
-    assert(nargs == 3 || nargs == 4, "else fix");
-    assert(c_rarg0 == rdi && c_rarg1 == rsi && c_rarg2 == rdx && c_rarg3 == rcx, "unexpected argument registers");
   }
 
   void restore_arg_regs() {
@@ -1920,8 +1915,6 @@ class StubGenerator: public StubCodeGenerator {
   // Helper for generating a dynamic type check.
   // Smashes no registers.
   void generate_type_check(Register sub_klass, Register super_check_offset, Register super_klass, Label& L_success) {
-    assert_different_registers(sub_klass, super_check_offset, super_klass);
-
     BLOCK_COMMENT("type_check:");
 
     Label L_miss;
@@ -2030,7 +2023,6 @@ class StubGenerator: public StubCodeGenerator {
     __ lea(end_from, end_from_addr);
     __ lea(end_to,   end_to_addr);
     __ movptr(r14_length, length);        // save a copy of the length
-    assert(length == count, "");
     __ negptr(count);                     // negate and test the length
     __ jcc(Assembler::notZero, L_load_element);
 
@@ -2064,7 +2056,6 @@ class StubGenerator: public StubCodeGenerator {
     // Register rdx = -1 * number of *remaining* oops, r14 = *total* oops.
     // Emit GC store barriers for the oops we have copied (r14 + rdx),
     // and report their number to the caller.
-    assert_different_registers(rax, r14_length, count, to, end_to, rcx, rscratch1);
     Label L_post_barrier;
     __ addptr(r14_length, count);     // K = (original - remaining) oops
     __ movptr(rax, r14_length);       // save the value
@@ -2228,7 +2219,6 @@ class StubGenerator: public StubCodeGenerator {
     // Short-hop target to L_failed.  Makes for denser prologue code.
     __ BIND(L_failed_0);
     __ jmp(L_failed);
-    assert(__ offset() % CodeEntryAlignment == 0, "no further alignment needed");
 
     __ align(CodeEntryAlignment);
     address start = __ pc();
@@ -2414,7 +2404,6 @@ class StubGenerator: public StubCodeGenerator {
       __ lea(to,   Address(dst, dst_pos, TIMES_OOP, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
       __ movl(count, length);           // length (reloaded)
       Register sco_temp = c_rarg3;      // this register is free now
-      assert_different_registers(from, to, count, sco_temp, r11_dst_klass, r10_src_klass);
       assert_clean_int(count, sco_temp);
 
       // Generate the type check.
@@ -2429,8 +2418,6 @@ class StubGenerator: public StubCodeGenerator {
       __ movl(  sco_temp,      Address(r11_dst_klass, sco_offset));
       assert_clean_int(sco_temp, rax);
 
-      // the checkcast_copy loop needs two extra arguments:
-      assert(c_rarg3 == sco_temp, "#3 already in place");
       // Set up arguments for checkcast_copy_entry.
       setup_arg_regs(4);
       __ movptr(r8, r11_dst_klass);  // dst.klass.element_klass, r8 is c_rarg4 on Linux/Solaris
@@ -2514,7 +2501,7 @@ class StubGenerator: public StubCodeGenerator {
   }
 
   // AES intrinsic stubs
-  enum {AESBlockSize = 16};
+  enum { AESBlockSize = 16 };
 
   address generate_key_shuffle_mask() {
     __ align(16);
@@ -2565,7 +2552,6 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_encryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_encryptBlock");
     Label L_doLast;
@@ -2658,7 +2644,6 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_decryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_decryptBlock");
     Label L_doLast;
@@ -2757,7 +2742,6 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_cipherBlockChaining_encryptAESCrypt() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_encryptAESCrypt");
     address start = __ pc();
@@ -2932,7 +2916,6 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_cipherBlockChaining_decryptAESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_decryptAESCrypt");
     address start = __ pc();
@@ -3120,7 +3103,7 @@ class StubGenerator: public StubCodeGenerator {
       __ movdqu(xmm_result, Address(from, pos, Address::times_1, 0)); // get next 16 bytes of cipher input
       __ movdqa(xmm_prev_block_cipher_save, xmm_result); // save for next r vector
       __ pxor(xmm_result, xmm_key_first); // do the aes dec rounds
-      for (int rnum = 1; rnum <= 9 ; rnum++) {
+      for (int rnum = 1; rnum <= 9; rnum++) {
           __ aesdec(xmm_result, as_XMMRegister(rnum + XMM_REG_NUM_KEY_FIRST));
       }
       if (k == 1) {
@@ -3259,7 +3242,6 @@ class StubGenerator: public StubCodeGenerator {
 // ofs and limit are use for multi-block byte array.
 // int com.sun.security.provider.DigestBase.implCompressMultiBlock(byte[] b, int ofs, int limit)
   address generate_sha256_implCompress(bool multi_block, const char *name) {
-    assert(VM_Version::supports_sha() || VM_Version::supports_avx2(), "");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", name);
     address start = __ pc();
@@ -3298,8 +3280,6 @@ class StubGenerator: public StubCodeGenerator {
   }
 
   address generate_sha512_implCompress(bool multi_block, const char *name) {
-    assert(VM_Version::supports_avx2(), "");
-    assert(VM_Version::supports_bmi2(), "");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", name);
     address start = __ pc();
@@ -3353,7 +3333,6 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_counterMode_AESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "counterMode_AESCrypt");
     address start = __ pc();
@@ -3393,7 +3372,7 @@ class StubGenerator: public StubCodeGenerator {
     const XMMRegister xmm_from5 = xmm4;
 
     //for key_128, key_192, key_256
-    const int rounds[3] = {10, 12, 14};
+    const int rounds[3] = { 10, 12, 14 };
     Label L_exit_preLoop, L_preLoop_start;
     Label L_multiBlock_loopTop[3];
     Label L_singleBlockLoopTop[3];
@@ -3636,7 +3615,6 @@ void roundDeclast(XMMRegister xmm_reg) {
   }
 
 address generate_cipherBlockChaining_decryptVectorAESCrypt() {
-    assert(VM_Version::supports_vaes(), "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_decryptAESCrypt");
     address start = __ pc();
@@ -4440,7 +4418,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-    assert(UseCRC32Intrinsics, "need AVX and CLMUL instructions");
 
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
@@ -4454,7 +4431,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
     const Register len   = c_rarg2;  // length
     const Register table = c_rarg3;  // crc_table address (reuse register)
     const Register tmp   = r11;
-    assert_different_registers(crc, buf, len, table, tmp, rax);
 
     BLOCK_COMMENT("Entry:");
     __ enter(); // required for proper stackwalking of RuntimeStub frame
@@ -4483,7 +4459,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
   *       rax   - int crc result
   */
   address generate_updateBytesCRC32C(bool is_pclmulqdq_supported) {
-      assert(UseCRC32CIntrinsics, "need SSE4_2");
       __ align(CodeEntryAlignment);
       StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32C");
       address start = __ pc();
@@ -4499,7 +4474,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
       const Register l = r11;
       const Register y = rcx;
       const Register z = r8;
-      assert_different_registers(crc, buf, len, a, j, k, l, y, z);
 
       BLOCK_COMMENT("Entry:");
       __ enter(); // required for proper stackwalking of RuntimeStub frame
@@ -4960,8 +4934,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
 
     __ enter(); // required for proper stackwalking of RuntimeStub frame
 
-    assert(is_even(framesize/2), "sp not 16-byte aligned");
-
     // return address and rbp are already in place
     __ subptr(rsp, (framesize-4) << LogBytesPerInt); // prolog
 
@@ -4974,7 +4946,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
 
     // Call runtime
     if (arg1 != noreg) {
-      assert(arg2 != c_rarg1, "clobbered");
       __ movptr(c_rarg1, arg1);
     }
     if (arg2 != noreg) {
@@ -5039,8 +5010,7 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
 
     StubRoutines::_forward_exception_entry = generate_forward_exception();
 
-    StubRoutines::_call_stub_entry =
-      generate_call_stub(StubRoutines::_call_stub_return_address);
+    StubRoutines::_call_stub_entry = generate_call_stub(StubRoutines::_call_stub_return_address);
 
     // is referenced by megamorphic call
     StubRoutines::_catch_exception_entry = generate_catch_exception();
@@ -5062,10 +5032,8 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
     StubRoutines::x86::_verify_mxcsr_entry    = generate_verify_mxcsr();
 
     // Build this early so it's available for the interpreter.
-    StubRoutines::_throw_StackOverflowError_entry =
-      generate_throw_exception("StackOverflowError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime:: throw_StackOverflowError));
-    StubRoutines::_throw_delayed_StackOverflowError_entry =
-      generate_throw_exception("delayed StackOverflowError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime:: throw_delayed_StackOverflowError));
+    StubRoutines::_throw_StackOverflowError_entry = generate_throw_exception("StackOverflowError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_StackOverflowError));
+    StubRoutines::_throw_delayed_StackOverflowError_entry = generate_throw_exception("delayed StackOverflowError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_delayed_StackOverflowError));
     if (UseCRC32Intrinsics) {
       // set table address before stub generation which use it
       StubRoutines::_crc_table_adr = (address)StubRoutines::x86::_crc_table;
@@ -5127,14 +5095,11 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
     // These entry points require SharedInfo::stack0 to be set up in
     // non-core builds and need to be relocatable, so they each
     // fabricate a RuntimeStub internally.
-    StubRoutines::_throw_AbstractMethodError_entry =
-      generate_throw_exception("AbstractMethodError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime:: throw_AbstractMethodError));
+    StubRoutines::_throw_AbstractMethodError_entry = generate_throw_exception("AbstractMethodError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_AbstractMethodError));
 
-    StubRoutines::_throw_IncompatibleClassChangeError_entry =
-      generate_throw_exception("IncompatibleClassChangeError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime:: throw_IncompatibleClassChangeError));
+    StubRoutines::_throw_IncompatibleClassChangeError_entry = generate_throw_exception("IncompatibleClassChangeError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_IncompatibleClassChangeError));
 
-    StubRoutines::_throw_NullPointerException_at_call_entry =
-      generate_throw_exception("NullPointerException at call throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime:: throw_NullPointerException_at_call));
+    StubRoutines::_throw_NullPointerException_at_call_entry = generate_throw_exception("NullPointerException at call throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_NullPointerException_at_call));
 
     // entry points that are platform specific
     StubRoutines::x86::_f2i_fixup = generate_f2i_fixup();
@@ -5159,13 +5124,13 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
       StubRoutines::_aescrypt_encryptBlock = generate_aescrypt_encryptBlock();
       StubRoutines::_aescrypt_decryptBlock = generate_aescrypt_decryptBlock();
       StubRoutines::_cipherBlockChaining_encryptAESCrypt = generate_cipherBlockChaining_encryptAESCrypt();
-      if (VM_Version::supports_vaes() &&  VM_Version::supports_avx512vl() && VM_Version::supports_avx512dq() ) {
+      if (VM_Version::supports_vaes() &&  VM_Version::supports_avx512vl() && VM_Version::supports_avx512dq()) {
         StubRoutines::_cipherBlockChaining_decryptAESCrypt = generate_cipherBlockChaining_decryptVectorAESCrypt();
       } else {
         StubRoutines::_cipherBlockChaining_decryptAESCrypt = generate_cipherBlockChaining_decryptAESCrypt_Parallel();
       }
     }
-    if (UseAESCTRIntrinsics){
+    if (UseAESCTRIntrinsics) {
       StubRoutines::x86::_counter_shuffle_mask_addr = generate_counter_shuffle_mask();
       StubRoutines::_counterMode_AESCrypt = generate_counterMode_AESCrypt_Parallel();
     }

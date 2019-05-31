@@ -42,7 +42,6 @@ G1ConcurrentRefineThreadControl::~G1ConcurrentRefineThreadControl() {
 }
 
 jint G1ConcurrentRefineThreadControl::initialize(G1ConcurrentRefine* cr, uint num_max_threads) {
-  assert(cr != NULL, "G1ConcurrentRefine must not be NULL");
   _cr = cr;
   _num_max_threads = num_max_threads;
 
@@ -67,7 +66,6 @@ jint G1ConcurrentRefineThreadControl::initialize(G1ConcurrentRefine* cr, uint nu
 }
 
 void G1ConcurrentRefineThreadControl::maybe_activate_next(uint cur_worker_id) {
-  assert(cur_worker_id < _num_max_threads, "Activating another thread from %u not allowed since there can be at most %u", cur_worker_id, _num_max_threads);
   if (cur_worker_id == (_num_max_threads - 1)) {
     // Already the last thread, there is no more thread to activate.
     return;
@@ -121,34 +119,6 @@ const size_t max_green_zone = max_yellow_zone / 2;
 const size_t max_red_zone = INT_MAX; // For dcqs.set_max_completed_queue.
 STATIC_ASSERT(max_yellow_zone <= max_red_zone);
 
-// Range check assertions for green zone values.
-#define assert_zone_constraints_g(green) \
-  do { \
-    size_t azc_g_green = (green); \
-    assert(azc_g_green <= max_green_zone, "green exceeds max: " SIZE_FORMAT, azc_g_green); \
-  } while (0)
-
-// Range check assertions for green and yellow zone values.
-#define assert_zone_constraints_gy(green, yellow) \
-  do { \
-    size_t azc_gy_green = (green); \
-    size_t azc_gy_yellow = (yellow); \
-    assert_zone_constraints_g(azc_gy_green); \
-    assert(azc_gy_yellow <= max_yellow_zone, "yellow exceeds max: " SIZE_FORMAT, azc_gy_yellow); \
-    assert(azc_gy_green <= azc_gy_yellow, "green (" SIZE_FORMAT ") exceeds yellow (" SIZE_FORMAT ")", azc_gy_green, azc_gy_yellow); \
-  } while (0)
-
-// Range check assertions for green, yellow, and red zone values.
-#define assert_zone_constraints_gyr(green, yellow, red) \
-  do { \
-    size_t azc_gyr_green = (green); \
-    size_t azc_gyr_yellow = (yellow); \
-    size_t azc_gyr_red = (red); \
-    assert_zone_constraints_gy(azc_gyr_green, azc_gyr_yellow); \
-    assert(azc_gyr_red <= max_red_zone, "red exceeds max: " SIZE_FORMAT, azc_gyr_red); \
-    assert(azc_gyr_yellow <= azc_gyr_red, "yellow (" SIZE_FORMAT ") exceeds red (" SIZE_FORMAT ")", azc_gyr_yellow, azc_gyr_red); \
-  } while (0)
-
 // Logging tag sequence for refinement control updates.
 #define CTRL_TAGS gc, ergo, refine
 
@@ -162,9 +132,7 @@ typedef Pair<size_t, size_t> Thresholds;
 inline size_t activation_level(const Thresholds& t) { return t.first; }
 inline size_t deactivation_level(const Thresholds& t) { return t.second; }
 
-static Thresholds calc_thresholds(size_t green_zone,
-                                  size_t yellow_zone,
-                                  uint worker_i) {
+static Thresholds calc_thresholds(size_t green_zone, size_t yellow_zone, uint worker_i) {
   double yellow_size = yellow_zone - green_zone;
   double step = yellow_size / G1ConcurrentRefine::max_num_threads();
   if (worker_i == 0) {
@@ -177,21 +145,16 @@ static Thresholds calc_thresholds(size_t green_zone,
   }
   size_t activate_offset = static_cast<size_t>(ceil(step * (worker_i + 1)));
   size_t deactivate_offset = static_cast<size_t>(floor(step * worker_i));
-  return Thresholds(green_zone + activate_offset,
-                    green_zone + deactivate_offset);
+  return Thresholds(green_zone + activate_offset, green_zone + deactivate_offset);
 }
 
-G1ConcurrentRefine::G1ConcurrentRefine(size_t green_zone,
-                                       size_t yellow_zone,
-                                       size_t red_zone,
-                                       size_t min_yellow_zone_size) :
+G1ConcurrentRefine::G1ConcurrentRefine(size_t green_zone, size_t yellow_zone, size_t red_zone, size_t min_yellow_zone_size) :
   _thread_control(),
   _green_zone(green_zone),
   _yellow_zone(yellow_zone),
   _red_zone(red_zone),
   _min_yellow_zone_size(min_yellow_zone_size)
 {
-  assert_zone_constraints_gyr(green_zone, yellow_zone, red_zone);
 }
 
 jint G1ConcurrentRefine::initialize() {
@@ -246,17 +209,9 @@ G1ConcurrentRefine* G1ConcurrentRefine::create(jint* ecode) {
   size_t yellow_zone = calc_init_yellow_zone(green_zone, min_yellow_zone_size);
   size_t red_zone = calc_init_red_zone(green_zone, yellow_zone);
 
-  LOG_ZONES("Initial Refinement Zones: "
-            "green: " SIZE_FORMAT ", "
-            "yellow: " SIZE_FORMAT ", "
-            "red: " SIZE_FORMAT ", "
-            "min yellow size: " SIZE_FORMAT,
-            green_zone, yellow_zone, red_zone, min_yellow_zone_size);
+  LOG_ZONES("Initial Refinement Zones: green: " SIZE_FORMAT ", yellow: " SIZE_FORMAT ", red: " SIZE_FORMAT ", min yellow size: " SIZE_FORMAT, green_zone, yellow_zone, red_zone, min_yellow_zone_size);
 
-  G1ConcurrentRefine* cr = new G1ConcurrentRefine(green_zone,
-                                                  yellow_zone,
-                                                  red_zone,
-                                                  min_yellow_zone_size);
+  G1ConcurrentRefine* cr = new G1ConcurrentRefine(green_zone, yellow_zone, red_zone, min_yellow_zone_size);
 
   if (cr == NULL) {
     *ecode = JNI_ENOMEM;
@@ -298,8 +253,7 @@ static size_t calc_new_green_zone(size_t green,
     if (green > 0) {
       green = static_cast<size_t>(green * dec_k);
     }
-  } else if (update_rs_time < goal_ms &&
-             update_rs_processed_buffers > green) {
+  } else if (update_rs_time < goal_ms && update_rs_processed_buffers > green) {
     green = static_cast<size_t>(MAX2(green * inc_k, green + 1.0));
     green = MIN2(green, max_green_zone);
   }
@@ -316,9 +270,7 @@ static size_t calc_new_red_zone(size_t green, size_t yellow) {
   return MIN2(yellow + (yellow - green), max_red_zone);
 }
 
-void G1ConcurrentRefine::update_zones(double update_rs_time,
-                                      size_t update_rs_processed_buffers,
-                                      double goal_ms) {
+void G1ConcurrentRefine::update_zones(double update_rs_time, size_t update_rs_processed_buffers, double goal_ms) {
   log_trace( CTRL_TAGS )("Updating Refinement Zones: "
                          "update_rs time: %.3fms, "
                          "update_rs buffers: " SIZE_FORMAT ", "
@@ -327,24 +279,14 @@ void G1ConcurrentRefine::update_zones(double update_rs_time,
                          update_rs_processed_buffers,
                          goal_ms);
 
-  _green_zone = calc_new_green_zone(_green_zone,
-                                    update_rs_time,
-                                    update_rs_processed_buffers,
-                                    goal_ms);
+  _green_zone = calc_new_green_zone(_green_zone, update_rs_time, update_rs_processed_buffers, goal_ms);
   _yellow_zone = calc_new_yellow_zone(_green_zone, _min_yellow_zone_size);
   _red_zone = calc_new_red_zone(_green_zone, _yellow_zone);
 
-  assert_zone_constraints_gyr(_green_zone, _yellow_zone, _red_zone);
-  LOG_ZONES("Updated Refinement Zones: "
-            "green: " SIZE_FORMAT ", "
-            "yellow: " SIZE_FORMAT ", "
-            "red: " SIZE_FORMAT,
-            _green_zone, _yellow_zone, _red_zone);
+  LOG_ZONES("Updated Refinement Zones: green: " SIZE_FORMAT ", yellow: " SIZE_FORMAT ", red: " SIZE_FORMAT, _green_zone, _yellow_zone, _red_zone);
 }
 
-void G1ConcurrentRefine::adjust(double update_rs_time,
-                                size_t update_rs_processed_buffers,
-                                double goal_ms) {
+void G1ConcurrentRefine::adjust(double update_rs_time, size_t update_rs_processed_buffers, double goal_ms) {
   DirtyCardQueueSet& dcqs = G1BarrierSet::dirty_card_queue_set();
 
   if (G1UseAdaptiveConcRefinement) {

@@ -16,7 +16,7 @@ class G1CodeBlobClosure : public CodeBlobClosure {
     void do_oop_work(T* p);
 
   public:
-    HeapRegionGatheringOopClosure(OopClosure* oc) : _g1h(G1CollectedHeap::heap()), _work(oc), _nm(NULL) {}
+    HeapRegionGatheringOopClosure(OopClosure* oc) : _g1h(G1CollectedHeap::heap()), _work(oc), _nm(NULL) { }
 
     void do_oop(oop* o);
     void do_oop(narrowOop* o);
@@ -28,7 +28,7 @@ class G1CodeBlobClosure : public CodeBlobClosure {
 
   HeapRegionGatheringOopClosure _oc;
 public:
-  G1CodeBlobClosure(OopClosure* oc) : _oc(oc) {}
+  G1CodeBlobClosure(OopClosure* oc) : _oc(oc) { }
 
   void do_code_blob(CodeBlob* cb);
 };

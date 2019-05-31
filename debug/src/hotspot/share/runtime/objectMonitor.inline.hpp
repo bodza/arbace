@@ -13,7 +13,6 @@ inline markOop ObjectMonitor::header() const {
 }
 
 inline volatile markOop* ObjectMonitor::header_addr() {
-  assert((intptr_t)this == (intptr_t)&_header, "sync code expects this");
   return &_header;
 }
 
@@ -34,12 +33,6 @@ inline void* ObjectMonitor::owner() const {
 }
 
 inline void ObjectMonitor::clear() {
-  assert(_header, "Fatal logic error in ObjectMonitor header!");
-  assert(_count == 0, "Fatal logic error in ObjectMonitor count!");
-  assert(_waiters == 0, "Fatal logic error in ObjectMonitor waiters!");
-  assert(_recursions == 0, "Fatal logic error in ObjectMonitor recursions!");
-  assert(_object != NULL, "Fatal logic error in ObjectMonitor object!");
-  assert(_owner == 0, "Fatal logic error in ObjectMonitor owner!");
 
   _header = NULL;
   _object = NULL;
@@ -61,7 +54,6 @@ inline bool ObjectMonitor::check(TRAPS) {
   if (THREAD != _owner) {
     if (THREAD->is_lock_owned((address) _owner)) {
       _owner = THREAD;  // regain ownership of inflated monitor
-      assert(_recursions == 0, "invariant");
     } else {
       check_slow(THREAD);
       return false;

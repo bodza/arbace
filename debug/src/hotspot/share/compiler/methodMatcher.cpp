@@ -57,9 +57,7 @@ MethodMatcher::~MethodMatcher() {
   }
 }
 
-void MethodMatcher::init(Symbol* class_name, Mode class_mode,
-                             Symbol* method_name, Mode method_mode,
-                             Symbol* signature) {
+void MethodMatcher::init(Symbol* class_name, Mode class_mode, Symbol* method_name, Mode method_mode, Symbol* signature) {
  _class_mode = class_mode;
  _method_mode = method_mode;
  _class_name = class_name;
@@ -216,22 +214,19 @@ void skip_leading_spaces(char*& line, int* total_bytes_read ) {
 void MethodMatcher::parse_method_pattern(char*& line, const char*& error_msg, MethodMatcher* matcher) {
   MethodMatcher::Mode c_match;
   MethodMatcher::Mode m_match;
-  char class_name[256] = {0};
-  char method_name[256] = {0};
-  char sig[1024] = {0};
+  char class_name[256] = { 0 };
+  char method_name[256] = { 0 };
+  char sig[1024] = { 0 };
   int bytes_read = 0;
   int total_bytes_read = 0;
 
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
-
   if (!MethodMatcher::canonicalize(line, error_msg)) {
-    assert(error_msg != NULL, "Message must be set if parsing failed");
     return;
   }
 
   skip_leading_spaces(line, &total_bytes_read);
 
-  if (2 == sscanf(line, "%255" RANGESLASH "%*[ ]" "%255"  RANGE0 "%n", class_name, method_name, &bytes_read)) {
+  if (2 == sscanf(line, "%255" RANGESLASH "%*[ ]" "%255" RANGE0 "%n", class_name, method_name, &bytes_read)) {
     c_match = check_mode(class_name, error_msg);
     m_match = check_mode(method_name, error_msg);
 
@@ -247,7 +242,6 @@ void MethodMatcher::parse_method_pattern(char*& line, const char*& error_msg, Me
     }
 
     if (c_match == MethodMatcher::Unknown || m_match == MethodMatcher::Unknown) {
-      assert(error_msg != NULL, "Must have been set by check_mode()");
       return;
     }
 
@@ -288,9 +282,7 @@ bool MethodMatcher::matches(const methodHandle& method) const {
   Symbol* method_name = method->name();
   Symbol* signature = method->signature();
 
-  if (match(class_name, this->class_name(), _class_mode) &&
-      match(method_name, this->method_name(), _method_mode) &&
-      ((this->signature() == NULL) || match(signature, this->signature(), Prefix))) {
+  if (match(class_name, this->class_name(), _class_mode) && match(method_name, this->method_name(), _method_mode) && ((this->signature() == NULL) || match(signature, this->signature(), Prefix))) {
     return true;
   }
   return false;
@@ -320,7 +312,6 @@ void MethodMatcher::print_base(outputStream* st) {
 }
 
 BasicMatcher* BasicMatcher::parse_method_pattern(char* line, const char*& error_msg) {
-  assert(error_msg == NULL, "Don't call here with error_msg already set");
   BasicMatcher* bm = new BasicMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, bm);
   if (error_msg != NULL) {
@@ -358,7 +349,6 @@ void InlineMatcher::print(outputStream* st) {
 }
 
 InlineMatcher* InlineMatcher::parse_method_pattern(char* line, const char*& error_msg) {
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
   InlineMatcher* im = new InlineMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, im);
   if (error_msg != NULL) {
@@ -394,10 +384,8 @@ InlineMatcher* InlineMatcher::parse_inline_pattern(char* str, const char*& error
    str++;
 
    int bytes_read = 0;
-   assert(error_msg== NULL, "error_msg must not be set yet");
    InlineMatcher* im = InlineMatcher::parse_method_pattern(str, error_msg);
    if (im == NULL) {
-     assert(error_msg != NULL, "Must have error message");
      return NULL;
    }
    im->set_action(_inline_action);
@@ -410,7 +398,7 @@ InlineMatcher* InlineMatcher::clone() {
    m->_method_mode = _method_mode;
    m->_inline_action = _inline_action;
    m->_class_name = _class_name;
-   if(_class_name != NULL) {
+   if (_class_name != NULL) {
      _class_name->increment_refcount();
    }
    m->_method_name = _method_name;

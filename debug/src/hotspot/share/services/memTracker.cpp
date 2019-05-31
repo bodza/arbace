@@ -50,8 +50,7 @@ NMT_TrackingLevel MemTracker::init_tracking_level() {
   // but it is benign, the results are the same.
   ::new ((void*)&NativeCallStack::EMPTY_STACK) NativeCallStack(0, false);
 
-  if (!MallocTracker::initialize(level) ||
-      !VirtualMemoryTracker::initialize(level)) {
+  if (!MallocTracker::initialize(level) || !VirtualMemoryTracker::initialize(level)) {
     level = NMT_off;
   }
   return level;
@@ -125,8 +124,6 @@ void MemTracker::shutdown() {
 bool MemTracker::transition_to(NMT_TrackingLevel level) {
   NMT_TrackingLevel current_level = tracking_level();
 
-  assert(level != NMT_off || current_level == NMT_off, "Cannot transition NMT to off");
-
   if (current_level == level) {
     return true;
   } else if (current_level > level) {
@@ -145,7 +142,6 @@ bool MemTracker::transition_to(NMT_TrackingLevel level) {
 }
 
 void MemTracker::report(bool summary_only, outputStream* output) {
- assert(output != NULL, "No output stream");
   MemBaseline baseline;
   if (baseline.baseline(summary_only)) {
     if (summary_only) {
@@ -156,10 +152,7 @@ void MemTracker::report(bool summary_only, outputStream* output) {
       rpt.report();
       output->print("Metaspace:");
       // Metadata reporting requires a safepoint, so avoid it if VM is not in good state.
-      assert(!VMError::fatal_error_in_progress(), "Do not report metadata in error report");
-      VM_PrintMetadata vmop(output, K,
-          MetaspaceUtils::rf_show_loaders |
-          MetaspaceUtils::rf_break_down_by_spacetype);
+      VM_PrintMetadata vmop(output, K, MetaspaceUtils::rf_show_loaders | MetaspaceUtils::rf_break_down_by_spacetype);
       VMThread::execute(&vmop);
     }
   }

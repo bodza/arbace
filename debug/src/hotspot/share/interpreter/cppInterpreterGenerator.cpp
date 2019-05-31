@@ -49,8 +49,7 @@ void CppInterpreterGenerator::generate_all() {
 }
 
 // Generate method entries
-address CppInterpreterGenerator::generate_method_entry(
-                                        AbstractInterpreter::MethodKind kind) {
+address CppInterpreterGenerator::generate_method_entry(AbstractInterpreter::MethodKind kind) {
   // determine code generation flags
   bool native = false;
   bool synchronized = false;

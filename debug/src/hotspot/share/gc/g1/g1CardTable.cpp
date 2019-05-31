@@ -57,8 +57,6 @@ void G1CardTable::initialize(G1RegionToSpaceMapper* mapper) {
 
   _byte_map = (jbyte*) mapper->reserved().start();
   _byte_map_base = _byte_map - (uintptr_t(low_bound) >> card_shift);
-  assert(byte_for(low_bound) == &_byte_map[0], "Checking start of map");
-  assert(byte_for(high_bound-1) <= &_byte_map[_last_valid_index], "Checking end of map");
 
   log_trace(gc, barrier)("G1CardTable::G1CardTable: ");
   log_trace(gc, barrier)("    &_byte_map[0]: " INTPTR_FORMAT "  &_byte_map[_last_valid_index]: " INTPTR_FORMAT,

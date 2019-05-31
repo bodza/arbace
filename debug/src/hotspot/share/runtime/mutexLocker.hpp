@@ -138,14 +138,12 @@ class MutexLocker: StackObj {
   Monitor * _mutex;
  public:
   MutexLocker(Monitor * mutex) {
-    assert(mutex->rank() != Mutex::special, "Special ranked mutex should only use MutexLockerEx");
     _mutex = mutex;
     _mutex->lock();
   }
 
   // Overloaded constructor passing current thread
   MutexLocker(Monitor * mutex, Thread *thread) {
-    assert(mutex->rank() != Mutex::special, "Special ranked mutex should only use MutexLockerEx");
     _mutex = mutex;
     _mutex->lock(thread);
   }
@@ -154,10 +152,6 @@ class MutexLocker: StackObj {
     _mutex->unlock();
   }
 };
-
-// for debugging: check that we're already owning this lock (or are at a safepoint)
-#define assert_locked_or_safepoint(lock)
-#define assert_lock_strong(lock)
 
 // A MutexLockerEx behaves like a MutexLocker when its constructor is
 // called with a Mutex.  Unlike a MutexLocker, its constructor can also be
@@ -173,7 +167,6 @@ class MutexLockerEx: public StackObj {
   MutexLockerEx(Monitor * mutex, bool no_safepoint_check = !Mutex::_no_safepoint_check_flag) {
     _mutex = mutex;
     if (_mutex != NULL) {
-      assert(mutex->rank() > Mutex::special || no_safepoint_check, "Mutexes with rank special or lower should not do safepoint checks");
       if (no_safepoint_check)
         _mutex->lock_without_safepoint_check();
       else

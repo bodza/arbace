@@ -27,10 +27,8 @@ template <class T> void G1ParScanThreadState::do_oop_evac(T* p) {
   } else if (in_cset_state.is_humongous()) {
     _g1h->set_humongous_is_live(obj);
   } else {
-    assert(in_cset_state.is_default(), "In_cset_state must be NotInCSet here, but is " CSETSTATE_FORMAT, in_cset_state.value());
   }
 
-  assert(obj != NULL, "Must be");
   if (!HeapRegion::is_in_same_region(p, obj)) {
     HeapRegion* from = _g1h->heap_region_containing(p);
     update_rs(from, p, obj);
@@ -38,28 +36,21 @@ template <class T> void G1ParScanThreadState::do_oop_evac(T* p) {
 }
 
 template <class T> inline void G1ParScanThreadState::push_on_queue(T* ref) {
-  assert(verify_ref(ref), "sanity");
   _refs->push(ref);
 }
 
 inline void G1ParScanThreadState::do_oop_partial_array(oop* p) {
-  assert(has_partial_array_mask(p), "invariant");
   oop from_obj = clear_partial_array_mask(p);
 
-  assert(_g1h->is_in_reserved(from_obj), "must be in heap.");
-  assert(from_obj->is_objArray(), "must be obj array");
   objArrayOop from_obj_array = objArrayOop(from_obj);
   // The from-space object contains the real length.
   int length                 = from_obj_array->length();
 
-  assert(from_obj->is_forwarded(), "must be forwarded");
   oop to_obj                 = from_obj->forwardee();
-  assert(from_obj != to_obj, "should not be chunking self-forwarded objects");
   objArrayOop to_obj_array   = objArrayOop(to_obj);
   // We keep track of the next start index in the length field of the
   // to-space object.
   int next_index             = to_obj_array->length();
-  assert(0 <= next_index && next_index < length, "invariant, next index: %d, length: %d", next_index, length);
 
   int start                  = next_index;
   int end                    = length;
@@ -73,7 +64,6 @@ inline void G1ParScanThreadState::do_oop_partial_array(oop* p) {
     oop* from_obj_p = set_partial_array_mask(from_obj);
     push_on_queue(from_obj_p);
   } else {
-    assert(length == end, "sanity");
     // We'll process the final range for this object. Restore the length
     // so that the heap remains parsable in case of evacuation failure.
     to_obj_array->set_length(end);
@@ -99,12 +89,10 @@ inline void G1ParScanThreadState::deal_with_reference(oop* ref_to_scan) {
 }
 
 inline void G1ParScanThreadState::deal_with_reference(narrowOop* ref_to_scan) {
-  assert(!has_partial_array_mask(ref_to_scan), "NarrowOop* elements should never be partial arrays.");
   do_oop_evac(ref_to_scan);
 }
 
 inline void G1ParScanThreadState::dispatch_reference(StarTask ref) {
-  assert(verify_task(ref), "sanity");
   if (ref.is_narrow()) {
     deal_with_reference((narrowOop*)ref);
   } else {
@@ -115,7 +103,6 @@ inline void G1ParScanThreadState::dispatch_reference(StarTask ref) {
 void G1ParScanThreadState::steal_and_trim_queue(RefToScanQueueSet *task_queues) {
   StarTask stolen_task;
   while (task_queues->steal(_worker_id, &_hash_seed, stolen_task)) {
-    assert(verify_task(stolen_task), "sanity");
     dispatch_reference(stolen_task);
 
     // We've just processed a reference and we might have made

@@ -103,7 +103,7 @@ class G1VerifyCodeRootOopClosure: public OopClosure {
 
 public:
   G1VerifyCodeRootOopClosure(G1CollectedHeap* g1h, OopClosure* root_cl, VerifyOption vo):
-    _g1h(g1h), _root_cl(root_cl), _vo(vo), _nm(NULL), _failures(false) {}
+    _g1h(g1h), _root_cl(root_cl), _vo(vo), _nm(NULL), _failures(false) { }
 
   void do_oop(oop* p) { do_oop_work(p); }
   void do_oop(narrowOop* p) { do_oop_work(p); }
@@ -117,7 +117,7 @@ class G1VerifyCodeRootBlobClosure: public CodeBlobClosure {
 
 public:
   G1VerifyCodeRootBlobClosure(G1VerifyCodeRootOopClosure* oop_cl):
-    _oop_cl(oop_cl) {}
+    _oop_cl(oop_cl) { }
 
   void do_code_blob(CodeBlob* cb) {
     nmethod* nm = cb->as_nmethod_or_null();
@@ -132,7 +132,7 @@ class YoungRefCounterClosure : public OopClosure {
   G1CollectedHeap* _g1h;
   int              _count;
  public:
-  YoungRefCounterClosure(G1CollectedHeap* g1h) : _g1h(g1h), _count(0) {}
+  YoungRefCounterClosure(G1CollectedHeap* g1h) : _g1h(g1h), _count(0) { }
   void do_oop(oop* p)       { if (_g1h->is_in_young(*p)) { _count++; } }
   void do_oop(narrowOop* p) { ShouldNotReachHere(); }
 
@@ -144,7 +144,7 @@ class VerifyCLDClosure: public CLDClosure {
   YoungRefCounterClosure _young_ref_counter_closure;
   OopClosure *_oop_closure;
  public:
-  VerifyCLDClosure(G1CollectedHeap* g1h, OopClosure* cl) : _young_ref_counter_closure(g1h), _oop_closure(cl) {}
+  VerifyCLDClosure(G1CollectedHeap* g1h, OopClosure* cl) : _young_ref_counter_closure(g1h), _oop_closure(cl) { }
   void do_cld(ClassLoaderData* cld) {
     cld->oops_do(_oop_closure, false);
 
@@ -168,8 +168,7 @@ public:
 
   template <class T> void do_oop_work(T *p) {
     oop obj = RawAccess<>::oop_load(p);
-    guarantee(obj == NULL || !_g1h->is_obj_dead_cond(obj, _vo),
-              "Dead object referenced by a not dead object");
+    guarantee(obj == NULL || !_g1h->is_obj_dead_cond(obj, _vo), "Dead object referenced by a not dead object");
   }
 };
 
@@ -189,7 +188,6 @@ public:
   }
   void do_object(oop o) {
     VerifyLivenessOopClosure isLive(_g1h, _vo);
-    assert(o != NULL, "Huh?");
     if (!_g1h->is_obj_dead_cond(o, _vo)) {
       // If the object is alive according to the full gc mark,
       // then verify that the marking information agrees.
@@ -224,14 +222,9 @@ public:
     oop obj = RawAccess<>::oop_load(p);
 
     if (_hr->is_open_archive()) {
-      guarantee(obj == NULL || G1ArchiveAllocator::is_archive_object(obj),
-                "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT,
-                p2i(p), p2i(obj));
+      guarantee(obj == NULL || G1ArchiveAllocator::is_archive_object(obj), "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT, p2i(p), p2i(obj));
     } else {
-      assert(_hr->is_closed_archive(), "should be closed archive region");
-      guarantee(obj == NULL || G1ArchiveAllocator::is_closed_archive_object(obj),
-                "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT,
-                p2i(p), p2i(obj));
+      guarantee(obj == NULL || G1ArchiveAllocator::is_closed_archive_object(obj), "Archive object at " PTR_FORMAT " references a non-archive object at " PTR_FORMAT, p2i(p), p2i(obj));
     }
   }
 };
@@ -244,7 +237,6 @@ public:
   // Verify that all object pointers are to archive regions.
   void do_object(oop o) {
     VerifyArchiveOopClosure checkOop(_hr);
-    assert(o != NULL, "Should not be here for NULL oops");
     o->oop_iterate(&checkOop);
   }
 };
@@ -282,7 +274,7 @@ public:
   VerifyRegionClosure(bool par, VerifyOption vo)
     : _par(par),
       _vo(vo),
-      _failures(false) {}
+      _failures(false) { }
 
   bool failures() {
     return _failures;
@@ -359,7 +351,7 @@ public:
       _g1h(g1h),
       _vo(vo),
       _failures(false),
-      _hrclaimer(g1h->workers()->active_workers()) {}
+      _hrclaimer(g1h->workers()->active_workers()) { }
 
   bool failures() {
     return _failures;
@@ -392,8 +384,6 @@ void G1HeapVerifier::verify(VerifyOption vo) {
   if (!SafepointSynchronize::is_at_safepoint()) {
     log_info(gc, verify)("Skipping verification. Not at safepoint.");
   }
-
-  assert(Thread::current()->is_VM_thread(), "Expected to be executed serially by the VM thread at this point");
 
   log_debug(gc, verify)("Roots");
   VerifyRootsClosure rootsCl(vo);
@@ -475,24 +465,20 @@ public:
                            HeapRegionSet* humongous_set,
                            HeapRegionManager* hrm) :
     _old_set(old_set), _humongous_set(humongous_set), _hrm(hrm),
-    _old_count(), _humongous_count(), _free_count(){ }
+    _old_count(), _humongous_count(), _free_count() { }
 
   bool do_heap_region(HeapRegion* hr) {
     if (hr->is_young()) {
       // TODO
     } else if (hr->is_humongous()) {
-      assert(hr->containing_set() == _humongous_set, "Heap region %u is humongous but not in humongous set.", hr->hrm_index());
       _humongous_count++;
     } else if (hr->is_empty()) {
-      assert(_hrm->is_free(hr), "Heap region %u is empty but not on the free list.", hr->hrm_index());
       _free_count++;
     } else if (hr->is_old()) {
-      assert(hr->containing_set() == _old_set, "Heap region %u is old but not in the old set.", hr->hrm_index());
       _old_count++;
     } else {
       // There are no other valid region types. Check for one invalid
       // one we can identify: pinned without old or humongous set.
-      assert(!hr->is_pinned(), "Heap region %u is pinned but not old (archive) or humongous.", hr->hrm_index());
       ShouldNotReachHere();
     }
     return false;
@@ -506,8 +492,6 @@ public:
 };
 
 void G1HeapVerifier::verify_region_sets() {
-  assert_heap_locked_or_at_safepoint(true /* should_be_vm_thread */);
-
   // First, check the explicit lists.
   _g1h->_hrm.verify();
 

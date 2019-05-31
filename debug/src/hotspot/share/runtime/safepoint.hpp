@@ -132,12 +132,11 @@ public:
   static void check_for_lazy_critical_native(JavaThread *thread, JavaThreadState state);
 
   // Query
-  inline static bool is_at_safepoint()   { return _state == _synchronized;  }
-  inline static bool is_synchronizing()  { return _state == _synchronizing;  }
+  inline static bool is_at_safepoint()   { return _state == _synchronized; }
+  inline static bool is_synchronizing()  { return _state == _synchronizing; }
   inline static int safepoint_counter()  { return _safepoint_counter; }
 
   inline static void increment_jni_active_count() {
-    assert_locked_or_safepoint(Safepoint_lock);
     _current_jni_active_count++;
   }
 
@@ -184,20 +183,6 @@ public:
     _defer_thr_suspend_loop_count = 1;
   }
 };
-
-// Some helper assert macros for safepoint checks.
-
-#define assert_at_safepoint() \
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at a safepoint")
-
-#define assert_at_safepoint_msg(...) \
-  assert(SafepointSynchronize::is_at_safepoint(), __VA_ARGS__)
-
-#define assert_not_at_safepoint() \
-  assert(!SafepointSynchronize::is_at_safepoint(), "should not be at a safepoint")
-
-#define assert_not_at_safepoint_msg(...) \
-  assert(!SafepointSynchronize::is_at_safepoint(), __VA_ARGS__)
 
 // State class for a thread suspended at a safepoint
 class ThreadSafepointState: public CHeapObj<mtInternal> {

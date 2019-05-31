@@ -42,9 +42,7 @@ bool ElfFile::specifies_noexecstack(const char* filepath) {
 
   // Read file header
   Elf_Ehdr head;
-  if (fread(&head, sizeof(Elf_Ehdr), 1, file) == 1 &&
-      is_elf_file(head) &&
-      fseek(file, head.e_phoff, SEEK_SET) == 0) {
+  if (fread(&head, sizeof(Elf_Ehdr), 1, file) == 1 && is_elf_file(head) && fseek(file, head.e_phoff, SEEK_SET) == 0) {
 
     // Read program header table
     Elf_Phdr phdr;

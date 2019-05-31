@@ -29,9 +29,6 @@ protected:
   // Initialize the members of this class. The biased start address of this array
   // is the bias (in elements) multiplied by the element size.
   void initialize_base(address base, size_t length, size_t bias, size_t elem_size, uint shift_by) {
-    assert(base != NULL, "just checking");
-    assert(length > 0, "just checking");
-    assert(shift_by < sizeof(uintptr_t) * 8, "Shifting by %u, larger than word size?", shift_by);
     _base = base;
     _length = length;
     _biased_base = base - (bias * elem_size);
@@ -42,10 +39,6 @@ protected:
   // Allocate and initialize this array to cover the heap addresses in the range
   // of [bottom, end).
   void initialize(HeapWord* bottom, HeapWord* end, size_t target_elem_size_in_bytes, size_t mapping_granularity_in_bytes) {
-    assert(mapping_granularity_in_bytes > 0, "just checking");
-    assert(is_power_of_2(mapping_granularity_in_bytes), "mapping granularity must be power of 2, is " SIZE_FORMAT, mapping_granularity_in_bytes);
-    assert((uintptr_t)bottom % mapping_granularity_in_bytes == 0, "bottom mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is  " PTR_FORMAT, mapping_granularity_in_bytes, p2i(bottom));
-    assert((uintptr_t)end % mapping_granularity_in_bytes == 0, "end mapping area address must be a multiple of mapping granularity " SIZE_FORMAT ", is " PTR_FORMAT, mapping_granularity_in_bytes, p2i(end));
     size_t num_target_elems = pointer_delta(end, bottom, mapping_granularity_in_bytes);
     idx_t bias = (uintptr_t)bottom / mapping_granularity_in_bytes;
     address base = create_new_base_array(num_target_elems, target_elem_size_in_bytes);
@@ -55,9 +48,9 @@ protected:
   size_t bias() const { return _bias; }
   uint shift_by() const { return _shift_by; }
 
-  void verify_index(idx_t index) const {};
-  void verify_biased_index(idx_t biased_index) const {};
-  void verify_biased_index_inclusive_end(idx_t biased_index) const {};
+  void verify_index(idx_t index) const { };
+  void verify_biased_index(idx_t biased_index) const { };
+  void verify_biased_index_inclusive_end(idx_t biased_index) const { };
 
 public:
    // Return the length of the array in elements.
@@ -155,7 +148,7 @@ protected:
     }
   }
 public:
-  G1BiasedMappedArray() {}
+  G1BiasedMappedArray() { }
 
   // Allocate and initialize this array to cover the heap addresses in the range
   // of [bottom, end).

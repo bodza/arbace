@@ -21,7 +21,7 @@ class JVMFlagRange_int : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_int(const char* name, const int* ptr, int min, int max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_int(*_ptr, verbose);
@@ -51,7 +51,7 @@ class JVMFlagRange_intx : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_intx(const char* name, const intx* ptr, intx min, intx max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_intx(*_ptr, verbose);
@@ -82,7 +82,7 @@ class JVMFlagRange_uint : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_uint(const char* name, const uint* ptr, uint min, uint max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_uint(*_ptr, verbose);
@@ -113,7 +113,7 @@ class JVMFlagRange_uintx : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_uintx(const char* name, const uintx* ptr, uintx min, uintx max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_uintx(*_ptr, verbose);
@@ -144,7 +144,7 @@ class JVMFlagRange_uint64_t : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_uint64_t(const char* name, const uint64_t* ptr, uint64_t min, uint64_t max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_uint64_t(*_ptr, verbose);
@@ -175,7 +175,7 @@ class JVMFlagRange_size_t : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_size_t(const char* name, const size_t* ptr, size_t min, size_t max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_size_t(*_ptr, verbose);
@@ -206,7 +206,7 @@ class JVMFlagRange_double : public JVMFlagRange {
 public:
   // the "name" argument must be a string literal
   JVMFlagRange_double(const char* name, const double* ptr, double min, double max)
-    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) {}
+    : JVMFlagRange(name), _min(min), _max(max), _ptr(ptr) { }
 
   JVMFlag::Error check(bool verbose = true) {
     return check_double(*_ptr, verbose);
@@ -230,22 +230,22 @@ public:
 };
 
 // No constraint emitting
-void emit_range_no(...)                         { /* NOP */ }
+void emit_range_no(...) { /* NOP */ }
 
 // No constraint emitting if function argument is NOT provided
-void emit_range_bool(const char* /*name*/, const bool* /*value*/)            { /* NOP */ }
-void emit_range_ccstr(const char* /*name*/, const ccstr* /*value*/)          { /* NOP */ }
-void emit_range_ccstrlist(const char* /*name*/, const ccstrlist* /*value*/)  { /* NOP */ }
-void emit_range_int(const char* /*name*/, const int* /*value*/)              { /* NOP */ }
-void emit_range_intx(const char* /*name*/, const intx* /*value*/)            { /* NOP */ }
-void emit_range_uint(const char* /*name*/, const uint* /*value*/)            { /* NOP */ }
-void emit_range_uintx(const char* /*name*/, const uintx* /*value*/)          { /* NOP */ }
-void emit_range_uint64_t(const char* /*name*/, const uint64_t* /*value*/)    { /* NOP */ }
-void emit_range_size_t(const char* /*name*/, const size_t* /*value*/)        { /* NOP */ }
-void emit_range_double(const char* /*name*/, const double* /*value*/)        { /* NOP */ }
+void emit_range_bool(const char* /*name*/, const bool* /*value*/) { /* NOP */ }
+void emit_range_ccstr(const char* /*name*/, const ccstr* /*value*/) { /* NOP */ }
+void emit_range_ccstrlist(const char* /*name*/, const ccstrlist* /*value*/) { /* NOP */ }
+void emit_range_int(const char* /*name*/, const int* /*value*/) { /* NOP */ }
+void emit_range_intx(const char* /*name*/, const intx* /*value*/) { /* NOP */ }
+void emit_range_uint(const char* /*name*/, const uint* /*value*/) { /* NOP */ }
+void emit_range_uintx(const char* /*name*/, const uintx* /*value*/) { /* NOP */ }
+void emit_range_uint64_t(const char* /*name*/, const uint64_t* /*value*/) { /* NOP */ }
+void emit_range_size_t(const char* /*name*/, const size_t* /*value*/) { /* NOP */ }
+void emit_range_double(const char* /*name*/, const double* /*value*/) { /* NOP */ }
 
 // JVMFlagRange emitting code functions if range arguments are provided
-void emit_range_int(const char* name, const int* ptr, int min, int max)       {
+void emit_range_int(const char* name, const int* ptr, int min, int max) {
   JVMFlagRangeList::add(new JVMFlagRange_int(name, ptr, min, max));
 }
 void emit_range_intx(const char* name, const intx* ptr, intx min, intx max) {
@@ -360,7 +360,6 @@ void JVMFlagRangeList::print(outputStream* st, const char* name, RangeStrFunc de
   } else {
     JVMFlagConstraint* constraint = JVMFlagConstraintList::find(name);
     if (constraint != NULL) {
-      assert(default_range_str_func!=NULL, "default_range_str_func must be provided");
       st->print("%s", default_range_str_func());
     } else {
       st->print("[                           ...                           ]");

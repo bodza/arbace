@@ -63,16 +63,10 @@ void SATBMarkQueue::flush() {
 // in an unfiltered buffer refer to valid objects.
 
 inline bool requires_marking(const void* entry, G1CollectedHeap* heap) {
-  // Includes rejection of NULL pointers.
-  assert(heap->is_in_reserved(entry), "Non-heap pointer in SATB buffer: " PTR_FORMAT, p2i(entry));
-
   HeapRegion* region = heap->heap_region_containing(entry);
-  assert(region != NULL, "No region for " PTR_FORMAT, p2i(entry));
   if (entry >= region->next_top_at_mark_start()) {
     return false;
   }
-
-  assert(oopDesc::is_oop(oop(entry), true /* ignore mark word */), "Invalid oop in SATB buffer: " PTR_FORMAT, p2i(entry));
 
   return true;
 }
@@ -98,7 +92,6 @@ void SATBMarkQueue::filter() {
   // Two-fingered compaction toward the end.
   void** src = &buf[index()];
   void** dst = &buf[capacity()];
-  assert(src <= dst, "invariant");
   for ( ; src < dst; ++src) {
     // Search low to high for an entry to keep.
     void* entry = *src;
@@ -125,14 +118,11 @@ void SATBMarkQueue::filter() {
 // instead of replacing it.
 
 bool SATBMarkQueue::should_enqueue_buffer() {
-  assert(_lock == NULL || _lock->owned_by_self(), "we should have taken the lock before calling this");
 
   // If G1SATBBufferEnqueueingThresholdPercent == 0 we could skip filtering.
 
   // This method should only be called if there is a non-NULL buffer
   // that is full.
-  assert(index() == 0, "pre-condition");
-  assert(_buf != NULL, "pre-condition");
 
   filter();
 
@@ -143,7 +133,6 @@ bool SATBMarkQueue::should_enqueue_buffer() {
 }
 
 void SATBMarkQueue::apply_closure_and_empty(SATBBufferClosure* cl) {
-  assert(SafepointSynchronize::is_at_safepoint(), "SATB queues must only be processed at safepoints");
   if (_buf != NULL) {
     cl->do_buffer(&_buf[index()], size());
     reset();
@@ -154,9 +143,7 @@ SATBMarkQueueSet::SATBMarkQueueSet() :
   PtrQueueSet(),
   _shared_satb_queue(this, true /* permanent */) { }
 
-void SATBMarkQueueSet::initialize(Monitor* cbl_mon, Mutex* fl_lock,
-                                  int process_completed_threshold,
-                                  Mutex* lock) {
+void SATBMarkQueueSet::initialize(Monitor* cbl_mon, Mutex* fl_lock, int process_completed_threshold, Mutex* lock) {
   PtrQueueSet::initialize(cbl_mon, fl_lock, process_completed_threshold, -1);
   _shared_satb_queue.set_lock(lock);
 }
@@ -166,7 +153,6 @@ void SATBMarkQueueSet::handle_zero_index_for_thread(JavaThread* t) {
 }
 
 void SATBMarkQueueSet::set_active_all_threads(bool active, bool expected_active) {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   _all_active = active;
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *t = jtiwh.next(); ) {
     G1ThreadLocalData::satb_mark_queue(t).set_active(active);
@@ -197,7 +183,6 @@ bool SATBMarkQueueSet::apply_closure_to_completed_buffer(SATBBufferClosure* cl) 
     void **buf = BufferNode::make_buffer_from_node(nd);
     size_t index = nd->index();
     size_t size = buffer_size();
-    assert(index <= size, "invariant");
     cl->do_buffer(buf + index, size - index);
     deallocate_buffer(nd);
     return true;
@@ -224,7 +209,6 @@ void SATBMarkQueueSet::abandon_partial_marking() {
     buffers_to_delete = nd->next();
     deallocate_buffer(nd);
   }
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint.");
   // So we can safely manipulate these queues.
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *t = jtiwh.next(); ) {
     G1ThreadLocalData::satb_mark_queue(t).reset();

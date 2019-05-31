@@ -208,7 +208,7 @@ inline T Atomic::PlatformXchg<8>::operator()(T exchange_value,
 
 // No direct support for cmpxchg of bytes; emulate using int.
 template<>
-struct Atomic::PlatformCmpxchg<1> : Atomic::CmpxchgByteUsingInt {};
+struct Atomic::PlatformCmpxchg<1> : Atomic::CmpxchgByteUsingInt { };
 
 template<>
 template<typename T>

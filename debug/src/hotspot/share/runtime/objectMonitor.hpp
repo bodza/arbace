@@ -121,9 +121,7 @@ class ObjectMonitor {
  public:
   ObjectMonitor*     FreeNext;      // Free list linkage
  private:
-  DEFINE_PAD_MINUS_SIZE(0, DEFAULT_CACHE_LINE_SIZE,
-                        sizeof(volatile markOop) + sizeof(void * volatile) +
-                        sizeof(ObjectMonitor *));
+  DEFINE_PAD_MINUS_SIZE(0, DEFAULT_CACHE_LINE_SIZE, sizeof(volatile markOop) + sizeof(void * volatile) + sizeof(ObjectMonitor *));
  protected:                         // protected for JvmtiRawMonitor
   void *  volatile _owner;          // pointer to owning thread OR BasicLock
   volatile jlong _previous_owner_tid;  // thread id of the previous owner of the monitor
@@ -249,11 +247,6 @@ class ObjectMonitor {
 
  private:
   void Recycle() {
-    // TODO: add stronger asserts ...
-    // _cxq == 0 _succ == NULL _owner == NULL _waiters == 0
-    // _count == 0 EntryList  == NULL
-    // _recursions == 0 _WaitSet == NULL
-    assert(((is_busy()|_recursions) == 0), "freeing inuse monitor");
     _succ          = NULL;
     _EntryList     = NULL;
     _cxq           = NULL;
@@ -313,6 +306,6 @@ class ObjectMonitor {
   }
 
 #undef  TEVENT
-#define TEVENT(nom) {;}
+#define TEVENT(nom) { }
 
 #endif

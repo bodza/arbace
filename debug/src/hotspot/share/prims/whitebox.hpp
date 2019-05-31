@@ -15,7 +15,7 @@ class ClearPendingJniExcCheck : public StackObj {
 private:
   JavaThread* _thread;
 public:
-  ClearPendingJniExcCheck(JNIEnv* env) : _thread(JavaThread::thread_from_jni_environment(env)) {}
+  ClearPendingJniExcCheck(JNIEnv* env) : _thread(JavaThread::thread_from_jni_environment(env)) { }
   ~ClearPendingJniExcCheck() {
     _thread->clear_pending_jni_exception_check();
   }

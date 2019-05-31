@@ -210,9 +210,7 @@ class StubRoutines: AllStatic {
   static bool is_stub_code(address addr)                   { return contains(addr); }
 
   static bool contains(address addr) {
-    return
-      (_code1 != NULL && _code1->blob_contains(addr)) ||
-      (_code2 != NULL && _code2->blob_contains(addr)) ;
+    return (_code1 != NULL && _code1->blob_contains(addr)) || (_code2 != NULL && _code2->blob_contains(addr));
   }
 
   static RuntimeBlob* code1() { return _code1; }
@@ -227,16 +225,7 @@ class StubRoutines: AllStatic {
   static address catch_exception_entry()                   { return _catch_exception_entry; }
 
   // Calls to Java
-  typedef void (*CallStub)(
-    address   link,
-    intptr_t* result,
-    BasicType result_type,
-    Method* method,
-    address   entry_point,
-    intptr_t* parameters,
-    int       size_of_parameters,
-    TRAPS
-  );
+  typedef void (*CallStub)(address link, intptr_t* result, BasicType result_type, Method* method, address entry_point, intptr_t* parameters, int size_of_parameters, TRAPS);
 
   static CallStub call_stub()                              { return CAST_TO_FN_PTR(CallStub, _call_stub_entry); }
 
@@ -244,8 +233,8 @@ class StubRoutines: AllStatic {
   static address forward_exception_entry()                 { return _forward_exception_entry; }
   // Implicit exceptions
   static address throw_AbstractMethodError_entry()         { return _throw_AbstractMethodError_entry; }
-  static address throw_IncompatibleClassChangeError_entry(){ return _throw_IncompatibleClassChangeError_entry; }
-  static address throw_NullPointerException_at_call_entry(){ return _throw_NullPointerException_at_call_entry; }
+  static address throw_IncompatibleClassChangeError_entry() { return _throw_IncompatibleClassChangeError_entry; }
+  static address throw_NullPointerException_at_call_entry() { return _throw_NullPointerException_at_call_entry; }
   static address throw_StackOverflowError_entry()          { return _throw_StackOverflowError_entry; }
   static address throw_delayed_StackOverflowError_entry()  { return _throw_delayed_StackOverflowError_entry; }
 
@@ -261,10 +250,10 @@ class StubRoutines: AllStatic {
 
   static address d2i_wrapper()                             { return _d2i_wrapper; }
   static address d2l_wrapper()                             { return _d2l_wrapper; }
-  static jint    fpu_cntrl_wrd_std()                       { return _fpu_cntrl_wrd_std;   }
-  static address addr_fpu_cntrl_wrd_std()                  { return (address)&_fpu_cntrl_wrd_std;   }
-  static address addr_fpu_cntrl_wrd_24()                   { return (address)&_fpu_cntrl_wrd_24;   }
-  static address addr_fpu_cntrl_wrd_64()                   { return (address)&_fpu_cntrl_wrd_64;   }
+  static jint    fpu_cntrl_wrd_std()                       { return _fpu_cntrl_wrd_std; }
+  static address addr_fpu_cntrl_wrd_std()                  { return (address)&_fpu_cntrl_wrd_std; }
+  static address addr_fpu_cntrl_wrd_24()                   { return (address)&_fpu_cntrl_wrd_24; }
+  static address addr_fpu_cntrl_wrd_64()                   { return (address)&_fpu_cntrl_wrd_64; }
   static address addr_fpu_cntrl_wrd_trunc()                { return (address)&_fpu_cntrl_wrd_trunc; }
   static address addr_mxcsr_std()                          { return (address)&_mxcsr_std; }
   static address addr_fpu_subnormal_bias1()                { return (address)&_fpu_subnormal_bias1; }
@@ -361,23 +350,18 @@ class StubRoutines: AllStatic {
   static address zero_aligned_words()  { return _zero_aligned_words; }
 
   static double  intrinsic_log10(double d) {
-    assert(_intrinsic_log10 != NULL, "must be defined");
     return _intrinsic_log10(d);
   }
   static double  intrinsic_pow(double d, double d2) {
-    assert(_intrinsic_pow != NULL, "must be defined");
     return _intrinsic_pow(d, d2);
   }
   static double  intrinsic_sin(double d) {
-    assert(_intrinsic_sin != NULL, "must be defined");
     return _intrinsic_sin(d);
   }
   static double  intrinsic_cos(double d) {
-    assert(_intrinsic_cos != NULL, "must be defined");
     return _intrinsic_cos(d);
   }
   static double  intrinsic_tan(double d) {
-    assert(_intrinsic_tan != NULL, "must be defined");
     return _intrinsic_tan(d);
   }
 
@@ -392,13 +376,10 @@ class StubRoutines: AllStatic {
   static SafeFetchNStub  SafeFetchN_stub()  { return CAST_TO_FN_PTR(SafeFetchNStub,  _safefetchN_entry); }
 
   static bool is_safefetch_fault(address pc) {
-    return pc != NULL &&
-          (pc == _safefetch32_fault_pc ||
-           pc == _safefetchN_fault_pc);
+    return pc != NULL && (pc == _safefetch32_fault_pc || pc == _safefetchN_fault_pc);
   }
 
   static address continuation_for_safefetch_fault(address pc) {
-    assert(_safefetch32_continuation_pc != NULL && _safefetchN_continuation_pc  != NULL, "not initialized");
 
     if (pc == _safefetch32_fault_pc) return _safefetch32_continuation_pc;
     if (pc == _safefetchN_fault_pc)  return _safefetchN_continuation_pc;
@@ -429,11 +410,9 @@ class StubRoutines: AllStatic {
 // Safefetch allows to load a value from a location that's not known
 // to be valid. If the load causes a fault, the error value is returned.
 inline int SafeFetch32(int* adr, int errValue) {
-  assert(StubRoutines::SafeFetch32_stub(), "stub not yet generated");
   return StubRoutines::SafeFetch32_stub()(adr, errValue);
 }
 inline intptr_t SafeFetchN(intptr_t* adr, intptr_t errValue) {
-  assert(StubRoutines::SafeFetchN_stub(), "stub not yet generated");
   return StubRoutines::SafeFetchN_stub()(adr, errValue);
 }
 

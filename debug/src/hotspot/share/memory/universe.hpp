@@ -203,24 +203,19 @@ class Universe: AllStatic {
 
   // Mirrors for primitive classes (created eagerly)
   static oop check_mirror(oop m) {
-    assert(m != NULL, "mirror not initialized");
     return m;
   }
 
   static void     set_narrow_oop_base(address base) {
-    assert(UseCompressedOops, "no compressed oops?");
     _narrow_oop._base    = base;
   }
   static void     set_narrow_klass_base(address base) {
-    assert(UseCompressedClassPointers, "no compressed klass ptrs?");
     _narrow_klass._base   = base;
   }
   static void     set_narrow_klass_range(uint64_t range) {
-     assert(UseCompressedClassPointers, "no compressed klass ptrs?");
      _narrow_klass_range = range;
   }
   static void     set_narrow_oop_use_implicit_null_checks(bool use) {
-    assert(UseCompressedOops, "no compressed ptrs?");
     _narrow_oop._use_implicit_null_checks   = use;
   }
 
@@ -234,17 +229,17 @@ class Universe: AllStatic {
   static uintptr_t _verify_oop_mask;
   static uintptr_t _verify_oop_bits;
 
-  static void calculate_verify_data(HeapWord* low_boundary, HeapWord* high_boundary) {};
+  static void calculate_verify_data(HeapWord* low_boundary, HeapWord* high_boundary) { };
   static void compute_verify_oop_data();
 
  public:
   // Known classes in the VM
-  static Klass* boolArrayKlassObj()                 { return _boolArrayKlassObj;   }
-  static Klass* byteArrayKlassObj()                 { return _byteArrayKlassObj;   }
-  static Klass* charArrayKlassObj()                 { return _charArrayKlassObj;   }
-  static Klass* intArrayKlassObj()                  { return _intArrayKlassObj;    }
-  static Klass* shortArrayKlassObj()                { return _shortArrayKlassObj;  }
-  static Klass* longArrayKlassObj()                 { return _longArrayKlassObj;   }
+  static Klass* boolArrayKlassObj()                 { return _boolArrayKlassObj; }
+  static Klass* byteArrayKlassObj()                 { return _byteArrayKlassObj; }
+  static Klass* charArrayKlassObj()                 { return _charArrayKlassObj; }
+  static Klass* intArrayKlassObj()                  { return _intArrayKlassObj; }
+  static Klass* shortArrayKlassObj()                { return _shortArrayKlassObj; }
+  static Klass* longArrayKlassObj()                 { return _longArrayKlassObj; }
   static Klass* singleArrayKlassObj()               { return _singleArrayKlassObj; }
   static Klass* doubleArrayKlassObj()               { return _doubleArrayKlassObj; }
 
@@ -253,8 +248,6 @@ class Universe: AllStatic {
   }
 
   static Klass* typeArrayKlassObj(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check for type: %s", type2name(t));
-    assert(_typeArrayKlassObjs[t] != NULL, "domain check");
     return _typeArrayKlassObjs[t];
   }
 
@@ -269,33 +262,32 @@ class Universe: AllStatic {
   static oop short_mirror()                 { return check_mirror(_short_mirror); }
   static oop void_mirror()                  { return check_mirror(_void_mirror); }
 
-  static void set_int_mirror(oop m)         { _int_mirror = m;    }
-  static void set_float_mirror(oop m)       { _float_mirror = m;  }
+  static void set_int_mirror(oop m)         { _int_mirror = m; }
+  static void set_float_mirror(oop m)       { _float_mirror = m; }
   static void set_double_mirror(oop m)      { _double_mirror = m; }
-  static void set_byte_mirror(oop m)        { _byte_mirror = m;   }
-  static void set_bool_mirror(oop m)        { _bool_mirror = m;   }
-  static void set_char_mirror(oop m)        { _char_mirror = m;   }
-  static void set_long_mirror(oop m)        { _long_mirror = m;   }
-  static void set_short_mirror(oop m)       { _short_mirror = m;  }
-  static void set_void_mirror(oop m)        { _void_mirror = m;   }
+  static void set_byte_mirror(oop m)        { _byte_mirror = m; }
+  static void set_bool_mirror(oop m)        { _bool_mirror = m; }
+  static void set_char_mirror(oop m)        { _char_mirror = m; }
+  static void set_long_mirror(oop m)        { _long_mirror = m; }
+  static void set_short_mirror(oop m)       { _short_mirror = m; }
+  static void set_void_mirror(oop m)        { _void_mirror = m; }
 
   // table of same
   static oop _mirrors[T_VOID+1];
 
   static oop java_mirror(BasicType t) {
-    assert((uint)t < T_VOID+1, "range check");
     return check_mirror(_mirrors[t]);
   }
   static oop      main_thread_group()                 { return _main_thread_group; }
-  static void set_main_thread_group(oop group)        { _main_thread_group = group;}
+  static void set_main_thread_group(oop group)        { _main_thread_group = group; }
 
   static oop      system_thread_group()               { return _system_thread_group; }
-  static void set_system_thread_group(oop group)      { _system_thread_group = group;}
+  static void set_system_thread_group(oop group)      { _system_thread_group = group; }
 
-  static objArrayOop  the_empty_class_klass_array ()  { return _the_empty_class_klass_array;   }
-  static Array<Klass*>* the_array_interfaces_array() { return _the_array_interfaces_array;   }
-  static oop          the_null_string()               { return _the_null_string;               }
-  static oop          the_min_jint_string()          { return _the_min_jint_string;          }
+  static objArrayOop  the_empty_class_klass_array ()  { return _the_empty_class_klass_array; }
+  static Array<Klass*>* the_array_interfaces_array() { return _the_array_interfaces_array; }
+  static oop          the_null_string()               { return _the_null_string; }
+  static oop          the_min_jint_string()          { return _the_min_jint_string; }
 
   static Method*      finalizer_register_method()     { return _finalizer_register_cache->get_method(); }
   static Method*      loader_addClass_method()        { return _loader_addClass_cache->get_method(); }
@@ -305,13 +297,13 @@ class Universe: AllStatic {
 
   static Method*      do_stack_walk_method()          { return _do_stack_walk_cache->get_method(); }
 
-  static oop          the_null_sentinel()             { return _the_null_sentinel;             }
-  static address      the_null_sentinel_addr()        { return (address) &_the_null_sentinel;  }
+  static oop          the_null_sentinel()             { return _the_null_sentinel; }
+  static address      the_null_sentinel_addr()        { return (address) &_the_null_sentinel; }
 
   // Function to initialize these
   static void initialize_known_methods(TRAPS);
 
-  static oop          null_ptr_exception_instance()   { return _null_ptr_exception_instance;   }
+  static oop          null_ptr_exception_instance()   { return _null_ptr_exception_instance; }
   static oop          arithmetic_exception_instance() { return _arithmetic_exception_instance; }
   static oop          virtual_machine_error_instance() { return _virtual_machine_error_instance; }
   static oop          vm_exception()                  { return _vm_exception; }
@@ -335,21 +327,21 @@ class Universe: AllStatic {
   // OutOfMemoryError support. Returns an error with the required message. The returned error
   // may or may not have a backtrace. If error has a backtrace then the stack trace is already
   // filled in.
-  static oop out_of_memory_error_java_heap()          { return gen_out_of_memory_error(_out_of_memory_error_java_heap);  }
-  static oop out_of_memory_error_metaspace()          { return gen_out_of_memory_error(_out_of_memory_error_metaspace);   }
-  static oop out_of_memory_error_class_metaspace()    { return gen_out_of_memory_error(_out_of_memory_error_class_metaspace);   }
+  static oop out_of_memory_error_java_heap()          { return gen_out_of_memory_error(_out_of_memory_error_java_heap); }
+  static oop out_of_memory_error_metaspace()          { return gen_out_of_memory_error(_out_of_memory_error_metaspace); }
+  static oop out_of_memory_error_class_metaspace()    { return gen_out_of_memory_error(_out_of_memory_error_class_metaspace); }
   static oop out_of_memory_error_array_size()         { return gen_out_of_memory_error(_out_of_memory_error_array_size); }
-  static oop out_of_memory_error_gc_overhead_limit()  { return gen_out_of_memory_error(_out_of_memory_error_gc_overhead_limit);  }
-  static oop out_of_memory_error_realloc_objects()    { return gen_out_of_memory_error(_out_of_memory_error_realloc_objects);  }
+  static oop out_of_memory_error_gc_overhead_limit()  { return gen_out_of_memory_error(_out_of_memory_error_gc_overhead_limit); }
+  static oop out_of_memory_error_realloc_objects()    { return gen_out_of_memory_error(_out_of_memory_error_realloc_objects); }
   static oop delayed_stack_overflow_error_message()   { return _delayed_stack_overflow_error_message; }
 
   // Accessors needed for fast allocation
-  static Klass** boolArrayKlassObj_addr()           { return &_boolArrayKlassObj;   }
-  static Klass** byteArrayKlassObj_addr()           { return &_byteArrayKlassObj;   }
-  static Klass** charArrayKlassObj_addr()           { return &_charArrayKlassObj;   }
-  static Klass** intArrayKlassObj_addr()            { return &_intArrayKlassObj;    }
-  static Klass** shortArrayKlassObj_addr()          { return &_shortArrayKlassObj;  }
-  static Klass** longArrayKlassObj_addr()           { return &_longArrayKlassObj;   }
+  static Klass** boolArrayKlassObj_addr()           { return &_boolArrayKlassObj; }
+  static Klass** byteArrayKlassObj_addr()           { return &_byteArrayKlassObj; }
+  static Klass** charArrayKlassObj_addr()           { return &_charArrayKlassObj; }
+  static Klass** intArrayKlassObj_addr()            { return &_intArrayKlassObj; }
+  static Klass** shortArrayKlassObj_addr()          { return &_shortArrayKlassObj; }
+  static Klass** longArrayKlassObj_addr()           { return &_longArrayKlassObj; }
   static Klass** singleArrayKlassObj_addr()         { return &_singleArrayKlassObj; }
   static Klass** doubleArrayKlassObj_addr()         { return &_doubleArrayKlassObj; }
   static Klass** objectArrayKlassObj_addr()         { return &_objectArrayKlassObj; }
@@ -420,7 +412,6 @@ class Universe: AllStatic {
   }
 
   static void     set_narrow_klass_shift(int shift)       {
-    assert(shift == 0 || shift == LogKlassAlignmentInBytes, "invalid shift for klass ptrs");
     _narrow_klass._shift   = shift;
   }
 

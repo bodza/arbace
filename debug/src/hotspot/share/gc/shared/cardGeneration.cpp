@@ -13,17 +13,13 @@
 #include "logging/log.hpp"
 #include "runtime/java.hpp"
 
-CardGeneration::CardGeneration(ReservedSpace rs,
-                               size_t initial_byte_size,
-                               CardTableRS* remset) :
+CardGeneration::CardGeneration(ReservedSpace rs, size_t initial_byte_size, CardTableRS* remset) :
   Generation(rs, initial_byte_size), _rs(remset),
   _shrink_factor(0), _min_heap_delta_bytes(), _capacity_at_prologue(),
   _used_at_prologue()
 {
   HeapWord* start = (HeapWord*)rs.base();
   size_t reserved_byte_size = rs.size();
-  assert((uintptr_t(start) & 3) == 0, "bad alignment");
-  assert((reserved_byte_size & 3) == 0, "bad alignment");
   MemRegion reserved_mr(start, heap_word_size(reserved_byte_size));
   _bts = new BlockOffsetSharedArray(reserved_mr,
                                     heap_word_size(initial_byte_size));
@@ -52,8 +48,7 @@ bool CardGeneration::grow_by(size_t bytes) {
   assert_correct_size_change_locking();
   bool result = _virtual_space.expand_by(bytes);
   if (result) {
-    size_t new_word_size =
-       heap_word_size(_virtual_space.committed_size());
+    size_t new_word_size = heap_word_size(_virtual_space.committed_size());
     MemRegion mr(space()->bottom(), new_word_size);
     // Expand card table
     GenCollectedHeap::heap()->rem_set()->resize_covered_region(mr);
@@ -83,12 +78,11 @@ bool CardGeneration::grow_by(size_t bytes) {
 }
 
 bool CardGeneration::expand(size_t bytes, size_t expand_bytes) {
-  assert_locked_or_safepoint(Heap_lock);
   if (bytes == 0) {
     return true;  // That's what grow_by(0) would return
   }
   size_t aligned_bytes  = ReservedSpace::page_align_size_up(bytes);
-  if (aligned_bytes == 0){
+  if (aligned_bytes == 0) {
     // The alignment caused the number of bytes to wrap.  An expand_by(0) will
     // return true with the implication that an expansion was done when it
     // was not.  A call to expand implies a best effort to expand by "bytes"
@@ -162,7 +156,6 @@ void CardGeneration::invalidate_remembered_set() {
 }
 
 void CardGeneration::compute_new_size() {
-  assert(_shrink_factor <= 100, "invalid shrink factor");
   size_t current_shrink_factor = _shrink_factor;
   _shrink_factor = 0;
 
@@ -179,7 +172,6 @@ void CardGeneration::compute_new_size() {
   size_t minimum_desired_capacity = (size_t)MIN2(min_tmp, double(max_uintx));
   // Don't shrink less than the initial generation size
   minimum_desired_capacity = MAX2(minimum_desired_capacity, initial_size());
-  assert(used_after_gc <= minimum_desired_capacity, "sanity check");
 
     const size_t free_after_gc = free();
     const double free_percentage = ((double)free_after_gc) / capacity_after_gc;
@@ -224,7 +216,6 @@ void CardGeneration::compute_new_size() {
                              _capacity_at_prologue / (double) K,
                              minimum_desired_capacity / (double) K,
                              maximum_desired_capacity / (double) K);
-    assert(minimum_desired_capacity <= maximum_desired_capacity, "sanity check");
 
     if (capacity_after_gc > maximum_desired_capacity) {
       // Capacity too large, compute shrinking size
@@ -244,7 +235,6 @@ void CardGeneration::compute_new_size() {
           _shrink_factor = MIN2(current_shrink_factor * 4, (size_t) 100);
         }
       }
-      assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
       log_trace(gc, heap)("    shrinking:  initSize: %.1fK  maximum_desired_capacity: %.1fK",
                                initial_size() / (double) K, maximum_desired_capacity / (double) K);
       log_trace(gc, heap)("    shrink_bytes: %.1fK  current_shrink_factor: " SIZE_FORMAT "  new shrink factor: " SIZE_FORMAT "  _min_heap_delta_bytes: %.1fK",
@@ -263,7 +253,6 @@ void CardGeneration::compute_new_size() {
     expansion_for_promotion = MIN2(expansion_for_promotion, max_shrink_bytes);
     // We have two shrinking computations, take the largest
     shrink_bytes = MAX2(shrink_bytes, expansion_for_promotion);
-    assert(shrink_bytes <= max_shrink_bytes, "invalid shrink size");
     log_trace(gc, heap)("    aggressive shrinking:  _capacity_at_prologue: %.1fK  capacity_after_gc: %.1fK  expansion_for_promotion: %.1fK  shrink_bytes: %.1fK",
                         capacity_after_gc / (double) K,
                         _capacity_at_prologue / (double) K,
@@ -277,10 +266,9 @@ void CardGeneration::compute_new_size() {
 }
 
 // Currently nothing to do.
-void CardGeneration::prepare_for_verify() {}
+void CardGeneration::prepare_for_verify() { }
 
-void CardGeneration::space_iterate(SpaceClosure* blk,
-                                                 bool usedOnly) {
+void CardGeneration::space_iterate(SpaceClosure* blk, bool usedOnly) {
   blk->do_space(space());
 }
 

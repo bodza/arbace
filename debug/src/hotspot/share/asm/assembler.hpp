@@ -80,8 +80,6 @@ class Label {
    * After binding, be sure 'patch_instructions' is called later to link
    */
   void bind_loc(int loc) {
-    assert(loc >= 0, "illegal locator");
-    assert(_loc == -1, "already bound");
     _loc = loc;
   }
   void bind_loc(int pos, int sect) { bind_loc(CodeBuffer::locator(pos, sect)); }
@@ -91,7 +89,6 @@ class Label {
    * The position is a 'locator', which encodes both offset and section.
    */
   int loc() const {
-    assert(_loc >= 0, "unbound label");
     return _loc;
   }
   int loc_pos()  const { return CodeBuffer::locator_pos(loc()); }
@@ -132,7 +129,6 @@ class Label {
   }
 
   ~Label() {
-    assert(is_bound() || is_unused(), "Label was never bound to a location, but it was used as a jmp target");
   }
 
   void reset() {
@@ -156,15 +152,13 @@ class RegisterOrConstant {
   intptr_t _c;
 
  public:
-  RegisterOrConstant(): _r(noreg), _c(0) {}
-  RegisterOrConstant(Register r): _r(r), _c(0) {}
-  RegisterOrConstant(intptr_t c): _r(noreg), _c(c) {}
+  RegisterOrConstant(): _r(noreg), _c(0) { }
+  RegisterOrConstant(Register r): _r(r), _c(0) { }
+  RegisterOrConstant(intptr_t c): _r(noreg), _c(c) { }
 
   Register as_register() const {
-    assert(is_register(),"");
     return _r; }
   intptr_t as_constant() const {
-    assert(is_constant(),"");
     return _c; }
 
   Register register_or_noreg() const { return _r; }
@@ -177,7 +171,7 @@ class RegisterOrConstant {
 // The Abstract Assembler: Pure assembler doing NO optimizations on the
 // instruction level; i.e., what you write is what you get.
 // The Assembler is generating code into a CodeBuffer.
-class AbstractAssembler : public ResourceObj  {
+class AbstractAssembler : public ResourceObj {
   friend class Label;
 
  protected:
@@ -204,7 +198,6 @@ class AbstractAssembler : public ResourceObj  {
 
    public:
     InstructionMark(AbstractAssembler* assm) : _assm(assm) {
-      assert(assm->inst_mark() == NULL, "overlapping instructions");
       _assm->set_inst_mark();
     }
     ~InstructionMark() {
@@ -215,7 +208,7 @@ class AbstractAssembler : public ResourceObj  {
   // Dummy in product.
   class ShortBranchVerifier: public StackObj {
    public:
-    ShortBranchVerifier(AbstractAssembler* assm) {}
+    ShortBranchVerifier(AbstractAssembler* assm) { }
   };
 
  public:
@@ -262,20 +255,19 @@ class AbstractAssembler : public ResourceObj  {
   CodeSection*  code_section() const   { return _code_section; }
   CodeBuffer*   code()         const   { return code_section()->outer(); }
   int           sect()         const   { return code_section()->index(); }
-  address       pc()           const   { return code_section()->end();   }
-  int           offset()       const   { return code_section()->size();  }
+  address       pc()           const   { return code_section()->end(); }
+  int           offset()       const   { return code_section()->size(); }
   int           locator()      const   { return CodeBuffer::locator(offset(), sect()); }
 
   OopRecorder*  oop_recorder() const   { return _oop_recorder; }
   void      set_oop_recorder(OopRecorder* r) { _oop_recorder = r; }
 
-  address       inst_mark() const { return code_section()->mark();       }
-  void      set_inst_mark()       {        code_section()->set_mark();   }
+  address       inst_mark() const { return code_section()->mark(); }
+  void      set_inst_mark()       {        code_section()->set_mark(); }
   void    clear_inst_mark()       {        code_section()->clear_mark(); }
 
   // Constants in code
   void relocate(RelocationHolder const& rspec, int format = 0) {
-    assert(!pd_check_instruction_mark() || inst_mark() == NULL || inst_mark() == code_section()->end(), "call relocate() between instructions");
     code_section()->relocate(code_section()->end(), rspec, format);
   }
   void relocate(   relocInfo::relocType rtype, int format = 0) {

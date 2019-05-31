@@ -11,7 +11,6 @@ void GCTimer::register_gc_start(const Ticks& time) {
 }
 
 void GCTimer::register_gc_end(const Ticks& time) {
-  assert(!_time_partitions.has_active_phases(), "We should have ended all started phases, before ending the GC");
 
   _gc_end = time;
 }
@@ -43,23 +42,19 @@ void STWGCTimer::register_gc_end(const Ticks& time) {
 }
 
 void ConcurrentGCTimer::register_gc_pause_start(const char* name, const Ticks& time) {
-  assert(!_is_concurrent_phase_active, "A pause phase can't be started while a concurrent phase is active.");
   GCTimer::register_gc_pause_start(name, time);
 }
 
 void ConcurrentGCTimer::register_gc_pause_end(const Ticks& time) {
-  assert(!_is_concurrent_phase_active, "A pause phase can't be ended while a concurrent phase is active.");
   GCTimer::register_gc_pause_end(time);
 }
 
 void ConcurrentGCTimer::register_gc_concurrent_start(const char* name, const Ticks& time) {
-  assert(!_is_concurrent_phase_active, "A concurrent phase is already active.");
   _time_partitions.report_gc_phase_start(name, time, GCPhase::ConcurrentPhaseType);
   _is_concurrent_phase_active = true;
 }
 
 void ConcurrentGCTimer::register_gc_concurrent_end(const Ticks& time) {
-  assert(_is_concurrent_phase_active, "A concurrent phase is not active.");
   _time_partitions.report_gc_phase_end(time, GCPhase::ConcurrentPhaseType);
   _is_concurrent_phase_active = false;
 }
@@ -69,14 +64,12 @@ void PhasesStack::clear() {
 }
 
 void PhasesStack::push(int phase_index) {
-  assert(_next_phase_level < PHASE_LEVELS, "Overflow");
 
   _phase_indices[_next_phase_level] = phase_index;
   _next_phase_level++;
 }
 
 int PhasesStack::pop() {
-  assert(_next_phase_level > 0, "Underflow");
 
   _next_phase_level--;
   return _phase_indices[_next_phase_level];
@@ -104,7 +97,6 @@ void TimePartitions::clear() {
 }
 
 void TimePartitions::report_gc_phase_start(const char* name, const Ticks& time, GCPhase::PhaseType type) {
-  assert(_phases->length() <= 1000, "Too many recored phases?");
 
   int level = _active_phases.count();
 
@@ -139,8 +131,6 @@ int TimePartitions::num_phases() const {
 }
 
 GCPhase* TimePartitions::phase_at(int index) const {
-  assert(index >= 0, "Out of bounds");
-  assert(index < _phases->length(), "Out of bounds");
 
   return _phases->adr_at(index);
 }
@@ -154,6 +144,5 @@ bool TimePartitionPhasesIterator::has_next() {
 }
 
 GCPhase* TimePartitionPhasesIterator::next() {
-  assert(has_next(), "Must have phases left");
   return _time_partitions->phase_at(_next++);
 }

@@ -58,7 +58,7 @@ int SignatureIterator::parse_type() {
     case 'L':
       { int begin = ++_index;
         Symbol* sig = _signature;
-        while (sig->byte_at(_index++) != ';') ;
+        while (sig->byte_at(_index++) != ';');
         do_object(begin, _index);
       }
       if (_parameter_index < 0 ) _return_type = T_OBJECT;
@@ -71,7 +71,7 @@ int SignatureIterator::parse_type() {
           _index++;
         }
         if (sig->byte_at(_index) == 'L') {
-          while (sig->byte_at(_index++) != ';') ;
+          while (sig->byte_at(_index++) != ';');
         } else {
           _index++;
         }
@@ -84,7 +84,6 @@ int SignatureIterator::parse_type() {
       ShouldNotReachHere();
       break;
   }
-  assert(size >= 0, "size must be set");
   return size;
 }
 
@@ -123,8 +122,6 @@ void SignatureIterator::iterate_parameters( uint64_t fingerprint ) {
     SignatureIterator::iterate_parameters();
     return;
   }
-
-  assert(fingerprint, "Fingerprint should not be 0");
 
   _parameter_index = 0;
   fingerprint = fingerprint >> (static_feature_size + result_feature_size);
@@ -205,7 +202,7 @@ void SignatureIterator::iterate_returntype() {
         break;
       case 'L':
         {
-          while (sig->byte_at(_index++) != ';') ;
+          while (sig->byte_at(_index++) != ';');
         }
         break;
       case '[':
@@ -215,7 +212,7 @@ void SignatureIterator::iterate_returntype() {
             _index++;
           }
           if (sig->byte_at(_index) == 'L') {
-            while (sig->byte_at(_index++) != ';') ;
+            while (sig->byte_at(_index++) != ';');
           } else {
             _index++;
           }
@@ -307,8 +304,7 @@ void SignatureStream::next_non_primitive(int t) {
 }
 
 bool SignatureStream::is_object() const {
-  return _type == T_OBJECT
-      || _type == T_ARRAY;
+  return _type == T_OBJECT || _type == T_ARRAY;
 }
 
 bool SignatureStream::is_array() const {
@@ -320,8 +316,7 @@ Symbol* SignatureStream::as_symbol(TRAPS) {
   int begin = _begin;
   int end   = _end;
 
-  if (   _signature->byte_at(_begin) == 'L'
-      && _signature->byte_at(_end-1) == ';') {
+  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end-1) == ';') {
     begin++;
     end--;
   }
@@ -333,8 +328,7 @@ Symbol* SignatureStream::as_symbol(TRAPS) {
   return name;
 }
 
-Klass* SignatureStream::as_klass(Handle class_loader, Handle protection_domain,
-                                   FailureMode failure_mode, TRAPS) {
+Klass* SignatureStream::as_klass(Handle class_loader, Handle protection_domain, FailureMode failure_mode, TRAPS) {
   if (!is_object())  return NULL;
   Symbol* name = as_symbol(CHECK_NULL);
   if (failure_mode == ReturnNull) {
@@ -345,8 +339,7 @@ Klass* SignatureStream::as_klass(Handle class_loader, Handle protection_domain,
   }
 }
 
-oop SignatureStream::as_java_mirror(Handle class_loader, Handle protection_domain,
-                                    FailureMode failure_mode, TRAPS) {
+oop SignatureStream::as_java_mirror(Handle class_loader, Handle protection_domain, FailureMode failure_mode, TRAPS) {
   if (!is_object())
     return Universe::java_mirror(type());
   Klass* klass = as_klass(class_loader, protection_domain, failure_mode, CHECK_NULL);
@@ -361,8 +354,7 @@ Symbol* SignatureStream::as_symbol_or_null() {
   int begin = _begin;
   int end   = _end;
 
-  if (   _signature->byte_at(_begin) == 'L'
-      && _signature->byte_at(_end-1) == ';') {
+  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end-1) == ';') {
     begin++;
     end--;
   }
@@ -423,8 +415,7 @@ bool SignatureVerifier::is_valid_method_signature(Symbol* sig) {
 bool SignatureVerifier::is_valid_type_signature(Symbol* sig) {
   const char* type_sig = (const char*)sig->bytes();
   ssize_t len = sig->utf8_length();
-  return (type_sig != NULL && len >= 1 &&
-          (is_valid_type(type_sig, len) == len));
+  return (type_sig != NULL && len >= 1 && (is_valid_type(type_sig, len) == len));
 }
 
 // Checks to see if the type (not to go beyond 'limit') refers to a valid type.

@@ -45,12 +45,6 @@ volatile int MallocSiteTable::_access_count = 0;
  * time, it is in single-threaded mode from JVM perspective.
  */
 bool MallocSiteTable::initialize() {
-  assert(sizeof(_hash_entry_allocation_stack) >= sizeof(NativeCallStack), "Sanity Check");
-  assert(sizeof(_hash_entry_allocation_site) >= sizeof(MallocSiteHashtableEntry), "Sanity Check");
-  assert((size_t)table_size <= MAX_MALLOCSITE_TABLE_SIZE, "Hashtable overflow");
-
-  // Fake the call stack for hashtable entry allocation
-  assert(NMT_TrackingStackDepth > 1, "At least one tracking stack");
 
   // Create pseudo call stack for hashtable entry allocation
   address pc[3];
@@ -112,7 +106,6 @@ bool MallocSiteTable::walk(MallocSiteWalker* walker) {
  */
 MallocSite* MallocSiteTable::lookup_or_add(const NativeCallStack& key, size_t* bucket_idx,
   size_t* pos_idx, MEMFLAGS flags) {
-  assert(flags != mtNone, "Should have a real memory type");
   unsigned int index = hash_to_index(key.hash());
   *bucket_idx = (size_t)index;
   *pos_idx = 0;
@@ -157,12 +150,10 @@ MallocSite* MallocSiteTable::lookup_or_add(const NativeCallStack& key, size_t* b
 
 // Access malloc site
 MallocSite* MallocSiteTable::malloc_site(size_t bucket_idx, size_t pos_idx) {
-  assert(bucket_idx < table_size, "Invalid bucket index");
   MallocSiteHashtableEntry* head = _table[bucket_idx];
   for (size_t index = 0;
        index < pos_idx && head != NULL;
-       index++, head = (MallocSiteHashtableEntry*)head->next()) {}
-  assert(head != NULL, "Invalid position index");
+       index++, head = (MallocSiteHashtableEntry*)head->next()) { }
   return head->data();
 }
 
@@ -201,7 +192,6 @@ void MallocSiteTable::shutdown() {
 }
 
 bool MallocSiteTable::walk_malloc_site(MallocSiteWalker* walker) {
-  assert(walker != NULL, "NuLL walker");
   AccessLock locker(&_access_count);
   if (locker.sharedLock()) {
     return walk(walker);
@@ -212,9 +202,6 @@ bool MallocSiteTable::walk_malloc_site(MallocSiteWalker* walker) {
 void MallocSiteTable::AccessLock::exclusiveLock() {
   int target;
   int val;
-
-  assert(_lock_state != ExclusiveLock, "Can only call once");
-  assert(*_lock >= 0, "Can not content exclusive lock");
 
   // make counter negative to block out shared locks
   do {

@@ -48,10 +48,10 @@ void FreeHeap(void* p) {
 void* MetaspaceObj::_shared_metaspace_base = NULL;
 void* MetaspaceObj::_shared_metaspace_top  = NULL;
 
-void* StackObj::operator new(size_t size)     throw() { ShouldNotCallThis(); return 0; }
-void  StackObj::operator delete(void* p)              { ShouldNotCallThis(); }
-void* StackObj::operator new [](size_t size)  throw() { ShouldNotCallThis(); return 0; }
-void  StackObj::operator delete [](void* p)           { ShouldNotCallThis(); }
+void* StackObj::operator new(size_t size) throw() { ShouldNotCallThis(); return 0; }
+void StackObj::operator delete(void* p) { ShouldNotCallThis(); }
+void* StackObj::operator new [](size_t size) throw() { ShouldNotCallThis(); return 0; }
+void StackObj::operator delete [](void* p) { ShouldNotCallThis(); }
 
 void* MetaspaceObj::operator new(size_t size, ClassLoaderData* loader_data,
                                  size_t word_size,
@@ -122,7 +122,6 @@ void* ResourceObj::operator new [](size_t size, const std::nothrow_t&  nothrow_c
 }
 
 void ResourceObj::operator delete(void* p) {
-  assert(((ResourceObj *)p)->allocated_on_C_heap(), "delete only allowed for C_HEAP objects");
   FreeHeap(p);
 }
 

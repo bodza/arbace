@@ -40,7 +40,7 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
     }
   }
 
-  void  set_average(float avg)  { _average = avg;        }
+  void  set_average(float avg)  { _average = avg; }
 
   // Helper function, computes an adaptive weighted average
   // given a sample and the last average
@@ -62,24 +62,22 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
 
   // Useful for modifying static structures after startup.
   void  modify(size_t avg, unsigned wt, bool force = false)  {
-    assert(force, "Are you sure you want to call this?");
     _average = (float)avg;
     _weight  = wt;
   }
 
   // Accessors
-  float    average() const       { return _average;       }
-  unsigned weight()  const       { return _weight;        }
-  unsigned count()   const       { return _sample_count;  }
-  float    last_sample() const   { return _last_sample;   }
-  bool     is_old()  const       { return _is_old;        }
+  float    average() const       { return _average; }
+  unsigned weight()  const       { return _weight; }
+  unsigned count()   const       { return _sample_count; }
+  float    last_sample() const   { return _last_sample; }
+  bool     is_old()  const       { return _is_old; }
 
   // Update data with a new sample.
   void sample(float new_sample);
 
   static inline float exp_avg(float avg, float sample,
                                unsigned int weight) {
-    assert(weight <= 100, "weight must be a percent");
     return (100.0F - weight) * avg / 100.0F + weight * sample / 100.0F;
   }
   static inline size_t exp_avg(size_t avg, size_t sample,
@@ -106,17 +104,17 @@ class AdaptivePaddedAverage : public AdaptiveWeightedAverage {
                                   // gives us an upper bound guess.
 
  protected:
-  void set_padded_average(float avg)  { _padded_avg = avg;  }
-  void set_deviation(float dev)       { _deviation  = dev;  }
+  void set_padded_average(float avg)  { _padded_avg = avg; }
+  void set_deviation(float dev)       { _deviation  = dev; }
 
  public:
   AdaptivePaddedAverage() :
     AdaptiveWeightedAverage(0),
-    _padded_avg(0.0), _deviation(0.0), _padding(0) {}
+    _padded_avg(0.0), _deviation(0.0), _padding(0) { }
 
   AdaptivePaddedAverage(unsigned weight, unsigned padding) :
     AdaptiveWeightedAverage(weight),
-    _padded_avg(0.0), _deviation(0.0), _padding(padding) {}
+    _padded_avg(0.0), _deviation(0.0), _padding(padding) { }
 
   // Placement support
   void* operator new(size_t ignored, void* p) throw() { return p; }
@@ -125,8 +123,8 @@ class AdaptivePaddedAverage : public AdaptiveWeightedAverage {
 
   // Accessor
   float padded_average() const         { return _padded_avg; }
-  float deviation()      const         { return _deviation;  }
-  unsigned padding()     const         { return _padding;    }
+  float deviation()      const         { return _deviation; }
+  unsigned padding()     const         { return _padding; }
 
   void clear() {
     AdaptiveWeightedAverage::clear();
@@ -154,7 +152,7 @@ class AdaptivePaddedAverage : public AdaptiveWeightedAverage {
 class AdaptivePaddedNoZeroDevAverage : public AdaptivePaddedAverage {
 public:
   AdaptivePaddedNoZeroDevAverage(unsigned weight, unsigned padding) :
-    AdaptivePaddedAverage(weight, padding)  {}
+    AdaptivePaddedAverage(weight, padding)  { }
   // Override
   void  sample(float new_sample);
 

@@ -73,9 +73,7 @@ address TemplateInterpreterGenerator::generate_ArrayIndexOutOfBounds_handler() {
   // Pass array to create more detailed exceptions.
   Register rarg = c_rarg1;
   __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::
-                              throw_ArrayIndexOutOfBoundsException),
+             CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ArrayIndexOutOfBoundsException),
              rarg, rbx);
   return entry;
 }
@@ -92,16 +90,12 @@ address TemplateInterpreterGenerator::generate_ClassCastException_handler() {
   __ empty_expression_stack();
 
   __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::
-                              throw_ClassCastException),
+             CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ClassCastException),
              rarg);
   return entry;
 }
 
-address TemplateInterpreterGenerator::generate_exception_handler_common(
-        const char* name, const char* message, bool pass_oop) {
-  assert(!pass_oop || message == NULL, "either oop or message but not both");
+address TemplateInterpreterGenerator::generate_exception_handler_common(const char* name, const char* message, bool pass_oop) {
   address entry = __ pc();
 
   Register rarg = c_rarg1;
@@ -117,9 +111,7 @@ address TemplateInterpreterGenerator::generate_exception_handler_common(
   // setup parameters
   __ lea(rarg, ExternalAddress((address)name));
   if (pass_oop) {
-    __ call_VM(rax, CAST_FROM_FN_PTR(address,
-                                     InterpreterRuntime::
-                                     create_klass_exception),
+    __ call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::create_klass_exception),
                rarg, rarg2);
   } else {
     __ lea(rarg2, ExternalAddress((address)message));
@@ -205,8 +197,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
   return entry;
 }
 
-address TemplateInterpreterGenerator::generate_result_handler_for(
-        BasicType type) {
+address TemplateInterpreterGenerator::generate_result_handler_for(BasicType type) {
   address entry = __ pc();
   switch (type) {
   case T_BOOLEAN: __ c2bool(rax);            break;
@@ -262,35 +253,26 @@ void TemplateInterpreterGenerator::generate_counter_incr(Label* overflow, Label*
       __ testptr(rax, rax);
       __ jccb(Assembler::zero, no_mdo);
       // Increment counter in the MDO
-      const Address mdo_invocation_counter(rax, in_bytes(MethodData::invocation_counter_offset()) +
-                                                in_bytes(InvocationCounter::counter_offset()));
+      const Address mdo_invocation_counter(rax, in_bytes(MethodData::invocation_counter_offset()) + in_bytes(InvocationCounter::counter_offset()));
       const Address mask(rax, in_bytes(MethodData::invoke_mask_offset()));
       __ increment_mask_and_jump(mdo_invocation_counter, increment, mask, rcx, false, Assembler::zero, overflow);
       __ jmp(done);
     }
     __ bind(no_mdo);
     // Increment counter in MethodCounters
-    const Address invocation_counter(rax,
-                  MethodCounters::invocation_counter_offset() +
-                  InvocationCounter::counter_offset());
+    const Address invocation_counter(rax, MethodCounters::invocation_counter_offset() + InvocationCounter::counter_offset());
     __ get_method_counters(rbx, rax, done);
     const Address mask(rax, in_bytes(MethodCounters::invoke_mask_offset()));
-    __ increment_mask_and_jump(invocation_counter, increment, mask, rcx,
-                               false, Assembler::zero, overflow);
+    __ increment_mask_and_jump(invocation_counter, increment, mask, rcx, false, Assembler::zero, overflow);
     __ bind(done);
   } else { // not TieredCompilation
-    const Address backedge_counter(rax,
-                  MethodCounters::backedge_counter_offset() +
-                  InvocationCounter::counter_offset());
-    const Address invocation_counter(rax,
-                  MethodCounters::invocation_counter_offset() +
-                  InvocationCounter::counter_offset());
+    const Address backedge_counter(rax, MethodCounters::backedge_counter_offset() + InvocationCounter::counter_offset());
+    const Address invocation_counter(rax, MethodCounters::invocation_counter_offset() + InvocationCounter::counter_offset());
 
     __ get_method_counters(rbx, rax, done);
 
     if (ProfileInterpreter) {
-      __ incrementl(Address(rax,
-              MethodCounters::interpreter_invocation_counter_offset()));
+      __ incrementl(Address(rax, MethodCounters::interpreter_invocation_counter_offset()));
     }
     // Update standard invocation counters
     __ movl(rcx, invocation_counter);
@@ -378,8 +360,7 @@ void TemplateInterpreterGenerator::generate_stack_overflow_check(void) {
   // total overhead size: entry_size + (saved rbp through expr stack
   // bottom).  be sure to change this if you add/subtract anything
   // to/from the overhead area
-  const int overhead_size =
-    -(frame::interpreter_frame_initial_sp_offset * wordSize) + entry_size;
+  const int overhead_size = -(frame::interpreter_frame_initial_sp_offset * wordSize) + entry_size;
 
   const int page_size = os::vm_page_size();
 
@@ -422,7 +403,6 @@ void TemplateInterpreterGenerator::generate_stack_overflow_check(void) {
 
   // Note: the restored frame is not necessarily interpreted.
   // Use the shared runtime version of the StackOverflowError.
-  assert(StubRoutines::throw_StackOverflowError_entry() != NULL, "stub not yet generated");
   __ jump(ExternalAddress(StubRoutines::throw_StackOverflowError_entry()));
   // all done with frame size check
   __ bind(after_frame_check_pop);
@@ -444,9 +424,7 @@ void TemplateInterpreterGenerator::generate_stack_overflow_check(void) {
 void TemplateInterpreterGenerator::lock_method() {
   // synchronize method
   const Address access_flags(rbx, Method::access_flags_offset());
-  const Address monitor_block_top(
-        rbp,
-        frame::interpreter_frame_monitor_block_top_offset * wordSize);
+  const Address monitor_block_top(rbp, frame::interpreter_frame_monitor_block_top_offset * wordSize);
   const int entry_size = frame::interpreter_frame_monitor_size() * wordSize;
 
   // get synchronization object
@@ -613,8 +591,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   const Address constMethod       (rbx, Method::const_offset());
   const Address access_flags      (rbx, Method::access_flags_offset());
-  const Address size_of_parameters(rcx, ConstMethod::
-                                        size_of_parameters_offset());
+  const Address size_of_parameters(rcx, ConstMethod::size_of_parameters_offset());
 
   // get parameter size (always needed)
   __ movptr(rcx, constMethod);
@@ -716,11 +693,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     __ bind(L);
   }
 
-  // call signature handler
-  assert(InterpreterRuntime::SignatureHandlerGenerator::from() == rlocals, "adjust this code");
-  assert(InterpreterRuntime::SignatureHandlerGenerator::to() == rsp, "adjust this code");
-  assert(InterpreterRuntime::SignatureHandlerGenerator::temp() == rscratch1, "adjust this code");
-
   // The generated handlers do not touch RBX (the method oop).
   // However, large signatures cannot be cached and are generated
   // each time here.  The slow-path generator can do a GC on return,
@@ -804,9 +776,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   if (os::is_MP()) {
     if (UseMembar) {
       // Force this write out before the read below
-      __ membar(Assembler::Membar_mask_bits(
-           Assembler::LoadLoad | Assembler::LoadStore |
-           Assembler::StoreLoad | Assembler::StoreStore));
+      __ membar(Assembler::Membar_mask_bits(Assembler::LoadLoad | Assembler::LoadStore | Assembler::StoreLoad | Assembler::StoreStore));
     } else {
       // Write serialization page so VM thread can do a pseudo remote membar.
       // We use the current thread pointer to calculate a thread specific
@@ -1227,8 +1197,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
     // deoptimized caller
     __ get_method(rax);
     __ movptr(rax, Address(rax, Method::const_offset()));
-    __ load_unsigned_short(rax, Address(rax, in_bytes(ConstMethod::
-                                                size_of_parameters_offset())));
+    __ load_unsigned_short(rax, Address(rax, in_bytes(ConstMethod::size_of_parameters_offset())));
     __ shll(rax, Interpreter::logStackElementSize);
     __ restore_locals();
     __ subptr(rlocals, rax);
@@ -1326,24 +1295,13 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
 //-----------------------------------------------------------------------------
 // Helper for vtos entry point generation
 
-void TemplateInterpreterGenerator::set_vtos_entry_points(Template* t,
-                                                         address& bep,
-                                                         address& cep,
-                                                         address& sep,
-                                                         address& aep,
-                                                         address& iep,
-                                                         address& lep,
-                                                         address& fep,
-                                                         address& dep,
-                                                         address& vep) {
-  assert(t->is_valid() && t->tos_in() == vtos, "illegal template");
+void TemplateInterpreterGenerator::set_vtos_entry_points(Template* t, address& bep, address& cep, address& sep, address& aep, address& iep, address& lep, address& fep, address& dep, address& vep) {
   Label L;
   aep = __ pc();  __ push_ptr();   __ jmp(L);
   fep = __ pc();  __ push_f(xmm0); __ jmp(L);
   dep = __ pc();  __ push_d(xmm0); __ jmp(L);
   lep = __ pc();  __ push_l();     __ jmp(L);
-  bep = cep = sep =
-  iep = __ pc();  __ push_i();
+  bep = cep = sep = iep = __ pc();  __ push_i();
   vep = __ pc();
   __ bind(L);
   generate_and_dispatch(t);

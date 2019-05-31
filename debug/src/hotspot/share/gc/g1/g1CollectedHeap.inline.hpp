@@ -40,7 +40,6 @@ inline HeapRegion* G1CollectedHeap::next_region_in_humongous(HeapRegion* hr) con
 }
 
 inline uint G1CollectedHeap::addr_to_region(HeapWord* addr) const {
-  assert(is_in_reserved(addr), "Cannot calculate region index for address " PTR_FORMAT " that is outside of the heap [" PTR_FORMAT ", " PTR_FORMAT ")", p2i(addr), p2i(reserved_region().start()), p2i(reserved_region().end()));
   return (uint)(pointer_delta(addr, reserved_region().start(), sizeof(uint8_t)) >> HeapRegion::LogOfHRGrainBytes);
 }
 
@@ -50,8 +49,6 @@ inline HeapWord* G1CollectedHeap::bottom_addr_for_region(uint index) const {
 
 template <class T>
 inline HeapRegion* G1CollectedHeap::heap_region_containing(const T addr) const {
-  assert(addr != NULL, "invariant");
-  assert(is_in_g1_reserved((const void*) addr), "Address " PTR_FORMAT " is outside of the heap ranging from [" PTR_FORMAT " to " PTR_FORMAT ")", p2i((void*)addr), p2i(g1_reserved().start()), p2i(g1_reserved().end()));
   return _hrm.addr_to_region((HeapWord*) addr);
 }
 
@@ -69,18 +66,7 @@ inline void G1CollectedHeap::old_set_remove(HeapRegion* hr) {
 // belongs to a young region.
 inline void
 G1CollectedHeap::dirty_young_block(HeapWord* start, size_t word_size) {
-  assert_heap_not_locked();
-
-  // Assign the containing region to containing_hr so that we don't
-  // have to keep calling heap_region_containing() in the
-  // asserts below.
-  assert(word_size > 0, "pre-condition");
-  assert(containing_hr->is_in(start), "it should contain start");
-  assert(containing_hr->is_young(), "it should be young");
-  assert(!containing_hr->is_humongous(), "it should not be humongous");
-
   HeapWord* end = start + word_size;
-  assert(containing_hr->is_in(end - 1), "it should also contain end - 1");
 
   MemRegion mr(start, end);
   card_table()->g1_mark_as_young(mr);
@@ -148,12 +134,10 @@ inline bool G1CollectedHeap::is_obj_dead_full(const oop obj) const {
 }
 
 inline void G1CollectedHeap::set_humongous_reclaim_candidate(uint region, bool value) {
-  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
   _humongous_reclaim_candidates.set_candidate(region, value);
 }
 
 inline bool G1CollectedHeap::is_humongous_reclaim_candidate(uint region) {
-  assert(_hrm.at(region)->is_starts_humongous(), "Must start a humongous object");
   return _humongous_reclaim_candidates.is_candidate(region);
 }
 

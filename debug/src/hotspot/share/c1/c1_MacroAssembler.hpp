@@ -19,8 +19,8 @@ class C1_MacroAssembler: public MacroAssembler {
   void remove_frame(int frame_size_in_bytes);
 
   void verified_entry();
-  void verify_stack_oop(int offset) {};
-  void verify_not_null_oop(Register r)  {};
+  void verify_stack_oop(int offset) { };
+  void verify_not_null_oop(Register r)  { };
 
 #include CPU_HEADER(c1_MacroAssembler)
 };

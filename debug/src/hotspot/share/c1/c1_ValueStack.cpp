@@ -104,7 +104,6 @@ void ValueStack::values_do(ValueVisitor* f) {
 }
 
 Values* ValueStack::pop_arguments(int argument_size) {
-  assert(stack_size() >= argument_size, "stack too small or too many arguments");
   int base = stack_size() - argument_size;
   Values* args = new Values(argument_size);
   for (int i = base; i < stack_size();) args->push(stack_at_inc(i));
@@ -134,17 +133,14 @@ int ValueStack::unlock() {
 }
 
 void ValueStack::setup_phi_for_stack(BlockBegin* b, int index) {
-  assert(stack_at(index)->as_Phi() == NULL || stack_at(index)->as_Phi()->block() != b, "phi function already created");
 
   ValueType* t = stack_at(index)->type();
   Value phi = new Phi(t, b, -index - 1);
   _stack.at_put(index, phi);
 
-  assert(!t->is_double_word() || _stack.at(index + 1) == NULL, "hi-word of doubleword value must be NULL");
 }
 
 void ValueStack::setup_phi_for_local(BlockBegin* b, int index) {
-  assert(local_at(index)->as_Phi() == NULL || local_at(index)->as_Phi()->block() != b, "phi function already created");
 
   ValueType* t = local_at(index)->type();
   Value phi = new Phi(t, b, index);

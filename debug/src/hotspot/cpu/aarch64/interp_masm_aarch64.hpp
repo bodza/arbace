@@ -33,7 +33,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
                      bool verifyoop = true, bool generate_poll = false);
 
  public:
-  InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) {}
+  InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) { }
 
   void jump_to_entry(address entry);
 
@@ -221,17 +221,14 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void profile_not_taken_branch(Register mdp);
   void profile_call(Register mdp);
   void profile_final_call(Register mdp);
-  void profile_virtual_call(Register receiver, Register mdp,
-                            Register scratch2,
-                            bool receiver_can_be_null = false);
-  void profile_called_method(Register method, Register mdp, Register reg2) ;
+  void profile_virtual_call(Register receiver, Register mdp, Register scratch2, bool receiver_can_be_null = false);
+  void profile_called_method(Register method, Register mdp, Register reg2);
   void profile_ret(Register return_bci, Register mdp);
   void profile_null_seen(Register mdp);
   void profile_typecheck(Register mdp, Register klass, Register scratch);
   void profile_typecheck_failed(Register mdp);
   void profile_switch_default(Register mdp);
-  void profile_switch_case(Register index_in_scratch, Register mdp,
-                           Register scratch2);
+  void profile_switch_case(Register index_in_scratch, Register mdp, Register scratch2);
 
   void profile_obj_type(Register obj, const Address& mdo_addr);
   void profile_arguments_type(Register mdp, Register callee, Register tmp, bool is_virtual);

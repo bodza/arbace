@@ -52,7 +52,7 @@ class MacroAssembler: public Assembler {
   void restore_rax(Register tmp);
 
  public:
-  MacroAssembler(CodeBuffer* code) : Assembler(code) {}
+  MacroAssembler(CodeBuffer* code) : Assembler(code) { }
 
   Address as_Address(AddressLiteral adr);
   Address as_Address(ArrayAddress adr);
@@ -71,7 +71,6 @@ class MacroAssembler: public Assembler {
   // They _shadow_ the declarations in AbstractAssembler, which are undefined.
   void pd_patch_instruction(address branch, address target) {
     unsigned char op = branch[0];
-    assert(op == 0xE8 /* call */ || op == 0xE9 /* jmp */ || op == 0xEB /* short jmp */ || (op & 0xF0) == 0x70 /* short jcc */ || op == 0x0F && (branch[1] & 0xF0) == 0x80 /* jcc */ || op == 0xC7 && branch[1] == 0xF8 /* xbegin */, "Invalid opcode at patch point");
 
     if (op == 0xEB || (op & 0xF0) == 0x70) {
       // short offset operators (jmp and jcc)
@@ -494,8 +493,8 @@ class MacroAssembler: public Assembler {
   void verify_oop_addr(Address addr, const char * s = "broken oop addr");
 
   // TODO: verify method and klass metadata (compare against vptr?)
-  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) {}
-  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line){}
+  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) { }
+  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line) { }
 
 #define verify_method_ptr(reg) _verify_method_ptr(reg, "broken method " #reg, __FILE__, __LINE__)
 #define verify_klass_ptr(reg) _verify_klass_ptr(reg, "broken klass " #reg, __FILE__, __LINE__)
@@ -532,8 +531,6 @@ class MacroAssembler: public Assembler {
 
   // Stack overflow checking
   void bang_stack_with_offset(int offset) {
-    // stack grows down, caller passes positive offset
-    assert(offset > 0, "must bang with negative offset");
     movl(Address(rsp, (-offset)), rax);
   }
 
@@ -872,7 +869,7 @@ private:
   void movss(XMMRegister dst, Address src)     { Assembler::movss(dst, src); }
   void movss(XMMRegister dst, AddressLiteral src);
 
-  void movlpd(XMMRegister dst, Address src)    {Assembler::movlpd(dst, src); }
+  void movlpd(XMMRegister dst, Address src)    { Assembler::movlpd(dst, src); }
   void movlpd(XMMRegister dst, AddressLiteral src);
 
 public:

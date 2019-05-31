@@ -11,10 +11,7 @@
 // header word instead of doing a full VM transition once it's been computed.
 // Since hashCode is usually polymorphic at call sites we can't do this
 // optimization at the call site without a lot of work.
-void SharedRuntime::inline_check_hashcode_from_object_header(MacroAssembler* masm,
-                                 const methodHandle& method,
-                                 Register obj_reg,
-                                 Register result) {
+void SharedRuntime::inline_check_hashcode_from_object_header(MacroAssembler* masm, const methodHandle& method, Register obj_reg, Register result) {
   Label slowCase;
 
   // Unlike for Object.hashCode, System.identityHashCode is static method and

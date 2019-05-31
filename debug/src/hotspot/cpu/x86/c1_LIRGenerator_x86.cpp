@@ -22,8 +22,6 @@ void LIRItem::load_byte_item() {
   LIR_Opr res = result();
 
   if (!res->is_virtual() || !_gen->is_vreg_flag_set(res, LIRGenerator::byte_reg)) {
-    // make sure that it is a byte register
-    assert(!value()->type()->is_float() && !value()->type()->is_double(), "can't load floats in byte register");
     LIR_Opr reg = _gen->rlock_byte(T_BYTE);
     __ move(res, reg);
 
@@ -67,7 +65,6 @@ LIR_Opr LIRGenerator::result_register_for(ValueType* type, bool callee) {
     default: ShouldNotReachHere(); return LIR_OprFact::illegalOpr;
   }
 
-  assert(opr->type_field() == as_OprType(as_BasicType(type)), "type mismatch");
   return opr;
 }
 
@@ -96,8 +93,7 @@ bool LIRGenerator::can_store_as_constant(Value v, BasicType type) const {
 
 bool LIRGenerator::can_inline_as_constant(Value v) const {
   if (v->type()->tag() == longTag) return false;
-  return v->type()->tag() != objectTag ||
-    (v->type()->is_constant() && v->type()->as_ObjectType()->constant_value()->is_null_object());
+  return v->type()->tag() != objectTag || (v->type()->is_constant() && v->type()->as_ObjectType()->constant_value()->is_null_object());
 }
 
 bool LIRGenerator::can_inline_as_constant(LIR_Const* c) const {
@@ -110,14 +106,12 @@ LIR_Opr LIRGenerator::safepoint_poll_register() {
 }
 
 LIR_Address* LIRGenerator::generate_address(LIR_Opr base, LIR_Opr index, int shift, int disp, BasicType type) {
-  assert(base->is_register(), "must be");
   if (index->is_constant()) {
     LIR_Const *constant = index->as_constant_ptr();
     jlong c;
     if (constant->type() == T_INT) {
       c = (jlong(index->as_jint()) << shift) + disp;
     } else {
-      assert(constant->type() == T_LONG, "should be");
       c = (index->as_jlong() << shift) + disp;
     }
     if ((jlong)((jint)c) == c) {
@@ -202,7 +196,7 @@ bool LIRGenerator::strength_reduce_multiply(LIR_Opr left, jint c, LIR_Opr result
   return false;
 }
 
-void LIRGenerator::store_stack_parameter (LIR_Opr item, ByteSize offset_from_sp) {
+void LIRGenerator::store_stack_parameter(LIR_Opr item, ByteSize offset_from_sp) {
   BasicType type = item->type();
   __ store(item, new LIR_Address(FrameMap::rsp_opr, in_bytes(offset_from_sp), type));
 }
@@ -219,7 +213,6 @@ void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo*
 //----------------------------------------------------------------------
 
 void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
-  assert(x->is_pinned(),"");
   LIRItem obj(x->obj(), this);
   obj.load_item();
 
@@ -245,7 +238,6 @@ void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
 }
 
 void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-  assert(x->is_pinned(),"");
 
   LIRItem obj(x->obj(), this);
   obj.dont_load_item();
@@ -286,7 +278,6 @@ void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
   LIRItem right(x->y(), this);
   LIRItem* left_arg  = &left;
   LIRItem* right_arg = &right;
-  assert(!left.is_stack() || !right.is_stack(), "can't both be memory operands");
   bool must_load_both = (x->op() == Bytecodes::_frem || x->op() == Bytecodes::_drem);
   if (left.is_register() || x->x()->type()->is_constant() || must_load_both) {
     left.load_item();
@@ -300,8 +291,6 @@ void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
   bool must_load_right = false;
   if (right.is_constant()) {
     LIR_Const* c = right.result()->as_constant_ptr();
-    assert(c != NULL, "invalid constant");
-    assert(c->type() == T_FLOAT || c->type() == T_DOUBLE, "invalid type");
 
     if (c->type() == T_FLOAT) {
       must_load_right = UseSSE < 1 && (c->is_one_float() || c->is_zero_float());
@@ -530,7 +519,6 @@ void LIRGenerator::do_ArithmeticOp(ArithmeticOp* x) {
   }
 
   ValueTag tag = x->type()->tag();
-  assert(x->x()->type()->tag() == tag && x->y()->type()->tag() == tag, "wrong parameters");
   switch (tag) {
     case floatTag:
     case doubleTag:  do_ArithmeticOp_FPU(x);  return;
@@ -629,7 +617,6 @@ LIR_Opr LIRGenerator::atomic_xchg(BasicType type, LIR_Opr addr, LIRItem& value) 
   value.load_item();
   // Because we want a 2-arg form of xchg and xadd
   __ move(value.result(), result);
-  assert(type == T_INT || is_oop  || type == T_LONG , "unexpected type");
   __ xchg(addr, result, result, LIR_OprFact::illegalOpr);
   return result;
 }
@@ -639,14 +626,11 @@ LIR_Opr LIRGenerator::atomic_add(BasicType type, LIR_Opr addr, LIRItem& value) {
   value.load_item();
   // Because we want a 2-arg form of xchg and xadd
   __ move(value.result(), result);
-  assert(type == T_INT  || type == T_LONG , "unexpected type");
   __ xadd(addr, result, result, LIR_OprFact::illegalOpr);
   return result;
 }
 
 void LIRGenerator::do_FmaIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 3, "wrong type");
-  assert(UseFMA, "Needs FMA instructions support.");
   LIRItem value(x->argument_at(0), this);
   LIRItem value1(x->argument_at(1), this);
   LIRItem value2(x->argument_at(2), this);
@@ -670,7 +654,6 @@ void LIRGenerator::do_FmaIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
-  assert(x->number_of_arguments() == 1 || (x->number_of_arguments() == 2 && x->id() == vmIntrinsics::_dpow), "wrong type");
 
   if (x->id() == vmIntrinsics::_dexp || x->id() == vmIntrinsics::_dlog ||
       x->id() == vmIntrinsics::_dpow || x->id() == vmIntrinsics::_dcos ||
@@ -692,8 +675,7 @@ void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
   LIR_Opr calc_result = rlock_result(x);
 
   LIR_Opr tmp = LIR_OprFact::illegalOpr;
-  if (UseAVX > 2 && (!VM_Version::supports_avx512vl()) &&
-      (x->id() == vmIntrinsics::_dabs)) {
+  if (UseAVX > 2 && (!VM_Version::supports_avx512vl()) && (x->id() == vmIntrinsics::_dabs)) {
     tmp = new_register(T_DOUBLE);
     __ move(LIR_OprFact::doubleConst(-0.0), tmp);
   }
@@ -792,7 +774,6 @@ void LIRGenerator::do_LibmIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
-  assert(x->number_of_arguments() == 5, "wrong type");
 
   // Make all state_for calls early since they can emit code
   CodeEmitInfo* info = state_for(x, x->state());
@@ -833,7 +814,6 @@ void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
 }
 
 void LIRGenerator::do_update_CRC32(Intrinsic* x) {
-  assert(UseCRC32Intrinsics, "need AVX and LCMUL instructions support");
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
   int flags = 0;
@@ -861,7 +841,7 @@ void LIRGenerator::do_update_CRC32(Intrinsic* x) {
 
       LIR_Opr index = off.result();
       int offset = is_updateBytes ? arrayOopDesc::base_offset_in_bytes(T_BYTE) : 0;
-      if(off.result()->is_constant()) {
+      if (off.result()->is_constant()) {
         index = LIR_OprFact::illegalOpr;
        offset += off.result()->as_jint();
       }
@@ -907,7 +887,6 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
 }
 
 void LIRGenerator::do_vectorizedMismatch(Intrinsic* x) {
-  assert(UseVectorizedMismatchIntrinsic, "need AVX instruction support");
 
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
@@ -1024,7 +1003,6 @@ void LIRGenerator::do_Convert(Convert* x) {
     __ move(input, conv_input);
   }
 
-  assert(fixed_result == false || round_result == false, "cannot set both");
   if (fixed_result) {
     conv_result = fixed_register_for(result->type());
   } else if (round_result) {
@@ -1042,7 +1020,6 @@ void LIRGenerator::do_Convert(Convert* x) {
     __ move(conv_result, result);
   }
 
-  assert(result->is_virtual(), "result must be virtual register");
   set_result(x, result);
 }
 
@@ -1184,16 +1161,12 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   obj.load_item();
 
   // info for exceptions
-  CodeEmitInfo* info_for_exception =
-      (x->needs_exception_state() ? state_for(x) :
-                                    state_for(x, x->state_before(), true /*ignore_xhandler*/));
+  CodeEmitInfo* info_for_exception = (x->needs_exception_state() ? state_for(x) : state_for(x, x->state_before(), true /*ignore_xhandler*/));
 
   CodeStub* stub;
   if (x->is_incompatible_class_change_check()) {
-    assert(patching_info == NULL, "can't patch this");
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    assert(patching_info == NULL, "can't patch this");
     stub = new DeoptimizeStub(info_for_exception, Deoptimization::Reason_class_check, Deoptimization::Action_none);
   } else {
     stub = new SimpleExceptionStub(Runtime1::throw_class_cast_exception_id, obj.result(), info_for_exception);
@@ -1230,7 +1203,6 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
 }
 
 void LIRGenerator::do_If(If* x) {
-  assert(x->number_of_sux() == 2, "inconsistency");
   ValueTag tag = x->x()->type()->tag();
   bool is_safepoint = x->is_safepoint();
 
@@ -1284,7 +1256,6 @@ void LIRGenerator::do_If(If* x) {
   } else {
     __ branch(lir_cond(cond), right->type(), x->tsux());
   }
-  assert(x->default_sux() == x->fsux(), "wrong destination above");
   __ jump(x->default_sux());
 }
 

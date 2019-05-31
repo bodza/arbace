@@ -121,7 +121,7 @@ void InstanceRefKlass::oop_oop_iterate_ref_processing(oop obj, OopClosureType* c
 class MrContains {
   const MemRegion _mr;
  public:
-  MrContains(MemRegion mr) : _mr(mr) {}
+  MrContains(MemRegion mr) : _mr(mr) { }
   template <typename T> bool operator()(T* p) const { return _mr.contains(p); }
 };
 

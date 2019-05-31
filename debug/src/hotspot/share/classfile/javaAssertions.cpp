@@ -17,7 +17,6 @@ JavaAssertions::OptionList*     JavaAssertions::_packages = 0;
 
 JavaAssertions::OptionList::OptionList(const char* name, bool enabled,
   OptionList* next) {
-  assert(name != 0, "need a name");
   _name = name;
   _enabled = enabled;
   _next = next;
@@ -30,7 +29,6 @@ int JavaAssertions::OptionList::count(OptionList* p) {
 }
 
 void JavaAssertions::addOption(const char* name, bool enable) {
-  assert(name != 0, "must have a name");
 
   // Copy the name.  The storage needs to exist for the the lifetime of the vm;
   // it is never freed, so will be leaked (along with other option strings -
@@ -101,21 +99,18 @@ oop JavaAssertions::createAssertionStatusDirectives(TRAPS) {
   return h();
 }
 
-void JavaAssertions::fillJavaArrays(const OptionList* p, int len,
-objArrayHandle names, typeArrayHandle enabled, TRAPS) {
+void JavaAssertions::fillJavaArrays(const OptionList* p, int len, objArrayHandle names, typeArrayHandle enabled, TRAPS) {
   // Fill in the parallel names and enabled (boolean) arrays.  Start at the end
   // of the array and work backwards, so the order of items in the arrays
   // matches the order on the command line (the list is in reverse order, since
   // it was created by prepending successive items from the command line).
   int index;
   for (index = len - 1; p != 0; p = p->next(), --index) {
-    assert(index >= 0, "length does not match list");
     Handle s = java_lang_String::create_from_str(p->name(), CHECK);
     s = java_lang_String::char_converter(s, '/', '.', CHECK);
     names->obj_at_put(index, s());
     enabled->bool_at_put(index, p->enabled());
   }
-  assert(index == -1, "length does not match list");
 }
 
 inline JavaAssertions::OptionList*
@@ -142,7 +137,6 @@ JavaAssertions::match_package(const char* classname) {
   for (/* empty */; len > 0 && classname[len] != '/'; --len) /* empty */;
 
   do {
-    assert(len == 0 || classname[len] == '/', "not a package name");
     for (OptionList* p = _packages; p != 0; p = p->next()) {
       if (strncmp(p->name(), classname, len) == 0 && p->name()[len] == '\0') {
         return p;
@@ -166,7 +160,6 @@ const char* typefound, const char* namefound, bool enabled) {
 }
 
 bool JavaAssertions::enabled(const char* classname, bool systemClass) {
-  assert(classname != 0, "must have a classname");
 
   // This will be slow if the number of assertion options on the command line is
   // large--it traverses two lists, one of them multiple times.  Could use a

@@ -32,11 +32,11 @@ protected:
 
 public:
   VectorSet(Arena *arena);                      // Creates a new, empty set.
-  VectorSet(const VectorSet &s) : Set(s._set_arena) {slamin(s);} // Set clone; deep-copy guts
+  VectorSet(const VectorSet &s) : Set(s._set_arena) { slamin(s); } // Set clone; deep-copy guts
   Set &operator =(const Set &s);                // Set clone; deep-copy guts
   VectorSet &operator =(const VectorSet &s)     // Set clone; deep-copy guts
   { if( &s != this ) { slamin(s); } return *this; }
-  ~VectorSet() {}
+  ~VectorSet() { }
   Set &clone(void) const { return *(new VectorSet(*this)); }
 
   Set &operator <<=(uint elem);          // Add member to set
@@ -76,7 +76,7 @@ public:
   void Sort(void);                  // Sort before iterating
   int hash() const;                 // Hash function
   void Reset(void) {                // Reset a set
-    memset( data, 0, size*sizeof(uint32_t) );
+    memset( data, 0, size*sizeof(uint32_t));
   }
 
   /* Removed for MCC BUG
@@ -91,11 +91,11 @@ public:
   //     if( visited[idx] ) return;
   //     visited <<= idx;
   // With:
-  //     if( visited.test_set(idx) ) return;
+  //     if( visited.test_set(idx)) return;
   //
   int test_set( uint elem ) {
     uint word = elem >> 5;           // Get the longword offset
-    if( word >= size )               // Beyond the last?
+    if (word >= size )               // Beyond the last?
       return test_set_grow(elem);    // Then grow; set; return 0;
     uint32_t mask = 1L << (elem & 31); // Get bit mask
     uint32_t datum = data[word] & mask;// Get bit
@@ -110,7 +110,7 @@ public:
   // Fast inlined test
   int test( uint elem ) const {
     uint word = elem >> 5;      // Get the longword offset
-    if( word >= size ) return 0; // Beyond the last?
+    if (word >= size ) return 0; // Beyond the last?
     uint32_t mask = 1L << (elem & 31); // Get bit mask
     return data[word] & mask;   // Get bit
   }
@@ -118,7 +118,7 @@ public:
   // Fast inlined set
   void set( uint elem ) {
     uint word = elem >> 5;      // Get the longword offset
-    if( word >= size ) {        // Beyond the last?
+    if (word >= size ) {        // Beyond the last?
       test_set_grow(elem);      // Then grow and set
     } else {
       uint32_t mask = 1L << (elem & 31); // Get bit mask

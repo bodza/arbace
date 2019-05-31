@@ -25,7 +25,7 @@ class GCLocker: public AllStatic {
   // At a safepoint, visit all threads and count the number of active
   // critical sections.  This is used to ensure that all active
   // critical sections are exited before a new one is started.
-  static void verify_critical_count() {};
+  static void verify_critical_count() { };
 
   static void jni_lock(JavaThread* thread);
   static void jni_unlock(JavaThread* thread);
@@ -42,10 +42,9 @@ class GCLocker: public AllStatic {
  public:
   // Accessors
   static bool is_active() {
-    assert(GCLocker::is_at_safepoint(), "only read at safepoint");
     return is_active_internal();
   }
-  static bool needs_gc()       { return _needs_gc;                        }
+  static bool needs_gc()       { return _needs_gc; }
 
   // Shorthand
   static bool is_active_and_needs_gc() {
@@ -56,8 +55,8 @@ class GCLocker: public AllStatic {
   }
 
   // In debug mode track the locking state at all times
-  static void increment_debug_jni_lock_count() {};
-  static void decrement_debug_jni_lock_count() {};
+  static void increment_debug_jni_lock_count() { };
+  static void decrement_debug_jni_lock_count() { };
 
   // Set the current lock count
   static void set_jni_lock_count(int count) {

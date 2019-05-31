@@ -80,21 +80,18 @@
   void push_addr (Address a)  { _rsp_offset++; pushptr(a); }
   void push_reg  (Register r) { _rsp_offset++; push(r); }
   void pop_reg   (Register r) { _rsp_offset--; pop(r);
-  assert(_rsp_offset >= 0, "stack offset underflow");
   }
 
   void dec_stack (int nof_words) {
     _rsp_offset -= nof_words;
-    assert(_rsp_offset >= 0, "stack offset underflow");
     addptr(rsp, wordSize * nof_words);
   }
 
   void dec_stack_after_call (int nof_words) {
     _rsp_offset -= nof_words;
-    assert(_rsp_offset >= 0, "stack offset underflow");
   }
 
-  void invalidate_registers(bool inv_rax, bool inv_rbx, bool inv_rcx, bool inv_rdx, bool inv_rsi, bool inv_rdi) {};
+  void invalidate_registers(bool inv_rax, bool inv_rbx, bool inv_rcx, bool inv_rdx, bool inv_rsi, bool inv_rdi) { };
 
   // This platform only uses signal-based null checks. The Label is not needed.
   void null_check(Register r, Label *Lnull = NULL) { MacroAssembler::null_check(r); }

@@ -11,12 +11,10 @@ inline HeapWord* objArrayOopDesc::base() const { return (HeapWord*) arrayOopDesc
 inline HeapWord* objArrayOopDesc::base_raw() const { return (HeapWord*) arrayOopDesc::base_raw(T_OBJECT); }
 
 template <class T> T* objArrayOopDesc::obj_at_addr(int index) const {
-  assert(is_within_bounds(index), "index out of bounds");
   return &((T*)base())[index];
 }
 
 template <class T> T* objArrayOopDesc::obj_at_addr_raw(int index) const {
-  assert(is_within_bounds(index), "index out of bounds");
   return &((T*)base_raw())[index];
 }
 

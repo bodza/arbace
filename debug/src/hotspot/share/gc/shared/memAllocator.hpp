@@ -57,7 +57,7 @@ public:
 class ObjAllocator: public MemAllocator {
 public:
   ObjAllocator(Klass* klass, size_t word_size, Thread* thread = Thread::current())
-    : MemAllocator(klass, word_size, thread) {}
+    : MemAllocator(klass, word_size, thread) { }
   virtual oop initialize(HeapWord* mem) const;
 };
 
@@ -72,14 +72,14 @@ public:
                     Thread* thread = Thread::current())
     : MemAllocator(klass, word_size, thread),
       _length(length),
-      _do_zero(do_zero) {}
+      _do_zero(do_zero) { }
   virtual oop initialize(HeapWord* mem) const;
 };
 
 class ClassAllocator: public MemAllocator {
 public:
   ClassAllocator(Klass* klass, size_t word_size, Thread* thread = Thread::current())
-    : MemAllocator(klass, word_size, thread) {}
+    : MemAllocator(klass, word_size, thread) { }
   virtual oop initialize(HeapWord* mem) const;
 };
 

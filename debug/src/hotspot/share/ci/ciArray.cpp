@@ -23,7 +23,6 @@ ciConstant ciArray::element_value_impl(BasicType elembt,
                                        int index) {
   if (ary == NULL)
     return ciConstant();
-  assert(ary->is_array(), "");
   if (index < 0 || index >= ary->length())
     return ciConstant();
   ArrayKlass* ak = (ArrayKlass*) ary->klass();
@@ -35,7 +34,6 @@ ciConstant ciArray::element_value_impl(BasicType elembt,
   case T_ARRAY:
   case T_OBJECT:
     {
-      assert(ary->is_objArray(), "");
       objArrayOop objary = (objArrayOop) ary;
       oop elem = objary->obj_at(index);
       ciEnv* env = CURRENT_ENV;
@@ -45,7 +43,6 @@ ciConstant ciArray::element_value_impl(BasicType elembt,
   default:
     break;
   }
-  assert(ary->is_typeArray(), "");
   typeArrayOop tary = (typeArrayOop) ary;
   jint value = 0;
   switch (elembt) {

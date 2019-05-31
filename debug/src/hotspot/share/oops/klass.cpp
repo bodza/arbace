@@ -24,8 +24,6 @@
 #include "utilities/stack.inline.hpp"
 
 void Klass::set_java_mirror(Handle m) {
-  assert(!m.is_null(), "New mirror should never be null.");
-  assert(_java_mirror.resolve() == NULL, "should only be used to initialize mirror");
   _java_mirror = class_loader_data()->add_handle(m);
 }
 
@@ -34,13 +32,11 @@ oop Klass::java_mirror() const {
 }
 
 bool Klass::is_cloneable() const {
-  return _access_flags.is_cloneable_fast() ||
-         is_subtype_of(SystemDictionary::Cloneable_klass());
+  return _access_flags.is_cloneable_fast() || is_subtype_of(SystemDictionary::Cloneable_klass());
 }
 
 void Klass::set_is_cloneable() {
   if (name() == vmSymbols::java_lang_invoke_MemberName()) {
-    assert(is_final(), "no subclasses allowed");
     // MemberName cloning should not be intrinsified and always happen in JVM_Clone.
   } else if (is_instance_klass() && InstanceKlass::cast(this)->reference_type() != REF_NONE) {
     // Reference cloning should not be intrinsified and always happen in JVM_Clone.
@@ -89,9 +85,9 @@ bool Klass::search_secondary_supers(Klass* k) const {
 // implementor.  Then return the 1 concrete implementation.
 Klass *Klass::up_cast_abstract() {
   Klass *r = this;
-  while( r->is_abstract() ) {   // Receiver is abstract?
+  while ( r->is_abstract()) {   // Receiver is abstract?
     Klass *s = r->subklass();   // Check for exactly 1 subklass
-    if( !s || s->next_sibling() ) // Oops; wrong count; give up
+    if (!s || s->next_sibling()) // Oops; wrong count; give up
       return this;              // Return 'this' as a no-progress flag
     r = s;                    // Loop till find concrete class
   }
@@ -101,9 +97,9 @@ Klass *Klass::up_cast_abstract() {
 // Find LCA in class hierarchy
 Klass *Klass::LCA( Klass *k2 ) {
   Klass *k1 = this;
-  while( 1 ) {
-    if( k1->is_subtype_of(k2) ) return k2;
-    if( k2->is_subtype_of(k1) ) return k1;
+  while ( 1 ) {
+    if (k1->is_subtype_of(k2)) return k2;
+    if (k2->is_subtype_of(k1)) return k1;
     k1 = k1->super();
     k2 = k2->super();
   }
@@ -117,7 +113,6 @@ void Klass::check_valid_for_instantiation(bool throwError, TRAPS) {
 
 void Klass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
   ResourceMark rm(THREAD);
-  assert(s != NULL, "Throw NPE!");
   THROW_MSG(vmSymbols::java_lang_ArrayStoreException(),
             err_msg("arraycopy: source type %s is not an array", s->klass()->external_name()));
 }
@@ -127,7 +122,6 @@ void Klass::initialize(TRAPS) {
 }
 
 bool Klass::compute_is_subtype_of(Klass* k) {
-  assert(k->is_klass(), "argument must be a class");
   return is_subclass_of(k);
 }
 
@@ -162,7 +156,6 @@ Klass::Klass(KlassID id) : _id(id),
 }
 
 jint Klass::array_layout_helper(BasicType etype) {
-  assert(etype >= T_BOOLEAN && etype <= T_OBJECT, "valid etype");
   // Note that T_ARRAY is not allowed here.
   int  hsize = arrayOopDesc::base_offset_in_bytes(etype);
   int  esize = type2aelembytes(etype);
@@ -170,13 +163,6 @@ jint Klass::array_layout_helper(BasicType etype) {
   int  tag   =  isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
   int lh = array_layout_helper(tag, hsize, etype, exact_log2(esize));
 
-  assert(lh < (int)_lh_neutral_value, "must look like an array layout");
-  assert(layout_helper_is_array(lh), "correct kind");
-  assert(layout_helper_is_objArray(lh) == isobj, "correct kind");
-  assert(layout_helper_is_typeArray(lh) == !isobj, "correct kind");
-  assert(layout_helper_header_size(lh) == hsize, "correct decode");
-  assert(layout_helper_element_type(lh) == etype, "correct decode");
-  assert(1 << layout_helper_log2_element_size(lh) == esize, "correct decode");
 
   return lh;
 }
@@ -199,9 +185,7 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
   if (k == NULL) {
     set_super(NULL);
     _primary_supers[0] = this;
-    assert(super_depth() == 0, "Object must already be initialized properly");
   } else if (k != super() || k == SystemDictionary::Object_klass()) {
-    assert(super() == NULL || super() == SystemDictionary::Object_klass(), "initialize this only once to a non-trivial value");
     set_super(k);
     Klass* sup = k;
     int sup_depth = sup->super_depth();
@@ -254,24 +238,23 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
       // secondary list already contains some primary overflows, they
       // (with the extra level of array-ness) will collide with the
       // normal primary superclass overflows.
-      for( i = 0; i < secondaries->length(); i++ ) {
-        if( secondaries->at(i) == p )
+      for ( i = 0; i < secondaries->length(); i++ ) {
+        if (secondaries->at(i) == p )
           break;
       }
-      if( i < secondaries->length() )
+      if (i < secondaries->length())
         continue;               // It's a dup, don't put it in
       primaries->push(p);
     }
     // Combine the two arrays into a metadata object to pack the array.
     // The primaries are added in the reverse order, then the secondaries.
     int new_length = primaries->length() + secondaries->length();
-    Array<Klass*>* s2 = MetadataFactory::new_array<Klass*>(
-                                       class_loader_data(), new_length, CHECK);
+    Array<Klass*>* s2 = MetadataFactory::new_array<Klass*>(class_loader_data(), new_length, CHECK);
     int fill_p = primaries->length();
     for (int j = 0; j < fill_p; j++) {
       s2->at_put(j, primaries->pop());  // add primaries in reverse order.
     }
-    for( int j = 0; j < secondaries->length(); j++ ) {
+    for ( int j = 0; j < secondaries->length(); j++ ) {
       s2->at_put(j+fill_p, secondaries->at(j));  // add secondaries on the end.
     }
 
@@ -281,24 +264,19 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
 
 GrowableArray<Klass*>* Klass::compute_secondary_supers(int num_extra_slots,
                                                        Array<Klass*>* transitive_interfaces) {
-  assert(num_extra_slots == 0, "override for complex klasses");
-  assert(transitive_interfaces == NULL, "sanity");
   set_secondary_supers(Universe::the_empty_klass_array());
   return NULL;
 }
 
 InstanceKlass* Klass::superklass() const {
-  assert(super() == NULL || super()->is_instance_klass(), "must be instance klass");
   return _super == NULL ? NULL : InstanceKlass::cast(_super);
 }
 
 void Klass::set_subklass(Klass* s) {
-  assert(s != this, "sanity check");
   _subklass = s;
 }
 
 void Klass::set_next_sibling(Klass* s) {
-  assert(s != this, "sanity check");
   _next_sibling = s;
 }
 
@@ -307,7 +285,6 @@ void Klass::append_to_sibling_list() {
   InstanceKlass* super = superklass();
   if (super == NULL) return;        // special case: class Object
   // interfaces cannot be supers
-  assert((!super->is_interface() && (super->superklass() == NULL || !is_interface())), "an interface can only be a subklass of Object");
   Klass* prev_first_subklass = super->subklass();
   if (prev_first_subklass != NULL) {
     // set our sibling to be the superklass' previous first subklass
@@ -332,8 +309,6 @@ void Klass::clean_weak_klass_links(bool unloading_occurred, bool clean_alive_kla
   stack.push(root);
   while (!stack.is_empty()) {
     Klass* current = stack.pop();
-
-    assert(current->is_loader_alive(), "just checking, this should be live");
 
     // Find and set the first alive subklass
     Klass* sub = current->subklass();
@@ -397,7 +372,6 @@ void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 void Klass::remove_unshareable_info() {
-  assert(DumpSharedSpaces, "only called for DumpSharedSpaces");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("remove: %s", external_name());
@@ -413,7 +387,6 @@ void Klass::remove_unshareable_info() {
 }
 
 void Klass::remove_java_mirror() {
-  assert(DumpSharedSpaces, "only called for DumpSharedSpaces");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("remove java_mirror: %s", external_name());
@@ -423,8 +396,6 @@ void Klass::remove_java_mirror() {
 }
 
 void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protection_domain, TRAPS) {
-  assert(is_klass(), "ensure C++ vtable is restored");
-  assert(is_shared(), "must be set");
   if (log_is_enabled(Trace, cds, unshareable)) {
     ResourceMark rm;
     log_trace(cds, unshareable)("restore: %s", external_name());
@@ -522,9 +493,7 @@ const char* Klass::external_name() const {
       size_t name_len = name()->utf8_length();
       char*  result   = NEW_RESOURCE_ARRAY(char, name_len + addr_len + 1);
       name()->as_klass_external_name(result, (int) name_len + 1);
-      assert(strlen(result) == name_len, "");
       strcpy(result + name_len, addr_buf);
-      assert(strlen(result) == name_len + addr_len, "");
       return result;
     }
   }
@@ -590,10 +559,6 @@ void Klass::oop_print_value_on(oop obj, outputStream* st) {
 
 void Klass::verify_on(outputStream* st) {
 
-  // This can be expensive, but it is worth checking that this klass is actually
-  // in the CLD graph but not in production.
-  assert(Metaspace::contains((address)this), "Should be");
-
   guarantee(this->is_klass(),"should be klass");
 
   if (super() != NULL) {
@@ -621,8 +586,7 @@ void Klass::oop_verify_on(oop obj, outputStream* st) {
 }
 
 Klass* Klass::decode_klass_raw(narrowKlass narrow_klass) {
-  return (Klass*)(void*)( (uintptr_t)Universe::narrow_klass_base() +
-                         ((uintptr_t)narrow_klass << Universe::narrow_klass_shift()));
+  return (Klass*)(void*)( (uintptr_t)Universe::narrow_klass_base() + ((uintptr_t)narrow_klass << Universe::narrow_klass_shift()));
 }
 
 bool Klass::is_valid(Klass* k) {
@@ -661,7 +625,6 @@ ByteSize Klass::vtable_start_offset() {
 //                      are in module <module-name>[@<version>]
 //                      of loader <loader-name_and_id>[, parent loader <parent-loader-name_and_id>]
 const char* Klass::joint_in_module_of_loader(const Klass* class2, bool include_parent_loader) const {
-  assert(module() == class2->module(), "classes do not have the same module");
   const char* class1_name = external_name();
   size_t len = strlen(class1_name) + 1;
 
@@ -732,15 +695,13 @@ const char* Klass::class_in_module_of_loader(bool use_are, bool include_parent_l
 
   // 3. class loader's name_and_id
   ClassLoaderData* cld = class_loader_data();
-  assert(cld != NULL, "class_loader_data should not be null");
   const char* loader_name_and_id = cld->loader_name_and_id();
   len += strlen(loader_name_and_id);
 
   // 4. include parent loader information
   const char* parent_loader_phrase = "";
   const char* parent_loader_name_and_id = "";
-  if (include_parent_loader &&
-      !cld->is_builtin_class_loader_data()) {
+  if (include_parent_loader && !cld->is_builtin_class_loader_data()) {
     oop parent_loader = java_lang_ClassLoader::parent(class_loader());
     ClassLoaderData *parent_cld = ClassLoaderData::class_loader_data_or_null(parent_loader);
     // The parent loader's ClassLoaderData could be null if it is

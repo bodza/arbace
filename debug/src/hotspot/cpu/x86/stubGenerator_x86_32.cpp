@@ -72,7 +72,6 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     // stub code parameters / addresses
-    assert(frame::entry_frame_call_wrapper_offset == 2, "adjust this code");
     bool  sse_save = false;
     const Address rsp_after_call(rbp, -4 * wordSize); // same as in generate_catch_exception()!
     const int     locals_count_in_bytes  (4*wordSize);
@@ -247,7 +246,6 @@ class StubGenerator: public StubCodeGenerator {
            ExternalAddress((address)__FILE__));
     __ movl(Address(rcx, Thread::exception_line_offset   ()), __LINE__ );
     // complete return to VM
-    assert(StubRoutines::_call_stub_return_address != NULL, "_call_stub_return_address must have been generated before");
     __ jump(RuntimeAddress(StubRoutines::_call_stub_return_address));
 
     return start;
@@ -436,8 +434,6 @@ class StubGenerator: public StubCodeGenerator {
                 framesize
   };
 
-  assert(FPUStateSizeInWords == 27, "update stack layout");
-
     // Save outgoing argument to stack across push_FPU_state()
     __ subptr(rsp, wordSize * 2);
     __ fstp_d(Address(rsp, 0));
@@ -546,7 +542,6 @@ class StubGenerator: public StubCodeGenerator {
   //   qword_count - 8-bytes element count, negative
   //
   void xmm_copy_forward(Register from, Register to_from, Register qword_count) {
-    assert( UseSSE >= 2, "supported cpu only" );
     Label L_copy_64_bytes_loop, L_copy_64_bytes, L_copy_8_bytes, L_exit;
 
     // Copy 64-byte chunks
@@ -624,7 +619,6 @@ class StubGenerator: public StubCodeGenerator {
   //   qword_count - 8-bytes element count, negative
   //
   void mmx_copy_forward(Register from, Register to_from, Register qword_count) {
-    assert( VM_Version::supports_mmx(), "supported cpu only" );
     Label L_copy_64_bytes_loop, L_copy_64_bytes, L_copy_8_bytes, L_exit;
     // Copy 64-byte chunks
     __ jmpb(L_copy_64_bytes);
@@ -1133,9 +1127,7 @@ class StubGenerator: public StubCodeGenerator {
 
     // The following is a strange variation of the fast path which requires
     // one less register, because needed values are on the argument stack.
-    // __ check_klass_subtype_fast_path(sub_klass, *super_klass*, temp,
-    //                                  L_success, L_failure, NULL);
-    assert_different_registers(sub_klass, temp);
+    // __ check_klass_subtype_fast_path(sub_klass, *super_klass*, temp, L_success, L_failure, NULL);
 
     int sc_offset = in_bytes(Klass::secondary_super_cache_offset());
 
@@ -1255,7 +1247,6 @@ class StubGenerator: public StubCodeGenerator {
     // Copy from low to high addresses, indexed from the end of each array.
     __ lea(end_from, end_from_addr);
     __ lea(end_to,   end_to_addr);
-    assert(length == count, "");
     __ negptr(count);                   // negate and test the length
     __ jccb(Assembler::notZero, L_load_element);
 
@@ -1294,7 +1285,6 @@ class StubGenerator: public StubCodeGenerator {
     // Register "count" = -1 * number of *remaining* oops, length_arg = *total* oops.
     // Emit GC store barriers for the oops we have copied (length_arg + count),
     // and report their number to the caller.
-    assert_different_registers(to, count, rax);
     Label L_post_barrier;
     __ addl(count, length_arg);         // transfers = (length - remaining)
     __ movl2ptr(rax, count);            // save the value
@@ -1419,11 +1409,11 @@ class StubGenerator: public StubCodeGenerator {
     __ addl(src_end, length); // src_pos + length
     __ addl(dst_end, length); // dst_pos + length
 
-    //  if (src_pos + length > arrayOop(src)->length() ) FAIL;
+    //  if (src_pos + length > arrayOop(src)->length()) FAIL;
     __ cmpl(src_end, Address(src, arrayOopDesc::length_offset_in_bytes()));
     __ jcc(Assembler::above, L_failed);
 
-    //  if (dst_pos + length > arrayOop(dst)->length() ) FAIL;
+    //  if (dst_pos + length > arrayOop(dst)->length()) FAIL;
     __ cmpl(dst_end, Address(dst, arrayOopDesc::length_offset_in_bytes()));
     __ jcc(Assembler::above, L_failed);
 
@@ -1464,7 +1454,6 @@ class StubGenerator: public StubCodeGenerator {
     // Short-hop target to L_failed.  Makes for denser prologue code.
     __ BIND(L_failed_0);
     __ jmp(L_failed);
-    assert(__ offset() % CodeEntryAlignment == 0, "no further alignment needed");
 
     __ align(CodeEntryAlignment);
     address start = __ pc();
@@ -1555,7 +1544,6 @@ class StubGenerator: public StubCodeGenerator {
     __ jccb(Assembler::notEqual, L_failed_0);
 
     const Register rcx_lh = rcx;  // layout helper
-    assert(rcx_lh == rcx_src_klass, "known alias");
     __ movl(rcx_lh, src_klass_lh_addr);
 
     //  if (!src->is_Array()) return -1;
@@ -1564,7 +1552,6 @@ class StubGenerator: public StubCodeGenerator {
 
     // At this point, it is known to be a typeArray (array_tag 0x3).
 
-    assert_different_registers(src, src_pos, dst, dst_pos, rcx_lh);
     arraycopy_range_checks(src, src_pos, dst, dst_pos, LENGTH, L_failed);
 
     // TypeArrayKlass
@@ -1596,11 +1583,9 @@ class StubGenerator: public StubCodeGenerator {
     BLOCK_COMMENT("scale indexes to element size");
     __ movl2ptr(rsi, SRC_POS);  // src_pos
     __ shlptr(rsi);             // src_pos << rcx (log2 elsize)
-    assert(src_array == from, "");
     __ addptr(from, rsi);       // from = src_array + SRC_POS << log2 elsize
     __ movl2ptr(rdi, DST_POS);  // dst_pos
     __ shlptr(rdi);             // dst_pos << rcx (log2 elsize)
-    assert(dst_array == to, "");
     __ addptr(to,  rdi);        // to   = dst_array + DST_POS << log2 elsize
     __ movptr(FROM, from);      // src_addr
     __ mov(rdi_elsize, rcx_lh); // log2 elsize
@@ -1636,7 +1621,6 @@ class StubGenerator: public StubCodeGenerator {
     __ jccb(Assembler::notEqual, L_checkcast_copy);
 
     // Identically typed arrays can be copied without element-wise checks.
-    assert_different_registers(src, src_pos, dst, dst_pos, rcx_src_klass);
     arraycopy_range_checks(src, src_pos, dst, dst_pos, LENGTH, L_failed);
 
   __ BIND(L_plain_copy);
@@ -1661,8 +1645,6 @@ class StubGenerator: public StubCodeGenerator {
 
       Register rsi_dst_klass = rsi;
       Register rdi_temp      = rdi;
-      assert(rsi_dst_klass == src_pos, "expected alias w/ src_pos");
-      assert(rdi_temp      == dst_pos, "expected alias w/ dst_pos");
       Address dst_klass_lh_addr(rsi_dst_klass, lh_offset);
 
       // Before looking at dst.length, make sure dst is also an objArray.
@@ -1709,7 +1691,6 @@ class StubGenerator: public StubCodeGenerator {
       Address DST_POS_arg(rsp, 16+16);
       Address  LENGTH_arg(rsp, 16+20);
       // push rbx, changed the incoming offsets (why not just use rbp,??)
-      // assert(SRC_POS_arg.disp() == SRC_POS.disp() + 4, "");
 
       __ movptr(rbx, Address(rsi_dst_klass, ek_offset));
       __ movl2ptr(length, LENGTH_arg);    // reload elements count
@@ -1744,61 +1725,28 @@ class StubGenerator: public StubCodeGenerator {
     address entry_jlong_arraycopy;
     address entry_checkcast_arraycopy;
 
-    StubRoutines::_arrayof_jbyte_disjoint_arraycopy =
-        generate_disjoint_copy(T_BYTE,  true, Address::times_1, &entry,
-                               "arrayof_jbyte_disjoint_arraycopy");
-    StubRoutines::_arrayof_jbyte_arraycopy =
-        generate_conjoint_copy(T_BYTE,  true, Address::times_1,  entry,
-                               NULL, "arrayof_jbyte_arraycopy");
-    StubRoutines::_jbyte_disjoint_arraycopy =
-        generate_disjoint_copy(T_BYTE, false, Address::times_1, &entry,
-                               "jbyte_disjoint_arraycopy");
-    StubRoutines::_jbyte_arraycopy =
-        generate_conjoint_copy(T_BYTE, false, Address::times_1,  entry,
-                               &entry_jbyte_arraycopy, "jbyte_arraycopy");
+    StubRoutines::_arrayof_jbyte_disjoint_arraycopy = generate_disjoint_copy(T_BYTE,  true, Address::times_1, &entry, "arrayof_jbyte_disjoint_arraycopy");
+    StubRoutines::_arrayof_jbyte_arraycopy = generate_conjoint_copy(T_BYTE,  true, Address::times_1,  entry, NULL, "arrayof_jbyte_arraycopy");
+    StubRoutines::_jbyte_disjoint_arraycopy = generate_disjoint_copy(T_BYTE, false, Address::times_1, &entry, "jbyte_disjoint_arraycopy");
+    StubRoutines::_jbyte_arraycopy = generate_conjoint_copy(T_BYTE, false, Address::times_1,  entry, &entry_jbyte_arraycopy, "jbyte_arraycopy");
 
-    StubRoutines::_arrayof_jshort_disjoint_arraycopy =
-        generate_disjoint_copy(T_SHORT,  true, Address::times_2, &entry,
-                               "arrayof_jshort_disjoint_arraycopy");
-    StubRoutines::_arrayof_jshort_arraycopy =
-        generate_conjoint_copy(T_SHORT,  true, Address::times_2,  entry,
-                               NULL, "arrayof_jshort_arraycopy");
-    StubRoutines::_jshort_disjoint_arraycopy =
-        generate_disjoint_copy(T_SHORT, false, Address::times_2, &entry,
-                               "jshort_disjoint_arraycopy");
-    StubRoutines::_jshort_arraycopy =
-        generate_conjoint_copy(T_SHORT, false, Address::times_2,  entry,
-                               &entry_jshort_arraycopy, "jshort_arraycopy");
+    StubRoutines::_arrayof_jshort_disjoint_arraycopy = generate_disjoint_copy(T_SHORT,  true, Address::times_2, &entry, "arrayof_jshort_disjoint_arraycopy");
+    StubRoutines::_arrayof_jshort_arraycopy = generate_conjoint_copy(T_SHORT,  true, Address::times_2,  entry, NULL, "arrayof_jshort_arraycopy");
+    StubRoutines::_jshort_disjoint_arraycopy = generate_disjoint_copy(T_SHORT, false, Address::times_2, &entry, "jshort_disjoint_arraycopy");
+    StubRoutines::_jshort_arraycopy = generate_conjoint_copy(T_SHORT, false, Address::times_2,  entry, &entry_jshort_arraycopy, "jshort_arraycopy");
 
     // Next arrays are always aligned on 4 bytes at least.
-    StubRoutines::_jint_disjoint_arraycopy =
-        generate_disjoint_copy(T_INT, true, Address::times_4, &entry,
-                               "jint_disjoint_arraycopy");
-    StubRoutines::_jint_arraycopy =
-        generate_conjoint_copy(T_INT, true, Address::times_4,  entry,
-                               &entry_jint_arraycopy, "jint_arraycopy");
+    StubRoutines::_jint_disjoint_arraycopy = generate_disjoint_copy(T_INT, true, Address::times_4, &entry, "jint_disjoint_arraycopy");
+    StubRoutines::_jint_arraycopy = generate_conjoint_copy(T_INT, true, Address::times_4,  entry, &entry_jint_arraycopy, "jint_arraycopy");
 
-    StubRoutines::_oop_disjoint_arraycopy =
-        generate_disjoint_copy(T_OBJECT, true, Address::times_ptr, &entry,
-                               "oop_disjoint_arraycopy");
-    StubRoutines::_oop_arraycopy =
-        generate_conjoint_copy(T_OBJECT, true, Address::times_ptr,  entry,
-                               &entry_oop_arraycopy, "oop_arraycopy");
+    StubRoutines::_oop_disjoint_arraycopy = generate_disjoint_copy(T_OBJECT, true, Address::times_ptr, &entry, "oop_disjoint_arraycopy");
+    StubRoutines::_oop_arraycopy = generate_conjoint_copy(T_OBJECT, true, Address::times_ptr,  entry, &entry_oop_arraycopy, "oop_arraycopy");
 
-    StubRoutines::_oop_disjoint_arraycopy_uninit =
-        generate_disjoint_copy(T_OBJECT, true, Address::times_ptr, &entry,
-                               "oop_disjoint_arraycopy_uninit",
-                               /*dest_uninitialized*/true);
-    StubRoutines::_oop_arraycopy_uninit =
-        generate_conjoint_copy(T_OBJECT, true, Address::times_ptr,  entry,
-                               NULL, "oop_arraycopy_uninit",
-                               /*dest_uninitialized*/true);
+    StubRoutines::_oop_disjoint_arraycopy_uninit = generate_disjoint_copy(T_OBJECT, true, Address::times_ptr, &entry, "oop_disjoint_arraycopy_uninit", /*dest_uninitialized*/true);
+    StubRoutines::_oop_arraycopy_uninit = generate_conjoint_copy(T_OBJECT, true, Address::times_ptr,  entry, NULL, "oop_arraycopy_uninit", /*dest_uninitialized*/true);
 
-    StubRoutines::_jlong_disjoint_arraycopy =
-        generate_disjoint_long_copy(&entry, "jlong_disjoint_arraycopy");
-    StubRoutines::_jlong_arraycopy =
-        generate_conjoint_long_copy(entry, &entry_jlong_arraycopy,
-                                    "jlong_arraycopy");
+    StubRoutines::_jlong_disjoint_arraycopy = generate_disjoint_long_copy(&entry, "jlong_disjoint_arraycopy");
+    StubRoutines::_jlong_arraycopy = generate_conjoint_long_copy(entry, &entry_jlong_arraycopy, "jlong_arraycopy");
 
     StubRoutines::_jbyte_fill = generate_fill(T_BYTE, false, "jbyte_fill");
     StubRoutines::_jshort_fill = generate_fill(T_SHORT, false, "jshort_fill");
@@ -1817,30 +1765,16 @@ class StubGenerator: public StubCodeGenerator {
     StubRoutines::_arrayof_oop_arraycopy_uninit = StubRoutines::_oop_arraycopy_uninit;
     StubRoutines::_arrayof_jlong_arraycopy      = StubRoutines::_jlong_arraycopy;
 
-    StubRoutines::_checkcast_arraycopy =
-        generate_checkcast_copy("checkcast_arraycopy", &entry_checkcast_arraycopy);
-    StubRoutines::_checkcast_arraycopy_uninit =
-        generate_checkcast_copy("checkcast_arraycopy_uninit", NULL, /*dest_uninitialized*/true);
+    StubRoutines::_checkcast_arraycopy = generate_checkcast_copy("checkcast_arraycopy", &entry_checkcast_arraycopy);
+    StubRoutines::_checkcast_arraycopy_uninit = generate_checkcast_copy("checkcast_arraycopy_uninit", NULL, /*dest_uninitialized*/true);
 
-    StubRoutines::_unsafe_arraycopy =
-        generate_unsafe_copy("unsafe_arraycopy",
-                               entry_jbyte_arraycopy,
-                               entry_jshort_arraycopy,
-                               entry_jint_arraycopy,
-                               entry_jlong_arraycopy);
+    StubRoutines::_unsafe_arraycopy = generate_unsafe_copy("unsafe_arraycopy", entry_jbyte_arraycopy, entry_jshort_arraycopy, entry_jint_arraycopy, entry_jlong_arraycopy);
 
-    StubRoutines::_generic_arraycopy =
-        generate_generic_copy("generic_arraycopy",
-                               entry_jbyte_arraycopy,
-                               entry_jshort_arraycopy,
-                               entry_jint_arraycopy,
-                               entry_oop_arraycopy,
-                               entry_jlong_arraycopy,
-                               entry_checkcast_arraycopy);
+    StubRoutines::_generic_arraycopy = generate_generic_copy("generic_arraycopy", entry_jbyte_arraycopy, entry_jshort_arraycopy, entry_jint_arraycopy, entry_oop_arraycopy, entry_jlong_arraycopy, entry_checkcast_arraycopy);
   }
 
   // AES intrinsic stubs
-  enum {AESBlockSize = 16};
+  enum { AESBlockSize = 16 };
 
   address generate_key_shuffle_mask() {
     __ align(16);
@@ -1922,7 +1856,6 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_encryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_encryptBlock");
     Label L_doLast;
@@ -2020,7 +1953,6 @@ class StubGenerator: public StubCodeGenerator {
   //   c_rarg2   - K (key) in little endian int array
   //
   address generate_aescrypt_decryptBlock() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "aescrypt_decryptBlock");
     Label L_doLast;
@@ -2144,7 +2076,6 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_cipherBlockChaining_encryptAESCrypt() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_encryptAESCrypt");
     address start = __ pc();
@@ -2301,7 +2232,6 @@ class StubGenerator: public StubCodeGenerator {
   //
 
   address generate_cipherBlockChaining_decryptAESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "cipherBlockChaining_decryptAESCrypt");
     address start = __ pc();
@@ -2474,7 +2404,6 @@ class StubGenerator: public StubCodeGenerator {
   //   rax       - input length
   //
   address generate_counterMode_AESCrypt_Parallel() {
-    assert(UseAES, "need AES instructions and misaligned SSE support");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "counterMode_AESCrypt");
     address start = __ pc();
@@ -2554,7 +2483,7 @@ class StubGenerator: public StubCodeGenerator {
     const XMMRegister xmm_from3             = xmm4;
 
     //for key_128, key_192, key_256
-    const int rounds[3] = {10, 12, 14};
+    const int rounds[3] = { 10, 12, 14 };
     Label L_singleBlockLoopTop[3];
     Label L_multiBlock_loopTop[3];
     Label L_key192_top, L_key256_top;
@@ -2914,7 +2843,6 @@ class StubGenerator: public StubCodeGenerator {
 
   /* Single and multi-block ghash operations */
   address generate_ghash_processBlocks() {
-    assert(UseGHASHIntrinsics, "need GHASH intrinsics and CLMUL support");
     __ align(CodeEntryAlignment);
     Label L_ghash_loop, L_exit;
     StubCodeMark mark(this, "StubRoutines", "ghash_processBlocks");
@@ -3062,7 +2990,6 @@ class StubGenerator: public StubCodeGenerator {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-    assert(UseCRC32Intrinsics, "need AVX and CLMUL instructions");
 
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
@@ -3074,7 +3001,6 @@ class StubGenerator: public StubCodeGenerator {
     const Register len   = rcx;  // length
     const Register table = rdi;  // crc_table address (reuse register)
     const Register tmp   = rbx;
-    assert_different_registers(crc, buf, len, table, tmp, rax);
 
     BLOCK_COMMENT("Entry:");
     __ enter(); // required for proper stackwalking of RuntimeStub frame
@@ -3118,7 +3044,6 @@ class StubGenerator: public StubCodeGenerator {
   *       rax  - int crc result
   */
   address generate_updateBytesCRC32C(bool is_pclmulqdq_supported) {
-    assert(UseCRC32CIntrinsics, "need SSE4_2");
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32C");
     address start = __ pc();
@@ -3131,7 +3056,6 @@ class StubGenerator: public StubCodeGenerator {
     const Register empty = 0; // will never be used, in order not
                               // to change a signature for crc32c_IPL_Alg2_Alt2
                               // between 64/32 I'm just keeping it here
-    assert_different_registers(crc, buf, len, d, g, h);
 
     BLOCK_COMMENT("Entry:");
     __ enter(); // required for proper stackwalking of RuntimeStub frame
@@ -3489,7 +3413,6 @@ class StubGenerator: public StubCodeGenerator {
       __ movptr(Address(rsp, arg1_off * wordSize), arg1);
     }
     if (arg2 != noreg) {
-      assert(arg1 != noreg, "missing reg arg");
       __ movptr(Address(rsp, arg2_off * wordSize), arg2);
     }
 
@@ -3554,8 +3477,7 @@ class StubGenerator: public StubCodeGenerator {
     //       the disadvantage of having a much more complicated generator structure. See also comment in stubRoutines.hpp.
     StubRoutines::_forward_exception_entry      = generate_forward_exception();
 
-    StubRoutines::_call_stub_entry              =
-      generate_call_stub(StubRoutines::_call_stub_return_address);
+    StubRoutines::_call_stub_entry              = generate_call_stub(StubRoutines::_call_stub_return_address);
     // is referenced by megamorphic call
     StubRoutines::_catch_exception_entry        = generate_catch_exception();
 

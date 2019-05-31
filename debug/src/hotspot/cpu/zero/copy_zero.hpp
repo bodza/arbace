@@ -72,28 +72,26 @@ static void pd_conjoint_jlongs_atomic(const jlong* from, jlong* to, size_t count
 }
 
 static void pd_conjoint_oops_atomic(const oop* from, oop* to, size_t count) {
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
   _Copy_conjoint_jlongs_atomic((const jlong*)from, (jlong*)to, count);
 }
 
-static void pd_arrayof_conjoint_bytes(const HeapWord* from, HeapWord* to, size_t    count) {
+static void pd_arrayof_conjoint_bytes(const HeapWord* from, HeapWord* to, size_t count) {
   _Copy_arrayof_conjoint_bytes(from, to, count);
 }
 
-static void pd_arrayof_conjoint_jshorts(const HeapWord* from, HeapWord* to, size_t    count) {
+static void pd_arrayof_conjoint_jshorts(const HeapWord* from, HeapWord* to, size_t count) {
   _Copy_arrayof_conjoint_jshorts(from, to, count);
 }
 
-static void pd_arrayof_conjoint_jints(const HeapWord* from, HeapWord* to, size_t    count) {
+static void pd_arrayof_conjoint_jints(const HeapWord* from, HeapWord* to, size_t count) {
   _Copy_arrayof_conjoint_jints(from, to, count);
 }
 
-static void pd_arrayof_conjoint_jlongs(const HeapWord* from, HeapWord* to, size_t    count) {
+static void pd_arrayof_conjoint_jlongs(const HeapWord* from, HeapWord* to, size_t count) {
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 }
 
-static void pd_arrayof_conjoint_oops(const HeapWord* from, HeapWord* to, size_t    count) {
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
+static void pd_arrayof_conjoint_oops(const HeapWord* from, HeapWord* to, size_t count) {
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 }
 
@@ -106,7 +104,7 @@ static void pd_fill_to_words(HeapWord* tohw, size_t count, juint value) {
   }
 }
 
-static void pd_fill_to_aligned_words(HeapWord* tohw, size_t    count, juint     value) {
+static void pd_fill_to_aligned_words(HeapWord* tohw, size_t count, juint value) {
   pd_fill_to_words(tohw, count, value);
 }
 

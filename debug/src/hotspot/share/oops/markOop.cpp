@@ -13,10 +13,7 @@ void markOopDesc::print_on(outputStream* st) const {
     if (mon == NULL) {
       st->print("NULL (this should never be seen!)");
     } else {
-      st->print("{count=0x%08x,waiters=0x%08x"
-                ",recursions=" INTPTR_FORMAT ",owner=" INTPTR_FORMAT "}",
-                mon->count(), mon->waiters(), mon->recursions(),
-                p2i(mon->owner()));
+      st->print("{count=0x%08x,waiters=0x%08x,recursions=" INTPTR_FORMAT ",owner=" INTPTR_FORMAT "}", mon->count(), mon->waiters(), mon->recursions(), p2i(mon->owner()));
     }
   } else if (is_locked()) {
     st->print(" locked(" INTPTR_FORMAT ")->", value());
@@ -36,7 +33,6 @@ void markOopDesc::print_on(outputStream* st) const {
       st->print("??");
     }
   } else {
-    assert(is_unlocked() || has_bias_pattern(), "just checking");
     st->print("mark(");
     if (has_bias_pattern()) st->print("biased,");
     st->print("hash " INTPTR_FORMAT ",", hash());

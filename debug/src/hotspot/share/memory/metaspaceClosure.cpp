@@ -21,7 +21,6 @@ void MetaspaceClosure::push_impl(MetaspaceClosure::Ref* ref, Writability w) {
       read_only = true;
       break;
     default:
-      assert(w == _default, "must be");
       read_only = ref->is_read_only_by_default();
     }
     if (do_ref(ref, read_only)) { // true means we want to iterate the embedded pointer in <ref>
@@ -33,11 +32,9 @@ void MetaspaceClosure::push_impl(MetaspaceClosure::Ref* ref, Writability w) {
 bool UniqueMetaspaceClosure::do_ref(MetaspaceClosure::Ref* ref, bool read_only) {
   bool* found = _has_been_visited.get(ref->obj());
   if (found != NULL) {
-    assert(*found == read_only, "must be");
     return false; // Already visited: no need to iterate embedded pointers.
   } else {
     bool isnew = _has_been_visited.put(ref->obj(), read_only);
-    assert(isnew, "sanity");
     do_unique_ref(ref, read_only);
     return true;  // Saw this for the first time: iterate the embedded pointers.
   }

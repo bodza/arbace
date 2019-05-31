@@ -12,7 +12,6 @@ G1HeapSizingPolicy::G1HeapSizingPolicy(const G1CollectedHeap* g1h, const G1Analy
   _analytics(analytics),
   _num_prev_pauses_for_heuristics(analytics->number_of_recorded_pause_times()) {
 
-  assert(MinOverThresholdForGrowth < _num_prev_pauses_for_heuristics, "Threshold must be less than %u", _num_prev_pauses_for_heuristics);
   clear_ratio_check_data();
 }
 
@@ -25,7 +24,6 @@ void G1HeapSizingPolicy::clear_ratio_check_data() {
 size_t G1HeapSizingPolicy::expansion_amount() {
   double recent_gc_overhead = _analytics->recent_avg_pause_time_ratio() * 100.0;
   double last_gc_overhead = _analytics->last_pause_time_ratio() * 100.0;
-  assert(GCTimeRatio > 0, "we should have set it to a default value set_g1_gc_flags() if a user set it to 0");
   const double gc_overhead_percent = 100.0 * (1.0 / (1.0 + GCTimeRatio));
 
   double threshold = gc_overhead_percent;
@@ -53,14 +51,12 @@ size_t G1HeapSizingPolicy::expansion_amount() {
   // is still over the threshold. This indicates a smaller number of GCs were
   // long enough to make the average exceed the threshold.
   bool filled_history_buffer = _pauses_since_start == _num_prev_pauses_for_heuristics;
-  if ((_ratio_over_threshold_count == MinOverThresholdForGrowth) ||
-      (filled_history_buffer && (recent_gc_overhead > threshold))) {
+  if ((_ratio_over_threshold_count == MinOverThresholdForGrowth) || (filled_history_buffer && (recent_gc_overhead > threshold))) {
     size_t min_expand_bytes = HeapRegion::GrainBytes;
     size_t reserved_bytes = _g1h->max_capacity();
     size_t committed_bytes = _g1h->capacity();
     size_t uncommitted_bytes = reserved_bytes - committed_bytes;
-    size_t expand_bytes_via_pct =
-      uncommitted_bytes * G1ExpandByPercentOfAvailable / 100;
+    size_t expand_bytes_via_pct = uncommitted_bytes * G1ExpandByPercentOfAvailable / 100;
     double scale_factor = 1.0;
 
     // If the current size is less than 1/4 of the Initial heap size, expand

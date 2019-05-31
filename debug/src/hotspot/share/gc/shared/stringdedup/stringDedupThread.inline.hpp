@@ -60,7 +60,6 @@ void StringDedupThreadImpl<S>::do_deduplication() {
 
 template <typename S>
 void StringDedupThreadImpl<S>::create() {
-  assert(_thread == NULL, "One string deduplication thread allowed");
   _thread = new StringDedupThreadImpl<S>();
 }
 

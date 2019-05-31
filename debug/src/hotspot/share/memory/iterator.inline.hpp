@@ -221,7 +221,7 @@ private:
   public:
     void (*_function[KLASS_ID_COUNT])(OopClosureType*, oop, Klass*);
 
-    Table(){
+    Table() {
       set_init_function<InstanceKlass>();
       set_init_function<InstanceRefKlass>();
       set_init_function<InstanceMirrorKlass>();
@@ -280,7 +280,7 @@ private:
   public:
     void (*_function[KLASS_ID_COUNT])(OopClosureType*, oop, Klass*, MemRegion);
 
-    Table(){
+    Table() {
       set_init_function<InstanceKlass>();
       set_init_function<InstanceRefKlass>();
       set_init_function<InstanceMirrorKlass>();
@@ -339,7 +339,7 @@ private:
   public:
     void (*_function[KLASS_ID_COUNT])(OopClosureType*, oop, Klass*);
 
-    Table(){
+    Table() {
       set_init_function<InstanceKlass>();
       set_init_function<InstanceRefKlass>();
       set_init_function<InstanceMirrorKlass>();

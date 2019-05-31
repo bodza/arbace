@@ -86,7 +86,7 @@
   // original sp we use that convention.
 
   intptr_t*     _unextended_sp;
-  void adjust_unextended_sp() {};
+  void adjust_unextended_sp() { };
 
   intptr_t* ptr_at_addr(int offset) const {
     return (intptr_t*) addr_at(offset);

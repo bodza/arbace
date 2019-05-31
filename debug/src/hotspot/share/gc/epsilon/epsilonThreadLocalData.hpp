@@ -11,10 +11,9 @@ private:
 
   EpsilonThreadLocalData() :
           _ergo_tlab_size(0),
-          _last_tlab_time(0) {}
+          _last_tlab_time(0) { }
 
   static EpsilonThreadLocalData* data(Thread* thread) {
-    assert(UseEpsilonGC, "Sanity");
     return thread->gc_data<EpsilonThreadLocalData>();
   }
 

@@ -12,7 +12,7 @@ uintx RTMLockingCounters::_calculation_flag = 0;
 
 class RTMLockingCalculationTask : public PeriodicTask {
  public:
-  RTMLockingCalculationTask(size_t interval_time) : PeriodicTask(interval_time){  }
+  RTMLockingCalculationTask(size_t interval_time) : PeriodicTask(interval_time) { }
 
   virtual void task() {
     RTMLockingCounters::_calculation_flag = 1;

@@ -18,7 +18,6 @@ public:
   int offset() { return _offset; }
 
   void* operator new(size_t ignore, DebugInformationRecorder* dir) throw() {
-    assert(ignore == sizeof(DIR_Chunk), "");
     if (dir->_next_chunk >= dir->_next_chunk_limit) {
       const int CHUNK = 100;
       dir->_next_chunk = NEW_RESOURCE_ARRAY(DIR_Chunk, CHUNK);
@@ -49,9 +48,7 @@ public:
     address buf = dir->stream()->buffer();
     for (int i = end_index; --i >= start_index; ) {
       DIR_Chunk* that = arr->at(i);
-      if (hash   == that->_hash &&
-          length == that->_length &&
-          0 == memcmp(buf + this->_offset, buf + that->_offset, length)) {
+      if (hash   == that->_hash && length == that->_length && 0 == memcmp(buf + this->_offset, buf + that->_offset, length)) {
         return that;
       }
     }
@@ -94,9 +91,6 @@ DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder)
   // make sure that there is no stream_decode_offset that is zero
   _stream->write_byte((jbyte)0xFF);
 
-  // make sure that we can distinguish the value "serialized_null" from offsets
-  assert(_stream->position() > serialized_null, "sanity");
-
   _oop_recorder = oop_recorder;
 
   _all_chunks    = new GrowableArray<DIR_Chunk*>(300);
@@ -111,7 +105,6 @@ void DebugInformationRecorder::add_oopmap(int pc_offset, OopMap* map) {
 }
 
 void DebugInformationRecorder::add_safepoint(int pc_offset, OopMap* map) {
-  assert(!_oop_recorder->is_complete(), "not frozen yet");
   // Store the new safepoint
 
   // Add the oop map
@@ -119,20 +112,15 @@ void DebugInformationRecorder::add_safepoint(int pc_offset, OopMap* map) {
 
   add_new_pc_offset(pc_offset);
 
-  assert(_recording_state == rs_null, "nesting of recording calls");
 }
 
 void DebugInformationRecorder::add_non_safepoint(int pc_offset) {
-  assert(!_oop_recorder->is_complete(), "not frozen yet");
-  assert(_recording_non_safepoints, "must be recording non-safepoints");
 
   add_new_pc_offset(pc_offset);
 
-  assert(_recording_state == rs_null, "nesting of recording calls");
 }
 
 void DebugInformationRecorder::add_new_pc_offset(int pc_offset) {
-  assert(_pcs_length == 0 || last_pc()->pc_offset() < pc_offset, "must specify a new, larger pc offset");
 
   // add the pcdesc
   if (_pcs_length == _pcs_size) {
@@ -145,7 +133,6 @@ void DebugInformationRecorder::add_new_pc_offset(int pc_offset) {
     _pcs_size = new_pcs_size;
     _pcs      = new_pcs;
   }
-  assert(_pcs_size > _pcs_length, "There must be room for after expanding");
 
   _pcs[_pcs_length++] = PcDesc(pc_offset, DebugInformationRecorder::serialized_null,
                                DebugInformationRecorder::serialized_null);
@@ -153,13 +140,11 @@ void DebugInformationRecorder::add_new_pc_offset(int pc_offset) {
 
 int DebugInformationRecorder::serialize_monitor_values(GrowableArray<MonitorValue*>* monitors) {
   if (monitors == NULL || monitors->is_empty()) return DebugInformationRecorder::serialized_null;
-  assert(_recording_state == rs_safepoint, "must be recording a safepoint");
   int result = stream()->position();
   stream()->write_int(monitors->length());
   for (int index = 0; index < monitors->length(); index++) {
     monitors->at(index)->write_on(stream());
   }
-  assert(result != serialized_null, "sanity");
 
   // (See comment below on DebugInformationRecorder::describe_scope.)
   int shared_result = find_sharable_decode_offset(result);
@@ -173,9 +158,7 @@ int DebugInformationRecorder::serialize_monitor_values(GrowableArray<MonitorValu
 
 int DebugInformationRecorder::serialize_scope_values(GrowableArray<ScopeValue*>* values) {
   if (values == NULL || values->is_empty()) return DebugInformationRecorder::serialized_null;
-  assert(_recording_state == rs_safepoint, "must be recording a safepoint");
   int result = stream()->position();
-  assert(result != serialized_null, "sanity");
   stream()->write_int(values->length());
   for (int index = 0; index < values->length(); index++) {
     values->at(index)->write_on(stream());
@@ -193,15 +176,12 @@ int DebugInformationRecorder::serialize_scope_values(GrowableArray<ScopeValue*>*
 
 int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
   int stream_length = stream()->position() - stream_offset;
-  assert(stream_offset != serialized_null, "should not be null");
-  assert(stream_length != 0, "should not be empty");
 
   DIR_Chunk* ns = new(this) DIR_Chunk(stream_offset, stream_length, this);
 
   DIR_Chunk* match = _all_chunks->insert_sorted<DIR_Chunk::compare>(ns);
   if (match != ns) {
     // Found an existing chunk
-    assert(ns+1 == _next_chunk, "");
     _next_chunk = ns;
     return match->offset();
   } else {
@@ -212,20 +192,8 @@ int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
 
 // must call add_safepoint before: it sets PcDesc and this routine uses
 // the last PcDesc set
-void DebugInformationRecorder::describe_scope(int         pc_offset,
-                                              const methodHandle& methodH,
-                                              ciMethod*   method,
-                                              int         bci,
-                                              bool        reexecute,
-                                              bool        rethrow_exception,
-                                              bool        is_method_handle_invoke,
-                                              bool        return_oop,
-                                              DebugToken* locals,
-                                              DebugToken* expressions,
-                                              DebugToken* monitors) {
-  assert(_recording_state != rs_null, "nesting of recording calls");
+void DebugInformationRecorder::describe_scope(int pc_offset, const methodHandle& methodH, ciMethod* method, int bci, bool reexecute, bool rethrow_exception, bool is_method_handle_invoke, bool return_oop, DebugToken* locals, DebugToken* expressions, DebugToken* monitors) {
   PcDesc* last_pd = last_pc();
-  assert(last_pd->pc_offset() == pc_offset, "must be last pc");
   int sender_stream_offset = last_pd->scope_decode_offset();
   // update the stream offset of current pc desc
   int stream_offset = stream()->position();
@@ -252,7 +220,6 @@ void DebugInformationRecorder::describe_scope(int         pc_offset,
   int method_enc_index = oop_recorder()->find_index(method_enc);
   stream()->write_int(method_enc_index);
   stream()->write_bci(bci);
-  assert(method == NULL || (method->is_native() && bci == 0) || (!method->is_native() && 0 <= bci && bci < method->code_size()) || bci == -1, "illegal bci");
 
   // serialize the locals/expressions/monitors
   stream()->write_int((intptr_t) locals);
@@ -286,7 +253,6 @@ void DebugInformationRecorder::dump_object_pool(GrowableArray<ScopeValue*>* obje
 }
 
 void DebugInformationRecorder::end_scopes(int pc_offset, bool is_safepoint) {
-  assert(_recording_state == (is_safepoint? rs_safepoint: rs_non_safepoint), "nesting of recording calls");
 
   // Try to compress away an equivalent non-safepoint predecessor.
   // (This only works because we have previously recognized redundant
@@ -302,7 +268,6 @@ void DebugInformationRecorder::end_scopes(int pc_offset, bool is_safepoint) {
     // In addition, it does not matter if the last PcDesc
     // is for a safepoint or not.
     if (_prev_safepoint_pc < prev->pc_offset() && prev->is_same_info(last)) {
-      assert(prev == last-1, "sane");
       prev->set_pc_offset(pc_offset);
       _pcs_length -= 1;
     }
@@ -316,12 +281,10 @@ void DebugInformationRecorder::end_scopes(int pc_offset, bool is_safepoint) {
 }
 
 DebugToken* DebugInformationRecorder::create_scope_values(GrowableArray<ScopeValue*>* values) {
-  assert(!recorders_frozen(), "not frozen yet");
   return (DebugToken*) (intptr_t) serialize_scope_values(values);
 }
 
 DebugToken* DebugInformationRecorder::create_monitor_values(GrowableArray<MonitorValue*>* monitors) {
-  assert(!recorders_frozen(), "not frozen yet");
   return (DebugToken*) (intptr_t) serialize_monitor_values(monitors);
 }
 

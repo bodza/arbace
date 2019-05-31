@@ -79,24 +79,19 @@ class CallInfo : public StackObj {
   CallKind     call_kind() const                 { return _call_kind; }
   int          call_index() const                { return _call_index; }
   int          vtable_index() const {
-    // Even for interface calls the vtable index could be non-negative.
-    // See CallInfo::set_interface.
-    assert(has_vtable_index() || is_statically_bound(), "");
-    assert(call_kind() == vtable_call || call_kind() == direct_call, "");
     // The returned value is < 0 if the call is statically bound.
     // But, the returned value may be >= 0 even if the kind is direct_call.
     // It is up to the caller to decide which way to go.
     return _call_index;
   }
   int          itable_index() const {
-    assert(call_kind() == itable_call, "");
     // The returned value is always >= 0, a valid itable index.
     return _call_index;
   }
 
   // debugging
-  void         verify() {};
-  void         print()  {};
+  void         verify() { };
+  void         print()  { };
 };
 
 // Condensed information from constant pool to use to resolve the method or field.
@@ -128,20 +123,20 @@ class LinkInfo : public StackObj {
            constantTag tag = JVM_CONSTANT_Invalid) :
     _resolved_klass(resolved_klass),
     _name(name), _signature(signature), _current_klass(current_klass), _current_method(methodHandle()),
-    _check_access(check_access == needs_access_check), _tag(tag) {}
+    _check_access(check_access == needs_access_check), _tag(tag) { }
 
   LinkInfo(Klass* resolved_klass, Symbol* name, Symbol* signature, const methodHandle& current_method,
            AccessCheck check_access = needs_access_check,
            constantTag tag = JVM_CONSTANT_Invalid) :
     _resolved_klass(resolved_klass),
     _name(name), _signature(signature), _current_klass(current_method->method_holder()), _current_method(current_method),
-    _check_access(check_access == needs_access_check), _tag(tag) {}
+    _check_access(check_access == needs_access_check), _tag(tag) { }
 
   // Case where we just find the method and don't check access against the current class
   LinkInfo(Klass* resolved_klass, Symbol*name, Symbol* signature) :
     _resolved_klass(resolved_klass),
     _name(name), _signature(signature), _current_klass(NULL), _current_method(methodHandle()),
-    _check_access(false), _tag(JVM_CONSTANT_Invalid) {}
+    _check_access(false), _tag(JVM_CONSTANT_Invalid) { }
 
   // accessors
   Symbol* name() const               { return _name; }
@@ -153,7 +148,7 @@ class LinkInfo : public StackObj {
   bool check_access() const          { return _check_access; }
   char* method_string() const;
 
-  void         print()  {};
+  void         print()  { };
 };
 
 // Link information for getfield/putfield & getstatic/putstatic bytecodes

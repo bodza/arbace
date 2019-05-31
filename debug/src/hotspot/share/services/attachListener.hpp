@@ -27,12 +27,12 @@ struct AttachOperationFunctionInfo {
 
 class AttachListener: AllStatic {
  public:
-  static void vm_start() {};
-  static void init()  {};
-  static void abort() {};
+  static void vm_start() { };
+  static void init()  { };
+  static void abort() { };
 
   // invoke to perform clean-up tasks when all clients detach
-  static void detachall() {};
+  static void detachall() { };
 
   // indicates if the Attach Listener needs to be created at startup
   static bool init_at_startup() { return false; };

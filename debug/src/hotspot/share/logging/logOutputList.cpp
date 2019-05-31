@@ -8,13 +8,11 @@
 
 jint LogOutputList::increase_readers() {
   jint result = Atomic::add(1, &_active_readers);
-  assert(_active_readers > 0, "Ensure we have consistent state");
   return result;
 }
 
 jint LogOutputList::decrease_readers() {
   jint result = Atomic::add(-1, &_active_readers);
-  assert(result >= 0, "Ensure we have consistent state");
   return result;
 }
 
@@ -46,7 +44,6 @@ LogOutputList::LogOutputNode* LogOutputList::find(const LogOutput* output) const
 }
 
 void LogOutputList::remove_output(LogOutputList::LogOutputNode* node) {
-  assert(node != NULL, "Node must be non-null");
 
   // Remove node from _level_start first
   bool found = false;
@@ -65,7 +62,6 @@ void LogOutputList::remove_output(LogOutputList::LogOutputNode* node) {
       break;
     }
   }
-  assert(found, "Node to be removed should always be found");
 
   wait_until_no_readers();
   delete node;

@@ -247,8 +247,7 @@ address decode_env::handle_event(const char* event, address arg) {
     }
   } else if (match(event, "mach")) {
     static char buffer[32] = { 0, };
-    if (strcmp(buffer, (const char*)arg) != 0 ||
-        strlen((const char*)arg) > sizeof(buffer) - 1) {
+    if (strcmp(buffer, (const char*)arg) != 0 || strlen((const char*)arg) > sizeof(buffer) - 1) {
       // Only print this when the mach changes
       strncpy(buffer, (const char*)arg, sizeof(buffer) - 1);
       buffer[sizeof(buffer) - 1] = '\0';
@@ -272,8 +271,7 @@ void decode_env::print_address(address adr) {
   }
 
   int small_num = (int)(intptr_t)adr;
-  if ((intptr_t)adr == (intptr_t)small_num
-      && -1 <= small_num && small_num <= 9) {
+  if ((intptr_t)adr == (intptr_t)small_num && -1 <= small_num && small_num <= 9) {
     st->print("%d", small_num);
     return;
   }
@@ -298,8 +296,7 @@ void decode_env::print_address(address adr) {
     }
 
     BarrierSet* bs = BarrierSet::barrier_set();
-    if (bs->is_a(BarrierSet::CardTableBarrierSet) &&
-        adr == ci_card_table_address_as<address>()) {
+    if (bs->is_a(BarrierSet::CardTableBarrierSet) && adr == ci_card_table_address_as<address>()) {
       st->print("word_map_base");
       if (WizardMode) st->print(" " INTPTR_FORMAT, p2i(adr));
       return;
@@ -343,9 +340,7 @@ void decode_env::print_insn_bytes(address pc, address pc_limit) {
   outputStream* st = output();
   size_t incr = 1;
   size_t perline = _bytes_per_line;
-  if ((size_t) Disassembler::pd_instruction_alignment() >= sizeof(int)
-      && !((uintptr_t)pc % sizeof(int))
-      && !((uintptr_t)pc_limit % sizeof(int))) {
+  if ((size_t) Disassembler::pd_instruction_alignment() >= sizeof(int) && !((uintptr_t)pc % sizeof(int)) && !((uintptr_t)pc_limit % sizeof(int))) {
     incr = sizeof(int);
     if (perline % incr)  perline += incr - (perline % incr);
   }
@@ -384,11 +379,9 @@ static int printf_to_env(void* env_pv, const char* format, ...) {
   const char* raw = NULL;
   if (flen == 0)  return 0;
   if (flen == 1 && format[0] == '\n') { st->bol(); return 1; }
-  if (flen < 2 ||
-      strchr(format, '%') == NULL) {
+  if (flen < 2 || strchr(format, '%') == NULL) {
     raw = format;
-  } else if (format[0] == '%' && format[1] == '%' &&
-             strchr(format+2, '%') == NULL) {
+  } else if (format[0] == '%' && format[1] == '%' && strchr(format+2, '%') == NULL) {
     // happens a lot on machines with names like %foo
     flen--;
     raw = format+1;
@@ -408,8 +401,6 @@ static int printf_to_env(void* env_pv, const char* format, ...) {
 
 address decode_env::decode_instructions(address start, address end) {
   _start = start; _end = end;
-
-  assert(((((intptr_t)start | (intptr_t)end) % Disassembler::pd_instruction_alignment()) == 0), "misaligned insn addr");
 
   const int show_bytes = false; // for disassembler debugging
 
@@ -484,8 +475,7 @@ void Disassembler::decode(CodeBlob* cb, outputStream* st) {
   env.decode_instructions(cb->code_begin(), cb->code_end());
 }
 
-void Disassembler::decode(address start, address end, outputStream* st, CodeStrings c,
-                          ptrdiff_t offset) {
+void Disassembler::decode(address start, address end, outputStream* st, CodeStrings c, ptrdiff_t offset) {
   ttyLocker ttyl;
   if (!load_library())  return;
   decode_env env(CodeCache::find_blob_unsafe(start), st, c, offset);

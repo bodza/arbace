@@ -27,8 +27,6 @@ class MetadataFactory : AllStatic {
   template <typename T>
   static void free_array(ClassLoaderData* loader_data, Array<T>* data) {
     if (data != NULL) {
-      assert(loader_data != NULL, "shouldn't pass null");
-      assert(!data->is_shared(), "cannot deallocate array in shared spaces");
       int size = data->size();
       loader_data->metaspace_non_null()->deallocate((MetaWord*)data, size, false);
     }
@@ -38,11 +36,7 @@ class MetadataFactory : AllStatic {
   template <class T>
   static void free_metadata(ClassLoaderData* loader_data, T md) {
     if (md != NULL) {
-      assert(loader_data != NULL, "shouldn't pass null");
       int size = md->size();
-      // Call metadata's deallocate function which will call deallocate fields
-      assert(!md->on_stack(), "can't deallocate things on stack");
-      assert(!md->is_shared(), "cannot deallocate if in shared spaces");
       md->deallocate_contents(loader_data);
       loader_data->metaspace_non_null()->deallocate((MetaWord*)md, size, md->is_klass());
     }

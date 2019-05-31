@@ -20,18 +20,17 @@ class TypeArrayKlass : public ArrayKlass {
   TypeArrayKlass(BasicType type, Symbol* name);
   static TypeArrayKlass* allocate(ClassLoaderData* loader_data, BasicType type, Symbol* name, TRAPS);
  public:
-  TypeArrayKlass() {} // For dummy objects.
+  TypeArrayKlass() { } // For dummy objects.
 
   // instance variables
   jint max_length()                     { return _max_length; }
-  void set_max_length(jint m)           { _max_length = m;    }
+  void set_max_length(jint m)           { _max_length = m; }
 
   // klass allocation
   static TypeArrayKlass* create_klass(BasicType type, const char* name_str,
                                TRAPS);
   static inline Klass* create_klass(BasicType type, int scale, TRAPS) {
     TypeArrayKlass* tak = create_klass(type, external_name(type), CHECK_NULL);
-    assert(scale == (1 << tak->log2_element_size()), "scale must check out");
     return tak;
   }
 
@@ -85,7 +84,6 @@ class TypeArrayKlass : public ArrayKlass {
   }
 
   static const TypeArrayKlass* cast(const Klass* k) {
-    assert(k->is_typeArray_klass(), "cast to TypeArrayKlass");
     return static_cast<const TypeArrayKlass*>(k);
   }
 

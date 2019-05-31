@@ -66,8 +66,7 @@ double AbsSeq::dvariance() const {
     // due to loss-of-precision errors, the variance might be negative
     // by a small bit
 
-    guarantee(-0.1 < result && result < 0.0,
-               "if variance is negative, it should be very small");
+    guarantee(-0.1 < result && result < 0.0, "if variance is negative, it should be very small");
     result = 0.0;
   }
   return result;

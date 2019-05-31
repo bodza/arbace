@@ -207,7 +207,6 @@ static void pd_conjoint_jints_atomic(const jint* from, jint* to, size_t count) {
 #ifdef AMD64
   _Copy_conjoint_jints_atomic(from, to, count);
 #else
-  assert(HeapWordSize == BytesPerInt, "heapwords and jints must be the same size");
   // pd_conjoint_words is word-atomic in this implementation.
   pd_conjoint_words((const HeapWord*)from, (HeapWord*)to, count);
 #endif
@@ -240,10 +239,8 @@ static void pd_conjoint_jlongs_atomic(const jlong* from, jlong* to, size_t count
 
 static void pd_conjoint_oops_atomic(const oop* from, oop* to, size_t count) {
 #ifdef AMD64
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
   _Copy_conjoint_jlongs_atomic((const jlong*)from, (jlong*)to, count);
 #else
-  assert(HeapWordSize == BytesPerOop, "heapwords and oops must be the same size");
   // pd_conjoint_words is word-atomic in this implementation.
   pd_conjoint_words((const HeapWord*)from, (HeapWord*)to, count);
 #endif
@@ -275,7 +272,6 @@ static void pd_arrayof_conjoint_jlongs(const HeapWord* from, HeapWord* to, size_
 
 static void pd_arrayof_conjoint_oops(const HeapWord* from, HeapWord* to, size_t count) {
 #ifdef AMD64
-  assert(BytesPerLong == BytesPerOop, "jlongs and oops must be the same size");
   _Copy_arrayof_conjoint_jlongs(from, to, count);
 #else
   pd_conjoint_oops_atomic((const oop*)from, (oop*)to, count);

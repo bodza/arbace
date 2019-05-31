@@ -39,7 +39,7 @@ class PairRep {
   T1 val1;
   T2 val2;
 
-  PairRep() : val1((T1)0), val2((T2)0) {}
+  PairRep() : val1((T1)0), val2((T2)0) { }
   void operator+=(const PairRep& rhs) {
     val1 += rhs.val1;
     val2 += rhs.val2;
@@ -88,8 +88,8 @@ class Representation {
   typedef typename TimeSource::Type Type;
  protected:
   Type _rep;
-  Representation(const Representation<TimeSource>& end, const Representation<TimeSource>& start) : _rep(end._rep - start._rep) {}
-  Representation() : _rep() {}
+  Representation(const Representation<TimeSource>& end, const Representation<TimeSource>& start) : _rep(end._rep - start._rep) { }
+  Representation() : _rep() { }
  public:
   void operator+=(const Representation<TimeSource>& rhs) {
     _rep += rhs._rep;
@@ -132,12 +132,12 @@ class Representation {
 template <typename TimeSource>
 class CounterRepresentation : public Representation<TimeSource> {
  protected:
-  CounterRepresentation(const CounterRepresentation& end, const CounterRepresentation& start) : Representation<TimeSource>(end, start) {}
+  CounterRepresentation(const CounterRepresentation& end, const CounterRepresentation& start) : Representation<TimeSource>(end, start) { }
   explicit CounterRepresentation(jlong value) : Representation<TimeSource>() {
     this->_rep = value;
   }
  public:
-  CounterRepresentation() : Representation<TimeSource>() {}
+  CounterRepresentation() : Representation<TimeSource>() { }
   typename TimeSource::Type value() const { return this->_rep; }
   operator typename TimeSource::Type() { return value(); }
 };
@@ -146,13 +146,13 @@ template <typename TimeSource>
 class CompositeCounterRepresentation : public Representation<TimeSource> {
  protected:
   CompositeCounterRepresentation(const CompositeCounterRepresentation& end, const CompositeCounterRepresentation& start) :
-    Representation<TimeSource>(end, start) {}
+    Representation<TimeSource>(end, start) { }
   explicit CompositeCounterRepresentation(jlong value) : Representation<TimeSource>() {
     this->_rep.val1 = value;
     this->_rep.val2 = value;
   }
  public:
-  CompositeCounterRepresentation() : Representation<TimeSource>() {}
+  CompositeCounterRepresentation() : Representation<TimeSource>() { }
   ElapsedCounterSource::Type value() const { return this->_rep.val1; }
   FastUnorderedElapsedCounterSource::Type ft_value() const { return this->_rep.val2; }
 };
@@ -164,9 +164,9 @@ template <template <typename> class Rep, typename TimeSource>
 class TimeInterval : public Rep<TimeSource> {
   template <template <typename> class, typename>
   friend class TimeInstant;
-  TimeInterval(const TimeInstant<Rep, TimeSource>& end, const TimeInstant<Rep, TimeSource>& start) : Rep<TimeSource>(end, start) {}
+  TimeInterval(const TimeInstant<Rep, TimeSource>& end, const TimeInstant<Rep, TimeSource>& start) : Rep<TimeSource>(end, start) { }
  public:
-  TimeInterval() : Rep<TimeSource>() {}
+  TimeInterval() : Rep<TimeSource>() { }
   TimeInterval<Rep, TimeSource> operator+(const TimeInterval<Rep, TimeSource>& rhs) const {
     TimeInterval<Rep, TimeSource> temp(*this);
     temp += rhs;
@@ -182,7 +182,7 @@ class TimeInterval : public Rep<TimeSource> {
 template <template <typename> class Rep, typename TimeSource>
 class TimeInstant : public Rep<TimeSource> {
  public:
-  TimeInstant() : Rep<TimeSource>() {}
+  TimeInstant() : Rep<TimeSource>() { }
   TimeInstant<Rep, TimeSource>& operator+=(const TimeInterval<Rep, TimeSource>& rhs) {
     Rep<TimeSource>::operator+=(rhs);
     return *this;
@@ -206,7 +206,7 @@ class TimeInstant : public Rep<TimeSource> {
     return temp;
   }
  private:
-  TimeInstant(jlong ticks) : Rep<TimeSource>(ticks) {}
+  TimeInstant(jlong ticks) : Rep<TimeSource>(ticks) { }
   friend class GranularTimer;
   friend class ObjectSample;
   //  GC VM tests

@@ -24,7 +24,6 @@ class G1Predictions {
   }
  public:
   G1Predictions(double sigma) : _sigma(sigma) {
-    assert(sigma >= 0.0, "Confidence must be larger than or equal to zero");
   }
 
   // Confidence factor.

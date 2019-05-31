@@ -248,7 +248,6 @@ JVMFlag::Flags JVMFlag::get_origin() {
 }
 
 void JVMFlag::set_origin(Flags origin) {
-  assert((origin & VALUE_ORIGIN_MASK) == origin, "sanity");
   Flags new_origin = Flags((origin == COMMAND_LINE) ? Flags(origin | ORIG_COMMAND_LINE) : origin);
   _flags = Flags((_flags & ~VALUE_ORIGIN_MASK) | new_origin);
 }
@@ -306,9 +305,7 @@ bool JVMFlag::is_constant_in_binary() const {
 }
 
 bool JVMFlag::is_unlocker() const {
-  return strcmp(_name, "UnlockDiagnosticVMOptions") == 0     ||
-  strcmp(_name, "UnlockExperimentalVMOptions") == 0   ||
-  is_unlocker_ext();
+  return strcmp(_name, "UnlockDiagnosticVMOptions") == 0     || strcmp(_name, "UnlockExperimentalVMOptions") == 0   || is_unlocker_ext();
 }
 
 bool JVMFlag::is_unlocked() const {
@@ -322,9 +319,7 @@ bool JVMFlag::is_unlocked() const {
 }
 
 void JVMFlag::clear_diagnostic() {
-  assert(is_diagnostic(), "sanity");
   _flags = Flags(_flags & ~KIND_DIAGNOSTIC);
-  assert(!is_diagnostic(), "sanity");
 }
 
 // Get custom message for this locked flag, or NULL if
@@ -614,17 +609,14 @@ void JVMFlag::print_kind(outputStream* st, unsigned int width) {
         if (is_first) {
           is_first = false;
         } else {
-          assert(buffer_used + 1 < buffer_size, "Too small buffer");
           jio_snprintf(kind + buffer_used, buffer_size - buffer_used, " ");
           buffer_used++;
         }
         size_t length = strlen(d.name);
-        assert(buffer_used + length < buffer_size, "Too small buffer");
         jio_snprintf(kind + buffer_used, buffer_size - buffer_used, "%s", d.name);
         buffer_used += length;
       }
     }
-    assert(buffer_used + 2 <= buffer_size, "Too small buffer");
     jio_snprintf(kind + buffer_used, buffer_size - buffer_used, "}");
     st->print("%*s", width, kind);
   }
@@ -816,7 +808,7 @@ static JVMFlag flagTable[] = {
              IGNORE_CONSTRAINT, \
              IGNORE_WRITEABLE)
   FLAGTABLE_EXT
-  {0, NULL, NULL}
+  { 0, NULL, NULL }
 };
 
 JVMFlag* JVMFlag::flags = flagTable;
@@ -892,24 +884,20 @@ JVMFlag* JVMFlag::fuzzy_match(const char* name, size_t length, bool allow_locked
 
 // Returns the address of the index'th element
 static JVMFlag* address_of_flag(JVMFlagsWithType flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   return &JVMFlag::flags[flag];
 }
 
 bool JVMFlagEx::is_default(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_default();
 }
 
 bool JVMFlagEx::is_ergo(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_ergonomic();
 }
 
 bool JVMFlagEx::is_cmdline(JVMFlags flag) {
-  assert((size_t)flag < JVMFlag::numFlags, "bad command line flag index");
   JVMFlag* f = &JVMFlag::flags[flag];
   return f->is_command_line();
 }
@@ -923,7 +911,6 @@ bool JVMFlag::wasSetOnCmdline(const char* name, bool* value) {
 
 void JVMFlagEx::setOnCmdLine(JVMFlagsWithType flag) {
   JVMFlag* faddr = address_of_flag(flag);
-  assert(faddr != NULL, "Unknown flag");
   faddr->set_command_line();
 }
 

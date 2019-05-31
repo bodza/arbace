@@ -69,7 +69,7 @@ class HeapRegionManager: public CHeapObj<mtGC> {
   uint _allocated_heapregions_length;
 
   HeapWord* heap_bottom() const { return _regions.bottom_address_mapped(); }
-  HeapWord* heap_end() const {return _regions.end_address_mapped(); }
+  HeapWord* heap_end() const { return _regions.end_address_mapped(); }
 
   void make_regions_available(uint index, uint num_regions = 1, WorkGang* pretouch_gang = NULL);
 
@@ -143,8 +143,6 @@ class HeapRegionManager: public CHeapObj<mtGC> {
     HeapRegion* hr = _free_list.remove_region(is_old);
 
     if (hr != NULL) {
-      assert(hr->next() == NULL, "Single region should not have next");
-      assert(is_available(hr->hrm_index()), "Must be committed");
     }
     return hr;
   }
@@ -225,7 +223,7 @@ class HeapRegionManager: public CHeapObj<mtGC> {
   void verify();
 
   // Do some sanity checking.
-  void verify_optional() {};
+  void verify_optional() { };
 };
 
 // The HeapRegionClaimer is used during parallel iteration over heap regions,

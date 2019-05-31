@@ -17,8 +17,8 @@ class ciMetadata: public ciBaseObject {
  protected:
   Metadata* _metadata;
 
-  ciMetadata(): _metadata(NULL) {}
-  ciMetadata(Metadata* o): _metadata(o) {}
+  ciMetadata(): _metadata(NULL) { }
+  ciMetadata(Metadata* o): _metadata(o) { }
 
   virtual bool is_classless() const         { return false; }
  public:
@@ -39,43 +39,33 @@ class ciMetadata: public ciBaseObject {
   virtual void dump_replay_data(outputStream* st) { /* do nothing */ }
 
   ciMethod*                as_method() {
-    assert(is_method(), "bad cast");
     return (ciMethod*)this;
   }
   ciMethodData*            as_method_data() {
-    assert(is_method_data(), "bad cast");
     return (ciMethodData*)this;
   }
   ciSymbol*                as_symbol() {
-    assert(is_symbol(), "bad cast");
     return (ciSymbol*)this;
   }
   ciType*                  as_type() {
-    assert(is_type(), "bad cast");
     return (ciType*)this;
   }
   ciReturnAddress*         as_return_address() {
-    assert(is_return_address(), "bad cast");
     return (ciReturnAddress*)this;
   }
   ciKlass*                 as_klass() {
-    assert(is_klass(), "bad cast");
     return (ciKlass*)this;
   }
   ciInstanceKlass*         as_instance_klass() {
-    assert(is_instance_klass(), "bad cast");
     return (ciInstanceKlass*)this;
   }
   ciArrayKlass*            as_array_klass() {
-    assert(is_array_klass(), "bad cast");
     return (ciArrayKlass*)this;
   }
   ciObjArrayKlass*         as_obj_array_klass() {
-    assert(is_obj_array_klass(), "bad cast");
     return (ciObjArrayKlass*)this;
   }
   ciTypeArrayKlass*        as_type_array_klass() {
-    assert(is_type_array_klass(), "bad cast");
     return (ciTypeArrayKlass*)this;
   }
 
@@ -86,7 +76,7 @@ class ciMetadata: public ciBaseObject {
   int hash() { return ident() * 31; } // ???
 
   void print(outputStream* st);
-  virtual void print_impl(outputStream* st) {}
+  virtual void print_impl(outputStream* st) { }
   virtual const char* type_string() { return "ciMetadata"; }
 
   void print()  { print(tty); }

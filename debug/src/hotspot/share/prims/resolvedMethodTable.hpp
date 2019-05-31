@@ -58,7 +58,6 @@ public:
   ResolvedMethodTable();
 
   static void create_table() {
-    assert(_the_table == NULL, "One symbol table allowed.");
     _the_table = new ResolvedMethodTable();
   }
 

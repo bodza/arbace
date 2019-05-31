@@ -64,7 +64,6 @@ class LastFrameAccessor : public StackObj {
   frame _last_frame;
 public:
   LastFrameAccessor(JavaThread* thread) {
-    assert(thread == Thread::current(), "sanity");
     _last_frame = thread->last_frame();
   }
   bool is_interpreted_frame() const              { return _last_frame.is_interpreted_frame(); }
@@ -137,17 +136,14 @@ IRT_ENTRY(void, InterpreterRuntime::ldc(JavaThread* thread, bool wide))
   int index = wide ? last_frame.get_index_u2(Bytecodes::_ldc_w) : last_frame.get_index_u1(Bytecodes::_ldc);
   constantTag tag = pool->tag_at(index);
 
-  assert(tag.is_unresolved_klass() || tag.is_klass(), "wrong ldc call");
   Klass* klass = pool->klass_at(index, CHECK);
     oop java_class = klass->java_mirror();
     thread->set_vm_result(java_class);
 IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::resolve_ldc(JavaThread* thread, Bytecodes::Code bytecode)) {
-  assert(bytecode == Bytecodes::_ldc || bytecode == Bytecodes::_ldc_w || bytecode == Bytecodes::_ldc2_w || bytecode == Bytecodes::_fast_aldc || bytecode == Bytecodes::_fast_aldc_w, "wrong bc");
   ResourceMark rm(thread);
-  const bool is_fast_aldc = (bytecode == Bytecodes::_fast_aldc ||
-                             bytecode == Bytecodes::_fast_aldc_w);
+  const bool is_fast_aldc = (bytecode == Bytecodes::_fast_aldc || bytecode == Bytecodes::_fast_aldc_w);
   LastFrameAccessor last_frame(thread);
   methodHandle m (thread, last_frame.method());
   Bytecode_loadconstant ldc(m, last_frame.bci());
@@ -163,7 +159,6 @@ IRT_ENTRY(void, InterpreterRuntime::resolve_ldc(JavaThread* thread, Bytecodes::C
   // Resolve the constant.  This does not do unboxing.
   // But it does replace Universe::the_null_sentinel by null.
   oop result = ldc.resolve_constant(CHECK);
-  assert(result != NULL || is_fast_aldc, "null result only valid for fast_aldc");
 
   thread->set_vm_result(result);
   if (!is_fast_aldc) {
@@ -226,8 +221,6 @@ IRT_ENTRY(void, InterpreterRuntime::multianewarray(JavaThread* thread, jint* fir
   int          i = last_frame.get_index_u2(Bytecodes::_multianewarray);
   Klass* klass   = constants->klass_at(i, CHECK);
   int   nof_dims = last_frame.number_of_dimensions();
-  assert(klass->is_klass(), "not a class");
-  assert(nof_dims >= 1, "multianewarray rank must be nonzero");
 
   // We must create an array of jints to pass to multi_allocate.
   ResourceMark rm(thread);
@@ -247,8 +240,6 @@ IRT_ENTRY(void, InterpreterRuntime::multianewarray(JavaThread* thread, jint* fir
 IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::register_finalizer(JavaThread* thread, oopDesc* obj))
-  assert(oopDesc::is_oop(obj), "must be a valid oop");
-  assert(obj->klass()->has_finalizer(), "shouldn't be here otherwise");
   InstanceKlass::register_finalizer(instanceOop(obj), CHECK);
 IRT_END
 
@@ -261,7 +252,6 @@ IRT_ENTRY(void, InterpreterRuntime::quicken_io_cc(JavaThread* thread))
   // We'd expect to assert that we're only here to quicken bytecodes, but in a multithreaded
   // program we might have seen an unquick'd bytecode in the interpreter but have another
   // thread quicken the bytecode before we get here.
-  // assert( cpool->tag_at(which).is_unresolved_klass(), "should only come here to quicken bytecodes" );
   Klass* klass = cpool->klass_at(which, CHECK);
   thread->set_vm_result_2(klass);
 IRT_END
@@ -269,14 +259,12 @@ IRT_END
 //------------------------------------------------------------------------------------------------------------------------
 // Exceptions
 
-void InterpreterRuntime::note_trap_inner(JavaThread* thread, int reason,
-                                         const methodHandle& trap_method, int trap_bci, TRAPS) {
+void InterpreterRuntime::note_trap_inner(JavaThread* thread, int reason, const methodHandle& trap_method, int trap_bci, TRAPS) {
   if (trap_method.not_null()) {
     MethodData* trap_mdo = trap_method->method_data();
     if (trap_mdo == NULL) {
       Method::build_interpreter_method_data(trap_method, THREAD);
       if (HAS_PENDING_EXCEPTION) {
-        assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOM error here");
         CLEAR_PENDING_EXCEPTION;
       }
       trap_mdo = trap_method->method_data();
@@ -293,7 +281,6 @@ void InterpreterRuntime::note_trap_inner(JavaThread* thread, int reason,
 // Assume the compiler is (or will be) interested in this event.
 // If necessary, create an MDO to hold the information, and record it.
 void InterpreterRuntime::note_trap(JavaThread* thread, int reason, TRAPS) {
-  assert(ProfileTraps, "call me only if profiling");
   LastFrameAccessor last_frame(thread);
   methodHandle trap_method(thread, last_frame.method());
   int trap_bci = trap_method->bci_from(last_frame.bcp());
@@ -324,7 +311,6 @@ void InterpreterRuntime::note_arrayCheck_trap(JavaThread* thread, Method *method
 static Handle get_preinitialized_exception(Klass* k, TRAPS) {
   // get klass
   InstanceKlass* klass = InstanceKlass::cast(k);
-  assert(klass->is_initialized(), "this klass should have been initialized during VM initialization");
   // create instance - do not call constructor since we may have no
   // (java) stack space left (should assert constructor is empty)
   Handle exception;
@@ -341,18 +327,14 @@ static Handle get_preinitialized_exception(Klass* k, TRAPS) {
 // klass to create an stack overflow error instance.  We do not call its
 // constructor for the same reason (it is empty, anyway).
 IRT_ENTRY(void, InterpreterRuntime::throw_StackOverflowError(JavaThread* thread))
-  Handle exception = get_preinitialized_exception(
-                                 SystemDictionary::StackOverflowError_klass(),
-                                 CHECK);
+  Handle exception = get_preinitialized_exception(SystemDictionary::StackOverflowError_klass(), CHECK);
   // Increment counter for hs_err file reporting
   Atomic::inc(&Exceptions::_stack_overflow_errors);
   THROW_HANDLE(exception);
 IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::throw_delayed_StackOverflowError(JavaThread* thread))
-  Handle exception = get_preinitialized_exception(
-                                 SystemDictionary::StackOverflowError_klass(),
-                                 CHECK);
+  Handle exception = get_preinitialized_exception(SystemDictionary::StackOverflowError_klass(), CHECK);
   java_lang_Throwable::set_message(exception(),
           Universe::delayed_stack_overflow_error_message());
   // Increment counter for hs_err file reporting
@@ -400,12 +382,10 @@ IRT_ENTRY(void, InterpreterRuntime::throw_ArrayIndexOutOfBoundsException(JavaThr
   THROW_MSG(vmSymbols::java_lang_ArrayIndexOutOfBoundsException(), ss.as_string());
 IRT_END
 
-IRT_ENTRY(void, InterpreterRuntime::throw_ClassCastException(
-  JavaThread* thread, oopDesc* obj))
+IRT_ENTRY(void, InterpreterRuntime::throw_ClassCastException(JavaThread* thread, oopDesc* obj))
 
   ResourceMark rm(thread);
-  char* message = SharedRuntime::generate_class_cast_message(
-    thread, obj->klass());
+  char* message = SharedRuntime::generate_class_cast_message(thread, obj->klass());
 
   if (ProfileTraps) {
     note_trap(thread, Deoptimization::Reason_class_check, CHECK);
@@ -455,7 +435,6 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
   // since at this moment the method hasn't been "officially" entered yet.
   if (thread->do_not_unlock_if_synchronized()) {
     ResourceMark rm;
-    assert(current_bci == 0,  "bci isn't zero for do_not_unlock_if_synchronized");
     thread->set_vm_result(exception);
 #ifdef CC_INTERP
     return (address) -1;
@@ -467,8 +446,6 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
   do {
     should_repeat = false;
 
-    // assertions
-
     // tracing
     if (log_is_enabled(Info, exceptions)) {
       ResourceMark rm(thread);
@@ -478,12 +455,6 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
                    h_method->print_value_string(), current_bci, p2i(thread), thread->name());
       Exceptions::log_exception(h_exception, tempst);
     }
-// Don't go paging in something which won't be used.
-//     else if (extable->length() == 0) {
-//       // disabled for now - interpreter is not using shortcut yet
-//       // (shortcut is not to call runtime if we have no exception handlers)
-//       // warning("performance bug: should not call runtime if method has no exception handlers");
-//     }
     // for AbortVMOnException flag
     Exceptions::debug_check_abort(h_exception);
 
@@ -544,7 +515,6 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
 IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::throw_pending_exception(JavaThread* thread))
-  assert(thread->has_pending_exception(), "must only ne called if there's an exception pending");
   // nothing to do - eventually we should remove this code entirely (see comments @ call sites)
 IRT_END
 
@@ -561,7 +531,6 @@ IRT_END
 IRT_ENTRY(void, InterpreterRuntime::throw_AbstractMethodErrorWithMethod(JavaThread* thread,
                                                                         Method* missingMethod))
   ResourceMark rm(thread);
-  assert(missingMethod != NULL, "sanity");
   methodHandle m(thread, missingMethod);
   LinkResolver::throw_abstract_method_error(m, THREAD);
 IRT_END
@@ -640,9 +609,7 @@ void InterpreterRuntime::resolve_get_put(JavaThread* thread, Bytecodes::Code byt
   // is completely initialized ala. in 2.17.5 in JVM Specification.
   InstanceKlass* klass = InstanceKlass::cast(info.field_holder());
   bool uninitialized_static = is_static && !klass->is_initialized();
-  bool has_initialized_final_update = info.field_holder()->major_version() >= 53 &&
-                                      info.has_initialized_final_update();
-  assert(!(has_initialized_final_update && !info.access_flags().is_final()), "Fields with initialized final updates must be final");
+  bool has_initialized_final_update = info.field_holder()->major_version() >= 53 && info.has_initialized_final_update();
 
   Bytecodes::Code get_code = (Bytecodes::Code)0;
   Bytecodes::Code put_code = (Bytecodes::Code)0;
@@ -679,20 +646,17 @@ IRT_ENTRY_NO_ASYNC(void, InterpreterRuntime::monitorenter(JavaThread* thread, Ba
     Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
   Handle h_obj(thread, elem->obj());
-  assert(Universe::heap()->is_in_reserved_or_null(h_obj()), "must be NULL or an object");
   if (UseBiasedLocking) {
     // Retry fast entry if bias is revoked to avoid unnecessary inflation
     ObjectSynchronizer::fast_enter(h_obj, elem->lock(), true, CHECK);
   } else {
     ObjectSynchronizer::slow_enter(h_obj, elem->lock(), CHECK);
   }
-  assert(Universe::heap()->is_in_reserved_or_null(elem->obj()), "must be NULL or an object");
 IRT_END
 
 //%note monitor_1
 IRT_ENTRY_NO_ASYNC(void, InterpreterRuntime::monitorexit(JavaThread* thread, BasicObjectLock* elem))
   Handle h_obj(thread, elem->obj());
-  assert(Universe::heap()->is_in_reserved_or_null(h_obj()), "must be NULL or an object");
   if (elem == NULL || h_obj()->is_unlocked()) {
     THROW(vmSymbols::java_lang_IllegalMonitorStateException());
   }
@@ -712,14 +676,10 @@ IRT_ENTRY(void, InterpreterRuntime::new_illegal_monitor_state_exception(JavaThre
   // trigger. Any current installed exception will be overwritten. This
   // method will be called during an exception unwind.
 
-  assert(!HAS_PENDING_EXCEPTION, "no pending exception");
   Handle exception(thread, thread->vm_result());
-  assert(exception() != NULL, "vm result should be set");
   thread->set_vm_result(NULL); // clear vm result before continuing (may cause memory leaks and assert failures)
   if (!exception->is_a(SystemDictionary::ThreadDeath_klass())) {
-    exception = get_preinitialized_exception(
-                       SystemDictionary::IllegalMonitorStateException_klass(),
-                       CATCH);
+    exception = get_preinitialized_exception(SystemDictionary::IllegalMonitorStateException_klass(), CATCH);
   }
   thread->set_vm_result(exception());
 IRT_END
@@ -742,16 +702,13 @@ void InterpreterRuntime::resolve_invoke(JavaThread* thread, Bytecodes::Code byte
   LastFrameAccessor last_frame(thread);
   // extract receiver from the outgoing argument list if necessary
   Handle receiver(thread, NULL);
-  if (bytecode == Bytecodes::_invokevirtual || bytecode == Bytecodes::_invokeinterface ||
-      bytecode == Bytecodes::_invokespecial) {
+  if (bytecode == Bytecodes::_invokevirtual || bytecode == Bytecodes::_invokeinterface || bytecode == Bytecodes::_invokespecial) {
     ResourceMark rm(thread);
     methodHandle m (thread, last_frame.method());
     Bytecode_invoke call(m, last_frame.bci());
     Symbol* signature = call.signature();
     receiver = Handle(thread, last_frame.callee_receiver(signature));
 
-    assert(Universe::heap()->is_in_reserved_or_null(receiver()), "sanity check");
-    assert(receiver.is_null() || !Universe::heap()->is_in_reserved(receiver->klass()), "sanity check");
   }
 
   // resolve method
@@ -776,23 +733,13 @@ void InterpreterRuntime::resolve_invoke(JavaThread* thread, Bytecodes::Code byte
 
   switch (info.call_kind()) {
   case CallInfo::direct_call:
-    cp_cache_entry->set_direct_call(
-      bytecode,
-      info.resolved_method(),
-      sender->is_interface());
+    cp_cache_entry->set_direct_call(bytecode, info.resolved_method(), sender->is_interface());
     break;
   case CallInfo::vtable_call:
-    cp_cache_entry->set_vtable_call(
-      bytecode,
-      info.resolved_method(),
-      info.vtable_index());
+    cp_cache_entry->set_vtable_call(bytecode, info.resolved_method(), info.vtable_index());
     break;
   case CallInfo::itable_call:
-    cp_cache_entry->set_itable_call(
-      bytecode,
-      info.resolved_klass(),
-      info.resolved_method(),
-      info.itable_index());
+    cp_cache_entry->set_itable_call(bytecode, info.resolved_klass(), info.resolved_method(), info.itable_index());
     break;
   default:  ShouldNotReachHere();
   }
@@ -874,7 +821,6 @@ IRT_END
 
 nmethod* InterpreterRuntime::frequency_counter_overflow(JavaThread* thread, address branch_bcp) {
   nmethod* nm = frequency_counter_overflow_inner(thread, branch_bcp);
-  assert(branch_bcp != NULL || nm == NULL, "always returns null for non OSR requests");
   if (branch_bcp != NULL && nm != NULL) {
     // This was a successful request for an OSR nmethod.  Because
     // frequency_counter_overflow_inner ends with a safepoint check,
@@ -904,14 +850,11 @@ IRT_ENTRY(nmethod*,
   UnlockFlagSaver fs(thread);
 
   LastFrameAccessor last_frame(thread);
-  assert(last_frame.is_interpreted_frame(), "must come from interpreter");
   methodHandle method(thread, last_frame.method());
   const int branch_bci = branch_bcp != NULL ? method->bci_from(branch_bcp) : InvocationEntryBci;
   const int bci = branch_bcp != NULL ? method->bci_from(last_frame.bcp()) : InvocationEntryBci;
 
-  assert(!HAS_PENDING_EXCEPTION, "Should not have any exceptions pending");
   nmethod* osr_nm = CompilationPolicy::policy()->event(method, method, branch_bci, bci, CompLevel_none, NULL, thread);
-  assert(!HAS_PENDING_EXCEPTION, "Event handler should not throw any exceptions");
 
   if (osr_nm != NULL) {
     // We may need to do on-stack replacement which requires that no
@@ -923,10 +866,10 @@ IRT_ENTRY(nmethod*,
     if (UseBiasedLocking) {
       ResourceMark rm;
       GrowableArray<Handle>* objects_to_revoke = new GrowableArray<Handle>();
-      for( BasicObjectLock *kptr = last_frame.monitor_end();
+      for ( BasicObjectLock *kptr = last_frame.monitor_end();
            kptr < last_frame.monitor_begin();
-           kptr = last_frame.next_monitor(kptr) ) {
-        if( kptr->obj() != NULL ) {
+           kptr = last_frame.next_monitor(kptr)) {
+        if (kptr->obj() != NULL ) {
           objects_to_revoke->append(Handle(THREAD, kptr->obj()));
         }
       }
@@ -937,7 +880,6 @@ IRT_ENTRY(nmethod*,
 IRT_END
 
 IRT_LEAF(jint, InterpreterRuntime::bcp_to_di(Method* method, address cur_bcp))
-  assert(ProfileInterpreter, "must be profiling interpreter");
   int bci = method->bci_from(cur_bcp);
   MethodData* mdo = method->method_data();
   if (mdo == NULL)  return 0;
@@ -949,24 +891,19 @@ IRT_ENTRY(void, InterpreterRuntime::profile_method(JavaThread* thread))
   // flag, in case this method triggers classloading which will call into Java.
   UnlockFlagSaver fs(thread);
 
-  assert(ProfileInterpreter, "must be profiling interpreter");
   LastFrameAccessor last_frame(thread);
-  assert(last_frame.is_interpreted_frame(), "must come from interpreter");
   methodHandle method(thread, last_frame.method());
   Method::build_interpreter_method_data(method, THREAD);
   if (HAS_PENDING_EXCEPTION) {
-    assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOM error here");
     CLEAR_PENDING_EXCEPTION;
     // and fall through...
   }
 IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::update_mdp_for_ret(JavaThread* thread, int return_bci))
-  assert(ProfileInterpreter, "must be profiling interpreter");
   ResourceMark rm(thread);
   HandleMark hm(thread);
   LastFrameAccessor last_frame(thread);
-  assert(last_frame.is_interpreted_frame(), "must come from interpreter");
   MethodData* h_mdo = last_frame.method()->method_data();
 
   // Grab a lock to ensure atomic access to setting the return bci and
@@ -985,7 +922,6 @@ IRT_END
 IRT_ENTRY(MethodCounters*, InterpreterRuntime::build_method_counters(JavaThread* thread, Method* m))
   MethodCounters* mcs = Method::build_method_counters(m, thread);
   if (HAS_PENDING_EXCEPTION) {
-    assert((PENDING_EXCEPTION->is_a(SystemDictionary::OutOfMemoryError_klass())), "we expect only an OOM error here");
     CLEAR_PENDING_EXCEPTION;
   }
   return mcs;
@@ -1104,7 +1040,6 @@ void SignatureHandlerLibrary::add(const methodHandle& method) {
           _fingerprints->append(fingerprint);
           _handlers->append(handler);
           // set handler index
-          assert(_fingerprints->length() == _handlers->length(), "sanity check");
           handler_index = _fingerprints->length() - 1;
         }
       }
@@ -1163,7 +1098,6 @@ address                  SignatureHandlerLibrary::_buffer       = NULL;
 
 IRT_ENTRY(void, InterpreterRuntime::prepare_native_call(JavaThread* thread, Method* method))
   methodHandle m(thread, method);
-  assert(m->is_native(), "sanity check");
   // lookup native function entry point if it doesn't exist
   bool in_base_library;
   if (!m->has_native_function()) {
@@ -1186,7 +1120,6 @@ IRT_LEAF(void, InterpreterRuntime::popframe_move_outgoing_args(JavaThread* threa
   HandleMark hm;
   ResourceMark rm;
   LastFrameAccessor last_frame(thread);
-  assert(last_frame.is_interpreted_frame(), "");
   jint bci = last_frame.bci();
   methodHandle mh(thread, last_frame.method());
   Bytecode_invoke invoke(mh, bci);

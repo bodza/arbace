@@ -150,7 +150,6 @@ public:
   }
 
   void set_trap_state(uint new_state) {
-    assert(ProfileTraps, "used only under +ProfileTraps");
     uint old_flags = _header._struct._traps;
     _header._struct._traps = new_state | old_flags;
   }
@@ -281,12 +280,10 @@ public:
 protected:
   // Low-level accessors for underlying data
   void set_intptr_at(int index, intptr_t value) {
-    assert(0 <= index && index < cell_count(), "oob");
     data()->set_cell_at(index, value);
   }
   void release_set_intptr_at(int index, intptr_t value);
   intptr_t intptr_at(int index) const {
-    assert(0 <= index && index < cell_count(), "oob");
     return data()->cell_at(index);
   }
   void set_uint_at(int index, uint value) {
@@ -368,77 +365,63 @@ public:
   virtual bool is_SpeculativeTrapData()const { return false; }
 
   BitData* as_BitData() const {
-    assert(is_BitData(), "wrong type");
     return is_BitData()         ? (BitData*)        this : NULL;
   }
   CounterData* as_CounterData() const {
-    assert(is_CounterData(), "wrong type");
     return is_CounterData()     ? (CounterData*)    this : NULL;
   }
   JumpData* as_JumpData() const {
-    assert(is_JumpData(), "wrong type");
     return is_JumpData()        ? (JumpData*)       this : NULL;
   }
   ReceiverTypeData* as_ReceiverTypeData() const {
-    assert(is_ReceiverTypeData(), "wrong type");
     return is_ReceiverTypeData() ? (ReceiverTypeData*)this : NULL;
   }
   VirtualCallData* as_VirtualCallData() const {
-    assert(is_VirtualCallData(), "wrong type");
     return is_VirtualCallData() ? (VirtualCallData*)this : NULL;
   }
   RetData* as_RetData() const {
-    assert(is_RetData(), "wrong type");
     return is_RetData()         ? (RetData*)        this : NULL;
   }
   BranchData* as_BranchData() const {
-    assert(is_BranchData(), "wrong type");
     return is_BranchData()      ? (BranchData*)     this : NULL;
   }
   ArrayData* as_ArrayData() const {
-    assert(is_ArrayData(), "wrong type");
     return is_ArrayData()       ? (ArrayData*)      this : NULL;
   }
   MultiBranchData* as_MultiBranchData() const {
-    assert(is_MultiBranchData(), "wrong type");
     return is_MultiBranchData() ? (MultiBranchData*)this : NULL;
   }
   ArgInfoData* as_ArgInfoData() const {
-    assert(is_ArgInfoData(), "wrong type");
     return is_ArgInfoData() ? (ArgInfoData*)this : NULL;
   }
   CallTypeData* as_CallTypeData() const {
-    assert(is_CallTypeData(), "wrong type");
     return is_CallTypeData() ? (CallTypeData*)this : NULL;
   }
   VirtualCallTypeData* as_VirtualCallTypeData() const {
-    assert(is_VirtualCallTypeData(), "wrong type");
     return is_VirtualCallTypeData() ? (VirtualCallTypeData*)this : NULL;
   }
   ParametersTypeData* as_ParametersTypeData() const {
-    assert(is_ParametersTypeData(), "wrong type");
     return is_ParametersTypeData() ? (ParametersTypeData*)this : NULL;
   }
   SpeculativeTrapData* as_SpeculativeTrapData() const {
-    assert(is_SpeculativeTrapData(), "wrong type");
     return is_SpeculativeTrapData() ? (SpeculativeTrapData*)this : NULL;
   }
 
   // Subclass specific initialization
-  virtual void post_initialize(BytecodeStream* stream, MethodData* mdo) {}
+  virtual void post_initialize(BytecodeStream* stream, MethodData* mdo) { }
 
   // GC support
-  virtual void clean_weak_klass_links(bool always_clean) {}
+  virtual void clean_weak_klass_links(bool always_clean) { }
 
   // Redefinition support
-  virtual void clean_weak_method_links() {}
+  virtual void clean_weak_method_links() { }
 
   // CI translation: ProfileData can represent both MethodDataOop data
   // as well as CIMethodData data. This function is provided for translating
   // an oop in a ProfileData to the ci equivalent. Generally speaking,
   // most ProfileData don't require any translation, so we provide the null
   // translation here, and the required translators are in the ci subclasses.
-  virtual void translate_from(const ProfileData* data) {}
+  virtual void translate_from(const ProfileData* data) { }
 
   virtual void print_data_on(outputStream* st, const char* extra = NULL) const {
     ShouldNotReachHere();
@@ -514,7 +497,7 @@ protected:
     counter_cell_count
   };
 public:
-  CounterData(DataLayout* layout) : BitData(layout) {}
+  CounterData(DataLayout* layout) : BitData(layout) { }
 
   virtual bool is_CounterData() const { return true; }
 
@@ -568,7 +551,6 @@ protected:
 
 public:
   JumpData(DataLayout* layout) : ProfileData(layout) {
-    assert(layout->tag() == DataLayout::jump_data_tag || layout->tag() == DataLayout::branch_data_tag, "wrong type");
   }
 
   virtual bool is_JumpData() const { return true; }
@@ -670,10 +652,8 @@ public:
 
   // type recorded
   static Klass* valid_klass(intptr_t k) {
-    if (!is_type_none(k) &&
-        !is_type_unknown(k)) {
+    if (!is_type_none(k) && !is_type_unknown(k)) {
       Klass* res = (Klass*)klass_part(k);
-      assert(res != NULL, "invalid");
       return res;
     } else {
       return NULL;
@@ -697,7 +677,7 @@ protected:
   const int _base_off;
 
   TypeEntries(int base_off)
-    : _base_off(base_off), _pd(NULL) {}
+    : _base_off(base_off), _pd(NULL) { }
 
   void set_intptr_at(int index, intptr_t value) {
     _pd->set_intptr_at(index, value);
@@ -742,7 +722,7 @@ private:
 public:
 
   TypeStackSlotEntries(int base_off, int nb_entries)
-    : TypeEntries(base_off), _number_of_entries(nb_entries) {}
+    : TypeEntries(base_off), _number_of_entries(nb_entries) { }
 
   static int compute_cell_count(Symbol* signature, bool include_receiver, int max);
 
@@ -762,25 +742,21 @@ public:
 
   // stack slot for entry i
   uint stack_slot(int i) const {
-    assert(i >= 0 && i < _number_of_entries, "oob");
     return _pd->uint_at(stack_slot_offset(i));
   }
 
   // set stack slot for entry i
   void set_stack_slot(int i, uint num) {
-    assert(i >= 0 && i < _number_of_entries, "oob");
     _pd->set_uint_at(stack_slot_offset(i), num);
   }
 
   // type for entry i
   intptr_t type(int i) const {
-    assert(i >= 0 && i < _number_of_entries, "oob");
     return _pd->intptr_at(type_offset_in_cells(i));
   }
 
   // set type for entry i
   void set_type(int i, intptr_t k) {
-    assert(i >= 0 && i < _number_of_entries, "oob");
     _pd->set_intptr_at(type_offset_in_cells(i), k);
   }
 
@@ -813,7 +789,7 @@ private:
 
 public:
   ReturnTypeEntry(int base_off)
-    : TypeEntries(base_off) {}
+    : TypeEntries(base_off) { }
 
   void post_initialize() {
     set_type(type_none());
@@ -926,7 +902,6 @@ private:
   }
 
   void check_number_of_arguments(int total) {
-    assert(number_of_arguments() == total, "should be set in DataLayout::initialize");
   }
 
 public:
@@ -935,19 +910,16 @@ public:
     _args(CounterData::static_cell_count()+TypeEntriesAtCall::header_cell_count(), number_of_arguments()),
     _ret(cell_count() - ReturnTypeEntry::static_cell_count())
   {
-    assert(layout->tag() == DataLayout::call_type_data_tag, "wrong type");
     // Some compilers (VC++) don't want this passed in member initialization list
     _args.set_profile_data(this);
     _ret.set_profile_data(this);
   }
 
   const TypeStackSlotEntries* args() const {
-    assert(has_arguments(), "no profiling of arguments");
     return &_args;
   }
 
   const ReturnTypeEntry* ret() const {
-    assert(has_return(), "no profiling of return value");
     return &_ret;
   }
 
@@ -968,9 +940,7 @@ public:
   virtual void post_initialize(BytecodeStream* stream, MethodData* mdo);
 
   virtual int cell_count() const {
-    return CounterData::static_cell_count() +
-      TypeEntriesAtCall::header_cell_count() +
-      int_at_unchecked(cell_count_global_offset());
+    return CounterData::static_cell_count() + TypeEntriesAtCall::header_cell_count() + int_at_unchecked(cell_count_global_offset());
   }
 
   int number_of_arguments() const {
@@ -978,13 +948,11 @@ public:
   }
 
   void set_argument_type(int i, Klass* k) {
-    assert(has_arguments(), "no arguments!");
     intptr_t current = _args.type(i);
     _args.set_type(i, TypeEntries::with_status(k, current));
   }
 
   void set_return_type(Klass* k) {
-    assert(has_return(), "no return!");
     intptr_t current = _ret.type();
     _ret.set_type(TypeEntries::with_status(k, current));
   }
@@ -995,7 +963,6 @@ public:
   // at least one argument.
   bool has_arguments() const {
     bool res = cell_count_no_header() >= TypeStackSlotEntries::per_arg_count();
-    assert(!res || TypeEntriesAtCall::arguments_profiling_enabled(), "no profiling of arguments");
     return res;
   }
 
@@ -1005,7 +972,6 @@ public:
   // is profiled in this object.
   bool has_return() const {
     bool res = (cell_count_no_header() % TypeStackSlotEntries::per_arg_count()) != 0;
-    assert(!res || TypeEntriesAtCall::return_profiling_enabled(), "no profiling of return values");
     return res;
   }
 
@@ -1063,7 +1029,6 @@ protected:
 
 public:
   ReceiverTypeData(DataLayout* layout) : CounterData(layout) {
-    assert(layout->tag() == DataLayout::receiver_type_data_tag || layout->tag() == DataLayout::virtual_call_data_tag || layout->tag() == DataLayout::virtual_call_type_data_tag, "wrong type");
   }
 
   virtual bool is_ReceiverTypeData() const { return true; }
@@ -1088,30 +1053,24 @@ public:
   }
 
   Klass* receiver(uint row) const {
-    assert(row < row_limit(), "oob");
 
     Klass* recv = (Klass*)intptr_at(receiver_cell_index(row));
-    assert(recv == NULL || recv->is_klass(), "wrong type");
     return recv;
   }
 
   void set_receiver(uint row, Klass* k) {
-    assert((uint)row < row_limit(), "oob");
     set_intptr_at(receiver_cell_index(row), (uintptr_t)k);
   }
 
   uint receiver_count(uint row) const {
-    assert(row < row_limit(), "oob");
     return uint_at(receiver_count_cell_index(row));
   }
 
   void set_receiver_count(uint row, uint count) {
-    assert(row < row_limit(), "oob");
     set_uint_at(receiver_count_cell_index(row), count);
   }
 
   void clear_row(uint row) {
-    assert(row < row_limit(), "oob");
     // Clear total count - indicator of polymorphic call site.
     // The site may look like as monomorphic after that but
     // it allow to have more accurate profiling information because
@@ -1172,7 +1131,6 @@ public:
 class VirtualCallData : public ReceiverTypeData {
 public:
   VirtualCallData(DataLayout* layout) : ReceiverTypeData(layout) {
-    assert(layout->tag() == DataLayout::virtual_call_data_tag || layout->tag() == DataLayout::virtual_call_type_data_tag, "wrong type");
   }
 
   virtual bool is_VirtualCallData() const { return true; }
@@ -1209,30 +1167,24 @@ public:
   }
 
   Method* method(uint row) const {
-    assert(row < method_row_limit(), "oob");
 
     Method* method = (Method*)intptr_at(method_cell_index(row));
-    assert(method == NULL || method->is_method(), "must be");
     return method;
   }
 
   uint method_count(uint row) const {
-    assert(row < method_row_limit(), "oob");
     return uint_at(method_count_cell_index(row));
   }
 
   void set_method(uint row, Method* m) {
-    assert((uint)row < method_row_limit(), "oob");
     set_intptr_at(method_cell_index(row), (uintptr_t)m);
   }
 
   void set_method_count(uint row, uint count) {
-    assert(row < method_row_limit(), "oob");
     set_uint_at(method_count_cell_index(row), count);
   }
 
   void clear_method_row(uint row) {
-    assert(row < method_row_limit(), "oob");
     // Clear total count - indicator of polymorphic call site (see comment for clear_row() in ReceiverTypeData).
     set_nonprofiled_count(0);
     set_method(row, NULL);
@@ -1245,7 +1197,7 @@ public:
   // Redefinition support
   virtual void clean_weak_method_links();
 
-  void print_method_data_on(outputStream* st) const ;
+  void print_method_data_on(outputStream* st) const;
   void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
@@ -1271,7 +1223,6 @@ private:
   }
 
   void check_number_of_arguments(int total) {
-    assert(number_of_arguments() == total, "should be set in DataLayout::initialize");
   }
 
 public:
@@ -1280,19 +1231,16 @@ public:
     _args(VirtualCallData::static_cell_count()+TypeEntriesAtCall::header_cell_count(), number_of_arguments()),
     _ret(cell_count() - ReturnTypeEntry::static_cell_count())
   {
-    assert(layout->tag() == DataLayout::virtual_call_type_data_tag, "wrong type");
     // Some compilers (VC++) don't want this passed in member initialization list
     _args.set_profile_data(this);
     _ret.set_profile_data(this);
   }
 
   const TypeStackSlotEntries* args() const {
-    assert(has_arguments(), "no profiling of arguments");
     return &_args;
   }
 
   const ReturnTypeEntry* ret() const {
-    assert(has_return(), "no profiling of return value");
     return &_ret;
   }
 
@@ -1313,9 +1261,7 @@ public:
   virtual void post_initialize(BytecodeStream* stream, MethodData* mdo);
 
   virtual int cell_count() const {
-    return VirtualCallData::static_cell_count() +
-      TypeEntriesAtCall::header_cell_count() +
-      int_at_unchecked(cell_count_global_offset());
+    return VirtualCallData::static_cell_count() + TypeEntriesAtCall::header_cell_count() + int_at_unchecked(cell_count_global_offset());
   }
 
   int number_of_arguments() const {
@@ -1323,13 +1269,11 @@ public:
   }
 
   void set_argument_type(int i, Klass* k) {
-    assert(has_arguments(), "no arguments!");
     intptr_t current = _args.type(i);
     _args.set_type(i, TypeEntries::with_status(k, current));
   }
 
   void set_return_type(Klass* k) {
-    assert(has_return(), "no return!");
     intptr_t current = _ret.type();
     _ret.set_type(TypeEntries::with_status(k, current));
   }
@@ -1340,7 +1284,6 @@ public:
   // is profiled in this object.
   bool has_return() const {
     bool res = (cell_count_no_header() % TypeStackSlotEntries::per_arg_count()) != 0;
-    assert(!res || TypeEntriesAtCall::return_profiling_enabled(), "no profiling of return values");
     return res;
   }
 
@@ -1350,7 +1293,6 @@ public:
   // at least one argument.
   bool has_arguments() const {
     bool res = cell_count_no_header() >= TypeStackSlotEntries::per_arg_count();
-    assert(!res || TypeEntriesAtCall::arguments_profiling_enabled(), "no profiling of arguments");
     return res;
   }
 
@@ -1398,12 +1340,10 @@ protected:
   };
 
   void set_bci(uint row, int bci) {
-    assert((uint)row < row_limit(), "oob");
     set_int_at(bci0_offset + row * ret_row_cell_count, bci);
   }
   void release_set_bci(uint row, int bci);
   void set_bci_count(uint row, uint count) {
-    assert((uint)row < row_limit(), "oob");
     set_uint_at(count0_offset + row * ret_row_cell_count, count);
   }
   void set_bci_displacement(uint row, int disp) {
@@ -1412,7 +1352,6 @@ protected:
 
 public:
   RetData(DataLayout* layout) : CounterData(layout) {
-    assert(layout->tag() == DataLayout::ret_data_tag, "wrong type");
   }
 
   virtual bool is_RetData() const { return true; }
@@ -1493,7 +1432,6 @@ protected:
 
 public:
   BranchData(DataLayout* layout) : JumpData(layout) {
-    assert(layout->tag() == DataLayout::branch_data_tag, "wrong type");
   }
 
   virtual bool is_BranchData() const { return true; }
@@ -1576,7 +1514,7 @@ protected:
   }
 
 public:
-  ArrayData(DataLayout* layout) : ProfileData(layout) {}
+  ArrayData(DataLayout* layout) : ProfileData(layout) { }
 
   virtual bool is_ArrayData() const { return true; }
 
@@ -1626,15 +1564,11 @@ protected:
     array_set_int_at(default_disaplacement_off_set, displacement);
   }
   void set_displacement_at(int index, int displacement) {
-    array_set_int_at(case_array_start +
-                     index * per_case_cell_count +
-                     relative_displacement_off_set,
-                     displacement);
+    array_set_int_at(case_array_start + index * per_case_cell_count + relative_displacement_off_set, displacement);
   }
 
 public:
   MultiBranchData(DataLayout* layout) : ArrayData(layout) {
-    assert(layout->tag() == DataLayout::multi_branch_data_tag, "wrong type");
   }
 
   virtual bool is_MultiBranchData() const { return true; }
@@ -1643,7 +1577,6 @@ public:
 
   int number_of_cases() const {
     int alen = array_len() - 2; // get rid of default case here.
-    assert(alen % per_case_cell_count == 0, "must be even");
     return (alen / per_case_cell_count);
   }
 
@@ -1655,14 +1588,10 @@ public:
   }
 
   uint count_at(int index) const {
-    return array_uint_at(case_array_start +
-                         index * per_case_cell_count +
-                         relative_count_off_set);
+    return array_uint_at(case_array_start + index * per_case_cell_count + relative_count_off_set);
   }
   int displacement_at(int index) const {
-    return array_int_at(case_array_start +
-                        index * per_case_cell_count +
-                        relative_displacement_off_set);
+    return array_int_at(case_array_start + index * per_case_cell_count + relative_displacement_off_set);
   }
 
   // Code generation support
@@ -1673,9 +1602,7 @@ public:
     return array_element_offset(default_disaplacement_off_set);
   }
   static ByteSize case_count_offset(int index) {
-    return case_array_offset() +
-           (per_case_size() * index) +
-           relative_count_offset();
+    return case_array_offset() + (per_case_size() * index) + relative_count_offset();
   }
   static ByteSize case_array_offset() {
     return array_element_offset(case_array_start);
@@ -1700,7 +1627,6 @@ class ArgInfoData : public ArrayData {
 
 public:
   ArgInfoData(DataLayout* layout) : ArrayData(layout) {
-    assert(layout->tag() == DataLayout::arg_info_data_tag, "wrong type");
   }
 
   virtual bool is_ArgInfoData() const { return true; }
@@ -1741,12 +1667,10 @@ private:
 
   static bool profiling_enabled();
   static void assert_profiling_enabled() {
-    assert(profiling_enabled(), "method parameters profiling should be on");
   }
 
 public:
   ParametersTypeData(DataLayout* layout) : ArrayData(layout), _parameters(1, number_of_parameters()) {
-    assert(layout->tag() == DataLayout::parameters_type_data_tag, "wrong type");
     // Some compilers (VC++) don't want this passed in member initialization list
     _parameters.set_profile_data(this);
   }
@@ -1808,7 +1732,6 @@ protected:
   };
 public:
   SpeculativeTrapData(DataLayout* layout) : ProfileData(layout) {
-    assert(layout->tag() == DataLayout::speculative_trap_data_tag, "wrong type");
   }
 
   virtual bool is_SpeculativeTrapData() const { return true; }
@@ -1827,7 +1750,6 @@ public:
   }
 
   void set_method(Method* m) {
-    assert(!m->is_old(), "cannot add old methods");
     set_intptr_at(speculative_trap_method, (intptr_t)m);
   }
 
@@ -1907,7 +1829,7 @@ private:
   MethodData(const methodHandle& method, int size, TRAPS);
 public:
   static MethodData* allocate(ClassLoaderData* loader_data, const methodHandle& method, TRAPS);
-  MethodData() : _extra_data_lock(Monitor::leaf, "MDO extra data lock") {}; // For ciMethodData
+  MethodData() : _extra_data_lock(Monitor::leaf, "MDO extra data lock") { }; // For ciMethodData
 
   bool is_methodData() const volatile { return true; }
   void initialize();
@@ -1959,7 +1881,7 @@ private:
   short             _num_loops;
   short             _num_blocks;
   // Does this method contain anything worth profiling?
-  enum WouldProfile {unknown, no_profile, profile};
+  enum WouldProfile { unknown, no_profile, profile };
   WouldProfile      _would_profile;
 
   // Support for HotSpotMethodData.setCompiledIRSize(int)
@@ -1988,7 +1910,6 @@ private:
 
   // Helper for initialization
   DataLayout* data_layout_at(int data_index) const {
-    assert(data_index % sizeof(intptr_t) == 0, "unaligned");
     return (DataLayout*) (((address)_data) + data_index);
   }
 
@@ -2011,7 +1932,6 @@ private:
   // hint accessors
   int      hint_di() const  { return _hint_di; }
   void set_hint_di(int di)  {
-    assert(!out_of_bounds(di), "hint_di out of bounds");
     _hint_di = di;
   }
   ProfileData* data_before(int bci) {
@@ -2109,7 +2029,7 @@ public:
   }
 
   int invocation_count_delta() { return invocation_count() - invocation_count_start(); }
-  int backedge_count_delta()   { return backedge_count()   - backedge_count_start();   }
+  int backedge_count_delta()   { return backedge_count()   - backedge_count_start(); }
 
   void reset_start_counters() {
     _invocation_counter_start = invocation_count();
@@ -2117,7 +2037,7 @@ public:
   }
 
   InvocationCounter* invocation_counter()     { return &_invocation_counter; }
-  InvocationCounter* backedge_counter()       { return &_backedge_counter;   }
+  InvocationCounter* backedge_counter()       { return &_backedge_counter; }
 
 #if INCLUDE_RTM_OPT
   int rtm_state() const {
@@ -2138,10 +2058,10 @@ public:
   void set_would_profile(bool p)              { _would_profile = p ? profile : no_profile; }
   bool would_profile() const                  { return _would_profile != no_profile; }
 
-  int num_loops() const                       { return _num_loops;  }
-  void set_num_loops(int n)                   { _num_loops = n;     }
+  int num_loops() const                       { return _num_loops; }
+  void set_num_loops(int n)                   { _num_loops = n; }
   int num_blocks() const                      { return _num_blocks; }
-  void set_num_blocks(int n)                  { _num_blocks = n;    }
+  void set_num_blocks(int n)                  { _num_blocks = n; }
 
   bool is_mature() const;  // consult mileage and ProfileMaturityPercentage
   static int mileage_of(Method* m);
@@ -2160,8 +2080,6 @@ public:
   intx arg_stack()                               { return _arg_stack; }
   intx arg_returned()                            { return _arg_returned; }
   uint arg_modified(int a)                       { ArgInfoData *aid = arg_info();
-                                                   assert(aid != NULL, "arg_info must be not null");
-                                                   assert(a >= 0 && a < aid->number_of_args(), "valid argument number");
                                                    return aid->arg_modified(a); }
 
   void set_eflags(intx v)                        { _eflags = v; }
@@ -2169,8 +2087,6 @@ public:
   void set_arg_stack(intx v)                     { _arg_stack = v; }
   void set_arg_returned(intx v)                  { _arg_returned = v; }
   void set_arg_modified(int a, uint v)           { ArgInfoData *aid = arg_info();
-                                                   assert(aid != NULL, "arg_info must be not null");
-                                                   assert(a >= 0 && a < aid->number_of_args(), "valid argument number");
                                                    aid->set_arg_modified(a, v); }
 
   void clear_escape_info()                       { _eflags = _arg_local = _arg_stack = _arg_returned = 0; }
@@ -2234,14 +2150,12 @@ public:
   // Add a handful of extra data records, for trap tracking.
   DataLayout* extra_data_base() const  { return limit_data_position(); }
   DataLayout* extra_data_limit() const { return (DataLayout*)((address)this + size_in_bytes()); }
-  DataLayout* args_data_limit() const  { return (DataLayout*)((address)this + size_in_bytes() -
-                                                              parameters_size_in_bytes()); }
+  DataLayout* args_data_limit() const  { return (DataLayout*)((address)this + size_in_bytes() - parameters_size_in_bytes()); }
   int extra_data_size() const          { return (address)extra_data_limit() - (address)extra_data_base(); }
   static DataLayout* next_extra(DataLayout* dp);
 
   // Return (uint)-1 for overflow.
   uint trap_count(int reason) const {
-    assert((uint)reason < 2* _trap_hist_limit, "oob");
     return (int)((_trap_hist._array[reason]+1) & _trap_hist_mask) - 1;
   }
   // For loops:
@@ -2249,8 +2163,6 @@ public:
   static uint trap_count_limit()  { return _trap_hist_mask; }
   uint inc_trap_count(int reason) {
     // Count another trap, anywhere in this method.
-    assert(reason >= 0, "must be single trap");
-    assert((uint)reason < 2* _trap_hist_limit, "oob");
     uint cnt1 = 1 + _trap_hist._array[reason];
     if ((cnt1 & _trap_hist_mask) != 0) {  // if no counter overflow...
       _trap_hist._array[reason] = cnt1;
@@ -2287,12 +2199,10 @@ public:
 
   // Return pointer to area dedicated to parameters in MDO
   ParametersTypeData* parameters_type_data() const {
-    assert(_parameters_type_data_di != parameters_uninitialized, "called too early");
     return _parameters_type_data_di != no_parameters ? data_layout_at(_parameters_type_data_di)->data_in()->as_ParametersTypeData() : NULL;
   }
 
   int parameters_type_data_di() const {
-    assert(_parameters_type_data_di != parameters_uninitialized && _parameters_type_data_di != no_parameters, "no args type data");
     return _parameters_type_data_di;
   }
 
@@ -2329,7 +2239,7 @@ public:
   virtual MetaspaceObj::Type type() const { return MethodDataType; }
 
   // Deallocation support - no pointer fields to deallocate
-  void deallocate_contents(ClassLoaderData* loader_data) {}
+  void deallocate_contents(ClassLoaderData* loader_data) { }
 
   // GC support
   void set_size(int object_size_in_bytes) { _size = object_size_in_bytes; }

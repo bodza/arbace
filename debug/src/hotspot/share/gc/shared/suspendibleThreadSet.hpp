@@ -69,7 +69,6 @@ public:
   }
 
   void yield() {
-    assert(_active, "Thread has not joined the suspendible thread set");
     SuspendibleThreadSet::yield();
   }
 };

@@ -61,7 +61,6 @@ class CompressedReadStream : public CompressedStream {
   jint read_int_mb(jint b0) {
     int     pos = position() - 1;
     u_char* buf = buffer() + pos;
-    assert(buf[0] == b0 && b0 >= L, "correctly called");
     jint    sum = b0;
     // must collect more bytes:  b[1]...b[4]
     int lg_H_i = lg_H;
@@ -78,11 +77,11 @@ class CompressedReadStream : public CompressedStream {
 
  public:
   CompressedReadStream(u_char* buffer, int position = 0)
-  : CompressedStream(buffer, position) {}
+  : CompressedStream(buffer, position) { }
 
-  jboolean read_bool()                 { return (jboolean) read();      }
-  jbyte    read_byte()                 { return (jbyte   ) read();      }
-  jchar    read_char()                 { return (jchar   ) read_int();  }
+  jboolean read_bool()                 { return (jboolean) read(); }
+  jbyte    read_byte()                 { return (jbyte   ) read(); }
+  jchar    read_char()                 { return (jchar   ) read_int(); }
   jshort   read_short()                { return (jshort  ) read_signed_int(); }
   jint     read_int()                  { jint   b0 = read();
                                          if (b0 < L)  return b0;
@@ -118,13 +117,13 @@ class CompressedWriteStream : public CompressedStream {
   CompressedWriteStream(u_char* buffer, int initial_size, int position = 0)
   : CompressedStream(buffer, position) { _size = initial_size; }
 
-  void write_bool(jboolean value)      { write(value);      }
-  void write_byte(jbyte value)         { write(value);      }
+  void write_bool(jboolean value)      { write(value); }
+  void write_byte(jbyte value)         { write(value); }
   void write_char(jchar value)         { write_int(value); }
-  void write_short(jshort value)       { write_signed_int(value);  }
+  void write_short(jshort value)       { write_signed_int(value); }
   void write_int(jint value)           { if ((juint)value < L && !full())
                                                store((u_char)value);
-                                         else  write_int_mb(value);  }
+                                         else  write_int_mb(value); }
   void write_signed_int(jint value);   // write_int(encode_sign(value))
   void write_float(jfloat value);      // write_int(reverse_int(jint_cast(v)))
   void write_double(jdouble value);    // write_int(reverse_int(<low,high>))

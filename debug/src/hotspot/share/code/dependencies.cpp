@@ -31,7 +31,6 @@ void Dependencies::initialize(ciEnv* env) {
   _content_bytes = NULL;
   _size_in_bytes = (size_t)-1;
 
-  assert(TYPE_LIMIT <= (1<<LG2_TYPE_LIMIT), "sanity");
 }
 
 void Dependencies::assert_evol_method(ciMethod* m) {
@@ -103,7 +102,6 @@ Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* 
   _content_bytes = NULL;
   _size_in_bytes = (size_t)-1;
 
-  assert(TYPE_LIMIT <= (1<<LG2_TYPE_LIMIT), "sanity");
 }
 
 void Dependencies::assert_evol_method(Method* m) {
@@ -149,8 +147,7 @@ void Dependencies::assert_call_site_target_value(oop call_site, oop method_handl
 // Helper function.  If we are adding a new dep. under ctxk2,
 // try to find an old dep. under a broader* ctxk1.  If there is
 //
-bool Dependencies::maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps,
-                                    int ctxk_i, ciKlass* ctxk2) {
+bool Dependencies::maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps, int ctxk_i, ciKlass* ctxk2) {
   ciKlass* ctxk1 = deps->at(ctxk_i)->as_metadata()->as_klass();
   if (ctxk2->is_subtype_of(ctxk1)) {
     return true;  // success, and no need to change
@@ -164,28 +161,23 @@ bool Dependencies::maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps,
 }
 
 void Dependencies::assert_common_1(DepType dept, ciBaseObject* x) {
-  assert(dep_args(dept) == 1, "sanity");
   log_dependency(dept, x);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
   // see if the same (or a similar) dep is already recorded
   if (note_dep_seen(dept, x)) {
-    assert(deps->find(x) >= 0, "sanity");
   } else {
     deps->append(x);
   }
 }
 
-void Dependencies::assert_common_2(DepType dept,
-                                   ciBaseObject* x0, ciBaseObject* x1) {
-  assert(dep_args(dept) == 2, "sanity");
+void Dependencies::assert_common_2(DepType dept, ciBaseObject* x0, ciBaseObject* x1) {
   log_dependency(dept, x0, x1);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
   // see if the same (or a similar) dep is already recorded
   bool has_ctxk = has_explicit_context_arg(dept);
   if (has_ctxk) {
-    assert(dep_context_arg(dept) == 0, "sanity");
     if (note_dep_seen(dept, x1)) {
       // look in this bucket for redundant assertions
       const int stride = 2;
@@ -217,10 +209,7 @@ void Dependencies::assert_common_2(DepType dept,
   deps->append(x1);
 }
 
-void Dependencies::assert_common_3(DepType dept,
-                                   ciKlass* ctxk, ciBaseObject* x, ciBaseObject* x2) {
-  assert(dep_context_arg(dept) == 0, "sanity");
-  assert(dep_args(dept) == 3, "sanity");
+void Dependencies::assert_common_3(DepType dept, ciKlass* ctxk, ciBaseObject* x, ciBaseObject* x2) {
   log_dependency(dept, ctxk, x, x2);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
@@ -258,8 +247,7 @@ void Dependencies::assert_common_3(DepType dept,
   deps->append(x2);
 }
 
-bool Dependencies::maybe_merge_ctxk(GrowableArray<DepValue>* deps,
-                                    int ctxk_i, DepValue ctxk2_dv) {
+bool Dependencies::maybe_merge_ctxk(GrowableArray<DepValue>* deps, int ctxk_i, DepValue ctxk2_dv) {
   Klass* ctxk1 = deps->at(ctxk_i).as_klass(_oop_recorder);
   Klass* ctxk2 = ctxk2_dv.as_klass(_oop_recorder);
   if (ctxk2->is_subtype_of(ctxk1)) {
@@ -274,28 +262,23 @@ bool Dependencies::maybe_merge_ctxk(GrowableArray<DepValue>* deps,
 }
 
 void Dependencies::assert_common_1(DepType dept, DepValue x) {
-  assert(dep_args(dept) == 1, "sanity");
   //log_dependency(dept, x);
   GrowableArray<DepValue>* deps = _dep_values[dept];
 
   // see if the same (or a similar) dep is already recorded
   if (note_dep_seen(dept, x)) {
-    assert(deps->find(x) >= 0, "sanity");
   } else {
     deps->append(x);
   }
 }
 
-void Dependencies::assert_common_2(DepType dept,
-                                   DepValue x0, DepValue x1) {
-  assert(dep_args(dept) == 2, "sanity");
+void Dependencies::assert_common_2(DepType dept, DepValue x0, DepValue x1) {
   //log_dependency(dept, x0, x1);
   GrowableArray<DepValue>* deps = _dep_values[dept];
 
   // see if the same (or a similar) dep is already recorded
   bool has_ctxk = has_explicit_context_arg(dept);
   if (has_ctxk) {
-    assert(dep_context_arg(dept) == 0, "sanity");
     if (note_dep_seen(dept, x1)) {
       // look in this bucket for redundant assertions
       const int stride = 2;
@@ -336,7 +319,6 @@ void Dependencies::copy_to(nmethod* nm) {
   Copy::disjoint_words((HeapWord*) content_bytes(),
                        (HeapWord*) beg,
                        size_in_bytes() / sizeof(HeapWord));
-  assert(size_in_bytes() % sizeof(HeapWord) == 0, "copy by words");
 }
 
 static int sort_dep(ciBaseObject** p1, ciBaseObject** p2, int narg) {
@@ -427,14 +409,11 @@ ciKlass* Dependencies::ctxk_encoded_as_null(DepType dept, ciBaseObject* x) {
 }
 
 Klass* Dependencies::ctxk_encoded_as_null(DepType dept, Metadata* x) {
-  assert(must_be_in_vm(), "raw oops here");
   switch (dept) {
   case abstract_with_exclusive_concrete_subtypes_2:
-    assert(x->is_klass(), "sanity");
     return (Klass*) x;
   case unique_concrete_method:
   case exclusive_concrete_methods_2:
-    assert(x->is_method(), "sanity");
     return ((Method*)x)->method_holder();
   default:
     return NULL;  // let NULL be NULL
@@ -454,7 +433,6 @@ void Dependencies::encode_content_bytes() {
       if (deps->length() == 0)  continue;
       int stride = dep_args(dept);
       int ctxkj  = dep_context_arg(dept);  // -1 if no context arg
-      assert(stride > 0, "sanity");
       for (int i = 0; i < deps->length(); i += stride) {
         jbyte code_byte = (jbyte)dept;
         int skipj = -1;
@@ -482,7 +460,6 @@ void Dependencies::encode_content_bytes() {
     if (deps->length() == 0)  continue;
     int stride = dep_args(dept);
     int ctxkj  = dep_context_arg(dept);  // -1 if no context arg
-    assert(stride > 0, "sanity");
     for (int i = 0; i < deps->length(); i += stride) {
       jbyte code_byte = (jbyte)dept;
       int skipj = -1;
@@ -518,9 +495,6 @@ void Dependencies::encode_content_bytes() {
   while (bytes.position() % sizeof(HeapWord) != 0) {
     bytes.write_byte(end_marker);
   }
-
-  // check whether the dept byte encoding really works
-  assert((jbyte)default_context_type_bit != 0, "byte overflow");
 
   _content_bytes = bytes.buffer();
   _size_in_bytes = bytes.position();
@@ -623,7 +597,6 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
   }
 
   if (klass_violations != 0) {
-    assert(counter_changed, "failed dependencies, but counter didn't change");
   }
   return result;
 }
@@ -653,10 +626,7 @@ void Dependencies::log_all_dependencies() {
   }
 }
 
-void Dependencies::write_dependency_to(CompileLog* log,
-                                       DepType dept,
-                                       GrowableArray<DepArgument>* args,
-                                       Klass* witness) {
+void Dependencies::write_dependency_to(CompileLog* log, DepType dept, GrowableArray<DepArgument>* args, Klass* witness) {
   if (log == NULL) {
     return;
   }
@@ -676,10 +646,7 @@ void Dependencies::write_dependency_to(CompileLog* log,
   guarantee(argslen == ciargs->length(), "ciargs array cannot grow inside nested ResoureMark scope");
 }
 
-void Dependencies::write_dependency_to(CompileLog* log,
-                                       DepType dept,
-                                       GrowableArray<ciBaseObject*>* args,
-                                       Klass* witness) {
+void Dependencies::write_dependency_to(CompileLog* log, DepType dept, GrowableArray<ciBaseObject*>* args, Klass* witness) {
   if (log == NULL) {
     return;
   }
@@ -719,10 +686,7 @@ void Dependencies::write_dependency_to(CompileLog* log,
   log->end_elem();
 }
 
-void Dependencies::write_dependency_to(xmlStream* xtty,
-                                       DepType dept,
-                                       GrowableArray<DepArgument>* args,
-                                       Klass* witness) {
+void Dependencies::write_dependency_to(xmlStream* xtty, DepType dept, GrowableArray<DepArgument>* args, Klass* witness) {
   if (xtty == NULL) {
     return;
   }
@@ -765,8 +729,7 @@ void Dependencies::write_dependency_to(xmlStream* xtty,
   xtty->end_elem();
 }
 
-void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* args,
-                                    Klass* witness, outputStream* st) {
+void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* args, Klass* witness, outputStream* st) {
   ResourceMark rm;
   ttyLocker ttyl;   // keep the following output all in one block
   st->print_cr("%s of type %s",
@@ -780,7 +743,6 @@ void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* ar
     if (arg.is_null())  continue;
     const char* what;
     if (j == ctxkj) {
-      assert(arg.is_metadata(), "must be");
       what = "context";
       put_star = !Dependencies::is_concrete_klass((Klass*)arg.metadata_value());
     } else if (arg.is_method()) {
@@ -864,9 +826,7 @@ void Dependencies::DepStream::print_dependency(Klass* witness, bool verbose, out
 /// Dependency stream support (decodes dependencies from an nmethod):
 
 bool Dependencies::DepStream::next() {
-  assert(_type != end_marker, "already at end");
-  if (_bytes.position() == 0 && _code != NULL
-      && _code->dependencies_size() == 0) {
+  if (_bytes.position() == 0 && _code != NULL && _code->dependencies_size() == 0) {
     // Method has no dependencies at all.
     return false;
   }
@@ -880,11 +840,9 @@ bool Dependencies::DepStream::next() {
     _type = dept;
     Dependencies::check_valid_dependency_type(dept);
     int stride = _dep_args[dept];
-    assert(stride == dep_args(dept), "sanity");
     int skipj = -1;
     if (ctxk_bit != 0) {
       skipj = 0;  // currently the only context argument is at zero
-      assert(skipj == dep_context_arg(dept), "zero arg always ctxk");
     }
     for (int j = 0; j < stride; j++) {
       _xi[j] = (j == skipj)? 0: _bytes.read_int();
@@ -919,7 +877,6 @@ Metadata* Dependencies::DepStream::argument(int i) {
     }
   }
 
-  assert(result == NULL || result->is_klass() || result->is_method(), "must be");
   return result;
 }
 
@@ -936,19 +893,16 @@ uintptr_t Dependencies::DepStream::get_identifier(int i) {
 
 oop Dependencies::DepStream::argument_oop(int i) {
   oop result = recorded_oop_at(argument_index(i));
-  assert(oopDesc::is_oop_or_null(result), "must be");
   return result;
 }
 
 Klass* Dependencies::DepStream::context_type() {
-  assert(must_be_in_vm(), "raw oops here");
 
   // Most dependencies have an explicit context type argument.
   {
     int ctxkj = dep_context_arg(type());  // -1 if no explicit context arg
     if (ctxkj >= 0) {
       Metadata* k = argument(ctxkj);
-      assert(k != NULL && k->is_klass(), "type check");
       return (Klass*)k;
     }
   }
@@ -959,7 +913,6 @@ Klass* Dependencies::DepStream::context_type() {
     int ctxkj = dep_implicit_context_arg(type());
     if (ctxkj >= 0) {
       Klass* k = argument_oop(ctxkj)->klass();
-      assert(k != NULL && k->is_klass(), "type check");
       return (Klass*) k;
     }
   }
@@ -1023,7 +976,6 @@ class ClassHierarchyWalker {
   }
 
   void initialize_from_method(Method* m) {
-    assert(m != NULL && m->is_method(), "sanity");
     _name      = m->name();
     _signature = m->signature();
   }
@@ -1061,27 +1013,22 @@ class ClassHierarchyWalker {
 
   int num_participants() { return _num_participants; }
   Klass* participant(int n) {
-    assert((uint)n <= (uint)_num_participants, "oob");
     return _participants[n];
   }
 
   // Note:  If n==num_participants, returns NULL.
   Method* found_method(int n) {
-    assert((uint)n <= (uint)_num_participants, "oob");
     Method* fm = _found_methods[n];
-    assert(n == _num_participants || fm != NULL, "proper usage");
     if (fm != NULL && fm->method_holder() != _participants[n]) {
       // Default methods from interfaces can be added to classes. In
       // that case the holder of the method is not the class but the
       // interface where it's defined.
-      assert(fm->is_default_method(), "sanity");
       return NULL;
     }
     return fm;
   }
 
   void add_participant(Klass* participant) {
-    assert(_num_participants + _record_witnesses < PARTICIPANT_LIMIT, "oob");
     int np = _num_participants++;
     _participants[np] = participant;
     _participants[np+1] = NULL;
@@ -1090,7 +1037,6 @@ class ClassHierarchyWalker {
 
   void record_witnesses(int add) {
     if (add > PARTICIPANT_LIMIT)  add = PARTICIPANT_LIMIT;
-    assert(_num_participants + add < PARTICIPANT_LIMIT, "oob");
     _record_witnesses = add;
   }
 
@@ -1175,7 +1121,6 @@ class ClassHierarchyWalker {
                            bool participants_hide_witnesses);
  public:
   Klass* find_witness_subtype(Klass* context_type, KlassDepChange* changes = NULL) {
-    assert(doing_subtype_search(), "must set up a subtype search");
     // When looking for unexpected concrete types,
     // do not look beneath expected ones.
     const bool participants_hide_witnesses = true;
@@ -1188,7 +1133,6 @@ class ClassHierarchyWalker {
     }
   }
   Klass* find_witness_definer(Klass* context_type, KlassDepChange* changes = NULL) {
-    assert(!doing_subtype_search(), "must set up a method definer search");
     // When looking for unexpected concrete methods,
     // look beneath expected ones, to see if there are overrides.
     const bool participants_hide_witnesses = true;
@@ -1203,18 +1147,10 @@ class ClassHierarchyWalker {
 
 #define count_find_witness_calls() (0)
 
-Klass* ClassHierarchyWalker::find_witness_in(KlassDepChange& changes,
-                                               Klass* context_type,
-                                               bool participants_hide_witnesses) {
-  assert(changes.involves_context(context_type), "irrelevant dependency");
+Klass* ClassHierarchyWalker::find_witness_in(KlassDepChange& changes, Klass* context_type, bool participants_hide_witnesses) {
   Klass* new_type = changes.new_type();
 
   (void)count_find_witness_calls();
-
-  // Current thread must be in VM (not native mode, as in CI):
-  assert(must_be_in_vm(), "raw oops here");
-  // Must not move the class hierarchy during this check:
-  assert_locked_or_safepoint(Compile_lock);
 
   int nof_impls = InstanceKlass::cast(context_type)->nof_implementors();
   if (nof_impls > 1) {
@@ -1224,13 +1160,11 @@ Klass* ClassHierarchyWalker::find_witness_in(KlassDepChange& changes,
     return context_type;
   }
 
-  assert(!is_participant(new_type), "only old classes are participants");
   if (participants_hide_witnesses) {
     // If the new type is a subtype of a participant, we are done.
     for (int i = 0; i < num_participants(); i++) {
       Klass* part = participant(i);
       if (part == NULL)  continue;
-      assert(changes.involves_context(part) == new_type->is_subtype_of(part), "correct marking of participants, b/c new_type is unique");
       if (changes.involves_context(part)) {
         // new guy is protected from this check by previous participant
         return NULL;
@@ -1238,8 +1172,7 @@ Klass* ClassHierarchyWalker::find_witness_in(KlassDepChange& changes,
     }
   }
 
-  if (is_witness(new_type) &&
-      !ignore_witness(new_type)) {
+  if (is_witness(new_type) && !ignore_witness(new_type)) {
     return new_type;
   }
 
@@ -1251,14 +1184,7 @@ Klass* ClassHierarchyWalker::find_witness_in(KlassDepChange& changes,
 // them only if participants_hide_witnesses is false.
 // If top_level_call is false, skip testing the context type,
 // because the caller has already considered it.
-Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type,
-                                                     bool participants_hide_witnesses,
-                                                     bool top_level_call) {
-  // Current thread must be in VM (not native mode, as in CI):
-  assert(must_be_in_vm(), "raw oops here");
-  // Must not move the class hierarchy during this check:
-  assert_locked_or_safepoint(Compile_lock);
-
+Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type, bool participants_hide_witnesses, bool top_level_call) {
   bool do_counts = count_find_witness_calls();
 
   // Check the root of the sub-hierarchy first.
@@ -1279,10 +1205,7 @@ Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type,
   Klass* chains[CHAINMAX];
   int    chaini = 0;  // index into worklist
   Klass* chain;       // scratch variable
-#define ADD_SUBCLASS_CHAIN(k)                     { \
-    assert(chaini < CHAINMAX, "oob"); \
-    chain = k->subklass(); \
-    if (chain != NULL)  chains[chaini++] = chain;    }
+#define ADD_SUBCLASS_CHAIN(k) { chain = k->subklass(); if (chain != NULL) chains[chaini++] = chain; }
 
   // Look for non-abstract subclasses.
   // (Note:  Interfaces do not have subclasses.)
@@ -1306,7 +1229,6 @@ Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type,
     }
     if (nof_impls > 0) {
       Klass* impl = InstanceKlass::cast(context_type)->implementor();
-      assert(impl != NULL, "just checking");
       // If impl is the same as the context_type, then more than one
       // implementor has seen. No exact info in this case.
       if (impl == context_type) {
@@ -1374,8 +1296,7 @@ bool Dependencies::is_concrete_method(Method* m, Klass * k) {
   // note "true" is conservative answer --
   //     overpass clause is false if k == NULL, implies return true if
   //     answer depends on overpass clause.
-  return ! ( m == NULL || m -> is_static() || m -> is_abstract() ||
-             (m->is_overpass() && k != NULL && k -> is_abstract()) );
+  return ! ( m == NULL || m -> is_static() || m -> is_abstract() || (m->is_overpass() && k != NULL && k -> is_abstract()));
 }
 
 Klass* Dependencies::find_finalizable_subclass(Klass* k) {
@@ -1406,7 +1327,6 @@ bool Dependencies::has_finalizable_subclass(ciInstanceKlass* k) {
 // marked by an "evol_method" dependency, if those contents
 // can change.  (Note: A method is always dependent on itself.)
 Klass* Dependencies::check_evol_method(Method* m) {
-  assert(must_be_in_vm(), "raw oops here");
   // Did somebody do a JVMTI RedefineClasses while our backs were turned?
   // Or is there a now a breakpoint?
   // (Assumes compiled code cannot handle bkpts; change if UseFastBreakpoints.)
@@ -1425,8 +1345,6 @@ Klass* Dependencies::check_evol_method(Method* m) {
 // know that the checked type comes from a concrete type,
 // and therefore we can disregard abstract types.)
 Klass* Dependencies::check_leaf_type(Klass* ctxk) {
-  assert(must_be_in_vm(), "raw oops here");
-  assert_locked_or_safepoint(Compile_lock);
   InstanceKlass* ctx = InstanceKlass::cast(ctxk);
   Klass* sub = ctx->subklass();
   if (sub != NULL) {
@@ -1435,7 +1353,6 @@ Klass* Dependencies::check_leaf_type(Klass* ctxk) {
     // if it is an interface, it must be unimplemented
     // (if it is not an interface, nof_implementors is always zero)
     Klass* impl = ctx->implementor();
-    assert(impl != NULL, "must be set");
     return impl;
   } else {
     return NULL;
@@ -1446,9 +1363,7 @@ Klass* Dependencies::check_leaf_type(Klass* ctxk) {
 // The type conck itself is allowed to have have further concrete subtypes.
 // This allows the compiler to narrow occurrences of ctxk by conck,
 // when dealing with the types of actual instances.
-Klass* Dependencies::check_abstract_with_unique_concrete_subtype(Klass* ctxk,
-                                                                   Klass* conck,
-                                                                   KlassDepChange* changes) {
+Klass* Dependencies::check_abstract_with_unique_concrete_subtype(Klass* ctxk, Klass* conck, KlassDepChange* changes) {
   ClassHierarchyWalker wf(conck);
   return wf.find_witness_subtype(ctxk, changes);
 }
@@ -1456,8 +1371,7 @@ Klass* Dependencies::check_abstract_with_unique_concrete_subtype(Klass* ctxk,
 // If a non-concrete class has no concrete subtypes, it is not (yet)
 // instantiatable.  This can allow the compiler to make some paths go
 // dead, if they are gated by a test of the type.
-Klass* Dependencies::check_abstract_with_no_concrete_subtype(Klass* ctxk,
-                                                               KlassDepChange* changes) {
+Klass* Dependencies::check_abstract_with_no_concrete_subtype(Klass* ctxk, KlassDepChange* changes) {
   // Find any concrete subtype, with no participants:
   ClassHierarchyWalker wf;
   return wf.find_witness_subtype(ctxk, changes);
@@ -1465,8 +1379,7 @@ Klass* Dependencies::check_abstract_with_no_concrete_subtype(Klass* ctxk,
 
 // If a concrete class has no concrete subtypes, it can always be
 // exactly typed.  This allows the use of a cheaper type test.
-Klass* Dependencies::check_concrete_with_no_concrete_subtype(Klass* ctxk,
-                                                               KlassDepChange* changes) {
+Klass* Dependencies::check_concrete_with_no_concrete_subtype(Klass* ctxk, KlassDepChange* changes) {
   // Find any concrete subtype, with only the ctxk as participant:
   ClassHierarchyWalker wf(ctxk);
   return wf.find_witness_subtype(ctxk, changes);
@@ -1494,11 +1407,7 @@ Klass* Dependencies::find_unique_concrete_subtype(Klass* ctxk) {
 // except possibly for further subtypes of k[12] themselves.
 // The context type must be abstract.  The types k1 and k2 are themselves
 // allowed to have further concrete subtypes.
-Klass* Dependencies::check_abstract_with_exclusive_concrete_subtypes(
-                                                Klass* ctxk,
-                                                Klass* k1,
-                                                Klass* k2,
-                                                KlassDepChange* changes) {
+Klass* Dependencies::check_abstract_with_exclusive_concrete_subtypes(Klass* ctxk, Klass* k1, Klass* k2, KlassDepChange* changes) {
   ClassHierarchyWalker wf;
   wf.add_participant(k1);
   wf.add_participant(k2);
@@ -1511,15 +1420,12 @@ Klass* Dependencies::check_abstract_with_exclusive_concrete_subtypes(
 // (Note that a return of 0 means there are exactly no concrete subtypes.)
 // In this search, if ctxk is concrete, it will be reported alone.
 // For any type CC reported, no proper subtypes of CC will be reported.
-int Dependencies::find_exclusive_concrete_subtypes(Klass* ctxk,
-                                                   int klen,
-                                                   Klass* karray[]) {
+int Dependencies::find_exclusive_concrete_subtypes(Klass* ctxk, int klen, Klass* karray[]) {
   ClassHierarchyWalker wf;
   wf.record_witnesses(klen);
   Klass* wit = wf.find_witness_subtype(ctxk);
   if (wit != NULL)  return -1;  // Too many witnesses.
   int num = wf.num_participants();
-  assert(num <= klen, "oob");
   // Pack the result array with the good news.
   for (int i = 0; i < num; i++)
     karray[i] = wf.participant(i);
@@ -1548,7 +1454,6 @@ Method* Dependencies::find_unique_concrete_method(Klass* ctxk, Method* m) {
     return NULL;
   }
   ClassHierarchyWalker wf(m);
-  assert(wf.check_method_context(ctxk, m), "proper context");
   wf.record_witnesses(1);
   Klass* wit = wf.find_witness_definer(ctxk);
   if (wit != NULL)  return NULL;  // Too many witnesses.
@@ -1584,9 +1489,6 @@ Klass* Dependencies::check_has_no_finalizable_subclasses(Klass* ctxk, KlassDepCh
 }
 
 Klass* Dependencies::check_call_site_target_value(oop call_site, oop method_handle, CallSiteDepChange* changes) {
-  assert(call_site != NULL, "sanity");
-  assert(method_handle != NULL, "sanity");
-  assert(call_site->is_a(SystemDictionary::CallSite_klass()),     "sanity");
 
   if (changes == NULL) {
     // Validate all CallSites
@@ -1595,7 +1497,6 @@ Klass* Dependencies::check_call_site_target_value(oop call_site, oop method_hand
   } else {
     // Validate the given CallSite
     if (oopDesc::equals(call_site, changes->call_site()) && !oopDesc::equals(java_lang_invoke_CallSite::target(call_site), changes->method_handle())) {
-      assert(!oopDesc::equals(method_handle, changes->method_handle()), "must be");
       return call_site->klass();  // assertion failed
     }
   }
@@ -1613,7 +1514,6 @@ void Dependencies::DepStream::trace_and_log_witness(Klass* witness) {
 }
 
 Klass* Dependencies::DepStream::check_klass_dependency(KlassDepChange* changes) {
-  assert_locked_or_safepoint(Compile_lock);
   Dependencies::check_valid_dependency_type(type());
 
   Klass* witness = NULL;
@@ -1654,7 +1554,6 @@ Klass* Dependencies::DepStream::check_klass_dependency(KlassDepChange* changes) 
 }
 
 Klass* Dependencies::DepStream::check_call_site_dependency(CallSiteDepChange* changes) {
-  assert_locked_or_safepoint(Compile_lock);
   Dependencies::check_valid_dependency_type(type());
 
   Klass* witness = NULL;
@@ -1760,14 +1659,10 @@ bool DepChange::ContextStream::next() {
 }
 
 void KlassDepChange::initialize() {
-  // entire transaction must be under this lock:
-  assert_lock_strong(Compile_lock);
-
   // Mark all dependee and all its superclasses
   // Mark transitive interfaces
   for (ContextStream str(*this); str.next(); ) {
     Klass* d = str.klass();
-    assert(!InstanceKlass::cast(d)->is_marked_dependent(), "checking");
     InstanceKlass::cast(d)->set_is_marked_dependent(true);
   }
 }
@@ -1787,13 +1682,10 @@ bool KlassDepChange::involves_context(Klass* k) {
   }
   InstanceKlass* ik = InstanceKlass::cast(k);
   bool is_contained = ik->is_marked_dependent();
-  assert(is_contained == new_type()->is_subtype_of(k), "correct marking of potential context types");
   return is_contained;
 }
 
 CallSiteDepChange::CallSiteDepChange(Handle call_site, Handle method_handle) :
   _call_site(call_site),
   _method_handle(method_handle) {
-  assert(_call_site()->is_a(SystemDictionary::CallSite_klass()), "must be");
-  assert(_method_handle.is_null() || _method_handle()->is_a(SystemDictionary::MethodHandle_klass()), "must be");
 }

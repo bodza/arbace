@@ -35,7 +35,7 @@ class klassVtable {
 
   // accessors
   vtableEntry* table() const      { return (vtableEntry*)(address(_klass) + _tableOffset); }
-  Klass* klass() const            { return _klass;  }
+  Klass* klass() const            { return _klass; }
   int length() const              { return _length; }
   inline Method* method_at(int i) const;
   inline Method* unchecked_method_at(int i) const;
@@ -69,9 +69,9 @@ class klassVtable {
                                                    TRAPS);
 
   // Debugging code
-  void print()                                              {};
+  void print()                                              { };
   void verify(outputStream* st, bool force = false);
-  static void print_statistics()                            {};
+  static void print_statistics()                            { };
 
  protected:
   friend class vtableEntry;
@@ -80,7 +80,7 @@ class klassVtable {
   // Transitive overridng rules for class files < JDK1_7 use the older JVMS rules.
   // Overriding is determined as we create the vtable, so we use the class file version
   // of the class whose vtable we are calculating.
-  enum { VTABLE_TRANSITIVE_OVERRIDE_VERSION = 51 } ;
+  enum { VTABLE_TRANSITIVE_OVERRIDE_VERSION = 51 };
 
  private:
   void copy_vtable_to(vtableEntry* start);
@@ -162,30 +162,24 @@ class vtableEntry {
  private:
   Method* _method;
   void set(Method* method)  {
-    assert(method != NULL, "use clear");
     _method = method; }
   void clear()                { _method = NULL; }
-  void print()                                        {};
+  void print()                                        { };
   void verify(klassVtable* vt, outputStream* st);
 
   friend class klassVtable;
 };
 
 inline Method* klassVtable::method_at(int i) const {
-  assert(i >= 0 && i < _length, "index out of bounds");
-  assert(table()[i].method() != NULL, "should not be null");
-  assert(((Metadata*)table()[i].method())->is_method(), "should be method");
   return table()[i].method();
 }
 
 inline Method* klassVtable::unchecked_method_at(int i) const {
-  assert(i >= 0 && i < _length, "index out of bounds");
   return table()[i].method();
 }
 
 inline Method** klassVtable::adr_method_at(int i) const {
   // Allow one past the last entry to be referenced; useful for loop bounds.
-  assert(i >= 0 && i <= _length, "index out of bounds");
   return (Method**)(address(table() + i) + vtableEntry::method_offset_in_bytes());
 }
 
@@ -264,11 +258,9 @@ class klassItable {
   klassItable(InstanceKlass* klass);
 
   itableOffsetEntry* offset_entry(int i) {
-    assert(0 <= i && i <= _size_offset_table, "index out of bounds");
                                            return &((itableOffsetEntry*)vtable_start())[i]; }
 
   itableMethodEntry* method_entry(int i) {
-    assert(0 <= i && i <= _size_method_table, "index out of bounds");
                                            return &((itableMethodEntry*)method_start())[i]; }
 
   int size_offset_table()                { return _size_offset_table; }
@@ -286,7 +278,7 @@ class klassItable {
   static Method* method_for_itable_index(Klass* klass, int itable_index);
 
   // Debugging/Statistics
-  static void print_statistics() {};
+  static void print_statistics() { };
  private:
   intptr_t* vtable_start() const { return ((intptr_t*)_klass) + _table_offset; }
   intptr_t* method_start() const { return vtable_start() + _size_offset_table * itableOffsetEntry::size(); }
@@ -294,7 +286,7 @@ class klassItable {
   // Helper methods
   static int  calc_itable_size(int num_interfaces, int num_methods) { return (num_interfaces * itableOffsetEntry::size()) + (num_methods * itableMethodEntry::size()); }
 
-  static void update_stats(int size) {}
+  static void update_stats(int size) { }
 };
 
 #endif

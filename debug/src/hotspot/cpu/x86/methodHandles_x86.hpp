@@ -12,14 +12,14 @@ public:
 
   static void verify_klass(MacroAssembler* _masm,
                            Register obj, SystemDictionary::WKID klass_id,
-                           const char* error_message = "wrong klass") {};
+                           const char* error_message = "wrong klass") { };
 
   static void verify_method_handle(MacroAssembler* _masm, Register mh_reg) {
     verify_klass(_masm, mh_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_invoke_MethodHandle),
                  "reference is a MH");
   }
 
-  static void verify_ref_kind(MacroAssembler* _masm, int ref_kind, Register member_reg, Register temp) {};
+  static void verify_ref_kind(MacroAssembler* _masm, int ref_kind, Register member_reg, Register temp) { };
 
   // Similar to InterpreterMacroAssembler::jump_from_interpreted.
   // Takes care of special dispatch from single stepping too.

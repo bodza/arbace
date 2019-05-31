@@ -13,7 +13,7 @@ class CollectionSetChooser: public CHeapObj<mtGC> {
   // wrapper methods are provided that use uints.
 
   uint regions_length()          { return (uint) _regions.length(); }
-  HeapRegion* regions_at(uint i) { return _regions.at((int) i);     }
+  HeapRegion* regions_at(uint i) { return _regions.at((int) i); }
   void regions_at_put(uint i, HeapRegion* hr) {
     _regions.at_put((int) i, hr);
   }
@@ -52,7 +52,6 @@ public:
     HeapRegion* res = NULL;
     if (_front < _end) {
       res = regions_at(_front);
-      assert(res != NULL, "Unexpected NULL hr in _regions at index %u", _front);
     }
     return res;
   }
@@ -61,10 +60,7 @@ public:
   // next one.
   HeapRegion* pop() {
     HeapRegion* hr = regions_at(_front);
-    assert(hr != NULL, "pre-condition");
-    assert(_front < _end, "pre-condition");
     regions_at_put(_front, NULL);
-    assert(hr->reclaimable_bytes() <= _remaining_reclaimable_bytes, "remaining reclaimable bytes inconsistent from region: " SIZE_FORMAT " remaining: " SIZE_FORMAT, hr->reclaimable_bytes(), _remaining_reclaimable_bytes);
     _remaining_reclaimable_bytes -= hr->reclaimable_bytes();
     _front += 1;
     return hr;
@@ -127,7 +123,7 @@ public:
 
   // Returns true if the used portion of "_regions" is properly
   // sorted, otherwise asserts false.
-  void verify() {};
+  void verify() { };
 };
 
 class CSetChooserParUpdater : public StackObj {
@@ -159,7 +155,6 @@ public:
         _cur_chunk_idx = _chooser->claim_array_chunk(_chunk_size);
         _cur_chunk_end = _cur_chunk_idx + _chunk_size;
       }
-      assert(_cur_chunk_idx < _cur_chunk_end, "invariant");
       _chooser->set_region(_cur_chunk_idx, hr);
       _cur_chunk_idx += 1;
     } else {

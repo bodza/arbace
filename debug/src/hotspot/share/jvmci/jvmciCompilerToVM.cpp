@@ -44,7 +44,6 @@ void JNIHandleMark::push_jni_handle_block() {
     // Inlined code from jni_PushLocalFrame()
     JNIHandleBlock* java_handles = ((JavaThread*)thread)->active_handles();
     JNIHandleBlock* compile_handles = JNIHandleBlock::allocate_block(thread);
-    assert(compile_handles != NULL && java_handles != NULL, "should not be NULL");
     compile_handles->set_pop_frame_link(java_handles);
     thread->set_active_handles(compile_handles);
   }
@@ -96,9 +95,7 @@ oop CompilerToVM::get_jvmci_type(JVMCIKlassHandle& klass, TRAPS) {
 }
 
 Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
-  assert(_index < _args->length(), "out of bounds");
   oop arg=((objArrayOop) (_args))->obj_at(_index++);
-  assert(expectedType == T_OBJECT || java_lang_boxing_object::is_instance(arg, expectedType), "arg type mismatch");
   return Handle(Thread::current(), arg);
 }
 
@@ -206,7 +203,6 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
         case Bytecodes::_fast_aldc: {
           int cpc_index = reconstituted_code->byte_at(bci + 1) & 0xff;
           int cp_index = method->constants()->object_to_cp_index(cpc_index);
-          assert(cp_index < method->constants()->length(), "sanity check");
           reconstituted_code->byte_at_put(bci + 1, (jbyte) cp_index);
           break;
         }
@@ -214,7 +210,6 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
         case Bytecodes::_fast_aldc_w: {
           int cpc_index = Bytes::get_native_u2((address) reconstituted_code->byte_at_addr(bci + 1));
           int cp_index = method->constants()->object_to_cp_index(cpc_index);
-          assert(cp_index < method->constants()->length(), "sanity check");
           Bytes::put_Java_u2((address) reconstituted_code->byte_at_addr(bci + 1), (u2) cp_index);
           break;
         }
@@ -252,7 +247,6 @@ C2V_VMENTRY(jobject, asResolvedJavaMethod, (JNIEnv *, jobject, jobject executabl
     mirror = java_lang_reflect_Constructor::clazz(executable);
     slot = java_lang_reflect_Constructor::slot(executable);
   } else {
-    assert(executable->klass() == SystemDictionary::reflect_Method_klass(), "wrong type");
     mirror = java_lang_reflect_Method::clazz(executable);
     slot = java_lang_reflect_Method::slot(executable);
   }
@@ -275,7 +269,6 @@ C2V_VMENTRY(jobject, getResolvedJavaMethod, (JNIEnv *, jobject, jobject base, jl
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
                 err_msg("Unexpected type: %s", base_object->klass()->external_name()));
   }
-  assert(method.is_null() || method->is_method(), "invalid read");
   oop result = CompilerToVM::get_jvmci_method(method, CHECK_NULL);
   return JNIHandles::make_local(THREAD, result);
 }
@@ -294,7 +287,6 @@ C2V_VMENTRY(jobject, getConstantPool, (JNIEnv *, jobject, jobject object_handle)
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
                 err_msg("Unexpected type: %s", object->klass()->external_name()));
   }
-  assert(!cp.is_null(), "npe");
   JavaValue method_result(T_OBJECT);
   JavaCallArguments args;
   args.push_long((jlong) (address) cp());
@@ -330,7 +322,6 @@ C2V_VMENTRY(jobject, getResolvedJavaType, (JNIEnv *, jobject, jobject base, jlon
                         base_object != NULL ? base_object->klass()->external_name() : "null",
                         offset, compressed ? "true" : "false"));
   }
-  assert(klass == NULL || klass->is_klass(), "invalid read");
   oop result = CompilerToVM::get_jvmci_type(klass, CHECK_NULL);
   return JNIHandles::make_local(THREAD, result);
 }
@@ -377,7 +368,6 @@ C2V_END
 C2V_VMENTRY(jboolean, isCompilable,(JNIEnv *, jobject, jobject jvmci_method))
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
   constantPoolHandle cp = method->constMethod()->constants();
-  assert(!cp.is_null(), "npe");
   // don't inline method when constant pool contains a CONSTANT_Dynamic
   return !method->is_not_compilable(CompLevel_full_optimization) && !cp->has_dynamic_constant();
 C2V_END
@@ -411,13 +401,10 @@ C2V_VMENTRY(jobject, lookupType, (JNIEnv*, jobject, jstring jname, jclass access
   if (resolve) {
     resolved_klass = SystemDictionary::resolve_or_null(class_name, class_loader, protection_domain, CHECK_0);
   } else {
-    if (class_name->byte_at(0) == 'L' &&
-      class_name->byte_at(class_name->utf8_length()-1) == ';') {
+    if (class_name->byte_at(0) == 'L' && class_name->byte_at(class_name->utf8_length()-1) == ';') {
       // This is a name from a signature.  Strip off the trimmings.
       // Call recursive to keep scope of strippedsym.
-      TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1,
-                                                          class_name->utf8_length()-2,
-                                                          CHECK_0);
+      TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1, class_name->utf8_length()-2, CHECK_0);
       resolved_klass = SystemDictionary::find(strippedsym, class_loader, protection_domain, CHECK_0);
     } else if (FieldType::is_array(class_name)) {
       FieldArrayInfo fd;
@@ -425,14 +412,9 @@ C2V_VMENTRY(jobject, lookupType, (JNIEnv*, jobject, jstring jname, jclass access
       // of this call
       BasicType t = FieldType::get_array_info(class_name, fd, CHECK_0);
       if (t == T_OBJECT) {
-        TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1+fd.dimension(),
-                                                            class_name->utf8_length()-2-fd.dimension(),
-                                                            CHECK_0);
+        TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1+fd.dimension(), class_name->utf8_length()-2-fd.dimension(), CHECK_0);
         // naked oop "k" is OK here -- we assign back into it
-        resolved_klass = SystemDictionary::find(strippedsym,
-                                                             class_loader,
-                                                             protection_domain,
-                                                             CHECK_0);
+        resolved_klass = SystemDictionary::find(strippedsym, class_loader, protection_domain, CHECK_0);
         if (!resolved_klass.is_null()) {
           resolved_klass = resolved_klass->array_klass(fd.dimension(), CHECK_0);
         }
@@ -582,8 +564,7 @@ C2V_VMENTRY(jobject, resolveMethod, (JNIEnv *, jobject, jobject receiver_jvmci_t
   methodHandle m;
   // Only do exact lookup if receiver klass has been linked.  Otherwise,
   // the vtable has not been setup, and the LinkResolver will fail.
-  if (recv_klass->is_array_klass() ||
-      (InstanceKlass::cast(recv_klass)->is_linked() && !recv_klass->is_interface())) {
+  if (recv_klass->is_array_klass() || (InstanceKlass::cast(recv_klass)->is_linked() && !recv_klass->is_interface())) {
     if (resolved->is_interface()) {
       m = LinkResolver::resolve_interface_call_or_null(recv_klass, link_info);
     } else {
@@ -602,7 +583,6 @@ C2V_END
 
 C2V_VMENTRY(jboolean, hasFinalizableSubclass,(JNIEnv *, jobject, jobject jvmci_type))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
-  assert(klass != NULL, "method must not be called for primitive types");
   return Dependencies::find_finalizable_subclass(klass) != NULL;
 C2V_END
 
@@ -663,10 +643,8 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   }
 
   if (result != JVMCIEnv::ok) {
-    assert(cb == NULL, "should be");
   } else {
     if (installed_code_handle.not_null()) {
-      assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
       nmethod::invalidate_installed_code(installed_code_handle, CHECK_0);
       {
         // Ensure that all updates to the InstalledCode fields are consistent.
@@ -985,10 +963,8 @@ void call_interface(JavaValue* result, Klass* spec_klass, Symbol* name, Symbol* 
   Handle receiver = args->receiver();
   Klass* recvrKlass = receiver.is_null() ? (Klass*)NULL : receiver->klass();
   LinkInfo link_info(spec_klass, name, signature);
-  LinkResolver::resolve_interface_call(
-          callinfo, receiver, recvrKlass, link_info, true, CHECK);
+  LinkResolver::resolve_interface_call(callinfo, receiver, recvrKlass, link_info, true, CHECK);
   methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
 
   // Invoke the method
   JavaCalls::call(result, method, args, CHECK);
@@ -1045,7 +1021,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
               realloc_called = true;
 
               GrowableArray<ScopeValue*>* local_values = scope->locals();
-              assert(local_values != NULL, "NULL locals");
               typeArrayOop array_oop = oopFactory::new_boolArray(local_values->length(), CHECK_NULL);
               typeArrayHandle array(THREAD, array_oop);
               for (int i = 0; i < local_values->length(); i++) {
@@ -1107,7 +1082,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
         if (result.get_jobject() != NULL) {
           return JNIHandles::make_local(thread, (oop) result.get_jobject());
         }
-        assert(initialSkip == 0, "There should be no match before initialSkip == 0");
         if (HotSpotStackFrameReference::objectsMaterialized(frame_reference) == JNI_TRUE) {
           // the frame has been deoptimized, we need to re-synchronize the frame and vframe
           intptr_t* stack_pointer = (intptr_t*) HotSpotStackFrameReference::stackPointer(frame_reference);
@@ -1127,7 +1101,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
               THROW_MSG_NULL(vmSymbols::java_lang_IllegalStateException(), "vframe not found after deopt")
             }
             vf = vf->sender();
-            assert(vf->is_compiled_frame(), "Wrong frame type");
           }
         }
         frame_reference = HotSpotStackFrameReference::klass()->allocate_instance_handle(CHECK_NULL);
@@ -1251,7 +1224,6 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     if (!fst.current()->is_compiled_frame()) {
       THROW_MSG(vmSymbols::java_lang_IllegalStateException(), "compiled stack frame expected")
     }
-    assert(fst.current()->cb()->is_nmethod(), "nmethod expected");
     ((nmethod*) fst.current()->cb())->make_not_entrant();
   }
   Deoptimization::deoptimize(thread, *fst.current(), fst.register_map(), Deoptimization::Reason_none);
@@ -1271,7 +1243,6 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
 
   GrowableArray<compiledVFrame*>* virtualFrames = new GrowableArray<compiledVFrame*>(10);
   while (true) {
-    assert(vf->is_compiled_frame(), "Wrong frame type");
     virtualFrames->push(compiledVFrame::cast(vf));
     if (vf->is_top()) {
       break;
@@ -1285,7 +1256,6 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 
   // Reallocate the non-escaping objects and restore their fields.
-  assert(virtualFrames->at(last_frame_number)->scope() != NULL,"invalid scope");
   GrowableArray<ScopeValue*>* objects = virtualFrames->at(last_frame_number)->scope()->objects();
 
   if (objects == NULL) {
@@ -1385,7 +1355,6 @@ C2V_VMENTRY(int, methodDataProfileDataSize, (JNIEnv*, jobject, jlong metaspace_m
   DataLayout* data    = mdo->extra_data_base();
   DataLayout* end   = mdo->extra_data_limit();
   for (;; data = mdo->next_extra(data)) {
-    assert(data < end, "moved past end of extra data");
     profile_data = data->data_in();
     if (mdo->dp_to_di(profile_data->dp()) == position) {
       return profile_data->size_in_bytes();
@@ -1483,70 +1452,70 @@ C2V_END
 #define METASPACE_METHOD_DATA   "J"
 
 JNINativeMethod CompilerToVM::methods[] = {
-  {CC "getBytecode",                                  CC "(" HS_RESOLVED_METHOD ")[B",                                                      FN_PTR(getBytecode)},
-  {CC "getExceptionTableStart",                       CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getExceptionTableStart)},
-  {CC "getExceptionTableLength",                      CC "(" HS_RESOLVED_METHOD ")I",                                                       FN_PTR(getExceptionTableLength)},
-  {CC "findUniqueConcreteMethod",                     CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD ")" HS_RESOLVED_METHOD,                   FN_PTR(findUniqueConcreteMethod)},
-  {CC "getImplementor",                               CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_KLASS,                                       FN_PTR(getImplementor)},
-  {CC "getStackTraceElement",                         CC "(" HS_RESOLVED_METHOD "I)" STACK_TRACE_ELEMENT,                                   FN_PTR(getStackTraceElement)},
-  {CC "methodIsIgnoredBySecurityStackWalk",           CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(methodIsIgnoredBySecurityStackWalk)},
-  {CC "setNotInlinableOrCompilable",                  CC "(" HS_RESOLVED_METHOD ")V",                                                       FN_PTR(setNotInlinableOrCompilable)},
-  {CC "isCompilable",                                 CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(isCompilable)},
-  {CC "hasNeverInlineDirective",                      CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(hasNeverInlineDirective)},
-  {CC "shouldInlineMethod",                           CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(shouldInlineMethod)},
-  {CC "lookupType",                                   CC "(" STRING CLASS "Z)" HS_RESOLVED_KLASS,                                           FN_PTR(lookupType)},
-  {CC "lookupNameInPool",                             CC "(" HS_CONSTANT_POOL "I)" STRING,                                                  FN_PTR(lookupNameInPool)},
-  {CC "lookupNameAndTypeRefIndexInPool",              CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(lookupNameAndTypeRefIndexInPool)},
-  {CC "lookupSignatureInPool",                        CC "(" HS_CONSTANT_POOL "I)" STRING,                                                  FN_PTR(lookupSignatureInPool)},
-  {CC "lookupKlassRefIndexInPool",                    CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(lookupKlassRefIndexInPool)},
-  {CC "lookupKlassInPool",                            CC "(" HS_CONSTANT_POOL "I)Ljava/lang/Object;",                                       FN_PTR(lookupKlassInPool)},
-  {CC "lookupAppendixInPool",                         CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(lookupAppendixInPool)},
-  {CC "lookupMethodInPool",                           CC "(" HS_CONSTANT_POOL "IB)" HS_RESOLVED_METHOD,                                     FN_PTR(lookupMethodInPool)},
-  {CC "constantPoolRemapInstructionOperandFromCache", CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(constantPoolRemapInstructionOperandFromCache)},
-  {CC "resolveConstantInPool",                        CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(resolveConstantInPool)},
-  {CC "resolvePossiblyCachedConstantInPool",          CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(resolvePossiblyCachedConstantInPool)},
-  {CC "resolveTypeInPool",                            CC "(" HS_CONSTANT_POOL "I)" HS_RESOLVED_KLASS,                                       FN_PTR(resolveTypeInPool)},
-  {CC "resolveFieldInPool",                           CC "(" HS_CONSTANT_POOL "I" HS_RESOLVED_METHOD "B[I)" HS_RESOLVED_KLASS,              FN_PTR(resolveFieldInPool)},
-  {CC "resolveInvokeDynamicInPool",                   CC "(" HS_CONSTANT_POOL "I)V",                                                        FN_PTR(resolveInvokeDynamicInPool)},
-  {CC "resolveInvokeHandleInPool",                    CC "(" HS_CONSTANT_POOL "I)V",                                                        FN_PTR(resolveInvokeHandleInPool)},
-  {CC "isResolvedInvokeHandleInPool",                 CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(isResolvedInvokeHandleInPool)},
-  {CC "resolveMethod",                                CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS ")" HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
-  {CC "getSignaturePolymorphicHolders",               CC "()[" STRING,                                                                      FN_PTR(getSignaturePolymorphicHolders)},
-  {CC "getVtableIndexForInterfaceMethod",             CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD ")I",                                     FN_PTR(getVtableIndexForInterfaceMethod)},
-  {CC "getClassInitializer",                          CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
-  {CC "hasFinalizableSubclass",                       CC "(" HS_RESOLVED_KLASS ")Z",                                                        FN_PTR(hasFinalizableSubclass)},
-  {CC "getMaxCallTargetOffset",                       CC "(J)J",                                                                            FN_PTR(getMaxCallTargetOffset)},
-  {CC "asResolvedJavaMethod",                         CC "(" EXECUTABLE ")" HS_RESOLVED_METHOD,                                             FN_PTR(asResolvedJavaMethod)},
-  {CC "getResolvedJavaMethod",                        CC "(Ljava/lang/Object;J)" HS_RESOLVED_METHOD,                                        FN_PTR(getResolvedJavaMethod)},
-  {CC "getConstantPool",                              CC "(Ljava/lang/Object;)" HS_CONSTANT_POOL,                                           FN_PTR(getConstantPool)},
-  {CC "getResolvedJavaType",                          CC "(Ljava/lang/Object;JZ)" HS_RESOLVED_KLASS,                                        FN_PTR(getResolvedJavaType)},
-  {CC "readConfiguration",                            CC "()[" OBJECT,                                                                      FN_PTR(readConfiguration)},
-  {CC "installCode",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE HS_SPECULATION_LOG ")I",    FN_PTR(installCode)},
-  {CC "getMetadata",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE HS_METADATA ")I",                          FN_PTR(getMetadata)},
-  {CC "resetCompilationStatistics",                   CC "()V",                                                                             FN_PTR(resetCompilationStatistics)},
-  {CC "disassembleCodeBlob",                          CC "(" INSTALLED_CODE ")" STRING,                                                     FN_PTR(disassembleCodeBlob)},
-  {CC "executeInstalledCode",                         CC "([" OBJECT INSTALLED_CODE ")" OBJECT,                                             FN_PTR(executeInstalledCode)},
-  {CC "getLineNumberTable",                           CC "(" HS_RESOLVED_METHOD ")[J",                                                      FN_PTR(getLineNumberTable)},
-  {CC "getLocalVariableTableStart",                   CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getLocalVariableTableStart)},
-  {CC "getLocalVariableTableLength",                  CC "(" HS_RESOLVED_METHOD ")I",                                                       FN_PTR(getLocalVariableTableLength)},
-  {CC "reprofile",                                    CC "(" HS_RESOLVED_METHOD ")V",                                                       FN_PTR(reprofile)},
-  {CC "invalidateInstalledCode",                      CC "(" INSTALLED_CODE ")V",                                                           FN_PTR(invalidateInstalledCode)},
-  {CC "collectCounters",                              CC "()[J",                                                                            FN_PTR(collectCounters)},
-  {CC "allocateCompileId",                            CC "(" HS_RESOLVED_METHOD "I)I",                                                      FN_PTR(allocateCompileId)},
-  {CC "isMature",                                     CC "(" METASPACE_METHOD_DATA ")Z",                                                    FN_PTR(isMature)},
-  {CC "hasCompiledCodeForOSR",                        CC "(" HS_RESOLVED_METHOD "II)Z",                                                     FN_PTR(hasCompiledCodeForOSR)},
-  {CC "getSymbol",                                    CC "(J)" STRING,                                                                      FN_PTR(getSymbol)},
-  {CC "iterateFrames",                                CC "([" RESOLVED_METHOD "[" RESOLVED_METHOD "I" INSPECTED_FRAME_VISITOR ")" OBJECT,   FN_PTR(iterateFrames)},
-  {CC "materializeVirtualObjects",                    CC "(" HS_STACK_FRAME_REF "Z)V",                                                      FN_PTR(materializeVirtualObjects)},
-  {CC "shouldDebugNonSafepoints",                     CC "()Z",                                                                             FN_PTR(shouldDebugNonSafepoints)},
-  {CC "writeDebugOutput",                             CC "([BII)V",                                                                         FN_PTR(writeDebugOutput)},
-  {CC "flushDebugOutput",                             CC "()V",                                                                             FN_PTR(flushDebugOutput)},
-  {CC "methodDataProfileDataSize",                    CC "(JI)I",                                                                           FN_PTR(methodDataProfileDataSize)},
-  {CC "getFingerprint",                               CC "(J)J",                                                                            FN_PTR(getFingerprint)},
-  {CC "getHostClass",                                 CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_KLASS,                                       FN_PTR(getHostClass)},
-  {CC "interpreterFrameSize",                         CC "(" BYTECODE_FRAME ")I",                                                           FN_PTR(interpreterFrameSize)},
-  {CC "compileToBytecode",                            CC "(" OBJECT ")V",                                                                   FN_PTR(compileToBytecode)},
-  {CC "getFlagValue",                                 CC "(" STRING ")" OBJECT,                                                             FN_PTR(getFlagValue)},
+  { CC "getBytecode",                                  CC "(" HS_RESOLVED_METHOD ")[B",                                                      FN_PTR(getBytecode)},
+  { CC "getExceptionTableStart",                       CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getExceptionTableStart)},
+  { CC "getExceptionTableLength",                      CC "(" HS_RESOLVED_METHOD ")I",                                                       FN_PTR(getExceptionTableLength)},
+  { CC "findUniqueConcreteMethod",                     CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD ")" HS_RESOLVED_METHOD,                   FN_PTR(findUniqueConcreteMethod)},
+  { CC "getImplementor",                               CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_KLASS,                                       FN_PTR(getImplementor)},
+  { CC "getStackTraceElement",                         CC "(" HS_RESOLVED_METHOD "I)" STACK_TRACE_ELEMENT,                                   FN_PTR(getStackTraceElement)},
+  { CC "methodIsIgnoredBySecurityStackWalk",           CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(methodIsIgnoredBySecurityStackWalk)},
+  { CC "setNotInlinableOrCompilable",                  CC "(" HS_RESOLVED_METHOD ")V",                                                       FN_PTR(setNotInlinableOrCompilable)},
+  { CC "isCompilable",                                 CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(isCompilable)},
+  { CC "hasNeverInlineDirective",                      CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(hasNeverInlineDirective)},
+  { CC "shouldInlineMethod",                           CC "(" HS_RESOLVED_METHOD ")Z",                                                       FN_PTR(shouldInlineMethod)},
+  { CC "lookupType",                                   CC "(" STRING CLASS "Z)" HS_RESOLVED_KLASS,                                           FN_PTR(lookupType)},
+  { CC "lookupNameInPool",                             CC "(" HS_CONSTANT_POOL "I)" STRING,                                                  FN_PTR(lookupNameInPool)},
+  { CC "lookupNameAndTypeRefIndexInPool",              CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(lookupNameAndTypeRefIndexInPool)},
+  { CC "lookupSignatureInPool",                        CC "(" HS_CONSTANT_POOL "I)" STRING,                                                  FN_PTR(lookupSignatureInPool)},
+  { CC "lookupKlassRefIndexInPool",                    CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(lookupKlassRefIndexInPool)},
+  { CC "lookupKlassInPool",                            CC "(" HS_CONSTANT_POOL "I)Ljava/lang/Object;",                                       FN_PTR(lookupKlassInPool)},
+  { CC "lookupAppendixInPool",                         CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(lookupAppendixInPool)},
+  { CC "lookupMethodInPool",                           CC "(" HS_CONSTANT_POOL "IB)" HS_RESOLVED_METHOD,                                     FN_PTR(lookupMethodInPool)},
+  { CC "constantPoolRemapInstructionOperandFromCache", CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(constantPoolRemapInstructionOperandFromCache)},
+  { CC "resolveConstantInPool",                        CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(resolveConstantInPool)},
+  { CC "resolvePossiblyCachedConstantInPool",          CC "(" HS_CONSTANT_POOL "I)" OBJECT,                                                  FN_PTR(resolvePossiblyCachedConstantInPool)},
+  { CC "resolveTypeInPool",                            CC "(" HS_CONSTANT_POOL "I)" HS_RESOLVED_KLASS,                                       FN_PTR(resolveTypeInPool)},
+  { CC "resolveFieldInPool",                           CC "(" HS_CONSTANT_POOL "I" HS_RESOLVED_METHOD "B[I)" HS_RESOLVED_KLASS,              FN_PTR(resolveFieldInPool)},
+  { CC "resolveInvokeDynamicInPool",                   CC "(" HS_CONSTANT_POOL "I)V",                                                        FN_PTR(resolveInvokeDynamicInPool)},
+  { CC "resolveInvokeHandleInPool",                    CC "(" HS_CONSTANT_POOL "I)V",                                                        FN_PTR(resolveInvokeHandleInPool)},
+  { CC "isResolvedInvokeHandleInPool",                 CC "(" HS_CONSTANT_POOL "I)I",                                                        FN_PTR(isResolvedInvokeHandleInPool)},
+  { CC "resolveMethod",                                CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS ")" HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
+  { CC "getSignaturePolymorphicHolders",               CC "()[" STRING,                                                                      FN_PTR(getSignaturePolymorphicHolders)},
+  { CC "getVtableIndexForInterfaceMethod",             CC "(" HS_RESOLVED_KLASS HS_RESOLVED_METHOD ")I",                                     FN_PTR(getVtableIndexForInterfaceMethod)},
+  { CC "getClassInitializer",                          CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
+  { CC "hasFinalizableSubclass",                       CC "(" HS_RESOLVED_KLASS ")Z",                                                        FN_PTR(hasFinalizableSubclass)},
+  { CC "getMaxCallTargetOffset",                       CC "(J)J",                                                                            FN_PTR(getMaxCallTargetOffset)},
+  { CC "asResolvedJavaMethod",                         CC "(" EXECUTABLE ")" HS_RESOLVED_METHOD,                                             FN_PTR(asResolvedJavaMethod)},
+  { CC "getResolvedJavaMethod",                        CC "(Ljava/lang/Object;J)" HS_RESOLVED_METHOD,                                        FN_PTR(getResolvedJavaMethod)},
+  { CC "getConstantPool",                              CC "(Ljava/lang/Object;)" HS_CONSTANT_POOL,                                           FN_PTR(getConstantPool)},
+  { CC "getResolvedJavaType",                          CC "(Ljava/lang/Object;JZ)" HS_RESOLVED_KLASS,                                        FN_PTR(getResolvedJavaType)},
+  { CC "readConfiguration",                            CC "()[" OBJECT,                                                                      FN_PTR(readConfiguration)},
+  { CC "installCode",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE HS_SPECULATION_LOG ")I",    FN_PTR(installCode)},
+  { CC "getMetadata",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE HS_METADATA ")I",                          FN_PTR(getMetadata)},
+  { CC "resetCompilationStatistics",                   CC "()V",                                                                             FN_PTR(resetCompilationStatistics)},
+  { CC "disassembleCodeBlob",                          CC "(" INSTALLED_CODE ")" STRING,                                                     FN_PTR(disassembleCodeBlob)},
+  { CC "executeInstalledCode",                         CC "([" OBJECT INSTALLED_CODE ")" OBJECT,                                             FN_PTR(executeInstalledCode)},
+  { CC "getLineNumberTable",                           CC "(" HS_RESOLVED_METHOD ")[J",                                                      FN_PTR(getLineNumberTable)},
+  { CC "getLocalVariableTableStart",                   CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getLocalVariableTableStart)},
+  { CC "getLocalVariableTableLength",                  CC "(" HS_RESOLVED_METHOD ")I",                                                       FN_PTR(getLocalVariableTableLength)},
+  { CC "reprofile",                                    CC "(" HS_RESOLVED_METHOD ")V",                                                       FN_PTR(reprofile)},
+  { CC "invalidateInstalledCode",                      CC "(" INSTALLED_CODE ")V",                                                           FN_PTR(invalidateInstalledCode)},
+  { CC "collectCounters",                              CC "()[J",                                                                            FN_PTR(collectCounters)},
+  { CC "allocateCompileId",                            CC "(" HS_RESOLVED_METHOD "I)I",                                                      FN_PTR(allocateCompileId)},
+  { CC "isMature",                                     CC "(" METASPACE_METHOD_DATA ")Z",                                                    FN_PTR(isMature)},
+  { CC "hasCompiledCodeForOSR",                        CC "(" HS_RESOLVED_METHOD "II)Z",                                                     FN_PTR(hasCompiledCodeForOSR)},
+  { CC "getSymbol",                                    CC "(J)" STRING,                                                                      FN_PTR(getSymbol)},
+  { CC "iterateFrames",                                CC "([" RESOLVED_METHOD "[" RESOLVED_METHOD "I" INSPECTED_FRAME_VISITOR ")" OBJECT,   FN_PTR(iterateFrames)},
+  { CC "materializeVirtualObjects",                    CC "(" HS_STACK_FRAME_REF "Z)V",                                                      FN_PTR(materializeVirtualObjects)},
+  { CC "shouldDebugNonSafepoints",                     CC "()Z",                                                                             FN_PTR(shouldDebugNonSafepoints)},
+  { CC "writeDebugOutput",                             CC "([BII)V",                                                                         FN_PTR(writeDebugOutput)},
+  { CC "flushDebugOutput",                             CC "()V",                                                                             FN_PTR(flushDebugOutput)},
+  { CC "methodDataProfileDataSize",                    CC "(JI)I",                                                                           FN_PTR(methodDataProfileDataSize)},
+  { CC "getFingerprint",                               CC "(J)J",                                                                            FN_PTR(getFingerprint)},
+  { CC "getHostClass",                                 CC "(" HS_RESOLVED_KLASS ")" HS_RESOLVED_KLASS,                                       FN_PTR(getHostClass)},
+  { CC "interpreterFrameSize",                         CC "(" BYTECODE_FRAME ")I",                                                           FN_PTR(interpreterFrameSize)},
+  { CC "compileToBytecode",                            CC "(" OBJECT ")V",                                                                   FN_PTR(compileToBytecode)},
+  { CC "getFlagValue",                                 CC "(" STRING ")" OBJECT,                                                             FN_PTR(getFlagValue)},
 };
 
 int CompilerToVM::methods_count() {

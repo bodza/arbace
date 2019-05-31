@@ -158,21 +158,20 @@ private:
 
 // This macro checks the type of a VMStructEntry by comparing pointer types
 #define CHECK_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
- {typeName *dummyObj = NULL; type* dummy = &dummyObj->fieldName; \
-  assert(offset_of(typeName, fieldName) < sizeof(typeName), "Illegal nonstatic struct entry, field offset too large"); }
+ { typeName *dummyObj = NULL; type* dummy = &dummyObj->fieldName; }
 
 // This macro checks the type of a volatile VMStructEntry by comparing pointer types
 #define CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
- {typedef type dummyvtype; typeName *dummyObj = NULL; volatile dummyvtype* dummy = &dummyObj->fieldName; }
+ { typedef type dummyvtype; typeName *dummyObj = NULL; volatile dummyvtype* dummy = &dummyObj->fieldName; }
 
 // This macro checks the type of a static VMStructEntry by comparing pointer types
 #define CHECK_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type) \
- {type* dummy = &typeName::fieldName; }
+ { type* dummy = &typeName::fieldName; }
 
 // This macro checks the type of a static pointer volatile VMStructEntry by comparing pointer types,
 // e.g.: "static ObjectMonitor * volatile gBlockList;"
 #define CHECK_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type) \
- {type volatile * dummy = &typeName::fieldName; }
+ { type volatile * dummy = &typeName::fieldName; }
 
 // This macro ensures the type of a field and its containing type are
 // present in the type table. The assertion string is shorter than
@@ -180,10 +179,7 @@ private:
 // which seems to prevent very long lines from compiling. This assertion
 // means that an entry in VMStructs::localHotSpotVMStructs[] was not
 // found in VMStructs::localHotSpotVMTypes[].
-#define ENSURE_FIELD_TYPE_PRESENT(typeName, fieldName, type) \
- { \
-    assert(findType(QUOTE(typeName)) != 0, "type \"" QUOTE(typeName) "\" not found in type table"); \
-   assert(findType(QUOTE(type)) != 0, "type \"" QUOTE(type) "\" not found in type table"); }
+#define ENSURE_FIELD_TYPE_PRESENT(typeName, fieldName, type) { }
 
 // This is a no-op macro for unchecked fields
 #define CHECK_NO_OP(a, b, c)

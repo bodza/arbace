@@ -23,15 +23,15 @@
 
 class Parker : public os::PlatformParker {
 private:
-  volatile int _counter ;
-  Parker * FreeNext ;
-  JavaThread * AssociatedWith ; // Current association
+  volatile int _counter;
+  Parker* FreeNext;
+  JavaThread* AssociatedWith; // Current association
 
 public:
   Parker() : PlatformParker() {
-    _counter       = 0 ;
-    FreeNext       = NULL ;
-    AssociatedWith = NULL ;
+    _counter       = 0;
+    FreeNext       = NULL;
+    AssociatedWith = NULL;
   }
 protected:
   ~Parker() { ShouldNotReachHere(); }
@@ -42,11 +42,11 @@ public:
   void unpark();
 
   // Lifecycle operators
-  static Parker * Allocate (JavaThread * t) ;
-  static void Release (Parker * e) ;
+  static Parker* Allocate (JavaThread* t);
+  static void Release (Parker* e);
 private:
-  static Parker * volatile FreeList ;
-  static volatile int ListLock ;
+  static Parker* volatile FreeList;
+  static volatile int ListLock;
 };
 
 /////////////////////////////////////////////////////////////
@@ -91,21 +91,21 @@ private:
 
 class ParkEvent : public os::PlatformEvent {
   private:
-    ParkEvent * FreeNext ;
+    ParkEvent* FreeNext;
 
     // Current association
-    Thread * AssociatedWith ;
+    Thread* AssociatedWith;
 
   public:
     // MCS-CLH list linkage and Native Mutex/Monitor
-    ParkEvent * volatile ListNext ;
-    volatile intptr_t OnList ;
-    volatile int TState ;
-    volatile int Notified ;             // for native monitor construct
+    ParkEvent* volatile ListNext;
+    volatile intptr_t OnList;
+    volatile int TState;
+    volatile int Notified;             // for native monitor construct
 
   private:
-    static ParkEvent * volatile FreeList ;
-    static volatile int ListLock ;
+    static ParkEvent* volatile FreeList;
+    static volatile int ListLock;
 
     // It's prudent to mark the dtor as "private"
     // ensuring that it's not visible outside the package.
@@ -114,15 +114,15 @@ class ParkEvent : public os::PlatformEvent {
     // The other compilers accept private dtors.
 
   protected:        // Ensure dtor is never invoked
-    ~ParkEvent() { guarantee (0, "invariant") ; }
+    ~ParkEvent() { guarantee(0, "invariant"); }
 
     ParkEvent() : PlatformEvent() {
-       AssociatedWith = NULL ;
-       FreeNext       = NULL ;
-       ListNext       = NULL ;
-       OnList         = 0 ;
-       TState         = 0 ;
-       Notified       = 0 ;
+       AssociatedWith = NULL;
+       FreeNext       = NULL;
+       ListNext       = NULL;
+       OnList         = 0;
+       TState         = 0;
+       Notified       = 0;
     }
 
     // We use placement-new to force ParkEvent instances to be
@@ -130,11 +130,11 @@ class ParkEvent : public os::PlatformEvent {
     // significant byte of a ParkEvent address is always 0.
 
     void * operator new (size_t sz) throw();
-    void operator delete (void * a) ;
+    void operator delete (void * a);
 
   public:
-    static ParkEvent * Allocate (Thread * t) ;
-    static void Release (ParkEvent * e) ;
-} ;
+    static ParkEvent * Allocate (Thread * t);
+    static void Release (ParkEvent * e);
+};
 
 #endif

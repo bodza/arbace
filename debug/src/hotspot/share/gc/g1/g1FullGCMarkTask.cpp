@@ -24,22 +24,14 @@ void G1FullGCMarkTask::work(uint worker_id) {
   MarkingCodeBlobClosure code_closure(marker->mark_closure(), !CodeBlobToOopClosure::FixRelocations);
 
   if (ClassUnloading) {
-    _root_processor.process_strong_roots(
-        marker->mark_closure(),
-        marker->cld_closure(),
-        &code_closure);
+    _root_processor.process_strong_roots(marker->mark_closure(), marker->cld_closure(), &code_closure);
   } else {
-    _root_processor.process_all_roots_no_string_table(
-        marker->mark_closure(),
-        marker->cld_closure(),
-        &code_closure);
+    _root_processor.process_all_roots_no_string_table(marker->mark_closure(), marker->cld_closure(), &code_closure);
   }
 
   // Mark stack is populated, now process and drain it.
   marker->complete_marking(collector()->oop_queue_set(), collector()->array_queue_set(), &_terminator);
 
   // This is the point where the entire marking should have completed.
-  assert(marker->oop_stack()->is_empty(), "Marking should have completed");
-  assert(marker->objarray_stack()->is_empty(), "Array marking should have completed");
   log_task("Marking task", worker_id, start);
 }

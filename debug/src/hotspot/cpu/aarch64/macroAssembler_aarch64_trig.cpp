@@ -51,8 +51,6 @@
 // and cos_coef to use the same optimization as in 3). It allows to load most of
 // required constants via single instruction
 //
-//
-//
 ///* __ieee754_rem_pio2(x,y)
 // *
 // * returns the remainder of x rem pi/2 in y[0]+y[1] (i.e. like x div pi/2)
@@ -60,106 +58,6 @@
 // * uses __kernel_rem_pio2()
 // */
 // // use tables(see stubRoutines_aarch64.cpp): two_over_pi and modified npio2_hw
-//
-// BEGIN __ieee754_rem_pio2 PSEUDO CODE
-//
-//static int __ieee754_rem_pio2(double x, double *y) {
-//  double z,w,t,r,fn;
-//  double tx[3];
-//  int e0,i,j,nx,n,ix,hx,i0;
-//
-//  i0 = ((*(int*)&two24A)>>30)^1;        /* high word index */
-//  hx = *(i0+(int*)&x);          /* high word of x */
-//  ix = hx&0x7fffffff;
-//  if(ix<0x4002d97c) {  /* |x| < 3pi/4, special case with n=+-1 */
-//    if(hx>0) {
-//      z = x - pio2_1;
-//      if(ix!=0x3ff921fb) {    /* 33+53 bit pi is good enough */
-//        y[0] = z - pio2_1t;
-//        y[1] = (z-y[0])-pio2_1t;
-//      } else {                /* near pi/2, use 33+33+53 bit pi */
-//        z -= pio2_2;
-//        y[0] = z - pio2_2t;
-//        y[1] = (z-y[0])-pio2_2t;
-//      }
-//      return 1;
-//    } else {    /* negative x */
-//      z = x + pio2_1;
-//      if(ix!=0x3ff921fb) {    /* 33+53 bit pi is good enough */
-//        y[0] = z + pio2_1t;
-//        y[1] = (z-y[0])+pio2_1t;
-//      } else {                /* near pi/2, use 33+33+53 bit pi */
-//        z += pio2_2;
-//        y[0] = z + pio2_2t;
-//        y[1] = (z-y[0])+pio2_2t;
-//      }
-//      return -1;
-//    }
-//  }
-//  if(ix<=0x413921fb) { /* |x| ~<= 2^19*(pi/2), medium size */
-//    t  = fabsd(x);
-//    n  = (int) (t*invpio2+half);
-//    fn = (double)n;
-//    r  = t-fn*pio2_1;
-//    w  = fn*pio2_1t;    /* 1st round good to 85 bit */
-//    // NOTE: y[0] = r-w; is moved from if/else below to be before "if"
-//    y[0] = r-w;
-//    if(n<32&&ix!=npio2_hw[n-1]) {
-//      // y[0] = r-w;       /* quick check no cancellation */ // NOTE: moved earlier
-//    } else {
-//      j  = ix>>20;
-//      // y[0] = r-w; // NOTE: moved earlier
-//      i = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
-//      if(i>16) {  /* 2nd iteration needed, good to 118 */
-//        t  = r;
-//        w  = fn*pio2_2;
-//        r  = t-w;
-//        w  = fn*pio2_2t-((t-r)-w);
-//        y[0] = r-w;
-//        i = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
-//        if(i>49)  {     /* 3rd iteration need, 151 bits acc */
-//          t  = r;       /* will cover all possible cases */
-//          w  = fn*pio2_3;
-//          r  = t-w;
-//          w  = fn*pio2_3t-((t-r)-w);
-//          y[0] = r-w;
-//        }
-//      }
-//    }
-//    y[1] = (r-y[0])-w;
-//    if(hx<0)    {y[0] = -y[0]; y[1] = -y[1]; return -n;}
-//    else         return n;
-//  }
-//  /*
-//   * all other (large) arguments
-//   */
-//  // NOTE: this check is removed, because it was checked in dsin/dcos
-//  // if(ix>=0x7ff00000) {          /* x is inf or NaN */
-//  //  y[0]=y[1]=x-x; return 0;
-//  // }
-//  /* set z = scalbn(|x|,ilogb(x)-23) */
-//  *(1-i0+(int*)&z) = *(1-i0+(int*)&x);
-//  e0    = (ix>>20)-1046;        /* e0 = ilogb(z)-23; */
-//  *(i0+(int*)&z) = ix - (e0<<20);
-//
-//  // NOTE: "for" loop below in unrolled. See comments in asm code
-//  for(i=0;i<2;i++) {
-//    tx[i] = (double)((int)(z));
-//    z     = (z-tx[i])*two24A;
-//  }
-//
-//  tx[2] = z;
-//  nx = 3;
-//
-//  // NOTE: while(tx[nx-1]==zeroA) nx--;  is unrolled. See comments in asm code
-//  while(tx[nx-1]==zeroA) nx--;  /* skip zero term */
-//
-//  n  =  __kernel_rem_pio2(tx,y,e0,nx,2,two_over_pi);
-//  if(hx<0) {y[0] = -y[0]; y[1] = -y[1]; return -n;}
-//  return n;
-//}
-//
-// END __ieee754_rem_pio2 PSEUDO CODE
 //
 // Changes between fdlibm and intrinsic for __ieee754_rem_pio2:
 //     1. INF/NaN check for huge argument is removed in comparison with fdlibm
@@ -343,7 +241,7 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
       movw(i, 24);
       fmovd(v26, jv);                              // v26 = z
 
-      block_comment("unrolled for(i=0;i<2;i++) {tx[i] = (double)((int)(z));z = (z-tx[i])*two24A;}"); {
+      block_comment("unrolled for(i=0;i<2;i++) {tx[i] = (double)((int)(z));z = (z-tx[i])*two24A; }"); {
         // tx[0,1,2] = v6,v7,v26
         frintzd(v6, v26);                          // v6 = (double)((int)v26)
         sdivw(jv, rscratch2, i);                   // jv = (e0 - 3)/24
@@ -453,7 +351,7 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
 // *
 // *      jv      index for pointing to the suitable ipio2[] for the
 // *              computation. In general, we want
-// *                      ( 2^e0*x[0] * ipio2[jv-1]*2^(-24jv) )/8
+// *                      ( 2^e0*x[0] * ipio2[jv-1]*2^(-24jv))/8
 // *              is an integer. Thus
 // *                      e0-3-24*jv >= 0 or (e0-3)/24 >= jv
 // *              Hence jv = max(0,(e0-3)/24).
@@ -481,164 +379,6 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
 // */
 //
 // Use PIo2 table(see stubRoutines_aarch64.cpp)
-//
-// BEGIN __kernel_rem_pio2 PSEUDO CODE
-//
-//static int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec, /* NOTE: converted to double */ const double *ipio2 // const int *ipio2) {
-//  int jz,jx,jv,jp,jk,carry,n,iq[20],i,j,k,m,q0,ih;
-//  double z,fw,f[20],fq[20],q[20];
-//
-//  /* initialize jk*/
-//  // jk = init_jk[prec]; // NOTE: prec==2 for double. jk is always 4.
-//  jp = jk; // NOTE: always 4
-//
-//  /* determine jx,jv,q0, note that 3>q0 */
-//  jx =  nx-1;
-//  jv = (e0-3)/24; if(jv<0) jv=0;
-//  q0 =  e0-24*(jv+1);
-//
-//  /* set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk] */
-//  j = jv-jx; m = jx+jk;
-//
-//  // NOTE: split into two for-loops: one with zeroB and one with ipio2[j]. It
-//  //       allows the use of wider loads/stores
-//  for(i=0;i<=m;i++,j++) f[i] = (j<0)? zeroB : /* NOTE: converted to double */ ipio2[j]; //(double) ipio2[j];
-//
-//  // NOTE: unrolled and vectorized "for". See comments in asm code
-//  /* compute q[0],q[1],...q[jk] */
-//  for (i=0;i<=jk;i++) {
-//    for(j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
-//  }
-//
-//  jz = jk;
-//recompute:
-//  /* distill q[] into iq[] reversingly */
-//  for(i=0,j=jz,z=q[jz];j>0;i++,j--) {
-//    fw    =  (double)((int)(twon24* z));
-//    iq[i] =  (int)(z-two24B*fw);
-//    z     =  q[j-1]+fw;
-//  }
-//
-//  /* compute n */
-//  z  = scalbnA(z,q0);           /* actual value of z */
-//  z -= 8.0*floor(z*0.125);              /* trim off integer >= 8 */
-//  n  = (int) z;
-//  z -= (double)n;
-//  ih = 0;
-//  if(q0>0) {    /* need iq[jz-1] to determine n */
-//    i  = (iq[jz-1]>>(24-q0)); n += i;
-//    iq[jz-1] -= i<<(24-q0);
-//    ih = iq[jz-1]>>(23-q0);
-//  }
-//  else if(q0==0) ih = iq[jz-1]>>23;
-//  else if(z>=0.5) ih=2;
-//
-//  if(ih>0) {    /* q > 0.5 */
-//    n += 1; carry = 0;
-//    for(i=0;i<jz ;i++) {        /* compute 1-q */
-//      j = iq[i];
-//      if(carry==0) {
-//        if(j!=0) {
-//          carry = 1; iq[i] = 0x1000000- j;
-//        }
-//      } else  iq[i] = 0xffffff - j;
-//    }
-//    if(q0>0) {          /* rare case: chance is 1 in 12 */
-//      switch(q0) {
-//      case 1:
-//        iq[jz-1] &= 0x7fffff; break;
-//      case 2:
-//        iq[jz-1] &= 0x3fffff; break;
-//      }
-//    }
-//    if(ih==2) {
-//      z = one - z;
-//      if(carry!=0) z -= scalbnA(one,q0);
-//    }
-//  }
-//
-//  /* check if recomputation is needed */
-//  if(z==zeroB) {
-//    j = 0;
-//    for (i=jz-1;i>=jk;i--) j |= iq[i];
-//    if(j==0) { /* need recomputation */
-//      for(k=1;iq[jk-k]==0;k++);   /* k = no. of terms needed */
-//
-//      for(i=jz+1;i<=jz+k;i++) {   /* add q[jz+1] to q[jz+k] */
-//        f[jx+i] = /* NOTE: converted to double */ ipio2[jv+i]; //(double) ipio2[jv+i];
-//        for(j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
-//        q[i] = fw;
-//      }
-//      jz += k;
-//      goto recompute;
-//    }
-//  }
-//
-//  /* chop off zero terms */
-//  if(z==0.0) {
-//    jz -= 1; q0 -= 24;
-//    while(iq[jz]==0) { jz--; q0-=24;}
-//  } else { /* break z into 24-bit if necessary */
-//    z = scalbnA(z,-q0);
-//    if(z>=two24B) {
-//      fw = (double)((int)(twon24*z));
-//      iq[jz] = (int)(z-two24B*fw);
-//      jz += 1; q0 += 24;
-//      iq[jz] = (int) fw;
-//    } else iq[jz] = (int) z ;
-//  }
-//
-//  /* convert integer "bit" chunk to floating-point value */
-//  fw = scalbnA(one,q0);
-//  for(i=jz;i>=0;i--) {
-//    q[i] = fw*(double)iq[i]; fw*=twon24;
-//  }
-//
-//  /* compute PIo2[0,...,jp]*q[jz,...,0] */
-//  for(i=jz;i>=0;i--) {
-//    for(fw=0.0,k=0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
-//    fq[jz-i] = fw;
-//  }
-//
-//  // NOTE: switch below is eliminated, because prec is always 2 for doubles
-//  /* compress fq[] into y[] */
-//  //switch(prec) {
-//  //case 0:
-//  //  fw = 0.0;
-//  //  for (i=jz;i>=0;i--) fw += fq[i];
-//  //  y[0] = (ih==0)? fw: -fw;
-//  //  break;
-//  //case 1:
-//  //case 2:
-//    fw = 0.0;
-//    for (i=jz;i>=0;i--) fw += fq[i];
-//    y[0] = (ih==0)? fw: -fw;
-//    fw = fq[0]-fw;
-//    for (i=1;i<=jz;i++) fw += fq[i];
-//    y[1] = (ih==0)? fw: -fw;
-//  //  break;
-//  //case 3:       /* painful */
-//  //  for (i=jz;i>0;i--) {
-//  //    fw      = fq[i-1]+fq[i];
-//  // fq[i]  += fq[i-1]-fw;
-//  //    fq[i-1] = fw;
-//  //  }
-//  //  for (i=jz;i>1;i--) {
-//  //    fw      = fq[i-1]+fq[i];
-//  //    fq[i]  += fq[i-1]-fw;
-//  //    fq[i-1] = fw;
-//  //  }
-//  //  for (fw=0.0,i=jz;i>=2;i--) fw += fq[i];
-//  //  if(ih==0) {
-//  //    y[0] =  fq[0]; y[1] =  fq[1]; y[2] =  fw;
-//  //  } else {
-//  //    y[0] = -fq[0]; y[1] = -fq[1]; y[2] = -fw;
-//  //  }
-//  //}
-//  return n&7;
-//}
-//
-// END __kernel_rem_pio2 PSEUDO CODE
 //
 // Changes between fdlibm and intrinsic:
 //     1. One loop is unrolled and vectorized (see comments in code)
@@ -800,11 +540,6 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
 
   block_comment("recompute loop"); {
     bind(RECOMPUTE);
-      //  for(i=0,j=jz,z=q[jz];j>0;i++,j--) {
-      //    fw    =  (double)((int)(twon24* z));
-      //    iq[i] =  (int)(z-two24A*fw);
-      //    z     =  q[j-1]+fw;
-      //  }
       block_comment("distill q[] into iq[] reversingly"); {
           eorw(i, i, i);
           movw(j, jz);
@@ -1009,7 +744,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
         mov(i, jz);
         fmovd(v30, tmp2);
 
-        block_comment("for(i=jz;i>=0;i--) {q[i] = fw*(double)iq[i]; fw*=twon24;}"); {
+        block_comment("for(i=jz;i>=0;i--) {q[i] = fw*(double)iq[i]; fw*=twon24; }"); {
           bind(CONVERTION_FOR);
             ldrw(tmp1, Address(iqBase, i, Address::lsl(2)));
             scvtfwd(v31, tmp1);
@@ -1127,29 +862,6 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
 //
 // NOTE: S1..S6 were moved into a table: StubRoutines::aarch64::_dsin_coef
 //
-// BEGIN __kernel_sin PSEUDO CODE
-//
-//static double __kernel_sin(double x, double y, bool iy)
-//{
-//        double z,r,v;
-//
-//        // NOTE: not needed. moved to dsin/dcos
-//        //int ix;
-//        //ix = high(x)&0x7fffffff;                /* high word of x */
-//
-//        // NOTE: moved to dsin/dcos
-//        //if(ix<0x3e400000)                       /* |x| < 2**-27 */
-//        //   {if((int)x==0) return x;}            /* generate inexact */
-//
-//        z       =  x*x;
-//        v       =  z*x;
-//        r       =  S2+z*(S3+z*(S4+z*(S5+z*S6)));
-//        if(iy==0) return x+v*(S1+z*r);
-//        else      return x-((z*(half*y-v*r)-y)-v*S1);
-//}
-//
-// END __kernel_sin PSEUDO CODE
-//
 // Changes between fdlibm and intrinsic:
 //     1. Removed |x| < 2**-27 check, because if was done earlier in dsin/dcos
 //     2. Constants are now loaded from table dsin_coef
@@ -1240,40 +952,6 @@ void MacroAssembler::generate_kernel_sin(FloatRegister x, bool iyIsOne, address 
 //
 // NOTE: C1..C6 were moved into a table: StubRoutines::aarch64::_dcos_coef
 //
-// BEGIN __kernel_cos PSEUDO CODE
-//
-//static double __kernel_cos(double x, double y)
-//{
-//  double a,h,z,r,qx=0;
-//
-//  // NOTE: ix is already initialized in dsin/dcos. Reuse value from register
-//  //int ix;
-//  //ix = high(x)&0x7fffffff;              /* ix = |x|'s high word*/
-//
-//  // NOTE: moved to dsin/dcos
-//  //if(ix<0x3e400000) {                   /* if x < 2**27 */
-//  //  if(((int)x)==0) return one;         /* generate inexact */
-//  //}
-//
-//  z  = x*x;
-//  r  = z*(C1+z*(C2+z*(C3+z*(C4+z*(C5+z*C6)))));
-//  if(ix < 0x3FD33333)                   /* if |x| < 0.3 */
-//    return one - (0.5*z - (z*r - x*y));
-//  else {
-//    if(ix > 0x3fe90000) {               /* x > 0.78125 */
-//      qx = 0.28125;
-//    } else {
-//      set_high(&qx, ix-0x00200000); /* x/4 */
-//      set_low(&qx, 0);
-//    }
-//    h = 0.5*z-qx;
-//    a = one-qx;
-//    return a - (h - (z*r-x*y));
-//  }
-//}
-//
-// END __kernel_cos PSEUDO CODE
-//
 // Changes between fdlibm and intrinsic:
 //     1. Removed |x| < 2**-27 check, because if was done earlier in dsin/dcos
 //     2. Constants are now loaded from table dcos_coef
@@ -1344,38 +1022,6 @@ void MacroAssembler::generate_kernel_cos(FloatRegister x, address dcos_coef) {
 // 1) handle corner cases: |x| ~< pi/4, x is NaN or INF, |x| < 2**-27
 // 2) perform argument reduction if required
 // 3) call kernel_sin or kernel_cos which approximate sin/cos via polynomial
-//
-// BEGIN dsin/dcos PSEUDO CODE
-//
-//dsin_dcos(jdouble x, bool isCos) {
-//  double y[2],z=0.0;
-//  int n, ix;
-//
-//  /* High word of x. */
-//  ix = high(x);
-//
-//  /* |x| ~< pi/4 */
-//  ix &= 0x7fffffff;
-//  if(ix <= 0x3fe921fb) return isCos ? __kernel_cos : __kernel_sin(x,z,0);
-//
-//  /* sin/cos(Inf or NaN) is NaN */
-//  else if (ix>=0x7ff00000) return x-x;
-//  else if (ix<0x3e400000) {                   /* if ix < 2**27 */
-//    if(((int)x)==0) return isCos ? one : x;         /* generate inexact */
-//  }
-//  /* argument reduction needed */
-//  else {
-//    n = __ieee754_rem_pio2(x,y);
-//    switch(n&3) {
-//    case 0: return isCos ?  __kernel_cos(y[0],y[1])      :  __kernel_sin(y[0],y[1], true);
-//    case 1: return isCos ? -__kernel_sin(y[0],y[1],true) :  __kernel_cos(y[0],y[1]);
-//    case 2: return isCos ? -__kernel_cos(y[0],y[1])      : -__kernel_sin(y[0],y[1], true);
-//    default:
-//      return isCos ? __kernel_sin(y[0],y[1],1) : -__kernel_cos(y[0],y[1]);
-//    }
-//  }
-//}
-// END dsin/dcos PSEUDO CODE
 //
 // Changes between fdlibm and intrinsic:
 //     1. Moved ix < 2**27 from kernel_sin/kernel_cos into dsin/dcos

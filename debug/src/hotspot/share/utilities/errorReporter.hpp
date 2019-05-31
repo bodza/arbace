@@ -8,7 +8,7 @@ class ErrorReporter : public StackObj {
 
 public:
   ErrorReporter();
-  ~ErrorReporter(){};
+  ~ErrorReporter() { };
 
   void call(FILE* fd, char *buffer, int length);
 };

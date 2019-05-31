@@ -11,7 +11,7 @@ class ThreadStatisticalInfo {
   uint64_t _define_class_count;
 
 public:
-  ThreadStatisticalInfo() : _start_time_stamp(os::javaTimeMillis()), _define_class_count(0) {}
+  ThreadStatisticalInfo() : _start_time_stamp(os::javaTimeMillis()), _define_class_count(0) { }
   uint64_t getStartTime() const             { return _start_time_stamp; }
   uint64_t getDefineClassCount() const                    { return  _define_class_count; }
   void     setDefineClassCount(uint64_t defineClassCount) { _define_class_count = defineClassCount; }

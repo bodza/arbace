@@ -204,7 +204,6 @@ public:
     _open(open) { }
 
   virtual ~G1ArchiveAllocator() {
-    assert(_allocation_region == NULL, "_allocation_region not NULL");
   }
 
   static G1ArchiveAllocator* create_allocator(G1CollectedHeap* g1h, bool open);

@@ -14,8 +14,7 @@ HSpaceCounters::HSpaceCounters(const char* name_space,
     EXCEPTION_MARK;
     ResourceMark rm;
 
-    const char* cns =
-      PerfDataManager::name_space(name_space, "space", ordinal);
+    const char* cns = PerfDataManager::name_space(name_space, "space", ordinal);
 
     _name_space = NEW_C_HEAP_ARRAY(char, strlen(cns)+1, mtGC);
     strcpy(_name_space, cns);

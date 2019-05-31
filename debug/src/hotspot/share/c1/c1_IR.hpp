@@ -53,15 +53,11 @@ class XHandler: public CompilationResourceObj {
   LIR_List*   entry_code() const                 { return _entry_code; }
   int         entry_pco() const                  { return _entry_pco; }
   int         phi_operand() const                {
-    assert(_phi_operand != -1, "not set");
     return _phi_operand; }
   int         scope_count() const                {
-    assert(_scope_count != -1, "not set");
     return _scope_count; }
 
   void set_entry_block(BlockBegin* entry_block) {
-    assert(entry_block->is_set(BlockBegin::exception_entry_flag), "must be an exception handler entry");
-    assert(entry_block->bci() == handler_bci(), "bci's must correspond");
     _entry_block = entry_block;
   }
   void set_entry_code(LIR_List* entry_code)      { _entry_code = entry_code; }
@@ -185,7 +181,7 @@ class IRScopeDebugInfo: public CompilationResourceObj {
     , _bci(bci)
     , _expressions(expressions)
     , _monitors(monitors)
-    , _caller(caller) {}
+    , _caller(caller) { }
 
   IRScope*                      scope()       { return _scope;       }
   int                           bci()         { return _bci;         }
@@ -287,7 +283,6 @@ class IR: public CompilationResourceObj {
   // The linear-scan order and the code emission order are equal, but
   // this may change in future
   BlockList* linear_scan_order() {
-    assert(_code != NULL, "not computed");
     return _code; }
 
   // iteration
@@ -296,9 +291,9 @@ class IR: public CompilationResourceObj {
   void iterate_linear_scan_order(BlockClosure* closure);
 
   // debugging
-  static void print(BlockBegin* start, bool cfg_only, bool live_only = false) {};
-  void print(bool cfg_only, bool live_only = false)                           {};
-  void verify()                                                               {};
+  static void print(BlockBegin* start, bool cfg_only, bool live_only = false) { };
+  void print(bool cfg_only, bool live_only = false)                           { };
+  void verify()                                                               { };
 };
 
 // Globally do instruction substitution and remove substituted

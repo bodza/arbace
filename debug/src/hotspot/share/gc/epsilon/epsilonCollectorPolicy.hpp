@@ -13,7 +13,7 @@ protected:
   }
 
 public:
-  EpsilonCollectorPolicy() : CollectorPolicy() {};
+  EpsilonCollectorPolicy() : CollectorPolicy() { };
 };
 
 #endif

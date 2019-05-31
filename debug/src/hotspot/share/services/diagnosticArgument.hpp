@@ -49,7 +49,7 @@ protected:
                   const char* default_string, bool mandatory)
     : _next(NULL), _name(name), _description(description), _type(type),
       _default_string(default_string), _is_set(false), _is_mandatory(mandatory),
-      _allow_multiple(false) {}
+      _allow_multiple(false) { }
 public:
   const char* name() const        { return _name; }
   const char* description() const { return _description; }
@@ -94,7 +94,7 @@ public:
                GenDCmdArgument(name, description, type, defaultvalue, mandatory)
                { }
   ~DCmdArgument() { destroy_value(); }
-  ArgType value() const { return _value;}
+  ArgType value() const { return _value; }
   void set_value(ArgType v) { _value = v; }
   void reset(TRAPS) {
     destroy_value();
@@ -107,7 +107,7 @@ public:
   void parse_value(const char* str, size_t len, TRAPS);
   void init_value(TRAPS);
   void destroy_value();
-  void value_as_str(char *buf, size_t len) const { to_string(_value, buf, len);}
+  void value_as_str(char *buf, size_t len) const { to_string(_value, buf, len); }
 };
 
 #endif

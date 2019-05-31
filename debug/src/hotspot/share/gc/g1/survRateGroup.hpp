@@ -29,7 +29,6 @@ public:
   size_t region_num() const { return _region_num; }
 
   double accum_surv_rate_pred(int age) const {
-    assert(age >= 0, "must be");
     if ((size_t)age < _stats_arrays_length)
       return _accum_surv_rate_pred[age];
     else {
@@ -55,7 +54,6 @@ public:
 
   int age_in_group(int age_index) const {
     int ret = (int) (_all_regions_allocated - age_index);
-    assert( ret >= 0, "invariant" );
     return ret;
   }
   void finished_recalculating_age_indexes() {

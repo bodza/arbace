@@ -44,7 +44,7 @@ void ClassLoaderStatsClosure::do_cld(ClassLoaderData* cld) {
 
   ClassStatsClosure csc;
   cld->classes_do(&csc);
-  if(cld->is_anonymous()) {
+  if (cld->is_anonymous()) {
     cls->_anon_classes_count += csc._num_classes;
   } else {
     cls->_classes_count = csc._num_classes;
@@ -53,7 +53,7 @@ void ClassLoaderStatsClosure::do_cld(ClassLoaderData* cld) {
 
   ClassLoaderMetaspace* ms = cld->metaspace_or_null();
   if (ms != NULL) {
-    if(cld->is_anonymous()) {
+    if (cld->is_anonymous()) {
       cls->_anon_chunk_sz += ms->allocated_chunks_bytes();
       cls->_anon_block_sz += ms->allocated_blocks_bytes();
     } else {
@@ -83,10 +83,7 @@ bool ClassLoaderStatsClosure::do_entry(oop const& key, ClassLoaderStats* const& 
   }
   _out->cr();
   if (cls->_anon_classes_count > 0) {
-    _out->print_cr(SPACE SPACE SPACE "                                    " UINTX_FORMAT_W(6) "  " SIZE_FORMAT_W(8) "  " SIZE_FORMAT_W(8) "   + unsafe anonymous classes",
-        "", "", "",
-        cls->_anon_classes_count,
-        cls->_anon_chunk_sz, cls->_anon_block_sz);
+    _out->print_cr(SPACE SPACE SPACE "                                    " UINTX_FORMAT_W(6) "  " SIZE_FORMAT_W(8) "  " SIZE_FORMAT_W(8) "   + unsafe anonymous classes", "", "", "", cls->_anon_classes_count, cls->_anon_chunk_sz, cls->_anon_block_sz);
   }
   return true;
 }

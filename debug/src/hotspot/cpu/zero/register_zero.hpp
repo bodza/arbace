@@ -33,7 +33,6 @@ class RegisterImpl : public AbstractRegisterImpl {
 
   // accessors
   int encoding() const {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this;
   }
   bool is_valid() const {
@@ -68,7 +67,6 @@ class FloatRegisterImpl : public AbstractRegisterImpl {
 
   // accessors
   int encoding() const {
-    assert(is_valid(), "invalid register");
     return (intptr_t)this;
   }
   bool is_valid() const {
@@ -80,8 +78,7 @@ class FloatRegisterImpl : public AbstractRegisterImpl {
 class ConcreteRegisterImpl : public AbstractRegisterImpl {
  public:
   enum {
-    number_of_registers = RegisterImpl::number_of_registers +
-                          FloatRegisterImpl::number_of_registers
+    number_of_registers = RegisterImpl::number_of_registers + FloatRegisterImpl::number_of_registers
   };
 
   static const int max_gpr;

@@ -56,14 +56,10 @@ static void print_before_rebuild(HeapRegion* r, bool selected_for_rebuild, size_
 }
 
 bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool is_live) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
-  assert(r->is_humongous(), "Region %u should be humongous", r->hrm_index());
 
   if (r->is_archive()) {
     return false;
   }
-
-  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
 
   bool selected_for_rebuild = false;
   // For humongous regions, to be of interest for rebuilding the remembered set the following must apply:
@@ -81,16 +77,12 @@ bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool
 }
 
 bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_bytes) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
-  assert(!r->is_humongous(), "Region %u is humongous", r->hrm_index());
 
   // Only consider updating the remembered set for old gen regions - excluding archive regions
   // which never move (but are "Old" regions).
   if (!r->is_old() || r->is_archive()) {
     return false;
   }
-
-  assert(!r->rem_set()->is_updating(), "Remembered set of region %u is updating before rebuild", r->hrm_index());
 
   size_t between_ntams_and_top = (r->top() - r->next_top_at_mark_start()) * HeapWordSize;
   size_t total_live_bytes = live_bytes + between_ntams_and_top;
@@ -101,9 +93,7 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
   // - Only need to rebuild non-complete remembered sets.
   // - Otherwise only add those old gen regions which occupancy is low enough that there
   // is a chance that we will ever evacuate them in the mixed gcs.
-  if ((total_live_bytes > 0) &&
-      CollectionSetChooser::region_occupancy_low_enough_for_evac(total_live_bytes) &&
-      !r->rem_set()->is_tracked()) {
+  if ((total_live_bytes > 0) && CollectionSetChooser::region_occupancy_low_enough_for_evac(total_live_bytes) && !r->rem_set()->is_tracked()) {
 
     r->rem_set()->set_state_updating();
     selected_for_rebuild = true;
@@ -115,7 +105,6 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
 }
 
 void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
 
   if (r->is_old_or_humongous()) {
     if (r->rem_set()->is_updating()) {
@@ -131,7 +120,6 @@ void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
       uint const region_idx = r->hrm_index();
       for (uint j = region_idx; j < (region_idx + size_in_regions); j++) {
         HeapRegion* const cur = g1h->region_at(j);
-        assert(!cur->is_continues_humongous() || cur->rem_set()->is_empty(), "Continues humongous region %u remset should be empty", j);
         cur->rem_set()->clear_locked(true /* only_cardset */);
       }
     }

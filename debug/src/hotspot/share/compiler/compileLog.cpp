@@ -12,9 +12,7 @@ CompileLog* CompileLog::_first = NULL;
 
 // ------------------------------------------------------------------
 // CompileLog::CompileLog
-CompileLog::CompileLog(const char* file_name, FILE* fp, intx thread_id)
-  : _context(_context_buffer, sizeof(_context_buffer))
-{
+CompileLog::CompileLog(const char* file_name, FILE* fp, intx thread_id) : _context(_context_buffer, sizeof(_context_buffer)) {
   initialize(new(ResourceObj::C_HEAP, mtCompiler) fileStream(fp, true));
   _file_end = 0;
   _thread_id = thread_id;
@@ -73,7 +71,6 @@ int CompileLog::identify(ciBaseObject* obj) {
   while (id >= _identities_limit) {
     _identities[_identities_limit++] = 0;
   }
-  assert(id < _identities_limit, "oob");
   // Mark this id as processed.
   // (Be sure to do this before any recursive calls to identify.)
   _identities[id] = 1;  // mark

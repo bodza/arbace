@@ -7,7 +7,7 @@
 // Class to aid in periodic checking under CheckJNICalls
 class JniPeriodicCheckerTask : public PeriodicTask {
   public:
-     JniPeriodicCheckerTask(int interval_time) : PeriodicTask(interval_time) {}
+     JniPeriodicCheckerTask(int interval_time) : PeriodicTask(interval_time) { }
      void task() { os::run_periodic_checks(); }
      static void engage();
      static void disengage();

@@ -28,7 +28,6 @@ private:
   // Give size of objArrayOop in HeapWords minus the header
   static int array_size(int length) {
     const uint OopsPerHeapWord = HeapWordSize/heapOopSize;
-    assert(OopsPerHeapWord >= 1 && (HeapWordSize % heapOopSize == 0), "Else the following (new) computation would be in error");
     uint res = ((uint)length + OopsPerHeapWord - 1)/OopsPerHeapWord;
     return res;
   }
@@ -58,8 +57,6 @@ private:
     // This returns the object size in HeapWords.
     uint asz = array_size(length);
     uint osz = align_object_size(header_size() + asz);
-    assert(osz >= asz,   "no overflow");
-    assert((int)osz > 0, "no overflow");
     return (int)osz;
   }
 

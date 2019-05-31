@@ -24,7 +24,6 @@ void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_
 #define NONZERO(x) (x)
 
 void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp, bool for_compiler_entry) {
-  assert(method == rmethod, "interpreter calling convention");
   Label L_no_such_method;
   __ cbz(rmethod, L_no_such_method);
   __ verify_method_ptr(method);
@@ -40,9 +39,6 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Re
   BLOCK_COMMENT("jump_to_lambda_form {");
   // This is the initial entry point of a lazy method handle.
   // After type checking, it picks up the invoker from the LambdaForm.
-  assert_different_registers(recv, method_temp, temp2);
-  assert(recv != noreg, "required register");
-  assert(method_temp == rmethod, "required register for loading method");
 
   // Load the invoker, as MH -> MH.form -> LF.vmentry
   __ verify_oop(recv);
@@ -60,7 +56,6 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Re
     __ load_sized_value(temp2,
                         Address(temp2, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
-    // assert(sizeof(u2) == sizeof(Method::_size_of_parameters), "");
     Label L;
     __ ldr(rscratch1, __ argument_address(temp2, -1));
     __ cmpoop(recv, rscratch1);
@@ -77,9 +72,7 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Re
 // Code generation
 address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid) {
   const bool not_for_compiler_entry = false;  // this is the interpreter entry
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
-  if (iid == vmIntrinsics::_invokeGeneric ||
-      iid == vmIntrinsics::_compiledLambdaForm) {
+  if (iid == vmIntrinsics::_invokeGeneric || iid == vmIntrinsics::_compiledLambdaForm) {
     // Perhaps surprisingly, the symbolic references visible to Java are not directly used.
     // They are linked to Java-generated adapters via MethodHandleNatives.linkMethod.
     // They all allow an appendix argument.
@@ -101,15 +94,13 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   address entry_point = __ pc();
 
   if (VerifyMethodHandles) {
-    assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
 
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
     __ ldrh(rscratch1, Address(rmethod, Method::intrinsic_id_offset_in_bytes()));
     __ cmp(rscratch1, (int) iid);
     __ br(Assembler::EQ, L);
-    if (iid == vmIntrinsics::_linkToVirtual ||
-        iid == vmIntrinsics::_linkToSpecial) {
+    if (iid == vmIntrinsics::_linkToVirtual || iid == vmIntrinsics::_linkToSpecial) {
       // could do this for all kinds, but would explode assembly code size
       trace_method_handle(_masm, "bad Method*::intrinsic_id");
     }
@@ -121,13 +112,11 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   // First task:  Find out how big the argument list is.
   Address r3_first_arg_addr;
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
-  assert(ref_kind != 0 || iid == vmIntrinsics::_invokeBasic, "must be _invokeBasic or a linkTo intrinsic");
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
     __ ldr(argp, Address(rmethod, Method::const_offset()));
     __ load_sized_value(argp,
                         Address(argp, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
-    // assert(sizeof(u2) == sizeof(Method::_size_of_parameters), "");
     r3_first_arg_addr = __ argument_address(argp, -1);
   } else {
   }
@@ -158,20 +147,10 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
 }
 
 void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmIntrinsics::ID iid, Register receiver_reg, Register member_reg, bool for_compiler_entry) {
-  assert(is_signature_polymorphic(iid), "expected invoke iid");
   // temps used in this code are not used in *either* compiled or interpreted calling sequences
   Register temp1 = r10;
   Register temp2 = r11;
   Register temp3 = r14;  // r13 is live by this point: it contains the sender SP
-  if (for_compiler_entry) {
-    assert(receiver_reg == (iid == vmIntrinsics::_linkToStatic ? noreg : j_rarg0), "only valid assignment");
-    assert_different_registers(temp1,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
-    assert_different_registers(temp2,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
-    assert_different_registers(temp3,        j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7);
-  }
-
-  assert_different_registers(temp1, temp2, temp3, receiver_reg);
-  assert_different_registers(temp1, temp2, temp3, member_reg);
 
   if (iid == vmIntrinsics::_invokeBasic) {
     // indirect through MH.form.vmentry.vmtarget
@@ -224,8 +203,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmInt
       }
       BLOCK_COMMENT("} check_receiver");
     }
-    if (iid == vmIntrinsics::_linkToSpecial ||
-        iid == vmIntrinsics::_linkToStatic) {
+    if (iid == vmIntrinsics::_linkToSpecial || iid == vmIntrinsics::_linkToStatic) {
     }
 
     // Live registers at this point:

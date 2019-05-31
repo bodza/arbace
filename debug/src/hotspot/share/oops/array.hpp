@@ -43,31 +43,24 @@ protected:
   // Can't distinguish between array of length 0 and length 1,
   // will always return 0 in those cases.
   static int bytes_to_length(size_t bytes)       {
-    assert(is_aligned(bytes, BytesPerWord), "Must be, for now");
 
     if (sizeof(Array<T>) >= bytes) {
       return 0;
     }
 
     size_t left = bytes - sizeof(Array<T>);
-    assert(is_aligned(left, sizeof(T)), "Must be");
 
     size_t elements = left / sizeof(T);
-    assert(elements <= (size_t)INT_MAX, "number of elements " SIZE_FORMAT "doesn't fit into an int.", elements);
 
     int length = (int)elements;
-
-    assert((size_t)size(length) * BytesPerWord == (size_t)bytes, "Expected: " SIZE_FORMAT " got: " SIZE_FORMAT, bytes, (size_t)size(length) * BytesPerWord);
 
     return length;
   }
 
   explicit Array(int length) : _length(length) {
-    assert(length >= 0, "illegal length");
   }
 
   Array(int length, T init) : _length(length) {
-    assert(length >= 0, "illegal length");
     for (int i = 0; i < length; i++) {
       _data[i] = init;
     }
@@ -82,8 +75,8 @@ protected:
 
   int index_of(const T& x) const {
     int i = length();
-    while (i-- > 0 && _data[i] != x) ;
-
+    while (i-- > 0 && _data[i] != x)
+        ;
     return i;
   }
 
@@ -91,13 +84,10 @@ protected:
   bool contains(const T& x) const      { return index_of(x) >= 0; }
 
   T    at(int i) const                 {
-    assert(i >= 0 && i< _length, "oob: 0 <= %d < %d", i, _length);
     return _data[i]; }
   void at_put(const int i, const T& x) {
-    assert(i >= 0 && i< _length, "oob: 0 <= %d < %d", i, _length);
     _data[i] = x; }
   T*   adr_at(const int i)             {
-    assert(i >= 0 && i< _length, "oob: 0 <= %d < %d", i, _length);
     return &_data[i]; }
   int  find(const T& x)                { return index_of(x); }
 
@@ -107,8 +97,6 @@ protected:
   static int size(int length) {
     size_t bytes = align_up(byte_sizeof(length), BytesPerWord);
     size_t words = bytes / BytesPerWord;
-
-    assert(words <= INT_MAX, "Overflow: " SIZE_FORMAT, words);
 
     return (int)words;
   }

@@ -63,7 +63,6 @@ class PeriodicTask: public CHeapObj<mtInternal> {
   // Returns how long (time in milliseconds) before the next time we should
   // execute this task.
   int time_to_next_interval() const {
-    assert(_interval > _counter,  "task counter greater than interval?");
     return _interval - _counter;
   }
 

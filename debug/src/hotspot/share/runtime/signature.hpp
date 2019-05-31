@@ -57,9 +57,7 @@ class SignatureIterator: public ResourceObj {
 
     // max parameters is wordsize minus
     //    The sign bit, termination field, the result and static bit fields
-    max_size_of_parameters = (BitsPerLong-1 -
-                              result_feature_size - parameter_feature_size -
-                              static_feature_size) / parameter_feature_size
+    max_size_of_parameters = (BitsPerLong-1 - result_feature_size - parameter_feature_size - static_feature_size) / parameter_feature_size
   };
 
   // Constructors
@@ -92,11 +90,9 @@ class SignatureIterator: public ResourceObj {
   virtual void do_array (int begin, int end) = 0;
 
   static bool is_static(uint64_t fingerprint) {
-    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
     return fingerprint & is_static_bit;
   }
   static BasicType return_type(uint64_t fingerprint) {
-    assert(fingerprint != (uint64_t)CONST64(-1), "invalid fingerprint");
     return (BasicType) ((fingerprint >> static_feature_size) & result_feature_mask);
   }
 };
@@ -120,7 +116,7 @@ class SignatureTypeNames : public SignatureIterator {
   void do_array (int begin, int end)   { type_name("jobject" ); }
 
  public:
-  SignatureTypeNames(Symbol* signature) : SignatureIterator(signature) {}
+  SignatureTypeNames(Symbol* signature) : SignatureIterator(signature) { }
 };
 
 class SignatureInfo: public SignatureIterator {
@@ -160,7 +156,7 @@ class ArgumentSizeComputer: public SignatureInfo {
  private:
   void set(int size, BasicType type)   { _size += size; }
  public:
-  ArgumentSizeComputer(Symbol* signature) : SignatureInfo(signature) {}
+  ArgumentSizeComputer(Symbol* signature) : SignatureInfo(signature) { }
 
   int       size()                     { lazy_iterate_parameters(); return _size; }
 };
@@ -169,7 +165,7 @@ class ArgumentCount: public SignatureInfo {
  private:
   void set(int size, BasicType type)   { _size ++; }
  public:
-  ArgumentCount(Symbol* signature) : SignatureInfo(signature) {}
+  ArgumentCount(Symbol* signature) : SignatureInfo(signature) { }
 
   int       size()                     { lazy_iterate_parameters(); return _size; }
 };
@@ -182,7 +178,7 @@ class ResultTypeFinder: public SignatureInfo {
  public:
   BasicType type()                     { lazy_iterate_return(); return _return_type; }
 
-  ResultTypeFinder(Symbol* signature) : SignatureInfo(signature) {}
+  ResultTypeFinder(Symbol* signature) : SignatureInfo(signature) { }
 };
 
 // Fingerprinter computes a unique ID for a given method. The ID
@@ -226,7 +222,6 @@ class Fingerprinter: public SignatureIterator {
       return _fingerprint;
     }
 
-    assert( (int)mh->result_type() <= (int)result_feature_mask, "bad result type");
     _fingerprint = mh->result_type();
     _fingerprint <<= static_feature_size;
     if (mh->is_static())  _fingerprint |= 1;
@@ -250,17 +245,17 @@ class NativeSignatureIterator: public SignatureIterator {
   int          _prepended;             // number of prepended JNI parameters (1 JNIEnv, plus 1 mirror if static)
   int          _jni_offset;            // the current parameter offset, starting with 0
 
-  void do_bool  ()                     { pass_int();    _jni_offset++; _offset++;       }
-  void do_char  ()                     { pass_int();    _jni_offset++; _offset++;       }
-  void do_float ()                     { pass_float();  _jni_offset++; _offset++;       }
-  void do_double()                     { pass_double(); _jni_offset++; _offset += 2;    }
-  void do_byte  ()                     { pass_int();    _jni_offset++; _offset++;       }
-  void do_short ()                     { pass_int();    _jni_offset++; _offset++;       }
-  void do_int   ()                     { pass_int();    _jni_offset++; _offset++;       }
-  void do_long  ()                     { pass_long();   _jni_offset++; _offset += 2;    }
-  void do_void  ()                     { ShouldNotReachHere();                               }
-  void do_object(int begin, int end)   { pass_object(); _jni_offset++; _offset++;        }
-  void do_array (int begin, int end)   { pass_object(); _jni_offset++; _offset++;        }
+  void do_bool  ()                     { pass_int();    _jni_offset++; _offset++; }
+  void do_char  ()                     { pass_int();    _jni_offset++; _offset++; }
+  void do_float ()                     { pass_float();  _jni_offset++; _offset++; }
+  void do_double()                     { pass_double(); _jni_offset++; _offset += 2; }
+  void do_byte  ()                     { pass_int();    _jni_offset++; _offset++; }
+  void do_short ()                     { pass_int();    _jni_offset++; _offset++; }
+  void do_int   ()                     { pass_int();    _jni_offset++; _offset++; }
+  void do_long  ()                     { pass_long();   _jni_offset++; _offset += 2; }
+  void do_void  ()                     { ShouldNotReachHere(); }
+  void do_object(int begin, int end)   { pass_object(); _jni_offset++; _offset++; }
+  void do_array (int begin, int end)   { pass_object(); _jni_offset++; _offset++; }
 
  public:
   methodHandle method() const          { return _method; }

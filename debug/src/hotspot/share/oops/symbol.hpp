@@ -105,7 +105,6 @@ class Symbol : public MetaspaceObj {
   }
 
   void byte_at_put(int index, int value) {
-    assert(index >=0 && index < _length, "symbol index overflow");
     _body[index] = value;
   }
 
@@ -146,7 +145,6 @@ class Symbol : public MetaspaceObj {
   }
 
   int byte_at(int index) const {
-    assert(index >=0 && index < _length, "symbol index overflow");
     return base()[index];
   }
 
@@ -162,7 +160,6 @@ class Symbol : public MetaspaceObj {
       if (str[l] != (char) byte_at(l))
         return false;
     }
-    assert(l == -1, "we should be at the beginning");
     return true;
   }
   bool equals(const char* str) const { return equals(str, (int) strlen(str)); }
@@ -217,7 +214,7 @@ class Symbol : public MetaspaceObj {
   void print_value_on(outputStream* st) const;   // Second level print.
 
   // printing on default output stream
-  void print()         { print_on(tty);       }
+  void print()         { print_on(tty); }
   void print_value()   { print_value_on(tty); }
 
   static bool is_valid(Symbol* s);

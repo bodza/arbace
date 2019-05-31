@@ -77,12 +77,12 @@ class CompileQueue : public CHeapObj<mtCompiler> {
   void         remove(CompileTask* task);
   void         remove_and_mark_stale(CompileTask* task);
   CompileTask* first()                           { return _first; }
-  CompileTask* last()                            { return _last;  }
+  CompileTask* last()                            { return _last; }
 
   CompileTask* get();
 
   bool         is_empty() const                  { return _first == NULL; }
-  int          size()     const                  { return _size;          }
+  int          size()     const                  { return _size; }
 
   // Redefine Classes support
   void mark_on_stack();
@@ -91,7 +91,6 @@ class CompileQueue : public CHeapObj<mtCompiler> {
   void print(outputStream* st = tty);
 
   ~CompileQueue() {
-    assert(is_empty(), " Compile Queue must be empty");
   }
 };
 
@@ -358,14 +357,10 @@ public:
 
   // Provide access to compiler thread Java objects
   static jobject compiler1_object(int idx) {
-    assert(_compiler1_objects != NULL, "must be initialized");
-    assert(idx < _c1_count, "oob");
     return _compiler1_objects[idx];
   }
 
   static jobject compiler2_object(int idx) {
-    assert(_compiler2_objects != NULL, "must be initialized");
-    assert(idx < _c2_count, "oob");
     return _compiler2_objects[idx];
   }
 
@@ -381,7 +376,7 @@ public:
   static int get_total_compiler_restarted_count() { return _total_compiler_restarted_count; }
   static int get_sum_osr_bytes_compiled() {         return _sum_osr_bytes_compiled; }
   static int get_sum_standard_bytes_compiled() {    return _sum_standard_bytes_compiled; }
-  static int get_sum_nmethod_size() {               return _sum_nmethod_size;}
+  static int get_sum_nmethod_size() {               return _sum_nmethod_size; }
   static int get_sum_nmethod_code_size() {          return _sum_nmethod_code_size; }
   static long get_peak_compilation_time() {         return _peak_compilation_time; }
   static long get_total_compilation_time() {        return _t_total_compilation.milliseconds(); }

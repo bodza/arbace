@@ -8,7 +8,6 @@ EpsilonMemoryPool::EpsilonMemoryPool(EpsilonHeap* heap) :
                             heap->capacity(),
                             heap->max_capacity(),
                             false) {
-  assert(UseEpsilonGC, "sanity");
 }
 
 MemoryUsage EpsilonMemoryPool::get_memory_usage() {

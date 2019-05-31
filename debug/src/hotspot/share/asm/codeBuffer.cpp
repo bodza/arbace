@@ -72,7 +72,6 @@ void CodeBuffer::initialize(csize_t code_size, csize_t locs_size) {
   // Always allow for empty slop around each section.
   int slop = (int) CodeSection::end_slop();
 
-  assert(blob() == NULL, "only once");
   set_blob(BufferBlob::create(_name, code_size + (align+slop) * (SECT_LIMIT+1)));
   if (blob() == NULL) {
     // The assembler constructor will throw a fatal on an empty CodeBuffer.
@@ -81,8 +80,6 @@ void CodeBuffer::initialize(csize_t code_size, csize_t locs_size) {
 
   // Set up various pointers into the blob.
   initialize(_total_start, _total_size);
-
-  assert((uintptr_t)insts_begin() % CodeEntryAlignment == 0, "instruction start not code entry aligned");
 
   pd_initialize();
 
@@ -116,15 +113,12 @@ CodeBuffer::~CodeBuffer() {
 }
 
 void CodeBuffer::initialize_oop_recorder(OopRecorder* r) {
-  assert(_oop_recorder == &_default_oop_recorder && _default_oop_recorder.is_unused(), "do this once");
   _oop_recorder = r;
 }
 
 void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {
-  assert(cs != &_insts, "insts is the memory provider, not the consumer");
   csize_t slop = CodeSection::end_slop();  // margin between sections
   int align = cs->alignment();
-  assert(is_power_of_2(align), "sanity");
   address start  = _insts._start;
   address limit  = _insts._limit;
   address middle = limit - size;
@@ -132,8 +126,6 @@ void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {
   guarantee(middle - slop > start, "need enough space to divide up");
   _insts._limit = middle - slop;  // subtract desired space, plus slop
   cs->initialize(middle, limit - middle);
-  assert(cs->start() == middle, "sanity");
-  assert(cs->limit() == limit,  "sanity");
   // give it some relocations to start with, if the main section has them
   if (_insts.has_locs())  cs->initialize_locs(1);
 }
@@ -239,7 +231,6 @@ address CodeSection::target(Label& L, address branch_pc) {
       return outer()->locator_address(loc);
     }
   } else {
-    assert(allocates2(branch_pc), "sanity");
     address base = start();
     int patch_loc = CodeBuffer::locator(branch_pc - base, index());
     L.add_patch_at(outer(), patch_loc);
@@ -266,7 +257,6 @@ void CodeSection::relocate(address at, relocInfo::relocType rtype, int format, j
       break;
     }
     case relocInfo::virtual_call_type: {
-      assert(method_index == 0, "resolved method overriding is not supported");
       rh = Relocation::spec_simple(rtype);
       break;
     }
@@ -285,17 +275,7 @@ void CodeSection::relocate(address at, RelocationHolder const& spec, int format)
   relocInfo::relocType rtype = (relocInfo::relocType) reloc->type();
   if (rtype == relocInfo::none)  return;
 
-  // The assertion below has been adjusted, to also work for
-  // relocation for fixup.  Sometimes we want to put relocation
-  // information for the next instruction, since it will be patched
-  // with a call.
-  assert(start() <= at && at <= end()+1, "cannot relocate data outside code boundaries");
-
   if (!has_locs()) {
-    // no space for relocation information provided => code cannot be
-    // relocated.  Make sure that relocate is only called with rtypes
-    // that can be ignored for this kind of code.
-    assert(rtype == relocInfo::none              || rtype == relocInfo::runtime_call_type || rtype == relocInfo::internal_word_type|| rtype == relocInfo::section_word_type || rtype == relocInfo::external_word_type, "code needs relocation information");
     return;
   }
 
@@ -320,7 +300,6 @@ void CodeSection::relocate(address at, RelocationHolder const& spec, int format)
   // If the offset is giant, emit filler relocs, of type 'none', but
   // each carrying the largest possible offset, to advance the locs_point.
   while (offset >= relocInfo::offset_limit()) {
-    assert(end < locs_limit(), "adjust previous paragraph of code");
     *end++ = filler_relocInfo();
     offset -= filler_relocInfo().addr_offset();
   }
@@ -333,7 +312,6 @@ void CodeSection::relocate(address at, RelocationHolder const& spec, int format)
 }
 
 void CodeSection::initialize_locs(int locs_capacity) {
-  assert(_locs_start == NULL, "only one locs init step, please");
   // Apply a priori lower limits to relocation size:
   csize_t min_locs = MAX2(size() / 16, (csize_t)4);
   if (locs_capacity < min_locs)  locs_capacity = min_locs;
@@ -345,7 +323,6 @@ void CodeSection::initialize_locs(int locs_capacity) {
 }
 
 void CodeSection::initialize_shared_locs(relocInfo* buf, int length) {
-  assert(_locs_start == NULL, "do this before locs are allocated");
   // Internal invariant:  locs buf must be fully aligned.
   // See copy_relocations_to() below.
   while ((uintptr_t)buf % HeapWordSize != 0 && length > 0) {
@@ -364,10 +341,8 @@ void CodeSection::initialize_locs_from(const CodeSection* source_cs) {
   if (lcount != 0) {
     initialize_shared_locs(source_cs->locs_start(), lcount);
     _locs_end = _locs_limit = _locs_start + lcount;
-    assert(is_allocated(), "must have copied code already");
     set_locs_point(start() + source_cs->locs_point_off());
   }
-  assert(this->locs_count() == source_cs->locs_count(), "sanity");
 }
 
 void CodeSection::expand_locs(int new_capacity) {
@@ -411,12 +386,10 @@ csize_t CodeBuffer::total_content_size() const {
 void CodeBuffer::compute_final_layout(CodeBuffer* dest) const {
   address buf = dest->_total_start;
   csize_t buf_offset = 0;
-  assert(dest->_total_size >= total_content_size(), "must be big enough");
 
   {
     // not sure why this is here, but why not...
     int alignSize = MAX2((intx) sizeof(jdouble), CodeEntryAlignment);
-    assert( (dest->_total_start - _insts.start()) % alignSize == 0, "copy must preserve alignment");
   }
 
   const CodeSection* prev_cs      = NULL;
@@ -446,14 +419,10 @@ void CodeBuffer::compute_final_layout(CodeBuffer* dest) const {
 
     dest_cs->initialize(buf+buf_offset, csize);
     dest_cs->set_end(buf+buf_offset+csize);
-    assert(dest_cs->is_allocated(), "must always be allocated");
-    assert(cs->is_empty() == dest_cs->is_empty(), "sanity");
 
     buf_offset += csize;
   }
 
-  // Done calculating sections; did it come out to the right end?
-  assert(buf_offset == total_content_size(), "sanity");
   dest->verify_section_allocation();
 }
 
@@ -558,9 +527,6 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
   csize_t code_end_so_far = 0;
   csize_t code_point_so_far = 0;
 
-  assert((uintptr_t)buf % HeapWordSize == 0, "buf must be fully aligned");
-  assert(buf_limit % HeapWordSize == 0, "buf must be evenly sized");
-
   for (int n = (int) SECT_FIRST; n < (int)SECT_LIMIT; n++) {
     if (only_inst && (n != (int)SECT_INSTS)) {
       // Need only relocation info for code.
@@ -568,7 +534,6 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
     }
     // pull relocs out of each section
     const CodeSection* cs = code_section(n);
-    assert(!(cs->is_empty() && cs->locs_count() > 0), "sanity");
     if (cs->is_empty())  continue;  // skip trivial section
     relocInfo* lstart = cs->locs_start();
     relocInfo* lend   = cs->locs_end();
@@ -593,7 +558,6 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
           filler = relocInfo(relocInfo::none, jump);
         }
         if (buf != NULL) {
-          assert(buf_offset + (csize_t)sizeof(filler) <= buf_limit, "filler in bounds");
           *(relocInfo*)(buf+buf_offset) = filler;
         }
         buf_offset += sizeof(filler);
@@ -601,15 +565,12 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
 
       // Update code point and end to skip past this section:
       csize_t last_code_point = code_end_so_far + cs->locs_point_off();
-      assert(code_point_so_far <= last_code_point, "sanity");
       code_point_so_far = last_code_point; // advance past this guy's relocs
     }
     code_end_so_far += csize;  // advance past this guy's instructions too
 
     // Done with filler; emit the real relocations:
     if (buf != NULL && lsize != 0) {
-      assert(buf_offset + lsize <= buf_limit, "target in bounds");
-      assert((uintptr_t)lstart % HeapWordSize == 0, "sane start");
       if (buf_offset % HeapWordSize == 0) {
         // Use wordwise copies if possible:
         Copy::disjoint_words((HeapWord*)lstart,
@@ -626,13 +587,10 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
   while (buf_offset % HeapWordSize != 0) {
     if (buf != NULL) {
       relocInfo padding = relocInfo(relocInfo::none, 0);
-      assert(buf_offset + (csize_t)sizeof(padding) <= buf_limit, "padding in bounds");
       *(relocInfo*)(buf+buf_offset) = padding;
     }
     buf_offset += sizeof(relocInfo);
   }
-
-  assert(only_inst || code_end_so_far == total_content_size(), "sanity");
 
   return buf_offset;
 }
@@ -656,7 +614,6 @@ csize_t CodeBuffer::copy_relocations_to(CodeBlob* dest) const {
 void CodeBuffer::copy_code_to(CodeBlob* dest_blob) {
 
   CodeBuffer dest(dest_blob);
-  assert(dest_blob->content_size() >= total_content_size(), "good sizing");
   this->compute_final_layout(&dest);
 
   // Set beginning of constant table before relocating.
@@ -666,9 +623,6 @@ void CodeBuffer::copy_code_to(CodeBlob* dest_blob) {
 
   // transfer strings and comments from buffer to blob
   dest_blob->set_strings(_code_strings);
-
-  // Done moving code bytes; were they the right size?
-  assert((int)align_up(dest.total_content_size(), oopSize) == dest_blob->content_size(), "sanity");
 
   // Flush generated code
   ICache::invalidate_range(dest_blob->code_begin(), dest_blob->code_size());
@@ -687,10 +641,8 @@ void CodeBuffer::relocate_code_to(CodeBuffer* dest) const {
     const CodeSection* cs = code_section(n);
     if (cs->is_empty())  continue;  // skip trivial section
     CodeSection* dest_cs = dest->code_section(n);
-    assert(cs->size() == dest_cs->size(), "sanity");
     csize_t usize = dest_cs->size();
     csize_t wsize = align_up(usize, HeapWordSize);
-    assert(dest_cs->start() + wsize <= dest_end, "no overflow");
     // Copy the code as aligned machine words.
     // This may also include an uninitialized partial word at the end.
     Copy::disjoint_words((HeapWord*)cs->start(),
@@ -705,8 +657,6 @@ void CodeBuffer::relocate_code_to(CodeBuffer* dest) const {
     }
     // Keep track of the highest filled address
     dest_filled = MAX2(dest_filled, dest_cs->end() + dest_cs->remaining());
-
-    assert(cs->locs_start() != (relocInfo*)badAddress, "this section carries no reloc storage, but reloc was attempted");
 
     // Make the new code copy use the old copy's relocations:
     dest_cs->initialize_locs_from(cs);
@@ -753,7 +703,6 @@ csize_t CodeBuffer::figure_expanded_capacities(CodeSection* which_cs,
       csize_t padding = sect->align_at_start(new_total_cap) - new_total_cap;
       if (padding != 0) {
         new_total_cap += padding;
-        assert(n - 1 >= SECT_FIRST, "sanity");
         new_capacity[n - 1] += padding;
       }
     }
@@ -798,8 +747,7 @@ void CodeBuffer::expand(CodeSection* which_cs, csize_t amount) {
   // Figure new capacity for each section.
   csize_t new_capacity[SECT_LIMIT];
   memset(new_capacity, 0, sizeof(csize_t) * SECT_LIMIT);
-  csize_t new_total_cap
-    = figure_expanded_capacities(which_cs, amount, new_capacity);
+  csize_t new_total_cap = figure_expanded_capacities(which_cs, amount, new_capacity);
 
   // Create a new (temporary) code buffer to hold all the new data
   CodeBuffer cb(name(), new_total_cap, 0);
@@ -826,7 +774,6 @@ void CodeBuffer::expand(CodeSection* which_cs, csize_t amount) {
     if (n != SECT_INSTS) {
       cb.initialize_section_size(cb_sect, new_capacity[n]);
     }
-    assert(cb_sect->capacity() >= new_capacity[n], "big enough");
     address cb_start = cb_sect->start();
     cb_sect->set_end(cb_start + this_sect->size());
     if (this_sect->mark() == NULL) {
@@ -854,8 +801,6 @@ void CodeBuffer::expand(CodeSection* which_cs, csize_t amount) {
 }
 
 void CodeBuffer::take_over_code_from(CodeBuffer* cb) {
-  // Must already have disposed of the old blob somehow.
-  assert(blob() == NULL, "must be empty");
   // Take the new blob away from cb.
   set_blob(cb->blob());
   // Take over all the section pointers.
@@ -880,9 +825,7 @@ void CodeBuffer::verify_section_allocation() {
   for (int n = (int) SECT_FIRST; n < (int) SECT_LIMIT; n++) {
     CodeSection* sect = code_section(n);
     if (!sect->is_allocated() || sect->is_empty())  continue;
-    guarantee((intptr_t)sect->start() % sect->alignment() == 0
-           || sect->is_empty() || _blob == NULL,
-           "start is aligned");
+    guarantee((intptr_t)sect->start() % sect->alignment() == 0 || sect->is_empty() || _blob == NULL, "start is aligned");
     for (int m = (int) SECT_FIRST; m < (int) SECT_LIMIT; m++) {
       CodeSection* other = code_section(m);
       if (!other->is_allocated() || other == sect)  continue;

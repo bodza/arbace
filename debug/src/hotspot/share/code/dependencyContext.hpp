@@ -29,7 +29,7 @@ class nmethodBucket: public CHeapObj<mtClass> {
 
  public:
   nmethodBucket(nmethod* nmethod, nmethodBucket* next) :
-   _nmethod(nmethod), _next(next), _count(1) {}
+   _nmethod(nmethod), _next(next), _count(1) { }
 
   int count()                             { return _count; }
   int increment()                         { _count += 1; return _count; }
@@ -58,7 +58,6 @@ class DependencyContext : public StackObj {
   intptr_t* _dependency_context_addr;
 
   void set_dependencies(nmethodBucket* b) {
-    assert((intptr_t(b) & _has_stale_entries_mask) == 0, "should be aligned");
     if (has_stale_entries()) {
       *_dependency_context_addr = intptr_t(b) | _has_stale_entries_mask;
     } else {
@@ -90,7 +89,7 @@ class DependencyContext : public StackObj {
   static PerfCounter* _perf_total_buckets_stale_acc_count;
 
  public:
-  DependencyContext(intptr_t* addr) : _dependency_context_addr(addr) {}
+  DependencyContext(intptr_t* addr) : _dependency_context_addr(addr) { }
 
   static const intptr_t EMPTY = 0; // dependencies = NULL, has_stale_entries = false
 

@@ -20,7 +20,7 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
   }
 
  public:
-  ChunkedList<T, F>() : _top(_values), _next_used(NULL), _next_free(NULL) {}
+  ChunkedList<T, F>() : _top(_values), _next_used(NULL), _next_free(NULL) { }
 
   bool is_full() const {
     return _top == end();
@@ -33,7 +33,6 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
   }
 
   void push(T m) {
-    assert(!is_full(), "Buffer is full");
     *_top = m;
     _top++;
   }
@@ -49,7 +48,6 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
   }
 
   T at(size_t i) {
-    assert(i < size(), "IOOBE i: " SIZE_FORMAT " size(): " SIZE_FORMAT, i, size());
     return _values[i];
   }
 };

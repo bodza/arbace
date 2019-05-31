@@ -32,8 +32,7 @@ NMTDCmd::NMTDCmd(outputStream* output,
             "BOOLEAN", false, "false"),
   _statistics("statistics", "print tracker statistics for tuning purpose.", \
             "BOOLEAN", false, "false"),
-  _scale("scale", "Memory usage in which scale, KB, MB or GB",
-       "STRING", false, "KB") {
+  _scale("scale", "Memory usage in which scale, KB, MB or GB", "STRING", false, "KB") {
   _dcmdparser.add_dcmd_option(&_summary);
   _dcmdparser.add_dcmd_option(&_detail);
   _dcmdparser.add_dcmd_option(&_baseline);
@@ -77,8 +76,7 @@ void NMTDCmd::execute(DCmdSource source, TRAPS) {
   if (_statistics.is_set() && _statistics.value()) { ++nopt; }
 
   if (nopt > 1) {
-      output()->print_cr("At most one of the following option can be specified: " \
-        "summary, detail, metadata, baseline, summary.diff, detail.diff, shutdown");
+      output()->print_cr("At most one of the following option can be specified: " \ "summary, detail, metadata, baseline, summary.diff, detail.diff, shutdown");
       return;
   } else if (nopt == 0) {
     if (_summary.is_set()) {
@@ -162,8 +160,6 @@ void NMTDCmd::report(bool summaryOnly, size_t scale_unit) {
 
 void NMTDCmd::report_diff(bool summaryOnly, size_t scale_unit) {
   MemBaseline& early_baseline = MemTracker::get_baseline();
-  assert(early_baseline.baseline_type() != MemBaseline::Not_baselined, "Not yet baselined");
-  assert(summaryOnly || early_baseline.baseline_type() == MemBaseline::Detail_baselined, "Not a detail baseline");
 
   MemBaseline baseline;
   if (baseline.baseline(summaryOnly)) {

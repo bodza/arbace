@@ -84,7 +84,7 @@ class Compilation: public StackObj {
   ExceptionInfoList* exception_info_list() const { return _exception_info_list; }
   ExceptionHandlerTable* exception_handler_table() { return &_exception_handler_table; }
 
-  LinearScan* allocator()                          { return _allocator;      }
+  LinearScan* allocator()                          { return _allocator; }
   void        set_allocator(LinearScan* allocator) { _allocator = allocator; }
 
   Instruction*       _current_instruction;       // the instruction currently being processed
@@ -140,7 +140,7 @@ class Compilation: public StackObj {
   void notice_inlined_method(ciMethod* method);
 
   // JSR 292
-  bool     has_method_handle_invokes() const { return _has_method_handle_invokes;     }
+  bool     has_method_handle_invokes() const { return _has_method_handle_invokes; }
   void set_has_method_handle_invokes(bool z) {        _has_method_handle_invokes = z; }
 
   bool     has_reserved_stack_access() const { return _has_reserved_stack_access; }
@@ -175,39 +175,32 @@ class Compilation: public StackObj {
   static void print_timers();
 
   bool is_profiling() {
-    return env()->comp_level() == CompLevel_full_profile ||
-           env()->comp_level() == CompLevel_limited_profile;
+    return env()->comp_level() == CompLevel_full_profile || env()->comp_level() == CompLevel_limited_profile;
   }
   bool count_invocations() { return is_profiling(); }
   bool count_backedges()   { return is_profiling(); }
 
   // Helpers for generation of profile information
   bool profile_branches() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && C1ProfileBranches;
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileBranches;
   }
   bool profile_calls() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && C1ProfileCalls;
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCalls;
   }
   bool profile_inlined_calls() {
     return profile_calls() && C1ProfileInlinedCalls;
   }
   bool profile_checkcasts() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && C1ProfileCheckcasts;
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCheckcasts;
   }
   bool profile_parameters() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && MethodData::profile_parameters();
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_parameters();
   }
   bool profile_arguments() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && MethodData::profile_arguments();
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_arguments();
   }
   bool profile_return() {
-    return env()->comp_level() == CompLevel_full_profile &&
-      C1UpdateMethodData && MethodData::profile_return();
+    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_return();
   }
   bool age_code() const {
     return _method->profile_aging();
@@ -216,9 +209,7 @@ class Compilation: public StackObj {
   // will compilation make optimistic assumptions that might lead to
   // deoptimization and that the runtime will account for?
   bool is_optimistic() const                             {
-    return !TieredCompilation &&
-      (RangeCheckElimination || UseLoopInvariantCodeMotion) &&
-      method()->method_data()->trap_count(Deoptimization::Reason_none) == 0;
+    return !TieredCompilation && (RangeCheckElimination || UseLoopInvariantCodeMotion) && method()->method_data()->trap_count(Deoptimization::Reason_none) == 0;
   }
 
   ciKlass* cha_exact_type(ciType* type);
@@ -242,11 +233,11 @@ class Compilation: public StackObj {
 // Macro definitions for unified bailout-support
 // The methods bailout() and bailed_out() are present in all classes
 // that might bailout, but forward all calls to Compilation
-#define BAILOUT(msg)               { bailout(msg); return;              }
-#define BAILOUT_(msg, res)         { bailout(msg); return res;          }
+#define BAILOUT(msg)               { bailout(msg); return; }
+#define BAILOUT_(msg, res)         { bailout(msg); return res; }
 
-#define CHECK_BAILOUT()            { if (bailed_out()) return;          }
-#define CHECK_BAILOUT_(res)        { if (bailed_out()) return res;      }
+#define CHECK_BAILOUT()            { if (bailed_out()) return; }
+#define CHECK_BAILOUT_(res)        { if (bailed_out()) return res; }
 
 class InstructionMark: public StackObj {
  private:
@@ -271,7 +262,7 @@ class CompilationResourceObj ALLOCATION_SUPER_CLASS_SPEC {
   void* operator new(size_t size, Arena* arena) throw() {
     return arena->Amalloc(size);
   }
-  void  operator delete(void* p) {} // nothing to do
+  void  operator delete(void* p) { } // nothing to do
 };
 
 //----------------------------------------------------------------------

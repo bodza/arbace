@@ -52,8 +52,8 @@ class ICStub: public Stub {
   void* cached_value() const;   // cached_value for stub
 
   // Debugging
-  void    verify()            {};
-  void    print()             {};
+  void    verify()            { };
+  void    print()             { };
 
   // Creation
   friend ICStub* ICStub_from_destination_address(address destination_address);
@@ -78,9 +78,9 @@ class InlineCacheBuffer: public AllStatic {
   static CompiledICHolder* _pending_released;
   static int _pending_count;
 
-  static StubQueue* buffer()                         { return _buffer;         }
+  static StubQueue* buffer()                         { return _buffer; }
   static void       set_next_stub(ICStub* next_stub) { _next_stub = next_stub; }
-  static ICStub*    get_next_stub()                  { return _next_stub;      }
+  static ICStub*    get_next_stub()                  { return _next_stub; }
 
   static void       init_next_stub();
 

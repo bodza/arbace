@@ -121,7 +121,7 @@ class StringLogMessage : public FormatBuffer<256> {
 // A simple ring buffer of fixed size text messages.
 class StringEventLog : public EventLogBase<StringLogMessage> {
  public:
-  StringEventLog(const char* name, int count = LogEventsBufferEntries) : EventLogBase<StringLogMessage>(name, count) {}
+  StringEventLog(const char* name, int count = LogEventsBufferEntries) : EventLogBase<StringLogMessage>(name, count) { }
 
   void logv(Thread* thread, const char* format, va_list ap) ATTRIBUTE_PRINTF(3, 0) {
     if (!should_log()) return;

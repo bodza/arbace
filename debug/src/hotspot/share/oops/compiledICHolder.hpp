@@ -31,7 +31,7 @@ class CompiledICHolder : public CHeapObj<mtCompiler> {
  public:
   // Constructor
   CompiledICHolder(Metadata* metadata, Klass* klass, bool is_method = true);
-  ~CompiledICHolder() {};
+  ~CompiledICHolder() { };
 
   static int live_count() { return _live_count; }
   static int live_not_claimed_count() { return _live_not_claimed_count; }
@@ -69,7 +69,7 @@ class CompiledICHolder : public CHeapObj<mtCompiler> {
 
   const char* internal_name() const { return "{compiledICHolder}"; }
 
-  void claim() {};
+  void claim() { };
 };
 
 #endif

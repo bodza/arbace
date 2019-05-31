@@ -107,7 +107,7 @@ class HierarchyVisitor : StackObj {
 
     Node(InstanceKlass* cls, void* data, bool visit_super)
         : _class(cls), _super_was_visited(!visit_super),
-          _interface_index(0), _algorithm_data(data) {}
+          _interface_index(0), _algorithm_data(data) { }
 
     int number_of_interfaces() { return _class->local_interfaces()->length(); }
     int interface_index() { return _interface_index; }
@@ -135,7 +135,6 @@ class HierarchyVisitor : StackObj {
   Node* current_top() const { return _path.top(); }
   bool has_more_nodes() const { return !_path.is_empty(); }
   void push(InstanceKlass* cls, void* data) {
-    assert(cls != NULL, "Requires a valid instance class");
     Node* node = new Node(cls, data, has_super(cls));
     _path.push(node);
   }
@@ -213,7 +212,6 @@ class HierarchyVisitor : StackObj {
           next = top->next_interface();
           top->increment_visited_interface();
         }
-        assert(next != NULL, "Otherwise we shouldn't be here");
         algo_data = algo->new_node_data(next);
         push(next, algo_data);
         top_needs_visit = true;
@@ -236,7 +234,7 @@ class PrintHierarchy : public HierarchyVisitor<PrintHierarchy> {
   void* new_node_data(InstanceKlass* cls) { return NULL; }
   void free_node_data(void* data) { return; }
 
-  PrintHierarchy(outputStream* st = tty) : _st(st) {}
+  PrintHierarchy(outputStream* st = tty) : _st(st) { }
 };
 
 // Used to register InstanceKlass objects and all related metadata structures
@@ -253,14 +251,12 @@ class KeepAliveRegistrar : public StackObj {
 
  public:
   KeepAliveRegistrar(Thread* thread) : _thread(thread), _keep_alive(20) {
-    assert(thread == Thread::current(), "Must be current thread");
   }
 
   ~KeepAliveRegistrar() {
     for (int i = _keep_alive.length() - 1; i >= 0; --i) {
       ConstantPool* cp = _keep_alive.at(i);
       int idx = _thread->metadata_handles()->find_from_end(cp);
-      assert(idx > 0, "Must be in the list");
       _thread->metadata_handles()->remove_at(idx);
     }
   }
@@ -279,7 +275,7 @@ class KeepAliveVisitor : public HierarchyVisitor<KeepAliveVisitor> {
   KeepAliveRegistrar* _registrar;
 
  public:
-  KeepAliveVisitor(KeepAliveRegistrar* registrar) : _registrar(registrar) {}
+  KeepAliveVisitor(KeepAliveRegistrar* registrar) : _registrar(registrar) { }
 
   void* new_node_data(InstanceKlass* cls) { return NULL; }
   void free_node_data(void* data) { return; }
@@ -331,7 +327,7 @@ class MethodFamily : public ResourceObj {
  public:
 
   MethodFamily()
-      : _selected_target(NULL), _exception_message(NULL), _exception_name(NULL) {}
+      : _selected_target(NULL), _exception_message(NULL), _exception_name(NULL) { }
 
   void set_target_if_empty(Method* m) {
     if (_selected_target == NULL && !m->is_overpass()) {
@@ -397,7 +393,6 @@ class MethodFamily : public ResourceObj {
       if (qualified_methods.length() == 0) {
         _exception_message = generate_no_defaults_message(CHECK);
       } else {
-        assert(root != NULL, "Null root class");
         _exception_message = generate_method_message(root->name(), qualified_methods.at(0), CHECK);
       }
       _exception_name = vmSymbols::java_lang_AbstractMethodError();
@@ -428,7 +423,6 @@ class MethodFamily : public ResourceObj {
   }
 
   void print_selected(outputStream* str, int indent) const {
-    assert(has_target(), "Should be called otherwise");
     streamIndentor si(str, indent * 2);
     str->indent().print("Selected method: ");
     print_method(str, _selected_target);
@@ -440,8 +434,6 @@ class MethodFamily : public ResourceObj {
   }
 
   void print_exception(outputStream* str, int indent) {
-    assert(throws_exception(), "Should be called otherwise");
-    assert(_exception_name != NULL, "exception_name should be set");
     streamIndentor si(str, indent * 2);
     str->indent().print_cr("%s: %s", _exception_name->as_C_string(), _exception_message->as_C_string());
   }
@@ -520,7 +512,7 @@ class StateRestorer : public PseudoScopeMark {
   QualifiedState _state_to_restore;
  public:
   StateRestorer(StatefulMethodFamily* dm, QualifiedState state)
-      : _method(dm), _state_to_restore(state) {}
+      : _method(dm), _state_to_restore(state) { }
   ~StateRestorer() { destroy(); }
   void restore_state() { _method->set_qualification_state(_state_to_restore); }
   virtual void destroy() { restore_state(); }
@@ -552,7 +544,7 @@ class EmptyVtableSlot : public ResourceObj {
  public:
   EmptyVtableSlot(Method* method)
       : _name(method->name()), _signature(method->signature()),
-        _size_of_parameters(method->size_of_parameters()), _binding(NULL) {}
+        _size_of_parameters(method->size_of_parameters()), _binding(NULL) { }
 
   Symbol* name() const { return _name; }
   Symbol* signature() const { return _signature; }
@@ -570,8 +562,7 @@ class EmptyVtableSlot : public ResourceObj {
 static bool already_in_vtable_slots(GrowableArray<EmptyVtableSlot*>* slots, Method* m) {
   bool found = false;
   for (int j = 0; j < slots->length(); ++j) {
-    if (slots->at(j)->name() == m->name() &&
-        slots->at(j)->signature() == m->signature() ) {
+    if (slots->at(j)->name() == m->name() && slots->at(j)->signature() == m->signature()) {
       found = true;
       break;
     }
@@ -579,10 +570,7 @@ static bool already_in_vtable_slots(GrowableArray<EmptyVtableSlot*>* slots, Meth
   return found;
 }
 
-static GrowableArray<EmptyVtableSlot*>* find_empty_vtable_slots(
-    InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
-
-  assert(klass != NULL, "Must be valid class");
+static GrowableArray<EmptyVtableSlot*>* find_empty_vtable_slots(InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
 
   GrowableArray<EmptyVtableSlot*>* slots = new GrowableArray<EmptyVtableSlot*>();
 
@@ -662,7 +650,7 @@ class FindMethodsByErasedSig : public HierarchyVisitor<FindMethodsByErasedSig> {
  public:
   FindMethodsByErasedSig(Symbol* name, Symbol* signature, bool is_interf) :
       _method_name(name), _method_signature(signature), _cur_class_is_interface(is_interf),
-      _family(NULL) {}
+      _family(NULL) { }
 
   void get_discovered_family(MethodFamily** family) {
       if (_family != NULL) {
@@ -693,8 +681,7 @@ class FindMethodsByErasedSig : public HierarchyVisitor<FindMethodsByErasedSig> {
     // Non-public methods in java.lang.Object are not candidates for default
     // methods.
     // Future: take access controls into account for superclass methods
-    if (m != NULL && !m->is_static() && !m->is_overpass() && !m->is_private() &&
-     (!_cur_class_is_interface || !SystemDictionary::is_nonpublic_Object_method(m))) {
+    if (m != NULL && !m->is_static() && !m->is_overpass() && !m->is_private() && (!_cur_class_is_interface || !SystemDictionary::is_nonpublic_Object_method(m))) {
       if (_family == NULL) {
         _family = new StatefulMethodFamily();
       }
@@ -715,12 +702,9 @@ class FindMethodsByErasedSig : public HierarchyVisitor<FindMethodsByErasedSig> {
   }
 };
 
-static void create_defaults_and_exceptions(
-    GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS);
+static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS);
 
-static void generate_erased_defaults(
-     InstanceKlass* klass, GrowableArray<EmptyVtableSlot*>* empty_slots,
-     EmptyVtableSlot* slot, bool is_intf, TRAPS) {
+static void generate_erased_defaults(InstanceKlass* klass, GrowableArray<EmptyVtableSlot*>* empty_slots, EmptyVtableSlot* slot, bool is_intf, TRAPS) {
 
   // sets up a set of methods with the same exact erased signature
   FindMethodsByErasedSig visitor(slot->name(), slot->signature(), is_intf);
@@ -751,9 +735,7 @@ static void create_default_methods( InstanceKlass* klass,
 // klass default_methods list or, only to handle exception cases, we create an
 // overpass method that throws an exception and add it to the klass methods list.
 // The JVM does not create bridges nor handle generic signatures here.
-void DefaultMethods::generate_default_methods(
-    InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
-  assert(klass != NULL, "invariant");
+void DefaultMethods::generate_default_methods(InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
 
   // This resource mark is the bound for all memory allocation that takes
   // place during default method processing.  After this goes out of scope,
@@ -779,8 +761,7 @@ void DefaultMethods::generate_default_methods(
     printer.run(klass);
   }
 
-  GrowableArray<EmptyVtableSlot*>* empty_slots =
-      find_empty_vtable_slots(klass, mirandas, CHECK);
+  GrowableArray<EmptyVtableSlot*>* empty_slots = find_empty_vtable_slots(klass, mirandas, CHECK);
 
   for (int i = 0; i < empty_slots->length(); ++i) {
     EmptyVtableSlot* slot = empty_slots->at(i);
@@ -799,8 +780,7 @@ void DefaultMethods::generate_default_methods(
   log_debug(defaultmethods)("Default method processing complete");
 }
 
-static int assemble_method_error(
-    BytecodeConstantPool* cp, BytecodeBuffer* buffer, Symbol* errorName, Symbol* message, TRAPS) {
+static int assemble_method_error(BytecodeConstantPool* cp, BytecodeBuffer* buffer, Symbol* errorName, Symbol* message, TRAPS) {
 
   Symbol* init = vmSymbols::object_initializer_name();
   Symbol* sig = vmSymbols::string_void_signature();
@@ -816,10 +796,7 @@ static int assemble_method_error(
   return 3; // max stack size: [ exception, exception, string ]
 }
 
-static Method* new_method(
-    BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, Symbol* name,
-    Symbol* sig, AccessFlags flags, int max_stack, int params,
-    ConstMethod::MethodType mt, TRAPS) {
+static Method* new_method(BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, Symbol* name, Symbol* sig, AccessFlags flags, int max_stack, int params, ConstMethod::MethodType mt, TRAPS) {
 
   address code_start = 0;
   int code_length = 0;
@@ -884,9 +861,7 @@ static void switchover_constant_pool(BytecodeConstantPool* bpool,
 // throwing methods then the loader constraint checking logic for vtable and
 // itable creation needs to be changed to check loader constraints for the
 // overpass methods that do not throw exceptions.
-static void create_defaults_and_exceptions(
-    GrowableArray<EmptyVtableSlot*>* slots,
-    InstanceKlass* klass, TRAPS) {
+static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS) {
 
   GrowableArray<Method*> overpasses;
   GrowableArray<Method*> defaults;
@@ -916,17 +891,12 @@ static void create_defaults_and_exceptions(
       if (method->has_target()) {
         Method* selected = method->get_selected_target();
         if (selected->method_holder()->is_interface()) {
-          assert(!selected->is_private(), "pushing private interface method as default");
           defaults.push(selected);
         }
       } else if (method->throws_exception()) {
-        int max_stack = assemble_method_error(&bpool, &buffer,
-           method->get_exception_name(), method->get_exception_message(), CHECK);
-        AccessFlags flags = accessFlags_from(
-          JVM_ACC_PUBLIC | JVM_ACC_SYNTHETIC | JVM_ACC_BRIDGE);
-         Method* m = new_method(&bpool, &buffer, slot->name(), slot->signature(),
-          flags, max_stack, slot->size_of_parameters(),
-          ConstMethod::OVERPASS, CHECK);
+        int max_stack = assemble_method_error(&bpool, &buffer, method->get_exception_name(), method->get_exception_message(), CHECK);
+        AccessFlags flags = accessFlags_from(JVM_ACC_PUBLIC | JVM_ACC_SYNTHETIC | JVM_ACC_BRIDGE);
+        Method* m = new_method(&bpool, &buffer, slot->name(), slot->signature(), flags, max_stack, slot->size_of_parameters(), ConstMethod::OVERPASS, CHECK);
         // We push to the methods list:
         // overpass methods which are exception throwing methods
         if (m != NULL) {
@@ -952,8 +922,7 @@ static void create_default_methods( InstanceKlass* klass,
     GrowableArray<Method*>* new_methods, TRAPS) {
 
   int new_size = new_methods->length();
-  Array<Method*>* total_default_methods = MetadataFactory::new_array<Method*>(
-      klass->class_loader_data(), new_size, NULL, CHECK);
+  Array<Method*>* total_default_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
   for (int index = 0; index < new_size; index++ ) {
     total_default_methods->at_put(index, new_methods->at(index));
   }
@@ -992,13 +961,11 @@ static void merge_in_new_methods(InstanceKlass* klass,
 
   int new_size = klass->methods()->length() + new_methods->length();
 
-  Array<Method*>* merged_methods = MetadataFactory::new_array<Method*>(
-      klass->class_loader_data(), new_size, NULL, CHECK);
+  Array<Method*>* merged_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
 
   // original_ordering might be empty if this class has no methods of its own
   if (DumpSharedSpaces) {
-    merged_ordering = MetadataFactory::new_array<int>(
-        klass->class_loader_data(), new_size, CHECK);
+    merged_ordering = MetadataFactory::new_array<int>(klass->class_loader_data(), new_size, CHECK);
   }
   int method_order_index = klass->methods()->length();
 
@@ -1018,12 +985,10 @@ static void merge_in_new_methods(InstanceKlass* klass,
       new_method = new_methods->at(new_idx);
     }
 
-    if (orig_method != NULL &&
-        (new_method == NULL || orig_method->name() < new_method->name())) {
+    if (orig_method != NULL && (new_method == NULL || orig_method->name() < new_method->name())) {
       merged_methods->at_put(i, orig_method);
       original_methods->at_put(orig_idx, NULL);
       if (merged_ordering->length() > 0) {
-        assert(original_ordering != NULL && original_ordering->length() > 0, "should have original order information for this method");
         merged_ordering->at_put(i, original_ordering->at(orig_idx));
       }
       ++orig_idx;

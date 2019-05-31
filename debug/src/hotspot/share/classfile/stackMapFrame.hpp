@@ -127,13 +127,11 @@ class StackMapFrame : public ResourceObj {
   StackMapFrame* frame_in_exception_handler(u1 flags);
 
   // Set local variable type array based on m's signature.
-  VerificationType set_locals_from_arg(
-    const methodHandle& m, VerificationType thisKlass, TRAPS);
+  VerificationType set_locals_from_arg(const methodHandle& m, VerificationType thisKlass, TRAPS);
 
   // Search local variable type array and stack type array.
   // Set every element with type of old_object to new_object.
-  void initialize_object(
-    VerificationType old_object, VerificationType new_object);
+  void initialize_object(VerificationType old_object, VerificationType new_object);
 
   // Copy local variable type array in src into this local variable type array.
   void copy_locals(const StackMapFrame* src);
@@ -142,8 +140,7 @@ class StackMapFrame : public ResourceObj {
   void copy_stack(const StackMapFrame* src);
 
   // Return true if this stack map frame is assignable to target.
-  bool is_assignable_to(
-      const StackMapFrame* target, ErrorContext* ctx, TRAPS) const;
+  bool is_assignable_to(const StackMapFrame* target, ErrorContext* ctx, TRAPS) const;
 
   inline void set_mark() {
     _stack_mark = _stack_size;
@@ -159,24 +156,16 @@ class StackMapFrame : public ResourceObj {
 
   // Push type into stack type array.
   inline void push_stack(VerificationType type, TRAPS) {
-    assert(!type.is_check(), "Must be a real type");
     if (_stack_size >= _max_stack) {
-      verifier()->verify_error(
-          ErrorContext::stack_overflow(_offset, this),
-          "Operand stack overflow");
+      verifier()->verify_error(ErrorContext::stack_overflow(_offset, this), "Operand stack overflow");
       return;
     }
     _stack[_stack_size++] = type;
   }
 
-  inline void push_stack_2(
-      VerificationType type1, VerificationType type2, TRAPS) {
-    assert(type1.is_long() || type1.is_double(), "must be long/double");
-    assert(type2.is_long2() || type2.is_double2(), "must be long/double_2");
+  inline void push_stack_2(VerificationType type1, VerificationType type2, TRAPS) {
     if (_stack_size >= _max_stack - 1) {
-      verifier()->verify_error(
-          ErrorContext::stack_overflow(_offset, this),
-          "Operand stack overflow");
+      verifier()->verify_error(ErrorContext::stack_overflow(_offset, this), "Operand stack overflow");
       return;
     }
     _stack[_stack_size++] = type1;
@@ -186,9 +175,7 @@ class StackMapFrame : public ResourceObj {
   // Pop and return the top type on stack without verifying.
   inline VerificationType pop_stack(TRAPS) {
     if (_stack_size <= 0) {
-      verifier()->verify_error(
-          ErrorContext::stack_underflow(_offset, this),
-          "Operand stack underflow");
+      verifier()->verify_error(ErrorContext::stack_underflow(_offset, this), "Operand stack underflow");
       return VerificationType::bogus_type();
     }
     VerificationType top = _stack[--_stack_size];
@@ -200,8 +187,7 @@ class StackMapFrame : public ResourceObj {
   inline VerificationType pop_stack(VerificationType type, TRAPS) {
     if (_stack_size != 0) {
       VerificationType top = _stack[_stack_size - 1];
-      bool subtype = type.is_assignable_from(
-        top, verifier(), false, CHECK_(VerificationType::bogus_type()));
+      bool subtype = type.is_assignable_from(top, verifier(), false, CHECK_(VerificationType::bogus_type()));
       if (subtype) {
         --_stack_size;
         return top;
@@ -210,10 +196,7 @@ class StackMapFrame : public ResourceObj {
     return pop_stack_ex(type, THREAD);
   }
 
-  inline void pop_stack_2(
-      VerificationType type1, VerificationType type2, TRAPS) {
-    assert(type1.is_long2() || type1.is_double2(), "must be long/double");
-    assert(type2.is_long() || type2.is_double(), "must be long/double_2");
+  inline void pop_stack_2(VerificationType type1, VerificationType type2, TRAPS) {
     if (_stack_size >= 2) {
       VerificationType top1 = _stack[_stack_size - 1];
       bool subtype1 = type1.is_assignable_from(top1, verifier(), false, CHECK);
@@ -243,19 +226,16 @@ class StackMapFrame : public ResourceObj {
   // it is assignable to type.
   VerificationType get_local(int32_t index, VerificationType type, TRAPS);
   // For long/double.
-  void get_local_2(
-    int32_t index, VerificationType type1, VerificationType type2, TRAPS);
+  void get_local_2(int32_t index, VerificationType type1, VerificationType type2, TRAPS);
 
   // Set element at index in local variable array to type.
   void set_local(int32_t index, VerificationType type, TRAPS);
   // For long/double.
-  void set_local_2(
-    int32_t index, VerificationType type1, VerificationType type2, TRAPS);
+  void set_local_2(int32_t index, VerificationType type1, VerificationType type2, TRAPS);
 
   // Private auxiliary method used only in is_assignable_to(StackMapFrame).
   // Returns true if src is assignable to target.
-  int is_assignable_to(
-    VerificationType* src, VerificationType* target, int32_t len, TRAPS) const;
+  int is_assignable_to(VerificationType* src, VerificationType* target, int32_t len, TRAPS) const;
 
   TypeOrigin stack_top_ctx();
 

@@ -328,9 +328,9 @@ class Bytecodes: AllStatic {
  public:
   // Conversion
   static void        check          (Code code)    {
-    assert(is_defined(code),      "illegal code: %d", (int)code); }
+    }
   static void        wide_check     (Code code)    {
-    assert(wide_is_defined(code), "illegal code: %d", (int)code); }
+    }
   static Code        cast           (int  code)    { return (Code)code; }
 
   // Fetch a bytecode, hiding breakpoints as necessary.  The method
@@ -340,9 +340,7 @@ class Bytecodes: AllStatic {
   // NULL since in that case the bcp and Method* are unrelated
   // memory.
   static Code       code_at(const Method* method, address bcp) {
-    assert(method == NULL || check_method(method, bcp), "bcp must point into method");
     Code code = cast(*bcp);
-    assert(code != _breakpoint || method != NULL, "need Method* to decode breakpoint");
     return (code != _breakpoint) ? code : non_breakpoint_code_at(method, bcp);
   }
   static Code       java_code_at(const Method* method, address bcp) {
@@ -385,27 +383,19 @@ class Bytecodes: AllStatic {
   static int         java_length_at (Method* method, address bcp)  { return length_for_code_at(java_code_at(method, bcp), bcp); }
   static bool        is_java_code   (Code code)    { return 0 <= code && code < number_of_java_codes; }
 
-  static bool        is_aload       (Code code)    { return (code == _aload  || code == _aload_0  || code == _aload_1
-                                                                             || code == _aload_2  || code == _aload_3); }
-  static bool        is_astore      (Code code)    { return (code == _astore || code == _astore_0 || code == _astore_1
-                                                                             || code == _astore_2 || code == _astore_3); }
+  static bool        is_aload       (Code code)    { return (code == _aload  || code == _aload_0  || code == _aload_1 || code == _aload_2  || code == _aload_3); }
+  static bool        is_astore      (Code code)    { return (code == _astore || code == _astore_0 || code == _astore_1 || code == _astore_2 || code == _astore_3); }
 
-  static bool        is_store_into_local(Code code){ return (_istore <= code && code <= _astore_3); }
+  static bool        is_store_into_local(Code code) { return (_istore <= code && code <= _astore_3); }
   static bool        is_const       (Code code)    { return (_aconst_null <= code && code <= _ldc2_w); }
-  static bool        is_zero_const  (Code code)    { return (code == _aconst_null || code == _iconst_0
-                                                           || code == _fconst_0 || code == _dconst_0); }
+  static bool        is_zero_const  (Code code)    { return (code == _aconst_null || code == _iconst_0 || code == _fconst_0 || code == _dconst_0); }
   static bool        is_return      (Code code)    { return (_ireturn <= code && code <= _return); }
   static bool        is_invoke      (Code code)    { return (_invokevirtual <= code && code <= _invokedynamic); }
-  static bool        has_receiver   (Code code)    {
-    assert(is_invoke(code), "");
-    return code == _invokevirtual ||
-                                                                                          code == _invokespecial ||
-                                                                                          code == _invokeinterface; }
+  static bool        has_receiver   (Code code)    { return code == _invokevirtual || code == _invokespecial || code == _invokeinterface; }
   static bool        has_optional_appendix(Code code) { return code == _invokedynamic || code == _invokehandle; }
 
   static int         compute_flags  (const char* format, int more_flags = 0);  // compute the flags
   static int         flags          (int code, bool is_wide) {
-    assert(code == (u_char)code, "must be a byte");
     return _flags[code + (is_wide ? (1<<BitsPerByte) : 0)];
   }
   static int         format_bits    (Code code, bool is_wide) { return flags(code, is_wide) & _all_fmt_bits; }

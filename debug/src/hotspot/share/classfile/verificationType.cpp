@@ -20,29 +20,21 @@ VerificationType VerificationType::from_tag(u1 tag) {
   }
 }
 
-bool VerificationType::resolve_and_check_assignability(InstanceKlass* klass, Symbol* name,
-         Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object, TRAPS) {
+bool VerificationType::resolve_and_check_assignability(InstanceKlass* klass, Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object, TRAPS) {
   HandleMark hm(THREAD);
-  Klass* this_class = SystemDictionary::resolve_or_fail(
-      name, Handle(THREAD, klass->class_loader()),
-      Handle(THREAD, klass->protection_domain()), true, CHECK_false);
+  Klass* this_class = SystemDictionary::resolve_or_fail(name, Handle(THREAD, klass->class_loader()), Handle(THREAD, klass->protection_domain()), true, CHECK_false);
   if (log_is_enabled(Debug, class, resolve)) {
     Verifier::trace_class_resolution(this_class, klass);
   }
 
-  if (this_class->is_interface() && (!from_field_is_protected ||
-      from_name != vmSymbols::java_lang_Object())) {
+  if (this_class->is_interface() && (!from_field_is_protected || from_name != vmSymbols::java_lang_Object())) {
     // If we are not trying to access a protected field or method in
     // java.lang.Object then, for arrays, we only allow assignability
     // to interfaces java.lang.Cloneable and java.io.Serializable.
     // Otherwise, we treat interfaces as java.lang.Object.
-    return !from_is_array ||
-      this_class == SystemDictionary::Cloneable_klass() ||
-      this_class == SystemDictionary::Serializable_klass();
+    return !from_is_array || this_class == SystemDictionary::Cloneable_klass() || this_class == SystemDictionary::Serializable_klass();
   } else if (from_is_object) {
-    Klass* from_class = SystemDictionary::resolve_or_fail(
-        from_name, Handle(THREAD, klass->class_loader()),
-        Handle(THREAD, klass->protection_domain()), true, CHECK_false);
+    Klass* from_class = SystemDictionary::resolve_or_fail(from_name, Handle(THREAD, klass->class_loader()), Handle(THREAD, klass->protection_domain()), true, CHECK_false);
     if (log_is_enabled(Debug, class, resolve)) {
       Verifier::trace_class_resolution(from_class, klass);
     }
@@ -52,9 +44,7 @@ bool VerificationType::resolve_and_check_assignability(InstanceKlass* klass, Sym
   return false;
 }
 
-bool VerificationType::is_reference_assignable_from(
-    const VerificationType& from, ClassVerifier* context,
-    bool from_field_is_protected, TRAPS) const {
+bool VerificationType::is_reference_assignable_from(const VerificationType& from, ClassVerifier* context, bool from_field_is_protected, TRAPS) const {
   InstanceKlass* klass = context->current_class();
   if (from.is_null()) {
     // null is assignable to any reference
@@ -92,7 +82,6 @@ bool VerificationType::is_reference_assignable_from(
 }
 
 VerificationType VerificationType::get_component(ClassVerifier *context, TRAPS) const {
-  assert(is_array() && name()->utf8_length() >= 2, "Must be a valid array");
   Symbol* component;
   switch (name()->byte_at(1)) {
     case 'Z': return VerificationType(Boolean);
@@ -104,14 +93,10 @@ VerificationType VerificationType::get_component(ClassVerifier *context, TRAPS) 
     case 'F': return VerificationType(Float);
     case 'D': return VerificationType(Double);
     case '[':
-      component = context->create_temporary_symbol(
-        name(), 1, name()->utf8_length(),
-        CHECK_(VerificationType::bogus_type()));
+      component = context->create_temporary_symbol(name(), 1, name()->utf8_length(), CHECK_(VerificationType::bogus_type()));
       return VerificationType::reference_type(component);
     case 'L':
-      component = context->create_temporary_symbol(
-        name(), 2, name()->utf8_length() - 1,
-        CHECK_(VerificationType::bogus_type()));
+      component = context->create_temporary_symbol(name(), 2, name()->utf8_length() - 1, CHECK_(VerificationType::bogus_type()));
       return VerificationType::reference_type(component);
     default:
       // Met an invalid type signature, e.g. [X

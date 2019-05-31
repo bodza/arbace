@@ -40,7 +40,7 @@ class ResourceHashtable : public ResourceObj {
     Node* _next;
 
     Node(unsigned hash, K const& key, V const& value) :
-        _hash(hash), _key(key), _value(value), _next(NULL) {}
+        _hash(hash), _key(key), _value(value), _next(NULL) { }
   };
 
   Node* _table[SIZE];
@@ -61,8 +61,7 @@ class ResourceHashtable : public ResourceObj {
   }
 
   Node const** lookup_node(unsigned hash, K const& key) const {
-    return const_cast<Node const**>(
-        const_cast<ResourceHashtable*>(this)->lookup_node(hash, key));
+    return const_cast<Node const**>(const_cast<ResourceHashtable*>(this)->lookup_node(hash, key));
   }
 
  public:

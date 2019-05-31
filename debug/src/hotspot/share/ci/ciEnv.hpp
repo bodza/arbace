@@ -344,11 +344,9 @@ public:
 #undef WK_KLASS_FUNC
 
   ciInstance* NullPointerException_instance() {
-    assert(_NullPointerException_instance != NULL, "initialization problem");
     return _NullPointerException_instance;
   }
   ciInstance* ArithmeticException_instance() {
-    assert(_ArithmeticException_instance != NULL, "initialization problem");
     return _ArithmeticException_instance;
   }
 

@@ -38,7 +38,7 @@ class GCMessage : public FormatBuffer<1024> {
   bool is_before;
 
  public:
-  GCMessage() {}
+  GCMessage() { }
 };
 
 class CollectedHeap;
@@ -48,7 +48,7 @@ class GCHeapLog : public EventLogBase<GCMessage> {
   void log_heap(CollectedHeap* heap, bool before);
 
  public:
-  GCHeapLog() : EventLogBase<GCMessage>("GC Heap History") {}
+  GCHeapLog() : EventLogBase<GCMessage>("GC Heap History") { }
 
   void log_heap_before(CollectedHeap* heap) {
     log_heap(heap, true);
@@ -135,7 +135,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   // Verification functions
   virtual void check_for_non_bad_heap_word_value(HeapWord* addr, size_t size)
-    {};
+    { };
 
  public:
   enum Name {
@@ -168,11 +168,11 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   virtual void post_initialize();
 
   // Stop any onging concurrent work and prepare for exit.
-  virtual void stop() {}
+  virtual void stop() { }
 
   // Stop and resume concurrent GC threads interfering with safepoint operations
-  virtual void safepoint_synchronize_begin() {}
-  virtual void safepoint_synchronize_end() {}
+  virtual void safepoint_synchronize_begin() { }
+  virtual void safepoint_synchronize_end() { }
 
   void initialize_reserved_region(HeapWord *start, HeapWord *end);
   MemRegion reserved_region() const { return _reserved; }
@@ -369,7 +369,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   // Total number of GC collections (started)
   unsigned int total_collections() const { return _total_collections; }
-  unsigned int total_full_collections() const { return _total_full_collections;}
+  unsigned int total_full_collections() const { return _total_full_collections; }
 
   // Increment total number of GC collections (started)
   // Should be protected but used by PSMarkSweep - cleanup for 1.4.2
@@ -485,9 +485,9 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   virtual bool is_scavengable(oop obj) = 0;
   // Registering and unregistering an nmethod (compiled code) with the heap.
   // Override with specific mechanism for each specialized heap type.
-  virtual void register_nmethod(nmethod* nm) {}
-  virtual void unregister_nmethod(nmethod* nm) {}
-  virtual void verify_nmethod(nmethod* nmethod) {}
+  virtual void register_nmethod(nmethod* nm) { }
+  virtual void unregister_nmethod(nmethod* nm) { }
+  virtual void verify_nmethod(nmethod* nmethod) { }
 
   void trace_heap_before_gc(const GCTracer* gc_tracer);
   void trace_heap_after_gc(const GCTracer* gc_tracer);

@@ -37,7 +37,6 @@ void G1BlockOffsetTable::set_offset_array(size_t index, u_char offset) {
 
 void G1BlockOffsetTable::set_offset_array(size_t index, HeapWord* high, HeapWord* low) {
   check_index(index, "index out of range");
-  assert(high >= low, "addresses out of order");
   size_t offset = pointer_delta(high, low);
   check_offset(offset, "offset too large");
   set_offset_array(index, (u_char)offset);
@@ -45,7 +44,6 @@ void G1BlockOffsetTable::set_offset_array(size_t index, HeapWord* high, HeapWord
 
 void G1BlockOffsetTable::set_offset_array(size_t left, size_t right, u_char offset) {
   check_index(right, "right index out of range");
-  assert(left <= right, "indexes out of order");
   size_t num_cards = right - left + 1;
   memset_with_concurrent_readers(&_offset_array[left], offset, num_cards);
 }
@@ -57,7 +55,6 @@ inline size_t G1BlockOffsetTable::index_for_raw(const void* p) const {
 
 inline size_t G1BlockOffsetTable::index_for(const void* p) const {
   char* pc = (char*)p;
-  assert(pc >= (char*)_reserved.start() && pc <  (char*)_reserved.end(), "p (" PTR_FORMAT ") not in reserved [" PTR_FORMAT ", " PTR_FORMAT ")", p2i(p), p2i(_reserved.start()), p2i(_reserved.end()));
   size_t result = index_for_raw(p);
   check_index(result, "bad index from address");
   return result;
@@ -66,7 +63,6 @@ inline size_t G1BlockOffsetTable::index_for(const void* p) const {
 inline HeapWord* G1BlockOffsetTable::address_for_index(size_t index) const {
   check_index(index, "index out of range");
   HeapWord* result = address_for_index_raw(index);
-  assert(result >= _reserved.start() && result < _reserved.end(), "bad address from index result " PTR_FORMAT " _reserved.start() " PTR_FORMAT " _reserved.end() " PTR_FORMAT, p2i(result), p2i(_reserved.start()), p2i(_reserved.end()));
   return result;
 }
 
@@ -77,7 +73,6 @@ inline size_t G1BlockOffsetTablePart::block_size(const HeapWord* p) const {
 inline HeapWord* G1BlockOffsetTablePart::block_at_or_preceding(const void* addr,
                                                                bool has_max_index,
                                                                size_t max_index) const {
-  assert(_object_can_span || _bot->offset_array(_bot->index_for(_space->bottom())) == 0, "Object crossed region boundary, found offset %u instead of 0", (uint) _bot->offset_array(_bot->index_for(_space->bottom())));
   size_t index = _bot->index_for(addr);
   // We must make sure that the offset table entry we use is valid.  If
   // "addr" is past the end, start at the last known one and go forward.
@@ -95,7 +90,6 @@ inline HeapWord* G1BlockOffsetTablePart::block_at_or_preceding(const void* addr,
     index -= n_cards_back;
     offset = _bot->offset_array(index);
   }
-  assert(offset < BOTConstants::N_words, "offset too large");
   q -= offset;
   return q;
 }
@@ -111,8 +105,6 @@ inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr_const(
     }
     n += block_size(q);
   }
-  assert(q <= n, "wrong order for q and addr");
-  assert(addr < n, "wrong order for addr and n");
   return q;
 }
 
@@ -129,7 +121,6 @@ inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr(HeapWo
   if (n <= addr) {
     q = forward_to_block_containing_addr_slow(q, n, addr);
   }
-  assert(q <= addr, "wrong order for current and arg");
   return q;
 }
 

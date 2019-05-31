@@ -22,7 +22,6 @@ void InlineCacheBuffer::assemble_ic_buffer_code(address code_begin, void* cached
   // because
   // (1) the value is old (i.e., doesn't matter for scavenges)
   // (2) these ICStubs are removed *before* a GC happens, so the roots disappear
-  // assert(cached_value == NULL || cached_oop->is_perm(), "must be perm oop");
 
   address start = __ pc();
   Label l;
@@ -33,7 +32,6 @@ void InlineCacheBuffer::assemble_ic_buffer_code(address code_begin, void* cached
   __ emit_int64((int64_t)cached_value);
   // Only need to invalidate the 1st two instructions - not the whole ic stub
   ICache::invalidate_range(code_begin, InlineCacheBuffer::ic_stub_code_size());
-  assert(__ pc() - start == ic_stub_code_size(), "must be");
 }
 
 address InlineCacheBuffer::ic_buffer_entry_point(address code_begin) {

@@ -19,14 +19,11 @@
 #include "utilities/growableArray.hpp"
 #include "utilities/macros.hpp"
 
-GrowableArray<MemoryPool*>* MemoryService::_pools_list =
-  new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryPool*>(init_pools_list_size, true);
-GrowableArray<MemoryManager*>* MemoryService::_managers_list =
-  new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryManager*>(init_managers_list_size, true);
+GrowableArray<MemoryPool*>* MemoryService::_pools_list = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryPool*>(init_pools_list_size, true);
+GrowableArray<MemoryManager*>* MemoryService::_managers_list = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryManager*>(init_managers_list_size, true);
 
 MemoryManager*   MemoryService::_code_cache_manager    = NULL;
-GrowableArray<MemoryPool*>* MemoryService::_code_heap_pools =
-    new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryPool*>(init_code_heap_pools_size, true);
+GrowableArray<MemoryPool*>* MemoryService::_code_heap_pools = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<MemoryPool*>(init_code_heap_pools_size, true);
 MemoryPool*      MemoryService::_metaspace_pool        = NULL;
 MemoryPool*      MemoryService::_compressed_class_pool = NULL;
 
@@ -34,7 +31,7 @@ class GcThreadCountClosure: public ThreadClosure {
  private:
   int _count;
  public:
-  GcThreadCountClosure() : _count(0) {};
+  GcThreadCountClosure() : _count(0) { };
   void do_thread(Thread* thread);
   int count() { return _count; }
 };
@@ -140,9 +137,7 @@ void MemoryService::track_memory_pool_usage(MemoryPool* pool) {
   }
 }
 
-void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime,
-                             bool recordAccumulatedGCTime,
-                             bool recordPreGCUsage, bool recordPeakUsage) {
+void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, bool recordAccumulatedGCTime, bool recordPreGCUsage, bool recordPeakUsage) {
 
   manager->gc_begin(recordGCBeginTime, recordPreGCUsage, recordAccumulatedGCTime);
 
@@ -155,11 +150,7 @@ void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime,
   }
 }
 
-void MemoryService::gc_end(GCMemoryManager* manager, bool recordPostGCUsage,
-                           bool recordAccumulatedGCTime,
-                           bool recordGCEndTime, bool countCollection,
-                           GCCause::Cause cause,
-                           bool allMemoryPoolsAffected) {
+void MemoryService::gc_end(GCMemoryManager* manager, bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected) {
   // register the GC end statistics and memory usage
   manager->gc_end(recordPostGCUsage, recordAccumulatedGCTime, recordGCEndTime,
                   countCollection, cause, allMemoryPoolsAffected);
@@ -200,11 +191,7 @@ Handle MemoryService::create_MemoryUsage_obj(MemoryUsage usage, TRAPS) {
   args.push_long(usage.committed_as_jlong());
   args.push_long(usage.max_size_as_jlong());
 
-  return JavaCalls::construct_new_instance(
-                          ik,
-                          vmSymbols::long_long_long_long_void_signature(),
-                          &args,
-                          CHECK_NH);
+  return JavaCalls::construct_new_instance(ik, vmSymbols::long_long_long_long_void_signature(), &args, CHECK_NH);
 }
 
 TraceMemoryManagerStats::TraceMemoryManagerStats(GCMemoryManager* gc_memory_manager,

@@ -17,7 +17,6 @@ double ConversionStub::double_zero = 0.0;
 
 void ConversionStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
-  assert(bytecode() == Bytecodes::_f2i || bytecode() == Bytecodes::_d2i, "other conversions do not require stub");
 
   if (input()->is_single_xmm()) {
     __ comiss(input()->as_xmm_float_reg(),
@@ -64,13 +63,11 @@ void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
 
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index, LIR_Opr array)
   : _throw_index_out_of_bounds_exception(false), _index(index), _array(array) {
-  assert(info != NULL, "must have info");
   _info = new CodeEmitInfo(info);
 }
 
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index)
   : _throw_index_out_of_bounds_exception(true), _index(index), _array(NULL) {
-  assert(info != NULL, "must have info");
   _info = new CodeEmitInfo(info);
 }
 
@@ -130,18 +127,15 @@ NewInstanceStub::NewInstanceStub(LIR_Opr klass_reg, LIR_Opr result, ciInstanceKl
   _klass = klass;
   _klass_reg = klass_reg;
   _info = new CodeEmitInfo(info);
-  assert(stub_id == Runtime1::new_instance_id                 || stub_id == Runtime1::fast_new_instance_id            || stub_id == Runtime1::fast_new_instance_init_check_id, "need new_instance id");
   _stub_id   = stub_id;
 }
 
 void NewInstanceStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
   __ movptr(rdx, _klass_reg->as_register());
   __ call(RuntimeAddress(Runtime1::entry_for(_stub_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == rax, "result must in rax,");
   __ jmp(_continuation);
 }
 
@@ -155,14 +149,10 @@ NewTypeArrayStub::NewTypeArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Opr re
 }
 
 void NewTypeArrayStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
-  assert(_length->as_register() == rbx, "length must in rbx,");
-  assert(_klass_reg->as_register() == rdx, "klass_reg must in rdx");
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_type_array_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == rax, "result must in rax,");
   __ jmp(_continuation);
 }
 
@@ -176,14 +166,10 @@ NewObjectArrayStub::NewObjectArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Op
 }
 
 void NewObjectArrayStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
-  assert(_length->as_register() == rbx, "length must in rbx,");
-  assert(_klass_reg->as_register() == rdx, "klass_reg must in rdx");
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_object_array_id)));
   ce->add_call_info_here(_info);
   ce->verify_oop_map(_info);
-  assert(_result->as_register() == rax, "result must in rax,");
   __ jmp(_continuation);
 }
 
@@ -196,7 +182,6 @@ MonitorEnterStub::MonitorEnterStub(LIR_Opr obj_reg, LIR_Opr lock_reg, CodeEmitIn
 }
 
 void MonitorEnterStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
   __ bind(_entry);
   ce->store_parameter(_obj_reg->as_register(),  1);
   ce->store_parameter(_lock_reg->as_register(), 0);
@@ -252,7 +237,6 @@ void PatchingStub::align_patch_site(MacroAssembler* masm) {
 }
 
 void PatchingStub::emit_code(LIR_Assembler* ce) {
-  assert(NativeCall::instruction_size <= _bytes_to_copy && _bytes_to_copy <= 0xFF, "not enough room for call");
 
   Label call_patch;
 
@@ -290,7 +274,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
     if (CommentedAssembly) {
       __ block_comment(" being_initialized check");
     }
-    assert(_obj != noreg, "must be a valid register");
     Register tmp = rax;
     Register tmp2 = rbx;
     __ push(tmp);
@@ -331,7 +314,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   __ emit_int8(bytes_to_skip);
   __ emit_int8(_bytes_to_copy);
   address patch_info_pc = __ pc();
-  assert(patch_info_pc - end_of_patch == bytes_to_skip, "incorrect patch info");
 
   address entry = __ pc();
   NativeGeneralJump::insert_unconditional((address)_pc_start, entry);
@@ -350,14 +332,13 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
     __ block_comment("patch entry point");
   }
   __ call(RuntimeAddress(target));
-  assert(_patch_info_offset == (patch_info_pc - __ pc()), "must not change");
   ce->add_call_info_here(_info);
   int jmp_off = __ offset();
   __ jmp(_patch_site_entry);
   // Add enough nops so deoptimization can overwrite the jmp above with a call
   // and not destroy the world. We cannot use fat nops here, since the concurrent
   // code rewrite may transiently create the illegal instruction sequence.
-  for (int j = __ offset() ; j < jmp_off + 5 ; j++ ) {
+  for (int j = __ offset(); j < jmp_off + 5; j++ ) {
     __ nop();
   }
   if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
@@ -391,7 +372,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
-  assert(__ rsp_offset() == 0, "frame size should be fixed");
 
   __ bind(_entry);
   // pass the object on stack because all registers must be preserved
@@ -423,13 +403,12 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
   r[4] = length()->as_register();
 
   // next registers will get stored on the stack
-  for (int i = 0; i < 5 ; i++ ) {
+  for (int i = 0; i < 5; i++ ) {
     VMReg r_1 = args[i].first();
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;
       __ movptr (Address(rsp, st_off), r[i]);
     } else {
-      assert(r[i] == args[i].first()->as_Register(), "Wrong register for arg ");
     }
   }
 

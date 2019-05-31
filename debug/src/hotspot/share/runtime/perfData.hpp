@@ -847,16 +847,16 @@ class PerfDataManager : AllStatic {
 
 // Useful macros to create the performance counters
 #define NEWPERFTICKCOUNTER(counter, counter_ns, counter_name) \
-  {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Ticks,CHECK);}
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
+                                             PerfData::U_Ticks,CHECK); }
 
 #define NEWPERFEVENTCOUNTER(counter, counter_ns, counter_name) \
-  {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Events,CHECK);}
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
+                                             PerfData::U_Events,CHECK); }
 
 #define NEWPERFBYTECOUNTER(counter, counter_ns, counter_name) \
-  {counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Bytes,CHECK);}
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
+                                             PerfData::U_Bytes,CHECK); }
 
 // Utility Classes
 
@@ -892,8 +892,7 @@ class PerfTraceTime : public StackObj {
     }
 
     inline PerfTraceTime(PerfLongCounter* timerp, int* recursion_counter) : _timerp(timerp), _recursion_counter(recursion_counter) {
-      if (!UsePerfData || (_recursion_counter != NULL &&
-                           (*_recursion_counter)++ > 0)) return;
+      if (!UsePerfData || (_recursion_counter != NULL && (*_recursion_counter)++ > 0)) return;
       _t.start();
     }
 

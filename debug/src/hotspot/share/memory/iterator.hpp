@@ -26,8 +26,8 @@ class OopClosure : public Closure {
 
 class DoNothingClosure : public OopClosure {
  public:
-  virtual void do_oop(oop* p)       {}
-  virtual void do_oop(narrowOop* p) {}
+  virtual void do_oop(oop* p)       { }
+  virtual void do_oop(narrowOop* p) { }
 };
 extern DoNothingClosure do_nothing_cl;
 
@@ -75,7 +75,7 @@ class OopIterateClosure : public OopClosure {
 // An OopIterateClosure that can be used when there's no need to visit the Metadata.
 class BasicOopIterateClosure : public OopIterateClosure {
 public:
-  BasicOopIterateClosure(ReferenceDiscoverer* rd = NULL) : OopIterateClosure(rd) {}
+  BasicOopIterateClosure(ReferenceDiscoverer* rd = NULL) : OopIterateClosure(rd) { }
 
   virtual bool do_metadata() { return false; }
   virtual void do_klass(Klass* k) { ShouldNotReachHere(); }
@@ -99,7 +99,7 @@ class CLDToOopClosure : public CLDClosure {
  public:
   CLDToOopClosure(OopClosure* oop_closure, bool must_claim_cld = true) :
       _oop_closure(oop_closure),
-      _must_claim_cld(must_claim_cld) {}
+      _must_claim_cld(must_claim_cld) { }
 
   void do_cld(ClassLoaderData* cld);
 };
@@ -145,7 +145,7 @@ class ObjectToOopClosure: public ObjectClosure {
   OopIterateClosure* _cl;
 public:
   void do_object(oop obj);
-  ObjectToOopClosure(OopIterateClosure* cl) : _cl(cl) {}
+  ObjectToOopClosure(OopIterateClosure* cl) : _cl(cl) { }
 };
 
 // A version of ObjectClosure that is expected to be robust
@@ -212,7 +212,7 @@ class CodeBlobToOopClosure : public CodeBlobClosure {
  public:
   // If fix_relocations(), then cl must copy objects to their new location immediately to avoid
   // patching nmethods with the old locations.
-  CodeBlobToOopClosure(OopClosure* cl, bool fix_relocations) : _cl(cl), _fix_relocations(fix_relocations) {}
+  CodeBlobToOopClosure(OopClosure* cl, bool fix_relocations) : _cl(cl), _fix_relocations(fix_relocations) { }
   virtual void do_code_blob(CodeBlob* cb);
 
   bool fix_relocations() const { return _fix_relocations; }
@@ -221,7 +221,7 @@ class CodeBlobToOopClosure : public CodeBlobClosure {
 
 class MarkingCodeBlobClosure : public CodeBlobToOopClosure {
  public:
-  MarkingCodeBlobClosure(OopClosure* cl, bool fix_relocations) : CodeBlobToOopClosure(cl, fix_relocations) {}
+  MarkingCodeBlobClosure(OopClosure* cl, bool fix_relocations) : CodeBlobToOopClosure(cl, fix_relocations) { }
   // Called for each code blob, but at most once per unique blob.
 
   virtual void do_code_blob(CodeBlob* cb);

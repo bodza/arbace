@@ -158,7 +158,7 @@ public:
   ParState(StoragePtr storage,
            uint estimated_thread_count = BasicParState::default_estimated_thread_count(concurrent)) :
     _basic_state(storage, estimated_thread_count, concurrent)
-  {}
+  { }
 
   template<typename F> void iterate(F f);
   template<typename Closure> void oops_do(Closure* cl);
@@ -172,7 +172,7 @@ public:
   ParState(OopStorage* storage,
            uint estimated_thread_count = BasicParState::default_estimated_thread_count(false)) :
     _basic_state(storage, estimated_thread_count, false)
-  {}
+  { }
 
   template<typename F> void iterate(F f);
   template<typename Closure> void oops_do(Closure* cl);

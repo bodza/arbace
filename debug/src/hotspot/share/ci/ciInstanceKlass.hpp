@@ -107,14 +107,11 @@ public:
 
   // General klass information.
   ciFlags                flags()          {
-    assert(is_loaded(), "must be loaded");
     return _flags;
   }
   bool                   has_finalizer()  {
-    assert(is_loaded(), "must be loaded");
     return _has_finalizer; }
   bool                   has_subklass()   {
-    assert(is_loaded(), "must be loaded");
     if (_is_shared && !_has_subklass) {
       if (flags().is_final()) {
         return false;
@@ -129,18 +126,14 @@ public:
             >> LogHeapWordSize);
   }
   jint                   nonstatic_field_size()  {
-    assert(is_loaded(), "must be loaded");
     return _nonstatic_field_size; }
   jint                   has_nonstatic_fields()  {
-    assert(is_loaded(), "must be loaded");
     return _has_nonstatic_fields; }
   jint                   nonstatic_oop_map_size()  {
-    assert(is_loaded(), "must be loaded");
     return _nonstatic_oop_map_size; }
   ciInstanceKlass*       super();
   jint                   nof_implementors() {
     ciInstanceKlass* impl;
-    assert(is_loaded(), "must be loaded");
     impl = implementor();
     if (impl == NULL) {
       return 0;
@@ -151,7 +144,6 @@ public:
     }
   }
   bool has_nonstatic_concrete_methods()  {
-    assert(is_loaded(), "must be loaded");
     return _has_nonstatic_concrete_methods;
   }
 
@@ -180,7 +172,6 @@ public:
 
   // nth nonstatic field (presented by ascending address)
   ciField* nonstatic_field_at(int i) {
-    assert(_nonstatic_fields != NULL, "");
     return _nonstatic_fields->at(i);
   }
 
@@ -239,7 +230,6 @@ public:
   ciInstanceKlass* host_klass();
 
   bool can_be_instantiated() {
-    assert(is_loaded(), "must be loaded");
     return !is_interface() && !is_abstract();
   }
 

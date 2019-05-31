@@ -6,13 +6,11 @@
 
 template <WeakHandleType T>
 oop WeakHandle<T>::resolve() const {
-  assert(!is_null(), "Must be created");
   return NativeAccess<ON_PHANTOM_OOP_REF>::oop_load(_obj);
 }
 
 template <WeakHandleType T>
 oop WeakHandle<T>::peek() const {
-  assert(!is_null(), "Must be created");
   return NativeAccess<ON_PHANTOM_OOP_REF | AS_NO_KEEPALIVE>::oop_load(_obj);
 }
 

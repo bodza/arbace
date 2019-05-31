@@ -139,7 +139,7 @@ class ConcurrentGCTimer : public GCTimer {
   bool _is_concurrent_phase_active;
 
  public:
-  ConcurrentGCTimer(): GCTimer(), _is_concurrent_phase_active(false) {};
+  ConcurrentGCTimer(): GCTimer(), _is_concurrent_phase_active(false) { };
 
   void register_gc_pause_start(const char* name, const Ticks& time = Ticks::now());
   void register_gc_pause_end(const Ticks& time = Ticks::now());

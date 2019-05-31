@@ -16,8 +16,6 @@ STATIC_ASSERT(sizeof(SparsePRTEntry) % sizeof(int) == 0);
 void SparsePRTEntry::init(RegionIdx_t region_ind) {
   // Check that the card array element type can represent all cards in the region.
   // Choose a large SparsePRTEntry::card_elem_t (e.g. CardIdx_t) if required.
-  assert(((size_t)1 << (sizeof(SparsePRTEntry::card_elem_t) * BitsPerByte)) * G1CardTable::card_size >= HeapRegionBounds::max_size(), "precondition");
-  assert(G1RSetSparseRegionEntries > 0, "precondition");
   _region_ind = region_ind;
   _next_index = RSHashTable::NullEntry;
   _next_null = 0;
@@ -53,8 +51,6 @@ void SparsePRTEntry::copy_cards(card_elem_t* cards) const {
 
 void SparsePRTEntry::copy_cards(SparsePRTEntry* e) const {
   copy_cards(e->_cards);
-  assert(_next_null >= 0, "invariant");
-  assert(_next_null <= cards_num(), "invariant");
   e->_next_null = _next_null;
 }
 
@@ -91,8 +87,7 @@ void RSHashTable::clear() {
   guarantee(_entries != NULL, "INV");
   guarantee(_buckets != NULL, "INV");
 
-  guarantee(_capacity <= ((size_t)1 << (sizeof(int)*BitsPerByte-1)) - 1,
-                "_capacity too large");
+  guarantee(_capacity <= ((size_t)1 << (sizeof(int)*BitsPerByte-1)) - 1, "_capacity too large");
 
   // This will put -1 == NullEntry in the key field of all entries.
   memset((void*)_entries, NullEntry, _num_entries * SparsePRTEntry::size());
@@ -103,10 +98,8 @@ void RSHashTable::clear() {
 
 bool RSHashTable::add_card(RegionIdx_t region_ind, CardIdx_t card_index) {
   SparsePRTEntry* e = entry_for_region_ind_create(region_ind);
-  assert(e != NULL && e->r_ind() == region_ind, "Postcondition of call above.");
   SparsePRTEntry::AddCardResult res = e->add_card(card_index);
   if (res == SparsePRTEntry::added) _occupied_cards++;
-  assert(e->num_valid_cards() > 0, "Postcondition");
   return res != SparsePRTEntry::overflow;
 }
 
@@ -114,15 +107,11 @@ SparsePRTEntry* RSHashTable::get_entry(RegionIdx_t region_ind) const {
   int ind = (int) (region_ind & capacity_mask());
   int cur_ind = _buckets[ind];
   SparsePRTEntry* cur;
-  while (cur_ind != NullEntry &&
-         (cur = entry(cur_ind))->r_ind() != region_ind) {
+  while (cur_ind != NullEntry && (cur = entry(cur_ind))->r_ind() != region_ind) {
     cur_ind = cur->next_index();
   }
 
   if (cur_ind == NullEntry) return NULL;
-  // Otherwise...
-  assert(cur->r_ind() == region_ind, "Postcondition of loop + test above.");
-  assert(cur->num_valid_cards() > 0, "Inv");
   return cur;
 }
 
@@ -131,8 +120,7 @@ bool RSHashTable::delete_entry(RegionIdx_t region_ind) {
   int* prev_loc = &_buckets[ind];
   int cur_ind = *prev_loc;
   SparsePRTEntry* cur;
-  while (cur_ind != NullEntry &&
-         (cur = entry(cur_ind))->r_ind() != region_ind) {
+  while (cur_ind != NullEntry && (cur = entry(cur_ind))->r_ind() != region_ind) {
     prev_loc = cur->next_index_addr();
     cur_ind = *prev_loc;
   }
@@ -183,11 +171,9 @@ void RSHashTable::free_entry(int fi) {
 }
 
 void RSHashTable::add_entry(SparsePRTEntry* e) {
-  assert(e->num_valid_cards() > 0, "Precondition.");
   SparsePRTEntry* e2 = entry_for_region_ind_create(e->r_ind());
   e->copy_cards(e2);
   _occupied_cards += e2->num_valid_cards();
-  assert(e2->num_valid_cards() > 0, "Postcondition.");
 }
 
 CardIdx_t RSHashTableIter::find_first_card_in_list() {
@@ -251,8 +237,7 @@ bool RSHashTable::contains_card(RegionIdx_t region_index, CardIdx_t card_index) 
 }
 
 size_t RSHashTable::mem_size() const {
-  return sizeof(RSHashTable) +
-    _num_entries * (SparsePRTEntry::size() + sizeof(int));
+  return sizeof(RSHashTable) + _num_entries * (SparsePRTEntry::size() + sizeof(int));
 }
 
 // ----------------------------------------------------------------------
@@ -298,24 +283,19 @@ void SparsePRT::do_cleanup_work(SparsePRTCleanupTask* sprt_cleanup_task) {
 }
 
 void SparsePRT::finish_cleanup_task(SparsePRTCleanupTask* sprt_cleanup_task) {
-  assert(ParGCRareEvent_lock->owned_by_self(), "pre-condition");
   SparsePRT* head = sprt_cleanup_task->head();
   SparsePRT* tail = sprt_cleanup_task->tail();
   if (head != NULL) {
-    assert(tail != NULL, "if head is not NULL, so should tail");
 
     tail->set_next_expanded(_head_expanded_list);
     _head_expanded_list = head;
   } else {
-    assert(tail == NULL, "if head is NULL, so should tail");
   }
 }
 
 bool SparsePRT::should_be_on_expanded_list() {
   if (_expanded) {
-    assert(_cur != _next, "if _expanded is true, cur should be != _next");
   } else {
-    assert(_cur == _next, "if _expanded is false, cur should be == _next");
   }
   return expanded();
 }
@@ -329,15 +309,12 @@ void SparsePRT::cleanup_all() {
   }
 }
 
-SparsePRT::SparsePRT(HeapRegion* hr) :
-  _hr(hr), _expanded(false), _next_expanded(NULL)
-{
+SparsePRT::SparsePRT(HeapRegion* hr) : _hr(hr), _expanded(false), _next_expanded(NULL) {
   _cur = new RSHashTable(InitialCapacity);
   _next = _cur;
 }
 
 SparsePRT::~SparsePRT() {
-  assert(_next != NULL && _cur != NULL, "Inv");
   if (_cur != _next) { delete _cur; }
   delete _next;
 }
@@ -405,7 +382,6 @@ void SparsePRT::expand() {
 }
 
 void SparsePRTCleanupTask::add(SparsePRT* sprt) {
-  assert(sprt->should_be_on_expanded_list(), "pre-condition");
 
   sprt->set_next_expanded(NULL);
   if (_tail != NULL) {

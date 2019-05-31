@@ -34,9 +34,6 @@ extern "C" {
 static const char* vm_symbol_bodies = VM_SYMBOLS_DO(VM_SYMBOL_BODY, VM_ALIAS_IGNORE);
 
 void vmSymbols::initialize(TRAPS) {
-  assert((int)SID_LIMIT <= (1<<log2_SID_LIMIT), "must fit in this bitfield");
-  assert((int)SID_LIMIT*5 > (1<<log2_SID_LIMIT), "make the bitfield smaller, please");
-  assert(vmIntrinsics::FLAG_LIMIT <= (1 << vmIntrinsics::log2_FLAG_LIMIT), "must fit in this bitfield");
 
   if (!UseSharedSpaces) {
     const char* string = &vm_symbol_bodies[0];
@@ -95,11 +92,9 @@ void vmSymbols::serialize(SerializeClosure* soc) {
 }
 
 BasicType vmSymbols::signature_type(const Symbol* s) {
-  assert(s != NULL, "checking");
   if (s->utf8_length() == 1) {
     BasicType result = char2type(s->byte_at(0));
     if (is_java_primitive(result) || result == T_VOID) {
-      assert(s == _type_signatures[result], "");
       return result;
     }
   }
@@ -131,7 +126,6 @@ vmSymbols::SID vmSymbols::find_sid(const Symbol* symbol) {
       ++min; --max;             // endpoints are done
       int mid = mid_hint;       // start at previous success
       while (max >= min) {
-        assert(mid >= min && mid <= max, "");
         sid1 = vm_symbol_index[mid];
         cmp1 = compare_symbol(symbol, symbol_at(sid1));
         if (cmp1 == 0) {
@@ -201,7 +195,6 @@ vmIntrinsics::ID vmIntrinsics::for_raw_conversion(BasicType src, BasicType dest)
 }
 
 bool vmIntrinsics::preserves_state(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   switch(id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
@@ -240,7 +233,6 @@ bool vmIntrinsics::preserves_state(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::can_trap(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   switch(id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
@@ -272,7 +264,6 @@ bool vmIntrinsics::can_trap(vmIntrinsics::ID id) {
 
 // Some intrinsics produce different results if they are not pinned
 bool vmIntrinsics::should_be_pinned(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   switch(id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
@@ -283,7 +274,6 @@ bool vmIntrinsics::should_be_pinned(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::does_virtual_dispatch(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   switch(id) {
   case vmIntrinsics::_hashCode:
   case vmIntrinsics::_clone:
@@ -295,7 +285,6 @@ bool vmIntrinsics::does_virtual_dispatch(vmIntrinsics::ID id) {
 }
 
 int vmIntrinsics::predicates_needed(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   switch (id) {
   case vmIntrinsics::_cipherBlockChaining_encryptAESCrypt:
   case vmIntrinsics::_cipherBlockChaining_decryptAESCrypt:
@@ -309,12 +298,10 @@ int vmIntrinsics::predicates_needed(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::is_intrinsic_available(vmIntrinsics::ID id) {
-  return !vmIntrinsics::is_intrinsic_disabled(id) &&
-    !vmIntrinsics::is_disabled_by_flags(id);
+  return !vmIntrinsics::is_intrinsic_disabled(id) && !vmIntrinsics::is_disabled_by_flags(id);
 }
 
 bool vmIntrinsics::is_intrinsic_disabled(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   // Canonicalize DisableIntrinsic to contain only ',' as a separator.
   // Note, DirectiveSet may not be created at this point yet since this code
@@ -338,12 +325,10 @@ bool vmIntrinsics::is_intrinsic_disabled(vmIntrinsics::ID id) {
 
 bool vmIntrinsics::is_disabled_by_flags(const methodHandle& method) {
   vmIntrinsics::ID id = method->intrinsic_id();
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
   return is_disabled_by_flags(id);
 }
 
 bool vmIntrinsics::is_disabled_by_flags(vmIntrinsics::ID id) {
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   // -XX:-InlineNatives disables nearly all intrinsics except the ones listed in
   // the following switch statement.
@@ -609,9 +594,7 @@ bool vmIntrinsics::is_disabled_by_flags(vmIntrinsics::ID id) {
 }
 
 #define VM_INTRINSIC_INITIALIZE(id, klass, name, sig, flags) #id "\0"
-static const char* vm_intrinsic_name_bodies =
-  VM_INTRINSICS_DO(VM_INTRINSIC_INITIALIZE,
-                   VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE);
+static const char* vm_intrinsic_name_bodies = VM_INTRINSICS_DO(VM_INTRINSIC_INITIALIZE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE);
 
 static const char* vm_intrinsic_name_table[vmIntrinsics::ID_LIMIT];
 
@@ -624,7 +607,6 @@ const char* vmIntrinsics::name_at(vmIntrinsics::ID id) {
       string += strlen(string); // skip string body
       string += 1;              // skip trailing null
     }
-    assert(!strcmp(nt[_hashCode], "_hashCode"), "lined up");
     nt[_none] = "_none";
   }
   if ((uint)id < (uint)ID_LIMIT)
@@ -675,7 +657,6 @@ vmIntrinsics::ID vmIntrinsics::find_id_impl(vmSymbols::SID holder,
                                             vmSymbols::SID name,
                                             vmSymbols::SID sig,
                                             jshort flags) {
-  assert((int)vmSymbols::SID_LIMIT <= (1<<vmSymbols::log2_SID_LIMIT), "must fit");
 
   // Let the C compiler build the decision tree.
 
@@ -719,27 +700,23 @@ inline jlong intrinsic_info(vmIntrinsics::ID id) {
 vmSymbols::SID vmIntrinsics::class_for(vmIntrinsics::ID id) {
   jlong info = intrinsic_info(id);
   int shift = 2*vmSymbols::log2_SID_LIMIT + log2_FLAG_LIMIT, mask = right_n_bits(vmSymbols::log2_SID_LIMIT);
-  assert(((ID4(1021,1022,1023,15) >> shift) & mask) == 1021, "");
   return vmSymbols::SID( (info >> shift) & mask );
 }
 
 vmSymbols::SID vmIntrinsics::name_for(vmIntrinsics::ID id) {
   jlong info = intrinsic_info(id);
   int shift = vmSymbols::log2_SID_LIMIT + log2_FLAG_LIMIT, mask = right_n_bits(vmSymbols::log2_SID_LIMIT);
-  assert(((ID4(1021,1022,1023,15) >> shift) & mask) == 1022, "");
   return vmSymbols::SID( (info >> shift) & mask );
 }
 
 vmSymbols::SID vmIntrinsics::signature_for(vmIntrinsics::ID id) {
   jlong info = intrinsic_info(id);
   int shift = log2_FLAG_LIMIT, mask = right_n_bits(vmSymbols::log2_SID_LIMIT);
-  assert(((ID4(1021,1022,1023,15) >> shift) & mask) == 1023, "");
   return vmSymbols::SID( (info >> shift) & mask );
 }
 
 vmIntrinsics::Flags vmIntrinsics::flags_for(vmIntrinsics::ID id) {
   jlong info = intrinsic_info(id);
   int shift = 0, mask = right_n_bits(log2_FLAG_LIMIT);
-  assert(((ID4(1021,1022,1023,15) >> shift) & mask) == 15, "");
   return Flags( (info >> shift) & mask );
 }

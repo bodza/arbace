@@ -88,7 +88,6 @@ class ciMethod : public ciMetadata {
 
   void code_at_put(int bci, Bytecodes::Code code) {
     Bytecodes::check(code);
-    assert(0 <= bci && bci < code_size(), "valid bci");
     address bcp = _code + bci;
     *bcp = code;
   }
@@ -99,7 +98,7 @@ class ciMethod : public ciMetadata {
 
  public:
   void check_is_loaded() const                   {
-    assert(is_loaded(), "not loaded"); }
+    }
 
   // Basic method information.
   ciFlags flags() const                          { check_is_loaded(); return _flags; }
@@ -130,8 +129,7 @@ class ciMethod : public ciMetadata {
       return arg_size();
     } else {
       int arg_size = _signature->size();
-      if (code != Bytecodes::_invokestatic &&
-          code != Bytecodes::_invokedynamic) {
+      if (code != Bytecodes::_invokestatic && code != Bytecodes::_invokedynamic) {
         arg_size++;
       }
       return arg_size;
@@ -140,7 +138,6 @@ class ciMethod : public ciMetadata {
 
   Method* get_Method() const {
     Method* m = (Method*)_metadata;
-    assert(m != NULL, "illegal use of unloaded method");
     return m;
   }
 
@@ -163,9 +160,9 @@ class ciMethod : public ciMetadata {
   // Code size for inlining decisions.
   int code_size_for_inlining();
 
-  bool caller_sensitive()    const { return get_Method()->caller_sensitive();    }
-  bool force_inline()        const { return get_Method()->force_inline();        }
-  bool dont_inline()         const { return get_Method()->dont_inline();         }
+  bool caller_sensitive()    const { return get_Method()->caller_sensitive(); }
+  bool force_inline()        const { return get_Method()->force_inline(); }
+  bool dont_inline()         const { return get_Method()->dont_inline(); }
   bool intrinsic_candidate() const { return get_Method()->intrinsic_candidate(); }
 
   int comp_level();
@@ -240,7 +237,6 @@ class ciMethod : public ciMetadata {
     bool ignored_will_link;
     ciSignature* declared_signature;
     get_method_at_bci(bci, ignored_will_link, &declared_signature);
-    assert(declared_signature != NULL, "cannot be null");
     return declared_signature;
   }
 

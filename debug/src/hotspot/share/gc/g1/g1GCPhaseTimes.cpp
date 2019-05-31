@@ -20,7 +20,6 @@ G1GCPhaseTimes::G1GCPhaseTimes(STWGCTimer* gc_timer, uint max_gc_threads) :
   _gc_pause_time_ms(0.0),
   _ref_phase_times((GCTimer*)gc_timer, max_gc_threads)
 {
-  assert(max_gc_threads > 0, "Must have some GC threads");
 
   _gc_par_phases[GCWorkerStart] = new WorkerDataArray<double>(max_gc_threads, "GC Worker Start (ms):");
   _gc_par_phases[ExtRootScan] = new WorkerDataArray<double>(max_gc_threads, "Ext Root Scanning (ms):");
@@ -137,7 +136,6 @@ void G1GCPhaseTimes::note_gc_start() {
 }
 
 #define ASSERT_PHASE_UNINITIALIZED(phase) \
-    assert(_gc_par_phases[phase] == NULL || _gc_par_phases[phase]->get(i) == uninitialized, "Phase " #phase " reported for thread that was not started");
 
 double G1GCPhaseTimes::worker_time(GCParPhases phase, uint worker) {
   if (_gc_par_phases[phase] == NULL) {
@@ -158,7 +156,6 @@ void G1GCPhaseTimes::note_gc_end() {
   for (uint i = 0; i < _max_gc_threads; i++) {
     double worker_start = _gc_par_phases[GCWorkerStart]->get(i);
     if (worker_start != uninitialized) {
-      assert(_gc_par_phases[GCWorkerEnd]->get(i) != uninitialized, "Worker started but not ended.");
       double total_worker_time = _gc_par_phases[GCWorkerEnd]->get(i) - _gc_par_phases[GCWorkerStart]->get(i);
       record_time_secs(GCWorkerTotal, i , total_worker_time);
 
@@ -215,7 +212,6 @@ double G1GCPhaseTimes::average_time_ms(GCParPhases phase) {
 }
 
 size_t G1GCPhaseTimes::sum_thread_work_items(GCParPhases phase, uint index) {
-  assert(_gc_par_phases[phase]->thread_work_items(index) != NULL, "No sub count");
   return _gc_par_phases[phase]->thread_work_items(index)->sum();
 }
 
@@ -437,7 +433,6 @@ G1EvacPhaseWithTrimTimeTracker::G1EvacPhaseWithTrimTimeTracker(G1ParScanThreadSt
   _trim_time(trim_time),
   _stopped(false) {
 
-  assert(_pss->trim_ticks().value() == 0, "Possibly remaining trim ticks left over from previous use");
 }
 
 G1EvacPhaseWithTrimTimeTracker::~G1EvacPhaseWithTrimTimeTracker() {
@@ -447,7 +442,6 @@ G1EvacPhaseWithTrimTimeTracker::~G1EvacPhaseWithTrimTimeTracker() {
 }
 
 void G1EvacPhaseWithTrimTimeTracker::stop() {
-  assert(!_stopped, "Should only be called once");
   _total_time += (Ticks::now() - _start) - _pss->trim_ticks();
   _trim_time += _pss->trim_ticks();
   _pss->reset_trim_ticks();

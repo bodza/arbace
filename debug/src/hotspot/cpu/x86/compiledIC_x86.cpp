@@ -36,8 +36,6 @@ address CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) 
   // This is recognized as unresolved by relocs/nativeinst/ic code.
   __ jump(RuntimeAddress(__ pc()));
 
-  assert(__ pc() - base <= to_interp_stub_size(), "wrong stub size");
-
   // Update current stubs pointer and restore insts_end.
   __ end_a_stub();
   return base;
@@ -82,10 +80,8 @@ void CompiledDirectStaticCall::set_to_interpreted(const methodHandle& callee, ad
 }
 
 void CompiledDirectStaticCall::set_stub_to_clean(static_stub_Relocation* static_stub) {
-  assert(CompiledIC_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "mt unsafe call");
   // Reset stub.
   address stub = static_stub->addr();
-  assert(stub != NULL, "stub not found");
   // Creation also verifies the object.
   NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);
   method_holder->set_data(0);

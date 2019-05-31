@@ -117,7 +117,6 @@ class Generation: public CHeapObj<mtGC> {
   // allocate and initialize ("weak") refs processing support
   virtual void ref_processor_init();
   void set_ref_processor(ReferenceProcessor* rp) {
-    assert(_ref_processor == NULL, "clobbering existing _ref_processor");
     _ref_processor = rp;
   }
 
@@ -125,7 +124,7 @@ class Generation: public CHeapObj<mtGC> {
 
   // This properly belongs in the collector, but for now this
   // will do.
-  virtual bool refs_discovery_is_atomic() const { return true;  }
+  virtual bool refs_discovery_is_atomic() const { return true; }
   virtual bool refs_discovery_is_mt()     const { return false; }
 
   // Space inquiries (results in bytes)
@@ -282,13 +281,13 @@ class Generation: public CHeapObj<mtGC> {
   // Informs the current generation that all par_promote_alloc's in the
   // collection have been completed; any supporting data structures can be
   // reset.  Default is to do nothing.
-  virtual void par_promote_alloc_done(int thread_num) {}
+  virtual void par_promote_alloc_done(int thread_num) { }
 
   // Informs the current generation that all oop_since_save_marks_iterates
   // performed by "thread_num" in the current collection, if any, have been
   // completed; any supporting data structures can be reset.  Default is to
   // do nothing.
-  virtual void par_oop_since_save_marks_iterate_done(int thread_num) {}
+  virtual void par_oop_since_save_marks_iterate_done(int thread_num) { }
 
   // Returns "true" iff collect() should subsequently be called on this
   // this generation. See comment below.
@@ -336,18 +335,18 @@ class Generation: public CHeapObj<mtGC> {
 
   // Some generations may require some cleanup or preparation actions before
   // allowing a collection.  The default is to do nothing.
-  virtual void gc_prologue(bool full) {}
+  virtual void gc_prologue(bool full) { }
 
   // Some generations may require some cleanup actions after a collection.
   // The default is to do nothing.
-  virtual void gc_epilogue(bool full) {}
+  virtual void gc_epilogue(bool full) { }
 
   // Save the high water marks for the used space in a generation.
-  virtual void record_spaces_top() {}
+  virtual void record_spaces_top() { }
 
   // Some generations may need to be "fixed-up" after some allocation
   // activity to make them parsable again. The default is to do nothing.
-  virtual void ensure_parsability() {}
+  virtual void ensure_parsability() { }
 
   // Time (in ms) when we were last collected or now if a collection is
   // in progress.
@@ -370,7 +369,7 @@ class Generation: public CHeapObj<mtGC> {
   // generation can decide to gather the amount of promoted data if
   // the collection of the young generation has completed.
   GCStats* gc_stats() const { return _gc_stats; }
-  virtual void update_gc_stats(Generation* current_generation, bool full) {}
+  virtual void update_gc_stats(Generation* current_generation, bool full) { }
 
   // Support for CMS's rescan. In this general form we return a pointer
   // to an abstract object that can be used, based on specific previously
@@ -381,11 +380,11 @@ class Generation: public CHeapObj<mtGC> {
   // expected to be GC worker thread-local, with the worker index
   // indicated by "thr_num".
   virtual void* get_data_recorder(int thr_num) { return NULL; }
-  virtual void sample_eden_chunk() {}
+  virtual void sample_eden_chunk() { }
 
   // Some generations may require some cleanup actions before allowing
   // a verification.
-  virtual void prepare_for_verify() {}
+  virtual void prepare_for_verify() { }
 
   // Accessing "marks".
 
@@ -393,11 +392,11 @@ class Generation: public CHeapObj<mtGC> {
   // collections.  For example, a contiguous generation might note the
   // beginning allocation point post-collection, which might allow some later
   // operations to be optimized.
-  virtual void save_marks() {}
+  virtual void save_marks() { }
 
   // This function allows generations to initialize any "saved marks".  That
   // is, should only be called when the generation is empty.
-  virtual void reset_saved_marks() {}
+  virtual void reset_saved_marks() { }
 
   // This function is "true" iff any no allocations have occurred in the
   // generation since the last call to "save_marks".
@@ -413,11 +412,11 @@ class Generation: public CHeapObj<mtGC> {
   // it to "list", leaving "list" pointing to the head of the
   // augmented list.  The default is to offer no space.
   virtual void contribute_scratch(ScratchBlock*& list, Generation* requestor,
-                                  size_t max_alloc_words) {}
+                                  size_t max_alloc_words) { }
 
   // Give each generation an opportunity to do clean up for any
   // contributed scratch.
-  virtual void reset_scratch() {}
+  virtual void reset_scratch() { }
 
   // When an older generation has been collected, and perhaps resized,
   // this method will be invoked on all younger generations (from older to
@@ -472,7 +471,7 @@ class Generation: public CHeapObj<mtGC> {
   // Requires "addr" to be the start of a chunk, and returns its size.
   // "addr + size" is required to be the start of a new chunk, or the end
   // of the active area of the heap.
-  virtual size_t block_size(const HeapWord* addr) const ;
+  virtual size_t block_size(const HeapWord* addr) const;
 
   // Requires "addr" to be the start of a block, and returns "TRUE" iff
   // the block is an object.
@@ -490,7 +489,7 @@ class Generation: public CHeapObj<mtGC> {
     elapsedTimer accumulated_time;
     StatRecord() :
       invocations(0),
-      accumulated_time(elapsedTimer()) {}
+      accumulated_time(elapsedTimer()) { }
   };
 private:
   StatRecord _stat_record;
@@ -504,7 +503,6 @@ public:
   virtual CollectorCounters* counters() { return _gc_counters; }
 
   GCMemoryManager* gc_manager() const {
-    assert(_gc_manager != NULL, "not initialized yet");
     return _gc_manager;
   }
 

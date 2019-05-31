@@ -10,10 +10,7 @@
 
 G1YoungRemSetSamplingThread::G1YoungRemSetSamplingThread() :
     ConcurrentGCThread(),
-    _monitor(Mutex::nonleaf,
-             "G1YoungRemSetSamplingThread monitor",
-             true,
-             Monitor::_safepoint_check_never) {
+    _monitor(Mutex::nonleaf, "G1YoungRemSetSamplingThread monitor", true, Monitor::_safepoint_check_never) {
   set_name("G1 Young RemSet Sampling");
   create_and_start();
 }

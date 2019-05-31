@@ -48,7 +48,7 @@ class AbstractICache : AllStatic {
 
 class ICacheStubGenerator : public StubCodeGenerator {
  public:
-  ICacheStubGenerator(CodeBuffer *c) : StubCodeGenerator(c) {}
+  ICacheStubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   // Generate the icache flush stub.
   //

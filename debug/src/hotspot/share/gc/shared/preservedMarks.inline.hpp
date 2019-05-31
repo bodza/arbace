@@ -11,7 +11,6 @@ inline bool PreservedMarks::should_preserve_mark(oop obj, markOop m) const {
 }
 
 inline void PreservedMarks::push(oop obj, markOop m) {
-  assert(should_preserve_mark(obj, m), "pre-condition");
   OopAndMarkOop elem(obj, m);
   _stack.push(elem);
 }
@@ -31,8 +30,6 @@ inline void PreservedMarksSet::restore(RestorePreservedMarksTaskExecutor* execut
 
   executor->restore(this, &total_size);
   assert_empty();
-
-  assert(total_size == total_size_before, "total_size = " SIZE_FORMAT " before = " SIZE_FORMAT, total_size, total_size_before);
 
   log_trace(gc)("Restored " SIZE_FORMAT " marks", total_size);
 }

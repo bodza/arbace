@@ -101,8 +101,7 @@ int os::get_native_stack(address* stack, int frames, int toSkip) {
     } else {
       stack[frame_idx ++] = fr.pc();
     }
-    if (fr.fp() == NULL || fr.cb() != NULL ||
-        fr.sender_pc() == NULL || os::is_first_C_frame(&fr)) break;
+    if (fr.fp() == NULL || fr.cb() != NULL || fr.sender_pc() == NULL || os::is_first_C_frame(&fr)) break;
 
     if (fr.sender_pc() && !os::is_first_C_frame(&fr)) {
       fr = os::get_sender_for_C_frame(&fr);
@@ -119,7 +118,6 @@ int os::get_native_stack(address* stack, int frames, int toSkip) {
 }
 
 bool os::unsetenv(const char* name) {
-  assert(name != NULL, "Null pointer");
   return (::unsetenv(name) == 0);
 }
 
@@ -179,7 +177,6 @@ static char* reserve_mmapped_memory(size_t bytes, char* requested_addr) {
   char * addr;
   int flags = MAP_PRIVATE NOT_AIX( | MAP_NORESERVE ) | MAP_ANONYMOUS;
   if (requested_addr != NULL) {
-    assert((uintptr_t)requested_addr % os::vm_page_size() == 0, "Requested address should be aligned to OS page size");
     flags |= MAP_FIXED;
   }
 
@@ -206,7 +203,7 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
     store.fst_flags = F_ALLOCATEALL;
     ret = fcntl(fd, F_PREALLOCATE, &store);
   }
-  if(ret != -1) {
+  if (ret != -1) {
     return ftruncate(fd, len);
   }
   return -1;
@@ -217,7 +214,6 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
 
 // Map the given address range to the provided file descriptor.
 char* os::map_memory_to_file(char* base, size_t size, int fd) {
-  assert(fd != -1, "File descriptor is not valid");
 
   // allocate space for the file
   int ret = util_posix_fallocate(fd, 0, (off_t)size);
@@ -247,8 +243,6 @@ char* os::map_memory_to_file(char* base, size_t size, int fd) {
 }
 
 char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, int fd) {
-  assert(fd != -1, "File descriptor is not valid");
-  assert(base != NULL, "Base cannot be NULL");
 
   return map_memory_to_file(base, size, fd);
 }
@@ -257,11 +251,8 @@ char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, in
 // so on posix, unmap the section at the start and at the end of the chunk that we mapped
 // rather than unmapping and remapping the whole chunk to get requested alignment.
 char* os::reserve_memory_aligned(size_t size, size_t alignment, int file_desc) {
-  assert((alignment & (os::vm_allocation_granularity() - 1)) == 0, "Alignment must be a multiple of allocation granularity (page size)");
-  assert((size & (alignment -1)) == 0, "size must be 'alignment' aligned");
 
   size_t extra_size = size + alignment;
-  assert(extra_size >= size, "overflow, size is too large to allow alignment");
 
   char* extra_base;
   if (file_desc != -1) {
@@ -328,7 +319,7 @@ int os::get_fileno(FILE* fp) {
   return NOT_AIX(::)fileno(fp);
 }
 
-struct tm* os::gmtime_pd(const time_t* clock, struct tm*  res) {
+struct tm* os::gmtime_pd(const time_t* clock, struct tm* res) {
   return gmtime_r(clock, res);
 }
 
@@ -509,11 +500,10 @@ char* os::build_agent_function_name(const char *sym_name, const char *lib_name,
 }
 
 int os::sleep(Thread* thread, jlong millis, bool interruptible) {
-  assert(thread == Thread::current(),  "thread consistency check");
 
-  ParkEvent * const slp = thread->_SleepEvent ;
-  slp->reset() ;
-  OrderAccess::fence() ;
+  ParkEvent * const slp = thread->_SleepEvent;
+  slp->reset();
+  OrderAccess::fence();
 
   if (interruptible) {
     jlong prevtime = javaTimeNanos();
@@ -526,9 +516,6 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       jlong newtime = javaTimeNanos();
 
       if (newtime - prevtime < 0) {
-        // time moving backwards, should only happen if no monotonic clock
-        // not a guarantee() because JVM should not abort on kernel/glibc bugs
-        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected in os::sleep(interruptible)");
       } else {
         millis -= (newtime - prevtime) / NANOSECS_PER_MILLISEC;
       }
@@ -540,7 +527,6 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       prevtime = newtime;
 
       {
-        assert(thread->is_Java_thread(), "sanity check");
         JavaThread *jt = (JavaThread *) thread;
         ThreadBlockInVM tbivm(jt);
         OSThreadWaitState osts(jt->osthread(), false /* not Object.wait() */);
@@ -565,19 +551,16 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
       jlong newtime = javaTimeNanos();
 
       if (newtime - prevtime < 0) {
-        // time moving backwards, should only happen if no monotonic clock
-        // not a guarantee() because JVM should not abort on kernel/glibc bugs
-        assert(!os::supports_monotonic_clock(), "unexpected time moving backwards detected on os::sleep(!interruptible)");
       } else {
         millis -= (newtime - prevtime) / NANOSECS_PER_MILLISEC;
       }
 
-      if (millis <= 0) break ;
+      if (millis <= 0) break;
 
       prevtime = newtime;
       slp->park(millis);
     }
-    return OS_OK ;
+    return OS_OK;
   }
 }
 
@@ -594,16 +577,16 @@ void os::interrupt(Thread* thread) {
     // resulting in multiple notifications.  We do, however, want the store
     // to interrupted() to be visible to other threads before we execute unpark().
     OrderAccess::fence();
-    ParkEvent * const slp = thread->_SleepEvent ;
-    if (slp != NULL) slp->unpark() ;
+    ParkEvent * const slp = thread->_SleepEvent;
+    if (slp != NULL) slp->unpark();
   }
 
   // For JSR166. Unpark even if interrupt status already was set
   if (thread->is_Java_thread())
     ((JavaThread*)thread)->parker()->unpark();
 
-  ParkEvent * ev = thread->_ParkEvent ;
-  if (ev != NULL) ev->unpark() ;
+  ParkEvent * ev = thread->_ParkEvent;
+  if (ev != NULL) ev->unpark();
 }
 
 bool os::is_interrupted(Thread* thread, bool clear_interrupted) {
@@ -903,7 +886,6 @@ const char* os::exception_name(int sig, char* buf, size_t size) {
 #define NUM_IMPORTANT_SIGS 32
 // Returns one-line short description of a signal set in a user provided buffer.
 const char* os::Posix::describe_signal_set_short(const sigset_t* set, char* buffer, size_t buf_size) {
-  assert(buf_size == (NUM_IMPORTANT_SIGS + 1), "wrong buffer size");
   // Note: for shortness, just print out the first 32. That should
   // cover most of the useful ones, apart from realtime signals.
   for (int sig = 1; sig <= NUM_IMPORTANT_SIGS; sig++) {
@@ -932,8 +914,6 @@ const char* os::Posix::describe_sa_flags(int flags, char* buffer, size_t size) {
   size_t remaining = size;
   bool first = true;
   int idx = 0;
-
-  assert(buffer, "invalid argument");
 
   if (size == 0) {
     return buffer;
@@ -1165,8 +1145,7 @@ void os::print_siginfo(outputStream* os, const void* si0) {
     if (sig == SIGCHLD) {
       os->print(", si_status: %d", si->si_status);
     }
-  } else if (sig == SIGSEGV || sig == SIGBUS || sig == SIGILL ||
-             sig == SIGTRAP || sig == SIGFPE) {
+  } else if (sig == SIGSEGV || sig == SIGBUS || sig == SIGILL || sig == SIGTRAP || sig == SIGFPE) {
     os->print(", si_addr: " PTR_FORMAT, p2i(si->si_addr));
 #ifdef SIGPOLL
   } else if (sig == SIGPOLL) {
@@ -1217,7 +1196,7 @@ char* os::Posix::describe_pthread_attr(char* buf, size_t buflen, const pthread_a
 char* os::Posix::realpath(const char* filename, char* outbuf, size_t outbuflen) {
 
   if (filename == NULL || outbuf == NULL || outbuflen < 1) {
-    assert(false, "os::Posix::realpath: invalid arguments.");
+    ShouldNotReachHere();
     errno = EINVAL;
     return NULL;
   }
@@ -1275,16 +1254,13 @@ char * os::native_path(char *path) {
 jint os::Posix::set_minimum_stack_sizes() {
   size_t os_min_stack_allowed = SOLARIS_ONLY(thr_min_stack()) NOT_SOLARIS(PTHREAD_STACK_MIN);
 
-  _java_thread_min_stack_allowed = _java_thread_min_stack_allowed +
-                                   JavaThread::stack_guard_zone_size() +
-                                   JavaThread::stack_shadow_zone_size();
+  _java_thread_min_stack_allowed = _java_thread_min_stack_allowed + JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size();
 
   _java_thread_min_stack_allowed = align_up(_java_thread_min_stack_allowed, vm_page_size());
   _java_thread_min_stack_allowed = MAX2(_java_thread_min_stack_allowed, os_min_stack_allowed);
 
   size_t stack_size_in_bytes = ThreadStackSize * K;
-  if (stack_size_in_bytes != 0 &&
-      stack_size_in_bytes < _java_thread_min_stack_allowed) {
+  if (stack_size_in_bytes != 0 && stack_size_in_bytes < _java_thread_min_stack_allowed) {
     // The '-Xss' and '-XX:ThreadStackSize=N' options both set
     // ThreadStackSize so we go with "Java thread stack size" instead
     // of "ThreadStackSize" to be more friendly.
@@ -1299,16 +1275,13 @@ jint os::Posix::set_minimum_stack_sizes() {
   JavaThread::set_stack_size_at_create(align_up(stack_size_in_bytes, vm_page_size()));
 
   // Reminder: a compiler thread is a Java thread.
-  _compiler_thread_min_stack_allowed = _compiler_thread_min_stack_allowed +
-                                       JavaThread::stack_guard_zone_size() +
-                                       JavaThread::stack_shadow_zone_size();
+  _compiler_thread_min_stack_allowed = _compiler_thread_min_stack_allowed + JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size();
 
   _compiler_thread_min_stack_allowed = align_up(_compiler_thread_min_stack_allowed, vm_page_size());
   _compiler_thread_min_stack_allowed = MAX2(_compiler_thread_min_stack_allowed, os_min_stack_allowed);
 
   stack_size_in_bytes = CompilerThreadStackSize * K;
-  if (stack_size_in_bytes != 0 &&
-      stack_size_in_bytes < _compiler_thread_min_stack_allowed) {
+  if (stack_size_in_bytes != 0 && stack_size_in_bytes < _compiler_thread_min_stack_allowed) {
     tty->print_cr("\nThe CompilerThreadStackSize specified is too small. "
                   "Specify at least " SIZE_FORMAT "k",
                   _compiler_thread_min_stack_allowed / K);
@@ -1319,8 +1292,7 @@ jint os::Posix::set_minimum_stack_sizes() {
   _vm_internal_thread_min_stack_allowed = MAX2(_vm_internal_thread_min_stack_allowed, os_min_stack_allowed);
 
   stack_size_in_bytes = VMThreadStackSize * K;
-  if (stack_size_in_bytes != 0 &&
-      stack_size_in_bytes < _vm_internal_thread_min_stack_allowed) {
+  if (stack_size_in_bytes != 0 && stack_size_in_bytes < _vm_internal_thread_min_stack_allowed) {
     tty->print_cr("\nThe VMThreadStackSize specified is too small. "
                   "Specify at least " SIZE_FORMAT "k",
                   _vm_internal_thread_min_stack_allowed / K);
@@ -1383,7 +1355,7 @@ size_t os::Posix::get_initial_stack_size(ThreadType thr_type, size_t req_stack_s
   return stack_size;
 }
 
-bool os::Posix::is_root(uid_t uid){
+bool os::Posix::is_root(uid_t uid) {
     return ROOT_UID == uid;
 }
 
@@ -1414,7 +1386,6 @@ bool os::ThreadCrashProtection::call(os::CrashProtectionCallback& cb) {
   Thread::muxAcquire(&_crash_mux, "CrashProtection");
 
   _protected_thread = Thread::current_or_null();
-  assert(_protected_thread != NULL, "Cannot crash protect a NULL thread");
 
   // we cannot rely on sigsetjmp/siglongjmp to save/restore the signal mask
   // since on at least some systems (OS X) siglongjmp will restore the mask
@@ -1440,16 +1411,12 @@ bool os::ThreadCrashProtection::call(os::CrashProtectionCallback& cb) {
 }
 
 void os::ThreadCrashProtection::restore() {
-  assert(_crash_protection != NULL, "must have crash protection");
   siglongjmp(_jmpbuf, 1);
 }
 
-void os::ThreadCrashProtection::check_crash_protection(int sig,
-    Thread* thread) {
+void os::ThreadCrashProtection::check_crash_protection(int sig, Thread* thread) {
 
-  if (thread != NULL &&
-      thread == _protected_thread &&
-      _crash_protection != NULL) {
+  if (thread != NULL && thread == _protected_thread && _crash_protection != NULL) {
 
     if (sig == SIGSEGV || sig == SIGBUS) {
       _crash_protection->restore();
@@ -1533,17 +1500,14 @@ void os::Posix::init(void) {
 
   _clock_gettime = NULL;
 
-  int (*clock_getres_func)(clockid_t, struct timespec*) =
-    (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
-  int (*clock_gettime_func)(clockid_t, struct timespec*) =
-    (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
+  int (*clock_getres_func)(clockid_t, struct timespec*) = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
+  int (*clock_gettime_func)(clockid_t, struct timespec*) = (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
   if (clock_getres_func != NULL && clock_gettime_func != NULL) {
     // We assume that if both clock_gettime and clock_getres support
     // CLOCK_MONOTONIC then the OS provides true high-res monotonic clock.
     struct timespec res;
     struct timespec tp;
-    if (clock_getres_func(CLOCK_MONOTONIC, &res) == 0 &&
-        clock_gettime_func(CLOCK_MONOTONIC, &tp) == 0) {
+    if (clock_getres_func(CLOCK_MONOTONIC, &res) == 0 && clock_gettime_func(CLOCK_MONOTONIC, &tp) == 0) {
       // Yes, monotonic clock is supported.
       _clock_gettime = clock_gettime_func;
     } else {
@@ -1561,9 +1525,7 @@ void os::Posix::init(void) {
   _pthread_condattr_setclock = NULL;
 
   // libpthread is already loaded.
-  int (*condattr_setclock_func)(pthread_condattr_t*, clockid_t) =
-    (int (*)(pthread_condattr_t*, clockid_t))dlsym(RTLD_DEFAULT,
-                                                   "pthread_condattr_setclock");
+  int (*condattr_setclock_func)(pthread_condattr_t*, clockid_t) = (int (*)(pthread_condattr_t*, clockid_t))dlsym(RTLD_DEFAULT, "pthread_condattr_setclock");
   if (condattr_setclock_func != NULL) {
     _pthread_condattr_setclock = condattr_setclock_func;
   }
@@ -1719,10 +1681,6 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
     }
   }
 
-  assert(abstime->tv_sec >= 0, "tv_sec < 0");
-  assert(abstime->tv_sec <= max_secs, "tv_sec > max_secs");
-  assert(abstime->tv_nsec >= 0, "tv_nsec < 0");
-  assert(abstime->tv_nsec < NANOUNITS, "tv_nsec >= NANOUNITS");
 }
 
 // PlatformEvent
@@ -1745,10 +1703,6 @@ void os::PlatformEvent::park() {       // AKA "down()"
   //   -1 => -1 : illegal
   //    1 =>  0 : pass - return immediately
   //    0 => -1 : block; then set _event to 0 before returning
-
-  // Invariant: Only the thread associated with the PlatformEvent
-  // may call park().
-  assert(_nParked == 0, "invariant");
 
   int v;
 
@@ -1786,10 +1740,6 @@ int os::PlatformEvent::park(jlong millis) {
   //   -1 => -1 : illegal
   //    1 =>  0 : pass - return immediately
   //    0 => -1 : block; then set _event to 0 before returning
-
-  // Invariant: Only the thread associated with the Event/PlatformEvent
-  // may call park().
-  assert(_nParked == 0, "invariant");
 
   int v;
   // atomically decrement _event
@@ -1864,7 +1814,6 @@ void os::PlatformEvent::unpark() {
   int status = pthread_mutex_lock(_mutex);
   assert_status(status == 0, status, "mutex_lock");
   int anyWaiters = _nParked;
-  assert(anyWaiters == 0 || anyWaiters == 1, "invariant");
   status = pthread_mutex_unlock(_mutex);
   assert_status(status == 0, status, "mutex_unlock");
 
@@ -1910,7 +1859,6 @@ void Parker::park(bool isAbsolute, jlong time) {
   if (Atomic::xchg(0, &_counter) > 0) return;
 
   Thread* thread = Thread::current();
-  assert(thread->is_Java_thread(), "Must be JavaThread");
   JavaThread *jt = (JavaThread *)thread;
 
   // Optional optimization -- avoid state transitions if there's
@@ -1938,8 +1886,7 @@ void Parker::park(bool isAbsolute, jlong time) {
 
   // Don't wait if cannot get lock since interference arises from
   // unparking. Also re-check interrupt before trying wait.
-  if (Thread::is_interrupted(thread, false) ||
-      pthread_mutex_trylock(_mutex) != 0) {
+  if (Thread::is_interrupted(thread, false) || pthread_mutex_trylock(_mutex) != 0) {
     return;
   }
 
@@ -1958,7 +1905,6 @@ void Parker::park(bool isAbsolute, jlong time) {
   jt->set_suspend_equivalent();
   // cleared by handle_special_suspend_equivalent_condition() or java_suspend_self()
 
-  assert(_cur_index == -1, "invariant");
   if (time == 0) {
     _cur_index = REL_INDEX; // arbitrary choice when not timed
     status = pthread_cond_wait(&_cond[_cur_index], _mutex);

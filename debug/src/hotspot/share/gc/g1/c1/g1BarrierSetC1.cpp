@@ -20,8 +20,7 @@ void G1PostBarrierStub::emit_code(LIR_Assembler* ce) {
   bs->gen_post_barrier_stub(ce, this);
 }
 
-void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
-                                 LIR_Opr pre_val, CodeEmitInfo* info) {
+void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr, LIR_Opr pre_val, CodeEmitInfo* info) {
   LIRGenerator* gen = access.gen();
   DecoratorSet decorators = access.decorators();
 
@@ -32,17 +31,13 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
   if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) {
     flag_type = T_INT;
   } else {
-    guarantee(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1,
-              "Assumption");
+    guarantee(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
     // Use unsigned type T_BOOLEAN here rather than signed T_BYTE since some platforms, eg. ARM,
     // need to use unsigned instructions to use the large offset to load the satb_mark_queue.
     flag_type = T_BOOLEAN;
   }
   LIR_Opr thrd = gen->getThreadPointer();
-  LIR_Address* mark_active_flag_addr =
-    new LIR_Address(thrd,
-                    in_bytes(G1ThreadLocalData::satb_mark_queue_active_offset()),
-                    flag_type);
+  LIR_Address* mark_active_flag_addr = new LIR_Address(thrd, in_bytes(G1ThreadLocalData::satb_mark_queue_active_offset()), flag_type);
   // Read the marking-in-progress flag.
   LIR_Opr flag_val = gen->new_register(T_INT);
   __ load(mark_active_flag_addr, flag_val);
@@ -53,8 +48,6 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
   CodeStub* slow;
 
   if (do_load) {
-    assert(pre_val == LIR_OprFact::illegalOpr, "sanity");
-    assert(addr_opr != LIR_OprFact::illegalOpr, "sanity");
 
     if (patch)
       pre_val_patch_code = lir_patch_normal;
@@ -62,15 +55,10 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr,
     pre_val = gen->new_register(T_OBJECT);
 
     if (!addr_opr->is_address()) {
-      assert(addr_opr->is_register(), "must be");
       addr_opr = LIR_OprFact::address(new LIR_Address(addr_opr, T_OBJECT));
     }
     slow = new G1PreBarrierStub(addr_opr, pre_val, pre_val_patch_code, info);
   } else {
-    assert(addr_opr == LIR_OprFact::illegalOpr, "sanity");
-    assert(pre_val->is_register(), "must be");
-    assert(pre_val->type() == T_OBJECT, "must be an object");
-    assert(info == NULL, "sanity");
 
     slow = new G1PreBarrierStub(pre_val);
   }
@@ -88,8 +76,7 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
   }
 
   // If the "new_val" is a constant NULL, no barrier is necessary.
-  if (new_val->is_constant() &&
-      new_val->as_constant_ptr()->as_jobject() == NULL) return;
+  if (new_val->is_constant() && new_val->as_constant_ptr()->as_jobject() == NULL) return;
 
   if (!new_val->is_register()) {
     LIR_Opr new_val_reg = gen->new_register(T_OBJECT);
@@ -100,7 +87,6 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     }
     new_val = new_val_reg;
   }
-  assert(new_val->is_register(), "must be a register at this point");
 
   if (addr->is_address()) {
     LIR_Address* address = addr->as_address_ptr();
@@ -108,12 +94,10 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     if (!address->index()->is_valid() && address->disp() == 0) {
       __ move(address->base(), ptr);
     } else {
-      assert(address->disp() != max_jint, "lea doesn't support patched addresses!");
       __ leal(addr, ptr);
     }
     addr = ptr;
   }
-  assert(addr->is_register(), "must be a register at this point");
 
   LIR_Opr xor_res = gen->new_pointer_register();
   LIR_Opr xor_shift_res = gen->new_pointer_register();
@@ -138,7 +122,6 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     __ leal(new_val, new_val_reg);
     new_val = new_val_reg;
   }
-  assert(new_val->is_register(), "must be a register at this point");
 
   __ cmp(lir_cond_notEqual, xor_shift_res, LIR_OprFact::intptrConst(NULL_WORD));
 

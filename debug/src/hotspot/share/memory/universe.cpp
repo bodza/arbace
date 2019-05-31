@@ -161,7 +161,6 @@ void Universe::oops_do(OopClosure* f, bool do_all) {
   for (int i = T_BOOLEAN; i < T_VOID+1; i++) {
     f->do_oop((oop*) &_mirrors[i]);
   }
-  assert(_mirrors[0] == NULL && _mirrors[T_BOOLEAN - 1] == NULL, "checking");
 
   f->do_oop((oop*)&_the_empty_class_klass_array);
   f->do_oop((oop*)&_the_null_sentinel);
@@ -231,7 +230,6 @@ void Universe::serialize(SerializeClosure* f, bool do_all) {
   {
     for (int i = 0; i < T_VOID+1; i++) {
       if (_typeArrayKlassObjs[i] != NULL) {
-        assert(i >= T_BOOLEAN, "checking");
         f->do_ptr((void**)&_typeArrayKlassObjs[i]);
       } else if (do_all) {
         f->do_ptr((void**)&_typeArrayKlassObjs[i]);
@@ -253,8 +251,7 @@ void Universe::serialize(SerializeClosure* f, bool do_all) {
 
 void Universe::check_alignment(uintx size, uintx alignment, const char* name) {
   if (size < alignment || size % alignment != 0) {
-    vm_exit_during_initialization(
-      err_msg("Size of %s (" UINTX_FORMAT " bytes) must be aligned to " UINTX_FORMAT " bytes", name, size, alignment));
+    vm_exit_during_initialization(err_msg("Size of %s (" UINTX_FORMAT " bytes) must be aligned to " UINTX_FORMAT " bytes", name, size, alignment));
   }
 }
 
@@ -349,8 +346,7 @@ void Universe::genesis(TRAPS) {
   // ordinary object arrays, _objectArrayKlass will be loaded when
   // SystemDictionary::initialize(CHECK); is run. See the extra check
   // for Object_klass_loaded in objArrayKlassKlass::allocate_objArray_klass_impl.
-  _objectArrayKlassObj = InstanceKlass::
-    cast(SystemDictionary::Object_klass())->array_klass(1, CHECK);
+  _objectArrayKlassObj = InstanceKlass::cast(SystemDictionary::Object_klass())->array_klass(1, CHECK);
   // OLD
   // Add the class to the class hierarchy manually to make sure that
   // its vtable is initialized after core bootstrapping is completed.
@@ -362,24 +358,15 @@ void Universe::genesis(TRAPS) {
 
 void Universe::initialize_basic_type_mirrors(TRAPS) {
     {
-      _int_mirror     =
-        java_lang_Class::create_basic_type_mirror("int",    T_INT, CHECK);
-      _float_mirror   =
-        java_lang_Class::create_basic_type_mirror("float",  T_FLOAT,   CHECK);
-      _double_mirror  =
-        java_lang_Class::create_basic_type_mirror("double", T_DOUBLE,  CHECK);
-      _byte_mirror    =
-        java_lang_Class::create_basic_type_mirror("byte",   T_BYTE, CHECK);
-      _bool_mirror    =
-        java_lang_Class::create_basic_type_mirror("boolean",T_BOOLEAN, CHECK);
-      _char_mirror    =
-        java_lang_Class::create_basic_type_mirror("char",   T_CHAR, CHECK);
-      _long_mirror    =
-        java_lang_Class::create_basic_type_mirror("long",   T_LONG, CHECK);
-      _short_mirror   =
-        java_lang_Class::create_basic_type_mirror("short",  T_SHORT,   CHECK);
-      _void_mirror    =
-        java_lang_Class::create_basic_type_mirror("void",   T_VOID, CHECK);
+      _int_mirror     = java_lang_Class::create_basic_type_mirror("int",    T_INT, CHECK);
+      _float_mirror   = java_lang_Class::create_basic_type_mirror("float",  T_FLOAT,   CHECK);
+      _double_mirror  = java_lang_Class::create_basic_type_mirror("double", T_DOUBLE,  CHECK);
+      _byte_mirror    = java_lang_Class::create_basic_type_mirror("byte",   T_BYTE, CHECK);
+      _bool_mirror    = java_lang_Class::create_basic_type_mirror("boolean",T_BOOLEAN, CHECK);
+      _char_mirror    = java_lang_Class::create_basic_type_mirror("char",   T_CHAR, CHECK);
+      _long_mirror    = java_lang_Class::create_basic_type_mirror("long",   T_LONG, CHECK);
+      _short_mirror   = java_lang_Class::create_basic_type_mirror("short",  T_SHORT,   CHECK);
+      _void_mirror    = java_lang_Class::create_basic_type_mirror("void",   T_VOID, CHECK);
     }
 
     _mirrors[T_INT]     = _int_mirror;
@@ -400,7 +387,6 @@ void Universe::fixup_mirrors(TRAPS) {
   // but we cannot do that for classes created before java.lang.Class is loaded. Here we simply
   // walk over permanent objects created so far (mostly classes) and fixup their mirrors. Note
   // that the number of objects allocated at this point is very small.
-  assert(SystemDictionary::Class_klass_loaded(), "java.lang.Class should be loaded");
   HandleMark hm(THREAD);
   // Cache the start of the static fields
   InstanceMirrorKlass::init_offset_of_static_fields();
@@ -409,7 +395,6 @@ void Universe::fixup_mirrors(TRAPS) {
   int list_length = list->length();
   for (int i = 0; i < list_length; i++) {
     Klass* k = list->at(i);
-    assert(k->is_klass(), "List should only hold classes");
     EXCEPTION_MARK;
     java_lang_Class::fixup_mirror(k, CATCH);
   }
@@ -417,37 +402,21 @@ void Universe::fixup_mirrors(TRAPS) {
   java_lang_Class::set_fixup_mirror_list(NULL);
 }
 
-#define assert_pll_locked(test) \
-  assert(Heap_lock->test(), "Reference pending list access requires lock")
-
-#define assert_pll_ownership() assert_pll_locked(owned_by_self)
-
 oop Universe::reference_pending_list() {
-  if (Thread::current()->is_VM_thread()) {
-    assert_pll_locked(is_locked);
-  } else {
-    assert_pll_ownership();
-  }
   return _reference_pending_list;
 }
 
 void Universe::set_reference_pending_list(oop list) {
-  assert_pll_ownership();
   _reference_pending_list = list;
 }
 
 bool Universe::has_reference_pending_list() {
-  assert_pll_ownership();
   return _reference_pending_list != NULL;
 }
 
 oop Universe::swap_reference_pending_list(oop list) {
-  assert_pll_locked(is_locked);
   return Atomic::xchg(list, &_reference_pending_list);
 }
-
-#undef assert_pll_locked
-#undef assert_pll_ownership
 
 // initialize_vtable could cause gc if
 // 1) we specified true to initialize_vtable and
@@ -499,10 +468,8 @@ oop Universe::gen_out_of_memory_error(oop default_err) {
   //   provided by the default error.
   // - otherwise, return the default error, without a stack trace.
   int next;
-  if ((_preallocated_out_of_memory_error_avail_count > 0) &&
-      SystemDictionary::Throwable_klass()->is_initialized()) {
+  if ((_preallocated_out_of_memory_error_avail_count > 0) && SystemDictionary::Throwable_klass()->is_initialized()) {
     next = (int)Atomic::add(-1, &_preallocated_out_of_memory_error_avail_count);
-    assert(next < (int)PreallocatedOutOfMemoryErrorCount, "avail count is corrupt");
   } else {
     next = -1;
   }
@@ -516,12 +483,10 @@ oop Universe::gen_out_of_memory_error(oop default_err) {
     // get the error object at the slot and set set it to NULL so that the
     // array isn't keeping it alive anymore.
     Handle exc(THREAD, preallocated_out_of_memory_errors()->obj_at(next));
-    assert(exc() != NULL, "slot has been used already");
     preallocated_out_of_memory_errors()->obj_at_put(next, NULL);
 
     // use the message from the default error
     oop msg = java_lang_Throwable::message(default_err_h());
-    assert(msg != NULL, "no message");
     java_lang_Throwable::set_message(exc(), msg);
 
     // populate the stack trace and return it.
@@ -552,7 +517,6 @@ void* Universe::non_oop_word() {
 }
 
 jint universe_init() {
-  assert(!Universe::_fully_initialized, "called after initialize_vtables");
   guarantee(1 << LogHeapWordSize == sizeof(HeapWord),
          "LogHeapWordSize is incorrect.");
   guarantee(sizeof(oop) >= sizeof(HeapWord), "HeapWord larger than oop?");
@@ -609,7 +573,6 @@ jint universe_init() {
 }
 
 CollectedHeap* Universe::create_heap() {
-  assert(_collectedHeap == NULL, "Heap already created");
   return GCConfig::arguments()->create_heap();
 }
 
@@ -658,19 +621,13 @@ jint Universe::initialize_heap() {
     }
 
     // Tell tests in which mode we run.
-    Arguments::PropertyList_add(new SystemProperty("java.vm.compressedOopsMode",
-                                                   narrow_oop_mode_to_string(narrow_oop_mode()),
-                                                   false));
+    Arguments::PropertyList_add(new SystemProperty("java.vm.compressedOopsMode", narrow_oop_mode_to_string(narrow_oop_mode()), false));
   }
-  // Universe::narrow_oop_base() is one page below the heap.
-  assert((intptr_t)Universe::narrow_oop_base() <= (intptr_t)(Universe::heap()->base() - os::vm_page_size()) || Universe::narrow_oop_base() == NULL, "invalid value");
-  assert(Universe::narrow_oop_shift() == LogMinObjAlignmentInBytes || Universe::narrow_oop_shift() == 0, "invalid value");
 
   // We will never reach the CATCH below since Exceptions::_throw will cause
   // the VM to exit if an exception is thrown during initialization
 
   if (UseTLAB) {
-    assert(Universe::heap()->supports_tlab_allocation(), "Should support thread-local allocation buffers");
     ThreadLocalAllocBuffer::startup_initialization();
   }
   return JNI_OK;
@@ -698,19 +655,14 @@ void Universe::print_compressed_oops_mode(outputStream* st) {
 
 ReservedSpace Universe::reserve_heap(size_t heap_size, size_t alignment) {
 
-  assert(alignment <= Arguments::conservative_max_heap_alignment(), "actual alignment " SIZE_FORMAT " must be within maximum heap alignment " SIZE_FORMAT, alignment, Arguments::conservative_max_heap_alignment());
-
   size_t total_reserved = align_up(heap_size, alignment);
-  assert(!UseCompressedOops || (total_reserved <= (OopEncodingHeapMax - os::vm_page_size())), "heap size is too big for compressed oops");
 
   bool use_large_pages = UseLargePages && is_aligned(alignment, os::large_page_size());
-  assert(!UseLargePages || UseParallelGC || use_large_pages, "Wrong alignment to use large pages");
 
   // Now create the space.
   ReservedHeapSpace total_rs(total_reserved, alignment, use_large_pages, AllocateHeapAt);
 
   if (total_rs.is_reserved()) {
-    assert((total_reserved == total_rs.size()) && ((uintptr_t)total_rs.base() % alignment == 0), "must be exactly of required size and alignment");
     // We are good.
 
     if (UseCompressedOops) {
@@ -726,9 +678,7 @@ ReservedSpace Universe::reserve_heap(size_t heap_size, size_t alignment) {
     return total_rs;
   }
 
-  vm_exit_during_initialization(
-    err_msg("Could not reserve enough space for " SIZE_FORMAT "KB object heap",
-            total_reserved/K));
+  vm_exit_during_initialization(err_msg("Could not reserve enough space for " SIZE_FORMAT "KB object heap", total_reserved/K));
 
   // satisfy compiler
   ShouldNotReachHere();
@@ -774,18 +724,11 @@ Universe::NARROW_OOP_MODE Universe::narrow_oop_mode() {
   return UnscaledNarrowOop;
 }
 
-void initialize_known_method(LatestMethodCache* method_cache,
-                             InstanceKlass* ik,
-                             const char* method,
-                             Symbol* signature,
-                             bool is_static, TRAPS)
-{
+void initialize_known_method(LatestMethodCache* method_cache, InstanceKlass* ik, const char* method, Symbol* signature, bool is_static, TRAPS) {
   TempNewSymbol name = SymbolTable::new_symbol(method, CHECK);
   Method* m = NULL;
   // The klass must be linked before looking up the method.
-  if (!ik->link_class_or_fail(THREAD) ||
-      ((m = ik->find_method(name, signature)) == NULL) ||
-      is_static != m->is_static()) {
+  if (!ik->link_class_or_fail(THREAD) || ((m = ik->find_method(name, signature)) == NULL) || is_static != m->is_static()) {
     ResourceMark rm(THREAD);
     // NoSuchMethodException doesn't actually work because it tries to run the
     // <init> function before java_lang_Class is linked. Print error and exit.
@@ -837,7 +780,6 @@ void universe_post_module_init() {
 }
 
 bool universe_post_init() {
-  assert(!is_init_completed(), "Error: initialization not yet completed!");
   Universe::_fully_initialized = true;
   EXCEPTION_MARK;
   { ResourceMark rm;
@@ -861,14 +803,12 @@ bool universe_post_init() {
   Universe::_out_of_memory_error_metaspace = ik->allocate_instance(CHECK_false);
   Universe::_out_of_memory_error_class_metaspace = ik->allocate_instance(CHECK_false);
   Universe::_out_of_memory_error_array_size = ik->allocate_instance(CHECK_false);
-  Universe::_out_of_memory_error_gc_overhead_limit =
-    ik->allocate_instance(CHECK_false);
+  Universe::_out_of_memory_error_gc_overhead_limit = ik->allocate_instance(CHECK_false);
   Universe::_out_of_memory_error_realloc_objects = ik->allocate_instance(CHECK_false);
 
   // Setup preallocated cause message for delayed StackOverflowError
   if (StackReservedPages > 0) {
-    Universe::_delayed_stack_overflow_error_message =
-      java_lang_String::create_oop_from_str("Delayed StackOverflowError due to ReservedStackAccess annotated method", CHECK_false);
+    Universe::_delayed_stack_overflow_error_message = java_lang_String::create_oop_from_str("Delayed StackOverflowError due to ReservedStackAccess annotated method", CHECK_false);
   }
 
   // Setup preallocated NullPointerException
@@ -880,15 +820,13 @@ bool universe_post_init() {
   k = SystemDictionary::resolve_or_fail(vmSymbols::java_lang_ArithmeticException(), true, CHECK_false);
   Universe::_arithmetic_exception_instance = InstanceKlass::cast(k)->allocate_instance(CHECK_false);
   // Virtual Machine Error for when we get into a situation we can't resolve
-  k = SystemDictionary::resolve_or_fail(
-    vmSymbols::java_lang_VirtualMachineError(), true, CHECK_false);
+  k = SystemDictionary::resolve_or_fail(vmSymbols::java_lang_VirtualMachineError(), true, CHECK_false);
   bool linked = InstanceKlass::cast(k)->link_class_or_fail(CHECK_false);
   if (!linked) {
      tty->print_cr("Unable to link/verify VirtualMachineError class");
      return false; // initialization failed
   }
-  Universe::_virtual_machine_error_instance =
-    InstanceKlass::cast(k)->allocate_instance(CHECK_false);
+  Universe::_virtual_machine_error_instance = InstanceKlass::cast(k)->allocate_instance(CHECK_false);
 
   Universe::_vm_exception = InstanceKlass::cast(k)->allocate_instance(CHECK_false);
 
@@ -914,7 +852,6 @@ bool universe_post_init() {
 
   // Setup the array of errors that have preallocated backtrace
   k = Universe::_out_of_memory_error_java_heap->klass();
-  assert(k->name() == vmSymbols::java_lang_OutOfMemoryError(), "should be out of memory error");
   ik = InstanceKlass::cast(k);
 
   int len = (StackTraceInThrowable) ? (int)PreallocatedOutOfMemoryErrorCount : 0;
@@ -1097,13 +1034,11 @@ void LatestMethodCache::init(Klass* k, Method* m) {
   }
 
   _method_idnum = m->method_idnum();
-  assert(_method_idnum >= 0, "sanity check");
 }
 
 Method* LatestMethodCache::get_method() {
   if (klass() == NULL) return NULL;
   InstanceKlass* ik = InstanceKlass::cast(klass());
   Method* m = ik->method_with_idnum(method_idnum());
-  assert(m != NULL, "sanity check");
   return m;
 }

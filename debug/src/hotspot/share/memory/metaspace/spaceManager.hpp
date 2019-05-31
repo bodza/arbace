@@ -186,7 +186,6 @@ class SpaceManager : public CHeapObj<mtClass> {
     raw_bytes_size = align_up(raw_bytes_size, Metachunk::object_alignment());
 
     size_t raw_word_size = raw_bytes_size / BytesPerWord;
-    assert(raw_word_size * BytesPerWord == raw_bytes_size, "Size problem");
 
     return raw_word_size;
   }

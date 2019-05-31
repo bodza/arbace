@@ -62,40 +62,27 @@ class Rewriter: public StackObj {
   }
 
   int cp_cache_delta() {
-    // How many cp cache entries were added since recording map limits after
-    // cp cache initialization?
-    assert(_first_iteration_cp_cache_limit != -1, "only valid after first iteration");
     return _cp_cache_map.length() - _first_iteration_cp_cache_limit;
   }
 
   int  cp_entry_to_cp_cache(int i) {
-    assert(has_cp_cache(i), "oob");
     return _cp_map.at(i); }
   bool has_cp_cache(int i) { return (uint) i < (uint) _cp_map.length() && _cp_map.at(i) >= 0; }
 
   int add_map_entry(int cp_index, GrowableArray<int>* cp_map, GrowableArray<int>* cp_cache_map) {
-    assert(cp_map->at(cp_index) == -1, "not twice on same cp_index");
     int cache_index = cp_cache_map->append(cp_index);
     cp_map->at_put(cp_index, cache_index);
     return cache_index;
   }
 
   int add_cp_cache_entry(int cp_index) {
-    assert(_pool->tag_at(cp_index).value() != JVM_CONSTANT_InvokeDynamic, "use indy version");
-    assert(_first_iteration_cp_cache_limit == -1, "do not add cache entries after first iteration");
     int cache_index = add_map_entry(cp_index, &_cp_map, &_cp_cache_map);
-    assert(cp_entry_to_cp_cache(cp_index) == cache_index, "");
-    assert(cp_cache_entry_pool_index(cache_index) == cp_index, "");
     return cache_index;
   }
 
   int add_invokedynamic_cp_cache_entry(int cp_index) {
-    assert(_pool->tag_at(cp_index).value() == JVM_CONSTANT_InvokeDynamic, "use non-indy version");
-    assert(_first_iteration_cp_cache_limit >= 0, "add indy cache entries after first iteration");
     // add to the invokedynamic index map.
     int cache_index = _invokedynamic_cp_cache_map.append(cp_index);
-    // do not update _cp_map, since the mapping is one-to-many
-    assert(invokedynamic_cp_cache_entry_pool_index(cache_index) == cp_index, "");
     // this index starts at one but in the bytecode it's appended to the end.
     return cache_index + _first_iteration_cp_cache_limit;
   }
@@ -108,7 +95,6 @@ class Rewriter: public StackObj {
   // add a new CP cache entry beyond the normal cache for the special case of
   // invokespecial with InterfaceMethodref as cpool operand.
   int add_invokespecial_cp_cache_entry(int cp_index) {
-    assert(_first_iteration_cp_cache_limit >= 0, "add these special cache entries after first iteration");
     // Don't add InterfaceMethodref if it already exists at the end.
     for (int i = _first_iteration_cp_cache_limit; i < _cp_cache_map.length(); i++) {
       if (cp_cache_entry_pool_index(i) == cp_index) {
@@ -116,14 +102,10 @@ class Rewriter: public StackObj {
       }
     }
     int cache_index = _cp_cache_map.append(cp_index);
-    assert(cache_index >= _first_iteration_cp_cache_limit, "");
-    // do not update _cp_map, since the mapping is one-to-many
-    assert(cp_cache_entry_pool_index(cache_index) == cp_index, "");
     return cache_index;
   }
 
   int  cp_entry_to_resolved_references(int cp_index) const {
-    assert(has_entry_in_resolved_references(cp_index), "oob");
     return _reference_map.at(cp_index);
   }
   bool has_entry_in_resolved_references(int cp_index) const {
@@ -133,21 +115,17 @@ class Rewriter: public StackObj {
   // add a new entry to the resolved_references map
   int add_resolved_references_entry(int cp_index) {
     int ref_index = add_map_entry(cp_index, &_reference_map, &_resolved_references_map);
-    assert(cp_entry_to_resolved_references(cp_index) == ref_index, "");
     return ref_index;
   }
 
   // add a new entries to the resolved_references map (for invokedynamic and invokehandle only)
   int add_invokedynamic_resolved_references_entries(int cp_index, int cache_index) {
-    assert(_resolved_reference_limit >= 0, "must add indy refs after first iteration");
     int ref_index = -1;
     for (int entry = 0; entry < ConstantPoolCacheEntry::_indy_resolved_references_entries; entry++) {
       const int index = _resolved_references_map.append(cp_index);  // many-to-one
-      assert(index >= _resolved_reference_limit, "");
       if (entry == 0) {
         ref_index = index;
       }
-      assert((index - entry) == ref_index, "entries must be consecutive");
       _invokedynamic_references_map.at_put_grow(index, cache_index, -1);
     }
     return ref_index;

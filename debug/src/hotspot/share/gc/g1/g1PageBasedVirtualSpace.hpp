@@ -119,10 +119,10 @@ class G1PageBasedVirtualSpace {
     return x;
   }
 
-  void check_for_contiguity() {};
+  void check_for_contiguity() { };
 
   // Debugging
-  void print_on(outputStream* out) {};
+  void print_on(outputStream* out) { };
   void print();
 };
 

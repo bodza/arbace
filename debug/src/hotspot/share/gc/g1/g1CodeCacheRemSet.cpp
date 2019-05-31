@@ -31,7 +31,6 @@ G1CodeRootSetTable::Entry* G1CodeRootSetTable::new_entry(nmethod* nm) {
 
 void G1CodeRootSetTable::remove_entry(Entry* e, Entry* previous) {
   int index = hash_to_index(e->hash());
-  assert((e == bucket(index)) == (previous == NULL), "if e is the first entry then previous should be null");
 
   if (previous == NULL) {
     set_entry(index, e->next());
@@ -51,7 +50,6 @@ G1CodeRootSetTable::~G1CodeRootSetTable() {
       FREE_C_HEAP_ARRAY(char, to_remove);
     }
   }
-  assert(number_of_entries() == 0, "should have removed all entries");
   free_buckets();
   for (BasicHashtableEntry<mtGC>* e = new_entry_free_list(); e != NULL; e = new_entry_free_list()) {
     FREE_C_HEAP_ARRAY(char, e);
@@ -191,7 +189,6 @@ void G1CodeRootSet::add(nmethod* method) {
     }
     ++_length;
   }
-  assert(_length == (size_t)_table->number_of_entries(), "sizes should match");
 }
 
 bool G1CodeRootSet::remove(nmethod* method) {
@@ -205,7 +202,6 @@ bool G1CodeRootSet::remove(nmethod* method) {
       clear();
     }
   }
-  assert((_length == 0 && _table == NULL) || (_length == (size_t)_table->number_of_entries()), "sizes should match");
   return removed;
 }
 
@@ -238,7 +234,7 @@ class CleanCallback : public StackObj {
     HeapRegion* _hr;
    public:
     bool _points_into;
-    PointsIntoHRDetectionClosure(HeapRegion* hr) : _hr(hr), _points_into(false) {}
+    PointsIntoHRDetectionClosure(HeapRegion* hr) : _hr(hr), _points_into(false) { }
 
     void do_oop(narrowOop* o) {
       do_oop_work(o);
@@ -260,7 +256,7 @@ class CleanCallback : public StackObj {
   CodeBlobToOopClosure _blobs;
 
  public:
-  CleanCallback(HeapRegion* hr) : _detector(hr), _blobs(&_detector, !CodeBlobToOopClosure::FixRelocations) {}
+  CleanCallback(HeapRegion* hr) : _detector(hr), _blobs(&_detector, !CodeBlobToOopClosure::FixRelocations) { }
 
   bool operator() (nmethod* nm) {
     _detector._points_into = false;
@@ -273,7 +269,6 @@ void G1CodeRootSet::clean(HeapRegion* owner) {
   CleanCallback should_clean(owner);
   if (_table != NULL) {
     int removed = _table->remove_if(should_clean);
-    assert((size_t)removed <= _length, "impossible");
     _length -= removed;
   }
   if (_length == 0) {

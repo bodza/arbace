@@ -37,10 +37,7 @@ void CppInterpreter::invoke_method(Method* method, address entry_point, TRAPS) {
   ((ZeroEntry *) entry_point)->invoke(method, THREAD);
 }
 
-void CppInterpreter::invoke_osr(Method* method,
-                                address   entry_point,
-                                address   osr_buf,
-                                TRAPS) {
+void CppInterpreter::invoke_osr(Method* method, address entry_point, address osr_buf, TRAPS) {
   ((ZeroEntry *) entry_point)->invoke_osr(method, osr_buf, THREAD);
 }
 

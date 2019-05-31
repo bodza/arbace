@@ -35,7 +35,7 @@ protected:
          SCAVENGABLE_FLAG = 1
        };
 protected:
-  ciBaseObject(): _ident(0) {}
+  ciBaseObject(): _ident(0) { }
 
   virtual const char* type_string() { return "ciBaseObject"; }
 
@@ -51,15 +51,12 @@ public:
   virtual bool is_metadata() const     { return false; }
 
   ciSymbol* as_symbol() {
-    assert(is_symbol(), "must be");
     return (ciSymbol*)this;
   }
   ciObject* as_object() {
-    assert(is_object(), "must be");
     return (ciObject*)this;
   }
   ciMetadata* as_metadata() {
-    assert(is_metadata(), "must be");
     return (ciMetadata*)this;
   }
 };

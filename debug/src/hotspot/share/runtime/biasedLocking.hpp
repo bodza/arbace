@@ -102,7 +102,7 @@ class BiasedLockingCounters {
     _rebiased_lock_entry_count(0),
     _revoked_lock_entry_count(0),
     _fast_path_entry_count(0),
-    _slow_path_entry_count(0) {}
+    _slow_path_entry_count(0) { }
 
   int slow_path_entry_count(); // Compute this field if necessary
 

@@ -92,18 +92,18 @@ class Set : public ResourceObj {
 
   // Creates a new, empty set.
   // DO NOT CONSTRUCT A Set.  THIS IS AN ABSTRACT CLASS, FOR INHERITENCE ONLY
-  Set(Arena *arena) : _set_arena(arena) {};
+  Set(Arena *arena) : _set_arena(arena) { };
 
   // Creates a new set from an existing set
   // DO NOT CONSTRUCT A Set.  THIS IS AN ABSTRACT CLASS, FOR INHERITENCE ONLY
-  Set(const Set &) {};
+  Set(const Set &) { };
 
   // Set assignment; deep-copy guts
   virtual Set &operator =(const Set &s)=0;
   virtual Set &clone(void) const=0;
 
   // Virtual destructor
-  virtual ~Set() {};
+  virtual ~Set() { };
 
   // Add member to set
   virtual Set &operator <<=(uint elem)=0;

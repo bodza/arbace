@@ -37,9 +37,7 @@ AdaptiveSizePolicy::AdaptiveSizePolicy(size_t init_eden_size,
     _threshold_tolerance_percent(1.0 + ThresholdTolerance/100.0),
     _young_gen_change_for_minor_throughput(0),
     _old_gen_change_for_major_throughput(0) {
-  assert(AdaptiveSizePolicyGCTimeLimitThreshold > 0, "No opportunity to clear SoftReferences before GC overhead limit");
-  _avg_minor_pause    =
-    new AdaptivePaddedAverage(AdaptiveTimeWeight, PausePadding);
+  _avg_minor_pause    = new AdaptivePaddedAverage(AdaptiveTimeWeight, PausePadding);
   _avg_minor_interval = new AdaptiveWeightedAverage(AdaptiveTimeWeight);
   _avg_minor_gc_cost  = new AdaptiveWeightedAverage(AdaptiveTimeWeight);
   _avg_major_gc_cost  = new AdaptiveWeightedAverage(AdaptiveTimeWeight);
@@ -48,20 +46,13 @@ AdaptiveSizePolicy::AdaptiveSizePolicy(size_t init_eden_size,
   _avg_old_live       = new AdaptiveWeightedAverage(AdaptiveSizePolicyWeight);
   _avg_eden_live      = new AdaptiveWeightedAverage(AdaptiveSizePolicyWeight);
 
-  _avg_survived       = new AdaptivePaddedAverage(AdaptiveSizePolicyWeight,
-                                                  SurvivorPadding);
-  _avg_pretenured     = new AdaptivePaddedNoZeroDevAverage(
-                                                  AdaptiveSizePolicyWeight,
-                                                  SurvivorPadding);
+  _avg_survived       = new AdaptivePaddedAverage(AdaptiveSizePolicyWeight, SurvivorPadding);
+  _avg_pretenured     = new AdaptivePaddedNoZeroDevAverage(AdaptiveSizePolicyWeight, SurvivorPadding);
 
-  _minor_pause_old_estimator =
-    new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
-  _minor_pause_young_estimator =
-    new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
-  _minor_collection_estimator =
-    new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
-  _major_collection_estimator =
-    new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
+  _minor_pause_old_estimator = new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
+  _minor_pause_young_estimator = new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
+  _minor_collection_estimator = new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
+  _major_collection_estimator = new LinearLeastSquareFit(AdaptiveSizePolicyWeight);
 
   // Start the timers
   _minor_timer.start();
@@ -94,33 +85,23 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
 
   // Always use at least min_workers but use up to
   // GCThreadsPerJavaThreads * application threads.
-  active_workers_by_JT =
-    MAX2((uintx) GCWorkersPerJavaThread * application_workers,
-         min_workers);
+  active_workers_by_JT = MAX2((uintx) GCWorkersPerJavaThread * application_workers, min_workers);
 
   // Choose a number of GC threads based on the current size
   // of the heap.  This may be complicated because the size of
   // the heap depends on factors such as the throughput goal.
   // Still a large heap should be collected by more GC threads.
-  active_workers_by_heap_size =
-      MAX2((size_t) 2U, Universe::heap()->capacity() / HeapSizePerGCThread);
+  active_workers_by_heap_size = MAX2((size_t) 2U, Universe::heap()->capacity() / HeapSizePerGCThread);
 
-  uintx max_active_workers =
-    MAX2(active_workers_by_JT, active_workers_by_heap_size);
+  uintx max_active_workers = MAX2(active_workers_by_JT, active_workers_by_heap_size);
 
   new_active_workers = MIN2(max_active_workers, (uintx) total_workers);
 
   // Increase GC workers instantly but decrease them more
   // slowly.
   if (new_active_workers < prev_active_workers) {
-    new_active_workers =
-      MAX2(min_workers, (prev_active_workers + new_active_workers) / 2);
+    new_active_workers = MAX2(min_workers, (prev_active_workers + new_active_workers) / 2);
   }
-
-  // Check once more that the number of workers is within the limits.
-  assert(min_workers <= total_workers, "Minimum workers not consistent with total workers");
-  assert(new_active_workers >= min_workers, "Minimum workers not observed");
-  assert(new_active_workers <= total_workers, "Total workers not observed");
 
   if (ForceDynamicNumberOfGCThreads) {
     // Assume this is debugging and jiggle the number of GC threads.
@@ -137,7 +118,6 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
       }
       _debug_perturbation = !_debug_perturbation;
     }
-    assert((new_active_workers <= ParallelGCThreads) && (new_active_workers >= min_workers), "Jiggled active workers too much");
   }
 
   log_trace(gc, task)("GCTaskManager::calc_default_active_workers() : "
@@ -146,13 +126,10 @@ uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
      " active_workers_by_JT: " UINTX_FORMAT "  active_workers_by_heap_size: " UINTX_FORMAT,
      active_workers, new_active_workers, prev_active_workers,
      active_workers_by_JT, active_workers_by_heap_size);
-  assert(new_active_workers > 0, "Always need at least 1");
   return new_active_workers;
 }
 
-uint AdaptiveSizePolicy::calc_active_workers(uintx total_workers,
-                                             uintx active_workers,
-                                             uintx application_workers) {
+uint AdaptiveSizePolicy::calc_active_workers(uintx total_workers, uintx active_workers, uintx application_workers) {
   // If the user has specifically set the number of
   // GC threads, use them.
 
@@ -161,39 +138,27 @@ uint AdaptiveSizePolicy::calc_active_workers(uintx total_workers,
   // number of workers to all the workers.
 
   uint new_active_workers;
-  if (!UseDynamicNumberOfGCThreads ||
-     (!FLAG_IS_DEFAULT(ParallelGCThreads) && !ForceDynamicNumberOfGCThreads)) {
+  if (!UseDynamicNumberOfGCThreads || (!FLAG_IS_DEFAULT(ParallelGCThreads) && !ForceDynamicNumberOfGCThreads)) {
     new_active_workers = total_workers;
   } else {
     uintx min_workers = (total_workers == 1) ? 1 : 2;
-    new_active_workers = calc_default_active_workers(total_workers,
-                                                     min_workers,
-                                                     active_workers,
-                                                     application_workers);
+    new_active_workers = calc_default_active_workers(total_workers, min_workers, active_workers, application_workers);
   }
-  assert(new_active_workers > 0, "Always need at least 1");
   return new_active_workers;
 }
 
-uint AdaptiveSizePolicy::calc_active_conc_workers(uintx total_workers,
-                                                  uintx active_workers,
-                                                  uintx application_workers) {
+uint AdaptiveSizePolicy::calc_active_conc_workers(uintx total_workers, uintx active_workers, uintx application_workers) {
   if (!UseDynamicNumberOfGCThreads ||
      (!FLAG_IS_DEFAULT(ConcGCThreads) && !ForceDynamicNumberOfGCThreads)) {
     return ConcGCThreads;
   } else {
-    uint no_of_gc_threads = calc_default_active_workers(total_workers,
-                                                        1, /* Minimum number of workers */
-                                                        active_workers,
-                                                        application_workers);
+    uint no_of_gc_threads = calc_default_active_workers(total_workers, 1, /* Minimum number of workers */ active_workers, application_workers);
     return no_of_gc_threads;
   }
 }
 
 bool AdaptiveSizePolicy::tenuring_threshold_change() const {
-  return decrement_tenuring_threshold_for_gc_cost() ||
-         increment_tenuring_threshold_for_gc_cost() ||
-         decrement_tenuring_threshold_for_survivor_limit();
+  return decrement_tenuring_threshold_for_gc_cost() || increment_tenuring_threshold_for_gc_cost() || decrement_tenuring_threshold_for_survivor_limit();
 }
 
 void AdaptiveSizePolicy::minor_collection_begin() {
@@ -205,8 +170,7 @@ void AdaptiveSizePolicy::minor_collection_begin() {
   _minor_timer.start();
 }
 
-void AdaptiveSizePolicy::update_minor_pause_young_estimator(
-    double minor_pause_in_ms) {
+void AdaptiveSizePolicy::update_minor_pause_young_estimator(double minor_pause_in_ms) {
   double eden_size_in_mbytes = ((double)_eden_size)/((double)M);
   _minor_pause_young_estimator->update(eden_size_in_mbytes,
     minor_pause_in_ms);
@@ -216,8 +180,7 @@ void AdaptiveSizePolicy::minor_collection_end(GCCause::Cause gc_cause) {
   // Update the pause time.
   _minor_timer.stop();
 
-  if (!GCCause::is_user_requested_gc(gc_cause) ||
-      UseAdaptiveSizePolicyWithSystemGC) {
+  if (!GCCause::is_user_requested_gc(gc_cause) || UseAdaptiveSizePolicyWithSystemGC) {
     double minor_pause_in_seconds = _minor_timer.seconds();
     double minor_pause_in_ms = minor_pause_in_seconds * MILLIUNITS;
 
@@ -226,12 +189,9 @@ void AdaptiveSizePolicy::minor_collection_end(GCCause::Cause gc_cause) {
 
     // Cost of collection (unit-less)
     double collection_cost = 0.0;
-    if ((_latest_minor_mutator_interval_seconds > 0.0) &&
-        (minor_pause_in_seconds > 0.0)) {
-      double interval_in_seconds =
-        _latest_minor_mutator_interval_seconds + minor_pause_in_seconds;
-      collection_cost =
-        minor_pause_in_seconds / interval_in_seconds;
+    if ((_latest_minor_mutator_interval_seconds > 0.0) && (minor_pause_in_seconds > 0.0)) {
+      double interval_in_seconds = _latest_minor_mutator_interval_seconds + minor_pause_in_seconds;
+      collection_cost = minor_pause_in_seconds / interval_in_seconds;
       _avg_minor_gc_cost->sample(collection_cost);
       // Sample for performance counter
       _avg_minor_interval->sample(interval_in_seconds);
@@ -239,8 +199,7 @@ void AdaptiveSizePolicy::minor_collection_end(GCCause::Cause gc_cause) {
 
     // The policy does not have enough data until at least some
     // young collections have been done.
-    _young_gen_policy_is_ready =
-      (_avg_minor_gc_cost->count() >= AdaptiveSizePolicyReadyThreshold);
+    _young_gen_policy_is_ready = (_avg_minor_gc_cost->count() >= AdaptiveSizePolicyReadyThreshold);
 
     // Calculate variables used to estimate pause time vs. gen sizes
     double eden_size_in_mbytes = ((double)_eden_size) / ((double)M);
@@ -253,7 +212,6 @@ void AdaptiveSizePolicy::minor_collection_end(GCCause::Cause gc_cause) {
                         minor_pause_in_ms, _latest_minor_mutator_interval_seconds * MILLIUNITS);
 
     // Calculate variable used to estimate collection cost vs. gen sizes
-    assert(collection_cost >= 0.0, "Expected to be non-negative");
     _minor_collection_estimator->update(eden_size_in_mbytes, collection_cost);
   }
 
@@ -274,8 +232,7 @@ size_t AdaptiveSizePolicy::eden_increment(size_t cur_eden) {
 }
 
 size_t AdaptiveSizePolicy::eden_decrement(size_t cur_eden) {
-  size_t eden_heap_delta = eden_increment(cur_eden) /
-    AdaptiveSizeDecrementScaleFactor;
+  size_t eden_heap_delta = eden_increment(cur_eden) / AdaptiveSizeDecrementScaleFactor;
   return eden_heap_delta;
 }
 
@@ -307,7 +264,7 @@ double AdaptiveSizePolicy::decaying_major_gc_cost() const {
   double major_interval = major_gc_interval_average_for_decay();
   double major_gc_cost_average = major_gc_cost();
   double decayed_major_gc_cost = major_gc_cost_average;
-  if(time_since_major_gc() > 0.0) {
+  if (time_since_major_gc() > 0.0) {
     decayed_major_gc_cost = major_gc_cost() *
       (((double) AdaptiveSizeMajorGCDecayTimeScale) * major_interval)
       / time_since_major_gc();
@@ -345,9 +302,7 @@ double AdaptiveSizePolicy::decaying_major_gc_cost() const {
 double AdaptiveSizePolicy::decaying_gc_cost() const {
   double decayed_major_gc_cost = major_gc_cost();
   double avg_major_interval = major_gc_interval_average_for_decay();
-  if (UseAdaptiveSizeDecayMajorGCCost &&
-      (AdaptiveSizeMajorGCDecayTimeScale > 0) &&
-      (avg_major_interval > 0.00)) {
+  if (UseAdaptiveSizeDecayMajorGCCost && (AdaptiveSizeMajorGCDecayTimeScale > 0) && (avg_major_interval > 0.00)) {
     double time_since_last_major_gc = time_since_major_gc();
 
     // Decay the major gc cost?
@@ -356,10 +311,8 @@ double AdaptiveSizePolicy::decaying_gc_cost() const {
 
       // Decay using the time-since-last-major-gc
       decayed_major_gc_cost = decaying_major_gc_cost();
-      log_trace(gc, ergo)("decaying_gc_cost: major interval average: %f  time since last major gc: %f",
-                    avg_major_interval, time_since_last_major_gc);
-      log_trace(gc, ergo)("  major gc cost: %f  decayed major gc cost: %f",
-                    major_gc_cost(), decayed_major_gc_cost);
+      log_trace(gc, ergo)("decaying_gc_cost: major interval average: %f  time since last major gc: %f", avg_major_interval, time_since_last_major_gc);
+      log_trace(gc, ergo)("  major gc cost: %f  decayed major gc cost: %f", major_gc_cost(), decayed_major_gc_cost);
     }
   }
   double result = MIN2(1.0, decayed_major_gc_cost + minor_gc_cost());
@@ -376,20 +329,12 @@ void AdaptiveSizePolicy::clear_generation_free_space_flags() {
   set_decide_at_full_gc(0);
 }
 
-void AdaptiveSizePolicy::check_gc_overhead_limit(
-                                          size_t young_live,
-                                          size_t eden_live,
-                                          size_t max_old_gen_size,
-                                          size_t max_eden_size,
-                                          bool   is_full_gc,
-                                          GCCause::Cause gc_cause,
-                                          SoftRefPolicy* soft_ref_policy) {
+void AdaptiveSizePolicy::check_gc_overhead_limit(size_t young_live, size_t eden_live, size_t max_old_gen_size, size_t max_eden_size, bool is_full_gc, GCCause::Cause gc_cause, SoftRefPolicy* soft_ref_policy) {
 
   // Ignore explicit GC's.  Exiting here does not set the flag and
   // does not reset the count.  Updating of the averages for system
   // GC's is still controlled by UseAdaptiveSizePolicyWithSystemGC.
-  if (GCCause::is_user_requested_gc(gc_cause) ||
-      GCCause::is_serviceability_requested_gc(gc_cause)) {
+  if (GCCause::is_user_requested_gc(gc_cause) || GCCause::is_serviceability_requested_gc(gc_cause)) {
     return;
   }
   // eden_limit is the upper limit on the size of eden based on
@@ -408,10 +353,8 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
   // space has suddenly jumped up).  If the current is much
   // higher than the average, use the average since it represents
   // the longer term behavior.
-  const size_t live_in_eden =
-    MIN2(eden_live, (size_t) avg_eden_live()->average());
-  const size_t free_in_eden = max_eden_size > live_in_eden ?
-    max_eden_size - live_in_eden : 0;
+  const size_t live_in_eden = MIN2(eden_live, (size_t) avg_eden_live()->average());
+  const size_t free_in_eden = max_eden_size > live_in_eden ? max_eden_size - live_in_eden : 0;
   const size_t free_in_old_gen = (size_t)(max_old_gen_size - avg_old_live()->average());
   const size_t total_free_limit = free_in_old_gen + free_in_eden;
   const size_t total_mem = max_old_gen_size + max_eden_size;
@@ -438,9 +381,7 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
 
   bool print_gc_overhead_limit_would_be_exceeded = false;
   if (is_full_gc) {
-    if (gc_cost() > gc_cost_limit &&
-      free_in_old_gen < (size_t) mem_free_old_limit &&
-      free_in_eden < (size_t) mem_free_eden_limit) {
+    if (gc_cost() > gc_cost_limit && free_in_old_gen < (size_t) mem_free_old_limit && free_in_eden < (size_t) mem_free_eden_limit) {
       // Collections, on average, are taking too much time, and
       //      gc_cost() > gc_cost_limit
       // we have too little space available after a full gc.
@@ -464,7 +405,7 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
       inc_gc_overhead_limit_count();
       if (UseGCOverheadLimit) {
         if (gc_overhead_limit_count() >=
-            AdaptiveSizePolicyGCTimeLimitThreshold){
+            AdaptiveSizePolicyGCTimeLimitThreshold) {
           // All conditions have been met for throwing an out-of-memory
           set_gc_overhead_limit_exceeded(true);
           // Avoid consecutive OOM due to the gc time limit by resetting
@@ -501,7 +442,6 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
       log_trace(gc, ergo)("GC is exceeding overhead limit of " UINTX_FORMAT "%%", GCTimeLimit);
       reset_gc_overhead_limit_count();
     } else if (print_gc_overhead_limit_would_be_exceeded) {
-      assert(gc_overhead_limit_count() > 0, "Should not be printing");
       log_trace(gc, ergo)("GC would exceed overhead limit of " UINTX_FORMAT "%% %d consecutive time(s)",
                           GCTimeLimit, gc_overhead_limit_count());
     }
@@ -510,7 +450,6 @@ void AdaptiveSizePolicy::check_gc_overhead_limit(
 // Printing
 
 bool AdaptiveSizePolicy::print() const {
-  assert(UseAdaptiveSizePolicy, "UseAdaptiveSizePolicy need to be enabled.");
 
   if (!log_is_enabled(Debug, gc, ergo)) {
     return false;
@@ -519,16 +458,10 @@ bool AdaptiveSizePolicy::print() const {
   // Print goal for which action is needed.
   char* action = NULL;
   bool change_for_pause = false;
-  if ((change_old_gen_for_maj_pauses() ==
-         decrease_old_gen_for_maj_pauses_true) ||
-      (change_young_gen_for_min_pauses() ==
-         decrease_young_gen_for_min_pauses_true)) {
+  if ((change_old_gen_for_maj_pauses() == decrease_old_gen_for_maj_pauses_true) || (change_young_gen_for_min_pauses() == decrease_young_gen_for_min_pauses_true)) {
     action = (char*) " *** pause time goal ***";
     change_for_pause = true;
-  } else if ((change_old_gen_for_throughput() ==
-               increase_old_gen_for_throughput_true) ||
-            (change_young_gen_for_throughput() ==
-               increase_young_gen_for_througput_true)) {
+  } else if ((change_old_gen_for_throughput() == increase_old_gen_for_throughput_true) || (change_young_gen_for_throughput() == increase_young_gen_for_througput_true)) {
     action = (char*) " *** throughput goal ***";
   } else if (decrease_for_footprint()) {
     action = (char*) " *** reduced footprint ***";
@@ -548,8 +481,7 @@ bool AdaptiveSizePolicy::print() const {
   char* shrink_msg = (char*) "(attempted to shrink)";
   char* grow_msg = (char*) "(attempted to grow)";
   char* no_change_msg = (char*) "(no change)";
-  if (change_young_gen_for_min_pauses() ==
-      decrease_young_gen_for_min_pauses_true) {
+  if (change_young_gen_for_min_pauses() == decrease_young_gen_for_min_pauses_true) {
     young_gen_action = shrink_msg;
   } else if (change_for_pause) {
     young_gen_action = no_change_msg;
@@ -563,11 +495,9 @@ bool AdaptiveSizePolicy::print() const {
 
   // Throughput
   if (change_old_gen_for_throughput() == increase_old_gen_for_throughput_true) {
-    assert(change_young_gen_for_throughput() == increase_young_gen_for_througput_true, "Both generations should be growing");
     young_gen_action = grow_msg;
     tenured_gen_action = grow_msg;
-  } else if (change_young_gen_for_throughput() ==
-             increase_young_gen_for_througput_true) {
+  } else if (change_young_gen_for_throughput() == increase_young_gen_for_througput_true) {
     // Only the young generation may grow at start up (before
     // enough full collections have been done to grow the old generation).
     young_gen_action = grow_msg;
@@ -598,6 +528,5 @@ void AdaptiveSizePolicy::print_tenuring_threshold( uint new_tenuring_threshold_a
   } else if (increment_tenuring_threshold_for_gc_cost()) {
     log_debug(gc, ergo)("Tenuring threshold: (attempted to increase to balance GC costs) = %u", new_tenuring_threshold_arg);
   } else {
-    assert(!tenuring_threshold_change(), "(no change was attempted)");
   }
 }

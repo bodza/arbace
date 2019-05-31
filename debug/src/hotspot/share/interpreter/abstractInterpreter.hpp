@@ -72,7 +72,7 @@ class AbstractInterpreter: AllStatic {
   // Conversion from the part of the above enum to vmIntrinsics::_invokeExact, etc.
   static vmIntrinsics::ID method_handle_intrinsic(MethodKind kind) {
     if (kind >= method_handle_invoke_FIRST && kind <= method_handle_invoke_LAST)
-      return (vmIntrinsics::ID)( vmIntrinsics::FIRST_MH_SIG_POLY + (kind - method_handle_invoke_FIRST) );
+      return (vmIntrinsics::ID)( vmIntrinsics::FIRST_MH_SIG_POLY + (kind - method_handle_invoke_FIRST));
     else
       return vmIntrinsics::_none;
   }
@@ -108,25 +108,23 @@ class AbstractInterpreter: AllStatic {
   // Method activation
   static MethodKind method_kind(const methodHandle& m);
   static address    entry_for_kind(MethodKind k)                {
-    assert(0 <= k && k < number_of_method_entries, "illegal kind");
     return _entry_table[k]; }
   static address    entry_for_method(const methodHandle& m)     { return entry_for_kind(method_kind(m)); }
 
   static address entry_for_cds_method(const methodHandle& m) {
     MethodKind k = method_kind(m);
-    assert(0 <= k && k < number_of_method_entries, "illegal kind");
     return _cds_entry_table[k];
   }
 
   // used by class data sharing
-  static void       update_cds_entry_table(MethodKind kind) {};
+  static void       update_cds_entry_table(MethodKind kind) { };
 
   static address    get_trampoline_code_buffer(AbstractInterpreter::MethodKind kind) { return 0; };
 
   // used for bootstrapping method handles:
   static void       set_entry_for_kind(MethodKind k, address e);
 
-  static void       print_method_kind(MethodKind kind)          {};
+  static void       print_method_kind(MethodKind kind)          { };
 
   // These should never be compiled since the interpreter will prefer
   // the compiled version to the intrinsic version.
@@ -226,7 +224,6 @@ class AbstractInterpreter: AllStatic {
   }
 
   static int local_index_at(int i) {
-    assert(i <= 0, "local direction already negated");
     return stackElementWords * i;
   }
 

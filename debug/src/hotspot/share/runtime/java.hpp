@@ -62,7 +62,7 @@ class JDK_Version {
 
   JDK_Version() : _major(0), _minor(0), _security(0), _patch(0), _build(0),
                   _thread_park_blocker(false), _post_vm_init_hook_enabled(false)
-                  {}
+                  { }
 
   JDK_Version(uint8_t major, uint8_t minor = 0, uint8_t security = 0,
               uint8_t patch = 0, uint8_t build = 0,
@@ -70,7 +70,7 @@ class JDK_Version {
       _major(major), _minor(minor), _security(security), _patch(patch), _build(build),
       _thread_park_blocker(thread_park_blocker),
       _post_vm_init_hook_enabled(post_vm_init_hook_enabled)
-      {}
+      { }
 
   // Returns the current running JDK version
   static JDK_Version current() { return _current; }

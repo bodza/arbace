@@ -14,7 +14,7 @@ enum CodeState {
   invalid = 2  // AOT code is invalidated because dependencies failed
 };
 
-template<> struct IsRegisteredEnum<CodeState> : public TrueType {};
+template<> struct IsRegisteredEnum<CodeState> : public TrueType { };
 
 typedef struct {
   AOTCompiledMethod* _aot;
@@ -184,7 +184,6 @@ class AOTCodeHeap : public CodeHeap {
       _memory.set_high_boundary(high);
       _memory.set_high(high);
     }
-    assert(_method_count > 0, "methods count should be set already");
   }
 
   void register_stubs();
@@ -235,7 +234,6 @@ public:
   AOTCompiledMethod* get_code_desc_at_index(int index) {
     if (index < _method_count && _code_to_aot[index]._state == in_use) {
         AOTCompiledMethod* m = _code_to_aot[index]._aot;
-        assert(m != NULL, "AOT method should be set");
         if (!m->is_runtime_stub()) {
           return m;
         }

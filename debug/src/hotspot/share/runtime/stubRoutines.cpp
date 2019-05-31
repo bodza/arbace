@@ -166,7 +166,6 @@ void StubRoutines::initialize1() {
     StubGenerator_generate(&buffer, false);
     // When new stubs added we need to make sure there is some space left
     // to catch situation when we should increase size again.
-    assert(code_size1 == 0 || buffer.insts_remaining() > 200, "increase code_size1");
   }
 }
 
@@ -182,7 +181,6 @@ void StubRoutines::initialize2() {
     StubGenerator_generate(&buffer, true);
     // When new stubs added we need to make sure there is some space left
     // to catch situation when we should increase size again.
-    assert(code_size2 == 0 || buffer.insts_remaining() > 200, "increase code_size2");
   }
 }
 
@@ -210,12 +208,10 @@ JRT_LEAF(void, StubRoutines::jlong_copy(jlong* src, jlong* dest, size_t count))
 JRT_END
 
 JRT_LEAF(void, StubRoutines::oop_copy(oop* src, oop* dest, size_t count))
-  assert(count != 0, "count should be non-zero");
   ArrayAccess<>::oop_arraycopy_raw((HeapWord*)src, (HeapWord*)dest, count);
 JRT_END
 
 JRT_LEAF(void, StubRoutines::oop_copy_uninit(oop* src, oop* dest, size_t count))
-  assert(count != 0, "count should be non-zero");
   ArrayAccess<IS_DEST_UNINITIALIZED>::oop_arraycopy_raw((HeapWord*)src, (HeapWord*)dest, count);
 JRT_END
 
@@ -236,12 +232,10 @@ JRT_LEAF(void, StubRoutines::arrayof_jlong_copy(HeapWord* src, HeapWord* dest, s
 JRT_END
 
 JRT_LEAF(void, StubRoutines::arrayof_oop_copy(HeapWord* src, HeapWord* dest, size_t count))
-  assert(count != 0, "count should be non-zero");
   ArrayAccess<ARRAYCOPY_ARRAYOF>::oop_arraycopy_raw(src, dest, count);
 JRT_END
 
 JRT_LEAF(void, StubRoutines::arrayof_oop_copy_uninit(HeapWord* src, HeapWord* dest, size_t count))
-  assert(count != 0, "count should be non-zero");
   ArrayAccess<ARRAYCOPY_ARRAYOF | IS_DEST_UNINITIALIZED>::oop_arraycopy_raw(src, dest, count);
 JRT_END
 
@@ -293,9 +287,7 @@ enum {
 // where an descending copy is permitted (i.e., dest_offset <= src_offset).
 address
 StubRoutines::select_arraycopy_function(BasicType t, bool aligned, bool disjoint, const char* &name, bool dest_uninitialized) {
-  int selector =
-    (aligned  ? COPYFUNC_ALIGNED  : COPYFUNC_UNALIGNED) +
-    (disjoint ? COPYFUNC_DISJOINT : COPYFUNC_CONJOINT);
+  int selector = (aligned  ? COPYFUNC_ALIGNED  : COPYFUNC_UNALIGNED) + (disjoint ? COPYFUNC_DISJOINT : COPYFUNC_CONJOINT);
 
 #define RETURN_STUB(xxx_arraycopy) { \
   name = #xxx_arraycopy; \

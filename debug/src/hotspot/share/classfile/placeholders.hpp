@@ -96,10 +96,10 @@ public:
        _stnext = NULL;
        _stprev = NULL;
    }
-   Thread* thread()                const { return _thread;}
+   Thread* thread()                const { return _thread; }
    void set_thread(Thread *thread) { _thread = thread; }
 
-   SeenThread* next()              const { return _stnext;}
+   SeenThread* next()              const { return _stnext; }
    void set_next(SeenThread *seen) { _stnext = seen; }
    void set_prev(SeenThread *seen) { _stprev = seen; }
 
@@ -153,10 +153,10 @@ class PlaceholderEntry : public HashtableEntry<Symbol*, mtClass> {
     if (_supername != NULL) _supername->increment_refcount();
   }
 
-  Thread*            definer()             const {return _definer; }
+  Thread*            definer()             const { return _definer; }
   void               set_definer(Thread* definer) { _definer = definer; }
 
-  InstanceKlass*     instance_klass()      const {return _instanceKlass; }
+  InstanceKlass*     instance_klass()      const { return _instanceKlass; }
   void               set_instance_klass(InstanceKlass* ik) { _instanceKlass = ik; }
 
   SeenThread*        superThreadQ()        const { return _superThreadQ; }
@@ -233,7 +233,6 @@ class PlaceholderEntry : public HashtableEntry<Symbol*, mtClass> {
 // definers: use as queue of define requestors, including owner of
 // define token. Appends for debugging of requestor order
   void add_seen_thread(Thread* thread, PlaceholderTable::classloadAction action) {
-    assert_lock_strong(SystemDictionary_lock);
     SeenThread* threadEntry = new SeenThread(thread);
     SeenThread* seen = actionToQueue(action);
 
@@ -251,7 +250,6 @@ class PlaceholderEntry : public HashtableEntry<Symbol*, mtClass> {
   }
 
   bool check_seen_thread(Thread* thread, PlaceholderTable::classloadAction action) {
-    assert_lock_strong(SystemDictionary_lock);
     SeenThread* threadQ = actionToQueue(action);
     SeenThread* seen = threadQ;
     while (seen) {
@@ -269,7 +267,6 @@ class PlaceholderEntry : public HashtableEntry<Symbol*, mtClass> {
   // ignores if cleanup has already been done
   // if found, deletes SeenThread
   bool remove_seen_thread(Thread* thread, PlaceholderTable::classloadAction action) {
-    assert_lock_strong(SystemDictionary_lock);
     SeenThread* threadQ = actionToQueue(action);
     SeenThread* seen = threadQ;
     SeenThread* prev = NULL;

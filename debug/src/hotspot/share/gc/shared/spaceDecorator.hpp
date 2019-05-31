@@ -63,7 +63,7 @@ class SpaceMangler: public CHeapObj<mtGC> {
   // of the initialize() call of a space does nothing (as it
   // should since the mangling is done as part of the constructor
   // for the space.
-  SpaceMangler() : _top_for_allocations(NULL) {}
+  SpaceMangler() : _top_for_allocations(NULL) { }
 
   // Methods for top and end that delegate to the specific
   // space type.
@@ -82,16 +82,16 @@ class SpaceMangler: public CHeapObj<mtGC> {
   // Mangle all the unused region [top, end)
   void mangle_unused_area_complete();
   // Do some sparse checking on the area that should have been mangled.
-  void check_mangled_unused_area(HeapWord* limit) {};
+  void check_mangled_unused_area(HeapWord* limit) { };
   // Do a complete check of the area that should be mangled.
-  void check_mangled_unused_area_complete() {};
+  void check_mangled_unused_area_complete() { };
 
   // Mangle the MemRegion.  This is a non-space specific mangler.  It
   // is used during the initial mangling of a space before the space
   // is fully constructed.  Also is used when a generation is expanded
   // and possibly before the spaces have been reshaped to to the new
   // size of the generation.
-  static void mangle_region(MemRegion mr) {};
+  static void mangle_region(MemRegion mr) { };
 };
 
 class ContiguousSpace;
@@ -106,7 +106,7 @@ class GenSpaceMangler: public SpaceMangler {
   HeapWord* end() const { return _sp->end(); }
 
  public:
-  GenSpaceMangler(ContiguousSpace* sp) : SpaceMangler(), _sp(sp) {}
+  GenSpaceMangler(ContiguousSpace* sp) : SpaceMangler(), _sp(sp) { }
 };
 
 #endif

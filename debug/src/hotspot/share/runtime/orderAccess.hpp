@@ -216,8 +216,8 @@ enum ScopedFenceType {
 template <ScopedFenceType T>
 class ScopedFenceGeneral: public StackObj {
  public:
-  void prefix() {}
-  void postfix() {}
+  void prefix() { }
+  void postfix() { }
 };
 
 template <ScopedFenceType T>
@@ -290,10 +290,10 @@ struct OrderAccess::PlatformOrderedLoad {
 
 #include OS_CPU_HEADER(orderAccess)
 
-template<> inline void ScopedFenceGeneral<X_ACQUIRE>::postfix()       { OrderAccess::acquire(); }
-template<> inline void ScopedFenceGeneral<RELEASE_X>::prefix()        { OrderAccess::release(); }
-template<> inline void ScopedFenceGeneral<RELEASE_X_FENCE>::prefix()  { OrderAccess::release(); }
-template<> inline void ScopedFenceGeneral<RELEASE_X_FENCE>::postfix() { OrderAccess::fence();   }
+template<> inline void ScopedFenceGeneral<X_ACQUIRE>::postfix() { OrderAccess::acquire(); }
+template<> inline void ScopedFenceGeneral<RELEASE_X>::prefix() { OrderAccess::release(); }
+template<> inline void ScopedFenceGeneral<RELEASE_X_FENCE>::prefix() { OrderAccess::release(); }
+template<> inline void ScopedFenceGeneral<RELEASE_X_FENCE>::postfix() { OrderAccess::fence(); }
 
 template <typename FieldType, ScopedFenceType FenceType>
 inline void OrderAccess::ordered_store(volatile FieldType* p, FieldType v) {

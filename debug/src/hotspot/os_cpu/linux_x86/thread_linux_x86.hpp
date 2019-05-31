@@ -11,7 +11,7 @@
  public:
   // Mutators are highly dangerous....
   intptr_t* last_Java_fp()                       { return _anchor.last_Java_fp(); }
-  void  set_last_Java_fp(intptr_t* fp)           { _anchor.set_last_Java_fp(fp);   }
+  void  set_last_Java_fp(intptr_t* fp)           { _anchor.set_last_Java_fp(fp); }
 
   void set_base_of_stack_pointer(intptr_t* base_sp) {
   }
@@ -37,7 +37,7 @@ public:
   // These routines are only used on cpu architectures that
   // have separate register stacks (Itanium).
   static bool register_stack_overflow() { return false; }
-  static void enable_register_stack_guard() {}
-  static void disable_register_stack_guard() {}
+  static void enable_register_stack_guard() { }
+  static void disable_register_stack_guard() { }
 
 #endif

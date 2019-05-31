@@ -80,7 +80,7 @@ class InstanceKlass: public Klass {
 
  public:
   InstanceKlass() {
-    assert(DumpSharedSpaces || UseSharedSpaces, "only for CDS"); }
+    }
 
   // See "The Java Virtual Machine Specification" section 2.16.2-5 for a detailed description
   // of the class loading & initialization procedure, and the use of the states.
@@ -494,7 +494,6 @@ public:
   // reference type
   ReferenceType reference_type() const     { return (ReferenceType)_reference_type; }
   void set_reference_type(ReferenceType t) {
-    assert(t == (u1)t, "overflow");
     _reference_type = (u1)t;
   }
 
@@ -594,18 +593,13 @@ public:
   InstanceKlass* host_klass() const              {
     InstanceKlass** hk = adr_host_klass();
     if (hk == NULL) {
-      assert(!is_anonymous(), "Anonymous classes have host klasses");
       return NULL;
     } else {
-      assert(*hk != NULL, "host klass should always be set if the address is not null");
-      assert(is_anonymous(), "Only anonymous classes have host klasses");
       return *hk;
     }
   }
   void set_host_klass(const InstanceKlass* host) {
-    assert(is_anonymous(), "not anonymous");
     const InstanceKlass** addr = (const InstanceKlass **)adr_host_klass();
-    assert(addr != NULL, "no reversed space");
     if (addr != NULL) {
       *addr = host;
     }
@@ -666,7 +660,6 @@ public:
   // symbol unloading support (refcount already added)
   Symbol* array_name()                     { return _array_name; }
   void set_array_name(Symbol* name)        {
-    assert(_array_name == NULL  || name == NULL, "name already created");
     _array_name = name; }
 
   // nonstatic oop-map blocks
@@ -735,7 +728,6 @@ public:
 private:
 
   void set_kind(unsigned kind) {
-    assert(kind <= _misc_kind_field_mask, "Invalid InstanceKlass kind");
     unsigned fmask = _misc_kind_field_mask << _misc_kind_field_pos;
     unsigned flags = _misc_flags & ~fmask;
     _misc_flags = (flags | (kind << _misc_kind_field_pos));
@@ -915,8 +907,6 @@ public:
   }
 
   static const InstanceKlass* cast(const Klass* k) {
-    assert(k != NULL, "k should not be null");
-    assert(k->is_instance_klass(), "cast to InstanceKlass");
     return static_cast<const InstanceKlass*>(k);
   }
 
@@ -958,8 +948,7 @@ public:
   }
 
   Klass** end_of_nonstatic_oop_maps() const {
-    return (Klass**)(start_of_nonstatic_oop_maps() +
-                     nonstatic_oop_map_count());
+    return (Klass**)(start_of_nonstatic_oop_maps() + nonstatic_oop_map_count());
   }
 
   Klass** adr_implementor() const {
@@ -1104,7 +1093,6 @@ public:
 
 public:
   void set_in_error_state() {
-    assert(DumpSharedSpaces, "only call this when dumping archive");
     _init_state = initialization_error;
   }
   bool check_sharing_error_state();
@@ -1250,7 +1238,6 @@ class InnerClassesIterator : public StackObj {
       // attribute data, or it should be
       // n*inner_class_next_offset+enclosing_method_attribute_size
       // if it also contains the EnclosingMethod data.
-      assert((_length % InstanceKlass::inner_class_next_offset == 0 || _length % InstanceKlass::inner_class_next_offset == InstanceKlass::enclosing_method_attribute_size), "just checking");
       // Remove the enclosing_method portion if exists.
       if (_length % InstanceKlass::inner_class_next_offset == InstanceKlass::enclosing_method_attribute_size) {
         _length -= InstanceKlass::enclosing_method_attribute_size;
@@ -1274,38 +1261,31 @@ class InnerClassesIterator : public StackObj {
   }
 
   u2 inner_class_info_index() const {
-    return _inner_classes->at(
-               _idx + InstanceKlass::inner_class_inner_class_info_offset);
+    return _inner_classes->at(_idx + InstanceKlass::inner_class_inner_class_info_offset);
   }
 
   void set_inner_class_info_index(u2 index) {
-    _inner_classes->at_put(
-               _idx + InstanceKlass::inner_class_inner_class_info_offset, index);
+    _inner_classes->at_put(_idx + InstanceKlass::inner_class_inner_class_info_offset, index);
   }
 
   u2 outer_class_info_index() const {
-    return _inner_classes->at(
-               _idx + InstanceKlass::inner_class_outer_class_info_offset);
+    return _inner_classes->at(_idx + InstanceKlass::inner_class_outer_class_info_offset);
   }
 
   void set_outer_class_info_index(u2 index) {
-    _inner_classes->at_put(
-               _idx + InstanceKlass::inner_class_outer_class_info_offset, index);
+    _inner_classes->at_put(_idx + InstanceKlass::inner_class_outer_class_info_offset, index);
   }
 
   u2 inner_name_index() const {
-    return _inner_classes->at(
-               _idx + InstanceKlass::inner_class_inner_name_offset);
+    return _inner_classes->at(_idx + InstanceKlass::inner_class_inner_name_offset);
   }
 
   void set_inner_name_index(u2 index) {
-    _inner_classes->at_put(
-               _idx + InstanceKlass::inner_class_inner_name_offset, index);
+    _inner_classes->at_put(_idx + InstanceKlass::inner_class_inner_name_offset, index);
   }
 
   u2 inner_access_flags() const {
-    return _inner_classes->at(
-               _idx + InstanceKlass::inner_class_access_flags_offset);
+    return _inner_classes->at(_idx + InstanceKlass::inner_class_access_flags_offset);
   }
 };
 

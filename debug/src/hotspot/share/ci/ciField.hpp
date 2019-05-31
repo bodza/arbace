@@ -85,7 +85,6 @@ public:
 
   // What is the offset of this field?
   int offset() const {
-    assert(_offset >= 1, "illegal call to offset()");
     return _offset;
   }
 

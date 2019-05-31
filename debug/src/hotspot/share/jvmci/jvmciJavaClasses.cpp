@@ -9,9 +9,6 @@
 
 #define START_CLASS(name) \
     void name::check(oop obj, const char* field_name, int offset) { \
-      assert(obj != NULL, "NULL field access of %s.%s", #name, field_name); \
-      assert(obj->is_a(SystemDictionary::name##_klass()), "wrong class, " #name " expected, found %s", obj->klass()->external_name()); \
-      assert(offset != 0, "must be valid offset"); \
     }
 
 #define END_CLASS
@@ -33,28 +30,23 @@
 #define STATIC_OBJARRAYOOP_FIELD(klassName, name, signature) STATIC_OOPISH_FIELD(klassName, name, objArrayOop, signature)
 #define STATIC_OOPISH_FIELD(klassName, name, type, signature) \
     type klassName::name() { \
-      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass(); \
       oop base = ik->static_field_base_raw(); \
       oop result = HeapAccess<>::oop_load_at(base, _##name##_offset); \
       return type(result); \
     } \
     void klassName::set_##name(type x) { \
-      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
-      assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName); \
       InstanceKlass* ik = klassName::klass(); \
       oop base = ik->static_field_base_raw(); \
       HeapAccess<>::oop_store_at(base, _##name##_offset, x); \
     }
 #define STATIC_PRIMITIVE_FIELD(klassName, name, jtypename) \
     jtypename klassName::name() { \
-      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass(); \
       oop base = ik->static_field_base_raw(); \
       return HeapAccess<>::load_at(base, _##name##_offset); \
     } \
     void klassName::set_##name(jtypename x) { \
-      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass(); \
       oop base = ik->static_field_base_raw(); \
       HeapAccess<>::store_at(base, _##name##_offset, x); \
@@ -101,7 +93,6 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
   }
   guarantee(fd.is_static() == static_field, "static/instance mismatch");
   dest_offset = fd.offset();
-  assert(dest_offset != 0, "must be valid offset");
   if (static_field) {
     // Must ensure classes for static fields are initialized as the
     // accessor itself does not include a class initialization check.
@@ -112,7 +103,6 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
 // This piece of macro magic creates the contents of the jvmci_compute_offsets method that initializes the field indices of all the access classes.
 
 #define START_CLASS(name) { Klass* k = SystemDictionary::name##_klass(); \
-    assert(k != NULL, "Could not find class " #name "");
 
 #define END_CLASS }
 

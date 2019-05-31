@@ -26,7 +26,6 @@ const char* StubCodeDesc::name_for(address pc) {
 }
 
 void StubCodeDesc::freeze() {
-  assert(!_frozen, "repeated freeze operation");
   _frozen = true;
 }
 
@@ -82,7 +81,6 @@ StubCodeMark::StubCodeMark(StubCodeGenerator* cgen, const char* group, const cha
 StubCodeMark::~StubCodeMark() {
   _cgen->assembler()->flush();
   _cdesc->set_end(_cgen->assembler()->pc());
-  assert(StubCodeDesc::_list == _cdesc, "expected order on list");
   _cgen->stub_epilog(_cdesc);
   Forte::register_stub(_cdesc->name(), _cdesc->begin(), _cdesc->end());
 }

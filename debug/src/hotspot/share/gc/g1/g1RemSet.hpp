@@ -147,7 +147,7 @@ public:
   Tickspan rem_set_root_scan_time() const { return _rem_set_root_scan_time; }
   Tickspan rem_set_trim_partially_time() const { return _rem_set_trim_partially_time; }
 
-  Tickspan strong_code_root_scan_time() const { return _strong_code_root_scan_time;  }
+  Tickspan strong_code_root_scan_time() const { return _strong_code_root_scan_time; }
   Tickspan strong_code_root_trim_partially_time() const { return _strong_code_trim_partially_time; }
 
   size_t cards_scanned() const { return _cards_scanned; }

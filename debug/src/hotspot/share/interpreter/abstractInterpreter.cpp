@@ -88,10 +88,7 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
   // Method handle primitive?
   if (m->is_method_handle_intrinsic()) {
     vmIntrinsics::ID id = m->intrinsic_id();
-    assert(MethodHandles::is_signature_polymorphic(id), "must match an intrinsic");
-    MethodKind kind = (MethodKind)( method_handle_invoke_FIRST +
-                                    ((int)id - vmIntrinsics::FIRST_MH_SIG_POLY) );
-    assert(kind <= method_handle_invoke_LAST, "parallel enum ranges");
+    MethodKind kind = (MethodKind)( method_handle_invoke_FIRST + ((int)id - vmIntrinsics::FIRST_MH_SIG_POLY));
     return kind;
   }
 
@@ -116,7 +113,6 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
   // Note: This test must come _before_ the test for intrinsic
   //       methods. See also comments below.
   if (m->is_native()) {
-    assert(!m->is_method_handle_intrinsic(), "overlapping bits here, watch out");
     return m->is_synchronized() ? native_synchronized : native;
   }
 
@@ -125,8 +121,7 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
     return zerolocals_synchronized;
   }
 
-  if (RegisterFinalizersAtInit && m->code_size() == 1 &&
-      m->intrinsic_id() == vmIntrinsics::_Object_init) {
+  if (RegisterFinalizersAtInit && m->code_size() == 1 && m->intrinsic_id() == vmIntrinsics::_Object_init) {
     // We need to execute the special return bytecode to check for
     // finalizer registration so create a normal frame.
     return zerolocals;
@@ -162,10 +157,6 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
 
   // Accessor method?
   if (m->is_getter()) {
-    // TODO: We should have used ::is_accessor above, but fast accessors in Zero expect only getters.
-    // See CppInterpreter::accessor_entry in cppInterpreter_zero.cpp. This should be fixed in Zero,
-    // then the call above updated to ::is_accessor
-    assert(m->size_of_parameters() == 1, "fast code for accessors assumes parameter size = 1");
     return accessor;
   }
 
@@ -174,8 +165,6 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
 }
 
 void AbstractInterpreter::set_entry_for_kind(AbstractInterpreter::MethodKind kind, address entry) {
-  assert(kind >= method_handle_invoke_FIRST && kind <= method_handle_invoke_LAST, "late initialization only for MH entry points");
-  assert(_entry_table[kind] == _entry_table[abstract], "previous value must be AME entry");
   _entry_table[kind] = entry;
 
   update_cds_entry_table(kind);
@@ -193,8 +182,7 @@ bool AbstractInterpreter::is_not_reached(const methodHandle& method, int bci) {
 
   // the bytecode might not be rewritten if the method is an accessor, etc.
   address ientry = method->interpreter_entry();
-  if (ientry != entry_for_kind(AbstractInterpreter::zerolocals) &&
-      ientry != entry_for_kind(AbstractInterpreter::zerolocals_synchronized))
+  if (ientry != entry_for_kind(AbstractInterpreter::zerolocals) && ientry != entry_for_kind(AbstractInterpreter::zerolocals_synchronized))
     return false;  // interpreter does not run this method!
 
   // otherwise, we can be sure this bytecode has never been executed
@@ -208,11 +196,9 @@ bool AbstractInterpreter::is_not_reached(const methodHandle& method, int bci) {
  * If a deoptimization happens, this function returns the point of next bytecode to continue execution.
  */
 address AbstractInterpreter::deopt_continue_after_entry(Method* method, address bcp, int callee_parameters, bool is_top_frame) {
-  assert(method->contains(bcp), "just checkin'");
 
   // Get the original and rewritten bytecode.
   Bytecodes::Code code = Bytecodes::java_code_at(method, bcp);
-  assert(!Interpreter::bytecode_should_reexecute(code), "should not reexecute");
 
   const int bci = method->bci_from(bcp);
 
@@ -282,9 +268,8 @@ address AbstractInterpreter::deopt_continue_after_entry(Method* method, address 
 // Note: Bytecodes::_athrow is a special case in that it does not return
 //       Interpreter::deopt_entry(vtos, 0) like others
 address AbstractInterpreter::deopt_reexecute_entry(Method* method, address bcp) {
-  assert(method->contains(bcp), "just checkin'");
   Bytecodes::Code code   = Bytecodes::java_code_at(method, bcp);
-  if(code == Bytecodes::_athrow ) {
+  if (code == Bytecodes::_athrow ) {
     return Interpreter::rethrow_exception_entry();
   }
   return Interpreter::deopt_entry(vtos, 0);

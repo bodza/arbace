@@ -6,7 +6,6 @@
 #include <signal.h>
 
 void OSThread::pd_initialize() {
-  assert(this != NULL, "check");
   _thread_id        = 0;
   _pthread_id       = 0;
   _siginfo = NULL;
@@ -18,7 +17,6 @@ void OSThread::pd_initialize() {
 
   _startThread_lock = new Monitor(Mutex::event, "startThread_lock", true,
                                   Monitor::_safepoint_check_never);
-  assert(_startThread_lock !=NULL, "check");
 }
 
 void OSThread::pd_destroy() {

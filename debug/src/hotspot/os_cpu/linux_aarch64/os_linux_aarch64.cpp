@@ -121,10 +121,6 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread,
   const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
-  assert(thread != NULL, "just checking");
-  assert(ret_sp != NULL, "just checking");
-  assert(ret_fp != NULL, "just checking");
-
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
@@ -164,12 +160,9 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
     // method returns the Java sender of the current frame.
     *fr = os::fetch_frame_from_context(uc);
     if (!fr->is_first_java_frame()) {
-      assert(fr->safe_for_sender(thread), "Safety check");
       *fr = fr->java_sender();
     }
   } else {
-    // more complex code with compiled code
-    assert(!Interpreter::contains(pc), "Interpreted methods should have been handled above");
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -185,13 +178,10 @@ bool os::Linux::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t*
                          - NativeInstruction::instruction_size);
       *fr = frame(sp, fp, pc);
       if (!fr->is_java_frame()) {
-        assert(fr->safe_for_sender(thread), "Safety check");
-        assert(!fr->is_first_frame(), "Safety check");
         *fr = fr->java_sender();
       }
     }
   }
-  assert(fr->is_java_frame(), "Safety check");
   return true;
 }
 
@@ -240,10 +230,10 @@ enum {
 };
 
 #ifdef BUILTIN_SIM
-extern "C" void Fetch32PFI () ;
-extern "C" void Fetch32Resume () ;
-extern "C" void FetchNPFI () ;
-extern "C" void FetchNResume () ;
+extern "C" void Fetch32PFI();
+extern "C" void Fetch32Resume();
+extern "C" void FetchNPFI();
+extern "C" void FetchNResume();
 #endif
 
 extern "C" JNIEXPORT int
@@ -288,11 +278,11 @@ JVM_handle_linux_signal(int sig,
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Linux::signal_handlers_are_installed) {
-    if (t != NULL ){
-      if(t->is_Java_thread()) {
+    if (t != NULL ) {
+      if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       }
-      else if(t->is_VM_thread()){
+      else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -303,7 +293,6 @@ JVM_handle_linux_signal(int sig,
     // can't decode this kind of signal
     info = NULL;
   } else {
-    assert(sig == info->si_signo, "bad siginfo");
   }
 */
   // decide if this trap can be handled by a stub
@@ -317,12 +306,12 @@ JVM_handle_linux_signal(int sig,
 
 #ifdef BUILTIN_SIM
     if (pc == (address) Fetch32PFI) {
-       uc->uc_mcontext.gregs[REG_PC] = intptr_t(Fetch32Resume) ;
-       return 1 ;
+       uc->uc_mcontext.gregs[REG_PC] = intptr_t(Fetch32Resume);
+       return 1;
     }
     if (pc == (address) FetchNPFI) {
-       uc->uc_mcontext.gregs[REG_PC] = intptr_t (FetchNResume) ;
-       return 1 ;
+       uc->uc_mcontext.gregs[REG_PC] = intptr_t (FetchNResume);
+       return 1;
     }
 #else
     if (StubRoutines::is_safefetch_fault(pc)) {
@@ -344,14 +333,11 @@ JVM_handle_linux_signal(int sig,
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Linux::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                assert(fr.is_java_frame(), "Must be a Java frame");
-                frame activation =
-                  SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
+                frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
                   if (activation.is_interpreted_frame()) {
-                    thread->set_reserved_stack_activation((address)(
-                      activation.fp() + frame::interpreter_frame_initial_sp_offset));
+                    thread->set_reserved_stack_activation((address)(activation.fp() + frame::interpreter_frame_initial_sp_offset));
                   } else {
                     thread->set_reserved_stack_activation((address)activation.unextended_sp());
                   }
@@ -400,8 +386,7 @@ JVM_handle_linux_signal(int sig,
       // a fault inside compiled code, the interpreter, or a stub
 
       // Handle signal from NativeJump::patch_verified_entry().
-      if ((sig == SIGILL || sig == SIGTRAP)
-          && nativeInstruction_at(pc)->is_sigill_zombie_not_entrant()) {
+      if ((sig == SIGILL || sig == SIGTRAP) && nativeInstruction_at(pc)->is_sigill_zombie_not_entrant()) {
         if (TraceTraps) {
           tty->print_cr("trap: zombie_not_entrant (%s)", (sig == SIGTRAP) ? "SIGTRAP" : "SIGILL");
         }
@@ -421,16 +406,9 @@ JVM_handle_linux_signal(int sig,
       }
       else
 
-      if (sig == SIGFPE  &&
-          (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
-        stub =
-          SharedRuntime::
-          continuation_for_implicit_exception(thread,
-                                              pc,
-                                              SharedRuntime::
-                                              IMPLICIT_DIVIDE_BY_ZERO);
-      } else if (sig == SIGSEGV &&
-               !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
+      if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+        stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
+      } else if (sig == SIGSEGV && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
           stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_NULL);
       }
@@ -454,8 +432,7 @@ JVM_handle_linux_signal(int sig,
     // process of write protecting the memory serialization page.
     // It write enables the page immediately after protecting it
     // so we can just return to retry the write.
-    if ((sig == SIGSEGV) &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
+    if ((sig == SIGSEGV) && os::is_memory_serialize_page(thread, (address) info->si_addr)) {
       // Block current thread until the memory serialize page permission restored.
       os::block_on_serialize_page_trap();
       return true;

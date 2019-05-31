@@ -70,13 +70,11 @@ JVM_ENTRY_NO_ENV(jboolean, JVM_RaiseSignal(jint sig))
     // BREAK_SIGNAL to be raised when ReduceSignalUsage is set, since
     // no handler for them is actually registered in JVM or via
     // JVM_RegisterSignal.
-    if (sig == SHUTDOWN1_SIGNAL || sig == SHUTDOWN2_SIGNAL ||
-        sig == SHUTDOWN3_SIGNAL || sig == BREAK_SIGNAL) {
+    if (sig == SHUTDOWN1_SIGNAL || sig == SHUTDOWN2_SIGNAL || sig == SHUTDOWN3_SIGNAL || sig == BREAK_SIGNAL) {
       return JNI_FALSE;
     }
   }
-  else if ((sig == SHUTDOWN1_SIGNAL || sig == SHUTDOWN2_SIGNAL ||
-            sig == SHUTDOWN3_SIGNAL) && os::Posix::is_sig_ignored(sig)) {
+  else if ((sig == SHUTDOWN1_SIGNAL || sig == SHUTDOWN2_SIGNAL || sig == SHUTDOWN3_SIGNAL) && os::Posix::is_sig_ignored(sig)) {
     // do not allow SHUTDOWN1_SIGNAL to be raised when SHUTDOWN1_SIGNAL
     // is ignored, since no handler for them is actually registered in JVM
     // or via JVM_RegisterSignal.

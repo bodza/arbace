@@ -87,7 +87,7 @@ void AdaptivePaddedNoZeroDevAverage::sample(float new_sample) {
 
 LinearLeastSquareFit::LinearLeastSquareFit(unsigned weight) :
   _sum_x(0), _sum_x_squared(0), _sum_y(0), _sum_xy(0),
-  _intercept(0), _slope(0), _mean_x(weight), _mean_y(weight) {}
+  _intercept(0), _slope(0), _mean_x(weight), _mean_y(weight) { }
 
 void LinearLeastSquareFit::update(double x, double y) {
   _sum_x = _sum_x + x;
@@ -96,8 +96,7 @@ void LinearLeastSquareFit::update(double x, double y) {
   _sum_xy = _sum_xy + x * y;
   _mean_x.sample(x);
   _mean_y.sample(y);
-  assert(_mean_x.count() == _mean_y.count(), "Incorrect count");
-  if ( _mean_x.count() > 1 ) {
+  if (_mean_x.count() > 1 ) {
     double slope_denominator;
     slope_denominator = (_mean_x.count() * _sum_x_squared - _sum_x * _sum_x);
     // Some tolerance should be injected here.  A denominator that is
@@ -121,7 +120,7 @@ void LinearLeastSquareFit::update(double x, double y) {
 double LinearLeastSquareFit::y(double x) {
   double new_y;
 
-  if ( _mean_x.count() > 1 ) {
+  if (_mean_x.count() > 1 ) {
     new_y = (_intercept + _slope * x);
     return new_y;
   } else {

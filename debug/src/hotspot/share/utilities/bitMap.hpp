@@ -92,8 +92,8 @@ class BitMap {
   idx_t word_index_round_up(idx_t bit) const;
 
   // Verification.
-  void verify_index(idx_t index) const {};
-  void verify_range(idx_t beg_index, idx_t end_index) const {};
+  void verify_index(idx_t index) const { };
+  void verify_range(idx_t beg_index, idx_t end_index) const { };
 
   // Statistics.
   static const idx_t* _pop_count_table;
@@ -144,8 +144,8 @@ class BitMap {
   }
 
   // Protected constructor and destructor.
-  BitMap(bm_word_t* map, idx_t size_in_bits) : _map(map), _size(size_in_bits) {}
-  ~BitMap() {}
+  BitMap(bm_word_t* map, idx_t size_in_bits) : _map(map), _size(size_in_bits) { }
+  ~BitMap() { }
 
  public:
   // Pretouch the entire range of memory this BitMap covers.
@@ -278,15 +278,15 @@ class BitMap {
 // The BitMapView is used when the backing storage is managed externally.
 class BitMapView : public BitMap {
  public:
-  BitMapView() : BitMap(NULL, 0) {}
-  BitMapView(bm_word_t* map, idx_t size_in_bits) : BitMap(map, size_in_bits) {}
+  BitMapView() : BitMap(NULL, 0) { }
+  BitMapView(bm_word_t* map, idx_t size_in_bits) : BitMap(map, size_in_bits) { }
 };
 
 // A BitMap with storage in a ResourceArea.
 class ResourceBitMap : public BitMap {
 
  public:
-  ResourceBitMap() : BitMap(NULL, 0) {}
+  ResourceBitMap() : BitMap(NULL, 0) { }
   // Clears the bitmap memory.
   ResourceBitMap(idx_t size_in_bits);
 
@@ -333,7 +333,7 @@ class CHeapBitMap : public BitMap {
   MEMFLAGS _flags;
 
  public:
-  CHeapBitMap(MEMFLAGS flags = mtInternal) : BitMap(NULL, 0), _flags(flags) {}
+  CHeapBitMap(MEMFLAGS flags = mtInternal) : BitMap(NULL, 0), _flags(flags) { }
   // Clears the bitmap memory.
   CHeapBitMap(idx_t size_in_bits, MEMFLAGS flags = mtInternal, bool clear = true);
   ~CHeapBitMap();
@@ -371,17 +371,16 @@ class BitMap2D {
   }
 
   void verify_bit_within_slot_index(idx_t index) const {
-    assert(index < _bits_per_slot, "bit_within_slot index out of bounds");
   }
 
  public:
   // Construction. bits_per_slot must be greater than 0.
   BitMap2D(idx_t bits_per_slot) :
-      _map(), _bits_per_slot(bits_per_slot) {}
+      _map(), _bits_per_slot(bits_per_slot) { }
 
   // Allocates necessary data structure in resource area. bits_per_slot must be greater than 0.
   BitMap2D(idx_t size_in_slots, idx_t bits_per_slot) :
-      _map(size_in_slots * bits_per_slot), _bits_per_slot(bits_per_slot) {}
+      _map(size_in_slots * bits_per_slot), _bits_per_slot(bits_per_slot) { }
 
   idx_t size_in_bits() {
     return _map.size();

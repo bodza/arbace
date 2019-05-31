@@ -18,7 +18,7 @@ class ReferenceProcessorStats {
     _soft_count(0),
     _weak_count(0),
     _final_count(0),
-    _phantom_count(0) {}
+    _phantom_count(0) { }
 
   ReferenceProcessorStats(size_t soft_count,
                           size_t weak_count,
@@ -28,7 +28,7 @@ class ReferenceProcessorStats {
     _weak_count(weak_count),
     _final_count(final_count),
     _phantom_count(phantom_count)
-  {}
+  { }
 
   size_t soft_count() const {
     return _soft_count;

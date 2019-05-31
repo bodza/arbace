@@ -14,11 +14,8 @@
 
 void TemplateInterpreter::initialize() {
   if (_code != NULL) return;
-  // assertions
-  assert((int)Bytecodes::number_of_codes <= (int)DispatchTable::length, "dispatch table too small");
 
   AbstractInterpreter::initialize();
-
   TemplateTable::initialize();
 
   // generate interpreter
@@ -44,7 +41,6 @@ void TemplateInterpreter::initialize() {
 // Implementation of EntryPoint
 
 EntryPoint::EntryPoint() {
-  assert(number_of_states == 10, "check the code below");
   _entry[btos] = NULL;
   _entry[ztos] = NULL;
   _entry[ctos] = NULL;
@@ -58,7 +54,6 @@ EntryPoint::EntryPoint() {
 }
 
 EntryPoint::EntryPoint(address bentry, address zentry, address centry, address sentry, address aentry, address ientry, address lentry, address fentry, address dentry, address ventry) {
-  assert(number_of_states == 10, "check the code below");
   _entry[btos] = bentry;
   _entry[ztos] = zentry;
   _entry[ctos] = centry;
@@ -72,12 +67,10 @@ EntryPoint::EntryPoint(address bentry, address zentry, address centry, address s
 }
 
 void EntryPoint::set_entry(TosState state, address entry) {
-  assert(0 <= state && state < number_of_states, "state out of bounds");
   _entry[state] = entry;
 }
 
 address EntryPoint::entry(TosState state) const {
-  assert(0 <= state && state < number_of_states, "state out of bounds");
   return _entry[state];
 }
 
@@ -102,7 +95,6 @@ bool EntryPoint::operator == (const EntryPoint& y) {
 // Implementation of DispatchTable
 
 EntryPoint DispatchTable::entry(int i) const {
-  assert(0 <= i && i < length, "index out of bounds");
   return
     EntryPoint(
       _table[btos][i],
@@ -119,8 +111,6 @@ EntryPoint DispatchTable::entry(int i) const {
 }
 
 void DispatchTable::set_entry(int i, EntryPoint& entry) {
-  assert(0 <= i && i < length, "index out of bounds");
-  assert(number_of_states == 10, "check the code below");
   _table[btos][i] = entry.entry(btos);
   _table[ztos][i] = entry.entry(ztos);
   _table[ctos][i] = entry.entry(ctos);
@@ -206,7 +196,6 @@ address TemplateInterpreter::return_entry(TosState state, int length, Bytecodes:
   case Bytecodes::_invokedynamic:
     return _invokedynamic_return_entry[index];
   default:
-    assert(!Bytecodes::is_invoke(code), "invoke instructions should be handled separately: %s", Bytecodes::name(code));
     address entry = _return_entry[length].entry(state);
     vmassert(entry != NULL, "unsupported return entry requested, length=%d state=%d", length, index);
     return entry;
@@ -224,8 +213,6 @@ address TemplateInterpreter::deopt_entry(TosState state, int length) {
 // Suport for invokes
 
 int TemplateInterpreter::TosState_as_index(TosState state) {
-  assert( state < number_of_states , "Invalid state in TosState_as_index");
-  assert(0 <= (int)state && (int)state < TemplateInterpreter::number_of_return_addrs, "index out of bounds");
   return (int)state;
 }
 
@@ -271,7 +258,6 @@ address TemplateInterpreter::deopt_continue_after_entry(Method* method, address 
 // Note: Bytecodes::_athrow (C1 only) and Bytecodes::_return are the special cases
 //       that do not return "Interpreter::deopt_entry(vtos, 0)"
 address TemplateInterpreter::deopt_reexecute_entry(Method* method, address bcp) {
-  assert(method->contains(bcp), "just checkin'");
   Bytecodes::Code code   = Bytecodes::code_at(method, bcp);
   if (code == Bytecodes::_return_register_finalizer) {
     // This is used for deopt during registration of finalizers

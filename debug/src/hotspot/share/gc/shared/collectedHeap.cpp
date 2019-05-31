@@ -60,8 +60,7 @@ void GCHeapLog::log_heap(CollectedHeap* heap, bool before) {
 VirtualSpaceSummary CollectedHeap::create_heap_space_summary() {
   size_t capacity_in_words = capacity() / HeapWordSize;
 
-  return VirtualSpaceSummary(
-    reserved_region().start(), reserved_region().start() + capacity_in_words, reserved_region().end());
+  return VirtualSpaceSummary(reserved_region().start(), reserved_region().start() + capacity_in_words, reserved_region().end());
 }
 
 GCHeapSummary CollectedHeap::create_heap_summary() {
@@ -83,10 +82,8 @@ MetaspaceSummary CollectedHeap::create_metaspace_summary() {
       MetaspaceUtils::used_bytes(Metaspace::ClassType),
       MetaspaceUtils::reserved_bytes(Metaspace::ClassType));
 
-  const MetaspaceChunkFreeListSummary& ms_chunk_free_list_summary =
-    MetaspaceUtils::chunk_free_list_summary(Metaspace::NonClassType);
-  const MetaspaceChunkFreeListSummary& class_chunk_free_list_summary =
-    MetaspaceUtils::chunk_free_list_summary(Metaspace::ClassType);
+  const MetaspaceChunkFreeListSummary& ms_chunk_free_list_summary = MetaspaceUtils::chunk_free_list_summary(Metaspace::NonClassType);
+  const MetaspaceChunkFreeListSummary& class_chunk_free_list_summary = MetaspaceUtils::chunk_free_list_summary(Metaspace::ClassType);
 
   return MetaspaceSummary(MetaspaceGC::capacity_until_GC(), meta_space, data_space, class_space,
                           ms_chunk_free_list_summary, class_chunk_free_list_summary);
@@ -197,8 +194,6 @@ CollectedHeap::CollectedHeap() :
 // heap lock is already held and that we are executing in
 // the context of the vm thread.
 void CollectedHeap::collect_as_vm_thread(GCCause::Cause cause) {
-  assert(Thread::current()->is_VM_thread(), "Precondition#1");
-  assert(Heap_lock->is_locked(), "Precondition#2");
   GCCauseSetter gcs(this, cause);
   switch (cause) {
     case GCCause::_heap_inspection:
@@ -225,8 +220,6 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
   uint gc_count = 0;
   uint full_gc_count = 0;
 
-  assert(!Heap_lock->owned_by_self(), "Should not be holding the Heap_lock");
-
   do {
     MetaWord* result = loader_data->metaspace_non_null()->allocate(word_size, mdtype);
     if (result != NULL) {
@@ -252,8 +245,7 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
         continue;
       } else {
         if (CheckJNICalls) {
-          fatal("Possible deadlock due to allocating while"
-                " in jni critical section");
+          fatal("Possible deadlock due to allocating while in jni critical section");
         }
         return NULL;
       }
@@ -284,10 +276,8 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
       return op.result();
     }
     loop_count++;
-    if ((QueuedAllocationWarningCount > 0) &&
-        (loop_count % QueuedAllocationWarningCount == 0)) {
-      log_warning(gc, ergo)("satisfy_failed_metadata_allocation() retries %d times,"
-                            " size=" SIZE_FORMAT, loop_count, word_size);
+    if ((QueuedAllocationWarningCount > 0) && (loop_count % QueuedAllocationWarningCount == 0)) {
+      log_warning(gc, ergo)("satisfy_failed_metadata_allocation() retries %d times, size=" SIZE_FORMAT, loop_count, word_size);
     }
   } while (true);  // Until a GC is done
 }
@@ -301,9 +291,7 @@ size_t CollectedHeap::max_tlab_size() const {
   // We actually lose a little by dividing first,
   // but that just makes the TLAB  somewhat smaller than the biggest array,
   // which is fine, since we'll be able to fill that.
-  size_t max_int_size = typeArrayOopDesc::header_size(T_INT) +
-              sizeof(jint) *
-              ((juint) max_jint / (size_t) HeapWordSize);
+  size_t max_int_size = typeArrayOopDesc::header_size(T_INT) + sizeof(jint) * ((juint) max_jint / (size_t) HeapWordSize);
   return align_down(max_int_size, MinObjAlignment);
 }
 
@@ -315,42 +303,31 @@ size_t CollectedHeap::filler_array_min_size() {
   return align_object_size(filler_array_hdr_size()); // align to MinObjAlignment
 }
 
-void
-CollectedHeap::fill_with_array(HeapWord* start, size_t words, bool zap)
-{
-  assert(words >= filler_array_min_size(), "too small for an array");
-  assert(words <= filler_array_max_size(), "too big for a single object");
+void CollectedHeap::fill_with_array(HeapWord* start, size_t words, bool zap) {
 
   const size_t payload_size = words - filler_array_hdr_size();
   const size_t len = payload_size * HeapWordSize / sizeof(jint);
-  assert((int)len >= 0, "size too large " SIZE_FORMAT " becomes %d", words, (int)len);
 
   ObjArrayAllocator allocator(Universe::intArrayKlassObj(), words, (int)len, /* do_zero */ false);
   allocator.initialize(start);
 }
 
-void
-CollectedHeap::fill_with_object_impl(HeapWord* start, size_t words, bool zap)
-{
-  assert(words <= filler_array_max_size(), "too big for a single object");
+void CollectedHeap::fill_with_object_impl(HeapWord* start, size_t words, bool zap) {
 
   if (words >= filler_array_min_size()) {
     fill_with_array(start, words, zap);
   } else if (words > 0) {
-    assert(words == min_fill_size(), "unaligned size");
     ObjAllocator allocator(SystemDictionary::Object_klass(), words);
     allocator.initialize(start);
   }
 }
 
-void CollectedHeap::fill_with_object(HeapWord* start, size_t words, bool zap)
-{
+void CollectedHeap::fill_with_object(HeapWord* start, size_t words, bool zap) {
   HandleMark hm;  // Free handles before leaving.
   fill_with_object_impl(start, words, zap);
 }
 
-void CollectedHeap::fill_with_objects(HeapWord* start, size_t words, bool zap)
-{
+void CollectedHeap::fill_with_objects(HeapWord* start, size_t words, bool zap) {
   HandleMark hm;  // Free handles before leaving.
 
   // Multiple objects may be required depending on the filler array maximum size. Fill
@@ -403,12 +380,10 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
   // started allocating (nothing much to verify) or we have
   // started allocating but are now a full-fledged JavaThread
   // (and have thus made our TLAB's) available for filling.
-  assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "Should only be called at a safepoint or at start-up" " otherwise concurrent mutator activity may make heap " " unparsable again");
   const bool use_tlab = UseTLAB;
   // The main thread starts allocating via a TLAB even before it
   // has added itself to the threads list at vm boot-up.
   JavaThreadIteratorWithHandle jtiwh;
-  assert(!use_tlab || jtiwh.length() > 0, "Attempt to fill tlabs before main thread has been added to threads list is doomed to failure!");
   BarrierSet *bs = BarrierSet::barrier_set();
   for (; JavaThread *thread = jtiwh.next(); ) {
      if (use_tlab) thread->tlab().make_parsable(retire_tlabs);
@@ -418,7 +393,6 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
 
 void CollectedHeap::accumulate_statistics_all_tlabs() {
   if (UseTLAB) {
-    assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "should only accumulate statistics on tlabs at safepoint");
 
     ThreadLocalAllocBuffer::accumulate_statistics_before_gc();
   }
@@ -426,14 +400,12 @@ void CollectedHeap::accumulate_statistics_all_tlabs() {
 
 void CollectedHeap::resize_all_tlabs() {
   if (UseTLAB) {
-    assert(SafepointSynchronize::is_at_safepoint() || !is_init_completed(), "should only resize tlabs at safepoint");
 
     ThreadLocalAllocBuffer::resize_all_tlabs();
   }
 }
 
 void CollectedHeap::full_gc_dump(GCTimer* timer, bool before) {
-  assert(timer != NULL, "timer is null");
   if ((HeapDumpBeforeFullGC && before) || (HeapDumpAfterFullGC && !before)) {
     GCTraceTime(Info, gc) tm(before ? "Heap Dump (before full gc)" : "Heap Dump (after full gc)", timer);
     HeapDumper::dump_heap();

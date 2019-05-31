@@ -42,8 +42,6 @@ void RemoveForwardedPointerClosure::do_object(oop obj) {
 }
 
 void PreservedMarksSet::init(uint num) {
-  assert(_stacks == NULL && _num == 0, "do not re-initialize");
-  assert(num > 0, "pre-condition");
   if (_in_c_heap) {
     _stacks = NEW_C_HEAP_ARRAY(Padded<PreservedMarks>, num, mtGC);
   } else {
@@ -99,8 +97,7 @@ void PreservedMarksSet::reclaim() {
   _num = 0;
 }
 
-void SharedRestorePreservedMarksTaskExecutor::restore(PreservedMarksSet* preserved_marks_set,
-                                                      volatile size_t* total_size_addr) {
+void SharedRestorePreservedMarksTaskExecutor::restore(PreservedMarksSet* preserved_marks_set, volatile size_t* total_size_addr) {
   if (_workers == NULL) {
     for (uint i = 0; i < preserved_marks_set->num(); i += 1) {
       *total_size_addr += preserved_marks_set->get(i)->size();

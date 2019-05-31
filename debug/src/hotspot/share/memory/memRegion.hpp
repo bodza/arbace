@@ -25,16 +25,14 @@ private:
   size_t    _word_size;
 
 public:
-  MemRegion() : _start(NULL), _word_size(0) {};
+  MemRegion() : _start(NULL), _word_size(0) { };
   MemRegion(HeapWord* start, size_t word_size) :
-    _start(start), _word_size(word_size) {};
+    _start(start), _word_size(word_size) { };
   MemRegion(HeapWord* start, HeapWord* end) :
     _start(start), _word_size(pointer_delta(end, start)) {
-    assert(end >= start, "incorrect constructor arguments");
   }
   MemRegion(MetaWord* start, MetaWord* end) :
     _start((HeapWord*)start), _word_size(pointer_delta(end, start)) {
-    assert(end >= start, "incorrect constructor arguments");
   }
 
   MemRegion intersection(const MemRegion mr2) const;
@@ -62,8 +60,7 @@ public:
   }
   bool equals(const MemRegion mr2) const {
     // first disjunct since we do not have a canonical empty set
-    return ((is_empty() && mr2.is_empty()) ||
-            (start() == mr2.start() && end() == mr2.end()));
+    return ((is_empty() && mr2.is_empty()) || (start() == mr2.start() && end() == mr2.end()));
   }
 
   size_t byte_size() const { return _word_size * sizeof(HeapWord); }
@@ -97,7 +94,7 @@ public:
         return ResourceObj::operator new(size);
   }
 
-  void  operator delete(void* p) {} // nothing to do
+  void  operator delete(void* p) { } // nothing to do
 };
 
 #endif

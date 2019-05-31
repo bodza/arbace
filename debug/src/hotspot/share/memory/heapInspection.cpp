@@ -36,7 +36,7 @@ inline void KlassInfoEntry::add_subclass(KlassInfoEntry* cie) {
 }
 
 int KlassInfoEntry::compare(KlassInfoEntry* e1, KlassInfoEntry* e2) {
-  if(e1->_instance_words > e2->_instance_words) {
+  if (e1->_instance_words > e2->_instance_words) {
     return -1;
   } else if(e1->_instance_words < e2->_instance_words) {
     return 1;
@@ -139,9 +139,7 @@ KlassInfoTable::KlassInfoTable(bool add_all_classes) {
   _size_of_instances_in_words = 0;
   _size = 0;
   _ref = (HeapWord*) Universe::boolArrayKlassObj();
-  _buckets =
-    (KlassInfoBucket*)  AllocateHeap(sizeof(KlassInfoBucket) * _num_buckets,
-       mtInternal, CURRENT_PC, AllocFailStrategy::RETURN_NULL);
+  _buckets = (KlassInfoBucket*)  AllocateHeap(sizeof(KlassInfoBucket) * _num_buckets, mtInternal, CURRENT_PC, AllocFailStrategy::RETURN_NULL);
   if (_buckets != NULL) {
     _size = _num_buckets;
     for (int index = 0; index < _size; index++) {
@@ -170,11 +168,7 @@ uint KlassInfoTable::hash(const Klass* p) {
 
 KlassInfoEntry* KlassInfoTable::lookup(Klass* k) {
   uint         idx = hash(k) % _size;
-  assert(_buckets != NULL, "Allocation failure should have been caught");
   KlassInfoEntry*  e   = _buckets[idx].lookup(k);
-  // Lookup may fail if this is a new klass for which we
-  // could not allocate space for an new entry.
-  assert(e == NULL || k == e->klass(), "must be equal");
   return e;
 }
 
@@ -196,7 +190,6 @@ bool KlassInfoTable::record_instance(const oop obj) {
 }
 
 void KlassInfoTable::iterate(KlassInfoClosure* cic) {
-  assert(_size == 0 || _buckets != NULL, "Allocation failure should have been caught");
   for (int index = 0; index < _size; index++) {
     _buckets[index].iterate(cic);
   }
@@ -231,7 +224,7 @@ void KlassInfoHisto::print_elements(outputStream* st) const {
   // simplify the formatting (ILP32 vs LP64) - store the sum in 64-bit
   int64_t total = 0;
   uint64_t totalw = 0;
-  for(int i=0; i < elements()->length(); i++) {
+  for (int i=0; i < elements()->length(); i++) {
     st->print("%4d: ", i+1);
     elements()->at(i)->print_on(st);
     total += elements()->at(i)->count();
@@ -277,13 +270,11 @@ bool KlassInfoHisto::is_selected(const char *col_name) {
   return true;
 }
 
-void KlassInfoHisto::print_title(outputStream* st, bool csv_format,
-                                 bool selected[], int width_table[],
-                                 const char *name_table[]) {
+void KlassInfoHisto::print_title(outputStream* st, bool csv_format, bool selected[], int width_table[], const char *name_table[]) {
   if (csv_format) {
     st->print("Index,Super");
     for (int c=0; c<KlassSizeStats::_num_columns; c++) {
-       if (selected[c]) {st->print(",%s", name_table[c]);}
+       if (selected[c]) { st->print(",%s", name_table[c]); }
     }
     st->print(",ClassName");
   } else {
@@ -306,7 +297,7 @@ class HierarchyClosure : public KlassInfoClosure {
 private:
   GrowableArray<KlassInfoEntry*> *_elements;
 public:
-  HierarchyClosure(GrowableArray<KlassInfoEntry*> *_elements) : _elements(_elements) {}
+  HierarchyClosure(GrowableArray<KlassInfoEntry*> *_elements) : _elements(_elements) { }
 
   void do_cinfo(KlassInfoEntry* cie) {
     // ignore array classes
@@ -316,8 +307,7 @@ public:
   }
 };
 
-void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfaces,
-                                           bool print_subclasses, char* classname) {
+void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfaces, bool print_subclasses, char* classname) {
   ResourceMark rm;
   Stack <KlassInfoEntry*, mtClass> class_stack;
   GrowableArray<KlassInfoEntry*> elements;
@@ -335,7 +325,7 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
   HierarchyClosure hc(&elements);
   cit.iterate(&hc);
 
-  for(int i = 0; i < elements.length(); i++) {
+  for (int i = 0; i < elements.length(); i++) {
     KlassInfoEntry* cie = elements.at(i);
     Klass* super = cie->klass()->super();
 
@@ -345,13 +335,12 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
     // Add the class to the subclass array of its superclass.
     if (super != NULL) {
       KlassInfoEntry* super_cie = cit.lookup(super);
-      assert(super_cie != NULL, "could not lookup superclass");
       super_cie->add_subclass(cie);
     }
   }
 
   // Set the do_print flag for each class that should be printed.
-  for(int i = 0; i < elements.length(); i++) {
+  for (int i = 0; i < elements.length(); i++) {
     KlassInfoEntry* cie = elements.at(i);
     if (classname == NULL) {
       // We are printing all classes.
@@ -368,7 +357,6 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
   // maintain the list of classes we still need to process. Start things off
   // by priming it with java.lang.Object.
   KlassInfoEntry* jlo_cie = cit.lookup(SystemDictionary::Object_klass());
-  assert(jlo_cie != NULL, "could not lookup java.lang.Object");
   class_stack.push(jlo_cie);
 
   // Repeatedly pop the top item off the stack, print its class info,
@@ -394,8 +382,7 @@ void KlassHierarchy::print_class_hierarchy(outputStream* st, bool print_interfac
 }
 
 // Sets the do_print flag for every superclass and subclass of the specified class.
-void KlassHierarchy::set_do_print_for_class_hierarchy(KlassInfoEntry* cie, KlassInfoTable* cit,
-                                                      bool print_subclasses) {
+void KlassHierarchy::set_do_print_for_class_hierarchy(KlassInfoEntry* cie, KlassInfoTable* cit, bool print_subclasses) {
   // Set do_print for all superclasses of this class.
   Klass* super = ((InstanceKlass*)cie->klass())->java_super();
   while (super != NULL) {
@@ -492,8 +479,7 @@ void KlassHierarchy::print_class(outputStream* st, KlassInfoEntry* cie, bool pri
   }
 }
 
-void KlassInfoHisto::print_class_stats(outputStream* st,
-                                      bool csv_format, const char *columns) {
+void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const char *columns) {
   ResourceMark rm;
   KlassSizeStats sz, sz_sum;
   int i;
@@ -509,7 +495,7 @@ void KlassInfoHisto::print_class_stats(outputStream* st,
     selected[c] = is_selected(name_table[c]);
   }
 
-  for(i=0; i < elements()->length(); i++) {
+  for (i=0; i < elements()->length(); i++) {
     elements()->at(i)->set_index(i+1);
   }
 
@@ -519,7 +505,7 @@ void KlassInfoHisto::print_class_stats(outputStream* st,
     if (pass == 2) {
       print_title(st, csv_format, selected, width_table, name_table);
     }
-    for(i=0; i < elements()->length(); i++) {
+    for (i=0; i < elements()->length(); i++) {
       KlassInfoEntry* e = (KlassInfoEntry*)elements()->at(i);
       const Klass* k = e->klass();
 
@@ -551,13 +537,13 @@ void KlassInfoHisto::print_class_stats(outputStream* st,
         if (csv_format) {
           st->print("%ld,%d", e->index(), super_index);
           for (int c=0; c<KlassSizeStats::_num_columns; c++) {
-            if (selected[c]) {st->print("," JULONG_FORMAT, col_table[c]);}
+            if (selected[c]) { st->print("," JULONG_FORMAT, col_table[c]); }
           }
           st->print(",%s",e->name());
         } else {
           st->print("%5ld %5d", e->index(), super_index);
           for (int c=0; c<KlassSizeStats::_num_columns; c++) {
-            if (selected[c]) {print_julong(st, width_table[c], col_table[c]);}
+            if (selected[c]) { print_julong(st, width_table[c], col_table[c]); }
           }
           st->print(" %s", e->name());
         }
@@ -585,12 +571,12 @@ void KlassInfoHisto::print_class_stats(outputStream* st,
   if (csv_format) {
     st->print(",");
     for (int c=0; c<KlassSizeStats::_num_columns; c++) {
-      if (selected[c]) {st->print("," JULONG_FORMAT, colsum_table[c]);}
+      if (selected[c]) { st->print("," JULONG_FORMAT, colsum_table[c]); }
     }
   } else {
     st->print("           ");
     for (int c=0; c<KlassSizeStats::_num_columns; c++) {
-      if (selected[c]) {print_julong(st, width_table[c], colsum_table[c]);}
+      if (selected[c]) { print_julong(st, width_table[c], colsum_table[c]); }
     }
     st->print(" Total");
     if (sz_sum._total_bytes > 0) {
@@ -632,8 +618,7 @@ julong KlassInfoHisto::annotations_bytes(Array<AnnotationArray*>* p) const {
   return bytes;
 }
 
-void KlassInfoHisto::print_histo_on(outputStream* st, bool print_stats,
-                                    bool csv_format, const char *columns) {
+void KlassInfoHisto::print_histo_on(outputStream* st, bool print_stats, bool csv_format, const char *columns) {
   if (print_stats) {
     print_class_stats(st, csv_format, columns);
   } else {
@@ -647,7 +632,7 @@ class HistoClosure : public KlassInfoClosure {
  private:
   KlassInfoHisto* _cih;
  public:
-  HistoClosure(KlassInfoHisto* cih) : _cih(cih) {}
+  HistoClosure(KlassInfoHisto* cih) : _cih(cih) { }
 
   void do_cinfo(KlassInfoEntry* cie) {
     _cih->add(cie);
@@ -661,7 +646,7 @@ class RecordInstanceClosure : public ObjectClosure {
   BoolObjectClosure* _filter;
  public:
   RecordInstanceClosure(KlassInfoTable* cit, BoolObjectClosure* filter) :
-    _cit(cit), _missed_count(0), _filter(filter) {}
+    _cit(cit), _missed_count(0), _filter(filter) { }
 
   void do_object(oop obj) {
     if (should_visit(obj)) {
@@ -738,7 +723,7 @@ class FindInstanceClosure : public ObjectClosure {
   GrowableArray<oop>* _result;
 
  public:
-  FindInstanceClosure(Klass* k, GrowableArray<oop>* result) : _klass(k), _result(result) {};
+  FindInstanceClosure(Klass* k, GrowableArray<oop>* result) : _klass(k), _result(result) { };
 
   void do_object(oop obj) {
     if (obj->is_a(_klass)) {
@@ -748,8 +733,6 @@ class FindInstanceClosure : public ObjectClosure {
 };
 
 void HeapInspection::find_instances_at_safepoint(Klass* k, GrowableArray<oop>* result) {
-  assert(SafepointSynchronize::is_at_safepoint(), "all threads are stopped");
-  assert(Heap_lock->is_locked(), "should have the Heap_lock");
 
   // Ensure that the heap is parsable
   Universe::heap()->ensure_parsability(false);  // no need to retire TALBs

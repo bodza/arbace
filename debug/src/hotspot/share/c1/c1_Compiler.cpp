@@ -53,19 +53,13 @@ void Compiler::initialize() {
 }
 
 int Compiler::code_buffer_size() {
-  assert(SegmentedCodeCache, "Should be only used with a segmented code cache");
   return Compilation::desired_max_code_buffer_size() + Compilation::desired_max_constant_size();
 }
 
 BufferBlob* Compiler::init_buffer_blob() {
-  // Allocate buffer blob once at startup since allocation for each
-  // compilation seems to be too expensive (at least on Intel win32).
-  assert(CompilerThread::current()->get_buffer_blob() == NULL, "Should initialize only once");
-
   // setup CodeBuffer.  Preallocate a BufferBlob of size
   // NMethodSizeLimit plus some extra space for constants.
-  int code_buffer_size = Compilation::desired_max_code_buffer_size() +
-    Compilation::desired_max_constant_size();
+  int code_buffer_size = Compilation::desired_max_code_buffer_size() + Compilation::desired_max_constant_size();
 
   BufferBlob* buffer_blob = BufferBlob::create("C1 temporary CodeBuffer", code_buffer_size);
   if (buffer_blob != NULL) {
@@ -77,7 +71,6 @@ BufferBlob* Compiler::init_buffer_blob() {
 
 bool Compiler::is_intrinsic_supported(const methodHandle& method) {
   vmIntrinsics::ID id = method->intrinsic_id();
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   if (method->is_synchronized()) {
     // C1 does not support intrinsification of synchronized methods.
@@ -204,7 +197,6 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
 
 void Compiler::compile_method(ciEnv* env, ciMethod* method, int entry_bci, DirectiveSet* directive) {
   BufferBlob* buffer_blob = CompilerThread::current()->get_buffer_blob();
-  assert(buffer_blob != NULL, "Must exist");
   // invoke compilation
   {
     // We are nested here because we need for the destructor

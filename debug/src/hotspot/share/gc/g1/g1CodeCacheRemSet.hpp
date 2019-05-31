@@ -25,7 +25,7 @@ class G1CodeRootSet {
   void allocate_small_table();
 
  public:
-  G1CodeRootSet() : _table(NULL), _length(0) {}
+  G1CodeRootSet() : _table(NULL), _length(0) { }
   ~G1CodeRootSet();
 
   static void purge();
@@ -48,7 +48,6 @@ class G1CodeRootSet {
 
   bool is_empty() {
     bool empty = length() == 0;
-    assert(empty == (_table == NULL), "is empty only if table is deallocated");
     return empty;
   }
 

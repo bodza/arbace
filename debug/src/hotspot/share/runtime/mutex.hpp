@@ -37,12 +37,12 @@
 // to a full-word CAS of the lockword.
 
 union SplitWord {   // full-word with separately addressable LSB
-  volatile intptr_t FullWord ;
-  volatile void * Address ;
-  volatile jbyte Bytes [sizeof(intptr_t)] ;
-} ;
+  volatile intptr_t FullWord;
+  volatile void * Address;
+  volatile jbyte Bytes [sizeof(intptr_t)];
+};
 
-class ParkEvent ;
+class ParkEvent;
 
 // See orderAccess.hpp.  We assume throughout the VM that mutex lock and
 // try_lock do fence-lock-acquire, and that unlock does a release-unlock,
@@ -109,9 +109,9 @@ class Monitor : public CHeapObj<mtInternal> {
 
   // Debugging fields for naming, deadlock detection, etc. (some only used in debug mode)
 
-  void set_owner_implementation(Thread* owner)                        {};
-  void check_prelock_state     (Thread* thread, bool safepoint_check) {};
-  void check_block_state       (Thread* thread)                       {};
+  void set_owner_implementation(Thread* owner)                        { };
+  void check_prelock_state     (Thread* thread, bool safepoint_check) { };
+  void check_block_state       (Thread* thread)                       { };
 
   // platform-dependent support code can go here (in os_<os_family>.cpp)
  public:
@@ -144,21 +144,21 @@ class Monitor : public CHeapObj<mtInternal> {
   };
 
  private:
-   int  TrySpin (Thread * Self) ;
-   int  TryLock () ;
-   int  TryFast () ;
-   int  AcquireOrPush (ParkEvent * ev) ;
-   void IUnlock (bool RelaxAssert) ;
-   void ILock (Thread * Self) ;
-   int  IWait (Thread * Self, jlong timo);
-   int  ILocked () ;
+   int  TrySpin (Thread* Self);
+   int  TryLock ();
+   int  TryFast ();
+   int  AcquireOrPush (ParkEvent* ev);
+   void IUnlock (bool RelaxAssert);
+   void ILock (Thread* Self);
+   int  IWait (Thread* Self, jlong timo);
+   int  ILocked ();
 
  protected:
-   static void ClearMonitor (Monitor * m, const char* name = NULL) ;
+   static void ClearMonitor (Monitor* m, const char* name = NULL);
    Monitor() ;
 
  public:
-  Monitor(int rank, const char *name, bool allow_vm_block = false,
+  Monitor(int rank, const char* name, bool allow_vm_block = false,
           SafepointCheckRequired safepoint_check_required = _safepoint_check_always);
   ~Monitor();
 
@@ -182,7 +182,7 @@ class Monitor : public CHeapObj<mtInternal> {
   // Lock without safepoint check. Should ONLY be used by safepoint code and other code
   // that is guaranteed not to block while running inside the VM.
   void lock_without_safepoint_check();
-  void lock_without_safepoint_check (Thread * Self) ;
+  void lock_without_safepoint_check (Thread* Self);
 
   // Current owner - not not MT-safe. Can only be used to guarantee that
   // the current running thread owns the lock
@@ -211,7 +211,7 @@ class PaddedMonitor : public Monitor {
  public:
   PaddedMonitor(int rank, const char *name, bool allow_vm_block = false,
                SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
-    Monitor(rank, name, allow_vm_block, safepoint_check_required) {};
+    Monitor(rank, name, allow_vm_block, safepoint_check_required) { };
 };
 
 // Normally we'd expect Monitor to extend Mutex in the sense that a monitor
@@ -246,8 +246,8 @@ class Mutex : public Monitor {      // degenerate Monitor
    bool notify ()    { ShouldNotReachHere(); return false; }
    bool notify_all() { ShouldNotReachHere(); return false; }
    bool wait (bool no_safepoint_check, long timeout, bool as_suspend_equivalent) {
-     ShouldNotReachHere() ;
-     return false ;
+     ShouldNotReachHere();
+     return false;
    }
 };
 
@@ -260,7 +260,7 @@ class PaddedMutex : public Mutex {
 public:
   PaddedMutex(int rank, const char *name, bool allow_vm_block = false,
               SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
-    Mutex(rank, name, allow_vm_block, safepoint_check_required) {};
+    Mutex(rank, name, allow_vm_block, safepoint_check_required) { };
 };
 
 #endif

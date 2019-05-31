@@ -30,9 +30,9 @@ private:
 public:
   // Constructors
   MemoryUsage(size_t i, size_t u, size_t c, size_t m) :
-    _initSize(i), _used(u), _committed(c), _maxSize(m) {};
+    _initSize(i), _used(u), _committed(c), _maxSize(m) { };
   MemoryUsage() :
-    _initSize(0), _used(0), _committed(0), _maxSize(0) {};
+    _initSize(0), _used(0), _committed(0), _maxSize(0) { };
 
   size_t init_size() const { return _initSize; }
   size_t used()      const { return _used; }

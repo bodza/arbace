@@ -14,7 +14,7 @@ struct SupportedGC {
   const char*         _hs_err_name;
 
   SupportedGC(bool& flag, CollectedHeap::Name name, GCArguments& arguments, const char* hs_err_name) :
-      _flag(flag), _name(name), _arguments(arguments), _hs_err_name(hs_err_name) {}
+      _flag(flag), _name(name), _arguments(arguments), _hs_err_name(hs_err_name) { }
 };
 
  static EpsilonArguments  epsilonArguments;
@@ -94,8 +94,7 @@ GCArguments* GCConfig::select_gc() {
 
     if (is_no_gc_selected()) {
       // Failed to select GC ergonomically
-      vm_exit_during_initialization("Garbage collector not selected "
-                                    "(default collector explicitly disabled)", NULL);
+      vm_exit_during_initialization("Garbage collector not selected (default collector explicitly disabled)", NULL);
     }
 
     // Succeeded to select GC ergonomically
@@ -120,7 +119,6 @@ GCArguments* GCConfig::select_gc() {
 }
 
 void GCConfig::initialize() {
-  assert(_arguments == NULL, "Already initialized");
   _arguments = select_gc();
 }
 
@@ -176,6 +174,5 @@ const char* GCConfig::hs_err_name(CollectedHeap::Name name) {
 }
 
 GCArguments* GCConfig::arguments() {
-  assert(_arguments != NULL, "Not initialized");
   return _arguments;
 }

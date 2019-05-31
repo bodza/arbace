@@ -43,8 +43,6 @@ void G1StringDedupQueue::cancel_wait_impl() {
 }
 
 void G1StringDedupQueue::push_impl(uint worker_id, oop java_string) {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at safepoint");
-  assert(worker_id < _nqueues, "Invalid queue");
 
   // Push and notify waiter
   G1StringDedupWorkerQueue& worker_queue = _queues[worker_id];
@@ -65,7 +63,6 @@ void G1StringDedupQueue::push_impl(uint worker_id, oop java_string) {
 }
 
 oop G1StringDedupQueue::pop_impl() {
-  assert(!SafepointSynchronize::is_at_safepoint(), "Must not be at safepoint");
   NoSafepointVerifier nsv;
 
   // Try all queues before giving up
@@ -92,7 +89,6 @@ oop G1StringDedupQueue::pop_impl() {
 }
 
 void G1StringDedupQueue::unlink_or_oops_do_impl(StringDedupUnlinkOrOopsDoClosure* cl, size_t queue) {
-  assert(queue < _nqueues, "Invalid queue");
   StackIterator<oop, mtGC> iter(_queues[queue]);
   while (!iter.is_empty()) {
     oop* p = iter.next_addr();

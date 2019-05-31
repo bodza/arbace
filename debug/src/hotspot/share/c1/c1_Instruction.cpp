@@ -13,7 +13,6 @@ int Instruction::dominator_depth() {
   if (block()) {
     result = block()->dominator_depth();
   }
-  assert(result != -1 || this->as_Local(), "Only locals have dominator depth -1");
   return result;
 }
 
@@ -41,9 +40,9 @@ Instruction::Condition Instruction::negate(Condition cond) {
     case gtr: return leq;
     case geq: return lss;
     case aeq:
-    assert(false, "Above equal cannot be negated");
+    ShouldNotReachHere();
     case beq:
-    assert(false, "Below equal cannot be negated");
+    ShouldNotReachHere();
   }
   ShouldNotReachHere();
   return eql;
@@ -51,7 +50,6 @@ Instruction::Condition Instruction::negate(Condition cond) {
 
 void Instruction::update_exception_state(ValueStack* state) {
   if (state != NULL && (state->kind() == ValueStack::EmptyExceptionState || state->kind() == ValueStack::ExceptionState)) {
-    assert(state->kind() == ValueStack::EmptyExceptionState, "unexpected state kind");
     _exception_state = state;
   } else {
     _exception_state = NULL;
@@ -63,7 +61,6 @@ Instruction* Instruction::prev() {
   Instruction* p = NULL;
   Instruction* q = block();
   while (q != this) {
-    assert(q != NULL, "this is not in the block's instruction list");
     p = q; q = q->next();
   }
   return p;
@@ -73,7 +70,7 @@ void Instruction::state_values_do(ValueVisitor* f) {
   if (state_before() != NULL) {
     state_before()->values_do(f);
   }
-  if (exception_state() != NULL){
+  if (exception_state() != NULL) {
     exception_state()->values_do(f);
   }
 }
@@ -117,7 +114,6 @@ ciType* Constant::exact_type() const {
 ciType* LoadIndexed::exact_type() const {
   ciType* array_type = array()->exact_type();
   if (array_type != NULL) {
-    assert(array_type->is_array_klass(), "what else?");
     ciArrayKlass* ak = (ciArrayKlass*)array_type;
 
     if (ak->element_type()->is_instance_klass()) {
@@ -135,7 +131,6 @@ ciType* LoadIndexed::declared_type() const {
   if (array_type == NULL || !array_type->is_loaded()) {
     return NULL;
   }
-  assert(array_type->is_array_klass(), "what else?");
   ciArrayKlass* ak = (ciArrayKlass*)array_type;
   return ak->element_type();
 }
@@ -216,7 +211,6 @@ void StateSplit::substitute(BlockList& list, BlockBegin* old_block, BlockBegin* 
       *b = new_block;
     }
   }
-  assert(assigned == true, "should have assigned at least once");
 }
 
 IRScope* StateSplit::scope() const {
@@ -253,8 +247,6 @@ Invoke::Invoke(Bytecodes::Code code, ValueType* result_type, Value recv, Values*
   set_flag(TargetIsFinalFlag,    target_is_loaded() && target->is_final_method());
   set_flag(TargetIsStrictfpFlag, target_is_loaded() && target->is_strict());
 
-  assert(args != NULL, "args must exist");
-
   // provide an initial guess of signature size.
   _signature = new BasicTypeList(number_of_arguments() + (has_receiver() ? 1 : 0));
   if (has_receiver()) {
@@ -276,7 +268,6 @@ void Invoke::state_values_do(ValueVisitor* f) {
 ciType* Invoke::declared_type() const {
   ciSignature* declared_signature = state()->scope()->method()->get_declared_signature_at_bci(state()->bci());
   ciType *t = declared_signature->return_type();
-  assert(t->basic_type() != T_VOID, "need return value of void method?");
   return t;
 }
 
@@ -301,10 +292,8 @@ intx Constant::hash() const {
         return HASH3(name(), high(temp), low(temp));
       }
     case objectTag:
-      assert(type()->as_ObjectType()->is_loaded(), "can't handle unloaded values");
       return HASH2(name(), type()->as_ObjectType()->constant_value());
     case metaDataTag:
-      assert(type()->as_MetadataType()->is_loaded(), "can't handle unloaded values");
       return HASH2(name(), type()->as_MetadataType()->constant_value());
     default:
       ShouldNotReachHere();
@@ -321,45 +310,37 @@ bool Constant::is_equal(Value v) const {
       {
         IntConstant* t1 =    type()->as_IntConstant();
         IntConstant* t2 = v->type()->as_IntConstant();
-        return (t1 != NULL && t2 != NULL &&
-                t1->value() == t2->value());
+        return (t1 != NULL && t2 != NULL && t1->value() == t2->value());
       }
     case longTag:
       {
         LongConstant* t1 =    type()->as_LongConstant();
         LongConstant* t2 = v->type()->as_LongConstant();
-        return (t1 != NULL && t2 != NULL &&
-                t1->value() == t2->value());
+        return (t1 != NULL && t2 != NULL && t1->value() == t2->value());
       }
     case floatTag:
       {
         FloatConstant* t1 =    type()->as_FloatConstant();
         FloatConstant* t2 = v->type()->as_FloatConstant();
-        return (t1 != NULL && t2 != NULL &&
-                jint_cast(t1->value()) == jint_cast(t2->value()));
+        return (t1 != NULL && t2 != NULL && jint_cast(t1->value()) == jint_cast(t2->value()));
       }
     case doubleTag:
       {
         DoubleConstant* t1 =    type()->as_DoubleConstant();
         DoubleConstant* t2 = v->type()->as_DoubleConstant();
-        return (t1 != NULL && t2 != NULL &&
-                jlong_cast(t1->value()) == jlong_cast(t2->value()));
+        return (t1 != NULL && t2 != NULL && jlong_cast(t1->value()) == jlong_cast(t2->value()));
       }
     case objectTag:
       {
         ObjectType* t1 =    type()->as_ObjectType();
         ObjectType* t2 = v->type()->as_ObjectType();
-        return (t1 != NULL && t2 != NULL &&
-                t1->is_loaded() && t2->is_loaded() &&
-                t1->constant_value() == t2->constant_value());
+        return (t1 != NULL && t2 != NULL && t1->is_loaded() && t2->is_loaded() && t1->constant_value() == t2->constant_value());
       }
     case metaDataTag:
       {
         MetadataType* t1 =    type()->as_MetadataType();
         MetadataType* t2 = v->type()->as_MetadataType();
-        return (t1 != NULL && t2 != NULL &&
-                t1->is_loaded() && t2->is_loaded() &&
-                t1->constant_value() == t2->constant_value());
+        return (t1 != NULL && t2 != NULL && t1->is_loaded() && t2->is_loaded() && t1->constant_value() == t2->constant_value());
       }
     default:
       return false;
@@ -407,7 +388,6 @@ Constant::CompareResult Constant::compare(Instruction::Condition cond, Value rig
   case objectTag: {
     ciObject* xvalue = lt->as_ObjectType()->constant_value();
     ciObject* yvalue = rt->as_ObjectType()->constant_value();
-    assert(xvalue != NULL && yvalue != NULL, "not constants");
     if (xvalue->is_loaded() && yvalue->is_loaded()) {
       switch (cond) {
       case If::eql: return xvalue == yvalue ? cond_true : cond_false;
@@ -420,7 +400,6 @@ Constant::CompareResult Constant::compare(Instruction::Condition cond, Value rig
   case metaDataTag: {
     ciMetadata* xvalue = lt->as_MetadataType()->constant_value();
     ciMetadata* yvalue = rt->as_MetadataType()->constant_value();
-    assert(xvalue != NULL && yvalue != NULL, "not constants");
     if (xvalue->is_loaded() && yvalue->is_loaded()) {
       switch (cond) {
       case If::eql: return xvalue == yvalue ? cond_true : cond_false;
@@ -439,7 +418,6 @@ Constant::CompareResult Constant::compare(Instruction::Condition cond, Value rig
 // Implementation of BlockBegin
 
 void BlockBegin::set_end(BlockEnd* end) {
-  assert(end != NULL, "should not reset block end to NULL");
   if (end == _end) {
     return;
   }
@@ -536,9 +514,6 @@ BlockBegin* BlockBegin::insert_block_between(BlockBegin* sux) {
   ValueStack* s = end()->state();
   new_sux->set_state(s->copy(s->kind(), bci));
   e->set_state(s->copy(s->kind(), bci));
-  assert(new_sux->state()->locals_size() == s->locals_size(), "local size mismatch!");
-  assert(new_sux->state()->stack_size() == s->stack_size(), "stack size mismatch!");
-  assert(new_sux->state()->locks_size() == s->locks_size(), "locks size mismatch!");
 
   // link predecessor to new block
   end()->substitute_sux(sux, new_sux);
@@ -568,7 +543,6 @@ BlockBegin* BlockBegin::insert_block_between(BlockBegin* sux) {
       new_sux->add_predecessor(this);
     }
   }
-  assert(assigned == true, "should have assigned at least once");
   return new_sux;
 }
 
@@ -591,13 +565,11 @@ void BlockBegin::remove_predecessor(BlockBegin* pred) {
 }
 
 void BlockBegin::add_exception_handler(BlockBegin* b) {
-  assert(b != NULL && (b->is_set(exception_entry_flag)), "exception handler must exist");
   // add only if not in the list already
   if (!_exception_handlers.contains(b)) _exception_handlers.append(b);
 }
 
 int BlockBegin::add_exception_state(ValueStack* state) {
-  assert(is_set(exception_entry_flag), "only for xhandlers");
   if (_exception_states == NULL) {
     _exception_states = new ValueStackStack(4);
   }
@@ -665,7 +637,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
     // Use method liveness to invalidate dead locals
     MethodLivenessResult liveness = new_state->scope()->method()->liveness_at_bci(bci());
     if (liveness.is_valid()) {
-      assert((int)liveness.size() == new_state->locals_size(), "error in use of liveness");
 
       for_each_local_value(new_state, index, new_value) {
         if (!liveness.at(index) || new_value->type()->is_illegal()) {
@@ -699,10 +670,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
 
   } else if (existing_state->is_same(new_state)) {
     TRACE_PHI(tty->print_cr("exisiting state found"));
-
-    assert(existing_state->scope() == new_state->scope(), "not matching");
-    assert(existing_state->locals_size() == new_state->locals_size(), "not matching");
-    assert(existing_state->stack_size() == new_state->stack_size(), "not matching");
 
     if (is_set(BlockBegin::was_visited_flag)) {
       TRACE_PHI(tty->print_cr("loop header block, phis must be present"));
@@ -757,10 +724,8 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
       }
     }
 
-    assert(existing_state->caller_state() == new_state->caller_state(), "caller states must be equal");
-
   } else {
-    assert(false, "stack or locks not matching (invalid bytecodes)");
+    ShouldNotReachHere();
     return false;
   }
 
@@ -771,7 +736,7 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
 
 // Implementation of BlockList
 
-void BlockList::iterate_forward (BlockClosure* closure) {
+void BlockList::iterate_forward(BlockClosure* closure) {
   const int l = length();
   for (int i = 0; i < l; i++) closure->block_do(at(i));
 }
@@ -821,7 +786,6 @@ Value Phi::operand_at(int i) const {
   } else {
     state = _block->pred_at(i)->end()->state();
   }
-  assert(state != NULL, "");
 
   if (is_local()) {
     return state->local_at(local_index());
@@ -839,7 +803,6 @@ int Phi::operand_count() const {
 }
 
 void RangeCheckPredicate::check_state() {
-  assert(state()->kind() != ValueStack::EmptyExceptionState && state()->kind() != ValueStack::ExceptionState, "will deopt with empty state");
 }
 
 void ProfileInvoke::state_values_do(ValueVisitor* f) {

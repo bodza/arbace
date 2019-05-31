@@ -49,8 +49,7 @@ void MethodHandles::throw_AME(Klass* rcvr, Method* interface_method, TRAPS) {
     ZeroFrame *frame = thread->top_zero_frame();
     while (frame) {
       if (frame->is_interpreter_frame()) {
-        interpreterState istate =
-          frame->as_interpreter_frame()->interpreter_state();
+        interpreterState istate = frame->as_interpreter_frame()->interpreter_state();
         if (istate->self_link() == istate)
           break;
       }
@@ -59,7 +58,6 @@ void MethodHandles::throw_AME(Klass* rcvr, Method* interface_method, TRAPS) {
       frame = frame->next();
     }
 
-    assert(frame != NULL, "must be");
     thread->set_last_Java_frame(frame, sp);
   }
   InterpreterRuntime::throw_AbstractMethodErrorVerbose(thread, rcvr, interface_method);
@@ -122,7 +120,7 @@ int MethodHandles::method_handle_entry_linkToInterface(Method* method, intptr_t 
   InstanceKlass* klass_part = InstanceKlass::cast(recv->klass());
   itableOffsetEntry* ki = (itableOffsetEntry*) klass_part->start_of_itable();
   int i;
-  for ( i = 0 ; i < klass_part->itable_length() ; i++, ki++ ) {
+  for ( i = 0; i < klass_part->itable_length(); i++, ki++ ) {
     if (ki->interface_klass() == clazz) break;
   }
 

@@ -69,7 +69,7 @@ class NMethodSweeper : public AllStatic {
   static MethodStateChange process_compiled_method(CompiledMethod *nm);
   static void              release_compiled_method(CompiledMethod* nm);
 
-  static void init_sweeper_log() {};
+  static void init_sweeper_log() { };
   static bool wait_for_stack_scanning();
   static void sweep_code_cache();
   static void handle_safepoint_request();

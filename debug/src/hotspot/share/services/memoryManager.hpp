@@ -40,7 +40,6 @@ public:
 
   int num_memory_pools() const           { return _num_pools; }
   MemoryPool* get_memory_pool(int index) {
-    assert(index >= 0 && index < _num_pools, "Invalid index");
     return _pools[index];
   }
 
@@ -83,11 +82,9 @@ public:
   jlong  end_time()               { return _end_time; }
   int    usage_array_size()       { return _usage_array_size; }
   MemoryUsage before_gc_usage_for_pool(int pool_index) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     return _before_gc_usage_array[pool_index];
   }
   MemoryUsage after_gc_usage_for_pool(int pool_index) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     return _after_gc_usage_array[pool_index];
   }
 
@@ -98,11 +95,9 @@ public:
   void set_start_time(jlong time) { _start_time = time; }
   void set_end_time(jlong time)   { _end_time = time; }
   void set_before_gc_usage(int pool_index, MemoryUsage usage) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     set_gc_usage(pool_index, usage, true /* before gc */);
   }
   void set_after_gc_usage(int pool_index, MemoryUsage usage) {
-    assert(pool_index >= 0 && pool_index < _usage_array_size, "Range checking");
     set_gc_usage(pool_index, usage, false /* after gc */);
   }
 
@@ -130,7 +125,6 @@ public:
   void add_pool(MemoryPool* pool, bool always_affected_by_gc);
 
   bool pool_always_affected_by_gc(int index) {
-    assert(index >= 0 && index < num_memory_pools(), "Invalid index");
     return _pool_always_affected_by_gc[index];
   }
 

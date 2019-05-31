@@ -119,8 +119,7 @@ size_t G1FullGCPrepareTask::G1RePrepareClosure::apply(oop obj) {
   return size;
 }
 
-void G1FullGCPrepareTask::G1CalculatePointersClosure::prepare_for_compaction_work(G1FullGCCompactionPoint* cp,
-                                                                                  HeapRegion* hr) {
+void G1FullGCPrepareTask::G1CalculatePointersClosure::prepare_for_compaction_work(G1FullGCCompactionPoint* cp, HeapRegion* hr) {
   G1PrepareCompactLiveClosure prepare_compact(cp);
   hr->set_compaction_top(hr->bottom());
   hr->apply_to_marked_objects(_bitmap, &prepare_compact);
@@ -159,7 +158,6 @@ void G1FullGCPrepareTask::prepare_serial_compaction() {
       // since it is already prepared for compaction.
       cp->initialize(current, false);
     } else {
-      assert(!current->is_humongous(), "Should be no humongous regions in compaction queue");
       G1RePrepareClosure re_prepare(cp, current);
       current->set_compaction_top(current->bottom());
       current->apply_to_marked_objects(collector()->mark_bitmap(), &re_prepare);

@@ -17,7 +17,7 @@ public:
   HeapWord* start() const { return _start; }
   HeapWord* committed_end() const { return _committed_end; }
   HeapWord* reserved_end() const { return _reserved_end; }
-  size_t committed_size() const { return (uintptr_t)_committed_end - (uintptr_t)_start;  }
+  size_t committed_size() const { return (uintptr_t)_committed_end - (uintptr_t)_start; }
   size_t reserved_size() const { return (uintptr_t)_reserved_end - (uintptr_t)_start; }
 };
 
@@ -43,9 +43,9 @@ class MetaspaceSizes : public StackObj {
   size_t _reserved;
 
  public:
-  MetaspaceSizes() : _committed(0), _used(0), _reserved(0) {}
+  MetaspaceSizes() : _committed(0), _used(0), _reserved(0) { }
   MetaspaceSizes(size_t committed, size_t used, size_t reserved) :
-    _committed(committed), _used(used), _reserved(reserved) {}
+    _committed(committed), _used(used), _reserved(reserved) { }
 
   size_t committed() const { return _committed; }
   size_t used() const { return _used; }
@@ -59,8 +59,8 @@ class G1HeapSummary;
 class GCHeapSummaryVisitor {
  public:
   virtual void visit(const GCHeapSummary* heap_summary) const = 0;
-  virtual void visit(const PSHeapSummary* heap_summary) const {}
-  virtual void visit(const G1HeapSummary* heap_summary) const {}
+  virtual void visit(const PSHeapSummary* heap_summary) const { }
+  virtual void visit(const G1HeapSummary* heap_summary) const { }
 };
 
 class GCHeapSummary : public StackObj {
@@ -137,7 +137,7 @@ class MetaspaceSummary : public StackObj {
     _class_space(),
     _metaspace_chunk_free_list_summary(),
     _class_chunk_free_list_summary()
-  {}
+  { }
   MetaspaceSummary(size_t capacity_until_GC,
                    const MetaspaceSizes& meta_space,
                    const MetaspaceSizes& data_space,
@@ -150,7 +150,7 @@ class MetaspaceSummary : public StackObj {
     _class_space(class_space),
     _metaspace_chunk_free_list_summary(metaspace_chunk_free_list_summary),
     _class_chunk_free_list_summary(class_chunk_free_list_summary)
-  {}
+  { }
 
   size_t capacity_until_GC() const { return _capacity_until_GC; }
   const MetaspaceSizes& meta_space() const { return _meta_space; }

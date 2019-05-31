@@ -56,7 +56,6 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
   __ movptr(rdx, Address(rdx, 0));           // *obj
   __ shrptr (rax, 2);                         // offset
 
-  assert(count < LIST_CAPACITY, "LIST_CAPACITY too small");
   speculative_load_pclist[count] = __ pc();
   switch (type) {
     case T_BOOLEAN: __ movzbl (rax, Address(rdx, rax, Address::times_1)); break;
@@ -160,7 +159,6 @@ address JNI_FastGetField::generate_fast_get_long_field() {
   __ movptr(rdx, Address(rdx, 0));           // *obj
   __ shrptr(rsi, 2);                         // offset
 
-  assert(count < LIST_CAPACITY-1, "LIST_CAPACITY too small");
   speculative_load_pclist[count++] = __ pc();
   __ movptr(rax, Address(rdx, rsi, Address::times_1));
 
@@ -238,7 +236,6 @@ address JNI_FastGetField::generate_fast_get_float_field0(BasicType type) {
   __ movptr(rdx, Address(rdx, 0));           // *obj
   __ shrptr(rax, 2);                         // offset
 
-  assert(count < LIST_CAPACITY, "LIST_CAPACITY too small");
   speculative_load_pclist[count] = __ pc();
   switch (type) {
     case T_FLOAT:  __ movflt (xmm0, Address(robj, roffset, Address::times_1)); break;

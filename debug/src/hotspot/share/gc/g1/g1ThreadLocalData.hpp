@@ -15,10 +15,9 @@ private:
 
   G1ThreadLocalData() :
       _satb_mark_queue(&G1BarrierSet::satb_mark_queue_set()),
-      _dirty_card_queue(&G1BarrierSet::dirty_card_queue_set()) {}
+      _dirty_card_queue(&G1BarrierSet::dirty_card_queue_set()) { }
 
   static G1ThreadLocalData* data(Thread* thread) {
-    assert(UseG1GC, "Sanity");
     return thread->gc_data<G1ThreadLocalData>();
   }
 

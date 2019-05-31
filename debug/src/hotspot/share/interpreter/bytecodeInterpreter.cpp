@@ -140,13 +140,13 @@
 #endif
 #endif
 
-#define UPDATE_PC(opsize) {pc += opsize; }
+#define UPDATE_PC(opsize) { pc += opsize; }
 /*
  * UPDATE_PC_AND_TOS - Macro for updating the pc and topOfStack.
  */
 #undef UPDATE_PC_AND_TOS
 #define UPDATE_PC_AND_TOS(opsize, stack) \
-    {pc += opsize; MORE_STACK(stack); }
+    { pc += opsize; MORE_STACK(stack); }
 
 /*
  * UPDATE_PC_AND_TOS_AND_CONTINUE - Macro for updating the pc and topOfStack,
@@ -478,10 +478,7 @@ void BytecodeInterpreter::run(interpreterState istate) {
 #endif
 
   /* QQQ this should be a stack method so we don't know actual direction */
-  guarantee(istate->msg() == initialize ||
-         topOfStack >= istate->stack_limit() &&
-         topOfStack < istate->stack_base(),
-         "Stack top out of range");
+  guarantee(istate->msg() == initialize || topOfStack >= istate->stack_limit() && topOfStack < istate->stack_base(), "Stack top out of range");
 
 #ifdef CC_INTERP_PROFILE
   // MethodData's last branch taken count.
@@ -500,7 +497,6 @@ void BytecodeInterpreter::run(interpreterState istate) {
     case method_entry: {
       THREAD->set_do_not_unlock();
       // count invocations
-      assert(initialized, "Interpreter not initialized");
       if (_compiling) {
         MethodCounters* mcs;
         GET_METHOD_COUNTERS(mcs);
@@ -545,9 +541,7 @@ void BytecodeInterpreter::run(interpreterState istate) {
           uintptr_t thread_ident;
           uintptr_t anticipated_bias_locking_value;
           thread_ident = (uintptr_t)istate->thread();
-          anticipated_bias_locking_value =
-            (((uintptr_t)rcvr->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) &
-            ~((uintptr_t) markOopDesc::age_mask_in_place);
+          anticipated_bias_locking_value = (((uintptr_t)rcvr->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) & ~((uintptr_t) markOopDesc::age_mask_in_place);
 
           if (anticipated_bias_locking_value == 0) {
             // Already biased towards this thread, nothing to do.
@@ -622,7 +616,6 @@ void BytecodeInterpreter::run(interpreterState istate) {
     case popping_frame: {
       // returned from a java call to pop the frame, restart the call
       // clear the message so we don't confuse ourselves later
-      assert(THREAD->pop_frame_in_process(), "wrong frame pop state");
       istate->set_msg(no_request);
       if (_compiling) {
         // Set MDX back to the ProfileData of the invoke bytecode that will be
@@ -680,7 +673,7 @@ void BytecodeInterpreter::run(interpreterState istate) {
       // much like trying to deopt at a poll return. In that has we simply
       // get out of here
       //
-      if ( Bytecodes::code_at(METHOD, pc) == Bytecodes::_return_register_finalizer) {
+      if (Bytecodes::code_at(METHOD, pc) == Bytecodes::_return_register_finalizer) {
         // this will do the right thing even if an exception is pending.
         goto handle_return;
       }
@@ -701,7 +694,6 @@ void BytecodeInterpreter::run(interpreterState istate) {
       // derefing's lockee ought to provoke implicit null check
       // find a free monitor
       BasicObjectLock* entry = (BasicObjectLock*) istate->stack_base();
-      assert(entry->obj() == NULL, "Frame manager didn't allocate the monitor");
       entry->set_obj(lockee);
       bool success = false;
       uintptr_t epoch_mask_in_place = (uintptr_t)markOopDesc::epoch_mask_in_place;
@@ -713,9 +705,7 @@ void BytecodeInterpreter::run(interpreterState istate) {
         uintptr_t thread_ident;
         uintptr_t anticipated_bias_locking_value;
         thread_ident = (uintptr_t)istate->thread();
-        anticipated_bias_locking_value =
-          (((uintptr_t)lockee->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) &
-          ~((uintptr_t) markOopDesc::age_mask_in_place);
+        anticipated_bias_locking_value = (((uintptr_t)lockee->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) & ~((uintptr_t) markOopDesc::age_mask_in_place);
 
         if  (anticipated_bias_locking_value == 0) {
           // already biased towards this thread, nothing to do
@@ -811,10 +801,8 @@ run:
        * when returing from transition frames.
        */
   opcode_switch:
-      assert(istate == orig, "Corrupted istate");
       /* QQQ Hmm this has knowledge of direction, ought to be a stack method */
-      assert(topOfStack >= istate->stack_limit(), "Stack overrun");
-      assert(topOfStack < istate->stack_base(), "Stack underrun");
+      assert(topOfStack >= istate->stack_limit(), "Stack overrun");
 
 #ifdef USELABELS
       DISPATCH(opcode);
@@ -1591,7 +1579,6 @@ run:
           if (arrObj->klass() == Universe::boolArrayKlassObj()) {
             item &= 1;
           } else {
-            assert(arrObj->klass() == Universe::byteArrayKlassObj(), "should be byte array otherwise");
           }
           ((typeArrayOop)arrObj)->byte_at_put(index, item);
           UPDATE_PC_AND_TOS_AND_CONTINUE(1, -3);
@@ -1642,9 +1629,7 @@ run:
             uintptr_t thread_ident;
             uintptr_t anticipated_bias_locking_value;
             thread_ident = (uintptr_t)istate->thread();
-            anticipated_bias_locking_value =
-              (((uintptr_t)lockee->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) &
-              ~((uintptr_t) markOopDesc::age_mask_in_place);
+            anticipated_bias_locking_value = (((uintptr_t)lockee->klass()->prototype_header() | thread_ident) ^ (uintptr_t)mark) & ~((uintptr_t) markOopDesc::age_mask_in_place);
 
             if  (anticipated_bias_locking_value == 0) {
               // already biased towards this thread, nothing to do
@@ -1933,7 +1918,7 @@ run:
           // Make sure klass is initialized and doesn't have a finalizer
           Klass* entry = constants->resolved_klass_at(index);
           InstanceKlass* ik = InstanceKlass::cast(entry);
-          if (ik->is_initialized() && ik->can_be_fastpath_allocated() ) {
+          if (ik->is_initialized() && ik->can_be_fastpath_allocated()) {
             size_t obj_size = ik->size_helper();
             oop result = NULL;
             // If the TLAB isn't pre-zeroed then we'll have to do it
@@ -2009,9 +1994,7 @@ run:
         jint dims = *(pc+3);
         jint size = STACK_INT(-1);
         // stack grows down, dimensions are up!
-        jint *dimarray =
-                   (jint*)&topOfStack[dims * Interpreter::stackElementWords+
-                                      Interpreter::stackElementWords-1];
+        jint *dimarray = (jint*)&topOfStack[dims * Interpreter::stackElementWords+ Interpreter::stackElementWords-1];
         //adjust pointer to start of stack element
         CALL_VM(InterpreterRuntime::multianewarray(THREAD, dimarray),
                 handle_exception);
@@ -2041,8 +2024,7 @@ run:
               // Decrement counter at checkcast.
               BI_PROFILE_SUBTYPECHECK_FAILED(objKlass);
               ResourceMark rm(THREAD);
-              char* message = SharedRuntime::generate_class_cast_message(
-                objKlass, klassOf);
+              char* message = SharedRuntime::generate_class_cast_message(objKlass, klassOf);
               VM_JAVA_ERROR(vmSymbols::java_lang_ClassCastException(), message, note_classCheck_trap);
             }
             // Profile checkcast with null_seen and receiver.
@@ -2072,7 +2054,7 @@ run:
             // Check for compatibilty. This check must not GC!!
             // Seems way more expensive now that we must dispatch.
             //
-            if ( objKlass == klassOf || objKlass->is_subtype_of(klassOf)) {
+            if (objKlass == klassOf || objKlass->is_subtype_of(klassOf)) {
               SET_STACK_INT(1, -1);
             } else {
               SET_STACK_INT(0, -1);
@@ -2608,7 +2590,7 @@ run:
     }
   do_continue: ;
 
-  } /* while (1) interpreter loop */
+  }
 
   // An exception exists in the thread state see whether this activation can handle it
   handle_exception: {
@@ -2620,7 +2602,6 @@ run:
     HandleMark __hm(THREAD);
 
     THREAD->clear_pending_exception();
-    assert(except_oop() != NULL, "No exception to process");
     intptr_t continuation_bci;
     // expression stack is emptied
     topOfStack = istate->stack_base() - Interpreter::stackElementWords;
@@ -2782,7 +2763,6 @@ run:
               HandleMark __hm(THREAD);
               CALL_VM_NOCHECK(InterpreterRuntime::throw_illegal_monitor_state_exception(THREAD));
             }
-            assert(THREAD->has_pending_exception(), "Lost our exception!");
             illegal_state_oop = Handle(THREAD, THREAD->pending_exception());
             THREAD->clear_pending_exception();
           }
@@ -2799,7 +2779,6 @@ run:
               HandleMark __hm(THREAD);
               CALL_VM_NOCHECK(InterpreterRuntime::throw_illegal_monitor_state_exception(THREAD));
             }
-            assert(THREAD->has_pending_exception(), "Lost our exception!");
             illegal_state_oop = Handle(THREAD, THREAD->pending_exception());
             THREAD->clear_pending_exception();
           }
@@ -2880,15 +2859,11 @@ run:
     // (with this note) in anticipation of changing the vm and the tests
     // simultaneously.
 
-    //
     suppress_exit_event = suppress_exit_event || illegal_state_oop() != NULL;
 
-    //
     // See if we are returning any exception
     // A pending exception that was pending prior to a possible popping frame
     // overrides the popping frame.
-    //
-    assert(!suppress_error || (suppress_error && illegal_state_oop() == NULL), "Error was not suppressed");
     if (illegal_state_oop() != NULL || original_exception() != NULL) {
       // Inform the frame manager we have no result.
       istate->set_msg(throwing_exception);
@@ -2910,8 +2885,7 @@ run:
         // has occurred and to pick the preserved args copy them to the deoptimized frame's
         // java expression stack. Yuck.
         //
-        THREAD->popframe_preserve_args(in_ByteSize(METHOD->size_of_parameters() * wordSize),
-                                LOCALS_SLOT(METHOD->size_of_parameters() - 1));
+        THREAD->popframe_preserve_args(in_ByteSize(METHOD->size_of_parameters() * wordSize), LOCALS_SLOT(METHOD->size_of_parameters() - 1));
         THREAD->set_popframe_condition_bit(JavaThread::popframe_force_deopt_reexecution_bit);
       }
     } else {
@@ -2977,49 +2951,39 @@ jlong BytecodeInterpreter::stack_long(intptr_t *tos, int offset) {
 }
 
 // only used for value types
-void BytecodeInterpreter::set_stack_slot(intptr_t *tos, address value,
-                                                        int offset) {
+void BytecodeInterpreter::set_stack_slot(intptr_t *tos, address value, int offset) {
   *((address *)&tos[Interpreter::expr_index_at(-offset)]) = value;
 }
 
-void BytecodeInterpreter::set_stack_int(intptr_t *tos, int value,
-                                                       int offset) {
+void BytecodeInterpreter::set_stack_int(intptr_t *tos, int value, int offset) {
   *((jint *)&tos[Interpreter::expr_index_at(-offset)]) = value;
 }
 
-void BytecodeInterpreter::set_stack_float(intptr_t *tos, jfloat value,
-                                                         int offset) {
+void BytecodeInterpreter::set_stack_float(intptr_t *tos, jfloat value, int offset) {
   *((jfloat *)&tos[Interpreter::expr_index_at(-offset)]) = value;
 }
 
-void BytecodeInterpreter::set_stack_object(intptr_t *tos, oop value,
-                                                          int offset) {
+void BytecodeInterpreter::set_stack_object(intptr_t *tos, oop value, int offset) {
   *((oop *)&tos[Interpreter::expr_index_at(-offset)]) = value;
 }
 
 // needs to be platform dep for the 32 bit platforms.
-void BytecodeInterpreter::set_stack_double(intptr_t *tos, jdouble value,
-                                                          int offset) {
+void BytecodeInterpreter::set_stack_double(intptr_t *tos, jdouble value, int offset) {
   ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->d = value;
 }
 
-void BytecodeInterpreter::set_stack_double_from_addr(intptr_t *tos,
-                                              address addr, int offset) {
-  (((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->d =
-                        ((VMJavaVal64*)addr)->d);
+void BytecodeInterpreter::set_stack_double_from_addr(intptr_t *tos, address addr, int offset) {
+  (((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->d = ((VMJavaVal64*)addr)->d);
 }
 
-void BytecodeInterpreter::set_stack_long(intptr_t *tos, jlong value,
-                                                        int offset) {
+void BytecodeInterpreter::set_stack_long(intptr_t *tos, jlong value, int offset) {
   ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset+1)])->l = 0xdeedbeeb;
   ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->l = value;
 }
 
-void BytecodeInterpreter::set_stack_long_from_addr(intptr_t *tos,
-                                            address addr, int offset) {
+void BytecodeInterpreter::set_stack_long_from_addr(intptr_t *tos, address addr, int offset) {
   ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset+1)])->l = 0xdeedbeeb;
-  ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->l =
-                        ((VMJavaVal64*)addr)->l;
+  ((VMJavaVal64*)&tos[Interpreter::expr_index_at(-offset)])->l = ((VMJavaVal64*)addr)->l;
 }
 
 // Locals
@@ -3052,49 +3016,38 @@ address BytecodeInterpreter::locals_double_at(intptr_t* locals, int offset) {
 }
 
 // Used for local value or returnAddress
-void BytecodeInterpreter::set_locals_slot(intptr_t *locals,
-                                   address value, int offset) {
+void BytecodeInterpreter::set_locals_slot(intptr_t *locals, address value, int offset) {
   *((address*)&locals[Interpreter::local_index_at(-offset)]) = value;
 }
-void BytecodeInterpreter::set_locals_int(intptr_t *locals,
-                                   jint value, int offset) {
+void BytecodeInterpreter::set_locals_int(intptr_t *locals, jint value, int offset) {
   *((jint *)&locals[Interpreter::local_index_at(-offset)]) = value;
 }
-void BytecodeInterpreter::set_locals_float(intptr_t *locals,
-                                   jfloat value, int offset) {
+void BytecodeInterpreter::set_locals_float(intptr_t *locals, jfloat value, int offset) {
   *((jfloat *)&locals[Interpreter::local_index_at(-offset)]) = value;
 }
-void BytecodeInterpreter::set_locals_object(intptr_t *locals,
-                                   oop value, int offset) {
+void BytecodeInterpreter::set_locals_object(intptr_t *locals, oop value, int offset) {
   *((oop *)&locals[Interpreter::local_index_at(-offset)]) = value;
 }
-void BytecodeInterpreter::set_locals_double(intptr_t *locals,
-                                   jdouble value, int offset) {
+void BytecodeInterpreter::set_locals_double(intptr_t *locals, jdouble value, int offset) {
   ((VMJavaVal64*)&locals[Interpreter::local_index_at(-(offset+1))])->d = value;
 }
-void BytecodeInterpreter::set_locals_long(intptr_t *locals,
-                                   jlong value, int offset) {
+void BytecodeInterpreter::set_locals_long(intptr_t *locals, jlong value, int offset) {
   ((VMJavaVal64*)&locals[Interpreter::local_index_at(-(offset+1))])->l = value;
 }
-void BytecodeInterpreter::set_locals_double_from_addr(intptr_t *locals,
-                                   address addr, int offset) {
+void BytecodeInterpreter::set_locals_double_from_addr(intptr_t *locals, address addr, int offset) {
   ((VMJavaVal64*)&locals[Interpreter::local_index_at(-(offset+1))])->d = ((VMJavaVal64*)addr)->d;
 }
-void BytecodeInterpreter::set_locals_long_from_addr(intptr_t *locals,
-                                   address addr, int offset) {
+void BytecodeInterpreter::set_locals_long_from_addr(intptr_t *locals, address addr, int offset) {
   ((VMJavaVal64*)&locals[Interpreter::local_index_at(-(offset+1))])->l = ((VMJavaVal64*)addr)->l;
 }
 
-void BytecodeInterpreter::astore(intptr_t* tos,    int stack_offset,
-                          intptr_t* locals, int locals_offset) {
+void BytecodeInterpreter::astore(intptr_t* tos, int stack_offset, intptr_t* locals, int locals_offset) {
   intptr_t value = tos[Interpreter::expr_index_at(-stack_offset)];
   locals[Interpreter::local_index_at(-locals_offset)] = value;
 }
 
-void BytecodeInterpreter::copy_stack_slot(intptr_t *tos, int from_offset,
-                                   int to_offset) {
-  tos[Interpreter::expr_index_at(-to_offset)] =
-                      (intptr_t)tos[Interpreter::expr_index_at(-from_offset)];
+void BytecodeInterpreter::copy_stack_slot(intptr_t *tos, int from_offset, int to_offset) {
+  tos[Interpreter::expr_index_at(-to_offset)] = (intptr_t)tos[Interpreter::expr_index_at(-from_offset)];
 }
 
 void BytecodeInterpreter::dup(intptr_t *tos) {

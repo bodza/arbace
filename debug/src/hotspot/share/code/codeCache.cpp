@@ -126,8 +126,7 @@ void CodeCache::check_heap_sizes(size_t non_nmethod_size, size_t profiled_size, 
   size_t total_size = non_nmethod_size + profiled_size + non_profiled_size;
   // Prepare error message
   const char* error = "Invalid code heap sizes";
-  err_msg message("NonNMethodCodeHeapSize (" SIZE_FORMAT "K) + ProfiledCodeHeapSize (" SIZE_FORMAT "K)"
-                  " + NonProfiledCodeHeapSize (" SIZE_FORMAT "K) = " SIZE_FORMAT "K",
+  err_msg message("NonNMethodCodeHeapSize (" SIZE_FORMAT "K) + ProfiledCodeHeapSize (" SIZE_FORMAT "K) + NonProfiledCodeHeapSize (" SIZE_FORMAT "K) = " SIZE_FORMAT "K",
           non_nmethod_size/K, profiled_size/K, non_profiled_size/K, total_size/K);
 
   if (total_size > cache_size) {
@@ -218,7 +217,6 @@ void CodeCache::initialize_heaps() {
     }
     if (diff_size != 0) {
       // Use non-nmethod code heap for remaining space requirements
-      assert(!non_nmethod_set && ((intx)non_nmethod_size + diff_size) > 0, "sanity");
       non_nmethod_size += diff_size;
     }
   }
@@ -236,13 +234,9 @@ void CodeCache::initialize_heaps() {
   // Make sure we have enough space for VM internal code
   uint min_code_cache_size = CodeCacheMinimumUseSpace;
   if (non_nmethod_size < (min_code_cache_size + code_buffers_size)) {
-    vm_exit_during_initialization(err_msg(
-        "Not enough space in non-nmethod code heap to run VM: " SIZE_FORMAT "K < " SIZE_FORMAT "K",
-        non_nmethod_size/K, (min_code_cache_size + code_buffers_size)/K));
+    vm_exit_during_initialization(err_msg("Not enough space in non-nmethod code heap to run VM: " SIZE_FORMAT "K < " SIZE_FORMAT "K", non_nmethod_size/K, (min_code_cache_size + code_buffers_size)/K));
   }
 
-  // Verify sizes and update flag values
-  assert(non_profiled_size + profiled_size + non_nmethod_size == cache_size, "Invalid code heap sizes");
   FLAG_SET_ERGO(uintx, NonNMethodCodeHeapSize, non_nmethod_size);
   FLAG_SET_ERGO(uintx, ProfiledCodeHeapSize, profiled_size);
   FLAG_SET_ERGO(uintx, NonProfiledCodeHeapSize, non_profiled_size);
@@ -313,8 +307,7 @@ bool CodeCache::heap_available(int code_blob_type) {
     return (code_blob_type < CodeBlobType::All);
   } else {
     // No TieredCompilation: we only need the non-nmethod and non-profiled code heap
-    return (code_blob_type == CodeBlobType::NonNMethod) ||
-           (code_blob_type == CodeBlobType::MethodNonProfiled);
+    return (code_blob_type == CodeBlobType::NonNMethod) || (code_blob_type == CodeBlobType::MethodNonProfiled);
   }
 }
 
@@ -343,7 +336,6 @@ int CodeCache::code_heap_compare(CodeHeap* const &lhs, CodeHeap* const &rhs) {
 }
 
 void CodeCache::add_heap(CodeHeap* heap) {
-  assert(!Universe::is_fully_initialized(), "late heap addition?");
 
   _heaps->insert_sorted<code_heap_compare>(heap);
 
@@ -391,7 +383,6 @@ CodeHeap* CodeCache::get_code_heap_containing(void* start) {
 }
 
 CodeHeap* CodeCache::get_code_heap(const CodeBlob* cb) {
-  assert(cb != NULL, "CodeBlob is null");
   FOR_ALL_HEAPS(heap) {
     if ((*heap)->contains_blob(cb)) {
       return *heap;
@@ -411,8 +402,6 @@ CodeHeap* CodeCache::get_code_heap(int code_blob_type) {
 }
 
 CodeBlob* CodeCache::first_blob(CodeHeap* heap) {
-  assert_locked_or_safepoint(CodeCache_lock);
-  assert(heap != NULL, "heap is null");
   return (CodeBlob*)heap->first();
 }
 
@@ -425,8 +414,6 @@ CodeBlob* CodeCache::first_blob(int code_blob_type) {
 }
 
 CodeBlob* CodeCache::next_blob(CodeHeap* heap, CodeBlob* cb) {
-  assert_locked_or_safepoint(CodeCache_lock);
-  assert(heap != NULL, "heap is null");
   return (CodeBlob*)heap->next(cb);
 }
 
@@ -440,8 +427,6 @@ CodeBlob* CodeCache::next_blob(CodeHeap* heap, CodeBlob* cb) {
 CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_type) {
   // Possibly wakes up the sweeper thread.
   NMethodSweeper::notify(code_blob_type);
-  assert_locked_or_safepoint(CodeCache_lock);
-  assert(size > 0, "Code cache allocation request must be > 0 but is %d", size);
   if (size <= 0) {
     return NULL;
   }
@@ -449,7 +434,6 @@ CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_t
 
   // Get CodeHeap for the given CodeBlobType
   CodeHeap* heap = get_code_heap(code_blob_type);
-  assert(heap != NULL, "heap is null");
 
   while (true) {
     cb = (CodeBlob*)heap->allocate(size);
@@ -509,7 +493,6 @@ CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_t
 }
 
 void CodeCache::free(CodeBlob* cb) {
-  assert_locked_or_safepoint(CodeCache_lock);
   CodeHeap* heap = get_code_heap(cb);
   print_trace("free", cb);
   if (cb->is_nmethod()) {
@@ -525,11 +508,9 @@ void CodeCache::free(CodeBlob* cb) {
   // Get heap for given CodeBlob and deallocate
   get_code_heap(cb)->deallocate(cb);
 
-  assert(heap->blob_count() >= 0, "sanity check");
 }
 
 void CodeCache::free_unused_tail(CodeBlob* cb, size_t used) {
-  assert_locked_or_safepoint(CodeCache_lock);
   guarantee(cb->is_buffer_blob() && strncmp("Interpreter", cb->name(), 11) == 0, "Only possible for interpreter!");
   print_trace("free_unused_tail", cb);
 
@@ -544,8 +525,6 @@ void CodeCache::free_unused_tail(CodeBlob* cb, size_t used) {
 }
 
 void CodeCache::commit(CodeBlob* cb) {
-  // this is called by nmethod::nmethod, which must already own CodeCache_lock
-  assert_locked_or_safepoint(CodeCache_lock);
   CodeHeap* heap = get_code_heap(cb);
   if (cb->is_nmethod()) {
     heap->set_nmethod_count(heap->nmethod_count() + 1);
@@ -603,12 +582,10 @@ CodeBlob* CodeCache::find_blob_unsafe(void* start) {
 
 nmethod* CodeCache::find_nmethod(void* start) {
   CodeBlob* cb = find_blob(start);
-  assert(cb->is_nmethod(), "did not find an nmethod");
   return (nmethod*)cb;
 }
 
 void CodeCache::blobs_do(void f(CodeBlob* nm)) {
-  assert_locked_or_safepoint(CodeCache_lock);
   FOR_ALL_HEAPS(heap) {
     FOR_ALL_BLOBS(cb, *heap) {
       f(cb);
@@ -617,17 +594,15 @@ void CodeCache::blobs_do(void f(CodeBlob* nm)) {
 }
 
 void CodeCache::nmethods_do(void f(nmethod* nm)) {
-  assert_locked_or_safepoint(CodeCache_lock);
   NMethodIterator iter;
-  while(iter.next()) {
+  while (iter.next()) {
     f(iter.method());
   }
 }
 
 void CodeCache::metadata_do(void f(Metadata* m)) {
-  assert_locked_or_safepoint(CodeCache_lock);
   NMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     iter.method()->metadata_do(f);
   }
   AOTLoader::metadata_do(f);
@@ -643,9 +618,8 @@ int CodeCache::alignment_offset() {
 
 // Mark nmethods for unloading if they contain otherwise unreachable oops.
 void CodeCache::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred) {
-  assert_locked_or_safepoint(CodeCache_lock);
   CompiledMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     iter.method()->do_unloading(is_alive);
   }
 
@@ -658,7 +632,6 @@ void CodeCache::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurre
 }
 
 void CodeCache::blobs_do(CodeBlobClosure* f) {
-  assert_locked_or_safepoint(CodeCache_lock);
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     FOR_ALL_BLOBS(cb, *heap) {
       if (cb->is_alive()) {
@@ -670,15 +643,11 @@ void CodeCache::blobs_do(CodeBlobClosure* f) {
 
 // Walk the list of methods which might contain oops to the java heap.
 void CodeCache::scavenge_root_nmethods_do(CodeBlobToOopClosure* f) {
-  assert_locked_or_safepoint(CodeCache_lock);
-
   const bool fix_relocations = f->fix_relocations();
 
   nmethod* prev = NULL;
   nmethod* cur = scavenge_root_nmethods();
   while (cur != NULL) {
-    assert(cur->scavenge_root_not_marked(), "");
-    assert(cur->on_scavenge_root_list(), "else shouldn't be on this list");
 
     bool is_live = (!cur->is_zombie() && !cur->is_unloaded());
     LogTarget(Trace, gc, nmethod) lt;
@@ -707,7 +676,6 @@ void CodeCache::scavenge_root_nmethods_do(CodeBlobToOopClosure* f) {
 }
 
 void CodeCache::register_scavenge_root_nmethod(nmethod* nm) {
-  assert_locked_or_safepoint(CodeCache_lock);
   if (!nm->on_scavenge_root_list() && nm->detect_scavenge_root_oops()) {
     add_scavenge_root_nmethod(nm);
   }
@@ -718,8 +686,6 @@ void CodeCache::verify_scavenge_root_nmethod(nmethod* nm) {
 }
 
 void CodeCache::add_scavenge_root_nmethod(nmethod* nm) {
-  assert_locked_or_safepoint(CodeCache_lock);
-
   nm->set_on_scavenge_root_list();
   nm->set_scavenge_root_link(_scavenge_root_nmethods);
   set_scavenge_root_nmethods(nm);
@@ -727,10 +693,6 @@ void CodeCache::add_scavenge_root_nmethod(nmethod* nm) {
 }
 
 void CodeCache::unlink_scavenge_root_nmethod(nmethod* nm, nmethod* prev) {
-  assert_locked_or_safepoint(CodeCache_lock);
-
-  assert((prev == NULL && scavenge_root_nmethods() == nm) || (prev != NULL && prev->scavenge_root_link() == nm), "precondition");
-
   print_trace("unlink_scavenge_root", nm);
   if (prev == NULL) {
     set_scavenge_root_nmethods(nm->scavenge_root_link());
@@ -742,8 +704,6 @@ void CodeCache::unlink_scavenge_root_nmethod(nmethod* nm, nmethod* prev) {
 }
 
 void CodeCache::drop_scavenge_root_nmethod(nmethod* nm) {
-  assert_locked_or_safepoint(CodeCache_lock);
-
   print_trace("drop_scavenge_root", nm);
   nmethod* prev = NULL;
   for (nmethod* cur = scavenge_root_nmethods(); cur != NULL; cur = cur->scavenge_root_link()) {
@@ -753,21 +713,16 @@ void CodeCache::drop_scavenge_root_nmethod(nmethod* nm) {
     }
     prev = cur;
   }
-  assert(false, "should have been on list");
+  ShouldNotReachHere();
 }
 
 void CodeCache::prune_scavenge_root_nmethods() {
-  assert_locked_or_safepoint(CodeCache_lock);
-
   nmethod* last = NULL;
   nmethod* cur = scavenge_root_nmethods();
   while (cur != NULL) {
     nmethod* next = cur->scavenge_root_link();
-    assert(cur->scavenge_root_not_marked(), "");
-    assert(cur->on_scavenge_root_list(), "else shouldn't be on this list");
 
-    if (!cur->is_zombie() && !cur->is_unloaded()
-        && cur->detect_scavenge_root_oops()) {
+    if (!cur->is_zombie() && !cur->is_unloaded() && cur->detect_scavenge_root_oops()) {
       // Keep it.  Advance 'last' to prevent deletion.
       last = cur;
     } else {
@@ -792,14 +747,12 @@ void CodeCache::gc_epilogue() {
 }
 
 void CodeCache::do_unloading_nmethod_caches(bool class_unloading_occurred) {
-  assert_locked_or_safepoint(CodeCache_lock);
   // Even if classes are not unloaded, there may have been some nmethods that are
   // unloaded because oops in them are no longer reachable.
   if (needs_cache_clean() || class_unloading_occurred) {
     CompiledMethodIterator iter;
-    while(iter.next_alive()) {
+    while (iter.next_alive()) {
       CompiledMethod* cm = iter.method();
-      assert(!cm->is_unloaded(), "Tautology");
       {
         // Clean up both unloaded klasses from nmethods and unloaded nmethods
         // from inline caches.
@@ -816,7 +769,7 @@ void CodeCache::verify_oops() {
   MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
   VerifyOopClosure voc;
   NMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     nmethod* nm = iter.method();
     nm->oops_do(&voc);
     nm->verify_oop_relocations();
@@ -914,8 +867,6 @@ double CodeCache::reverse_free_ratio(int code_blob_type) {
   double unallocated_capacity = MAX2((double)heap->unallocated_capacity(), 1.0); // Avoid division by 0;
   double max_capacity = (double)heap->max_capacity();
   double result = max_capacity / unallocated_capacity;
-  assert(max_capacity >= unallocated_capacity, "Must be");
-  assert(result >= 1.0, "reverse_free_ratio must be at least 1. It is %f", result);
   return result;
 }
 
@@ -946,8 +897,6 @@ size_t CodeCache::freelists_length() {
 void icache_init();
 
 void CodeCache::initialize() {
-  assert(CodeCacheSegmentSize >= (uintx)CodeEntryAlignment, "CodeCacheSegmentSize must be large enough to align entry points");
-  assert(CodeCacheSegmentSize >= sizeof(jdouble),    "CodeCacheSegmentSize must be large enough to align constants");
   // This was originally just a check of the alignment, causing failure, instead, round
   // the code cache to the page size.  In particular, Solaris is moving to a larger
   // default page size.
@@ -988,17 +937,15 @@ int CodeCache::number_of_nmethods_with_dependencies() {
 }
 
 void CodeCache::clear_inline_caches() {
-  assert_locked_or_safepoint(CodeCache_lock);
   CompiledMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     iter.method()->clear_inline_caches();
   }
 }
 
 void CodeCache::cleanup_inline_caches() {
-  assert_locked_or_safepoint(CodeCache_lock);
   NMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     iter.method()->cleanup_inline_caches(/*clean_all=*/true);
   }
 }
@@ -1025,7 +972,6 @@ int CodeCache::mark_for_deoptimization(KlassDepChange& changes) {
 
 CompiledMethod* CodeCache::find_compiled(void* start) {
   CodeBlob *cb = find_blob(start);
-  assert(cb == NULL || cb->is_compiled(), "did not find an compiled_method");
   return (CompiledMethod*)cb;
 }
 
@@ -1037,7 +983,7 @@ bool CodeCache::is_far_target(address target) {
 void CodeCache::mark_all_nmethods_for_deoptimization() {
   MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
   CompiledMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     CompiledMethod* nm = iter.method();
     if (!nm->method()->is_method_handle_intrinsic()) {
       nm->mark_for_deoptimization();
@@ -1050,7 +996,7 @@ int CodeCache::mark_for_deoptimization(Method* dependee) {
   int number_of_marked_CodeBlobs = 0;
 
   CompiledMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     CompiledMethod* nm = iter.method();
     if (nm->is_dependent_on_method(dependee)) {
       ResourceMark rm;
@@ -1063,9 +1009,8 @@ int CodeCache::mark_for_deoptimization(Method* dependee) {
 }
 
 void CodeCache::make_marked_nmethods_not_entrant() {
-  assert_locked_or_safepoint(CodeCache_lock);
   CompiledMethodIterator iter;
-  while(iter.next_alive()) {
+  while (iter.next_alive()) {
     CompiledMethod* nm = iter.method();
     if (nm->is_marked_for_deoptimization() && !nm->is_not_entrant()) {
       nm->make_not_entrant();
@@ -1075,8 +1020,6 @@ void CodeCache::make_marked_nmethods_not_entrant() {
 
 // Flushes compiled methods dependent on dependee.
 void CodeCache::flush_dependents_on(InstanceKlass* dependee) {
-  assert_lock_strong(Compile_lock);
-
   if (number_of_nmethods_with_dependencies() == 0) return;
 
   // CodeCache can only be updated by a thread_in_VM and they will all be
@@ -1095,9 +1038,6 @@ void CodeCache::flush_dependents_on(InstanceKlass* dependee) {
 
 // Flushes compiled methods dependent on dependee
 void CodeCache::flush_dependents_on_method(const methodHandle& m_h) {
-  // --- Compile_lock is not held. However we are at a safepoint.
-  assert_locked_or_safepoint(Compile_lock);
-
   // CodeCache can only be updated by a thread_in_VM and they will all be
   // stopped dring the safepoint so CodeCache will be safe to update without
   // holding the CodeCache_lock.
@@ -1122,7 +1062,6 @@ void CodeCache::flush_dependents_on_method(const methodHandle& m_h) {
 }
 
 void CodeCache::verify() {
-  assert_locked_or_safepoint(CodeCache_lock);
   FOR_ALL_HEAPS(heap) {
     (*heap)->verify();
     FOR_ALL_BLOBS(cb, *heap) {
@@ -1139,7 +1078,6 @@ PRAGMA_FORMAT_NONLITERAL_IGNORED
 void CodeCache::report_codemem_full(int code_blob_type, bool print) {
   // Get nmethod heap for the given CodeBlobType and build CodeCacheFull event
   CodeHeap* heap = get_code_heap(code_blob_type);
-  assert(heap != NULL, "heap is null");
 
   if ((heap->full_count() == 0) || print) {
     // Not yet reported for this heap, report
@@ -1287,10 +1225,7 @@ void CodeCache::print_layout(outputStream* st) {
 }
 
 void CodeCache::log_state(outputStream* st) {
-  st->print(" total_blobs='" UINT32_FORMAT "' nmethods='" UINT32_FORMAT "'"
-            " adapters='" UINT32_FORMAT "' free_code_cache='" SIZE_FORMAT "'",
-            blob_count(), nmethod_count(), adapter_count(),
-            unallocated_capacity());
+  st->print(" total_blobs='" UINT32_FORMAT "' nmethods='" UINT32_FORMAT "' adapters='" UINT32_FORMAT "' free_code_cache='" SIZE_FORMAT "'", blob_count(), nmethod_count(), adapter_count(), unallocated_capacity());
 }
 
 //---<  BEGIN  >--- CodeHeap State Analytics.

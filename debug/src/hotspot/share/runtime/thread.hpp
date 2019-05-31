@@ -129,7 +129,6 @@ class Thread: public ThreadShadow {
   // This field is enabled via -XX:+EnableThreadSMRStatistics:
   uint _nested_threads_hazard_ptr_cnt;
   void dec_nested_threads_hazard_ptr_cnt() {
-    assert(_nested_threads_hazard_ptr_cnt != 0, "mismatched {dec,inc}_nested_threads_hazard_ptr_cnt()");
     _nested_threads_hazard_ptr_cnt--;
   }
   void inc_nested_threads_hazard_ptr_cnt() {
@@ -360,7 +359,6 @@ class Thread: public ThreadShadow {
   static bool is_interrupted(Thread* thr, bool clear_interrupted);
 
   void set_native_thread_name(const char *name) {
-    assert(Thread::current() == this, "set_native_thread_name can only be called on the current thread");
     os::set_native_thread_name(name);
   }
 
@@ -413,7 +411,7 @@ class Thread: public ThreadShadow {
   ResourceArea* resource_area() const            { return _resource_area; }
   void set_resource_area(ResourceArea* area)     { _resource_area = area; }
 
-  OSThread* osthread() const                     { return _osthread;   }
+  OSThread* osthread() const                     { return _osthread; }
   void set_osthread(OSThread* thread)            { _osthread = thread; }
 
   // JNI handle support
@@ -427,7 +425,7 @@ class Thread: public ThreadShadow {
   void set_handle_area(HandleArea* area)         { _handle_area = area; }
 
   GrowableArray<Metadata*>* metadata_handles() const          { return _metadata_handles; }
-  void set_metadata_handles(GrowableArray<Metadata*>* handles){ _metadata_handles = handles; }
+  void set_metadata_handles(GrowableArray<Metadata*>* handles) { _metadata_handles = handles; }
 
   // Thread-Local Allocation Buffer (TLAB) support
   ThreadLocalAllocBuffer& tlab()                 { return _tlab; }
@@ -541,14 +539,13 @@ protected:
  public:
   // Stack overflow support
   address stack_base() const           {
-    assert(_stack_base != NULL,"Sanity check");
     return _stack_base; }
   void    set_stack_base(address base) { _stack_base = base; }
   size_t  stack_size() const           { return _stack_size; }
   void    set_stack_size(size_t size)  { _stack_size = size; }
   address stack_end()  const           { return stack_base() - stack_size(); }
   void    record_stack_base_and_size();
-  void    register_thread_stack_with_NMT() {};
+  void    register_thread_stack_with_NMT() { };
 
   bool    on_local_stack(address adr) const {
     // QQQ this has knowledge of direction, ought to be a stack method
@@ -570,7 +567,7 @@ protected:
 
   // Debug-only code
 
-  void check_for_valid_safepoint_state(bool potential_vm_operation) {};
+  void check_for_valid_safepoint_state(bool potential_vm_operation) { };
 
  public:
   // Code generation
@@ -631,7 +628,6 @@ protected:
 // Inline implementation of Thread::current()
 inline Thread* Thread::current() {
   Thread* current = current_or_null();
-  assert(current != NULL, "Thread::current() called on detached thread");
   return current;
 }
 
@@ -691,7 +687,6 @@ class WorkerThread: public NamedThread {
   virtual bool is_Worker_thread() const { return true; }
 
   virtual WorkerThread* as_Worker_thread() const {
-    assert(is_Worker_thread(), "Dubious cast to WorkerThread*?");
     return (WorkerThread*) this;
   }
 
@@ -969,7 +964,7 @@ class JavaThread: public Thread {
   void cleanup_failed_attach_current_thread();
 
   // Testers
-  virtual bool is_Java_thread() const            { return true;  }
+  virtual bool is_Java_thread() const            { return true; }
   virtual bool can_call_java() const             { return true; }
 
   // Thread chain operations
@@ -1011,7 +1006,7 @@ class JavaThread: public Thread {
   // Safepoint support
 #if !(defined(PPC64) || defined(AARCH64))
   JavaThreadState thread_state() const           { return _thread_state; }
-  void set_thread_state(JavaThreadState s)       { _thread_state = s;    }
+  void set_thread_state(JavaThreadState s)       { _thread_state = s; }
 #else
   // Use membars when accessing volatile _thread_state. See
   // Threads::create_vm() for size checks.
@@ -1086,7 +1081,6 @@ class JavaThread: public Thread {
   int  java_suspend_self();
 
   void check_and_wait_while_suspended() {
-    assert(JavaThread::current() == this, "sanity check");
 
     bool do_self_suspend;
     do {
@@ -1158,7 +1152,6 @@ class JavaThread: public Thread {
   // Special method to handle a pending external suspend request
   // when a suspend equivalent condition lifts.
   bool handle_special_suspend_equivalent_condition() {
-    assert(is_suspend_equivalent(), "should only be called in a suspend equivalence condition");
     MutexLockerEx ml(SR_lock(), Mutex::_no_safepoint_check_flag);
     bool ret = is_external_suspend();
     if (!ret) {
@@ -1213,8 +1206,7 @@ class JavaThread: public Thread {
     // possible that the external suspend request is dropped after
     // we have checked is_external_suspend(), we will recheck its value
     // under SR_lock in java_suspend_self().
-    return (_special_runtime_exit_condition != _no_async_condition) ||
-            is_external_suspend() || is_trace_suspend();
+    return (_special_runtime_exit_condition != _no_async_condition) || is_external_suspend() || is_trace_suspend();
   }
 
   void set_pending_unsafe_access_error()          { _special_runtime_exit_condition = _async_unsafe_access_error; }
@@ -1228,12 +1220,12 @@ class JavaThread: public Thread {
   // The linked list of vframe arrays are sorted on sp. This means when we
   // unpack the head must contain the vframe array to unpack.
   void set_vframe_array_head(vframeArray* value) { _vframe_array_head = value; }
-  vframeArray* vframe_array_head() const         { return _vframe_array_head;  }
+  vframeArray* vframe_array_head() const         { return _vframe_array_head; }
 
   // These only really exist to make debugging deopt problems simpler
 
   void set_vframe_array_last(vframeArray* value) { _vframe_array_last = value; }
-  vframeArray* vframe_array_last() const         { return _vframe_array_last;  }
+  vframeArray* vframe_array_last() const         { return _vframe_array_last; }
 
   // The special resourceMark used during deoptimization
 
@@ -1258,7 +1250,7 @@ class JavaThread: public Thread {
   void set_vm_result_2  (Metadata* x)          { _vm_result_2   = x; }
 
   MemRegion deferred_card_mark() const           { return _deferred_card_mark; }
-  void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr;   }
+  void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr; }
 
   int  pending_deoptimization() const             { return _pending_deoptimization; }
   long  pending_failed_speculation() const         { return _pending_failed_speculation; }
@@ -1270,10 +1262,8 @@ class JavaThread: public Thread {
   void set_pending_failed_speculation(long failed_speculation) { _pending_failed_speculation = failed_speculation; }
   void set_pending_transfer_to_interpreter(bool b) { _pending_transfer_to_interpreter = b; }
   void set_jvmci_alternate_call_target(address a) {
-    assert(_jvmci._alternate_call_target == NULL, "must be");
     _jvmci._alternate_call_target = a; }
   void set_jvmci_implicit_exception_pc(address a) {
-    assert(_jvmci._implicit_exception_pc == NULL, "must be");
     _jvmci._implicit_exception_pc = a; }
 
   // Exception handling for compiled methods
@@ -1349,12 +1339,9 @@ class JavaThread: public Thread {
   inline size_t stack_available(address cur_sp);
 
   static size_t stack_red_zone_size() {
-    assert(_stack_red_zone_size > 0, "Don't call this before the field is initialized.");
     return _stack_red_zone_size;
   }
   static void set_stack_red_zone_size(size_t s) {
-    assert(is_aligned(s, os::vm_page_size()), "We can not protect if the red zone size is not page aligned.");
-    assert(_stack_red_zone_size == 0, "This should be called only once.");
     _stack_red_zone_size = s;
   }
   address stack_red_zone_base() {
@@ -1365,12 +1352,9 @@ class JavaThread: public Thread {
   }
 
   static size_t stack_yellow_zone_size() {
-    assert(_stack_yellow_zone_size > 0, "Don't call this before the field is initialized.");
     return _stack_yellow_zone_size;
   }
   static void set_stack_yellow_zone_size(size_t s) {
-    assert(is_aligned(s, os::vm_page_size()), "We can not protect if the yellow zone size is not page aligned.");
-    assert(_stack_yellow_zone_size == 0, "This should be called only once.");
     _stack_yellow_zone_size = s;
   }
 
@@ -1379,17 +1363,13 @@ class JavaThread: public Thread {
     return _stack_reserved_zone_size;
   }
   static void set_stack_reserved_zone_size(size_t s) {
-    assert(is_aligned(s, os::vm_page_size()), "We can not protect if the reserved zone size is not page aligned.");
-    assert(_stack_reserved_zone_size == 0, "This should be called only once.");
     _stack_reserved_zone_size = s;
   }
   address stack_reserved_zone_base() {
-    return (address)(stack_end() +
-                     (stack_red_zone_size() + stack_yellow_zone_size() + stack_reserved_zone_size()));
+    return (address)(stack_end() + (stack_red_zone_size() + stack_yellow_zone_size() + stack_reserved_zone_size()));
   }
   bool in_stack_reserved_zone(address a) {
-    return (a <= stack_reserved_zone_base()) &&
-           (a >= (address)((intptr_t)stack_reserved_zone_base() - stack_reserved_zone_size()));
+    return (a <= stack_reserved_zone_base()) && (a >= (address)((intptr_t)stack_reserved_zone_base() - stack_reserved_zone_size()));
   }
 
   static size_t stack_yellow_reserved_zone_size() {
@@ -1405,7 +1385,6 @@ class JavaThread: public Thread {
   }
 
   static size_t stack_shadow_zone_size() {
-    assert(_stack_shadow_zone_size > 0, "Don't call this before the field is initialized.");
     return _stack_shadow_zone_size;
   }
   static void set_stack_shadow_zone_size(size_t s) {
@@ -1418,8 +1397,6 @@ class JavaThread: public Thread {
     // the page size is a multiple of 4K, banging in 4K steps
     // suffices to touch all pages. (Some pages are banged
     // several times, though.)
-    assert(is_aligned(s, os::vm_page_size()), "Stack bang assumes multiple of page size.");
-    assert(_stack_shadow_zone_size == 0, "This should be called only once.");
     _stack_shadow_zone_size = s;
   }
 
@@ -1440,7 +1417,6 @@ class JavaThread: public Thread {
 
   address reserved_stack_activation() const { return _reserved_stack_activation; }
   void set_reserved_stack_activation(address addr) {
-    assert(_reserved_stack_activation == stack_base() || _reserved_stack_activation == NULL || addr == stack_base(), "Must not be set twice");
     _reserved_stack_activation = addr;
   }
 
@@ -1457,8 +1433,7 @@ class JavaThread: public Thread {
 
   address stack_overflow_limit() { return _stack_overflow_limit; }
   void set_stack_overflow_limit() {
-    _stack_overflow_limit =
-      stack_end() + MAX2(JavaThread::stack_guard_zone_size(), JavaThread::stack_shadow_zone_size());
+    _stack_overflow_limit = stack_end() + MAX2(JavaThread::stack_guard_zone_size(), JavaThread::stack_shadow_zone_size());
   }
 
   // Misc. accessors/mutators
@@ -1526,13 +1501,10 @@ class JavaThread: public Thread {
   bool in_critical()    { return _jni_active_critical > 0; }
   bool in_last_critical()  { return _jni_active_critical == 1; }
   void enter_critical() {
-    assert(Thread::current() == this || (Thread::current()->is_VM_thread() && SafepointSynchronize::is_synchronizing()), "this must be current thread or synchronizing");
     _jni_active_critical++;
   }
   void exit_critical() {
-    assert(Thread::current() == this, "this must be current thread");
     _jni_active_critical--;
-    assert(_jni_active_critical >= 0, "JNI critical nesting problem?");
   }
 
   // Checked JNI: is the programmer required to check for exceptions, if so specify
@@ -1559,7 +1531,6 @@ class JavaThread: public Thread {
   bool in_deopt_handler() const                  { return _in_deopt_handler > 0; }
   void inc_in_deopt_handler()                    { _in_deopt_handler++; }
   void dec_in_deopt_handler() {
-    assert(_in_deopt_handler > 0, "mismatched deopt nesting");
     if (_in_deopt_handler > 0) { // robustness
       _in_deopt_handler--;
     }
@@ -1587,8 +1558,8 @@ class JavaThread: public Thread {
   void print_on(outputStream* st, bool print_extended_info) const;
   void print_on(outputStream* st) const { print_on(st, false); }
   void print_value();
-  void print_thread_state_on(outputStream*) const      {};
-  void print_thread_state() const                      {};
+  void print_thread_state_on(outputStream*) const      { };
+  void print_thread_state() const                      { };
   void print_on_error(outputStream* st, char* buf, int buflen) const;
   void print_name_on_error(outputStream* st, char* buf, int buflen) const;
   void verify();
@@ -1616,13 +1587,13 @@ class JavaThread: public Thread {
   void print_stack() { print_stack_on(tty); }
 
   // Print stack traces in various internal formats
-  void trace_stack()                             {};
-  void trace_stack_from(vframe* start_vf)        {};
-  void trace_frames()                            {};
-  void trace_oops()                              {};
+  void trace_stack()                             { };
+  void trace_stack_from(vframe* start_vf)        { };
+  void trace_frames()                            { };
+  void trace_oops()                              { };
 
   // Print an annotated view of the stack frames
-  void print_frame_layout(int depth = 0, bool validate_only = false) {};
+  void print_frame_layout(int depth = 0, bool validate_only = false) { };
   void validate_frame_layout() {
     print_frame_layout(0, true);
   }
@@ -1793,12 +1764,10 @@ class JavaThread: public Thread {
 // Inline implementation of JavaThread::current
 inline JavaThread* JavaThread::current() {
   Thread* thread = Thread::current();
-  assert(thread->is_Java_thread(), "just checking");
   return (JavaThread*)thread;
 }
 
 inline CompilerThread* JavaThread::as_CompilerThread() {
-  assert(is_Compiler_thread(), "just checking");
   return (CompilerThread*)this;
 }
 
@@ -1809,7 +1778,6 @@ class CodeCacheSweeperThread : public JavaThread {
   CodeCacheSweeperThread();
   // Track the nmethod currently being scanned by the sweeper
   void set_scanned_compiled_method(CompiledMethod* cm) {
-    assert(_scanned_compiled_method == NULL || cm == NULL, "should reset to NULL before writing a new value");
     _scanned_compiled_method = cm;
   }
 
@@ -1867,11 +1835,7 @@ class CompilerThread : public JavaThread {
 
   // Get/set the thread's logging information
   CompileLog*   log()                            { return _log; }
-  void          init_log(CompileLog* log) {
-    // Set once, for good.
-    assert(_log == NULL, "set only once");
-    _log = log;
-  }
+  void          init_log(CompileLog* log)        { _log = log; }
 
   void start_idle_timer()                        { _idle_time.update(); }
   jlong idle_time_millis() {
@@ -1941,7 +1905,7 @@ class Threads: AllStatic {
   // never set the global parity to 0.
   static int thread_claim_parity() { return _thread_claim_parity; }
   static void change_thread_claim_parity();
-  static void assert_all_threads_claimed() {};
+  static void assert_all_threads_claimed() { };
 
   // Apply "f->do_oop" to all root oops in all threads.
   // This version may only be called by sequential code.

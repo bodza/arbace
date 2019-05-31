@@ -50,8 +50,6 @@ template<typename T> char* UTF8::next(const char* str, T* value) {
 
   *value = (T)result;
 
-  // The assert is correct but the .class file is wrong
-  // assert(UNICODE::utf8_size(result) == length, "checking reverse computation");
   return (char *)(ptr + length);
 }
 
@@ -149,7 +147,7 @@ template<typename T> void UTF8::convert_to_unicode(const char* utf8_str, T* unic
 
   /* ASCII case loop optimization */
   for (; index < unicode_length; index++) {
-    if((ch = ptr[0]) > 0x7F) { break; }
+    if ((ch = ptr[0]) > 0x7F) { break; }
     unicode_str[index] = (T)ch;
     ptr = (const char *)(ptr + 1);
   }
@@ -200,7 +198,6 @@ void UTF8::as_quoted_ascii(const char* utf8_str, int utf8_length, char* buf, int
       p += 6;
     }
   }
-  assert(p < end, "sanity");
   *p = '\0';
 }
 
@@ -281,10 +278,8 @@ const char* UTF8::from_quoted_ascii(const char* quoted_ascii_str) {
 // Returns NULL if 'c' it not found. This only works as long
 // as 'c' is an ASCII character
 const jbyte* UTF8::strrchr(const jbyte* base, int length, jbyte c) {
-  assert(length >= 0, "sanity check");
-  assert(c >= 0, "does not work for non-ASCII characters");
   // Skip backwards in string until 'c' is found or end is reached
-  while(--length >= 0 && base[length] != c);
+  while (--length >= 0 && base[length] != c);
   return (length < 0) ? NULL : &base[length];
 }
 
@@ -307,8 +302,7 @@ jint UTF8::get_supplementary_character(const unsigned char* str) {
                  + ((str[4] & 0x0f) << 6)  + (str[5] & 0x3f);
 }
 
-bool UTF8::is_legal_utf8(const unsigned char* buffer, int length,
-                         bool version_leq_47) {
+bool UTF8::is_legal_utf8(const unsigned char* buffer, int length, bool version_leq_47) {
   int i = 0;
   int count = length >> 2;
   for (int k=0; k<count; k++) {
@@ -326,11 +320,11 @@ bool UTF8::is_legal_utf8(const unsigned char* buffer, int length,
     if (res >= 128) break;
     i += 4;
   }
-  for(; i < length; i++) {
+  for (; i < length; i++) {
     unsigned short c;
     // no embedded zeros
     if (buffer[i] == 0) return false;
-    if(buffer[i] < 128) {
+    if (buffer[i] < 128) {
       continue;
     }
     if ((i + 5) < length) { // see if it's legal supplementary character
@@ -422,7 +416,6 @@ char* UNICODE::as_utf8(T* base, int& length) {
   int utf8_len = utf8_length(base, length);
   u_char* buf = NEW_RESOURCE_ARRAY(u_char, utf8_len + 1);
   char* result = as_utf8(base, length, (char*) buf, utf8_len + 1);
-  assert((int) strlen(result) == utf8_len, "length prediction must be correct");
   // Set string length to uft8 length
   length = utf8_len;
   return (char*) result;
@@ -462,7 +455,7 @@ char* UNICODE::as_utf8(jbyte* base, int length, char* buf, int buflen) {
 }
 
 void UNICODE::convert_to_utf8(const jchar* base, int length, char* utf8_buffer) {
-  for(int index = 0; index < length; index++) {
+  for (int index = 0; index < length; index++) {
     utf8_buffer = (char*)utf8_write((u_char*)utf8_buffer, base[index]);
   }
   *utf8_buffer = '\0';

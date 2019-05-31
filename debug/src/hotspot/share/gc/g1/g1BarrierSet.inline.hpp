@@ -10,8 +10,7 @@
 
 template <DecoratorSet decorators, typename T>
 inline void G1BarrierSet::write_ref_field_pre(T* field) {
-  if (HasDecorator<decorators, IS_DEST_UNINITIALIZED>::value ||
-      HasDecorator<decorators, AS_NO_KEEPALIVE>::value) {
+  if (HasDecorator<decorators, IS_DEST_UNINITIALIZED>::value || HasDecorator<decorators, AS_NO_KEEPALIVE>::value) {
     return;
   }
 
@@ -31,7 +30,6 @@ inline void G1BarrierSet::write_ref_field_post(T* field, oop new_val) {
 }
 
 inline void G1BarrierSet::enqueue_if_weak(DecoratorSet decorators, oop value) {
-  assert((decorators & ON_UNKNOWN_OOP_REF) == 0, "Reference strength must be known");
   // Loading from a weak or phantom reference needs enqueueing, as
   // the object may not have been reachable (part of the snapshot)
   // when marking started.
@@ -46,8 +44,7 @@ inline void G1BarrierSet::enqueue_if_weak(DecoratorSet decorators, oop value) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_load_not_in_heap(T* addr) {
+inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_load_not_in_heap(T* addr) {
   oop value = ModRef::oop_load_not_in_heap(addr);
   enqueue_if_weak(decorators, value);
   return value;
@@ -55,16 +52,14 @@ oop_load_not_in_heap(T* addr) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_load_in_heap(T* addr) {
+inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_load_in_heap(T* addr) {
   oop value = ModRef::oop_load_in_heap(addr);
   enqueue_if_weak(decorators, value);
   return value;
 }
 
 template <DecoratorSet decorators, typename BarrierSetT>
-inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_load_in_heap_at(oop base, ptrdiff_t offset) {
+inline oop G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_load_in_heap_at(oop base, ptrdiff_t offset) {
   oop value = ModRef::oop_load_in_heap_at(base, offset);
   enqueue_if_weak(AccessBarrierSupport::resolve_possibly_unknown_oop_ref_strength<decorators>(base, offset), value);
   return value;
@@ -72,8 +67,7 @@ oop_load_in_heap_at(oop base, ptrdiff_t offset) {
 
 template <DecoratorSet decorators, typename BarrierSetT>
 template <typename T>
-inline void G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::
-oop_store_not_in_heap(T* addr, oop new_value) {
+inline void G1BarrierSet::AccessBarrier<decorators, BarrierSetT>::oop_store_not_in_heap(T* addr, oop new_value) {
   // Apply SATB barriers for all non-heap references, to allow
   // concurrent scanning of such references.
   G1BarrierSet *bs = barrier_set_cast<G1BarrierSet>(BarrierSet::barrier_set());

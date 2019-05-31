@@ -4,18 +4,11 @@
 #include "gc/g1/g1AllocRegion.hpp"
 #include "gc/g1/heapRegion.inline.hpp"
 
-#define assert_alloc_region(p, message) \
-  do { \
-    assert((p), "[%s] %s c: %u b: %s r: " PTR_FORMAT " u: " SIZE_FORMAT, _name, (message), _count, BOOL_TO_STR(_bot_updates), p2i(_alloc_region), _used_bytes_before); \
-  } while (0)
-
 inline void G1AllocRegion::reset_alloc_region() {
   _alloc_region = _dummy_region;
 }
 
-inline HeapWord* G1AllocRegion::allocate(HeapRegion* alloc_region,
-                                         size_t word_size) {
-  assert(alloc_region != NULL, "pre-condition");
+inline HeapWord* G1AllocRegion::allocate(HeapRegion* alloc_region, size_t word_size) {
 
   if (!_bot_updates) {
     return alloc_region->allocate_no_bot_updates(word_size);
@@ -29,12 +22,7 @@ inline HeapWord* G1AllocRegion::par_allocate(HeapRegion* alloc_region, size_t wo
   return par_allocate(alloc_region, word_size, word_size, &temp);
 }
 
-inline HeapWord* G1AllocRegion::par_allocate(HeapRegion* alloc_region,
-                                             size_t min_word_size,
-                                             size_t desired_word_size,
-                                             size_t* actual_word_size) {
-  assert(alloc_region != NULL, "pre-condition");
-  assert(!alloc_region->is_empty(), "pre-condition");
+inline HeapWord* G1AllocRegion::par_allocate(HeapRegion* alloc_region, size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
 
   if (!_bot_updates) {
     return alloc_region->par_allocate_no_bot_updates(min_word_size, desired_word_size, actual_word_size);
@@ -52,7 +40,6 @@ inline HeapWord* G1AllocRegion::attempt_allocation(size_t min_word_size,
                                                    size_t desired_word_size,
                                                    size_t* actual_word_size) {
   HeapRegion* alloc_region = _alloc_region;
-  assert_alloc_region(alloc_region != NULL, "not initialized properly");
 
   HeapWord* result = par_allocate(alloc_region, min_word_size, desired_word_size, actual_word_size);
   if (result != NULL) {
@@ -91,8 +78,6 @@ inline HeapWord* G1AllocRegion::attempt_allocation_locked(size_t min_word_size,
 }
 
 inline HeapWord* G1AllocRegion::attempt_allocation_force(size_t word_size) {
-  assert_alloc_region(_alloc_region != NULL, "not initialized properly");
-
   trace("forcing alloc", word_size, word_size);
   HeapWord* result = new_alloc_region_and_allocate(word_size, true /* force */);
   if (result != NULL) {

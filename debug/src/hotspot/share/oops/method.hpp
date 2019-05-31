@@ -91,7 +91,7 @@ class Method : public Metadata {
                           TRAPS);
 
   // CDS and vtbl checking can create an empty Method to get vtbl pointer.
-  Method(){}
+  Method() { }
 
   bool is_method() const volatile { return true; }
 
@@ -108,18 +108,18 @@ class Method : public Metadata {
   address from_interpreted_entry() const;
 
   // access flag
-  AccessFlags access_flags() const               { return _access_flags;  }
+  AccessFlags access_flags() const               { return _access_flags; }
   void set_access_flags(AccessFlags flags)       { _access_flags = flags; }
 
   // name
   Symbol* name() const                           { return constants()->symbol_at(name_index()); }
-  int name_index() const                         { return constMethod()->name_index();         }
-  void set_name_index(int index)                 { constMethod()->set_name_index(index);       }
+  int name_index() const                         { return constMethod()->name_index(); }
+  void set_name_index(int index)                 { constMethod()->set_name_index(index); }
 
   // signature
   Symbol* signature() const                      { return constants()->symbol_at(signature_index()); }
-  int signature_index() const                    { return constMethod()->signature_index();         }
-  void set_signature_index(int index)            { constMethod()->set_signature_index(index);       }
+  int signature_index() const                    { return constMethod()->signature_index(); }
+  void set_signature_index(int index)            { constMethod()->set_signature_index(index); }
 
   // generics support
   Symbol* generic_signature() const              { int idx = generic_signature_index(); return ((idx != 0) ? constants()->symbol_at(idx) : (Symbol*)NULL); }
@@ -296,7 +296,7 @@ class Method : public Metadata {
   }
 
   // for PrintMethodData in a product build
-  int  compiled_invocation_count() const         { return 0;  }
+  int  compiled_invocation_count() const         { return 0; }
 
   // Clear (non-shared space) pointers which could not be relevant
   // if this (shared) method were mapped into another JVM.
@@ -324,7 +324,7 @@ class Method : public Metadata {
   // setup entry points
   void link_method(const methodHandle& method, TRAPS);
   // clear entry points. Used by sharing code during dump time
-  void unlink_method() {};
+  void unlink_method() { };
 
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
   virtual MetaspaceObj::Type type() const { return MethodType; }
@@ -345,7 +345,6 @@ class Method : public Metadata {
   void set_vtable_index(int index);
   bool has_itable_index() const                  { return _vtable_index <= itable_index_max; }
   int  itable_index() const                      {
-    assert(valid_itable_index(), "");
                                                    return itable_index_max - _vtable_index; }
   void set_itable_index(int index);
 
@@ -353,7 +352,6 @@ class Method : public Metadata {
   address interpreter_entry() const              { return _i2i_entry; }
   // Only used when first initialize so we can set _i2i_entry and _from_interpreted_entry
   void set_interpreter_entry(address entry) {
-    assert(!is_shared(), "shared method's interpreter entry should not be changed at run time");
     if (_i2i_entry != entry) {
       _i2i_entry = entry;
     }
@@ -435,17 +433,17 @@ class Method : public Metadata {
   objArrayHandle resolved_checked_exceptions(TRAPS) { return resolved_checked_exceptions_impl(this, THREAD); }
 
   // Access flags
-  bool is_public() const                         { return access_flags().is_public();      }
-  bool is_private() const                        { return access_flags().is_private();     }
-  bool is_protected() const                      { return access_flags().is_protected();   }
+  bool is_public() const                         { return access_flags().is_public(); }
+  bool is_private() const                        { return access_flags().is_private(); }
+  bool is_protected() const                      { return access_flags().is_protected(); }
   bool is_package_private() const                { return !is_public() && !is_private() && !is_protected(); }
-  bool is_static() const                         { return access_flags().is_static();      }
-  bool is_final() const                          { return access_flags().is_final();       }
-  bool is_synchronized() const                   { return access_flags().is_synchronized();}
-  bool is_native() const                         { return access_flags().is_native();      }
-  bool is_abstract() const                       { return access_flags().is_abstract();    }
-  bool is_strict() const                         { return access_flags().is_strict();      }
-  bool is_synthetic() const                      { return access_flags().is_synthetic();   }
+  bool is_static() const                         { return access_flags().is_static(); }
+  bool is_final() const                          { return access_flags().is_final(); }
+  bool is_synchronized() const                   { return access_flags().is_synchronized(); }
+  bool is_native() const                         { return access_flags().is_native(); }
+  bool is_abstract() const                       { return access_flags().is_abstract(); }
+  bool is_strict() const                         { return access_flags().is_strict(); }
+  bool is_synthetic() const                      { return access_flags().is_synthetic(); }
 
   // returns true if contains only return operation
   bool is_empty_method() const;
@@ -539,10 +537,10 @@ class Method : public Metadata {
   static ByteSize method_counters_offset()       {
     return byte_offset_of(Method, _method_counters);
   }
-  static ByteSize native_function_offset()       { return in_ByteSize(sizeof(Method));                 }
+  static ByteSize native_function_offset()       { return in_ByteSize(sizeof(Method)); }
   static ByteSize from_interpreted_offset()      { return byte_offset_of(Method, _from_interpreted_entry ); }
   static ByteSize interpreter_entry_offset()     { return byte_offset_of(Method, _i2i_entry ); }
-  static ByteSize signature_handler_offset()     { return in_ByteSize(sizeof(Method) + wordSize);      }
+  static ByteSize signature_handler_offset()     { return in_ByteSize(sizeof(Method) + wordSize); }
   static ByteSize itable_index_offset()          { return byte_offset_of(Method, _vtable_index ); }
 
   // for code generation
@@ -645,7 +643,6 @@ class Method : public Metadata {
   // to provide a valid jmethodID; the only sanity checks are in asserts;
   // result guaranteed not to be NULL.
   inline static Method* resolve_jmethod_id(jmethodID mid) {
-    assert(mid != NULL, "JNI method id should not be null");
     return *((Method**)mid);
   }
 
@@ -659,7 +656,7 @@ class Method : public Metadata {
 
   // Clear methods
   static void clear_jmethod_ids(ClassLoaderData* loader_data);
-  static void print_jmethod_ids(const ClassLoaderData* loader_data, outputStream* out) {};
+  static void print_jmethod_ids(const ClassLoaderData* loader_data, outputStream* out) { };
 
   // Get this method's jmethodID -- allocate if it doesn't exist
   jmethodID jmethod_id()                            { return method_holder()->get_jmethod_id(this); }
@@ -672,7 +669,7 @@ class Method : public Metadata {
   jmethodID find_jmethod_id_or_null()               { return method_holder()->jmethod_id_or_null(this); }
 
   // Support for inlining of intrinsic methods
-  vmIntrinsics::ID intrinsic_id() const          { return (vmIntrinsics::ID) _intrinsic_id;           }
+  vmIntrinsics::ID intrinsic_id() const          { return (vmIntrinsics::ID) _intrinsic_id; }
   void     set_intrinsic_id(vmIntrinsics::ID id) {                           _intrinsic_id = (u2) id; }
 
   // Helper routines for intrinsic_id() and vmIntrinsics::method().
@@ -777,24 +774,24 @@ class Method : public Metadata {
     return _method_counters;
   }
 
-  bool   is_not_c1_compilable() const         { return access_flags().is_not_c1_compilable();  }
-  void  set_not_c1_compilable()               {       _access_flags.set_not_c1_compilable();   }
+  bool   is_not_c1_compilable() const         { return access_flags().is_not_c1_compilable(); }
+  void  set_not_c1_compilable()               {       _access_flags.set_not_c1_compilable(); }
   void clear_not_c1_compilable()              {       _access_flags.clear_not_c1_compilable(); }
-  bool   is_not_c2_compilable() const         { return access_flags().is_not_c2_compilable();  }
-  void  set_not_c2_compilable()               {       _access_flags.set_not_c2_compilable();   }
+  bool   is_not_c2_compilable() const         { return access_flags().is_not_c2_compilable(); }
+  void  set_not_c2_compilable()               {       _access_flags.set_not_c2_compilable(); }
   void clear_not_c2_compilable()              {       _access_flags.clear_not_c2_compilable(); }
 
   bool    is_not_c1_osr_compilable() const    { return is_not_c1_compilable(); }  // don't waste an accessFlags bit
   void   set_not_c1_osr_compilable()          {       set_not_c1_compilable(); }  // don't waste an accessFlags bit
   void clear_not_c1_osr_compilable()          {     clear_not_c1_compilable(); }  // don't waste an accessFlags bit
-  bool   is_not_c2_osr_compilable() const     { return access_flags().is_not_c2_osr_compilable();  }
-  void  set_not_c2_osr_compilable()           {       _access_flags.set_not_c2_osr_compilable();   }
+  bool   is_not_c2_osr_compilable() const     { return access_flags().is_not_c2_osr_compilable(); }
+  void  set_not_c2_osr_compilable()           {       _access_flags.set_not_c2_osr_compilable(); }
   void clear_not_c2_osr_compilable()          {       _access_flags.clear_not_c2_osr_compilable(); }
 
   // Background compilation support
   bool queued_for_compilation() const  { return access_flags().queued_for_compilation(); }
-  void set_queued_for_compilation()    { _access_flags.set_queued_for_compilation();     }
-  void clear_queued_for_compilation()  { _access_flags.clear_queued_for_compilation();   }
+  void set_queued_for_compilation()    { _access_flags.set_queued_for_compilation(); }
+  void clear_queued_for_compilation()  { _access_flags.clear_queued_for_compilation(); }
 
   // Resolve all classes in signature, return 'true' if successful
   static bool load_signature_classes(const methodHandle& m, TRAPS);
@@ -804,7 +801,7 @@ class Method : public Metadata {
 
   // Printing
   void print_short_name(outputStream* st = tty); // prints as klassname::methodname; Exposed so field engineers can debug VM
-  void print_name(outputStream* st = tty)        {}; // prints as "virtual void foo(int)"
+  void print_name(outputStream* st = tty)        { }; // prints as "virtual void foo(int)"
 
   // Helper routine used for method sorting
   static void sort_methods(Array<Method*>* methods, bool idempotent = false, bool set_idnums = true);
@@ -814,7 +811,7 @@ class Method : public Metadata {
 
   // Printing
   void print_value_on(outputStream* st) const;
-  void print_linkage_flags(outputStream* st) {};
+  void print_linkage_flags(outputStream* st) { };
 
   const char* internal_name() const { return "{method}"; }
 
@@ -830,7 +827,6 @@ class Method : public Metadata {
 
   // Inlined elements
   address* native_function_addr() const          {
-    assert(is_native(), "must be native");
     return (address*) (this+1); }
   address* signature_handler_addr() const        { return native_function_addr() + 1; }
 };
@@ -843,8 +839,8 @@ class CompressedLineNumberWriteStream: public CompressedWriteStream {
   int _line;
  public:
   // Constructor
-  CompressedLineNumberWriteStream(int initial_size) : CompressedWriteStream(initial_size), _bci(0), _line(0) {}
-  CompressedLineNumberWriteStream(u_char* buffer, int initial_size) : CompressedWriteStream(buffer, initial_size), _bci(0), _line(0) {}
+  CompressedLineNumberWriteStream(int initial_size) : CompressedWriteStream(initial_size), _bci(0), _line(0) { }
+  CompressedLineNumberWriteStream(u_char* buffer, int initial_size) : CompressedWriteStream(buffer, initial_size), _bci(0), _line(0) { }
 
   // Write (bci, line number) pair to stream
   void write_pair_regular(int bci_delta, int line_delta);
@@ -922,42 +918,34 @@ class ExceptionTable : public StackObj {
   }
 
   u2 start_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
     return _table[idx].start_pc;
   }
 
   void set_start_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
     _table[idx].start_pc = value;
   }
 
   u2 end_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
     return _table[idx].end_pc;
   }
 
   void set_end_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
     _table[idx].end_pc = value;
   }
 
   u2 handler_pc(int idx) const {
-    assert(idx < _length, "out of bounds");
     return _table[idx].handler_pc;
   }
 
   void set_handler_pc(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
     _table[idx].handler_pc = value;
   }
 
   u2 catch_type_index(int idx) const {
-    assert(idx < _length, "out of bounds");
     return _table[idx].catch_type_index;
   }
 
   void set_catch_type_index(int idx, u2 value) {
-    assert(idx < _length, "out of bounds");
     _table[idx].catch_type_index = value;
   }
 };

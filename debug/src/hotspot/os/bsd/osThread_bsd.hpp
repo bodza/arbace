@@ -79,13 +79,13 @@ private:
   address _alt_sig_stack;               /* address of base of alternate signal stack */
 
 public:
-  void* siginfo() const                   { return _siginfo;  }
-  void set_siginfo(void* ptr)             { _siginfo = ptr;   }
+  void* siginfo() const                   { return _siginfo; }
+  void set_siginfo(void* ptr)             { _siginfo = ptr; }
   ucontext_t* ucontext() const            { return _ucontext; }
-  void set_ucontext(ucontext_t* ptr)      { _ucontext = ptr;  }
-  void set_expanding_stack(void)          { _expanding_stack = 1;  }
-  void clear_expanding_stack(void)        { _expanding_stack = 0;  }
-  int  expanding_stack(void)              { return _expanding_stack;  }
+  void set_ucontext(ucontext_t* ptr)      { _ucontext = ptr; }
+  void set_expanding_stack(void)          { _expanding_stack = 1; }
+  void clear_expanding_stack(void)        { _expanding_stack = 0; }
+  int  expanding_stack(void)              { return _expanding_stack; }
 
   void set_alt_sig_stack(address val)     { _alt_sig_stack = val; }
   address alt_sig_stack(void)             { return _alt_sig_stack; }

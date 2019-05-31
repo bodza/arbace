@@ -157,8 +157,7 @@ int BsdAttachListener::init() {
   // register function to cleanup
   ::atexit(listener_cleanup);
 
-  int n = snprintf(path, UNIX_PATH_MAX, "%s/.java_pid%d",
-                   os::get_temp_directory(), os::current_process_id());
+  int n = snprintf(path, UNIX_PATH_MAX, "%s/.java_pid%d", os::get_temp_directory(), os::current_process_id());
   if (n < (int)UNIX_PATH_MAX) {
     n = snprintf(initial_path, UNIX_PATH_MAX, "%s.tmp", path);
   }
@@ -226,8 +225,7 @@ BsdAttachOperation* BsdAttachListener::read_request(int s) {
   // where <ver> is the protocol version (1), <cmd> is the command
   // name ("load", "datadump", ...), and <arg> is an argument
   int expected_str_count = 2 + AttachOperation::arg_count_max;
-  const int max_len = (sizeof(ver_str) + 1) + (AttachOperation::name_length_max + 1) +
-    AttachOperation::arg_count_max*(AttachOperation::arg_length_max + 1);
+  const int max_len = (sizeof(ver_str) + 1) + (AttachOperation::name_length_max + 1) + AttachOperation::arg_count_max*(AttachOperation::arg_length_max + 1);
 
   char buf[max_len];
   int str_count = 0;
@@ -241,7 +239,6 @@ BsdAttachOperation* BsdAttachListener::read_request(int s) {
   do {
     int n;
     RESTARTABLE(read(s, buf+off, left), n);
-    assert(n <= left, "buffer was too small, impossible!");
     buf[max_len - 1] = '\0';
     if (n == -1) {
       return NULL;      // reset by peer or other error
@@ -257,8 +254,7 @@ BsdAttachOperation* BsdAttachListener::read_request(int s) {
         // The first string is <ver> so check it now to
         // check for protocol mis-match
         if (str_count == 1) {
-          if ((strlen(buf) != strlen(ver_str)) ||
-              (atoi(buf) != ATTACH_PROTOCOL_VER)) {
+          if ((strlen(buf) != strlen(ver_str)) || (atoi(buf) != ATTACH_PROTOCOL_VER)) {
             char msg[32];
             sprintf(msg, "%d\n", ATTACH_ERROR_BADVERSION);
             write_fully(s, msg, strlen(msg));
@@ -333,8 +329,7 @@ BsdAttachOperation* BsdAttachListener::dequeue() {
     }
 
     if (!os::Posix::matches_effective_uid_and_gid_or_root(puid, pgid)) {
-      log_debug(attach)("euid/egid check failed (%d/%d vs %d/%d)", puid, pgid,
-              geteuid(), getegid());
+      log_debug(attach)("euid/egid check failed (%d/%d vs %d/%d)", puid, pgid, geteuid(), getegid());
       ::close(s);
       continue;
     }
@@ -431,7 +426,6 @@ void AttachListener::vm_start() {
 
   int n = snprintf(fn, UNIX_PATH_MAX, "%s/.java_pid%d",
            os::get_temp_directory(), os::current_process_id());
-  assert(n < (int)UNIX_PATH_MAX, "java_pid file name buffer overflow");
 
   RESTARTABLE(::stat(fn, &st), ret);
   if (ret == 0) {

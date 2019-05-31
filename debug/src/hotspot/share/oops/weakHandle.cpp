@@ -18,7 +18,6 @@ template <> OopStorage* WeakHandle<vm_string_table_data>::get_storage() {
 
 template <WeakHandleType T>
 WeakHandle<T> WeakHandle<T>::create(Handle obj) {
-  assert(obj() != NULL, "no need to create weak null oop");
   oop* oop_addr = get_storage()->allocate();
   if (oop_addr == NULL) {
     vm_exit_out_of_memory(sizeof(oop*), OOM_MALLOC_ERROR, "Unable to create new weak oop handle in OopStorage");

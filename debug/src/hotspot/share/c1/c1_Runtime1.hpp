@@ -142,7 +142,7 @@ class Runtime1: public AllStatic {
 
   static void predicate_failed_trap(JavaThread* thread);
 
-  static void print_statistics()                 {};
+  static void print_statistics()                 { };
 };
 
 #endif

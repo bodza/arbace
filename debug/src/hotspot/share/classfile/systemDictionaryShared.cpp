@@ -48,7 +48,7 @@ oop SystemDictionaryShared::shared_jar_manifest(int index) {
 }
 
 Handle SystemDictionaryShared::get_shared_jar_manifest(int shared_path_index, TRAPS) {
-  Handle manifest ;
+  Handle manifest;
   if (shared_jar_manifest(shared_path_index) == NULL) {
     SharedClassPathEntry* ent = FileMapInfo::shared_path(shared_path_index);
     long size = ent->manifest_size();
@@ -58,7 +58,6 @@ Handle SystemDictionaryShared::get_shared_jar_manifest(int shared_path_index, TR
 
     // ByteArrayInputStream bais = new ByteArrayInputStream(buf);
     const char* src = ent->manifest();
-    assert(src != NULL, "No Manifest data");
     typeArrayOop buf = oopFactory::new_byteArray(size, CHECK_NH);
     typeArrayHandle bufhandle(THREAD, buf);
     ArrayAccess<>::arraycopy_from_native(reinterpret_cast<const jbyte*>(src),
@@ -76,7 +75,6 @@ Handle SystemDictionaryShared::get_shared_jar_manifest(int shared_path_index, TR
   }
 
   manifest = Handle(THREAD, shared_jar_manifest(shared_path_index));
-  assert(manifest.not_null(), "sanity");
   return manifest;
 }
 
@@ -86,8 +84,7 @@ Handle SystemDictionaryShared::get_shared_jar_url(int shared_path_index, TRAPS) 
     JavaValue result(T_OBJECT);
     const char* path = FileMapInfo::shared_path_name(shared_path_index);
     Handle path_string = java_lang_String::create_from_str(path, CHECK_(url_h));
-    Klass* classLoaders_klass =
-        SystemDictionary::jdk_internal_loader_ClassLoaders_klass();
+    Klass* classLoaders_klass = SystemDictionary::jdk_internal_loader_ClassLoaders_klass();
     JavaCalls::call_static(&result, classLoaders_klass,
                            vmSymbols::toFileURL_name(),
                            vmSymbols::toFileURL_signature(),
@@ -97,7 +94,6 @@ Handle SystemDictionaryShared::get_shared_jar_url(int shared_path_index, TRAPS) 
   }
 
   url_h = Handle(THREAD, shared_jar_url(shared_path_index));
-  assert(url_h.not_null(), "sanity");
   return url_h;
 }
 
@@ -116,12 +112,7 @@ Handle SystemDictionaryShared::get_package_name(Symbol* class_name, TRAPS) {
 // Define Package for shared app classes from JAR file and also checks for
 // package sealing (all done in Java code)
 // See http://docs.oracle.com/javase/tutorial/deployment/jar/sealman.html
-void SystemDictionaryShared::define_shared_package(Symbol*  class_name,
-                                                   Handle class_loader,
-                                                   Handle manifest,
-                                                   Handle url,
-                                                   TRAPS) {
-  assert(SystemDictionary::is_system_class_loader(class_loader()), "unexpected class loader");
+void SystemDictionaryShared::define_shared_package(Symbol* class_name, Handle class_loader, Handle manifest, Handle url, TRAPS) {
   // get_package_name() returns a NULL handle if the class is in unnamed package
   Handle pkgname_string = get_package_name(class_name, CHECK);
   if (pkgname_string.not_null()) {
@@ -141,21 +132,15 @@ void SystemDictionaryShared::define_shared_package(Symbol*  class_name,
 }
 
 // Define Package for shared app/platform classes from named module
-void SystemDictionaryShared::define_shared_package(Symbol* class_name,
-                                                   Handle class_loader,
-                                                   ModuleEntry* mod_entry,
-                                                   TRAPS) {
-  assert(mod_entry != NULL, "module_entry should not be NULL");
+void SystemDictionaryShared::define_shared_package(Symbol* class_name, Handle class_loader, ModuleEntry* mod_entry, TRAPS) {
   Handle module_handle(THREAD, mod_entry->module());
 
   Handle pkg_name = get_package_name(class_name, CHECK);
-  assert(pkg_name.not_null(), "Package should not be null for class in named module");
 
   Klass* classLoader_klass;
   if (SystemDictionary::is_system_class_loader(class_loader())) {
     classLoader_klass = SystemDictionary::jdk_internal_loader_ClassLoaders_AppClassLoader_klass();
   } else {
-    assert(SystemDictionary::is_platform_class_loader(class_loader()), "unexpected classloader");
     classLoader_klass = SystemDictionary::jdk_internal_loader_ClassLoaders_PlatformClassLoader_klass();
   }
 
@@ -204,7 +189,6 @@ Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
   // set the shared protection_domain and the atomic_set fails, the current thread
   // needs to get the updated protection_domain from the cache.
   protection_domain = Handle(THREAD, shared_protection_domain(shared_path_index));
-  assert(protection_domain.not_null(), "sanity");
   return protection_domain;
 }
 
@@ -215,8 +199,7 @@ Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
   if (mod->shared_protection_domain() == NULL) {
     Symbol* location = mod->location();
     if (location != NULL) {
-      Handle location_string = java_lang_String::create_from_symbol(
-                                     location, CHECK_NH);
+      Handle location_string = java_lang_String::create_from_symbol(location, CHECK_NH);
       Handle url;
       JavaValue result(T_OBJECT);
       if (location->starts_with("jrt:/")) {
@@ -224,8 +207,7 @@ Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
                                                 vmSymbols::string_void_signature(),
                                                 location_string, CHECK_NH);
       } else {
-        Klass* classLoaders_klass =
-          SystemDictionary::jdk_internal_loader_ClassLoaders_klass();
+        Klass* classLoaders_klass = SystemDictionary::jdk_internal_loader_ClassLoaders_klass();
         JavaCalls::call_static(&result, classLoaders_klass, vmSymbols::toFileURL_name(),
                                vmSymbols::toFileURL_signature(),
                                location_string, CHECK_NH);
@@ -239,7 +221,6 @@ Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
   }
 
   Handle protection_domain(THREAD, mod->shared_protection_domain());
-  assert(protection_domain.not_null(), "sanity");
   return protection_domain;
 }
 
@@ -251,7 +232,6 @@ Handle SystemDictionaryShared::init_security_info(Handle class_loader, InstanceK
 
   if (ik != NULL) {
     int index = ik->shared_classpath_index();
-    assert(index >= 0, "Sanity");
     SharedClassPathEntry* ent = FileMapInfo::shared_path(index);
     Symbol* class_name = ik->name();
 
@@ -260,8 +240,7 @@ Handle SystemDictionaryShared::init_security_info(Handle class_loader, InstanceK
       //   The ProtectionDomains are cached in the corresponding ModuleEntries
       //   for fast access by the VM.
       ResourceMark rm;
-      ClassLoaderData *loader_data =
-                ClassLoaderData::class_loader_data(class_loader());
+      ClassLoaderData *loader_data = ClassLoaderData::class_loader_data(class_loader());
       PackageEntryTable* pkgEntryTable = loader_data->packages();
       TempNewSymbol pkg_name = InstanceKlass::package_from_name(class_name, CHECK_(pd));
       if (pkg_name != NULL) {
@@ -307,9 +286,7 @@ Handle SystemDictionaryShared::init_security_info(Handle class_loader, InstanceK
 
 bool SystemDictionaryShared::is_sharing_possible(ClassLoaderData* loader_data) {
   oop class_loader = loader_data->class_loader();
-  return (class_loader == NULL ||
-          SystemDictionary::is_system_class_loader(class_loader) ||
-          SystemDictionary::is_platform_class_loader(class_loader));
+  return (class_loader == NULL || SystemDictionary::is_system_class_loader(class_loader) || SystemDictionary::is_platform_class_loader(class_loader));
 }
 
 // Currently AppCDS only archives classes from the run-time image, the
@@ -329,24 +306,13 @@ bool SystemDictionaryShared::is_sharing_possible(ClassLoaderData* loader_data) {
 //   - Class from -cp. The class must have no PackageEntry defined in any of the
 //     boot/platform/app classloader, or must be in the unnamed module defined in the
 //     AppClassLoader.
-bool SystemDictionaryShared::is_shared_class_visible_for_classloader(
-                                                     InstanceKlass* ik,
-                                                     Handle class_loader,
-                                                     const char* pkg_string,
-                                                     Symbol* pkg_name,
-                                                     PackageEntry* pkg_entry,
-                                                     ModuleEntry* mod_entry,
-                                                     TRAPS) {
-  assert(class_loader.not_null(), "Class loader should not be NULL");
-  assert(Universe::is_module_initialized(), "Module system is not initialized");
+bool SystemDictionaryShared::is_shared_class_visible_for_classloader(InstanceKlass* ik, Handle class_loader, const char* pkg_string, Symbol* pkg_name, PackageEntry* pkg_entry, ModuleEntry* mod_entry, TRAPS) {
   ResourceMark rm(THREAD);
 
   int path_index = ik->shared_classpath_index();
-  SharedClassPathEntry* ent =
-            (SharedClassPathEntry*)FileMapInfo::shared_path(path_index);
+  SharedClassPathEntry* ent = (SharedClassPathEntry*)FileMapInfo::shared_path(path_index);
 
   if (SystemDictionary::is_platform_class_loader(class_loader())) {
-    assert(ent != NULL, "shared class for PlatformClassLoader should have valid SharedClassPathEntry");
     // The PlatformClassLoader can only load archived class originated from the
     // run-time image. The class' PackageEntry/ModuleEntry must be
     // defined by the PlatformClassLoader.
@@ -358,13 +324,10 @@ bool SystemDictionaryShared::is_shared_class_visible_for_classloader(
       }
     }
   } else if (SystemDictionary::is_system_class_loader(class_loader())) {
-    assert(ent != NULL, "shared class for system loader should have valid SharedClassPathEntry");
     if (pkg_string == NULL) {
       // The archived class is in the unnamed package. Currently, the boot image
       // does not contain any class in the unnamed package.
-      assert(!ent->is_modules_image(), "Class in the unnamed package must be from the classpath");
       if (path_index >= ClassLoaderExt::app_class_paths_start_index()) {
-        assert(path_index < ClassLoaderExt::app_module_paths_start_index(), "invalid path_index");
         return true;
       }
     } else {
@@ -395,14 +358,13 @@ bool SystemDictionaryShared::is_shared_class_visible_for_classloader(
           // shared class from -cp
           return true;
         } else {
-          if(!pkg_entry->in_unnamed_module() &&
-              (path_index >= ClassLoaderExt::app_module_paths_start_index())&&
+          if (!pkg_entry->in_unnamed_module() &&
+              (path_index >= ClassLoaderExt::app_module_paths_start_index()) &&
               (path_index < FileMapInfo::get_number_of_shared_paths()) &&
               (strcmp(ent->name(), ClassLoader::skip_uri_protocol(mod_entry->location()->as_C_string())) == 0)) {
             // shared module class from module path
             return true;
           } else {
-            assert(path_index < FileMapInfo::get_number_of_shared_paths(), "invalid path_index");
           }
         }
       }
@@ -448,20 +410,16 @@ bool SystemDictionaryShared::is_shared_class_visible_for_classloader(
 // NOTE: there's a lot of assumption about the Java code. If any of that change, this
 // needs to be redesigned.
 
-InstanceKlass* SystemDictionaryShared::find_or_load_shared_class(
-                 Symbol* name, Handle class_loader, TRAPS) {
+InstanceKlass* SystemDictionaryShared::find_or_load_shared_class(Symbol* name, Handle class_loader, TRAPS) {
   InstanceKlass* k = NULL;
   if (UseSharedSpaces) {
     if (!FileMapInfo::current_info()->header()->has_platform_or_app_classes()) {
       return NULL;
     }
 
-    if (shared_dictionary() != NULL &&
-        (SystemDictionary::is_system_class_loader(class_loader()) ||
-         SystemDictionary::is_platform_class_loader(class_loader()))) {
+    if (shared_dictionary() != NULL && (SystemDictionary::is_system_class_loader(class_loader()) || SystemDictionary::is_platform_class_loader(class_loader()))) {
       // Fix for 4474172; see evaluation for more details
-      class_loader = Handle(
-        THREAD, java_lang_ClassLoader::non_reflection_class_loader(class_loader()));
+      class_loader = Handle(THREAD, java_lang_ClassLoader::non_reflection_class_loader(class_loader()));
       ClassLoaderData *loader_data = register_loader(class_loader);
       Dictionary* dictionary = loader_data->dictionary();
 
@@ -498,20 +456,13 @@ InstanceKlass* SystemDictionaryShared::find_or_load_shared_class(
   return k;
 }
 
-InstanceKlass* SystemDictionaryShared::load_shared_class_for_builtin_loader(
-                 Symbol* class_name, Handle class_loader, TRAPS) {
-  assert(UseSharedSpaces, "must be");
-  assert(shared_dictionary() != NULL, "already checked");
+InstanceKlass* SystemDictionaryShared::load_shared_class_for_builtin_loader(Symbol* class_name, Handle class_loader, TRAPS) {
   Klass* k = shared_dictionary()->find_class_for_builtin_loader(class_name);
 
   if (k != NULL) {
     InstanceKlass* ik = InstanceKlass::cast(k);
-    if ((ik->is_shared_app_class() &&
-         SystemDictionary::is_system_class_loader(class_loader()))  ||
-        (ik->is_shared_platform_class() &&
-         SystemDictionary::is_platform_class_loader(class_loader()))) {
-      Handle protection_domain =
-        SystemDictionaryShared::init_security_info(class_loader, ik, CHECK_NULL);
+    if ((ik->is_shared_app_class() && SystemDictionary::is_system_class_loader(class_loader()))  || (ik->is_shared_platform_class() && SystemDictionary::is_platform_class_loader(class_loader()))) {
+      Handle protection_domain = SystemDictionaryShared::init_security_info(class_loader, ik, CHECK_NULL);
       return load_shared_class(ik, class_loader, protection_domain, THREAD);
     }
   }
@@ -527,22 +478,19 @@ void SystemDictionaryShared::oops_do(OopClosure* f) {
 
 void SystemDictionaryShared::allocate_shared_protection_domain_array(int size, TRAPS) {
   if (_shared_protection_domains == NULL) {
-    _shared_protection_domains = oopFactory::new_objArray(
-        SystemDictionary::ProtectionDomain_klass(), size, CHECK);
+    _shared_protection_domains = oopFactory::new_objArray(SystemDictionary::ProtectionDomain_klass(), size, CHECK);
   }
 }
 
 void SystemDictionaryShared::allocate_shared_jar_url_array(int size, TRAPS) {
   if (_shared_jar_urls == NULL) {
-    _shared_jar_urls = oopFactory::new_objArray(
-        SystemDictionary::URL_klass(), size, CHECK);
+    _shared_jar_urls = oopFactory::new_objArray(SystemDictionary::URL_klass(), size, CHECK);
   }
 }
 
 void SystemDictionaryShared::allocate_shared_jar_manifest_array(int size, TRAPS) {
   if (_shared_jar_manifests == NULL) {
-    _shared_jar_manifests = oopFactory::new_objArray(
-        SystemDictionary::Jar_Manifest_klass(), size, CHECK);
+    _shared_jar_manifests = oopFactory::new_objArray(SystemDictionary::Jar_Manifest_klass(), size, CHECK);
   }
 }
 
@@ -564,9 +512,7 @@ InstanceKlass* SystemDictionaryShared::lookup_from_stream(const Symbol* class_na
   if (class_name == NULL) {  // don't do this for anonymous classes
     return NULL;
   }
-  if (class_loader.is_null() ||
-      SystemDictionary::is_system_class_loader(class_loader()) ||
-      SystemDictionary::is_platform_class_loader(class_loader())) {
+  if (class_loader.is_null() || SystemDictionary::is_system_class_loader(class_loader()) || SystemDictionary::is_platform_class_loader(class_loader())) {
     // Do nothing for the BUILTIN loaders.
     return NULL;
   }
@@ -595,11 +541,7 @@ InstanceKlass* SystemDictionaryShared::lookup_from_stream(const Symbol* class_na
                                           protection_domain, THREAD);
 }
 
-InstanceKlass* SystemDictionaryShared::acquire_class_for_current_thread(
-                   InstanceKlass *ik,
-                   Handle class_loader,
-                   Handle protection_domain,
-                   TRAPS) {
+InstanceKlass* SystemDictionaryShared::acquire_class_for_current_thread(InstanceKlass *ik, Handle class_loader, Handle protection_domain, TRAPS) {
   ClassLoaderData* loader_data = ClassLoaderData::class_loader_data(class_loader());
 
   {
@@ -628,12 +570,7 @@ InstanceKlass* SystemDictionaryShared::acquire_class_for_current_thread(
   return shared_klass;
 }
 
-bool SystemDictionaryShared::add_non_builtin_klass(Symbol* name,
-                                                   ClassLoaderData* loader_data,
-                                                   InstanceKlass* k,
-                                                   TRAPS) {
-  assert(DumpSharedSpaces, "only when dumping");
-  assert(boot_loader_dictionary() != NULL, "must be");
+bool SystemDictionaryShared::add_non_builtin_klass(Symbol* name, ClassLoaderData* loader_data, InstanceKlass* k, TRAPS) {
 
   if (boot_loader_dictionary()->add_non_builtin_klass(name, loader_data, k)) {
     MutexLocker mu_r(Compile_lock, THREAD); // not really necessary, but add_to_hierarchy asserts this.
@@ -650,11 +587,7 @@ bool SystemDictionaryShared::add_non_builtin_klass(Symbol* name,
 // java/lang/Object id: 0
 // Interface   id: 2 super: 0 source: cust.jar
 // ChildClass  id: 4 super: 0 interfaces: 2 source: cust.jar
-Klass* SystemDictionaryShared::dump_time_resolve_super_or_fail(
-    Symbol* child_name, Symbol* class_name, Handle class_loader,
-    Handle protection_domain, bool is_superclass, TRAPS) {
-
-  assert(DumpSharedSpaces, "only when dumping");
+Klass* SystemDictionaryShared::dump_time_resolve_super_or_fail(Symbol* child_name, Symbol* class_name, Handle class_loader, Handle protection_domain, bool is_superclass, TRAPS) {
 
   ClassListParser* parser = ClassListParser::instance();
   if (parser == NULL) {
@@ -686,7 +619,6 @@ struct SharedMiscInfo {
 static GrowableArray<SharedMiscInfo>* misc_info_array = NULL;
 
 void SystemDictionaryShared::set_shared_class_misc_info(Klass* k, ClassFileStream* cfs) {
-  assert(DumpSharedSpaces, "only when dumping");
   int clsfile_size  = cfs->length();
   int clsfile_crc32 = ClassLoader::crc32(0, (const char*)cfs->buffer(), cfs->length());
 
@@ -724,9 +656,7 @@ void SystemDictionaryShared::init_shared_dictionary_entry(Klass* k, DictionaryEn
   }
 }
 
-bool SystemDictionaryShared::add_verification_constraint(Klass* k, Symbol* name,
-         Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) {
-  assert(DumpSharedSpaces, "called at dump time only");
+bool SystemDictionaryShared::add_verification_constraint(Klass* k, Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) {
 
   // Skip anonymous classes, which are not archived as they are not in
   // dictionary (see assert_no_anonymoys_classes_in_dictionaries() in
@@ -739,8 +669,7 @@ bool SystemDictionaryShared::add_verification_constraint(Klass* k, Symbol* name,
   ResourceMark rm;
   // Lambda classes are not archived and will be regenerated at runtime.
   if (entry == NULL) {
-    guarantee(strstr(k->name()->as_C_string(), "Lambda$") != NULL,
-              "class should be in dictionary before being verified");
+    guarantee(strstr(k->name()->as_C_string(), "Lambda$") != NULL, "class should be in dictionary before being verified");
     return true;
   }
   entry->add_verification_constraint(name, from_name, from_field_is_protected,
@@ -760,11 +689,8 @@ void SystemDictionaryShared::finalize_verification_constraints() {
   boot_loader_dictionary()->finalize_verification_constraints();
 }
 
-void SystemDictionaryShared::check_verification_constraints(InstanceKlass* klass,
-                                                             TRAPS) {
-  assert(!DumpSharedSpaces && UseSharedSpaces, "called at run time with CDS enabled only");
+void SystemDictionaryShared::check_verification_constraints(InstanceKlass* klass, TRAPS) {
   SharedDictionaryEntry* entry = shared_dictionary()->find_entry_for(klass);
-  assert(entry != NULL, "call this only for shared classes");
   entry->check_verification_constraints(klass, THREAD);
 }
 
@@ -806,8 +732,7 @@ void SharedDictionary::finalize_verification_constraints() {
   }
 }
 
-void SharedDictionaryEntry::add_verification_constraint(Symbol* name,
-         Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) {
+void SharedDictionaryEntry::add_verification_constraint(Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) {
   if (_verifier_constraints == NULL) {
     _verifier_constraints = new(ResourceObj::C_HEAP, mtClass) GrowableArray<Symbol*>(8, true, mtClass);
   }
@@ -816,8 +741,7 @@ void SharedDictionaryEntry::add_verification_constraint(Symbol* name,
   }
   GrowableArray<Symbol*>* vc_array = (GrowableArray<Symbol*>*)_verifier_constraints;
   for (int i=0; i<vc_array->length(); i+= 2) {
-    if (name      == vc_array->at(i) &&
-        from_name == vc_array->at(i+1)) {
+    if (name      == vc_array->at(i) && from_name == vc_array->at(i+1)) {
       return;
     }
   }
@@ -840,7 +764,6 @@ void SharedDictionaryEntry::add_verification_constraint(Symbol* name,
 }
 
 int SharedDictionaryEntry::finalize_verification_constraints() {
-  assert(DumpSharedSpaces, "called at dump time only");
   Thread* THREAD = Thread::current();
   ClassLoaderData* loader_data = ClassLoaderData::the_null_class_loader_data();
   GrowableArray<Symbol*>* vc_array = (GrowableArray<Symbol*>*)_verifier_constraints;
@@ -860,7 +783,6 @@ int SharedDictionaryEntry::finalize_verification_constraints() {
       // FIXME: change this to be done after relocation, so we can use symbol offset??
       int length = vc_array->length();
       Array<Symbol*>* out = MetadataFactory::new_array<Symbol*>(loader_data, length, 0, THREAD);
-      assert(out != NULL, "Dump time allocation failure would have aborted VM");
       for (int i=0; i<length; i++) {
         out->at_put(i, vc_array->at(i));
       }
@@ -871,7 +793,6 @@ int SharedDictionaryEntry::finalize_verification_constraints() {
     {
       int length = vcflags_array->length();
       Array<char>* out = MetadataFactory::new_array<char>(loader_data, length, 0, THREAD);
-      assert(out != NULL, "Dump time allocation failure would have aborted VM");
       for (int i=0; i<length; i++) {
         out->at_put(i, vcflags_array->at(i));
       }
@@ -922,14 +843,8 @@ void SharedDictionaryEntry::metaspace_pointers_do(MetaspaceClosure* it) {
   it->push((Array<char>**)&_verifier_constraint_flags);
 }
 
-bool SharedDictionary::add_non_builtin_klass(const Symbol* class_name,
-                                             ClassLoaderData* loader_data,
-                                             InstanceKlass* klass) {
+bool SharedDictionary::add_non_builtin_klass(const Symbol* class_name, ClassLoaderData* loader_data, InstanceKlass* klass) {
 
-  assert(DumpSharedSpaces, "supported only when dumping");
-  assert(klass != NULL, "adding NULL klass");
-  assert(klass->name() == class_name, "sanity check on name");
-  assert(klass->shared_classpath_index() < 0, "the shared classpath index should not be set for shared class loaded by the custom loaders");
 
   // Add an entry for a non-builtin class.
   // For a shared class for custom class loaders, SystemDictionary::resolve_or_null will
@@ -949,12 +864,9 @@ bool SharedDictionary::add_non_builtin_klass(const Symbol* class_name,
     }
   }
 
-  assert(Dictionary::entry_size() >= sizeof(SharedDictionaryEntry), "must be big enough");
   SharedDictionaryEntry* entry = (SharedDictionaryEntry*)new_entry(hash, klass);
   add_entry(index, entry);
 
-  assert(entry->is_unregistered(), "sanity");
-  assert(!entry->is_builtin(), "sanity");
   return true;
 }
 
@@ -978,7 +890,6 @@ Klass* SharedDictionary::find_class_for_unregistered_loader(const Symbol* name,
 }
 
 void SharedDictionary::update_entry(Klass* klass, int id) {
-  assert(DumpSharedSpaces, "supported only when dumping");
   Symbol* class_name = klass->name();
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
@@ -996,7 +907,6 @@ void SharedDictionary::update_entry(Klass* klass, int id) {
 }
 
 SharedDictionaryEntry* SharedDictionary::get_entry_for_builtin_loader(const Symbol* class_name) const {
-  assert(!DumpSharedSpaces, "supported only when at runtime");
   unsigned int hash = compute_hash(class_name);
   const int index = hash_to_index(hash);
 
@@ -1015,7 +925,6 @@ SharedDictionaryEntry* SharedDictionary::get_entry_for_builtin_loader(const Symb
 SharedDictionaryEntry* SharedDictionary::get_entry_for_unregistered_loader(const Symbol* class_name,
                                                                            int clsfile_size,
                                                                            int clsfile_crc32) const {
-  assert(!DumpSharedSpaces, "supported only when at runtime");
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
 

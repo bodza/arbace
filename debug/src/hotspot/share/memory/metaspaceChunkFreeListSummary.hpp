@@ -22,7 +22,7 @@ class MetaspaceChunkFreeListSummary {
     _small_chunks_size_in_bytes(0),
     _medium_chunks_size_in_bytes(0),
     _humongous_chunks_size_in_bytes(0)
-  {}
+  { }
 
   MetaspaceChunkFreeListSummary(size_t num_specialized_chunks,
                                 size_t num_small_chunks,
@@ -40,7 +40,7 @@ class MetaspaceChunkFreeListSummary {
     _small_chunks_size_in_bytes(small_chunks_size_in_bytes),
     _medium_chunks_size_in_bytes(medium_chunks_size_in_bytes),
     _humongous_chunks_size_in_bytes(humongous_chunks_size_in_bytes)
-  {}
+  { }
 
   size_t num_specialized_chunks() const {
     return _num_specialized_chunks;

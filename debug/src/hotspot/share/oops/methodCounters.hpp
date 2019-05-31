@@ -69,7 +69,7 @@ class MethodCounters : public Metadata {
 
   static MethodCounters* allocate(const methodHandle& mh, TRAPS);
 
-  void deallocate_contents(ClassLoaderData* loader_data) {}
+  void deallocate_contents(ClassLoaderData* loader_data) { }
 
   static int method_counters_size() {
     return align_up((int)sizeof(MethodCounters), wordSize) / wordSize;

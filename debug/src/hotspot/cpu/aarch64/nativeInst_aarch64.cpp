@@ -10,7 +10,6 @@
 #include "c1/c1_Runtime1.hpp"
 
 void NativeCall::verify() {
-  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
 }
 
 void NativeInstruction::wrote(int offset) {
@@ -23,7 +22,6 @@ void NativeLoadGot::report_and_fail() const {
 }
 
 void NativeLoadGot::verify() const {
-  assert(is_adrp_at((address)this), "must be adrp");
 }
 
 address NativeLoadGot::got_address() const {
@@ -102,7 +100,6 @@ void NativePltCall::set_stub_to_clean() {
 }
 
 void NativePltCall::verify() const {
-  assert(NativeCall::is_call_at((address)this), "unexpected code at call site");
 }
 
 address NativeGotJump::got_address() const {
@@ -115,13 +112,11 @@ address NativeGotJump::destination() const {
 }
 
 bool NativeGotJump::is_GotJump() const {
-  NativeInstruction *insn =
-    nativeInstruction_at(addr_at(3 * NativeInstruction::instruction_size));
+  NativeInstruction *insn = nativeInstruction_at(addr_at(3 * NativeInstruction::instruction_size));
   return insn->encoding() == 0xd61f0200; // br x16
 }
 
 void NativeGotJump::verify() const {
-  assert(is_adrp_at((address)this), "must be adrp");
 }
 
 address NativeCall::destination() const {
@@ -130,7 +125,6 @@ address NativeCall::destination() const {
 
   // Do we use a trampoline stub for this call?
   CodeBlob* cb = CodeCache::find_blob_unsafe(addr);   // Else we get assertion if nmethod is zombie.
-  assert(cb && cb->is_nmethod(), "sanity");
   nmethod *nm = (nmethod *)cb;
   if (nm->stub_contains(destination) && is_NativeCallTrampolineStub_at(destination)) {
     // Yes we do, so get the destination from the trampoline stub.
@@ -150,18 +144,15 @@ address NativeCall::destination() const {
 // Add parameter assert_lock to switch off assertion
 // during code generation, where no patching lock is needed.
 void NativeCall::set_destination_mt_safe(address dest, bool assert_lock) {
-  assert(!assert_lock || (Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint()), "concurrent code patching");
 
   ResourceMark rm;
   int code_size = NativeInstruction::instruction_size;
   address addr_call = addr_at(0);
   bool reachable = Assembler::reachable_from_branch_at(addr_call, dest);
-  assert(NativeCall::is_call_at(addr_call), "unexpected code at call site");
 
   // Patch the constant in the call's trampoline stub.
   address trampoline_stub_addr = get_trampoline();
   if (trampoline_stub_addr != NULL) {
-    assert(! is_NativeCallTrampolineStub_at(dest), "chained trampolines");
     nativeCallTrampolineStub_at(trampoline_stub_addr)->set_destination(dest);
   }
 
@@ -169,7 +160,6 @@ void NativeCall::set_destination_mt_safe(address dest, bool assert_lock) {
   if (reachable) {
     set_destination(dest);
   } else {
-    assert(trampoline_stub_addr != NULL, "we need a trampoline");
     set_destination(trampoline_stub_addr);
   }
 
@@ -180,12 +170,9 @@ address NativeCall::get_trampoline() {
   address call_addr = addr_at(0);
 
   CodeBlob *code = CodeCache::find_blob(call_addr);
-  assert(code != NULL, "Could not find the containing code blob");
 
-  address bl_destination
-    = MacroAssembler::pd_call_destination(call_addr);
-  if (code->contains(bl_destination) &&
-      is_NativeCallTrampolineStub_at(bl_destination))
+  address bl_destination = MacroAssembler::pd_call_destination(call_addr);
+  if (code->contains(bl_destination) && is_NativeCallTrampolineStub_at(bl_destination))
     return bl_destination;
 
   if (code->is_nmethod()) {
@@ -251,9 +238,9 @@ void NativeMovConstReg::print() {
 
 //-------------------------------------------------------------------
 
-address NativeMovRegMem::instruction_address() const      { return addr_at(instruction_offset); }
+address NativeMovRegMem::instruction_address() const { return addr_at(instruction_offset); }
 
-int NativeMovRegMem::offset() const  {
+int NativeMovRegMem::offset() const {
   address pc = instruction_address();
   unsigned insn = *(unsigned*)pc;
   if (Instruction_aarch64::extract(insn, 28, 24) == 0b10000) {
@@ -286,7 +273,7 @@ void NativeJump::verify() { ; }
 void NativeJump::check_verified_entry_alignment(address entry, address verified_entry) {
 }
 
-address NativeJump::jump_destination() const          {
+address NativeJump::jump_destination() const {
   address dest = MacroAssembler::target_addr_for_insn(instruction_address());
 
   // We use jump to self as the unresolved address which the inline
@@ -377,8 +364,7 @@ bool NativeInstruction::is_ldr_literal_at(address instr) {
 
 bool NativeInstruction::is_ldrw_to_zr(address instr) {
   unsigned insn = *(unsigned*)instr;
-  return (Instruction_aarch64::extract(insn, 31, 22) == 0b1011100101 &&
-          Instruction_aarch64::extract(insn, 4, 0) == 0b11111);
+  return (Instruction_aarch64::extract(insn, 31, 22) == 0b1011100101 && Instruction_aarch64::extract(insn, 4, 0) == 0b11111);
 }
 
 bool NativeInstruction::is_general_jump() {
@@ -420,8 +406,6 @@ void NativeIllegalInstruction::insert(address code_pos) {
 
 void NativeJump::patch_verified_entry(address entry, address verified_entry, address dest) {
 
-  assert(dest == SharedRuntime::get_handle_wrong_method_stub(), "expected fixed destination of patch");
-
   // Patch this nmethod atomically.
   if (Assembler::reachable_from_branch_at(verified_entry, dest)) {
     ptrdiff_t disp = dest - verified_entry;
@@ -438,7 +422,7 @@ void NativeJump::patch_verified_entry(address entry, address verified_entry, add
   ICache::invalidate_range(verified_entry, instruction_size);
 }
 
-void NativeGeneralJump::verify() {  }
+void NativeGeneralJump::verify() { }
 
 void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   NativeGeneralJump* n_jump = (NativeGeneralJump*)code_pos;
@@ -472,8 +456,7 @@ address NativeCall::trampoline_jump(CodeBuffer &cbuf, address dest) {
   MacroAssembler a(&cbuf);
   address stub = NULL;
 
-  if (a.far_branches()
-      && ! is_NativeCallTrampolineStub_at(instruction_address() + displacement())) {
+  if (a.far_branches() && ! is_NativeCallTrampolineStub_at(instruction_address() + displacement())) {
     stub = a.emit_trampoline_stub(instruction_address() - cbuf.insts()->start(), dest);
   }
 

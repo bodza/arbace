@@ -125,8 +125,8 @@ class ObjectLookup : public ResourceObj {
     int     _index;
 
    public:
-    ObjectEntry(jobject value, int index) : _value(value), _index(index) {}
-    ObjectEntry() : _value(NULL), _index(0) {}
+    ObjectEntry(jobject value, int index) : _value(value), _index(index) { }
+    ObjectEntry() : _value(NULL), _index(0) { }
     oop oop_value() const;
     int index() { return _index; }
   };

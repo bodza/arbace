@@ -20,19 +20,12 @@ int AbstractInterpreter::BasicType_as_index(BasicType type) {
     case T_ARRAY  : i = 9; break;
     default       : ShouldNotReachHere();
   }
-  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers, "index out of bounds");
   return i;
 }
 
 // Deoptimization helpers
 
-int AbstractInterpreter::size_activation(int       max_stack,
-                                         int       tempcount,
-                                         int       extra_args,
-                                         int       moncount,
-                                         int       callee_param_count,
-                                         int       callee_locals,
-                                         bool      is_top_frame) {
+int AbstractInterpreter::size_activation(int max_stack, int tempcount, int extra_args, int moncount, int callee_param_count, int callee_locals, bool is_top_frame) {
   int header_words        = InterpreterFrame::header_words;
   int monitor_words       = moncount * frame::interpreter_frame_monitor_size();
   int stack_words         = is_top_frame ? max_stack : tempcount;
@@ -52,8 +45,6 @@ void AbstractInterpreter::layout_activation(Method* method,
                                             frame*    interpreter_frame,
                                             bool      is_top_frame,
                                             bool      is_bottom_frame) {
-  assert(popframe_extra_args == 0, "what to do?");
-  assert(!is_top_frame || (!callee_locals && !callee_param_count), "top frame should have no caller");
 
   // This code must exactly match what InterpreterFrame::build
   // does (the full InterpreterFrame::build, that is, not the

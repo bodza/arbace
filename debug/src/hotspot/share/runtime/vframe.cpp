@@ -25,13 +25,11 @@
 
 vframe::vframe(const frame* fr, const RegisterMap* reg_map, JavaThread* thread)
 : _reg_map(reg_map), _thread(thread) {
-  assert(fr != NULL, "must have frame");
   _fr = *fr;
 }
 
 vframe::vframe(const frame* fr, JavaThread* thread)
 : _reg_map(thread), _thread(thread) {
-  assert(fr != NULL, "must have frame");
   _fr = *fr;
 }
 
@@ -63,7 +61,6 @@ vframe* vframe::new_vframe(const frame* f, const RegisterMap* reg_map, JavaThrea
 
 vframe* vframe::sender() const {
   RegisterMap temp_map = *register_map();
-  assert(is_top(), "just checking");
   if (_fr.is_entry_frame() && _fr.is_first_frame()) return NULL;
   frame s = _fr.real_sender(&temp_map);
   if (s.is_first_frame()) return NULL;
@@ -88,7 +85,6 @@ javaVFrame* vframe::java_sender() const {
 // ------------- javaVFrame --------------
 
 GrowableArray<MonitorInfo*>* javaVFrame::locked_monitors() {
-  assert(SafepointSynchronize::is_at_safepoint() || JavaThread::current() == thread(), "must be at safepoint or it's a java frame of the current thread");
 
   GrowableArray<MonitorInfo*>* mons = monitors();
   GrowableArray<MonitorInfo*>* result = new GrowableArray<MonitorInfo*>(mons->length());
@@ -137,8 +133,7 @@ void javaVFrame::print_lock_info_on(outputStream* st, int frame_count) {
   // then print out the receiver. Locals are not always available,
   // e.g., compiled native frames have no scope so there are no locals.
   if (frame_count == 0) {
-    if (method()->name() == vmSymbols::wait_name() &&
-        method()->method_holder()->name() == vmSymbols::java_lang_Object()) {
+    if (method()->name() == vmSymbols::wait_name() && method()->method_holder()->name() == vmSymbols::java_lang_Object()) {
       const char *wait_state = "waiting on"; // assume we are waiting
       // If earlier in the output we reported java.lang.Thread.State ==
       // "WAITING (on object monitor)" and now we report "waiting on", then
@@ -252,7 +247,6 @@ void interpretedVFrame::set_bcp(u_char* bcp) {
 }
 
 intptr_t* interpretedVFrame::locals_addr_at(int offset) const {
-  assert(fr().is_interpreted_frame(), "frame should be an interpreted frame");
   return fr().interpreter_frame_local_at(offset);
 }
 
@@ -278,8 +272,6 @@ static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_
                                                    int index,
                                                    const intptr_t* const addr) {
 
-  assert(index >= 0 && index < oop_mask.number_of_entries(), "invariant");
-
   // categorize using oop_mask
   if (oop_mask.is_oop(index)) {
     // reference (oop) "r"
@@ -291,7 +283,6 @@ static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_
 }
 
 static bool is_in_expression_stack(const frame& fr, const intptr_t* const addr) {
-  assert(addr != NULL, "invariant");
 
   // Ensure to be 'inside' the expresion stack (i.e., addr >= sp for Intel).
   // In case of exceptions, the expression stack is invalid and the sp
@@ -308,15 +299,10 @@ static void stack_locals(StackValueCollection* result,
                          const InterpreterOopMap& oop_mask,
                          const frame& fr) {
 
-  assert(result != NULL, "invariant");
-
   for (int i = 0; i < length; ++i) {
     const intptr_t* const addr = fr.interpreter_frame_local_at(i);
-    assert(addr != NULL, "invariant");
-    assert(addr >= fr.sp(), "must be inside the frame");
 
     StackValue* const sv = create_stack_value_from_oop_map(oop_mask, i, addr);
-    assert(sv != NULL, "sanity check");
 
     result->add(sv);
   }
@@ -328,11 +314,8 @@ static void stack_expressions(StackValueCollection* result,
                               const InterpreterOopMap& oop_mask,
                               const frame& fr) {
 
-  assert(result != NULL, "invariant");
-
   for (int i = 0; i < length; ++i) {
     const intptr_t* addr = fr.interpreter_frame_expression_stack_at(i);
-    assert(addr != NULL, "invariant");
     if (!is_in_expression_stack(fr, addr)) {
       // Need to ensure no bogus escapes.
       addr = NULL;
@@ -341,7 +324,6 @@ static void stack_expressions(StackValueCollection* result,
     StackValue* const sv = create_stack_value_from_oop_map(oop_mask,
                                                            i + max_locals,
                                                            addr);
-    assert(sv != NULL, "sanity check");
 
     result->add(sv);
   }
@@ -377,10 +359,7 @@ StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
   const int max_locals = method()->is_native() ?
     method()->size_of_parameters() : method()->max_locals();
 
-  assert(mask_len >= max_locals, "invariant");
-
   const int length = expressions ? mask_len - max_locals : max_locals;
-  assert(length >= 0, "invariant");
 
   StackValueCollection* const result = new StackValueCollection(length);
 
@@ -394,8 +373,6 @@ StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
     stack_locals(result, length, oop_mask, fr());
   }
 
-  assert(length == result->size(), "invariant");
-
   return result;
 }
 
@@ -407,8 +384,6 @@ void interpretedVFrame::set_locals(StackValueCollection* values) const {
   const int max_locals = method()->is_native() ?
     method()->size_of_parameters() : method()->max_locals();
 
-  assert(max_locals == values->size(), "Mismatch between actual stack format and supplied data");
-
   // handle locals
   for (int i = 0; i < max_locals; i++) {
     // Find stack location
@@ -416,7 +391,6 @@ void interpretedVFrame::set_locals(StackValueCollection* values) const {
 
     // Depending on oop/int put it in the right package
     const StackValue* const sv = values->at(i);
-    assert(sv != NULL, "sanity check");
     if (sv->type() == T_OBJECT) {
       *(oop *) addr = (sv->get_obj())();
     } else {                   // integer
@@ -428,7 +402,7 @@ void interpretedVFrame::set_locals(StackValueCollection* values) const {
 // ------------- cChunk --------------
 
 entryVFrame::entryVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread)
-: externalVFrame(fr, reg_map, thread) {}
+: externalVFrame(fr, reg_map, thread) { }
 
 // top-frame will be skipped
 vframeStream::vframeStream(JavaThread* thread, frame top_frame,
@@ -446,7 +420,6 @@ vframeStream::vframeStream(JavaThread* thread, frame top_frame,
 // This function is used in Class.forName, Class.newInstance, Method.Invoke,
 // AccessController.doPrivileged.
 void vframeStreamCommon::security_get_caller_frame(int depth) {
-  assert(depth >= 0, "invalid depth: %d", depth);
   for (int n = 0; !at_end(); security_next()) {
     if (!method()->is_ignored_by_security_stack_walk()) {
       if (n == depth) {

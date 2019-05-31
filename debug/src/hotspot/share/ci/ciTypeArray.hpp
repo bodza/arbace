@@ -13,9 +13,9 @@ class ciTypeArray : public ciArray {
   CI_PACKAGE_ACCESS
 
 protected:
-  ciTypeArray(typeArrayHandle h_t) : ciArray(h_t) {}
+  ciTypeArray(typeArrayHandle h_t) : ciArray(h_t) { }
 
-  ciTypeArray(ciKlass* klass, int len) : ciArray(klass, len) {}
+  ciTypeArray(ciKlass* klass, int len) : ciArray(klass, len) { }
 
   typeArrayOop get_typeArrayOop() {
     return (typeArrayOop)get_oop();

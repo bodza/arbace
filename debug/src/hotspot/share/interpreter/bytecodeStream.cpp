@@ -4,7 +4,6 @@
 #include "runtime/handles.inline.hpp"
 
 Bytecodes::Code RawBytecodeStream::raw_next_special(Bytecodes::Code code) {
-  assert(!is_last_bytecode(), "should have been checked");
   // set next bytecode position
   address bcp = RawBytecodeStream::bcp();
   address end = method()->code_base() + end_bci();

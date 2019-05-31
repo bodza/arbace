@@ -65,7 +65,6 @@ public:
   }
 
   inline address get_frame(int index) const {
-    assert(index >= 0 && index < NMT_TrackingStackDepth, "Index out of bound");
     return _stack[index];
   }
 

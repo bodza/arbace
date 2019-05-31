@@ -43,7 +43,6 @@ template <class T> inline void G1AdjustClosure::adjust_pointer(T* p) {
   }
 
   oop obj = CompressedOops::decode_not_null(heap_oop);
-  assert(Universe::heap()->is_in(obj), "should be in heap");
   if (G1ArchiveAllocator::is_archive_object(obj)) {
     // We never forward archive objects.
     return;
@@ -53,16 +52,14 @@ template <class T> inline void G1AdjustClosure::adjust_pointer(T* p) {
   if (forwardee == NULL) {
     // Not forwarded, return current reference.
     // Correct mark // Will be restored by PreservedMarksSet // Will be restored by BiasedLocking
-    assert(obj->mark_raw() == markOopDesc::prototype_for_object(obj) || obj->mark_raw()->must_be_preserved(obj) || (UseBiasedLocking && obj->has_bias_pattern_raw()), "Must have correct prototype or be preserved, obj: " PTR_FORMAT ", mark: " PTR_FORMAT ", prototype: " PTR_FORMAT, p2i(obj), p2i(obj->mark_raw()), p2i(markOopDesc::prototype_for_object(obj)));
     return;
   }
 
   // Forwarded, just update.
-  assert(Universe::heap()->is_in_reserved(forwardee), "should be in object space");
   RawAccess<IS_NOT_NULL>::oop_store(p, forwardee);
 }
 
-inline void G1AdjustClosure::do_oop(oop* p)       { do_oop_work(p); }
+inline void G1AdjustClosure::do_oop(oop* p) { do_oop_work(p); }
 inline void G1AdjustClosure::do_oop(narrowOop* p) { do_oop_work(p); }
 
 inline bool G1IsAliveClosure::do_object_b(oop p) {

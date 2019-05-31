@@ -9,7 +9,6 @@ template <typename T>
 WorkerDataArray<T>::WorkerDataArray(uint length, const char* title) :
  _title(title),
  _length(0) {
-  assert(length > 0, "Must have some workers to store data for");
   _length = length;
   _data = NEW_C_HEAP_ARRAY(T, _length, mtGC);
   for (uint i = 0; i < MaxThreadWorkItems; i++) {
@@ -20,14 +19,11 @@ WorkerDataArray<T>::WorkerDataArray(uint length, const char* title) :
 
 template <typename T>
 void WorkerDataArray<T>::set(uint worker_i, T value) {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
-  assert(_data[worker_i] == uninitialized(), "Overwriting data for worker %d in %s", worker_i, _title);
   _data[worker_i] = value;
 }
 
 template <typename T>
 T WorkerDataArray<T>::get(uint worker_i) const {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
   return _data[worker_i];
 }
 
@@ -38,28 +34,21 @@ WorkerDataArray<T>::~WorkerDataArray() {
 
 template <typename T>
 void WorkerDataArray<T>::link_thread_work_items(WorkerDataArray<size_t>* thread_work_items, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
   _thread_work_items[index] = thread_work_items;
 }
 
 template <typename T>
 void WorkerDataArray<T>::set_thread_work_item(uint worker_i, size_t value, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
-  assert(_thread_work_items[index] != NULL, "No sub count");
   _thread_work_items[index]->set(worker_i, value);
 }
 
 template <typename T>
 void WorkerDataArray<T>::add_thread_work_item(uint worker_i, size_t value, uint index) {
-  assert(index < MaxThreadWorkItems, "Tried to access thread work item %u (max %u)", index, MaxThreadWorkItems);
-  assert(_thread_work_items[index] != NULL, "No sub count");
   _thread_work_items[index]->add(worker_i, value);
 }
 
 template <typename T>
 void WorkerDataArray<T>::add(uint worker_i, T value) {
-  assert(worker_i < _length, "Worker %d is greater than max: %d", worker_i, _length);
-  assert(_data[worker_i] != uninitialized(), "No data to add to for worker %d", worker_i);
   _data[worker_i] += value;
 }
 
@@ -117,7 +106,6 @@ void WorkerDataArray<T>::print_summary_on(outputStream* out, bool print_sum) con
       }
     }
     T diff = max - min;
-    assert(contributing_threads != 0, "Must be since we found a used value for the start index");
     double avg = sum / (double) contributing_threads;
     WDAPrinter::summary(out, min, avg, max, diff, sum, print_sum);
     out->print_cr(", Workers: %d", contributing_threads);

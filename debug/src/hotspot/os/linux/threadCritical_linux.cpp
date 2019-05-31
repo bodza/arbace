@@ -18,15 +18,12 @@ ThreadCritical::ThreadCritical() {
   if (self != tc_owner) {
     int ret = pthread_mutex_lock(&tc_mutex);
     guarantee(ret == 0, "fatal error with pthread_mutex_lock()");
-    assert(tc_count == 0, "Lock acquired with illegal reentry count.");
     tc_owner = self;
   }
   tc_count++;
 }
 
 ThreadCritical::~ThreadCritical() {
-  assert(tc_owner == pthread_self(), "must have correct owner");
-  assert(tc_count > 0, "must have correct count");
 
   tc_count--;
   if (tc_count == 0) {

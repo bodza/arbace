@@ -4,10 +4,10 @@
 
 // 32-bit one-to-one sign encoding taken from Pack200
 // converts leading sign bits into leading zeroes with trailing sign bit
-inline juint CompressedStream::encode_sign(jint  value) {
+inline juint CompressedStream::encode_sign(jint value) {
   return (value << 1) ^ (value >> 31);
 }
-inline jint  CompressedStream::decode_sign(juint value) {
+inline jint CompressedStream::decode_sign(juint value) {
   return (value >> 1) ^ -(jint)(value & 1);
 }
 
@@ -73,7 +73,6 @@ void CompressedWriteStream::write_signed_int(jint value) {
 void CompressedWriteStream::write_float(jfloat value) {
   juint f = jint_cast(value);
   juint rf = reverse_int(f);
-  assert(f == reverse_int(rf), "can re-read same bits");
   write_int(rf);
 }
 
@@ -82,8 +81,6 @@ void CompressedWriteStream::write_double(jdouble value) {
   juint l  = low( jlong_cast(value));
   juint rh = reverse_int(h);
   juint rl = reverse_int(l);
-  assert(h == reverse_int(rh), "can re-read same bits");
-  assert(l == reverse_int(rl), "can re-read same bits");
   write_int(rh);
   write_int(rl);
 }
@@ -100,7 +97,6 @@ void CompressedWriteStream::write_int_mb(jint value) {
   for (int i = 0; ; ) {
     if (sum < L || i == MAX_i) {
       // remainder is either a "low code" or the 5th byte
-      assert(sum == (u_char)sum, "valid byte");
       write((u_char)sum);
       break;
     }

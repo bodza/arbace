@@ -67,8 +67,6 @@ static jint get_properties(AttachOperation* op, outputStream* out, Symbol* seria
 
   // The result should be a [B
   oop res = (oop)result.get_jobject();
-  assert(res->is_typeArray(), "just checking");
-  assert(TypeArrayKlass::cast(res->klass())->element_type() == T_BYTE, "just checking");
 
   // copy the bytes to the output stream
   typeArrayOop ba = typeArrayOop(res);
@@ -281,9 +279,6 @@ static AttachOperationFunctionInfo funcs[] = {
 static void attach_listener_thread_entry(JavaThread* thread, TRAPS) {
   os::set_priority(thread, NearMaxPriority);
 
-  assert(thread == Thread::current(), "Must be");
-  assert(thread->stack_base() != NULL && thread->stack_size() > 0, "Should already be setup");
-
   if (AttachListener::pd_init() != 0) {
     return;
   }
@@ -303,15 +298,13 @@ static void attach_listener_thread_entry(JavaThread* thread, TRAPS) {
     if (strcmp(op->name(), AttachOperation::detachall_operation_name()) == 0) {
       AttachListener::detachall();
     } else if (!EnableDynamicAgentLoading && strcmp(op->name(), "load") == 0) {
-      st.print("Dynamic agent loading is not enabled. "
-               "Use -XX:+EnableDynamicAgentLoading to launch target VM.");
+      st.print("Dynamic agent loading is not enabled. Use -XX:+EnableDynamicAgentLoading to launch target VM.");
       res = JNI_ERR;
     } else {
       // find the function to dispatch too
       AttachOperationFunctionInfo* info = NULL;
       for (int i=0; funcs[i].name != NULL; i++) {
         const char* name = funcs[i].name;
-        assert(strlen(name) <= AttachOperation::name_length_max, "operation <= name_length_max");
         if (strcmp(op->name(), name) == 0) {
           info = &(funcs[i]);
           break;

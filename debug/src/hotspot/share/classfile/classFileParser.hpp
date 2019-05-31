@@ -310,8 +310,8 @@ class ClassFileParser {
     if (!b) { classfile_parse_error(msg, CHECK); }
   }
 
-  void report_assert_property_failure(const char* msg, TRAPS) const {};
-  void report_assert_property_failure(const char* msg, int index, TRAPS) const {};
+  void report_assert_property_failure(const char* msg, TRAPS) const { };
+  void report_assert_property_failure(const char* msg, int index, TRAPS) const { };
 
   inline void assert_property(bool b, const char* msg, TRAPS) const {
   }
@@ -338,95 +338,60 @@ class ClassFileParser {
     }
   }
 
-  inline void guarantee_property(bool b,
-                                 const char* msg,
-                                 int index,
-                                 TRAPS) const {
+  inline void guarantee_property(bool b, const char* msg, int index, TRAPS) const {
     if (!b) { classfile_parse_error(msg, index, CHECK); }
   }
 
-  inline void guarantee_property(bool b,
-                                 const char* msg,
-                                 const char *name,
-                                 TRAPS) const {
+  inline void guarantee_property(bool b, const char* msg, const char *name, TRAPS) const {
     if (!b) { classfile_parse_error(msg, name, CHECK); }
   }
 
-  inline void guarantee_property(bool b,
-                                 const char* msg,
-                                 int index,
-                                 const char *name,
-                                 TRAPS) const {
+  inline void guarantee_property(bool b, const char* msg, int index, const char *name, TRAPS) const {
     if (!b) { classfile_parse_error(msg, index, name, CHECK); }
   }
 
-  void throwIllegalSignature(const char* type,
-                             const Symbol* name,
-                             const Symbol* sig,
-                             TRAPS) const;
+  void throwIllegalSignature(const char* type, const Symbol* name, const Symbol* sig, TRAPS) const;
 
-  void verify_constantvalue(const ConstantPool* const cp,
-                            int constantvalue_index,
-                            int signature_index,
-                            TRAPS) const;
+  void verify_constantvalue(const ConstantPool* const cp, int constantvalue_index, int signature_index, TRAPS) const;
 
   void verify_legal_utf8(const unsigned char* buffer, int length, TRAPS) const;
   void verify_legal_class_name(const Symbol* name, TRAPS) const;
   void verify_legal_field_name(const Symbol* name, TRAPS) const;
   void verify_legal_method_name(const Symbol* name, TRAPS) const;
 
-  void verify_legal_field_signature(const Symbol* fieldname,
-                                    const Symbol* signature,
-                                    TRAPS) const;
-  int  verify_legal_method_signature(const Symbol* methodname,
-                                     const Symbol* signature,
-                                     TRAPS) const;
+  void verify_legal_field_signature(const Symbol* fieldname, const Symbol* signature, TRAPS) const;
+  int  verify_legal_method_signature(const Symbol* methodname, const Symbol* signature, TRAPS) const;
 
   void verify_legal_class_modifiers(jint flags, TRAPS) const;
   void verify_legal_field_modifiers(jint flags, bool is_interface, TRAPS) const;
-  void verify_legal_method_modifiers(jint flags,
-                                     bool is_interface,
-                                     const Symbol* name,
-                                     TRAPS) const;
+  void verify_legal_method_modifiers(jint flags, bool is_interface, const Symbol* name, TRAPS) const;
 
-  const char* skip_over_field_signature(const char* signature,
-                                        bool void_ok,
-                                        unsigned int length,
-                                        TRAPS) const;
+  const char* skip_over_field_signature(const char* signature, bool void_ok, unsigned int length, TRAPS) const;
 
   bool has_cp_patch_at(int index) const {
-    assert(index >= 0, "oob");
-    return (_cp_patches != NULL
-            && index < _cp_patches->length()
-            && _cp_patches->adr_at(index)->not_null());
+    return (_cp_patches != NULL && index < _cp_patches->length() && _cp_patches->adr_at(index)->not_null());
   }
 
   Handle cp_patch_at(int index) const {
-    assert(has_cp_patch_at(index), "oob");
     return _cp_patches->at(index);
   }
 
   Handle clear_cp_patch_at(int index);
 
   void patch_class(ConstantPool* cp, int class_index, Klass* k, Symbol* name);
-  void patch_constant_pool(ConstantPool* cp,
-                           int index,
-                           Handle patch,
-                           TRAPS);
+  void patch_constant_pool(ConstantPool* cp, int index, Handle patch, TRAPS);
 
   // Wrapper for constantTag.is_klass_[or_]reference.
   // In older versions of the VM, Klass*s cannot sneak into early phases of
   // constant pool construction, but in later versions they can.
   // %%% Let's phase out the old is_klass_reference.
   bool valid_klass_reference_at(int index) const {
-    return _cp->is_within_bounds(index) &&
-             _cp->tag_at(index).is_klass_or_reference();
+    return _cp->is_within_bounds(index) && _cp->tag_at(index).is_klass_or_reference();
   }
 
   // Checks that the cpool index is in range and is a utf8
   bool valid_symbol_at(int cpool_index) const {
-    return _cp->is_within_bounds(cpool_index) &&
-             _cp->tag_at(cpool_index).is_utf8();
+    return _cp->is_within_bounds(cpool_index) && _cp->tag_at(cpool_index).is_utf8();
   }
 
   void copy_localvariable_table(const ConstMethod* cm,

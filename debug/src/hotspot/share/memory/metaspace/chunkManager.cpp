@@ -38,19 +38,11 @@ void ChunkManager::remove_chunk(Metachunk* chunk) {
 }
 
 bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex target_chunk_type) {
-  assert_lock_strong(MetaspaceExpand_lock);
-  assert(chunk != NULL, "invalid chunk pointer");
-  // Check for valid merge combinations.
-  assert((chunk->get_chunk_type() == SpecializedIndex && (target_chunk_type == SmallIndex || target_chunk_type == MediumIndex)) || (chunk->get_chunk_type() == SmallIndex && target_chunk_type == MediumIndex), "Invalid chunk merge combination.");
-
-  const size_t target_chunk_word_size =
-    get_size_for_nonhumongous_chunktype(target_chunk_type, this->is_class());
+  const size_t target_chunk_word_size = get_size_for_nonhumongous_chunktype(target_chunk_type, this->is_class());
 
   // [ prospective merge region )
-  MetaWord* const p_merge_region_start =
-    (MetaWord*) align_down(chunk, target_chunk_word_size * sizeof(MetaWord));
-  MetaWord* const p_merge_region_end =
-    p_merge_region_start + target_chunk_word_size;
+  MetaWord* const p_merge_region_start = (MetaWord*) align_down(chunk, target_chunk_word_size * sizeof(MetaWord));
+  MetaWord* const p_merge_region_end = p_merge_region_start + target_chunk_word_size;
 
   // We need the VirtualSpaceNode containing this chunk and its occupancy map.
   VirtualSpaceNode* const vsn = chunk->container();
@@ -68,8 +60,7 @@ bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex
   if (!ocmap->chunk_starts_at_address(p_merge_region_start)) {
     return false;
   }
-  if (p_merge_region_end < vsn->top() &&
-      !ocmap->chunk_starts_at_address(p_merge_region_end)) {
+  if (p_merge_region_end < vsn->top() && !ocmap->chunk_starts_at_address(p_merge_region_end)) {
     return false;
   }
 
@@ -83,18 +74,13 @@ bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex
     (is_class() ? "class space" : "metaspace"),
     p_merge_region_start, p_merge_region_end);
 
-  const int num_chunks_removed =
-    remove_chunks_in_area(p_merge_region_start, target_chunk_word_size);
+  const int num_chunks_removed = remove_chunks_in_area(p_merge_region_start, target_chunk_word_size);
 
   // ... and create a single new bigger chunk.
-  Metachunk* const p_new_chunk =
-      ::new (p_merge_region_start) Metachunk(target_chunk_type, is_class(), target_chunk_word_size, vsn);
-  assert(p_new_chunk == (Metachunk*)p_merge_region_start, "Sanity");
+  Metachunk* const p_new_chunk = ::new (p_merge_region_start) Metachunk(target_chunk_type, is_class(), target_chunk_word_size, vsn);
   p_new_chunk->set_origin(origin_merge);
 
-  log_trace(gc, metaspace, freelist)("%s: created coalesced chunk at %p, size " SIZE_FORMAT_HEX ".",
-    (is_class() ? "class space" : "metaspace"),
-    p_new_chunk, p_new_chunk->word_size() * sizeof(MetaWord));
+  log_trace(gc, metaspace, freelist)("%s: created coalesced chunk at %p, size " SIZE_FORMAT_HEX ".", (is_class() ? "class space" : "metaspace"), p_new_chunk, p_new_chunk->word_size() * sizeof(MetaWord));
 
   // Fix occupancy map: remove old start bits of the small chunks and set new start bit.
   ocmap->wipe_chunk_start_bits_in_region(p_merge_region_start, target_chunk_word_size);
@@ -109,7 +95,7 @@ bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex
   ChunkList* const list = free_chunks(target_chunk_type);
   list->return_chunk_at_head(p_new_chunk);
 
-  // And adjust ChunkManager:: _free_chunks_count (_free_chunks_total
+  // And adjust ChunkManager::_free_chunks_count (_free_chunks_total
   // should not have changed, because the size of the space should be the same)
   _free_chunks_count -= num_chunks_removed;
   _free_chunks_count ++;
@@ -128,9 +114,7 @@ bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex
 // - Does not adjust container count counter in containing VirtualSpaceNode
 // Returns number of chunks removed.
 int ChunkManager::remove_chunks_in_area(MetaWord* p, size_t word_size) {
-  assert(p != NULL && word_size > 0, "Invalid range.");
   const size_t smallest_chunk_size = get_size_for_nonhumongous_chunktype(SpecializedIndex, is_class());
-  assert_is_aligned(word_size, smallest_chunk_size);
 
   Metachunk* const start = (Metachunk*) p;
   const Metachunk* const end = (Metachunk*)(p + word_size);
@@ -138,8 +122,6 @@ int ChunkManager::remove_chunks_in_area(MetaWord* p, size_t word_size) {
   int num_removed = 0;
   while (cur < end) {
     Metachunk* next = (Metachunk*)(((MetaWord*)cur) + cur->word_size());
-    assert(cur->get_chunk_type() != HumongousIndex, "Unexpected humongous chunk found at %p.", cur);
-    assert(cur->is_tagged_free(), "Chunk expected to be free (%p)", cur);
     log_trace(gc, metaspace, freelist)("%s: removing chunk %p, size " SIZE_FORMAT_HEX ".",
       (is_class() ? "class space" : "metaspace"),
       cur, cur->word_size() * sizeof(MetaWord));
@@ -166,16 +148,12 @@ size_t ChunkManager::free_chunks_total_bytes() {
 
 // Update internal accounting after a chunk was added
 void ChunkManager::account_for_added_chunk(const Metachunk* c) {
-  assert_lock_strong(MetaspaceExpand_lock);
   _free_chunks_count ++;
   _free_chunks_total += c->word_size();
 }
 
 // Update internal accounting after a chunk was removed
 void ChunkManager::account_for_removed_chunk(const Metachunk* c) {
-  assert_lock_strong(MetaspaceExpand_lock);
-  assert(_free_chunks_count >= 1, "ChunkManager::_free_chunks_count: about to go negative (" SIZE_FORMAT ").", _free_chunks_count);
-  assert(_free_chunks_total >= c->word_size(), "ChunkManager::_free_chunks_total: about to go negative (now: " SIZE_FORMAT ", decrement value: " SIZE_FORMAT ").", _free_chunks_total, c->word_size());
   _free_chunks_count --;
   _free_chunks_total -= c->word_size();
 }
@@ -189,19 +167,13 @@ ChunkIndex ChunkManager::list_index(size_t size) {
 }
 
 size_t ChunkManager::size_by_index(ChunkIndex index) const {
-  index_bounds_check(index);
-  assert(index != HumongousIndex, "Do not call for humongous chunks.");
   return get_size_for_nonhumongous_chunktype(index, is_class());
 }
 
 void ChunkManager::locked_verify_free_chunks_total() {
-  assert_lock_strong(MetaspaceExpand_lock);
-  assert(sum_free_chunks() == _free_chunks_total, "_free_chunks_total " SIZE_FORMAT " is not the same as sum " SIZE_FORMAT, _free_chunks_total, sum_free_chunks());
 }
 
 void ChunkManager::locked_verify_free_chunks_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
-  assert(sum_free_chunks_count() == _free_chunks_count, "_free_chunks_count " SIZE_FORMAT " is not the same as sum " SIZE_FORMAT, _free_chunks_count, sum_free_chunks_count());
 }
 
 void ChunkManager::verify() {
@@ -218,7 +190,6 @@ void ChunkManager::locked_verify() {
     if (list != NULL) {
       Metachunk* chunk = list->head();
       while (chunk) {
-        assert(chunk->is_tagged_free(), "Chunk should be tagged as free.");
         chunk = chunk->next();
       }
     }
@@ -226,19 +197,14 @@ void ChunkManager::locked_verify() {
 }
 
 void ChunkManager::locked_print_free_chunks(outputStream* st) {
-  assert_lock_strong(MetaspaceExpand_lock);
-  st->print_cr("Free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT,
-                _free_chunks_total, _free_chunks_count);
+  st->print_cr("Free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT, _free_chunks_total, _free_chunks_count);
 }
 
 void ChunkManager::locked_print_sum_free_chunks(outputStream* st) {
-  assert_lock_strong(MetaspaceExpand_lock);
-  st->print_cr("Sum free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT,
-                sum_free_chunks(), sum_free_chunks_count());
+  st->print_cr("Sum free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT, sum_free_chunks(), sum_free_chunks_count());
 }
 
 ChunkList* ChunkManager::free_chunks(ChunkIndex index) {
-  assert(index == SpecializedIndex || index == SmallIndex || index == MediumIndex, "Bad index: %d", (int)index);
 
   return &_free_chunks[index];
 }
@@ -246,7 +212,6 @@ ChunkList* ChunkManager::free_chunks(ChunkIndex index) {
 // These methods that sum the free chunk lists are used in printing
 // methods that are used in product builds.
 size_t ChunkManager::sum_free_chunks() {
-  assert_lock_strong(MetaspaceExpand_lock);
   size_t result = 0;
   for (ChunkIndex i = ZeroIndex; i < NumberOfFreeLists; i = next_chunk_index(i)) {
     ChunkList* list = free_chunks(i);
@@ -262,7 +227,6 @@ size_t ChunkManager::sum_free_chunks() {
 }
 
 size_t ChunkManager::sum_free_chunks_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
   size_t count = 0;
   for (ChunkIndex i = ZeroIndex; i < NumberOfFreeLists; i = next_chunk_index(i)) {
     ChunkList* list = free_chunks(i);
@@ -277,7 +241,6 @@ size_t ChunkManager::sum_free_chunks_count() {
 
 ChunkList* ChunkManager::find_free_chunks_list(size_t word_size) {
   ChunkIndex index = list_index(word_size);
-  assert(index < HumongousIndex, "No humongous list");
   return free_chunks(index);
 }
 
@@ -287,7 +250,6 @@ ChunkList* ChunkManager::find_free_chunks_list(size_t word_size) {
 // chunk, are returned to the freelist. The pointer to the target chunk is returned.
 // Note that this chunk is supposed to be removed from the freelist right away.
 Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* larger_chunk) {
-  assert(larger_chunk->word_size() > target_chunk_word_size, "Sanity");
 
   const ChunkIndex larger_chunk_index = larger_chunk->get_chunk_type();
   const ChunkIndex target_chunk_index = get_chunk_type_by_size(target_chunk_word_size, is_class());
@@ -297,11 +259,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
   MetaWord* const region_end = region_start + region_word_len;
   VirtualSpaceNode* const vsn = larger_chunk->container();
   OccupancyMap* const ocmap = vsn->occupancy_map();
-
-  // Any larger non-humongous chunk size is a multiple of any smaller chunk size.
-  // Since non-humongous chunks are aligned to their chunk size, the larger chunk should start
-  // at an address suitable to place the smaller target chunk.
-  assert_is_aligned(region_start, target_chunk_word_size);
 
   // Remove old chunk.
   free_chunks(larger_chunk_index)->remove_chunk(larger_chunk);
@@ -313,7 +270,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
   // In its place create first the target chunk...
   MetaWord* p = region_start;
   Metachunk* target_chunk = ::new (p) Metachunk(target_chunk_index, is_class(), target_chunk_word_size, vsn);
-  assert(target_chunk == (Metachunk*)p, "Sanity");
   target_chunk->set_origin(origin_split);
 
   // Note: we do not need to mark its start in the occupancy map
@@ -325,30 +281,23 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
 
   // In the remaining space create the remainder chunks.
   p += target_chunk->word_size();
-  assert(p < region_end, "Sanity");
 
   while (p < region_end) {
 
     // Find the largest chunk size which fits the alignment requirements at address p.
     ChunkIndex this_chunk_index = prev_chunk_index(larger_chunk_index);
     size_t this_chunk_word_size = 0;
-    for(;;) {
+    for (;;) {
       this_chunk_word_size = get_size_for_nonhumongous_chunktype(this_chunk_index, is_class());
       if (is_aligned(p, this_chunk_word_size * BytesPerWord)) {
         break;
       } else {
         this_chunk_index = prev_chunk_index(this_chunk_index);
-        assert(this_chunk_index >= target_chunk_index, "Sanity");
       }
     }
 
-    assert(this_chunk_word_size >= target_chunk_word_size, "Sanity");
-    assert(is_aligned(p, this_chunk_word_size * BytesPerWord), "Sanity");
-    assert(p + this_chunk_word_size <= region_end, "Sanity");
-
     // Create splitting chunk.
     Metachunk* this_chunk = ::new (p) Metachunk(this_chunk_index, is_class(), this_chunk_word_size, vsn);
-    assert(this_chunk == (Metachunk*)p, "Sanity");
     this_chunk->set_origin(origin_split);
     ocmap->set_chunk_starts_at_address(p, true);
     do_update_in_use_info_for_chunk(this_chunk, false);
@@ -369,8 +318,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
 }
 
 Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
-  assert_lock_strong(MetaspaceExpand_lock);
-
   slow_locked_verify();
 
   Metachunk* chunk = NULL;
@@ -379,7 +326,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
   if (list_index(word_size) != HumongousIndex) {
 
     ChunkList* free_list = find_free_chunks_list(word_size);
-    assert(free_list != NULL, "Sanity check");
 
     chunk = free_list->head();
 
@@ -400,8 +346,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
       }
 
       if (larger_chunk != NULL) {
-        assert(larger_chunk->word_size() > word_size, "Sanity");
-        assert(larger_chunk->get_chunk_type() == larger_chunk_index, "Sanity");
 
         // We found a larger chunk. Lets split it up:
         // - remove old chunk
@@ -418,11 +362,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
           chunk_size_name(larger_chunk_index), word_size, chunk_size_name(target_chunk_index));
 
         chunk = split_chunk(word_size, larger_chunk);
-
-        // This should have worked.
-        assert(chunk != NULL, "Sanity");
-        assert(chunk->word_size() == word_size, "Sanity");
-        assert(chunk->is_tagged_free(), "Sanity");
 
         we_did_split_a_chunk = true;
       }
@@ -465,7 +404,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
 }
 
 Metachunk* ChunkManager::chunk_freelist_allocate(size_t word_size) {
-  assert_lock_strong(MetaspaceExpand_lock);
   slow_locked_verify();
 
   // Take from the beginning of the list
@@ -474,7 +412,6 @@ Metachunk* ChunkManager::chunk_freelist_allocate(size_t word_size) {
     return NULL;
   }
 
-  assert((word_size <= chunk->word_size()) || (list_index(chunk->word_size()) == HumongousIndex), "Non-humongous variable sized chunk");
   LogTarget(Trace, gc, metaspace, freelist) lt;
   if (lt.is_enabled()) {
     size_t list_count;
@@ -496,26 +433,17 @@ Metachunk* ChunkManager::chunk_freelist_allocate(size_t word_size) {
 
 void ChunkManager::return_single_chunk(Metachunk* chunk) {
   const ChunkIndex index = chunk->get_chunk_type();
-  assert_lock_strong(MetaspaceExpand_lock);
-  assert(chunk != NULL, "Expected chunk.");
-  assert(chunk->container() != NULL, "Container should have been set.");
-  assert(chunk->is_tagged_free() == false, "Chunk should be in use.");
-  index_bounds_check(index);
 
   if (index != HumongousIndex) {
     // Return non-humongous chunk to freelist.
     ChunkList* list = free_chunks(index);
-    assert(list->size() == chunk->word_size(), "Wrong chunk type.");
     list->return_chunk_at_head(chunk);
     log_trace(gc, metaspace, freelist)("returned one %s chunk at " PTR_FORMAT " to freelist.",
         chunk_size_name(index), p2i(chunk));
   } else {
     // Return humongous chunk to dictionary.
-    assert(chunk->word_size() > free_chunks(MediumIndex)->size(), "Wrong chunk type.");
-    assert(chunk->word_size() % free_chunks(SpecializedIndex)->size() == 0, "Humongous chunk has wrong alignment.");
     _humongous_dictionary.return_chunk(chunk);
-    log_trace(gc, metaspace, freelist)("returned one %s chunk at " PTR_FORMAT " (word size " SIZE_FORMAT ") to freelist.",
-        chunk_size_name(index), p2i(chunk), chunk->word_size());
+    log_trace(gc, metaspace, freelist)("returned one %s chunk at " PTR_FORMAT " (word size " SIZE_FORMAT ") to freelist.", chunk_size_name(index), p2i(chunk), chunk->word_size());
   }
   chunk->container()->dec_container_count();
   do_update_in_use_info_for_chunk(chunk, false);

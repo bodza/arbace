@@ -22,7 +22,6 @@ inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
   _unextended_sp = sp;
   _fp = fp;
   _pc = pc;
-  assert(pc != NULL, "no pc?");
   _cb = CodeCache::find_blob(pc);
   adjust_unextended_sp();
 
@@ -44,14 +43,12 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   _unextended_sp = unextended_sp;
   _fp = fp;
   _pc = pc;
-  assert(pc != NULL, "no pc?");
   _cb = CodeCache::find_blob(pc);
   adjust_unextended_sp();
 
   address original_pc = CompiledMethod::get_deopt_original_pc(this);
   if (original_pc != NULL) {
     _pc = original_pc;
-    assert(_cb->as_compiled_method()->insts_contains_inclusive(_pc), "original PC must be in the main code section of the the compiled method (or must be immediately following it)");
     _deopt_state = is_deoptimized;
   } else {
     if (_cb->is_deoptimization_stub()) {
@@ -78,7 +75,6 @@ inline frame::frame(intptr_t* sp, intptr_t* fp) {
   // Then we could use the assert below. However this assert is of somewhat dubious
   // value.
   // UPDATE: this constructor is only used by trace_method_handle_stub() now.
-  // assert(_pc != NULL, "no pc?");
 
   _cb = CodeCache::find_blob(_pc);
   adjust_unextended_sp();
@@ -95,11 +91,7 @@ inline frame::frame(intptr_t* sp, intptr_t* fp) {
 // Accessors
 
 inline bool frame::equal(frame other) const {
-  bool ret =  sp() == other.sp()
-              && unextended_sp() == other.unextended_sp()
-              && fp() == other.fp()
-              && pc() == other.pc();
-  assert(!ret || ret && cb() == other.cb() && _deopt_state == other._deopt_state, "inconsistent construction");
+  bool ret =  sp() == other.sp() && unextended_sp() == other.unextended_sp() && fp() == other.fp() && pc() == other.pc();
   return ret;
 }
 
@@ -111,24 +103,22 @@ inline intptr_t* frame::id(void) const { return unextended_sp(); }
 // Relationals on frames based
 // Return true if the frame is younger (more recent activation) than the frame represented by id
 inline bool frame::is_younger(intptr_t* id) const {
-    assert(this->id() != NULL && id != NULL, "NULL frame id");
-                                                    return this->id() < id ; }
+                                                    return this->id() < id; }
 
 // Return true if the frame is older (less recent activation) than the frame represented by id
-inline bool frame::is_older(intptr_t* id) const   {
-    assert(this->id() != NULL && id != NULL, "NULL frame id");
-                                                    return this->id() > id ; }
+inline bool frame::is_older(intptr_t* id) const {
+                                                    return this->id() > id; }
 
-inline intptr_t* frame::link() const              { return (intptr_t*) *(intptr_t **)addr_at(link_offset); }
+inline intptr_t* frame::link() const { return (intptr_t*) *(intptr_t **)addr_at(link_offset); }
 
-inline intptr_t* frame::unextended_sp() const     { return _unextended_sp; }
+inline intptr_t* frame::unextended_sp() const { return _unextended_sp; }
 
 // Return address:
 
-inline address* frame::sender_pc_addr()      const { return (address*) addr_at( return_addr_offset); }
-inline address  frame::sender_pc()           const { return *sender_pc_addr(); }
+inline address* frame::sender_pc_addr() const { return (address*) addr_at( return_addr_offset); }
+inline address frame::sender_pc() const { return *sender_pc_addr(); }
 
-inline intptr_t*    frame::sender_sp()        const { return            addr_at(   sender_sp_offset); }
+inline intptr_t* frame::sender_sp() const { return addr_at( sender_sp_offset); }
 
 inline intptr_t** frame::interpreter_frame_locals_addr() const {
   return (intptr_t**)addr_at(interpreter_frame_locals_offset);
@@ -173,7 +163,6 @@ inline intptr_t* frame::interpreter_frame_tos_address() const {
     // sp() may have been extended or shrunk by an adapter.  At least
     // check that we don't fall behind the legal region.
     // For top deoptimized frame last_sp == interpreter_frame_monitor_end.
-    assert(last_sp <= (intptr_t*) interpreter_frame_monitor_end(), "bad tos");
     return last_sp;
   }
 }

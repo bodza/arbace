@@ -22,8 +22,7 @@ static bool should_commit_large_pages_when_reserving(size_t bytes) {
   if (UseLargePages && UseLargePagesInMetaspace && !os::can_commit_large_page_memory()) {
     size_t words = bytes / BytesPerWord;
     bool is_class = false; // We never reserve large pages for the class space.
-    if (MetaspaceGC::can_expand(words, is_class) &&
-        MetaspaceGC::allowed_expansion() >= words) {
+    if (MetaspaceGC::can_expand(words, is_class) && MetaspaceGC::allowed_expansion() >= words) {
       return true;
     }
   }
@@ -34,16 +33,10 @@ static bool should_commit_large_pages_when_reserving(size_t bytes) {
 // byte_size is the size of the associated virtualspace.
 VirtualSpaceNode::VirtualSpaceNode(bool is_class, size_t bytes) :
     _is_class(is_class), _top(NULL), _next(NULL), _rs(), _container_count(0), _occupancy_map(NULL) {
-  assert_is_aligned(bytes, Metaspace::reserve_alignment());
   bool large_pages = should_commit_large_pages_when_reserving(bytes);
   _rs = ReservedSpace(bytes, Metaspace::reserve_alignment(), large_pages);
 
   if (_rs.is_reserved()) {
-    assert(_rs.base() != NULL, "Catch if we get a NULL address");
-    assert(_rs.size() != 0, "Catch if we get a 0 size");
-    assert_is_aligned(_rs.base(), Metaspace::reserve_alignment());
-    assert_is_aligned(_rs.size(), Metaspace::reserve_alignment());
-
     MemTracker::record_virtual_memory_type((address)_rs.base(), mtClass);
   }
 }
@@ -52,11 +45,9 @@ void VirtualSpaceNode::purge(ChunkManager* chunk_manager) {
     Metachunk* chunk = first_chunk();
   Metachunk* invalid_chunk = (Metachunk*) top();
   while (chunk < invalid_chunk ) {
-    assert(chunk->is_tagged_free(), "Should be tagged free");
     MetaWord* next = ((MetaWord*)chunk) + chunk->word_size();
     chunk_manager->remove_chunk(chunk);
     chunk->remove_sentinel();
-    assert(chunk->next() == NULL && chunk->prev() == NULL, "Was not removed from its list");
     chunk = (Metachunk*) next;
   }
 }
@@ -143,12 +134,10 @@ void VirtualSpaceNode::print_map(outputStream* st, bool is_class) const {
 }
 
 void VirtualSpaceNode::inc_container_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
   _container_count++;
 }
 
 void VirtualSpaceNode::dec_container_count() {
-  assert_lock_strong(MetaspaceExpand_lock);
   _container_count--;
 }
 
@@ -175,8 +164,6 @@ size_t VirtualSpaceNode::free_words_in_vs() const {
 // Given an address larger than top(), allocate padding chunks until top is at the given address.
 void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_top) {
 
-  assert(target_top > top(), "Sanity");
-
   // Padding chunks are added to the freelist.
   ChunkManager* const chunk_manager = Metaspace::get_chunk_manager(this->is_class());
 
@@ -191,24 +178,16 @@ void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_
     // for padding chunks, so it is not worth it.
     size_t padding_chunk_word_size = small_word_size;
     if (is_aligned(top(), small_word_size * sizeof(MetaWord)) == false) {
-      assert_is_aligned(top(), spec_word_size * sizeof(MetaWord)); // Should always hold true.
       padding_chunk_word_size = spec_word_size;
     }
     MetaWord* here = top();
-    assert_is_aligned(here, padding_chunk_word_size * sizeof(MetaWord));
     inc_top(padding_chunk_word_size);
 
     // Create new padding chunk.
     ChunkIndex padding_chunk_type = get_chunk_type_by_size(padding_chunk_word_size, is_class());
-    assert(padding_chunk_type == SpecializedIndex || padding_chunk_type == SmallIndex, "sanity");
 
-    Metachunk* const padding_chunk =
-        ::new (here) Metachunk(padding_chunk_type, is_class(), padding_chunk_word_size, this);
-    assert(padding_chunk == (Metachunk*)here, "Sanity");
-    log_trace(gc, metaspace, freelist)("Created padding chunk in %s at "
-        PTR_FORMAT ", size " SIZE_FORMAT_HEX ".",
-        (is_class() ? "class space " : "metaspace"),
-        p2i(padding_chunk), padding_chunk->word_size() * sizeof(MetaWord));
+    Metachunk* const padding_chunk = ::new (here) Metachunk(padding_chunk_type, is_class(), padding_chunk_word_size, this);
+    log_trace(gc, metaspace, freelist)("Created padding chunk in %s at " PTR_FORMAT ", size " SIZE_FORMAT_HEX ".", (is_class() ? "class space " : "metaspace"), p2i(padding_chunk), padding_chunk->word_size() * sizeof(MetaWord));
 
     // Mark chunk start in occupancy map.
     occupancy_map()->set_chunk_starts_at_address((MetaWord*)padding_chunk, true);
@@ -227,7 +206,6 @@ void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_
     // chunk beyond this point.
   }
 
-  assert(top() == target_top, "Sanity");
 }
 
 // Allocates the chunk from the virtual space only.
@@ -252,8 +230,6 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
   const size_t small_word_size = chunk_manager->small_chunk_word_size();
   const size_t med_word_size = chunk_manager->medium_chunk_word_size();
 
-  assert(chunk_word_size == spec_word_size || chunk_word_size == small_word_size || chunk_word_size >= med_word_size, "Invalid chunk size requested.");
-
   // Chunk alignment (in bytes) == chunk size unless humongous.
   // Humongous chunks are aligned to the smallest chunk size (spec).
   const size_t required_chunk_alignment = (chunk_word_size > med_word_size ?
@@ -261,8 +237,7 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
 
   // Do we have enough space to create the requested chunk plus
   // any padding chunks needed?
-  MetaWord* const next_aligned =
-      static_cast<MetaWord*>(align_up(top(), required_chunk_alignment));
+  MetaWord* const next_aligned = static_cast<MetaWord*>(align_up(top(), required_chunk_alignment));
   if (!is_available((next_aligned - top()) + chunk_word_size)) {
     return NULL;
   }
@@ -276,21 +251,10 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
         (is_class() ? "class space " : "metaspace"),
         top(), next_aligned);
     allocate_padding_chunks_until_top_is_at(next_aligned);
-    // Now, top should be aligned correctly.
-    assert_is_aligned(top(), required_chunk_alignment);
   }
-
-  // Now, top should be aligned correctly.
-  assert_is_aligned(top(), required_chunk_alignment);
 
   // Bottom of the new chunk
   MetaWord* chunk_limit = top();
-  assert(chunk_limit != NULL, "Not safe to call this method");
-
-  // The virtual spaces are always expanded by the
-  // commit granularity to enforce the following condition.
-  // Without this the is_available check will not work correctly.
-  assert(_virtual_space.committed_size() == _virtual_space.actual_committed_size(), "The committed memory doesn't match the expanded memory.");
 
   if (!is_available(chunk_word_size)) {
     LogTarget(Trace, gc, metaspace, freelist) lt;
@@ -309,7 +273,6 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
   // Initialize the chunk
   ChunkIndex chunk_type = get_chunk_type_by_size(chunk_word_size, is_class());
   Metachunk* result = ::new (chunk_limit) Metachunk(chunk_type, is_class(), chunk_word_size, this);
-  assert(result == (Metachunk*)chunk_limit, "Sanity");
   occupancy_map()->set_chunk_starts_at_address((MetaWord*)result, true);
   do_update_in_use_info_for_chunk(result, true);
 
@@ -340,13 +303,10 @@ bool VirtualSpaceNode::expand_by(size_t min_words, size_t preferred_words) {
     log_trace(gc, metaspace, freelist)("Failed to expand %s virtual space list node by " SIZE_FORMAT " words.", (is_class() ? "class" : "non-class"), commit);
   }
 
-  assert(result, "Failed to commit memory");
-
   return result;
 }
 
 Metachunk* VirtualSpaceNode::get_chunk_vs(size_t chunk_word_size) {
-  assert_lock_strong(MetaspaceExpand_lock);
   Metachunk* result = take_from_committed(chunk_word_size);
   return result;
 }
@@ -357,22 +317,13 @@ bool VirtualSpaceNode::initialize() {
     return false;
   }
 
-  // These are necessary restriction to make sure that the virtual space always
-  // grows in steps of Metaspace::commit_alignment(). If both base and size are
-  // aligned only the middle alignment of the VirtualSpace is used.
-  assert_is_aligned(_rs.base(), Metaspace::commit_alignment());
-  assert_is_aligned(_rs.size(), Metaspace::commit_alignment());
-
   // ReservedSpaces marked as special will have the entire memory
   // pre-committed. Setting a committed size will make sure that
   // committed_size and actual_committed_size agrees.
   size_t pre_committed_size = _rs.special() ? _rs.size() : 0;
 
-  bool result = virtual_space()->initialize_with_granularity(_rs, pre_committed_size,
-      Metaspace::commit_alignment());
+  bool result = virtual_space()->initialize_with_granularity(_rs, pre_committed_size, Metaspace::commit_alignment());
   if (result) {
-    assert(virtual_space()->committed_size() == virtual_space()->actual_committed_size(), "Checking that the pre-committed memory was registered by the VirtualSpace");
-
     set_top((MetaWord*)virtual_space()->low());
   }
 
@@ -404,7 +355,6 @@ void VirtualSpaceNode::print_on(outputStream* st, size_t scale) const {
 }
 
 void VirtualSpaceNode::retire(ChunkManager* chunk_manager) {
-  assert(this->is_class() == chunk_manager->is_class(), "Wrong ChunkManager?");
   for (int i = (int)MediumIndex; i >= (int)ZeroIndex; --i) {
     ChunkIndex index = (ChunkIndex)i;
     size_t chunk_size = chunk_manager->size_by_index(index);
@@ -423,6 +373,5 @@ void VirtualSpaceNode::retire(ChunkManager* chunk_manager) {
       chunk_manager->return_single_chunk(chunk);
     }
   }
-  assert(free_words_in_vs() == 0, "should be empty now");
 }
 }

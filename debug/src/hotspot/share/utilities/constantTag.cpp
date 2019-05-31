@@ -27,7 +27,7 @@ BasicType constantTag::basic_type() const {
 
     case JVM_CONSTANT_Dynamic :
     case JVM_CONSTANT_DynamicInError :
-      assert(false, "Dynamic constant has no fixed basic type");
+      ShouldNotReachHere();
 
     default:
       ShouldNotReachHere();

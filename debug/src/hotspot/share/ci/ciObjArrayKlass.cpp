@@ -15,17 +15,14 @@
 //
 // Constructor for loaded object array klasses.
 ciObjArrayKlass::ciObjArrayKlass(Klass* k) : ciArrayKlass(k) {
-  assert(get_Klass()->is_objArray_klass(), "wrong type");
   Klass* element_Klass = get_ObjArrayKlass()->bottom_klass();
   _base_element_klass = CURRENT_ENV->get_klass(element_Klass);
-  assert(_base_element_klass->is_instance_klass() || _base_element_klass->is_type_array_klass(), "bad base klass");
   if (dimension() == 1) {
     _element_klass = _base_element_klass;
   } else {
     _element_klass = NULL;
   }
   if (!ciObjectFactory::is_initialized()) {
-    assert(_element_klass->is_java_lang_Object(), "only arrays of object are shared");
   }
 }
 
@@ -39,7 +36,6 @@ ciObjArrayKlass::ciObjArrayKlass(ciSymbol* array_name,
   : ciArrayKlass(array_name,
                  dimension, T_OBJECT) {
     _base_element_klass = base_element_klass;
-    assert(_base_element_klass->is_instance_klass() || _base_element_klass->is_type_array_klass(), "bad base klass");
     if (dimension == 1) {
       _element_klass = base_element_klass;
     } else {
@@ -53,7 +49,6 @@ ciObjArrayKlass::ciObjArrayKlass(ciSymbol* array_name,
 // What is the one-level element type of this array?
 ciKlass* ciObjArrayKlass::element_klass() {
   if (_element_klass == NULL) {
-    assert(dimension() > 1, "_element_klass should not be NULL");
     // Produce the element klass.
     if (is_loaded()) {
       VM_ENTRY_MARK;
@@ -63,12 +58,7 @@ ciKlass* ciObjArrayKlass::element_klass() {
       VM_ENTRY_MARK;
       // We are an unloaded array klass.  Attempt to fetch our
       // element klass by name.
-      _element_klass = CURRENT_THREAD_ENV->get_klass_by_name_impl(
-                          this,
-                          constantPoolHandle(),
-                          construct_array_name(base_element_klass()->name(),
-                                               dimension() - 1),
-                          false);
+      _element_klass = CURRENT_THREAD_ENV->get_klass_by_name_impl(this, constantPoolHandle(), construct_array_name(base_element_klass()->name(), dimension() - 1), false);
     }
   }
   return _element_klass;
@@ -78,8 +68,7 @@ ciKlass* ciObjArrayKlass::element_klass() {
 // ciObjArrayKlass::construct_array_name
 //
 // Build an array name from an element name and a dimension.
-ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name,
-                                                int dimension) {
+ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dimension) {
   EXCEPTION_CONTEXT;
   int element_len = element_name->utf8_length();
 

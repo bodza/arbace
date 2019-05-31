@@ -23,16 +23,12 @@ class ZeroStack {
   int suggest_size(Thread *thread) const;
 
   void setup(void *mem, size_t size) {
-    assert(needs_setup(), "already set up");
-    assert(!(size & WordAlignmentMask), "unaligned");
 
     _base = (intptr_t *) mem;
     _top  = _base + (size >> LogBytesPerWord);
     _sp   = _top;
   }
   void teardown() {
-    assert(!needs_setup(), "not set up");
-    assert(_sp == _top, "stuff on stack at teardown");
 
     _base = NULL;
     _top  = NULL;
@@ -43,7 +39,6 @@ class ZeroStack {
     return _sp;
   }
   void set_sp(intptr_t *new_sp) {
-    assert(_top >= new_sp && new_sp >= _base, "bad stack pointer");
     _sp = new_sp;
   }
 
@@ -55,17 +50,14 @@ class ZeroStack {
   }
 
   void push(intptr_t value) {
-    assert(_sp > _base, "stack overflow");
     *(--_sp) = value;
   }
   intptr_t pop() {
-    assert(_sp < _top, "stack underflow");
     return *(_sp++);
   }
 
   void *alloc(size_t size) {
     int count = align_up(size, wordSize) >> LogBytesPerWord;
-    assert(count <= available_words(), "stack overflow");
     return _sp -= count;
   }
 
@@ -79,7 +71,7 @@ class ZeroStack {
   static void handle_overflow(TRAPS);
 
  public:
-  void zap(int c) {};
+  void zap(int c) { };
 
  public:
   static ByteSize base_offset() {
@@ -158,15 +150,12 @@ class ZeroFrame {
 
  public:
   EntryFrame *as_entry_frame() const {
-    assert(is_entry_frame(), "should be");
     return (EntryFrame *) this;
   }
   InterpreterFrame *as_interpreter_frame() const {
-    assert(is_interpreter_frame(), "should be");
     return (InterpreterFrame *) this;
   }
   FakeStubFrame *as_fake_stub_frame() const {
-    assert(is_fake_stub_frame(), "should be");
     return (FakeStubFrame *) this;
   }
 

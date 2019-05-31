@@ -11,7 +11,6 @@ static bool rdtsc_elapsed_counter_enabled = false;
 static jlong tsc_frequency = 0;
 
 static jlong set_epoch() {
-  assert(0 == _epoch, "invariant");
   _epoch = os::rdtsc();
   return _epoch;
 }
@@ -60,15 +59,12 @@ static void do_time_measurements(volatile jlong& time_base,
 }
 
 static jlong initialize_frequency() {
-  assert(0 == tsc_frequency, "invariant");
-  assert(0 == _epoch, "invariant");
   const jlong initial_counter = set_epoch();
   if (initial_counter == 0) {
     return 0;
   }
   // os time frequency
   static double os_freq = (double)os::elapsed_frequency();
-  assert(os_freq > 0, "os_elapsed frequency corruption!");
 
   double tsc_freq = .0;
   double os_to_tsc_conv_factor = 1.0;
@@ -171,10 +167,7 @@ jlong Rdtsc::raw() {
 bool Rdtsc::initialize() {
   static bool initialized = false;
   if (!initialized) {
-    assert(!rdtsc_elapsed_counter_enabled, "invariant");
     VM_Version_Ext::initialize();
-    assert(0 == tsc_frequency, "invariant");
-    assert(0 == _epoch, "invariant");
     bool result = initialize_elapsed_counter(); // init hw
     if (result) {
       result = ergonomics(); // check logical state

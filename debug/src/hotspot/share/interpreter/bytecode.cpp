@@ -20,8 +20,6 @@ int Bytecode_tableswitch::dest_offset_at(int i) const {
 // Implementation of Bytecode_invoke
 
 void Bytecode_invoke::verify() const {
-  assert(is_valid(), "check invoke");
-  assert(cpcache() != NULL, "do not call this from verifier or rewriter");
 }
 
 int Bytecode_invoke::size_of_parameters() const {
@@ -83,14 +81,12 @@ ConstantPoolCacheEntry* Bytecode_member_ref::cpcache_entry() const {
 // Implementation of Bytecode_field
 
 void Bytecode_field::verify() const {
-  assert(is_valid(), "check field");
 }
 
 // Implementation of Bytecode_loadconstant
 
 int Bytecode_loadconstant::raw_index() const {
   Bytecodes::Code rawc = code();
-  assert(rawc != Bytecodes::_wide, "verifier prevents this");
   if (Bytecodes::java_code(rawc) == Bytecodes::_ldc)
     return get_index_u1(rawc);
   else
@@ -111,7 +107,6 @@ BasicType Bytecode_loadconstant::result_type() const {
 }
 
 oop Bytecode_loadconstant::resolve_constant(TRAPS) const {
-  assert(_method != NULL, "must supply method to resolve constant");
   int index = raw_index();
   ConstantPool* constants = _method->constants();
   if (has_cache_index()) {

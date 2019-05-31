@@ -92,10 +92,10 @@ extern "C" {
 static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_jdk_internal_misc_Unsafe_registerNatives",             NULL, FN_PTR(JVM_RegisterJDKInternalMiscUnsafeMethods) },
   { CC"Java_java_lang_invoke_MethodHandleNatives_registerNatives", NULL, FN_PTR(JVM_RegisterMethodHandleMethods) },
-  { CC"Java_jdk_internal_perf_Perf_registerNatives",               NULL, FN_PTR(JVM_RegisterPerfMethods)         },
-  { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
-  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            NULL, FN_PTR(JVM_GetJVMCIRuntime)             },
-  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",       NULL, FN_PTR(JVM_RegisterJVMCINatives)        },
+  { CC"Java_jdk_internal_perf_Perf_registerNatives",               NULL, FN_PTR(JVM_RegisterPerfMethods) },
+  { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods) },
+  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            NULL, FN_PTR(JVM_GetJVMCIRuntime) },
+  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",       NULL, FN_PTR(JVM_RegisterJVMCINatives) },
 };
 
 static address lookup_special_native(char* jni_name) {
@@ -237,8 +237,7 @@ address NativeLookup::lookup_entry(const methodHandle& method, bool& in_base_lib
 address NativeLookup::lookup_critical_entry(const methodHandle& method) {
   if (!CriticalJNINatives) return NULL;
 
-  if (method->is_synchronized() ||
-      !method->is_static()) {
+  if (method->is_synchronized() || !method->is_static()) {
     // Only static non-synchronized methods are allowed
     return NULL;
   }
@@ -342,7 +341,6 @@ address NativeLookup::base_library_lookup(const char* class_name, const char* me
   methodHandle method (THREAD,
                        klass->uncached_lookup_method(m_name, s_name, Klass::find_overpass));
   address result = lookup(method, in_base_library, CATCH);
-  assert(in_base_library, "must be in basic library");
   guarantee(result != NULL, "must be non NULL");
   return result;
 }

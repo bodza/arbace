@@ -284,14 +284,14 @@ typedef uintptr_t     address_word; // unsigned integer which will hold a pointe
 //  Utility functions to "portably" (?) bit twiddle pointers
 //  Where portable means keep ANSI C++ compilers quiet
 
-inline address       set_address_bits(address x, int m)       { return address(intptr_t(x) | m); }
-inline address       clear_address_bits(address x, int m)     { return address(intptr_t(x) & ~m); }
+inline address set_address_bits(address x, int m) { return address(intptr_t(x) | m); }
+inline address clear_address_bits(address x, int m) { return address(intptr_t(x) & ~m); }
 
 //  Utility functions to "portably" make cast to/from function pointers.
 
-inline address_word  mask_address_bits(address x, int m)      { return address_word(x) & m; }
-inline address_word  castable_address(address x)              { return address_word(x) ; }
-inline address_word  castable_address(void* x)                { return address_word(x) ; }
+inline address_word mask_address_bits(address x, int m) { return address_word(x) & m; }
+inline address_word castable_address(address x) { return address_word(x) ; }
+inline address_word castable_address(void* x) { return address_word(x) ; }
 
 // Pointer subtraction.
 // The idea here is to avoid ptrdiff_t, which is signed and so doesn't have
@@ -470,15 +470,15 @@ typedef union {
   julong ul;
 } DoubleLongConv;
 
-inline jint    jint_cast    (jfloat  x)  { return ((FloatIntConv*)&x)->i; }
-inline jfloat  jfloat_cast  (jint    x)  { return ((FloatIntConv*)&x)->f; }
+inline jint jint_cast (jfloat x) { return ((FloatIntConv*)&x)->i; }
+inline jfloat jfloat_cast (jint x) { return ((FloatIntConv*)&x)->f; }
 
-inline jlong   jlong_cast   (jdouble x)  { return ((DoubleLongConv*)&x)->l;  }
-inline julong  julong_cast  (jdouble x)  { return ((DoubleLongConv*)&x)->ul; }
-inline jdouble jdouble_cast (jlong   x)  { return ((DoubleLongConv*)&x)->d;  }
+inline jlong jlong_cast (jdouble x) { return ((DoubleLongConv*)&x)->l; }
+inline julong julong_cast (jdouble x) { return ((DoubleLongConv*)&x)->ul; }
+inline jdouble jdouble_cast (jlong x) { return ((DoubleLongConv*)&x)->d; }
 
-inline jint low (jlong value)                    { return jint(value); }
-inline jint high(jlong value)                    { return jint(value >> 32); }
+inline jint low (jlong value) { return jint(value); }
+inline jint high(jlong value) { return jint(value >> 32); }
 
 // the fancy casts are a hopefully portable way
 // to do unsigned 32 to 64 bit type conversion
@@ -649,17 +649,17 @@ class JavaValue {
  JavaCallValue* get_value_addr() { return &_value; }
  BasicType get_type() const { return _type; }
 
- void set_jfloat(jfloat f) { _value.f = f;}
- void set_jdouble(jdouble d) { _value.d = d;}
- void set_jint(jint i) { _value.i = i;}
- void set_jlong(jlong l) { _value.l = l;}
- void set_jobject(jobject h) { _value.h = h;}
+ void set_jfloat(jfloat f) { _value.f = f; }
+ void set_jdouble(jdouble d) { _value.d = d; }
+ void set_jint(jint i) { _value.i = i; }
+ void set_jlong(jlong l) { _value.l = l; }
+ void set_jobject(jobject h) { _value.h = h; }
  void set_type(BasicType t) { _type = t; }
 
- jboolean get_jboolean() const { return (jboolean) (_value.i);}
- jbyte get_jbyte() const { return (jbyte) (_value.i);}
- jchar get_jchar() const { return (jchar) (_value.i);}
- jshort get_jshort() const { return (jshort) (_value.i);}
+ jboolean get_jboolean() const { return (jboolean) (_value.i); }
+ jbyte get_jbyte() const { return (jbyte) (_value.i); }
+ jchar get_jchar() const { return (jchar) (_value.i); }
+ jshort get_jshort() const { return (jshort) (_value.i); }
 };
 
 #define STACK_BIAS      0
@@ -900,16 +900,16 @@ const intptr_t OneBit     =  1; // only right_most bit set in a word
 #define left_n_bits(n)    (right_n_bits(n) << (((n) >= BitsPerWord) ? 0 : (BitsPerWord - (n))))
 
 // bit-operations using a mask m
-inline void   set_bits    (intptr_t& x, intptr_t m) { x |= m; }
-inline void clear_bits    (intptr_t& x, intptr_t m) { x &= ~m; }
-inline intptr_t mask_bits      (intptr_t  x, intptr_t m) { return x & m; }
-inline jlong    mask_long_bits (jlong     x, jlong    m) { return x & m; }
+inline void set_bits (intptr_t& x, intptr_t m) { x |= m; }
+inline void clear_bits (intptr_t& x, intptr_t m) { x &= ~m; }
+inline intptr_t mask_bits (intptr_t x, intptr_t m) { return x & m; }
+inline jlong mask_long_bits (jlong x, jlong m) { return x & m; }
 inline bool mask_bits_are_true (intptr_t flags, intptr_t mask) { return (flags & mask) == mask; }
 
 // bit-operations using the n.th bit
-inline void    set_nth_bit(intptr_t& x, int n) { set_bits  (x, nth_bit(n)); }
-inline void  clear_nth_bit(intptr_t& x, int n) { clear_bits(x, nth_bit(n)); }
-inline bool is_set_nth_bit(intptr_t  x, int n) { return mask_bits (x, nth_bit(n)) != NoBits; }
+inline void set_nth_bit(intptr_t& x, int n) { set_bits (x, nth_bit(n)); }
+inline void clear_nth_bit(intptr_t& x, int n) { clear_bits(x, nth_bit(n)); }
+inline bool is_set_nth_bit(intptr_t x, int n) { return mask_bits (x, nth_bit(n)) != NoBits; }
 
 // returns the bitfield of x starting at start_bit_no with length field_length (no sign-extension!)
 inline intptr_t bitfield(intptr_t x, int start_bit_no, int field_length) {
@@ -934,14 +934,14 @@ inline intptr_t bitfield(intptr_t x, int start_bit_no, int field_length) {
 // and 64-bit overloaded functions, which does not work, and having
 // explicitly-typed versions of these routines (i.e., MAX2I, MAX2L)
 // will be even more error-prone than macros.
-template<class T> inline T MAX2(T a, T b)           { return (a > b) ? a : b; }
-template<class T> inline T MIN2(T a, T b)           { return (a < b) ? a : b; }
-template<class T> inline T MAX3(T a, T b, T c)      { return MAX2(MAX2(a, b), c); }
-template<class T> inline T MIN3(T a, T b, T c)      { return MIN2(MIN2(a, b), c); }
+template<class T> inline T MAX2(T a, T b) { return (a > b) ? a : b; }
+template<class T> inline T MIN2(T a, T b) { return (a < b) ? a : b; }
+template<class T> inline T MAX3(T a, T b, T c) { return MAX2(MAX2(a, b), c); }
+template<class T> inline T MIN3(T a, T b, T c) { return MIN2(MIN2(a, b), c); }
 template<class T> inline T MAX4(T a, T b, T c, T d) { return MAX2(MAX3(a, b, c), d); }
 template<class T> inline T MIN4(T a, T b, T c, T d) { return MIN2(MIN3(a, b, c), d); }
 
-template<class T> inline T ABS(T x)                 { return (x > 0) ? x : -x; }
+template<class T> inline T ABS(T x) { return (x > 0) ? x : -x; }
 
 // true if x is a power of 2, false otherwise
 inline bool is_power_of_2(intptr_t x) {
@@ -1008,17 +1008,15 @@ inline int log2_jlong(jlong x) {
 
 //* the argument must be exactly a power of 2
 inline int exact_log2(intptr_t x) {
-  assert(is_power_of_2(x), "x must be a power of 2: " INTPTR_FORMAT, x);
   return log2_intptr(x);
 }
 
 //* the argument must be exactly a power of 2
 inline int exact_log2_long(jlong x) {
-  assert(is_power_of_2_long(x), "x must be a power of 2: " JLONG_FORMAT, x);
   return log2_long(x);
 }
 
-inline bool is_odd (intx x) { return x & 1;      }
+inline bool is_odd (intx x) { return x & 1; }
 inline bool is_even(intx x) { return !is_odd(x); }
 
 // abs methods which cannot overflow and so are well-defined across

@@ -27,8 +27,7 @@ inline bool G1FullGCMarker::mark_object(oop obj) {
 
   // Marked by us, preserve if needed.
   markOop mark = obj->mark_raw();
-  if (mark->must_be_preserved(obj) &&
-      !G1ArchiveAllocator::is_open_archive_object(obj)) {
+  if (mark->must_be_preserved(obj) && !G1ArchiveAllocator::is_open_archive_object(obj)) {
     preserved_stack()->push(obj, mark);
   }
 
@@ -45,9 +44,7 @@ template <class T> inline void G1FullGCMarker::mark_and_push(T* p) {
     oop obj = CompressedOops::decode_not_null(heap_oop);
     if (mark_object(obj)) {
       _oop_stack.push(obj);
-      assert(_bitmap->is_marked(obj), "Must be marked now - map self");
     } else {
-      assert(_bitmap->is_marked(obj) || G1ArchiveAllocator::is_closed_archive_object(obj), "Must be marked by other or closed archive object");
     }
   }
 }
@@ -62,7 +59,6 @@ inline bool G1FullGCMarker::pop_object(oop& oop) {
 
 inline void G1FullGCMarker::push_objarray(oop obj, size_t index) {
   ObjArrayTask task(obj, index);
-  assert(task.is_valid(), "bad ObjArrayTask");
   _objarray_stack.push(task);
 }
 
@@ -81,7 +77,6 @@ inline void G1FullGCMarker::follow_array(objArrayOop array) {
 void G1FullGCMarker::follow_array_chunk(objArrayOop array, int index) {
   const int len = array->length();
   const int beg_index = index;
-  assert(beg_index < len || len == 0, "index too large");
 
   const int stride = MIN2(len - beg_index, (int) ObjArrayMarkingStride);
   const int end_index = beg_index + stride;
@@ -97,13 +92,12 @@ void G1FullGCMarker::follow_array_chunk(objArrayOop array, int index) {
     _verify_closure.set_containing_obj(array);
     array->oop_iterate_range(&_verify_closure, beg_index, end_index);
     if (_verify_closure.failures()) {
-      assert(false, "Failed");
+      ShouldNotReachHere();
     }
   }
 }
 
 inline void G1FullGCMarker::follow_object(oop obj) {
-  assert(_bitmap->is_marked(obj), "should be marked");
   if (obj->is_objArray()) {
     // Handle object arrays explicitly to allow them to
     // be split into chunks if needed.
@@ -118,7 +112,7 @@ inline void G1FullGCMarker::follow_object(oop obj) {
       obj->oop_iterate(&_verify_closure);
       if (_verify_closure.failures()) {
         log_warning(gc, verify)("Failed after %d", _verify_closure._cc);
-        assert(false, "Failed");
+        ShouldNotReachHere();
       }
     }
   }
@@ -128,7 +122,6 @@ void G1FullGCMarker::drain_stack() {
   do {
     oop obj;
     while (pop_object(obj)) {
-      assert(_bitmap->is_marked(obj), "must be marked");
       follow_object(obj);
     }
     // Process ObjArrays one at a time to avoid marking stack bloat.

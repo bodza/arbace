@@ -10,10 +10,9 @@ private:
   int _length;
 
 public:
-  G1EdenRegions() : _length(0) {}
+  G1EdenRegions() : _length(0) { }
 
   void add(HeapRegion* hr) {
-    assert(!hr->is_eden(), "should not already be set");
     _length++;
   }
 

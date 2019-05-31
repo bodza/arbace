@@ -109,8 +109,6 @@ class CompileTask : public CHeapObj<mtCompiler> {
   void         clear_waiter()                    { _has_waiter = false; }
   CompilerThread* jvmci_compiler_thread() const  { return _jvmci_compiler_thread; }
   void         set_jvmci_compiler_thread(CompilerThread* t) {
-    assert(is_blocking(), "must be");
-    assert((t == NULL) != (_jvmci_compiler_thread == NULL), "must be");
     _jvmci_compiler_thread = t;
   }
 
@@ -124,8 +122,8 @@ class CompileTask : public CHeapObj<mtCompiler> {
   void         mark_complete()                   { _is_complete = true; }
   void         mark_success()                    { _is_success = true; }
 
-  int          comp_level()                      { return _comp_level;}
-  void         set_comp_level(int comp_level)    { _comp_level = comp_level;}
+  int          comp_level()                      { return _comp_level; }
+  void         set_comp_level(int comp_level)    { _comp_level = comp_level; }
 
   AbstractCompiler* compiler();
 

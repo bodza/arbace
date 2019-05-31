@@ -54,7 +54,6 @@ TypeArrayKlass* TypeArrayKlass::create_klass(BasicType type,
 }
 
 TypeArrayKlass* TypeArrayKlass::allocate(ClassLoaderData* loader_data, BasicType type, Symbol* name, TRAPS) {
-  assert(TypeArrayKlass::header_size() <= InstanceKlass::header_size(), "array klasses must be same size as InstanceKlass");
 
   int size = ArrayKlass::static_size(TypeArrayKlass::header_size());
 
@@ -63,17 +62,13 @@ TypeArrayKlass* TypeArrayKlass::allocate(ClassLoaderData* loader_data, BasicType
 
 TypeArrayKlass::TypeArrayKlass(BasicType type, Symbol* name) : ArrayKlass(name, ID) {
   set_layout_helper(array_layout_helper(type));
-  assert(is_array_klass(), "sanity");
-  assert(is_typeArray_klass(), "sanity");
 
   set_max_length(arrayOopDesc::max_array_length(type));
-  assert(size() >= TypeArrayKlass::header_size(), "bad size");
 
   set_class_loader_data(ClassLoaderData::the_null_class_loader_data());
 }
 
 typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
-  assert(log2_element_size() >= 0, "bad scale");
   if (length >= 0) {
     if (length <= max_length()) {
       size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
@@ -90,13 +85,11 @@ typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
 
 oop TypeArrayKlass::multi_allocate(int rank, jint* last_size, TRAPS) {
   // For typeArrays this is only called for the last dimension
-  assert(rank == 1, "just checking");
   int length = *last_size;
   return allocate(length, THREAD);
 }
 
 void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
-  assert(s->is_typeArray(), "must be type array");
 
   // Check destination type.
   if (!d->is_typeArray()) {
@@ -166,7 +159,6 @@ void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos
 // create a klass of array holding typeArrays
 Klass* TypeArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
   int dim = dimension();
-  assert(dim <= n, "check order of chain");
     if (dim == n)
       return this;
 
@@ -182,13 +174,11 @@ Klass* TypeArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
       MutexLocker mu(MultiArray_lock, THREAD);
 
       if (higher_dimension() == NULL) {
-        Klass* oak = ObjArrayKlass::allocate_objArray_klass(
-              class_loader_data(), dim + 1, this, CHECK_NULL);
+        Klass* oak = ObjArrayKlass::allocate_objArray_klass(class_loader_data(), dim + 1, this, CHECK_NULL);
         ObjArrayKlass* h_ak = ObjArrayKlass::cast(oak);
         h_ak->set_lower_dimension(this);
         // use 'release' to pair with lock-free load
         release_set_higher_dimension(h_ak);
-        assert(h_ak->is_objArray_klass(), "incorrect initialization of ObjArrayKlass");
       }
     }
   } else {
@@ -206,7 +196,6 @@ Klass* TypeArrayKlass::array_klass_impl(bool or_null, TRAPS) {
 }
 
 int TypeArrayKlass::oop_size(oop obj) const {
-  assert(obj->is_typeArray(),"must be a type array");
   typeArrayOop t = typeArrayOop(obj);
   return t->object_size();
 }
@@ -237,7 +226,6 @@ void TypeArrayKlass::print_on(outputStream* st) const {
 }
 
 void TypeArrayKlass::print_value_on(outputStream* st) const {
-  assert(is_klass(), "must be klass");
   st->print("{type array ");
   BasicType bt = element_type();
   if (bt == T_BOOLEAN) {

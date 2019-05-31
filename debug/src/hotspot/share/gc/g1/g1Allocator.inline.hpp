@@ -29,7 +29,6 @@ inline HeapWord* G1Allocator::attempt_allocation(size_t min_word_size,
 
 inline HeapWord* G1Allocator::attempt_allocation_locked(size_t word_size) {
   HeapWord* result = mutator_alloc_region()->attempt_allocation_locked(word_size);
-  assert(result != NULL || mutator_alloc_region()->get() == NULL, "Must not have a mutator alloc region if there is no memory, but is " PTR_FORMAT, p2i(mutator_alloc_region()->get()));
   return result;
 }
 
@@ -38,8 +37,6 @@ inline HeapWord* G1Allocator::attempt_allocation_force(size_t word_size) {
 }
 
 inline PLAB* G1PLABAllocator::alloc_buffer(InCSetState dest) {
-  assert(dest.is_valid(), "Allocation buffer index out of bounds: " CSETSTATE_FORMAT, dest.value());
-  assert(_alloc_buffers[dest.value()] != NULL, "Allocation buffer is NULL: " CSETSTATE_FORMAT, dest.value());
   return _alloc_buffers[dest.value()];
 }
 
@@ -81,7 +78,6 @@ inline void G1ArchiveAllocator::enable_archive_object_check() {
 
 // Set the regions containing the specified address range as archive.
 inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
-  assert(_archive_check_enabled, "archive range check not enabled");
   log_info(gc, cds)("Mark %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
                      open ? "open" : "closed",
                      p2i(range.start()),
@@ -95,7 +91,6 @@ inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
 
 // Clear the archive regions map containing the specified address range.
 inline void G1ArchiveAllocator::clear_range_archive(MemRegion range, bool open) {
-  assert(_archive_check_enabled, "archive range check not enabled");
   log_info(gc, cds)("Clear %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
                     open ? "open" : "closed",
                     p2i(range.start()),
@@ -133,8 +128,7 @@ inline bool G1ArchiveAllocator::is_open_archive_object(oop object) {
 }
 
 inline bool G1ArchiveAllocator::is_archive_object(oop object) {
-  return (archive_check_enabled() && (in_closed_archive_range(object) ||
-                                      in_open_archive_range(object)));
+  return (archive_check_enabled() && (in_closed_archive_range(object) || in_open_archive_range(object)));
 }
 
 #endif

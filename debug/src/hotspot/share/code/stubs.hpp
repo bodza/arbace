@@ -127,18 +127,14 @@ class StubQueue: public CHeapObj<mtCode> {
   int            _number_of_stubs;               // the number of buffered stubs
   Mutex* const   _mutex;                         // the lock used for a (request, commit) transaction
 
-  void  check_index(int i) const                 {
-    assert(0 <= i && i < _buffer_limit && i % CodeEntryAlignment == 0, "illegal index"); }
+  void  check_index(int i) const                 { }
   bool  is_contiguous() const                    { return _queue_begin <= _queue_end; }
   int   index_of(Stub* s) const                  { int i = (address)s - _stub_buffer; check_index(i); return i; }
   Stub* stub_at(int i) const                     { check_index(i); return (Stub*)(_stub_buffer + i); }
   Stub* current_stub() const                     { return stub_at(_queue_end); }
 
   // Stub functionality accessed via interface
-  void  stub_initialize(Stub* s, int size,
-                        CodeStrings& strings)    {
-    assert(size % CodeEntryAlignment == 0, "size not aligned");
-    _stub_interface->initialize(s, size, strings); }
+  void  stub_initialize(Stub* s, int size, CodeStrings& strings)    { _stub_interface->initialize(s, size, strings); }
   void  stub_finalize(Stub* s)                   { _stub_interface->finalize(s); }
   int   stub_size(Stub* s) const                 { return _stub_interface->size(s); }
   bool  stub_contains(Stub* s, address pc) const { return _stub_interface->code_begin(s) <= pc && pc < _stub_interface->code_end(s); }
@@ -147,8 +143,7 @@ class StubQueue: public CHeapObj<mtCode> {
   void  stub_print(Stub* s)                      { _stub_interface->print(s); }
 
  public:
-  StubQueue(StubInterface* stub_interface, int buffer_size, Mutex* lock,
-            const char* name);
+  StubQueue(StubInterface* stub_interface, int buffer_size, Mutex* lock, const char* name);
   ~StubQueue();
 
   // General queue info

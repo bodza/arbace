@@ -140,10 +140,8 @@ class LinearScan : public CompilationResourceObj {
 
   // access to block list (sorted in linear scan order)
   int           block_count() const              {
-    assert(_cached_blocks.length() == ir()->linear_scan_order()->length(), "invalid cached block list");
     return _cached_blocks.length(); }
   BlockBegin*   block_at(int idx) const          {
-    assert(_cached_blocks.at(idx) == ir()->linear_scan_order()->at(idx), "invalid cached block list");
     return _cached_blocks.at(idx); }
 
   int           num_virtual_regs() const         { return _num_virtual_regs; }
@@ -169,23 +167,18 @@ class LinearScan : public CompilationResourceObj {
 
   // access to LIR_Ops and Blocks indexed by op_id
   int          max_lir_op_id() const                {
-    assert(_lir_ops.length() > 0, "no operations");
     return (_lir_ops.length() - 1) << 1; }
   LIR_Op*      lir_op_with_id(int op_id) const      {
-    assert(op_id >= 0 && op_id <= max_lir_op_id() && op_id % 2 == 0, "op_id out of range or not even");
     return _lir_ops.at(op_id >> 1); }
   BlockBegin*  block_of_op_with_id(int op_id) const {
-    assert(_block_of_op.length() > 0 && op_id >= 0 && op_id <= max_lir_op_id() + 1, "op_id out of range");
     return _block_of_op.at(op_id >> 1); }
 
   bool is_block_begin(int op_id)                    { return op_id == 0 || block_of_op_with_id(op_id) != block_of_op_with_id(op_id - 1); }
   bool covers_block_begin(int op_id_1, int op_id_2) { return block_of_op_with_id(op_id_1) != block_of_op_with_id(op_id_2); }
 
   bool has_call(int op_id)                          {
-    assert(op_id % 2 == 0, "must be even");
     return _has_call.at(op_id >> 1); }
   bool has_info(int op_id)                          {
-    assert(op_id % 2 == 0, "must be even");
     return _has_info.at(op_id >> 1); }
 
   // functions for converting LIR-Operands to register numbers
@@ -355,7 +348,6 @@ class LinearScan : public CompilationResourceObj {
   // accessors used by Compilation
   int         max_spills()  const { return _max_spills; }
   int         num_calls() const   {
-    assert(_num_calls >= 0, "not set");
     return _num_calls; }
 
   // entry functions for printing
@@ -383,11 +375,8 @@ class MoveResolver: public StackObj {
   int              _register_blocked[LinearScan::nof_regs];
 
   int  register_blocked(int reg)                    {
-    assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds");
     return _register_blocked[reg]; }
   void set_register_blocked(int reg, int direction) {
-    assert(reg >= 0 && reg < LinearScan::nof_regs, "out of bounds");
-                                                      assert(direction == 1 || direction == -1, "out of bounds");
                                                       _register_blocked[reg] += direction; }
 
   void block_registers(Interval* it);
@@ -442,7 +431,7 @@ class Range : public CompilationResourceObj {
   void             set_next(Range* next)         { _next = next; }
 
   // for testing
-  void             print(outputStream* out = tty) const {};
+  void             print(outputStream* out = tty) const { };
 };
 
 // Interval is an ordered list of disjoint ranges.
@@ -502,19 +491,15 @@ class Interval : public CompilationResourceObj {
   // accessors
   int              reg_num() const               { return _reg_num; }
   void             set_reg_num(int r)            {
-    assert(_reg_num == -1, "cannot change reg_num");
     _reg_num = r; }
   BasicType        type() const                  {
-    assert(_reg_num == -1 || _reg_num >= LIR_OprDesc::vreg_base, "cannot access type for fixed interval");
     return _type; }
   void             set_type(BasicType type)      {
-    assert(_reg_num < LIR_OprDesc::vreg_base || _type == T_ILLEGAL || _type == type, "overwriting existing type");
     _type = type; }
 
   Range*           first() const                 { return _first; }
   int              from() const                  { return _first->from(); }
   int              to()                          { if (_cached_to == -1) _cached_to = calc_to();
-  assert(_cached_to == calc_to(), "invalid cached value");
   return _cached_to; }
   int              num_use_positions() const     { return _use_pos_and_kinds.length() / 2; }
 
@@ -537,7 +522,6 @@ class Interval : public CompilationResourceObj {
   bool             is_split_parent() const       { return _split_parent == this; }
   bool             is_split_child() const        { return _split_parent != this; }
   Interval*        split_parent() const          {
-    assert(_split_parent->is_split_parent(), "must be");
     return _split_parent; }
   Interval*        split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mode);
   Interval*        split_child_before_op_id(int op_id);
@@ -546,7 +530,6 @@ class Interval : public CompilationResourceObj {
   // information stored in split parent, but available for all children
   int              canonical_spill_slot() const            { return split_parent()->_canonical_spill_slot; }
   void             set_canonical_spill_slot(int slot)      {
-    assert(split_parent()->_canonical_spill_slot == -1, "overwriting existing value");
     split_parent()->_canonical_spill_slot = slot; }
   Interval*        current_split_child() const             { return split_parent()->_current_split_child; }
   void             make_current_split_child()              { split_parent()->_current_split_child = this; }
@@ -558,10 +541,8 @@ class Interval : public CompilationResourceObj {
   IntervalSpillState spill_state() const         { return split_parent()->_spill_state; }
   int              spill_definition_pos() const  { return split_parent()->_spill_definition_pos; }
   void             set_spill_state(IntervalSpillState state) {
-    assert(state >= spill_state(), "state cannot decrease");
   split_parent()->_spill_state = state; }
   void             set_spill_definition_pos(int pos) {
-    assert(spill_definition_pos() == -1, "cannot set the position twice");
     split_parent()->_spill_definition_pos = pos; }
   // returns true if this interval has a shadow copy on the stack that is always correct
   bool             always_in_memory() const      { return split_parent()->_spill_state == storeAtDefinition || split_parent()->_spill_state == startInMemory; }
@@ -594,7 +575,6 @@ class Interval : public CompilationResourceObj {
   // range iteration
   void   rewind_range()                          { _current = _first; }
   void   next_range()                            {
-    assert(this != _end, "not allowed on sentinel");
     _current = _current->next(); }
   int    current_from() const                    { return _current->from(); }
   int    current_to() const                      { return _current->to(); }
@@ -603,7 +583,7 @@ class Interval : public CompilationResourceObj {
   int    current_intersects_at(Interval* it)     { return _current->intersects_at(it->_current); };
 
   // printing
-  void print(outputStream* out = tty) const      {};
+  void print(outputStream* out = tty) const      { };
 };
 
 class IntervalWalker : public CompilationResourceObj {
@@ -627,7 +607,7 @@ class IntervalWalker : public CompilationResourceObj {
   bool             bailed_out() const                { return compilation()->bailed_out(); }
 
   void check_bounds(IntervalKind kind) {
-    assert(kind >= fixedKind && kind <= anyKind, "invalid interval_kind"); }
+    }
 
   Interval** unhandled_first_addr(IntervalKind kind) { check_bounds(kind); return &_unhandled_first[kind]; }
   Interval** active_first_addr(IntervalKind kind)    { check_bounds(kind); return &_active_first[kind]; }

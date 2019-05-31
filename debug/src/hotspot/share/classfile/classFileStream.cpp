@@ -20,7 +20,7 @@ ClassFileStream::ClassFileStream(const u1* buffer,
   _buffer_end(buffer + length),
   _current(buffer),
   _source(source),
-  _need_verify(verify_stream) {}
+  _need_verify(verify_stream) { }
 
 const u1* ClassFileStream::clone_buffer() const {
   u1* const new_buffer_start = NEW_RESOURCE_ARRAY(u1, length());
@@ -53,7 +53,6 @@ u1 ClassFileStream::get_u1(TRAPS) const {
   if (_need_verify) {
     guarantee_more(1, CHECK_0);
   } else {
-    assert(1 <= _buffer_end - _current, "buffer overflow");
   }
   return *_current++;
 }
@@ -62,7 +61,6 @@ u2 ClassFileStream::get_u2(TRAPS) const {
   if (_need_verify) {
     guarantee_more(2, CHECK_0);
   } else {
-    assert(2 <= _buffer_end - _current, "buffer overflow");
   }
   const u1* tmp = _current;
   _current += 2;
@@ -73,7 +71,6 @@ u4 ClassFileStream::get_u4(TRAPS) const {
   if (_need_verify) {
     guarantee_more(4, CHECK_0);
   } else {
-    assert(4 <= _buffer_end - _current, "buffer overflow");
   }
   const u1* tmp = _current;
   _current += 4;
@@ -84,7 +81,6 @@ u8 ClassFileStream::get_u8(TRAPS) const {
   if (_need_verify) {
     guarantee_more(8, CHECK_0);
   } else {
-    assert(8 <= _buffer_end - _current, "buffer overflow");
   }
   const u1* tmp = _current;
   _current += 8;
@@ -116,7 +112,6 @@ uint64_t ClassFileStream::compute_fingerprint() const {
   int classfile_size = length();
   int classfile_crc = ClassLoader::crc32(0, (const char*)buffer(), length());
   uint64_t fingerprint = (uint64_t(classfile_size) << 32) | uint64_t(uint32_t(classfile_crc));
-  assert(fingerprint != 0, "must not be zero");
 
   return fingerprint;
 }

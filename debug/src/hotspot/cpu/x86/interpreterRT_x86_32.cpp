@@ -73,7 +73,7 @@ Register InterpreterRuntime::SignatureHandlerGenerator::temp()       { return rc
 
 // Implementation of SignatureHandlerLibrary
 
-void SignatureHandlerLibrary::pd_set_handler(address handler) {}
+void SignatureHandlerLibrary::pd_set_handler(address handler) { }
 
 class SlowSignatureHandler: public NativeSignatureIterator {
  private:
@@ -114,7 +114,6 @@ class SlowSignatureHandler: public NativeSignatureIterator {
 
 IRT_ENTRY(address, InterpreterRuntime::slow_signature_handler(JavaThread* thread, Method* method, intptr_t* from, intptr_t* to))
   methodHandle m(thread, (Method*)method);
-  assert(m->is_native(), "sanity check");
   // handle arguments
   SlowSignatureHandler(m, (address)from, to + 1).iterate((uint64_t)CONST64(-1));
   // return result handler

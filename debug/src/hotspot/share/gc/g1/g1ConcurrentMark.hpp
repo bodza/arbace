@@ -34,7 +34,6 @@ private:
   static const uintptr_t ArraySliceBit = 1;
 
   G1TaskQueueEntry(oop obj) : _holder(obj) {
-    assert(_holder != NULL, "Not allowed to set NULL task queue element");
   }
   G1TaskQueueEntry(HeapWord* addr) : _holder((void*)((uintptr_t)addr | ArraySliceBit)) { }
 public:
@@ -55,12 +54,10 @@ public:
   }
 
   oop obj() const {
-    assert(!is_array_slice(), "Trying to read array slice " PTR_FORMAT " as oop", p2i(_holder));
     return (oop)_holder;
   }
 
   HeapWord* slice() const {
-    assert(is_array_slice(), "Trying to read oop " PTR_FORMAT " as array slice", p2i(_holder));
     return (HeapWord*)((uintptr_t)_holder & ~ArraySliceBit);
   }
 
@@ -197,7 +194,7 @@ private:
 
   // Apply Fn to every oop on the mark stack. The mark stack must not
   // be modified while iterating.
-  template<typename Fn> void iterate(Fn fn) const {};
+  template<typename Fn> void iterate(Fn fn) const { };
 };
 
 // Root Regions are regions that are not empty at the beginning of a
@@ -385,7 +382,7 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   // Prints all gathered CM-related statistics
   void print_stats();
 
-  HeapWord*               finger()          { return _finger;   }
+  HeapWord*               finger()          { return _finger; }
   bool                    concurrent()      { return _concurrent; }
   uint                    active_tasks()    { return _num_active_tasks; }
   ParallelTaskTerminator* terminator()      { return &_terminator; }
@@ -417,7 +414,6 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   G1CMTask* task(uint id) {
     // During initial mark we use the parallel gc threads to do some work, so
     // we can only compare against _max_num_tasks.
-    assert(id < _max_num_tasks, "Task id %u not within bounds up to %u", id, _max_num_tasks);
     return _tasks[id];
   }
 
@@ -559,7 +555,7 @@ public:
   // Verify that there are no collection set oops on the stacks (taskqueues /
   // global mark stack) and fingers (global / per-task).
   // If marking is not in progress, it's a no-op.
-  void verify_no_cset_oops() {};
+  void verify_no_cset_oops() { };
 
   inline bool do_yield_check();
 
@@ -700,8 +696,7 @@ private:
   // Checks whether the words scanned or refs visited reached their
   // respective limit and calls reached_limit() if they have
   void check_limits() {
-    if (_words_scanned >= _words_scanned_limit ||
-        _refs_reached >= _refs_reached_limit) {
+    if (_words_scanned >= _words_scanned_limit || _refs_reached >= _refs_reached_limit) {
       reached_limit();
     }
   }
@@ -801,7 +796,6 @@ public:
 
   // Moves the local finger to a new location
   inline void move_finger_to(HeapWord* new_finger) {
-    assert(new_finger >= _finger && new_finger < _region_limit, "invariant");
     _finger = new_finger;
   }
 

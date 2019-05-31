@@ -4,17 +4,6 @@
 #include "memory/allocation.hpp"
 #include "runtime/thread.hpp"
 
-// The resource area holds temporary data structures in the VM.
-// The actual allocation areas are thread local. Typical usage:
-//
-//   ...
-//   {
-//     ResourceMark rm;
-//     int foo[] = NEW_RESOURCE_ARRAY(int, 64);
-//     ...
-//   }
-//   ...
-
 //------------------------------ResourceArea-----------------------------------
 // A ResourceArea is an Arena that supports safe usage of ResourceMark.
 class ResourceArea: public Arena {
@@ -52,12 +41,10 @@ protected:
     _hwm = _area->_hwm;
     _max= _area->_max;
     _size_in_bytes = _area->size_in_bytes();
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
  public:
 
   ResourceMark(Thread *thread) {
-    assert(thread == Thread::current(), "not the current thread");
     initialize(thread);
   }
 
@@ -66,20 +53,15 @@ protected:
   ResourceMark( ResourceArea *r ) :
     _area(r), _chunk(r->_chunk), _hwm(r->_hwm), _max(r->_max) {
     _size_in_bytes = r->_size_in_bytes;
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
   void reset_to_mark() {
     if (UseMallocOnly) free_malloced_objects();
 
-    if( _chunk->next() ) {       // Delete later chunks
-      // reset arena size before delete chunks. Otherwise, the total
-      // arena size could exceed total chunk size
-      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
+    if (_chunk->next()) {       // Delete later chunks
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
     } else {
-      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;
@@ -90,12 +72,11 @@ protected:
   }
 
   ~ResourceMark() {
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
     reset_to_mark();
   }
 
  private:
-  void free_malloced_objects()                                         {};
+  void free_malloced_objects()                                         { };
   size_t size_in_bytes() { return _size_in_bytes; }
 };
 
@@ -141,13 +122,11 @@ protected:
     _hwm = _area->_hwm;
     _max= _area->_max;
     _size_in_bytes = _area->size_in_bytes();
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
  public:
 
   DeoptResourceMark(Thread *thread) {
-    assert(thread == Thread::current(), "not the current thread");
     initialize(thread);
   }
 
@@ -156,20 +135,15 @@ protected:
   DeoptResourceMark( ResourceArea *r ) :
     _area(r), _chunk(r->_chunk), _hwm(r->_hwm), _max(r->_max) {
     _size_in_bytes = _area->size_in_bytes();
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
   }
 
   void reset_to_mark() {
     if (UseMallocOnly) free_malloced_objects();
 
-    if( _chunk->next() ) {        // Delete later chunks
-      // reset arena size before delete chunks. Otherwise, the total
-      // arena size could exceed total chunk size
-      assert(_area->size_in_bytes() > size_in_bytes(), "Sanity check");
+    if (_chunk->next()) {        // Delete later chunks
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
     } else {
-      assert(_area->size_in_bytes() == size_in_bytes(), "Sanity check");
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;
@@ -180,12 +154,11 @@ protected:
   }
 
   ~DeoptResourceMark() {
-    assert( _area->_nesting > 0, "must stack allocate RMs" );
     reset_to_mark();
   }
 
  private:
-  void free_malloced_objects()                                         {};
+  void free_malloced_objects()                                         { };
   size_t size_in_bytes() { return _size_in_bytes; };
 };
 

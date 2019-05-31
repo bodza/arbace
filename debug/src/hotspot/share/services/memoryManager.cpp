@@ -21,7 +21,6 @@ MemoryManager::MemoryManager(const char* name) : _name(name) {
 
 int MemoryManager::add_pool(MemoryPool* pool) {
   int index = _num_pools;
-  assert(index < MemoryManager::max_num_pools, "_num_pools exceeds the max");
   if (index < MemoryManager::max_num_pools) {
     _pools[index] = pool;
     _num_pools++;
@@ -176,16 +175,13 @@ void GCMemoryManager::add_pool(MemoryPool* pool, bool always_affected_by_gc) {
 }
 
 void GCMemoryManager::initialize_gc_stat_info() {
-  assert(MemoryService::num_memory_pools() > 0, "should have one or more memory pools");
   _last_gc_stat = new(ResourceObj::C_HEAP, mtGC) GCStatInfo(MemoryService::num_memory_pools());
   _current_gc_stat = new(ResourceObj::C_HEAP, mtGC) GCStatInfo(MemoryService::num_memory_pools());
   // tracking concurrent collections we need two objects: one to update, and one to
   // hold the publicly available "last (completed) gc" information.
 }
 
-void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage,
-                               bool recordAccumulatedGCTime) {
-  assert(_last_gc_stat != NULL && _current_gc_stat != NULL, "Just checking");
+void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage, bool recordAccumulatedGCTime) {
   if (recordAccumulatedGCTime) {
     _accumulated_timer.start();
   }
@@ -201,11 +197,7 @@ void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage,
       MemoryPool* pool = MemoryService::get_memory_pool(i);
       MemoryUsage usage = pool->get_memory_usage();
       _current_gc_stat->set_before_gc_usage(i, usage);
-      HOTSPOT_MEM_POOL_GC_BEGIN(
-        (char *) name(), strlen(name()),
-        (char *) pool->name(), strlen(pool->name()),
-        usage.init_size(), usage.used(),
-        usage.committed(), usage.max_size());
+      HOTSPOT_MEM_POOL_GC_BEGIN((char *) name(), strlen(name()), (char *) pool->name(), strlen(pool->name()), usage.init_size(), usage.used(), usage.committed(), usage.max_size());
     }
   }
 }
@@ -213,11 +205,7 @@ void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage,
 // A collector MUST, even if it does not complete for some reason,
 // make a TraceMemoryManagerStats object where countCollection is true,
 // to ensure the current gc stat is placed in _last_gc_stat.
-void GCMemoryManager::gc_end(bool recordPostGCUsage,
-                             bool recordAccumulatedGCTime,
-                             bool recordGCEndTime, bool countCollection,
-                             GCCause::Cause cause,
-                             bool allMemoryPoolsAffected) {
+void GCMemoryManager::gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected) {
   if (recordAccumulatedGCTime) {
     _accumulated_timer.stop();
   }
@@ -232,11 +220,7 @@ void GCMemoryManager::gc_end(bool recordPostGCUsage,
       MemoryPool* pool = MemoryService::get_memory_pool(i);
       MemoryUsage usage = pool->get_memory_usage();
 
-      HOTSPOT_MEM_POOL_GC_END(
-        (char *) name(), strlen(name()),
-        (char *) pool->name(), strlen(pool->name()),
-        usage.init_size(), usage.used(),
-        usage.committed(), usage.max_size());
+      HOTSPOT_MEM_POOL_GC_END((char *) name(), strlen(name()), (char *) pool->name(), strlen(pool->name()), usage.init_size(), usage.used(), usage.committed(), usage.max_size());
 
       _current_gc_stat->set_after_gc_usage(i, usage);
     }
@@ -278,7 +262,6 @@ size_t GCMemoryManager::get_last_gc_stat(GCStatInfo* dest) {
     dest->set_index(_last_gc_stat->gc_index());
     dest->set_start_time(_last_gc_stat->start_time());
     dest->set_end_time(_last_gc_stat->end_time());
-    assert(dest->usage_array_size() == _last_gc_stat->usage_array_size(), "Must have same array size");
     size_t len = dest->usage_array_size() * sizeof(MemoryUsage);
     memcpy(dest->before_gc_usage_array(), _last_gc_stat->before_gc_usage_array(), len);
     memcpy(dest->after_gc_usage_array(), _last_gc_stat->after_gc_usage_array(), len);

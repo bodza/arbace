@@ -114,7 +114,6 @@ class InvocationCounter {
 };
 
 inline void InvocationCounter::set(State state, int count) {
-  assert(0 <= state && state < number_of_states, "illegal state");
   int carry = (_counter & carry_mask);    // the carry bit is sticky
   _counter = (count << number_of_noncount_bits) | carry | state;
 }

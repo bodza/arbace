@@ -21,19 +21,19 @@ void JVMFlagWriteable::mark_startup(void) {
 }
 
 // No control emitting
-void emit_writeable_no(...)                         { /* NOP */ }
+void emit_writeable_no(...) { /* NOP */ }
 
 // No control emitting if type argument is NOT provided
-void emit_writeable_bool(const char* /*name*/)      { /* NOP */ }
-void emit_writeable_ccstr(const char* /*name*/)     { /* NOP */ }
+void emit_writeable_bool(const char* /*name*/) { /* NOP */ }
+void emit_writeable_ccstr(const char* /*name*/) { /* NOP */ }
 void emit_writeable_ccstrlist(const char* /*name*/) { /* NOP */ }
-void emit_writeable_int(const char* /*name*/)       { /* NOP */ }
-void emit_writeable_intx(const char* /*name*/)      { /* NOP */ }
-void emit_writeable_uint(const char* /*name*/)      { /* NOP */ }
-void emit_writeable_uintx(const char* /*name*/)     { /* NOP */ }
-void emit_writeable_uint64_t(const char* /*name*/)  { /* NOP */ }
-void emit_writeable_size_t(const char* /*name*/)    { /* NOP */ }
-void emit_writeable_double(const char* /*name*/)    { /* NOP */ }
+void emit_writeable_int(const char* /*name*/) { /* NOP */ }
+void emit_writeable_intx(const char* /*name*/) { /* NOP */ }
+void emit_writeable_uint(const char* /*name*/) { /* NOP */ }
+void emit_writeable_uintx(const char* /*name*/) { /* NOP */ }
+void emit_writeable_uint64_t(const char* /*name*/) { /* NOP */ }
+void emit_writeable_size_t(const char* /*name*/) { /* NOP */ }
+void emit_writeable_double(const char* /*name*/) { /* NOP */ }
 
 // JVMFlagWriteable emitting code functions if range arguments are provided
 void emit_writeable_bool(const char* name, JVMFlagWriteable::WriteableType type) {

@@ -24,7 +24,6 @@ inline bool os::uses_stack_guard_pages() {
 }
 
 inline bool os::must_commit_stack_guard_pages() {
-  assert(uses_stack_guard_pages(), "sanity check");
 #if !defined(__FreeBSD__) || __FreeBSD__ < 5
   // Since FreeBSD 4 uses malloc() for allocating the thread stack
   // there is no need to do anything extra to allocate the guard pages
@@ -49,11 +48,10 @@ inline void os::dll_unload(void *lib) {
   ::dlclose(lib);
 }
 
-inline const int os::default_file_open_flags() { return 0;}
+inline const int os::default_file_open_flags() { return 0; }
 
 inline DIR* os::opendir(const char* dirname)
 {
-  assert(dirname != NULL, "just checking");
   return ::opendir(dirname);
 }
 
@@ -78,13 +76,12 @@ inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
 {
   dirent* p;
   int status;
-  assert(dirp != NULL, "just checking");
 
   // NOTE: Bsd readdir_r (on RH 6.2 and 7.2 at least) is NOT like the POSIX
   // version. Here is the doc for this function:
   // http://www.gnu.org/manual/glibc-2.2.3/html_node/libc_262.html
 
-  if((status = ::readdir_r(dirp, dbuf, &p)) != 0) {
+  if ((status = ::readdir_r(dirp, dbuf, &p)) != 0) {
     errno = status;
     return NULL;
   } else
@@ -92,7 +89,6 @@ inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
 }
 
 inline int os::closedir(DIR *dirp) {
-  assert(dirp != NULL, "argument is NULL");
   return ::closedir(dirp);
 }
 
@@ -108,8 +104,8 @@ inline int os::closedir(DIR *dirp) {
   return _result; \
 } while(false)
 
-inline bool os::numa_has_static_binding()   { return true; }
-inline bool os::numa_has_group_homing()     { return false;  }
+inline bool os::numa_has_static_binding() { return true; }
+inline bool os::numa_has_group_homing() { return false; }
 
 inline size_t os::restartable_read(int fd, void *buf, unsigned int nBytes) {
   size_t res;

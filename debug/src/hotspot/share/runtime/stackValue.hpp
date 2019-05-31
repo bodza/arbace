@@ -20,7 +20,6 @@ class StackValue : public ResourceObj {
     _type                = T_OBJECT;
     _integer_value       = scalar_replaced;
     _handle_value        = value;
-    assert(_integer_value == 0 ||  _handle_value.is_null(), "not null object should not be marked as scalar replaced");
   }
 
   StackValue() {
@@ -30,39 +29,32 @@ class StackValue : public ResourceObj {
 
   // Only used during deopt- preserve object type.
   StackValue(intptr_t o, BasicType t) {
-    assert(t == T_OBJECT, "should not be used");
     _type          = t;
     _integer_value = o;
   }
 
   Handle get_obj() const {
-    assert(type() == T_OBJECT, "type check");
     return _handle_value;
   }
 
   bool obj_is_scalar_replaced() const {
-    assert(type() == T_OBJECT, "type check");
     return _integer_value != 0;
   }
 
   void set_obj(Handle value) {
-    assert(type() == T_OBJECT, "type check");
     _handle_value = value;
   }
 
   intptr_t get_int() const {
-    assert(type() == T_INT, "type check");
     return _integer_value;
   }
 
   // For special case in deopt.
   intptr_t get_int(BasicType t) const {
-    assert(t == T_OBJECT && type() == T_OBJECT, "type check");
     return _integer_value;
   }
 
   void set_int(intptr_t value) {
-    assert(type() == T_INT, "type check");
     _integer_value = value;
   }
 
@@ -73,7 +65,6 @@ class StackValue : public ResourceObj {
     if (_type == T_OBJECT)
       return (_handle_value == value->_handle_value);
     else {
-      assert(_type == T_INT, "sanity check");
       // [phh] compare only low addressed portions of intptr_t slots
       return (*(int *)&_integer_value == *(int *)&value->_integer_value);
     }

@@ -71,7 +71,6 @@ OopMapForCacheEntry::OopMapForCacheEntry(const methodHandle& method, int bci, Oo
 }
 
 void OopMapForCacheEntry::compute_map(TRAPS) {
-  assert(!method()->is_native(), "cannot compute oop map for native methods");
   // First check if it is a method where the stackmap is always empty
   if (method()->code_size() == 0 || method()->max_locals() + method()->max_stack() == 0) {
     _entry->set_mask_size(0);
@@ -98,10 +97,7 @@ void OopMapForCacheEntry::fill_init_vars(GrowableArray<intptr_t> *init_vars) {
   // Do nothing
 }
 
-void OopMapForCacheEntry::fill_stackmap_for_opcodes(BytecodeStream *bcs,
-                                                    CellTypeState* vars,
-                                                    CellTypeState* stack,
-                                                    int stack_top) {
+void OopMapForCacheEntry::fill_stackmap_for_opcodes(BytecodeStream *bcs, CellTypeState* vars, CellTypeState* stack, int stack_top) {
   // Only interested in one specific bci
   if (bcs->bci() == _bci) {
     _entry->set_mask(vars, stack, stack_top);
@@ -110,7 +106,6 @@ void OopMapForCacheEntry::fill_stackmap_for_opcodes(BytecodeStream *bcs,
 }
 
 int OopMapForCacheEntry::size() {
-  assert(_stack_top != -1, "compute_map must be called first");
   return ((method()->is_static()) ? 0 : 1) + method()->max_locals() + _stack_top;
 }
 
@@ -132,12 +127,6 @@ InterpreterOopMap::InterpreterOopMap() {
 }
 
 InterpreterOopMap::~InterpreterOopMap() {
-  // The expection is that the bit mask was allocated
-  // last in this resource area.  That would make the free of the
-  // bit_mask effective (see how FREE_RESOURCE_ARRAY does a free).
-  // If it was not allocated last, there is not a correctness problem
-  // but the space for the bit_mask is not freed.
-  assert(_resource_allocate_bit_mask, "Trying to free C heap space");
   if (mask_size() > small_mask_limit) {
     FREE_RESOURCE_ARRAY(uintptr_t, _bit_mask[0], mask_word_size());
   }
@@ -145,7 +134,6 @@ InterpreterOopMap::~InterpreterOopMap() {
 
 bool InterpreterOopMap::is_empty() const {
   bool result = _method == NULL;
-  assert(_method != NULL || (_bci == 0 && (_mask_size == 0 || _mask_size == USHRT_MAX) && _bit_mask[0] == 0), "Should be completely empty");
   return result;
 }
 
@@ -194,7 +182,6 @@ class MaskFillerForNative: public NativeSignatureIterator {
 
   void set_one(int i) {
     i *= InterpreterOopMap::bits_per_entry;
-    assert(0 <= i && i < _size, "offset out of bounds");
     _mask[i / BitsPerWord] |= (((uintptr_t) 1 << InterpreterOopMap::oop_bit_number) << (i % BitsPerWord));
   }
 
@@ -230,19 +217,17 @@ bool OopMapCacheEntry::verify_mask(CellTypeState* vars, CellTypeState* stack, in
   LogStream st(logv.trace());
 
   st.print("Locals (%d): ", max_locals);
-  for(int i = 0; i < max_locals; i++) {
+  for (int i = 0; i < max_locals; i++) {
     bool v1 = is_oop(i)               ? true : false;
     bool v2 = vars[i].is_reference()  ? true : false;
-    assert(v1 == v2, "locals oop mask generation error");
     st.print("%d", v1 ? 1 : 0);
   }
   st.cr();
 
   st.print("Stack (%d): ", stack_top);
-  for(int j = 0; j < stack_top; j++) {
+  for (int j = 0; j < stack_top; j++) {
     bool v1 = is_oop(max_locals + j)  ? true : false;
     bool v2 = stack[j].is_reference() ? true : false;
-    assert(v1 == v2, "stack oop mask generation error");
     st.print("%d", v1 ? 1 : 0);
   }
   st.cr();
@@ -251,7 +236,6 @@ bool OopMapCacheEntry::verify_mask(CellTypeState* vars, CellTypeState* stack, in
 
 void OopMapCacheEntry::allocate_bit_mask() {
   if (mask_size() > small_mask_limit) {
-    assert(_bit_mask[0] == 0, "bit mask should be new or just flushed");
     _bit_mask[0] = (intptr_t)
       NEW_C_HEAP_ARRAY(uintptr_t, mask_word_size(), mtClass);
   }
@@ -259,13 +243,11 @@ void OopMapCacheEntry::allocate_bit_mask() {
 
 void OopMapCacheEntry::deallocate_bit_mask() {
   if (mask_size() > small_mask_limit && _bit_mask[0] != 0) {
-    assert(!Thread::current()->resource_area()->contains((void*)_bit_mask[0]), "This bit mask should not be in the resource area");
     FREE_C_HEAP_ARRAY(uintptr_t, _bit_mask[0]);
   }
 }
 
 void OopMapCacheEntry::fill_for_native(const methodHandle& mh) {
-  assert(mh->is_native(), "method must be native method");
   set_mask_size(mh->size_of_parameters() * bits_per_entry);
   allocate_bit_mask();
   // fill mask for parameters
@@ -318,22 +300,18 @@ void OopMapCacheEntry::set_mask(CellTypeState *vars, CellTypeState *stack, int s
     }
 
     // set oop bit
-    if ( cell->is_reference()) {
+    if (cell->is_reference()) {
       value |= (mask << oop_bit_number );
     }
 
     // set dead bit
     if (!cell->is_live()) {
       value |= (mask << dead_bit_number);
-      assert(!cell->is_reference(), "dead value marked as oop");
     }
   }
 
   // make sure last word is stored
   bit_mask()[word_index] = value;
-
-  // verify bit mask
-  assert(verify_mask(vars, stack, max_locals, stack_top), "mask could not be verified");
 }
 
 void OopMapCacheEntry::flush() {
@@ -344,7 +322,6 @@ void OopMapCacheEntry::flush() {
 // Implementation of OopMapCache
 
 void InterpreterOopMap::resource_copy(OopMapCacheEntry* from) {
-  assert(_resource_allocate_bit_mask, "Should not resource allocate the _bit_mask");
 
   set_method(from->method());
   set_bci(from->bci());
@@ -356,16 +333,10 @@ void InterpreterOopMap::resource_copy(OopMapCacheEntry* from) {
     memcpy((void *)_bit_mask, (void *)from->_bit_mask,
       mask_word_size() * BytesPerWord);
   } else {
-    // The expectation is that this InterpreterOopMap is a recently created
-    // and empty. It is used to get a copy of a cached entry.
-    // If the bit mask has a value, it should be in the
-    // resource area.
-    assert(_bit_mask[0] == 0 || Thread::current()->resource_area()->contains((void*)_bit_mask[0]), "The bit mask should have been allocated from a resource area");
     // Allocate the bit_mask from a Resource area for performance.  Allocating
     // from the C heap as is done for OopMapCache has a significant
     // performance impact.
     _bit_mask[0] = (uintptr_t) NEW_RESOURCE_ARRAY(uintptr_t, mask_word_size());
-    assert(_bit_mask[0] != 0, "bit mask was not allocated");
     memcpy((void*) _bit_mask[0], (void*) from->_bit_mask[0],
       mask_word_size() * BytesPerWord);
   }
@@ -384,11 +355,10 @@ OopMapCacheEntry* volatile OopMapCache::_old_entries = NULL;
 
 OopMapCache::OopMapCache() {
   _array  = NEW_C_HEAP_ARRAY(OopMapCacheEntry*, _size, mtClass);
-  for(int i = 0; i < _size; i++) _array[i] = NULL;
+  for (int i = 0; i < _size; i++) _array[i] = NULL;
 }
 
 OopMapCache::~OopMapCache() {
-  assert(_array != NULL, "sanity check");
   // Deallocate oop maps that are allocated out-of-line
   flush();
   // Deallocate array
@@ -415,7 +385,6 @@ void OopMapCache::flush() {
 }
 
 void OopMapCache::flush_obsolete_entries() {
-  assert(SafepointSynchronize::is_at_safepoint(), "called by RedefineClasses in a safepoint");
   for (int i = 0; i < _size; i++) {
     OopMapCacheEntry* entry = _array[i];
     if (entry != NULL && !entry->is_empty() && entry->method()->is_old()) {
@@ -436,10 +405,7 @@ void OopMapCache::flush_obsolete_entries() {
 
 // Called by GC for thread root scan during a safepoint only.  The other interpreted frame oopmaps
 // are generated locally and not cached.
-void OopMapCache::lookup(const methodHandle& method,
-                         int bci,
-                         InterpreterOopMap* entry_for) {
-  assert(SafepointSynchronize::is_at_safepoint(), "called by GC in a safepoint");
+void OopMapCache::lookup(const methodHandle& method, int bci, InterpreterOopMap* entry_for) {
   int probe = hash_value_for(method, bci);
   int i;
   OopMapCacheEntry* entry = NULL;
@@ -453,11 +419,10 @@ void OopMapCache::lookup(const methodHandle& method,
   }
 
   // Search hashtable for match
-  for(i = 0; i < _probe_depth; i++) {
+  for (i = 0; i < _probe_depth; i++) {
     entry = entry_at(probe + i);
     if (entry != NULL && !entry->is_empty() && entry->match(method, bci)) {
       entry_for->resource_copy(entry);
-      assert(!entry_for->is_empty(), "A non-empty oop map should be returned");
       log_debug(interpreter, oopmap)("- found at hash %d", probe + i);
       return;
     }
@@ -481,11 +446,10 @@ void OopMapCache::lookup(const methodHandle& method,
   }
 
   // First search for an empty slot
-  for(i = 0; i < _probe_depth; i++) {
+  for (i = 0; i < _probe_depth; i++) {
     entry = entry_at(probe + i);
     if (entry == NULL) {
       if (put_at(probe + i, tmp, NULL)) {
-        assert(!entry_for->is_empty(), "A non-empty oop map should be returned");
         return;
       }
     }
@@ -502,7 +466,6 @@ void OopMapCache::lookup(const methodHandle& method,
     enqueue_for_cleanup(tmp);
   }
 
-  assert(!entry_for->is_empty(), "A non-empty oop map should be returned");
   return;
 }
 

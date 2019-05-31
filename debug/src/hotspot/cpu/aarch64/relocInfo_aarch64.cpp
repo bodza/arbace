@@ -18,7 +18,6 @@ void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
       if (NativeInstruction::is_ldr_literal_at(addr())) {
         address constptr = (address)code()->oop_addr_at(reloc->oop_index());
         bytes = MacroAssembler::pd_patch_instruction_size(addr(), constptr);
-        assert(*(address*)constptr == x, "error in oop relocation");
       } else{
         bytes = MacroAssembler::patch_oop(addr(), x);
       }
@@ -32,7 +31,6 @@ void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
 }
 
 address Relocation::pd_call_destination(address orig_addr) {
-  assert(is_call(), "should be a call here");
   if (NativeCall::is_call_at(addr())) {
     address trampoline = nativeCall_at(addr())->get_trampoline();
     if (trampoline) {
@@ -52,7 +50,6 @@ address Relocation::pd_call_destination(address orig_addr) {
 }
 
 void Relocation::pd_set_call_destination(address x) {
-  assert(is_call(), "should be a call here");
   if (NativeCall::is_call_at(addr())) {
     address trampoline = nativeCall_at(addr())->get_trampoline();
     if (trampoline) {
@@ -61,7 +58,6 @@ void Relocation::pd_set_call_destination(address x) {
     }
   }
   MacroAssembler::pd_patch_instruction(addr(), x);
-  assert(pd_call_destination(addr()) == x, "fail in reloc");
 }
 
 address* Relocation::pd_address_in_code() {

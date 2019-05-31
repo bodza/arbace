@@ -5,11 +5,11 @@
 
 // Efficient swapping of data bytes from Java byte
 // ordering to native byte ordering and vice versa.
-inline u2   Bytes::swap_u2(u2 x) {
+inline u2 Bytes::swap_u2(u2 x) {
   return bswap_16(x);
 }
 
-inline u4   Bytes::swap_u4(u4 x) {
+inline u4 Bytes::swap_u4(u4 x) {
   return bswap_32(x);
 }
 

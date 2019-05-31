@@ -25,8 +25,6 @@ static const char* classes_plural(uintx num) {
 
 void PrintCLDMetaspaceInfoClosure::do_cld(ClassLoaderData* cld) {
 
-  assert(SafepointSynchronize::is_at_safepoint(), "Must be at a safepoint");
-
   if (cld->is_unloading()) {
     _num_loaders_unloading ++;
     return;

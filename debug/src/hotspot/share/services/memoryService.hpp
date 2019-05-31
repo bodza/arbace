@@ -103,7 +103,7 @@ private:
   bool         _countCollection;
   GCCause::Cause _cause;
 public:
-  TraceMemoryManagerStats() {}
+  TraceMemoryManagerStats() { }
   TraceMemoryManagerStats(GCMemoryManager* gc_memory_manager,
                           GCCause::Cause cause,
                           bool allMemoryPoolsAffected = true,

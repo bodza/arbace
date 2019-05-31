@@ -27,7 +27,6 @@ void DebugInfoWriteStream::write_metadata(Metadata* h) {
 
 oop DebugInfoReadStream::read_oop() {
   oop o = code()->oop_at(read_int());
-  assert(oopDesc::is_oop_or_null(o), "oop only");
   return o;
 }
 
@@ -42,7 +41,6 @@ ScopeValue* DebugInfoReadStream::read_object_value() {
 
 ScopeValue* DebugInfoReadStream::get_cached_object() {
   int id = read_int();
-  assert(_obj_pool != NULL, "object pool does not exist");
   for (int i = _obj_pool->length() - 1; i >= 0; i--) {
     ObjectValue* ov = _obj_pool->at(i)->as_ObjectValue();
     if (ov->id() == id) {
@@ -97,7 +95,6 @@ void ObjectValue::set_value(oop value) {
 
 void ObjectValue::read_object(DebugInfoReadStream* stream) {
   _klass = read_from(stream);
-  assert(_klass->is_constant_oop(), "should be constant java mirror oop");
   int length = stream->read_int();
   for (int i = 0; i < length; i++) {
     ScopeValue* val = read_from(stream);
@@ -192,7 +189,6 @@ void ConstantOopWriteValue::print_on(outputStream* st) const {
 
 ConstantOopReadValue::ConstantOopReadValue(DebugInfoReadStream* stream) {
   _value = Handle(Thread::current(), stream->read_oop());
-  assert(_value() == NULL || Universe::heap()->is_in_reserved(_value()), "Should be in heap");
 }
 
 void ConstantOopReadValue::write_on(DebugInfoWriteStream* stream) {

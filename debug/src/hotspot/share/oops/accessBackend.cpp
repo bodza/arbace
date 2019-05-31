@@ -45,7 +45,6 @@ namespace AccessInternal {
   }
 
   AccessLocker::AccessLocker() {
-    assert(!VM_Version::supports_cx8(), "why else?");
     UnsafeJlong_lock->lock_without_safepoint_check();
   }
 

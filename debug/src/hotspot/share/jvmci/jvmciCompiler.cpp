@@ -20,7 +20,6 @@ JVMCICompiler::JVMCICompiler() : AbstractCompiler(compiler_jvmci) {
   _bootstrapping = false;
   _bootstrap_compilation_request_handled = false;
   _methods_compiled = 0;
-  assert(_instance == NULL, "only one instance allowed");
   _instance = this;
 }
 
@@ -159,7 +158,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
         }
       }
     } else {
-      assert(false, "JVMCICompiler.compileMethod should always return non-null");
+      ShouldNotReachHere();
     }
   }
   if (_bootstrapping) {

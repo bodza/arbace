@@ -12,8 +12,7 @@ address CppInterpreterGenerator::generate_slow_signature_handler() {
   return (address) InterpreterRuntime::slow_signature_handler;
 }
 
-address CppInterpreterGenerator::generate_math_entry(
-    AbstractInterpreter::MethodKind kind) {
+address CppInterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKind kind) {
   if (!InlineIntrinsics)
     return NULL;
 

@@ -12,7 +12,6 @@ FloatRegister LIR_OprDesc::as_double_reg() const {
 
 // Reg2 unused.
 LIR_Opr LIR_OprFact::double_fpu(int reg1, int reg2) {
-  assert(as_FloatRegister(reg2) == fnoreg, "Not used on this platform");
   return (LIR_Opr)(intptr_t)((reg1 << LIR_OprDesc::reg1_shift) |
                              (reg1 << LIR_OprDesc::reg2_shift) |
                              LIR_OprDesc::double_type          |

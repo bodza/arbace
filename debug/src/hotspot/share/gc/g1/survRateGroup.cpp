@@ -60,8 +60,7 @@ void SurvRateGroup::stop_adding_regions() {
 }
 
 void SurvRateGroup::record_surviving_words(int age_in_group, size_t surv_words) {
-  guarantee( 0 <= age_in_group && (size_t) age_in_group < _region_num,
-             "pre-condition" );
+  guarantee( 0 <= age_in_group && (size_t) age_in_group < _region_num, "pre-condition" );
 
   double surv_rate = (double) surv_words / (double) HeapRegion::GrainWords;
   _surv_rate_pred[age_in_group]->add(surv_rate);

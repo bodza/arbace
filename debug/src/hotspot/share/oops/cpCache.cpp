@@ -25,19 +25,13 @@
 // Implementation of ConstantPoolCacheEntry
 
 void ConstantPoolCacheEntry::initialize_entry(int index) {
-  assert(0 < index && index < 0x10000, "sanity check");
   _indices = index;
   _f1 = NULL;
   _f2 = _flags = 0;
-  assert(constant_pool_index() == index, "");
 }
 
 void ConstantPoolCacheEntry::verify_just_initialized(bool f2_used) {
-  assert((_indices & (~cp_index_mask)) == 0, "sanity");
-  assert(_f1 == NULL, "sanity");
-  assert(_flags == 0, "sanity");
   if (!f2_used) {
-    assert(_f2 == 0, "sanity");
   }
 }
 
@@ -50,14 +44,11 @@ void ConstantPoolCacheEntry::reinitialize(bool f2_used) {
   }
 }
 
-int ConstantPoolCacheEntry::make_flags(TosState state,
-                                       int option_bits,
-                                       int field_index_or_method_params) {
-  assert(state < number_of_states, "Invalid state in make_flags");
+int ConstantPoolCacheEntry::make_flags(TosState state, int option_bits, int field_index_or_method_params) {
   int f = ((int)state << tos_state_shift) | option_bits | field_index_or_method_params;
   // Preserve existing flag bit values
   // The low bits are a field offset, or else the method parameter size.
-  return (_flags | f) ;
+  return (_flags | f);
 }
 
 void ConstantPoolCacheEntry::set_bytecode_1(Bytecodes::Code code) {
@@ -72,7 +63,6 @@ void ConstantPoolCacheEntry::set_bytecode_2(Bytecodes::Code code) {
 
 // Sets f1, ordering with previous writes.
 void ConstantPoolCacheEntry::release_set_f1(Metadata* f1) {
-  assert(f1 != NULL, "");
   OrderAccess::release_store(&_f1, f1);
 }
 
@@ -85,18 +75,9 @@ void ConstantPoolCacheEntry::set_indy_resolution_failed() {
 // the damaged entry.  More seriously, the memory synchronization is needed
 // to flush other fields (f1, f2) completely to memory before the bytecodes
 // are updated, lest other processors see a non-zero bytecode but zero f1/f2.
-void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code,
-                                       Bytecodes::Code put_code,
-                                       Klass* field_holder,
-                                       int field_index,
-                                       int field_offset,
-                                       TosState field_type,
-                                       bool is_final,
-                                       bool is_volatile,
-                                       Klass* root_klass) {
+void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code, Bytecodes::Code put_code, Klass* field_holder, int field_index, int field_offset, TosState field_type, bool is_final, bool is_volatile, Klass* root_klass) {
   set_f1(field_holder);
   set_f2(field_offset);
-  assert((field_index & field_index_mask) == field_index, "field index does not fit in low flag bits");
   set_field_flags(field_type,
                   ((is_volatile ? 1 : 0) << is_volatile_shift) |
                   ((is_final    ? 1 : 0) << is_final_shift),
@@ -108,7 +89,6 @@ void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code,
 void ConstantPoolCacheEntry::set_parameter_size(int value) {
   // This routine is called only in corner cases where the CPCE is not yet initialized.
   // See AbstractInterpreter::deopt_continue_after_entry.
-  assert(_flags == 0 || parameter_size() == 0 || parameter_size() == value, "size must not change: parameter_size=%d, value=%d", parameter_size(), value);
   // Setting the parameter size by itself is only safe if the
   // current value of _flags is 0, otherwise another thread may have
   // updated it and we don't want to overwrite that value.  Don't
@@ -118,17 +98,11 @@ void ConstantPoolCacheEntry::set_parameter_size(int value) {
     intx newflags = (value & parameter_size_mask);
     Atomic::cmpxchg(newflags, &_flags, (intx)0);
   }
-  guarantee(parameter_size() == value,
-            "size must not change: parameter_size=%d, value=%d", parameter_size(), value);
+  guarantee(parameter_size() == value, "size must not change: parameter_size=%d, value=%d", parameter_size(), value);
 }
 
-void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_code,
-                                                       const methodHandle& method,
-                                                       int vtable_index,
-                                                       bool sender_is_interface) {
+void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_code, const methodHandle& method, int vtable_index, bool sender_is_interface) {
   bool is_vtable_call = (vtable_index >= 0);  // FIXME: split this method on this boolean
-  assert(method->interpreter_entry() != NULL, "should have been set at this point");
-  assert(!method->is_obsolete(),  "attempt to write obsolete method to cpCache");
 
   int byte_no = -1;
   bool change_to_virtual = false;
@@ -137,9 +111,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
     case Bytecodes::_invokeinterface:
       holder = method->method_holder();
       // check for private interface method invocations
-      if (vtable_index == Method::nonvirtual_vtable_index && holder->is_interface() ) {
-        assert(method->is_private(), "unexpected non-private method");
-        assert(method->can_be_statically_bound(), "unexpected non-statically-bound method");
+      if (vtable_index == Method::nonvirtual_vtable_index && holder->is_interface()) {
         // set_f2_as_vfinal_method checks if is_vfinal flag is true.
         set_method_flags(as_TosState(method->result_type()),
                          (                             1      << is_vfinal_shift) |
@@ -157,8 +129,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
         // or when invokeinterface is used explicitly.
         // In that case, the method has no itable index and must be invoked as a virtual.
         // Set a flag to keep track of this corner case.
-        assert(holder->is_interface() || holder == SystemDictionary::Object_klass(), "unexpected holder class");
-        assert(method->is_public(), "Calling non-public method in Object with invokeinterface");
         change_to_virtual = true;
 
         // ...and fall through as if we were handling invokevirtual:
@@ -166,7 +136,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
     case Bytecodes::_invokevirtual:
       {
         if (!is_vtable_call) {
-          assert(method->can_be_statically_bound(), "");
           // set_f2_as_vfinal_method checks if is_vfinal flag is true.
           set_method_flags(as_TosState(method->result_type()),
                            (                             1      << is_vfinal_shift) |
@@ -175,9 +144,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
                            method()->size_of_parameters());
           set_f2_as_vfinal_method(method());
         } else {
-          assert(!method->can_be_statically_bound(), "");
-          assert(vtable_index >= 0, "valid index");
-          assert(!method->is_final_method(), "sanity");
           set_method_flags(as_TosState(method->result_type()),
                            ((change_to_virtual ? 1 : 0) << is_forced_virtual_shift),
                            method()->size_of_parameters());
@@ -189,7 +155,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
 
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
-      assert(!is_vtable_call, "");
       // Note:  Read and preserve the value of the is_vfinal flag on any
       // invokevirtual bytecode shared with this constant pool cache entry.
       // It is cheap and safe to consult is_vfinal() at all times.
@@ -208,13 +173,11 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
 
   // Note:  byte_no also appears in TemplateTable::resolve.
   if (byte_no == 1) {
-    assert(invoke_code != Bytecodes::_invokevirtual && invoke_code != Bytecodes::_invokeinterface, "");
     bool do_resolve = true;
     // Don't mark invokespecial to method as resolved if sender is an interface.  The receiver
     // has to be checked that it is a subclass of the current class every time this bytecode
     // is executed.
-    if (invoke_code == Bytecodes::_invokespecial && sender_is_interface &&
-        method->name() != vmSymbols::object_initializer_name()) {
+    if (invoke_code == Bytecodes::_invokespecial && sender_is_interface && method->name() != vmSymbols::object_initializer_name()) {
       do_resolve = false;
     }
     // Don't mark invokestatic to method as resolved if the holder class has not yet completed
@@ -228,7 +191,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
     }
   } else if (byte_no == 2)  {
     if (change_to_virtual) {
-      assert(invoke_code == Bytecodes::_invokeinterface, "");
       // NOTE: THIS IS A HACK - BE VERY CAREFUL!!!
       //
       // Workaround for the case where we encounter an invokeinterface, but we
@@ -244,9 +206,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
       // We set bytecode_2() to _invokevirtual.
       // See also interpreterRuntime.cpp. (8/25/2000)
     } else {
-      assert(invoke_code == Bytecodes::_invokevirtual || (invoke_code == Bytecodes::_invokeinterface && ((method->is_private() || (method->is_final() && method->method_holder() == SystemDictionary::Object_klass())))), "unexpected invocation mode");
-      if (invoke_code == Bytecodes::_invokeinterface &&
-          (method->is_private() || method->is_final())) {
+      if (invoke_code == Bytecodes::_invokeinterface && (method->is_private() || method->is_final())) {
         // We set bytecode_1() to _invokeinterface, because that is the
         // bytecode # used by the interpreter to see if it is resolved.
         // We set bytecode_2() to _invokevirtual.
@@ -260,8 +220,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
   }
 }
 
-void ConstantPoolCacheEntry::set_direct_call(Bytecodes::Code invoke_code, const methodHandle& method,
-                                             bool sender_is_interface) {
+void ConstantPoolCacheEntry::set_direct_call(Bytecodes::Code invoke_code, const methodHandle& method, bool sender_is_interface) {
   int index = Method::nonvirtual_vtable_index;
   // index < 0; FIXME: inline and customize set_direct_or_vtable_call
   set_direct_or_vtable_call(invoke_code, method, index, sender_is_interface);
@@ -269,24 +228,15 @@ void ConstantPoolCacheEntry::set_direct_call(Bytecodes::Code invoke_code, const 
 
 void ConstantPoolCacheEntry::set_vtable_call(Bytecodes::Code invoke_code, const methodHandle& method, int index) {
   // either the method is a miranda or its holder should accept the given index
-  assert(method->method_holder()->is_interface() || method->method_holder()->verify_vtable_index(index), "");
   // index >= 0; FIXME: inline and customize set_direct_or_vtable_call
   set_direct_or_vtable_call(invoke_code, method, index, false);
 }
 
-void ConstantPoolCacheEntry::set_itable_call(Bytecodes::Code invoke_code,
-                                             Klass* referenced_klass,
-                                             const methodHandle& method, int index) {
-  assert(method->method_holder()->verify_itable_index(index), "");
-  assert(invoke_code == Bytecodes::_invokeinterface, "");
+void ConstantPoolCacheEntry::set_itable_call(Bytecodes::Code invoke_code, Klass* referenced_klass, const methodHandle& method, int index) {
   InstanceKlass* interf = method->method_holder();
-  assert(interf->is_interface(), "must be an interface");
-  assert(!method->is_final_method(), "interfaces do not have final methods; cannot link to one here");
   set_f1(referenced_klass);
   set_f2((intx)method());
-  set_method_flags(as_TosState(method->result_type()),
-                   0,  // no option bits
-                   method()->size_of_parameters());
+  set_method_flags(as_TosState(method->result_type()), 0, method()->size_of_parameters());
   set_bytecode_1(Bytecodes::_invokeinterface);
 }
 
@@ -298,9 +248,7 @@ void ConstantPoolCacheEntry::set_dynamic_call(const constantPoolHandle& cpool, c
   set_method_handle_common(cpool, Bytecodes::_invokedynamic, call_info);
 }
 
-void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& cpool,
-                                                      Bytecodes::Code invoke_code,
-                                                      const CallInfo &call_info) {
+void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& cpool, Bytecodes::Code invoke_code, const CallInfo &call_info) {
   // NOTE: This CPCE can be the subject of data races.
   // There are three words to update: flags, refs[f2], f1 (in that order).
   // Writers must store all other values before f1.
@@ -314,7 +262,6 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
   // Use the resolved_references() lock for this cpCache entry.
   // resolved_references are created for all classes with Invokedynamic, MethodHandle
   // or MethodType constant pool cache entries.
-  assert(resolved_references() != NULL, "a resolved_references array should have been created for this class");
   ObjectLocker ol(resolved_references, Thread::current());
   if (!is_f1_null()) {
     return;
@@ -332,8 +279,7 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
       }
     }
     guarantee(index >= 0, "Didn't find cpCache entry!");
-    int encoded_index = ResolutionErrorTable::encode_cpcache_index(
-                          ConstantPool::encode_invokedynamic_index(index));
+    int encoded_index = ResolutionErrorTable::encode_cpcache_index(ConstantPool::encode_invokedynamic_index(index));
     Thread* THREAD = Thread::current();
     ConstantPool::throw_resolution_error(cpool, encoded_index, THREAD);
     return;
@@ -385,16 +331,12 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
   // Store appendix, if any.
   if (has_appendix) {
     const int appendix_index = f2_as_index() + _indy_resolved_references_appendix_offset;
-    assert(appendix_index >= 0 && appendix_index < resolved_references->length(), "oob");
-    assert(resolved_references->obj_at(appendix_index) == NULL, "init just once");
     resolved_references->obj_at_put(appendix_index, appendix());
   }
 
   // Store MethodType, if any.
   if (has_method_type) {
     const int method_type_index = f2_as_index() + _indy_resolved_references_method_type_offset;
-    assert(method_type_index >= 0 && method_type_index < resolved_references->length(), "oob");
-    assert(resolved_references->obj_at(method_type_index) == NULL, "init just once");
     resolved_references->obj_at_put(method_type_index, method_type());
   }
 
@@ -409,17 +351,12 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
   }
 }
 
-bool ConstantPoolCacheEntry::save_and_throw_indy_exc(
-  const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS) {
-
-  assert(HAS_PENDING_EXCEPTION, "No exception got thrown!");
-  assert(PENDING_EXCEPTION->is_a(SystemDictionary::LinkageError_klass()), "No LinkageError exception");
+bool ConstantPoolCacheEntry::save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS) {
 
   // Use the resolved_references() lock for this cpCache entry.
   // resolved_references are created for all classes with Invokedynamic, MethodHandle
   // or MethodType constant pool cache entries.
   objArrayHandle resolved_references(Thread::current(), cpool->resolved_references());
-  assert(resolved_references() != NULL, "a resolved_references array should have been created for this class");
   ObjectLocker ol(resolved_references, THREAD);
 
   // if f1 is not null or the indy_resolution_failed flag is set then another
@@ -434,7 +371,6 @@ bool ConstantPoolCacheEntry::save_and_throw_indy_exc(
 
   Symbol* error = PENDING_EXCEPTION->klass()->name();
   Symbol* message = java_lang_Throwable::detail_message(PENDING_EXCEPTION);
-  assert(message != NULL, "Missing detail message");
 
   SystemDictionary::add_resolution_error(cpool, index, error, message);
   set_indy_resolution_failed();
@@ -449,14 +385,11 @@ Method* ConstantPoolCacheEntry::method_if_resolved(const constantPoolHandle& cpo
     if (f1 != NULL) {
       switch (invoke_code) {
       case Bytecodes::_invokeinterface:
-        assert(f1->is_klass(), "");
         return klassItable::method_for_itable_index((Klass*)f1, f2_as_index());
       case Bytecodes::_invokestatic:
       case Bytecodes::_invokespecial:
-        assert(!has_appendix(), "");
       case Bytecodes::_invokehandle:
       case Bytecodes::_invokedynamic:
-        assert(f1->is_method(), "");
         return (Method*)f1;
       default:
         break;
@@ -470,7 +403,6 @@ Method* ConstantPoolCacheEntry::method_if_resolved(const constantPoolHandle& cpo
       if (is_vfinal()) {
         // invokevirtual
         Method* m = f2_as_vfinal_method();
-        assert(m->is_method(), "");
         return m;
       } else {
         int holder_index = cpool->uncached_klass_ref_index_at(constant_pool_index());
@@ -534,14 +466,11 @@ ConstantPoolCache* ConstantPoolCache::allocate(ClassLoaderData* loader_data,
     ConstantPoolCache(length, index_map, invokedynamic_index_map, invokedynamic_map);
 }
 
-void ConstantPoolCache::initialize(const intArray& inverse_index_map,
-                                   const intArray& invokedynamic_inverse_index_map,
-                                   const intArray& invokedynamic_references_map) {
+void ConstantPoolCache::initialize(const intArray& inverse_index_map, const intArray& invokedynamic_inverse_index_map, const intArray& invokedynamic_references_map) {
   for (int i = 0; i < inverse_index_map.length(); i++) {
     ConstantPoolCacheEntry* e = entry_at(i);
     int original_index = inverse_index_map.at(i);
     e->initialize_entry(original_index);
-    assert(entry_at(i) == e, "sanity");
   }
 
   // Append invokedynamic entries at the end
@@ -551,7 +480,6 @@ void ConstantPoolCache::initialize(const intArray& inverse_index_map,
     ConstantPoolCacheEntry* e = entry_at(offset);
     int original_index = invokedynamic_inverse_index_map.at(i);
     e->initialize_entry(original_index);
-    assert(entry_at(offset) == e, "sanity");
   }
 
   for (int ref = 0; ref < invokedynamic_references_map.length(); ref++) {
@@ -571,7 +499,6 @@ void ConstantPoolCache::remove_unshareable_info() {
 }
 
 void ConstantPoolCache::walk_entries_for_initialization(bool check_only) {
-  assert(DumpSharedSpaces, "sanity");
   // When dumping the archive, we want to clean up the ConstantPoolCache
   // to remove any effect of linking due to the execution of Java code --
   // each ConstantPoolCacheEntry will have the same contents as if
@@ -619,7 +546,6 @@ void ConstantPoolCache::walk_entries_for_initialization(bool check_only) {
 }
 
 void ConstantPoolCache::deallocate_contents(ClassLoaderData* data) {
-  assert(!is_shared(), "shared caches are not deallocated");
   data->remove_handle(_resolved_references);
   set_resolved_references(NULL);
   MetadataFactory::free_array<u2>(data, _reference_map);
@@ -635,14 +561,12 @@ void ConstantPoolCache::metaspace_pointers_do(MetaspaceClosure* it) {
 // Printing
 
 void ConstantPoolCache::print_on(outputStream* st) const {
-  assert(is_constantPoolCache(), "obj must be constant pool cache");
   st->print_cr("%s", internal_name());
   // print constant pool cache entries
   for (int i = 0; i < length(); i++) entry_at(i)->print(st, i);
 }
 
 void ConstantPoolCache::print_value_on(outputStream* st) const {
-  assert(is_constantPoolCache(), "obj must be constant pool cache");
   st->print("cache [%d]", length());
   print_address_on(st);
   st->print(" for ");

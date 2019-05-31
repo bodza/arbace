@@ -18,7 +18,6 @@
   ciEnv::is_in_vm()
 
 #define ASSERT_IN_VM \
-  assert(IS_IN_VM, "must be in vm state");
 
 inline const char* bool_to_str(bool b) {
   return ((b) ? "true" : "false");

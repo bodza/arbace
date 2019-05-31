@@ -45,10 +45,10 @@ class TraceTime: public StackObj {
 
   // Accessors
   void set_verbose(bool verbose)  { _verbose = verbose; }
-  bool verbose() const            { return _verbose;    }
+  bool verbose() const            { return _verbose; }
 
   // Activation
-  void suspend()  { if (_active) _t.stop();  }
+  void suspend()  { if (_active) _t.stop(); }
   void resume()   { if (_active) _t.start(); }
 };
 

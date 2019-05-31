@@ -64,7 +64,7 @@ class SharedGCInfo {
 class ParallelOldGCInfo {
   void* _dense_prefix;
  public:
-  ParallelOldGCInfo() : _dense_prefix(NULL) {}
+  ParallelOldGCInfo() : _dense_prefix(NULL) { }
   void report_dense_prefix(void* addr) {
     _dense_prefix = addr;
   }
@@ -74,7 +74,7 @@ class ParallelOldGCInfo {
 class G1YoungGCInfo {
   G1YCType _type;
  public:
-  G1YoungGCInfo() : _type(G1YCTypeEndSentinel) {}
+  G1YoungGCInfo() : _type(G1YCTypeEndSentinel) { }
   void set_type(G1YCType type) {
     _type = type;
   }
@@ -91,10 +91,10 @@ class GCTracer : public ResourceObj {
   void report_gc_heap_summary(GCWhen::Type when, const GCHeapSummary& heap_summary) const;
   void report_metaspace_summary(GCWhen::Type when, const MetaspaceSummary& metaspace_summary) const;
   void report_gc_reference_stats(const ReferenceProcessorStats& rp) const;
-  void report_object_count_after_gc(BoolObjectClosure* object_filter) {};
+  void report_object_count_after_gc(BoolObjectClosure* object_filter) { };
 
  protected:
-  GCTracer(GCName name) : _shared_gc_info(name) {}
+  GCTracer(GCName name) : _shared_gc_info(name) { }
   virtual void report_gc_start_impl(GCCause::Cause cause, const Ticks& timestamp);
   virtual void report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions);
 
@@ -113,7 +113,7 @@ class YoungGCTracer : public GCTracer {
   uint _tenuring_threshold;
 
  protected:
-  YoungGCTracer(GCName name) : GCTracer(name), _tenuring_threshold(UNSET_TENURING_THRESHOLD) {}
+  YoungGCTracer(GCName name) : GCTracer(name), _tenuring_threshold(UNSET_TENURING_THRESHOLD) { }
   virtual void report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions);
 
  public:
@@ -157,7 +157,7 @@ class YoungGCTracer : public GCTracer {
 
 class OldGCTracer : public GCTracer {
  protected:
-  OldGCTracer(GCName name) : GCTracer(name) {}
+  OldGCTracer(GCName name) : GCTracer(name) { }
   virtual void report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions);
 
  public:
@@ -172,7 +172,7 @@ class ParallelOldTracer : public OldGCTracer {
   ParallelOldGCInfo _parallel_old_gc_info;
 
  public:
-  ParallelOldTracer() : OldGCTracer(ParallelOld) {}
+  ParallelOldTracer() : OldGCTracer(ParallelOld) { }
   void report_dense_prefix(void* dense_prefix);
 
  protected:
@@ -184,22 +184,22 @@ class ParallelOldTracer : public OldGCTracer {
 
 class SerialOldTracer : public OldGCTracer {
  public:
-  SerialOldTracer() : OldGCTracer(SerialOld) {}
+  SerialOldTracer() : OldGCTracer(SerialOld) { }
 };
 
 class ParallelScavengeTracer : public YoungGCTracer {
  public:
-  ParallelScavengeTracer() : YoungGCTracer(ParallelScavenge) {}
+  ParallelScavengeTracer() : YoungGCTracer(ParallelScavenge) { }
 };
 
 class DefNewTracer : public YoungGCTracer {
  public:
-  DefNewTracer() : YoungGCTracer(DefNew) {}
+  DefNewTracer() : YoungGCTracer(DefNew) { }
 };
 
 class ParNewTracer : public YoungGCTracer {
  public:
-  ParNewTracer() : YoungGCTracer(ParNew) {}
+  ParNewTracer() : YoungGCTracer(ParNew) { }
 };
 
 class G1MMUTracer : public AllStatic {
@@ -213,7 +213,7 @@ class G1NewTracer : public YoungGCTracer {
   G1YoungGCInfo _g1_young_gc_info;
 
  public:
-  G1NewTracer() : YoungGCTracer(G1New) {}
+  G1NewTracer() : YoungGCTracer(G1New) { }
 
   void report_yc_type(G1YCType type);
   void report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions);
@@ -260,19 +260,19 @@ class G1NewTracer : public YoungGCTracer {
 
 class G1FullGCTracer : public OldGCTracer {
  public:
-  G1FullGCTracer() : OldGCTracer(G1Full) {}
+  G1FullGCTracer() : OldGCTracer(G1Full) { }
 };
 
 class CMSTracer : public OldGCTracer {
  public:
-  CMSTracer() : OldGCTracer(ConcurrentMarkSweep) {}
+  CMSTracer() : OldGCTracer(ConcurrentMarkSweep) { }
 };
 
 class G1OldTracer : public OldGCTracer {
  protected:
   void report_gc_start_impl(GCCause::Cause cause, const Ticks& timestamp);
  public:
-  G1OldTracer() : OldGCTracer(G1Old) {}
+  G1OldTracer() : OldGCTracer(G1Old) { }
   void set_gc_cause(GCCause::Cause cause);
 };
 

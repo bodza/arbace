@@ -18,7 +18,7 @@
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
 
-int vframeArrayElement:: bci(void) const { return (_bci == SynchronizationEntryBCI ? 0 : _bci); }
+int vframeArrayElement::bci(void) const { return (_bci == SynchronizationEntryBCI ? 0 : _bci); }
 
 void vframeArrayElement::free_monitors(JavaThread* jt) {
   if (_monitors != NULL) {
@@ -54,12 +54,10 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
     // Migrate the BasicLocks from the stack to the monitor chunk
     for (index = 0; index < list->length(); index++) {
       MonitorInfo* monitor = list->at(index);
-      assert(!monitor->owner_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
       BasicObjectLock* dest = _monitors->at(index);
       if (monitor->owner_is_scalar_replaced()) {
         dest->set_obj(NULL);
       } else {
-        assert(monitor->owner() == NULL || (!monitor->owner()->is_unlocked() && !monitor->owner()->has_bias_pattern()), "object must be null or locked, and unbiased");
         dest->set_obj(monitor->owner());
         monitor->lock()->move_to(monitor->owner(), dest->lock());
       }
@@ -83,11 +81,10 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
 
   StackValueCollection *locs = vf->locals();
   _locals = new StackValueCollection(locs->size());
-  for(index = 0; index < locs->size(); index++) {
+  for (index = 0; index < locs->size(); index++) {
     StackValue* value = locs->at(index);
     switch(value->type()) {
       case T_OBJECT:
-        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
         // preserve object type
         _locals->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
         break;
@@ -108,11 +105,10 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
 
   StackValueCollection *exprs = vf->expressions();
   _expressions = new StackValueCollection(exprs->size());
-  for(index = 0; index < exprs->size(); index++) {
+  for (index = 0; index < exprs->size(); index++) {
     StackValue* value = exprs->at(index);
     switch(value->type()) {
       case T_OBJECT:
-        assert(!value->obj_is_scalar_replaced() || realloc_failures, "object should be reallocated already");
         // preserve object type
         _expressions->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
         break;
@@ -133,13 +129,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
 
 int unpack_counter = 0;
 
-void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
-                                         int callee_parameters,
-                                         int callee_locals,
-                                         frame* caller,
-                                         bool is_top_frame,
-                                         bool is_bottom_frame,
-                                         int exec_mode) {
+void vframeArrayElement::unpack_on_stack(int caller_actual_parameters, int callee_parameters, int callee_locals, frame* caller, bool is_top_frame, bool is_bottom_frame, int exec_mode) {
   JavaThread* thread = (JavaThread*) Thread::current();
 
   bool realloc_failure_exception = thread->frames_to_pop_failed_realloc() > 0;
@@ -156,7 +146,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     bcp = method()->bcp_from(0); // first byte code
     pc  = Interpreter::deopt_entry(vtos, 0); // step = 0 since we don't skip current bytecode
   } else if (should_reexecute()) { //reexecute this bytecode
-    assert(is_top_frame, "reexecute allowed only for the top frame");
     bcp = method()->bcp_from(bci());
     pc  = Interpreter::deopt_reexecute_entry(method(), bcp);
   } else {
@@ -164,7 +153,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     pc  = Interpreter::deopt_continue_after_entry(method(), bcp, callee_parameters, is_top_frame);
     use_next_mdp = true;
   }
-  assert(Bytecodes::is_defined(*bcp), "must be a valid bytecode");
 
   // Monitorenter and pending exceptions:
   //
@@ -180,12 +168,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   //
   // For realloc failure exception we just pop frames, skip the guarantee.
 
-  assert(*bcp != Bytecodes::_monitorenter || is_top_frame, "a _monitorenter must be a top frame");
-  assert(thread->deopt_compiled_method() != NULL, "compiled method should be known");
-  guarantee(realloc_failure_exception || !(thread->deopt_compiled_method()->is_compiled_by_c2() &&
-              *bcp == Bytecodes::_monitorenter             &&
-              exec_mode == Deoptimization::Unpack_exception),
-            "shouldn't get exception during monitorenter");
+  guarantee(realloc_failure_exception || !(thread->deopt_compiled_method()->is_compiled_by_c2() && *bcp == Bytecodes::_monitorenter             && exec_mode == Deoptimization::Unpack_exception), "shouldn't get exception during monitorenter");
 
   int popframe_preserved_args_size_in_bytes = 0;
   int popframe_preserved_args_size_in_words = 0;
@@ -217,7 +200,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
 
   // Setup the interpreter frame
 
-  assert(method() != NULL, "method must exist");
   int temps = expressions()->size();
 
   int locks = monitors() == NULL ? 0 : monitors()->number_of_monitors();
@@ -239,8 +221,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   // exact interpreter address we should use.
 
   _frame.patch_pc(thread, pc);
-
-  assert(!method()->is_synchronized() || locks > 0 || _removed_monitors || raw_bci() == SynchronizationEntryBCI, "synchronized methods must have monitors");
 
   BasicObjectLock* top = iframe()->interpreter_frame_monitor_begin();
   for (int index = 0; index < locks; index++) {
@@ -273,7 +253,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   // as parameters. The callee parameters are unpacked as part of the
   // callee locals.
   int i;
-  for(i = 0; i < expressions()->size(); i++) {
+  for (i = 0; i < expressions()->size(); i++) {
     StackValue *value = expressions()->at(i);
     intptr_t*   addr  = iframe()->interpreter_frame_expression_stack_at(i);
     switch(value->type()) {
@@ -293,7 +273,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   }
 
   // Unpack the locals
-  for(i = 0; i < locals()->size(); i++) {
+  for (i = 0; i < locals()->size(); i++) {
     StackValue *value = locals()->at(i);
     intptr_t* addr  = iframe()->interpreter_frame_local_at(i);
     switch(value->type()) {
@@ -319,11 +299,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
   _locals = _expressions = NULL;
 }
 
-int vframeArrayElement::on_stack_size(int callee_parameters,
-                                      int callee_locals,
-                                      bool is_top_frame,
-                                      int popframe_extra_stack_expression_els) const {
-  assert(method()->max_locals() == locals()->size(), "just checking");
+int vframeArrayElement::on_stack_size(int callee_parameters, int callee_locals, bool is_top_frame, int popframe_extra_stack_expression_els) const {
   int locks = monitors() == NULL ? 0 : monitors()->number_of_monitors();
   int temps = expressions()->size();
   return Interpreter::size_activation(method()->max_stack(),
@@ -357,21 +333,17 @@ vframeArray* vframeArray::allocate(JavaThread* thread, int frame_size, GrowableA
   return result;
 }
 
-void vframeArray::fill_in(JavaThread* thread,
-                          int frame_size,
-                          GrowableArray<compiledVFrame*>* chunk,
-                          const RegisterMap *reg_map,
-                          bool realloc_failures) {
+void vframeArray::fill_in(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, const RegisterMap *reg_map, bool realloc_failures) {
   // Set owner first, it is used when adding monitor chunks
 
   _frame_size = frame_size;
-  for(int i = 0; i < chunk->length(); i++) {
+  for (int i = 0; i < chunk->length(); i++) {
     element(i)->fill_in(chunk->at(i), realloc_failures);
   }
 
   // Copy registers for callee-saved registers
   if (reg_map != NULL) {
-    for(int i = 0; i < RegisterMap::reg_count; i++) {
+    for (int i = 0; i < RegisterMap::reg_count; i++) {
 #ifdef AMD64
       // The register map has one entry for every int (32-bit value), so
       // 64-bit physical registers have two entries in the map, one for
@@ -385,10 +357,6 @@ void vframeArray::fill_in(JavaThread* thread,
       //      if (VMReg::Name(i) < SharedInfo::stack0 && is_even(i)) {
         intptr_t* src = (intptr_t*) reg_map->location(VMRegImpl::as_VMReg(i));
         _callee_registers[i] = src != NULL ? *src : NULL_WORD;
-        //      } else {
-        //      jint* src = (jint*) reg_map->location(VMReg::Name(i));
-        //      _callee_registers[i] = src != NULL ? *src : NULL_WORD;
-        //      }
 #else
       jint* src = (jint*) reg_map->location(VMRegImpl::as_VMReg(i));
       _callee_registers[i] = src != NULL ? *src : NULL_WORD;
@@ -439,8 +407,7 @@ void vframeArray::unpack_to_stack(frame &unpack_frame, int exec_mode, int caller
       Bytecode_invoke inv(caller, elem->bci());
       // invokedynamic instructions don't have a class but obviously don't have a MemberName appendix.
       // NOTE:  Use machinery here that avoids resolving of any kind.
-      const bool has_member_arg =
-          !inv.is_invokedynamic() && MethodHandles::has_member_arg(inv.klass(), inv.name());
+      const bool has_member_arg = !inv.is_invokedynamic() && MethodHandles::has_member_arg(inv.klass(), inv.name());
       callee_parameters = callee->size_of_parameters() + (has_member_arg ? 1 : 0);
       callee_locals     = callee->max_locals();
     }
@@ -468,6 +435,5 @@ void vframeArray::deallocate_monitor_chunks() {
 }
 
 address vframeArray::register_location(int i) const {
-  assert(0 <= i && i < RegisterMap::reg_count, "index out of bounds");
   return (address) & _callee_registers[i];
 }

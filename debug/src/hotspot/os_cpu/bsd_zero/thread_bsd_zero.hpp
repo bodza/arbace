@@ -37,11 +37,8 @@
 
  public:
   void record_base_of_stack_pointer() {
-    assert(top_zero_frame() == NULL, "junk on stack prior to Java call");
   }
   void set_base_of_stack_pointer(intptr_t* base_sp) {
-    assert(base_sp == NULL, "should be");
-    assert(top_zero_frame() == NULL, "junk on stack after Java call");
   }
 
  public:
@@ -65,8 +62,7 @@
 
  public:
   static ByteSize last_Java_fp_offset() {
-    return byte_offset_of(JavaThread, _anchor) +
-      JavaFrameAnchor::last_Java_fp_offset();
+    return byte_offset_of(JavaThread, _anchor) + JavaFrameAnchor::last_Java_fp_offset();
   }
 
  public:
@@ -88,7 +84,7 @@
   // These routines are only used on cpu architectures that
   // have separate register stacks (Itanium).
   static bool register_stack_overflow() { return false; }
-  static void enable_register_stack_guard() {}
-  static void disable_register_stack_guard() {}
+  static void enable_register_stack_guard() { }
+  static void disable_register_stack_guard() { }
 
 #endif

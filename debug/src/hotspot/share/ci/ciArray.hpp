@@ -17,11 +17,11 @@ private:
   int _length;
 
 protected:
-  ciArray(    arrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) {}
-  ciArray( objArrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) {}
-  ciArray(typeArrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) {}
+  ciArray(    arrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) { }
+  ciArray( objArrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) { }
+  ciArray(typeArrayHandle h_a) : ciObject(h_a), _length(h_a()->length()) { }
 
-  ciArray(ciKlass* klass, int len) : ciObject(klass), _length(len) {}
+  ciArray(ciKlass* klass, int len) : ciObject(klass), _length(len) { }
 
   arrayOop get_arrayOop() const { return (arrayOop)get_oop(); }
 

@@ -52,7 +52,7 @@ class RegisterMap : public StackObj {
   bool        _update_map;              // Tells if the register map need to be
                                         // updated when traversing the stack
 
-  void check_location_valid() {}
+  void check_location_valid() { }
 
  public:
   RegisterMap(JavaThread *thread, bool update_map = true);
@@ -60,8 +60,6 @@ class RegisterMap : public StackObj {
 
   address location(VMReg reg) const {
     int index = reg->value() / location_valid_type_size;
-    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
-    assert(0 <= index && index < location_valid_size, "range check");
     if (_location_valid[index] & ((LocationValidType)1 << (reg->value() % location_valid_type_size))) {
       return (address) _location[reg->value()];
     } else {
@@ -71,9 +69,6 @@ class RegisterMap : public StackObj {
 
   void set_location(VMReg reg, address loc) {
     int index = reg->value() / location_valid_type_size;
-    assert(0 <= reg->value() && reg->value() < reg_count, "range check");
-    assert(0 <= index && index < location_valid_size, "range check");
-    assert(_update_map, "updating map that does not need updating");
     _location[reg->value()] = (intptr_t*) loc;
     _location_valid[index] |= ((LocationValidType)1 << (reg->value() % location_valid_type_size));
     check_location_valid();

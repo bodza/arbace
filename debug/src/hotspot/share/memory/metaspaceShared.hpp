@@ -62,10 +62,9 @@ class MetaspaceShared : AllStatic {
     n_regions =  last_valid_region + 1 // total number of regions
   };
 
-  static void prepare_for_dumping() {};
-  static void preload_and_dump(TRAPS) {};
-  static int preload_classes(const char * class_list_path,
-                             TRAPS) { return 0; };
+  static void prepare_for_dumping() { };
+  static void preload_and_dump(TRAPS) { };
+  static int preload_classes(const char * class_list_path, TRAPS) { return 0; };
 
   static bool is_archive_object(oop p) { return false; };
 
@@ -76,11 +75,11 @@ class MetaspaceShared : AllStatic {
   }
   static void destroy_archive_object_cache() {
   }
-  static void fixup_mapped_heap_regions() {};
+  static void fixup_mapped_heap_regions() { };
 
-  static void dump_closed_archive_heap_objects(GrowableArray<MemRegion> * closed_archive) {};
+  static void dump_closed_archive_heap_objects(GrowableArray<MemRegion> * closed_archive) { };
 
-  static void dump_open_archive_heap_objects(GrowableArray<MemRegion> * open_archive) {};
+  static void dump_open_archive_heap_objects(GrowableArray<MemRegion> * open_archive) { };
   static void set_open_archive_heap_region_mapped() {
   }
   static bool open_archive_heap_region_mapped() {
@@ -90,18 +89,16 @@ class MetaspaceShared : AllStatic {
   static ReservedSpace* shared_rs() {
     return NULL;
   }
-  static void commit_shared_space_to(char* newtop) {};
+  static void commit_shared_space_to(char* newtop) { };
   static size_t core_spaces_size() {
     return _core_spaces_size;
   }
-  static void initialize_dumptime_shared_and_meta_spaces() {};
-  static void initialize_runtime_shared_and_meta_spaces() {};
-  static void post_initialize(TRAPS) {};
+  static void initialize_dumptime_shared_and_meta_spaces() { };
+  static void initialize_runtime_shared_and_meta_spaces() { };
+  static void post_initialize(TRAPS) { };
 
   // Delta of this object from the bottom of the archive.
   static uintx object_delta(void* obj) {
-    assert(DumpSharedSpaces, "supported only for dumping");
-    assert(shared_rs()->contains(obj), "must be");
     address base_address = address(shared_rs()->base());
     uintx delta = address(obj) - base_address;
     return delta;
@@ -111,7 +108,7 @@ class MetaspaceShared : AllStatic {
     _archive_loading_failed = true;
   }
   static bool map_shared_spaces(FileMapInfo* mapinfo) { return false; };
-  static void initialize_shared_spaces() {};
+  static void initialize_shared_spaces() { };
 
   // Return true if given address is in the shared metaspace regions (i.e., excluding any
   // mapped shared heap regions.)
@@ -140,8 +137,8 @@ class MetaspaceShared : AllStatic {
   static void zero_cpp_vtable_clones_for_writing();
   static void patch_cpp_vtable_pointers();
   static bool is_valid_shared_method(const Method* m) { return false; };
-  static void serialize(SerializeClosure* sc) {};
-  static void serialize_well_known_classes(SerializeClosure* soc) {};
+  static void serialize(SerializeClosure* sc) { };
+  static void serialize_well_known_classes(SerializeClosure* soc) { };
 
   static MetaspaceSharedStats* stats() {
     return &_stats;
@@ -186,6 +183,6 @@ class MetaspaceShared : AllStatic {
   static Klass* get_relocated_klass(Klass *k);
 
 private:
-  static void read_extra_data(const char* filename, TRAPS) {};
+  static void read_extra_data(const char* filename, TRAPS) { };
 };
 #endif

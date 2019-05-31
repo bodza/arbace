@@ -16,7 +16,7 @@ LogDecorations::LogDecorations(LogLevelType level, const LogTagSet &tagset, cons
 
 void LogDecorations::initialize(jlong vm_start_time) {
   char buffer[1024];
-  if (os::get_host_name(buffer, sizeof(buffer))){
+  if (os::get_host_name(buffer, sizeof(buffer))) {
     _host_name = os::strdup_check_oom(buffer);
   }
   _vm_start_time_millis = vm_start_time;
@@ -41,7 +41,6 @@ jlong LogDecorations::java_millis() {
 }
 
 #define ASSERT_AND_RETURN(written, pos) \
-    assert(written >= 0, "Decorations buffer overflow"); \
     return pos + written;
 
 char* LogDecorations::create_time_decoration(char* pos) {

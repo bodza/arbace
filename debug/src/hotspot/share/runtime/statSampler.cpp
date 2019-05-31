@@ -17,7 +17,7 @@
 
 class StatSamplerTask : public PeriodicTask {
   public:
-    StatSamplerTask(int interval_time) : PeriodicTask(interval_time) {}
+    StatSamplerTask(int interval_time) : PeriodicTask(interval_time) { }
     void task() { StatSampler::collect_sample(); }
 };
 
@@ -107,8 +107,6 @@ void StatSampler::destroy() {
  */
 void StatSampler::sample_data(PerfDataList* list) {
 
-  assert(list != NULL, "null list unexpected");
-
   for (int index = 0; index < list->length(); index++) {
     PerfData* item = list->at(index);
     item->sample();
@@ -139,8 +137,6 @@ void StatSampler::collect_sample() {
   //   }
   //   _sampled = PerfDataManager::sampled();
   // }
-
-  assert(_sampled != NULL, "list not initialized");
 
   sample_data(_sampled);
 }
@@ -236,25 +232,17 @@ static PropertyCounters property_counters[] = {
  * property name as indicated in property_counters[].
  */
 void StatSampler::create_system_property_instrumentation(TRAPS) {
-
   ResourceMark rm;
 
   for (int i = 0; property_counters[i].property_list != NULL; i++) {
 
     for (int j = 0; property_counters[i].property_list[j] != NULL; j++) {
-
       const char* property_name = property_counters[i].property_list[j];
-      assert(property_name != NULL, "property name should not be NULL");
-
       const char* value = get_system_property(property_name, CHECK);
-
-      // the property must exist
-      assert(value != NULL, "property name should be valid");
 
       if (value != NULL) {
         // create the property counter
-        PerfDataManager::create_string_constant(property_counters[i].name_space,
-                                                property_name, value, CHECK);
+        PerfDataManager::create_string_constant(property_counters[i].name_space, property_name, value, CHECK);
       }
     }
   }
@@ -273,9 +261,7 @@ void StatSampler::create_misc_perfdata() {
   // numeric constants
 
   // frequency of the native high resolution timer
-  PerfDataManager::create_constant(SUN_OS, "hrt.frequency",
-                                   PerfData::U_Hertz, os::elapsed_frequency(),
-                                   CHECK);
+  PerfDataManager::create_constant(SUN_OS, "hrt.frequency", PerfData::U_Hertz, os::elapsed_frequency(), CHECK);
 
   // string constants
 

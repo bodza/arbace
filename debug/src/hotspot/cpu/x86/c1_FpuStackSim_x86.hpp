@@ -42,7 +42,7 @@ class FpuStackSim {
   intArray* write_state();
   void read_state(intArray* fpu_stack_state);
 
-  void print() {};
+  void print() { };
 };
 
 #endif

@@ -95,7 +95,7 @@ class ComputeCallStack : public SignatureIterator {
   virtual void do_byte  ()              { set(CellTypeState::value); };
   virtual void do_short ()              { set(CellTypeState::value); };
   virtual void do_int   ()              { set(CellTypeState::value); };
-  virtual void do_void  ()              { set(CellTypeState::bottom);};
+  virtual void do_void  ()              { set(CellTypeState::bottom); };
   virtual void do_object(int begin, int end)  { set(CellTypeState::ref); };
   virtual void do_array (int begin, int end)  { set(CellTypeState::ref); };
 
@@ -105,7 +105,7 @@ class ComputeCallStack : public SignatureIterator {
                                            set(CellTypeState::value); }
 
 public:
-  ComputeCallStack(Symbol* signature) : SignatureIterator(signature) {};
+  ComputeCallStack(Symbol* signature) : SignatureIterator(signature) { };
 
   // Compute methods
   int compute_for_parameters(bool is_static, CellTypeState *effect) {
@@ -149,7 +149,7 @@ class ComputeEntryStack : public SignatureIterator {
   virtual void do_byte  ()              { set(CellTypeState::value); };
   virtual void do_short ()              { set(CellTypeState::value); };
   virtual void do_int   ()              { set(CellTypeState::value); };
-  virtual void do_void  ()              { set(CellTypeState::bottom);};
+  virtual void do_void  ()              { set(CellTypeState::bottom); };
   virtual void do_object(int begin, int end)  { set(CellTypeState::make_slot_ref(_idx)); }
   virtual void do_array (int begin, int end)  { set(CellTypeState::make_slot_ref(_idx)); }
 
@@ -159,7 +159,7 @@ class ComputeEntryStack : public SignatureIterator {
                                           set(CellTypeState::value); }
 
 public:
-  ComputeEntryStack(Symbol* signature) : SignatureIterator(signature) {};
+  ComputeEntryStack(Symbol* signature) : SignatureIterator(signature) { };
 
   // Compute methods
   int compute_for_parameters(bool is_static, CellTypeState *effect) {
@@ -213,7 +213,7 @@ void RetTable::compute_ret_table(const methodHandle& method) {
   BytecodeStream i(method);
   Bytecodes::Code bytecode;
 
-  while( (bytecode = i.next()) >= 0) {
+  while ( (bytecode = i.next()) >= 0) {
     switch (bytecode) {
       case Bytecodes::_jsr:
         add_jsr(i.next_bci(), i.dest());
@@ -247,8 +247,7 @@ void RetTable::add_jsr(int return_bci, int target_bci) {
 RetTableEntry* RetTable::find_jsrs_for_target(int targBci) {
   RetTableEntry *cur = _first;
 
-  while(cur) {
-    assert(cur->target_bci() != -1, "sanity check");
+  while (cur) {
     if (cur->target_bci() == targBci)  return cur;
     cur = cur->next();
   }
@@ -259,7 +258,7 @@ RetTableEntry* RetTable::find_jsrs_for_target(int targBci) {
 // The instruction at bci is changing size by "delta".  Update the return map.
 void RetTable::update_ret_table(int bci, int delta) {
   RetTableEntry *cur = _first;
-  while(cur) {
+  while (cur) {
     cur->add_delta(bci, delta);
     cur = cur->next();
   }
@@ -370,7 +369,6 @@ void GenerateOopMap::initialize_bb() {
 }
 
 void GenerateOopMap::bb_mark_fct(GenerateOopMap *c, int bci, int *data) {
-  assert(bci>= 0 && bci < c->method()->code_size(), "index out of bounds");
   if (c->is_bb_header(bci))
      return;
 
@@ -388,7 +386,7 @@ void GenerateOopMap::mark_bbheaders_and_count_gc_points() {
 
   // First mark all exception handlers as start of a basic-block
   ExceptionTable excps(method());
-  for(int i = 0; i < excps.length(); i ++) {
+  for (int i = 0; i < excps.length(); i ++) {
     bb_mark_fct(this, excps.handler_pc(i), NULL);
   }
 
@@ -396,7 +394,7 @@ void GenerateOopMap::mark_bbheaders_and_count_gc_points() {
   BytecodeStream bcs(_method);
   Bytecodes::Code bytecode;
 
-  while( (bytecode = bcs.next()) >= 0) {
+  while ( (bytecode = bcs.next()) >= 0) {
     int bci = bcs.bci();
 
     if (!fellThrough)
@@ -407,11 +405,9 @@ void GenerateOopMap::mark_bbheaders_and_count_gc_points() {
      /* We will also mark successors of jsr's as basic block headers. */
     switch (bytecode) {
       case Bytecodes::_jsr:
-        assert(!fellThrough, "should not happen");
         bb_mark_fct(this, bci + Bytecodes::length_for(bytecode), NULL);
         break;
       case Bytecodes::_jsr_w:
-        assert(!fellThrough, "should not happen");
         bb_mark_fct(this, bci + Bytecodes::length_for(bytecode), NULL);
         break;
       default:
@@ -428,7 +424,6 @@ void GenerateOopMap::set_bbmark_bit(int bci) {
 }
 
 void GenerateOopMap::reachable_basicblock(GenerateOopMap *c, int bci, int *data) {
-  assert(bci>= 0 && bci < c->method()->code_size(), "index out of bounds");
   BasicBlock* bb = c->get_basic_block_at(bci);
   if (bb->is_dead()) {
     bb->mark_as_alive();
@@ -442,7 +437,7 @@ void GenerateOopMap::mark_reachable_code() {
   // Mark entry basic block as alive and all exception handlers
   _basic_blocks[0].mark_as_alive();
   ExceptionTable excps(method());
-  for(int i = 0; i < excps.length(); i++) {
+  for (int i = 0; i < excps.length(); i++) {
     BasicBlock *bb = get_basic_block_at(excps.handler_pc(i));
     // If block is not already alive (due to multiple exception handlers to same bb), then
     // make it alive
@@ -463,7 +458,6 @@ void GenerateOopMap::mark_reachable_code() {
         bcs.next();
         Bytecodes::Code bytecode = bcs.code();
         int bci = bcs.bci();
-        assert(bci == bb->_end_bci, "wrong bci");
 
         bool fell_through = jump_targets_do(&bcs, &GenerateOopMap::reachable_basicblock, &change);
 
@@ -471,7 +465,6 @@ void GenerateOopMap::mark_reachable_code() {
         switch (bytecode) {
           case Bytecodes::_jsr:
           case Bytecodes::_jsr_w:
-            assert(!fell_through, "should not happen");
             reachable_basicblock(this, bci + Bytecodes::length_for(bytecode), &change);
             break;
           default:
@@ -541,14 +534,13 @@ bool GenerateOopMap::jump_targets_do(BytecodeStream *bcs, jmpFct_t jmpFct, int *
       { Bytecode_lookupswitch lookupswitch(method(), bcs->bcp());
         int npairs = lookupswitch.number_of_pairs();
         (*jmpFct)(this, bci + lookupswitch.default_offset(), data); /* Default. */
-        while(--npairs >= 0) {
+        while (--npairs >= 0) {
           LookupswitchPair pair = lookupswitch.pair_at(npairs);
           (*jmpFct)(this, bci + pair.offset(), data);
         }
         break;
       }
     case Bytecodes::_jsr:
-      assert(bcs->is_wide()==false, "sanity check");
       (*jmpFct)(this, bcs->dest(), data);
 
       break;
@@ -578,7 +570,6 @@ bool GenerateOopMap::jump_targets_do(BytecodeStream *bcs, jmpFct_t jmpFct, int *
    block. */
 BasicBlock *GenerateOopMap::get_basic_block_at(int bci) const {
   BasicBlock* bb = get_basic_block_containing(bci);
-  assert(bb->_bci == bci, "should have found BB");
   return bb;
 }
 
@@ -593,19 +584,17 @@ BasicBlock  *GenerateOopMap::get_basic_block_containing(int bci) const {
     int mbci = bbs[m]._bci;
     int nbci;
 
-    if ( m == _bb_count-1) {
-      assert( bci >= mbci && bci < method()->code_size(), "sanity check failed");
+    if (m == _bb_count-1) {
       return bbs+m;
     } else {
       nbci = bbs[m+1]._bci;
     }
 
-    if ( mbci <= bci && bci < nbci) {
+    if (mbci <= bci && bci < nbci) {
       return bbs+m;
     } else if (mbci < bci) {
       lo = m + 1;
     } else {
-      assert(mbci > bci, "sanity check");
       hi = m - 1;
     }
   }
@@ -614,8 +603,7 @@ BasicBlock  *GenerateOopMap::get_basic_block_containing(int bci) const {
   return NULL;
 }
 
-void GenerateOopMap::restore_state(BasicBlock *bb)
-{
+void GenerateOopMap::restore_state(BasicBlock *bb) {
   memcpy(_state, bb->_state, _state_len*sizeof(CellTypeState));
   _stack_top = bb->_stack_top;
   _monitor_top = bb->_monitor_top;
@@ -668,13 +656,10 @@ int GenerateOopMap::methodsig_to_effect(Symbol* signature, bool is_static, CellT
 CellTypeState CellTypeState::merge(CellTypeState cts, int slot) const {
   CellTypeState result;
 
-  assert(!is_bottom() && !cts.is_bottom(), "merge of bottom values is handled elsewhere");
-
   result._state = _state | cts._state;
 
   // If the top bit is set, we don't need to do any more work.
   if (!result.is_info_top()) {
-    assert((result.can_be_address() || result.can_be_reference()), "only addresses and references have non-top info");
 
     if (!equal(cts)) {
       // The two values being merged are different.  Raise to top.
@@ -685,14 +670,12 @@ CellTypeState CellTypeState::merge(CellTypeState cts, int slot) const {
       }
     }
   }
-  assert(result.is_valid_state(), "checking that CTS merge maintains legal state");
 
   return result;
 }
 
 // Merge the variable state for locals and stack from cts into bbts.
-bool GenerateOopMap::merge_local_state_vectors(CellTypeState* cts,
-                                               CellTypeState* bbts) {
+bool GenerateOopMap::merge_local_state_vectors(CellTypeState* cts, CellTypeState* bbts) {
   int i;
   int len = _max_locals + _stack_top;
   bool change = false;
@@ -707,8 +690,7 @@ bool GenerateOopMap::merge_local_state_vectors(CellTypeState* cts,
 }
 
 // Merge the monitor stack state from cts into bbts.
-bool GenerateOopMap::merge_monitor_state_vectors(CellTypeState* cts,
-                                                 CellTypeState* bbts) {
+bool GenerateOopMap::merge_monitor_state_vectors(CellTypeState* cts, CellTypeState* bbts) {
   bool change = false;
   if (_max_monitors > 0 && _monitor_top != bad_monitors) {
     // If there are no monitors in the program, or there has been
@@ -760,7 +742,6 @@ void GenerateOopMap::copy_state(CellTypeState *dst, CellTypeState *src) {
 // about the correctness of the code.
 void GenerateOopMap::merge_state_into_bb(BasicBlock *bb) {
   guarantee(bb != NULL, "null basicblock");
-  assert(bb->is_alive(), "merging state into a dead basicblock");
 
   if (_stack_top == bb->_stack_top) {
     // always merge local state even if monitors don't match.
@@ -801,7 +782,6 @@ void GenerateOopMap::merge_state(GenerateOopMap *gom, int bci, int* data) {
 }
 
 void GenerateOopMap::set_var(int localNo, CellTypeState cts) {
-  assert(cts.is_reference() || cts.is_value() || cts.is_address(), "wrong celltypestate");
   if (localNo < 0 || localNo > _max_locals) {
     verify_error("variable write error: r%d", localNo);
     return;
@@ -810,7 +790,6 @@ void GenerateOopMap::set_var(int localNo, CellTypeState cts) {
 }
 
 CellTypeState GenerateOopMap::get_var(int localNo) {
-  assert(localNo < _max_locals + _nof_refval_conflicts, "variable read error");
   if (localNo < 0 || localNo > _max_locals) {
     verify_error("variable read error: r%d", localNo);
     return valCTS; // just to pick something;
@@ -819,7 +798,7 @@ CellTypeState GenerateOopMap::get_var(int localNo) {
 }
 
 CellTypeState GenerateOopMap::pop() {
-  if ( _stack_top <= 0) {
+  if (_stack_top <= 0) {
     verify_error("stack underflow");
     return valCTS; // just to pick something
   }
@@ -827,7 +806,7 @@ CellTypeState GenerateOopMap::pop() {
 }
 
 void GenerateOopMap::push(CellTypeState cts) {
-  if ( _stack_top >= _max_stack) {
+  if (_stack_top >= _max_stack) {
     verify_error("stack overflow");
     return;
   }
@@ -835,7 +814,6 @@ void GenerateOopMap::push(CellTypeState cts) {
 }
 
 CellTypeState GenerateOopMap::monitor_pop() {
-  assert(_monitor_top != bad_monitors, "monitor_pop called on error monitor stack");
   if (_monitor_top == 0) {
     // We have detected a pop of an empty monitor stack.
     _monitor_safe = false;
@@ -850,7 +828,6 @@ CellTypeState GenerateOopMap::monitor_pop() {
 }
 
 void GenerateOopMap::monitor_push(CellTypeState cts) {
-  assert(_monitor_top != bad_monitors, "monitor_push called on error monitor stack");
   if (_monitor_top >= _max_monitors) {
     // Some monitorenter is being executed more than once.
     // This means that the monitor stack cannot be simulated.
@@ -869,8 +846,7 @@ void GenerateOopMap::monitor_push(CellTypeState cts) {
 // Interpretation handling methods
 //
 
-void GenerateOopMap::do_interpretation()
-{
+void GenerateOopMap::do_interpretation() {
   // "i" is just for debugging, so we can detect cases where this loop is
   // iterated more than once.
   int i = 0;
@@ -906,7 +882,7 @@ void GenerateOopMap::init_basic_blocks() {
   int bbNo = 0;
   int monitor_count = 0;
   int prev_bci = -1;
-  while( (bytecode = j.next()) >= 0) {
+  while ( (bytecode = j.next()) >= 0) {
     if (j.code() == Bytecodes::_monitorenter) {
       monitor_count++;
     }
@@ -959,8 +935,7 @@ void GenerateOopMap::init_basic_blocks() {
   // basic blocks and stack/locals/monitors.  Need to check to make sure
   // we don't overflow the capacity of a pointer.
   if ((unsigned)bbNo > UINTPTR_MAX / sizeof(CellTypeState) / _state_len) {
-    report_error("The amount of memory required to analyze this method "
-                 "exceeds addressable range");
+    report_error("The amount of memory required to analyze this method exceeds addressable range");
     return;
   }
 
@@ -992,17 +967,14 @@ void GenerateOopMap::setup_method_entry_state() {
     // This is the start state
     merge_state_into_bb(&_basic_blocks[0]);
 
-    assert(_basic_blocks[0].changed(), "we are not getting off the ground");
 }
 
 // The instruction at bci is changing size by "delta".  Update the basic blocks.
-void GenerateOopMap::update_basic_blocks(int bci, int delta,
-                                         int new_method_size) {
-  assert(new_method_size >= method()->code_size() + delta, "new method size is too small");
+void GenerateOopMap::update_basic_blocks(int bci, int delta, int new_method_size) {
 
   _bb_hdr_bits.reinitialize(new_method_size);
 
-  for(int k = 0; k < _bb_count; k++) {
+  for (int k = 0; k < _bb_count; k++) {
     if (_basic_blocks[k]._bci > bci) {
       _basic_blocks[k]._bci     += delta;
       _basic_blocks[k]._end_bci += delta;
@@ -1026,7 +998,7 @@ void GenerateOopMap::add_to_ref_init_set(int localNo) {
     tty->print_cr("Added init vars: %d", localNo);
 
   // Is it already in the set?
-  if (_init_vars->contains(localNo) )
+  if (_init_vars->contains(localNo))
     return;
 
    _init_vars->append(localNo);
@@ -1057,7 +1029,6 @@ void GenerateOopMap::interp_bb(BasicBlock *bb) {
 
   // We do not want to do anything in case the basic-block has not been initialized. This
   // will happen in the case where there is dead-code hang around in a method.
-  assert(bb->is_reachable(), "should be reachable or deadcode exist");
   restore_state(bb);
 
   BytecodeStream itr(_method);
@@ -1065,12 +1036,11 @@ void GenerateOopMap::interp_bb(BasicBlock *bb) {
   // Set iterator interval to be the current basicblock
   int lim_bci = next_bb_start_pc(bb);
   itr.set_interval(bb->_bci, lim_bci);
-  assert(lim_bci != bb->_bci, "must be at least one instruction in a basicblock");
   itr.next(); // read first instruction
 
   // Iterates through all bytecodes except the last in a basic block.
   // We handle the last one special, since there is controlflow change.
-  while(itr.next_bci() < lim_bci && !_got_error) {
+  while (itr.next_bci() < lim_bci && !_got_error) {
     if (_has_exceptions || _monitor_top != 0) {
       // We do not need to interpret the results of exceptional
       // continuation from this instruction when the method has no
@@ -1084,7 +1054,6 @@ void GenerateOopMap::interp_bb(BasicBlock *bb) {
 
   // Handle last instruction.
   if (!_got_error) {
-    assert(itr.next_bci() == lim_bci, "must point to end");
     if (_has_exceptions || _monitor_top != 0) {
       do_exception_edge(&itr);
     }
@@ -1094,7 +1063,6 @@ void GenerateOopMap::interp_bb(BasicBlock *bb) {
     if (_got_error)  return;
 
     if (itr.code() == Bytecodes::_ret) {
-      assert(!fall_through, "cannot be set if ret instruction");
       // Automatically handles 'wide' ret indicies
       ret_jump_targets_do(&itr, GenerateOopMap::merge_state, itr.get_index(), NULL);
     } else if (fall_through) {
@@ -1151,7 +1119,7 @@ void GenerateOopMap::do_exception_edge(BytecodeStream* itr) {
   if (_has_exceptions) {
     int bci = itr->bci();
     ExceptionTable exct(method());
-    for(int i = 0; i< exct.length(); i++) {
+    for (int i = 0; i< exct.length(); i++) {
       int start_pc   = exct.start_pc(i);
       int end_pc     = exct.end_pc(i);
       int handler_pc = exct.handler_pc(i);
@@ -1164,9 +1132,6 @@ void GenerateOopMap::do_exception_edge(BytecodeStream* itr) {
         CellTypeState *cOpStck = stack();
         CellTypeState cOpStck_0 = cOpStck[0];
         int cOpStackTop = _stack_top;
-
-        // Exception stacks are always the same.
-        assert(method()->max_stack() > 0, "sanity check");
 
         // We remembered the size and first element of "cOpStck"
         // above; now we temporarily set them to the appropriate
@@ -1219,17 +1184,14 @@ void GenerateOopMap::report_monitor_mismatch(const char *msg) {
   ls.print_cr(": %s", msg);
 }
 
-void GenerateOopMap::print_states(outputStream *os,
-                                  CellTypeState* vec, int num) {
+void GenerateOopMap::print_states(outputStream *os, CellTypeState* vec, int num) {
   for (int i = 0; i < num; i++) {
     vec[i].print(tty);
   }
 }
 
 // Print the state values at the current bytecode.
-void GenerateOopMap::print_current_state(outputStream   *os,
-                                         BytecodeStream *currentBC,
-                                         bool            detailed) {
+void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *currentBC, bool detailed) {
   if (detailed) {
     os->print("     %4d vars     = ", currentBC->bci());
     print_states(os, vars(), _max_locals);
@@ -1582,22 +1544,19 @@ void GenerateOopMap::check_type(CellTypeState expected, CellTypeState actual) {
 }
 
 void GenerateOopMap::ppstore(CellTypeState *in, int loc_no) {
-  while(!(*in).is_bottom()) {
+  while (!(*in).is_bottom()) {
     CellTypeState expected =*in++;
     CellTypeState actual   = pop();
     check_type(expected, actual);
-    assert(loc_no >= 0, "sanity check");
     set_var(loc_no++, actual);
   }
 }
 
 void GenerateOopMap::ppload(CellTypeState *out, int loc_no) {
-  while(!(*out).is_bottom()) {
+  while (!(*out).is_bottom()) {
     CellTypeState out1 = *out++;
     CellTypeState vcts = get_var(loc_no);
-    assert(out1.can_be_reference() || out1.can_be_value(), "can only load refs. and values.");
     if (out1.is_reference()) {
-      assert(loc_no>=0, "sanity check");
       if (!vcts.is_reference()) {
         // We were asked to push a reference, but the type of the
         // variable can be something else
@@ -1630,7 +1589,6 @@ void GenerateOopMap::ppload(CellTypeState *out, int loc_no) {
 
 void GenerateOopMap::ppdupswap(int poplen, const char *out) {
   CellTypeState actual[5];
-  assert(poplen < 5, "this must be less than length of actual vector");
 
   // Pop all arguments.
   for (int i = 0; i < poplen; i++) {
@@ -1645,7 +1603,6 @@ void GenerateOopMap::ppdupswap(int poplen, const char *out) {
   char push_ch = *out++;
   while (push_ch != '\0') {
     int idx = push_ch - '1';
-    assert(idx >= 0 && idx < poplen, "wrong arguments");
     push(actual[idx]);
     push_ch = *out++;
   }
@@ -1663,7 +1620,6 @@ void GenerateOopMap::ppop(CellTypeState *out) {
 }
 
 void GenerateOopMap::ppush1(CellTypeState in) {
-  assert(in.is_reference() | in.is_value(), "sanity check");
   push(in);
 }
 
@@ -1693,8 +1649,7 @@ void GenerateOopMap::ppop_any(int poplen) {
 
 // Replace all occurences of the state 'match' with the state 'replace'
 // in our current state vector.
-void GenerateOopMap::replace_all_CTS_matches(CellTypeState match,
-                                             CellTypeState replace) {
+void GenerateOopMap::replace_all_CTS_matches(CellTypeState match, CellTypeState replace) {
   int i;
   int len = _max_locals + _stack_top;
   bool change = false;
@@ -1818,7 +1773,6 @@ void GenerateOopMap::do_ldc(int bci) {
   BasicType       bt  = ldc.result_type();
   CellTypeState   cts;
   if (is_reference_type(bt)) {  // could be T_ARRAY with condy
-    assert(!tag.is_string_index() && !tag.is_klass_index(), "Unexpected index tag");
     cts = CellTypeState::make_line_ref(bci);
   } else {
     cts = valCTS;
@@ -1827,8 +1781,7 @@ void GenerateOopMap::do_ldc(int bci) {
 }
 
 void GenerateOopMap::do_multianewarray(int dims, int bci) {
-  assert(dims >= 1, "sanity check");
-  for(int i = dims -1; i >=0; i--) {
+  for (int i = dims -1; i >=0; i--) {
     ppop1(valCTS);
   }
   ppush1(CellTypeState::make_line_ref(bci));
@@ -1863,8 +1816,6 @@ void GenerateOopMap::do_field(int is_get, int is_static, int idx, int bci) {
   int signatureIdx       = cp->signature_ref_index_at(nameAndTypeIdx);
   Symbol* signature      = cp->symbol_at(signatureIdx);
 
-  // Parse signature (espcially simple for fields)
-  assert(signature->utf8_length() > 0, "field signatures cannot have zero length");
   // The signature is UFT8 encoded, but the first char is always ASCII for signatures.
   char sigch = (char)*(signature->base());
   CellTypeState temp[4];
@@ -1882,7 +1833,6 @@ void GenerateOopMap::do_field(int is_get, int is_static, int idx, int bci) {
   }
   if (!is_static) in[i++] = CellTypeState::ref;
   in[i] = CellTypeState::bottom;
-  assert(i<=3, "sanity check");
   pp(in, out);
 }
 
@@ -1904,11 +1854,8 @@ void GenerateOopMap::do_method(int is_static, int is_interface, int idx, int bci
     out[0] = CellTypeState::make_line_ref(bci);
   }
 
-  assert(res_length<=4, "max value should be vv");
-
   // Compute arguments
   int arg_length = cse.compute_for_parameters(is_static != 0, in);
-  assert(arg_length<=MAXARGSIZE, "too many locals");
 
   // Pop arguments
   for (int i = arg_length - 1; i >= 0; i--) ppop1(in[i]);// Do args in reverse order.
@@ -1957,7 +1904,6 @@ void GenerateOopMap::ret_jump_targets_do(BytecodeStream *bcs, jmpFct_t jmpFct, i
     int target_bci = rtEnt->jsrs(i);
     // Make sure a jrtRet does not set the changed bit for dead basicblock.
     BasicBlock* jsr_bb    = get_basic_block_containing(target_bci - 1);
-    assert(target_bb  == get_basic_block_at(target_bci), "wrong calc. of successor basicblock");
     bool alive = jsr_bb->is_alive();
     if (TraceNewOopMapGeneration) {
       tty->print("pc = %d, ret -> %d alive: %s\n", bci, target_bci, alive ? "true" : "false");
@@ -2018,7 +1964,7 @@ void GenerateOopMap::compute_map(TRAPS) {
       _method->print_codes();
       tty->print_cr("Exception table:");
       ExceptionTable excps(method());
-      for(int i = 0; i < excps.length(); i ++) {
+      for (int i = 0; i < excps.length(); i ++) {
         tty->print_cr("[%d - %d] -> %d",
                       excps.start_pc(i), excps.end_pc(i), excps.handler_pc(i));
       }
@@ -2131,7 +2077,6 @@ void GenerateOopMap::result_for_basicblock(int bci) {
   // Find basicblock and report results
   BasicBlock* bb = get_basic_block_containing(bci);
   guarantee(bb != NULL, "no basic block for bci");
-  assert(bb->is_reachable(), "getting result from unreachable basicblock");
   bb->set_changed(true);
   interp_bb(bb);
 }
@@ -2141,7 +2086,6 @@ void GenerateOopMap::result_for_basicblock(int bci) {
 //
 
 void GenerateOopMap::record_refval_conflict(int varNo) {
-  assert(varNo>=0 && varNo< _max_locals, "index out of range");
 
   if (TraceOopMapRewrites) {
      tty->print("### Conflict detected (local no: %d)\n", varNo);
@@ -2152,7 +2096,7 @@ void GenerateOopMap::record_refval_conflict(int varNo) {
     for (int k = 0; k < _max_locals; k++)  _new_var_map[k] = k;
   }
 
-  if ( _new_var_map[varNo] == varNo) {
+  if (_new_var_map[varNo] == varNo) {
     // Check if max. number of locals has been reached
     if (_max_locals + _nof_refval_conflicts >= MAX_LOCAL_VARS) {
       report_error("Rewriting exceeded local variable limit");
@@ -2163,8 +2107,7 @@ void GenerateOopMap::record_refval_conflict(int varNo) {
   }
 }
 
-void GenerateOopMap::rewrite_refval_conflicts()
-{
+void GenerateOopMap::rewrite_refval_conflicts() {
   // We can get here two ways: Either a rewrite conflict was detected, or
   // an uninitialize reference was detected. In the second case, we do not
   // do any rewriting, we just want to recompute the reference set with the
@@ -2172,7 +2115,7 @@ void GenerateOopMap::rewrite_refval_conflicts()
 
   int nof_conflicts = 0;              // Used for debugging only
 
-  if ( _nof_refval_conflicts == 0 )
+  if (_nof_refval_conflicts == 0 )
      return;
 
   // Check if rewrites are allowed in this parse.
@@ -2212,9 +2155,6 @@ void GenerateOopMap::rewrite_refval_conflicts()
     method()->print_codes();
   }
 
-  assert(_new_var_map!=NULL, "nothing to rewrite");
-  assert(_conflict==true, "We should not be here");
-
   compute_ret_adr_at_TOS();
   if (!_got_error) {
     for (int k = 0; k < _max_locals && !_got_error; k++) {
@@ -2228,8 +2168,6 @@ void GenerateOopMap::rewrite_refval_conflicts()
       }
     }
   }
-
-  assert(nof_conflicts == _nof_refval_conflicts, "sanity check");
 
   // Adjust the number of locals
   method()->set_max_locals(_max_locals+_nof_refval_conflicts);
@@ -2249,7 +2187,7 @@ void GenerateOopMap::rewrite_refval_conflict(int from, int to) {
     BytecodeStream bcs(_method);
     startOver = false;
 
-    while( !startOver && !_got_error &&
+    while ( !startOver && !_got_error &&
            // test bcs in case method changed and it became invalid
            bcs.next() >=0) {
       startOver = rewrite_refval_conflict_inst(&bcs, from, to);
@@ -2299,8 +2237,6 @@ bool GenerateOopMap::rewrite_refval_conflict_inst(BytecodeStream *itr, int from,
 // bcN : either _aload or _astore
 // bc0 : either _aload_0 or _astore_0
 bool GenerateOopMap::rewrite_load_or_store(BytecodeStream *bcs, Bytecodes::Code bcN, Bytecodes::Code bc0, unsigned int varNo) {
-  assert(bcN == Bytecodes::_astore   || bcN == Bytecodes::_aload,   "wrong argument (bcN)");
-  assert(bc0 == Bytecodes::_astore_0 || bc0 == Bytecodes::_aload_0, "wrong argument (bc0)");
   int ilen = Bytecodes::length_at(_method(), bcs->bcp());
   int newIlen;
 
@@ -2321,7 +2257,6 @@ bool GenerateOopMap::rewrite_load_or_store(BytecodeStream *bcs, Bytecodes::Code 
   // also relocate that instruction, e.g., if a _goto before it gets widen to a _goto_w.
   // Hence, we do not know which bci to patch after relocation.
 
-  assert(newIlen <= 4, "sanity check");
   u_char inst_buffer[4]; // Max. instruction size is 4.
   address bcp;
 
@@ -2334,14 +2269,11 @@ bool GenerateOopMap::rewrite_load_or_store(BytecodeStream *bcs, Bytecodes::Code 
 
   // Patch either directly in Method* or in temp. buffer
   if (newIlen == 1) {
-    assert(varNo < 4, "varNo too large");
     *bcp = bc0 + varNo;
   } else if (newIlen == 2) {
-    assert(varNo < 256, "2-byte index needed!");
     *(bcp + 0) = bcN;
     *(bcp + 1) = varNo;
   } else {
-    assert(newIlen == 4, "Wrong instruction length");
     *(bcp + 0) = Bytecodes::_wide;
     *(bcp + 1) = bcN;
     Bytes::put_Java_u2(bcp+2, varNo);
@@ -2424,7 +2356,7 @@ bool GenerateOopMap::is_aload(BytecodeStream *itr, int *index) {
 // Return true iff the top of the operand stack holds a return address at
 // the current instruction
 bool GenerateOopMap::stack_top_holds_ret_addr(int bci) {
-  for(int i = 0; i < _ret_adr_tos->length(); i++) {
+  for (int i = 0; i < _ret_adr_tos->length(); i++) {
     if (_ret_adr_tos->at(i) == bci)
       return true;
   }
@@ -2433,7 +2365,6 @@ bool GenerateOopMap::stack_top_holds_ret_addr(int bci) {
 }
 
 void GenerateOopMap::compute_ret_adr_at_TOS() {
-  assert(_ret_adr_tos != NULL, "must be initialized");
   _ret_adr_tos->clear();
 
   for (int i = 0; i < bb_count(); i++) {
@@ -2463,7 +2394,7 @@ void GenerateOopMap::compute_ret_adr_at_TOS() {
 }
 
 void GenerateOopMap::update_ret_adr_at_TOS(int bci, int delta) {
-  for(int i = 0; i < _ret_adr_tos->length(); i++) {
+  for (int i = 0; i < _ret_adr_tos->length(); i++) {
     int v = _ret_adr_tos->at(i);
     if (v > bci)  _ret_adr_tos->at_put(i, v + delta);
   }

@@ -13,7 +13,7 @@ class Bytes: AllStatic {
  public:
   // Efficient reading and writing of unaligned unsigned data in
   // platform-specific byte ordering.
-  static inline u2 get_native_u2(address p){
+  static inline u2 get_native_u2(address p) {
     unaligned *up = (unaligned *) p;
     return up->us;
   }

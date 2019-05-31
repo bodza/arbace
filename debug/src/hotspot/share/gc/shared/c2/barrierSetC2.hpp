@@ -42,7 +42,7 @@ protected:
 public:
   C2AccessValue(Node* node, const Type* type) :
     _node(node),
-    _type(type) {}
+    _type(type) { }
 
   Node* node() const        { return _node; }
   const Type* type() const  { return _type; }
@@ -56,7 +56,7 @@ class C2AccessValuePtr: public C2AccessValue {
 
 public:
   C2AccessValuePtr(Node* node, const TypePtr* type) :
-    C2AccessValue(node, reinterpret_cast<const Type*>(type)) {}
+    C2AccessValue(node, reinterpret_cast<const Type*>(type)) { }
 
   const TypePtr* type() const { return reinterpret_cast<const TypePtr*>(_type); }
   int alias_idx() const       { return _alias_idx; }
@@ -99,7 +99,7 @@ public:
   Node* raw_access() const        { return _raw_access; }
 
   void set_raw_access(Node* raw_access) { _raw_access = raw_access; }
-  virtual void set_memory() {} // no-op for normal accesses, but not for atomic accesses.
+  virtual void set_memory() { } // no-op for normal accesses, but not for atomic accesses.
 
   MemNode::MemOrd mem_node_mo() const;
   bool needs_cpu_membar() const;
@@ -123,7 +123,7 @@ public:
     C2Access(kit, decorators, type, base, addr),
     _memory(NULL),
     _alias_idx(alias_idx),
-    _needs_pinning(true) {}
+    _needs_pinning(true) { }
 
   // Set the memory node based on the current memory slice.
   virtual void set_memory();
@@ -177,9 +177,9 @@ public:
   virtual void register_potential_barrier_node(Node* node) const { }
   virtual void unregister_potential_barrier_node(Node* node) const { }
   virtual void eliminate_gc_barrier(PhaseMacroExpand* macro, Node* node) const { }
-  virtual void enqueue_useful_gc_barrier(Unique_Node_List &worklist, Node* node) const {}
-  virtual void eliminate_useless_gc_barriers(Unique_Node_List &useful) const {}
-  virtual void add_users_to_worklist(Unique_Node_List* worklist) const {}
+  virtual void enqueue_useful_gc_barrier(Unique_Node_List &worklist, Node* node) const { }
+  virtual void eliminate_useless_gc_barriers(Unique_Node_List &useful) const { }
+  virtual void add_users_to_worklist(Unique_Node_List* worklist) const { }
 
   // Allow barrier sets to have shared state that is preserved across a compilation unit.
   // This could for example comprise macro nodes to be expanded during macro expansion.
@@ -187,7 +187,7 @@ public:
   // If the BarrierSetC2 state has kept macro nodes in its compilation unit state to be
   // expanded later, then now is the time to do so.
   virtual bool expand_macro_nodes(PhaseMacroExpand* macro) const { return false; }
-  virtual void verify_gc_barriers(bool post_parse) const {}
+  virtual void verify_gc_barriers(bool post_parse) const { }
 };
 
 #endif

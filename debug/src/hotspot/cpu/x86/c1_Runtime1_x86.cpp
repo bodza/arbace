@@ -22,9 +22,6 @@
 int StubAssembler::call_RT(Register oop_result1, Register metadata_result, address entry, int args_size) {
   // setup registers
   const Register thread = r15_thread; // is callee-saved register (Visual C++ calling conventions)
-  assert(!(oop_result1->is_valid() || metadata_result->is_valid()) || oop_result1 != metadata_result, "registers must be different");
-  assert(oop_result1 != thread && metadata_result != thread, "registers must be different");
-  assert(args_size >= 0, "illegal args_size");
   bool align_stack = false;
   // At a method handle call, the stack may not be properly aligned
   // when returning with an exception.
@@ -225,7 +222,6 @@ static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_
 
   // In 64bit all the args are in regs so there are no additional stack slots
   num_rt_args = 0;
-  assert((reg_save_frame_size * VMRegImpl::stack_slot_size) % 16 == 0, "must be 16 byte aligned");
   int frame_size_in_slots = reg_save_frame_size + num_rt_args; // args + thread
   sasm->set_frame_size(frame_size_in_slots / VMRegImpl::slots_per_word);
 
@@ -281,7 +277,6 @@ static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_
         }
         fpu_off += 2;
       }
-      assert(fpu_off == fpu_state_off, "incorrect number of fpu stack slots");
     }
 
     if (UseSSE >= 2) {
@@ -297,7 +292,6 @@ static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_
         }
         xmm_off += 2;
       }
-      assert(xmm_off == float_regs_as_doubles_off, "incorrect number of xmm registers");
 
     } else if (UseSSE == 1) {
       int xmm_off = xmm_regs_as_doubles_off;
@@ -306,7 +300,6 @@ static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_
         map->set_callee_saved(VMRegImpl::stack2reg(xmm_off + num_rt_args), xmm_name_0);
         xmm_off += 2;
       }
-      assert(xmm_off == float_regs_as_doubles_off, "incorrect number of xmm registers");
     }
   }
 
@@ -319,9 +312,6 @@ void C1_MacroAssembler::save_live_registers_no_oop_map(bool save_fpu_registers) 
   __ block_comment("save_live_registers");
 
   __ pusha();         // integer registers
-
-  // assert(float_regs_as_doubles_off % 2 == 0, "misaligned offset");
-  // assert(xmm_regs_as_doubles_off % 2 == 0, "misaligned offset");
 
   __ subptr(rsp, extra_space_offset * VMRegImpl::stack_slot_size);
 
@@ -662,7 +652,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   const int num_rt_args = 2;  // thread + dummy
 
   DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-  assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
   OopMap* oop_map = save_live_registers(sasm, num_rt_args);
 
@@ -771,20 +760,17 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         } else if (id == fast_new_instance_id) {
           __ set_info("fast new_instance", dont_gc_arguments);
         } else {
-          assert(id == fast_new_instance_init_check_id, "bad StubID");
           __ set_info("fast new_instance init check", dont_gc_arguments);
         }
 
         // If TLAB is disabled, see if there is support for inlining contiguous
         // allocations.
         // Otherwise, just go to the slow path.
-        if ((id == fast_new_instance_id || id == fast_new_instance_init_check_id) && !UseTLAB
-            && Universe::heap()->supports_inline_contig_alloc()) {
+        if ((id == fast_new_instance_id || id == fast_new_instance_init_check_id) && !UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
           Label slow_path;
           Register obj_size = rcx;
           Register t1       = rbx;
           Register t2       = rsi;
-          assert_different_registers(klass, obj, obj_size, t1, t2);
 
           __ push(rdi);
           __ push(rbx);
@@ -873,7 +859,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ movl(t1, Address(klass, Klass::layout_helper_offset()));
           // since size is postive movl does right thing on 64bit
           __ movl(arr_size, length);
-          assert(t1 == rcx, "fixed register usage");
           __ shlptr(arr_size /* by t1=rcx, mod 32 */);
           __ shrptr(t1, Klass::_lh_header_size_shift);
           __ andptr(t1, Klass::_lh_header_size_mask);
@@ -887,8 +872,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
           __ initialize_header(obj, klass, length, t1, t2);
           __ movb(t1, Address(klass, in_bytes(Klass::layout_helper_offset()) + (Klass::_lh_header_size_shift / BitsPerByte)));
-          assert(Klass::_lh_header_size_shift % BitsPerByte == 0, "bytewise");
-          assert(Klass::_lh_header_size_mask <= 0xFF, "bytewise");
           __ andptr(t1, Klass::_lh_header_size_mask);
           __ subptr(arr_size, t1);  // body length
           __ addptr(t1, obj);       // body start
@@ -1144,7 +1127,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps->add_gc_map(call_offset, oop_map);
         restore_live_registers(sasm);
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
         __ leave();
         __ jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }
@@ -1278,7 +1260,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         restore_live_registers(sasm);
         __ leave();
         DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
-        assert(deopt_blob != NULL, "deoptimization blob must have been created");
 
         __ jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }

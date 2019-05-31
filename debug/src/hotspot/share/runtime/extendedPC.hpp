@@ -12,7 +12,7 @@ class ExtendedPC {
 
  public:
   address pc() const { return _pc; }
-  ExtendedPC(address pc) { _pc  = pc;   }
+  ExtendedPC(address pc) { _pc  = pc; }
   ExtendedPC()           { _pc  = NULL; }
 };
 

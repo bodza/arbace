@@ -16,10 +16,9 @@ class ciInstance : public ciObject {
 
 protected:
   ciInstance(instanceHandle h_i) : ciObject(h_i) {
-    assert(h_i()->is_instance_noinline(), "wrong type");
   }
 
-  ciInstance(ciKlass* klass) : ciObject(klass) {}
+  ciInstance(ciKlass* klass) : ciObject(klass) { }
 
   instanceOop get_instanceOop() { return (instanceOop)get_oop(); }
 

@@ -19,7 +19,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_bool(const char* name, const bool* ptr,
                                  JVMFlagConstraintFunc_bool func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     bool value = *_ptr;
@@ -39,7 +39,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_int(const char* name, const int* ptr,
                                 JVMFlagConstraintFunc_int func,
-                                ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     int value = *_ptr;
@@ -59,7 +59,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_intx(const char* name, const intx* ptr,
                                  JVMFlagConstraintFunc_intx func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     intx value = *_ptr;
@@ -79,7 +79,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_uint(const char* name, const uint* ptr,
                                  JVMFlagConstraintFunc_uint func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     uint value = *_ptr;
@@ -99,7 +99,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_uintx(const char* name, const uintx* ptr,
                                   JVMFlagConstraintFunc_uintx func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     uintx value = *_ptr;
@@ -119,7 +119,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_uint64_t(const char* name, const uint64_t* ptr,
                                      JVMFlagConstraintFunc_uint64_t func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     uint64_t value = *_ptr;
@@ -138,7 +138,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_size_t(const char* name, const size_t* ptr,
                                    JVMFlagConstraintFunc_size_t func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     size_t value = *_ptr;
@@ -158,7 +158,7 @@ public:
   // the "name" argument must be a string literal
   JVMFlagConstraint_double(const char* name, const double* ptr,
                                    JVMFlagConstraintFunc_double func,
-                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) {}
+                                 ConstraintType type) : JVMFlagConstraint(name, type), _constraint(func), _ptr(ptr) { }
 
   JVMFlag::Error apply(bool verbose) {
     double value = *_ptr;
@@ -171,19 +171,19 @@ public:
 };
 
 // No constraint emitting
-void emit_constraint_no(...)                                                      { /* NOP */ }
+void emit_constraint_no(...) { /* NOP */ }
 
 // No constraint emitting if function argument is NOT provided
-void emit_constraint_bool(const char* /*name*/, const bool* /*value*/)            { /* NOP */ }
-void emit_constraint_ccstr(const char* /*name*/, const ccstr* /*value*/)          { /* NOP */ }
-void emit_constraint_ccstrlist(const char* /*name*/, const ccstrlist* /*value*/)  { /* NOP */ }
-void emit_constraint_int(const char* /*name*/, const int* /*value*/)              { /* NOP */ }
-void emit_constraint_intx(const char* /*name*/, const intx* /*value*/)            { /* NOP */ }
-void emit_constraint_uint(const char* /*name*/, const uint* /*value*/)            { /* NOP */ }
-void emit_constraint_uintx(const char* /*name*/, const uintx* /*value*/)          { /* NOP */ }
-void emit_constraint_uint64_t(const char* /*name*/, const uint64_t* /*value*/)    { /* NOP */ }
-void emit_constraint_size_t(const char* /*name*/, const size_t* /*value*/)        { /* NOP */ }
-void emit_constraint_double(const char* /*name*/, const double* /*value*/)        { /* NOP */ }
+void emit_constraint_bool(const char* /*name*/, const bool* /*value*/) { /* NOP */ }
+void emit_constraint_ccstr(const char* /*name*/, const ccstr* /*value*/) { /* NOP */ }
+void emit_constraint_ccstrlist(const char* /*name*/, const ccstrlist* /*value*/) { /* NOP */ }
+void emit_constraint_int(const char* /*name*/, const int* /*value*/) { /* NOP */ }
+void emit_constraint_intx(const char* /*name*/, const intx* /*value*/) { /* NOP */ }
+void emit_constraint_uint(const char* /*name*/, const uint* /*value*/) { /* NOP */ }
+void emit_constraint_uintx(const char* /*name*/, const uintx* /*value*/) { /* NOP */ }
+void emit_constraint_uint64_t(const char* /*name*/, const uint64_t* /*value*/) { /* NOP */ }
+void emit_constraint_size_t(const char* /*name*/, const size_t* /*value*/) { /* NOP */ }
+void emit_constraint_double(const char* /*name*/, const double* /*value*/) { /* NOP */ }
 
 // JVMFlagConstraint emitting code functions if function argument is provided
 void emit_constraint_bool(const char* name, const bool* ptr, JVMFlagConstraintFunc_bool func, JVMFlagConstraint::ConstraintType type) {

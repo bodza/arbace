@@ -82,21 +82,21 @@ class GraphBuilder {
    public:
     ScopeData(ScopeData* parent);
 
-    ScopeData* parent() const                      { return _parent;            }
+    ScopeData* parent() const                      { return _parent; }
 
-    BlockList* bci2block() const                   { return _bci2block;         }
-    void       set_bci2block(BlockList* bci2block) { _bci2block = bci2block;    }
+    BlockList* bci2block() const                   { return _bci2block; }
+    void       set_bci2block(BlockList* bci2block) { _bci2block = bci2block; }
 
     // NOTE: this has a different effect when parsing jsrs
     BlockBegin* block_at(int bci);
 
-    IRScope* scope() const                         { return _scope;             }
+    IRScope* scope() const                         { return _scope; }
     // Has side-effect of setting has_handler flag
     void set_scope(IRScope* scope);
 
     // Whether this or any parent scope has exception handlers
-    bool has_handler() const                       { return _has_handler;       }
-    void set_has_handler()                         { _has_handler = true;       }
+    bool has_handler() const                       { return _has_handler; }
+    void set_has_handler()                         { _has_handler = true; }
 
     // Exception handlers list to be used for this scope
     XHandlers* xhandlers() const;
@@ -108,21 +108,21 @@ class GraphBuilder {
     // Indicates parse is over
     bool is_work_list_empty() const;
 
-    ciBytecodeStream* stream()                     { return _stream;            }
-    void set_stream(ciBytecodeStream* stream)      { _stream = stream;          }
+    ciBytecodeStream* stream()                     { return _stream; }
+    void set_stream(ciBytecodeStream* stream)      { _stream = stream; }
 
-    intx max_inline_size() const                   { return _max_inline_size;   }
+    intx max_inline_size() const                   { return _max_inline_size; }
 
-    BlockBegin* continuation() const               { return _continuation;      }
-    void set_continuation(BlockBegin* cont)        { _continuation = cont;      }
+    BlockBegin* continuation() const               { return _continuation; }
+    void set_continuation(BlockBegin* cont)        { _continuation = cont; }
 
     // Indicates whether this ScopeData was pushed only for the
     // parsing and inlining of a jsr
-    bool parsing_jsr() const                       { return _parsing_jsr;       }
-    void set_parsing_jsr()                         { _parsing_jsr = true;       }
-    int  jsr_entry_bci() const                     { return _jsr_entry_bci;     }
-    void set_jsr_entry_bci(int bci)                { _jsr_entry_bci = bci;      }
-    void set_jsr_return_address_local(int local_no){ _jsr_ret_addr_local = local_no; }
+    bool parsing_jsr() const                       { return _parsing_jsr; }
+    void set_parsing_jsr()                         { _parsing_jsr = true; }
+    int  jsr_entry_bci() const                     { return _jsr_entry_bci; }
+    void set_jsr_entry_bci(int bci)                { _jsr_entry_bci = bci; }
+    void set_jsr_return_address_local(int local_no) { _jsr_ret_addr_local = local_no; }
     int  jsr_return_address_local() const          { return _jsr_ret_addr_local; }
     // Must be called after scope is set up for jsr ScopeData
     void setup_jsr_xhandlers();
@@ -130,8 +130,8 @@ class GraphBuilder {
     // The jsr continuation is only used when parsing_jsr is true, and
     // is different from the "normal" continuation since we can end up
     // doing a return (rather than a ret) from within a subroutine
-    BlockBegin* jsr_continuation() const           { return _jsr_continuation;  }
-    void set_jsr_continuation(BlockBegin* cont)    { _jsr_continuation = cont;  }
+    BlockBegin* jsr_continuation() const           { return _jsr_continuation; }
+    void set_jsr_continuation(BlockBegin* cont)    { _jsr_continuation = cont; }
 
     int num_returns();
     void incr_num_returns();
@@ -143,7 +143,7 @@ class GraphBuilder {
     Instruction* inline_cleanup_return_prev() const{ return _cleanup_return_prev; }
     ValueStack*  inline_cleanup_state() const      { return _cleanup_state; }
 
-    bool ignore_return() const                     { return _ignore_return;          }
+    bool ignore_return() const                     { return _ignore_return; }
     void set_ignore_return(bool ignore_return)     { _ignore_return = ignore_return; }
   };
 
@@ -172,7 +172,6 @@ class GraphBuilder {
   Compilation*      compilation() const          { return _compilation; }
   BlockList*        bci2block() const            { return scope_data()->bci2block(); }
   ValueMap*         vmap() const                 {
-    assert(UseLocalValueNumbering, "should not access otherwise");
     return _vmap; }
   bool              has_handler() const          { return scope_data()->has_handler(); }
 
@@ -294,9 +293,9 @@ class GraphBuilder {
   //
 
   // accessors
-  bool parsing_jsr() const                               { return scope_data()->parsing_jsr();           }
-  BlockBegin* continuation() const                       { return scope_data()->continuation();          }
-  BlockBegin* jsr_continuation() const                   { return scope_data()->jsr_continuation();      }
+  bool parsing_jsr() const                               { return scope_data()->parsing_jsr(); }
+  BlockBegin* continuation() const                       { return scope_data()->continuation(); }
+  BlockBegin* jsr_continuation() const                   { return scope_data()->jsr_continuation(); }
   void set_continuation(BlockBegin* continuation)        { scope_data()->set_continuation(continuation); }
   void set_inline_cleanup_info(BlockBegin* block,
                                Instruction* return_prev,
@@ -306,18 +305,18 @@ class GraphBuilder {
   void set_inline_cleanup_info() {
     set_inline_cleanup_info(_block, _last, _state);
   }
-  BlockBegin*  inline_cleanup_block() const              { return scope_data()->inline_cleanup_block();  }
+  BlockBegin*  inline_cleanup_block() const              { return scope_data()->inline_cleanup_block(); }
   Instruction* inline_cleanup_return_prev() const        { return scope_data()->inline_cleanup_return_prev(); }
-  ValueStack*  inline_cleanup_state() const              { return scope_data()->inline_cleanup_state();  }
+  ValueStack*  inline_cleanup_state() const              { return scope_data()->inline_cleanup_state(); }
   void restore_inline_cleanup_info() {
     _block = inline_cleanup_block();
     _last  = inline_cleanup_return_prev();
     _state = inline_cleanup_state();
   }
-  void incr_num_returns()                                { scope_data()->incr_num_returns();             }
-  int  num_returns() const                               { return scope_data()->num_returns();           }
-  intx max_inline_size() const                           { return scope_data()->max_inline_size();       }
-  int  inline_level() const                              { return scope()->level();                      }
+  void incr_num_returns()                                { scope_data()->incr_num_returns(); }
+  int  num_returns() const                               { return scope_data()->num_returns(); }
+  intx max_inline_size() const                           { return scope_data()->max_inline_size(); }
+  int  inline_level() const                              { return scope()->level(); }
   int  recursive_inline_level(ciMethod* callee) const;
 
   // inlining of synchronized methods
@@ -366,16 +365,16 @@ class GraphBuilder {
   void profile_invocation(ciMethod* inlinee, ValueStack* state);
 
   // Shortcuts to profiling control.
-  bool is_profiling()          { return _compilation->is_profiling();          }
-  bool count_invocations()     { return _compilation->count_invocations();     }
-  bool count_backedges()       { return _compilation->count_backedges();       }
-  bool profile_branches()      { return _compilation->profile_branches();      }
-  bool profile_calls()         { return _compilation->profile_calls();         }
+  bool is_profiling()          { return _compilation->is_profiling(); }
+  bool count_invocations()     { return _compilation->count_invocations(); }
+  bool count_backedges()       { return _compilation->count_backedges(); }
+  bool profile_branches()      { return _compilation->profile_branches(); }
+  bool profile_calls()         { return _compilation->profile_calls(); }
   bool profile_inlined_calls() { return _compilation->profile_inlined_calls(); }
-  bool profile_checkcasts()    { return _compilation->profile_checkcasts();    }
-  bool profile_parameters()    { return _compilation->profile_parameters();    }
-  bool profile_arguments()     { return _compilation->profile_arguments();     }
-  bool profile_return()        { return _compilation->profile_return();        }
+  bool profile_checkcasts()    { return _compilation->profile_checkcasts(); }
+  bool profile_parameters()    { return _compilation->profile_parameters(); }
+  bool profile_arguments()     { return _compilation->profile_arguments(); }
+  bool profile_return()        { return _compilation->profile_return(); }
 
   Values* args_list_for_profiling(ciMethod* target, int& start, bool may_have_receiver);
   Values* collect_args_for_profiling(Values* args, ciMethod* target, bool may_have_receiver);
@@ -387,7 +386,6 @@ class GraphBuilder {
 
   // public
   static bool can_trap(ciMethod* method, Bytecodes::Code code) {
-    assert(0 <= code && code < Bytecodes::number_of_java_codes, "illegal bytecode");
     if (_can_trap[code]) return true;
     // special handling for finalizer registration
     return code == Bytecodes::_return && method->intrinsic_id() == vmIntrinsics::_Object_init;

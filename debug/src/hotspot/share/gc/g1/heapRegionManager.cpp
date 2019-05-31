@@ -7,12 +7,7 @@
 #include "memory/allocation.hpp"
 #include "utilities/bitMap.inline.hpp"
 
-void HeapRegionManager::initialize(G1RegionToSpaceMapper* heap_storage,
-                               G1RegionToSpaceMapper* prev_bitmap,
-                               G1RegionToSpaceMapper* next_bitmap,
-                               G1RegionToSpaceMapper* bot,
-                               G1RegionToSpaceMapper* cardtable,
-                               G1RegionToSpaceMapper* card_counts) {
+void HeapRegionManager::initialize(G1RegionToSpaceMapper* heap_storage, G1RegionToSpaceMapper* prev_bitmap, G1RegionToSpaceMapper* next_bitmap, G1RegionToSpaceMapper* bot, G1RegionToSpaceMapper* cardtable, G1RegionToSpaceMapper* card_counts) {
   _allocated_heapregions_length = 0;
 
   _heap_mapper = heap_storage;
@@ -39,7 +34,6 @@ HeapRegion* HeapRegionManager::new_heap_region(uint hrm_index) {
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
   HeapWord* bottom = g1h->bottom_addr_for_region(hrm_index);
   MemRegion mr(bottom, bottom + HeapRegion::GrainWords);
-  assert(reserved().contains(mr), "invariant");
   return g1h->new_heap_region(hrm_index, mr);
 }
 
@@ -103,7 +97,6 @@ void HeapRegionManager::make_regions_available(uint start, uint num_regions, Wor
   _available_map.par_set_range(start, start + num_regions, BitMap::unknown_range);
 
   for (uint i = start; i < start + num_regions; i++) {
-    assert(is_available(i), "Just made region %u available but is apparently not.", i);
     HeapRegion* hr = at(i);
     if (G1CollectedHeap::heap()->hr_printer()->is_active()) {
       G1CollectedHeap::heap()->hr_printer()->commit(hr);
@@ -149,8 +142,7 @@ uint HeapRegionManager::expand_at(uint start, uint num_regions, WorkGang* pretou
 
   uint expanded = 0;
 
-  while (expanded < num_regions &&
-         (num_last_found = find_unavailable_from_idx(cur, &idx_last_found)) > 0) {
+  while (expanded < num_regions && (num_last_found = find_unavailable_from_idx(cur, &idx_last_found)) > 0) {
     uint to_expand = MIN2(num_regions - expanded, num_last_found);
     make_regions_available(idx_last_found, to_expand, pretouch_workers);
     expanded += to_expand;
@@ -183,9 +175,7 @@ uint HeapRegionManager::find_contiguous(size_t num, bool empty_only) {
     for (uint i = found; i < (found + num); i++) {
       HeapRegion* hr = _regions.get_by_index(i);
       // sanity check
-      guarantee((!empty_only && !is_available(i)) || (is_available(i) && hr != NULL && hr->is_empty()),
-                "Found region sequence starting at " UINT32_FORMAT ", length " SIZE_FORMAT
-                " that is not empty at " UINT32_FORMAT ". Hr is " PTR_FORMAT, found, num, i, p2i(hr));
+      guarantee((!empty_only && !is_available(i)) || (is_available(i) && hr != NULL && hr->is_empty()), "Found region sequence starting at " UINT32_FORMAT ", length " SIZE_FORMAT " that is not empty at " UINT32_FORMAT ". Hr is " PTR_FORMAT, found, num, i, p2i(hr));
     }
     return found;
   } else {
@@ -299,7 +289,6 @@ void HeapRegionManager::par_iterate(HeapRegionClosure* blk, HeapRegionClaimer* h
   const uint n_regions = hrclaimer->n_regions();
   for (uint count = 0; count < n_regions; count++) {
     const uint index = (start_index + count) % n_regions;
-    assert(index < n_regions, "sanity");
     // Skip over unavailable regions
     if (!is_available(index)) {
       continue;
@@ -325,10 +314,6 @@ void HeapRegionManager::par_iterate(HeapRegionClosure* blk, HeapRegionClaimer* h
 }
 
 uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
-  assert(length() > 0, "the region sequence should not be empty");
-  assert(length() <= _allocated_heapregions_length, "invariant");
-  assert(_allocated_heapregions_length > 0, "we should have at least one region committed");
-  assert(num_regions_to_remove < length(), "We should never remove all regions");
 
   if (num_regions_to_remove == 0) {
     return 0;
@@ -339,8 +324,7 @@ uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
   uint idx_last_found = 0;
   uint num_last_found = 0;
 
-  while ((removed < num_regions_to_remove) &&
-      (num_last_found = find_empty_from_idx_reverse(cur, &idx_last_found)) > 0) {
+  while ((removed < num_regions_to_remove) && (num_last_found = find_empty_from_idx_reverse(cur, &idx_last_found)) > 0) {
     uint to_remove = MIN2(num_regions_to_remove - removed, num_last_found);
 
     shrink_at(idx_last_found + num_last_found - to_remove, to_remove);
@@ -383,12 +367,8 @@ uint HeapRegionManager::find_empty_from_idx_reverse(uint start_idx, uint* res_id
 }
 
 void HeapRegionManager::verify() {
-  guarantee(length() <= _allocated_heapregions_length,
-            "invariant: _length: %u _allocated_length: %u",
-            length(), _allocated_heapregions_length);
-  guarantee(_allocated_heapregions_length <= max_length(),
-            "invariant: _allocated_length: %u _max_length: %u",
-            _allocated_heapregions_length, max_length());
+  guarantee(length() <= _allocated_heapregions_length, "invariant: _length: %u _allocated_length: %u", length(), _allocated_heapregions_length);
+  guarantee(_allocated_heapregions_length <= max_length(), "invariant: _allocated_length: %u _max_length: %u", _allocated_heapregions_length, max_length());
 
   bool prev_committed = true;
   uint num_committed = 0;
@@ -401,11 +381,8 @@ void HeapRegionManager::verify() {
     num_committed++;
     HeapRegion* hr = _regions.get_by_index(i);
     guarantee(hr != NULL, "invariant: i: %u", i);
-    guarantee(!prev_committed || hr->bottom() == prev_end,
-              "invariant i: %u " HR_FORMAT " prev_end: " PTR_FORMAT,
-              i, HR_FORMAT_PARAMS(hr), p2i(prev_end));
-    guarantee(hr->hrm_index() == i,
-              "invariant: i: %u hrm_index(): %u", i, hr->hrm_index());
+    guarantee(!prev_committed || hr->bottom() == prev_end, "invariant i: %u " HR_FORMAT " prev_end: " PTR_FORMAT, i, HR_FORMAT_PARAMS(hr), p2i(prev_end));
+    guarantee(hr->hrm_index() == i, "invariant: i: %u hrm_index(): %u", i, hr->hrm_index());
     // Asserts will fire if i is >= _length
     HeapWord* addr = hr->bottom();
     guarantee(addr_to_region(addr) == hr, "sanity");
@@ -425,7 +402,6 @@ void HeapRegionManager::verify() {
 
 HeapRegionClaimer::HeapRegionClaimer(uint n_workers) :
     _n_workers(n_workers), _n_regions(G1CollectedHeap::heap()->_hrm._allocated_heapregions_length), _claims(NULL) {
-  assert(n_workers > 0, "Need at least one worker.");
   uint* new_claims = NEW_C_HEAP_ARRAY(uint, _n_regions, mtGC);
   memset(new_claims, Unclaimed, sizeof(*_claims) * _n_regions);
   _claims = new_claims;
@@ -438,17 +414,14 @@ HeapRegionClaimer::~HeapRegionClaimer() {
 }
 
 uint HeapRegionClaimer::offset_for_worker(uint worker_id) const {
-  assert(worker_id < _n_workers, "Invalid worker_id.");
   return _n_regions * worker_id / _n_workers;
 }
 
 bool HeapRegionClaimer::is_region_claimed(uint region_index) const {
-  assert(region_index < _n_regions, "Invalid index.");
   return _claims[region_index] == Claimed;
 }
 
 bool HeapRegionClaimer::claim_region(uint region_index) {
-  assert(region_index < _n_regions, "Invalid index.");
   uint old_val = Atomic::cmpxchg(Claimed, &_claims[region_index], Unclaimed);
   return old_val == Unclaimed;
 }

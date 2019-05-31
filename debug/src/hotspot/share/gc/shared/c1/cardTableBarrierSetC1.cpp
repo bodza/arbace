@@ -17,7 +17,6 @@ void CardTableBarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, L
   BarrierSet* bs = BarrierSet::barrier_set();
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
   CardTable* ct = ctbs->card_table();
-  assert(sizeof(*(ct->byte_map_base())) == sizeof(jbyte), "adjust this code");
   LIR_Const* card_table_base = new LIR_Const(ct->byte_map_base());
   if (addr->is_address()) {
     LIR_Address* address = addr->as_address_ptr();
@@ -27,12 +26,10 @@ void CardTableBarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, L
     if (!address->index()->is_valid() && address->disp() == 0) {
       __ move(address->base(), ptr);
     } else {
-      assert(address->disp() != max_jint, "lea doesn't support patched addresses!");
       __ leal(addr, ptr);
     }
     addr = ptr;
   }
-  assert(addr->is_register(), "must be a register at this point");
 
 #ifdef CARDTABLEBARRIERSET_POST_BARRIER_HELPER
   gen->CardTableBarrierSet_post_barrier_helper(addr, card_table_base);

@@ -28,7 +28,7 @@ public:
   //   the same representation as x.
   // - static T recover(Decayed x): return a value of type T with the
   //   same representation as x.
-  template<typename T> struct Translate : public FalseType {};
+  template<typename T> struct Translate : public FalseType { };
 
 private:
 
@@ -97,9 +97,7 @@ struct PrimitiveConversions::Cast<
 template<typename T, typename U>
 struct PrimitiveConversions::Cast<
   T, U, true,
-  typename EnableIf<IsIntegral<T>::value &&
-                    (IsRegisteredEnum<U>::value ||
-                     IsFloatingPoint<U>::value)>::type>
+  typename EnableIf<IsIntegral<T>::value && (IsRegisteredEnum<U>::value || IsFloatingPoint<U>::value)>::type>
 {
   T operator()(U x) const { return cast_using_union<T>(x); }
 };
@@ -108,9 +106,7 @@ struct PrimitiveConversions::Cast<
 template<typename T, typename U>
 struct PrimitiveConversions::Cast<
   T, U, true,
-  typename EnableIf<IsIntegral<U>::value &&
-                    (IsRegisteredEnum<T>::value ||
-                     IsFloatingPoint<T>::value)>::type>
+  typename EnableIf<IsIntegral<U>::value && (IsRegisteredEnum<T>::value || IsFloatingPoint<T>::value)>::type>
 {
   T operator()(U x) const { return cast_using_union<T>(x); }
 };

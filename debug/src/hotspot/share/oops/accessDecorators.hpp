@@ -17,7 +17,7 @@ typedef uint64_t DecoratorSet;
 // The HasDecorator trait can help at compile-time determining whether a decorator set
 // has an intersection with a certain other decorator set
 template <DecoratorSet decorators, DecoratorSet decorator>
-struct HasDecorator: public IntegralConstant<bool, (decorators & decorator) != 0> {};
+struct HasDecorator: public IntegralConstant<bool, (decorators & decorator) != 0> { };
 
 // == Internal Decorators - do not use ==
 // * INTERNAL_EMPTY: This is the name for the empty decorator set (in absence of other decorators).
@@ -40,8 +40,7 @@ const DecoratorSet INTERNAL_BT_TO_SPACE_INVARIANT    = UCONST64(1) << 4;
 //   access backends iff UseCompressedOops is true.
 const DecoratorSet INTERNAL_RT_USE_COMPRESSED_OOPS   = UCONST64(1) << 5;
 
-const DecoratorSet INTERNAL_DECORATOR_MASK           = INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_VALUE_IS_OOP |
-                                                       INTERNAL_BT_BARRIER_ON_PRIMITIVES | INTERNAL_RT_USE_COMPRESSED_OOPS;
+const DecoratorSet INTERNAL_DECORATOR_MASK           = INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_VALUE_IS_OOP | INTERNAL_BT_BARRIER_ON_PRIMITIVES | INTERNAL_RT_USE_COMPRESSED_OOPS;
 
 // == Memory Ordering Decorators ==
 // The memory ordering decorators can be described in the following way:

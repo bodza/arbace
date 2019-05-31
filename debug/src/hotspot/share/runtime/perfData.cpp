@@ -62,14 +62,12 @@ PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v)
   const char* prefix = PerfDataManager::ns_to_string(ns);
 
   _name = NEW_C_HEAP_ARRAY(char, strlen(name) + strlen(prefix) + 2, mtInternal);
-  assert(_name != NULL && strlen(name) != 0, "invalid name");
 
   if (ns == NULL_NS) {
      // No prefix is added to counters with the NULL_NS namespace.
      strcpy(_name, name);
      // set the F_Supported flag based on the counter name prefix.
-     if (PerfDataManager::is_stable_supported(_name) ||
-         PerfDataManager::is_unstable_supported(_name)) {
+     if (PerfDataManager::is_stable_supported(_name) || PerfDataManager::is_unstable_supported(_name)) {
        _flags = F_Supported;
      }
      else {
@@ -79,8 +77,7 @@ PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v)
   else {
     sprintf(_name, "%s.%s", prefix, name);
     // set the F_Supported flag based on the given namespace.
-    if (PerfDataManager::is_stable_supported(ns) ||
-        PerfDataManager::is_unstable_supported(ns)) {
+    if (PerfDataManager::is_stable_supported(ns) || PerfDataManager::is_unstable_supported(ns)) {
       _flags = F_Supported;
     }
     else {
@@ -126,9 +123,6 @@ void PerfData::create_entry(BasicType dtype, size_t dsize, size_t vlen) {
 
   // data is in the last dsize*dlen bytes of the entry
   void* valuep = (void*) (psmp + data_start);
-
-  assert(is_on_c_heap() || PerfMemory::contains(cname), "just checking");
-  assert(is_on_c_heap() || PerfMemory::contains((char*)valuep), "just checking");
 
   // copy the name, including null terminator, into PerfData memory
   strcpy(cname, name());
@@ -215,24 +209,14 @@ int PerfString::format(char* buffer, int length) {
   return jio_snprintf(buffer, length, "%s", (char*)_valuep);
 }
 
-PerfStringConstant::PerfStringConstant(CounterNS ns, const char* namep,
-                                       const char* initial_value)
-                     : PerfString(ns, namep, V_Constant,
-                                  initial_value == NULL ? 1 :
-                                  MIN2((jint)(strlen((char*)initial_value)+1),
-                                       (jint)(PerfMaxStringConstLength+1)),
-                                  initial_value) {
+PerfStringConstant::PerfStringConstant(CounterNS ns, const char* namep, const char* initial_value)
+    : PerfString(ns, namep, V_Constant, initial_value == NULL ? 1 : MIN2((jint)(strlen((char*)initial_value)+1), (jint)(PerfMaxStringConstLength+1)), initial_value) {
 
   if (PrintMiscellaneous && Verbose) {
-    if (is_valid() && initial_value != NULL &&
-        ((jint)strlen(initial_value) > (jint)PerfMaxStringConstLength)) {
+    if (is_valid() && initial_value != NULL && ((jint)strlen(initial_value) > (jint)PerfMaxStringConstLength)) {
 
-      warning("Truncating PerfStringConstant: name = %s,"
-              " length = " INT32_FORMAT ","
-              " PerfMaxStringConstLength = " INT32_FORMAT "\n",
-              namep,
-              (jint)strlen(initial_value),
-              (jint)PerfMaxStringConstLength);
+      warning("Truncating PerfStringConstant: name = %s, length = " INT32_FORMAT ", PerfMaxStringConstLength = " INT32_FORMAT "\n",
+              namep, (jint)strlen(initial_value), (jint)PerfMaxStringConstLength);
     }
   }
 }
@@ -275,8 +259,6 @@ void PerfDataManager::add_item(PerfData* p, bool sampled) {
     _all = new PerfDataList(100);
     _has_PerfData = true;
   }
-
-  assert(!_all->contains(p->name()), "duplicate name added");
 
   // add to the list of all perf data items
   _all->append(p);
@@ -335,8 +317,6 @@ PerfDataList* PerfDataManager::constants() {
 }
 
 char* PerfDataManager::counter_name(const char* ns, const char* name) {
-   assert(ns != NULL, "ns string required");
-   assert(name != NULL, "name string required");
 
    size_t len = strlen(ns) + strlen(name) + 2;
    char* result = NEW_RESOURCE_ARRAY(char, len);
@@ -400,8 +380,6 @@ PerfStringVariable* PerfDataManager::create_string_variable(CounterNS ns,
                                                             TRAPS) {
 
   if (max_length == 0 && s != NULL) max_length = (int)strlen(s);
-
-  assert(max_length != 0, "PerfStringVariable with length 0");
 
   PerfStringVariable* p = new PerfStringVariable(ns, name, max_length, s);
 
@@ -581,14 +559,11 @@ PerfDataList* PerfDataList::clone() {
 
   PerfDataList* copy = new PerfDataList(this);
 
-  assert(copy != NULL, "just checking");
-
   return copy;
 }
 
 PerfTraceTime::~PerfTraceTime() {
-  if (!UsePerfData || (_recursion_counter != NULL &&
-      --(*_recursion_counter) > 0)) return;
+  if (!UsePerfData || (_recursion_counter != NULL && --(*_recursion_counter) > 0)) return;
   _t.stop();
   _timerp->inc(_t.ticks());
 }

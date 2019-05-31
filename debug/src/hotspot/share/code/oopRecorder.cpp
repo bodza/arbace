@@ -15,8 +15,7 @@ template <class T> ValueRecorder<T>::ValueRecorder(Arena* arena) {
   _complete = false;
 }
 
-template <class T> template <class X>  ValueRecorder<T>::IndexCache<X>::IndexCache() {
-  assert(first_index > 0, "initial zero state of cache must be invalid index");
+template <class T> template <class X> ValueRecorder<T>::IndexCache<X>::IndexCache() {
   Copy::zero_to_bytes(&_cache[0], sizeof(_cache));
 }
 
@@ -27,7 +26,6 @@ template <class T> int ValueRecorder<T>::size() {
 }
 
 template <class T> void ValueRecorder<T>::copy_values_to(nmethod* nm) {
-  assert(_complete, "must be frozen");
   maybe_initialize();  // get non-null handles, even if we have no oops
   nm->copy_values(_handles);
 }
@@ -51,14 +49,12 @@ template <class T> T ValueRecorder<T>::at(int index) {
 }
 
 template <class T> int ValueRecorder<T>::add_handle(T h, bool make_findable) {
-  assert(!_complete, "cannot allocate more elements after size query");
   maybe_initialize();
   // indexing uses 1 as an origin--0 means null
   int index = _handles->length() + first_index;
   _handles->append(h);
 
   // Support correct operation of find_index().
-  assert(!(make_findable && !is_real(h)), "nulls are not findable");
   if (make_findable) {
     // This index may be returned from find_index().
     if (_indexes != NULL) {
@@ -86,10 +82,8 @@ template <class T> int ValueRecorder<T>::add_handle(T h, bool make_findable) {
 }
 
 template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
-  assert(!_complete, "cannot allocate more elements after size query");
   maybe_initialize();
   if (h == NULL)  return null_index;
-  assert(is_real(h), "must be valid");
   int* cloc = (_indexes == NULL)? NULL: _indexes->cache_location(h);
   if (cloc != NULL) {
     int cindex = _indexes->cache_location_index(cloc);
@@ -125,7 +119,7 @@ template class ValueRecorder<jobject>;
 
 oop ObjectLookup::ObjectEntry::oop_value() const { return JNIHandles::resolve(_value); }
 
-ObjectLookup::ObjectLookup(): _gc_count(Universe::heap()->total_collections()), _values(4) {}
+ObjectLookup::ObjectLookup(): _gc_count(Universe::heap()->total_collections()), _values(4) { }
 
 void ObjectLookup::maybe_resort() {
   // The values are kept sorted by address which may be invalidated

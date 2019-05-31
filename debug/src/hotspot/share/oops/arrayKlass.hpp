@@ -24,22 +24,22 @@ class ArrayKlass: public Klass {
   // initialization, the other is a dummy
   ArrayKlass(Symbol* name, KlassID id);
   ArrayKlass() {
-    assert(DumpSharedSpaces || UseSharedSpaces, "only for cds"); }
+    }
 
  public:
   // Instance variables
-  int dimension() const                 { return _dimension;      }
+  int dimension() const                 { return _dimension; }
   void set_dimension(int dimension)     { _dimension = dimension; }
 
   Klass* higher_dimension() const     { return _higher_dimension; }
   inline Klass* higher_dimension_acquire() const; // load with acquire semantics
   void set_higher_dimension(Klass* k) { _higher_dimension = k; }
   inline void release_set_higher_dimension(Klass* k); // store with release semantics
-  Klass** adr_higher_dimension()      { return (Klass**)&this->_higher_dimension;}
+  Klass** adr_higher_dimension()      { return (Klass**)&this->_higher_dimension; }
 
   Klass* lower_dimension() const      { return _lower_dimension; }
   void set_lower_dimension(Klass* k)  { _lower_dimension = k; }
-  Klass** adr_lower_dimension()       { return (Klass**)&this->_lower_dimension;}
+  Klass** adr_lower_dimension()       { return (Klass**)&this->_lower_dimension; }
 
   // offset of first element, including any padding for the sake of alignment
   int  array_header_in_bytes() const    { return layout_helper_header_size(layout_helper()); }
@@ -69,7 +69,6 @@ class ArrayKlass: public Klass {
   }
 
   static const ArrayKlass* cast(const Klass* k) {
-    assert(k->is_array_klass(), "cast to ArrayKlass");
     return static_cast<const ArrayKlass*>(k);
   }
 

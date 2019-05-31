@@ -253,8 +253,8 @@ public:
   void  write_bytes(const void* buffer, int count);
   void  write_bytes_aligned(const void* buffer, int count);
   char* map_region(int i, char** top_ret);
-  void  map_heap_regions() {};
-  void  fixup_mapped_heap_regions() {};
+  void  map_heap_regions() { };
+  void  fixup_mapped_heap_regions() { };
   void  unmap_region(int i);
   bool  verify_region_checksum(int i);
   void  close();
@@ -270,7 +270,7 @@ public:
   static void fail_continue(const char *msg, ...) ATTRIBUTE_PRINTF(1, 2);
 
   bool is_in_shared_region(const void* p, int idx) { return false; };
-  void print_shared_spaces() {};
+  void print_shared_spaces() { };
 
   // Stop CDS sharing and unmap CDS regions.
   static void stop_sharing_and_unmap(const char* msg);
@@ -284,14 +284,12 @@ public:
     if (index < 0) {
       return NULL;
     }
-    assert(index < _shared_path_table_size, "sanity");
     char* p = (char*)_shared_path_table->data();
     p += _shared_path_entry_size * index;
     return (SharedClassPathEntry*)p;
   }
 
   static const char* shared_path_name(int index) {
-    assert(index >= 0, "Sanity");
     return shared_path(index)->name();
   }
 
@@ -303,7 +301,7 @@ public:
   bool  map_heap_data(MemRegion **heap_mem, int first, int max, int* num,
                       bool is_open = false) { return false; };
   bool  verify_mapped_heap_regions(int first, int num) { return false; };
-  void  dealloc_archive_heap_regions(MemRegion* regions, int num, bool is_open) {};
+  void  dealloc_archive_heap_regions(MemRegion* regions, int num, bool is_open) { };
 };
 
 #endif

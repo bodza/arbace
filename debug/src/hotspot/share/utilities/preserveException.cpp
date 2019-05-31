@@ -39,7 +39,6 @@ CautiouslyPreserveExceptionMark::CautiouslyPreserveExceptionMark(Thread* thread)
 }
 
 CautiouslyPreserveExceptionMark::~CautiouslyPreserveExceptionMark() {
-  assert(!_thread->has_pending_exception(), "unexpected exception generated");
   if (_thread->has_pending_exception()) {
     _thread->clear_pending_exception();
   }

@@ -30,7 +30,6 @@ inline bool is_KRegister() {
 
 inline Register as_Register() {
 
-  assert( is_Register(), "must be");
   // Yuk
 #ifdef AMD64
   return ::as_Register(value() >> 1);
@@ -40,25 +39,21 @@ inline Register as_Register() {
 }
 
 inline FloatRegister as_FloatRegister() {
-  assert( is_FloatRegister() && is_even(value()), "must be" );
   // Yuk
   return ::as_FloatRegister((value() - ConcreteRegisterImpl::max_gpr) >> 1);
 }
 
 inline XMMRegister as_XMMRegister() {
-  assert( is_XMMRegister() && is_even(value()), "must be" );
   // Yuk
   return ::as_XMMRegister((value() - ConcreteRegisterImpl::max_fpr) >> 4);
 }
 
 inline KRegister as_KRegister() {
-  assert(is_KRegister(), "must be");
   // Yuk
   return ::as_KRegister((value() - ConcreteRegisterImpl::max_xmm));
 }
 
-inline   bool is_concrete() {
-  assert(is_reg(), "must be");
+inline bool is_concrete() {
 #ifndef AMD64
   if (is_Register()) return true;
 #endif

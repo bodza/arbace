@@ -44,7 +44,7 @@ public:
   inline static void init_forwarded_mark(oop obj);
 
   // Assert the stack is empty and has no cached segments.
-  void assert_empty() {};
+  void assert_empty() { };
 
   inline PreservedMarks();
   ~PreservedMarks() { assert_empty(); }
@@ -93,8 +93,6 @@ public:
 
   // Return the i'th stack.
   PreservedMarks* get(uint i = 0) const {
-    assert(_num > 0 && _stacks != NULL, "stacks should have been initialized");
-    assert(i < _num, "pre-condition");
     return (_stacks + i);
   }
 
@@ -111,13 +109,12 @@ public:
   void reclaim();
 
   // Assert all the stacks are empty and have no cached segments.
-  void assert_empty() {};
+  void assert_empty() { };
 
   PreservedMarksSet(bool in_c_heap)
       : _in_c_heap(in_c_heap), _num(0), _stacks(NULL) { }
 
   ~PreservedMarksSet() {
-    assert(_stacks == NULL && _num == 0, "stacks should have been reclaimed");
   }
 };
 

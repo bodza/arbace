@@ -27,7 +27,6 @@ void G1BarrierSetAssembler::gen_write_ref_array_pre_barrier(MacroAssembler* masm
     if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) {
       __ cmpl(in_progress, 0);
     } else {
-      assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
       __ cmpb(in_progress, 0);
     }
 
@@ -60,11 +59,9 @@ void G1BarrierSetAssembler::gen_write_ref_array_pre_barrier(MacroAssembler* masm
 void G1BarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssembler* masm, DecoratorSet decorators, Register addr, Register count, Register tmp) {
   __ pusha();             // push registers (overkill)
   if (c_rarg0 == count) { // On win64 c_rarg0 == rcx
-    assert_different_registers(c_rarg1, addr);
     __ mov(c_rarg1, count);
     __ mov(c_rarg0, addr);
   } else {
-    assert_different_registers(c_rarg0, count);
     __ mov(c_rarg0, addr);
     __ mov(c_rarg1, count);
   }
@@ -93,28 +90,13 @@ void G1BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorator
   }
 }
 
-void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
-                                                 Register obj,
-                                                 Register pre_val,
-                                                 Register thread,
-                                                 Register tmp,
-                                                 bool tosca_live,
-                                                 bool expand_call) {
+void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm, Register obj, Register pre_val, Register thread, Register tmp, bool tosca_live, bool expand_call) {
   // If expand_call is true then we expand the call_VM_leaf macro
   // directly to skip generating the check by
   // InterpreterMacroAssembler::call_VM_leaf_base that checks _last_sp.
 
-  assert(thread == r15_thread, "must be");
-
   Label done;
   Label runtime;
-
-  assert(pre_val != noreg, "check this code");
-
-  if (obj != noreg) {
-    assert_different_registers(obj, pre_val, tmp);
-    assert(pre_val != rax, "check this code");
-  }
 
   Address in_progress(thread, in_bytes(G1ThreadLocalData::satb_mark_queue_active_offset()));
   Address index(thread, in_bytes(G1ThreadLocalData::satb_mark_queue_index_offset()));
@@ -124,7 +106,6 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) {
     __ cmpl(in_progress, 0);
   } else {
-    assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
     __ cmpb(in_progress, 0);
   }
   __ jcc(Assembler::equal, done);
@@ -156,7 +137,7 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
 
   __ bind(runtime);
   // save the live input values
-  if(tosca_live) __ push(rax);
+  if (tosca_live) __ push(rax);
 
   if (obj != noreg && obj != rax)
     __ push(obj);
@@ -177,7 +158,6 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   // expand_call should be passed true.
 
   if (expand_call) {
-     assert(pre_val != c_rarg1, "smashed arg");
     if (c_rarg1 != thread) {
       __ mov(c_rarg1, thread);
     }
@@ -196,25 +176,17 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   if (obj != noreg && obj != rax)
     __ pop(obj);
 
-  if(tosca_live) __ pop(rax);
+  if (tosca_live) __ pop(rax);
 
   __ bind(done);
 }
 
-void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm,
-                                                  Register store_addr,
-                                                  Register new_val,
-                                                  Register thread,
-                                                  Register tmp,
-                                                  Register tmp2) {
-  assert(thread == r15_thread, "must be");
+void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm, Register store_addr, Register new_val, Register thread, Register tmp, Register tmp2) {
 
   Address queue_index(thread, in_bytes(G1ThreadLocalData::dirty_card_queue_index_offset()));
   Address buffer(thread, in_bytes(G1ThreadLocalData::dirty_card_queue_buffer_offset()));
 
-  CardTableBarrierSet* ct =
-    barrier_set_cast<CardTableBarrierSet>(BarrierSet::barrier_set());
-  assert(sizeof(*ct->card_table()->byte_map_base()) == sizeof(jbyte), "adjust this code");
+  CardTableBarrierSet* ct = barrier_set_cast<CardTableBarrierSet>(BarrierSet::barrier_set());
 
   Label done;
   Label runtime;
@@ -278,7 +250,6 @@ void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm,
 void G1BarrierSetAssembler::oop_store_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type, Address dst, Register val, Register tmp1, Register tmp2) {
   bool in_heap = (decorators & IN_HEAP) != 0;
   bool as_normal = (decorators & AS_NORMAL) != 0;
-  assert((decorators & IS_DEST_UNINITIALIZED) == 0, "unsupported");
 
   bool needs_pre_barrier = as_normal;
   bool needs_post_barrier = val != noreg && in_heap;
@@ -338,7 +309,6 @@ void G1BarrierSetAssembler::gen_pre_barrier_stub(LIR_Assembler* ce, G1PreBarrier
   // been loaded into _pre_val.
 
   __ bind(*stub->entry());
-  assert(stub->pre_val()->is_register(), "Precondition.");
 
   Register pre_val_reg = stub->pre_val()->as_register();
 
@@ -356,8 +326,6 @@ void G1BarrierSetAssembler::gen_pre_barrier_stub(LIR_Assembler* ce, G1PreBarrier
 void G1BarrierSetAssembler::gen_post_barrier_stub(LIR_Assembler* ce, G1PostBarrierStub* stub) {
   G1BarrierSetC1* bs = (G1BarrierSetC1*)BarrierSet::barrier_set()->barrier_set_c1();
   __ bind(*stub->entry());
-  assert(stub->addr()->is_register(), "Precondition.");
-  assert(stub->new_val()->is_register(), "Precondition.");
   Register new_val_reg = stub->new_val()->as_register();
   __ cmpptr(new_val_reg, (int32_t) NULL_WORD);
   __ jcc(Assembler::equal, *stub->continuation());
@@ -391,7 +359,6 @@ void G1BarrierSetAssembler::generate_c1_pre_barrier_runtime_stub(StubAssembler* 
   if (in_bytes(SATBMarkQueue::byte_width_of_active()) == 4) {
     __ cmpl(queue_active, 0);
   } else {
-    assert(in_bytes(SATBMarkQueue::byte_width_of_active()) == 1, "Assumption");
     __ cmpb(queue_active, 0);
   }
   __ jcc(Assembler::equal, done);
@@ -434,9 +401,7 @@ void G1BarrierSetAssembler::generate_c1_post_barrier_runtime_stub(StubAssembler*
   // arg0: store_address
   Address store_addr(rbp, 2*BytesPerWord);
 
-  CardTableBarrierSet* ct =
-    barrier_set_cast<CardTableBarrierSet>(BarrierSet::barrier_set());
-  assert(sizeof(*ct->card_table()->byte_map_base()) == sizeof(jbyte), "adjust this code");
+  CardTableBarrierSet* ct = barrier_set_cast<CardTableBarrierSet>(BarrierSet::barrier_set());
 
   Label done;
   Label enqueued;

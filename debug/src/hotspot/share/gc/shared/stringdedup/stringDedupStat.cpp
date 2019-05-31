@@ -40,9 +40,7 @@ void StringDedupStat::add(const StringDedupStat* const stat) {
 }
 
 void StringDedupStat::print_start(const StringDedupStat* last_stat) {
-  log_info(gc, stringdedup)(
-     "Concurrent String Deduplication (" STRDEDUP_TIME_FORMAT ")",
-     STRDEDUP_TIME_PARAM(last_stat->_start_concurrent));
+  log_info(gc, stringdedup)("Concurrent String Deduplication (" STRDEDUP_TIME_FORMAT ")", STRDEDUP_TIME_PARAM(last_stat->_start_concurrent));
 }
 
 void StringDedupStat::print_end(const StringDedupStat* last_stat, const StringDedupStat* total_stat) {

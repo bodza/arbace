@@ -12,9 +12,7 @@ ciBlock *ciMethodBlocks::block_containing(int bci) {
 }
 
 bool ciMethodBlocks::is_block_start(int bci) {
-  assert(bci >=0 && bci < _code_size, "valid bytecode range");
   ciBlock *b = _bci_to_block[bci];
-  assert(b != NULL, "must have block for bytecode");
   return b->start_bci() == bci;
 }
 
@@ -28,7 +26,6 @@ ciBlock *ciMethodBlocks::split_block_at(int bci) {
   ciBlock *former_block = block_containing(bci);
   ciBlock *new_block = new(_arena) ciBlock(_method, _num_blocks++, former_block->start_bci());
   _blocks->append(new_block);
-  assert(former_block != NULL, "must not be NULL");
   new_block->set_limit_bci(bci);
   former_block->set_start_bci(bci);
   for (int pos=bci-1; pos >= 0; pos--) {
@@ -90,7 +87,6 @@ void ciMethodBlocks::do_analysis() {
     // Determine if a new block has been made at the current bci.  If
     // this block differs from our current range, switch to the new
     // one and end the old one.
-    assert(cur_block != NULL, "must always have a current block");
     ciBlock *new_block = block_containing(bci);
     if (new_block == NULL || new_block == cur_block) {
       // We have not marked this bci as the start of a new block.
@@ -244,7 +240,7 @@ ciMethodBlocks::ciMethodBlocks(Arena *arena, ciMethod *meth): _method(meth),
 
   // create blocks for exception handlers
   if (meth->has_exception_handlers()) {
-    for(ciExceptionHandlerStream str(meth); !str.is_done(); str.next()) {
+    for (ciExceptionHandlerStream str(meth); !str.is_done(); str.next()) {
       ciExceptionHandler* handler = str.handler();
       ciBlock *eb = make_block_at(handler->handler_bci());
       //
@@ -288,7 +284,7 @@ ciMethodBlocks::ciMethodBlocks(Arena *arena, ciMethod *meth): _method(meth),
 
   // mark blocks that have exception handlers
   if (meth->has_exception_handlers()) {
-    for(ciExceptionHandlerStream str(meth); !str.is_done(); str.next()) {
+    for (ciExceptionHandlerStream str(meth); !str.is_done(); str.next()) {
       ciExceptionHandler* handler = str.handler();
       int ex_start = handler->start();
       int ex_end = handler->limit();
@@ -313,9 +309,7 @@ ciBlock::ciBlock(ciMethod *method, int index, int start_bci) :
                          _ex_start_bci(-1), _ex_limit_bci(-1) {
 }
 
-void ciBlock::set_exception_range(int start_bci, int limit_bci)  {
-   assert(limit_bci >= start_bci, "valid range");
-   assert(!is_handler() && _ex_start_bci == -1 && _ex_limit_bci == -1, "must not be handler");
+void ciBlock::set_exception_range(int start_bci, int limit_bci) {
    _ex_start_bci = start_bci;
    _ex_limit_bci = limit_bci;
    set_handler();

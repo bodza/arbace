@@ -22,7 +22,7 @@ private:
 protected:
   void fill_stackframe(Handle stackFrame, const methodHandle& method, TRAPS);
 public:
-  BaseFrameStream(JavaThread* thread) : _thread(thread), _anchor(0L) {}
+  BaseFrameStream(JavaThread* thread) : _thread(thread), _anchor(0L) { }
 
   virtual void    next()=0;
   virtual bool    at_end()=0;

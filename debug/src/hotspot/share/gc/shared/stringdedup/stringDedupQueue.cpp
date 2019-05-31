@@ -28,7 +28,6 @@ void StringDedupQueue::verify() {
 }
 
 StringDedupQueue* const StringDedupQueue::queue() {
-  assert(_queue != NULL, "Not yet initialized");
   return _queue;
 }
 
@@ -37,5 +36,4 @@ void StringDedupQueue::gc_prologue() {
 }
 
 void StringDedupQueue::gc_epilogue() {
-  assert(_claimed_index >= queue()->num_queues() || _claimed_index == 0, "All or nothing");
 }

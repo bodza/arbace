@@ -25,7 +25,6 @@ inline bool ConstantPoolCacheEntry::is_resolved(Bytecodes::Code code) const {
 }
 
 inline Method* ConstantPoolCacheEntry::f2_as_interface_method() const {
-  assert(bytecode_1() == Bytecodes::_invokeinterface, "");
   return (Method*)_f2;
 }
 
@@ -33,13 +32,11 @@ inline Metadata* ConstantPoolCacheEntry::f1_ord() const { return (Metadata *)Ord
 
 inline Method* ConstantPoolCacheEntry::f1_as_method() const {
   Metadata* f1 = f1_ord();
-  assert(f1 == NULL || f1->is_method(), "");
   return (Method*)f1;
 }
 
 inline Klass* ConstantPoolCacheEntry::f1_as_klass() const {
   Metadata* f1 = f1_ord();
-  assert(f1 == NULL || f1->is_klass(), "");
   return (Klass*)f1;
 }
 
@@ -53,7 +50,7 @@ inline bool ConstantPoolCacheEntry::has_method_type() const {
   return (!is_f1_null()) && (_flags & (1 << has_method_type_shift)) != 0;
 }
 
-inline intx ConstantPoolCacheEntry::flags_ord() const   { return (intx)OrderAccess::load_acquire(&_flags); }
+inline intx ConstantPoolCacheEntry::flags_ord() const { return (intx)OrderAccess::load_acquire(&_flags); }
 
 inline bool ConstantPoolCacheEntry::indy_resolution_failed() const {
   intx flags = flags_ord();
@@ -70,7 +67,6 @@ inline ConstantPoolCache::ConstantPoolCache(int length,
   initialize(inverse_index_map, invokedynamic_inverse_index_map,
              invokedynamic_references_map);
   for (int i = 0; i < length; i++) {
-    assert(entry_at(i)->is_f1_null(), "Failed to clear?");
   }
 }
 

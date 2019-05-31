@@ -27,7 +27,7 @@ public:
     G1VerifyAll             = -1
   };
 
-  G1HeapVerifier(G1CollectedHeap* heap) : _g1h(heap) {}
+  G1HeapVerifier(G1CollectedHeap* heap) : _g1h(heap) { }
 
   static void enable_verification_type(G1VerifyType type);
   static bool should_verify(G1VerifyType type);
@@ -61,21 +61,21 @@ public:
   // If G1VerifyBitmaps is set, verify that the marking bitmaps for
   // the given region do not have any spurious marks. If errors are
   // detected, print appropriate error messages and crash.
-  void check_bitmaps(const char* caller, HeapRegion* hr) {};
+  void check_bitmaps(const char* caller, HeapRegion* hr) { };
 
   // If G1VerifyBitmaps is set, verify that the marking bitmaps do not
   // have any spurious marks. If errors are detected, print
   // appropriate error messages and crash.
-  void check_bitmaps(const char* caller) {};
+  void check_bitmaps(const char* caller) { };
 
   // Do sanity check on the contents of the in-cset fast test table.
   bool check_cset_fast_test() { return true; };
 
-  void verify_card_table_cleanup() {};
+  void verify_card_table_cleanup() { };
 
-  void verify_not_dirty_region(HeapRegion* hr) {};
-  void verify_dirty_region(HeapRegion* hr) {};
-  void verify_dirty_young_regions() {};
+  void verify_not_dirty_region(HeapRegion* hr) { };
+  void verify_dirty_region(HeapRegion* hr) { };
+  void verify_dirty_young_regions() { };
 
   static void verify_archive_regions();
 };

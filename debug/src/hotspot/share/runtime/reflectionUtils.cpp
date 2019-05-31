@@ -43,8 +43,7 @@ bool KlassStream::eos() {
   return eos();
 }
 
-GrowableArray<FilteredField*> *FilteredFieldsMap::_filtered_fields =
-  new (ResourceObj::C_HEAP, mtInternal) GrowableArray<FilteredField*>(3,true);
+GrowableArray<FilteredField*> *FilteredFieldsMap::_filtered_fields = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<FilteredField*>(3,true);
 
 void FilteredFieldsMap::initialize() {
   int offset = reflect_ConstantPool::oop_offset();

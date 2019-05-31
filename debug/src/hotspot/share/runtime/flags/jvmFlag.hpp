@@ -249,7 +249,7 @@ public:
   static void printFlags(outputStream* out, bool withComments, bool printRanges = false, bool skipDefaults = false);
   static void printError(bool verbose, const char* msg, ...);
 
-  static void verify() {};
+  static void verify() { };
 };
 
 #endif

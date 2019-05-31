@@ -12,23 +12,12 @@ G1CollectedHeap* G1AllocRegion::_g1h = NULL;
 HeapRegion* G1AllocRegion::_dummy_region = NULL;
 
 void G1AllocRegion::setup(G1CollectedHeap* g1h, HeapRegion* dummy_region) {
-  assert(_dummy_region == NULL, "should be set once");
-  assert(dummy_region != NULL, "pre-condition");
-  assert(dummy_region->free() == 0, "pre-condition");
-
-  // Make sure that any allocation attempt on this region will fail
-  // and will not trigger any asserts.
-  assert(dummy_region->allocate_no_bot_updates(1) == NULL, "should fail");
-  assert(dummy_region->allocate(1) == NULL, "should fail");
-  assert(dummy_region->par_allocate_no_bot_updates(1, 1, &assert_tmp) == NULL, "should fail");
-  assert(dummy_region->par_allocate(1, 1, &assert_tmp) == NULL, "should fail");
 
   _g1h = g1h;
   _dummy_region = dummy_region;
 }
 
 size_t G1AllocRegion::fill_up_remaining_space(HeapRegion* alloc_region) {
-  assert(alloc_region != NULL && alloc_region != _dummy_region, "pre-condition");
   size_t result = 0;
 
   // Other threads might still be trying to allocate using a CAS out
@@ -64,7 +53,6 @@ size_t G1AllocRegion::fill_up_remaining_space(HeapRegion* alloc_region) {
   }
   result += alloc_region->free();
 
-  assert(alloc_region->free() / HeapWordSize < min_word_size_to_fill, "post-condition");
   return result;
 }
 
@@ -73,13 +61,11 @@ size_t G1AllocRegion::retire_internal(HeapRegion* alloc_region, bool fill_up) {
   // and potentially free it if it is, given that it's guaranteed that
   // it will never be empty.
   size_t waste = 0;
-  assert_alloc_region(!alloc_region->is_empty(), "the alloc region should never be empty");
 
   if (fill_up) {
     waste = fill_up_remaining_space(alloc_region);
   }
 
-  assert_alloc_region(alloc_region->used() >= _used_bytes_before, "invariant");
   size_t allocated_bytes = alloc_region->used() - _used_bytes_before;
   retire_region(alloc_region, allocated_bytes);
   _used_bytes_before = 0;
@@ -88,8 +74,6 @@ size_t G1AllocRegion::retire_internal(HeapRegion* alloc_region, bool fill_up) {
 }
 
 size_t G1AllocRegion::retire(bool fill_up) {
-  assert_alloc_region(_alloc_region != NULL, "not initialized properly");
-
   size_t waste = 0;
 
   trace("retiring");
@@ -103,11 +87,7 @@ size_t G1AllocRegion::retire(bool fill_up) {
   return waste;
 }
 
-HeapWord* G1AllocRegion::new_alloc_region_and_allocate(size_t word_size,
-                                                       bool force) {
-  assert_alloc_region(_alloc_region == _dummy_region, "pre-condition");
-  assert_alloc_region(_used_bytes_before == 0, "pre-condition");
-
+HeapWord* G1AllocRegion::new_alloc_region_and_allocate(size_t word_size, bool force) {
   trace("attempting region allocation");
   HeapRegion* new_alloc_region = allocate_new_region(word_size, force);
   if (new_alloc_region != NULL) {
@@ -115,7 +95,6 @@ HeapWord* G1AllocRegion::new_alloc_region_and_allocate(size_t word_size,
     // Need to do this before the allocation
     _used_bytes_before = new_alloc_region->used();
     HeapWord* result = allocate(new_alloc_region, word_size);
-    assert_alloc_region(result != NULL, "the allocation should succeeded");
 
     OrderAccess::storestore();
     // Note that we first perform the allocation and then we store the
@@ -133,8 +112,6 @@ HeapWord* G1AllocRegion::new_alloc_region_and_allocate(size_t word_size,
 
 void G1AllocRegion::init() {
   trace("initializing");
-  assert_alloc_region(_alloc_region == NULL && _used_bytes_before == 0, "pre-condition");
-  assert_alloc_region(_dummy_region != NULL, "should have been set");
   _alloc_region = _dummy_region;
   _count = 0;
   trace("initialized");
@@ -142,13 +119,6 @@ void G1AllocRegion::init() {
 
 void G1AllocRegion::set(HeapRegion* alloc_region) {
   trace("setting");
-  // We explicitly check that the region is not empty to make sure we
-  // maintain the "the alloc region cannot be empty" invariant.
-  assert_alloc_region(alloc_region != NULL && !alloc_region->is_empty(), "pre-condition");
-  assert_alloc_region(_alloc_region == _dummy_region &&
-                         _used_bytes_before == 0 && _count == 0,
-                         "pre-condition");
-
   _used_bytes_before = alloc_region->used();
   _alloc_region = alloc_region;
   _count += 1;
@@ -157,10 +127,6 @@ void G1AllocRegion::set(HeapRegion* alloc_region) {
 
 void G1AllocRegion::update_alloc_region(HeapRegion* alloc_region) {
   trace("update");
-  // We explicitly check that the region is not empty to make sure we
-  // maintain the "the alloc region cannot be empty" invariant.
-  assert_alloc_region(alloc_region != NULL && !alloc_region->is_empty(), "pre-condition");
-
   _alloc_region = alloc_region;
   _count += 1;
   trace("updated");
@@ -170,7 +136,6 @@ HeapRegion* G1AllocRegion::release() {
   trace("releasing");
   HeapRegion* alloc_region = _alloc_region;
   retire(false /* fill_up */);
-  assert_alloc_region(_alloc_region == _dummy_region, "post-condition of retire()");
   _alloc_region = NULL;
   trace("released");
   return (alloc_region == _dummy_region) ? NULL : alloc_region;
@@ -187,13 +152,11 @@ HeapRegion* MutatorAllocRegion::allocate_new_region(size_t word_size,
   return _g1h->new_mutator_alloc_region(word_size, force);
 }
 
-void MutatorAllocRegion::retire_region(HeapRegion* alloc_region,
-                                       size_t allocated_bytes) {
+void MutatorAllocRegion::retire_region(HeapRegion* alloc_region, size_t allocated_bytes) {
   _g1h->retire_mutator_alloc_region(alloc_region, allocated_bytes);
 }
 
 void MutatorAllocRegion::init() {
-  assert(_retained_alloc_region == NULL, "Pre-condition");
   G1AllocRegion::init();
   _wasted_bytes = 0;
 }
@@ -204,8 +167,7 @@ bool MutatorAllocRegion::should_retain(HeapRegion* region) {
     return false;
   }
 
-  if (_retained_alloc_region != NULL &&
-      free_bytes < _retained_alloc_region->free()) {
+  if (_retained_alloc_region != NULL && free_bytes < _retained_alloc_region->free()) {
     return false;
   }
 
@@ -270,12 +232,10 @@ HeapRegion* MutatorAllocRegion::release() {
 
 HeapRegion* G1GCAllocRegion::allocate_new_region(size_t word_size,
                                                  bool force) {
-  assert(!force, "not supported for GC alloc regions");
   return _g1h->new_gc_alloc_region(word_size, _purpose);
 }
 
-void G1GCAllocRegion::retire_region(HeapRegion* alloc_region,
-                                    size_t allocated_bytes) {
+void G1GCAllocRegion::retire_region(HeapRegion* alloc_region, size_t allocated_bytes) {
   _g1h->retire_gc_alloc_region(alloc_region, allocated_bytes, _purpose);
 }
 

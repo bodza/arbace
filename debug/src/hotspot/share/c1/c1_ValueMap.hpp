@@ -183,7 +183,7 @@ class ValueNumberingEffects: public ValueNumberingVisitor {
   void          kill_field(ciField* field, bool all_offsets)  { _map->kill_field(field, all_offsets); }
   void          kill_array(ValueType* type)                   { _map->kill_array(type); }
 
-  ValueNumberingEffects(ValueMap* map): _map(map) {}
+  ValueNumberingEffects(ValueMap* map): _map(map) { }
 };
 
 class GlobalValueNumbering: public ValueNumberingVisitor {
@@ -200,7 +200,6 @@ class GlobalValueNumbering: public ValueNumberingVisitor {
   ValueMap*     current_map()                    { return _current_map; }
   ValueMap*     value_map_of(BlockBegin* block)  { return _value_maps.at(block->linear_scan_number()); }
   void          set_value_map_of(BlockBegin* block, ValueMap* map)   {
-    assert(value_map_of(block) == NULL, "");
     _value_maps.at_put(block->linear_scan_number(), map); }
 
   bool          is_processed(Value v)            { return _processed_values.contains(v); }

@@ -4,7 +4,7 @@
 #include "services/mallocTracker.hpp"
 #include "services/memTracker.hpp"
 
-inline void* MallocTracker::get_base(void* memblock){
+inline void* MallocTracker::get_base(void* memblock) {
   return get_base(memblock, MemTracker::tracking_level());
 }
 

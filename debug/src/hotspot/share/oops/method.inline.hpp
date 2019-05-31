@@ -20,7 +20,6 @@ inline void Method::set_method_data(MethodData* data) {
 }
 
 inline CompiledMethod* volatile Method::code() const {
-  assert( check_code(), "" );
   return OrderAccess::load_acquire(&_code);
 }
 

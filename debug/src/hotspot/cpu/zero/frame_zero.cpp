@@ -26,17 +26,11 @@ bool frame::is_fake_stub_frame() const {
 }
 
 frame frame::sender_for_entry_frame(RegisterMap *map) const {
-  assert(zeroframe()->is_entry_frame(), "wrong type of frame");
-  assert(map != NULL, "map must be set");
-  assert(!entry_frame_is_first(), "next Java fp must be non zero");
-  assert(entry_frame_call_wrapper()->anchor()->last_Java_sp() == sender_sp(), "sender should be next Java frame");
   map->clear();
-  assert(map->include_argument_oops(), "should be set by clear");
   return frame(zeroframe()->next(), sender_sp());
 }
 
 frame frame::sender_for_nonentry_frame(RegisterMap *map) const {
-  assert(zeroframe()->is_interpreter_frame() || zeroframe()->is_fake_stub_frame(), "wrong type of frame");
   return frame(zeroframe()->next(), sender_sp());
 }
 
@@ -71,7 +65,6 @@ void frame::patch_pc(Thread* thread, address pc) {
   } else {
     // We borrow this call to set the thread pointer in the interpreter
     // state; the hook to set up deoptimized frames isn't supplied it.
-    assert(pc == NULL, "should be");
     get_interpreterState()->set_thread((JavaThread *) thread);
   }
 }
@@ -87,7 +80,6 @@ bool frame::is_interpreted_frame_valid(JavaThread *thread) const {
 }
 
 BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result) {
-  assert(is_interpreted_frame(), "interpreted frame expected");
   Method* method = interpreter_frame_method();
   BasicType type = method->result_type();
   intptr_t* tos_addr = (intptr_t *) interpreter_frame_tos_address();
@@ -130,7 +122,6 @@ BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result)
       oop* obj_p = (oop *) tos_addr;
       obj = (obj_p == NULL) ? (oop) NULL : *obj_p;
     }
-    assert(obj == NULL || Universe::heap()->is_in(obj), "sanity check");
     *oop_result = obj;
     break;
 
@@ -151,10 +142,7 @@ intptr_t* frame::interpreter_frame_tos_at(jint offset) const {
   return &interpreter_frame_tos_address()[index];
 }
 
-void frame::zero_print_on_error(int           frame_index,
-                                outputStream* st,
-                                char*         buf,
-                                int           buflen) const {
+void frame::zero_print_on_error(int frame_index, outputStream* st, char* buf, int buflen) const {
   // Divide the buffer between the field and the value
   buflen >>= 1;
   char *fieldbuf = buf;
@@ -176,11 +164,7 @@ void frame::zero_print_on_error(int           frame_index,
   }
 }
 
-void ZeroFrame::identify_word(int   frame_index,
-                              int   offset,
-                              char* fieldbuf,
-                              char* valuebuf,
-                              int   buflen) const {
+void ZeroFrame::identify_word(int frame_index, int offset, char* fieldbuf, char* valuebuf, int buflen) const {
   switch (offset) {
   case next_frame_off:
     strncpy(fieldbuf, "next_frame", buflen);
@@ -198,25 +182,18 @@ void ZeroFrame::identify_word(int   frame_index,
 
   default:
     if (is_entry_frame()) {
-      as_entry_frame()->identify_word(
-        frame_index, offset, fieldbuf, valuebuf, buflen);
+      as_entry_frame()->identify_word(frame_index, offset, fieldbuf, valuebuf, buflen);
     }
     else if (is_interpreter_frame()) {
-      as_interpreter_frame()->identify_word(
-        frame_index, offset, fieldbuf, valuebuf, buflen);
+      as_interpreter_frame()->identify_word(frame_index, offset, fieldbuf, valuebuf, buflen);
     }
     else if (is_fake_stub_frame()) {
-      as_fake_stub_frame()->identify_word(
-        frame_index, offset, fieldbuf, valuebuf, buflen);
+      as_fake_stub_frame()->identify_word(frame_index, offset, fieldbuf, valuebuf, buflen);
     }
   }
 }
 
-void EntryFrame::identify_word(int   frame_index,
-                               int   offset,
-                               char* fieldbuf,
-                               char* valuebuf,
-                               int   buflen) const {
+void EntryFrame::identify_word(int frame_index, int offset, char* fieldbuf, char* valuebuf, int buflen) const {
   switch (offset) {
   case call_wrapper_off:
     strncpy(fieldbuf, "call_wrapper", buflen);
@@ -227,11 +204,7 @@ void EntryFrame::identify_word(int   frame_index,
   }
 }
 
-void InterpreterFrame::identify_word(int   frame_index,
-                                     int   offset,
-                                     char* fieldbuf,
-                                     char* valuebuf,
-                                     int   buflen) const {
+void InterpreterFrame::identify_word(int frame_index, int offset, char* fieldbuf, char* valuebuf, int buflen) const {
   interpreterState istate = interpreter_state();
   bool is_valid = istate->self_link() == istate;
   intptr_t *addr = addr_of_word(offset);
@@ -263,8 +236,7 @@ void InterpreterFrame::identify_word(int   frame_index,
     address hA = istate->method()->signature_handler();
     if (hA != NULL) {
       if (hA != (address) InterpreterRuntime::slow_signature_handler) {
-        InterpreterRuntime::SignatureHandler *handler =
-          InterpreterRuntime::SignatureHandler::from_handlerAddr(hA);
+        InterpreterRuntime::SignatureHandler *handler = InterpreterRuntime::SignatureHandler::from_handlerAddr(hA);
 
         intptr_t *params = istate->stack_base() - handler->argument_count();
         if (addr >= params) {
@@ -297,19 +269,13 @@ void InterpreterFrame::identify_word(int   frame_index,
   identify_vp_word(frame_index, addr, (intptr_t *) istate->monitor_base(), istate->stack_base(), fieldbuf, buflen);
 }
 
-void ZeroFrame::identify_vp_word(int       frame_index,
-                                 intptr_t* addr,
-                                 intptr_t* monitor_base,
-                                 intptr_t* stack_base,
-                                 char*     fieldbuf,
-                                 int       buflen) const {
+void ZeroFrame::identify_vp_word(int frame_index, intptr_t* addr, intptr_t* monitor_base, intptr_t* stack_base, char* fieldbuf, int buflen) const {
   // Monitors
   if (addr >= stack_base && addr < monitor_base) {
     int monitor_size = frame::interpreter_frame_monitor_size();
     int last_index = (monitor_base - stack_base) / monitor_size - 1;
     int index = last_index - (addr - stack_base) / monitor_size;
-    intptr_t monitor = (intptr_t) (
-      (BasicObjectLock *) monitor_base - 1 - index);
+    intptr_t monitor = (intptr_t) ((BasicObjectLock *) monitor_base - 1 - index);
     intptr_t offset = (intptr_t) addr - monitor;
 
     if (offset == BasicObjectLock::obj_offset_in_bytes())

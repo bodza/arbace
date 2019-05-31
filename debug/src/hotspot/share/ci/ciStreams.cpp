@@ -69,12 +69,9 @@ Bytecodes::Code ciBytecodeStream::next_wide_or_table(Bytecodes::Code bc) {
   case Bytecodes::_wide:
     // Special handling for the wide bytcode
     // Get following bytecode; do not return wide
-    assert(Bytecodes::Code(_pc[0]) == Bytecodes::_wide, "");
     bc = Bytecodes::java_code(_raw_bc = (Bytecodes::Code)_pc[1]);
-    assert(Bytecodes::wide_length_for(bc) > 2, "must make progress");
     _pc += Bytecodes::wide_length_for(bc);
     _was_wide = _pc;              // Flag last wide bytecode found
-    assert(is_wide(), "accessor works right");
     break;
 
   case Bytecodes::_lookupswitch:
@@ -238,7 +235,6 @@ constantTag ciBytecodeStream::get_constant_pool_tag(int index) const {
 // If this is a field access bytecode, get the constant pool
 // index of the referenced field.
 int ciBytecodeStream::get_field_index() {
-  assert(cur_bc() == Bytecodes::_getfield || cur_bc() == Bytecodes::_putfield || cur_bc() == Bytecodes::_getstatic || cur_bc() == Bytecodes::_putstatic, "wrong bc");
   return get_index_u2_cpcache();
 }
 

@@ -49,15 +49,12 @@ class G1ConcurrentMarkThread: public ConcurrentGCThread {
   G1ConcurrentMark* cm()   { return _cm; }
 
   void set_idle()          {
-    assert(_state != Started, "must not be starting a new cycle");
     _state = Idle; }
   bool idle()              { return _state == Idle; }
   void set_started()       {
-    assert(_state == Idle, "cycle in progress");
     _state = Started; }
   bool started()           { return _state == Started; }
   void set_in_progress()   {
-    assert(_state == Started, "must be starting a cycle");
     _state = InProgress; }
   bool in_progress()       { return _state == InProgress; }
 

@@ -49,7 +49,7 @@ public:
 
   static void invalidate(uint start_idx, size_t num_regions);
 
-  static void print(outputStream* out = tty) {};
+  static void print(outputStream* out = tty) { };
 
   static size_t static_mem_size() {
     return _static_mem_size;

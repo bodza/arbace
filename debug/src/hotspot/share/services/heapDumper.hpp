@@ -52,9 +52,9 @@ class HeapDumper : public StackObj {
   // returns error message (resource allocated), or NULL if no error
   char* error_as_C_string() const;
 
-  static void dump_heap()    {};
+  static void dump_heap()    { };
 
-  static void dump_heap_from_oome()    {};
+  static void dump_heap_from_oome()    { };
 };
 
 #endif

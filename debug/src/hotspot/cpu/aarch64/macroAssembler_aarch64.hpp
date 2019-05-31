@@ -59,11 +59,7 @@ class MacroAssembler: public Assembler {
 
  public:
   MacroAssembler(CodeBuffer* code) : Assembler(code) {
-    use_XOR_for_compressed_class_base
-      = (operand_valid_for_logical_immediate(false /*is32*/,
-                                             (uint64_t)Universe::narrow_klass_base())
-         && ((uint64_t)Universe::narrow_klass_base()
-             > (1UL << log2_intptr(Universe::narrow_klass_range()))));
+    use_XOR_for_compressed_class_base = (operand_valid_for_logical_immediate(false /*is32*/, (uint64_t)Universe::narrow_klass_base()) && ((uint64_t)Universe::narrow_klass_base() > (1UL << log2_intptr(Universe::narrow_klass_range()))));
   }
 
   void safepoint_poll(Label& slow_path);
@@ -176,7 +172,6 @@ class MacroAssembler: public Assembler {
     }
   }
   inline void mov(Register Rd, Register Rn) {
-    assert(Rd != r31_sp && Rn != r31_sp, "should be");
     if (Rd == Rn) {
     } else if (Rd == sp || Rn == sp) {
       add(Rd, Rn, 0U);
@@ -471,7 +466,6 @@ public:
   // Generalized Test Bit And Branch, including a "far" variety which
   // spans more than 32KiB.
   void tbr(Condition cond, Register Rt, int bitpos, Label &dest, bool far = false) {
-    assert(cond == EQ || cond == NE, "must be");
 
     if (far)
       cond = ~cond;
@@ -804,7 +798,7 @@ public:
   void reinit_heapbase();
 
   void push_CPU_state(bool save_vectors = false);
-  void pop_CPU_state(bool restore_vectors = false) ;
+  void pop_CPU_state(bool restore_vectors = false);
 
   // Round up to a power of two
   void round_to(Register reg, int modulus);
@@ -886,8 +880,8 @@ public:
   void verify_oop_addr(Address addr, const char * s = "broken oop addr");
 
 // TODO: verify method and klass metadata (compare against vptr?)
-  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) {}
-  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line){}
+  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) { }
+  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line) { }
 
 #define verify_method_ptr(reg) _verify_method_ptr(reg, "broken method " #reg, __FILE__, __LINE__)
 #define verify_klass_ptr(reg) _verify_klass_ptr(reg, "broken klass " #reg, __FILE__, __LINE__)
@@ -911,8 +905,6 @@ public:
 
   // Stack overflow checking
   void bang_stack_with_offset(int offset) {
-    // stack grows down, caller passes positive offset
-    assert(offset > 0, "must bang with negative offset");
     sub(rscratch2, sp, offset);
     str(zr, Address(rscratch2));
   }
@@ -1302,8 +1294,7 @@ public:
     ldr(Vx, T, spill_address(1 << (int)T, offset));
   }
   void spill_copy128(int src_offset, int dst_offset, Register tmp1=rscratch1, Register tmp2=rscratch2) {
-    if (src_offset < 512 && (src_offset & 7) == 0 &&
-        dst_offset < 512 && (dst_offset & 7) == 0) {
+    if (src_offset < 512 && (src_offset & 7) == 0 && dst_offset < 512 && (dst_offset & 7) == 0) {
       ldp(tmp1, tmp2, Address(sp, src_offset));
       stp(tmp1, tmp2, Address(sp, dst_offset));
     } else {

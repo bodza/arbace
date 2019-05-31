@@ -50,11 +50,11 @@ class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
 
   // Helpers for generate_and_dispatch
   address generate_trace_code(TosState state)   { return 0; };
-  void count_bytecode()                         {};
-  void histogram_bytecode(Template* t)          {};
-  void histogram_bytecode_pair(Template* t)     {};
-  void trace_bytecode(Template* t)              {};
-  void stop_interpreter_at()                    {};
+  void count_bytecode()                         { };
+  void histogram_bytecode(Template* t)          { };
+  void histogram_bytecode_pair(Template* t)     { };
+  void trace_bytecode(Template* t)              { };
+  void stop_interpreter_at()                    { };
 
   void generate_all();
 

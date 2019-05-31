@@ -21,7 +21,7 @@ private:
 public:
   // the "name" argument must be a string literal
   JVMFlagRange(const char* name) { _name=name; }
-  ~JVMFlagRange() {}
+  ~JVMFlagRange() { }
   const char* name() { return _name; }
   virtual JVMFlag::Error check(bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; }
   virtual JVMFlag::Error check_int(int value, bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; }

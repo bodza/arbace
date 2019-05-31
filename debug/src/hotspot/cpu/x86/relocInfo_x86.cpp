@@ -13,7 +13,6 @@ void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
   x += o;
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm, call32, narrow oop
-  assert(which == Assembler::disp32_operand || which == Assembler::narrow_oop_operand || which == Assembler::imm_operand, "format unpacks ok");
   if (which == Assembler::imm_operand) {
     if (verify_only) {
       guarantee(*pd_address_in_code() == x, "instructions must match");
@@ -111,16 +110,13 @@ address* Relocation::pd_address_in_code() {
   // All embedded Intel addresses are stored in 32-bit words.
   // Since the addr points at the start of the instruction,
   // we must parse the instruction a bit to find the embedded word.
-  assert(is_data(), "must be a DataRelocation");
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm/imm32
 #ifdef AMD64
-  assert(which == Assembler::disp32_operand || which == Assembler::call32_operand || which == Assembler::imm_operand, "format unpacks ok");
   // The "address" in the code is a displacement can't return it as
   // and address* since it is really a jint*
   guarantee(which == Assembler::imm_operand, "must be immediate operand");
 #else
-  assert(which == Assembler::disp32_operand || which == Assembler::imm_operand, "format unpacks ok");
 #endif
   return (address*) Assembler::locate_operand(addr(), which);
 }
@@ -130,10 +126,8 @@ address Relocation::pd_get_address_from_code() {
   // All embedded Intel addresses are stored in 32-bit words.
   // Since the addr points at the start of the instruction,
   // we must parse the instruction a bit to find the embedded word.
-  assert(is_data(), "must be a DataRelocation");
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format(); // that is, disp32 or imm/imm32
-  assert(which == Assembler::disp32_operand || which == Assembler::call32_operand || which == Assembler::imm_operand, "format unpacks ok");
   if (which != Assembler::imm_operand) {
     address ip = addr();
     address disp = Assembler::locate_operand(ip, which);
@@ -149,7 +143,6 @@ void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffe
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format();
   if (which == Assembler::disp32_operand) {
-    assert(SafepointMechanism::uses_global_page_poll(), "should only have generated such a poll if global polling enabled");
     address orig_addr = old_addr_for(addr(), src, dest);
     NativeInstruction* oni = nativeInstruction_at(orig_addr);
     int32_t* orig_disp = (int32_t*) Assembler::locate_operand(orig_addr, which);

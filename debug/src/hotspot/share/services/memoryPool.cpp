@@ -39,7 +39,6 @@ MemoryPool::MemoryPool(const char* name,
 }
 
 void MemoryPool::add_manager(MemoryManager* mgr) {
-  assert(_num_managers < MemoryPool::max_num_managers, "_num_managers exceeds the max");
   if (_num_managers < MemoryPool::max_num_managers) {
     _managers[_num_managers] = mgr;
     _num_managers++;
@@ -128,7 +127,6 @@ void MemoryPool::record_peak_memory_usage() {
 }
 
 static void set_sensor_obj_at(SensorInfo** sensor_ptr, instanceHandle sh) {
-  assert(*sensor_ptr == NULL, "Should be called only once");
   SensorInfo* sensor = new SensorInfo();
   sensor->set_sensor(sh());
   *sensor_ptr = sensor;

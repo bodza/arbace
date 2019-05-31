@@ -25,7 +25,7 @@ class ObjArrayKlass : public ArrayKlass {
   static ObjArrayKlass* allocate(ClassLoaderData* loader_data, int n, Klass* k, Symbol* name, TRAPS);
  public:
   // For dummy objects
-  ObjArrayKlass() {}
+  ObjArrayKlass() { }
 
   // Instance variables
   Klass* element_klass() const      { return _element_klass; }
@@ -84,7 +84,6 @@ class ObjArrayKlass : public ArrayKlass {
   }
 
   static const ObjArrayKlass* cast(const Klass* k) {
-    assert(k->is_objArray_klass(), "cast to ObjArrayKlass");
     return static_cast<const ObjArrayKlass*>(k);
   }
 

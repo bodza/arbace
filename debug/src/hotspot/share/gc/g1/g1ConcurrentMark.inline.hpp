@@ -27,7 +27,6 @@ inline bool G1CMSubjectToDiscoveryClosure::do_object_b(oop obj) {
   if (obj == NULL) {
     return false;
   }
-  assert(_g1h->is_in_reserved(obj), "Trying to discover obj " PTR_FORMAT " not in heap", p2i(obj));
   return _g1h->heap_region_containing(obj)->is_old_or_humongous();
 }
 
@@ -37,16 +36,10 @@ inline bool G1ConcurrentMark::mark_in_next_bitmap(uint const worker_id, oop cons
 }
 
 inline bool G1ConcurrentMark::mark_in_next_bitmap(uint const worker_id, HeapRegion* const hr, oop const obj, size_t const obj_size) {
-  assert(hr != NULL, "just checking");
-  assert(hr->is_in_reserved(obj), "Attempting to mark object at " PTR_FORMAT " that is not contained in the given region %u", p2i(obj), hr->hrm_index());
 
   if (hr->obj_allocated_since_next_marking(obj)) {
     return false;
   }
-
-  // Some callers may have stale objects to mark above nTAMS after humongous reclaim.
-  // Can't assert that this is a valid object at this point, since it might be in the process of being copied by another thread.
-  assert(!hr->is_continues_humongous(), "Should not try to mark object " PTR_FORMAT " in Humongous continues region %u above nTAMS " PTR_FORMAT, p2i(obj), hr->hrm_index(), p2i(hr->next_top_at_mark_start()));
 
   HeapWord* const obj_addr = (HeapWord*)obj;
 
@@ -61,11 +54,6 @@ inline bool G1ConcurrentMark::mark_in_next_bitmap(uint const worker_id, HeapRegi
 inline void G1CMTask::scan_task_entry(G1TaskQueueEntry task_entry) { process_grey_task_entry<true>(task_entry); }
 
 inline void G1CMTask::push(G1TaskQueueEntry task_entry) {
-  assert(task_entry.is_array_slice() || _g1h->is_in_g1_reserved(task_entry.obj()), "invariant");
-  assert(task_entry.is_array_slice() || !_g1h->is_on_master_free_list(_g1h->heap_region_containing(task_entry.obj())), "invariant");
-  assert(task_entry.is_array_slice() || !_g1h->is_obj_ill(task_entry.obj()), "invariant");  // FIXME!!!
-  assert(task_entry.is_array_slice() || _next_mark_bitmap->is_marked((HeapWord*)task_entry.obj()), "invariant");
-
   if (!_task_queue->push(task_entry)) {
     // The local task queue looks full. We need to push some entries
     // to the global stack.
@@ -75,7 +63,6 @@ inline void G1CMTask::push(G1TaskQueueEntry task_entry) {
     // stack, we should have definitely removed some entries from the
     // local queue. So, there must be space on it.
     bool success = _task_queue->push(task_entry);
-    assert(success, "invariant");
   }
 }
 
@@ -91,12 +78,6 @@ inline bool G1CMTask::is_below_finger(oop obj, HeapWord* global_finger) const {
   if (_finger != NULL) {
     // We have a current region.
 
-    // Finger and region values are all NULL or all non-NULL.  We
-    // use _finger to check since we immediately use its value.
-    assert(_curr_region != NULL, "invariant");
-    assert(_region_limit != NULL, "invariant");
-    assert(_region_limit <= global_finger, "invariant");
-
     // True if obj is less than the local finger, or is between
     // the region limit and the global finger.
     if (objAddr < _finger) {
@@ -111,8 +92,6 @@ inline bool G1CMTask::is_below_finger(oop obj, HeapWord* global_finger) const {
 
 template<bool scan>
 inline void G1CMTask::process_grey_task_entry(G1TaskQueueEntry task_entry) {
-  assert(scan || (task_entry.is_oop() && task_entry.obj()->is_typeArray()), "Skipping scan of grey non-typeArray");
-  assert(task_entry.is_array_slice() || _next_mark_bitmap->is_marked((HeapWord*)task_entry.obj()), "Any stolen object should be a slice or marked");
 
   if (scan) {
     if (task_entry.is_array_slice()) {
@@ -122,7 +101,7 @@ inline void G1CMTask::process_grey_task_entry(G1TaskQueueEntry task_entry) {
       if (G1CMObjArrayProcessor::should_be_sliced(obj)) {
         _words_scanned += _objArray_processor.process_obj(obj);
       } else {
-        _words_scanned += obj->oop_iterate_size(_cm_oop_closure);;
+        _words_scanned += obj->oop_iterate_size(_cm_oop_closure);
       }
     }
   }
@@ -135,14 +114,11 @@ inline size_t G1CMTask::scan_objArray(objArrayOop obj, MemRegion mr) {
 }
 
 inline HeapWord* G1ConcurrentMark::top_at_rebuild_start(uint region) const {
-  assert(region < _g1h->max_regions(), "Tried to access TARS for region %u out of bounds", region);
   return _top_at_rebuild_starts[region];
 }
 
 inline void G1ConcurrentMark::update_top_at_rebuild_start(HeapRegion* r) {
   uint const region = r->hrm_index();
-  assert(region < _g1h->max_regions(), "Tried to access TARS for region %u out of bounds", region);
-  assert(_top_at_rebuild_starts[region] == NULL, "TARS for region %u has already been set to " PTR_FORMAT " should be NULL", region, p2i(_top_at_rebuild_starts[region]));
   G1RemSetTrackingPolicy* tracker = _g1h->g1_policy()->remset_tracker();
   if (tracker->needs_scan_for_rebuild(r)) {
     _top_at_rebuild_starts[region] = r->top();
@@ -213,17 +189,14 @@ inline bool G1CMTask::deal_with_reference(T* p) {
 }
 
 inline void G1ConcurrentMark::mark_in_prev_bitmap(oop p) {
-  assert(!_prev_mark_bitmap->is_marked((HeapWord*) p), "sanity");
  _prev_mark_bitmap->mark((HeapWord*) p);
 }
 
 bool G1ConcurrentMark::is_marked_in_prev_bitmap(oop p) const {
-  assert(p != NULL && oopDesc::is_oop(p), "expected an oop");
   return _prev_mark_bitmap->is_marked((HeapWord*)p);
 }
 
 bool G1ConcurrentMark::is_marked_in_next_bitmap(oop p) const {
-  assert(p != NULL && oopDesc::is_oop(p), "expected an oop");
   return _next_mark_bitmap->is_marked((HeapWord*)p);
 }
 

@@ -70,8 +70,7 @@ class MethodHandles: AllStatic {
 
   // Queries
   static bool is_signature_polymorphic(vmIntrinsics::ID iid) {
-    return (iid >= vmIntrinsics::FIRST_MH_SIG_POLY &&
-            iid <= vmIntrinsics::LAST_MH_SIG_POLY);
+    return (iid >= vmIntrinsics::FIRST_MH_SIG_POLY && iid <= vmIntrinsics::LAST_MH_SIG_POLY);
   }
 
   static bool is_signature_polymorphic_method(Method* m) {
@@ -79,27 +78,20 @@ class MethodHandles: AllStatic {
   }
 
   static bool is_signature_polymorphic_intrinsic(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
     // Most sig-poly methods are intrinsics which do not require an
     // appeal to Java for adapter code.
     return (iid != vmIntrinsics::_invokeGeneric);
   }
 
   static bool is_signature_polymorphic_static(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
-    return (iid >= vmIntrinsics::FIRST_MH_STATIC &&
-            iid <= vmIntrinsics::LAST_MH_SIG_POLY);
+    return (iid >= vmIntrinsics::FIRST_MH_STATIC && iid <= vmIntrinsics::LAST_MH_SIG_POLY);
   }
 
   static bool has_member_arg(vmIntrinsics::ID iid) {
-    assert(is_signature_polymorphic(iid), "");
-    return (iid >= vmIntrinsics::_linkToVirtual &&
-            iid <= vmIntrinsics::_linkToInterface);
+    return (iid >= vmIntrinsics::_linkToVirtual && iid <= vmIntrinsics::_linkToInterface);
   }
   static bool has_member_arg(Symbol* klass, Symbol* name) {
-    if ((klass == vmSymbols::java_lang_invoke_MethodHandle() ||
-         klass == vmSymbols::java_lang_invoke_VarHandle()) &&
-        is_signature_polymorphic_name(name)) {
+    if ((klass == vmSymbols::java_lang_invoke_MethodHandle() || klass == vmSymbols::java_lang_invoke_VarHandle()) && is_signature_polymorphic_name(name)) {
       vmIntrinsics::ID iid = signature_polymorphic_name_id(name);
       return has_member_arg(iid);
     }
@@ -145,11 +137,9 @@ public:
     return (ref_kind >= JVM_REF_MIN && ref_kind <= JVM_REF_MAX);
   }
   static bool ref_kind_is_field(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind <= JVM_REF_putStatic);
   }
   static bool ref_kind_is_getter(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind <= JVM_REF_getStatic);
   }
   static bool ref_kind_is_setter(int ref_kind) {
@@ -159,15 +149,13 @@ public:
     return !ref_kind_is_field(ref_kind) && (ref_kind != JVM_REF_newInvokeSpecial);
   }
   static bool ref_kind_has_receiver(int ref_kind) {
-    assert(ref_kind_is_valid(ref_kind), "");
     return (ref_kind & 1) != 0;
   }
   static bool ref_kind_is_static(int ref_kind) {
     return !ref_kind_has_receiver(ref_kind) && (ref_kind != JVM_REF_newInvokeSpecial);
   }
   static bool ref_kind_does_dispatch(int ref_kind) {
-    return (ref_kind == JVM_REF_invokeVirtual ||
-            ref_kind == JVM_REF_invokeInterface);
+    return (ref_kind == JVM_REF_invokeVirtual || ref_kind == JVM_REF_invokeInterface);
   }
 
   static int ref_kind_to_flags(int ref_kind);
@@ -175,7 +163,7 @@ public:
 #include CPU_HEADER(methodHandles)
 
   // Tracing
-  static void trace_method_handle(MacroAssembler* _masm, const char* adaptername) {};
+  static void trace_method_handle(MacroAssembler* _masm, const char* adaptername) { };
   static void trace_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid);
 };
 
@@ -184,7 +172,7 @@ public:
 //
 class MethodHandlesAdapterGenerator : public StubCodeGenerator {
 public:
-  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code, PrintMethodHandleStubs) {}
+  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code, PrintMethodHandleStubs) { }
 
   void generate();
 };

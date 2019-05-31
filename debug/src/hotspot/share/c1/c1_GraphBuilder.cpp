@@ -108,7 +108,6 @@ void BlockListBuilder::set_entries(int osr_bci) {
 }
 
 BlockBegin* BlockListBuilder::make_block_at(int cur_bci, BlockBegin* predecessor) {
-  assert(method()->bci_block_start().at(cur_bci), "wrong block starts of MethodLivenessAnalyzer");
 
   BlockBegin* block = _bci2block->at(cur_bci);
   if (block == NULL) {
@@ -117,7 +116,6 @@ BlockBegin* BlockListBuilder::make_block_at(int cur_bci, BlockBegin* predecessor
     _bci2block->at_put(cur_bci, block);
     _blocks.append(block);
 
-    assert(predecessor == NULL || predecessor->bci() < cur_bci, "targets for backward branches must already exist");
   }
 
   if (predecessor != NULL) {
@@ -150,8 +148,6 @@ void BlockListBuilder::handle_exceptions(BlockBegin* current, int cur_bci) {
 
     if (h->covers(cur_bci)) {
       BlockBegin* entry = h->entry_block();
-      assert(entry != NULL && entry == _bci2block->at(h->handler_bci()), "entry must be set");
-      assert(entry->is_set(BlockBegin::exception_entry_flag), "flag must be set");
 
       // add each exception handler only once
       if (!current->is_successor(entry)) {
@@ -193,7 +189,6 @@ void BlockListBuilder::set_leaders() {
     if (bci_block_start.at(cur_bci)) {
       current = make_block_at(cur_bci, current);
     }
-    assert(current != NULL, "must have current block");
 
     if (has_xhandlers && GraphBuilder::can_trap(method(), s.cur_bc())) {
       handle_exceptions(current, cur_bci);
@@ -322,7 +317,6 @@ void BlockListBuilder::mark_loops() {
 
   // recursively iterate the control flow graph
   mark_loops(_bci2block->at(0), false);
-  assert(_next_block_number >= 0, "invalid block numbers");
 
   // Remove dangling Resource pointers before the ResourceMark goes out-of-scope.
   _active.resize(0);
@@ -338,13 +332,8 @@ void BlockListBuilder::make_loop_header(BlockBegin* block) {
   if (!block->is_set(BlockBegin::parser_loop_header_flag)) {
     block->set(BlockBegin::parser_loop_header_flag);
 
-    assert(_loop_map.at(block->block_id()) == 0, "must not be set yet");
-    assert(0 <= _next_loop_index && _next_loop_index < BitsPerInt, "_next_loop_index is used as a bit-index in integer");
     _loop_map.at_put(block->block_id(), 1 << _next_loop_index);
     if (_next_loop_index < 31) _next_loop_index++;
-  } else {
-    // block already marked as loop header
-    assert(is_power_of_2((unsigned int)_loop_map.at(block->block_id())), "exactly one bit must be set");
   }
 }
 
@@ -389,7 +378,6 @@ int BlockListBuilder::mark_loops(BlockBegin* block, bool in_subroutine) {
 
   if (block->is_set(BlockBegin::parser_loop_header_flag)) {
     int header_loop_state = _loop_map.at(block_id);
-    assert(is_power_of_2((unsigned)header_loop_state), "exactly one bit must be set");
 
     // If the highest bit is set (i.e. when integer value is negative), the method
     // has 32 or more loops. This bit is never cleared because it is used for multiple loops
@@ -409,14 +397,13 @@ class FieldBuffer: public CompilationResourceObj {
   GrowableArray<Value> _values;
 
  public:
-  FieldBuffer() {}
+  FieldBuffer() { }
 
   void kill() {
     _values.trunc_to(0);
   }
 
   Value at(ciField* field) {
-    assert(field->holder()->is_loaded(), "must be a loaded field");
     int offset = field->offset();
     if (offset < _values.length()) {
       return _values.at(offset);
@@ -426,7 +413,6 @@ class FieldBuffer: public CompilationResourceObj {
   }
 
   void at_put(ciField* field, Value value) {
-    assert(field->holder()->is_loaded(), "must be a loaded field");
     int offset = field->offset();
     _values.at_put_grow(offset, value, NULL);
   }
@@ -455,7 +441,7 @@ class MemoryBuffer: public CompilationResourceObj {
   GrowableArray<FieldBuffer*> _fields;
 
  public:
-  MemoryBuffer() {}
+  MemoryBuffer() { }
 
   StoreField* store(StoreField* st) {
     if (!EliminateFieldAccess) {
@@ -529,7 +515,6 @@ class MemoryBuffer: public CompilationResourceObj {
         result = _values.at(field);
       }
       if (result != NULL) {
-        assert(result->type()->tag() == load->type()->tag(), "wrong types");
         return result;
       }
     }
@@ -643,10 +628,8 @@ BlockBegin* GraphBuilder::ScopeData::block_at(int bci) {
 
 XHandlers* GraphBuilder::ScopeData::xhandlers() const {
   if (_jsr_xhandlers == NULL) {
-    assert(!parsing_jsr(), "");
     return scope()->xhandlers();
   }
-  assert(parsing_jsr(), "");
   return _jsr_xhandlers;
 }
 
@@ -659,9 +642,7 @@ void GraphBuilder::ScopeData::set_scope(IRScope* scope) {
   _has_handler = parent_has_handler || scope->xhandlers()->has_handlers();
 }
 
-void GraphBuilder::ScopeData::set_inline_cleanup_info(BlockBegin* block,
-                                                      Instruction* return_prev,
-                                                      ValueStack* return_state) {
+void GraphBuilder::ScopeData::set_inline_cleanup_info(BlockBegin* block, Instruction* return_prev, ValueStack* return_state) {
   _cleanup_block       = block;
   _cleanup_return_prev = return_prev;
   _cleanup_state       = return_state;
@@ -692,10 +673,8 @@ void GraphBuilder::ScopeData::add_to_work_list(BlockBegin* block) {
 }
 
 void GraphBuilder::sort_top_into_worklist(BlockList* worklist, BlockBegin* top) {
-  assert(worklist->top() == top, "");
   // sort block descending into work list
   const int dfn = top->depth_first_number();
-  assert(dfn != -1, "unknown depth first number");
   int i = worklist->length()-2;
   while (i >= 0) {
     BlockBegin* b = worklist->at(i);
@@ -721,7 +700,6 @@ bool GraphBuilder::ScopeData::is_work_list_empty() const {
 }
 
 void GraphBuilder::ScopeData::setup_jsr_xhandlers() {
-  assert(parsing_jsr(), "");
   // clone all the exception handlers from the scope
   XHandlers* handlers = new XHandlers(scope()->xhandlers());
   const int n = handlers->length();
@@ -732,7 +710,6 @@ void GraphBuilder::ScopeData::setup_jsr_xhandlers() {
     // should be left alone since there can be only one and all code
     // should dispatch to the same one.
     XHandler* h = handlers->handler_at(i);
-    assert(h->handler_bci() != SynchronizationEntryBCI, "must be real");
     h->set_entry_block(block_at(h->handler_bci()));
   }
   _jsr_xhandlers = handlers;
@@ -779,8 +756,7 @@ void GraphBuilder::load_constant() {
       case T_OBJECT :
        {
         ciObject* obj = con.as_object();
-        if (!obj->is_loaded()
-            || (PatchALot && obj->klass() != ciEnv::current()->String_klass())) {
+        if (!obj->is_loaded() || (PatchALot && obj->klass() != ciEnv::current()->String_klass())) {
           // A Class, MethodType, MethodHandle, or String.
           // Unloaded condy nodes show up as T_ILLEGAL, above.
           patch_state = copy_state_before();
@@ -811,7 +787,6 @@ void GraphBuilder::load_constant() {
 
 void GraphBuilder::load_local(ValueType* type, int index) {
   Value x = state()->local_at(index);
-  assert(x != NULL && !x->type()->is_illegal(), "access of illegal local variable");
   push(type, x);
 }
 
@@ -854,9 +829,7 @@ void GraphBuilder::load_indexed(BasicType type) {
   Value index = ipop();
   Value array = apop();
   Value length = NULL;
-  if (CSEArrayLength ||
-      (array->as_AccessField() && array->as_AccessField()->field()->is_constant()) ||
-      (array->as_NewArray() && array->as_NewArray()->length() && array->as_NewArray()->length()->type()->is_constant())) {
+  if (CSEArrayLength || (array->as_AccessField() && array->as_AccessField()->field()->is_constant()) || (array->as_NewArray() && array->as_NewArray()->length() && array->as_NewArray()->length()->type()->is_constant())) {
     length = append(new ArrayLength(array, state_before));
   }
   push(as_ValueType(type), append(new LoadIndexed(array, index, length, type, state_before)));
@@ -870,17 +843,13 @@ void GraphBuilder::store_indexed(BasicType type) {
   Value index = ipop();
   Value array = apop();
   Value length = NULL;
-  if (CSEArrayLength ||
-      (array->as_AccessField() && array->as_AccessField()->field()->is_constant()) ||
-      (array->as_NewArray() && array->as_NewArray()->length() && array->as_NewArray()->length()->type()->is_constant())) {
+  if (CSEArrayLength || (array->as_AccessField() && array->as_AccessField()->field()->is_constant()) || (array->as_NewArray() && array->as_NewArray()->length() && array->as_NewArray()->length()->type()->is_constant())) {
     length = append(new ArrayLength(array, state_before));
   }
   ciType* array_type = array->declared_type();
   bool check_boolean = false;
   if (array_type != NULL) {
-    if (array_type->is_loaded() &&
-      array_type->as_array_klass()->element_type()->basic_type() == T_BOOLEAN) {
-      assert(type == T_BYTE, "boolean store uses bastore");
+    if (array_type->is_loaded() && array_type->as_array_klass()->element_type()->basic_type() == T_BOOLEAN) {
       Value mask = append(new Constant(new IntConstant(1)));
       value = append(new LogicOp(Bytecodes::_iand, value, mask));
     }
@@ -1027,7 +996,6 @@ void GraphBuilder::shift_op(ValueType* type, Bytecodes::Code code) {
               ipush(l->x());
             } else {
               // pattern: (a << s0c) >>> s0c => simplify to: a & m, with m constant
-              assert(0 < s0c && s0c < BitsPerInt, "adjust code below to handle corner cases");
               const int m = (1 << (BitsPerInt - s0c)) - 1;
               Value s = append(new Constant(new IntConstant(m)));
               ipush(append(new LogicOp(Bytecodes::_iand, l->x(), s)));
@@ -1088,8 +1056,6 @@ void GraphBuilder::if_node(Value x, If::Condition cond, Value y, ValueStack* sta
   // In case of loop invariant code motion or predicate insertion
   // before the body of a loop the state is needed
   Instruction *i = append(new If(x, cond, false, y, tsux, fsux, (is_bb || compilation()->is_optimistic()) ? state_before : NULL, is_bb));
-
-  assert(i->as_Goto() == NULL || (i->as_Goto()->sux_at(0) == tsux  && i->as_Goto()->is_safepoint() == tsux->bci() < stream()->cur_bci()) || (i->as_Goto()->sux_at(0) == fsux  && i->as_Goto()->is_safepoint() == fsux->bci() < stream()->cur_bci()), "safepoint state of Goto returned by canonicalizer incorrect");
 
   if (is_profiling()) {
     If* if_node = i->as_If();
@@ -1231,7 +1197,7 @@ void GraphBuilder::lookup_switch() {
     bool is_bb = tsux->bci() < bci() || fsux->bci() < bci();
     // In case of loop invariant code motion or predicate insertion
     // before the body of a loop the state is needed
-    ValueStack* state_before = copy_state_if_bb(is_bb);;
+    ValueStack* state_before = copy_state_if_bb(is_bb);
     append(new If(ipop(), If::eql, true, key, tsux, fsux, state_before, is_bb));
   } else {
     // collect successors & keys
@@ -1261,12 +1227,9 @@ void GraphBuilder::call_register_finalizer() {
 
   // Gather some type information about the receiver
   Value receiver = state()->local_at(0);
-  assert(receiver != NULL, "must have a receiver");
   ciType* declared_type = receiver->declared_type();
   ciType* exact_type = receiver->exact_type();
-  if (exact_type == NULL &&
-      receiver->as_Local() &&
-      receiver->as_Local()->java_index() == 0) {
+  if (exact_type == NULL && receiver->as_Local() && receiver->as_Local()->java_index() == 0) {
     ciInstanceKlass* ik = compilation()->method()->holder();
     if (ik->is_final()) {
       exact_type = ik;
@@ -1298,23 +1261,19 @@ void GraphBuilder::call_register_finalizer() {
     // Perform the registration of finalizable objects.
     ValueStack* state_before = copy_state_for_exception();
     load_local(objectType, 0);
-    append_split(new Intrinsic(voidType, vmIntrinsics::_Object_init,
-                               state()->pop_arguments(1),
-                               true, state_before, true));
+    append_split(new Intrinsic(voidType, vmIntrinsics::_Object_init, state()->pop_arguments(1), true, state_before, true));
   }
 }
 
 void GraphBuilder::method_return(Value x, bool ignore_return) {
-  if (RegisterFinalizersAtInit &&
-      method()->intrinsic_id() == vmIntrinsics::_Object_init) {
+  if (RegisterFinalizersAtInit && method()->intrinsic_id() == vmIntrinsics::_Object_init) {
     call_register_finalizer();
   }
 
   bool need_mem_bar = false;
   if (method()->name() == ciSymbol::object_initializer_name() &&
-      (scope()->wrote_final() || (AlwaysSafeConstructors && scope()->wrote_fields())
-                              || (support_IRIW_for_not_multiple_copy_atomic_cpu && scope()->wrote_volatile())
-     )){
+      (scope()->wrote_final() || (AlwaysSafeConstructors && scope()->wrote_fields()) || (support_IRIW_for_not_multiple_copy_atomic_cpu && scope()->wrote_volatile())
+     )) {
     need_mem_bar = true;
   }
 
@@ -1368,8 +1327,6 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
       }
     }
 
-    assert(!method()->is_synchronized() || InlineSynchronizedMethods, "can not inline synchronized methods yet");
-
     if (compilation()->env()->dtrace_method_probes()) {
       // Report exit from inline methods
       Values* args = new Values(1);
@@ -1380,7 +1337,6 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     // If the inlined method is synchronized, the monitor must be
     // released before we jump to the continuation block.
     if (method()->is_synchronized()) {
-      assert(state()->locks_size() == 1, "receiver must be locked here");
       monitorexit(state()->lock_at(0), SynchronizationEntryBCI);
     }
 
@@ -1432,7 +1388,6 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
       append(new MemBar(lir_membar_storestore));
   }
 
-  assert(!ignore_return, "Ignoring return value works only for inlining");
   append(new Return(x));
 }
 
@@ -1443,8 +1398,7 @@ Value GraphBuilder::make_constant(ciConstant field_value, ciField* field) {
   ValueType* value = as_ValueType(field_value);
 
   // Attach dimension info to stable arrays.
-  if (FoldStableValues &&
-      field->is_stable() && field_type == T_ARRAY && !field_value.is_null_or_zero()) {
+  if (FoldStableValues && field->is_stable() && field_type == T_ARRAY && !field_value.is_null_or_zero()) {
     ciArray* array = field_value.as_object()->as_array();
     jint dimension = field->type()->as_array_klass()->dimension();
     value = new StableArrayConstant(array, dimension);
@@ -1469,9 +1423,7 @@ void GraphBuilder::access_field(Bytecodes::Code code) {
   BasicType field_type = field->type()->basic_type();
   ValueType* type = as_ValueType(field_type);
   // call will_link again to determine if the field is valid.
-  const bool needs_patching = !holder->is_loaded() ||
-                              !field->will_link(method(), code) ||
-                              PatchALot;
+  const bool needs_patching = !holder->is_loaded() || !field->will_link(method(), code) || PatchALot;
 
   ValueStack* state_before = NULL;
   if (!holder->is_initialized() || needs_patching) {
@@ -1508,7 +1460,6 @@ void GraphBuilder::access_field(Bytecodes::Code code) {
       Value constant = NULL;
       if (field->is_static_constant() && !PatchALot) {
         ciConstant field_value = field->constant_value();
-        assert(!field->is_stable() || !field_value.is_null_or_zero(), "stable static w/ default value shouldn't be a constant");
         constant = make_constant(field_value, field);
       }
       if (constant != NULL) {
@@ -1565,7 +1516,6 @@ void GraphBuilder::access_field(Bytecodes::Code code) {
         LoadField* load = new LoadField(obj, offset, field, false, state_before, needs_patching);
         Value replacement = !needs_patching ? _memory->load(load) : load;
         if (replacement != load) {
-          assert(replacement->is_linked() || !replacement->can_be_linked(), "should already by linked");
           push(type, replacement);
         } else {
           push(type, append(load));
@@ -1597,7 +1547,6 @@ void GraphBuilder::access_field(Bytecodes::Code code) {
 }
 
 Dependencies* GraphBuilder::dependency_recorder() const {
-  assert(DeoptC1, "need debug information");
   return compilation()->dependency_recorder();
 }
 
@@ -1655,11 +1604,8 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   ciMethod*             target = stream()->get_method(will_link, &declared_signature);
   ciKlass*              holder = stream()->get_declared_method_holder();
   const Bytecodes::Code bc_raw = stream()->cur_bc_raw();
-  assert(declared_signature != NULL, "cannot be null");
-  assert(will_link == target->is_loaded(), "");
 
   ciInstanceKlass* klass = target->holder();
-  assert(!target->is_loaded() || klass->is_loaded(), "loaded target must imply loaded klass");
 
   // check if CHA possible: if so, change the code to invoke_special
   ciInstanceKlass* calling_klass = method()->holder();
@@ -1674,9 +1620,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
 
   // invoke-special-super
   if (bc_raw == Bytecodes::_invokespecial && !target->is_object_initializer()) {
-    ciInstanceKlass* sender_klass =
-          calling_klass->is_anonymous() ? calling_klass->host_klass() :
-                                          calling_klass;
+    ciInstanceKlass* sender_klass = calling_klass->is_anonymous() ? calling_klass->host_klass() : calling_klass;
     if (sender_klass->is_interface()) {
       int index = state()->stack_size() - (target->arg_size_no_receiver() + 1);
       Value receiver = state()->stack_at(index);
@@ -1701,7 +1645,6 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
     }
   } else {
     if (bc_raw == Bytecodes::_invokehandle) {
-      assert(!will_link, "should come here only for unlinked call");
       code = Bytecodes::_invokespecial;
     }
   }
@@ -1736,15 +1679,13 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
       int index = state()->stack_size() - (target->arg_size_no_receiver() + 1);
       receiver = state()->stack_at(index);
       ciType* type = receiver->exact_type();
-      if (type != NULL && type->is_loaded() &&
-          type->is_instance_klass() && !type->as_instance_klass()->is_interface()) {
+      if (type != NULL && type->is_loaded() && type->is_instance_klass() && !type->as_instance_klass()->is_interface()) {
         receiver_klass = (ciInstanceKlass*) type;
         type_is_exact = true;
       }
       if (type == NULL) {
         type = receiver->declared_type();
-        if (type != NULL && type->is_loaded() &&
-            type->is_instance_klass() && !type->as_instance_klass()->is_interface()) {
+        if (type != NULL && type->is_loaded() && type->is_instance_klass() && !type->as_instance_klass()->is_interface()) {
           receiver_klass = (ciInstanceKlass*) type;
           if (receiver_klass->is_leaf_type() && !receiver_klass->is_final()) {
             // Insert a dependency on this type since
@@ -1755,8 +1696,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
         }
       }
     }
-    if (receiver_klass != NULL && type_is_exact &&
-        receiver_klass->is_loaded() && code != Bytecodes::_invokespecial) {
+    if (receiver_klass != NULL && type_is_exact && receiver_klass->is_loaded() && code != Bytecodes::_invokespecial) {
       // If we have the exact receiver type we can bind directly to
       // the method to call.
       exact_target = target->resolve_invoke(calling_klass, receiver_klass);
@@ -1765,9 +1705,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
         code = Bytecodes::_invokespecial;
       }
     }
-    if (receiver_klass != NULL &&
-        receiver_klass->is_subtype_of(actual_recv) &&
-        actual_recv->is_initialized()) {
+    if (receiver_klass != NULL && receiver_klass->is_subtype_of(actual_recv) && actual_recv->is_initialized()) {
       actual_recv = receiver_klass;
     }
 
@@ -1787,9 +1725,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
       ciInstanceKlass* singleton = NULL;
       if (target->holder()->nof_implementors() == 1) {
         singleton = target->holder()->implementor();
-        assert(singleton != NULL && singleton != target->holder(), "just checking");
 
-        assert(holder->is_interface(), "invokeinterface to non interface?");
         ciInstanceKlass* decl_interface = (ciInstanceKlass*)holder;
         // the number of implementors for decl_interface is less or
         // equal to the number of implementors for target->holder() so
@@ -1842,14 +1778,9 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   }
 
   // check if we could do inlining
-  if (!PatchALot && Inline && target->is_loaded() &&
-      (klass->is_initialized() || (klass->is_interface() && target->holder()->is_initialized()))
-      && !patch_for_appendix) {
+  if (!PatchALot && Inline && target->is_loaded() && (klass->is_initialized() || (klass->is_interface() && target->holder()->is_initialized())) && !patch_for_appendix) {
     // callee is known => check if we have static binding
-    if (code == Bytecodes::_invokestatic  ||
-        code == Bytecodes::_invokespecial ||
-        (code == Bytecodes::_invokevirtual && target->is_final_method()) ||
-        code == Bytecodes::_invokedynamic) {
+    if (code == Bytecodes::_invokestatic  || code == Bytecodes::_invokespecial || (code == Bytecodes::_invokevirtual && target->is_final_method()) || code == Bytecodes::_invokedynamic) {
       ciMethod* inline_target = (cha_monomorphic_target != NULL) ? cha_monomorphic_target : target;
       // static binding => check if callee is ok
       bool success = try_inline(inline_target, (cha_monomorphic_target != NULL) || (exact_target != NULL), false, code, better_receiver);
@@ -1883,10 +1814,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   ValueStack* state_before = copy_state_exhandling();
 
   // The bytecode (code) might change in this method so we are checking this very late.
-  const bool has_receiver =
-    code == Bytecodes::_invokespecial   ||
-    code == Bytecodes::_invokevirtual   ||
-    code == Bytecodes::_invokeinterface;
+  const bool has_receiver = code == Bytecodes::_invokespecial   || code == Bytecodes::_invokevirtual   || code == Bytecodes::_invokeinterface;
   Values* args = state()->pop_arguments(target->arg_size_no_receiver() + patching_appendix_arg);
   Value recv = has_receiver ? apop() : NULL;
   int vtable_index = Method::invalid_vtable_index;
@@ -1895,8 +1823,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   // Currently only supported on Sparc.
   // The UseInlineCaches only controls dispatch to invokevirtuals for
   // loaded classes which we weren't able to statically bind.
-  if (!UseInlineCaches && target->is_loaded() && code == Bytecodes::_invokevirtual
-      && !target->can_be_statically_bound()) {
+  if (!UseInlineCaches && target->is_loaded() && code == Bytecodes::_invokevirtual && !target->can_be_statically_bound()) {
     // Find a vtable index if one is available
     // For arrays, callee_holder is Object. Resolving the call with
     // Object would allow an illegal call to finalize() on an
@@ -1921,8 +1848,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   //
   // Normal invokevirtual will perform the null check during lookup
 
-  bool need_null_check = (code == Bytecodes::_invokespecial) ||
-      (target->is_loaded() && (target->is_final_method() || (is_profiling() && profile_calls())));
+  bool need_null_check = (code == Bytecodes::_invokespecial) || (target->is_loaded() && (target->is_final_method() || (is_profiling() && profile_calls())));
 
   if (need_null_check) {
     if (recv != NULL) {
@@ -1934,7 +1860,6 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
       compilation()->set_would_profile(true);
 
       if (profile_calls()) {
-        assert(cha_monomorphic_target == NULL || exact_target == NULL, "both can not be set");
         ciKlass* target_klass = NULL;
         if (cha_monomorphic_target != NULL) {
           target_klass = cha_monomorphic_target->holder();
@@ -1966,7 +1891,6 @@ void GraphBuilder::new_instance(int klass_index) {
   ValueStack* state_before = copy_state_exhandling();
   bool will_link;
   ciKlass* klass = stream()->get_klass(will_link);
-  assert(klass->is_instance_klass(), "must be an instance klass");
   NewInstance* new_instance = new NewInstance(klass->as_instance_klass(), state_before, stream()->is_unresolved_klass());
   _memory->new_instance(new_instance);
   apush(append_split(new_instance));
@@ -2108,7 +2032,6 @@ Instruction* GraphBuilder::append_with_bci(Instruction* instr, int bci) {
     Instruction* i2 = vmap()->find_insert(i1);
     if (i2 != i1) {
       // found an entry in the value map, so just return it.
-      assert(i2->is_linked(), "should already be linked");
       return i2;
     }
     ValueNumberingEffects vne(vmap());
@@ -2116,7 +2039,6 @@ Instruction* GraphBuilder::append_with_bci(Instruction* instr, int bci) {
   }
 
   // i1 was not eliminated => append it
-  assert(i1->next() == NULL, "shouldn't already be linked");
   _last = _last->set_next(i1, canon.bci());
 
   if (++_instruction_count >= InstructionCountCutoff && !bailed_out()) {
@@ -2141,13 +2063,11 @@ Instruction* GraphBuilder::append_with_bci(Instruction* instr, int bci) {
   // set up exception handlers for this instruction if necessary
   if (i1->can_trap()) {
     i1->set_exception_handlers(handle_exception(i1));
-    assert(i1->exception_state() != NULL || !i1->needs_exception_state() || bailed_out(), "handle_exception must set exception state");
   }
   return i1;
 }
 
 Instruction* GraphBuilder::append(Instruction* instr) {
-  assert(instr->as_StateSplit() == NULL || instr->as_BlockEnd() != NULL, "wrong append used");
   return append_with_bci(instr, bci());
 }
 
@@ -2175,7 +2095,6 @@ void GraphBuilder::null_check(Value value) {
 
 XHandlers* GraphBuilder::handle_exception(Instruction* instruction) {
   if (!has_handler() && (!instruction->needs_exception_state() || instruction->exception_state() != NULL)) {
-    assert(instruction->exception_state() == NULL || instruction->exception_state()->kind() == ValueStack::EmptyExceptionState, "exception_state should be of exception kind");
     return new XHandlers();
   }
 
@@ -2185,11 +2104,8 @@ XHandlers* GraphBuilder::handle_exception(Instruction* instruction) {
   ValueStack* prev_state = NULL;
   int scope_count = 0;
 
-  assert(cur_state != NULL, "state_before must be set");
   do {
     int cur_bci = cur_state->bci();
-    assert(cur_scope_data->scope() == cur_state->scope(), "scopes do not match");
-    assert(cur_bci == SynchronizationEntryBCI || cur_bci == cur_scope_data->stream()->cur_bci(), "invalid bci");
 
     // join with all potential exception handlers
     XHandlers* list = cur_scope_data->xhandlers();
@@ -2207,12 +2123,6 @@ XHandlers* GraphBuilder::handle_exception(Instruction* instruction) {
           // very rare so we bailout instead of trying to handle it.
           BAILOUT_("exception handler covers itself", exception_handlers);
         }
-        assert(entry->bci() == h->handler_bci(), "must match");
-        assert(entry->bci() == -1 || entry == cur_scope_data->block_at(entry->bci()), "blocks must correspond");
-
-        // previously this was a BAILOUT, but this is not necessary
-        // now because asynchronous exceptions are not handled this way.
-        assert(entry->state() == NULL || cur_state->total_locks_size() == entry->state()->total_locks_size(), "locks do not match");
 
         // xhandler start with an empty expression stack
         if (cur_state->stack_size() != 0) {
@@ -2251,7 +2161,6 @@ XHandlers* GraphBuilder::handle_exception(Instruction* instruction) {
         exception_handlers->append(new_xhandler);
 
         // fill in exception handler subgraph lazily
-        assert(!entry->is_set(BlockBegin::was_visited_flag), "entry must not be visited yet");
         cur_scope_data->add_to_work_list(entry);
 
         // stop when reaching catchall
@@ -2282,9 +2191,6 @@ XHandlers* GraphBuilder::handle_exception(Instruction* instruction) {
     while (cur_scope_data->parsing_jsr()) {
       cur_scope_data = cur_scope_data->parent();
     }
-
-    assert(cur_scope_data->scope() == cur_state->scope(), "scopes do not match");
-    assert(cur_state->locks_size() == 0 || cur_state->locks_size() == 1, "unlocking must be done in a catchall exception handler");
 
     prev_state = cur_state;
     cur_state = cur_state->caller_state();
@@ -2340,7 +2246,6 @@ Value PhiSimplifier::simplify(Value v) {
     int opd_count = phi->operand_count();
     for (int i = 0; i < opd_count; i++) {
       Value opd = phi->operand_at(i);
-      assert(opd != NULL, "Operand must exist!");
 
       if (opd->type()->is_illegal()) {
         // if one operand is illegal, the entire phi function is illegal
@@ -2350,7 +2255,6 @@ Value PhiSimplifier::simplify(Value v) {
       }
 
       Value new_opd = simplify(opd);
-      assert(new_opd != NULL, "Simplified operand must exist!");
 
       if (new_opd != phi && new_opd != subst) {
         if (subst == NULL) {
@@ -2365,7 +2269,6 @@ Value PhiSimplifier::simplify(Value v) {
     }
 
     // sucessfully simplified phi function
-    assert(subst != NULL, "illegal phi function");
     _has_substitutions = true;
     phi->clear(Phi::visited);
     phi->set_subst(subst);
@@ -2397,7 +2300,6 @@ void GraphBuilder::connect_to_end(BlockBegin* beg) {
 
 BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   _skip_block = false;
-  assert(state() != NULL, "ValueStack missing!");
   CompileLog* log = compilation()->log();
   ciBytecodeStream s(method());
   s.reset_to_bci(bci);
@@ -2414,19 +2316,13 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
 
   bool ignore_return = scope_data()->ignore_return();
 
-  while (!bailed_out() && last()->as_BlockEnd() == NULL &&
-         (code = stream()->next()) != ciBytecodeStream::EOBC() &&
-         (block_at(s.cur_bci()) == NULL || block_at(s.cur_bci()) == block())) {
-    assert(state()->kind() == ValueStack::Parsing, "invalid state kind");
+  while (!bailed_out() && last()->as_BlockEnd() == NULL && (code = stream()->next()) != ciBytecodeStream::EOBC() && (block_at(s.cur_bci()) == NULL || block_at(s.cur_bci()) == block())) {
 
     if (log != NULL)
       log->set_context("bc code='%d' bci='%d'", (int)code, s.cur_bci());
 
     // Check for active jsr during OSR compilation
-    if (compilation()->is_osr_compile()
-        && scope()->is_top_scope()
-        && parsing_jsr()
-        && s.cur_bci() == compilation()->osr_bci()) {
+    if (compilation()->is_osr_compile() && scope()->is_top_scope() && parsing_jsr() && s.cur_bci() == compilation()->osr_bci()) {
       bailout("OSR not supported while a jsr is active");
     }
 
@@ -2653,7 +2549,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   // stop processing of this block (see try_inline_full)
   if (_skip_block) {
     _skip_block = false;
-    assert(_last && _last->as_BlockEnd(), "");
     return _last->as_BlockEnd();
   }
   // if there are any, check if last instruction is a BlockEnd instruction
@@ -2663,10 +2558,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
     end = new Goto(block_at(s.cur_bci()), false);
     append(end);
   }
-  assert(end == last()->as_BlockEnd(), "inconsistency");
-
-  assert(end->state() != NULL, "state must already be present");
-  assert(end->as_Return() == NULL || end->as_Throw() == NULL || end->state()->stack_size() == 0, "stack not needed for return and throw");
 
   // connect to begin & set state
   // NOTE that inlining may have changed the block we are parsing
@@ -2674,7 +2565,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   // propagate state
   for (int i = end->number_of_sux() - 1; i >= 0; i--) {
     BlockBegin* sux = end->sux_at(i);
-    assert(sux->is_predecessor(block()), "predecessor missing");
     // be careful, bailout if bytecodes are strange
     if (!sux->try_merge(end->state())) BAILOUT_("block join failed", NULL);
     scope_data()->add_to_work_list(end->sux_at(i));
@@ -2774,7 +2664,6 @@ void GraphBuilder::initialize() {
 }
 
 BlockBegin* GraphBuilder::header_block(BlockBegin* entry, BlockBegin::Flag f, ValueStack* state) {
-  assert(entry->is_set(f), "entry/flag mismatch");
   // create header block
   BlockBegin* h = new BlockBegin(entry->bci());
   h->set_depth_first_number(0);
@@ -2786,7 +2675,6 @@ BlockBegin* GraphBuilder::header_block(BlockBegin* entry, BlockBegin::Flag f, Va
   h->set(f);
   // setup header block end state
   ValueStack* s = state->copy(ValueStack::StateAfter, entry->bci()); // can use copy since stack is empty (=> no phis)
-  assert(s->stack_is_empty(), "must have empty stack at entry point");
   g->set_state(s);
   return h;
 }
@@ -2810,11 +2698,7 @@ BlockBegin* GraphBuilder::setup_start_block(int osr_bci, BlockBegin* std_entry, 
   }
 
   // setup start block (root for the IR graph)
-  Base* base =
-    new Base(
-      new_header_block,
-      osr_entry
-    );
+  Base* base = new Base(new_header_block, osr_entry);
   start->set_next(base, 0);
   start->set_end(base);
   // create & setup state for start block
@@ -2826,12 +2710,10 @@ BlockBegin* GraphBuilder::setup_start_block(int osr_bci, BlockBegin* std_entry, 
     base->std_entry()->merge(state);
   }
 
-  assert(base->std_entry()->state() != NULL, "");
   return start;
 }
 
 void GraphBuilder::setup_osr_entry_block() {
-  assert(compilation()->is_osr_compile(), "only for osrs");
 
   int osr_bci = compilation()->osr_bci();
   ciBytecodeStream s(method());
@@ -2844,7 +2726,6 @@ void GraphBuilder::setup_osr_entry_block() {
   _osr_entry->set(BlockBegin::osr_entry_flag);
   _osr_entry->set_depth_first_number(0);
   BlockBegin* target = bci2block()->at(osr_bci);
-  assert(target != NULL && target->is_set(BlockBegin::osr_entry_flag), "must be there");
   // the osr entry has no values for locals
   ValueStack* state = target->state()->copy();
   _osr_entry->set_state(state);
@@ -2852,7 +2733,6 @@ void GraphBuilder::setup_osr_entry_block() {
   kill_all();
   _block = _osr_entry;
   _state = _osr_entry->state()->copy();
-  assert(_state->bci() == osr_bci, "mismatch");
   _last  = _osr_entry;
   Value e = append(new OsrEntry());
   e->set_needs_null_check(false);
@@ -2899,7 +2779,6 @@ void GraphBuilder::setup_osr_entry_block() {
 
   // the storage for the OSR buffer is freed manually in the LIRGenerator.
 
-  assert(state->caller_state() == NULL, "should be top scope");
   state->clear_locals();
   Goto* g = new Goto(target, false);
   append(g);
@@ -3147,8 +3026,7 @@ bool GraphBuilder::try_inline(ciMethod* callee, bool holder_known, bool ignore_r
   }
 
   // handle intrinsics
-  if (callee->intrinsic_id() != vmIntrinsics::_none &&
-      (CheckIntrinsics ? callee->intrinsic_candidate() : true)) {
+  if (callee->intrinsic_id() != vmIntrinsics::_none && (CheckIntrinsics ? callee->intrinsic_candidate() : true)) {
     if (try_inline_intrinsics(callee, ignore_return)) {
       print_inlining(callee, "intrinsic");
       if (callee->has_reserved_stack_access()) {
@@ -3187,8 +3065,8 @@ bool GraphBuilder::try_inline(ciMethod* callee, bool holder_known, bool ignore_r
 
 const char* GraphBuilder::check_can_parse(ciMethod* callee) const {
   // Certain methods cannot be parsed at all:
-  if ( callee->is_native())            return "native method";
-  if ( callee->is_abstract())          return "abstract method";
+  if (callee->is_native())            return "native method";
+  if (callee->is_abstract())          return "abstract method";
   if (!callee->can_be_compiled())      return "not compilable (disabled)";
   if (!callee->can_be_parsed())        return "cannot be parsed";
   return NULL;
@@ -3196,14 +3074,13 @@ const char* GraphBuilder::check_can_parse(ciMethod* callee) const {
 
 // negative filter: should callee NOT be inlined?  returns NULL, ok to inline, or rejection msg
 const char* GraphBuilder::should_not_inline(ciMethod* callee) const {
-  if ( compilation()->directive()->should_not_inline(callee)) return "disallowed by CompileCommand";
-  if ( callee->dont_inline())          return "don't inline by annotation";
+  if (compilation()->directive()->should_not_inline(callee)) return "disallowed by CompileCommand";
+  if (callee->dont_inline())          return "don't inline by annotation";
   return NULL;
 }
 
 void GraphBuilder::build_graph_for_intrinsic(ciMethod* callee, bool ignore_return) {
   vmIntrinsics::ID id = callee->intrinsic_id();
-  assert(id != vmIntrinsics::_none, "must be a VM intrinsic");
 
   // Some intrinsics need special IR nodes.
   switch(id) {
@@ -3335,7 +3212,6 @@ bool GraphBuilder::try_inline_jsr(int jsr_dest_bci) {
   // Introduce a new callee continuation point - all Ret instructions
   // will be replaced with Gotos to this point.
   BlockBegin* cont = block_at(next_bci());
-  assert(cont != NULL, "continuation must exist (BlockListBuilder starts a new block after a jsr");
 
   // Note: can not assign state to continuation yet, as we have to
   // pick up the state from the Ret instructions.
@@ -3348,11 +3224,8 @@ bool GraphBuilder::try_inline_jsr(int jsr_dest_bci) {
   scope_data()->set_stream(scope_data()->parent()->stream());
 
   BlockBegin* jsr_start_block = block_at(jsr_dest_bci);
-  assert(jsr_start_block != NULL, "jsr start block must exist");
-  assert(!jsr_start_block->is_set(BlockBegin::was_visited_flag), "should not have visited jsr yet");
   Goto* goto_sub = new Goto(jsr_start_block, false);
   // Must copy state to avoid wrong sharing when parsing bytecodes
-  assert(jsr_start_block->state() == NULL, "should have fresh jsr starting block");
   jsr_start_block->set_state(copy_state_before_with_bci(jsr_dest_bci));
   append(goto_sub);
   _block->set_end(goto_sub);
@@ -3381,10 +3254,6 @@ bool GraphBuilder::try_inline_jsr(int jsr_dest_bci) {
     }
   }
 
-  assert(jsr_continuation() == cont, "continuation must not have changed");
-  assert(!jsr_continuation()->is_set(BlockBegin::was_visited_flag) || jsr_continuation()->is_set(BlockBegin::parser_loop_header_flag), "continuation can only be visited in case of backward branches");
-  assert(_last && _last->as_BlockEnd(), "block must have end");
-
   // continuation is in work list, so end iteration of current block
   _skip_block = true;
   pop_scope_for_jsr();
@@ -3399,10 +3268,8 @@ bool GraphBuilder::try_inline_jsr(int jsr_dest_bci) {
 // guaranteed to be non-null by the explicit null check at the
 // beginning of inlining.
 void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
-  assert(lock != NULL && sync_handler != NULL, "lock or handler missing");
 
   monitorenter(lock, SynchronizationEntryBCI);
-  assert(_last->as_MonitorEnter() != NULL, "monitor enter expected");
   _last->set_needs_null_check(false);
 
   sync_handler->set(BlockBegin::exception_entry_flag);
@@ -3426,17 +3293,10 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
   _last = _block = sync_handler;
   _state = sync_handler->state()->copy();
 
-  assert(sync_handler != NULL, "handler missing");
-  assert(!sync_handler->is_set(BlockBegin::was_visited_flag), "is visited here");
-
-  assert(lock != NULL || default_handler, "lock or handler missing");
-
   XHandler* h = scope_data()->xhandlers()->remove_last();
-  assert(h->entry_block() == sync_handler, "corrupt list of handlers");
 
   block()->set(BlockBegin::was_visited_flag);
   Value exception = append_with_bci(new ExceptionObject(), SynchronizationEntryBCI);
-  assert(exception->is_pinned(), "must be");
 
   int bci = SynchronizationEntryBCI;
   if (compilation()->env()->dtrace_method_probes()) {
@@ -3448,7 +3308,6 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
   }
 
   if (lock) {
-    assert(state()->locks_size() > 0 && state()->lock_at(state()->locks_size() - 1) == lock, "lock is missing");
     if (!lock->is_linked()) {
       lock = append_with_bci(lock, bci);
     }
@@ -3477,7 +3336,6 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
 }
 
 bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ignore_return, Bytecodes::Code bc, Value receiver) {
-  assert(!callee->is_native(), "callee must not be native");
   if (CompilationPolicy::policy()->should_not_inline(compilation()->env(), callee)) {
     INLINE_BAILOUT("inlining prohibited by policy");
   }
@@ -3520,8 +3378,7 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     if (callee->code_size_for_inlining() > max_inline_size()    ) INLINE_BAILOUT("callee is too large");
 
     // don't inline throwable methods unless the inlining tree is rooted in a throwable class
-    if (callee->name() == ciSymbol::object_initializer_name() &&
-        callee->holder()->is_subclass_of(ciEnv::current()->Throwable_klass())) {
+    if (callee->name() == ciSymbol::object_initializer_name() && callee->holder()->is_subclass_of(ciEnv::current()->Throwable_klass())) {
       // Throwable constructor call
       IRScope* top = scope();
       while (top->caller() != NULL) {
@@ -3549,7 +3406,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   const bool has_receiver = (bc != Bytecodes::_invokestatic && !is_invokedynamic);
 
   const int args_base = state()->stack_size() - callee->arg_size();
-  assert(args_base >= 0, "stack underflow during inlining");
 
   // Insert null check if necessary
   Value recv = NULL;
@@ -3557,8 +3413,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     // note: null check must happen even if first instruction of callee does
     //       an implicit null check since the callee is in a different scope
     //       and we must make sure exception handling does the right thing
-    assert(!callee->is_static(), "callee must not be static");
-    assert(callee->arg_size() > 0, "must have at least a receiver");
     recv = state()->stack_at(args_base);
     null_check(recv);
   }
@@ -3634,7 +3488,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   // Note that we preserve locals state in case we can use it later
   // (see use of pop_scope() below)
   caller_state->truncate_stack(args_base);
-  assert(callee_state->stack_size() == 0, "callee stack must be empty");
 
   Value lock = NULL;
   BlockBegin* sync_handler = NULL;
@@ -3659,7 +3512,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
 
   BlockBegin* callee_start_block = block_at(0);
   if (callee_start_block != NULL) {
-    assert(callee_start_block->is_set(BlockBegin::parser_loop_header_flag), "must be loop header");
     Goto* goto_callee = new Goto(callee_start_block, false);
     // The state for this goto is in the scope of the callee, so use
     // the entry bci for the callee instead of the call site bci.
@@ -3689,11 +3541,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   if (bailed_out())
       return false;
 
-  // iterate_all_blocks theoretically traverses in random order; in
-  // practice, we have only traversed the continuation if we are
-  // inlining into a subroutine
-  assert(continuation_existed || !continuation()->is_set(BlockBegin::was_visited_flag), "continuation should not have been parsed yet if we created it");
-
   // At this point we are almost ready to return and resume parsing of
   // the caller back in the GraphBuilder. The only thing we want to do
   // first is an optimization: during parsing of the callee we
@@ -3705,17 +3552,13 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   // block merging. This allows load elimination and CSE to take place
   // across multiple callee scopes if they are relatively simple, and
   // is currently essential to making inlining profitable.
-  if (num_returns() == 1
-      && block() == orig_block
-      && block() == inline_cleanup_block()) {
+  if (num_returns() == 1 && block() == orig_block && block() == inline_cleanup_block()) {
     _last  = inline_cleanup_return_prev();
     _state = inline_cleanup_state();
   } else if (continuation_preds == cont->number_of_preds()) {
     // Inlining caused that the instructions after the invoke in the
     // caller are not reachable any more. So skip filling this block
     // with instructions!
-    assert(cont == continuation(), "");
-    assert(_last && _last->as_BlockEnd(), "");
     _skip_block = true;
   } else {
     // Resume parsing in continuation block unless it was already parsed.
@@ -3723,7 +3566,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     // iterate_bytecodes_for_block will stop when we return.
     if (!continuation()->is_set(BlockBegin::was_visited_flag)) {
       // add continuation to work list instead of parsing it immediately
-      assert(_last && _last->as_BlockEnd(), "");
       scope_data()->parent()->add_to_work_list(continuation());
       _skip_block = true;
     }
@@ -3798,8 +3640,7 @@ bool GraphBuilder::try_method_handle_inline(ciMethod* callee, bool ignore_return
           if (!target->is_static()) {
             ciKlass* tk = signature->accessing_klass();
             Value obj = state()->stack_at(args_base);
-            if (obj->exact_type() == NULL &&
-                obj->declared_type() != tk && tk != compilation()->env()->Object_klass()) {
+            if (obj->exact_type() == NULL && obj->declared_type() != tk && tk != compilation()->env()->Object_klass()) {
               TypeCast* c = new TypeCast(tk, obj, state_before);
               append(c);
               state()->stack_at_put(args_base, c);
@@ -3811,8 +3652,7 @@ bool GraphBuilder::try_method_handle_inline(ciMethod* callee, bool ignore_return
             if (t->is_klass()) {
               ciKlass* tk = t->as_klass();
               Value obj = state()->stack_at(args_base + receiver_skip + j);
-              if (obj->exact_type() == NULL &&
-                  obj->declared_type() != tk && tk != compilation()->env()->Object_klass()) {
+              if (obj->exact_type() == NULL && obj->declared_type() != tk && tk != compilation()->env()->Object_klass()) {
                 TypeCast* c = new TypeCast(t, obj, state_before);
                 append(c);
                 state()->stack_at_put(args_base + receiver_skip + j, c);
@@ -3845,7 +3685,6 @@ bool GraphBuilder::try_method_handle_inline(ciMethod* callee, bool ignore_return
 }
 
 void GraphBuilder::inline_bailout(const char* msg) {
-  assert(msg != NULL, "inline bailout msg must exist");
   _inline_bailout_msg = msg;
 }
 
@@ -3953,7 +3792,6 @@ void GraphBuilder::append_unsafe_put_raw(ciMethod* callee, BasicType t) {
 void GraphBuilder::append_unsafe_CAS(ciMethod* callee) {
   ValueStack* state_before = copy_state_for_exception();
   ValueType* result_type = as_ValueType(callee->return_type());
-  assert(result_type->is_int(), "int result");
   Values* args = state()->pop_arguments(callee->arg_size());
 
   // Pop off some args to specially handle, then push back
@@ -3983,11 +3821,6 @@ void GraphBuilder::append_unsafe_CAS(ciMethod* callee) {
 }
 
 void GraphBuilder::append_char_access(ciMethod* callee, bool is_store) {
-  // This intrinsic accesses byte[] array as char[] array. Computing the offsets
-  // correctly requires matched array shapes.
-  assert(arrayOopDesc::base_offset_in_bytes(T_CHAR) == arrayOopDesc::base_offset_in_bytes(T_BYTE), "sanity: byte[] and char[] bases agree");
-  assert(type2aelembytes(T_CHAR) == type2aelembytes(T_BYTE)*2, "sanity: byte[] and char[] scales agree");
-
   ValueStack* state_before = copy_state_indexed_access();
   compilation()->set_has_access_indexed(true);
   Values* args = state()->pop_arguments(callee->arg_size());
@@ -4012,10 +3845,6 @@ static void post_inlining_event(EventCompilerInlining* event,
                                 int bci,
                                 ciMethod* caller,
                                 ciMethod* callee) {
-  assert(caller != NULL, "invariant");
-  assert(callee != NULL, "invariant");
-  assert(event != NULL, "invariant");
-  assert(event->should_commit(), "invariant");
   JfrStructCalleeMethod callee_struct;
   callee_struct.set_type(callee->holder()->name()->as_utf8());
   callee_struct.set_name(callee->name()->as_utf8());
@@ -4072,7 +3901,6 @@ void GraphBuilder::append_unsafe_get_and_set_obj(ciMethod* callee, bool is_add) 
 }
 
 void GraphBuilder::profile_call(ciMethod* callee, Value recv, ciKlass* known_holder, Values* obj_args, bool inlined) {
-  assert(known_holder == NULL || (known_holder->is_instance_klass() && (!known_holder->is_interface() || ((ciInstanceKlass*)known_holder)->has_nonstatic_concrete_methods())), "should be non-static concrete method");
   if (known_holder != NULL) {
     if (known_holder->exact_klass() == NULL) {
       known_holder = compilation()->cha_exact_type(known_holder);
@@ -4083,7 +3911,6 @@ void GraphBuilder::profile_call(ciMethod* callee, Value recv, ciKlass* known_hol
 }
 
 void GraphBuilder::profile_return_type(Value ret, ciMethod* callee, ciMethod* m, int invoke_bci) {
-  assert((m == NULL) == (invoke_bci < 0), "invalid method and invalid bci together");
   if (m == NULL) {
     m = method();
   }

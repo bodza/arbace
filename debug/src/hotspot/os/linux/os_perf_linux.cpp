@@ -326,8 +326,7 @@ static OSReturn get_total_ticks(int which_logical_cpu, CPUPerfTicks* pticks) {
 
   pticks->used       = userTicks + niceTicks;
   pticks->usedKernel = systemTicks + irqTicks + sirqTicks;
-  pticks->total      = userTicks + niceTicks + systemTicks + idleTicks +
-                       iowTicks + irqTicks + sirqTicks;
+  pticks->total      = userTicks + niceTicks + systemTicks + idleTicks + iowTicks + irqTicks + sirqTicks;
 
   return OS_OK;
 }
@@ -612,10 +611,6 @@ int CPUPerformanceInterface::CPUPerformance::cpu_load_total_process(double* cpu_
 int CPUPerformanceInterface::CPUPerformance::cpu_loads_process(double* pjvmUserLoad, double* pjvmKernelLoad, double* psystemTotalLoad) {
   double u, s, t;
 
-  assert(pjvmUserLoad != NULL, "pjvmUserLoad not inited");
-  assert(pjvmKernelLoad != NULL, "pjvmKernelLoad not inited");
-  assert(psystemTotalLoad != NULL, "psystemTotalLoad not inited");
-
   u = get_cpu_load(-1, &_counters, &s, CPU_LOAD_VM_ONLY);
   if (u < 0) {
     *pjvmUserLoad = 0.0;
@@ -724,7 +719,6 @@ bool SystemProcessInterface::SystemProcesses::ProcessIterator::is_dir(const char
 }
 
 int SystemProcessInterface::SystemProcesses::ProcessIterator::fsize(const char* name, uint64_t& size) const {
-  assert(name != NULL, "name pointer is NULL!");
   size = 0;
   struct stat fbuf;
 
@@ -933,9 +927,6 @@ SystemProcessInterface::SystemProcesses::~SystemProcesses() {
 }
 
 int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const {
-  assert(system_processes != NULL, "system_processes pointer is NULL!");
-  assert(no_of_sys_processes != NULL, "system_processes counter pointers is NULL!");
-  assert(_iterator != NULL, "iterator is NULL!");
 
   // initialize pointers
   *no_of_sys_processes = 0;

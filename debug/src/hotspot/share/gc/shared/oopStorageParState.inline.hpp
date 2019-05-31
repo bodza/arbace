@@ -11,7 +11,7 @@ class OopStorage::BasicParState::AlwaysTrueFn {
   F _f;
 
 public:
-  AlwaysTrueFn(F f) : _f(f) {}
+  AlwaysTrueFn(F f) : _f(f) { }
 
   template<typename OopPtr>     // [const] oop*
   bool operator()(OopPtr ptr) const { _f(ptr); return true; }
@@ -27,10 +27,8 @@ template<bool is_const, typename F>
 inline void OopStorage::BasicParState::iterate(F f) {
   // Wrap f in ATF so we can use Block::iterate.
   AlwaysTrueFn<F> atf_f(f);
-  IterationData data = {};      // zero initialize.
+  IterationData data = { };      // zero initialize.
   while (claim_next_segment(&data)) {
-    assert(data._segment_start < data._segment_end, "invariant");
-    assert(data._segment_end <= _block_count, "invariant");
     typedef typename Conditional<is_const, const Block*, Block*>::type BlockPtr;
     size_t i = data._segment_start;
     do {

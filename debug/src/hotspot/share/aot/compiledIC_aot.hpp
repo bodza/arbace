@@ -18,7 +18,7 @@ class CompiledPltStaticCall: public CompiledStaticCall {
 
   NativePltCall* _call;
 
-  CompiledPltStaticCall(NativePltCall* call) : _call(call) {}
+  CompiledPltStaticCall(NativePltCall* call) : _call(call) { }
 
  public:
 
@@ -48,8 +48,8 @@ class CompiledPltStaticCall: public CompiledStaticCall {
   static void set_stub_to_clean(static_stub_Relocation* static_stub);
 
   // Misc.
-  void print()  {};
-  void verify() {};
+  void print()  { };
+  void verify() { };
 
  protected:
   virtual address resolve_call_stub() const { return _call->plt_resolve_call(); }

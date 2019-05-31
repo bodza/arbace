@@ -24,9 +24,8 @@ public:
   inline void set_head(oop o);
   inline bool is_empty() const;
   size_t length()               { return _len; }
-  void   set_length(size_t len) { _len = len;  }
+  void   set_length(size_t len) { _len = len; }
   void   inc_length(size_t inc) { _len += inc;
-  assert(_len > 0, "Error");
   }
   void   dec_length(size_t dec) { _len -= dec; }
 
@@ -123,7 +122,6 @@ public:
     } else {
       _current_discovered = _next_discovered;
     }
-    assert(_current_discovered != _first_seen, "cyclic ref_list found");
     _processed++;
   }
 };
@@ -167,7 +165,7 @@ public:
 
 private:
   size_t total_count(DiscoveredList lists[]) const;
-  void verify_total_count_zero(DiscoveredList lists[], const char* type) {};
+  void verify_total_count_zero(DiscoveredList lists[], const char* type) { };
 
   // The SoftReference master timestamp clock
   static jlong _soft_ref_timestamp_clock;
@@ -325,11 +323,9 @@ private:
   // round-robin mod _num_queues (not: _not_ mod _max_num_queues)
   uint next_id() {
     uint id = _next_id;
-    assert(!_discovery_is_mt, "Round robin should only be used in serial discovery");
     if (++_next_id == _num_queues) {
       _next_id = 0;
     }
-    assert(_next_id < _num_queues, "_next_id %u _num_queues %u _max_num_queues %u", _next_id, _num_queues, _max_num_queues);
     return id;
   }
   DiscoveredList* get_discovered_list(ReferenceType rt);
@@ -339,7 +335,7 @@ private:
   void clear_discovered_references(DiscoveredList& refs_list);
 
   void log_reflist(const char* prefix, DiscoveredList list[], uint num_active_queues);
-  void log_reflist_counts(DiscoveredList ref_lists[], uint num_active_queues) {};
+  void log_reflist_counts(DiscoveredList ref_lists[], uint num_active_queues) { };
 
   // Balances reference queues.
   void balance_queues(DiscoveredList refs_lists[]);
@@ -388,7 +384,7 @@ public:
   // start and stop weak ref discovery
   void enable_discovery(bool check_no_refs = true);
   void disable_discovery()  { _discovering_refs = false; }
-  bool discovery_enabled()  { return _discovering_refs;  }
+  bool discovery_enabled()  { return _discovering_refs; }
 
   // whether discovery is atomic wrt other collectors
   bool discovery_is_atomic() const { return _discovery_is_atomic; }
@@ -433,8 +429,8 @@ public:
   size_t total_reference_count(ReferenceType rt) const;
 
   // debugging
-  void verify_no_references_recorded() {};
-  void verify_referent(oop obj)        {};
+  void verify_no_references_recorded() { };
+  void verify_referent(oop obj)        { };
 
   bool adjust_no_of_processing_threads() const { return _adjust_no_of_processing_threads; }
 };

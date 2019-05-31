@@ -35,7 +35,6 @@ void G1CMBitMapMappingChangedListener::on_commit(uint start_region, size_t num_r
 
 void G1CMBitMap::clear_range(MemRegion mr) {
   MemRegion intersection = mr.intersection(_covered);
-  assert(!intersection.is_empty(), "Given range from " PTR_FORMAT " to " PTR_FORMAT " is completely outside the heap", p2i(mr.start()), p2i(mr.end()));
   // convert address range into offset range
   _bm.at_put_range(addr_to_offset(intersection.start()),
                    addr_to_offset(intersection.end()), false);

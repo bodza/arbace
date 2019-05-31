@@ -116,7 +116,7 @@ class TypedMethodOptionMatcher : public MethodMatcher {
     _option = os::strdup_check_oom(opt);
   }
 
-  void set_next(TypedMethodOptionMatcher* next) {_next = next; }
+  void set_next(TypedMethodOptionMatcher* next) { _next = next; }
   TypedMethodOptionMatcher* next() { return _next; }
   OptionType type() { return _type; }
   template<typename T> T value();
@@ -227,7 +227,6 @@ TypedMethodOptionMatcher::~TypedMethodOptionMatcher() {
 }
 
 TypedMethodOptionMatcher* TypedMethodOptionMatcher::parse_method_pattern(char*& line, const char*& error_msg) {
-  assert(error_msg == NULL, "Dont call here with error_msg already set");
   TypedMethodOptionMatcher* tom = new TypedMethodOptionMatcher();
   MethodMatcher::parse_method_pattern(line, error_msg, tom);
   if (error_msg != NULL) {
@@ -254,10 +253,7 @@ TypedMethodOptionMatcher* TypedMethodOptionMatcher::match(const methodHandle& me
 }
 
 template<typename T>
-static void add_option_string(TypedMethodOptionMatcher* matcher,
-                                        const char* option,
-                                        T value) {
-  assert(matcher != option_list, "No circular lists please");
+static void add_option_string(TypedMethodOptionMatcher* matcher, const char* option, T value) {
   matcher->init(option, get_type_for<T>(), option_list);
   matcher->set_value<T>(value);
   option_list = matcher;
@@ -266,13 +262,10 @@ static void add_option_string(TypedMethodOptionMatcher* matcher,
 }
 
 static bool check_predicate(OracleCommand command, const methodHandle& method) {
-  return ((lists[command] != NULL) &&
-          !method.is_null() &&
-          lists[command]->match(method));
+  return ((lists[command] != NULL) && !method.is_null() && lists[command]->match(method));
 }
 
 static void add_predicate(OracleCommand command, BasicMatcher* bm) {
-  assert(command != OptionCommand, "must use add_option_string");
   if (command == LogCommand && !LogCompilation && lists[LogCommand] == NULL) {
     tty->print_cr("Warning:  +LogCompilation must be enabled in order for individual methods to be logged.");
   }
@@ -350,7 +343,6 @@ bool CompilerOracle::should_break_at(const methodHandle& method) {
 }
 
 static OracleCommand parse_command_name(const char * line, int* bytes_read) {
-  assert(ARRAY_SIZE(command_names) == OracleCommandCount, "command_names size mismatch");
 
   *bytes_read = 0;
   char command[33];
@@ -525,8 +517,7 @@ int skip_whitespace(char* line) {
   return whitespace_read;
 }
 
-void CompilerOracle::print_parse_error(const char*&  error_msg, char* original_line) {
-  assert(error_msg != NULL, "Must have error_message");
+void CompilerOracle::print_parse_error(const char*& error_msg, char* original_line) {
 
   ttyLocker ttyl;
   tty->print_cr("CompileCommand: An error occurred during parsing");
@@ -584,7 +575,6 @@ void CompilerOracle::parse_from_line(char* line) {
     line++; // skip the ','
     TypedMethodOptionMatcher* archetype = TypedMethodOptionMatcher::parse_method_pattern(line, error_msg);
     if (archetype == NULL) {
-      assert(error_msg != NULL, "Must have error_message");
       print_parse_error(error_msg, original_line);
       return;
     }
@@ -604,7 +594,7 @@ void CompilerOracle::parse_from_line(char* line) {
           || strcmp(option, "ccstrlist") == 0
           || strcmp(option, "double") == 0
           ) {
-        char errorbuf[1024] = {0};
+        char errorbuf[1024] = { 0 };
         // Type (2) option: parse flag name and value.
         scan_flag_and_value(option, line, bytes_read, typed_matcher, errorbuf, sizeof(errorbuf));
         if (*errorbuf != '\0') {
@@ -619,7 +609,6 @@ void CompilerOracle::parse_from_line(char* line) {
       }
       if (typed_matcher != NULL && !_quiet) {
         // Print out the last match added
-        assert(error_msg == NULL, "No error here");
         ttyLocker ttyl;
         tty->print("CompileCommand: %s ", command_names[command]);
         typed_matcher->print();
@@ -628,11 +617,9 @@ void CompilerOracle::parse_from_line(char* line) {
     }
     delete archetype;
   } else {  // not an OptionCommand)
-    assert(error_msg == NULL, "Don't call here with error_msg already set");
 
     BasicMatcher* matcher = BasicMatcher::parse_method_pattern(line, error_msg);
     if (error_msg != NULL) {
-      assert(matcher == NULL, "consistency");
       print_parse_error(error_msg, original_line);
       return;
     }
@@ -667,14 +654,13 @@ bool CompilerOracle::has_command_file() {
 bool CompilerOracle::_quiet = false;
 
 void CompilerOracle::parse_from_file() {
-  assert(has_command_file(), "command file must be specified");
   FILE* stream = fopen(cc_file(), "rt");
   if (stream == NULL) return;
 
   char token[1024];
   int  pos = 0;
   int  c = getc(stream);
-  while(c != EOF && pos < (int)(sizeof(token)-1)) {
+  while (c != EOF && pos < (int)(sizeof(token)-1)) {
     if (c == '\n') {
       token[pos++] = '\0';
       parse_from_line(token);
@@ -710,7 +696,6 @@ void CompilerOracle::parse_from_string(const char* str, void (*parse_line)(char*
 }
 
 void CompilerOracle::append_comment_to_file(const char* message) {
-  assert(has_command_file(), "command file must be specified");
   fileStream stream(fopen(cc_file(), "at"));
   stream.print("# ");
   for (int index = 0; message[index] != '\0'; index++) {
@@ -721,7 +706,6 @@ void CompilerOracle::append_comment_to_file(const char* message) {
 }
 
 void CompilerOracle::append_exclude_to_file(const methodHandle& method) {
-  assert(has_command_file(), "command file must be specified");
   fileStream stream(fopen(cc_file(), "at"));
   stream.print("exclude ");
   method->method_holder()->name()->print_symbol_on(&stream);
@@ -740,9 +724,7 @@ void compilerOracle_init() {
   } else {
     struct stat buf;
     if (os::stat(default_cc_file, &buf) == 0) {
-      warning("%s file is present but has been ignored.  "
-              "Run with -XX:CompileCommandFile=%s to load the file.",
-              default_cc_file, default_cc_file);
+      warning("%s file is present but has been ignored.  Run with -XX:CompileCommandFile=%s to load the file.", default_cc_file, default_cc_file);
     }
   }
   if (lists[PrintCommand] != NULL) {

@@ -20,7 +20,6 @@ RFrame::RFrame(frame fr, JavaThread* thread, RFrame*const callee) :
 }
 
 void RFrame::set_distance(int d) {
-  assert(is_compiled() || d >= 0, "should be positive");
   _distance = d;
 }
 
@@ -29,7 +28,6 @@ InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, RFrame*const 
   RegisterMap map(thread, false);
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = _vf->method();
-  assert(   _vf->is_interpreted_frame(), "must be interpreted");
   init();
 }
 
@@ -39,7 +37,6 @@ InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, Method* m)
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = m;
 
-  assert(   _vf->is_interpreted_frame(),  "must be interpreted");
   init();
 }
 
@@ -54,7 +51,7 @@ CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread)
 }
 
 DeoptimizedRFrame::DeoptimizedRFrame(frame fr, JavaThread* thread, RFrame*const  callee)
-: InterpretedRFrame(fr, thread, callee) {}
+: InterpretedRFrame(fr, thread, callee) { }
 
 RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame*const  callee) {
   RFrame* rf = NULL;
@@ -67,7 +64,7 @@ RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame*const  callee) {
     // is invisible until it happens.
     rf = new CompiledRFrame(fr, thread, callee);
   } else {
-    assert(false, "Unhandled frame type");
+    ShouldNotReachHere();
   }
   if (rf != NULL) {
     rf->set_distance(dist);
@@ -114,12 +111,10 @@ int CompiledRFrame::cost() const {
 void CompiledRFrame::init() {
   RegisterMap map(thread(), false);
   vframe* vf = vframe::new_vframe(&_fr, &map, thread());
-  assert(vf->is_compiled_frame(), "must be compiled");
   _nm = compiledVFrame::cast(vf)->code()->as_nmethod();
   vf = vf->top();
   _vf = javaVFrame::cast(vf);
   _method = CodeCache::find_nmethod(_fr.pc())->method();
-  assert(_method, "should have found a method");
 }
 
 void InterpretedRFrame::init() {

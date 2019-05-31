@@ -45,7 +45,6 @@ LIR_Opr BarrierSetC1::resolve_address(LIRAccess& access, bool resolve_in_registe
 void BarrierSetC1::store_at(LIRAccess& access, LIR_Opr value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
 
   LIR_Opr resolved = resolve_address(access, false);
   access.set_resolved_addr(resolved);
@@ -55,7 +54,6 @@ void BarrierSetC1::store_at(LIRAccess& access, LIR_Opr value) {
 void BarrierSetC1::load_at(LIRAccess& access, LIR_Opr result) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
 
   LIR_Opr resolved = resolve_address(access, false);
   access.set_resolved_addr(resolved);
@@ -65,7 +63,6 @@ void BarrierSetC1::load_at(LIRAccess& access, LIR_Opr result) {
 LIR_Opr BarrierSetC1::atomic_cmpxchg_at(LIRAccess& access, LIRItem& cmp_value, LIRItem& new_value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -77,7 +74,6 @@ LIR_Opr BarrierSetC1::atomic_cmpxchg_at(LIRAccess& access, LIRItem& cmp_value, L
 LIR_Opr BarrierSetC1::atomic_xchg_at(LIRAccess& access, LIRItem& value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -89,7 +85,6 @@ LIR_Opr BarrierSetC1::atomic_xchg_at(LIRAccess& access, LIRItem& value) {
 LIR_Opr BarrierSetC1::atomic_add_at(LIRAccess& access, LIRItem& value) {
   DecoratorSet decorators = access.decorators();
   bool in_heap = (decorators & IN_HEAP) != 0;
-  assert(in_heap, "not supported yet");
 
   access.load_address();
 
@@ -246,8 +241,7 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
     if ((type != NULL) && type->is_loaded()) {
       if (type->is_subtype_of(gen->compilation()->env()->Reference_klass())) {
         gen_type_check = false;
-      } else if (type->is_klass() &&
-                 !gen->compilation()->env()->Object_klass()->is_subtype_of(type->as_klass())) {
+      } else if (type->is_klass() && !gen->compilation()->env()->Object_klass()->is_subtype_of(type->as_klass())) {
         // Not Reference and not Object klass.
         gen_pre_barrier = false;
       }
@@ -273,7 +267,6 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
       if (offset->type() == T_INT) {
         referent_off = LIR_OprFact::intConst(java_lang_ref_Reference::referent_offset);
       } else {
-        assert(offset->type() == T_LONG, "what else?");
         referent_off = gen->new_register(T_LONG);
         __ move(LIR_OprFact::longConst(java_lang_ref_Reference::referent_offset), referent_off);
       }

@@ -26,8 +26,8 @@ class CppInterpreter: public AbstractInterpreter {
  public:
 
   // No displatch table to switch so no need for these to do anything special
-  static void notice_safepoints() {}
-  static void ignore_safepoints() {}
+  static void notice_safepoints() { }
+  static void ignore_safepoints() { }
 
   static address    return_entry  (TosState state, int length, Bytecodes::Code code);
   static address    deopt_entry   (TosState state, int length);

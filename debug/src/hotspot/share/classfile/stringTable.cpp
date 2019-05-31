@@ -176,9 +176,7 @@ size_t StringTable::item_added() {
 
 size_t StringTable::add_items_to_clean(size_t ndead) {
   size_t total = Atomic::add((size_t)ndead, &(the_table()->_uncleaned_items));
-  log_trace(stringtable)(
-     "Uncleaned items:" SIZE_FORMAT " added: " SIZE_FORMAT " total:" SIZE_FORMAT,
-     the_table()->_uncleaned_items, ndead, total);
+  log_trace(stringtable)("Uncleaned items:" SIZE_FORMAT " added: " SIZE_FORMAT " total:" SIZE_FORMAT, the_table()->_uncleaned_items, ndead, total);
   return total;
 }
 
@@ -229,10 +227,9 @@ class StringTableGet : public StackObj {
   Thread* _thread;
   Handle  _return;
  public:
-  StringTableGet(Thread* thread) : _thread(thread) {}
+  StringTableGet(Thread* thread) : _thread(thread) { }
   void operator()(WeakHandle<vm_string_table_data>* val) {
     oop result = val->resolve();
-    assert(result != NULL, "Result should be reachable");
     _return = Handle(_thread, result);
   }
   oop get_res_oop() {
@@ -310,16 +307,14 @@ class StringTableCreateEntry : public StackObj {
    Handle  _store;
  public:
   StringTableCreateEntry(Thread* thread, Handle store)
-    : _thread(thread), _store(store) {}
+    : _thread(thread), _store(store) { }
 
   WeakHandle<vm_string_table_data> operator()() { // No dups found
-    WeakHandle<vm_string_table_data> wh =
-      WeakHandle<vm_string_table_data>::create(_store);
+    WeakHandle<vm_string_table_data> wh = WeakHandle<vm_string_table_data>::create(_store);
     return wh;
   }
   void operator()(bool inserted, WeakHandle<vm_string_table_data>* val) {
     oop result = val->resolve();
-    assert(result != NULL, "Result should be reachable");
     _return = Handle(_thread, result);
   }
   oop get_return() const {
@@ -343,8 +338,6 @@ oop StringTable::do_intern(Handle string_or_null_h, jchar* name,
   // compiler optimizations done on e.g. interned string literals.
   Universe::heap()->deduplicate_string(string_h());
 
-  assert(java_lang_String::equals(string_h(), name, len), "string must be properly initialized");
-  assert(len == java_lang_String::length(string_h()), "Must be same length");
   StringTableLookupOop lookup(THREAD, hash, string_h);
   StringTableCreateEntry stc(THREAD, string_h);
 
@@ -363,7 +356,7 @@ class StringTableIsAliveCounter : public BoolObjectClosure {
   size_t _count;
   size_t _count_total;
   StringTableIsAliveCounter(BoolObjectClosure* boc) : _real_boc(boc), _count(0),
-                                                      _count_total(0) {}
+                                                      _count_total(0) { }
   bool do_object_b(oop obj) {
     bool ret = _real_boc->do_object_b(obj);
     if (!ret) {
@@ -374,10 +367,8 @@ class StringTableIsAliveCounter : public BoolObjectClosure {
   }
 };
 
-void StringTable::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f,
-                                    int* processed, int* removed) {
+void StringTable::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f, int* processed, int* removed) {
   DoNothingClosure dnc;
-  assert(is_alive != NULL, "No closure");
   StringTableIsAliveCounter stiac(is_alive);
   OopClosure* tmp = f != NULL ? f : &dnc;
 
@@ -397,16 +388,12 @@ void StringTable::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f,
 }
 
 void StringTable::oops_do(OopClosure* f) {
-  assert(f != NULL, "No closure");
   StringTable::the_table()->_weak_handles->oops_do(f);
 }
 
-void StringTable::possibly_parallel_unlink(
-   OopStorage::ParState<false, false>* _par_state_string, BoolObjectClosure* cl,
-   int* processed, int* removed)
+void StringTable::possibly_parallel_unlink(OopStorage::ParState<false, false>* _par_state_string, BoolObjectClosure* cl, int* processed, int* removed)
 {
   DoNothingClosure dnc;
-  assert(cl != NULL, "No closure");
   StringTableIsAliveCounter stiac(cl);
 
   _par_state_string->weak_oops_do(&stiac, &dnc);
@@ -418,11 +405,8 @@ void StringTable::possibly_parallel_unlink(
   *removed = (int) stiac._count;
 }
 
-void StringTable::possibly_parallel_oops_do(
-   OopStorage::ParState<false /* concurrent */, false /* const */>*
-   _par_state_string, OopClosure* f)
+void StringTable::possibly_parallel_oops_do(OopStorage::ParState<false /* concurrent */, false /* const */>* _par_state_string, OopClosure* f)
 {
-  assert(f != NULL, "No closure");
   _par_state_string->oops_do(f);
 }
 
@@ -457,7 +441,7 @@ struct StringTableDoDelete : StackObj {
 struct StringTableDeleteCheck : StackObj {
   long _count;
   long _item;
-  StringTableDeleteCheck() : _count(0), _item(0) {}
+  StringTableDeleteCheck() : _count(0), _item(0) { }
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     ++_item;
     oop tmp = val->peek();
@@ -480,7 +464,7 @@ void StringTable::clean_dead_entries(JavaThread* jt) {
   StringTableDoDelete stdd;
   {
     TraceTime timer("Clean", TRACETIME_LOG(Debug, stringtable, perf));
-    while(bdt.do_task(jt, stdc, stdd)) {
+    while (bdt.do_task(jt, stdc, stdd)) {
       bdt.pause(jt);
       {
         ThreadBlockInVM tbivm(jt);
@@ -502,11 +486,8 @@ void StringTable::check_concurrent_work() {
   // We should clean/resize if we have more dead than alive,
   // more items than preferred load factor or
   // more dead items than water mark.
-  if ((dead_factor > load_factor) ||
-      (load_factor > PREF_AVG_LIST_LEN) ||
-      (dead_factor > CLEAN_DEAD_HIGH_WATER_MARK)) {
-    log_debug(stringtable)("Concurrent work triggered, live factor:%g dead factor:%g",
-                           load_factor, dead_factor);
+  if ((dead_factor > load_factor) || (load_factor > PREF_AVG_LIST_LEN) || (dead_factor > CLEAN_DEAD_HIGH_WATER_MARK)) {
+    log_debug(stringtable)("Concurrent work triggered, live factor:%g dead factor:%g", load_factor, dead_factor);
     trigger_concurrent_work();
   }
 }
@@ -555,8 +536,7 @@ void StringTable::try_rehash_table() {
   log_debug(stringtable)("Table imbalanced, rehashing called.");
 
   // Grow instead of rehash.
-  if (get_load_factor() > PREF_AVG_LIST_LEN &&
-      !_local_table->is_max_size_reached()) {
+  if (get_load_factor() > PREF_AVG_LIST_LEN && !_local_table->is_max_size_reached()) {
     log_debug(stringtable)("Choosing growing over rehashing.");
     trigger_concurrent_work();
     _needs_rehashing = false;
@@ -611,8 +591,7 @@ struct SizeFunc : StackObj {
   };
 };
 
-void StringTable::print_table_statistics(outputStream* st,
-                                         const char* table_name) {
+void StringTable::print_table_statistics(outputStream* st, const char* table_name) {
   SizeFunc sz;
   _local_table->statistics_to(Thread::current(), sz, st, table_name);
 }
@@ -623,7 +602,6 @@ class VerifyStrings : StackObj {
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     oop s = val->peek();
     if (s != NULL) {
-      assert(java_lang_String::length(s) >= 0, "Length on string must work.");
     }
     return true;
   };
@@ -643,7 +621,7 @@ class VerifyCompStrings : StackObj {
   GrowableArray<oop>* _oops;
  public:
   size_t _errors;
-  VerifyCompStrings(GrowableArray<oop>* oops) : _oops(oops), _errors(0) {}
+  VerifyCompStrings(GrowableArray<oop>* oops) : _oops(oops), _errors(0) { }
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     oop s = val->resolve();
     if (s == NULL) {
@@ -652,7 +630,6 @@ class VerifyCompStrings : StackObj {
     int len = _oops->length();
     for (int i = 0; i < len; i++) {
       bool eq = java_lang_String::equals(s, _oops->at(i));
-      assert(!eq, "Duplicate strings");
       if (eq) {
         _errors++;
       }
@@ -664,9 +641,7 @@ class VerifyCompStrings : StackObj {
 
 size_t StringTable::verify_and_compare_entries() {
   Thread* thr = Thread::current();
-  GrowableArray<oop>* oops =
-    new (ResourceObj::C_HEAP, mtInternal)
-      GrowableArray<oop>((int)the_table()->_current_size, true);
+  GrowableArray<oop>* oops = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<oop>((int)the_table()->_current_size, true);
 
   VerifyCompStrings vcs(oops);
   if (!the_table()->_local_table->try_scan(thr, vcs)) {
@@ -681,7 +656,7 @@ class PrintString : StackObj {
   Thread* _thr;
   outputStream* _st;
  public:
-  PrintString(Thread* thr, outputStream* st) : _thr(thr), _st(st) {}
+  PrintString(Thread* thr, outputStream* st) : _thr(thr), _st(st) { }
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     oop s = val->peek();
     if (s == NULL) {
@@ -731,8 +706,7 @@ void StringTable::dump(outputStream* st, bool verbose) {
 // Utility for dumping strings
 StringtableDCmd::StringtableDCmd(outputStream* output, bool heap) :
                                  DCmdWithParser(output, heap),
-  _verbose("-verbose", "Dump the content of each string in the table",
-           "BOOLEAN", false, "false") {
+  _verbose("-verbose", "Dump the content of each string in the table", "BOOLEAN", false, "false") {
   _dcmdparser.add_dcmd_option(&_verbose);
 }
 

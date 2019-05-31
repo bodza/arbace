@@ -28,10 +28,7 @@ LogSelection::LogSelection(const LogTagType tags[LogTag::MaxTags], bool wildcard
 }
 
 bool LogSelection::operator==(const LogSelection& ref) const {
-  if (_ntags != ref._ntags ||
-      _wildcard != ref._wildcard ||
-      _level != ref._level ||
-      _tag_sets_selected != ref._tag_sets_selected) {
+  if (_ntags != ref._ntags || _wildcard != ref._wildcard || _level != ref._level || _tag_sets_selected != ref._tag_sets_selected) {
     return false;
   }
   for (size_t i = 0; i < _ntags; i++) {
@@ -181,8 +178,7 @@ size_t LogSelection::tag_sets_selected() const {
 int LogSelection::describe_tags(char* buf, size_t bufsize) const {
   int tot_written = 0;
   for (size_t i = 0; i < _ntags; i++) {
-    int written = jio_snprintf(buf + tot_written, bufsize - tot_written,
-                               "%s%s", (i == 0 ? "" : "+"), LogTag::name(_tags[i]));
+    int written = jio_snprintf(buf + tot_written, bufsize - tot_written, "%s%s", (i == 0 ? "" : "+"), LogTag::name(_tags[i]));
     if (written == -1) {
       return written;
     }

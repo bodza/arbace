@@ -28,7 +28,7 @@ class SwitchRange: public CompilationResourceObj {
   int _high_key;
   BlockBegin* _sux;
  public:
-  SwitchRange(int start_key, BlockBegin* sux): _low_key(start_key), _high_key(start_key), _sux(sux) {}
+  SwitchRange(int start_key, BlockBegin* sux): _low_key(start_key), _high_key(start_key), _sux(sux) { }
   void set_high_key(int key) { _high_key = key; }
 
   int high_key() const { return _high_key; }
@@ -58,7 +58,7 @@ class ResolveNode: public CompilationResourceObj {
     : _operand(operand)
     , _assigned(false)
     , _visited(false)
-    , _start_node(false) {};
+    , _start_node(false) { };
 
   // accessors
   LIR_Opr operand() const           { return _operand; }
@@ -86,7 +86,7 @@ class PhiResolverState: public CompilationResourceObj {
   NodeList _vreg_table;       // Mapping from virtual register to Node
 
  public:
-  PhiResolverState() {}
+  PhiResolverState() { }
 
   void reset(int max_vregs);
 };
@@ -102,8 +102,8 @@ class PhiResolver: public CompilationResourceObj {
 
   // access to shared state arrays
   NodeList& virtual_operands() { return _state._virtual_operands; }
-  NodeList& other_operands()   { return _state._other_operands;   }
-  NodeList& vreg_table()       { return _state._vreg_table;       }
+  NodeList& other_operands()   { return _state._other_operands; }
+  NodeList& vreg_table()       { return _state._vreg_table; }
 
   ResolveNode* create_node(LIR_Opr opr, bool source);
   ResolveNode* source_node(LIR_Opr opr)      { return create_node(opr, true); }
@@ -147,7 +147,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
     return this;
   }
 
-  void print_if_not_loaded(const NewInstance* new_instance) {};
+  void print_if_not_loaded(const NewInstance* new_instance) { };
 
  public:
   LIR_List* lir() const {
@@ -185,17 +185,12 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   LIR_Opr load_immediate(int x, BasicType type);
 
   void  set_result(Value x, LIR_Opr opr)           {
-    assert(opr->is_valid(), "must set to valid value");
-    assert(x->operand()->is_illegal(), "operand should never change");
-    assert(!opr->is_register() || opr->is_virtual(), "should never set result to a physical register");
     x->set_operand(opr);
-    assert(opr == x->operand(), "must be");
     if (opr->is_virtual()) {
       _instruction_for_operand.at_put_grow(opr->vreg_number(), x, NULL);
     }
   }
   void  set_no_result(Value x)                     {
-    assert(!x->has_uses(), "can't have use");
     x->clear_operand(); }
 
   friend class LIRItem;
@@ -589,10 +584,9 @@ class LIRItem: public CompilationResourceObj {
     _new_result = LIR_OprFact::illegalOpr;
   }
 
-  Value value() const          { return _value;          }
+  Value value() const          { return _value; }
   ValueType* type() const      { return value()->type(); }
   LIR_Opr result()             {
-    assert(!_destroys_register || (!_result->is_register() || _result->is_virtual()), "shouldn't use set_destroys_register with physical regsiters");
     if (_destroys_register && _result->is_register()) {
       if (_new_result->is_illegal()) {
         _new_result = _gen->new_register(type());

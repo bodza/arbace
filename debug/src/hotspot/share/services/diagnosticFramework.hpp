@@ -58,10 +58,9 @@ public:
 
   DCmdIter(const char* str, char delim)
    : _str(str), _delim(delim), _len(::strlen(str)),
-     _cursor(0) {}
+     _cursor(0) { }
   bool has_next() const { return _cursor < _len; }
   CmdLine next() {
-    assert(_cursor <= _len, "Cannot iterate more");
     size_t n = _cursor;
     while (n < _len && _str[n] != _delim) n++;
     CmdLine line(&(_str[_cursor]), n - _cursor, false);
@@ -85,7 +84,7 @@ class DCmdArgIter : public ResourceObj {
 public:
   DCmdArgIter(const char* buf, size_t len, char delim)
     : _buffer(buf), _len(len), _cursor(0), _key_addr(NULL),
-      _key_len(0), _value_addr(NULL), _value_len(0), _delim(delim) {}
+      _key_len(0), _value_addr(NULL), _value_len(0), _delim(delim) { }
 
   bool next(TRAPS);
   const char* key_addr() const    { return _key_addr; }
@@ -112,7 +111,7 @@ public:
           int num_arguments,
           bool enabled)
   : _name(name), _description(description), _impact(impact), _permission(permission),
-    _num_arguments(num_arguments), _is_enabled(enabled) {}
+    _num_arguments(num_arguments), _is_enabled(enabled) { }
   const char* name() const          { return _name; }
   const char* description() const   { return _description; }
   const char* impact() const        { return _impact; }
@@ -144,7 +143,7 @@ public:
                    bool multiple, int position = -1)
     : _name(name), _description(description), _type(type),
       _default_string(default_string), _mandatory(mandatory), _option(option),
-      _multiple(multiple), _position(position) {}
+      _multiple(multiple), _position(position) { }
 
   const char* name() const        { return _name; }
   const char* description() const { return _description; }
@@ -181,7 +180,7 @@ private:
   GenDCmdArgument* _arguments_list;
 public:
   DCmdParser()
-    : _options(NULL), _arguments_list(NULL) {}
+    : _options(NULL), _arguments_list(NULL) { }
   void add_dcmd_option(GenDCmdArgument* arg);
   void add_dcmd_argument(GenDCmdArgument* arg);
   GenDCmdArgument* lookup_dcmd_option(const char* name, size_t len);
@@ -216,11 +215,11 @@ protected:
   const bool          _is_heap_allocated;
 public:
   DCmd(outputStream* output, bool heap_allocated)
-   : _output(output), _is_heap_allocated(heap_allocated) {}
+   : _output(output), _is_heap_allocated(heap_allocated) { }
 
   // Child classes: please always provide these methods:
-  //  static const char* name()             { return "<command name>";}
-  //  static const char* description()      { return "<command help>";}
+  //  static const char* name()             { return "<command name>"; }
+  //  static const char* description()      { return "<command help>"; }
 
   static const char* disabled_message() { return "Diagnostic command currently disabled"; }
 
@@ -246,7 +245,7 @@ public:
   // execute diagnostic commands to remote users. Any diagnostic command with
   // a potential impact on security should overwrite this method.
   static const JavaPermission permission() {
-    JavaPermission p = {NULL, NULL, NULL};
+    JavaPermission p = { NULL, NULL, NULL };
     return p;
   }
   static int num_arguments()        { return 0; }
@@ -259,8 +258,7 @@ public:
     DCmdArgIter iter(line->args_addr(), line->args_len(), delim);
     bool has_arg = iter.next(CHECK);
     if (has_arg) {
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                "The argument list of this diagnostic command should be empty.");
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "The argument list of this diagnostic command should be empty.");
     }
   }
   virtual void execute(DCmdSource source, TRAPS) { }
@@ -301,7 +299,7 @@ public:
 class DCmdMark : public StackObj {
   DCmd* const _ref;
 public:
-  DCmdMark(DCmd* cmd) : _ref(cmd) {}
+  DCmdMark(DCmd* cmd) : _ref(cmd) { }
   ~DCmdMark() {
     if (_ref != NULL) {
       _ref->cleanup();
@@ -340,7 +338,7 @@ private:
 public:
   DCmdFactory(int num_arguments, uint32_t flags, bool enabled, bool hidden)
     : _next(NULL), _enabled(enabled), _hidden(hidden),
-      _export_flags(flags), _num_arguments(num_arguments) {}
+      _export_flags(flags), _num_arguments(num_arguments) { }
   bool is_enabled() const       { return _enabled; }
   bool is_hidden() const        { return _hidden; }
   uint32_t export_flags() const { return _export_flags; }

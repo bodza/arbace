@@ -124,7 +124,6 @@ public:
   // Bucket handling
   int hash_to_index(unsigned int full_hash) const {
     int h = full_hash % _table_size;
-    assert(h >= 0 && h < _table_size, "Illegal hash value");
     return h;
   }
 
@@ -207,7 +206,7 @@ public:
 
   bool resize(int new_size);
 
-  template <class T> void verify_table(const char* table_name) {};
+  template <class T> void verify_table(const char* table_name) { };
 };
 
 template <class T, MEMFLAGS F> class Hashtable : public BasicHashtable<F> {
@@ -222,7 +221,7 @@ public:
     : BasicHashtable<F>(table_size, entry_size, buckets, number_of_entries) { }
 
   // Debugging
-  void print()               {};
+  void print()               { };
 
   unsigned int compute_hash(const Symbol* name) const {
     return (unsigned int) name->identity_hash();

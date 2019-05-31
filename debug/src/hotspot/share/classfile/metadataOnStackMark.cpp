@@ -19,9 +19,6 @@ MetadataOnStackBuffer* MetadataOnStackMark::_current_buffer = NULL;
 // the relocator and dummy constant pools.  None of these appear anywhere except
 // in metadata Handles.
 MetadataOnStackMark::MetadataOnStackMark(bool redefinition_walk) {
-  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
-  assert(_used_buffers == NULL, "sanity check");
-  assert(!_is_active, "MetadataOnStackMarks do not nest");
 
   Threads::metadata_handles_do(Metadata::mark_on_stack);
 
@@ -35,7 +32,6 @@ MetadataOnStackMark::MetadataOnStackMark(bool redefinition_walk) {
 }
 
 MetadataOnStackMark::~MetadataOnStackMark() {
-  assert(SafepointSynchronize::is_at_safepoint(), "sanity check");
   // Unmark everything that was marked.   Can't do the same walk because
   // redefine classes messes up the code cache so the set of methods
   // might not be the same.
@@ -91,14 +87,11 @@ MetadataOnStackBuffer* MetadataOnStackMark::allocate_buffer() {
     allocated = new MetadataOnStackBuffer();
   }
 
-  assert(!allocated->is_full(), "Should not be full: " PTR_FORMAT, p2i(allocated));
-
   return allocated;
 }
 
 // Record which objects are marked so we can unmark the same objects.
 void MetadataOnStackMark::record(Metadata* m) {
-  assert(_is_active, "metadata on stack marking is active");
 
   MetadataOnStackBuffer* buffer = _current_buffer;
 

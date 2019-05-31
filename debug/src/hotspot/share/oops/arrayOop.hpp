@@ -60,11 +60,9 @@ class arrayOopDesc : public oopDesc {
   template <typename T>
   static T* obj_offset_to_raw(arrayOop obj, size_t offset_in_bytes, T* raw) {
     if (obj != NULL) {
-      assert(raw == NULL, "either raw or in-heap");
       char* base = reinterpret_cast<char*>((void*) obj);
       raw = reinterpret_cast<T*>(base + offset_in_bytes);
     } else {
-      assert(raw != NULL, "either raw or in-heap");
     }
     return raw;
   }
@@ -100,13 +98,9 @@ class arrayOopDesc : public oopDesc {
   // overflow. We also need to make sure that this will not overflow a size_t on
   // 32 bit platforms when we convert it to a byte size.
   static int32_t max_array_length(BasicType type) {
-    assert(type >= 0 && type < T_CONFLICT, "wrong type");
-    assert(type2aelembytes(type) != 0, "wrong type");
 
-    const size_t max_element_words_per_size_t =
-      align_down((SIZE_MAX/HeapWordSize - header_size(type)), MinObjAlignment);
-    const size_t max_elements_per_size_t =
-      HeapWordSize * max_element_words_per_size_t / type2aelembytes(type);
+    const size_t max_element_words_per_size_t = align_down((SIZE_MAX/HeapWordSize - header_size(type)), MinObjAlignment);
+    const size_t max_elements_per_size_t = HeapWordSize * max_element_words_per_size_t / type2aelembytes(type);
     if ((size_t)max_jint < max_elements_per_size_t) {
       // It should be ok to return max_jint here, but parts of the code
       // (CollectedHeap, Klass::oop_oop_iterate(), and more) uses an int for

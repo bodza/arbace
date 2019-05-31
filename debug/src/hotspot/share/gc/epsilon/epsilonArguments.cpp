@@ -15,8 +15,6 @@ size_t EpsilonArguments::conservative_max_heap_alignment() {
 void EpsilonArguments::initialize() {
   GCArguments::initialize();
 
-  assert(UseEpsilonGC, "Sanity");
-
   // Forcefully exit when OOME is detected. Nothing we can do at that point.
   if (FLAG_IS_DEFAULT(ExitOnOutOfMemoryError)) {
     FLAG_SET_DEFAULT(ExitOnOutOfMemoryError, true);

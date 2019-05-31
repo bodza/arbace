@@ -136,11 +136,11 @@ JVM_handle_bsd_signal(int sig,
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Bsd::signal_handlers_are_installed) {
-    if (t != NULL ){
-      if(t->is_Java_thread()) {
+    if (t != NULL ) {
+      if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       }
-      else if(t->is_VM_thread()){
+      else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -165,29 +165,15 @@ JVM_handle_bsd_signal(int sig,
       }
     }
 
-    /*if (thread->thread_state() == _thread_in_Java) {
+    if (thread->thread_state() == _thread_in_vm && sig == SIGBUS && thread->doing_unsafe_access()) {
       ShouldNotCallThis();
     }
-    else*/ if (thread->thread_state() == _thread_in_vm &&
-               sig == SIGBUS && thread->doing_unsafe_access()) {
-      ShouldNotCallThis();
-    }
-
-    // jni_fast_Get<Primitive>Field can trap at certain pc's if a GC
-    // kicks in and the heap gets shrunk before the field access.
-    /*if (sig == SIGSEGV || sig == SIGBUS) {
-      address addr = JNI_FastGetField::find_slowcase_pc(pc);
-      if (addr != (address)-1) {
-        stub = addr;
-      }
-    }*/
 
     // Check to see if we caught the safepoint code in the process
     // of write protecting the memory serialization page.  It write
     // enables the page immediately after protecting it so we can
     // just return to retry the write.
-    if ((sig == SIGSEGV || sig == SIGBUS) &&
-        os::is_memory_serialize_page(thread, (address) info->si_addr)) {
+    if ((sig == SIGSEGV || sig == SIGBUS) && os::is_memory_serialize_page(thread, (address) info->si_addr)) {
       // Block current thread until permission is restored.
       os::block_on_serialize_page_trap();
       return true;
@@ -204,8 +190,7 @@ JVM_handle_bsd_signal(int sig,
     return false;
   }
 
-  const char *fmt =
-      "caught unhandled signal " INT32_FORMAT " at address " PTR_FORMAT;
+  const char *fmt = "caught unhandled signal " INT32_FORMAT " at address " PTR_FORMAT;
   char buf[128];
 
   sprintf(buf, fmt, sig, info->si_addr);
@@ -267,8 +252,7 @@ static void current_stack_region(address *bottom, size_t *size) {
   if (rslt != 0)
     fatal("pthread_attr_get_np failed with error = " INT32_FORMAT, rslt);
 
-  if (pthread_attr_getstackaddr(&attr, (void **) &stack_bottom) != 0 ||
-      pthread_attr_getstacksize(&attr, &stack_bytes) != 0) {
+  if (pthread_attr_getstackaddr(&attr, (void **) &stack_bottom) != 0 || pthread_attr_getstacksize(&attr, &stack_bytes) != 0) {
     fatal("Can not locate current stack attributes!");
   }
 
@@ -276,9 +260,6 @@ static void current_stack_region(address *bottom, size_t *size) {
 
   stack_top = stack_bottom + stack_bytes;
 #endif
-
-  assert(os::current_stack_pointer() >= stack_bottom, "should do");
-  assert(os::current_stack_pointer() < stack_top, "should do");
 
   *bottom = stack_bottom;
   *size = stack_top - stack_bottom;

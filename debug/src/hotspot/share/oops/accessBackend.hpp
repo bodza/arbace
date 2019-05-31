@@ -46,7 +46,7 @@ namespace AccessInternal {
   struct MustConvertCompressedOop: public IntegralConstant<bool,
     HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value &&
     IsSame<typename HeapOopType<decorators>::type, narrowOop>::value &&
-    IsSame<T, oop>::value> {};
+    IsSame<T, oop>::value> { };
 
   // This metafunction returns an appropriate oop type if the value is oop-like
   // and otherwise returns the same type T.
@@ -60,17 +60,16 @@ namespace AccessInternal {
   template <DecoratorSet decorators>
   inline typename HeapOopType<decorators>::type*
   oop_field_addr(oop base, ptrdiff_t byte_offset) {
-    return reinterpret_cast<typename HeapOopType<decorators>::type*>(
-             reinterpret_cast<intptr_t>((void*)base) + byte_offset);
+    return reinterpret_cast<typename HeapOopType<decorators>::type*>(reinterpret_cast<intptr_t>((void*)base) + byte_offset);
   }
 
   // This metafunction returns whether it is possible for a type T to require
   // locking to support wide atomics or not.
   template <typename T>
 #ifdef SUPPORTS_NATIVE_CX8
-  struct PossiblyLockedAccess: public IntegralConstant<bool, false> {};
+  struct PossiblyLockedAccess: public IntegralConstant<bool, false> { };
 #else
-  struct PossiblyLockedAccess: public IntegralConstant<bool, (sizeof(T) > 4)> {};
+  struct PossiblyLockedAccess: public IntegralConstant<bool, (sizeof(T) > 4)> { };
 #endif
 
   template <DecoratorSet decorators, typename T>
@@ -100,7 +99,7 @@ namespace AccessInternal {
                                      size_t length);
   };
 
-  template <DecoratorSet decorators, typename T, BarrierType barrier> struct AccessFunction {};
+  template <DecoratorSet decorators, typename T, BarrierType barrier> struct AccessFunction { };
 
 #define ACCESS_GENERATE_ACCESS_FUNCTION(bt, func) \
   template <DecoratorSet decorators, typename T> \
@@ -439,7 +438,7 @@ namespace AccessInternal {
   // function pointer to this new accessor.
 
   template <DecoratorSet decorators, typename T, BarrierType type>
-  struct RuntimeDispatch: AllStatic {};
+  struct RuntimeDispatch: AllStatic { };
 
   template <DecoratorSet decorators, typename T>
   struct RuntimeDispatch<decorators, T, BARRIER_STORE>: AllStatic {
@@ -652,7 +651,7 @@ namespace AccessInternal {
       !HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value || // primitive access
       !HasDecorator<decorators, INTERNAL_CONVERT_COMPRESSED_OOP>::value || // don't care about compressed oops (oop* address)
       HasDecorator<decorators, INTERNAL_RT_USE_COMPRESSED_OOPS>::value> // we can infer we use compressed oops (narrowOop* address)
-    {};
+    { };
 
     static const DecoratorSet convert_compressed_oops = INTERNAL_RT_USE_COMPRESSED_OOPS | INTERNAL_CONVERT_COMPRESSED_OOP;
 
@@ -1138,7 +1137,7 @@ namespace AccessInternal {
   // that the passed in types make sense.
 
   template <DecoratorSet decorators, typename T>
-  static void verify_types(){
+  static void verify_types() {
     // If this fails to compile, then you have sent in something that is
     // not recognized as a valid primitive type to a primitive Access function.
     STATIC_ASSERT((HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value || // oops have already been validated
@@ -1295,7 +1294,7 @@ namespace AccessInternal {
   private:
     P *const _addr;
   public:
-    OopLoadProxy(P* addr) : _addr(addr) {}
+    OopLoadProxy(P* addr) : _addr(addr) { }
 
     inline operator oop() {
       return load<decorators | INTERNAL_VALUE_IS_OOP, P, oop>(_addr);
@@ -1323,7 +1322,7 @@ namespace AccessInternal {
     const oop _base;
     const ptrdiff_t _offset;
   public:
-    LoadAtProxy(oop base, ptrdiff_t offset) : _base(base), _offset(offset) {}
+    LoadAtProxy(oop base, ptrdiff_t offset) : _base(base), _offset(offset) { }
 
     template <typename T>
     inline operator T() const {
@@ -1344,7 +1343,7 @@ namespace AccessInternal {
     const oop _base;
     const ptrdiff_t _offset;
   public:
-    OopLoadAtProxy(oop base, ptrdiff_t offset) : _base(base), _offset(offset) {}
+    OopLoadAtProxy(oop base, ptrdiff_t offset) : _base(base), _offset(offset) { }
 
     inline operator oop() const {
       return load_at<decorators | INTERNAL_VALUE_IS_OOP, oop>(_base, _offset);

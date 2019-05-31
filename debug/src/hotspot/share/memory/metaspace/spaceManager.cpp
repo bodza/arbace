@@ -17,7 +17,6 @@
 namespace metaspace {
 
 #define assert_counter(expected_value, real_value, msg) \
-  assert( (expected_value) == (real_value), "Counter mismatch (%s): expected " SIZE_FORMAT ", but got: " SIZE_FORMAT ".", msg, expected_value, real_value);
 
 // SpaceManager methods
 
@@ -65,8 +64,6 @@ size_t SpaceManager::get_initial_chunk_size(Metaspace::MetaspaceType type) const
   // Adjust to one of the fixed chunk sizes (unless humongous)
   const size_t adjusted = adjust_initial_chunk_size(requested);
 
-  assert(adjusted != 0, "Incorrect initial chunk size. Requested: " SIZE_FORMAT " adjusted: " SIZE_FORMAT, requested, adjusted);
-
   return adjusted;
 }
 
@@ -100,8 +97,7 @@ size_t SpaceManager::calc_chunk_size(size_t word_size) {
     return SpecializedChunk;
   }
 
-  if (num_chunks_by_type(MediumIndex) == 0 &&
-      num_chunks_by_type(SmallIndex) < small_chunk_limit) {
+  if (num_chunks_by_type(MediumIndex) == 0 && num_chunks_by_type(SmallIndex) < small_chunk_limit) {
     chunk_word_size = (size_t) small_chunk_size();
     if (word_size + Metachunk::overhead() > small_chunk_size()) {
       chunk_word_size = medium_chunk_size();
@@ -113,13 +109,9 @@ size_t SpaceManager::calc_chunk_size(size_t word_size) {
   // Might still need a humongous chunk.  Enforce
   // humongous allocations sizes to be aligned up to
   // the smallest chunk size.
-  size_t if_humongous_sized_chunk =
-    align_up(word_size + Metachunk::overhead(),
-                  smallest_chunk_size());
-  chunk_word_size =
-    MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
+  size_t if_humongous_sized_chunk = align_up(word_size + Metachunk::overhead(), smallest_chunk_size());
+  chunk_word_size = MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
 
-  assert(!SpaceManager::is_humongous(word_size) || chunk_word_size == if_humongous_sized_chunk, "Size calculation is wrong, word_size " SIZE_FORMAT " chunk_word_size " SIZE_FORMAT, word_size, chunk_word_size);
   Log(gc, metaspace, alloc) log;
   if (log.is_trace() && SpaceManager::is_humongous(word_size)) {
     log.trace("Metadata humongous allocation:");
@@ -140,9 +132,6 @@ void SpaceManager::track_metaspace_memory_usage() {
 }
 
 MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
-  assert_lock_strong(_lock);
-  assert(vs_list()->current_virtual_space() != NULL, "Should have been set");
-  assert(current_chunk() == NULL || current_chunk()->allocate(word_size) == NULL, "Don't need to expand");
   MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
   if (log_is_enabled(Trace, gc, metaspace, freelist)) {
@@ -171,8 +160,7 @@ MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
     // need to allocate a new chunk anyway, while we would now prematurely retire a perfectly
     // good chunk which could be used for more normal allocations.
     bool make_current = true;
-    if (next->get_chunk_type() == HumongousIndex &&
-        current_chunk() != NULL) {
+    if (next->get_chunk_type() == HumongousIndex && current_chunk() != NULL) {
       make_current = false;
     }
     add_chunk(next, make_current);
@@ -210,9 +198,6 @@ SpaceManager::SpaceManager(Metaspace::MetadataType mdtype,
 }
 
 void SpaceManager::account_for_new_chunk(const Metachunk* new_chunk) {
-
-  assert_lock_strong(MetaspaceExpand_lock);
-
   _capacity_words += new_chunk->word_size();
   _overhead_words += Metachunk::overhead();
   _num_chunks_by_type[new_chunk->get_chunk_type()] ++;
@@ -223,10 +208,6 @@ void SpaceManager::account_for_new_chunk(const Metachunk* new_chunk) {
 }
 
 void SpaceManager::account_for_allocation(size_t words) {
-  // Note: we should be locked with the ClassloaderData-specific metaspace lock.
-  // We may or may not be locked with the global metaspace expansion lock.
-  assert_lock_strong(lock());
-
   // Add to the per SpaceManager totals. This can be done non-atomically.
   _used_words += words;
 
@@ -235,9 +216,6 @@ void SpaceManager::account_for_allocation(size_t words) {
 }
 
 void SpaceManager::account_for_spacemanager_death() {
-
-  assert_lock_strong(MetaspaceExpand_lock);
-
   MetaspaceUtils::dec_capacity(mdtype(), _capacity_words);
   MetaspaceUtils::dec_overhead(mdtype(), _overhead_words);
   MetaspaceUtils::dec_used(mdtype(), _used_words);
@@ -277,7 +255,6 @@ SpaceManager::~SpaceManager() {
 }
 
 void SpaceManager::deallocate(MetaWord* p, size_t word_size) {
-  assert_lock_strong(lock());
   // Allocations and deallocations are in raw_word_size
   size_t raw_word_size = get_allocation_word_size(word_size);
   // Lazily create a block_freelist
@@ -289,11 +266,6 @@ void SpaceManager::deallocate(MetaWord* p, size_t word_size) {
 
 // Adds a chunk to the list of chunks in use.
 void SpaceManager::add_chunk(Metachunk* new_chunk, bool make_current) {
-
-  assert_lock_strong(_lock);
-  assert(new_chunk != NULL, "Should not be NULL");
-  assert(new_chunk->next() == NULL, "Should not be on a list");
-
   new_chunk->reset_empty();
 
   // Find the correct list and and set the current
@@ -314,7 +286,6 @@ void SpaceManager::add_chunk(Metachunk* new_chunk, bool make_current) {
   // Adjust counters.
   account_for_new_chunk(new_chunk);
 
-  assert(new_chunk->is_empty(), "Not ready for reuse");
   Log(gc, metaspace, freelist) log;
   if (log.is_trace()) {
     log.trace("SpaceManager::added chunk: ");
@@ -346,8 +317,7 @@ Metachunk* SpaceManager::get_new_chunk(size_t chunk_word_size) {
   }
 
   Log(gc, metaspace, alloc) log;
-  if (log.is_trace() && next != NULL &&
-      SpaceManager::is_humongous(next->word_size())) {
+  if (log.is_trace() && next != NULL && SpaceManager::is_humongous(next->word_size())) {
     log.trace("  new humongous chunk word size " PTR_FORMAT, next->word_size());
   }
 
@@ -378,7 +348,6 @@ MetaWord* SpaceManager::allocate(size_t word_size) {
 // Returns the address of spaced allocated for "word_size".
 // This methods does not know about blocks (Metablocks)
 MetaWord* SpaceManager::allocate_work(size_t word_size) {
-  assert_lock_strong(lock());
   // Is there space in the current chunk?
   MetaWord* result = NULL;
 
@@ -400,18 +369,15 @@ MetaWord* SpaceManager::allocate_work(size_t word_size) {
 void SpaceManager::verify() {
   Metachunk* curr = chunk_list();
   while (curr != NULL) {
-    assert(curr->is_tagged_free() == false, "Chunk should be tagged as in use.");
     curr = curr->next();
   }
 }
 
 void SpaceManager::verify_chunk_size(Metachunk* chunk) {
-  assert(is_humongous(chunk->word_size()) || chunk->word_size() == medium_chunk_size() || chunk->word_size() == small_chunk_size() || chunk->word_size() == specialized_chunk_size(), "Chunk size is wrong");
   return;
 }
 
 void SpaceManager::add_to_statistics_locked(SpaceManagerStatistics* out) const {
-  assert_lock_strong(lock());
   Metachunk* chunk = chunk_list();
   while (chunk != NULL) {
     UsedChunksStatistics& chunk_stat = out->chunk_stats(chunk->get_chunk_type());

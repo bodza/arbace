@@ -54,14 +54,9 @@ G1CollectionSet::~G1CollectionSet() {
   delete _cset_chooser;
 }
 
-void G1CollectionSet::init_region_lengths(uint eden_cset_region_length,
-                                          uint survivor_cset_region_length) {
-  assert_at_safepoint_on_vm_thread();
-
+void G1CollectionSet::init_region_lengths(uint eden_cset_region_length, uint survivor_cset_region_length) {
   _eden_region_length     = eden_cset_region_length;
   _survivor_region_length = survivor_cset_region_length;
-
-  assert((size_t) young_region_length() == _collection_set_cur_length, "Young region length %u should match collection set length " SIZE_FORMAT, young_region_length(), _collection_set_cur_length);
 
   _old_region_length      = 0;
 }
@@ -78,16 +73,9 @@ void G1CollectionSet::set_recorded_rs_lengths(size_t rs_lengths) {
 
 // Add the heap region at the head of the non-incremental collection set
 void G1CollectionSet::add_old_region(HeapRegion* hr) {
-  assert_at_safepoint_on_vm_thread();
-
-  assert(_inc_build_state == Active, "Precondition");
-  assert(hr->is_old(), "the region should be old");
-
-  assert(!hr->in_collection_set(), "should not already be in the CSet");
   _g1h->register_old_region_with_cset(hr);
 
   _collection_set_regions[_collection_set_cur_length++] = hr->hrm_index();
-  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set now larger than maximum size.");
 
   _bytes_used_before += hr->used();
   size_t rs_length = hr->rem_set()->occupied();
@@ -97,8 +85,6 @@ void G1CollectionSet::add_old_region(HeapRegion* hr) {
 
 // Initialize the per-collection-set information
 void G1CollectionSet::start_incremental_building() {
-  assert(_collection_set_cur_length == 0, "Collection set must be empty before starting a new collection set.");
-  assert(_inc_build_state == Inactive, "Precondition");
 
   _inc_bytes_used_before = 0;
 
@@ -110,8 +96,6 @@ void G1CollectionSet::start_incremental_building() {
 }
 
 void G1CollectionSet::finalize_incremental_building() {
-  assert(_inc_build_state == Active, "Precondition");
-  assert(SafepointSynchronize::is_at_safepoint(), "should be at a safepoint");
 
   // The two "main" fields, _inc_recorded_rs_lengths and
   // _inc_predicted_elapsed_time_ms, are updated by the thread
@@ -142,7 +126,6 @@ void G1CollectionSet::finalize_incremental_building() {
 }
 
 void G1CollectionSet::clear() {
-  assert_at_safepoint_on_vm_thread();
   _collection_set_cur_length = 0;
 }
 
@@ -173,11 +156,8 @@ void G1CollectionSet::iterate_from(HeapRegionClosure* cl, uint worker_id, uint t
   } while (cur_pos != start_pos);
 }
 
-void G1CollectionSet::update_young_region_prediction(HeapRegion* hr,
-                                                     size_t new_rs_length) {
+void G1CollectionSet::update_young_region_prediction(HeapRegion* hr, size_t new_rs_length) {
   // Update the CSet information that is dependent on the new RS length
-  assert(hr->is_young(), "Precondition");
-  assert(!SafepointSynchronize::is_at_safepoint(), "should not be at a safepoint");
 
   // We could have updated _inc_recorded_rs_lengths and
   // _inc_predicted_elapsed_time_ms directly but we'd need to do
@@ -202,11 +182,8 @@ void G1CollectionSet::update_young_region_prediction(HeapRegion* hr,
 }
 
 void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
-  assert(hr->is_young(), "invariant");
-  assert(_inc_build_state == Active, "Precondition");
 
   size_t collection_set_length = _collection_set_cur_length;
-  assert(collection_set_length <= INT_MAX, "Collection set is too large with %d entries", (int)collection_set_length);
   hr->set_young_index_in_cset((int)collection_set_length);
 
   _collection_set_regions[collection_set_length] = hr->hrm_index();
@@ -214,7 +191,6 @@ void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
   // update to the length field.
   OrderAccess::storestore();
   _collection_set_cur_length++;
-  assert(_collection_set_cur_length <= _collection_set_max_length, "Collection set larger than maximum allowed.");
 
   // This routine is used when:
   // * adding survivor regions to the incremental cset at the end of an
@@ -248,17 +224,14 @@ void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
     _inc_bytes_used_before += hr->used();
   }
 
-  assert(!hr->in_collection_set(), "invariant");
   _g1h->register_young_region_with_cset(hr);
 }
 
 void G1CollectionSet::add_survivor_regions(HeapRegion* hr) {
-  assert(hr->is_survivor(), "Must only add survivor regions, but is %s", hr->get_type_str());
   add_young_region_common(hr);
 }
 
 void G1CollectionSet::add_eden_region(HeapRegion* hr) {
-  assert(hr->is_eden(), "Must only add eden regions, but is %s", hr->get_type_str());
   add_young_region_common(hr);
 }
 
@@ -267,8 +240,7 @@ double G1CollectionSet::finalize_young_part(double target_pause_time_ms, G1Survi
 
   finalize_incremental_building();
 
-  guarantee(target_pause_time_ms > 0.0,
-            "target_pause_time_ms = %1.6lf should be positive", target_pause_time_ms);
+  guarantee(target_pause_time_ms > 0.0, "target_pause_time_ms = %1.6lf should be positive", target_pause_time_ms);
 
   size_t pending_cards = _policy->pending_cards();
   double base_time_ms = _policy->predict_base_elapsed_time_ms(pending_cards);
@@ -346,9 +318,7 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
         // We've added enough old regions that the amount of uncollected
         // reclaimable space is at or below the waste threshold. Stop
         // adding old regions to the CSet.
-        log_debug(gc, ergo, cset)("Finish adding old regions to CSet (reclaimable percentage not over threshold). "
-                                  "old %u regions, max %u regions, reclaimable: " SIZE_FORMAT "B (%1.2f%%) threshold: " UINTX_FORMAT "%%",
-                                  old_region_length(), max_old_cset_length, reclaimable_bytes, reclaimable_percent, G1HeapWastePercent);
+        log_debug(gc, ergo, cset)("Finish adding old regions to CSet (reclaimable percentage not over threshold). old %u regions, max %u regions, reclaimable: " SIZE_FORMAT "B (%1.2f%%) threshold: " UINTX_FORMAT "%%", old_region_length(), max_old_cset_length, reclaimable_bytes, reclaimable_percent, G1HeapWastePercent);
         break;
       }
 
@@ -360,9 +330,7 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
           if (old_region_length() >= min_old_cset_length) {
             // We have added the minimum number of old regions to the CSet,
             // we are done with this CSet.
-            log_debug(gc, ergo, cset)("Finish adding old regions to CSet (predicted time is too high). "
-                                      "predicted time: %1.2fms, remaining time: %1.2fms old %u regions, min %u regions",
-                                      predicted_time_ms, time_remaining_ms, old_region_length(), min_old_cset_length);
+            log_debug(gc, ergo, cset)("Finish adding old regions to CSet (predicted time is too high). predicted time: %1.2fms, remaining time: %1.2fms old %u regions, min %u regions", predicted_time_ms, time_remaining_ms, old_region_length(), min_old_cset_length);
             break;
           }
 
@@ -375,8 +343,7 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
           // In the non-auto-tuning case, we'll finish adding regions
           // to the CSet if we reach the minimum.
 
-          log_debug(gc, ergo, cset)("Finish adding old regions to CSet (old CSet region num reached min). old %u regions, min %u regions",
-                                    old_region_length(), min_old_cset_length);
+          log_debug(gc, ergo, cset)("Finish adding old regions to CSet (old CSet region num reached min). old %u regions, min %u regions", old_region_length(), min_old_cset_length);
           break;
         }
       }
@@ -398,9 +365,7 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
       // We print the information once here at the end, predicated on
       // whether we added any apparently expensive regions or not, to
       // avoid generating output per region.
-      log_debug(gc, ergo, cset)("Added expensive regions to CSet (old CSet region num not reached min)."
-                                "old: %u regions, expensive: %u regions, min: %u regions, remaining time: %1.2fms",
-                                old_region_length(), expensive_region_num, min_old_cset_length, time_remaining_ms);
+      log_debug(gc, ergo, cset)("Added expensive regions to CSet (old CSet region num not reached min). old: %u regions, expensive: %u regions, min: %u regions, remaining time: %1.2fms", old_region_length(), expensive_region_num, min_old_cset_length, time_remaining_ms);
     }
 
     cset_chooser()->verify();

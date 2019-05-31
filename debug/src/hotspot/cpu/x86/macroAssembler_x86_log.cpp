@@ -161,7 +161,6 @@ void MacroAssembler::fast_log(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   Label L_2TAG_PACKET_8_0_2;
   Label L_2TAG_PACKET_12_0_2, L_2TAG_PACKET_13_0_2, B1_3, B1_5, start;
 
-  assert_different_registers(tmp1, tmp2, eax, ecx, edx);
   jmp(start);
   address L_tbl = (address)_L_tbl;
   address log2 = (address)_log2;

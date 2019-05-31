@@ -167,8 +167,6 @@ void NativeCall::insert(address code_pos, address entry) {
 // selfs (spinlock). Then patches the last byte, and then atomicly replaces
 // the jmp's with the first 4 byte of the new instruction.
 void NativeCall::replace_mt_safe(address instr_addr, address code_buffer) {
-  assert(Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "concurrent code patching");
-  assert(instr_addr != NULL, "illegal address for code patching");
 
   NativeCall* n_call =  nativeCall_at (instr_addr); // checking that it is a call
   if (os::is_MP()) {
@@ -177,7 +175,6 @@ void NativeCall::replace_mt_safe(address instr_addr, address code_buffer) {
 
   // First patch dummy jmp in place
   unsigned char patch[4];
-  assert(sizeof(patch)==sizeof(jint), "sanity check");
   patch[0] = 0xEB;       // jmp rel8
   patch[1] = 0xFE;       // jmp to self
   patch[2] = 0xEB;
@@ -214,9 +211,6 @@ void NativeCall::replace_mt_safe(address instr_addr, address code_buffer) {
 // Used in the runtime linkage of calls; see class CompiledIC.
 // (Cf. 4506997 and 4479829, where threads witnessed garbage displacements.)
 void NativeCall::set_destination_mt_safe(address dest) {
-  // Make sure patching code is locked.  No two threads can patch at the same
-  // time but one may be executing this code.
-  assert(Patching_lock->is_locked() || SafepointSynchronize::is_at_safepoint(), "concurrent code patching");
   // Both C1 and C2 should now be generating code which aligns the patched address
   // to be within a single cache line except that C1 does not do the alignment on
   // uniprocessor systems.
@@ -229,7 +223,7 @@ void NativeCall::set_destination_mt_safe(address dest) {
     // Simple case:  The destination lies within a single cache line.
     set_destination(dest);
   } else if ((uintptr_t)instruction_address() / cache_line_size ==
-             ((uintptr_t)instruction_address()+1) / cache_line_size) {
+             ((uintptr_t)instruction_address() + 1) / cache_line_size) {
     // Tricky case:  The instruction prefix lies within a single cache line.
     intptr_t disp = dest - return_address();
 #ifdef AMD64
@@ -244,7 +238,6 @@ void NativeCall::set_destination_mt_safe(address dest) {
       patch_jump[0] = 0xEB;       // jmp rel8
       patch_jump[1] = 0xFE;       // jmp to self
 
-      assert(sizeof(patch_jump)==sizeof(short), "sanity check");
       *(short*)instruction_address() = *(short*)patch_jump;
     }
     // Invalidate.  Opteron requires a flush after every write.
@@ -258,7 +251,6 @@ void NativeCall::set_destination_mt_safe(address dest) {
     u_char patch_disp[5];
     patch_disp[0] = call_opcode;
     *(int32_t*)&patch_disp[1] = (int32_t)disp;
-    assert(sizeof(patch_disp)==instruction_size, "sanity check");
     for (int i = sizeof(short); i < instruction_size; i++)
       instruction_address()[i] = patch_disp[i];
 
@@ -283,8 +275,7 @@ void NativeCall::set_destination_mt_safe(address dest) {
 void NativeMovConstReg::verify() {
 #ifdef AMD64
   // make sure code pattern is actually a mov reg64, imm64 instruction
-  if ((ubyte_at(0) != Assembler::REX_W && ubyte_at(0) != Assembler::REX_WB) ||
-      (ubyte_at(1) & (0xff ^ register_mask)) != 0xB8) {
+  if ((ubyte_at(0) != Assembler::REX_W && ubyte_at(0) != Assembler::REX_WB) || (ubyte_at(1) & (0xff ^ register_mask)) != 0xB8) {
     print();
     fatal("not a REX.W[B] mov reg64, imm64");
   }
@@ -308,15 +299,12 @@ int NativeMovRegMem::instruction_start() const {
 
   // See comment in Assembler::locate_operand() about VEX prefixes.
   if (instr_0 == instruction_VEX_prefix_2bytes) {
-    assert((UseAVX > 0), "shouldn't have VEX prefix");
     return 2;
   }
   if (instr_0 == instruction_VEX_prefix_3bytes) {
-    assert((UseAVX > 0), "shouldn't have VEX prefix");
     return 3;
   }
   if (instr_0 == instruction_EVEX_prefix_4bytes) {
-    assert(VM_Version::supports_evex(), "shouldn't have EVEX prefix");
     return 4;
   }
 
@@ -339,13 +327,13 @@ int NativeMovRegMem::instruction_start() const {
     instr_0 = ubyte_at(off);
   }
 
-  if ( instr_0 == instruction_code_xmm_ss_prefix || // 0xf3
+  if (instr_0 == instruction_code_xmm_ss_prefix || // 0xf3
        instr_0 == instruction_code_xmm_sd_prefix) { // 0xf2
     off++;
     instr_0 = ubyte_at(off);
   }
 
-  if ( instr_0 >= instruction_prefix_wide_lo && // 0x40
+  if (instr_0 >= instruction_prefix_wide_lo && // 0x40
        instr_0 <= instruction_prefix_wide_hi) { // 0x4f
     off++;
     instr_0 = ubyte_at(off);
@@ -475,12 +463,10 @@ void NativeMovRegMem::print() {
 void NativeLoadAddress::verify() {
   // make sure code pattern is actually a mov [reg+offset], reg instruction
   u_char test_byte = *(u_char*)instruction_address();
-  if ( (test_byte == instruction_prefix_wide ||
-        test_byte == instruction_prefix_wide_extended) ) {
+  if ((test_byte == instruction_prefix_wide || test_byte == instruction_prefix_wide_extended)) {
     test_byte = *(u_char*)(instruction_address() + 1);
   }
-  if ( ! ((test_byte == lea_instruction_code)
-          || (test_byte == mov64_instruction_code) )) {
+  if (! ((test_byte == lea_instruction_code) || (test_byte == mov64_instruction_code))) {
     fatal ("not a lea reg, [reg+offs] instruction");
   }
 }
@@ -562,7 +548,6 @@ void NativeJump::patch_verified_entry(address entry, address verified_entry, add
   //First patch dummy jmp in place
 
   unsigned char patch[4];
-  assert(sizeof(patch)==sizeof(int32_t), "sanity check");
   patch[0] = 0xEB;       // jmp rel8
   patch[1] = 0xFE;       // jmp to self
   patch[2] = 0xEB;
@@ -584,7 +569,7 @@ void NativeJump::patch_verified_entry(address entry, address verified_entry, add
   n_jump->wrote(0);
 }
 
-address NativeFarJump::jump_destination() const          {
+address NativeFarJump::jump_destination() const {
   NativeMovConstReg* mov = nativeMovConstReg_at(addr_at(0));
   return (address)mov->data();
 }
@@ -599,20 +584,16 @@ void NativeFarJump::verify() {
 }
 
 void NativePopReg::insert(address code_pos, Register reg) {
-  assert(reg->encoding() < 8, "no space for REX");
-  assert(NativePopReg::instruction_size == sizeof(char), "right address unit for update");
   *code_pos = (u_char)(instruction_code | reg->encoding());
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
 void NativeIllegalInstruction::insert(address code_pos) {
-  assert(NativeIllegalInstruction::instruction_size == sizeof(short), "right address unit for update");
   *(short *)code_pos = instruction_code;
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
 void NativeGeneralJump::verify() {
-  assert(((NativeInstruction *)this)->is_jump() || ((NativeInstruction *)this)->is_cond_jump(), "not a general jump instruction");
 }
 
 void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
@@ -631,12 +612,10 @@ void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
 // selfs (spinlock). Then patches the last byte, and then atomicly replaces
 // the jmp's with the first 4 byte of the new instruction.
 void NativeGeneralJump::replace_mt_safe(address instr_addr, address code_buffer) {
-   assert(instr_addr != NULL, "illegal address for code patching (4)");
    NativeGeneralJump* n_jump =  nativeGeneralJump_at (instr_addr); // checking that it is a jump
 
    // Temporary code
    unsigned char patch[4];
-   assert(sizeof(patch)==sizeof(int32_t), "sanity check");
    patch[0] = 0xEB;       // jmp rel8
    patch[1] = 0xFE;       // jmp to self
    patch[2] = 0xEB;

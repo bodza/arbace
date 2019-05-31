@@ -21,9 +21,9 @@
 // representing summary information for any extra arguments
 class BCEscapeAnalyzer::ArgumentMap {
   uint  _bits;
-  enum {MAXBIT = 29,
+  enum { MAXBIT = 29,
         ALLOCATED = 1,
-        UNKNOWN = 2};
+        UNKNOWN = 2 };
 
   uint int_to_bit(uint e) const {
     if (e > MAXBIT)
@@ -32,10 +32,10 @@ class BCEscapeAnalyzer::ArgumentMap {
   }
 
 public:
-  ArgumentMap()                         { _bits = 0;}
-  void set_bits(uint bits)              { _bits = bits;}
-  uint get_bits() const                 { return _bits;}
-  void clear()                          { _bits = 0;}
+  ArgumentMap()                         { _bits = 0; }
+  void set_bits(uint bits)              { _bits = bits; }
+  uint get_bits() const                 { return _bits; }
+  void clear()                          { _bits = 0; }
   void set_all()                        { _bits = ~0u; }
   bool is_empty() const                 { return _bits == 0; }
   bool contains(uint var) const         { return (_bits & int_to_bit(var)) != 0; }
@@ -97,7 +97,7 @@ bool BCEscapeAnalyzer::is_argument(ArgumentMap vars) {
 }
 
 // return true if any element of vars is an arg_stack argument
-bool BCEscapeAnalyzer::is_arg_stack(ArgumentMap vars){
+bool BCEscapeAnalyzer::is_arg_stack(ArgumentMap vars) {
   if (_conservative)
     return true;
   for (int i = 0; i < _arg_size; i++) {
@@ -183,7 +183,6 @@ bool BCEscapeAnalyzer::is_recursive_call(ciMethod* callee) {
 bool BCEscapeAnalyzer::is_arg_modified(int arg, int offset, int size_in_bytes) {
   if (offset == OFFSET_ANY)
     return _arg_modified[arg] != 0;
-  assert(arg >= 0 && arg < _arg_size, "must be an argument.");
   bool modified = false;
   int l = offset / HeapWordSize;
   int h = align_up(offset + size_in_bytes, HeapWordSize) / HeapWordSize;
@@ -202,7 +201,6 @@ void BCEscapeAnalyzer::set_arg_modified(int arg, int offset, int size_in_bytes) 
     _arg_modified[arg] =  (uint) -1;
     return;
   }
-  assert(arg >= 0 && arg < _arg_size, "must be an argument.");
   int l = offset / HeapWordSize;
   int h = align_up(offset + size_in_bytes, HeapWordSize) / HeapWordSize;
   if (l > ARG_OFFSET_MAX)
@@ -245,8 +243,7 @@ void BCEscapeAnalyzer::invoke(StateInfo &state, Bytecodes::Code code, ciMethod* 
   // direct recursive calls are skipped if they can be bound statically without introducing
   // dependencies and if parameters are passed at the same position as in the current method
   // other calls are skipped if there are no unescaped arguments passed to them
-  bool directly_recursive = (method() == target) &&
-               (code != Bytecodes::_invokevirtual || target->is_final_method() || state._stack[arg_base] .is_empty());
+  bool directly_recursive = (method() == target) && (code != Bytecodes::_invokevirtual || target->is_final_method() || state._stack[arg_base] .is_empty());
 
   // check if analysis of callee can safely be skipped
   bool skip_callee = true;
@@ -269,12 +266,8 @@ void BCEscapeAnalyzer::invoke(StateInfo &state, Bytecodes::Code code, ciMethod* 
 
   // determine actual method (use CHA if necessary)
   ciMethod* inline_target = NULL;
-  if (target->is_loaded() && klass->is_loaded()
-      && (klass->is_initialized() || (klass->is_interface() && target->holder()->is_initialized()))
-      && target->is_loaded()) {
-    if (code == Bytecodes::_invokestatic
-        || code == Bytecodes::_invokespecial
-        || (code == Bytecodes::_invokevirtual && target->is_final_method())) {
+  if (target->is_loaded() && klass->is_loaded() && (klass->is_initialized() || (klass->is_interface() && target->holder()->is_initialized())) && target->is_loaded()) {
+    if (code == Bytecodes::_invokestatic || code == Bytecodes::_invokespecial || (code == Bytecodes::_invokevirtual && target->is_final_method())) {
       inline_target = target;
     } else {
       inline_target = target->find_monomorphic_target(calling_klass, callee_holder, actual_recv);
@@ -311,8 +304,7 @@ void BCEscapeAnalyzer::invoke(StateInfo &state, Bytecodes::Code code, ciMethod* 
 
     // record dependencies if at least one parameter retained stack-allocatable
     if (must_record_dependencies) {
-      if (code == Bytecodes::_invokeinterface ||
-          (code == Bytecodes::_invokevirtual && !target->is_final_method())) {
+      if (code == Bytecodes::_invokeinterface || (code == Bytecodes::_invokevirtual && !target->is_final_method())) {
         _dependencies.append(actual_recv);
         _dependencies.append(inline_target);
       }
@@ -711,8 +703,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
       {
         state.spop();
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         break;
       }
@@ -726,8 +716,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
         state.spop();
         state.spop();
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         break;
       }
@@ -737,16 +725,12 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
         set_method_escape(state.apop());
         set_method_escape(state.apop());
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         break;
       }
       case Bytecodes::_goto:
       {
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         fall_through = false;
         break;
@@ -754,8 +738,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
       case Bytecodes::_jsr:
       {
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         state.apush(empty_map);
         successors.push(_methodBlocks->block_containing(dest_bci));
         fall_through = false;
@@ -763,11 +745,9 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
       }
       case Bytecodes::_ret:
         // we don't track  the destination of a "ret" instruction
-        assert(s.next_bci() == limit_bci, "branch must end block");
         fall_through = false;
         break;
       case Bytecodes::_return:
-        assert(s.next_bci() == limit_bci, "return must end block");
         fall_through = false;
         break;
       case Bytecodes::_tableswitch:
@@ -778,13 +758,10 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
           int dest_bci;
           for (int i = 0; i < len; i++) {
             dest_bci = s.cur_bci() + sw.dest_offset_at(i);
-            assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
             successors.push(_methodBlocks->block_containing(dest_bci));
           }
           dest_bci = s.cur_bci() + sw.default_offset();
-          assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
           successors.push(_methodBlocks->block_containing(dest_bci));
-          assert(s.next_bci() == limit_bci, "branch must end block");
           fall_through = false;
           break;
         }
@@ -796,11 +773,9 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
           int dest_bci;
           for (int i = 0; i < len; i++) {
             dest_bci = s.cur_bci() + sw.pair_at(i).offset();
-            assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
             successors.push(_methodBlocks->block_containing(dest_bci));
           }
           dest_bci = s.cur_bci() + sw.default_offset();
-          assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
           successors.push(_methodBlocks->block_containing(dest_bci));
           fall_through = false;
           break;
@@ -864,7 +839,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
           ciSignature* declared_signature = NULL;
           ciMethod* target = s.get_method(ignored_will_link, &declared_signature);
           ciKlass*  holder = s.get_declared_method_holder();
-          assert(declared_signature != NULL, "cannot be null");
           // If the current bytecode has an attached appendix argument,
           // push an unknown object to represent that argument. (Analysis
           // of dynamic call sites, especially invokehandle calls, needs
@@ -888,9 +862,7 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
           // instructions, except if the call site is the _invokeBasic intrinsic
           // (that intrinsic is always targeted by an invokehandle instruction but does
           // not have an appendix argument).
-          if (target->is_loaded() &&
-              Bytecodes::has_optional_appendix(s.cur_bc_raw()) &&
-              target->intrinsic_id() != vmIntrinsics::_invokeBasic) {
+          if (target->is_loaded() && Bytecodes::has_optional_appendix(s.cur_bc_raw()) && target->intrinsic_id() != vmIntrinsics::_invokeBasic) {
             state.apush(unknown_obj);
           }
           // Pass in raw bytecode because we need to see invokehandle instructions.
@@ -952,16 +924,12 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
       {
         set_method_escape(state.apop());
         int dest_bci = s.get_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         break;
       }
       case Bytecodes::_goto_w:
       {
         int dest_bci = s.get_far_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         successors.push(_methodBlocks->block_containing(dest_bci));
         fall_through = false;
         break;
@@ -969,8 +937,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
       case Bytecodes::_jsr_w:
       {
         int dest_bci = s.get_far_dest();
-        assert(_methodBlocks->is_block_start(dest_bci), "branch destination must start a block");
-        assert(s.next_bci() == limit_bci, "branch must end block");
         state.apush(empty_map);
         successors.push(_methodBlocks->block_containing(dest_bci));
         fall_through = false;
@@ -986,7 +952,6 @@ void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, Growabl
   if (fall_through) {
     int fall_through_bci = s.cur_bci();
     if (fall_through_bci < _method->code_size()) {
-      assert(_methodBlocks->is_block_start(fall_through_bci), "must fall through to block start.");
       successors.push(_methodBlocks->block_containing(fall_through_bci));
     }
   }
@@ -1012,9 +977,7 @@ void BCEscapeAnalyzer::merge_block_states(StateInfo *blockstates, ciBlock *dest,
     d_state->_max_stack = s_state->_max_stack;
     d_state->_initialized = true;
   } else if (!dest->processed()) {
-    // we have not yet walked the bytecodes of dest, we can merge
-    // the states
-    assert(d_state->_stack_height == s_state->_stack_height, "computed stack heights must match");
+    // we have not yet walked the bytecodes of dest, we can merge the states
     for (int i = 0; i < nlocals; i++) {
       d_state->_vars[i].set_union(s_state->_vars[i]);
     }
@@ -1027,7 +990,6 @@ void BCEscapeAnalyzer::merge_block_states(StateInfo *blockstates, ciBlock *dest,
     // as global escape.
     // Future refinement:  we only need to mark these variable to the
     // maximum escape of any variables in dest state
-    assert(d_state->_stack_height == s_state->_stack_height, "computed stack heights must match");
     ArgumentMap extra_vars;
     for (int i = 0; i < nlocals; i++) {
       ArgumentMap t;
@@ -1100,13 +1062,12 @@ void BCEscapeAnalyzer::iterate_blocks(Arena *arena) {
     j += t->size();
   }
   blockstates[fb_i]._initialized = true;
-  assert(j == _arg_size, "just checking");
 
   ArgumentMap unknown_map;
   unknown_map.add_unknown();
 
   worklist.push(first_blk);
-  while(worklist.length() > 0) {
+  while (worklist.length() > 0) {
     ciBlock *blk = worklist.pop();
     StateInfo *blkState = blockstates + blk->index();
     if (blk->is_handler() || blk->is_ret_target()) {
@@ -1144,16 +1105,14 @@ void BCEscapeAnalyzer::iterate_blocks(Arena *arena) {
         if (b->is_handler()) {
           int ex_start = b->ex_start_bci();
           int ex_end = b->ex_limit_bci();
-          if ((ex_start >= blk_start && ex_start < blk_end) ||
-              (ex_end > blk_start && ex_end <= blk_end)) {
+          if ((ex_start >= blk_start && ex_start < blk_end) || (ex_end > blk_start && ex_end <= blk_end)) {
             successors.push(b);
           }
         }
       }
-      assert(handler_count > 0, "must find at least one handler");
     }
     // merge computed variable state with successors
-    while(successors.length() > 0) {
+    while (successors.length() > 0) {
       ciBlock *succ = successors.pop();
       merge_block_states(blockstates, succ, &state);
       if (!succ->processed())
@@ -1175,8 +1134,7 @@ bool BCEscapeAnalyzer::do_analysis() {
 vmIntrinsics::ID BCEscapeAnalyzer::known_intrinsic() {
   vmIntrinsics::ID iid = method()->intrinsic_id();
 
-  if (iid == vmIntrinsics::_getClass ||
-      iid == vmIntrinsics::_hashCode)
+  if (iid == vmIntrinsics::_getClass || iid == vmIntrinsics::_hashCode)
     return iid;
   else
     return vmIntrinsics::_none;
@@ -1193,7 +1151,7 @@ bool BCEscapeAnalyzer::compute_escape_for_intrinsic(vmIntrinsics::ID iid) {
     // initialized state is correct
     break;
   default:
-    assert(false, "unexpected intrinsic");
+    ShouldNotReachHere();
   }
   return true;
 }
@@ -1220,7 +1178,6 @@ void BCEscapeAnalyzer::initialize() {
     }
     j += t->size();
   }
-  assert(j == _arg_size, "just checking");
 
   // start with optimistic assumption
   ciType *rt = _method->return_type();
@@ -1260,14 +1217,11 @@ void BCEscapeAnalyzer::clear_escape_info() {
 
 void BCEscapeAnalyzer::compute_escape_info() {
   int i;
-  assert(!methodData()->has_escape_info(), "do not overwrite escape info");
 
   vmIntrinsics::ID iid = known_intrinsic();
 
   // check if method can be analyzed
-  if (iid ==  vmIntrinsics::_none && (method()->is_abstract() || method()->is_native() || !method()->holder()->is_initialized()
-      || _level > MaxBCEAEstimateLevel
-      || method()->code_size() > MaxBCEAEstimateSize)) {
+  if (iid ==  vmIntrinsics::_none && (method()->is_abstract() || method()->is_native() || !method()->holder()->is_initialized() || _level > MaxBCEAEstimateLevel || method()->code_size() > MaxBCEAEstimateSize)) {
     if (BCEATraceLevel >= 1) {
       tty->print("Skipping method because: ");
       if (method()->is_abstract())
@@ -1326,7 +1280,6 @@ void BCEscapeAnalyzer::compute_escape_info() {
   if (!has_dependencies() && !methodData()->is_empty()) {
     for (i = 0; i < _arg_size; i++) {
       if (_arg_local.test(i)) {
-        assert(_arg_stack.test(i), "inconsistent escape info");
         methodData()->set_arg_local(i);
         methodData()->set_arg_stack(i);
       } else if (_arg_stack.test(i)) {
@@ -1354,7 +1307,6 @@ void BCEscapeAnalyzer::compute_escape_info() {
 }
 
 void BCEscapeAnalyzer::read_escape_info() {
-  assert(methodData()->has_escape_info(), "no escape info available");
 
   // read escape information from method descriptor
   for (int i = 0; i < _arg_size; i++) {

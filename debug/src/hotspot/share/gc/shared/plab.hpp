@@ -86,7 +86,6 @@ public:
 
   // The number of words of unallocated space remaining in the buffer.
   size_t words_remaining() {
-    assert(_end >= _top, "Negative buffer");
     return pointer_delta(_end, _top, HeapWordSize);
   }
 
@@ -96,14 +95,12 @@ public:
 
   // Sets the space of the buffer to be [buf, space+word_sz()).
   void set_buf(HeapWord* buf, size_t new_word_sz) {
-    assert(new_word_sz > AlignmentReserve, "Too small");
     _word_sz = new_word_sz;
 
     _bottom   = buf;
     _top      = _bottom;
     _hard_end = _bottom + word_sz();
     _end      = _hard_end - AlignmentReserve;
-    assert(_end >= _top, "Negative buffer");
     // In support of ergonomic sizing
     _allocated += word_sz();
   }

@@ -9,7 +9,7 @@
 class FormatBufferBase {
  protected:
   char* _buf;
-  inline FormatBufferBase(char* buf) : _buf(buf) {}
+  inline FormatBufferBase(char* buf) : _buf(buf) { }
  public:
   static const int BufferSize = 256;
   operator const char *() const { return _buf; }
@@ -21,7 +21,7 @@ class FormatBufferResource : public FormatBufferBase {
   FormatBufferResource(const char * format, ...) ATTRIBUTE_PRINTF(2, 3);
 };
 
-class FormatBufferDummy {};
+class FormatBufferDummy { };
 
 // Use stack for buffer
 template <size_t bufsz = FormatBufferBase::BufferSize>

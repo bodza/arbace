@@ -32,7 +32,6 @@ void* Symbol::operator new(size_t sz, int len, Arena* arena, TRAPS) throw() {
 }
 
 void Symbol::operator delete(void *p) {
-  assert(((Symbol*)p)->refcount() == 0, "should not call this");
   FreeHeap(p);
 }
 
@@ -47,7 +46,6 @@ bool Symbol::starts_with(const char* prefix, int len) const {
     if (prefix[len] != (char) byte_at(len))
       return false;
   }
-  assert(len == -1, "we should be at the beginning");
   return true;
 }
 
@@ -57,7 +55,6 @@ bool Symbol::starts_with(const char* prefix, int len) const {
 // Finds if the given string is a substring of this symbol's utf8 bytes.
 // Return -1 on failure.  Otherwise return the first index where str occurs.
 int Symbol::index_of_at(int i, const char* str, int len) const {
-  assert(i >= 0 && i <= utf8_length(), "oob");
   if (len <= 0)  return 0;
   char first_char = str[0];
   address bytes = (address) ((Symbol*)this)->base();
@@ -69,7 +66,6 @@ int Symbol::index_of_at(int i, const char* str, int len) const {
     scan = (address) memchr(scan, first_char, (limit + 1 - scan));
     if (scan == NULL)
       return -1;  // not found
-    assert(scan >= bytes+i && scan <= limit, "scan oob");
     if (memcmp(scan, str, len) == 0)
       return (int)(scan - bytes);
   }

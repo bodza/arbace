@@ -24,7 +24,6 @@ inline bool os::uses_stack_guard_pages() {
 }
 
 inline bool os::must_commit_stack_guard_pages() {
-  assert(uses_stack_guard_pages(), "sanity check");
   return true;
 }
 
@@ -41,11 +40,10 @@ inline void os::dll_unload(void *lib) {
   ::dlclose(lib);
 }
 
-inline const int os::default_file_open_flags() { return 0;}
+inline const int os::default_file_open_flags() { return 0; }
 
 inline DIR* os::opendir(const char* dirname)
 {
-  assert(dirname != NULL, "just checking");
   return ::opendir(dirname);
 }
 
@@ -68,12 +66,10 @@ inline int os::ftruncate(int fd, jlong length) {
 
 inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
 {
-  assert(dirp != NULL, "just checking");
   return ::readdir(dirp);
 }
 
 inline int os::closedir(DIR *dirp) {
-  assert(dirp != NULL, "argument is NULL");
   return ::closedir(dirp);
 }
 
@@ -89,8 +85,8 @@ inline int os::closedir(DIR *dirp) {
   return _result; \
 } while(false)
 
-inline bool os::numa_has_static_binding()   { return true; }
-inline bool os::numa_has_group_homing()     { return false;  }
+inline bool os::numa_has_static_binding() { return true; }
+inline bool os::numa_has_group_homing() { return false; }
 
 inline size_t os::restartable_read(int fd, void *buf, unsigned int nBytes) {
   size_t res;

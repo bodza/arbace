@@ -71,7 +71,6 @@ void G1MMUTrackerQueue::add_pause(double start, double end) {
     // simply overwrite the oldest entry in the tracker.
 
     _head_index = trim_index(_head_index + 1);
-    assert(_head_index == _tail_index, "Because we have a full circular buffer");
     _tail_index = trim_index(_tail_index + 1);
   } else {
     _head_index = trim_index(_head_index + 1);
@@ -90,8 +89,7 @@ void G1MMUTrackerQueue::add_pause(double start, double end) {
 
 double G1MMUTrackerQueue::when_sec(double current_time, double pause_time) {
   // if the pause is over the maximum, just assume that it's the maximum
-  double adjusted_pause_time =
-    (pause_time > max_gc_time()) ? max_gc_time() : pause_time;
+  double adjusted_pause_time = (pause_time > max_gc_time()) ? max_gc_time() : pause_time;
   double earliest_end = current_time + adjusted_pause_time;
   double limit = earliest_end - _time_slice;
   double gc_time = calculate_gc_time(earliest_end);

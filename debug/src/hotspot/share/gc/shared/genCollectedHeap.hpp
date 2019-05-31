@@ -291,7 +291,6 @@ public:
 
   // Total number of full collections completed.
   unsigned int total_full_collections_completed() {
-    assert(_full_collections_completed <= _total_full_collections, "Can't complete more collections than were started");
     return _full_collections_completed;
   }
 
@@ -413,8 +412,7 @@ public:
   bool incremental_collection_will_fail(bool consult_young) {
     // The first disjunct remembers if an incremental collection failed, even
     // when we thought (second disjunct) that it would not.
-    return incremental_collection_failed() ||
-           (consult_young && !_young_gen->collection_attempt_is_safe());
+    return incremental_collection_failed() || (consult_young && !_young_gen->collection_attempt_is_safe());
   }
 
   // If a generation bails out of an incremental collection,
@@ -451,7 +449,7 @@ private:
 
   // Override
   void check_for_non_bad_heap_word_value(HeapWord* addr,
-    size_t size) {};
+    size_t size) { };
 
   // Perform a full collection of the generations up to and including max_generation.
   // This is the low level interface used by the public versions of
@@ -459,7 +457,7 @@ private:
   void collect_locked(GCCause::Cause cause, GenerationType max_generation);
 
   // Save the tops of the spaces in all generations
-  void record_gen_tops_before_GC() {};
+  void record_gen_tops_before_GC() { };
 };
 
 #endif

@@ -263,12 +263,8 @@ void VM_Version_init() {
   }
 }
 
-unsigned int Abstract_VM_Version::nof_parallel_worker_threads(
-                                                      unsigned int num,
-                                                      unsigned int den,
-                                                      unsigned int switch_pt) {
+unsigned int Abstract_VM_Version::nof_parallel_worker_threads(unsigned int num, unsigned int den, unsigned int switch_pt) {
   if (FLAG_IS_DEFAULT(ParallelGCThreads)) {
-    assert(ParallelGCThreads == 0, "Default ParallelGCThreads is not 0");
     unsigned int threads;
     // For very large machines, there are diminishing returns
     // for large numbers of worker threads.  Instead of

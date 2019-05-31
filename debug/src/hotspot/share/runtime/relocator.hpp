@@ -13,7 +13,7 @@ class ChangeItem;
 // Callback object for code relocations
 class RelocatorListener : public StackObj {
  public:
-  RelocatorListener() {};
+  RelocatorListener() { };
   virtual void relocated(int bci, int delta, int new_method_size) = 0;
 };
 

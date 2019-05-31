@@ -13,20 +13,12 @@
 const u2 ConstMethod::MAX_IDNUM   = 0xFFFE;
 const u2 ConstMethod::UNSET_IDNUM = 0xFFFF;
 
-ConstMethod* ConstMethod::allocate(ClassLoaderData* loader_data,
-                                   int byte_code_size,
-                                   InlineTableSizes* sizes,
-                                   MethodType method_type,
-                                   TRAPS) {
+ConstMethod* ConstMethod::allocate(ClassLoaderData* loader_data, int byte_code_size, InlineTableSizes* sizes, MethodType method_type, TRAPS) {
   int size = ConstMethod::size(byte_code_size, sizes);
-  return new (loader_data, size, MetaspaceObj::ConstMethodType, THREAD) ConstMethod(
-      byte_code_size, sizes, method_type, size);
+  return new (loader_data, size, MetaspaceObj::ConstMethodType, THREAD) ConstMethod(byte_code_size, sizes, method_type, size);
 }
 
-ConstMethod::ConstMethod(int byte_code_size,
-                         InlineTableSizes* sizes,
-                         MethodType method_type,
-                         int size) {
+ConstMethod::ConstMethod(int byte_code_size, InlineTableSizes* sizes, MethodType method_type, int size) {
 
   NoSafepointVerifier no_safepoint;
   init_fingerprint();
@@ -36,7 +28,6 @@ ConstMethod::ConstMethod(int byte_code_size,
   set_constMethod_size(size);
   set_inlined_tables_length(sizes); // sets _flags
   set_method_type(method_type);
-  assert(this->size() == size, "wrong size for object");
   set_name_index(0);
   set_signature_index(0);
   set_constants(NULL);
@@ -48,8 +39,7 @@ ConstMethod::ConstMethod(int byte_code_size,
 }
 
 // Accessor that copies to metadata.
-void ConstMethod::copy_stackmap_data(ClassLoaderData* loader_data,
-                                     u1* sd, int length, TRAPS) {
+void ConstMethod::copy_stackmap_data(ClassLoaderData* loader_data, u1* sd, int length, TRAPS) {
   _stackmap_data = MetadataFactory::new_array<u1>(loader_data, length, CHECK);
   memcpy((void*)_stackmap_data->adr_at(0), (void*)sd, length);
 }
@@ -74,8 +64,7 @@ void ConstMethod::deallocate_contents(ClassLoaderData* loader_data) {
 
 // How big must this constMethodObject be?
 
-int ConstMethod::size(int code_size,
-                      InlineTableSizes* sizes) {
+int ConstMethod::size(int code_size, InlineTableSizes* sizes) {
   int extra_bytes = code_size;
   if (sizes->compressed_linenumber_size() > 0) {
     extra_bytes += sizes->compressed_linenumber_size();
@@ -123,7 +112,6 @@ int ConstMethod::size(int code_size,
   }
 
   int extra_words = align_up(extra_bytes, BytesPerWord) / BytesPerWord;
-  assert(extra_words == extra_bytes/BytesPerWord, "should already be aligned");
   return align_metadata_size(header_size() + extra_words);
 }
 
@@ -136,7 +124,6 @@ Method* ConstMethod::method() const {
 
 u_char* ConstMethod::compressed_linenumber_table() const {
   // Located immediately following the bytecodes.
-  assert(has_linenumber_table(), "called only if table is present");
   return code_end();
 }
 
@@ -152,36 +139,30 @@ u2* ConstMethod::last_u2_element() const {
 
 u2* ConstMethod::generic_signature_index_addr() const {
   // Located at the end of the constMethod.
-  assert(has_generic_signature(), "called only if generic signature exists");
   return last_u2_element();
 }
 
 u2* ConstMethod::method_parameters_length_addr() const {
-  assert(has_method_parameters(), "called only if table is present");
-  return has_generic_signature() ? (last_u2_element() - 1) :
-                                    last_u2_element();
+  return has_generic_signature() ? (last_u2_element() - 1) : last_u2_element();
 }
 
 u2* ConstMethod::checked_exceptions_length_addr() const {
   // Located immediately before the generic signature index.
-  assert(has_checked_exceptions(), "called only if table is present");
-  if(has_method_parameters()) {
+  if (has_method_parameters()) {
     // If method parameters present, locate immediately before them.
     return (u2*)method_parameters_start() - 1;
   } else {
     // Else, the exception table is at the end of the constMethod.
-    return has_generic_signature() ? (last_u2_element() - 1) :
-                                     last_u2_element();
+    return has_generic_signature() ? (last_u2_element() - 1) : last_u2_element();
   }
 }
 
 u2* ConstMethod::exception_table_length_addr() const {
-  assert(has_exception_handler(), "called only if table is present");
   if (has_checked_exceptions()) {
     // If checked_exception present, locate immediately before them.
     return (u2*) checked_exceptions_start() - 1;
   } else {
-    if(has_method_parameters()) {
+    if (has_method_parameters()) {
       // If method parameters present, locate immediately before them.
       return (u2*)method_parameters_start() - 1;
     } else {
@@ -193,7 +174,6 @@ u2* ConstMethod::exception_table_length_addr() const {
 }
 
 u2* ConstMethod::localvariable_table_length_addr() const {
-  assert(has_localvariable_table(), "called only if table is present");
   if (has_exception_handler()) {
     // If exception_table present, locate immediately before them.
     return (u2*) exception_table_start() - 1;
@@ -202,7 +182,7 @@ u2* ConstMethod::localvariable_table_length_addr() const {
       // If checked_exception present, locate immediately before them.
       return (u2*) checked_exceptions_start() - 1;
     } else {
-      if(has_method_parameters()) {
+      if (has_method_parameters()) {
         // If method parameters present, locate immediately before them.
         return (u2*)method_parameters_start() - 1;
       } else {
@@ -284,7 +264,6 @@ int ConstMethod::checked_exceptions_length() const {
 CheckedExceptionElement* ConstMethod::checked_exceptions_start() const {
   u2* addr = checked_exceptions_length_addr();
   u2 length = *addr;
-  assert(length > 0, "should only be called if table is present");
   addr -= length * sizeof(CheckedExceptionElement) / sizeof(u2);
   return (CheckedExceptionElement*) addr;
 }
@@ -296,7 +275,6 @@ int ConstMethod::localvariable_table_length() const {
 LocalVariableTableElement* ConstMethod::localvariable_table_start() const {
   u2* addr = localvariable_table_length_addr();
   u2 length = *addr;
-  assert(length > 0, "should only be called if table is present");
   addr -= length * sizeof(LocalVariableTableElement) / sizeof(u2);
   return (LocalVariableTableElement*) addr;
 }
@@ -308,25 +286,21 @@ int ConstMethod::exception_table_length() const {
 ExceptionTableElement* ConstMethod::exception_table_start() const {
   u2* addr = exception_table_length_addr();
   u2 length = *addr;
-  assert(length > 0, "should only be called if table is present");
   addr -= length * sizeof(ExceptionTableElement) / sizeof(u2);
   return (ExceptionTableElement*)addr;
 }
 
 AnnotationArray** ConstMethod::method_annotations_addr() const {
-  assert(has_method_annotations(), "should only be called if method annotations are present");
   return (AnnotationArray**)constMethod_end() - 1;
 }
 
 AnnotationArray** ConstMethod::parameter_annotations_addr() const {
-  assert(has_parameter_annotations(), "should only be called if method parameter annotations are present");
   int offset = 1;
   if (has_method_annotations()) offset++;
   return (AnnotationArray**)constMethod_end() - offset;
 }
 
 AnnotationArray** ConstMethod::type_annotations_addr() const {
-  assert(has_type_annotations(), "should only be called if method type annotations are present");
   int offset = 1;
   if (has_method_annotations()) offset++;
   if (has_parameter_annotations()) offset++;
@@ -334,7 +308,6 @@ AnnotationArray** ConstMethod::type_annotations_addr() const {
 }
 
 AnnotationArray** ConstMethod::default_annotations_addr() const {
-  assert(has_default_annotations(), "should only be called if method default annotations are present");
   int offset = 1;
   if (has_method_annotations()) offset++;
   if (has_parameter_annotations()) offset++;
@@ -354,22 +327,18 @@ Array<u1>* copy_annotations(ClassLoaderData* loader_data, AnnotationArray* from,
 void ConstMethod::copy_annotations_from(ClassLoaderData* loader_data, ConstMethod* cm, TRAPS) {
   Array<u1>* a;
   if (cm->has_method_annotations()) {
-    assert(has_method_annotations(), "should be allocated already");
     a = copy_annotations(loader_data, cm->method_annotations(), CHECK);
     set_method_annotations(a);
   }
   if (cm->has_parameter_annotations()) {
-    assert(has_parameter_annotations(), "should be allocated already");
     a = copy_annotations(loader_data, cm->parameter_annotations(), CHECK);
     set_parameter_annotations(a);
   }
   if (cm->has_type_annotations()) {
-    assert(has_type_annotations(), "should be allocated already");
     a = copy_annotations(loader_data, cm->type_annotations(), CHECK);
     set_type_annotations(a);
   }
   if (cm->has_default_annotations()) {
-    assert(has_default_annotations(), "should be allocated already");
     a = copy_annotations(loader_data, cm->default_annotations(), CHECK);
     set_default_annotations(a);
   }
@@ -398,7 +367,6 @@ void ConstMethod::metaspace_pointers_do(MetaspaceClosure* it) {
 
 void ConstMethod::print_on(outputStream* st) const {
   ResourceMark rm;
-  assert(is_constMethod(), "must be constMethod");
   st->print_cr("%s", internal_name());
   Method* m = method();
   st->print(" - method:       " INTPTR_FORMAT " ", p2i((address)m));
@@ -416,7 +384,6 @@ void ConstMethod::print_on(outputStream* st) const {
 // Short version of printing ConstMethod* - just print the name of the
 // method it belongs to.
 void ConstMethod::print_value_on(outputStream* st) const {
-  assert(is_constMethod(), "must be constMethod");
   st->print(" const part of method " );
   Method* m = method();
   if (m != NULL) {

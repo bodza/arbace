@@ -120,7 +120,7 @@ class JNIHandleBlock : public CHeapObj<mtInternal> {
   static int      _blocks_allocated;            // For debugging/printing
 
   // Fill block with bad_handle values
-  void zap() {};
+  void zap() { };
 
   // Free list computation
   void rebuild_free_list();

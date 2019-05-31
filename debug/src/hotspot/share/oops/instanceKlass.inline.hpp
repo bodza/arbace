@@ -58,7 +58,6 @@ ALWAYSINLINE void InstanceKlass::oop_oop_iterate_oop_map_bounded(OopMapBlock* ma
 
   T* const l   = (T*)mr.start();
   T* const h   = (T*)mr.end();
-  assert(mask_bits((intptr_t)l, sizeof(T)-1) == 0 && mask_bits((intptr_t)h, sizeof(T)-1) == 0, "bounded region must be properly aligned");
 
   if (p < l) {
     p = l;
@@ -116,7 +115,6 @@ ALWAYSINLINE int InstanceKlass::oop_oop_iterate(oop obj, OopClosureType* closure
 
 template <typename T, class OopClosureType>
 ALWAYSINLINE int InstanceKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closure) {
-  assert(!Devirtualizer::do_metadata(closure), "Code to handle metadata is not implemented");
 
   oop_oop_iterate_oop_maps_reverse<T>(obj, closure);
 

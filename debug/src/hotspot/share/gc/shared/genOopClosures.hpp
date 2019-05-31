@@ -39,7 +39,7 @@ class OopsInGenClosure : public OopIterateClosure {
 
  public:
   OopsInGenClosure() : OopIterateClosure(NULL),
-    _orig_gen(NULL), _gen(NULL), _gen_boundary(NULL), _rs(NULL) {};
+    _orig_gen(NULL), _gen(NULL), _gen_boundary(NULL), _rs(NULL) { };
 
   OopsInGenClosure(Generation* gen);
   void set_generation(Generation* gen);
@@ -58,7 +58,7 @@ class OopsInGenClosure : public OopIterateClosure {
 
 class BasicOopsInGenClosure: public OopsInGenClosure {
  public:
-  BasicOopsInGenClosure() : OopsInGenClosure() {}
+  BasicOopsInGenClosure() : OopsInGenClosure() { }
   BasicOopsInGenClosure(Generation* gen);
 
   virtual bool do_metadata() { return false; }
@@ -70,9 +70,8 @@ class BasicOopsInGenClosure: public OopsInGenClosure {
 class OopsInClassLoaderDataOrGenClosure: public BasicOopsInGenClosure {
   ClassLoaderData* _scanned_cld;
  public:
-  OopsInClassLoaderDataOrGenClosure(Generation* g) : BasicOopsInGenClosure(g), _scanned_cld(NULL) {}
+  OopsInClassLoaderDataOrGenClosure(Generation* g) : BasicOopsInGenClosure(g), _scanned_cld(NULL) { }
   void set_scanned_cld(ClassLoaderData* cld) {
-    assert(cld == NULL || _scanned_cld == NULL, "Must be");
     _scanned_cld = cld;
   }
   bool is_scanning_a_cld() { return _scanned_cld != NULL; }
@@ -86,7 +85,7 @@ class CLDScanClosure: public CLDClosure {
  public:
   CLDScanClosure(OopsInClassLoaderDataOrGenClosure* scavenge_closure,
                  bool accumulate_modified_oops) :
-       _scavenge_closure(scavenge_closure), _accumulate_modified_oops(accumulate_modified_oops) {}
+       _scavenge_closure(scavenge_closure), _accumulate_modified_oops(accumulate_modified_oops) { }
   void do_cld(ClassLoaderData* cld);
 };
 
@@ -99,11 +98,10 @@ class FilteringClosure: public OopIterateClosure {
  public:
   FilteringClosure(HeapWord* boundary, OopIterateClosure* cl) :
     OopIterateClosure(cl->ref_discoverer()), _boundary(boundary),
-    _cl(cl) {}
+    _cl(cl) { }
   virtual void do_oop(oop* p);
   virtual void do_oop(narrowOop* p);
   virtual bool do_metadata()            {
-    assert(!_cl->do_metadata(), "assumption broken, must change to 'return _cl->do_metadata()'");
     return false; }
   virtual void do_klass(Klass*)         { ShouldNotReachHere(); }
   virtual void do_cld(ClassLoaderData*) { ShouldNotReachHere(); }

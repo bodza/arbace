@@ -14,7 +14,6 @@
 //
 // Loaded array klass.
 ciArrayKlass::ciArrayKlass(Klass* k) : ciKlass(k) {
-  assert(get_Klass()->is_array_klass(), "wrong type");
   _dimension = get_ArrayKlass()->dimension();
 }
 

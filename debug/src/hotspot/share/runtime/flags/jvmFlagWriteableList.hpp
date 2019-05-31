@@ -21,7 +21,7 @@ private:
 public:
   // the "name" argument must be a string literal
   JVMFlagWriteable(const char* name, WriteableType type) { _name=name; _type=type; _writeable=true; _startup_done=false; }
-  ~JVMFlagWriteable() {}
+  ~JVMFlagWriteable() { }
   const char* name() { return _name; }
   const WriteableType type() { return _type; }
   bool is_writeable(void);

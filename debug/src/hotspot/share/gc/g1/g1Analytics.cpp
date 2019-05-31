@@ -112,14 +112,12 @@ void G1Analytics::report_alloc_rate_ms(double alloc_rate) {
 
 void G1Analytics::compute_pause_time_ratio(double interval_ms, double pause_time_ms) {
   _recent_avg_pause_time_ratio = _recent_gc_times_ms->sum() / interval_ms;
-  if (_recent_avg_pause_time_ratio < 0.0 ||
-      (_recent_avg_pause_time_ratio - 1.0 > 0.0)) {
+  if (_recent_avg_pause_time_ratio < 0.0 || (_recent_avg_pause_time_ratio - 1.0 > 0.0)) {
     // Clip ratio between 0.0 and 1.0, and continue. This will be fixed in
     // CR 6902692 by redoing the manner in which the ratio is incrementally computed.
     if (_recent_avg_pause_time_ratio < 0.0) {
       _recent_avg_pause_time_ratio = 0.0;
     } else {
-      assert(_recent_avg_pause_time_ratio - 1.0 > 0.0, "Ctl-point invariant");
       _recent_avg_pause_time_ratio = 1.0;
     }
   }
@@ -129,8 +127,7 @@ void G1Analytics::compute_pause_time_ratio(double interval_ms, double pause_time
   // most recent interval, has the effect of smoothing over a possible transient 'burst'
   // of more frequent pauses that don't really reflect a change in heap occupancy.
   // This reduces the likelihood of a needless heap expansion being triggered.
-  _last_pause_time_ratio =
-    (pause_time_ms * _recent_prev_end_times_for_all_gcs_sec->num()) / interval_ms;
+  _last_pause_time_ratio = (pause_time_ms * _recent_prev_end_times_for_all_gcs_sec->num()) / interval_ms;
 }
 
 void G1Analytics::report_cost_per_card_ms(double cost_per_card_ms) {
@@ -297,8 +294,7 @@ double G1Analytics::last_known_gc_end_time_sec() const {
   return _recent_prev_end_times_for_all_gcs_sec->oldest();
 }
 
-void G1Analytics::update_recent_gc_times(double end_time_sec,
-                                         double pause_time_ms) {
+void G1Analytics::update_recent_gc_times(double end_time_sec, double pause_time_ms) {
   _recent_gc_times_ms->add(pause_time_ms);
   _recent_prev_end_times_for_all_gcs_sec->add(end_time_sec);
   _prev_collection_pause_end_ms = end_time_sec * 1000.0;

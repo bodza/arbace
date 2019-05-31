@@ -21,7 +21,7 @@ class PrivilegedElement {
   PrivilegedElement *next() const  { return _next; }
 
   // debugging (used for find)
-  void print_on(outputStream* st) const   {};
+  void print_on(outputStream* st) const   { };
   bool contains(address addr)             { return 0; };
 };
 

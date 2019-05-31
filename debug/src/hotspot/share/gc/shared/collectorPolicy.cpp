@@ -26,13 +26,9 @@ CollectorPolicy::CollectorPolicy() :
     _initial_heap_byte_size(InitialHeapSize),
     _max_heap_byte_size(MaxHeapSize),
     _min_heap_byte_size(Arguments::min_heap_size())
-{}
+{ }
 
 void CollectorPolicy::initialize_flags() {
-  assert(_space_alignment != 0, "Space alignment not set up properly");
-  assert(_heap_alignment != 0, "Heap alignment not set up properly");
-  assert(_heap_alignment >= _space_alignment, "heap_alignment: " SIZE_FORMAT " less than space_alignment: " SIZE_FORMAT, _heap_alignment, _space_alignment);
-  assert(_heap_alignment % _space_alignment == 0, "heap_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT, _heap_alignment, _space_alignment);
 
   if (FLAG_IS_CMDLINE(MaxHeapSize)) {
     if (FLAG_IS_CMDLINE(InitialHeapSize) && InitialHeapSize > MaxHeapSize) {
@@ -67,8 +63,7 @@ void CollectorPolicy::initialize_flags() {
     FLAG_SET_ERGO(size_t, MaxHeapSize, aligned_max_heap_size);
   }
 
-  if (FLAG_IS_CMDLINE(InitialHeapSize) && _min_heap_byte_size != 0 &&
-      InitialHeapSize < _min_heap_byte_size) {
+  if (FLAG_IS_CMDLINE(InitialHeapSize) && _min_heap_byte_size != 0 && InitialHeapSize < _min_heap_byte_size) {
     vm_exit_during_initialization("Incompatible minimum and initial heap sizes specified");
   }
   if (!FLAG_IS_DEFAULT(InitialHeapSize) && InitialHeapSize > MaxHeapSize) {
@@ -119,7 +114,7 @@ GenCollectorPolicy::GenCollectorPolicy() :
     _initial_old_size(0),
     _max_old_size(0),
     _gen_alignment(0)
-{}
+{ }
 
 size_t GenCollectorPolicy::scale_by_NewRatio_aligned(size_t base_size) {
   return align_down_bounded(base_size / (NewRatio + 1), _gen_alignment);
@@ -143,10 +138,6 @@ size_t GenCollectorPolicy::old_gen_size_lower_bound() {
 void GenCollectorPolicy::initialize_flags() {
   CollectorPolicy::initialize_flags();
 
-  assert(_gen_alignment != 0, "Generation alignment not set up properly");
-  assert(_heap_alignment >= _gen_alignment, "heap_alignment: " SIZE_FORMAT " less than gen_alignment: " SIZE_FORMAT, _heap_alignment, _gen_alignment);
-  assert(_gen_alignment % _space_alignment == 0, "gen_alignment: " SIZE_FORMAT " not aligned by space_alignment: " SIZE_FORMAT, _gen_alignment, _space_alignment);
-  assert(_heap_alignment % _gen_alignment == 0, "heap_alignment: " SIZE_FORMAT " not aligned by gen_alignment: " SIZE_FORMAT, _heap_alignment, _gen_alignment);
 
   // All generational heaps have a young gen; handle those flags here
 
@@ -188,9 +179,7 @@ void GenCollectorPolicy::initialize_flags() {
       // Make sure there is room for an old generation
       size_t smaller_max_new_size = MaxHeapSize - _gen_alignment;
       if (FLAG_IS_CMDLINE(MaxNewSize)) {
-        log_warning(gc, ergo)("MaxNewSize (" SIZE_FORMAT "k) is equal to or greater than the entire "
-                              "heap (" SIZE_FORMAT "k).  A new max generation size of " SIZE_FORMAT "k will be used.",
-                              MaxNewSize/K, MaxHeapSize/K, smaller_max_new_size/K);
+        log_warning(gc, ergo)("MaxNewSize (" SIZE_FORMAT "k) is equal to or greater than the entire heap (" SIZE_FORMAT "k).  A new max generation size of " SIZE_FORMAT "k will be used.", MaxNewSize/K, MaxHeapSize/K, smaller_max_new_size/K);
       }
       FLAG_SET_ERGO(size_t, MaxNewSize, smaller_max_new_size);
       if (NewSize > MaxNewSize) {
@@ -209,9 +198,7 @@ void GenCollectorPolicy::initialize_flags() {
     // At this point this should only happen if the user specifies a large NewSize and/or
     // a small (but not too small) MaxNewSize.
     if (FLAG_IS_CMDLINE(MaxNewSize)) {
-      log_warning(gc, ergo)("NewSize (" SIZE_FORMAT "k) is greater than the MaxNewSize (" SIZE_FORMAT "k). "
-                            "A new max generation size of " SIZE_FORMAT "k will be used.",
-                            NewSize/K, MaxNewSize/K, NewSize/K);
+      log_warning(gc, ergo)("NewSize (" SIZE_FORMAT "k) is greater than the MaxNewSize (" SIZE_FORMAT "k). A new max generation size of " SIZE_FORMAT "k will be used.", NewSize/K, MaxNewSize/K, NewSize/K);
     }
     FLAG_SET_ERGO(size_t, MaxNewSize, NewSize);
     _max_young_size = MaxNewSize;
@@ -232,7 +219,6 @@ void GenCollectorPolicy::initialize_flags() {
     // NewRatio will be used later to set the young generation size so we use
     // it to calculate how big the heap should be based on the requested OldSize
     // and NewRatio.
-    assert(NewRatio > 0, "NewRatio should have been set up earlier");
     size_t calculated_heapsize = (OldSize / NewRatio) * (NewRatio + 1);
 
     calculated_heapsize = align_up(calculated_heapsize, _heap_alignment);
@@ -334,16 +320,14 @@ void GenCollectorPolicy::initialize_size_info() {
     if (FLAG_IS_CMDLINE(NewSize)) {
       // If NewSize is set on the command line, we should use it as
       // the initial size, but make sure it is within the heap bounds.
-      _initial_young_size =
-        MIN2(_max_young_size, bound_minus_alignment(NewSize, _initial_heap_byte_size));
+      _initial_young_size = MIN2(_max_young_size, bound_minus_alignment(NewSize, _initial_heap_byte_size));
       _min_young_size = bound_minus_alignment(_initial_young_size, _min_heap_byte_size);
     } else {
       // For the case where NewSize is not set on the command line, use
       // NewRatio to size the initial generation size. Use the current
       // NewSize as the floor, because if NewRatio is overly large, the resulting
       // size can be too small.
-      _initial_young_size =
-        MIN2(_max_young_size, MAX2(scale_by_NewRatio_aligned(_initial_heap_byte_size), NewSize));
+      _initial_young_size = MIN2(_max_young_size, MAX2(scale_by_NewRatio_aligned(_initial_heap_byte_size), NewSize));
     }
   }
 
@@ -377,10 +361,7 @@ void GenCollectorPolicy::initialize_size_info() {
     // The generation minimums and the overall heap minimum should
     // be within one generation alignment.
     if (_initial_old_size > _max_old_size) {
-      log_warning(gc, ergo)("Inconsistency between maximum heap size and maximum "
-                            "generation sizes: using maximum heap = " SIZE_FORMAT
-                            ", -XX:OldSize flag is being ignored",
-                            _max_heap_byte_size);
+      log_warning(gc, ergo)("Inconsistency between maximum heap size and maximum generation sizes: using maximum heap = " SIZE_FORMAT ", -XX:OldSize flag is being ignored", _max_heap_byte_size);
       _initial_old_size = _max_old_size;
     }
 
@@ -392,8 +373,7 @@ void GenCollectorPolicy::initialize_size_info() {
   // differs from JDK8 where the generation sizes have higher priority
   // than the initial heap size.
   if ((_initial_old_size + _initial_young_size) != _initial_heap_byte_size) {
-    log_warning(gc, ergo)("Inconsistency between generation sizes and heap size, resizing "
-                          "the generations to fit the heap.");
+    log_warning(gc, ergo)("Inconsistency between generation sizes and heap size, resizing the generations to fit the heap.");
 
     size_t desired_young_size = _initial_heap_byte_size - _initial_old_size;
     if (_initial_heap_byte_size < _initial_old_size) {

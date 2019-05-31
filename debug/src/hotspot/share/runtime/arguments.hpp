@@ -171,7 +171,6 @@ class AgentLibraryList {
         break;
       }
     }
-    assert(curr != NULL, "always should be found");
 
     if (curr != NULL) {
       // it was found, by-pass this library
@@ -522,7 +521,7 @@ class Arguments : AllStatic {
 
   // -Xms
   static size_t min_heap_size()             { return _min_heap_size; }
-  static void  set_min_heap_size(size_t v)  { _min_heap_size = v;  }
+  static void  set_min_heap_size(size_t v)  { _min_heap_size = v; }
 
   // -Xrun
   static AgentLibrary* libraries()          { return _libraryList.first(); }
@@ -583,7 +582,6 @@ class Arguments : AllStatic {
   static void add_patch_mod_prefix(const char *module_name, const char *path, bool* patch_mod_javabase);
   static void set_sysclasspath(const char *value, bool has_jimage) {
     // During start up, set by os::set_boot_path()
-    assert(get_sysclasspath() == NULL, "System boot class path previously set");
     _system_boot_class_path->set_value(value);
     _has_jimage = has_jimage;
   }
@@ -599,7 +597,7 @@ class Arguments : AllStatic {
 
   static char* get_java_home()    { return _java_home->value(); }
   static char* get_dll_dir()      { return _sun_boot_library_path->value(); }
-  static char* get_ext_dirs()     { return _ext_dirs;  }
+  static char* get_ext_dirs()     { return _ext_dirs; }
   static char* get_appclasspath() { return _java_class_path->value(); }
   static void  fix_appclasspath();
 
@@ -614,7 +612,7 @@ class Arguments : AllStatic {
   // Utility: copies src into buf, replacing "%%" with "%" and "%p" with pid.
   static bool copy_expand_pid(const char* src, size_t srclen, char* buf, size_t buflen);
 
-  static void check_unsupported_dumping_properties() {};
+  static void check_unsupported_dumping_properties() { };
 
   static bool check_unsupported_cds_runtime_properties() { return 0; };
 

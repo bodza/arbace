@@ -34,14 +34,10 @@ class StackMapTable : public StackObj {
 
   // Match and/or update current_frame to the frame in stackmap table with
   // specified offset. Return true if the two frames match.
-  bool match_stackmap(
-    StackMapFrame* current_frame, int32_t offset,
-    bool match, bool update, ErrorContext* ctx, TRAPS) const;
+  bool match_stackmap(StackMapFrame* current_frame, int32_t offset, bool match, bool update, ErrorContext* ctx, TRAPS) const;
   // Match and/or update current_frame to the frame in stackmap table with
   // specified offset and frame index. Return true if the two frames match.
-  bool match_stackmap(
-    StackMapFrame* current_frame, int32_t offset, int32_t frame_index,
-    bool match, bool update, ErrorContext* ctx, TRAPS) const;
+  bool match_stackmap(StackMapFrame* current_frame, int32_t offset, int32_t frame_index, bool match, bool update, ErrorContext* ctx, TRAPS) const;
 
   // Check jump instructions. Make sure there are no uninitialized
   // instances on backward branch.
@@ -97,15 +93,13 @@ class StackMapReader : StackObj {
 
   int32_t chop(VerificationType* locals, int32_t length, int32_t chops);
   VerificationType parse_verification_type(u1* flags, TRAPS);
-  void check_verification_type_array_size(
-      int32_t size, int32_t max_size, TRAPS) {
+  void check_verification_type_array_size(int32_t size, int32_t max_size, TRAPS) {
     if (size < 0 || size > max_size) {
       // Since this error could be caused someone rewriting the method
       // but not knowing to update the stackmap data, we call the the
       // verifier's error method, which may not throw an exception and
       // failover to the old verifier instead.
-      _verifier->class_format_error(
-        "StackMapTable format error: bad type array size");
+      _verifier->class_format_error("StackMapTable format error: bad type array size");
     }
   }
 

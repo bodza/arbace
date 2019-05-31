@@ -27,17 +27,17 @@ typedef ProfileData ciProfileData;
 
 class ciBitData : public BitData {
 public:
-  ciBitData(DataLayout* layout) : BitData(layout) {};
+  ciBitData(DataLayout* layout) : BitData(layout) { };
 };
 
 class ciCounterData : public CounterData {
 public:
-  ciCounterData(DataLayout* layout) : CounterData(layout) {};
+  ciCounterData(DataLayout* layout) : CounterData(layout) { };
 };
 
 class ciJumpData : public JumpData {
 public:
-  ciJumpData(DataLayout* layout) : JumpData(layout) {};
+  ciJumpData(DataLayout* layout) : JumpData(layout) { };
 };
 
 class ciTypeEntries {
@@ -53,10 +53,8 @@ protected:
 
 public:
   static ciKlass* valid_ciklass(intptr_t k) {
-    if (!TypeEntries::is_type_none(k) &&
-        !TypeEntries::is_type_unknown(k)) {
+    if (!TypeEntries::is_type_none(k) && !TypeEntries::is_type_unknown(k)) {
       ciKlass* res = (ciKlass*)TypeEntries::klass_part(k);
-      assert(res != NULL, "invalid");
       return res;
     } else {
       return NULL;
@@ -107,7 +105,7 @@ public:
 
 class ciCallTypeData : public CallTypeData {
 public:
-  ciCallTypeData(DataLayout* layout) : CallTypeData(layout) {}
+  ciCallTypeData(DataLayout* layout) : CallTypeData(layout) { }
 
   ciTypeStackSlotEntries* args() const { return (ciTypeStackSlotEntries*)CallTypeData::args(); }
   ciReturnTypeEntry* ret() const { return (ciReturnTypeEntry*)CallTypeData::ret(); }
@@ -122,22 +120,18 @@ public:
   }
 
   intptr_t argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
     return args()->type(i);
   }
 
   ciKlass* valid_argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
     return args()->valid_type(i);
   }
 
   intptr_t return_type() const {
-    assert(has_return(), "no ret type profiling data");
     return ret()->type();
   }
 
   ciKlass* valid_return_type() const {
-    assert(has_return(), "no ret type profiling data");
     return ret()->valid_type();
   }
 
@@ -152,18 +146,15 @@ public:
 
 class ciReceiverTypeData : public ReceiverTypeData {
 public:
-  ciReceiverTypeData(DataLayout* layout) : ReceiverTypeData(layout) {};
+  ciReceiverTypeData(DataLayout* layout) : ReceiverTypeData(layout) { };
 
   void set_receiver(uint row, ciKlass* recv) {
-    assert((uint)row < row_limit(), "oob");
     set_intptr_at(receiver0_offset + row * receiver_type_row_cell_count,
                   (intptr_t) recv);
   }
 
   ciKlass* receiver(uint row) const {
-    assert((uint)row < row_limit(), "oob");
     ciKlass* recv = (ciKlass*)intptr_at(receiver0_offset + row * receiver_type_row_cell_count);
-    assert(recv == NULL || recv->is_klass(), "wrong type");
     return recv;
   }
 
@@ -179,7 +170,7 @@ class ciVirtualCallData : public VirtualCallData {
   ciReceiverTypeData* rtd_super() const { return (ciReceiverTypeData*) this; }
 
 public:
-  ciVirtualCallData(DataLayout* layout) : VirtualCallData(layout) {};
+  ciVirtualCallData(DataLayout* layout) : VirtualCallData(layout) { };
 
   void set_receiver(uint row, ciKlass* recv) {
     rtd_super()->set_receiver(row, recv);
@@ -200,7 +191,7 @@ private:
   // Fake multiple inheritance...  It's a ciReceiverTypeData also.
   ciReceiverTypeData* rtd_super() const { return (ciReceiverTypeData*) this; }
 public:
-  ciVirtualCallTypeData(DataLayout* layout) : VirtualCallTypeData(layout) {}
+  ciVirtualCallTypeData(DataLayout* layout) : VirtualCallTypeData(layout) { }
 
   void set_receiver(uint row, ciKlass* recv) {
     rtd_super()->set_receiver(row, recv);
@@ -225,22 +216,18 @@ public:
   }
 
   intptr_t argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
     return args()->type(i);
   }
 
   ciKlass* valid_argument_type(int i) const {
-    assert(has_arguments(), "no arg type profiling data");
     return args()->valid_type(i);
   }
 
   intptr_t return_type() const {
-    assert(has_return(), "no ret type profiling data");
     return ret()->type();
   }
 
   ciKlass* valid_return_type() const {
-    assert(has_return(), "no ret type profiling data");
     return ret()->valid_type();
   }
 
@@ -255,32 +242,32 @@ public:
 
 class ciRetData : public RetData {
 public:
-  ciRetData(DataLayout* layout) : RetData(layout) {};
+  ciRetData(DataLayout* layout) : RetData(layout) { };
 };
 
 class ciBranchData : public BranchData {
 public:
-  ciBranchData(DataLayout* layout) : BranchData(layout) {};
+  ciBranchData(DataLayout* layout) : BranchData(layout) { };
 };
 
 class ciArrayData : public ArrayData {
 public:
-  ciArrayData(DataLayout* layout) : ArrayData(layout) {};
+  ciArrayData(DataLayout* layout) : ArrayData(layout) { };
 };
 
 class ciMultiBranchData : public MultiBranchData {
 public:
-  ciMultiBranchData(DataLayout* layout) : MultiBranchData(layout) {};
+  ciMultiBranchData(DataLayout* layout) : MultiBranchData(layout) { };
 };
 
 class ciArgInfoData : public ArgInfoData {
 public:
-  ciArgInfoData(DataLayout* layout) : ArgInfoData(layout) {};
+  ciArgInfoData(DataLayout* layout) : ArgInfoData(layout) { };
 };
 
 class ciParametersTypeData : public ParametersTypeData {
 public:
-  ciParametersTypeData(DataLayout* layout) : ParametersTypeData(layout) {}
+  ciParametersTypeData(DataLayout* layout) : ParametersTypeData(layout) { }
 
   virtual void translate_from(const ProfileData* data) {
     parameters()->translate_type_data_from(data->as_ParametersTypeData()->parameters());
@@ -299,7 +286,7 @@ public:
 
 class ciSpeculativeTrapData : public SpeculativeTrapData {
 public:
-  ciSpeculativeTrapData(DataLayout* layout) : SpeculativeTrapData(layout) {}
+  ciSpeculativeTrapData(DataLayout* layout) : SpeculativeTrapData(layout) { }
 
   virtual void translate_from(const ProfileData* data);
 
@@ -381,7 +368,6 @@ private:
   void print_impl(outputStream* st);
 
   DataLayout* data_layout_at(int data_index) const {
-    assert(data_index % sizeof(intptr_t) == 0, "unaligned");
     return (DataLayout*) (((address)_data) + data_index);
   }
 
@@ -392,7 +378,6 @@ private:
   // hint accessors
   int      hint_di() const  { return _hint_di; }
   void set_hint_di(int di)  {
-    assert(!out_of_bounds(di), "hint_di out of bounds");
     _hint_di = di;
   }
   ciProfileData* data_before(int bci) {
@@ -432,7 +417,7 @@ public:
   int current_mileage()  { return _current_mileage; }
 
   int invocation_count() { return _invocation_counter; }
-  int backedge_count()   { return _backedge_counter;   }
+  int backedge_count()   { return _backedge_counter; }
 
 #if INCLUDE_RTM_OPT
   // return cached value
@@ -474,8 +459,7 @@ public:
   bool is_valid(ciProfileData* current) { return current != NULL; }
 
   DataLayout* extra_data_base() const  { return data_layout_at(data_size()); }
-  DataLayout* args_data_limit() const  { return data_layout_at(data_size() + extra_data_size() -
-                                                               parameters_size()); }
+  DataLayout* args_data_limit() const  { return data_layout_at(data_size() + extra_data_size() - parameters_size()); }
 
   // Get the data at an arbitrary bci, or NULL if there is none. If m
   // is not NULL look for a SpeculativeTrapData if any first.
@@ -499,7 +483,6 @@ public:
   // Helpful query functions that decode trap_state.
   int has_trap_at(ciProfileData* data, int reason);
   int has_trap_at(int bci, ciMethod* m, int reason) {
-    assert((m != NULL) == Deoptimization::reason_is_speculate(reason), "inconsistent method/reason");
     return has_trap_at(bci_to_data(bci, m), reason);
   }
   int trap_recompiled_at(ciProfileData* data);

@@ -16,7 +16,7 @@ protected:
                            Node* val,
                            const TypeOopPtr* val_type,
                            Node* pre_val,
-                           BasicType bt) const {}
+                           BasicType bt) const { }
 
   virtual void post_barrier(GraphKit* kit,
                             Node* ctl,
@@ -26,7 +26,7 @@ protected:
                             uint adr_idx,
                             Node* val,
                             BasicType bt,
-                            bool use_precise) const {}
+                            bool use_precise) const { }
 
   virtual Node* store_at_resolved(C2Access& access, C2AccessValue& val) const;
 

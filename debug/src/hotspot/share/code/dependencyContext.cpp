@@ -19,14 +19,10 @@ void dependencyContext_init() {
 void DependencyContext::init() {
   if (UsePerfData) {
     EXCEPTION_MARK;
-    _perf_total_buckets_allocated_count =
-        PerfDataManager::create_counter(SUN_CI, "nmethodBucketsAllocated", PerfData::U_Events, CHECK);
-    _perf_total_buckets_deallocated_count =
-        PerfDataManager::create_counter(SUN_CI, "nmethodBucketsDeallocated", PerfData::U_Events, CHECK);
-    _perf_total_buckets_stale_count =
-        PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStale", PerfData::U_Events, CHECK);
-    _perf_total_buckets_stale_acc_count =
-        PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStaleAccumulated", PerfData::U_Events, CHECK);
+    _perf_total_buckets_allocated_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsAllocated", PerfData::U_Events, CHECK);
+    _perf_total_buckets_deallocated_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsDeallocated", PerfData::U_Events, CHECK);
+    _perf_total_buckets_stale_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStale", PerfData::U_Events, CHECK);
+    _perf_total_buckets_stale_acc_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStaleAccumulated", PerfData::U_Events, CHECK);
   }
 }
 
@@ -63,7 +59,6 @@ int DependencyContext::mark_dependent_nmethods(DepChange& changes) {
 // deletion of dependencies is consistent.
 //
 void DependencyContext::add_dependent_nmethod(nmethod* nm, bool expunge) {
-  assert_lock_strong(CodeCache_lock);
   for (nmethodBucket* b = dependencies(); b != NULL; b = b->next()) {
     if (nm == b->get_nmethod()) {
       b->increment();
@@ -88,7 +83,6 @@ void DependencyContext::add_dependent_nmethod(nmethod* nm, bool expunge) {
 // Can be called concurrently by parallel GC threads.
 //
 void DependencyContext::remove_dependent_nmethod(nmethod* nm, bool expunge) {
-  assert_locked_or_safepoint(CodeCache_lock);
   nmethodBucket* first = dependencies();
   nmethodBucket* last = NULL;
   for (nmethodBucket* b = first; b != NULL; b = b->next()) {
@@ -131,16 +125,13 @@ void DependencyContext::remove_dependent_nmethod(nmethod* nm, bool expunge) {
 // Reclaim all unused buckets.
 //
 void DependencyContext::expunge_stale_entries() {
-  assert_locked_or_safepoint(CodeCache_lock);
   if (!has_stale_entries()) {
-    assert(!find_stale_entries(), "inconsistent info");
     return;
   }
   nmethodBucket* first = dependencies();
   nmethodBucket* last = NULL;
   int removed = 0;
   for (nmethodBucket* b = first; b != NULL;) {
-    assert(b->count() >= 0, "bucket count: %d", b->count());
     nmethodBucket* next = b->next();
     if (b->count() == 0) {
       if (last == NULL) {
@@ -167,7 +158,6 @@ void DependencyContext::expunge_stale_entries() {
 //
 // Invalidate all dependencies in the context
 int DependencyContext::remove_all_dependents() {
-  assert_locked_or_safepoint(CodeCache_lock);
   nmethodBucket* b = dependencies();
   set_dependencies(NULL);
   int marked = 0;
@@ -191,7 +181,6 @@ int DependencyContext::remove_all_dependents() {
 }
 
 void DependencyContext::wipe() {
-  assert_locked_or_safepoint(CodeCache_lock);
   nmethodBucket* b = dependencies();
   set_dependencies(NULL);
   set_has_stale_entries(false);

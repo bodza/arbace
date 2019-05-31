@@ -67,7 +67,6 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
   BarrierSetAssembler* bs = BarrierSet::barrier_set()->barrier_set_assembler();
   bs->try_resolve_jobject_in_native(masm, /* jni_env */ c_rarg0, robj, rtmp, slow);
 
-  assert(count < LIST_CAPACITY, "LIST_CAPACITY too small");
   speculative_load_pclist[count] = __ pc();
   switch (type) {
     case T_BOOLEAN: __ movzbl (rax, Address(robj, roffset, Address::times_1)); break;
@@ -170,7 +169,6 @@ address JNI_FastGetField::generate_fast_get_float_field0(BasicType type) {
   __ mov   (roffset, c_rarg2);
   __ shrptr(roffset, 2);                         // offset
 
-  assert(count < LIST_CAPACITY, "LIST_CAPACITY too small");
   speculative_load_pclist[count] = __ pc();
   switch (type) {
     case T_FLOAT:  __ movflt (xmm0, Address(robj, roffset, Address::times_1)); break;

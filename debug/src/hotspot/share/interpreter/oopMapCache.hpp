@@ -30,7 +30,7 @@
 // 10 dead value
 // 11 <unused>                                   (we cannot distinguish between dead oops or values with the current oop map generator)
 
-class OffsetClosure  {
+class OffsetClosure {
  public:
   virtual void offset_do(int offset) = 0;
 };

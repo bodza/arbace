@@ -25,7 +25,6 @@ bool ElfStringTable::string_at(size_t pos, char* buf, int buflen) {
     return false;
   }
 
-  assert(buflen > 0, "no buffer");
   if (pos >= _section.section_header()->sh_size) {
     return false;
   }
@@ -37,9 +36,7 @@ bool ElfStringTable::string_at(size_t pos, char* buf, int buflen) {
   } else {  // no cache data, read from file instead
     const Elf_Shdr* const shdr = _section.section_header();
     MarkedFileReader mfd(_fd);
-    if (mfd.has_mark() &&
-      mfd.set_position(shdr->sh_offset + pos) &&
-      mfd.read((void*)buf, size_t(buflen))) {
+    if (mfd.has_mark() && mfd.set_position(shdr->sh_offset + pos) && mfd.read((void*)buf, size_t(buflen))) {
       buf[buflen - 1] = '\0';
       return true;
     } else {

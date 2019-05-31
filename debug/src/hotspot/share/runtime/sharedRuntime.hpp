@@ -175,30 +175,24 @@ class SharedRuntime: AllStatic {
   static address get_poll_stub(address pc);
 
   static address get_ic_miss_stub() {
-    assert(_ic_miss_blob!= NULL, "oops");
     return _ic_miss_blob->entry_point();
   }
 
   static address get_handle_wrong_method_stub() {
-    assert(_wrong_method_blob!= NULL, "oops");
     return _wrong_method_blob->entry_point();
   }
 
   static address get_handle_wrong_method_abstract_stub() {
-    assert(_wrong_method_abstract_blob!= NULL, "oops");
     return _wrong_method_abstract_blob->entry_point();
   }
 
   static address get_resolve_opt_virtual_call_stub() {
-    assert(_resolve_opt_virtual_call_blob != NULL, "oops");
     return _resolve_opt_virtual_call_blob->entry_point();
   }
   static address get_resolve_virtual_call_stub() {
-    assert(_resolve_virtual_call_blob != NULL, "oops");
     return _resolve_virtual_call_blob->entry_point();
   }
   static address get_resolve_static_call_stub() {
-    assert(_resolve_static_call_blob != NULL, "oops");
     return _resolve_static_call_blob->entry_point();
   }
 
@@ -319,9 +313,7 @@ class SharedRuntime: AllStatic {
   // return value is the maximum number of VMReg stack slots the convention will use.
   static int java_calling_convention(const BasicType* sig_bt, VMRegPair* regs, int total_args_passed, int is_outgoing);
 
-  static void check_member_name_argument_is_last_argument(const methodHandle& method,
-                                                          const BasicType* sig_bt,
-                                                          const VMRegPair* regs) {};
+  static void check_member_name_argument_is_last_argument(const methodHandle& method, const BasicType* sig_bt, const VMRegPair* regs) { };
 
   // Ditto except for calling C
   //
@@ -331,8 +323,7 @@ class SharedRuntime: AllStatic {
   // to be filled by the c_calling_convention method. On other architectures,
   // NULL is being passed as the second VMRegPair array, so arguments are either
   // passed in a register OR in a stack slot.
-  static int c_calling_convention(const BasicType *sig_bt, VMRegPair *regs, VMRegPair *regs2,
-                                  int total_args_passed);
+  static int c_calling_convention(const BasicType *sig_bt, VMRegPair *regs, VMRegPair *regs2, int total_args_passed);
 
   static size_t trampoline_size();
 
@@ -542,7 +533,7 @@ class CDSAdapterHandlerEntry: public AdapterHandlerEntry {
 public:
   address get_c2i_entry_trampoline()             const { return _c2i_entry_trampoline; }
   AdapterHandlerEntry** get_adapter_trampoline() const { return _adapter_trampoline; }
-  void init() {};
+  void init() { };
 };
 
 class AdapterHandlerLibrary: public AllStatic {
